@@ -34,10 +34,19 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 .. hint::
 
    See :ref:`high-level help <WARNING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Exceptions`
+      |rarr| Exceptions, which are raised instead of collected.
+   :mod:`pyTooling.TerminalUI`
+      |rarr| Writing the collected warnings to the terminal.
 """
-from threading import local, Lock
-from types     import TracebackType
-from typing    import List, Callable, Optional as Nullable, Type, Iterator, Self, Iterable, Tuple, Union
+from __future__           import annotations
+
+from threading            import local, Lock
+from types                import TracebackType
+from typing               import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
 
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
@@ -72,7 +81,7 @@ class CriticalWarning(BaseException):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -101,7 +110,7 @@ class Warning(BaseException):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -114,18 +123,7 @@ AnyWarning = Union[CriticalWarning, Warning]
 
 
 @export
-class UnhandledWarningException(ExceptionBase):   # FIXME: to be removed in v9.0.0
-	"""
-	Deprecated.
-
-	.. deprecated:: v9.0.0
-
-	   Please use :exc:`UnhandledCriticalWarningException`.
-	"""
-
-
-@export
-class UnhandledCriticalWarningException(UnhandledWarningException):
+class UnhandledCriticalWarningException(ExceptionBase):
 	"""
 	This exception is raised when a critical warning isn't handled by a :class:`WarningCollector` within the
 	call-hierarchy.
@@ -133,9 +131,20 @@ class UnhandledCriticalWarningException(UnhandledWarningException):
 
 
 @export
-class UnhandledExceptionException(UnhandledWarningException):
+class UnhandledExceptionException(ExceptionBase):
 	"""
 	This exception is raised when an exception isn't handled by a :class:`WarningCollector` within the call-hierarchy.
+	"""
+
+
+@export
+class EscalatedWarningException(ExceptionBase):
+	"""
+	This exception is raised when a :class:`WarningCollector` decides a collected warning should not be collected but
+	raised.
+
+	A collector's handler returning ``True`` asks for the warning to be escalated; the warning itself becomes the
+	exception's cause.
 	"""
 
 
@@ -144,24 +153,24 @@ class WarningCollector:
 	"""
 	A context manager to collect warnings within the call hierarchy.
 	"""
-	_parent:   Nullable["WarningCollector"]               #: Parent WarningCollector
-	_warnings: List[BaseException]                        #: List of collected warnings (and exceptions).
+	_parent:   Nullable[WarningCollector]                 #: Parent WarningCollector
+	_warnings: list[BaseException]                        #: List of collected warnings (and exceptions).
 	_handler:  Nullable[Callable[[BaseException], bool]]  #: Optional handler function, which is called per collected warning.
 
 	__slots__ = ("_parent", "_warnings", "_handler")
 
 	def __init__(
 		self,
-		warnings: Nullable[List[BaseException]] = None,
+		warnings: Nullable[list[BaseException]] = None,
 		handler:  Nullable[Callable[[BaseException], bool]] = None
 	) -> None:
 		"""
 		Initializes a warning collector.
 
-		:param warnings:   An optional reference to a list of warnings, which can be modified (appended) by this warning
+		:param warnings:   Optional, reference to a list of warnings, which can be modified (appended) by this warning
 		                   collector. If ``None``, an internal list is created and can be referenced by the collector's
 		                   instance.
-		:param handler:    An optional handler function, which processes the current warning and decides if a warning should
+		:param handler:    Optional, handler function, which processes the current warning and decides if a warning should
 		                   be reraised as an exception.
 		:raises TypeError: If optional parameter 'warnings' is not of type list.
 		:raises TypeError: If optional parameter 'handler' is not a callable.
@@ -226,7 +235,7 @@ class WarningCollector:
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -258,7 +267,7 @@ class WarningCollector:
 		self._parent = value
 
 	@readonly
-	def Warnings(self) -> List[Warning | CriticalWarning | Exception]:
+	def Warnings(self) -> list[Warning | CriticalWarning | Exception]:
 		"""
 		Read-only property to access the list of collected warnings.
 
@@ -300,12 +309,14 @@ class WarningCollector:
 
 		:param warning:                            Warning to send upwards in the call stack.
 		:param cause:                              Optional, root cause to be added to the warning.
-		:param notes:                              optional, a single note or a list of notes to be added to the warning.
-		:raises Exception:                         If warning should be converted to an exception.
+		:param notes:                              Optional, a single note or a list of notes to be added to the warning.
+		:raises EscalatedWarningException:         If the warning collector asks for the warning to be raised.
 		:raises UnhandledExceptionException:       If no warning collector was found along the call-hierarchy to collect and
 		                                           handle an exception.
-		:raises UnhandledCriticalWarningException: If no warning collector was found along the call-hierarchy to collect and
-		                                           handle a critical warning.
+		:raises UnhandledCriticalWarningException:  If no warning collector was found along the call-hierarchy to collect
+		                                           and handle a critical warning. |br|
+		                                           Add a with-statement using :class:`WarningCollector` somewhere up the
+		                                           call-hierarchy to receive and collect warnings.
 		"""
 		global _threadLocalData
 
@@ -322,7 +333,7 @@ class WarningCollector:
 		try:
 			warningCollector = _threadLocalData.warningCollector
 			if warningCollector.AddWarning(warning):
-				raise Exception(f"Warning: {warning}") from warning
+				raise EscalatedWarningException(f"Warning: {warning}") from warning
 		except AttributeError:
 			ex = None
 			if isinstance(warning, Exception):
@@ -337,7 +348,12 @@ class WarningCollector:
 
 @export
 class SupervisedWarningCollectorException(ExceptionBase):
-	pass
+	"""
+	This exception is raised when a supervised warning collector is not the top-most collector in its thread.
+
+	A supervised collector hands its warnings to the thread supervisor, which only works if nothing else collects them
+	first.
+	"""
 
 
 @export
@@ -345,31 +361,37 @@ class SupervisedWarningCollector(WarningCollector):
 	"""
 	A context manager to collect warnings within the call hierarchy.
 	"""
-	_supervisor:       Nullable["ThreadSupervisor"]
-	_exceptionHandler: Nullable[Callable[[BaseException], bool]]
-	_finallyHandler:   Nullable[Callable[[], None]]
+	_supervisor:       Nullable[ThreadSupervisor]                 #: Supervisor collecting warnings and exceptions of all threads.
+	_exceptionHandler: Nullable[Callable[[BaseException], bool]]  #: Handler called for an exception escaping the thread.
+	_finallyHandler:   Nullable[Callable[[], None]]               #: Handler called when the thread ends, in either case.
 
 	__slots__ = ("_supervisor", "_exceptionHandler", "_finallyHandler")
 
 	def __init__(
 		self,
-		warnings:         Nullable[List[BaseException]] =             None,
+		warnings:         Nullable[list[BaseException]] =             None,
 		handler:          Nullable[Callable[[BaseException], bool]] = None,
 		/,
-		supervisor:       Nullable["ThreadSupervisor"] =              None,
+		supervisor:       Nullable[ThreadSupervisor] =              None,
 		exceptionHandler: Nullable[Callable[[BaseException], bool]] = None,
 		finallyHandler:   Nullable[Callable[[], None]] =              None
 	) -> None:
 		"""
 		Initializes a warning collector.
 
-		:param warnings:   An optional reference to a list of warnings, which can be modified (appended) by this warning
-		                   collector. If ``None``, an internal list is created and can be referenced by the collector's
-		                   instance.
-		:param handler:    An optional handler function, which processes the current warning and decides if a warning should
-		                   be reraised as an exception.
-		:raises TypeError: If optional parameter 'warnings' is not of type list.
-		:raises TypeError: If optional parameter 'handler' is not a callable.
+		:param warnings:         Optional, reference to a list of warnings, which can be modified (appended) by this warning
+		                         collector. If ``None``, an internal list is created and can be referenced by the
+		                         collector's instance.
+		:param handler:          Optional, handler function, which processes the current warning and decides if a warning
+		                         should be reraised as an exception.
+		:param supervisor:       Optional, thread supervisor. On leaving the context, the collected warnings and an
+		                         exception leaving the block are handed to it, so the thread that started this one can
+		                         reraise them. Without a supervisor, an exception leaves the block unchanged.
+		:param exceptionHandler: Optional, handler function, called with an exception leaving the block when a supervisor is
+		                         set. Its result decides whether the exception is suppressed.
+		:param finallyHandler:   Optional, function called when the context is left, whether or not an exception left it.
+		:raises TypeError:       If optional parameter 'warnings' is not of type list.
+		:raises TypeError:       If optional parameter 'handler' is not a callable.
 		"""
 		super().__init__(warnings, handler)
 
@@ -381,7 +403,8 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Enter the warning collector context.
 
-		:returns: The warning collector instance.
+		:returns:                                    The warning collector instance.
+		:raises SupervisedWarningCollectorException: If this collector is not the top-most warning collector of its thread.
 		"""
 		global _threadLocalData
 
@@ -394,7 +417,7 @@ class SupervisedWarningCollector(WarningCollector):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -435,19 +458,33 @@ class SupervisedThreadException(ExceptionBase):
 	The exception is raise if a supervised thread received an unhandled exception which got collected by
 	:class:`ExceptionCollector`.
 	"""
-	_threadName: str
+	_threadName: Nullable[str]  #: Name of the thread the exception was raised in.
 
-	def __init__(self, threadName: str, message: str, /, cause: Nullable[BaseException] = None) -> None:
+	def __init__(
+		self,
+		message: str,
+		/,
+		*,
+		threadName: Nullable[str] = None,
+		cause: Nullable[BaseException] = None
+	) -> None:
+		"""
+		Initializes the exception with the name of the thread that failed.
+
+		:param message:    The exception's message.
+		:param threadName: Optional, name of the thread that raised the collected exception.
+		:param cause:      Optional, the exception collected from that thread.
+		"""
 		super().__init__(message)
 		self._threadName = threadName
 		self.__cause__ = cause
 
 	@readonly
-	def ThreadName(self) -> str:
+	def ThreadName(self) -> Nullable[str]:
 		"""
 		Read-only property to access the name of the thread that raised the exception (:attr:`_threadName`).
 
-		:returns: Name of the thread.
+		:returns: Name of the thread, or ``None`` if it wasn't recorded.
 		"""
 		return self._threadName
 
@@ -492,7 +529,7 @@ class ThreadSupervisor:
 
 	   def RunVivadoPipeline(
 	     self,
-	   ) -> List[AnyWarning]:
+	   ) -> list[AnyWarning]:
 	     stopEvent =        Event()
 	     threadSupervisor = ThreadSupervisor()
 
@@ -511,13 +548,16 @@ class ThreadSupervisor:
 	     return threadSupervisor.Warnings
 	"""
 
-	_lock:       Lock
-	_exceptions: List[Tuple[str, BaseException]]
-	_warnings:   List[Tuple[str, AnyWarning]]
+	_lock:       Lock                             #: Lock serializing the collection from multiple threads.
+	_exceptions: list[tuple[str, BaseException]]  #: Exceptions of all supervised threads, as (thread name, exception).
+	_warnings:   list[tuple[str, AnyWarning]]     #: Warnings of all supervised threads, as (thread name, warning).
 
 	__slots__ = ("_lock", "_exceptions", "_warnings")
 
 	def __init__(self) -> None:
+		"""
+		Initialize a thread supervisor with empty lists of exceptions and warnings.
+		"""
 		self._lock =       Lock()
 		self._exceptions = []
 		self._warnings =   []
@@ -543,7 +583,7 @@ class ThreadSupervisor:
 			return len(self._exceptions) > 0
 
 	@readonly
-	def Warnings(self) -> List[AnyWarning]:
+	def Warnings(self) -> list[AnyWarning]:
 		"""
 		Read-only property to return all warnings collected from supervised threads (:attr:`_warnings`).
 
@@ -553,18 +593,47 @@ class ThreadSupervisor:
 			return [warning for _, warning in self._warnings]
 
 	def AddWarning(self, threadName: str, warning: AnyWarning) -> None:
+		"""
+		Collect a warning raised in a supervised thread.
+
+		:param threadName: Optional, name of the thread the warning was raised in.
+		:param warning:    The warning to collect.
+		"""
 		with self._lock:
 			self._warnings.append((threadName, warning))
 
-	def AddWarnings(self, threadName: str, warnings: List[AnyWarning]) -> None:
+	def AddWarnings(self, threadName: str, warnings: list[AnyWarning]) -> None:
+		"""
+		Collect several warnings raised in a supervised thread.
+
+		:param threadName: Optional, name of the thread the warnings were raised in.
+		:param warnings:   Optional, the warnings to collect.
+		"""
 		with self._lock:
 			self._warnings.extend((threadName, warning) for warning in warnings)
 
 	def AddException(self, threadName: str, ex: BaseException) -> None:
+		"""
+		Collect an exception that escaped a supervised thread.
+
+		:param threadName: Optional, name of the thread the exception was raised in.
+		:param ex:         The exception to collect.
+		"""
 		with self._lock:
 			self._exceptions.append((threadName, ex))
 
 	def ReRaise(self, unwrapped: bool = False) -> None:
+		"""
+		Re-raise the exceptions collected from the supervised threads in the supervising thread.
+
+		A single exception is re-raised as itself - wrapped in a :exc:`SupervisedThreadException` naming its thread,
+		unless ``unwrapped`` is set. Several exceptions are raised as an :exc:`ExceptionGroup`, so none of them is lost.
+
+		:param unwrapped:                  Optional, if ``True``, a single exception is raised as it was, without naming its
+		                                   thread.
+		:raises SupervisedThreadException: If exactly one thread failed.
+		:raises ExceptionGroup:            If more than one thread failed.
+		"""
 		with self._lock:
 			if len(self._exceptions) == 0:
 				return
@@ -576,7 +645,7 @@ class ThreadSupervisor:
 			if unwrapped:
 				raise ex
 			else:
-				raise SupervisedThreadException(threadName, f"Thread '{threadName}' failed.") from ex
+				raise SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName) from ex
 
 		elif unwrapped:
 			raise ExceptionGroup(
@@ -586,5 +655,8 @@ class ThreadSupervisor:
 		else:
 			raise ExceptionGroup(
 				"Multiple threads failed.",
-				[SupervisedThreadException(f"Thread '{threadName}' failed.", cause=ex) for threadName, ex in exceptions]
+				[
+					SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName, cause=ex)
+					for threadName, ex in exceptions
+				]
 			)

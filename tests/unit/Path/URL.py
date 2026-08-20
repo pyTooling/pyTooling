@@ -28,9 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.GenericPath.URL`."""
-from unittest import TestCase
+"""
+Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.GenericPath.URL`: parsing a URL into its
+parts and rendering it back.
+"""
 from pyTooling.GenericPath.URL import URL, Protocols
+from pyTooling.Testing         import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -39,7 +42,34 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class GenericPath(TestCase):
+class Schemes(Testcase):
+	def test_SecuredSchemeIsTLSPlusProtocol(self) -> None:
+		self.assertEqual(Protocols.TLS | Protocols.HTTP, Protocols.HTTPS)
+		self.assertEqual(Protocols.TLS | Protocols.FTP, Protocols.FTPS)
+
+	def test_SecuredSchemeContainsTLS(self) -> None:
+		self.assertIn(Protocols.TLS, Protocols.HTTPS)
+		self.assertIn(Protocols.TLS, Protocols.FTPS)
+
+	def test_PlainSchemeContainsNoTLS(self) -> None:
+		self.assertNotIn(Protocols.TLS, Protocols.HTTP)
+		self.assertNotIn(Protocols.TLS, Protocols.FTP)
+		self.assertNotIn(Protocols.TLS, Protocols.FILE)
+
+	def test_SecuredSchemeContainsPlainScheme(self) -> None:
+		self.assertIn(Protocols.HTTP, Protocols.HTTPS)
+		self.assertIn(Protocols.FTP, Protocols.FTPS)
+
+	def test_CombinationIsNamedLikeTheSecuredScheme(self) -> None:
+		self.assertEqual("HTTPS", (Protocols.TLS | Protocols.HTTP).name)
+		self.assertEqual("FTPS", (Protocols.TLS | Protocols.FTP).name)
+
+	def test_SchemeByName(self) -> None:
+		self.assertEqual(Protocols.HTTPS, Protocols["HTTPS"])
+		self.assertEqual(Protocols.FTPS, Protocols["FTPS"])
+
+
+class GenericPath(Testcase):
 	url : URL = URL.Parse("https://pyTooling.GitHub.io:8080/path/to/endpoint?user=paebbels&token=1234567890")
 
 	def test_Protocol(self) -> None:
@@ -55,7 +85,7 @@ class GenericPath(TestCase):
 		self.assertEqual(str(self.url), "https://pyTooling.GitHub.io:8080/path/to/endpoint?user=paebbels&token=1234567890")
 
 
-class URLs(TestCase):
+class URLs(Testcase):
 	def test_Host(self) -> None:
 		resource = "github"
 		url = URL.Parse(resource)

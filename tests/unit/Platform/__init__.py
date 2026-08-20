@@ -28,13 +28,15 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for TBD."""
+"""
+Unit tests for :mod:`pyTooling.Platform`: the flags describing the current platform. Most testcases are
+gated on the environment variable ``ENVIRONMENT_NAME``, so they run on the matching CI platform only.
+"""
 from os       import getenv as os_getenv, environ as os_environ
 from pytest   import mark
-from unittest import TestCase
 
 from pyTooling.Platform import Platforms, Platform, CurrentPlatform
-
+from pyTooling.Testing  import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -42,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class AnyPlatform(TestCase):
+class AnyPlatform(Testcase):
 	expected = os_getenv("ENVIRONMENT_NAME", default="Windows (x86-64)")
 	isOnGitHub = "GITHUB_SHA" in os_environ
 

@@ -30,8 +30,7 @@
 #
 """An implementation of 2D cartesian shapes for Python."""
 
-from typing import Generic, Tuple
-
+from typing                import Generic
 from pyTooling.Decorators  import export
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
@@ -47,17 +46,18 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 	"""
 	A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
 	"""
-	points:   Tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
-	segments: Tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
+	points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
+	segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
 
 	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
 		"""
 		Initializes a trapezium with 4 corners.
 
-		:param p00: First corner.
-		:param p01: Second corner.
-		:param p11: Third corner.
-		:param p10: Forth corner
+		:param p00:        First corner.
+		:param p01:        Second corner.
+		:param p11:        Third corner.
+		:param p10:        Forth corner
+		:raises TypeError: If a given point is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
 		if not isinstance(p00, Point2D):
 			ex = TypeError(f"Parameter 'p00' is not of type Point2D.")
@@ -101,10 +101,11 @@ class Rectangle(Trapezium[Coordinate]):
 		"""
 		Initializes a rectangle with 4 corners.
 
-		:param p00: First corner.
-		:param p01: Second corner.
-		:param p11: Third corner.
-		:param p10: Forth corner
+		:param p00:         First corner.
+		:param p01:         Second corner.
+		:param p11:         Third corner.
+		:param p10:         Forth corner
+		:raises ValueError: If the given points don't describe a rectangle.
 		"""
 		super().__init__(p00, p01, p11, p10)
 
@@ -126,10 +127,11 @@ class Square(Rectangle[Coordinate]):
 		"""
 		Initializes a square with 4 corners.
 
-		:param p00: First corner.
-		:param p01: Second corner.
-		:param p11: Third corner.
-		:param p10: Forth corner
+		:param p00:         First corner.
+		:param p01:         Second corner.
+		:param p11:         Third corner.
+		:param p10:         Forth corner
+		:raises ValueError: If the given points don't describe a square.
 		"""
 		super().__init__(p00, p01, p11, p10)
 

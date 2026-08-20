@@ -34,9 +34,20 @@ Implementation of package dependencies.
 .. hint::
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Dependency.Python`
+      |rarr| The implementation for Python packages on a package index.
+   :mod:`pyTooling.Versioning`
+      |rarr| The version numbers a requirement is resolved against.
+   :mod:`pyTooling.Graph`
+      |rarr| The graph data structure a dependency graph is built on.
 """
-from datetime import datetime
-from typing   import Optional as Nullable, Dict, Union, Iterable, Set, Self, Iterator
+from __future__            import annotations
+
+from datetime              import datetime
+from typing                import Optional as Nullable, Union, Iterable, Self, Iterator
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -93,22 +104,22 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	:class:`PackageVersion`s.
 	"""
 
-	_package:    "Package"                                                #: Reference to the corresponding package
-	_version:    SemanticVersion                                          #: :class:`SemanticVersion` of this package version.
-	_releasedAt: Nullable[datetime]
+	_package:    Package                                              #: Reference to the corresponding package
+	_version:    SemanticVersion                                      #: :class:`SemanticVersion` of this package version.
+	_releasedAt: Nullable[datetime]                                   #: Time when this package version was released.
 
-	_dependsOn: Dict["Package", Dict[SemanticVersion, "PackageVersion"]]  #: Versioned dependencies to other packages.
+	_dependsOn: dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
-	def __init__(self, version: SemanticVersion, package: "Package", releasedAt: Nullable[datetime] = None) -> None:
+	def __init__(self, version: SemanticVersion, package: Package, releasedAt: Nullable[datetime] = None) -> None:
 		"""
 		Initializes a package version.
 
 		:param version:           Semantic version of this package.
 		:param package:           Package this version is associated to.
-		:param releasedAt:        Optional release date and time.
-		:raises TypeError:        When parameter 'version' is not of type 'SemanticVersion'.
-		:raises TypeError:        When parameter 'package' is not of type 'Package'.
-		:raises TypeError:        When parameter 'releasedAt' is not of type 'datetime'.
+		:param releasedAt:        Optional, release date and time.
+		:raises TypeError:        When parameter 'version' is not of type :class:`SemanticVersion`.
+		:raises TypeError:        When parameter 'package' is not of type :class:`Package`.
+		:raises TypeError:        When parameter 'releasedAt' is not of type :class:`~datetime.datetime`.
 		:raises ToolingException: When version already exists for the associated package.
 		"""
 		if not isinstance(version, SemanticVersion):
@@ -138,7 +149,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		self._dependsOn = {}
 
 	@readonly
-	def Package(self) -> "Package":
+	def Package(self) -> Package:
 		"""
 		Read-only property to access the associated package.
 
@@ -165,7 +176,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		return self._releasedAt
 
 	@readonly
-	def DependsOn(self) -> Dict["Package", Dict[SemanticVersion, "PackageVersion"]]:
+	def DependsOn(self) -> dict[Package, dict[SemanticVersion, PackageVersion]]:
 		"""
 		Read-only property to access the dictionary of dictionaries referencing dependencies.
 
@@ -176,7 +187,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		"""
 		return self._dependsOn
 
-	def AddDependencyToPackageVersion(self, packageVersion: "PackageVersion") -> None:
+	def AddDependencyToPackageVersion(self, packageVersion: PackageVersion) -> None:
 		"""
 		Add a dependency from current package version to another package version.
 
@@ -191,7 +202,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		else:
 			self._dependsOn[package] = {packageVersion._version: packageVersion}
 
-	def AddDependencyToPackageVersions(self, packageVersions: Iterable["PackageVersion"]) -> None:
+	def AddDependencyToPackageVersions(self, packageVersions: Iterable[PackageVersion]) -> None:
 		"""
 		Add multiple dependencies from current package version to a list of other package versions.
 
@@ -211,14 +222,15 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 	def AddDependencyTo(
 		self,
-		package: "str | Package",
+		package: str | Package,
 		version: str | SemanticVersion | Iterable[str | SemanticVersion]
 	) -> None:
 		"""
 		Add a dependency from current package version to another package version.
 
-		:param package: :class:`Package` object or name of the package.
-		:param version: :class:`~pyTooling.Versioning.SemanticVersion` object or version string or an iterable thereof.
+		:param package:    :class:`Package` object or name of the package.
+		:param version:    :class:`~pyTooling.Versioning.SemanticVersion` object or version string or an iterable thereof.
+		:raises TypeError: If parameter 'package' is not of type :class:`Package`.
 		"""
 		if isinstance(package, str):
 			package = self._package._storage._packages[package]
@@ -261,7 +273,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			self._dependsOn[package] = {version: versions[version] for version in sorted(versions.keys(), reverse=True)}
 		return self
 
-	def SolveLatest(self) -> Iterable["PackageVersion"]:
+	def SolveLatest(self) -> Iterable[PackageVersion]:
 		"""
 		Solve the dependency problem, while using preferably latest versions.
 
@@ -272,11 +284,20 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:returns:                 A list of :class:`PackageVersion`s fulfilling the constraints of the dependency problem.
 		:raises ToolingException: When there is no valid solution to the problem.
 		"""
-		solution: Dict["Package", "PackageVersion"] = {self._package: self}
+		solution: dict[Package, PackageVersion] = {self._package: self}
 
-		def _recursion(currentSolution: Dict["Package", "PackageVersion"]) -> bool:
+		def _recursion(currentSolution: dict[Package, PackageVersion]) -> bool:
+			"""
+			Nested function for recursion.
+
+			It adds the latest matching version of every package the current solution requires, and recurses until no
+			package is missing.
+
+			:param currentSolution: The packages selected so far, by package.
+			:returns:               ``True``, if the solution is complete and consistent.
+			"""
 			# 1. Identify all required packages based on current selection
-			requiredPackages: Set["Package"] = set()
+			requiredPackages: set[Package] = set()
 			for packageVersion in currentSolution.values():
 				requiredPackages.update(packageVersion.DependsOn.keys())
 
@@ -293,7 +314,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 			# 4. Determine valid candidates
 			# The candidate version must satisfy the constraints of all parents currently in the solution
-			allowedVersions: Nullable[Set[SemanticVersion]] = None
+			allowedVersions: Nullable[set[SemanticVersion]] = None
 
 			for parentPackageVersion in currentSolution.values():
 				if targetPackage in parentPackageVersion.DependsOn:
@@ -369,17 +390,18 @@ class Package(metaclass=ExtendedType, slots=True):
 	"""
 	The package, which exists in multiple versions (:class:`PackageVersion`).
 	"""
-	_storage:  "PackageStorage"                       #: Reference to the package's storage.
+	_storage:  PackageStorage                         #: Reference to the package's storage.
 	_name:     str                                    #: Name of the package.
 
-	_versions: Dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
+	_versions: dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
 
-	def __init__(self, name: str, *, storage: "PackageStorage") -> None:
+	def __init__(self, name: str, *, storage: PackageStorage) -> None:
 		"""
 		Initializes a package.
 
-		:param name:    Name of the package.
-		:param storage: The package's storage.
+		:param name:       Name of the package.
+		:param storage:    The package's storage.
+		:raises TypeError: If a parameter is not of the expected type.
 		"""
 		if not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -399,7 +421,7 @@ class Package(metaclass=ExtendedType, slots=True):
 		self._versions = {}
 
 	@readonly
-	def Storage(self) -> "PackageStorage":
+	def Storage(self) -> PackageStorage:
 		"""
 		Read-only property to access the package's storage.
 
@@ -417,7 +439,7 @@ class Package(metaclass=ExtendedType, slots=True):
 		return self._name
 
 	@readonly
-	def Versions(self) -> Dict[SemanticVersion, PackageVersion]:
+	def Versions(self) -> dict[SemanticVersion, PackageVersion]:
 		"""
 		Read-only property to access the dictionary of available versions.
 
@@ -449,21 +471,28 @@ class Package(metaclass=ExtendedType, slots=True):
 		return len(self._versions)
 
 	def __iter__(self) -> Iterator[PackageVersion]:
+		"""
+		Iterate the versions of this package.
+
+		:returns: An iterator over all versions of this package.
+		"""
 		return iter(self._versions.values())
 
 	def __getitem__(self, version: str | SemanticVersion) -> PackageVersion:
 		"""
 		Access a package version in the package by version string or semantic version.
 
-		:param version:   Version as string or instance.
-		:returns:         The package version.
-		:raises KeyError: If version is not available for the package.
+		:param version:    Version as string or instance.
+		:returns:          The package version.
+		:raises KeyError:  If version is not available for the package.
+		:raises TypeError: If the given key is not of the expected type.
 		"""
 		if isinstance(version, str):
 			version = SemanticVersion.Parse(version)
 		elif not isinstance(version, SemanticVersion):
-			# TODO: raise proper type error
-			raise TypeError()
+			ex = TypeError("Parameter 'version' is neither a 'str' nor of type 'SemanticVersion'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
 
 		return self._versions[version]
 
@@ -484,16 +513,17 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 	"""
 	A storage for packages.
 	"""
-	_graph:    "PackageDependencyGraph"  #: Reference to the overall dependency graph data structure.
-	_name:     str                       #: Package dependency graph name
-	_packages: Dict[str, Package]        #: Dictionary of known packages.
+	_graph:    PackageDependencyGraph  #: Reference to the overall dependency graph data structure.
+	_name:     str                     #: Package dependency graph name
+	_packages: dict[str, Package]      #: Dictionary of known packages.
 
-	def __init__(self, name: str, graph: "PackageDependencyGraph") -> None:
+	def __init__(self, name: str, graph: PackageDependencyGraph) -> None:
 		"""
 		Initializes the package storage.
 
-		:param name:  Name of the package storage.
-		:param graph: PackageDependencyGraph instance (parent).
+		:param name:       Name of the package storage.
+		:param graph:      PackageDependencyGraph instance (parent).
+		:raises TypeError: If a parameter is not of the expected type.
 		"""
 		if not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -513,7 +543,7 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		self._packages = {}
 
 	@readonly
-	def Graph(self) -> "PackageDependencyGraph":
+	def Graph(self) -> PackageDependencyGraph:
 		"""
 		Read-only property to access the package dependency graph.
 
@@ -531,7 +561,7 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		return self._name
 
 	@readonly
-	def Packages(self) -> Dict[str, Package]:
+	def Packages(self) -> dict[str, Package]:
 		"""
 		Read-only property to access the dictionary of known packages.
 
@@ -604,6 +634,11 @@ class PackageStorage(metaclass=ExtendedType, slots=True):
 		return len(self._packages)
 
 	def __iter__(self) -> Iterator[Package]:
+		"""
+		Iterate the packages in this storage.
+
+		:returns: An iterator over all packages in this storage.
+		"""
 		return iter(self._packages.values())
 
 	def __getitem__(self, name: str) -> Package:
@@ -634,13 +669,14 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 	A package dependency graph collecting all known packages.
 	"""
 	_name:     str                        #: Package dependency graph name
-	_storages: Dict[str, PackageStorage]  #: Dictionary of known package storages.
+	_storages: dict[str, PackageStorage]  #: Dictionary of known package storages.
 
 	def __init__(self, name: str) -> None:
 		"""
 		Initializes the package dependency graph.
 
-		:param name: Name of the dependency graph.
+		:param name:       Name of the dependency graph.
+		:raises TypeError: If a parameter is not of the expected type.
 		"""
 		if not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
@@ -661,7 +697,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		return self._name
 
 	@readonly
-	def Storages(self) -> Dict[str, PackageStorage]:
+	def Storages(self) -> dict[str, PackageStorage]:
 		"""
 		Read-only property to access the dictionary of known package storages.
 
@@ -725,6 +761,11 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		return len(self._storages)
 
 	def __iter__(self) -> Iterator[PackageStorage]:
+		"""
+		Iterate the storages in this dependency graph.
+
+		:returns: An iterator over all storages in this dependency graph.
+		"""
 		return iter(self._storages.values())
 
 	def __getitem__(self, name: str) -> PackageStorage:

@@ -28,11 +28,23 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+An operating system independent abstraction of the currently running process.
 
+The process' properties are queried through one API, whichever operating system provides them, so a program reading
+its own memory usage needs no platform handling of its own.
+
+.. seealso::
+
+   :mod:`pyTooling.Platform`
+      |rarr| The platform this process runs on.
+   :mod:`pyTooling.Stopwatch`
+      |rarr| Measuring how long a piece of code took, next to how much memory it used.
+"""
 from ctypes              import Structure, c_void_p, c_size_t, c_int, c_int32, c_uint64
 from os                  import getpid, strerror
 from pathlib             import Path
-from typing import ClassVar, Any
+from typing              import ClassVar, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -45,6 +57,8 @@ if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 
 @export
 class MemoryInfo(metaclass=ExtendedType, slots=True):
+	"""A snapshot of a process' memory usage: physically mapped pages and total virtual address space."""
+
 	_ResidentMemory: int  #: Resident Set Size (VmRSS)  – physical pages currently mapped. Memory usage in bytes.
 	_VirtualMemory:  int  #: Virtual Memory Size (VmS) – total virtual address space used. Memory usage in bytes.
 
@@ -77,11 +91,23 @@ class MemoryInfo(metaclass=ExtendedType, slots=True):
 		return self._VirtualMemory
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this memory snapshot.
+
+		:returns: Resident and virtual memory usage in MiB.
+		"""
 		return f"Physical Memory (VmRSS): {self.ResidentMemory / 2**20:.3f} MiB / Virtual Memory (VmS): {self.VirtualMemory / 2**20:.3f}  MiB"
 
 
 @export
 class ProcessInformation(metaclass=ExtendedType, slots=True):
+	"""
+	Access to the current process' information, implemented per platform.
+
+	Windows reads it through ``psapi``, Linux through :file:`/proc/self/statm` and macOS through ``proc_pidinfo``, so
+	the class body itself differs by platform while :attr:`MemoryInfo` is the same everywhere.
+	"""
+
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		_psapi:         WinDLL
 		_kernel32:      WinDLL
@@ -91,6 +117,12 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
+			"""
+			Initialize the process information by opening the Windows libraries it queries.
+
+			:attr:`_psapi` and :attr:`_kernel32` are loaded, ``GetCurrentProcess`` is declared, and the handle it returns
+			is kept in :attr:`_processHandle` for the lifetime of this object.
+			"""
 			self._psapi =    WinDLL("psapi", use_last_error=True)
 			self._kernel32 = WinDLL("kernel32", use_last_error=True)
 
@@ -100,6 +132,12 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			self._processHandle = self._kernel32.GetCurrentProcess()
 	else:
 		def __init__(self) -> None:
+			"""
+			Initialize the process information.
+
+			There is nothing to open outside Windows: :attr:`_psapi`, :attr:`_kernel32` and :attr:`_processHandle` are
+			declared under the same platform condition as this initializer, so they don't exist here.
+			"""
 			pass
 
 	if CurrentPlatform.IsNativeLinux:
@@ -130,7 +168,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			``SC_PAGESIZE`` is typically 4096 bytes, but can be 16kiB (ARM64) or 64kiB (PowerPC/RHEL9+). :func:`os.sysconf`
 			reads it from the aux vector — no syscall overhead.
 
-			:returns: Physical memory usage (VmRSS) in bytes.
+			:returns:                  Physical memory usage (VmRSS) in bytes.
+			:raises PlatformException: If the process' memory usage couldn't be read.
 			"""
 
 			try:
@@ -181,6 +220,9 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 			proc_pidinfo() returns the number of bytes written; ≤ 0 means error
 			(errno is set).  PROC_PIDTASKINFO = 4.
+
+			:returns:                  Memory usage of the current process.
+			:raises PlatformException: If ``proc_pidinfo`` reported an error.
 			"""
 			from ctypes import CDLL, byref, sizeof, get_errno
 			from ctypes.util import find_library
@@ -208,6 +250,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 	elif CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		class _ProcessMemoryCounters(Structure):
+			"""The Windows ``PROCESS_MEMORY_COUNTERS`` structure, as filled in by ``GetProcessMemoryInfo``."""
+
 			from ctypes.wintypes import DWORD
 
 			_fields_ = [
@@ -236,6 +280,9 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			GetCurrentProcess() returns a pseudo-handle (-1) requiring no CloseHandle.
 			use_last_error=True routes SetLastError / GetLastError through ctypes so
 			WinError() picks up the correct code without a race.
+
+			:returns:         Memory usage of the current process.
+			:raises WinError: If ``GetProcessMemoryInfo`` reported an error.
 			"""
 
 			from ctypes import WinDLL, WinError, POINTER, sizeof, byref, get_last_error

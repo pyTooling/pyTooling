@@ -31,28 +31,29 @@
 #
 """
 List of valued flags are argument lists where each item is a valued flag (See
-:mod:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
+:class:`~pyTooling.CLIAbstraction.ValuedFlag.ValuedFlag`).
 
 Each list item gets translated into a ``***ValuedFlag``, with the same flag name, but differing values.
 
 .. seealso::
 
-   * For single valued flags. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For list of strings. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
-   * For list of paths. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For single valued flags.
+   :class:`~pyTooling.CLIAbstraction.Argument.StringListArgument`
+      |rarr| For a list of strings.
+   :class:`~pyTooling.CLIAbstraction.Argument.PathListArgument`
+      |rarr| For a list of paths.
 """
-from typing import List, Union, Iterable, cast, Any, Self
-
+from typing                            import Union, Iterable, cast, Any
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.Common                  import getFullyQualifiedName
 from pyTooling.CLIAbstraction.Argument import ValueT, NamedAndValuedArgument
 
 
 @export
-class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
+@abstractclass
+class ValuedFlagList(NamedAndValuedArgument[str], pattern="{0}={1}"):
 	"""
 	Class and base-class for all ValuedFlagList classes, which represents a list of valued flags.
 
@@ -69,48 +70,37 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+	def __init__(self, value: list[ValueT]) -> None:
 		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+		Initialize the argument with a list of values, each of which is rendered as its own command line element.
 
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		:param value: Values of the argument.
 		"""
-		if cls is ValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
-	def __init__(self, value: List[ValueT]) -> None:
 		super().__init__(list(value))
 
 	@property
-	def Value(self) -> List[str]:
+	def Value(self) -> list[str]:
 		"""
-		Get the internal value.
+		Property to access the internal list of values (:attr:`_value`).
 
-		:returns: Internal value.
+		.. note:: On assignment, the list object is not replaced, but cleared and then reused by adding the given elements
+		   of the iterable.
+
+		:returns:          Internal list of values.
+		:raises TypeError: If an assigned iterable contains elements which are not of type string.
 		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, values: Iterable[str]) -> None:
-		"""
-		Set the internal value.
-
-		:param values:       List of values to set.
-		:raises ValueError:  If a list element is not o type :class:`str`.
-		"""
-		innerList = cast(list, self._value)
+		innerList = cast(list[str], self._value)
 		innerList.clear()
 		for value in values:
 			if not isinstance(value, str):
@@ -120,8 +110,14 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 			innerList.append(value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
+		"""
+		Render this argument as a list of command line elements, one per value.
+
+		:returns:           The rendered command line elements.
+		:raises ValueError: If the argument has no name.
+		"""
 		if self._name is None:
-			raise ValueError(f"")  # XXX: add message
+			raise ValueError("Internal value '_name' is None.")
 
 		return [self._pattern.format(self._name, value) for value in self._value]
 
@@ -143,6 +139,7 @@ class ValuedFlagList(NamedAndValuedArgument, pattern="{0}={1}"):
 
 
 @export
+@abstractclass
 class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a single dash.
@@ -157,29 +154,16 @@ class ShortValuedFlagList(ValuedFlagList, pattern="-{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"-{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a double dash.
@@ -194,29 +178,16 @@ class LongValuedFlagList(ValuedFlagList, pattern="--{0}={1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"--{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 	"""
 	Represents a :py:class:`ValuedFlagArgument` with a single slash.
@@ -232,23 +203,9 @@ class WindowsValuedFlagList(ValuedFlagList, pattern="/{0}:{1}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"/{0}:{1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is WindowsValuedFlagList:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

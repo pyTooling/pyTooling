@@ -29,13 +29,11 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for :class:`pyTooling.MetaClasses.ExtendedType` - one module per feature of the meta-class.
 """
-from sys                   import version_info
-from typing                import Any
-from unittest              import TestCase
 
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,15 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class WithoutSlots(TestCase):
-	# WORKAROUND: for Python versions before 3.14
-	if version_info < (3, 14):
-		def assertHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
-			self.assertTrue(hasattr(obj, attr))
-
-		def assertNotHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
-			self.assertFalse(hasattr(obj, attr))
-
+class WithoutSlots(Testcase):
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType):
 			pass
@@ -497,15 +487,7 @@ class WithoutSlots(TestCase):
 		self.assertEqual(18, inst._data_3)
 
 
-class WithSlots(TestCase):
-	# WORKAROUND: for Python versions before 3.14
-	if version_info < (3, 14):
-		def assertHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
-			self.assertTrue(hasattr(obj, attr))
-
-		def assertNotHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
-			self.assertFalse(hasattr(obj, attr))
-
+class WithSlots(Testcase):
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			pass
@@ -550,15 +532,7 @@ class WithSlots(TestCase):
 		self.assertIsNotNone(inst)
 
 
-class Mixin(TestCase):
-	# WORKAROUND: for Python versions before 3.14
-	if version_info < (3, 14):
-		def assertHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
-			self.assertTrue(hasattr(obj, attr))
-
-		def assertNotHasAttr(self, obj: object, attr: str, msg: Any = None) -> None:
-			self.assertFalse(hasattr(obj, attr))
-
+class Mixin(Testcase):
 	def test_NoInheritance(self) -> None:
 		class Base(metaclass=ExtendedType, mixin=True):
 			pass

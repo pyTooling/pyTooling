@@ -35,9 +35,15 @@ A common set of missing exceptions in Python.
 .. hint::
 
    See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
-"""
-from typing               import Tuple, Iterable, Any
 
+.. seealso::
+
+   :mod:`pyTooling.Warning`
+      |rarr| Warnings, which are collected instead of raised.
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The exceptions raised for a class that violates the meta-class' rules.
+"""
+from typing               import ClassVar, Iterable, Any, Optional as Nullable
 from pyTooling.Decorators import export, readonly
 
 
@@ -56,11 +62,11 @@ def addNoteWithItemList(
 	long, remaining items will be continued in addition notes.
 
 	:param ex:        Exception to attach the note to.
-	:param message:   The message of the note.
+	:param message:   Optional, the message of the note.
 	:param items:     An iterable of items to add to the note.
-	:param indent:    The indentation of the additional notes.
-	:param separator: Separator between items.
-	:param maxWidth:  The maximum width of the attached notes.
+	:param indent:    Optional, the indentation of the additional notes.
+	:param separator: Optional, separator between items.
+	:param maxWidth:  Optional, the maximum width of the attached notes.
 	"""
 	note = message
 	sep = ""
@@ -83,10 +89,11 @@ class OverloadResolutionError(Exception):
 	"""
 	The exception is raised, when no matching overloaded method was found.
 
-	.. seealso::
+	.. attention::
 
-	   :deco:`~pyTooling.MetaClasses.overloadable`
-	      |rarr| Mark a method as *overloadable*.
+	   Method overloading is not implemented yet - the ``overloadable`` decorator and the dispatching machinery are
+	   commented out in :mod:`pyTooling.MetaClasses`. Nothing raises this exception today; it is declared so the feature
+	   has its exception when it arrives.
 	"""
 
 	@readonly
@@ -99,7 +106,7 @@ class OverloadResolutionError(Exception):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -116,7 +123,7 @@ class ExceptionBase(Exception):
 		"""
 		ExceptionBase initializer.
 
-		:param message:   The exception message.
+		:param message:   Optional, the exception message.
 		"""
 		super().__init__()
 		self.message = message
@@ -131,7 +138,7 @@ class ExceptionBase(Exception):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 
@@ -140,7 +147,11 @@ class ExceptionBase(Exception):
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
 
 	def __str__(self) -> str:
-		"""Returns the exception's message text."""
+		"""
+		Returns the exception's message text.
+
+		:returns: The exception's message text.
+		"""
 		return self.message
 
 	# @DocumentMemberAttribute(False)
@@ -166,6 +177,92 @@ class NotConfiguredException(ExceptionBase):
 	"""The exception is raise if the requested setting is not configured."""
 
 
+@export
+class MissingDependencyException(ImportError):
+	"""
+	The exception is raised when an optional dependency of pyTooling is not installed.
+
+	Some modules need a package pyTooling doesn't install by default. Importing such a module without its dependency
+	raises this exception instead of the bare :exc:`ImportError`, so the message names the extra that installs it.
+
+	The exception derives from :exc:`ImportError`, because that is what a caller guarding an optional import expects to
+	catch, and it carries the missing package and the extra as :attr:`Dependency` and :attr:`Extra`.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      try:
+	        from ruamel.yaml import YAML
+	      except ImportError as ex:
+	        raise MissingDependencyException(dependency="ruamel.yaml", extra="yaml") from ex
+	"""
+
+	EXIT_CODE:   ClassVar[int] = 242  #: Exit code an application should use when an optional dependency is missing.
+
+	_dependency: str            #: Field storing the name of the package that is not installed.
+	_extra:      Nullable[str]  #: Field storing the name of the pyTooling extra installing that package.
+
+	def __init__(self, message: Nullable[str] = None, /, *, dependency: str, extra: Nullable[str] = None) -> None:
+		"""
+		Initialize a new missing-dependency error and attach the installation hint as a note.
+
+		:param message:    Optional, the exception message. |br|
+		                   When omitted, it is derived from ``dependency`` - every raising site says the same thing, so
+		                   there is nothing for the caller to add.
+		:param dependency: Name of the package that is not installed.
+		:param extra:      Optional, name of the pyTooling extra installing that package. |br|
+		                   When given, the note offers ``pyTooling[<extra>]`` next to the package itself.
+		"""
+		super().__init__(message if message is not None else f"Optional dependency '{dependency}' not installed.")
+
+		self._dependency = dependency
+		self._extra = extra
+
+		if extra is None:
+			self.add_note(f"Install '{dependency}'.")
+		else:
+			self.add_note(f"Either install pyTooling with extra 'pyTooling[{extra}]' or install '{dependency}' directly.")
+
+	@readonly
+	def Dependency(self) -> str:
+		"""
+		Read-only property to access the name of the package that is not installed (:attr:`_dependency`).
+
+		:returns: Name of the missing package.
+		"""
+		return self._dependency
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the pyTooling extra installing the package (:attr:`_extra`).
+
+		:returns: Name of the extra, or ``None`` if the package has no extra of its own.
+		"""
+		return self._extra
+
+	@readonly
+	def InstallCommands(self) -> tuple[str, ...]:
+		"""
+		Read-only property to return the command lines installing the missing package.
+
+		The extra comes first, because it installs the package *and* records why it is needed. Both commands are
+		plain text and need no terminal support: an application that cannot even import :mod:`pyTooling.TerminalUI` -
+		because *colorama* is the missing package - can print them itself, and
+		:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyException` formats them when it can.
+
+		:returns: One command line per installation option, most specific first.
+		"""
+		if self._extra is None:
+			return (f"pip install {self._dependency}", )
+
+		return (
+			f"pip install pyTooling[{self._extra}]",
+			f"pip install {self._dependency}"
+		)
+
+
 # FIXME: Why not derived from ExceptionBase?
 @export
 class ToolingException(Exception):
@@ -181,7 +278,7 @@ class ToolingException(Exception):
 		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
 
 	@readonly
-	def Notes(self) -> Tuple[str, ...]:
+	def Notes(self) -> tuple[str, ...]:
 		"""
 		Read-only property to return warning's attached notes.
 

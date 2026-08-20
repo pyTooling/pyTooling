@@ -29,12 +29,13 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for class variables handled by :class:`pyTooling.MetaClasses.ExtendedType`, with and without
+slots, and through inheritance.
 """
 from typing                import ClassVar
-from unittest              import TestCase
 
-from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
+from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class WithoutSlots(TestCase):
+class WithoutSlots(Testcase):
 	def test_NoInitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: ClassVar[int]
@@ -76,7 +77,7 @@ class WithoutSlots(TestCase):
 		self.assertEqual(1, Base._data0)
 
 
-class WithSlots(TestCase):
+class WithSlots(Testcase):
 	def test_NoInitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int]
@@ -147,7 +148,7 @@ class WithSlots(TestCase):
 		self.assertEqual(6, inst._data1)
 
 
-class Inheritance_WithSlots(TestCase):
+class Inheritance_WithSlots(Testcase):
 	def test_BaseAssigned(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int] = 1

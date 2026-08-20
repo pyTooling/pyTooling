@@ -44,9 +44,9 @@ The Licensing module implements mapping tables for various license names and ide
 
    See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
-from dataclasses  import dataclass
-from typing       import Any, Dict
-
+from dataclasses           import dataclass
+from typing                import Any
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 
@@ -81,7 +81,7 @@ class PythonLicenseName:
 
 
 #: Mapping of SPDX identifiers to Python license names
-PYTHON_LICENSE_NAMES: Dict[str, PythonLicenseName] = {
+PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 	"Apache-2.0":       PythonLicenseName("Apache 2.0",       "Apache Software License"),
 	"BSD-3-Clause":     PythonLicenseName("BSD",              "BSD License"),
 	"MIT":              PythonLicenseName("MIT",              "MIT License"),
@@ -99,6 +99,14 @@ class License(metaclass=ExtendedType, slots=True):
 	_fsfApproved: bool    #: FSF approval status
 
 	def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False) -> None:
+		"""
+		Initialize a license with its SPDX identifier, its name and its approval flags.
+
+		:param spdxIdentifier: SPDX identifier of the license.
+		:param name:           Name of the license.
+		:param osiApproved:    Optional, ``True``, if the license is approved by the Open Source Initiative.
+		:param fsfApproved:    Optional, ``True``, if the license is approved by the Free Software Foundation.
+		"""
 		self._spdxIdentifier = spdxIdentifier
 		self._name = name
 		self._osiApproved = osiApproved
@@ -145,7 +153,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		Returns the Python license name for this license if it's defined.
 
-		:returns: The Python license name.
+		:returns:           The Python license name.
 		:raises ValueError: If there is no license name defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 		"""
 		try:
@@ -160,7 +168,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		Returns the Python package classifier for this license if it's defined.
 
-		:returns: The Python package classifier.
+		:returns:           The Python package classifier.
 		:raises ValueError: If there is no classifier defined for the license. |br| (See and check :data:`~pyTooling.Licensing.PYTHON_LICENSE_NAMES`)
 
 		.. seealso::
@@ -180,12 +188,13 @@ class License(metaclass=ExtendedType, slots=True):
 		Returns true, if both licenses are identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are identical.
-		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
+		:raises TypeError: If second operand is not of type :class:`License` or string.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by equal operator.")
+			ex = TypeError(f"Second operand is not supported by equal operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
@@ -194,21 +203,34 @@ class License(metaclass=ExtendedType, slots=True):
 		Returns true, if both licenses are not identical (comparison based on SPDX identifiers).
 
 		:returns:          ``True``, if both licenses are not identical.
-		:raises TypeError: If second operand is not of type :class:`License` or :class:`str`.
+		:raises TypeError: If second operand is not of type :class:`License` or string.
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by unequal operator.")
+			ex = TypeError(f"Second operand is not supported by unequal operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: License, str")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are compatible."""
+		"""
+		Returns true, if both licenses are compatible.
+
+		:param other:                Second operand, the license to compare with.
+		:returns:                    ``True``, if both licenses are compatible.
+		:raises NotImplementedError: License compatibility is not implemented yet.
+		"""
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __ge__(self, other: Any) -> bool:
-		"""Returns true, if both licenses are compatible."""
+		"""
+		Returns true, if both licenses are compatible.
+
+		:param other:                Second operand, the license to compare with.
+		:returns:                    ``True``, if both licenses are compatible.
+		:raises NotImplementedError: License compatibility is not implemented yet.
+		"""
 		raise NotImplementedError("License compatibility check is not yet implemented.")
 
 	def __repr__(self) -> str:
@@ -235,7 +257,7 @@ MIT_License =          License("MIT", "MIT License", True, True)
 
 
 #: Mapping of predefined licenses
-SPDX_INDEX: Dict[str, License] = {
+SPDX_INDEX: dict[str, License] = {
 	"Apache-2.0":       Apache_2_0_License,
 	"BSD-3-Clause":     BSD_3_Clause_License,
 	"GPL-2.0-or-later": GPL_2_0_or_later,

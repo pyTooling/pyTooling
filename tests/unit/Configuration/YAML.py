@@ -28,16 +28,19 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for YAML based configurations."""
+"""
+Unit tests for :mod:`pyTooling.Configuration.YAML`: reading values through the node API and the errors
+raised for a missing key or a wrong type.
+"""
 from pathlib  import Path
-from unittest import TestCase
 
 from pyTooling.Configuration      import InterpolationException, KeyNotFoundException, PathExpressionException
 from pyTooling.Configuration      import UnsupportedValueTypeException
 from pyTooling.Configuration.YAML import Configuration
+from pyTooling.Testing            import Testcase
 
 
-class ReadingValues(TestCase):
+class ReadingValues(Testcase):
 	def test_SimpleString(self) -> None:
 		config = Configuration(Path("tests/unit/Configuration/config.yml"))
 
@@ -111,7 +114,7 @@ class ReadingValues(TestCase):
 		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"]["Defaults"]["BinaryDir"])
 
 
-class Errors(TestCase):
+class Errors(Testcase):
 	_configFile = Path("tests/unit/Configuration/errors.yml")
 
 	def test_UnknownKeyInDictionary(self) -> None:

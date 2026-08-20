@@ -34,12 +34,20 @@ A stopwatch to measure execution times.
 .. hint::
 
    See :ref:`high-level help <COMMON/Stopwatch>` for explanations and usage examples.
-"""
 
-from datetime import datetime
-from time     import perf_counter_ns
-from types    import TracebackType
-from typing   import List, Optional as Nullable, Iterator, Tuple, Type, Self
+.. seealso::
+
+   :mod:`pyTooling.Tracing`
+      |rarr| Nested timespans instead of a single measurement, for tracing an execution.
+   :mod:`pyTooling.Process`
+      |rarr| The process' memory usage, next to its runtime.
+"""
+from __future__            import annotations
+
+from datetime              import datetime
+from time                  import perf_counter_ns
+from types                 import TracebackType
+from typing                import Optional as Nullable, Iterator, Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
@@ -59,9 +67,9 @@ class ExcludeContextManager:
 	While a normal stopwatch's embedded context manager (re)starts the stopwatch on every *enter* event and pauses the
 	stopwatch on every *exit* event, this context manager pauses on *enter* events and restarts on every *exit* event.
 	"""
-	_stopwatch: "Stopwatch"  #: Reference to the stopwatch.
+	_stopwatch: Stopwatch  #: Reference to the stopwatch.
 
-	def __init__(self, stopwatch: "Stopwatch") -> None:
+	def __init__(self, stopwatch: Stopwatch) -> None:
 		"""
 		Initializes an excluding context manager.
 
@@ -81,7 +89,7 @@ class ExcludeContextManager:
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -112,19 +120,19 @@ class Stopwatch(SlottedObject):
 	The stopwatch can also be used in a :ref:`with-statement <with>`, because it implements the :ref:`context manager protocol <context-managers>`.
 	"""
 
-	_name:         Nullable[str]
-	_preferPause:  bool
+	_name:         Nullable[str]  #: Optional name of the stopwatch.
+	_preferPause:  bool           #: If ``True``, the context manager pauses instead of stopping on exit.
 
-	_beginTime:    Nullable[datetime]
-	_endTime:      Nullable[datetime]
-	_startTime:    Nullable[int]
-	_resumeTime:   Nullable[int]
-	_pauseTime:    Nullable[int]
-	_stopTime:     Nullable[int]
-	_totalTime:    Nullable[int]
-	_splits:       List[Tuple[float, bool]]
+	_beginTime:    Nullable[datetime]        #: Absolute time when the stopwatch was started.
+	_endTime:      Nullable[datetime]        #: Absolute time when the stopwatch was stopped.
+	_startTime:    Nullable[int]             #: Performance counter in ns when the stopwatch was started.
+	_resumeTime:   Nullable[int]             #: Performance counter in ns of the latest resume operation.
+	_pauseTime:    Nullable[int]             #: Performance counter in ns of the latest pause operation.
+	_stopTime:     Nullable[int]             #: Performance counter in ns when the stopwatch was stopped.
+	_totalTime:    Nullable[int]             #: Duration in ns from starting to stopping, activity and inactivity.
+	_splits:       list[tuple[float, bool]]  #: Split times as (duration, is-active) pairs, in the order they were taken.
 
-	_excludeContextManager: ExcludeContextManager
+	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
 
 	def __init__(self, name: str = None, started: bool = False, preferPause: bool = False) -> None:
 		"""
@@ -132,9 +140,9 @@ class Stopwatch(SlottedObject):
 
 		If parameter ``started`` is set to true, the stopwatch will immediately start.
 
-		:param name:        Optional name of the stopwatch.
-		:param preferPause: Optional setting, if __exit__(...) in a contex should prefer pause or stop behavior.
-		:param started:     Optional flag, if the stopwatch should be started immediately.
+		:param name:        Optional, name of the stopwatch.
+		:param started:     Optional, if ``True``, start the stopwatch immediately.
+		:param preferPause: Optional, if ``True``, ``__exit__(...)`` prefers pause over stop behavior.
 		"""
 		self._name =         name
 		self._preferPause =  preferPause
@@ -464,7 +472,8 @@ class Stopwatch(SlottedObject):
 
 		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
 
-		:returns: The stopwatch itself.
+		:returns:                   The stopwatch itself.
+		:raises StopwatchException: If the stopwatch was already started.
 		"""
 		if self._startTime is None:           # start stopwatch
 			self._beginTime = datetime.now()
@@ -486,7 +495,7 @@ class Stopwatch(SlottedObject):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -495,10 +504,11 @@ class Stopwatch(SlottedObject):
 
 		A running stopwatch will be paused or stopped depending on the configured ``preferPause`` behavior.
 
-		:param exc_type: Exception type, otherwise None.
-		:param exc_val:  Exception object, otherwise None.
-		:param exc_tb:   Exception's traceback, otherwise None.
-		:returns:        True, if exceptions should be suppressed.
+		:param exc_type:            Exception type, otherwise None.
+		:param exc_val:             Exception object, otherwise None.
+		:param exc_tb:              Exception's traceback, otherwise None.
+		:returns:                   True, if exceptions should be suppressed.
+		:raises StopwatchException: If the stopwatch was already stopped.
 		"""
 		if self._startTime is None:           # never started?
 			raise StopwatchException("Stopwatch was never started.")
@@ -531,7 +541,7 @@ class Stopwatch(SlottedObject):
 		"""
 		return len(self._splits)
 
-	def __getitem__(self, index: int) -> Tuple[float, bool]:
+	def __getitem__(self, index: int) -> tuple[float, bool]:
 		"""
 		Implementation of ``split = object[i]`` to return the i-th split time.
 
@@ -543,7 +553,7 @@ class Stopwatch(SlottedObject):
 		"""
 		return self._splits[index]
 
-	def __iter__(self) -> Iterator[Tuple[float, bool]]:
+	def __iter__(self) -> Iterator[tuple[float, bool]]:
 		"""
 		Return an iterator of tuples to iterate all split times.
 

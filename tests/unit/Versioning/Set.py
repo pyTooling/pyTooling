@@ -28,12 +28,14 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest             import TestCase
-
+"""
+Unit tests for :class:`pyTooling.Versioning.VersionSet`: ordering, intersection and union of version sets.
+"""
 from pytest               import mark
 
 from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, VersionSet
+from pyTooling.Testing    import Testcase
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -41,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_None(self) -> None:
 		with self.assertRaises(ValueError):
 			_ = VersionSet(None)
@@ -91,7 +93,7 @@ class Instantiation(TestCase):
 		self.assertEqual(v2, vs[1])
 
 
-class Comparison(TestCase):
+class Comparison(Testcase):
 	def test_LessThan(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = SemanticVersion(1, 5, 0)
@@ -184,7 +186,7 @@ class Comparison(TestCase):
 		self.assertFalse(vF in vs)
 
 
-class Ordering(TestCase):
+class Ordering(Testcase):
 	def test_Index(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = SemanticVersion(1, 5, 0)
@@ -211,7 +213,7 @@ class Ordering(TestCase):
 			previousVersion = nextVersion
 
 
-class Intersection(TestCase):
+class Intersection(Testcase):
 	def test_EqualLists(self) -> None:
 		vA1 = SemanticVersion(1, 0, 0)
 		vA2 = SemanticVersion(1, 5, 0)
@@ -268,7 +270,7 @@ class Intersection(TestCase):
 		self.assertEqual(vA5, intersection[2])
 
 
-class Union(TestCase):
+class Union(Testcase):
 	def test_EqualLists(self) -> None:
 		vA1 = SemanticVersion(1, 0, 0)
 		vA2 = SemanticVersion(1, 5, 0)

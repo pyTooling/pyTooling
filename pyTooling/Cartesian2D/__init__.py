@@ -28,10 +28,20 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An implementation of 2D cartesian data structures for Python."""
+"""
+An implementation of 2D cartesian data structures for Python.
 
-from math   import sqrt, acos
-from typing import TypeVar, Union, Generic, Any, Tuple, Self
+.. seealso::
+
+   :mod:`pyTooling.Cartesian3D`
+      |rarr| The same data structures in three dimensions.
+   :mod:`pyTooling.Cartesian2D.Shapes`
+      |rarr| Shapes built from these points and offsets.
+"""
+from __future__            import annotations
+
+from math                  import sqrt, acos
+from typing                import TypeVar, Union, Generic, Any, Self
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
@@ -52,8 +62,8 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional point.
 
-		:param x: X-coordinate.
-		:param y: Y-coordinate.
+		:param x:          X-coordinate.
+		:param y:          Y-coordinate.
 		:raises TypeError: If x/y-coordinate is not of type integer or float.
 		"""
 		if not isinstance(x, (int, float)):
@@ -83,7 +93,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.x, self.y)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-Point to a simple 2-element tuple.
 
@@ -91,13 +101,13 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.x, self.y
 
-	def __add__(self, other: Any) -> "Point2D[Coordinate]":
+	def __add__(self, other: Any) -> Point2D[Coordinate]:
 		"""
 		Adds a 2D-offset to this 2D-point and creates a new 2D-point.
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          A new 2D-point shifted by the 2D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.__class__(
@@ -118,9 +128,9 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 2D-offset to this 2D-point (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.x += other.xOffset
@@ -135,7 +145,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> Union["Offset2D[Coordinate]", "Point2D[Coordinate]"]:
+	def __sub__(self, other: Any) -> Union[Offset2D[Coordinate], Point2D[Coordinate]]:
 		"""
 		Subtract two 2D-Points from each other and create a new 2D-offset.
 
@@ -157,9 +167,9 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtracts a 2D-offset to this 2D-point (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.x -= other.xOffset
@@ -203,6 +213,8 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 
 	def Copy(self) -> Self:
 		"""
+		An origin is a singular point, so it can't be copied.
+
 		:raises RuntimeError: Because an origin can't be copied.
 		"""
 		raise RuntimeError(f"An origin can't be copied.")
@@ -258,7 +270,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.xOffset, self.yOffset)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-offset to a simple 2-element tuple.
 
@@ -266,13 +278,13 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.xOffset, self.yOffset
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two 2D-offsets for equality.
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 2D-offsets are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.xOffset == other.xOffset and self.yOffset == other.yOffset
@@ -283,17 +295,17 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two 2D-offsets for inequality.
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 2D-offsets are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Offset2D` or tuple.
 		"""
 		return not self.__eq__(other)
 
-	def __neg__(self) -> "Offset2D[Coordinate]":
+	def __neg__(self) -> Offset2D[Coordinate]:
 		"""
 		Negate all components of this 2D-offset and create a new 2D-offset.
 
@@ -304,13 +316,13 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			-self.yOffset
 		)
 
-	def __add__(self, other: Any) -> "Offset2D[Coordinate]":
+	def __add__(self, other: Any) -> Offset2D[Coordinate]:
 		"""
 		Adds a 2D-offset to this 2D-offset and creates a new 2D-offset.
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          A new 2D-offset extended by the 2D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.__class__(
@@ -331,9 +343,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 2D-offset to this 2D-offset (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.xOffset += other.xOffset
@@ -348,13 +360,13 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> "Offset2D[Coordinate]":
+	def __sub__(self, other: Any) -> Offset2D[Coordinate]:
 		"""
 		Subtracts a 2D-offset from this 2D-offset and creates a new 2D-offset.
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          A new 2D-offset reduced by the 2D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			return self.__class__(
@@ -375,9 +387,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtracts a 2D-offset from this 2D-offset (inplace).
 
-		:param other:      A 2D-offset as :class:`Offset2D` or :class:`tuple`.
+		:param other:      A 2D-offset as :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset2D` or tuple.
 		"""
 		if isinstance(other, Offset2D):
 			self.xOffset -= other.xOffset
@@ -444,7 +456,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.width, self.height)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-size to a simple 2-element tuple.
 
@@ -482,7 +494,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
-		:raises TypeError: If start/end is not of type Point2D.
+		:param copyPoints: Optional, if ``True``, the given points are copied instead of referenced.
+		:raises TypeError: If start/end is not of type :class:`Point2D`.
 		"""
 		if not isinstance(start, Point2D):
 			ex = TypeError(f"Parameter 'start' is not of type Point2D.")
@@ -510,7 +523,13 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.x - self.start.x) ** 2)
 
-	def AngleTo(self, other: "LineSegment2D[Coordinate]") -> float:
+	def AngleTo(self, other: LineSegment2D[Coordinate]) -> float:
+		"""
+		Compute the angle between this line segment and another one.
+
+		:param other: The second line segment.
+		:returns:     The angle in radians.
+		"""
 		vectorA = self.ToOffset()
 		vectorB = other.ToOffset()
 		scalarProductAB = vectorA.xOffset * vectorB.xOffset + vectorA.yOffset * vectorB.yOffset
@@ -525,7 +544,7 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.end - self.start
 
-	def ToTuple(self) -> Tuple[Tuple[Coordinate, Coordinate], Tuple[Coordinate, Coordinate]]:
+	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate], tuple[Coordinate, Coordinate]]:
 		"""
 		Convert this 2D line segment to a simple 2-element tuple of 2D-point tuples.
 

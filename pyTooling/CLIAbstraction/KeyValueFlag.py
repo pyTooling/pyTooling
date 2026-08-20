@@ -34,22 +34,23 @@ Flag arguments represent simple boolean values by being present or absent.
 
 .. seealso::
 
-   * For flags with different pattern based on the boolean value itself. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
-   * For flags with a value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For flags that have an optional value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :mod:`~pyTooling.CLIAbstraction.BooleanFlag`
+      |rarr| For flags with a different pattern based on the boolean value itself.
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For flags with a value.
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
+      |rarr| For flags that have an optional value.
 """
-from typing import Union, Iterable, Dict, cast, Any, Optional as Nullable, Self
-
+from typing                            import Union, Iterable, cast, Any, Optional as Nullable
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.Common                  import getFullyQualifiedName
 from pyTooling.CLIAbstraction.Argument import NamedAndValuedArgument
 
 
 @export
-class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
+@abstractclass
+class NamedKeyValuePairsArgument(NamedAndValuedArgument[str], pattern="{0}{1}={2}"):
 	"""
 	Class and base-class for all KeyValueFlag classes, which represents a flag argument with key and value
 	(key-value-pairs).
@@ -68,8 +69,8 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -77,21 +78,13 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+	def __init__(self, keyValuePairs: dict[str, str]) -> None:
 		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
+		Initialize the argument with a mapping of key-value-pairs, each rendered as its own command line element.
 
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
+		:param keyValuePairs: Key-value-pairs of the argument.
+		:raises TypeError:    If a key or a value is not a string.
 		"""
-		if cls is NamedKeyValuePairsArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
-	def __init__(self, keyValuePairs: Dict[str, str]) -> None:
 		super().__init__({})
 
 		for key, value in keyValuePairs.items():
@@ -107,23 +100,21 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 			self._value[key] = value
 
 	@property
-	def Value(self) -> Dict[str, str]:
+	def Value(self) -> dict[str, str]:
 		"""
-		Get the internal value.
+		Property to access the internal key-value-pairs (:attr:`_value`).
 
-		:returns: Internal value.
+		.. note:: On assignment, the dictionary object is not replaced, but cleared and then reused by adding the given
+		   pairs.
+
+		:returns:          Internal dictionary of key-value-pairs.
+		:raises TypeError: If an assigned pair has a key or a value which is not of type string.
 		"""
 		return self._value
 
 	@Value.setter
-	def Value(self, keyValuePairs: Dict[str, str]) -> None:
-		"""
-		Set the internal value.
-
-		:param keyValuePairs: Value to set.
-		:raises ValueError:   If value to set is None.
-		"""
-		innerDict = cast(Dict[str, str], self._value)
+	def Value(self, keyValuePairs: dict[str, str]) -> None:
+		innerDict = cast(dict[str, str], self._value)
 		innerDict.clear()
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):
@@ -152,6 +143,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument, pattern="{0}{1}={2}"):
 
 
 @export
+@abstractclass
 class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 	"""
 	Represents a :py:class:`NamedKeyValueFlagArgument` with a single dash in front of the switch name.
@@ -166,8 +158,8 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"-{0}{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -175,22 +167,9 @@ class ShortKeyValueFlag(NamedKeyValuePairsArgument, pattern="-{0}{1}={2}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortKeyValueFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 	"""
 	Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
@@ -205,8 +184,8 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"--{0}{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -214,22 +193,9 @@ class LongKeyValueFlag(NamedKeyValuePairsArgument, pattern="--{0}{1}={2}"):
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongKeyValueFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 	"""
 	Represents a :py:class:`NamedKeyValueFlagArgument` with a double dash in front of the switch name.
@@ -244,25 +210,11 @@ class WindowsKeyValueFlag(NamedKeyValuePairsArgument, pattern="/{0}:{1}={2}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"/{0}:{1}={2}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongKeyValueFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

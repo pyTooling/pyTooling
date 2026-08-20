@@ -34,10 +34,18 @@ Auxiliary classes to implement call-by-reference.
 .. hint::
 
    See :ref:`high-level help <COMMON/CallByRef>` for explanations and usage examples.
-"""
-from decimal       import Decimal
-from typing        import Any, Generic, TypeVar, Optional as Nullable
 
+.. seealso::
+
+   :mod:`pyTooling.Common`
+      |rarr| Helper functions for the data types passed around this way.
+"""
+from __future__            import annotations
+
+from decimal               import Decimal
+from typing                import Any, Generic, Self, TypeVar, Optional as Nullable
+
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
 
@@ -52,10 +60,10 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 
 	.. seealso::
 
-	   * :class:`CallByRefBoolParam` |br|
-	     |rarr| A special *call-by-reference* implementation for boolean reference types.
-	   * :class:`CallByRefIntParam` |br|
-	     |rarr| A special *call-by-reference* implementation for integer reference types.
+	   :class:`CallByRefBoolParam`
+	      |rarr| A special *call-by-reference* implementation for boolean reference types.
+	   :class:`CallByRefIntParam`
+	      |rarr| A special *call-by-reference* implementation for integer reference types.
 	"""
 
 	Value: T    #: internal value
@@ -63,11 +71,11 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 	def __init__(self, value: Nullable[T] = None) -> None:
 		"""Constructs a *call-by-reference* object for any type.
 
-		:param value: The value to be set as an initial value.
+		:param value: Optional, the value to be set as an initial value.
 		"""
 		self.Value = value
 
-	def __ilshift__(self, other: T) -> 'CallByRefParam[T]':  # Starting with Python 3.11+, use typing.Self as return type
+	def __ilshift__(self, other: T) -> Self:
 		"""Assigns a value to the *call-by-reference* object.
 
 		:param other: The value to be assigned to this *call-by-reference* object.
@@ -89,7 +97,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 		else:
 			return self.Value == other
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare a CallByRefParam wrapped value with another instances (CallbyRefParam) or non-wrapped value for inequality.
 
@@ -120,7 +128,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 
 
 @export
-class CallByRefBoolParam(CallByRefParam):
+class CallByRefBoolParam(CallByRefParam[bool]):
 	"""A special *call-by-reference* implementation for boolean reference types."""
 
 	# Binary operators - comparison
@@ -130,31 +138,33 @@ class CallByRefBoolParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.
+		:raises TypeError: If parameter ``other`` is not of type boolean or :class:`CallByRefBoolParam`.
 		"""
 		if isinstance(other, bool):
 			return self.Value == other
 		elif isinstance(other, CallByRefBoolParam):
 			return self.Value == other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note("Supported types for second operand: bool, CallByRefBoolParam")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare a CallByRefBoolParam wrapped boolean value with another instances (CallByRefBoolParam) or non-wrapped boolean value for inequality.
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`bool` or :class:`CallByRefBoolParam`.
+		:raises TypeError: If parameter ``other`` is not of type boolean or :class:`CallByRefBoolParam`.
 		"""
 		if isinstance(other, bool):
 			return self.Value != other
 		elif isinstance(other, CallByRefBoolParam):
 			return self.Value != other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
 			raise ex
 
@@ -177,213 +187,365 @@ class CallByRefBoolParam(CallByRefParam):
 
 
 @export
-class CallByRefIntParam(CallByRefParam):
+class CallByRefIntParam(CallByRefParam[int]):
 	"""A special *call-by-reference* implementation for integer reference types."""
 
 	# Unary operators
 	def __neg__(self) -> int:
-		"""Negate: -self."""
+		"""
+		Negate: :pycode:`-self`.
+
+		:returns: The negated value.
+		"""
 		return -self.Value
 
 	def __pos__(self) -> int:
-		"""Positive: +self."""
+		"""
+		Positive: :pycode:`+self`.
+
+		:returns: The value with a positive sign.
+		"""
 		return +self.Value
 
 	def __invert__(self) -> int:
-		"""Invert: ~self."""
+		"""
+		Invert: :pycode:`~self`.
+
+		:returns: The bitwise inverted value.
+		"""
 		return ~self.Value
 
 	# Binary operators - logical
 	def __and__(self, other: Any) -> int:
-		"""And: self & other."""
+		"""
+		And: :pycode:`self & other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Result of the bitwise *and* operation.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value & other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by and operator.")
+			ex = TypeError(f"Second operand is not supported by and operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __or__(self, other: Any) -> int:
-		"""Or: self | other."""
+		"""
+		Or: :pycode:`self | other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Result of the bitwise *or* operation.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value | other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by or operator.")
+			ex = TypeError(f"Second operand is not supported by or operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __xor__(self, other: Any) -> int:
-		"""Xor: self ^ other."""
+		"""
+		Xor: :pycode:`self ^ other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Result of the bitwise *exclusive or* operation.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value ^ other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	# Binary inplace operators
-	def __iand__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
-		"""Inplace and: self &= other."""
+	def __iand__(self, other: Any) -> Self:
+		"""
+		In-place and: :pycode:`self &= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value &= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by &= operator.")
+			ex = TypeError(f"Second operand is not supported by &= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ior__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
-		r"""Inplace or: self \|= other."""
+	def __ior__(self, other: Any) -> Self:
+		r"""
+		In-place or: :pycode:`self |= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value |= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by |= operator.")
+			ex = TypeError(f"Second operand is not supported by |= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ixor__(self, other: Any) -> 'CallByRefIntParam':  # Starting with Python 3.11+, use typing.Self as return type
-		r"""Inplace or: self \|= other."""
+	def __ixor__(self, other: Any) -> Self:
+		"""
+		In-place xor: :pycode:`self ^= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value ^= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ^= operator.")
+			ex = TypeError(f"Second operand is not supported by ^= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	# Binary operators - arithmetic
 	def __add__(self, other: Any) -> int:
-		"""Addition: self + other."""
+		"""
+		Addition: :pycode:`self + other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Sum of both operands.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value + other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by + operator.")
+			ex = TypeError(f"Second operand is not supported by + operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __sub__(self, other: Any) -> int:
-		"""Subtraction: self - other."""
+		"""
+		Subtraction: :pycode:`self - other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Difference of both operands.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value - other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by - operator.")
+			ex = TypeError(f"Second operand is not supported by - operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __truediv__(self, other: Any) -> int:
-		"""Division: self / other."""
+		"""
+		Division: :pycode:`self / other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Quotient of both operands.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value / other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by / operator.")
+			ex = TypeError(f"Second operand is not supported by / operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __floordiv__(self, other: Any) -> int:
-		"""Floor division: self // other."""
+		"""
+		Floor division: :pycode:`self // other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Floor of the quotient of both operands.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value // other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by // operator.")
+			ex = TypeError(f"Second operand is not supported by // operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __mul__(self, other: Any) -> int:
-		"""Multiplication: self * other."""
+		"""
+		Multiplication: :pycode:`self * other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Product of both operands.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value * other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by * operator.")
+			ex = TypeError(f"Second operand is not supported by * operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __mod__(self, other: Any) -> int:
-		"""Modulo: self % other."""
+		"""
+		Modulo: :pycode:`self % other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          Remainder of the division.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value % other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by % operator.")
+			ex = TypeError(f"Second operand is not supported by % operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	def __pow__(self, other: Any) -> int:
-		"""Power: self ** other."""
+		"""
+		Power: :pycode:`self ** other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The value raised to the power of the second operand.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			return self.Value ** other
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by ** operator.")
+			ex = TypeError(f"Second operand is not supported by ** operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
 	# Binary inplace operators - arithmetic
-	def __iadd__(self, other: Any) -> 'CallByRefIntParam':
-		"""Addition: self += other."""
+	def __iadd__(self, other: Any) -> CallByRefIntParam:
+		"""
+		In-place addition: :pycode:`self += other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value += other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __isub__(self, other: Any) -> 'CallByRefIntParam':
-		"""Subtraction: self -= other."""
+	def __isub__(self, other: Any) -> CallByRefIntParam:
+		"""
+		In-place subtraction: :pycode:`self -= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value -= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __idiv__(self, other: Any) -> 'CallByRefIntParam':
-		"""Division: self /= other."""
+	def __idiv__(self, other: Any) -> CallByRefIntParam:
+		"""
+		In-place division: :pycode:`self /= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value /= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ifloordiv__(self, other: Any) -> 'CallByRefIntParam':
-		"""Floor division: self // other."""
+	def __ifloordiv__(self, other: Any) -> CallByRefIntParam:
+		"""
+		In-place floor division: :pycode:`self //= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value //= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __imul__(self, other: Any) -> 'CallByRefIntParam':
-		r"""Multiplication: self \*= other."""
+	def __imul__(self, other: Any) -> CallByRefIntParam:
+		r"""
+		In-place multiplication: :pycode:`self *= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value *= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __imod__(self, other: Any) -> 'CallByRefIntParam':
-		"""Modulo: self %= other."""
+	def __imod__(self, other: Any) -> CallByRefIntParam:
+		"""
+		In-place modulo: :pycode:`self %= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value %= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
-	def __ipow__(self, other: Any) -> 'CallByRefIntParam':
-		r"""Power: self \*\*= other."""
+	def __ipow__(self, other: Any) -> CallByRefIntParam:
+		r"""
+		In-place power: :pycode:`self **= other`.
+
+		:param other:      Second operand, which has to be of type integer.
+		:returns:          The same *call-by-reference* object, with its value updated.
+		:raises TypeError: If the second operand is not of type integer.
+		"""
 		if isinstance(other, int):
 			self.Value **= other
 			return self
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by xor operator.")
+			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int")
 			raise ex
 
@@ -394,31 +556,35 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value == other
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value == other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for inequality.
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both values are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value != other
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value != other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
@@ -428,14 +594,16 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is less than the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value < other
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value < other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
@@ -445,14 +613,16 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is less than or equal the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value <= other
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value <= other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
@@ -462,14 +632,16 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is greater than the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value > other
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value > other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
@@ -479,14 +651,16 @@ class CallByRefIntParam(CallByRefParam):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if the wrapped value is greater than or equal the other value.
-		:raises TypeError: If parameter ``other`` is not of type :class:`int`, :class:`float`, :class:`complex`, :class:`Decimal` or :class:`CallByRefParam`.
+		:raises TypeError:If parameter ``other`` is not of type integer, float, complex number, :class:`Decimal` or
+		                  :class:`CallByRefParam`.
 		"""
 		if isinstance(other, (int, float, complex, Decimal)) and not isinstance(other, bool):
 			return self.Value >= other
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value >= other.Value
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 

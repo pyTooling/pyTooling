@@ -28,8 +28,17 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Slice a filesystem tree into Docker image layers.
+
+A :class:`~pyTooling.Filesystem.Docker.LayerCake` distributes the files of a
+:class:`~pyTooling.Filesystem.Root` over layers - largest file first, each layer filled up to a target size that
+shrinks from layer to layer - and writes one file list per layer, ready to be turned into image layers.
+"""
+from __future__            import annotations
+
 from pathlib               import Path
-from typing                import Optional as Nullable, List, Set
+from typing                import Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -40,14 +49,25 @@ from pyTooling.Stopwatch   import Stopwatch
 
 @export
 class Layer(metaclass=ExtendedType):
-	_parent:        Nullable["LayerCake"]     #: Reference to the parent layer cake.
-	_previousLayer: Nullable["Layer"]         #: Reference to the previous layer.
-	_nextLayer:     Nullable["Layer"]         #: Reference to the next layer
+	"""
+	One layer of a Docker image: the files assigned to it, and its neighboring layers in the layer cake.
 
-	_files:         List[Element[Directory]]  #: List of files in this layer.
+	A layer knows its aggregated size, so the slicing algorithm can stop filling it when the target size is reached.
+	"""
+	_parent:        Nullable[LayerCake]       #: Reference to the parent layer cake.
+	_previousLayer: Nullable[Layer]           #: Reference to the previous layer.
+	_nextLayer:     Nullable[Layer]           #: Reference to the next layer
+
+	_files:         list[Element[Directory]]  #: List of files in this layer.
 	_size:          int                       #: Aggregated size of all contained files for this layer.
 
-	def __init__(self, parent: Nullable["LayerCake"] = None, previousLayer: Nullable["Layer"] = None) -> None:
+	def __init__(self, parent: Nullable[LayerCake] = None, previousLayer: Nullable[Layer] = None) -> None:
+		"""
+		Initialize an empty layer, which appends itself to the layer cake it belongs to.
+
+		:param parent:        Optional, layer cake this layer is part of.
+		:param previousLayer: Optional, layer below this one, which is linked to this layer in both directions.
+		"""
 		if parent is not None:
 			parent._layers.append(self)
 		self._parent =        parent
@@ -60,7 +80,7 @@ class Layer(metaclass=ExtendedType):
 		self._size =  0
 
 	@readonly
-	def Parent(self) -> Nullable["LayerCake"]:
+	def Parent(self) -> Nullable[LayerCake]:
 		"""
 		Read-only property to access the layer cake this layer belongs to (:attr:`_parent`).
 
@@ -69,7 +89,7 @@ class Layer(metaclass=ExtendedType):
 		return self._parent
 
 	@readonly
-	def PreviousLayer(self) -> Nullable["Layer"]:
+	def PreviousLayer(self) -> Nullable[Layer]:
 		"""
 		Read-only property to access the layer below this one (:attr:`_previousLayer`).
 
@@ -78,7 +98,7 @@ class Layer(metaclass=ExtendedType):
 		return self._previousLayer
 
 	@readonly
-	def NextLayer(self) -> Nullable["Layer"]:
+	def NextLayer(self) -> Nullable[Layer]:
 		"""
 		Read-only property to access the layer above this one (:attr:`_nextLayer`).
 
@@ -87,7 +107,7 @@ class Layer(metaclass=ExtendedType):
 		return self._nextLayer
 
 	@readonly
-	def Files(self) -> List[Element[Directory]]:
+	def Files(self) -> list[Element[Directory]]:
 		"""
 		Read-only property to access the files contributed by this layer (:attr:`_files`).
 
@@ -113,7 +133,17 @@ class Layer(metaclass=ExtendedType):
 		"""
 		return self._size
 
-	def AddFile(self, element: Element) -> Set[Filename]:
+	def AddFile(self, element: Element) -> set[Filename]:
+		"""
+		Add a filename or symbolic link to this layer.
+
+		For a filename, every other filename of the same file object is added too, because hardlinks have to end up in
+		the same image layer.
+
+		:param element:    The filename or symbolic link to add.
+		:returns:          The set of elements that were added, so the caller can skip them.
+		:raises TypeError: If parameter 'element' is neither a filename nor a symbolic link.
+		"""
 		usedFiles = set()
 		if isinstance(element, Filename):
 			for filename in element.File.Parents:
@@ -132,13 +162,31 @@ class Layer(metaclass=ExtendedType):
 		return usedFiles
 
 	def WriteLayerFile(self, path: Path, relative: bool = True) -> None:
+		"""
+		Write the layer's files as one file list.
+
+		:param path:     Path of the file list to write.
+		:param relative: Optional, if ``True``, the paths are written relative to the filesystem root.
+		"""
 		rootDirectory = self._parent._root._path
 
 		if relative:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a file's path relative to the filesystem root.
+
+				:param file: The path to render.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a file's path as it is.
+
+				:param file: The path to render.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.as_posix()}\n"
 
 		with path.open("w", encoding="utf-8") as f:
@@ -148,12 +196,24 @@ class Layer(metaclass=ExtendedType):
 
 @export
 class LayerCake(metaclass=ExtendedType):
+	"""
+	A stack of Docker image layers computed from a filesystem tree.
+
+	:meth:`CreateDockerLayers` distributes the files of a :class:`~pyTooling.Filesystem.Root` over layers - largest file
+	first, each layer filled up to a target size that shrinks by a gradient from layer to layer - and collects the
+	directories no layer covers.
+	"""
 	_root:             Nullable[Root]   #: Reference to the filesystem root.
-	_layers:           List[Layer]      #: List of Docker image layers.
-	_emptyDirectories: List[Directory]  #: List of empty directories (not covered by layers).
+	_layers:           list[Layer]      #: List of Docker image layers.
+	_emptyDirectories: list[Directory]  #: List of empty directories (not covered by layers).
 	_slicingDuration:  Nullable[float]  #: Duration for sorting files by size and assigning them to Docker image layers.
 
 	def __init__(self, root: Root) -> None:
+		"""
+		Initialize an empty layer cake for the given filesystem tree.
+
+		:param root: Root of the filesystem statistics scope to slice into layers.
+		"""
 		self._root =             root
 		self._layers =           []
 		self._emptyDirectories = []
@@ -168,7 +228,7 @@ class LayerCake(metaclass=ExtendedType):
 		return self._root
 
 	@readonly
-	def Layers(self) -> List[Layer]:
+	def Layers(self) -> list[Layer]:
 		"""
 		Read-only property to access all layers, bottom-most first (:attr:`_layers`).
 
@@ -195,7 +255,7 @@ class LayerCake(metaclass=ExtendedType):
 		return sum(layer.FileCount for layer in self._layers)
 
 	@readonly
-	def EmptyDirectories(self) -> List[Directory]:
+	def EmptyDirectories(self) -> list[Directory]:
 		"""
 		Read-only property to access the directories that contain no files (:attr:`_emptyDirectories`).
 
@@ -226,6 +286,16 @@ class LayerCake(metaclass=ExtendedType):
 		return self._slicingDuration
 
 	def CreateDockerLayers(self, minLayerSize: int, maxLayerSize: int, layerSizeGradient: int) -> None:
+		"""
+		Distribute the filesystem's files over image layers and collect the directories no layer covers.
+
+		The layers are filled largest file first. Each layer is filled up to a target size, which shrinks by
+		``layerSizeGradient`` from layer to layer until ``minLayerSize`` is reached.
+
+		:param minLayerSize:      Smallest target size a layer is filled to.
+		:param maxLayerSize:      Target size of the first layer.
+		:param layerSizeGradient: Amount the target size shrinks by from layer to layer.
+		"""
 		with Stopwatch() as sw:
 			self._SliceFilesystemIntoLayers(minLayerSize, maxLayerSize, layerSizeGradient)
 			self._CollectEmptDirectories()
@@ -233,10 +303,25 @@ class LayerCake(metaclass=ExtendedType):
 		self._slicingDuration = sw.Duration
 
 	def _SliceFilesystemIntoLayers(self, minLayerSize: int, maxLayerSize: int, layerSizeGradient: int) -> None:
+		"""
+		Distribute the filesystem's files over image layers, largest file first.
+
+		:param minLayerSize:      Smallest target size a layer is filled to.
+		:param maxLayerSize:      Target size of the first layer.
+		:param layerSizeGradient: Amount the target size shrinks by from layer to layer.
+		"""
 		# greedy algorithm
 		layer = Layer(self)
 
 		def sizeOf(file: Element[Directory]) -> int:
+			"""
+			Nested function used as sort key.
+
+			A symbolic link occupies no space of its own, so it is counted as zero and ends up last.
+
+			:param file: The filesystem element to measure.
+			:returns:    Size of the element in bytes.
+			"""
 			return 0 if isinstance(file, SymbolicLink) else file.Size
 
 		collectedFiles = set()
@@ -259,22 +344,51 @@ class LayerCake(metaclass=ExtendedType):
 					targetLayerSize = size
 
 	def _CollectEmptDirectories(self) -> None:
+		"""
+		Collect the directories that contain neither files nor subdirectories, so no layer covers them.
+		"""
 		for directory in self._root.IterateDirectories():
 			if directory.SubdirectoryCount == 0 and directory.FileCount == 0:
 				self._emptyDirectories.append(directory)
 
 	def WriteLayerFiles(self, directory: Path, fileNamePattern: str = "layer_{layerID}.files", relative: bool = True) -> None:
+		"""
+		Write one file list per layer.
+
+		:param directory:       Directory the file lists are written to.
+		:param fileNamePattern: Optional, pattern of the file names, with ``{layerID}`` replaced by the layer's number.
+		:param relative:        Optional, if ``True``, the paths are written relative to the filesystem root.
+		"""
 		for i, layer in enumerate(self._layers, start=1):
 			layer.WriteLayerFile(directory / fileNamePattern.format(layerID=i), relative)
 
 	def WriteEmptyDirectoryFile(self, directory: Path, fileNamePattern: str = "empty_directories.files", relative: bool = True) -> None:
+		"""
+		Write the empty directories as one file list, so an image build can recreate them.
+
+		:param directory:       Directory the file list is written to.
+		:param fileNamePattern: Optional, name of the file list to write.
+		:param relative:        Optional, if ``True``, the paths are written relative to the filesystem root.
+		"""
 		rootDirectory = self._root._path
 
 		if relative:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a directory's path relative to the filesystem root.
+
+				:param file: The path to render.
+				:returns:    The relative path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.relative_to(rootDirectory).as_posix()}\n"
 		else:
 			def format(file: Path) -> str:
+				"""
+				Nested function rendering a directory's path as it is.
+
+				:param file: The path to render.
+				:returns:    The absolute path in POSIX notation, terminated by a newline.
+				"""
 				return f"{file.as_posix()}\n"
 
 		with (directory / fileNamePattern).open("w", encoding="utf-8") as f:

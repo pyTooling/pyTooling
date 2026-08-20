@@ -30,14 +30,14 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for attributes attached to methods.
+Unit tests for attributes attached to classes, including the ones defined at module level and the filtering
+of attributes by type.
 """
-from unittest     import TestCase
-
 from pyTooling.MetaClasses import ExtendedType
-from pytest       import mark
+from pytest                import mark
 
-from pyTooling.Attributes import Attribute
+from pyTooling.Attributes  import Attribute
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -46,7 +46,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ApplyClassAttributes(TestCase):
+class ApplyClassAttributes(Testcase):
 	def test_SingleClass(self) -> None:
 		class AttributeA(Attribute):
 			pass
@@ -196,7 +196,7 @@ class ModuleClass:
 		pass
 
 
-class Filtering(TestCase):
+class Filtering(Testcase):
 	def test_SubclassOf(self) -> None:
 		class AttributeA(Attribute):
 			pass

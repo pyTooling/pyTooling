@@ -29,12 +29,14 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :class:`~pyTooling.Common.ChangeDirectory`.
+Unit tests for :class:`pyTooling.Common.ChangeDirectory`, the context manager restoring the working
+directory.
 """
 from pathlib  import Path
-from unittest import TestCase
 
-from pyTooling.Common import ChangeDirectory as ChangeDir
+from pyTooling.Common  import ChangeDirectory as ChangeDir
+from pyTooling.Testing import Testcase
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -42,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ChangeDirectory(TestCase):
+class ChangeDirectory(Testcase):
 	def test_ChangeDirectory(self) -> None:
 		before = Path.cwd()
 		path = Path("tests/unit/Common")

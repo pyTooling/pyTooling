@@ -28,10 +28,20 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An implementation of 3D cartesian data structures for Python."""
+"""
+An implementation of 3D cartesian data structures for Python.
 
-from math   import sqrt, acos
-from typing import Union, Generic, Any, Tuple, Self
+.. seealso::
+
+   :mod:`pyTooling.Cartesian2D`
+      |rarr| The same data structures in two dimensions.
+   :mod:`pyTooling.Cartesian3D.Volumes`
+      |rarr| Volumes built from these points and offsets.
+"""
+from __future__            import annotations
+
+from math                  import sqrt, acos
+from typing                import Union, Generic, Any, Self
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
@@ -51,9 +61,9 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 3-dimensional point.
 
-		:param x: X-coordinate.
-		:param y: Y-coordinate.
-		:param z: Z-coordinate.
+		:param x:          X-coordinate.
+		:param y:          Y-coordinate.
+		:param z:          Z-coordinate.
 		:raises TypeError: If x/y/z-coordinate is not of type integer or float.
 		"""
 		if not isinstance(x, (int, float)):
@@ -88,7 +98,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.x, self.y, self.z)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
 		"""
 		Convert this 3D-Point to a simple 3-element tuple.
 
@@ -96,13 +106,13 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.x, self.y, self.z
 
-	def __add__(self, other: Any) -> "Point3D[Coordinate]":
+	def __add__(self, other: Any) -> Point3D[Coordinate]:
 		"""
 		Adds a 3D-offset to this 3D-point and creates a new 3D-point.
 
-		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          A new 3D-point shifted by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			return self.__class__(
@@ -125,9 +135,9 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 3D-offset to this 3D-point (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			self.x += other.xOffset
@@ -144,7 +154,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> Union["Offset3D[Coordinate]", "Point3D[Coordinate]"]:
+	def __sub__(self, other: Any) -> Union[Offset3D[Coordinate], Point3D[Coordinate]]:
 		"""
 		Subtract two 3D-Points from each other and create a new 3D-offset.
 
@@ -167,9 +177,9 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtracts a 3D-offset to this 3D-point (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			self.x -= other.xOffset
@@ -215,6 +225,8 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 
 	def Copy(self) -> Self:
 		"""
+		An origin is a singular point, so it can't be copied.
+
 		:raises RuntimeError: Because an origin can't be copied.
 		"""
 		raise RuntimeError(f"An origin can't be copied.")
@@ -277,7 +289,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.xOffset, self.yOffset, self.zOffset)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
 		"""
 		Convert this 3D-offset to a simple 3-element tuple.
 
@@ -285,13 +297,13 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.xOffset, self.yOffset, self.zOffset
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two 3D-offsets for equality.
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 3D-offsets are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			return self.xOffset == other.xOffset and self.yOffset == other.yOffset and self.zOffset == other.zOffset
@@ -302,17 +314,17 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two 3D-offsets for inequality.
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 3D-offsets are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter ``other`` is not of type :class:`Offset3D` or tuple.
 		"""
 		return not self.__eq__(other)
 
-	def __neg__(self) -> "Offset3D[Coordinate]":
+	def __neg__(self) -> Offset3D[Coordinate]:
 		"""
 		Negate all components of this 3D-offset and create a new 3D-offset.
 
@@ -324,13 +336,13 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			-self.zOffset
 		)
 
-	def __add__(self, other: Any) -> "Offset3D[Coordinate]":
+	def __add__(self, other: Any) -> Offset3D[Coordinate]:
 		"""
 		Adds a 3D-offset to this 3D-offset and creates a new 3D-offset.
 
-		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          A new 3D-offset extended by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			return self.__class__(
@@ -353,9 +365,9 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Adds a 3D-offset to this 3D-offset (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			self.xOffset += other.xOffset
@@ -372,13 +384,13 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self
 
-	def __sub__(self, other: Any) -> "Offset3D[Coordinate]":
+	def __sub__(self, other: Any) -> Offset3D[Coordinate]:
 		"""
 		Subtracts a 3D-offset from this 3D-offset and creates a new 3D-offset.
 
-		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          A new 3D-offset reduced by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			return self.__class__(
@@ -401,9 +413,9 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtracts a 3D-offset from this 3D-offset (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
 		"""
 		if isinstance(other, Offset3D):
 			self.xOffset -= other.xOffset
@@ -479,7 +491,7 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.width, self.height, self.depth)
 
-	def ToTuple(self) -> Tuple[Coordinate, Coordinate, Coordinate]:
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
 		"""
 		Convert this 3D-size to a simple 3-element tuple.
 
@@ -517,7 +529,8 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
-		:raises TypeError: If start/end is not of type Point3D.
+		:param copyPoints: Optional, if ``True``, the given points are copied instead of referenced.
+		:raises TypeError: If start/end is not of type :class:`Point3D`.
 		"""
 		if not isinstance(start, Point3D):
 			ex = TypeError(f"Parameter 'start' is not of type Point3D.")
@@ -545,7 +558,13 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		"""
 		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2 + (self.end.z - self.start.z) ** 2)
 
-	def AngleTo(self, other: "LineSegment3D[Coordinate]") -> float:
+	def AngleTo(self, other: LineSegment3D[Coordinate]) -> float:
+		"""
+		Compute the angle between this line segment and another one.
+
+		:param other: The second line segment.
+		:returns:     The angle in radians.
+		"""
 		vectorA = self.ToOffset()
 		vectorB = other.ToOffset()
 		scalarProductAB = vectorA.xOffset * vectorB.xOffset + vectorA.yOffset * vectorB.yOffset + vectorA.zOffset * vectorB.zOffset
@@ -560,7 +579,7 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.end - self.start
 
-	def ToTuple(self) -> Tuple[Tuple[Coordinate, Coordinate, Coordinate], Tuple[Coordinate, Coordinate, Coordinate]]:
+	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate, Coordinate], tuple[Coordinate, Coordinate, Coordinate]]:
 		"""
 		Convert this 3D line segment to a simple 2-element tuple of 3D-point tuples.
 

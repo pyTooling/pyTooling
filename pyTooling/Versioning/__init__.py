@@ -34,16 +34,57 @@ Implementation of semantic and date versioning version-numbers.
 .. hint::
 
    See :ref:`high-level help <VERSIONING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Packaging`
+      |rarr| Reading a package's version from its dunder variables.
+   :mod:`pyTooling.Dependency`
+      |rarr| Resolving requirements against these version numbers.
 """
-from collections.abc import Iterable as abc_Iterable
-from enum            import Flag, Enum
-from re              import compile as re_compile, Pattern
-from typing          import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator, List
+from __future__            import annotations
+
+from collections.abc       import Iterable as abc_Iterable
+from enum                  import Flag, Enum
+from re                    import compile as re_compile, Pattern
+from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName
+
+
+@export
+class VersionValidatorException(ToolingException):
+	"""
+	Raised when a parsed version is rejected by the validator it was parsed with.
+
+	The version string itself was well-formed - it parsed - so this is not a :exc:`ValueError` about the input, but
+	a statement that the resulting version is not acceptable to the caller. The version that failed is carried in
+	:attr:`Version`, so a caller can report what was wrong with it.
+	"""
+
+	_version: Nullable[Version]  #: The version rejected by a validator.
+
+	def __init__(self, message: str, /, *, version: Nullable[Version] = None) -> None:
+		"""
+		Initializes the exception with the rejected version.
+
+		:param message: The exception's message.
+		:param version: Optional, the version the validator rejected.
+		"""
+		super().__init__(message)
+		self._version = version
+
+	@readonly
+	def Version(self) -> Nullable[Version]:
+		"""
+		Read-only property to access the version the validator rejected (:attr:`_version`).
+
+		:returns: The rejected version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
 
 
 @export
@@ -84,13 +125,14 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is equal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -102,13 +144,14 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is unequal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by != operator.")
+			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -120,13 +163,14 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is less than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -138,13 +182,14 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is less than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <=>= operator.")
+			ex = TypeError(f"Second operand is not supported by <=>= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -156,13 +201,14 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is greater than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
@@ -174,26 +220,35 @@ class ReleaseLevel(Enum):
 
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if release level is greater than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or :class:`str`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
 
 		return self.value >= other.value
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this release level, so it can be used as a key in a dictionary or an element of a set.
+
+		The hash is derived from the release level's value, so two release levels compare and hash alike.
+
+		:returns: Hash of the release level's value.
+		"""
 		return hash(self.value)
 
 	def __str__(self) -> str:
 		"""
 		Returns the release level's string equivalent.
 
-		:returns: The string equivalent of the release level.
+		:returns:                 The string equivalent of the release level.
+		:raises ToolingException: If the release level is unknown, so it has no string equivalent.
 		"""
 		if self is ReleaseLevel.Final:
 			return "final"
@@ -233,11 +288,11 @@ def WordSizeValidator(
 	"""
 	A factory function to return a validator for Version instances for a positive integer range based on word-sizes in bits.
 
-	:param bits:      Number of bits to encode any positive version number part.
-	:param majorBits: Number of bits to encode a positive major number in a version.
-	:param minorBits: Number of bits to encode a positive minor number in a version.
-	:param microBits: Number of bits to encode a positive micro number in a version.
-	:param buildBits: Number of bits to encode a positive build number in a version.
+	:param bits:      Optional, number of bits to encode any positive version number part.
+	:param majorBits: Optional, number of bits to encode a positive major number in a version.
+	:param minorBits: Optional, number of bits to encode a positive minor number in a version.
+	:param microBits: Optional, number of bits to encode a positive micro number in a version.
+	:param buildBits: Optional, number of bits to encode a positive build number in a version.
 	:returns:         A validation function for Version instances.
 	"""
 	majorMax = minorMax = microMax = buildMax = -1
@@ -254,6 +309,13 @@ def WordSizeValidator(
 		buildMax = 2**buildBits - 1
 
 	def validator(version: SemanticVersion) -> bool:
+		"""
+		Validator function, which checks each version part against the maximum its word size allows.
+
+		:param version:     Optional, the version to validate.
+		:returns:           ``True``, if every part fits into its word size.
+		:raises ValueError: If a part exceeds the maximum value of its word size.
+		"""
 		if Parts.Major in version._parts and version._major > majorMax:
 			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
@@ -282,17 +344,24 @@ def MaxValueValidator(
 	"""
 	A factory function to return a validator for Version instances checking for a positive integer range [0..max].
 
-	:param max:      The upper bound for any positive version number part.
-	:param majorMax: The upper bound for the positive major number.
-	:param minorMax: The upper bound for the positive minor number.
-	:param microMax: The upper bound for the positive micro number.
-	:param buildMax: The upper bound for the positive build number.
+	:param max:      Optional, the upper bound for any positive version number part.
+	:param majorMax: Optional, the upper bound for the positive major number.
+	:param minorMax: Optional, the upper bound for the positive minor number.
+	:param microMax: Optional, the upper bound for the positive micro number.
+	:param buildMax: Optional, the upper bound for the positive build number.
 	:returns:        A validation function for Version instances.
 	"""
 	if max is not None:
 		majorMax = minorMax = microMax = buildMax = max
 
 	def validator(version: SemanticVersion) -> bool:
+		"""
+		Validator function, which checks each version part against its maximum value.
+
+		:param version:     Optional, the version to validate.
+		:returns:           ``True``, if every part is within its maximum.
+		:raises ValueError: If a part exceeds its maximum value.
+		"""
 		if Parts.Major in version._parts and version._major > majorMax:
 			raise ValueError(f"Field 'Version.Major' > {majorMax}.")
 
@@ -350,27 +419,27 @@ class Version(metaclass=ExtendedType, slots=True):
 		Initializes a version number representation.
 
 		:param major:       Major number part of the version number.
-		:param minor:       Minor number part of the version number.
-		:param micro:       Micro (patch) number part of the version number.
-		:param level:       Release level (alpha, beta, release candidate, final, ...) of the version number.
-		:param number:      Release number part (in combination with release level) of the version number.
-		:param post:        Post number part of the version number.
-		:param dev:         Development number part of the version number.
-		:param build:       Build number part of the version number.
-		:param postfix:     The version number's postfix.
-		:param prefix:      The version number's prefix.
-		:param hash:        Postfix string.
-		:param flags:       The version number's flags.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:param minor:       Optional, minor number part of the version number.
+		:param micro:       Optional, micro (patch) number part of the version number.
+		:param level:       Optional, release level (alpha, beta, release candidate, final, ...) of the version number.
+		:param number:      Optional, release number part (in combination with release level) of the version number.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param postfix:     Optional, the version number's postfix.
+		:param prefix:      Optional, the version number's prefix.
+		:param hash:        Optional, postfix string.
+		:param flags:       Optional, the version number's flags.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		self.__hash = None
 
@@ -498,8 +567,14 @@ class Version(metaclass=ExtendedType, slots=True):
 
 	@classmethod
 	@abstractmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "Version":
-		"""Parse a version string and return a Version instance."""
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> Version:
+		"""
+		Parse a version string and return a Version instance.
+
+		:param versionString: The version string to parse.
+		:param validator:     Optional, validator rejecting a parsed version, e.g. by word size or maximum value.
+		:returns:             The parsed version number.
+		"""
 
 	@readonly
 	def Parts(self) -> Parts:
@@ -618,7 +693,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		return self._flags
 
-	def _equal(self, left: "Version", right: "Version") -> Nullable[bool]:
+	def _equal(self, left: Version, right: Version) -> Nullable[bool]:
 		"""
 		Private helper method to compute the equality of two :class:`Version` instances.
 
@@ -638,7 +713,7 @@ class Version(metaclass=ExtendedType, slots=True):
 			(left._postfix == right._postfix)
 		)
 
-	def _compare(self, left: "Version", right: "Version") -> Nullable[bool]:
+	def _compare(self, left: Version, right: Version) -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`Version` instances.
 
@@ -690,7 +765,17 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		return None
 
-	def _minimum(self, actual: "Version", expected: "Version") -> Nullable[bool]:
+	def _minimum(self, actual: Version, expected: Version) -> Nullable[bool]:
+		"""
+		Check if a version fulfills a minimum requirement.
+
+		How exact the comparison is depends on how detailed the expected version is: a minor number in the expectation
+		requires an exact major number, and a micro number requires an exact minor number.
+
+		:param actual:   The version to check.
+		:param expected: The minimum version, whose parts decide how exact the comparison is.
+		:returns:        ``True``, if the actual version fulfills the expectation.
+		"""
 		exactMajor = Parts.Minor in expected._parts
 		exactMinor = Parts.Micro in expected._parts
 
@@ -742,7 +827,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return result
 
 	@mustoverride
-	def __eq__(self, other: Union["Version", str, int, None]) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for equality.
 
@@ -756,7 +841,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -767,14 +852,15 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
 		return self._equal(self, other)
 
 	@mustoverride
-	def __ne__(self, other: Union["Version", str, int, None]) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for inequality.
 
@@ -788,7 +874,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -799,14 +885,15 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by == operator.")
+			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
 		return not self._equal(self, other)
 
 	@mustoverride
-	def __lt__(self, other: Union["Version", str, int, None]) -> bool:
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than the second operand.
 
@@ -821,7 +908,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -836,14 +924,15 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by < operator.")
+			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is True
 
 	@mustoverride
-	def __le__(self, other: Union["Version", str, int, None]) -> bool:
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than or equal the second operand.
 
@@ -858,7 +947,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
@@ -875,7 +965,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by <= operator.")
+			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
@@ -883,7 +974,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		return result if result is not None else equalValue
 
 	@mustoverride
-	def __gt__(self, other: Union["Version", str, int, None]) -> bool:
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than the second operand.
 
@@ -898,7 +989,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -913,14 +1005,15 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by > operator.")
+			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is False
 
 	@mustoverride
-	def __ge__(self, other: Union["Version", str, int, None]) -> bool:
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than or equal the second operand.
 
@@ -935,7 +1028,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
+		                   :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
@@ -952,14 +1046,23 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >= operator.")
+			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		result = self._compare(self, other)
 		return not result if result is not None else equalValue
 
-	def __rshift__(self, other: Union["Version", str, int, None]) -> bool:
+	def __rshift__(self, other: Union[Version, str, int, None]) -> bool:
+		"""
+		Return the minimum of this version and a second operand.
+
+		:param other:       Second operand, a version, a version string or a major version number.
+		:returns:           ``True``, if this version is the minimum of both operands.
+		:raises ValueError: If the second operand is ``None``.
+		:raises TypeError:  If the second operand is not a version, a string or an integer.
+		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
 		elif isinstance(other, self.__class__):
@@ -969,13 +1072,22 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand of type '{other.__class__.__name__}' is not supported by >> operator.")
+			ex = TypeError(f"Second operand is not supported by >> operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
 
 		return self._minimum(self, other)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number and cache it.
+
+		All parts of the version are part of the hash, so two versions differing in a postfix or a build number don't
+		collide.
+
+		:returns: Hash of this version number.
+		"""
 		if self.__hash is None:
 			self.__hash = hash((
 				self._prefix,
@@ -1015,7 +1127,7 @@ class SemanticVersion(Version):
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
 		r"(?:(?P<delim4>[\.\-\+])(?P<postfix>\w+))?"
 		r"$"
-	)
+	)  #: Regular expression to parse a semantic version from a string.
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead:    int = 0
 
@@ -1039,36 +1151,36 @@ class SemanticVersion(Version):
 		Initializes a semantic version number representation.
 
 		:param major:       Major number part of the version number.
-		:param minor:       Minor number part of the version number.
-		:param micro:       Micro (patch) number part of the version number.
-		:param build:       Build number part of the version number.
-		:param level:       tbd
-		:param number:      tbd
-		:param post:        Post number part of the version number.
-		:param dev:         Development number part of the version number.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
-		:param flags:       The version number's flags.
-		:param hash:        tbd
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:param minor:       Optional, minor number part of the version number.
+		:param micro:       Optional, micro (patch) number part of the version number.
+		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param postfix:     Optional, the version number's postfix.
+		:param prefix:      Optional, the version number's prefix.
+		:param hash:        Optional, hash of the version control system's commit this version was built from.
+		:param flags:       Optional, the version number's flags.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type int.
+		:raises TypeError:  If parameter 'post' is not of type integer.
 		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type int.
+		:raises TypeError:  If parameter 'dev' is not of type integer.
 		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags)
 
 	@classmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "SemanticVersion":
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> SemanticVersion:
 		"""
 		Parse a version string and return a :class:`SemanticVersion` instance.
 
@@ -1079,12 +1191,14 @@ class SemanticVersion(Version):
 		* ``r|R`` - release, revision
 		* ``rev|REV`` - revision
 
-		:param versionString: The version string to parse.
-		:param validator:     Optional, a validation function.
-		:returns:             An object representing a semantic version.
-		:raises TypeError:    When parameter ``versionString`` is not a string.
-		:raises ValueError:   When parameter ``versionString`` is None.
-		:raises ValueError:   When parameter ``versionString`` is empty.
+		:param versionString:              The version string to parse.
+		:param validator:                  Optional, a validation function.
+		:returns:                          An object representing a semantic version.
+		:raises TypeError:                 When parameter ``versionString`` is not a string.
+		:raises ValueError:                When parameter ``versionString`` is None or empty.
+		:raises ValueError:                When parameter ``versionString`` isn't a semantic version number. |br|
+		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
+		:raises VersionValidatorException: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1101,6 +1215,13 @@ class SemanticVersion(Version):
 			raise ex
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
+			"""
+			Nested function converting an optional part of a version string to an integer.
+
+			:param value:       The matched part, or ``None`` if the pattern didn't match it.
+			:returns:           The part as an integer, or ``None`` if it wasn't present.
+			:raises ValueError: If the part isn't a number.
+			"""
 			if value is None or value == "":
 				return None
 
@@ -1152,8 +1273,7 @@ class SemanticVersion(Version):
 		)
 
 		if validator is not None and not validator(version):
-			# TODO: VersionValidatorException
-			raise ValueError(f"Failed to validate version string '{versionString}'.")
+			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -1168,7 +1288,7 @@ class SemanticVersion(Version):
 		"""
 		return self._micro
 
-	def _equal(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
+	def _equal(self, left: SemanticVersion, right: SemanticVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the equality of two :class:`SemanticVersion` instances.
 
@@ -1178,7 +1298,7 @@ class SemanticVersion(Version):
 		"""
 		return super()._equal(left, right)
 
-	def _compare(self, left: "SemanticVersion", right: "SemanticVersion") -> Nullable[bool]:
+	def _compare(self, left: SemanticVersion, right: SemanticVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`SemanticVersion` instances.
 
@@ -1190,7 +1310,7 @@ class SemanticVersion(Version):
 		"""
 		return super()._compare(left, right)
 
-	def __eq__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for equality.
 
@@ -1204,11 +1324,11 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__eq__(other)
 
-	def __ne__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for inequality.
 
@@ -1222,11 +1342,11 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__ne__(other)
 
-	def __lt__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than the second operand.
 
@@ -1240,11 +1360,11 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__lt__(other)
 
-	def __le__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than or equal the second operand.
 
@@ -1258,11 +1378,11 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__le__(other)
 
-	def __gt__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than the second operand.
 
@@ -1276,11 +1396,11 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__gt__(other)
 
-	def __ge__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than or equal the second operand.
 
@@ -1294,17 +1414,40 @@ class SemanticVersion(Version):
 		:param other:       Operand to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`SemanticVersion`, string or integer.
 		"""
 		return super().__ge__(other)
 
-	def __rshift__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+	def __rshift__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
+		"""
+		Return the minimum of this semantic version and a second operand.
+
+		:param other:       Second operand, a version, a version string or a major version number.
+		:returns:           ``True``, if this version is the minimum of both operands.
+		:raises ValueError: If the second operand is ``None``.
+		:raises TypeError:  If the second operand is not a version, a string or an integer.
+		"""
 		return super().__rshift__(other)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 	def __format__(self, formatSpec: str) -> str:
+		"""
+		Return a string representation of this version number according to the format specification.
+
+		:param formatSpec:  The format specification, using ``%``-placeholders for the version's parts.
+		:returns:           Formatted version number.
+		:raises ValueError: If the format specification contains an unknown placeholder.
+		"""
 		result = self._format(formatSpec)
 
 		if (pos := result.find("%")) != -1 and result[pos + 1] != "%":  # pragma: no cover
@@ -1360,11 +1503,12 @@ class PythonVersion(SemanticVersion):
 	"""
 
 	@classmethod
-	def FromSysVersionInfo(cls) -> "PythonVersion":
+	def FromSysVersionInfo(cls) -> PythonVersion:
 		"""
 		Create a Python version from :data:`sys.version_info`.
 
-		:returns: A PythonVersion instance of the current Python interpreter's version.
+		:returns:                 A PythonVersion instance of the current Python interpreter's version.
+		:raises ToolingException: If the interpreter reports a release level this class doesn't know.
 		"""
 		from sys import version_info
 
@@ -1386,6 +1530,14 @@ class PythonVersion(SemanticVersion):
 		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, number=number)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 	def __str__(self) -> str:
@@ -1426,7 +1578,7 @@ class CalendarVersion(Version):
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
 		r"$"
-	)
+	)  #: Regular expression to parse a calendar version from a string.
 
 	def __init__(
 		self,
@@ -1442,27 +1594,27 @@ class CalendarVersion(Version):
 		Initializes a calendar version number representation.
 
 		:param major:       Major number part of the version number.
-		:param minor:       Minor number part of the version number.
-		:param micro:       Micro (patch) number part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:param minor:       Optional, minor number part of the version number.
+		:param micro:       Optional, micro (patch) number part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(major, minor, micro, build=build, postfix=postfix, prefix=prefix, flags=flags)
 
 	@classmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["CalendarVersion"], bool]] = None) -> "CalendarVersion":
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[CalendarVersion], bool]] = None) -> CalendarVersion:
 		"""
 		Parse a version string and return a :class:`CalendarVersion` instance.
 
@@ -1477,14 +1629,18 @@ class CalendarVersion(Version):
 		:class:`YearWeekVersion` and :class:`YearReleaseVersion` describe two parts, so a third part is rejected for
 		them.
 
-		:param versionString: The version string to parse.
-		:param validator:     Optional, a validation function.
-		:returns:             An object representing a calendar version.
-		:raises TypeError:    If parameter ``versionString`` is not a string.
-		:raises ValueError:   If parameter ``versionString`` is None.
-		:raises ValueError:   If parameter ``versionString`` is empty.
-		:raises ValueError:   If parameter ``versionString`` isn't a calendar version number.
-		:raises ValueError:   If parameter ``versionString`` has more parts than the class describes.
+		:param versionString:              The version string to parse.
+		:param validator:                  Optional, a validation function.
+		:returns:                          An object representing a calendar version.
+		:raises TypeError:                 If parameter ``versionString`` is not a string.
+		:raises ValueError:                If parameter ``versionString`` is None or empty.
+		:raises ValueError:                If parameter ``versionString`` isn't a calendar version number. |br|
+		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g.
+		                                   ``v2024.04``.
+		:raises ValueError:                If parameter ``versionString`` has more parts than the class describes. |br|
+		                                   Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
+		                                   three-part calendar version number.
+		:raises VersionValidatorException: If the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1510,14 +1666,16 @@ class CalendarVersion(Version):
 			ex.add_note(f"Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
 			raise ex
 
-		numbers = [int(match["major"]), 0 if minor is None else int(minor)]
-		if micro is not None:
-			numbers.append(int(micro))
+		numbers = [int(match["major"])]
+		if minor is not None:
+			numbers.append(int(minor))
+			if micro is not None:
+				numbers.append(int(micro))
 
 		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
 
 		if validator is not None and not validator(version):
-			raise ValueError(f"Failed to validate version string '{versionString}'.")  # pragma: no cover
+			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -1530,7 +1688,7 @@ class CalendarVersion(Version):
 		"""
 		return self._major
 
-	def _equal(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
+	def _equal(self, left: CalendarVersion, right: CalendarVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the equality of two :class:`CalendarVersion` instances.
 
@@ -1540,7 +1698,7 @@ class CalendarVersion(Version):
 		"""
 		return (left._major == right._major) and (left._minor == right._minor) and (left._micro == right._micro)
 
-	def _compare(self, left: "CalendarVersion", right: "CalendarVersion") -> Nullable[bool]:
+	def _compare(self, left: CalendarVersion, right: CalendarVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`CalendarVersion` instances.
 
@@ -1567,7 +1725,7 @@ class CalendarVersion(Version):
 
 		return None
 
-	def __eq__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for equality.
 
@@ -1581,11 +1739,11 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if both version numbers are equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__eq__(other)
 
-	def __ne__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers for inequality.
 
@@ -1599,11 +1757,11 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if both version numbers are not equal.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__ne__(other)
 
-	def __lt__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than the second operand.
 
@@ -1617,11 +1775,11 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__lt__(other)
 
-	def __le__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __le__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is less than or equal the second operand.
 
@@ -1635,11 +1793,11 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__le__(other)
 
-	def __gt__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than the second operand.
 
@@ -1653,11 +1811,11 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__gt__(other)
 
-	def __ge__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+	def __ge__(self, other: Any) -> bool:
 		"""
 		Compare two version numbers if the version is greater than or equal the second operand.
 
@@ -1671,11 +1829,19 @@ class CalendarVersion(Version):
 		:param other:       Parameter to compare against.
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, :class:`str` or :class:`ìnt`.
+		:raises TypeError:  If parameter ``other`` is not of type :class:`CalendarVersion`, string or integer.
 		"""
 		return super().__ge__(other)
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 	def __format__(self, formatSpec: str) -> str:
@@ -1752,23 +1918,23 @@ class YearMonthVersion(CalendarVersion):
 		Initializes a year-month version number representation.
 
 		:param year:        Year part of the version number.
-		:param month:       Month part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:param month:       Optional, month part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
-		super().__init__(year, month, 0, build, flags, prefix, postfix)
+		super().__init__(year, month, None, build, flags, prefix, postfix)
 
 	@readonly
 	def Month(self) -> int:
@@ -1780,6 +1946,14 @@ class YearMonthVersion(CalendarVersion):
 		return self._minor
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -1802,23 +1976,23 @@ class YearWeekVersion(CalendarVersion):
 		Initializes a year-week version number representation.
 
 		:param year:        Year part of the version number.
-		:param week:        Week part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:param week:        Optional, week part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
-		super().__init__(year, week, 0, build, flags, prefix, postfix)
+		super().__init__(year, week, None, build, flags, prefix, postfix)
 
 	@readonly
 	def Week(self) -> int:
@@ -1830,6 +2004,14 @@ class YearWeekVersion(CalendarVersion):
 		return self._minor
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -1852,23 +2034,23 @@ class YearReleaseVersion(CalendarVersion):
 		Initializes a year-release version number representation.
 
 		:param year:        Year part of the version number.
-		:param release:     Release number of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:param release:     Optional, release number of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
-		super().__init__(year, release, 0, build, flags, prefix, postfix)
+		super().__init__(year, release, None, build, flags, prefix, postfix)
 
 	@readonly
 	def Release(self) -> int:
@@ -1880,6 +2062,14 @@ class YearReleaseVersion(CalendarVersion):
 		return self._minor
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -1901,22 +2091,22 @@ class YearMonthDayVersion(CalendarVersion):
 		Initializes a year-month-day version number representation.
 
 		:param year:        Year part of the version number.
-		:param month:       Month part of the version number.
-		:param day:         Day part of the version number.
-		:param build:       Build number part of the version number.
-		:param flags:       The version number's flags.
-		:param prefix:      The version number's prefix.
-		:param postfix:     The version number's postfix.
-		:raises TypeError:  If parameter 'major' is not of type int.
+		:param month:       Optional, month part of the version number.
+		:param day:         Optional, day part of the version number.
+		:param build:       Optional, build number part of the version number.
+		:param flags:       Optional, the version number's flags.
+		:param prefix:      Optional, the version number's prefix.
+		:param postfix:     Optional, the version number's postfix.
+		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type int.
+		:raises TypeError:  If parameter 'minor' is not of type integer.
 		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type int.
+		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type int.
+		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type str.
-		:raises TypeError:  If parameter 'postfix' is not of type str.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
+		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
 		super().__init__(year, month, day, build, flags, prefix, postfix)
 
@@ -1939,6 +2129,14 @@ class YearMonthDayVersion(CalendarVersion):
 		return self._micro
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this version number.
+
+		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
+		version unhashable.
+
+		:returns: Hash of this version number.
+		"""
 		return super().__hash__()
 
 
@@ -1967,20 +2165,21 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 	This version range works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
 	"""
-	_lowerBound:    V
-	_upperBound:    V
-	_boundHandling: RangeBoundHandling
+	_lowerBound:    V                   #: Lower bound of the version range.
+	_upperBound:    V                   #: Upper bound of the version range.
+	_boundHandling: RangeBoundHandling  #: Strategy deciding whether the bounds are part of the range.
 
 	def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
 		"""
 		Initializes a version range described by a lower and upper bound.
 
-		:param lowerBound:  lowest version (inclusive).
-		:param upperBound:  hightest version (inclusive).
-		:raises TypeError:  If parameter ``lowerBound`` is not of type :class:`Version`.
-		:raises TypeError:  If parameter ``upperBound`` is not of type :class:`Version`.
-		:raises TypeError:  If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
-		:raises ValueError: If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
+		:param lowerBound:    lowest version (inclusive).
+		:param upperBound:    hightest version (inclusive).
+		:param boundHandling: Optional, strategy deciding whether the bounds are part of the range.
+		:raises TypeError:    If parameter ``lowerBound`` is not of type :class:`Version`.
+		:raises TypeError:    If parameter ``upperBound`` is not of type :class:`Version`.
+		:raises TypeError:    If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
+		:raises ValueError:   If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
 		"""
 		if not isinstance(lowerBound, Version):
 			ex = TypeError(f"Parameter 'lowerBound' is not of type 'Version'.")
@@ -2011,7 +2210,8 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's lower bound.
 
-		:returns: Lower bound of the version range.
+		:returns:          Lower bound of the version range.
+		:raises TypeError: If an assigned value is not of type :class:`Version`.
 		"""
 		return self._lowerBound
 
@@ -2029,7 +2229,8 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's upper bound.
 
-		:returns: Upper bound of the version range.
+		:returns:          Upper bound of the version range.
+		:raises TypeError: If an assigned value is not of type :class:`Version`.
 		"""
 		return self._upperBound
 
@@ -2047,7 +2248,8 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the range's bound handling strategy.
 
-		:returns: The range's bound handling strategy.
+		:returns:          The range's bound handling strategy.
+		:raises TypeError: If an assigned value is not of type :class:`RangeBoundHandling`.
 		"""
 		return self._boundHandling
 
@@ -2060,7 +2262,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._boundHandling = value
 
-	def __and__(self, other: Any) -> "VersionRange[T]":
+	def __and__(self, other: Any) -> VersionRange[T]:
 		"""
 		Compute the intersection of two version ranges.
 
@@ -2085,14 +2287,20 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		elif other._lowerBound in self:
 			lBound = other._lowerBound
 		else:
-			raise ValueError()
+			ex = ValueError("The intersection of both version ranges is empty.")
+			ex.add_note(f"Got value '{other._lowerBound}' for other's lower bound.")
+			ex.add_note(f"This range's upper bound is '{self._upperBound}'.")
+			raise ex
 
 		if other._upperBound > self._upperBound:
 			uBound = self._upperBound
 		elif other._upperBound in self:
 			uBound = other._upperBound
 		else:
-			raise ValueError()
+			ex = ValueError("The intersection of both version ranges is empty.")
+			ex.add_note(f"Got value '{other._upperBound}' for other's upper bound.")
+			ex.add_note(f"This range's lower bound is '{self._lowerBound}'.")
+			raise ex
 
 		return self.__class__(lBound, uBound)
 
@@ -2194,7 +2402,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Check if the version is in the version range.
 
-		:param version:    Version to check.
+		:param version:    Optional, version to check.
 		:returns:          ``True``, if version is in range.
 		:raises TypeError: If parameter ``version`` is not of type :class:`Version`.
 		"""
@@ -2220,7 +2428,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 	This version set works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
 	"""
-	_items: List[V]  #: An ordered list of set members.
+	_items: list[V]  #: An ordered list of set members.
 
 	def __init__(self, versions: Union[Version, Iterable[V]]) -> None:
 		"""
@@ -2257,7 +2465,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		else:
 			raise TypeError(f"Parameter 'versions' is not an Iterable.")
 
-	def __and__(self, other: "VersionSet[V]") -> "VersionSet[T]":
+	def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
 		"""
 		Compute intersection of two version sets.
 
@@ -2287,7 +2495,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 		return VersionSet(result)
 
-	def __or__(self, other: "VersionSet[V]") -> "VersionSet[T]":
+	def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
 		"""
 		Compute union of two version sets.
 
@@ -2423,7 +2631,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Checks if the version a member of the set.
 
-		:param version: The version to check.
+		:param version: Optional, the version to check.
 		:returns:       ``True``, if the version is a member of the set.
 		"""
 		return version in self._items

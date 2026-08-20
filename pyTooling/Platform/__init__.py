@@ -34,6 +34,13 @@ Common platform information gathered from various sources.
 .. hint::
 
    See :ref:`high-level help <COMMON/Platform>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Process`
+      |rarr| Information about the running process, independent of the platform.
+   :mod:`pyTooling.Filesystem`
+      |rarr| Filesystem statistics, whose path style depends on the platform.
 """
 from enum                    import Flag, auto, Enum
 
@@ -174,13 +181,15 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	   StackOverflow question: `Python: What OS am I running on? <https://stackoverflow.com/a/54837707/3719459>`__
 	"""
 
-	_platform:             Platforms
-	_pythonImplementation: PythonImplementation
-	_pythonVersion:        PythonVersion
+	_platform:             Platforms             #: Operating system, processor architecture and environment, as flags.
+	_pythonImplementation: PythonImplementation  #: The Python implementation running this program (CPython, PyPy).
+	_pythonVersion:        PythonVersion         #: Version of the Python interpreter running this program.
 
 	def __init__(self) -> None:
 		"""
 		Initializes a platform by accessing multiple APIs of Python to gather all necessary information.
+
+		:raises UnknownPlatformException: If the operating system or the Python implementation isn't known to pyTooling.
 		"""
 		import sys
 		import os

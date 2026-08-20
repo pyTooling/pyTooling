@@ -28,8 +28,19 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""A generic path to derive domain specific path libraries."""
-from typing import ClassVar, List, Optional as Nullable, Type
+"""
+A generic path to derive domain specific path libraries.
+
+.. seealso::
+
+   :mod:`pyTooling.GenericPath.URL`
+      |rarr| A URL as a domain-specific path.
+   :mod:`pyTooling.Configuration`
+      |rarr| Path expressions addressing a node in a configuration.
+"""
+from __future__            import annotations
+
+from typing                import ClassVar, Optional as Nullable
 
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
@@ -39,15 +50,15 @@ from pyTooling.MetaClasses import ExtendedType
 class Base(metaclass=ExtendedType, mixin=True):
 	"""Base-mixin-class for all :mod:`pyTooling.GenericPath` path elements."""
 
-	DELIMITER: ClassVar[str] = "/"            #: Path element delimiter sign.
+	DELIMITER: ClassVar[str] = "/"  #: Path element delimiter sign.
 
-	_parent: Nullable["Base"]  #: Reference to the parent object.
+	_parent: Nullable[Base]         #: Reference to the parent object.
 
-	def __init__(self, parent: Nullable["Base"] = None) -> None:
+	def __init__(self, parent: Nullable[Base] = None) -> None:
 		"""
 		Initialize the base-mixin-class with a parent reference.
 
-		:param parent: Optional parent reference.
+		:param parent: Optional, parent reference.
 		"""
 		self._parent = parent
 
@@ -73,7 +84,7 @@ class ElementMixIn(Base, mixin=True):
 		"""
 		Initialize the mixin-class for a path element.
 
-		:param parent:      Reference to a parent path element.
+		:param parent:      Optional, reference to a parent path element.
 		:param elementName: Name of the path element.
 		"""
 		super().__init__(parent)
@@ -81,6 +92,11 @@ class ElementMixIn(Base, mixin=True):
 		self._elementName = elementName
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this path element.
+
+		:returns: The element's name.
+		"""
 		return self._elementName
 
 
@@ -88,18 +104,18 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"          #: Path element delimiter sign.
-	ROOT_DELIMITER:    ClassVar[str] = "/"          #: Root element delimiter sign.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Path element delimiter sign.
+	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Root element delimiter sign.
 
-	_isAbsolute: bool                #: True, if the path is absolute.
-	_elements:   List[ElementMixIn]  #: List of path elements.
+	_isAbsolute: bool                       #: True, if the path is absolute.
+	_elements:   list[ElementMixIn]         #: List of path elements.
 
-	def __init__(self, elements: List[ElementMixIn], isAbsolute: bool) -> None:
+	def __init__(self, elements: list[ElementMixIn], isAbsolute: bool) -> None:
 		"""
 		Initialize the mixin-class for a path.
 
 		:param elements:   Reference to a parent path element.
-		:param isAbsolute: Assign to true, if a path is absolute, otherwise false.
+		:param isAbsolute: ``True``, if the path is absolute, otherwise ``False``.
 		"""
 		self._isAbsolute = isAbsolute
 		self._elements =   elements
@@ -113,6 +129,11 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		return len(self._elements)
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this path.
+
+		:returns: The path's elements, joined by the delimiter, prefixed by the root delimiter if the path is absolute.
+		"""
 		result = self.ROOT_DELIMITER if self._isAbsolute else ""
 
 		if len(self._elements) > 0:
@@ -128,9 +149,9 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		cls,
 		path: str,
 		root: RootMixIn,
-		pathCls: Type["PathMixIn"],
-		elementCls: Type[ElementMixIn]
-	) -> "PathMixIn":
+		pathCls: type[PathMixIn],
+		elementCls: type[ElementMixIn]
+	) -> PathMixIn:
 		"""
 		Parses a string representation of a path and returns a path instance.
 

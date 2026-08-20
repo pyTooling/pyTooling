@@ -39,11 +39,22 @@ class, method or function. By default, this field is called ``__pyattr__``.
 .. hint::
 
    See :ref:`high-level help <ATTR>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Attributes.ArgParse`
+      |rarr| Attributes describing a command line interface.
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The meta-class that collects the attributes attached to a class' methods.
+   :mod:`pyTooling.Decorators`
+      |rarr| Decorators that modify an entity instead of marking it.
 """
-from enum   import IntFlag
-from types  import MethodType, FunctionType, ModuleType
-from typing import Callable, List, TypeVar, Dict, Any, Iterable, Union, Type, Tuple, Generator, ClassVar
-from typing import Optional as Nullable
+from __future__           import annotations
+
+from enum                 import IntFlag
+from types                import MethodType, FunctionType, ModuleType
+from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar
+from typing               import Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
@@ -51,13 +62,13 @@ from pyTooling.Common     import getFullyQualifiedName
 
 __all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]
 
-Entity = TypeVar("Entity", bound=Union[Type, Callable])
+Entity = TypeVar("Entity", bound=Union[type, Callable[..., Any]])
 """A type variable for functions, methods or classes."""
 
 TAttr = TypeVar("TAttr", bound='Attribute')
 """A type variable for :class:`~pyTooling.Attributes.Attribute`."""
 
-TAttributeFilter = Union[Type[TAttr], Iterable[Type[TAttr]], None]
+TAttributeFilter = Union[type[TAttr], Iterable[type[TAttr]], None]
 """A type hint for a predicate parameter that accepts either a single :class:`~pyTooling.Attributes.Attribute` or an
 iterable of those."""
 
@@ -83,9 +94,9 @@ class AttributeScope(IntFlag):
 class Attribute:  # (metaclass=ExtendedType, slots=True):
 	"""Base-class for all pyTooling attributes."""
 #	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"             #: Field name on entities (function, class, method) to store pyTooling.Attributes.
-	_functions:               ClassVar[List[Any]] = []                       #: List of functions, this Attribute was attached to.
-	_classes:                 ClassVar[List[Any]] = []                       #: List of classes, this Attribute was attached to.
-	_methods:                 ClassVar[List[Any]] = []                       #: List of methods, this Attribute was attached to.
+	_functions:               ClassVar[list[Any]] = []                       #: List of functions, this Attribute was attached to.
+	_classes:                 ClassVar[list[Any]] = []                       #: List of classes, this Attribute was attached to.
+	_methods:                 ClassVar[list[Any]] = []                       #: List of methods, this Attribute was attached to.
 	_scope:                   ClassVar[AttributeScope] = AttributeScope.Any  #: Allowed language construct this attribute can be used with.
 
 	# Ensure each derived class has its own instances of class variables.
@@ -114,7 +125,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return entity
 
 	@staticmethod
-	def _AppendAttribute(entity: Entity, attribute: "Attribute") -> None:
+	def _AppendAttribute(entity: Entity, attribute: Attribute) -> None:
 		"""
 		Append an attribute to a language entity (class, method, function).
 
@@ -161,15 +172,16 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return cls._scope
 
 	@classmethod
-	def GetFunctions(cls, scope: Nullable[Type] = None) -> Generator[TAttr, None, None]:
+	def GetFunctions(cls, scope: Nullable[type] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all functions, where this attribute is attached to.
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope:     Undocumented.
-		:returns:         A sequence of functions where this attribute is attached to.
+		:param scope:                Optional, module the functions have to be defined in; ``None`` accepts every function.
+		:returns:                    A sequence of functions where this attribute is attached to.
+		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
 		"""
 		if scope is None:
 			for c in cls._functions:
@@ -183,7 +195,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			raise NotImplementedError(f"Parameter 'scope' is a class isn't supported yet.")
 
 	@classmethod
-	def GetClasses(cls, scope: Nullable[Type | ModuleType] = None, subclassOf: Nullable[Type] = None) -> Generator[TAttr, None, None]:
+	def GetClasses(cls, scope: Nullable[type | ModuleType] = None, subclassOf: Nullable[type] = None) -> Generator[TAttr, None, None]:
 	# def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all classes, where this attribute is attached to.
@@ -192,8 +204,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 		 * ``subclassOf`` - when the item is a subclass of ``subclassOf``.
 
-		:param scope:      Undocumented.
-		:param subclassOf: An attribute class or tuple thereof, to filter for that attribute type or subtype.
+		:param scope:      Optional, class or module the classes have to be nested in or defined in; ``None`` accepts every
+		                   class.
+		:param subclassOf: Optional, an attribute class or tuple thereof, to filter for that attribute type or subtype.
 		:returns:          A sequence of classes where this attribute is attached to.
 		"""
 		from pyTooling.Common import isnestedclass
@@ -222,14 +235,15 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield c
 
 	@classmethod
-	def GetMethods(cls, scope: Nullable[Type] = None) -> Generator[TAttr, None, None]:
+	def GetMethods(cls, scope: Nullable[type] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all methods, where this attribute is attached to.
 
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope:     Undocumented.
+		:param scope:     Optional, class or module the methods' classes have to be nested in or defined in; ``None``
+		                  accepts every method.
 		:returns:         A sequence of methods where this attribute is attached to.
 		"""
 		if scope is None:
@@ -241,12 +255,12 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 					yield m
 
 	@classmethod
-	def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> Tuple['Attribute', ...]:
+	def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> tuple[Attribute, ...]:
 		"""
 		Returns attached attributes of this kind for a given method.
 
 		:param method:            Method to search attributes for.
-		:param includeSubClasses: If ``True``, attributes of derived attribute classes are included too.
+		:param includeSubClasses: Optional, if ``True``, attributes of derived attribute classes are included too.
 		:returns:                 Tuple of attached attributes of this kind.
 		:raises TypeError:
 		"""
@@ -255,21 +269,36 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			if isinstance(attributes, list):
 				return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
 			else:
-				raise TypeError(f"Method '{method.__class__.__name__}{method.__name__}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's not a list of Attributes.")
+				methodName = getFullyQualifiedName(method)
+				ex = TypeError(f"Method '{methodName}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's no list.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(attributes)}'.")
+				raise ex
 		return tuple()
 
 
 @export
 class SimpleAttribute(Attribute):
-	_args: Tuple[Any, ...]
-	_kwargs: Dict[str, Any]
+	"""
+	A generic attribute preserving the parameters it was applied with.
 
-	def __init__(self, *args, **kwargs) -> None:
+	It needs no derived class per use case: whatever is passed to it is available from :attr:`Args` and :attr:`KwArgs`,
+	which makes it the quickest way to mark a class, method or function and read the marking back.
+	"""
+	_args:   tuple[Any, ...]  #: Positional parameters the attribute was applied with.
+	_kwargs: dict[str, Any]   #: Named parameters the attribute was applied with.
+
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
+		"""
+		Initialize the attribute, preserving whatever parameters it was applied with.
+
+		:param args:   Positional parameters, readable from :attr:`Args`.
+		:param kwargs: Named parameters, readable from :attr:`KwArgs`.
+		"""
 		self._args = args
 		self._kwargs = kwargs
 
 	@readonly
-	def Args(self) -> Tuple[Any, ...]:
+	def Args(self) -> tuple[Any, ...]:
 		"""
 		Read-only property to access the positional parameters this attribute was created with (:attr:`_args`).
 
@@ -278,7 +307,7 @@ class SimpleAttribute(Attribute):
 		return self._args
 
 	@readonly
-	def KwArgs(self) -> Dict[str, Any]:
+	def KwArgs(self) -> dict[str, Any]:
 		"""
 		Read-only property to access the named parameters this attribute was created with (:attr:`_kwargs`).
 

@@ -28,11 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.LinkedList."""
-
-from unittest import TestCase
-
+"""
+Unit tests for :mod:`pyTooling.LinkedList`: insertion, removal, searching, iteration and the conversions
+from and to Python's own sequence types.
+"""
 from pyTooling.LinkedList import Node, LinkedList, LinkedListException
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -41,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Node(self) -> None:
 		node = Node(5)
 
@@ -83,6 +84,19 @@ class Instantiation(TestCase):
 	def test_Node_Next_WrongType(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Node(5, nextNode=6)
+
+	def test_Node_NeighboursFromDifferentLists(self) -> None:
+		"""A node can't be inserted between two nodes that belong to different linked lists."""
+		firstList = LinkedList((Node(1), Node(2)))
+		secondList = LinkedList((Node(3), Node(4)))
+
+		with self.assertRaises(ValueError) as exceptionCapture:
+			_ = Node(5, previousNode=firstList.FirstNode, nextNode=secondList.FirstNode)
+
+		self.assertEqual(
+			"Parameters 'previous' and 'next' belong to different linked lists.",
+			str(exceptionCapture.exception)
+		)
 
 	def test_LinkedList(self) -> None:
 		linkedList = LinkedList()
@@ -154,7 +168,7 @@ class Instantiation(TestCase):
 		self.assertEqual(3, linkedList.Count)
 
 
-class Properties(TestCase):
+class Properties(Testcase):
 	def test_Count(self) -> None:
 		ll = LinkedList()
 
@@ -175,7 +189,7 @@ class Properties(TestCase):
 		self.assertEqual("5", node.Value)
 
 
-class Insert(TestCase):
+class Insert(Testcase):
 	def test_InsertFirst(self) -> None:
 		ll = LinkedList()
 
@@ -411,7 +425,7 @@ class Insert(TestCase):
 			node1.InsertNodeAfter(node0)
 
 
-class Remove(TestCase):
+class Remove(Testcase):
 	def test_RemoveFirst_EmptyList(self) -> None:
 		ll = LinkedList()
 
@@ -594,7 +608,7 @@ class Remove(TestCase):
 		self.assertIsNone(node2.NextNode)
 
 
-class MiscOperations(TestCase):
+class MiscOperations(Testcase):
 	def test_Clear_EmptyList(self) -> None:
 		ll = LinkedList()
 
@@ -733,7 +747,7 @@ class MiscOperations(TestCase):
 		self.assertListEqual([i for i in range(1, len(sequence) + 1)], [n._value for n in ll.ToList()])
 
 
-class GetNode(TestCase):
+class GetNode(Testcase):
 	def test_GetFirst(self) -> None:
 		ll = LinkedList()
 
@@ -795,7 +809,7 @@ class GetNode(TestCase):
 			_ = ll.GetNodeByIndex(2)
 
 
-class Search(TestCase):
+class Search(Testcase):
 	def test_Search_Empty(self) -> None:
 		ll = LinkedList()
 
@@ -841,7 +855,7 @@ class Search(TestCase):
 		self.assertEqual(4, node.Value)
 
 
-class Iterate(TestCase):
+class Iterate(Testcase):
 	def test_IterateFromFirst_Empty(self) -> None:
 		ll = LinkedList()
 
@@ -1040,7 +1054,7 @@ class Iterate(TestCase):
 		self.assertEqual(0, ll.Count)
 
 
-class Conversion(TestCase):
+class Conversion(Testcase):
 	def test_ToTuple_Empty(self) -> None:
 		ll = LinkedList()
 
@@ -1124,7 +1138,7 @@ class Conversion(TestCase):
 		self.assertListEqual(sequence, l)
 
 
-class Usecases(TestCase):
+class Usecases(Testcase):
 	def test_FillBuckets(self) -> None:
 		print()
 

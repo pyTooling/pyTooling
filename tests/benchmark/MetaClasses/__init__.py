@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Benchmark tests for pyTooling.MetaClasses."""
+"""
+Benchmarks for :class:`pyTooling.MetaClasses.ExtendedType`, measuring what its features cost at runtime.
+"""
 from typing import Tuple, Any, Dict
 
 from pytest import mark

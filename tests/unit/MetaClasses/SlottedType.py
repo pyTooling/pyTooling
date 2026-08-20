@@ -29,10 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for the slots handling of :class:`pyTooling.MetaClasses.ExtendedType`: object sizes, the errors
+raised for unannotated or shadowed fields, and inheritance including mixin-classes.
 """
 from typing                import ClassVar, Optional as Nullable
-from unittest              import TestCase
 
 from pytest                import mark
 
@@ -42,6 +42,7 @@ from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
 from pyTooling.Platform    import CurrentPlatform
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -50,7 +51,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ObjectSizes(TestCase):
+class ObjectSizes(Testcase):
 	class Normal1:
 		_data_0: int
 
@@ -134,7 +135,7 @@ class ObjectSizes(TestCase):
 		print(f"size of Slotted2:  {getsizeof(self.Slotted2)} B")
 
 
-class AttributeErrors(TestCase):
+class AttributeErrors(Testcase):
 	class Data0(metaclass=ExtendedType, slots=True):
 		_int_0: int
 
@@ -221,7 +222,7 @@ class AttributeErrors(TestCase):
 		_ = data._int_0
 
 
-class Inheritance(TestCase):
+class Inheritance(Testcase):
 	def test_LinearInheritance_1_BaseSlotted(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int
@@ -1066,7 +1067,7 @@ class Inheritance(TestCase):
 			# self.assertEqual(18, inst._data_3)
 
 
-class NonEmptySlotsOnSecondaryBaseClass(TestCase):
+class NonEmptySlotsOnSecondaryBaseClass(Testcase):
 	"""
 	Only the primary inheritance line may use non-empty ``__slots__``. Secondary base-classes must be mixin-classes,
 	otherwise Python reports an instance lay-out conflict.
@@ -1125,7 +1126,7 @@ class NonEmptySlotsOnSecondaryBaseClass(TestCase):
 		self.assertEqual(3, inst._data_2)
 
 
-class SlotShadowedByClassMember(TestCase):
+class SlotShadowedByClassMember(Testcase):
 	"""
 	A class member assigned without a type annotation stays a class attribute. If it carries the name of a slot, it
 	shadows the slot's descriptor and the field becomes read-only on instances - which used to surface much later as a
@@ -1186,7 +1187,7 @@ class SlotShadowedByClassMember(TestCase):
 		self.assertEqual(100, inst._data_0)
 
 
-class UnannotatedFields(TestCase):
+class UnannotatedFields(Testcase):
 	"""
 	Every field should carry type information. A field assigned in the class body without a type annotation is reported
 	as a warning - it needs a :class:`WarningCollector` to be observed, so importing such a module doesn't fail.
@@ -1270,7 +1271,7 @@ class UnannotatedFields(TestCase):
 		self.assertIn("'LIMIT', 'NAME'", warnings[0].__notes__[0])
 
 
-class Hierarchy(TestCase):
+class Hierarchy(Testcase):
 	def test_GraphMLInheritanceHierarchy(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data_0: int

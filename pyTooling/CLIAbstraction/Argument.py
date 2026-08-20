@@ -36,9 +36,9 @@ This module implements command line arguments without prefix character(s).
 """
 from abc     import abstractmethod
 from pathlib import Path
-from typing  import ClassVar, List, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable, Self
-
+from typing  import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Common      import getFullyQualifiedName
 
 
@@ -49,7 +49,8 @@ ValueT = TypeVar("ValueT")   #: The type of value in a valued argument.
 
 
 @export
-class CommandLineArgument:
+@abstractclass
+class CommandLineArgument(metaclass=ExtendedType):
 	"""
 	Base-class for all *Argument* classes.
 
@@ -68,38 +69,22 @@ class CommandLineArgument:
 	* names and values |br|
 	  |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`, :mod:`~pyTooling.CLIAbstraction.OptionalValuedFlag`
 	* key-value pairs |br|
-	  |rarr| :mod:`~pyTooling.CLIAbstraction.NamedKeyValuePair`
+	  |rarr| :class:`~pyTooling.CLIAbstraction.KeyValueFlag.NamedKeyValuePairsArgument`
 	"""
 
-	_pattern: ClassVar[str]
+	_pattern: ClassVar[str]  #: Format string to render the argument on the command line.
 
 	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``None``.
 		:param kwargs:  Any keyword argument.
 		"""
 		super().__init_subclass__(*args, **kwargs)
 		cls._pattern = pattern
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is CommandLineArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-
-		# TODO: not sure why parameters meant for __init__ do reach this level and distract __new__ from it's work
-		return super().__new__(cls)
 
 	# TODO: Add property to read pattern
 
@@ -143,7 +128,7 @@ class ExecutableArgument(CommandLineArgument):
 	Represents the executable.
 	"""
 
-	_executable: Path
+	_executable: Path  #: Path to the executable this argument represents.
 
 	def __init__(self, executable: Path) -> None:
 		"""
@@ -162,20 +147,15 @@ class ExecutableArgument(CommandLineArgument):
 	@property
 	def Executable(self) -> Path:
 		"""
-		Get the internal path to the wrapped executable.
+		Property to access the path to the wrapped executable (:attr:`_executable`).
 
-		:returns: Internal path to the executable.
+		:returns:          Internal path to the executable.
+		:raises TypeError: If an assigned value is not of type :class:`~pathlib.Path`.
 		"""
 		return self._executable
 
 	@Executable.setter
 	def Executable(self, value: Path) -> None:
-		"""
-		Set the internal path to the wrapped executable.
-
-		:param value:      Value to path to the executable.
-		:raises TypeError: If value is not of type :class:`~pathlib.Path`.
-		"""
 		if not isinstance(value, Path):
 			ex = TypeError("Parameter 'value' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -214,7 +194,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"--"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -241,40 +221,27 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 
 
 @export
+@abstractclass
 class NamedArgument(CommandLineArgument, pattern="{0}"):
 	"""
 	Base-class for all command line arguments with a name.
 	"""
 
-	_name: ClassVar[str]
+	_name: ClassVar[str]  #: Name of the argument, inserted into :attr:`_pattern`.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
 		cls._name = name
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is NamedArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
 
 	@readonly
 	def Name(self) -> str:
@@ -315,14 +282,14 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	Base-class for all command line arguments with a value.
 	"""
 
-	_value: ValueT
+	_value: ValueT  #: Value of the argument, inserted into :attr:`_pattern`.
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -333,8 +300,9 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 		"""
 		Initializes a ValuedArgument instance.
 
-		:param value:      Value to be stored internally.
-		:raises TypeError: If parameter 'value' is None.
+		:param value:       Value to be stored internally.
+		:raises ValueError: If parameter 'value' is None.
+		:raises ValueError: If parameter 'value' is None.
 		"""
 		if value is None:
 			raise ValueError("Parameter 'value' is None.")
@@ -344,20 +312,15 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	@property
 	def Value(self) -> ValueT:
 		"""
-		Get the internal value.
+		Property to access the internal value (:attr:`_value`).
 
-		:returns: Internal value.
+		:returns:           Internal value.
+		:raises ValueError: If ``None`` is assigned.
 		"""
 		return self._value
 
 	@Value.setter
 	def Value(self, value: ValueT) -> None:
-		"""
-		Set the internal value.
-
-		:param value:       Value to set.
-		:raises ValueError: If value to set is None.
-		"""
 		if value is None:
 			raise ValueError(f"Value to set is None.")
 
@@ -383,7 +346,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	__repr__ = __str__
 
 
-class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pattern="{0}={1}"):
+class NamedAndValuedArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT], pattern="{0}={1}"):
 	"""
 	Base-class for all command line arguments with a name and a value.
 	"""
@@ -393,8 +356,8 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param name:    Name of the CLI argument.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param name:    Optional, name of the CLI argument.
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}={1}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -406,6 +369,11 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 		ValuedArgument.__init_subclass__(*args, **kwargs)
 
 	def __init__(self, value: ValueT) -> None:
+		"""
+		Initialize the argument with the value rendered into its pattern.
+
+		:param value: Value of the argument.
+		"""
 		ValuedArgument.__init__(self, value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
@@ -432,7 +400,8 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument, Generic[ValueT], pat
 	__repr__ = __str__
 
 
-class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], pattern="{0}"):
+@abstractclass
+class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT], pattern="{0}"):
 	"""
 	Class and base-class for all TupleFlag classes, which represents an argument with separate value.
 
@@ -444,17 +413,17 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 	* `width 100``
 	"""
 
-	_valuePattern: ClassVar[str]
+	_valuePattern: ClassVar[str]  #: Format string to render the argument's value as a second command line element.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param name:         Name of the CLI argument.
-		:param pattern:      This pattern is used to format the CLI argument name. |br|
+		:param name:         Optional, name of the CLI argument.
+		:param pattern:      Optional, this pattern is used to format the CLI argument name. |br|
 		                     Default: ``"{0}"``.
-		:param valuePattern: This pattern is used to format the value. |br|
+		:param valuePattern: Optional, this pattern is used to format the value. |br|
 		                     Default: ``"{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -463,21 +432,12 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 		super().__init_subclass__(*args, **kwargs)
 		cls._valuePattern = valuePattern
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is NamedTupledArgument:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 	def __init__(self, value: ValueT) -> None:
+		"""
+		Initialize the argument with the value rendered into its pattern.
+
+		:param value: Value of the argument.
+		"""
 		ValuedArgument.__init__(self, value)
 
 	# TODO: Add property to read value pattern
@@ -485,7 +445,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 	# @property
 	# def ValuePattern(self) -> str:
 	# 	if self._valuePattern is None:
-	# 		raise ValueError(f"")  # XXX: add message
+	# 		raise ValueError("Internal value '_valuePattern' is None.")
 	#
 	# 	return self._valuePattern
 
@@ -523,7 +483,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument, Generic[ValueT], patter
 
 
 @export
-class StringArgument(ValuedArgument, pattern="{0}"):
+class StringArgument(ValuedArgument[str], pattern="{0}"):
 	"""
 	Represents a simple string argument.
 
@@ -535,7 +495,7 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 		This method is called when a class is derived.
 
 		:param args:    Any positional arguments.
-		:param pattern: This pattern is used to format an argument. |br|
+		:param pattern: Optional, this pattern is used to format an argument. |br|
 		                Default: ``"{0}"``.
 		:param kwargs:  Any keyword argument.
 		"""
@@ -544,7 +504,7 @@ class StringArgument(ValuedArgument, pattern="{0}"):
 
 
 @export
-class StringListArgument(ValuedArgument):
+class StringListArgument(ValuedArgument[str]):
 	"""
 	Represents a list of string argument (:class:`~pyTooling.CLIAbstraction.Argument.StringArgument`)."""
 
@@ -553,7 +513,7 @@ class StringListArgument(ValuedArgument):
 		Initializes a StringListArgument instance.
 
 		:param values:     An iterable of str instances.
-		:raises TypeError: If iterable parameter 'values' contains elements not of type :class:`str`.
+		:raises TypeError: If iterable parameter 'values' contains elements not of type string.
 		"""
 		self._values = []
 		for value in values:
@@ -565,24 +525,20 @@ class StringListArgument(ValuedArgument):
 			self._values.append(value)
 
 	@property
-	def Value(self) -> List[str]:
+	def Value(self) -> list[str]:
 		"""
-		Get the internal list of str objects.
+		Property to access the internal list of str objects (:attr:`_values`).
 
-		:returns: Reference to the internal list of str objects.
+		.. note:: On assignment, the list object is not replaced, but cleared and then reused by adding the given elements
+		   of the iterable.
+
+		:returns:          Reference to the internal list of str objects.
+		:raises TypeError: If an assigned iterable contains elements which are not of type string.
 		"""
 		return self._values
 
 	@Value.setter
 	def Value(self, value: Iterable[str]) -> None:
-		"""
-		Overwrite all elements in the internal list of str objects.
-
-		.. note:: The list object is not replaced, but cleared and then reused by adding the given elements in the iterable.
-
-		:param value:      List of str objects to set.
-		:raises TypeError: If value contains elements, which are not of type :class:`str`.
-		"""
 		self._values.clear()
 		for value in value:
 			if not isinstance(value, str):
@@ -626,7 +582,7 @@ class PathArgument(CommandLineArgument):
 	A list of paths is available as :class:`~pyTooling.CLIAbstraction.Argument.PathListArgument`.
 	"""
 	# The output format can be forced to the POSIX format with :py:data:`_PosixFormat`.
-	_path: Path
+	_path: Path  #: Path this argument represents.
 
 	def __init__(self, path: Path) -> None:
 		"""
@@ -644,20 +600,15 @@ class PathArgument(CommandLineArgument):
 	@property
 	def Value(self) -> Path:
 		"""
-		Get the internal path object.
+		Property to access the internal path object (:attr:`_path`).
 
-		:returns: Internal path object.
+		:returns:          Internal path object.
+		:raises TypeError: If an assigned value is not of type :class:`~pathlib.Path`.
 		"""
 		return self._path
 
 	@Value.setter
 	def Value(self, value: Path) -> None:
-		"""
-		Set the internal path object.
-
-		:param value:      Value to set.
-		:raises TypeError: If value is not of type :class:`~pathlib.Path`.
-		"""
 		if not isinstance(value, Path):
 			ex = TypeError("Value is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -691,7 +642,7 @@ class PathListArgument(CommandLineArgument):
 	Represents a list of path arguments  (:class:`~pyTooling.CLIAbstraction.Argument.PathArgument`).
 	"""
 	# The output format can be forced to the POSIX format with :py:data:`_PosixFormat`.
-	_paths: List[Path]
+	_paths: list[Path]  #: Paths this argument represents.
 
 	def __init__(self, paths: Iterable[Path]) -> None:
 		"""
@@ -710,24 +661,20 @@ class PathListArgument(CommandLineArgument):
 			self._paths.append(path)
 
 	@property
-	def Value(self) -> List[Path]:
+	def Value(self) -> list[Path]:
 		"""
-		Get the internal list of path objects.
+		Property to access the internal list of path objects (:attr:`_paths`).
 
-		:returns: Reference to the internal list of path objects.
+		.. note:: On assignment, the list object is not replaced, but cleared and then reused by adding the given elements
+		   of the iterable.
+
+		:returns:          Reference to the internal list of path objects.
+		:raises TypeError: If an assigned iterable contains elements which are not of type :class:`~pathlib.Path`.
 		"""
 		return self._paths
 
 	@Value.setter
 	def Value(self, value: Iterable[Path]) -> None:
-		"""
-		Overwrite all elements in the internal list of path objects.
-
-		.. note:: The list object is not replaced, but cleared and then reused by adding the given elements in the iterable.
-
-		:param value:      List of path objects to set.
-		:raises TypeError: If value contains elements, which are not of type :class:`~pathlib.Path`.
-		"""
 		self._paths.clear()
 		for path in value:
 			if not isinstance(path, Path):

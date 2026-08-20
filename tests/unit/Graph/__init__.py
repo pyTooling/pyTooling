@@ -28,14 +28,18 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Graph."""
+"""
+Unit tests for :mod:`pyTooling.Graph`: construction, subgraphs, the element attributes (name, ID, value,
+weight, key-value-pairs), the iteration methods, and the conversion of a graph into a tree.
+"""
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
-from unittest import TestCase
 
 from pyTooling.Decorators import readonly
-from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, DuplicateVertexError, CycleError
+from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, CycleError
+from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,7 +48,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Construction(TestCase):
+class Construction(Testcase):
 	def test_Graph(self) -> None:
 		graph = Graph()
 
@@ -436,7 +440,7 @@ class Construction(TestCase):
 		self.assertEqual(7, next(iter(v1.Graph.Components)).VertexCount)
 
 
-class Subgraphs(TestCase):
+class Subgraphs(Testcase):
 	def test_OuterVertices(self) -> None:
 		graph = Graph()
 		subgraph1 = Subgraph(name="subgraph1", graph=graph)
@@ -537,7 +541,7 @@ class Subgraphs(TestCase):
 		self.assertTupleEqual((link12,), vertex2.InboundLinks)
 
 
-class Names(TestCase):
+class Names(Testcase):
 	def test_Graph_NoName(self) -> None:
 		graph = Graph()
 
@@ -563,7 +567,7 @@ class Names(TestCase):
 			graph.Name = 25
 
 
-class IDs(TestCase):
+class IDs(Testcase):
 	def test_VertexNoneID(self) -> None:
 		graph = Graph()
 		vertex = Vertex(graph=graph)
@@ -626,7 +630,7 @@ class IDs(TestCase):
 			_ = Vertex(vertexID=1, graph=graph)
 
 
-class Values(TestCase):
+class Values(Testcase):
 	def test_VertexNoneValue(self) -> None:
 		graph = Graph()
 		vertex = Vertex(graph=graph)
@@ -722,7 +726,7 @@ class Values(TestCase):
 		self.assertIsNone(edge12.Value)
 
 
-class Weights(TestCase):
+class Weights(Testcase):
 	def test_VertexNoneWeight(self) -> None:
 		graph = Graph()
 		vertex = Vertex(graph=graph)
@@ -768,7 +772,7 @@ class Weights(TestCase):
 		self.assertIsNone(edge12.Weight)
 
 
-class Dicts(TestCase):
+class Dicts(Testcase):
 	def test_GraphDict(self) -> None:
 		graph = Graph()
 
@@ -885,7 +889,7 @@ class Dicts(TestCase):
 			_ = edge12["key"]
 
 
-class EdgesAndLinks(TestCase):
+class EdgesAndLinks(Testcase):
 	def test_EdgeToVertex(self) -> None:
 		graph = Graph()
 		subgraph = Subgraph(graph=graph)
@@ -1070,7 +1074,7 @@ class EdgesAndLinks(TestCase):
 				self.assertIn("are in the same subgraph", str(context.exception))
 
 
-class Iterate(TestCase):
+class Iterate(Testcase):
 	class TestGraph:
 		_vertexCount: int
 		_edgeCount:   int
@@ -1501,3 +1505,211 @@ class GraphToTree(Iterate):
 
 		self.assertEqual(g.VertexCount, tree.Size)
 		self.assertSetEqual(set([v.Value for v in g.IterateLeafs()]), set([n.Value for n in tree.IterateLeafs()]))
+
+
+class DuplicateIdentifiers(Testcase):
+	"""A duplicate identifier is carried by the exception, not only formatted into its message."""
+
+	def test_ADuplicateVertexIDIsCarried(self) -> None:
+		graph = Graph()
+		Vertex(vertexID="v1", graph=graph)
+
+		with self.assertRaises(DuplicateVertexError) as context:
+			Vertex(vertexID="v1", graph=graph)
+
+		self.assertEqual("v1", context.exception.VertexID)
+
+	def test_ADuplicateEdgeIDIsCarried(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		first.EdgeToVertex(second, edgeID="e1")
+
+		with self.assertRaises(DuplicateEdgeError) as context:
+			first.EdgeToVertex(second, edgeID="e1")
+
+		self.assertEqual("e1", context.exception.EdgeID)
+
+
+class Deletion(Testcase):
+	"""Deleting a vertex, an edge or a link unregisters it everywhere it was registered."""
+
+	def test_Edge(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		edge = first.EdgeToVertex(second, edgeID="e1")
+
+		edge.Delete()
+
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(0, len(first.OutboundEdges))
+		self.assertEqual(0, len(second.InboundEdges))
+
+	def test_Edge_WithoutID(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		edge = first.EdgeToVertex(second)
+
+		edge.Delete()
+
+		self.assertEqual(0, graph.EdgeCount)
+
+	def test_Edge_InSubgraph(self) -> None:
+		graph = Graph()
+		subgraph = Subgraph(graph=graph, name="sub")
+		first = Vertex(vertexID="v1", subgraph=subgraph)
+		second = Vertex(vertexID="v2", subgraph=subgraph)
+		edge = first.EdgeToVertex(second, edgeID="e1")
+
+		edge.Delete()
+
+		self.assertEqual(0, subgraph.EdgeCount)
+
+	def test_Link(self) -> None:
+		graph = Graph()
+		outer = Subgraph(graph=graph, name="outer")
+		inner = Subgraph(graph=graph, name="inner")
+		first = Vertex(vertexID="v1", subgraph=outer)
+		second = Vertex(vertexID="v2", subgraph=inner)
+		link = first.LinkToVertex(second, linkID="l1")
+
+		link.Delete()
+
+		self.assertEqual(0, len(first.OutboundLinks))
+		self.assertEqual(0, len(second.InboundLinks))
+		self.assertEqual(0, outer.LinkCount)
+		self.assertEqual(0, inner.LinkCount)
+
+	def test_Link_WithoutID(self) -> None:
+		graph = Graph()
+		outer = Subgraph(graph=graph, name="outer")
+		inner = Subgraph(graph=graph, name="inner")
+		first = Vertex(vertexID="v1", subgraph=outer)
+		second = Vertex(vertexID="v2", subgraph=inner)
+		link = first.LinkToVertex(second)
+
+		link.Delete()
+
+		self.assertEqual(0, outer.LinkCount)
+		self.assertEqual(0, inner.LinkCount)
+
+	def test_Vertex(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		first.EdgeToVertex(second, edgeID="e1")
+		second.EdgeToVertex(first, edgeID="e2")
+
+		second.Delete()
+
+		self.assertEqual(1, graph.VertexCount)
+		self.assertFalse(graph.HasVertexByID("v2"))
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(0, len(first.OutboundEdges))
+		self.assertEqual(0, len(first.InboundEdges))
+
+	def test_Vertex_WithoutID(self) -> None:
+		graph = Graph()
+		first = Vertex(graph=graph)
+		second = Vertex(graph=graph)
+		first.EdgeToVertex(second)
+
+		second.Delete()
+
+		self.assertEqual(1, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+
+	def test_Vertex_SelfLoop(self) -> None:
+		graph = Graph()
+		vertex = Vertex(vertexID="v1", graph=graph)
+		vertex.EdgeToVertex(vertex, edgeID="e1")
+
+		vertex.Delete()
+
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+
+	def test_Vertex_InSubgraph(self) -> None:
+		graph = Graph()
+		subgraph = Subgraph(graph=graph, name="sub")
+		first = Vertex(vertexID="v1", subgraph=subgraph)
+		Vertex(vertexID="v2", subgraph=subgraph)
+
+		first.Delete()
+
+		self.assertEqual(1, subgraph.VertexCount)
+
+	def test_Vertex_WithLinks(self) -> None:
+		graph = Graph()
+		outer = Subgraph(graph=graph, name="outer")
+		inner = Subgraph(graph=graph, name="inner")
+		first = Vertex(vertexID="v1", subgraph=outer)
+		second = Vertex(vertexID="v2", subgraph=inner)
+		first.LinkToVertex(second, linkID="l1")
+
+		first.Delete()
+
+		self.assertEqual(0, len(second.InboundLinks))
+		self.assertEqual(0, outer.LinkCount)
+		self.assertEqual(0, inner.LinkCount)
+
+	def test_AttributesAreClearedNotDropped(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		edge = first.EdgeToVertex(second, edgeID="e1")
+		edge["key"] = "value"
+
+		edge.Delete()
+
+		self.assertEqual(0, len(edge))
+		self.assertNotIn("key", edge)
+
+	def test_AttributesOfADeletedVertexAreQueryable(self) -> None:
+		graph = Graph()
+		vertex = Vertex(vertexID="v1", graph=graph)
+		vertex["key"] = "value"
+
+		vertex.Delete()
+
+		self.assertEqual(0, len(vertex))
+		self.assertNotIn("key", vertex)
+
+
+class Reversing(Testcase):
+	"""Reversing a single edge or link moves it between the inbound and outbound lists of both vertices."""
+
+	def test_Edge(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		edge = first.EdgeToVertex(second, edgeID="e1")
+
+		edge.Reverse()
+
+		self.assertIs(second, edge.Source)
+		self.assertIs(first, edge.Destination)
+		self.assertEqual(0, len(first.OutboundEdges))
+		self.assertEqual(1, len(first.InboundEdges))
+		self.assertEqual(1, len(second.OutboundEdges))
+		self.assertEqual(0, len(second.InboundEdges))
+
+	def test_Link(self) -> None:
+		graph = Graph()
+		outer = Subgraph(graph=graph, name="outer")
+		inner = Subgraph(graph=graph, name="inner")
+		first = Vertex(vertexID="v1", subgraph=outer)
+		second = Vertex(vertexID="v2", subgraph=inner)
+		link = first.LinkToVertex(second, linkID="l1")
+
+		link.Reverse()
+
+		self.assertIs(second, link.Source)
+		self.assertIs(first, link.Destination)
+		self.assertEqual(0, len(first.OutboundLinks))
+		self.assertEqual(1, len(first.InboundLinks))
+		self.assertEqual(1, len(second.OutboundLinks))
+		self.assertEqual(0, len(second.InboundLinks))
+

@@ -29,11 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :func:`isnestedclass`.
+Unit tests for :func:`pyTooling.Common.isnestedclass`.
 """
-from unittest import TestCase
-
-from pyTooling.Common import isnestedclass
+from pyTooling.Common  import isnestedclass
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -56,7 +55,7 @@ class Class_2:
 	pass
 
 
-class IsNestedClass(TestCase):
+class IsNestedClass(Testcase):
 	def test_SameClass(self) -> None:
 		self.assertFalse(isnestedclass(Class_1, Class_1))
 

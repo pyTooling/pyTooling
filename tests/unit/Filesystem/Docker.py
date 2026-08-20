@@ -28,14 +28,14 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Filesystem.Docker."""
+"""
+Unit tests for :mod:`pyTooling.Filesystem.Docker`: slicing a filesystem tree into image layers.
+"""
 from pathlib  import Path
-from random   import randint
-
-from unittest import TestCase
 
 from pyTooling.Filesystem        import Root, Directory, Filename, File
 from pyTooling.Filesystem.Docker import LayerCake, Layer
+from pyTooling.Testing           import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_LayerCake(self) -> None:
 		cake = LayerCake(None)
 
@@ -139,7 +139,7 @@ class Instantiation(TestCase):
 		self.assertIsNone(thirdLayer.NextLayer)
 
 
-class Slicing(TestCase):
+class Slicing(Testcase):
 	def test_LayerCake(self) -> None:
 		print()
 		fileSizes = [

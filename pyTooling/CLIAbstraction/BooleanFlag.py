@@ -34,21 +34,23 @@ Boolean flags are arguments with a name and different pattern for a positive (``
 
 .. seealso::
 
-   * For simple flags. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.Flag`
-   * For flags with a value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
-   * For flags that have an optional value. |br|
-     |rarr| :mod:`~pyTooling.CLIAbstraction.NamedOptionalValuedFlag`
+   :mod:`~pyTooling.CLIAbstraction.Flag`
+      |rarr| For simple flags.
+   :mod:`~pyTooling.CLIAbstraction.ValuedFlag`
+      |rarr| For flags with a value.
+   :class:`~pyTooling.CLIAbstraction.OptionalValuedFlag.OptionalValuedFlag`
+      |rarr| For flags that have an optional value.
 """
-from typing import ClassVar, Union, Iterable, Any, Optional as Nullable, Self
+from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
 
 from pyTooling.Decorators              import export
+from pyTooling.MetaClasses             import abstractclass
 from pyTooling.CLIAbstraction.Argument import NamedArgument, ValuedArgument
 
 
 @export
-class BooleanFlag(NamedArgument, ValuedArgument):
+@abstractclass
+class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 	"""
 	Class and base-class for all BooleanFlag classes, which represents a flag argument with different pattern for an
 	enabled/positive (``True``) or disabled/negative (``False``) state.
@@ -62,16 +64,17 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 	* False: ``without-checks``
 	"""
 
-	_falsePattern: ClassVar[str]
+	_falsePattern: ClassVar[str]  #: Format string used when the flag's value is ``False``; :attr:`_pattern` is used for ``True``.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Any) -> None:
 		"""
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -84,24 +87,10 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 		cls._falsePattern = falsePattern
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is BooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 	def __init__(self, value: bool) -> None:
 		"""Initializes a BooleanFlag instance.
 
-		:param value: Initial value set for this argument instance.
+		:param value: ``True`` adds the flag, ``False`` its negation.
 		"""
 		ValuedArgument.__init__(self, value)
 
@@ -109,7 +98,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
 		on the internal name and value.
 
-		:returns: Formatted argument.
+		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
@@ -120,6 +109,7 @@ class BooleanFlag(NamedArgument, ValuedArgument):
 
 
 @export
+@abstractclass
 class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-{0}"):
 	"""Represents a :py:class:`BooleanFlag` with a single dash.
 
@@ -134,9 +124,10 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"-with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"-without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -145,22 +136,9 @@ class ShortBooleanFlag(BooleanFlag, pattern="-with-{0}", falsePattern="-without-
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is ShortBooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without-{0}"):
 	"""Represents a :py:class:`BooleanFlag` with a double dash.
 
@@ -175,9 +153,10 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"--with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"--without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -186,22 +165,9 @@ class LongBooleanFlag(BooleanFlag, pattern="--with-{0}", falsePattern="--without
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
 
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is LongBooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)
-
 
 @export
+@abstractclass
 class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/without-{0}"):
 	"""Represents a :py:class:`BooleanFlag` with a slash.
 
@@ -216,9 +182,10 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		This method is called when a class is derived.
 
 		:param args:         Any positional arguments.
-		:param pattern:      This pattern is used to format an argument when the value is ``True``. |br|
+		:param name:         Optional, name of the flag, inserted into the patterns.
+		:param pattern:      Optional, this pattern is used to format an argument when the value is ``True``. |br|
 		                     Default: ``"/with-{0}"``.
-		:param falsePattern: This pattern is used to format an argument when the value is ``False``. |br|
+		:param falsePattern: Optional, this pattern is used to format an argument when the value is ``False``. |br|
 		                     Default: ``"/without-{0}"``.
 		:param kwargs:       Any keyword argument.
 		"""
@@ -226,17 +193,3 @@ class WindowsBooleanFlag(BooleanFlag, pattern="/with-{0}", falsePattern="/withou
 		kwargs["pattern"] = pattern
 		kwargs["falsePattern"] = falsePattern
 		super().__init_subclass__(*args, **kwargs)
-
-	# TODO: the whole class should be marked as abstract
-	# TODO: a decorator should solve the issue and overwrite the __new__ method with that code
-	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		"""
-		Check if this class was directly instantiated without being derived to a subclass. If so, raise an error.
-
-		:param args:       Any positional arguments.
-		:param kwargs:     Any keyword arguments.
-		:raises TypeError: When this class gets directly instantiated without being derived to a subclass.
-		"""
-		if cls is WindowsBooleanFlag:
-			raise TypeError(f"Class '{cls.__name__}' is abstract.")
-		return super().__new__(cls, *args, **kwargs)

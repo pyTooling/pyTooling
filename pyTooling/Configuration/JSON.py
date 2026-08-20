@@ -35,20 +35,22 @@ Configuration reader for JSON files.
 
    See :ref:`high-level help <CONFIG/FileFormat/JSON>` for explanations and usage examples.
 """
-from json          import load
-from pathlib       import Path
-from typing        import Any, Dict, List, Union, Iterator as typing_Iterator, Self
+from __future__              import annotations
 
-from pyTooling.Common          import getFullyQualifiedName
-from pyTooling.Decorators      import export
-from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
-from pyTooling.Configuration   import InterpolationException, KeyNotFoundException, PathExpressionException
-from pyTooling.Configuration   import UnsupportedValueTypeException
-from pyTooling.Configuration   import Node as Abstract_Node
-from pyTooling.Configuration   import Dictionary as Abstract_Dict
-from pyTooling.Configuration   import Sequence as Abstract_Seq
-from pyTooling.Configuration   import Configuration as Abstract_Configuration
+from json                    import load
+from pathlib                 import Path
+from typing                  import Any, Union, Iterator as typing_Iterator, Self
+
+from pyTooling.Common        import getFullyQualifiedName
+from pyTooling.Decorators    import export, InheritDocString
+from pyTooling.MetaClasses   import ExtendedType
+from pyTooling.Configuration import ConfigurationException, KeyT, NodeT, ValueT
+from pyTooling.Configuration import InterpolationException, KeyNotFoundException, PathExpressionException
+from pyTooling.Configuration import UnsupportedValueTypeException
+from pyTooling.Configuration import Node as Abstract_Node
+from pyTooling.Configuration import Dictionary as Abstract_Dict
+from pyTooling.Configuration import Sequence as Abstract_Seq
+from pyTooling.Configuration import Configuration as Abstract_Configuration
 
 
 @export
@@ -57,17 +59,17 @@ class Node(Abstract_Node):
 	Node in a JSON configuration data structure.
 	"""
 
-	_jsonNode: Union[Dict, List]  #: Reference to the associated JSON node.
-	_cache:    Dict[str, ValueT]
-	_key:      KeyT               #: Key of this node.
-	_length:   int                #: Number of sub-elements.
+	_jsonNode: Union[dict[str, Any], list[Any]]  #: Reference to the associated JSON node.
+	_cache:    dict[str, ValueT]                 #: Cache of already converted sub-nodes and values, by key.
+	_key:      KeyT                              #: Key of this node.
+	_length:   int                               #: Number of sub-elements.
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
-		jsonNode: Union[Dict, List]
+		jsonNode: Union[dict[str, Any], list[Any]]
 	) -> None:
 		"""
 		Initializes a JSON node.
@@ -84,21 +86,12 @@ class Node(Abstract_Node):
 		self._key =      key
 		self._length =   len(jsonNode)
 
+	@InheritDocString(Abstract_Node)
 	def __len__(self) -> int:
-		"""
-		Returns the number of sub-elements.
-
-		:returns: Number of sub-elements.
-		"""
 		return self._length
 
+	@InheritDocString(Abstract_Node)
 	def __getitem__(self, key: KeyT) -> ValueT:
-		"""
-		Access an element in the node by index or key.
-
-		:param key: Index or key of the element.
-		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
-		"""
 		return self._GetNodeOrValue(str(key))
 
 	@property
@@ -106,7 +99,9 @@ class Node(Abstract_Node):
 		"""
 		Property to access the node's key.
 
-		:returns: Key of the node.
+		:returns:                    Key of the node.
+		:raises NotImplementedError: If a new key is assigned; renaming a key is not supported by this configuration
+		                             implementation.
 		"""
 		return self._key
 
@@ -114,18 +109,19 @@ class Node(Abstract_Node):
 	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError()
 
+	@InheritDocString(Abstract_Node)
 	def QueryPath(self, query: str) -> ValueT:
-		"""
-		Return a node or value based on a path description to that node or value.
-
-		:param query: String describing the path to the node or value.
-		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
-		"""
 		path = self._ToPath(query)
 		return self._GetNodeOrValueByPathExpression(path)
 
 	@staticmethod
-	def _ToPath(query: str) -> List[Union[str, int]]:
+	def _ToPath(query: str) -> list[Union[str, int]]:
+		"""
+		Split a path expression into its elements.
+
+		:param query: Path expression, with its elements separated by ``:``.
+		:returns:     List of keys and indices.
+		"""
 		return query.split(":")
 
 	def _LookupKey(self, key: str) -> Any:
@@ -175,6 +171,18 @@ class Node(Abstract_Node):
 			return f"Node '{self._key}' is a sequence with indices 0..{self._length - 1}."
 
 	def _GetNodeOrValue(self, key: str) -> ValueT:
+		"""
+		Return a sub-node or a value by key, converting it on first access.
+
+		The converted object is cached, so a second access returns the same node object rather than a new one.
+
+		:param key:                            Key or index to look up.
+		:returns:                              A dictionary node, a sequence node, or a scalar value with its variables
+		                                       resolved.
+		:raises KeyNotFoundException:          If the key doesn't exist in this node.
+		:raises UnsupportedValueTypeException: If the JSON parser returned a value that is neither a scalar, nor a
+		                                       node.
+		"""
 		try:
 			value = self._cache[key]
 		except KeyError:
@@ -199,6 +207,19 @@ class Node(Abstract_Node):
 		return value
 
 	def _ResolveVariables(self, value: str) -> str:
+		"""
+		Resolve the ``${...}`` variables inside a value.
+
+		A variable references another node by a path expression, so a value can be composed from other values of the
+		same configuration.
+
+		:param value:                   The raw value, possibly containing variables.
+		:returns:                       The value with every variable replaced by what it references.
+		:raises InterpolationException: If a variable is malformed - a dangling ``$`` at the end of the value, or a
+		                                missing closing ``}`` for a ``${`` at some position. |br|
+		                                Use ``$$`` to escape a literal dollar sign.
+		:raises KeyNotFoundException:   If a referenced key doesn't exist.
+		"""
 		if value == "":
 			return ""
 		elif "$" not in value:
@@ -243,7 +264,16 @@ class Node(Abstract_Node):
 
 		return result
 
-	def _GetValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+	def _GetValueByPathExpression(self, path: list[KeyT]) -> ValueT:
+		"""
+		Return the value the given path refers to.
+
+		:param path:                     Path elements, where ``..`` selects the parent node.
+		:returns:                        The scalar value at that path.
+		:raises KeyNotFoundException:    If a path element doesn't exist.
+		:raises PathExpressionException: If the path resolves to a node instead of a value. Extend the path expression
+		                                 to address a scalar value.
+		"""
 		node = self
 		for p in path:
 			if p == "..":
@@ -259,7 +289,14 @@ class Node(Abstract_Node):
 
 		return node
 
-	def _GetNodeOrValueByPathExpression(self, path: List[KeyT]) -> ValueT:
+	def _GetNodeOrValueByPathExpression(self, path: list[KeyT]) -> ValueT:
+		"""
+		Return the node or value the given path refers to.
+
+		:param path:                  Path elements, where ``..`` selects the parent node.
+		:returns:                     A node or a scalar value at that path.
+		:raises KeyNotFoundException: If a path element doesn't exist.
+		"""
 		node = self
 		for p in path:
 			if p == "..":
@@ -274,14 +311,14 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a JSON data file."""
 
-	_keys: List[KeyT]  #: List of keys in this dictionary.
+	_keys: list[KeyT]           #: List of keys in this dictionary.
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
-		jsonNode: Dict
+		jsonNode: dict
 	) -> None:
 		"""
 		Initializes a JSON dictionary.
@@ -314,8 +351,8 @@ class Dictionary(Node, Abstract_Dict):
 		class Iterator(metaclass=ExtendedType, slots=True):
 			"""Iterator to iterate dictionary items."""
 
-			_iter: typing_Iterator
-			_obj:  Dictionary
+			_iter: typing_Iterator  #: Iterator over the underlying dictionary's keys.
+			_obj:  Dictionary       #: The dictionary being iterated.
 
 			def __init__(self, obj: Dictionary) -> None:
 				"""
@@ -352,10 +389,10 @@ class Sequence(Node, Abstract_Seq):
 
 	def __init__(
 		self,
-		root:     "Configuration",
+		root:     Configuration,
 		parent:   NodeT,
 		key:      KeyT,
-		jsonNode: List
+		jsonNode: list
 	) -> None:
 		"""
 		Initializes a JSON sequence (list).
@@ -424,7 +461,7 @@ setattr(Node, "SEQ_TYPE", Sequence)
 class Configuration(Dictionary, Abstract_Configuration):
 	"""A configuration read from a JSON file."""
 
-	_jsonConfig: Dict
+	_jsonConfig: dict  #: The parsed JSON document this configuration is based on.
 
 	def __init__(self, configFile: Path) -> None:
 		"""
@@ -432,7 +469,8 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the JSON file are accessible via Python's dictionary syntax.
 
-		:param configFile: Configuration file to read and parse.
+		:param configFile:              Configuration file to read and parse.
+		:raises ConfigurationException: If the JSON file doesn't exist or can't be parsed.
 		"""
 		if not configFile.exists():
 			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
@@ -452,5 +490,9 @@ class Configuration(Dictionary, Abstract_Configuration):
 		"""
 		return self._GetNodeOrValue(str(key))
 
-	def __setitem__(self, key: str, value: ValueT) -> None:
-		raise NotImplementedError()
+	#
+	# 	:param key:                  Key of the value to write.
+	# 	:param value:                The new value.
+	# 	:raises NotImplementedError: Writing a configuration is not supported by this implementation.
+	# 	"""
+	# 	raise NotImplementedError()

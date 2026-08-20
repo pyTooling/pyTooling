@@ -28,11 +28,13 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest             import TestCase
+"""
+Unit tests for :class:`pyTooling.Versioning.CalendarVersion` and its year-based variants: parsing,
+comparing, validating and formatting.
+"""
 from pyTooling.Versioning import Flags, Parts, CalendarVersion, WordSizeValidator, MaxValueValidator
 from pyTooling.Versioning import YearMonthVersion, YearWeekVersion, YearReleaseVersion, YearMonthDayVersion
-
+from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -40,7 +42,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Major(self) -> None:
 		version = CalendarVersion(1)
 
@@ -71,7 +73,7 @@ class Instantiation(TestCase):
 			_ = CalendarVersion(1, -2)
 
 
-class Parsing(TestCase):
+class Parsing(Testcase):
 	def test_None(self) -> None:
 		with self.assertRaises(ValueError):
 			CalendarVersion.Parse(None)
@@ -176,7 +178,7 @@ class Parsing(TestCase):
 		self.assertEqual("2024.10.15", str(version))
 
 
-# class CompareVersions(TestCase):
+# class CompareVersions(Testcase):
 # 	def test_Equal(self) -> None:
 # 		l = [
 # 			("0.0.0", "0.0.0"),
@@ -275,7 +277,7 @@ class Parsing(TestCase):
 # 				self.assertGreaterEqual(v1, v2)
 
 
-class HashVersions(TestCase):
+class HashVersions(Testcase):
 	def test_CalendarVersion(self) -> None:
 		version = CalendarVersion.Parse("2024.2")
 
@@ -302,7 +304,7 @@ class HashVersions(TestCase):
 		self.assertIsNotNone(version.__hash__())
 
 
-class CompareNone(TestCase):
+class CompareNone(Testcase):
 	def test_Equal(self) -> None:
 		version = CalendarVersion(1, 2)
 
@@ -340,7 +342,7 @@ class CompareNone(TestCase):
 			_ = version >= None
 
 
-class CompareString(TestCase):
+class CompareString(Testcase):
 	def test_Equal(self) -> None:
 		version = CalendarVersion(1, 2)
 
@@ -372,7 +374,7 @@ class CompareString(TestCase):
 		self.assertGreaterEqual("1.2", version)
 
 
-class CompareInteger(TestCase):
+class CompareInteger(Testcase):
 	def test_Equal(self) -> None:
 		version = CalendarVersion(1)
 
@@ -404,7 +406,7 @@ class CompareInteger(TestCase):
 		self.assertGreaterEqual(2, version)
 
 
-class CompareOtherType(TestCase):
+class CompareOtherType(Testcase):
 	def test_Equal(self) -> None:
 		version = CalendarVersion(1, 2)
 
@@ -442,7 +444,7 @@ class CompareOtherType(TestCase):
 			_ = version >= 1.2
 
 
-class ValidatedWordSize(TestCase):
+class ValidatedWordSize(Testcase):
 	def test_All8Bit_AllInRange(self) -> None:
 		version = CalendarVersion.Parse("12.64", WordSizeValidator(8))
 
@@ -480,7 +482,7 @@ class ValidatedWordSize(TestCase):
 		self.assertIn("Version.Minor", str(ex.exception))
 
 
-class ValidatedMaxValue(TestCase):
+class ValidatedMaxValue(Testcase):
 	def test_All63_AllInRange(self) -> None:
 		version = CalendarVersion.Parse("12.63", MaxValueValidator(63))
 
@@ -500,7 +502,7 @@ class ValidatedMaxValue(TestCase):
 		self.assertIn("Version.Minor", str(ex.exception))
 
 
-class FormattingUsingRepr(TestCase):
+class FormattingUsingRepr(Testcase):
 	def test_Major(self) -> None:
 		version = CalendarVersion(1)
 
@@ -518,7 +520,7 @@ class FormattingUsingRepr(TestCase):
 		self.assertEqual("1.2", repr(version))
 
 
-class FormattingUsingStr(TestCase):
+class FormattingUsingStr(Testcase):
 	def test_Major(self) -> None:
 		version = CalendarVersion(1)
 
@@ -535,7 +537,7 @@ class FormattingUsingStr(TestCase):
 		self.assertEqual("1.2", str(version))
 
 
-class FormattingUsingFormat(TestCase):
+class FormattingUsingFormat(Testcase):
 	def test_Empty(self) -> None:
 		version = CalendarVersion(1, 2)
 
@@ -568,7 +570,7 @@ class FormattingUsingFormat(TestCase):
 		self.assertEqual("v1.2", f"{version:v%M.%m}")
 
 
-class InstantiationOfYearMonthVersion(TestCase):
+class InstantiationOfYearMonthVersion(Testcase):
 	def test_Year(self) -> None:
 		version = YearMonthVersion(1)
 
@@ -586,7 +588,7 @@ class InstantiationOfYearMonthVersion(TestCase):
 		self.assertEqual(Flags.Clean, version.Flags)
 
 
-class InstantiationOfYearWeekVersion(TestCase):
+class InstantiationOfYearWeekVersion(Testcase):
 	def test_Year(self) -> None:
 		version = YearWeekVersion(1)
 
@@ -604,7 +606,7 @@ class InstantiationOfYearWeekVersion(TestCase):
 		self.assertEqual(Flags.Clean, version.Flags)
 
 
-class InstantiationOfYearReleaseVersion(TestCase):
+class InstantiationOfYearReleaseVersion(Testcase):
 	def test_Year(self) -> None:
 		version = YearReleaseVersion(1)
 
@@ -622,7 +624,7 @@ class InstantiationOfYearReleaseVersion(TestCase):
 		self.assertEqual(Flags.Clean, version.Flags)
 
 
-class InstantiationOfYearMonthDayVersion(TestCase):
+class InstantiationOfYearMonthDayVersion(Testcase):
 	def test_Year(self) -> None:
 		version = YearMonthDayVersion(1)
 
@@ -648,3 +650,31 @@ class InstantiationOfYearMonthDayVersion(TestCase):
 		self.assertEqual(3, version.Day)
 		self.assertEqual(0, version.Build)
 		self.assertEqual(Flags.Clean, version.Flags)
+
+
+class RenderingIsConsistent(Testcase):
+	"""Parsing a version and constructing the same version must render the same string - finding T28."""
+
+	def test_ParsedAndConstructedAgree(self) -> None:
+		for text, numbers in (("2024", (2024, )), ("2024.10", (2024, 10)), ("2024.10.15", (2024, 10, 15))):
+			with self.subTest(version=text):
+				self.assertEqual(str(CalendarVersion(*numbers)), str(CalendarVersion.Parse(text)))
+				self.assertEqual(text, str(CalendarVersion.Parse(text)))
+
+	def test_AnAbsentPartIsNotInvented(self) -> None:
+		"""A missing part must not set its 'Parts' flag - that is what rendered '2024' as '2024.0'."""
+		version = CalendarVersion.Parse("2024")
+
+		self.assertEqual(Parts.Major | Parts.Level, version.Parts)
+		self.assertNotIn(Parts.Minor, version.Parts)
+
+	def test_ATwoPartVersionRendersTwoParts(self) -> None:
+		"""The year-month, year-week and year-release classes describe two parts, so a third must not appear."""
+		self.assertEqual("2024.10", str(YearMonthVersion(2024, 10)))
+		self.assertEqual("2024.42", str(YearWeekVersion(2024, 42)))
+		self.assertEqual("2024.3", str(YearReleaseVersion(2024, 3)))
+
+	def test_AThreePartVersionIsUnaffected(self) -> None:
+		self.assertEqual("2024.10.15", str(YearMonthDayVersion(2024, 10, 15)))
+		self.assertEqual("2024.10.15", str(YearMonthDayVersion.Parse("2024.10.15")))
+

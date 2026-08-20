@@ -29,11 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.ExtendedType`.
+Unit tests for object fields handled by :class:`pyTooling.MetaClasses.ExtendedType`, with and without slots.
 """
-from unittest              import TestCase
-
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -42,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class WithoutSlots(TestCase):
+class WithoutSlots(Testcase):
 	def test_NoInitValue_NoDunderInit_ClassCheck(self) -> None:
 		class Base(metaclass=ExtendedType):
 			_data0: int
@@ -122,7 +121,7 @@ class WithoutSlots(TestCase):
 		self.assertEqual(2, inst._data0)
 
 
-class WithSlots(TestCase):
+class WithSlots(Testcase):
 	def test_NoInitValue_NoDunderInit_InstCheck(self) -> None:
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: int

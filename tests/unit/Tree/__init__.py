@@ -28,13 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Tree."""
+"""
+Unit tests for :mod:`pyTooling.Tree`: construction, merging and splitting of trees, the loop detection, the
+iteration methods, and the rendering of a tree.
+"""
 from typing   import Any, Optional as Nullable, List, Tuple, Dict
-from unittest import TestCase
 
 from pytest   import mark
 
-from pyTooling.Tree import Node, AlreadyInTreeError, NoSiblingsError
+from pyTooling.Tree    import Node, AlreadyInTreeError, NoSiblingsError
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -43,7 +46,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Construction(TestCase):
+class Construction(Testcase):
 	def test_SingleNode(self) -> None:
 		root: Node[Nullable[Any], int, str, Any] = Node()
 
@@ -247,7 +250,7 @@ class Construction(TestCase):
 		self.assertIs(root, child.Parent)
 
 
-class MergeTree(TestCase):
+class MergeTree(Testcase):
 	def test_SetParent(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
@@ -292,12 +295,41 @@ class MergeTree(TestCase):
 			self.assertFalse(node.IsRoot)
 			self.assertIs(root, node.Root)
 
-	@mark.skip(reason="Not yet implemented!")
 	def test_AddChildren(self) -> None:
-		pass
+		root1 = Node(1)
+		children1 = [Node(11, parent=root1), Node(12, parent=root1)]
+		root2 = Node(2)
+		children2 = [Node(21, parent=root2), Node(22, parent=root2)]
+		root3 = Node(3)
+
+		root1.AddChildren((root2, root3))
+
+		self.assertEqual(2 + len(children1), len(tuple(root1.GetDescendants())) - len(children2))
+		for node in (root2, root3):
+			self.assertIs(root1, node.Parent)
+			self.assertIs(root1, node.Root)
+			self.assertEqual(1, node.Level)
+
+		# the merged tree carries the grandchildren with it
+		for node in children2:
+			self.assertIs(root1, node.Root)
+			self.assertEqual(2, node.Level)
+
+	def test_AddChildren_AlreadyInTree(self) -> None:
+		root = Node(1)
+		child = Node(11, parent=root)
+
+		with self.assertRaises(AlreadyInTreeError):
+			root.AddChildren((Node(2), child))
+
+	def test_AddChildren_TypeError(self) -> None:
+		root = Node(1)
+
+		with self.assertRaises(TypeError):
+			root.AddChildren((Node(2), "not a node"))
 
 
-class SplitTree(TestCase):
+class SplitTree(Testcase):
 	def test_SplitTreeWithoutIDs(self) -> None:
 		root = Node()
 		children = [Node(parent=root), Node(parent=root)]
@@ -352,12 +384,12 @@ class SplitTree(TestCase):
 
 		# check if subtree's IDs are not in main tree anymore
 
-	@mark.skip(reason="Not yet implemented!")
+	@mark.skip(reason="Node has no DeleteChild method yet - the tree offers no way to remove a node.")
 	def test_DeleteChild(self) -> None:
 		pass
 
 
-class Loops(TestCase):
+class Loops(Testcase):
 	def test_SelfLoop(self) -> None:
 		root = Node(1)
 
@@ -406,7 +438,7 @@ class Loops(TestCase):
 			grandchild[0].Parent = grandchild[1]
 
 
-class Features(TestCase):
+class Features(Testcase):
 	def test_NodeWithID(self) -> None:
 		root = Node(nodeID=1)
 
@@ -547,7 +579,7 @@ class Features(TestCase):
 		_ = str(nodeIDValue)
 
 
-class Iteration(TestCase):
+class Iteration(Testcase):
 	_root: Node
 	_children: List[Node]
 
@@ -658,7 +690,7 @@ class Iteration(TestCase):
 		], [node.ID for node in self._root.IterateLeafs()])
 
 
-class Exceptions(TestCase):
+class Exceptions(Testcase):
 	def test_NewNodeWithWrongParent(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Node(parent=1)
@@ -755,7 +787,7 @@ class Exceptions(TestCase):
 				pass
 
 
-class Rendering(TestCase):
+class Rendering(Testcase):
 	# parentID, nodeID, dict
 	_tree: Tuple[Tuple[int, int, Dict[str, float]], ...] = (
 		(0, 1, {"time": 11.0}), (0, 2, {"time": 3.2}), (0, 3, {"time": 7.9}),

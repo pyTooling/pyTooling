@@ -29,14 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Testcase for operating system program ``mkdir``.
-
-:copyright: Copyright 2007-2026 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
+Unit tests for :class:`pyTooling.CLIAbstraction.Environment` - the default environment and an artificial one.
 """
-from unittest     import TestCase
-
 from pyTooling.CLIAbstraction import Environment
+from pyTooling.Testing        import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -45,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class DefaultEnvironment(TestCase):
+class DefaultEnvironment(Testcase):
 	def test_Empty(self) -> None:
 		env = Environment(newVariables={})
 
@@ -59,7 +55,7 @@ class DefaultEnvironment(TestCase):
 		self.assertTrue("PATH" in env)
 
 
-class ArtificialEnvironment(TestCase):
+class ArtificialEnvironment(Testcase):
 	def test_Simple(self) -> None:
 		variables = {"PATH": "/bin"}
 		env = Environment(newVariables=variables)

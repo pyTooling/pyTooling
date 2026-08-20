@@ -28,9 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from unittest     import TestCase
-
+"""
+Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
+"""
 from pyTooling.Licensing import PYTHON_LICENSE_NAMES, SPDX_INDEX, License
+from pyTooling.Testing   import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -39,7 +41,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class LicenseDataClass(TestCase):
+class LicenseDataClass(Testcase):
 	def test_Properies(self) -> None:
 		license = License("spdx", "License Name", False, False)
 		self.assertEqual("spdx", license.SPDXIdentifier)
@@ -84,13 +86,13 @@ class LicenseDataClass(TestCase):
 		self.assertEqual("License Name", f"{license!s}")
 
 
-class SPDXLicenses(TestCase):
+class SPDXLicenses(Testcase):
 	def test_Apache(self) -> None:
 		self.assertIn("Apache-2.0", SPDX_INDEX)
 		self.assertIn("Apache-2.0", PYTHON_LICENSE_NAMES)
 
 
-# class PythonClassifiers(TestCase):
+# class PythonClassifiers(Testcase):
 # 	def test_OSIApproved(self) -> None:
 # 		for spdxId, item in PYTHON_LICENSE_NAMES.items():
 # 			license = SPDX_INDEX[spdxId]

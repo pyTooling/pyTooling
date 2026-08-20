@@ -28,13 +28,23 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Tools for software execution tracing."""
-from datetime  import datetime
-from time      import perf_counter_ns
-from threading import local
-from types     import TracebackType
-from typing import Optional as Nullable, List, Iterator, Type, Self, Iterable, Dict, Any, Tuple
+"""
+Tools for software execution tracing.
 
+.. seealso::
+
+   :mod:`pyTooling.Stopwatch`
+      |rarr| A single measurement instead of nested timespans.
+   :mod:`pyTooling.Tree`
+      |rarr| The tree data structure spans and their sub-spans form.
+"""
+from __future__            import annotations
+
+from datetime              import datetime
+from time                  import perf_counter_ns
+from threading             import local
+from types                 import TracebackType
+from typing                import Optional as Nullable, Iterator, Self, Iterable, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -61,17 +71,19 @@ class Event(metaclass=ExtendedType, slots=True):
 	It may contain arbitrary attributes (key-value pairs).
 	"""
 	_name:      str                 #: Name of the event.
-	_parent:    Nullable["Span"]    #: Reference to the parent span.
+	_parent:    Nullable[Span]      #: Reference to the parent span.
 	_time:      Nullable[datetime]  #: Timestamp of the event.
-	_dict:      Dict[str, Any]			#: Dictionary of associated attributes.
+	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
 
-	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable["Span"] = None) -> None:
+	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable[Span] = None) -> None:
 		"""
 		Initializes a named event.
 
-		:param name:   The name of the event.
-		:param time:   The optional time when the event happened.
-		:param parent: Reference to the parent span.
+		:param name:        The name of the event.
+		:param time:        Optional, time when the event happened.
+		:param parent:      Optional, reference to the parent span.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
 		if isinstance(name, str):
 			if name == "":
@@ -123,7 +135,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		return self._time
 
 	@readonly
-	def Parent(self) -> Nullable["Span"]:
+	def Parent(self) -> Nullable[Span]:
 		"""
 		Read-only property to access the event's parent span.
 
@@ -169,7 +181,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		return key in self._dict
 
-	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+	def __iter__(self) -> Iterator[tuple[str, Any]]:
 		"""
 		Returns an iterator to iterate all associated attributes of this event as :pycode:`(key, value)` tuples.
 
@@ -202,24 +214,26 @@ class Span(metaclass=ExtendedType, slots=True):
 	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
 	_name:      str                 #: Name of the timespan
-	_parent:    Nullable["Span"]    #: Reference to the parent span (or trace).
+	_parent:    Nullable[Span]      #: Reference to the parent span (or trace).
 
 	_beginTime: Nullable[datetime]  #: Timestamp when the timespan begins.
 	_endTime:   Nullable[datetime]  #: Timestamp when the timespan ends.
-	_startTime: Nullable[int]
-	_stopTime:  Nullable[int]
+	_startTime: Nullable[int]       #: Performance counter in ns when the timespan was started.
+	_stopTime:  Nullable[int]       #: Performance counter in ns when the timespan was stopped.
 	_totalTime: Nullable[int]       #: Duration of this timespan in ns.
 
-	_spans:     List["Span"]        #: Sub-timespans
-	_events:    List[Event]         #: Events happened within this timespan
-	_dict:      Dict[str, Any]      #: Dictionary of associated attributes.
+	_spans:     list[Span]          #: Sub-timespans
+	_events:    list[Event]         #: Events happened within this timespan
+	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
 
-	def __init__(self, name: str, parent: Nullable["Span"] = None) -> None:
+	def __init__(self, name: str, parent: Nullable[Span] = None) -> None:
 		"""
 		Initializes a timespan as part of a software execution trace.
 
-		:param name:   Name of the timespan.
-		:param parent: Reference to a parent span or trace.
+		:param name:        Name of the timespan.
+		:param parent:      Optional, reference to a parent span or trace.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
 		if isinstance(name, str):
 			if name == "":
@@ -261,7 +275,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		return self._name
 
 	@readonly
-	def Parent(self) -> Nullable["Span"]:
+	def Parent(self) -> Nullable[Span]:
 		"""
 		Read-only property to access the span's parent span or trace.
 
@@ -269,7 +283,13 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return self._parent
 
-	def _AddSpan(self, span: "Span") -> Self:
+	def _AddSpan(self, span: Span) -> Self:
+		"""
+		Append a sub-span to this timespan and set this timespan as its parent.
+
+		:param span: The sub-span to append.
+		:returns:    The appended sub-span.
+		"""
 		self._spans.append(span)
 		span._parent = self
 
@@ -294,7 +314,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		return len(self._spans)
 
 	# iterate subspans with optional predicate
-	def IterateSubSpans(self) -> Iterator["Span"]:
+	def IterateSubSpans(self) -> Iterator[Span]:
 		"""
 		Returns an iterator to iterate all nested sub-spans.
 
@@ -363,7 +383,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
 
 	@classmethod
-	def CurrentSpan(cls) -> "Span":
+	def CurrentSpan(cls) -> Span:
 		"""
 		Class-method to return the currently active timespan (span) or ``None``.
 
@@ -384,7 +404,9 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		A span will be started.
 
-		:returns: The span itself.
+		:returns:                 The span itself.
+		:raises TracingException: If no trace is active, so the span has nothing to attach to. |br|
+		                          Use a with-statement on :class:`Trace` to set up software execution tracing.
 		"""
 		global _threadLocalData
 
@@ -404,7 +426,7 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -467,7 +489,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return key in self._dict
 
-	def __iter__(self) -> Iterator[Tuple[str, Any]]:
+	def __iter__(self) -> Iterator[tuple[str, Any]]:
 		"""
 		Returns an iterator to iterate all associated attributes of this timespan as :pycode:`(key, value)` tuples.
 
@@ -484,6 +506,13 @@ class Span(metaclass=ExtendedType, slots=True):
 		return len(self._dict)
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
+		"""
+		Render this timespan and its sub-spans as indented lines.
+
+		:param indent:     Optional, indentation level of this timespan.
+		:param columnSize: Optional, column the durations are aligned at.
+		:returns:          One line per timespan, deepest last.
+		"""
 		result = []
 		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self._totalTime/1e6:8.3f} ms")
 		for span in self._spans:
@@ -492,6 +521,11 @@ class Span(metaclass=ExtendedType, slots=True):
 		return result
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this timespan.
+
+		:returns: The timespan's name, followed by its parents up to the trace.
+		"""
 		return f"{self._name} -> {self._parent!r}"
 
 	def __str__(self) -> str:
@@ -526,6 +560,11 @@ class Trace(Span):
 		super().__init__(name)
 
 	def __enter__(self) -> Self:
+		"""
+		Start the trace and register it as the current trace and current span of this thread.
+
+		:returns: The trace itself, so it can be named in an ``as`` clause.
+		"""
 		global _threadLocalData
 
 		# TODO: check if a trace is already setup
@@ -544,7 +583,7 @@ class Trace(Span):
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
@@ -568,7 +607,7 @@ class Trace(Span):
 		return None
 
 	@classmethod
-	def CurrentTrace(cls) -> "Trace":
+	def CurrentTrace(cls) -> Trace:
 		"""
 		Class-method to return the currently active trace or ``None``.
 
@@ -582,6 +621,13 @@ class Trace(Span):
 		return currentTrace
 
 	def Format(self, indent: int = 0, columnSize: int = 25) -> Iterable[str]:
+		"""
+		Render this trace and its spans as indented lines.
+
+		:param indent:     Optional, indentation level of the trace.
+		:param columnSize: Optional, column the durations are aligned at.
+		:returns:          A headline, followed by one line per timespan.
+		"""
 		result = []
 		result.append(f"{'  ' * indent}Software Execution Trace: {self._totalTime/1e6:8.3f} ms")
 		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self._totalTime/1e6:8.3f} ms")

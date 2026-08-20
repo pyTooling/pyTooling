@@ -28,12 +28,14 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for pyTooling.Graph.GraphML."""
-from unittest import TestCase
-
+"""
+Unit tests for :mod:`pyTooling.Graph.GraphML`: constructing a GraphML document, and converting a
+:mod:`pyTooling.Graph` graph or a :mod:`pyTooling.Tree` tree into one.
+"""
 from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
 from pyTooling.Tree          import Node as pyToolingNode
+from pyTooling.Testing       import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -42,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Construction(TestCase):
+class Construction(Testcase):
 	def test_Key(self) -> None:
 		key = Key("k1", AttributeContext.Node, "color", AttributeTypes.String)
 
@@ -254,7 +256,7 @@ class Construction(TestCase):
 			print(line, end="")
 
 
-class pyToolingGraph(TestCase):
+class pyToolingGraph(Testcase):
 	def test_ConvertGraph(self) -> None:
 		graph = pyTooling_Graph(name="g1")
 
@@ -306,7 +308,7 @@ class pyToolingGraph(TestCase):
 			print(line, end="")
 
 
-class pyToolingTree(TestCase):
+class pyToolingTree(Testcase):
 	def test_Conversion(self) -> None:
 		root = pyToolingNode(nodeID="n0", value="v0")
 		child1 = pyToolingNode("n1", "v1", parent=root)

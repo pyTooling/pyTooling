@@ -829,7 +829,7 @@ applying a single meta-class. In comparison, Python's approach in to provide mul
 :mod:`abc`) that can't be combined e.g. to a singleton using slots.
 
 :ref:`ExtendedType <META/ExtendedType>` allows to implement :ref:`slotted types <META/Slotted>`,
-:ref:`mixins <META/Mixin>`, :ref:`abstract and override methods <META/Abstract>` and :ref:`singletons <META/Singleton>`,
+:ref:`mixins <META/Mixin>`, :ref:`abstract and override methods <META/AbstractMethod>` and :ref:`singletons <META/Singleton>`,
 and combinations thereof. Exception messages in case of errors have been improved too.
 
 Slotted types significantly reduce the memory footprint by 4x and decrease the class field access time by 10..25%. While
@@ -844,7 +844,7 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
       :pycode:`class MyClass(metaclass=ExtendedType):`
         A class definition using the :class:`~pyTooling.MetaClasses.ExtendedType` meta-class. I can now implement
-        :ref:`abstract methods <META/Abstract>` using the decorators :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
+        :ref:`abstract methods <META/AbstractMethod>` using the decorators :ref:`DECO/AbstractMethod` or :ref:`DECO/MustOverride`.
 
       :pycode:`class MyClass(metaclass=ExtendedType, singleton=True):`
         A class defined with enabled :ref:`singleton <META/Singleton>` behavior allows only a single instance of that class to
@@ -990,15 +990,44 @@ Terminal
       a terminal. It's designed on the idea that command line programs emit one line of text per message. Each message
       can be categorized as normal text, warnings, errors, and many more.
 
-      Therefore, this package offers a :ref:`LineTerminal <TERM/LineTerminal>` implementation, derived from a basic
-      :ref:`Terminal <TERM/Terminal>` class. Of cause, it also includes colored outputs based on `colorama`.
+      Therefore, this package offers a :ref:`TerminalApplication <TERM/TerminalApplication>` implementation, derived
+      from a basic :ref:`TerminalBaseApplication <TERM/TerminalBaseApplication>` class. The message's
+      :ref:`severity <TERM/Severity>` decides whether it's visible at the configured verbosity, how it's formatted, and
+      to which stream it's written. Of cause, it also includes colored outputs based on `colorama`.
 
-      .. todo:: Terminal helpers.
+      See the :ref:`Terminal Application tutorial <TUTORIAL/TerminalApplication>`, which builds such a program step by
+      step.
 
    .. grid-item::
       :columns: 6
 
-      .. todo:: Needs example code
+      .. code-block:: Python
+
+         from sys import argv
+
+         from pyTooling.TerminalUI import TerminalApplication
+
+         class Application(TerminalApplication):
+           HeadLine = "My Application"
+
+           def Run(self) -> None:
+             self._PrintHeadline()
+             self.WriteNormal("A normal message.")
+             self.WriteVerbose("Only with --verbose.")
+             self.WriteWarning("A warning.")
+             self.ExitOnPreviousErrors()
+
+         def main() -> NoReturn:
+           program = Application()
+           program.Configure(verbose=("-v" in argv or "--verbose" in argv))
+
+           try:
+             program.Run()
+           except Exception as ex:
+             program.PrintException(ex)
+
+         if __name__ == "__main__":
+           main()
 
 
 .. _CONTRIBUTORS:
@@ -1118,6 +1147,18 @@ License
    :hidden:
 
    Terminal/index
+
+.. toctree::
+   :caption: Package Dependencies
+   :hidden:
+
+   PackageDependencies
+
+.. toctree::
+   :caption: Testing
+   :hidden:
+
+   Testing
 
 .. raw:: latex
 

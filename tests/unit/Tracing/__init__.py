@@ -28,12 +28,14 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Tracing`."""
-from colorama          import Fore
+"""
+Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attached to them.
+"""
 from time              import sleep
-from unittest          import TestCase
 
 from pyTooling.Tracing import TracingException, Trace, Span, Event
+from pyTooling.Testing import Testcase
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -41,7 +43,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_Trace(self) -> None:
 		t = Trace("trace")
 
@@ -103,7 +105,7 @@ class Instantiation(TestCase):
 		self.assertEqual(0, len([a for a in e]))
 
 
-class Context(TestCase):
+class Context(Testcase):
 	def test_Trace(self) -> None:
 		print()
 		self.assertIsNone(Trace.CurrentTrace())
@@ -250,7 +252,7 @@ class Context(TestCase):
 			print(line)
 
 
-class Attributes(TestCase):
+class Attributes(Testcase):
 	def test_Trace(self) -> None:
 		t = Trace("trace")
 

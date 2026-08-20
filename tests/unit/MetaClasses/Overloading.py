@@ -29,11 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for class :class:`pyTooling.MetaClasses.Overloading`.
+Unit tests for :class:`pyTooling.MetaClasses.Overloading`, which dispatches a method by its signature.
 """
-from unittest       import TestCase
-
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -50,7 +49,7 @@ class Application(metaclass=ExtendedType):
 		self.x = x
 
 
-class Overloading(TestCase):
+class Overloading(Testcase):
 	def test_OverloadingByTypeSignature(self) -> None:
 		app1 = Application(1)
 		self.assertEqual(app1.x, 1)

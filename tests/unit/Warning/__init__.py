@@ -28,11 +28,16 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Unit tests for :mod:`pyTooling.Warning`: collecting warnings within a call hierarchy, the handler protocol,
+and what happens when no collector is installed.
+"""
 from typing   import List
-from unittest import TestCase
 
 from pyTooling.Warning import WarningCollector, Warning, CriticalWarning
 from pyTooling.Warning import UnhandledExceptionException, UnhandledCriticalWarningException
+from pyTooling.Warning import EscalatedWarningException
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -90,7 +95,7 @@ class Handler:
 			self._c.methC()
 
 
-class NoWarningCollector(TestCase):
+class NoWarningCollector(Testcase):
 	def test_RaiseWarning(self) -> None:
 		a = ClassA("none")
 		a.methA_RaiseWarning()
@@ -110,7 +115,7 @@ class NoWarningCollector(TestCase):
 		self.assertEqual("Unhandled Exception: Exception from ClassA.methA_RaiseException", str(ex.exception))
 
 
-class WarningCollection(TestCase):
+class WarningCollection(Testcase):
 	def test_WarningCollector_NoList(self) -> None:
 		a = ClassA("list")
 		with WarningCollector() as warning:
@@ -158,15 +163,16 @@ class WarningCollection(TestCase):
 			return True
 
 		a = ClassA("abort")
-		with self.assertRaises(Exception) as ex:
+		with self.assertRaises(EscalatedWarningException) as ex:
 			with WarningCollector(handler=func) as warning:
 				a.methA_RaiseException()
 
 		self.assertEqual("Exception from ClassA.methA_RaiseException", message)
 		self.assertEqual("Warning: Exception from ClassA.methA_RaiseException", str(ex.exception))
+		self.assertEqual("Exception from ClassA.methA_RaiseException", str(ex.exception.__cause__))
 
 
-class CallStack(TestCase):
+class CallStack(Testcase):
 	def test_Level_1(self) -> None:
 		warnings = []
 
@@ -211,7 +217,7 @@ class CallStack(TestCase):
 		self.assertEqual("Exception from ClassA.methA_RaiseException", str(warning2[0]))
 
 
-class Catch(TestCase):
+class Catch(Testcase):
 	def test_Inner(self) -> None:
 		warnings = []
 

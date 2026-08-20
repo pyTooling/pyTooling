@@ -29,8 +29,24 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing positional command line arguments.
+
+A positional argument has no option name: it is recognized by its position, and its value is converted to the type the
+attribute declares before the handler method is called:
+
+* :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
+* :class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` and its typed variants
+  (:class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`,
+  :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerListArgument`,
+  :class:`~pyTooling.Attributes.ArgParse.Argument.FloatListArgument`,
+  :class:`~pyTooling.Attributes.ArgParse.Argument.PathListArgument`)
+"""
 from pathlib import Path
-from typing import Type
+
 
 from pyTooling.Decorators          import export
 from pyTooling.Attributes.ArgParse import CommandLineArgument
@@ -83,15 +99,15 @@ class PositionalArgument(ValuedArgument):
 
 	TODO
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
-	def __init__(self, dest: str, metaName: str, type: Type = str, optional: bool = False, help: str = "") -> None:
+	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
 		"""
-		args = []
+		args: list[str] = []
 		kwargs = {
 			"dest":    dest,
 			"metavar": metaName,
@@ -109,7 +125,7 @@ class StringArgument(PositionalArgument):
 	"""
 	Represents a simple string argument.
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -125,7 +141,7 @@ class IntegerArgument(PositionalArgument):
 	"""
 	Represents an integer argument.
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -141,7 +157,7 @@ class FloatArgument(PositionalArgument):
 	"""
 	Represents a floating point number argument.
 
-	A list of strings is available as :class:`~pyTooling.Attribute.ArgParse.Argument.StringListArgument`.
+	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -158,7 +174,7 @@ class PathArgument(PositionalArgument):
 	"""
 	Represents a single path argument.
 
-	A list of paths is available as :class:`~pyTooling.Attribute.ArgParse.Argument.PathListArgument`.
+	A list of paths is available as :class:`~pyTooling.Attributes.ArgParse.Argument.PathListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -172,15 +188,15 @@ class PathArgument(PositionalArgument):
 @export
 class ListArgument(ValuedArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
-	def __init__(self, dest: str, metaName: str, type: Type = str, optional: bool = False, help: str = "") -> None:
+	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
 		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
 		modification to :meth:`~ArgumentParser.add_argument`.
 		"""
-		args = []
+		args: list[str] = []
 		kwargs = {
 			"dest":    dest,
 			"metavar": metaName,
@@ -194,7 +210,7 @@ class ListArgument(ValuedArgument):
 @export
 class StringListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -208,7 +224,7 @@ class StringListArgument(ListArgument):
 @export
 class IntegerListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -222,7 +238,7 @@ class IntegerListArgument(ListArgument):
 @export
 class FloatListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`).
+	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
@@ -236,7 +252,7 @@ class FloatListArgument(ListArgument):
 @export
 class PathListArgument(ListArgument):
 	"""
-	Represents a list of path arguments  (:class:`~pyTooling.Attribute.ArgParse.Argument.PathArgument`).
+	Represents a list of path arguments  (:class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:

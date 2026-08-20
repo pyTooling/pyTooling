@@ -28,12 +28,12 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for Decorators."""
-from unittest import TestCase
-
-from pytest   import mark
-
-from pyTooling.Decorators import export, InheritDocString, readonly
+"""
+Unit tests for :mod:`pyTooling.Decorators`: :deco:`~pyTooling.Decorators.export`,
+:deco:`~pyTooling.Decorators.readonly` and :deco:`~pyTooling.Decorators.InheritDocString`.
+"""
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeOrder, readonly
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -74,7 +74,7 @@ def NotExportedFunction():
 L = lambda x: x
 
 
-class Export(TestCase):
+class Export(Testcase):
 	def test_ExportedClass(self) -> None:
 		self.assertIn(ExportedClass.__name__, __all__)
 		self.assertNotIn(NotExportedClass.__name__, __all__)
@@ -106,7 +106,7 @@ class Export(TestCase):
 				pass
 
 
-class ReadOnly(TestCase):
+class ReadOnly(Testcase):
 	def test_ReadOnly(self) -> None:
 		class Data:
 			_data: int
@@ -177,7 +177,48 @@ class ReadOnly(TestCase):
 		self.assertEqual("Doc-string of the getter.", Data.length.__doc__)
 
 
-class InheritDocStrings(TestCase):
+
+	def test_Getter(self) -> None:
+		"""A derived class can replace the getter, and the result is still a read-only property."""
+		class Data:
+			_data: int
+
+			def __init__(self, data: int) -> None:
+				self._data = data
+
+			@readonly
+			def length(self) -> int:
+				"""Doc-string of the base getter."""
+				return 2 ** self._data
+
+		class DerivedData(Data):
+			@Data.length.getter
+			def length(self) -> int:
+				"""Doc-string of the derived getter."""
+				return 3 ** self._data
+
+		self.assertIsInstance(DerivedData.length, readonly)
+		self.assertEqual("Doc-string of the derived getter.", DerivedData.length.__doc__)
+		self.assertEqual(9, DerivedData(2).length)
+		self.assertEqual(4, Data(2).length)
+
+	def test_GetterKeepsRejectingASetter(self) -> None:
+		"""The property derived by 'getter' is read-only as well."""
+		class Data:
+			_data: int
+
+			@readonly
+			def length(self) -> int:
+				return 2 ** self._data
+
+		derived = Data.length.getter(lambda self: 0)
+
+		with self.assertRaises(AttributeError):
+			derived.setter(lambda self, value: None)
+		with self.assertRaises(AttributeError):
+			derived.deleter(lambda self: None)
+
+class InheritDocStrings(Testcase):
 	def test_Class_Copy(self) -> None:
 		class Class1:
 			"""Class1"""
@@ -221,6 +262,72 @@ class InheritDocStrings(TestCase):
 		self.assertEqual("Class1", Class1.__doc__)
 		self.assertEqual("Class1\n\nClass2", Class2.__doc__)
 
+	def test_Class_MergeDerivedFirst(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1, merge=True, order=DocStringMergeOrder.DerivedFirst)
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("Class2\n\nClass1", Class2.__doc__)
+
+	def test_Class_MergeAffixes(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("<Class1|Class2>", Class2.__doc__)
+
+	def test_Class_MergeAffixesWithoutBaseDocString(self) -> None:
+		class Class1:
+			pass
+
+		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		class Class2(Class1):
+			"""Class2"""
+
+		self.assertEqual("<Class2>", Class2.__doc__)
+
+	def test_Class_MergeAffixesWithoutDerivedDocString(self) -> None:
+		class Class1:
+			"""Class1"""
+
+		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		class Class2(Class1):
+			pass
+
+		self.assertEqual("<Class1>", Class2.__doc__)
+
+	def test_Class_MergeWithoutAnyDocString(self) -> None:
+		class Class1:
+			pass
+
+		@InheritDocString(Class1, merge=True, prefix="<", postfix=">")
+		class Class2(Class1):
+			pass
+
+		self.assertIsNone(Class2.__doc__)
+
+	def test_Class_MergeDedentsBothDocStrings(self) -> None:
+		"""Both parts are dedented, even if they were indented differently (tabs vs. spaces)."""
+		class Class1:
+			pass
+
+		class Class2(Class1):
+			pass
+
+		# Python 3.13+ strips a doc-string's indentation at compile time, so assign the raw form explicitly.
+		Class1.__doc__ = "\n\tLine 1.\n\n\tLine 2.\n\t"
+		Class2.__doc__ = "\n    Line 3.\n\n    Line 4.\n    "
+
+		InheritDocString(Class1, merge=True)(Class2)
+
+		self.assertEqual("Line 1.\n\nLine 2.\n\nLine 3.\n\nLine 4.", Class2.__doc__)
+
 	def test_Method(self) -> None:
 		class Class1:
 			def method(self):
@@ -232,3 +339,15 @@ class InheritDocStrings(TestCase):
 				pass
 
 		self.assertEqual(Class1.method.__doc__, Class2.method.__doc__)
+
+	def test_Method_Merge(self) -> None:
+		class Class1:
+			def method(self):
+				"""Base method's doc-string."""
+
+		class Class2(Class1):
+			@InheritDocString(Class1, merge=True, order=DocStringMergeOrder.DerivedFirst)
+			def method(self):
+				"""Derived method's doc-string."""
+
+		self.assertEqual("Derived method's doc-string.\n\nBase method's doc-string.", Class2.method.__doc__)

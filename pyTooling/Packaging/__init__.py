@@ -34,6 +34,15 @@ A set of helper functions to describe a Python package for setuptools.
 .. hint::
 
    See :ref:`high-level help <PACKAGING>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Versioning`
+      |rarr| The version numbers read from a package's dunder variables.
+   :mod:`pyTooling.Licensing`
+      |rarr| The license names translated for setuptools.
+   :mod:`pyTooling.Testing`
+      |rarr| Testing the console scripts a package installs.
 """
 from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
 from collections.abc import Sized
@@ -41,10 +50,9 @@ from os              import scandir as os_scandir
 from pathlib         import Path
 from re              import split as re_split
 from sys             import version_info
-from typing          import List, Iterable, Dict, Sequence, Any, Optional as Nullable, Union, Tuple
-
+from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import ToolingException, MissingDependencyException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
 from pyTooling.Licensing   import License, Apache_2_0_License
@@ -104,9 +112,9 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 	  * Markdown (``*.md``)
 	  * ReStructured Text (``*.rst``)
 
-	:param readmeFile:         Path to the `README` file as an instance of :class:`Path`.
+	:param readmeFile:         Optional, path to the `README` file as an instance of :class:`Path`.
 	:returns:                  A tuple containing the file content and the MIME type.
-	:raises TypeError:         If parameter 'readmeFile' is not of type 'Path'.
+	:raises TypeError:         If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises ValueError:        If README file has an unsupported format.
 	:raises FileNotFoundError: If README file does not exist.
 	"""
@@ -135,7 +143,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 
 
 @export
-def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = False) -> List[str]:
+def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = False) -> list[str]:
 	"""
 	Reads a `requirements.txt` file (recursively) and extracts all specified dependencies into an array.
 
@@ -149,10 +157,11 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 	      requirements = list(set(loadRequirementsFile(requirementsFile)))
 
-	:param requirementsFile:   Path to the ``requirements.txt`` file as an instance of :class:`Path`.
-	:param debug:              If ``True``, print found dependencies and recursion.
+	:param requirementsFile:   Optional, path to the ``requirements.txt`` file as an instance of :class:`Path`.
+	:param indent:             Optional, indentation level used for the debug output of nested requirements files.
+	:param debug:              Optional, if ``True``, print found dependencies and recursion.
 	:returns:                  A list of dependencies.
-	:raises TypeError:         If parameter 'requirementsFile' is not of type 'Path'.
+	:raises TypeError:         If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError: If requirements file does not exist.
 	"""
 	if not isinstance(requirementsFile, Path):
@@ -160,8 +169,15 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 		ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
 		raise ex
 
-	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> List[str]:
-		"""Recursive variant of :func:`loadRequirementsFile`."""
+	def _loadRequirementsFile(requirementsFile: Path, indent: int) -> list[str]:
+		"""
+		Recursive variant of :func:`loadRequirementsFile`.
+
+		:param requirementsFile:   Optional, path to the requirements file to read.
+		:param indent:             Optional, indentation level used for the debug output of nested requirements files.
+		:returns:                  List of requirements read from that file and every file it includes.
+		:raises FileNotFoundError: If the requirements file doesn't exist.
+		"""
 		requirements = []
 		try:
 			with requirementsFile.open("r", encoding="utf-8") as file:
@@ -202,7 +218,7 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 	_author: str          #: Author name(s).
 	_copyright: str       #: Copyright information.
 	_email: str           #: Author's email address.
-	_keywords: List[str]  #: Keywords.
+	_keywords: list[str]  #: Keywords.
 	_license: str         #: License name.
 	_description: str     #: Description of the package.
 	_version: str         #: Version number.
@@ -223,10 +239,10 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		:param author:      Author of the Python package.
 		:param email:       The author's email address
 		:param copyright:   The copyright notice of the Package.
-		:param license:     The Python package's license.
+		:param license:     Optional, the Python package's license.
 		:param version:     The Python package's version.
 		:param description: The Python package's short description.
-		:param keywords:    The Python package's list of keywords.
+		:param keywords:    Optional, the Python package's list of keywords.
 		"""
 		self._author =      author
 		self._email =       email
@@ -273,7 +289,7 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		return self._email
 
 	@readonly
-	def Keywords(self) -> List[str]:
+	def Keywords(self) -> list[str]:
 		"""
 		Read-only property to access the package's keywords (:attr:`_keywords`).
 
@@ -300,6 +316,11 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		return self._version
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this version information.
+
+		:returns: The version number.
+		"""
 		return f"{self._version}"
 
 
@@ -317,10 +338,12 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	* ``__license__``
 	* ``__version__``
 
-	:param sourceFile: Path to a Python source file as an instance of :class:`Path`.
-	:returns:          An instance of :class:`VersionInformation` with gathered variable contents.
-	:raises TypeError: If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
-
+	:param sourceFile:         Path to a Python source file as an instance of :class:`Path`.
+	:returns:                  An instance of :class:`VersionInformation` with gathered variable contents.
+	:raises TypeError:         If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError: If the given file doesn't exist.
+	:raises AssertionError:    If a dunder variable is missing in the given file.
+	:raises ToolingException:  If a dunder variable has an unexpected format.
 	"""
 	if not isinstance(sourceFile, Path):
 		ex = TypeError(f"Parameter 'sourceFile' is not of type 'Path'.")
@@ -391,7 +414,7 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	return VersionInformation(_author, _email, _copyright, _license, _version, _description, _keywords)
 
 
-STATUS: Dict[str, str] = {
+STATUS: dict[str, str] = {
 	"planning":  "1 - Planning",
 	"pre-alpha": "2 - Pre-Alpha",
 	"alpha":     "3 - Alpha",
@@ -496,15 +519,15 @@ def DescribePythonPackage(
 	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
 	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
 	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
-	additionalRequirements: Dict[str, List[str]] = None,
+	additionalRequirements: dict[str, list[str]] = None,
 	sourceFileWithVersion: Nullable[Path] = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None,
-	dataFiles: Dict[str, List[str]] = None,
+	consoleScripts: dict[str, str] = None,
+	dataFiles: dict[str, list[str]] = None,
 	debug: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
 	"""
 	Helper function to describe a Python package.
 
@@ -590,27 +613,39 @@ def DescribePythonPackage(
 
 	:param packageName:                   Name of the Python package.
 	:param description:                   Short description of the package. The long description will be read from README file.
-	:param projectURL:                    URL to the Python project.
+	:param projectURL:                    Optional, URL to the Python project.
 	:param sourceCodeURL:                 URL to the Python source code.
 	:param documentationURL:              URL to the package's documentation.
 	:param issueTrackerCodeURL:           URL to the projects issue tracker (ticket system).
-	:param keywords:                      A list of keywords.
-	:param license:                       The package's license. (Default: ``Apache License, 2.0``, see :const:`DEFAULT_LICENSE`)
-	:param readmeFile:                    The path to the README file. (Default: ``README.md``, see :const:`DEFAULT_README`)
-	:param requirementsFile:              The path to the project's requirements file. (Default: ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
-	:param documentationRequirementsFile: The path to the project's requirements file for documentation. (Default: ``doc/requirements.txt``, see :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
-	:param unittestRequirementsFile:      The path to the project's requirements file for unit tests. (Default: ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
-	:param packagingRequirementsFile:     The path to the project's requirements file for packaging. (Default: ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
-	:param additionalRequirements:        A dictionary of a lists with additional requirements. (default: None)
-	:param sourceFileWithVersion:         The path to the project's source file containing dunder variables like ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
-	:param classifiers:                   A list of package classifiers. (Default: 3 classifiers, see :const:`DEFAULT_CLASSIFIERS`)
-	:param developmentStatus:             Development status of the package. (Default: stable, see :const:`STATUS` for supported status values)
-	:param pythonVersions:                A list of supported Python 3 version. (Default: all currently maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                A dictionary mapping command line names to entry points. (Default: None)
-	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.
-	:param debug:                         Enable extended outputs for debugging.
+	:param keywords:                      Optional, a list of keywords.
+	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
+	                                      :const:`DEFAULT_LICENSE`)
+	:param readmeFile:                    Optional, the path to the README file. (Default: ``README.md``, see
+	                                      :const:`DEFAULT_README`)
+	:param requirementsFile:              Optional, the path to the project's requirements file. (Default:
+	                                      ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
+	:param documentationRequirementsFile: Optional, the path to the project's requirements file for documentation.
+	                                      (Default: ``doc/requirements.txt``, see
+	                                      :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
+	:param unittestRequirementsFile:      Optional, the path to the project's requirements file for unit tests. (Default:
+	                                      ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
+	:param packagingRequirementsFile:     Optional, the path to the project's requirements file for packaging. (Default:
+	                                      ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
+	:param additionalRequirements:        Optional, a dictionary of a lists with additional requirements. (default: None)
+	:param sourceFileWithVersion:         Optional, the path to the project's source file containing dunder variables like
+	                                      ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
+	:param classifiers:                   Optional, a list of package classifiers. (Default: 3 classifiers, see
+	                                      :const:`DEFAULT_CLASSIFIERS`)
+	:param developmentStatus:             Optional, development status of the package. (Default: stable, see
+	                                      :const:`STATUS` for supported status values)
+	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
+	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
+	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
+	                                      None)
+	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
+	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
-	:raises ToolingException:             If package 'setuptools' is not available.
+	:raises MissingDependencyException:   If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError:            If README file doesn't exist.
 	:raises TypeError:                    If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
@@ -625,11 +660,13 @@ def DescribePythonPackage(
 	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
+	:raises Exception:                    If the package's directory doesn't exist, or if a requirements file is
+	                                      malformed.
 	"""
 	try:
 		from setuptools import find_packages, find_namespace_packages
 	except ImportError as ex:
-		raise Exception(f"Optional dependency 'setuptools' not installed. Either install pyTooling with extra dependencies 'pyTooling[packaging]' or install 'setuptools' directly.") from ex
+		raise MissingDependencyException(dependency="setuptools", extra="packaging") from ex
 
 	print(f"[pyTooling.Packaging] Python: {version_info.major}.{version_info.minor}.{version_info.micro}, pyTooling: {__version__}")
 
@@ -653,7 +690,7 @@ def DescribePythonPackage(
 	else:
 		requirements = list(set(loadRequirementsFile(requirementsFile, debug=debug)))
 
-	extraRequirements: Dict[str, List[str]] = {}
+	extraRequirements: dict[str, list[str]] = {}
 	if documentationRequirementsFile is not None:
 		if not isinstance(documentationRequirementsFile, Path):
 			ex = TypeError(f"Parameter 'documentationRequirementsFile' is not of type 'Path'.")
@@ -730,7 +767,7 @@ def DescribePythonPackage(
 		packages = find_packages(exclude=exclude)
 
 	if debug:
-		print(f"[pyTooling.Packaging] Found packages: ({packages.__class__.__name__})")
+		print(f"[pyTooling.Packaging] Found packages: ({getFullyQualifiedName(packages)})")
 		for package in packages:
 			print(f"[pyTooling.Packaging] - {package}")
 
@@ -747,17 +784,30 @@ def DescribePythonPackage(
 		raise ex
 	classifiers.append(license.PythonClassifier)
 
-	def _naturalSorting(array: Iterable[str]) -> List[str]:
-		"""A simple natural sorting implementation."""
+	def _naturalSorting(array: Iterable[str]) -> list[str]:
+		"""
+		A simple natural sorting implementation.
+
+		:param array: The strings to sort.
+		:returns:     The strings, sorted with embedded numbers compared numerically.
+		"""
 		# See http://nedbatchelder.com/blog/200712/human_sorting.html
 		def _toInt(text: str) -> Union[str, int]:
-			"""Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string."""
+			"""
+			Try to convert a :class:`str` to :class:`int` if possible, otherwise preserve the string.
+
+			:param text: The text to convert.
+			:returns:    The converted integer, or the unchanged string.
+			"""
 			return int(text) if text.isdigit() else text
 
-		def _createKey(text: str) -> Tuple[Union[str, float], ...]:
+		def _createKey(text: str) -> tuple[Union[str, float], ...]:
 			"""
 			Split the text into a tuple of multiple :class:`str` and :class:`int` fields, so embedded numbers can be sorted by
 			their value.
+
+			:param text: The text to split.
+			:returns:    Tuple of string and integer fields, usable as a sort key.
 			"""
 			return tuple(_toInt(part) for part in re_split(r"(\d+)", text))
 
@@ -833,15 +883,15 @@ def DescribePythonPackageHostedOnGitHub(
 	documentationRequirementsFile: Path = DEFAULT_DOCUMENTATION_REQUIREMENTS,
 	unittestRequirementsFile: Path = DEFAULT_TEST_REQUIREMENTS,
 	packagingRequirementsFile: Path = DEFAULT_PACKAGING_REQUIREMENTS,
-	additionalRequirements: Dict[str, List[str]] = None,
+	additionalRequirements: dict[str, list[str]] = None,
 	sourceFileWithVersion: Path = DEFAULT_VERSION_FILE,
 	classifiers: Iterable[str] = DEFAULT_CLASSIFIERS,
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
-	consoleScripts: Dict[str, str] = None,
-	dataFiles: Dict[str, List[str]] = None,
+	consoleScripts: dict[str, str] = None,
+	dataFiles: dict[str, list[str]] = None,
 	debug: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
 	"""
 	Helper function to describe a Python package when the source code is hosted on GitHub.
 
@@ -851,25 +901,37 @@ def DescribePythonPackageHostedOnGitHub(
 	:param packageName:                   Name of the Python package.
 	:param description:                   Short description of the package. The long description will be read from README file.
 	:param gitHubNamespace:               Name of the GitHub namespace (organization or user).
-	:param gitHubRepository:              Name of the GitHub repository.
-	:param projectURL:                    URL to the Python project.
-	:param keywords:                      A list of keywords.
-	:param license:                       The package's license. (Default: ``Apache License, 2.0``, see :const:`DEFAULT_LICENSE`)
-	:param readmeFile:                    The path to the README file. (Default: ``README.md``, see :const:`DEFAULT_README`)
-	:param requirementsFile:              The path to the project's requirements file. (Default: ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
-	:param documentationRequirementsFile: The path to the project's requirements file for documentation. (Default: ``doc/requirements.txt``, see :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
-	:param unittestRequirementsFile:      The path to the project's requirements file for unit tests. (Default: ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
-	:param packagingRequirementsFile:     The path to the project's requirements file for packaging. (Default: ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
-	:param additionalRequirements:        A dictionary of a lists with additional requirements. (default: None)
-	:param sourceFileWithVersion:         The path to the project's source file containing dunder variables like ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
-	:param classifiers:                   A list of package classifiers. (Default: 3 classifiers, see :const:`DEFAULT_CLASSIFIERS`)
-	:param developmentStatus:             Development status of the package. (Default: stable, see :const:`STATUS` for supported status values)
-	:param pythonVersions:                A list of supported Python 3 version. (Default: all currently maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                A dictionary mapping command line names to entry points. (Default: None)
-	:param dataFiles:                     A dictionary mapping package names to lists of additional data files.
-	:param debug:                         Enable extended outputs for debugging.
+	:param gitHubRepository:              Optional, name of the GitHub repository.
+	:param projectURL:                    Optional, URL to the Python project.
+	:param keywords:                      Optional, a list of keywords.
+	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
+	                                      :const:`DEFAULT_LICENSE`)
+	:param readmeFile:                    Optional, the path to the README file. (Default: ``README.md``, see
+	                                      :const:`DEFAULT_README`)
+	:param requirementsFile:              Optional, the path to the project's requirements file. (Default:
+	                                      ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
+	:param documentationRequirementsFile: Optional, the path to the project's requirements file for documentation.
+	                                      (Default: ``doc/requirements.txt``, see
+	                                      :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
+	:param unittestRequirementsFile:      Optional, the path to the project's requirements file for unit tests. (Default:
+	                                      ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
+	:param packagingRequirementsFile:     Optional, the path to the project's requirements file for packaging. (Default:
+	                                      ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
+	:param additionalRequirements:        Optional, a dictionary of a lists with additional requirements. (default: None)
+	:param sourceFileWithVersion:         Optional, the path to the project's source file containing dunder variables like
+	                                      ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
+	:param classifiers:                   Optional, a list of package classifiers. (Default: 3 classifiers, see
+	                                      :const:`DEFAULT_CLASSIFIERS`)
+	:param developmentStatus:             Optional, development status of the package. (Default: stable, see
+	                                      :const:`STATUS` for supported status values)
+	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
+	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
+	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
+	                                      None)
+	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
+	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
-	:raises ToolingException:             If package 'setuptools' is not available.
+	:raises MissingDependencyException:   If package 'setuptools' is not available.
 	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises FileNotFoundError:            If README file doesn't exist.
 	:raises TypeError:                    If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.

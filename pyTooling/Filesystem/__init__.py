@@ -34,13 +34,24 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
 .. important::
 
    This isn't a replacement of :mod:`pathlib` introduced with Python 3.4.
+
+.. seealso::
+
+   :mod:`pyTooling.Filesystem.Docker`
+      |rarr| Slicing a scanned filesystem into Docker image layers.
+   :mod:`pyTooling.Tree`
+      |rarr| The tree data structure a filesystem scope is converted to.
+   :mod:`pyTooling.Stopwatch`
+      |rarr| The stopwatch measuring how long a scan took.
 """
-from os                    import scandir, readlink
+from __future__            import annotations
 
 from enum                  import Enum
 from itertools             import chain
+from os                    import scandir, readlink
 from pathlib               import Path
-from typing import Optional as Nullable, Dict, Generic, Generator, TypeVar, List, Any, Callable, Union, Iterator, Set
+from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
+from typing                import Iterator, cast
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
@@ -65,9 +76,20 @@ class FilesystemException(ToolingException):
 
 @export
 class PermissionWarning(Warning):
-	_path: Path
+	"""
+	Warning emitted when a directory or file couldn't be read while scanning a filesystem.
 
-	def __init__(self, path: Path, *args) -> None:
+	The scan continues, so the collected statistics are incomplete by exactly the path this warning carries.
+	"""
+	_path: Path  #: Path that couldn't be read.
+
+	def __init__(self, path: Path, *args: Any) -> None:
+		"""
+		Initialize a permission warning for the path that couldn't be read.
+
+		:param path: The path that raised a :exc:`PermissionError`.
+		:param args: Positional parameters forwarded to the base-class.
+		"""
 		super().__init__(*args)
 		self._path = path
 
@@ -100,19 +122,21 @@ class Base(metaclass=ExtendedType, slots=True):
 
 	It implements a size and a reference to the root element of the filesystem.
 	"""
-	_root:   Nullable["Root"]  #: Reference to the root of the filesystem statistics scope.
-	_size:   Nullable[int]     #: Actual or aggregated size of the filesystem element.
+	_root:   Nullable[Root]  #: Reference to the root of the filesystem statistics scope.
+	_size:   Nullable[int]   #: Actual or aggregated size of the filesystem element.
 
 	def __init__(
 		self,
 		size: Nullable[int],
-		root: Nullable["Root"]
+		root: Nullable[Root]
 	) -> None:
 		"""
 		Initialize the base-class with filesystem element size and root reference.
 
-		:param size: Optional size of the element.
-		:param root: Optional reference to the filesystem root element.
+		:param size:       Optional, size of the element.
+		:param root:       Optional reference to the filesystem root element.
+		:raises TypeError: If parameter 'size' is not of type integer.
+		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
 		"""
 		if size is not None and not isinstance(size, int):
 			ex = TypeError("Parameter 'size' is not of type 'int'.")
@@ -128,16 +152,18 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._root = root
 
 	@property
-	def Root(self) -> Nullable["Root"]:
+	def Root(self) -> Nullable[Root]:
 		"""
 		Property to access the root of the filesystem statistics scope.
 
-		:returns: Root of the filesystem statistics scope.
+		:returns:           Root of the filesystem statistics scope.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`Root`.
 		"""
 		return self._root
 
 	@Root.setter
-	def Root(self, value: "Root") -> None:
+	def Root(self, value: Root) -> None:
 		if value is None:
 			raise ValueError(f"Parameter 'value' is None.")
 		elif not isinstance(value, Root):
@@ -168,7 +194,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
 		will be stored in the node's key-value store.
 
-		:returns: A tree's node referencing this filesystem element.
+		:returns:                    A tree's node referencing this filesystem element.
 		"""
 		raise NotImplementedError()
 
@@ -184,9 +210,9 @@ class Element(Base, Generic[_ParentType]):
 
 	   Symbolic link sources are reverse references describing which symbolic links point to this element.
 	"""
-	_name:        str                   #: Name of the filesystem element.
-	_parent:      _ParentType           #: Reference to the filesystem element's parent (:class:`Directory`)
-	_linkSources: List["SymbolicLink"]  #: A list of symbolic links pointing to this filesystem element.
+	_name:        str                 #: Name of the filesystem element.
+	_parent:      _ParentType         #: Reference to the filesystem element's parent (:class:`Directory`)
+	_linkSources: list[SymbolicLink]  #: A list of symbolic links pointing to this filesystem element.
 
 	def __init__(
 		self,
@@ -197,9 +223,11 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Initialize the element base-class with name, size and parent reference.
 
-		:param name:   Name of the element.
-		:param size:   Optional size of the element.
-		:param parent: Optional parent reference.
+		:param name:        Name of the element.
+		:param size:        Optional, size of the element.
+		:param parent:      Optional, parent reference.
+		:raises ValueError: If parameter 'name' is None.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Directory`.
 		"""
 		if name is None:
 			raise ValueError(f"Parameter 'name' is None.")
@@ -229,7 +257,9 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Property to access the element's parent.
 
-		:returns: Parent element.
+		:returns:           Parent element.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`Directory`.
 		"""
 		return self._parent
 
@@ -261,12 +291,12 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Read-only property to access the element's path.
 
-		:returns: Path of the element.
+		:returns:                    Path of the element.
 		"""
 		raise NotImplementedError(f"Property 'Path' is abstract.")
 
 	@readonly
-	def LinkSources(self) -> List["SymbolicLink"]:
+	def LinkSources(self) -> list[SymbolicLink]:
 		"""
 		Read-only property to access the symbolic links pointing to this element (:attr:`_linkSources`).
 
@@ -274,11 +304,12 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		return self._linkSources
 
-	def AddLinkSources(self, source: "SymbolicLink") -> None:
+	def AddLinkSources(self, source: SymbolicLink) -> None:
 		"""
 		Add a link source of a symbolic link to the named element (reverse reference).
 
-		:param source: The referenced symbolic link.
+		:param source:     The referenced symbolic link.
+		:raises TypeError: If parameter 'source' is not of type :class:`SymbolicLink`.
 		"""
 		if not isinstance(source, SymbolicLink):
 			ex = TypeError("Parameter 'source' is not of type 'SymbolicLink'.")
@@ -307,27 +338,27 @@ class Directory(Element["Directory"]):
 	aggregation is provided via :data:`AggregateDuration`.
 	"""
 
-	_path:              Nullable[Path]             #: Cached :class:`~pathlib.Path` object of this directory.
-	_subdirectories:    Dict[str, "Directory"]     #: Dictionary containing name-:class:`Directory` pairs.
-	_files:             Dict[str, "Filename"]      #: Dictionary containing name-:class:`Filename` pairs.
-	_symbolicLinks:     Dict[str, "SymbolicLink"]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
-	_filesSize:         int                        #: Aggregated size of all direct files.
-	_collapsed:         bool                       #: True, if this directory was collapsed. It contains no subelements.
-	_scanDuration:      Nullable[float]            #: Duration for scanning the directory and all its subelements.
-	_aggregateDuration: Nullable[float]            #: Duration for aggregating all subelements.
+	_path:              Nullable[Path]           #: Cached :class:`~pathlib.Path` object of this directory.
+	_subdirectories:    dict[str, Directory]     #: Dictionary containing name-:class:`Directory` pairs.
+	_files:             dict[str, Filename]      #: Dictionary containing name-:class:`Filename` pairs.
+	_symbolicLinks:     dict[str, SymbolicLink]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
+	_filesSize:         int                      #: Aggregated size of all direct files.
+	_collapsed:         bool                     #: True, if this directory was collapsed. It contains no subelements.
+	_scanDuration:      Nullable[float]          #: Duration for scanning the directory and all its subelements.
+	_aggregateDuration: Nullable[float]          #: Duration for aggregating all subelements.
 
 	def __init__(
 		self,
 		name:                  str,
 		collectSubdirectories: bool = False,
-		parent:                Nullable["Directory"] = None
+		parent:                Nullable[Directory] = None
 	) -> None:
 		"""
 		Initialize the directory with name and parent reference.
 
 		:param name:                  Name of the element.
-		:param collectSubdirectories: If true, collect subdirectory statistics.
-		:param parent:                Optional parent reference.
+		:param collectSubdirectories: Optional, if ``True``, collect subdirectory statistics.
+		:param parent:                Optional, parent reference.
 		"""
 		super().__init__(name, None, parent)
 
@@ -363,7 +394,17 @@ class Directory(Element["Directory"]):
 
 		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
 		storage object is assumed.
+
+		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
+		the collected statistics are incomplete by exactly that path.
+
+		:raises FilesystemException: If this directory isn't attached to a :class:`Root`, which owns the ID table.
+		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
+		                             symbolic link.
 		"""
+		if (root := self._root) is None:
+			raise FilesystemException(f"Directory '{self._name}' is not attached to a filesystem root.")
+
 		with Stopwatch() as sw1:
 			try:
 				items = scandir(directoryPath := self.Path)
@@ -375,8 +416,8 @@ class Directory(Element["Directory"]):
 					_ = Directory(dirEntry.name, collectSubdirectories=True, parent=self)
 				elif dirEntry.is_file(follow_symlinks=False):
 					id = dirEntry.inode()
-					if id in self._root._ids:
-						file = self._root._ids[id]
+					if id in root._ids:
+						file = root._ids[id]
 
 						_ = Filename(dirEntry.name, file=file, parent=self)
 					else:
@@ -384,7 +425,7 @@ class Directory(Element["Directory"]):
 						filename = Filename(dirEntry.name, parent=self)
 						file = File(id, s.st_size, parent=filename)
 
-						self._root._ids[id] = file
+						root._ids[id] = file
 				elif dirEntry.is_symlink():
 					target = Path(readlink(directoryPath / dirEntry.name))
 					_ = SymbolicLink(dirEntry.name, target, parent=self)
@@ -394,6 +435,12 @@ class Directory(Element["Directory"]):
 		self._scanDuration = sw1.Duration
 
 	def ResolveSymbolicLinks(self) -> None:
+		"""
+		Resolve the symbolic links of this directory and of every directory below it.
+
+		A link whose target lies inside the scanned tree is connected to that element; a target that doesn't exist
+		registers the link as broken, and a target outside the scanned tree registers it as unconnected.
+		"""
 		for dir in self._subdirectories.values():
 			dir.ResolveSymbolicLinks()
 
@@ -434,7 +481,15 @@ class Directory(Element["Directory"]):
 				else:
 					target.AddLinkSources(link)
 
-	def AggregateSizes(self) -> Set["File"]:
+	def AggregateSizes(self) -> set[File]:
+		"""
+		Compute the aggregated size of this directory and of every directory below it.
+
+		A file is counted once, even when several filenames (hardlinks) refer to it, which is why the already counted
+		files are returned and handed up the recursion.
+
+		:returns: The set of file objects counted in this subtree.
+		"""
 		with Stopwatch() as sw2:
 			aggregatedFiles = set()
 
@@ -456,7 +511,7 @@ class Directory(Element["Directory"]):
 		return aggregatedFiles
 
 	@Element.Root.setter
-	def Root(self, value: "Root") -> None:
+	def Root(self, value: Root) -> None:
 		Element.Root.fset(self, value)
 
 		for subdir in self._subdirectories.values():
@@ -567,7 +622,7 @@ class Directory(Element["Directory"]):
 		return len(self._subdirectories) + sum(d.TotalSubdirectoryCount for d in self._subdirectories.values())
 
 	@readonly
-	def Subdirectories(self) -> Generator["Directory", None, None]:
+	def Subdirectories(self) -> Generator[Directory, None, None]:
 		"""
 		Iterate all direct subdirectories of the directory.
 
@@ -576,7 +631,7 @@ class Directory(Element["Directory"]):
 		return (d for d in self._subdirectories.values())
 
 	@readonly
-	def Files(self) -> Generator["Filename | SymbolicLink", None, None]:
+	def Files(self) -> Generator[Filename | SymbolicLink, None, None]:
 		"""
 		Iterate all direct files of the directory.
 
@@ -589,7 +644,7 @@ class Directory(Element["Directory"]):
 		return (f for f in chain(self._files.values(), self._symbolicLinks.values()))
 
 	@readonly
-	def RegularFiles(self) -> Generator["Filename", None, None]:
+	def RegularFiles(self) -> Generator[Filename, None, None]:
 		"""
 		Iterate all direct regular files of the directory.
 
@@ -598,7 +653,7 @@ class Directory(Element["Directory"]):
 		return (f for f in self._files.values())
 
 	@readonly
-	def SymbolicLinks(self) -> Generator["SymbolicLink", None, None]:
+	def SymbolicLinks(self) -> Generator[SymbolicLink, None, None]:
 		"""
 		Iterate all direct symbolic links of the directory.
 
@@ -650,15 +705,37 @@ class Directory(Element["Directory"]):
 		return self._aggregateDuration
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this filesystem element based on its identity.
+
+		Two elements with the same name in different directories are different elements, so the hash is derived from the
+		object's identity and not from its name.
+
+		:returns: Hash of this filesystem element.
+		"""
 		return hash(id(self))
 
-	def IterateDirectories(self) -> Generator["Directory", None, None]:
+	def IterateDirectories(self) -> Generator[Directory, None, None]:
+		"""
+		A generator to iterate all subdirectories below this directory in pre-order.
+
+		A parent directory is yielded before its children.
+
+		:returns: A generator to iterate all subdirectories below this directory.
+		"""
 		# pre-order
 		for directory in self._subdirectories.values():
 			yield directory
 			yield from directory.IterateDirectories()
 
 	def IterateFiles(self) -> Generator[Element, None, None]:
+		"""
+		A generator to iterate all files and symbolic links below this directory in post-order.
+
+		The elements of the subdirectories are yielded before this directory's own.
+
+		:returns: A generator to iterate all files and symbolic links below this directory.
+		"""
 		# post-order
 		for directory in self._subdirectories.values():
 			yield from directory.IterateFiles()
@@ -666,7 +743,7 @@ class Directory(Element["Directory"]):
 		yield from self._files.values()
 		yield from self._symbolicLinks.values()
 
-	def Copy(self, parent: Nullable["Directory"] = None) -> "Directory":
+	def Copy(self, parent: Nullable[Directory] = None) -> Directory:
 		"""
 		Copy the directory structure including all subelements and link it to the given parent.
 
@@ -675,7 +752,7 @@ class Directory(Element["Directory"]):
 		   Statistics like aggregated directory size are copied too. |br|
 		   There is no rescan or repeated aggregation needed.
 
-		:param parent: The parent element of the copied directory.
+		:param parent: Optional, the parent element of the copied directory.
 		:returns:      A deep copy of the directory structure.
 		"""
 		dir = Directory(self._name, parent=parent)
@@ -692,7 +769,16 @@ class Directory(Element["Directory"]):
 
 		return dir
 
-	def Collapse(self, func: Callable[["Directory"], bool]) -> bool:
+	def Collapse(self, func: Callable[[Directory], bool]) -> bool:
+		"""
+		Collapse this directory's subtree where the given predicate accepts it.
+
+		A directory is collapsed when it has no subdirectories left - or all of them collapsed - and the predicate
+		accepts it. Collapsing discards the directory's elements, so only its aggregated numbers remain.
+
+		:param func: Predicate deciding whether a directory may be collapsed.
+		:returns:    ``True``, if this directory was collapsed.
+		"""
 		# if len(self._subdirectories) == 0 or all(subdir.Collapse(func) for subdir in self._subdirectories.values()):
 		if len(self._subdirectories) == 0:
 			if func(self):
@@ -735,14 +821,21 @@ class Directory(Element["Directory"]):
 		``size``
 		  The directory's aggregated size.
 
-		:param format: A user defined formatting function for tree nodes.
+		:param format: Optional, a user defined formatting function for tree nodes.
 		:returns:      A tree node representing this directory.
 		"""
 		if format is None:
 			def format(node: Node) -> str:
-				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
+				"""
+				Nested function rendering a tree node as one line.
 
-		directoryNode = Node(
+				:param node: The tree node to render.
+				:returns:    The node's size in MiB, followed by its name.
+				"""
+				element = cast(Element[Any], node._value)     # the node was created with this element as its value
+				return f"{node['size'] * 1e-6:7.1f} MiB {element.Name}"
+
+		directoryNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.File,
@@ -756,7 +849,7 @@ class Directory(Element["Directory"]):
 
 		return directoryNode
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two Directory instances for equality.
 
@@ -791,9 +884,19 @@ class Directory(Element["Directory"]):
 		return not self.__eq__(other)
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this directory.
+
+		:returns: The directory's full path, prefixed by its kind.
+		"""
 		return f"Directory: {self.Path}"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 
@@ -807,20 +910,21 @@ class Filename(Element[Directory]):
 	   Filename and file storage are represented by two classes, which allows multiple names (hard links) per file storage
 	   object.
 	"""
-	_file: Nullable["File"]
+	_file: Nullable[File]  #: The file this filename refers to; ``None`` until the filename is linked.
 
 	def __init__(
 		self,
 		name:   str,
-		file:   Nullable["File"] = None,
+		file:   Nullable[File] = None,
 		parent: Nullable[Directory] = None
 	) -> None:
 		"""
 		Initialize the filename with name, file (storage) object and parent reference.
 
-		:param name:   Name of the file.
-		:param size:   Optional file (storage) object.
-		:param parent: Optional parent reference.
+		:param name:       Name of the file.
+		:param file:       Optional, file (storage) object.
+		:param parent:     Optional, parent reference.
+		:raises TypeError: If parameter 'file' is not of type :class:`File`.
 		"""
 		super().__init__(name, None, parent)
 
@@ -842,7 +946,7 @@ class Filename(Element[Directory]):
 				self._root = parent._root
 
 	@Element.Root.setter
-	def Root(self, value: "Root") -> None:
+	def Root(self, value: Root) -> None:
 		Element.Root.fset(self, value)
 
 		if self._file is not None:
@@ -858,7 +962,7 @@ class Filename(Element[Directory]):
 			self.Root = value
 
 	@readonly
-	def File(self) -> Nullable["File"]:
+	def File(self) -> Nullable[File]:
 		"""
 		Read-only property to access the file this filename is linked to (:attr:`_file`).
 
@@ -895,9 +999,26 @@ class Filename(Element[Directory]):
 		return self._parent.Path / self._name
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this filesystem element based on its identity.
+
+		Two elements with the same name in different directories are different elements, so the hash is derived from the
+		object's identity and not from its name.
+
+		:returns: Hash of this filesystem element.
+		"""
 		return hash(id(self))
 
-	def Copy(self, parent: Directory) -> "Filename":
+	def Copy(self, parent: Directory) -> Filename:
+		"""
+		Copy this filename into another filesystem statistics scope.
+
+		The file object behind the filename is copied only once per scope: a filename referring to a file that was
+		already copied - a hardlink - is connected to the existing copy.
+
+		:param parent: Optional, the directory in the target scope the copy is registered at.
+		:returns:      The copied filename.
+		"""
 		fileID = self._file._id
 
 		if fileID in parent._root._ids:
@@ -911,10 +1032,21 @@ class Filename(Element[Directory]):
 		return Filename(self._name, file, parent=parent)
 
 	def ToTree(self) -> Node:
+		"""
+		Convert this filename to a node of a :mod:`pyTooling.Tree`.
+
+		:returns: A tree node carrying this filename, its kind and its size.
+		"""
 		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by its name.
+			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		fileNode = Node(
+		fileNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.File,
@@ -925,7 +1057,7 @@ class Filename(Element[Directory]):
 
 		return fileNode
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two Filename instances for equality.
 
@@ -956,18 +1088,34 @@ class Filename(Element[Directory]):
 		return self._name != other._name or self.Size != other.Size
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this filename.
+
+		:returns: The file's full path, prefixed by its kind.
+		"""
 		return f"File: {self.Path}"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 
 @export
 class SymbolicLink(Element[Directory]):
-	_target:       Path
-	_isConnected:  bool
-	_isBroken:     Nullable[bool]
-	_isOutOfRange: Nullable[bool]
+	"""
+	A symbolic link in the filesystem statistics scope.
+
+	After the scan, the link is resolved: it is either connected to an element of the scanned tree, broken (the target
+	doesn't exist), or out of range (the target lies outside the scanned tree).
+	"""
+	_target:       Path            #: Path the symbolic link points to.
+	_isConnected:  bool            #: ``True``, if the link target was resolved to an element of the scanned tree.
+	_isBroken:     Nullable[bool]  #: ``True``, if the link target doesn't exist; ``None`` until resolved.
+	_isOutOfRange: Nullable[bool]  #: ``True``, if the link target lies outside the scanned tree; ``None`` until resolved.
 
 	def __init__(
 		self,
@@ -975,6 +1123,18 @@ class SymbolicLink(Element[Directory]):
 		target: Path,
 		parent: Nullable[Directory]
 	) -> None:
+		"""
+		Initialize a symbolic link, which is registered at its parent directory.
+
+		The link is unresolved at first: :meth:`Root.ResolveSymbolicLinks` decides afterwards whether it is connected,
+		broken or out of range.
+
+		:param name:        Name of the symbolic link.
+		:param target:      Path the symbolic link points to.
+		:param parent:      Optional, parent directory of the symbolic link.
+		:raises ValueError: If parameter 'target' is None.
+		:raises TypeError:  If parameter 'target' is not of type :class:`~pathlib.Path`.
+		"""
 		super().__init__(name, None, parent)
 
 		if target is None:
@@ -1043,16 +1203,41 @@ class SymbolicLink(Element[Directory]):
 		return self._isOutOfRange
 
 	def __hash__(self) -> int:
+		"""
+		Compute a hash for this filesystem element based on its identity.
+
+		Two elements with the same name in different directories are different elements, so the hash is derived from the
+		object's identity and not from its name.
+
+		:returns: Hash of this filesystem element.
+		"""
 		return hash(id(self))
 
-	def Copy(self, parent: Directory) -> "SymbolicLink":
+	def Copy(self, parent: Directory) -> SymbolicLink:
+		"""
+		Copy this symbolic link into another filesystem statistics scope.
+
+		:param parent: Optional, the directory in the target scope the copy is registered at.
+		:returns:      The copied symbolic link, unresolved.
+		"""
 		return SymbolicLink(self._name, self._target, parent=parent)
 
 	def ToTree(self) -> Node:
+		"""
+		Convert this symbolic link to a node of a :mod:`pyTooling.Tree`.
+
+		:returns: A tree node carrying this symbolic link, its kind and its size.
+		"""
 		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by its name.
+			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		symbolicLinkNode = Node(
+		symbolicLinkNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.SymbolicLink,
@@ -1063,7 +1248,7 @@ class SymbolicLink(Element[Directory]):
 
 		return symbolicLinkNode
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two SymbolicLink instances for equality.
 
@@ -1094,9 +1279,19 @@ class SymbolicLink(Element[Directory]):
 		return self._name != other._name or self._target != other._target
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this symbolic link.
+
+		:returns: The link's full path and the path it points to.
+		"""
 		return f"SymLink: {self.Path} -> {self._target}"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 
@@ -1105,15 +1300,27 @@ class Root(Directory):
 	"""
 	A **Root** represents the root-directory in the filesystem, which contains subdirectories, regular files and symbolic links.
 	"""
-	_ids:                      Dict[int, "File"]   #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
-	_brokenSymbolicLinks:      List[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
-	_unconnectedSymbolicLinks: List[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
+	_ids:                      dict[int, File]     #: Dictionary of file identifier - file objects pairs found while scanning the directory structure.
+	_brokenSymbolicLinks:      list[SymbolicLink]  #: Broken symbolic links (target doesn't exist).
+	_unconnectedSymbolicLinks: list[SymbolicLink]  #: Symbolic links which couldn't be connected to their target (out of scope).
 
 	def __init__(
 		self,
 		rootDirectory:         Path,
 		collectSubdirectories: bool = True
 	) -> None:
+		"""
+		Initialize a filesystem statistics scope for the given directory.
+
+		Unless ``collectSubdirectories`` is disabled, the whole tree is scanned and its symbolic links are resolved right
+		away, so the root is usable as soon as it exists.
+
+		:param rootDirectory:         Directory to collect the statistics for.
+		:param collectSubdirectories: Optional, if ``True``, scan the tree and resolve its symbolic links immediately.
+		:raises ValueError:           If parameter 'rootDirectory' is None.
+		:raises TypeError:            If parameter 'rootDirectory' is not of type :class:`~pathlib.Path`.
+		:raises ToolingException:     If the given path doesn't exist.
+		"""
 		if rootDirectory is None:
 			raise ValueError(f"Parameter 'rootDirectory' is None.")
 		elif not isinstance(rootDirectory, Path):
@@ -1143,7 +1350,7 @@ class Root(Directory):
 		return self._path
 
 	@readonly
-	def BrokenSymbolicLinks(self) -> List[SymbolicLink]:
+	def BrokenSymbolicLinks(self) -> list[SymbolicLink]:
 		"""
 		Read-only property to access all symbolic links with a non-existing target (:attr:`_brokenSymbolicLinks`).
 
@@ -1152,7 +1359,7 @@ class Root(Directory):
 		return self._brokenSymbolicLinks
 
 	@readonly
-	def UnconnectedSymbolicLinks(self) -> List[SymbolicLink]:
+	def UnconnectedSymbolicLinks(self) -> list[SymbolicLink]:
 		"""
 		Read-only property to access all symbolic links that couldn't be resolved within the scanned filesystem (:attr:`_unconnectedSymbolicLinks`).
 
@@ -1228,14 +1435,24 @@ class Root(Directory):
 		return len(self._ids)
 
 	def RegisterBrokenSymbolicLink(self, symLink: SymbolicLink) -> None:
+		"""
+		Mark a symbolic link as broken and collect it at the root.
+
+		:param symLink: The symbolic link whose target doesn't exist.
+		"""
 		symLink._isBroken = True
 		self._brokenSymbolicLinks.append(symLink)
 
 	def RegisterUnconnectedSymbolicLink(self, symLink: SymbolicLink) -> None:
+		"""
+		Mark a symbolic link as out of range and collect it at the root.
+
+		:param symLink: The symbolic link whose target lies outside the scanned tree.
+		"""
 		symLink._isOutOfRange = True
 		self._unconnectedSymbolicLinks.append(symLink)
 
-	def Copy(self) -> "Root":
+	def Copy(self) -> Root:
 		"""
 		Copy the directory structure including all subelements and link it to the given parent.
 
@@ -1267,9 +1484,19 @@ class Root(Directory):
 		return root
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this filesystem root.
+
+		:returns: The root's path and the number of directories, regular files and symbolic links below it.
+		"""
 		return f"Root: {self.Path} (dirs: {self.TotalSubdirectoryCount}, files: {self.TotalRegularFileCount}, symlinks: {self.TotalSymbolicLinkCount})"
 
 	def __str__(self) -> str:
+		"""
+		Return a string representation of this filesystem element.
+
+		:returns: The element's name, without any path.
+		"""
 		return self._name
 
 
@@ -1281,7 +1508,7 @@ class File(Base):
 	Each file has an internal id, which is associated to a unique ID within the host's filesystem.
 	"""
 	_id:      int             #: Unique (host internal) file object ID)
-	_parents: List[Filename]  #: List of reverse references to :class:`Filename` objects.
+	_parents: list[Filename]  #: List of reverse references to :class:`Filename` objects.
 
 	def __init__(
 		self,
@@ -1292,9 +1519,11 @@ class File(Base):
 		"""
 		Initialize the File storage object with an ID, size and parent reference.
 
-		:param id:     Unique ID of the file object.
-		:param size:   Size of the file object.
-		:param parent: Optional parent reference.
+		:param id:          Unique ID of the file object.
+		:param size:        Optional, size of the file object.
+		:param parent:      Optional, parent reference.
+		:raises ValueError: If parameter 'id' is None.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Filename`.
 		"""
 		if id is None:
 			raise ValueError(f"Parameter 'id' is None.")
@@ -1327,7 +1556,7 @@ class File(Base):
 		return self._id
 
 	@readonly
-	def Parents(self) -> List[Filename]:
+	def Parents(self) -> list[Filename]:
 		"""
 		Read-only property to access the list of filenames using the same file storage object.
 
@@ -1343,7 +1572,10 @@ class File(Base):
 		"""
 		Add another parent reference to a :class:`Filename`.
 
-		:param filename: Reference to a filename object.
+		:param filename:          Reference to a filename object.
+		:raises ValueError:       If parameter 'filename' is None.
+		:raises TypeError:        If parameter 'filename' is not of type :class:`Filename`.
+		:raises ToolingException: If the filename already references another file object.
 		"""
 		if filename is None:
 			raise ValueError(f"Parameter 'filename' is None.")

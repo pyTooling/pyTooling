@@ -29,7 +29,19 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Basic abstraction layer for executables."""
+"""
+Basic abstraction layer for executables.
+
+.. seealso::
+
+   :mod:`pyTooling.Attributes.ArgParse`
+      |rarr| The other direction: describing the command line a program accepts.
+   :mod:`pyTooling.TerminalUI`
+      |rarr| Writing the program's own messages to the terminal.
+   :mod:`pyTooling.Platform`
+      |rarr| Deciding which executable name and path style the current platform uses.
+"""
+from __future__ import annotations
 
 # __keywords__ =  ["abstract", "executable", "cli", "cli arguments"]
 
@@ -38,8 +50,7 @@ from pathlib    import Path
 from platform   import system
 from shutil     import which as shutil_which
 from subprocess import Popen as Subprocess_Popen, PIPE as Subprocess_Pipe, STDOUT as Subprocess_StdOut, TimeoutExpired
-from typing     import Dict, Optional as Nullable, ClassVar, Type, List, Tuple, Iterator, Generator, Any, Mapping, Iterable
-
+from typing     import Optional as Nullable, ClassVar, Iterator, Generator, Any, Mapping, Iterable
 
 from pyTooling.Decorators                import export, readonly
 from pyTooling.MetaClasses               import ExtendedType
@@ -76,12 +87,12 @@ class Environment(metaclass=ExtendedType, slots=True):
 
 	   * Environment variables
 	"""
-	_variables: Dict[str, str]  #: Dictionary of active environment variables.
+	_variables: dict[str, str]  #: Dictionary of active environment variables.
 
 	# TODO: derive environment from existing environment object.
 	def __init__(
 		self, *,
-		environment:  Nullable["Environment"] = None,
+		environment:  Nullable[Environment] = None,
 		newVariables: Nullable[Mapping[str, str]] = None,
 		addVariables: Nullable[Mapping[str, str]] = None,
 		delVariables: Nullable[Iterable[str]] = None
@@ -100,11 +111,11 @@ class Environment(metaclass=ExtendedType, slots=True):
 			 2. Remove variables from environment.
 			 3. Add new or update existing variables.
 
-		:param environment:  Optional existing Environment instance to derive a new environment.
-		:param newVariables: Optional dictionary of new environment variables. |br|
+		:param environment:  Optional, existing Environment instance to derive a new environment.
+		:param newVariables: Optional, dictionary of new environment variables. |br|
 		                     If ``None``, read current environment variables from :func:`os.environ`.
-		:param addVariables: Optional dictionary of variables to be added or modified in the environment.
-		:param delVariables: Optional list of variable names to be removed from the environment.
+		:param addVariables: Optional, dictionary of variables to be added or modified in the environment.
+		:param delVariables: Optional, list of variable names to be removed from the environment.
 		"""
 		if environment is not None:
 			newVariables = environment._variables
@@ -132,8 +143,8 @@ class Environment(metaclass=ExtendedType, slots=True):
 		"""
 		Checks if the variable is set in the environment.
 
-		:param key: The variable name to check.
-		:returns:   ``True``, if the variable is set in the environment.
+		:param name: The variable name to check.
+		:returns:    ``True``, if the variable is set in the environment.
 		"""
 		return name in self._variables
 
@@ -174,12 +185,12 @@ class Program(metaclass=ExtendedType, slots=True):
 	CLI options are collected in a ``__cliOptions__`` dictionary.
 	"""
 
-	_platform:         str                                                            #: Current platform the executable runs on (Linux, Windows, ...)
-	_executableNames:  ClassVar[Dict[str, str]]                                       #: Dictionary of platform specific executable names.
-	_executablePath:   Path                                                           #: The path to the executable (binary, script, ...).
-	_dryRun:           bool                                                           #: True, if program shall run in *dry-run mode*.
-	__cliOptions__:    ClassVar[Dict[Type[CommandLineArgument], int]]                 #: List of all possible CLI options.
-	__cliParameters__: Dict[Type[CommandLineArgument], Nullable[CommandLineArgument]] #: List of all CLI parameters (used CLI options).
+	_platform:         str                                                   #: Current platform the executable runs on (Linux, Windows, ...)
+	_executableNames:  ClassVar[dict[str, str]]                              #: Dictionary of platform specific executable names.
+	_executablePath:   Path                                                  #: The path to the executable (binary, script, ...).
+	_dryRun:           bool                                                  #: True, if program shall run in *dry-run mode*.
+	__cliOptions__:    ClassVar[dict[type[CommandLineArgument], int]]        #: List of all possible CLI options.
+	__cliParameters__: dict[type[CommandLineArgument], CommandLineArgument]  #: List of all CLI parameters.
 
 	def __init_subclass__(cls, *args: Any, **kwargs: Any) -> None:
 		"""
@@ -192,7 +203,11 @@ class Program(metaclass=ExtendedType, slots=True):
 		super().__init_subclass__(*args, **kwargs)
 
 		# register all available CLI options (nested classes marked with attribute 'CLIArgument')
-		cls.__cliOptions__ = {option: order for order, option in enumerate(CLIArgument.GetClasses(scope=cls))}
+		options: dict[type[CommandLineArgument], int] = {
+			option: order
+			for order, option in enumerate(CLIArgument.GetClasses(scope=cls))
+		}
+		cls.__cliOptions__ = options
 
 	def __init__(
 		self,
@@ -205,9 +220,11 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		.. todo:: Document algorithm
 
-		:param executablePath:      Path to the executable.
-		:param binaryDirectoryPath: Path to the executable's directory.
-		:param dryRun:              True, when the program should run in dryrun mode.
+		:param executablePath:           Optional, path to the executable.
+		:param binaryDirectoryPath:      Optional, path to the executable's directory.
+		:param dryRun:                   Optional, ``True``, when the program should run in dryrun mode.
+		:raises TypeError:               If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
+		:raises CLIAbstractionException: If the executable doesn't exist at the given path.
 		"""
 		self._platform =    system()
 		self._dryRun =      dryRun
@@ -279,11 +296,23 @@ class Program(metaclass=ExtendedType, slots=True):
 		self.__cliParameters__ = {}
 
 	@staticmethod
-	def _NeedsParameterInitialization(key) -> bool:
+	def _NeedsParameterInitialization(key: type) -> bool:
+		"""
+		Check if an argument class needs a value when it is set.
+
+		:param key: Class of the command line argument.
+		:returns:   ``True``, if the argument carries a value.
+		"""
 		return issubclass(key, (ValuedFlag, ValuedArgument, NamedAndValuedArgument, NamedTupledArgument, PathArgument, PathListArgument))
 
-	def __getitem__(self, key: Type[CommandLineArgument]) -> CommandLineArgument:
-		"""Access to a CLI parameter by CLI option (key must be of type :class:`CommandLineArgument`), which is already used."""
+	def __getitem__(self, key: type[CommandLineArgument]) -> CommandLineArgument:
+		"""
+		Access to a CLI parameter by CLI option, which is already used.
+
+		:param key:        Class of the command line argument to read.
+		:returns:          The command line argument object registered for that class.
+		:raises TypeError: If the key is not a subclass of :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument`.
+		"""
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
@@ -292,7 +321,15 @@ class Program(metaclass=ExtendedType, slots=True):
 		# TODO: is nested check
 		return self.__cliParameters__[key]
 
-	def __setitem__(self, key: Type[CommandLineArgument], value: CommandLineArgument) -> None:
+	def __setitem__(self, key: type[CommandLineArgument], value: CommandLineArgument) -> None:
+		"""
+		Set a command line argument of this program by its argument class.
+
+		:param key:        Class of the command line argument to set.
+		:param value:      Value of that argument; ignored for arguments needing no value.
+		:raises TypeError: If the key is not a subclass of :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument`.
+		:raises KeyError:  If the argument isn't allowed on this program, or was set before.
+		"""
 		if not issubclass(key, CommandLineArgument):
 			ex = TypeError(f"Key '{key}' is not a subclass of 'CommandLineArgument'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
@@ -316,27 +353,39 @@ class Program(metaclass=ExtendedType, slots=True):
 		"""
 		return self._executablePath
 
-	def ToArgumentList(self) -> List[str]:
+	def ToArgumentList(self) -> list[str]:
 		"""
 		Convert a program and used CLI options to a list of CLI argument strings in correct order and with escaping.
 
-		:returns: List of CLI arguments
+		:returns:          List of CLI arguments
+		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|
+		                   An argument's :meth:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument` has to
+		                   return a string, a tuple or a list.
 		"""
-		result: List[str] = []
+		result: list[str] = []
 
 		result.append(str(self._executablePath))
 
-		def predicate(item: Tuple[Type[CommandLineArgument], int]) -> int:
+		def predicate(item: tuple[type[CommandLineArgument], int]) -> int:
+			"""
+			Nested function used as sort key.
+
+			:param item: Pair of an argument class and its argument object.
+			:returns:    The position the argument class was registered at, so the command line keeps the declared order.
+			"""
 			return self.__cliOptions__[item[0]]
 
 		for key, value in sorted(self.__cliParameters__.items(), key=predicate):
 			param = value.AsArgument()
 			if isinstance(param, str):
 				result.append(param)
-			elif isinstance(param, (Tuple, List)):
+			elif isinstance(param, (tuple, list)):
 				result += param
 			else:
-				raise TypeError(f"")  # XXX: needs error message
+				ex = TypeError(f"Argument '{key.__name__}' was rendered to neither a string nor a sequence of strings.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(param)}'.")
+				ex.add_note("'AsArgument()' has to return a 'str', a 'tuple' or a 'list'.")
+				raise ex
 
 		return result
 
@@ -366,14 +415,14 @@ class Program(metaclass=ExtendedType, slots=True):
 class Executable(Program):  # (ILogable):
 	"""Represent a CLI executable derived from :class:`Program`, that adds an abstraction of :class:`subprocess.Popen`."""
 
-	_BOUNDARY:         ClassVar[str] = "====== BOUNDARY pyTooling.CLIAbstraction BOUNDARY ======"
+	_BOUNDARY:         ClassVar[str] = "====== BOUNDARY pyTooling.CLIAbstraction BOUNDARY ======"  #: Marker line printed between the program's own output and the executable's output.
 
 	_workingDirectory: Nullable[Path]              #: Path to the working directory
 	_environment:      Nullable[Environment]       #: Environment to use when executing.
-	_process:          Nullable[Subprocess_Popen]  #: Reference to the running process.
+	_process:          Nullable[Subprocess_Popen[str]]  #: Reference to the running process.
 	_exitCode:         Nullable[int]               #: The child's process exit code.
 	_killed:           Nullable[bool]              #: True, if the child-process got killed (e.g. by a timeout).
-	_iterator:         Nullable[Iterator]          #: Iterator for reading STDOUT.
+	_iterator:         Nullable[Iterator[str]]     #: Iterator for reading STDOUT.
 
 	def __init__(
 		self,
@@ -386,11 +435,11 @@ class Executable(Program):  # (ILogable):
 		"""
 		Initializes an executable instance.
 
-		:param executablePath:      Path to the executable.
-		:param binaryDirectoryPath: Path to the executable's directory.
-		:param workingDirectory:    Path to the working directory.
-		:param environment:         Optional environment that should be setup when launching the executable.
-		:param dryRun:              True, when the program should run in dryrun mode.
+		:param executablePath:      Optional, path to the executable.
+		:param binaryDirectoryPath: Optional, path to the executable's directory.
+		:param workingDirectory:    Optional, path to the working directory.
+		:param environment:         Optional, environment that should be setup when launching the executable.
+		:param dryRun:              Optional, ``True``, when the program should run in dryrun mode.
 		"""
 		super().__init__(executablePath, binaryDirectoryPath, dryRun)
 
@@ -405,7 +454,7 @@ class Executable(Program):  # (ILogable):
 		"""
 		Start the executable as a child-process.
 
-		:param environment:              Optional environment that should be setup when launching the executable. |br|
+		:param environment:              Optional, environment that should be setup when launching the executable. |br|
 		                                 If ``None``, the :attr:`_environment` is used.
 		:raises CLIAbstractionException: When an :exc:`OSError` occurs while launching the child-process.
 		"""
@@ -442,14 +491,20 @@ class Executable(Program):  # (ILogable):
 		Send a string to STDIN of the running child-process.
 
 		:param line:                     Line to send.
-		:param end:                      Line end character.
+		:param end:                      Optional, line end character.
+		:raises CLIAbstractionException: If the child-process was not started, or has no standard input.
 		:raises CLIAbstractionException: When any error occurs while sending data to the child-process.
 		"""
+		if self._process is None or self._process.stdin is None:
+			raise CLIAbstractionException(
+				f"The child-process '{self._executablePath}' was not started, or has no standard input."
+			)
+
 		try:
 			self._process.stdin.write(line + end)
 			self._process.stdin.flush()
 		except Exception as ex:
-			raise CLIAbstractionException(f"") from ex     # XXX: need error message
+			raise CLIAbstractionException(f"Error while sending data to the child-process '{self._executablePath}'.") from ex
 
 	# This is TCL specific ...
 	# def SendBoundary(self):
@@ -464,13 +519,18 @@ class Executable(Program):  # (ILogable):
 		:raises CLIAbstractionException: When any error occurs while reading outputs from the child-process.
 		"""
 		if self._dryRun:
-			raise DryRunException()  # XXX: needs a message
+			raise DryRunException(f"Can't read from the child-process '{self._executablePath}' in dry-run mode.")
+
+		if self._process is None or self._process.stdout is None:
+			raise CLIAbstractionException(
+				f"The child-process '{self._executablePath}' was not started, or has no standard output."
+			)
 
 		try:
 			for line in iter(self._process.stdout.readline, ""):     # FIXME: can it be improved?
 				yield line[:-1]
 		except Exception as ex:
-			raise CLIAbstractionException() from ex     # XXX: need error message
+			raise CLIAbstractionException(f"Error while reading from the child-process '{self._executablePath}'.") from ex
 		# finally:
 			# self._process.terminate()
 
@@ -482,8 +542,8 @@ class Executable(Program):  # (ILogable):
 
 		:param timeout:                  Optional, timeout in seconds. |br|
 		                                 Default: infinitely wait on the child-process.
-		:param kill:                     If true, terminate (kill) the child-process if it didn't terminate by itself within
-		                                 the timeout period.
+		:param kill:                     Optional, if ``True``, terminate (kill) the child-process if it didn't terminate by
+		                                 itself within the timeout period.
 		:returns:                        ``None`` when the child-process is still running, otherwise the exit code.
 		:raises CLIAbstractionException: When the child-process is not started yet.
 
@@ -548,8 +608,10 @@ class Executable(Program):  # (ILogable):
 
 		.. seealso::
 
-		   * :meth:`Wait` - Wait on the child-process with an optional timeout.
-		   * :meth:`Terminate` - Terminate the child-process.
+		   :meth:`Wait`
+		      |rarr| Wait on the child-process with an optional timeout.
+		   :meth:`Terminate`
+		      |rarr| Terminate the child-process.
 		"""
 		return self._exitCode
 
@@ -569,12 +631,19 @@ class Executable(Program):  # (ILogable):
 @export
 class OutputFilteredExecutable(Executable):
 	"""Represent a CLI executable derived from :class:`Executable`, whose outputs are filtered."""
-	_hasOutput:   bool
-	_hasWarnings: bool
-	_hasErrors:   bool
-	_hasFatals:   bool
+	_hasOutput:   bool  #: ``True``, if the executable wrote any output.
+	_hasWarnings: bool  #: ``True``, if the output filter classified a line as a warning.
+	_hasErrors:   bool  #: ``True``, if the output filter classified a line as an error.
+	_hasFatals:   bool  #: ``True``, if the output filter classified a line as a fatal error.
 
 	def __init__(self, platform: Platform, dryrun: bool, executablePath: Path) -> None: #, environment=None, logger=None) -> None:
+		"""
+		Initialize an executable whose output is filtered, with all filter results cleared.
+
+		:param platform:       Platform the executable is called on.
+		:param dryrun:         If ``True``, the executable is not started, only the command line is assembled.
+		:param executablePath: Optional, path to the executable.
+		"""
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)
 
 		self._hasOutput =   False

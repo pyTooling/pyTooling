@@ -34,12 +34,23 @@ Abstract configuration reader.
 .. hint::
 
    See :ref:`high-level help <CONFIG>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Configuration.JSON`
+      |rarr| A configuration read from a JSON file.
+   :mod:`pyTooling.Configuration.YAML`
+      |rarr| A configuration read from a YAML file.
+   :mod:`pyTooling.GenericPath`
+      |rarr| The path expressions a configuration is queried with.
 """
-from pathlib       import Path
-from typing        import Union, ClassVar, Iterator, Type, Optional as Nullable
+from __future__            import annotations
+
+from pathlib               import Path
+from typing                import Union, ClassVar, Iterator, Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, mixin
+from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
 from pyTooling.Exceptions  import ToolingException
 
 
@@ -89,21 +100,22 @@ class PathExpressionException(ConfigurationException):
 class Node(metaclass=ExtendedType, slots=True):
 	"""Abstract node in a configuration data structure."""
 
-	DICT_TYPE: ClassVar[Type["Dictionary"]]  #: Type reference used when instantiating new dictionaries
-	SEQ_TYPE:  ClassVar[Type["Sequence"]]    #: Type reference used when instantiating new sequences
-	_root:     "Configuration"               #: Reference to the root node.
-	_parent:   "Dictionary"                  #: Reference to a parent node.
+	DICT_TYPE: ClassVar[type[Dictionary]]  #: Type reference used when instantiating new dictionaries
+	SEQ_TYPE:  ClassVar[type[Sequence]]    #: Type reference used when instantiating new sequences
+	_root:     Configuration               #: Reference to the root node.
+	_parent:   Dictionary                  #: Reference to a parent node.
 
-	def __init__(self, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a node.
 
-		:param root:   Reference to the root node.
-		:param parent: Reference to the parent node.
+		:param root:   Optional, reference to the root node.
+		:param parent: Optional, reference to the parent node.
 		"""
 		self._root = root
 		self._parent = parent
 
+	@abstractmethod
 	def __len__(self) -> int:  # type: ignore[empty-body]
 		"""
 		Returns the number of sub-elements.
@@ -111,38 +123,43 @@ class Node(metaclass=ExtendedType, slots=True):
 		:returns: Number of sub-elements.
 		"""
 
+	@abstractmethod
 	def __getitem__(self, key: KeyT) -> ValueT:  # type: ignore[empty-body]
 		"""
 		Access an element in the node by index or key.
 
-		:param key: Index or key of the element.
-		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
+		:param key:                  Index or key of the element.
+		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
-	def __setitem__(self, key: KeyT, value: ValueT) -> None:  # type: ignore[empty-body]
+	def __setitem__(self, key: KeyT, value: ValueT) -> None:
 		"""
 		Set an element in the node by index or key.
 
-		:param key:   Index or key of the element.
-		:param value: Value to set
-		"""
-		raise NotImplementedError()
+		.. attention::
 
+		   A configuration is **read-only**: the file format doesn't implements writing.
+
+		:param key:                  Index or key of the element.
+		:param value:                The new value of that element.
+		:raises NotImplementedError: Always - a configuration is read-only.
+		"""
+		raise NotImplementedError("Currently, the configuration is read-only. Writing isn't implemented.")
+
+	@abstractmethod
 	def __iter__(self) -> Iterator[ValueT]:  # type: ignore[empty-body]
 		"""
 		Returns an iterator to iterate a node.
 
-		:returns: Node iterator.
+		:returns:                    Node iterator.
 		"""
-		raise NotImplementedError()
 
 	@property
 	def Key(self) -> KeyT:
 		"""
-		Read-only property to access the node's key.
+		Property to access the node's key.
 
-		:returns: Key of the node.
+		:returns:                    Key of the node.
 		"""
 		raise NotImplementedError()
 
@@ -150,14 +167,14 @@ class Node(metaclass=ExtendedType, slots=True):
 	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError()
 
+	@abstractmethod
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
 		"""
 		Return a node or value based on a path description to that node or value.
 
-		:param query: String describing the path to the node or value.
-		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
+		:param query:                String describing the path to the node or value.
+		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
 
 @export
@@ -165,16 +182,22 @@ class Node(metaclass=ExtendedType, slots=True):
 class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a dictionary.
 
-		:param root:   Reference to the root node.
-		:param parent: Reference to the parent node.
+		:param root:   Optional, reference to the root node.
+		:param parent: Optional, reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
 
 	def __contains__(self, key: KeyT) -> bool:  # type: ignore[empty-body]
+		"""
+		Check if a key exists in this dictionary node.
+
+		:param key: The key to check for.
+		:returns:   ``True``, if the key exists in this node.
+		"""
 		raise NotImplementedError()
 
 
@@ -183,20 +206,37 @@ class Dictionary(Node):
 class Sequence(Node):
 	"""Abstract sequence node in a configuration."""
 
-	def __init__(self, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a sequence.
 
-		:param root:   Reference to the root node.
-		:param parent: Reference to the parent node.
+		:param root:   Optional, reference to the root node.
+		:param parent: Optional, reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
 
 	def __getitem__(self, index: int) -> ValueT:  # type: ignore[empty-body]
+		"""
+		Read an element of this sequence node by index.
+
+		:param index: Index of the element to read.
+		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
+		"""
 		raise NotImplementedError()
 
-	def __setitem__(self, index: int, value: ValueT) -> None:  # type: ignore[empty-body]
-		raise NotImplementedError()
+	def __setitem__(self, index: int, value: ValueT) -> None:
+		"""
+		Write an element of this sequence node by index.
+
+		.. attention::
+
+		   A configuration is **read-only** - see :meth:`Node.__setitem__`.
+
+		:param index:                Index of the element to write.
+		:param value:                The new value of that element.
+		:raises NotImplementedError: Always - a configuration is read-only.
+		"""
+		raise NotImplementedError("Currently, the configuration is read-only. Writing isn't implemented.")
 
 
 setattr(Node, "DICT_TYPE", Dictionary)
@@ -210,13 +250,13 @@ class Configuration(Node):
 
 	_configFile: Path  #: Path to the configuration file.
 
-	def __init__(self, configFile: Path, root: "Configuration" = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, configFile: Path, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a configuration.
 
 		:param configFile: Configuration file.
-		:param root:       Reference to the root node.
-		:param parent:     Reference to the parent node.
+		:param root:       Optional, reference to the root node.
+		:param parent:     Optional, reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
 		self._configFile = configFile

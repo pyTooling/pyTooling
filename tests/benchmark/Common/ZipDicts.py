@@ -28,7 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Benchmark tests for :func:`pyTooling.Common.zipdicts`."""
+"""
+Benchmarks for :func:`pyTooling.Common.zipdicts`, compared with zipping dictionaries by hand.
+"""
 from pytest import mark
 
 from pyTooling.Common import zipdicts

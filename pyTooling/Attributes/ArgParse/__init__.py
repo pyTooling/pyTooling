@@ -29,9 +29,22 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-from argparse import ArgumentParser, Namespace
-from typing   import Callable, Dict, Tuple, Any, TypeVar
+"""
+Attributes to describe a command line interface as decorated methods.
 
+An application deriving from :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin` declares its commands and
+options as attributes on its handler methods. The mixin translates them into an :mod:`argparse` parser hierarchy, so
+the command line's structure is written down once - next to the code implementing it - instead of twice.
+
+.. seealso::
+
+   :class:`~pyTooling.Attributes.ArgParse.DefaultHandler`
+      |rarr| Marks the method called when no sub-command was given.
+   :class:`~pyTooling.Attributes.ArgParse.CommandHandler`
+      |rarr| Marks the method implementing a sub-command.
+"""
+from argparse              import ArgumentParser, Namespace
+from typing                import Callable, Any, TypeVar
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
@@ -39,12 +52,12 @@ from pyTooling.Common      import firstElement, firstPair
 from pyTooling.Attributes  import Attribute
 
 
-M = TypeVar("M", bound=Callable)
+M = TypeVar("M", bound=Callable[..., Any])
 
 
 @export
 class ArgParseException(ToolingException):
-	pass
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Attributes.ArgParse`."""
 
 
 #@abstract
@@ -60,10 +73,10 @@ class _HandlerMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	A mixin-class that offers a class field for a reference to a handler method and a matching property.
 	"""
-	_handler: Callable = None   #: Reference to a method that is called to handle e.g. a sub-command.
+	_handler: Callable[..., Any] = None   #: Reference to a method that is called to handle e.g. a sub-command.
 
 	@readonly
-	def Handler(self) -> Callable:
+	def Handler(self) -> Callable[..., Any]:
 		"""
 		Read-only property to access the handler method (:attr:`_handler`).
 
@@ -85,15 +98,18 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 	There are multiple derived formats supporting:
 
 	* commands |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Command`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.CommandHandler`
 	* simple names (flags) |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.Flag`, :mod:`~pyTooling.Attribute.ArgParse.BooleanFlag`
-	* simple values (vlaued flags) |br|
-	  |rarr| :class:`~pyTooling.Attribute.ArgParse.Argument.StringArgument`, :class:`~pyTooling.Attribute.ArgParse.Argument.PathArgument`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.Flag.FlagArgument`,
+	  :class:`~pyTooling.Attributes.ArgParse.BooleanFlag.BooleanFlag`
+	* simple values (valued flags) |br|
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`,
+	  :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
 	* names and values |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.ValuedFlag`, :mod:`~pyTooling.Attribute.ArgParse.OptionalValuedFlag`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag`,
+	  :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.OptionalValuedFlag`
 	* key-value pairs |br|
-	  |rarr| :mod:`~pyTooling.Attribute.ArgParse.NamedKeyValuePair`
+	  |rarr| :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.NamedKeyValuePairsArgument`
 	"""
 
 	# def __init__(self, args: Iterable, kwargs: Mapping) -> None:
@@ -104,8 +120,8 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 	#
 	# 	super().__init__(*args, **kwargs)
 
-	_args:   Tuple
-	_kwargs: Dict
+	_args:   tuple[Any, ...]  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
+	_kwargs: dict[str, Any]   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
 
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
@@ -117,7 +133,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		self._kwargs = kwargs
 
 	@readonly
-	def Args(self) -> Tuple:
+	def Args(self) -> tuple[Any, ...]:
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
@@ -127,7 +143,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 		return self._args
 
 	@readonly
-	def KWArgs(self) -> Dict:
+	def KWArgs(self) -> dict[str, Any]:
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
@@ -142,7 +158,7 @@ class CommandGroupAttribute(ArgParseAttribute):
 	"""
 	*Experimental* attribute to group sub-commands in groups for better readability in a ``prog.py --help`` call.
 	"""
-	__groupName: str = None
+	__groupName: str = None  #: Name of the group the sub-commands are collected in.
 
 	def __init__(self, groupName: str) -> None:
 		"""
@@ -199,10 +215,20 @@ class DefaultHandler(ArgParseAttribute, _HandlerMixin):
 	"""
 	Marks a handler method as *default* handler. This method is called if no sub-command is given.
 
-	It's an error, if more	than one method is annotated with this attribute.
+	.. attention::
+
+	   It's an error, if more than one method is annotated with this attribute.
 	"""
 
-	def __call__(self, func: Callable) -> Callable:
+	def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+		"""
+		Apply this attribute to the handler method.
+
+		The handler method is stored in :attr:`_handler`.
+
+		:param func: The method handling the case that no sub-command was given.
+		:returns:    The same method, now carrying this attribute.
+		"""
 		self._handler = func
 		return super().__call__(func)
 
@@ -213,11 +239,11 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 	a sub-command parser using :meth:`~ArgumentParser.add_subparsers`.
 	"""
 
-	_command: str
-	_help: str
+	_command: str    #: Name of the sub-command this handler is responsible for.
+	_help:    str    #: Help text of the sub-command, displayed in the help page.
 	# FIXME: extract to mixin?
-	_args:   Tuple
-	_kwargs: Dict
+	_args:    tuple[Any, ...]  #: Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
+	_kwargs:  dict[str, Any]   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
 
 	def __init__(self, command: str, help: str = "", **kwargs: Any) -> None:
 		"""The constructor expects a 'command' and an optional list of named parameters
@@ -232,6 +258,14 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 		self._kwargs["help"] = help
 
 	def __call__(self, func: M) -> M:
+		"""
+		Apply this attribute to the handler method.
+
+		The handler method is stored in :attr:`_handler`.
+
+		:param func: The method handling the sub-command.
+		:returns:    The same method, now carrying this attribute.
+		"""
 		self._handler = func
 		return super().__call__(func)
 
@@ -246,7 +280,7 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 
 # FIXME: extract to mixin?
 	@readonly
-	def Args(self) -> Tuple:
+	def Args(self) -> tuple[Any, ...]:
 		"""
 		A tuple of additional positional parameters (``*args``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
@@ -257,7 +291,7 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 
 	# FIXME: extract to mixin?
 	@readonly
-	def KWArgs(self) -> Dict:
+	def KWArgs(self) -> dict[str, Any]:
 		"""
 		A dictionary of additional named parameters (``**kwargs``) passed to the attribute. These additional parameters are
 		passed without modification to :class:`~ArgumentParser`.
@@ -272,15 +306,20 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	Mixin-class to implement an :mod:`argparse`-base command line argument processor.
 	"""
-	_mainParser: ArgumentParser
-	_formatter:  Any   # TODO: Find type
-	_subParser:  Any   # TODO: Find type
-	_subParsers: Dict[str, ArgumentParser]
+	_mainParser: ArgumentParser             #: The main argument parser of the application.
+	# TODO: Find type
+	_formatter:  Any                        #: Help page formatter class used by every parser.
+	# TODO: Find type
+	_subParser:  Any                        #: The sub-parser action the sub-commands are registered at.
+	_subParsers: dict[str, ArgumentParser]  #: Sub-command name to its argument parser.
 
 	def __init__(self, **kwargs: Any) -> None:
 		"""
 		The mixin-constructor expects an optional list of named parameters which are passed without modification to the
 		:class:`ArgumentParser` constructor.
+
+		:param kwargs:             Named parameters forwarded to the :class:`~argparse.ArgumentParser` constructor.
+		:raises ArgParseException: If more than one method is marked as the default handler.
 		"""
 		from .Argument import CommandLineArgument
 
@@ -319,7 +358,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			raise ArgParseException("Marked more then one handler as default handler with 'DefaultAttribute'.")
 
 		# Search for 'CommandHandler' marked methods
-		methods: Dict[Callable, Tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
+		methods: dict[Callable[..., Any], tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
 		for method, attributes in methods.items():
 			if self._subParser is None:
 				self._subParser = self._mainParser.add_subparsers(help='sub-command help')
@@ -346,12 +385,23 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			self._subParsers[attribute.Command] = subParser
 
 	def Run(self, enableAutoComplete: bool = True) -> None:
+		"""
+		Parse the command line arguments and call the handler method the command selects.
+
+		:param enableAutoComplete: Optional, if ``True``, register the parser with ``argcomplete``, if that package is
+		                           installed.
+		"""
 		if enableAutoComplete:
 			self._EnabledAutoComplete()
 
 		self._ParseArguments()
 
 	def _EnabledAutoComplete(self) -> None:
+		"""
+		Register the main parser with ``argcomplete`` for shell completion.
+
+		The package is optional: when it isn't installed, completion is silently unavailable.
+		"""
 		try:
 			from argcomplete  import autocomplete
 			autocomplete(self._mainParser)
@@ -359,11 +409,21 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 			pass
 
 	def _ParseArguments(self) -> None:
+		"""
+		Parse the command line arguments and route them to the selected handler method.
+		"""
 		# parse command line options and process split arguments in callback functions
 		parsed, args = self._mainParser.parse_known_args()
 		self._RouteToHandler(parsed)
 
 	def _RouteToHandler(self, args: Namespace) -> None:
+		"""
+		Call the handler method the parsed arguments select.
+
+		The handler is stored as an unbound function, so it is called with the application object as first parameter.
+
+		:param args: The parsed command line arguments.
+		"""
 		# because func is a function (unbound to an object), it MUST be called with self as a first parameter
 		args.func(self, args)
 
@@ -377,7 +437,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		return self._mainParser
 
 	@readonly
-	def SubParsers(self) -> Dict[str, ArgumentParser]:
+	def SubParsers(self) -> dict[str, ArgumentParser]:
 		"""
 		Read-only property to access the sub-parsers (:attr:`_subParser`).
 

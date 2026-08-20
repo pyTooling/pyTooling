@@ -28,16 +28,19 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Performance tests for pyTooling.Graph."""
+"""
+Common infrastructure of the graph performance tests: the edge lists read from :file:`tests/data`, and the
+base-class measuring one operation over graphs of growing size.
+"""
 import timeit
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
 from time import perf_counter_ns
 from typing import Callable, Iterable
-from unittest import TestCase
 
-from pyTooling.Graph import Graph as pt_Graph
+from pyTooling.Graph   import Graph as pt_Graph
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -60,7 +63,7 @@ class EdgeFile:
 	file: Path
 
 
-class PerformanceTest(TestCase):
+class PerformanceTest(Testcase):
 	counts: Iterable[int] = (10, 100, 1000, 10000)
 	edgeFiles:  Iterable[EdgeFile] = (
 		EdgeFile(   100,    150, BiggestNetwork(  92,    72), Path("graph_n100_m150_dir_w0_100.edgelist")),

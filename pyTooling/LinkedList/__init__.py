@@ -28,10 +28,20 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""An object-oriented doubly linked-list data structure for Python."""
+"""
+An object-oriented doubly linked-list data structure for Python.
 
-from collections.abc import Sized
-from typing          import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Tuple, List, Any
+.. seealso::
+
+   :mod:`pyTooling.Tree`
+      |rarr| A tree data structure.
+   :mod:`pyTooling.Graph`
+      |rarr| A graph data structure.
+"""
+from __future__            import annotations
+
+from collections.abc       import Sized
+from typing                import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Any
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
@@ -61,28 +71,31 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	field of the **last node** is ``None``. ``None`` represents the end of the linked list when iterating it node-by-node.
 	"""
 
-	_linkedList:   Nullable["LinkedList[_NodeValue]"]      #: Reference to the doubly linked list instance.
-	_previousNode: Nullable["Node[_NodeKey, _NodeValue]"]  #: Reference to the previous node.
-	_nextNode:     Nullable["Node[_NodeKey, _NodeValue]"]  #: Reference to the next node.
-	_key:          Nullable[_NodeKey]                      #: The sortable key of the node.
-	_value:        _NodeValue                              #: The value of the node.
+	_linkedList:   Nullable[LinkedList[_NodeValue]]      #: Reference to the doubly linked list instance.
+	_previousNode: Nullable[Node[_NodeKey, _NodeValue]]  #: Reference to the previous node.
+	_nextNode:     Nullable[Node[_NodeKey, _NodeValue]]  #: Reference to the next node.
+	_key:          Nullable[_NodeKey]                    #: The sortable key of the node.
+	_value:        _NodeValue                            #: The value of the node.
 
 	def __init__(
 		self,
 		value:        _NodeValue,
 		key:          Nullable[_NodeKey] = None,
-		previousNode: Nullable["Node[_NodeKey, _NodeValue]"] = None,
-		nextNode:     Nullable["Node[_NodeKey, _NodeValue]"] = None
+		previousNode: Nullable[Node[_NodeKey, _NodeValue]] = None,
+		nextNode:     Nullable[Node[_NodeKey, _NodeValue]] = None
 	) -> None:
 		"""
 		Initialize a linked list node.
 
 		:param value:        Value to store in the node.
-		:param key:          Optional sortable key to store in the node.
-		:param previousNode: Optional reference to the previous node.
-		:param nextNode:     Optional reference to the next node.
+		:param key:          Optional, sortable key to store in the node.
+		:param previousNode: Optional, reference to the previous node.
+		:param nextNode:     Optional, reference to the next node.
 		:raises TypeError:   If parameter 'previous' is not of type :class:`Node`.
 		:raises TypeError:   If parameter 'next' is not of type :class:`Node`.
+		:raises ValueError:  If parameter 'value' is None.
+		:raises ValueError:  If ``previous`` and ``next`` belong to different linked lists. |br|
+		                     A node can only be inserted between two neighbours of the same linked list.
 		"""
 		self._previousNode = previousNode
 		self._nextNode = nextNode
@@ -119,10 +132,12 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 					ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
 					raise ex
 
-				if nextNode._linkedList is not None:
-					if self._linkedList is not None:
-						if self._linkedList is not previousNode._linkedList:
-							raise ValueError()
+				# 'self._linkedList' was just taken from 'previousNode', so comparing it against 'previousNode' again
+				# could never differ - the two neighbours are what has to agree.
+				if nextNode._linkedList is not previousNode._linkedList:
+					ex = ValueError("Parameters 'previous' and 'next' belong to different linked lists.")
+					ex.add_note("A node can only be inserted between two neighbours of the same linked list.")
+					raise ex
 
 				previousNode._nextNode = self
 		elif nextNode is not None:
@@ -151,7 +166,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			self._linkedList = None
 
 	@readonly
-	def List(self) -> Nullable["LinkedList[_NodeValue]"]:
+	def List(self) -> Nullable[LinkedList[_NodeValue]]:
 		"""
 		Read-only property to access the linked list, this node belongs to.
 
@@ -160,7 +175,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		return self._linkedList
 
 	@readonly
-	def PreviousNode(self) -> Nullable["Node[_NodeKey, _NodeValue]"]:
+	def PreviousNode(self) -> Nullable[Node[_NodeKey, _NodeValue]]:
 		"""
 		Read-only property to access node's predecessor.
 
@@ -171,7 +186,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		return self._previousNode
 
 	@readonly
-	def NextNode(self) -> Nullable["Node[_NodeKey, _NodeValue]"]:
+	def NextNode(self) -> Nullable[Node[_NodeKey, _NodeValue]]:
 		"""
 		Read-only property to access node's successor.
 
@@ -211,7 +226,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	def Value(self, value: _NodeValue) -> None:
 		self._value = value
 
-	def InsertNodeBefore(self, node: "Node[_NodeKey, _NodeValue]") -> None:
+	def InsertNodeBefore(self, node: Node[_NodeKey, _NodeValue]) -> None:
 		"""
 		Insert a node before this node.
 
@@ -219,6 +234,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:raises ValueError:          If parameter 'node' is ``None``.
 		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		:raises LinkedListException: If this node is not part of a linked list.
 		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
@@ -230,6 +246,9 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if node._linkedList is not None:
 			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
+
+		if self._linkedList is None:
+			raise LinkedListException(f"Node is not part of a linked list.")
 
 		node._linkedList = self._linkedList
 		node._nextNode = self
@@ -241,7 +260,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		self._previousNode = node
 		self._linkedList._count += 1
 
-	def InsertNodeAfter(self, node: "Node[_NodeKey, _NodeValue]") -> None:
+	def InsertNodeAfter(self, node: Node[_NodeKey, _NodeValue]) -> None:
 		"""
 		Insert a node after this node.
 
@@ -249,6 +268,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:raises ValueError:          If parameter 'node' is ``None``.
 		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListException: If parameter 'node' is already part of another linked list.
+		:raises LinkedListException: If this node is not part of a linked list.
 		"""
 		if node is None:
 			raise ValueError(f"Parameter 'node' is None.")
@@ -260,6 +280,9 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if node._linkedList is not None:
 			raise LinkedListException(f"Parameter 'node' belongs to another linked list.")
+
+		if self._linkedList is None:
+			raise LinkedListException(f"Node is not part of a linked list.")
 
 		node._linkedList = self._linkedList
 		node._previousNode = self
@@ -292,6 +315,8 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	def Remove(self) -> _NodeValue:
 		"""
 		Remove this node from the linked list.
+
+		:returns: The value of the removed node.
 		"""
 		if self._previousNode is None:
 			if self._linkedList is not None:
@@ -327,13 +352,13 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		return self._value
 
-	def IterateToFirst(self, includeSelf: bool = False) -> Generator["Node[_NodeKey, _NodeValue]", None, None]:
+	def IterateToFirst(self, includeSelf: bool = False) -> Generator[Node[_NodeKey, _NodeValue], None, None]:
 		"""
 		Return a generator iterating backward from this node to the list's first node.
 
 		Optionally, this node can be included into the generated sequence.
 
-		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at previous node.
+		:param includeSelf: Optional, if ``True``, include this node into the sequence, otherwise start at previous node.
 		:returns:           A sequence of nodes towards the list's first node.
 		"""
 		previousNode = self._previousNode
@@ -347,13 +372,13 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			yield node
 			node = previousNode
 
-	def IterateToLast(self, includeSelf: bool = False) -> Generator["Node[_NodeKey, _NodeValue]", None, None]:
+	def IterateToLast(self, includeSelf: bool = False) -> Generator[Node[_NodeKey, _NodeValue], None, None]:
 		"""
 		Return a generator iterating forward from this node to the list's last node.
 
 		Optionally, this node can be included into the generated sequence by setting.
 
-		:param includeSelf: If ``True``, include this node into the sequence, otherwise start at next node.
+		:param includeSelf: Optional, if ``True``, include this node into the sequence, otherwise start at next node.
 		:returns:           A sequence of nodes towards the list's last node.
 		"""
 		nextNode = self._nextNode
@@ -368,6 +393,11 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			node = nextNode
 
 	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this node.
+
+		:returns: The node's value, prefixed by its kind.
+		"""
 		return f"Node: {self._value}"
 
 
@@ -386,7 +416,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		Optionally, an iterable can be given to initialize the linked list. The order is preserved.
 
-		:param nodes:                Optional iterable to initialize the linked list.
+		:param nodes:                Optional, iterable to initialize the linked list.
 		:raises TypeError:           If parameter 'nodes' is not an :class:`iterable <typing.Iterable>`.
 		:raises TypeError:           If parameter 'nodes' items are not of type :class:`Node`.
 		:raises LinkedListException: If parameter 'nodes' contains items which are already part of another linked list.
@@ -551,7 +581,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		if self._lastNode is None:
 			self._firstNode = node
 		else:
-			node._previousNode._nextNode = node
+			self._lastNode._nextNode = node
 		self._lastNode = node
 		self._count += 1
 
@@ -606,20 +636,21 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Access a node in the linked list by position.
 
-		:param index:       Node position to access.
-		:returns:           Node at the given position.
-		:raises ValueError: If parameter 'position' is out of range.
+		:param index:                Node position to access.
+		:returns:                    Node at the given position.
+		:raises ValueError:          If parameter 'position' is out of range.
+		:raises LinkedListException: If the list is empty, or the index is out of range.
 
 		.. note::
 
 		   The algorithm starts iterating nodes from the shorter end.
 		"""
-		if index == 0:
-			if self._firstNode is None:
-				ex = ValueError("Parameter 'position' is out of range.")
-				ex.add_note(f"Linked list is empty.")
-				raise ex
+		if self._firstNode is None or self._lastNode is None:
+			ex = ValueError("Parameter 'position' is out of range.")
+			ex.add_note(f"Linked list is empty.")
+			raise ex
 
+		if index == 0:
 			return self._firstNode
 		elif index == self._count - 1:
 			return self._lastNode
@@ -652,6 +683,14 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 				raise LinkedListException(f"Node position not found.")
 
 	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
+		"""
+		Search the list for the first node matching a predicate.
+
+		:param predicate:            Filter function accepting a node and returning a boolean.
+		:param reverse:              Optional, if ``True``, search from the last node towards the first.
+		:returns:                    The first matching node.
+		:raises LinkedListException: If the list is empty, or no node matches.
+		"""
 		if self._firstNode is None:
 			raise LinkedListException(f"Linked list is empty.")
 
@@ -699,8 +738,8 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		The sort operation is **stable**.
 
-		:param key:     Optional function to access a user-defined key for sorting.
-		:param reverse: Optional parameter, if ``True`` sort in descending order, otherwise in ascending order.
+		:param key:     Optional, function to access a user-defined key for sorting.
+		:param reverse: Optional, parameter, if ``True`` sort in descending order, otherwise in ascending order.
 
 		.. note::
 
@@ -763,13 +802,13 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			yield node
 			node = previousNode
 
-	def ToList(self, reverse: bool = False) -> List[Node[_NodeKey, _NodeValue]]:
+	def ToList(self, reverse: bool = False) -> list[Node[_NodeKey, _NodeValue]]:
 		"""
 		Convert the linked list to a :class:`list`.
 
 		Optionally, the resulting list can be constructed in reverse order.
 
-		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
+		:param reverse: Optional, parameter, if ``True`` return in reversed order, otherwise in normal order.
 		:returns:       A list (array) of this linked list's values.
 		"""
 		if self._count == 0:
@@ -779,13 +818,13 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		else:
 			return [n._value for n in self.IterateFromFirst()]
 
-	def ToTuple(self, reverse: bool = False) -> Tuple[Node[_NodeKey, _NodeValue], ...]:
+	def ToTuple(self, reverse: bool = False) -> tuple[Node[_NodeKey, _NodeValue], ...]:
 		"""
 		Convert the linked list to a :class:`tuple`.
 
 		Optionally, the resulting tuple can be constructed in reverse order.
 
-		:param reverse: Optional parameter, if ``True`` return in reversed order, otherwise in normal order.
+		:param reverse: Optional, parameter, if ``True`` return in reversed order, otherwise in normal order.
 		:returns:       A tuple of this linked list's values.
 		"""
 		if self._count == 0:

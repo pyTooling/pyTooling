@@ -30,19 +30,17 @@
 # ==================================================================================================================== #
 #
 """
-Testcase for operating system program ``mkdir``.
-
-:copyright: Copyright 2007-2026 Patrick Lehmann - Bötzingen, Germany
-:license: Apache License, Version 2.0
+Unit tests for :class:`pyTooling.CLIAbstraction.Executable`, using ``git`` as the abstracted program: where
+the executable is looked up per platform, and how its options are assembled.
 """
 from pathlib      import Path
 from typing       import Any, Self
 
 from pytest       import mark
 from sys          import platform as sys_platform
-from unittest     import TestCase
 
 from pyTooling.CLIAbstraction import Executable, Environment
+from pyTooling.Testing        import Testcase
 from .                        import Helper
 from .Examples                import GitArgumentsMixin
 
@@ -65,7 +63,7 @@ class Git(Executable, GitArgumentsMixin):
 
 
 @mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
-class ExplicitBinaryDirectoryOnFreeBSD(TestCase, Helper):
+class ExplicitBinaryDirectoryOnFreeBSD(Testcase, Helper):
 	_binaryDirectoryPath = Path("/usr/local/bin")
 
 	def test_VersionFlag(self) -> None:
@@ -78,7 +76,7 @@ class ExplicitBinaryDirectoryOnFreeBSD(TestCase, Helper):
 
 
 @mark.skipif(sys_platform in ("freebsd", "win32"), reason="Don't run these tests on FreeBSD and Windows.")
-class ExplicitBinaryDirectoryOnLinux(TestCase, Helper):
+class ExplicitBinaryDirectoryOnLinux(Testcase, Helper):
 	_binaryDirectoryPath = Path("/usr/bin")
 
 	def test_VersionFlag(self) -> None:
@@ -91,7 +89,7 @@ class ExplicitBinaryDirectoryOnLinux(TestCase, Helper):
 
 
 @mark.skipif(sys_platform in ("darwin", "freebsd", "linux"), reason="Don't run these tests on FreeBSD, Linux or macOS.")
-class ExplicitBinaryDirectoryOnWindows(TestCase, Helper):
+class ExplicitBinaryDirectoryOnWindows(Testcase, Helper):
 	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
 
 	def test_VersionFlag(self) -> None:
@@ -103,7 +101,7 @@ class ExplicitBinaryDirectoryOnWindows(TestCase, Helper):
 		self.assertRegex(output, r"git version \d+.\d+.\d+.windows.\d+")
 
 
-class CommonOptions(TestCase, Helper):
+class CommonOptions(Testcase, Helper):
 	def test_VersionFlag(self) -> None:
 		print()
 		tool = Git()
@@ -137,7 +135,7 @@ class CommonOptions(TestCase, Helper):
 
 		print(output)
 
-# class Commit(TestCase, Helper):
+# class Commit(Testcase, Helper):
 # 	def test_CommitWithMessage(self) -> None:
 # 		tool = Git()
 # 		tool[tool.CommandCommit] = True

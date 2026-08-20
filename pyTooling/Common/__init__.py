@@ -34,12 +34,19 @@ Common types, helper functions and classes.
 .. hint::
 
    See :ref:`high-level help <COMMON>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Decorators`
+      |rarr| Decorators used throughout the package.
+   :mod:`pyTooling.MetaClasses`
+      |rarr| The meta-class implementing slots, singletons and abstract classes.
 """
 __author__ =            "Patrick Lehmann"
 __email__ =             "Paebbels@gmail.com"
 __copyright__ =         "2017-2026, Patrick Lehmann"
 __license__ =           "Apache License, Version 2.0"
-__version__ =           "8.19.0"
+__version__ =           "9.0.0"
 __keywords__ =          [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
@@ -57,9 +64,8 @@ from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
 from types               import ModuleType, TracebackType
-from typing              import Type, TypeVar, Callable, Generator, Hashable, List
-from typing              import Any, Dict, Tuple, Union, Mapping, Set, Iterable, Optional as Nullable
-
+from typing              import TypeVar, Callable, Generator, Hashable
+from typing              import Any, Union, Mapping, Iterable, Optional as Nullable
 
 from pyTooling.Decorators  import export
 
@@ -124,7 +130,7 @@ def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
 
 
 @export
-def isnestedclass(cls: Type, scope: Type) -> bool:
+def isnestedclass(cls: type, scope: type) -> bool:
 	"""
 	Returns true, if the given class ``cls`` is a member on an outer class ``scope``.
 
@@ -135,7 +141,7 @@ def isnestedclass(cls: Type, scope: Type) -> bool:
 	for mroClass in scope.mro():
 		for memberName in mroClass.__dict__:
 			member = getattr(mroClass, memberName)
-			if isinstance(member, Type):
+			if isinstance(member, type):
 				if cls is member:
 					return True
 
@@ -188,7 +194,7 @@ def getsizeof(obj: Any) -> int:
 		if isinstance(obj, (str, bytes, bytearray, range, Number)):
 			pass
 		# Handle iterables
-		elif isinstance(obj, (tuple, list, Set, deque)):      # TODO: What about builtin "set", "frozenset" and "dict"?
+		elif isinstance(obj, (tuple, list, set, deque)):      # TODO: What about builtin "set", "frozenset" and "dict"?
 			for item in obj:
 				size += recurse(item)
 		# Handle mappings
@@ -218,7 +224,7 @@ def getsizeof(obj: Any) -> int:
 	return recurse(obj)
 
 
-def bind(instance, func, methodName: Nullable[str] = None):
+def bind(instance: Any, func: Callable[..., Any], methodName: Nullable[str] = None) -> None:
 	"""
 	Bind the function *func* to *instance*, with either provided name *as_name*
 	or the existing name of *func*. The provided *func* should accept the
@@ -226,7 +232,7 @@ def bind(instance, func, methodName: Nullable[str] = None):
 
 	:param instance:   Object to bind the function to.
 	:param func:       Function to bind. Its first parameter is the instance (``self``).
-	:param methodName: Optional name to bind the function as. If ``None``, the function's own name is used.
+	:param methodName: Optional, name to bind the function as. If ``None``, the function's own name is used.
 	:returns:          The bound method.
 	"""
 	if methodName is None:
@@ -239,7 +245,7 @@ def bind(instance, func, methodName: Nullable[str] = None):
 
 
 @export
-def count(iterator: Iterable) -> int:
+def count(iterator: Iterable[Any]) -> int:
 	"""
 	Returns the number of elements in an iterable.
 
@@ -255,7 +261,7 @@ _Element = TypeVar("Element")
 
 
 @export
-def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+def firstElement(indexable: Union[list[_Element], tuple[_Element, ...]]) -> _Element:
 	"""
 	Returns the first element from an indexable.
 
@@ -266,7 +272,7 @@ def firstElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Ele
 
 
 @export
-def lastElement(indexable: Union[List[_Element], Tuple[_Element, ...]]) -> _Element:
+def lastElement(indexable: Union[list[_Element], tuple[_Element, ...]]) -> _Element:
 	"""
 	Returns the last element from an indexable.
 
@@ -322,7 +328,7 @@ _DictValue3 = TypeVar("_DictValue3")
 
 
 @export
-def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
+def firstKey(d: dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	"""
 	Retrieves the first key from a dictionary's keys.
 
@@ -337,7 +343,7 @@ def firstKey(d: Dict[_DictKey1, _DictValue1]) -> _DictKey1:
 
 
 @export
-def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
+def firstValue(d: dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	"""
 	Retrieves the first value from a dictionary's values.
 
@@ -352,7 +358,7 @@ def firstValue(d: Dict[_DictKey1, _DictValue1]) -> _DictValue1:
 
 
 @export
-def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
+def firstPair(d: dict[_DictKey1, _DictValue1]) -> tuple[_DictKey1, _DictValue1]:
 	"""
 	Retrieves the first key-value-pair from a dictionary.
 
@@ -367,7 +373,10 @@ def firstPair(d: Dict[_DictKey1, _DictValue1]) -> Tuple[_DictKey1, _DictValue1]:
 
 
 @export
-def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] = None) -> Dict:
+def mergedicts(
+	*dicts: dict[Hashable, Any],
+	filter: Nullable[Callable[[Hashable, Any], bool]] = None
+) -> dict[Hashable, Any]:
 	"""
 	Merge multiple dictionaries into a single new dictionary.
 
@@ -375,7 +384,7 @@ def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] =
 	it returns true, the dictionary element will be present in the resulting dictionary.
 
 	:param dicts:       Tuple of dictionaries to merge as positional parameters.
-	:param filter:      Optional filter function to apply to each dictionary element when merging.
+	:param filter:      Optional, filter function to apply to each dictionary element when merging.
 	:returns:           A new dictionary containing the merge result.
 	:raises ValueError: If 'mergedicts' got called without any dictionaries parameters.
 
@@ -393,7 +402,7 @@ def mergedicts(*dicts: Dict, filter: Nullable[Callable[[Hashable, Any], bool]] =
 
 
 @export
-def zipdicts(*dicts: Dict) -> Generator[Tuple, None, None]:
+def zipdicts(*dicts: dict[Hashable, Any]) -> Generator[tuple[Any, ...], None, None]:
 	"""
 	Iterate multiple dictionaries simultaneously.
 
@@ -415,9 +424,14 @@ def zipdicts(*dicts: Dict) -> Generator[Tuple, None, None]:
 	if any(len(d) != len(dicts[0]) for d in dicts):
 		raise ValueError(f"All given dictionaries must have the same length.")
 
-	def gen(ds: Tuple[Dict, ...]) -> Generator[Tuple, None, None]:
+	def gen(ds: tuple[dict[Hashable, Any], ...]) -> Generator[tuple[Any, ...], None, None]:
+		"""
+		Nested generator function, so the length check runs when :func:`zipdicts` is called, not on first iteration.
+
+		:param ds: The dictionaries to zip.
+		:returns:  A generator yielding a tuple of the key and one value per dictionary.
+		"""
 		for key, item0 in ds[0].items():
-			# WORKAROUND: using redundant parenthesis for Python 3.7 and pypy-3.10
 			yield key, item0, *(d[key] for d in ds[1:])
 
 	return gen(dicts)
@@ -455,7 +469,7 @@ class ChangeDirectory:
 
 	def __exit__(
 		self,
-		exc_type: Nullable[Type[BaseException]] = None,
+		exc_type: Nullable[type[BaseException]] = None,
 		exc_val:  Nullable[BaseException] = None,
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:

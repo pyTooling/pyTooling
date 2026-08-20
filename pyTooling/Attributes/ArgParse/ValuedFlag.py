@@ -29,6 +29,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing options carrying a value, like ``--count=25``.
+"""
 from typing import Optional as Nullable
 
 from pyTooling.Decorators                   import export
@@ -76,11 +79,33 @@ class ValuedFlag(NamedAndValuedArgument):
 
 @export
 class ShortValuedFlag(ValuedFlag):
+	"""Defines a switch argument with a value in short form like ``-c=25``."""
+
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a switch argument with a value in its short form.
+
+		:param short:    Optional, short form of the option, including its dash, e.g. :pycode:`short="-v"`.
+		:param dest:     Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param metaName: Optional, name of the value in the help page.
+		:param optional: Optional, if ``True``, the option may be omitted.
+		:param help:     Optional, help text of the option, displayed in the help page.
+		"""
 		super().__init__(short, None, dest, metaName, optional, help)
 
 
 @export
 class LongValuedFlag(ValuedFlag):
+	"""Defines a switch argument with a value in long form like ``--count=25``."""
+
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a switch argument with a value in its long form.
+
+		:param long:     Optional, long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
+		:param dest:     Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param metaName: Optional, name of the value in the help page.
+		:param optional: Optional, if ``True``, the option may be omitted.
+		:param help:     Optional, help text of the option, displayed in the help page.
+		"""
 		super().__init__(None, long, dest, metaName, optional, help)

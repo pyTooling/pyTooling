@@ -34,8 +34,13 @@ This packages provides a data structure to describe statemachines.
 .. hint::
 
    See :ref:`high-level help <STRUCT/StateMachine>` for explanations and usage examples.
+
+.. seealso::
+
+   :mod:`pyTooling.Graph`
+      |rarr| The graph data structure a statemachine is a special case of.
 """
-from typing import List
+from __future__            import annotations
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -43,7 +48,7 @@ from pyTooling.MetaClasses import ExtendedType
 
 @export
 class Base(metaclass=ExtendedType, slots=True):
-	pass
+	"""Base-class for all elements of a statemachine diagram."""
 
 
 @export
@@ -51,10 +56,10 @@ class Transition(Base):
 	"""
 	Represents a transition (edge) in a statemachine diagram (directed graph).
 	"""
-	_source:      "State"  #: Source state.
-	_destination: "State"  #: Destination state.
+	_source:      State  #: Source state.
+	_destination: State  #: Destination state.
 
-	def __init__(self, source: "State", destination: "State") -> None:
+	def __init__(self, source: State, destination: State) -> None:
 		"""
 		Initializes a transition.
 
@@ -70,8 +75,8 @@ class State(Base):
 	"""
 	Represents a state (node/vertex) in a statemachine diagram (directed graph).
 	"""
-	_inboundTransitions:  List[Transition]  #: List of inbound transitions.
-	_outboundTransitions: List[Transition]  #: List of outbound transitions.
+	_inboundTransitions:  list[Transition]  #: List of inbound transitions.
+	_outboundTransitions: list[Transition]  #: List of outbound transitions.
 
 	def __init__(self) -> None:
 		"""
@@ -87,8 +92,8 @@ class StateMachine(Base):
 	"""
 	Represents a statemachine (graph) in a statemachine diagram (directed graph).
 	"""
-	_states:       List[State]
-	_initialState: State
+	_states:       list[State]  #: List of all states in this statemachine.
+	_initialState: State        #: The state the statemachine starts in.
 
 	def __init__(self, initialState: State) -> None:
 		"""
@@ -103,7 +108,8 @@ class StateMachine(Base):
 		"""
 		Add a state to the state machine.
 
-		:param state: State to add.
+		:param state:       State to add.
+		:raises ValueError: If the given state is already part of this statemachine.
 		"""
 		if state not in self._states:    # TODO: use a set to check for double added states?
 			self._states.append(state)
@@ -111,7 +117,7 @@ class StateMachine(Base):
 			raise ValueError(f"State '{state}' was already added to this statemachine.")
 
 	@readonly
-	def States(self) -> List[State]:
+	def States(self) -> list[State]:
 		"""
 		Read-only property to access the list of states.
 

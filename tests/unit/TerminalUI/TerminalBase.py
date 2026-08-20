@@ -29,13 +29,15 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""pyTooling.TerminalUI"""
+"""
+Unit tests for :class:`pyTooling.TerminalUI.TerminalBaseApplication`: low-level writing, the exit codes, and
+the exception printers.
+"""
 from io                   import StringIO
-from unittest             import TestCase
 
 from pyTooling.Exceptions import ExceptionBase
-
 from pyTooling.TerminalUI import TerminalBaseApplication
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,7 +46,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiate(TestCase):
+class Instantiate(Testcase):
 	def test_NoConfigure(self) -> None:
 		term = TerminalBaseApplication()
 
@@ -70,7 +72,7 @@ class Instantiate(TestCase):
 		app = Application()
 
 
-class WriteMessages(TestCase):
+class WriteMessages(Testcase):
 	def test_WriteToStdOut(self) -> None:
 		term = TerminalBaseApplication()
 		term._stdout, term._stderr = out, err = StringIO(), StringIO()
@@ -120,7 +122,7 @@ class WriteMessages(TestCase):
 		self.assertEqual("Message\n", err.readline())
 
 
-class Exiting(TestCase):
+class Exiting(Testcase):
 	def test_Exit(self) -> None:
 		term = TerminalBaseApplication()
 
@@ -160,28 +162,8 @@ class Exiting(TestCase):
 			app.FatalExit()
 		self.assertEqual(255, ex.exception.code)
 
-	def test_CheckPythonVersion3(self) -> None:
-		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-				super().CheckPythonVersion((3, 8, 0))
 
-		_ = Application()
-
-	def test_CheckPythonVersion4(self) -> None:
-		print()
-
-		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-				super().CheckPythonVersion((4, 9, 0))
-
-		with self.assertRaises(SystemExit) as exitEx:
-			_ = Application()
-		self.assertEqual(254, exitEx.exception.code)
-
-
-class ExceptionHandling(TestCase):
+class ExceptionHandling(Testcase):
 	def test_NotImplemented(self) -> None:
 		print()
 

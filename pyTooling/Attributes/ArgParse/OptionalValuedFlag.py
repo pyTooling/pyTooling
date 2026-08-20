@@ -29,6 +29,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
+"""
+Attributes describing options whose value may be omitted, like ``--repeat[=1]``.
+
+Without a value, the option is still recognized; the handler method sees the default instead.
+"""
 from typing import Optional as Nullable
 
 from pyTooling.Decorators                   import export
@@ -76,11 +81,29 @@ class OptionalValuedFlag(NamedAndValuedArgument):
 
 @export
 class ShortOptionalValuedFlag(OptionalValuedFlag):
+	"""Defines a switch argument with an optional value in short form like ``-r[=1]``."""
+
 	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a switch argument with an optional value in its short form.
+
+		:param short: Optional, short form of the option, including its dash, e.g. :pycode:`short="-v"`.
+		:param dest:  Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param help:  Optional, help text of the option, displayed in the help page.
+		"""
 		super().__init__(short=short, dest=dest, help=help)
 
 
 @export
 class LongOptionalValuedFlag(OptionalValuedFlag):
+	"""Defines a switch argument with an optional value in long form like ``--repeat[=1]``."""
+
 	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+		"""
+		Initialize a switch argument with an optional value in its long form.
+
+		:param long: Optional, long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
+		:param dest: Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param help: Optional, help text of the option, displayed in the help page.
+		"""
 		super().__init__(long=long, dest=dest, help=help)

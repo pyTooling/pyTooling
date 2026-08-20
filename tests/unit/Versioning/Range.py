@@ -28,10 +28,11 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for package :mod:`pyTooling.Versioning`."""
-from unittest             import TestCase
-
+"""
+Unit tests for :class:`pyTooling.Versioning.VersionRange`: comparison and intersection of ranges.
+"""
 from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, VersionRange, RangeBoundHandling
+from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -39,7 +40,7 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Instantiation(TestCase):
+class Instantiation(Testcase):
 	def test_SemVer_SemVer(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = SemanticVersion(2, 0, 0)
@@ -106,7 +107,7 @@ class Instantiation(TestCase):
 		self.assertEqual(RangeBoundHandling.UpperBoundExclusive, vr.BoundHandling)
 
 
-class Comparison(TestCase):
+class Comparison(Testcase):
 	def test_LessThan(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = SemanticVersion(2, 0, 0)
@@ -210,7 +211,7 @@ class Comparison(TestCase):
 		self.assertTrue(SemanticVersion(2, 5, 0) not in vr)
 
 
-class Intersection(TestCase):
+class Intersection(Testcase):
 	def test_AInsideB(self) -> None:
 		vA1 = SemanticVersion(2, 0, 0)
 		vA2 = SemanticVersion(3, 0, 0)
@@ -274,3 +275,26 @@ class Intersection(TestCase):
 
 		self.assertEqual(vA1, intersection.LowerBound)
 		self.assertEqual(vB2, intersection.UpperBound)
+
+	def test_Disjoint(self) -> None:
+		"""Two ranges that don't overlap have an empty intersection, and the exception says which bound is where."""
+		vrA = VersionRange(SemanticVersion(1, 0, 0), SemanticVersion(2, 0, 0))
+		vrB = VersionRange(SemanticVersion(3, 0, 0), SemanticVersion(4, 0, 0))
+
+		with self.assertRaises(ValueError) as exceptionCapture:
+			vrA & vrB
+
+		self.assertEqual("The intersection of both version ranges is empty.", str(exceptionCapture.exception))
+		self.assertIn("3.0.0", exceptionCapture.exception.__notes__[0])
+		self.assertIn("2.0.0", exceptionCapture.exception.__notes__[1])
+
+	def test_Disjoint_Reversed(self) -> None:
+		vrA = VersionRange(SemanticVersion(3, 0, 0), SemanticVersion(4, 0, 0))
+		vrB = VersionRange(SemanticVersion(1, 0, 0), SemanticVersion(2, 0, 0))
+
+		with self.assertRaises(ValueError) as exceptionCapture:
+			vrA & vrB
+
+		self.assertEqual("The intersection of both version ranges is empty.", str(exceptionCapture.exception))
+		self.assertIn("2.0.0", exceptionCapture.exception.__notes__[0])
+		self.assertIn("3.0.0", exceptionCapture.exception.__notes__[1])
