@@ -284,7 +284,7 @@ class SimpleAttribute(Attribute):
 	_args:   tuple[Any, ...]  #: Positional parameters the attribute was applied with.
 	_kwargs: dict[str, Any]   #: Named parameters the attribute was applied with.
 
-	def __init__(self, *args, **kwargs) -> None:
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
 		Initialize the attribute, preserving whatever parameters it was applied with.
 
