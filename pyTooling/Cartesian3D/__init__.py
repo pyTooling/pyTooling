@@ -295,7 +295,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.xOffset, self.yOffset, self.zOffset
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two 3D-offsets for equality.
 
@@ -312,7 +312,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two 3D-offsets for inequality.
 

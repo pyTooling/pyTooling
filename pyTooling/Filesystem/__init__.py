@@ -80,7 +80,7 @@ class PermissionWarning(Warning):
 	"""
 	_path: Path  #: Path that couldn't be read.
 
-	def __init__(self, path: Path, *args) -> None:
+	def __init__(self, path: Path, *args: Any) -> None:
 		"""
 		Initialize a permission warning for the path that couldn't be read.
 
@@ -827,7 +827,7 @@ class Directory(Element["Directory"]):
 				"""
 				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		directoryNode: Node[Any, Any, Any, Any, Any, Any, Any] = Node(
+		directoryNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.File,
@@ -841,7 +841,7 @@ class Directory(Element["Directory"]):
 
 		return directoryNode
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two Directory instances for equality.
 
@@ -1038,7 +1038,7 @@ class Filename(Element[Directory]):
 			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		fileNode: Node[Any, Any, Any, Any, Any, Any, Any] = Node(
+		fileNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.File,
@@ -1049,7 +1049,7 @@ class Filename(Element[Directory]):
 
 		return fileNode
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two Filename instances for equality.
 
@@ -1229,7 +1229,7 @@ class SymbolicLink(Element[Directory]):
 			"""
 			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
-		symbolicLinkNode: Node[Any, Any, Any, Any, Any, Any, Any] = Node(
+		symbolicLinkNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
 				"kind": NodeKind.SymbolicLink,
@@ -1240,7 +1240,7 @@ class SymbolicLink(Element[Directory]):
 
 		return symbolicLinkNode
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two SymbolicLink instances for equality.
 

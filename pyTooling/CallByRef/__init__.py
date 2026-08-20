@@ -95,7 +95,7 @@ class CallByRefParam(Generic[T], metaclass=ExtendedType, slots=True):
 		else:
 			return self.Value == other
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare a CallByRefParam wrapped value with another instances (CallbyRefParam) or non-wrapped value for inequality.
 
@@ -148,7 +148,7 @@ class CallByRefBoolParam(CallByRefParam):
 			ex.add_note("Supported types for second operand: bool, CallByRefBoolParam")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare a CallByRefBoolParam wrapped boolean value with another instances (CallByRefBoolParam) or non-wrapped boolean value for inequality.
 
@@ -567,7 +567,7 @@ class CallByRefIntParam(CallByRefParam):
 			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare a CallByRefIntParam wrapped integer value with another instances (CallByRefIntParam) or non-wrapped integer value for inequality.
 

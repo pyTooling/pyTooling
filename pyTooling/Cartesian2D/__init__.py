@@ -276,7 +276,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.xOffset, self.yOffset
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two 2D-offsets for equality.
 
@@ -293,7 +293,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-	def __ne__(self, other) -> bool:
+	def __ne__(self, other: Any) -> bool:
 		"""
 		Compare two 2D-offsets for inequality.
 

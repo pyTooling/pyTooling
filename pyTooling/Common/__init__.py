@@ -224,7 +224,7 @@ def getsizeof(obj: Any) -> int:
 	return recurse(obj)
 
 
-def bind(instance, func, methodName: Nullable[str] = None):
+def bind(instance: Any, func: Callable[..., Any], methodName: Nullable[str] = None) -> None:
 	"""
 	Bind the function *func* to *instance*, with either provided name *as_name*
 	or the existing name of *func*. The provided *func* should accept the

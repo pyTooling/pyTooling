@@ -64,7 +64,7 @@ starting vertex are provided as methods on a vertex.
 import heapq
 from collections           import deque
 from itertools             import chain
-from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
+from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable
 from typing                import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -1727,7 +1727,7 @@ class Vertex(
 				self.parent = parent
 				self.ref = ref
 
-			def __str__(self):
+			def __str__(self) -> str:
 				"""
 				Return a string representation of this search tree node.
 
@@ -1836,7 +1836,7 @@ class Vertex(
 				self.distance = distance
 				self.ref = ref
 
-			def __lt__(self, other):
+			def __lt__(self, other: Any) -> bool:
 				"""
 				Compare two search tree nodes by their accumulated distance, so they can be kept in a priority queue.
 
@@ -1845,7 +1845,7 @@ class Vertex(
 				"""
 				return self.distance < other.distance
 
-			def __str__(self):
+			def __str__(self) -> str:
 				"""
 				Return a string representation of this search tree node.
 

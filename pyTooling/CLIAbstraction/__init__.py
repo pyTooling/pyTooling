@@ -295,7 +295,7 @@ class Program(metaclass=ExtendedType, slots=True):
 		self.__cliParameters__ = {}
 
 	@staticmethod
-	def _NeedsParameterInitialization(key) -> bool:
+	def _NeedsParameterInitialization(key: type) -> bool:
 		"""
 		Check if an argument class needs a value when it is set.
 

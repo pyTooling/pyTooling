@@ -156,7 +156,7 @@ def notimplemented(message: str) -> Callable[..., Any]:
 		:returns:      Replacement method, carrying the field ``__notImplemented__``.
 		"""
 		@wraps(method)
-		def func(*_, **__):
+		def func(*_: Any, **__: Any) -> NoReturn:
 			"""
 			Replacement method, which raises a :exc:`NotImplementedError` when called.
 
