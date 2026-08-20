@@ -46,7 +46,8 @@ from enum      import Enum, unique
 from functools import wraps
 from inspect   import cleandoc
 from types     import FunctionType
-from typing    import Any, Union, TypeVar, Callable, NoReturn, ParamSpec
+from typing    import Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
+from typing    import Optional as Nullable
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
@@ -170,8 +171,12 @@ def notimplemented(message: str) -> Callable[..., Any]:
 	return decorator
 
 
+_ReturnType = TypeVar("_ReturnType")
+"""A type variable for the value a read-only property hands out."""
+
+
 @export
-class readonly(property):
+class readonly(property, Generic[_ReturnType]):
 	"""
 	Marks a property as *read-only*.
 
@@ -188,6 +193,28 @@ class readonly(property):
 	"""
 
 	fget: Callable[[Any], Any]   #: The getter-method; a read-only property is always constructed from one.
+
+	@overload
+	def __get__(self, instance: None, owner: type, /) -> "readonly[_ReturnType]":
+		...     # pragma: no cover - an overload carries no implementation
+
+	@overload
+	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> _ReturnType:
+		...     # pragma: no cover - an overload carries no implementation
+
+	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> Union["readonly[_ReturnType]", _ReturnType]:
+		"""
+		Return the value of the property, or the property itself when it is read from the class.
+
+		Declaring this - :class:`property` implements it already - is what tells a type checker that the value has
+		the getter's return type. Without it, every read of a ``@readonly`` property is :data:`~typing.Any`, and that
+		spreads: a comparison of two such values, or a method returning one, becomes ``Any`` as well.
+
+		:param instance: The object the property is read from, or ``None`` when it is read from the class.
+		:param owner:    Optional, the class the property is defined in.
+		:returns:        The value the getter returns, or this property when read from the class.
+		"""
+		return super().__get__(instance, owner)     # type: ignore[no-any-return]
 
 	def setter(self, fset: Callable[..., Any]) -> NoReturn:
 		"""
