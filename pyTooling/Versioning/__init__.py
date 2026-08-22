@@ -56,7 +56,7 @@ from pyTooling.Common      import getFullyQualifiedName
 
 
 @export
-class VersionValidatorException(ToolingException):
+class VersionValidatorError(ToolingException):
 	"""
 	Raised when a parsed version is rejected by the validator it was parsed with.
 
@@ -1198,7 +1198,7 @@ class SemanticVersion(Version):
 		:raises ValueError:                When parameter ``versionString`` is None or empty.
 		:raises ValueError:                When parameter ``versionString`` isn't a semantic version number. |br|
 		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
-		:raises VersionValidatorException: When the parsed version is rejected by ``validator``.
+		:raises VersionValidatorError: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1273,7 +1273,7 @@ class SemanticVersion(Version):
 		)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
+			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -1640,7 +1640,7 @@ class CalendarVersion(Version):
 		:raises ValueError:                If parameter ``versionString`` has more parts than the class describes. |br|
 		                                   Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
 		                                   three-part calendar version number.
-		:raises VersionValidatorException: If the parsed version is rejected by ``validator``.
+		:raises VersionValidatorError: If the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1675,7 +1675,7 @@ class CalendarVersion(Version):
 		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
+			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -2664,3 +2664,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+VersionValidatorException = VersionValidatorError

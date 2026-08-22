@@ -160,25 +160,25 @@ class ExceptionBase(Exception):
 
 
 @export
-class EnvironmentException(ExceptionBase):
+class EnvironmentVariableError(ExceptionBase):
 	"""The exception is raised when an expected environment variable is missing."""
 
 
-# ConfigurationException
+# ConfigurationError
 #
 
 @export
-class PlatformNotSupportedException(ExceptionBase):
+class PlatformNotSupportedError(ExceptionBase):
 	"""The exception is raise if the platform is not supported."""
 
 
 @export
-class NotConfiguredException(ExceptionBase):
+class NotConfiguredError(ExceptionBase):
 	"""The exception is raise if the requested setting is not configured."""
 
 
 @export
-class MissingDependencyException(ImportError):
+class MissingDependencyError(ImportError):
 	"""
 	The exception is raised when an optional dependency of pyTooling is not installed.
 
@@ -195,7 +195,7 @@ class MissingDependencyException(ImportError):
 	      try:
 	        from ruamel.yaml import YAML
 	      except ImportError as ex:
-	        raise MissingDependencyException(dependency="ruamel.yaml", extra="yaml") from ex
+	        raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 	"""
 
 	EXIT_CODE:   ClassVar[int] = 242  #: Exit code an application should use when an optional dependency is missing.
@@ -285,3 +285,12 @@ class ToolingException(Exception):
 		:returns: Attached notes.
 		"""
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+EnvironmentException          = EnvironmentVariableError
+MissingDependencyException    = MissingDependencyError
+NotConfiguredException        = NotConfiguredError
+PlatformNotSupportedException = PlatformNotSupportedError

@@ -162,12 +162,12 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 
 
 @export
-class GraphException(ToolingException):
+class GraphError(ToolingException):
 	"""Base exception of all exceptions raised by :mod:`pyTooling.Graph`."""
 
 
 @export
-class InternalError(GraphException):
+class InternalError(GraphError):
 	"""
 	The exception is raised when a data structure corruption is detected.
 
@@ -181,12 +181,12 @@ class InternalError(GraphException):
 
 
 @export
-class NotInSameGraph(GraphException):
+class NotInSameGraph(GraphError):
 	"""The exception is raised when creating an edge between two vertices, but these are not in the same graph."""
 
 
 @export
-class NotInDifferentSubgraphs(GraphException):
+class NotInDifferentSubgraphs(GraphError):
 	"""
 	The exception is raised when creating a link between two vertices, but these are in the same subgraph.
 
@@ -195,7 +195,7 @@ class NotInDifferentSubgraphs(GraphException):
 
 
 @export
-class DuplicateVertexError(GraphException):
+class DuplicateVertexError(GraphError):
 	"""The exception is raised when the vertex already exists in the graph."""
 
 	_vertexID: Nullable[VertexIDType]  #: ID of the vertex that already exists in the graph.
@@ -221,7 +221,7 @@ class DuplicateVertexError(GraphException):
 
 
 @export
-class DuplicateEdgeError(GraphException):
+class DuplicateEdgeError(GraphError):
 	"""The exception is raised when the edge already exists in the graph."""
 
 	_edgeID: Nullable[EdgeIDType]  #: ID of the edge that already exists in the graph.
@@ -247,12 +247,12 @@ class DuplicateEdgeError(GraphException):
 
 
 @export
-class DestinationNotReachable(GraphException):
+class DestinationNotReachable(GraphError):
 	"""The exception is raised when a destination vertex is not reachable."""
 
 
 @export
-class NotATreeError(GraphException):
+class NotATreeError(GraphError):
 	"""
 	The exception is raised when a subgraph is not a tree.
 
@@ -261,7 +261,7 @@ class NotATreeError(GraphException):
 
 
 @export
-class CycleError(GraphException):
+class CycleError(GraphError):
 	"""The exception is raised when a not permitted cycle is found."""
 
 
@@ -1395,13 +1395,13 @@ class Vertex(
 		Delete the outbound edge to the given vertex.
 
 		:param destination:     The vertex the edge points to.
-		:raises GraphException: If no outbound edge to that vertex exists.
+		:raises GraphError: If no outbound edge to that vertex exists.
 		"""
 		for edge in self._outboundEdges:
 			if edge._destination is destination:
 				break
 		else:
-			raise GraphException(f"No outbound edge found to '{destination!r}'.")
+			raise GraphError(f"No outbound edge found to '{destination!r}'.")
 
 		edge.Delete()
 
@@ -1410,13 +1410,13 @@ class Vertex(
 		Delete the inbound edge from the given vertex.
 
 		:param source:          The vertex the edge comes from.
-		:raises GraphException: If no inbound edge from that vertex exists.
+		:raises GraphError: If no inbound edge from that vertex exists.
 		"""
 		for edge in self._inboundEdges:
 			if edge._source is source:
 				break
 		else:
-			raise GraphException(f"No inbound edge found to '{source!r}'.")
+			raise GraphError(f"No inbound edge found to '{source!r}'.")
 
 		edge.Delete()
 
@@ -1425,13 +1425,13 @@ class Vertex(
 		Delete the outbound link to the given vertex.
 
 		:param destination:     The vertex the link points to.
-		:raises GraphException: If no outbound link to that vertex exists.
+		:raises GraphError: If no outbound link to that vertex exists.
 		"""
 		for link in self._outboundLinks:
 			if link._destination is destination:
 				break
 		else:
-			raise GraphException(f"No outbound link found to '{destination!r}'.")
+			raise GraphError(f"No outbound link found to '{destination!r}'.")
 
 		link.Delete()
 
@@ -1440,13 +1440,13 @@ class Vertex(
 		Delete the inbound link from the given vertex.
 
 		:param source:          The vertex the link comes from.
-		:raises GraphException: If no inbound link from that vertex exists.
+		:raises GraphError: If no inbound link from that vertex exists.
 		"""
 		for link in self._inboundLinks:
 			if link._source is source:
 				break
 		else:
-			raise GraphException(f"No inbound link found to '{source!r}'.")
+			raise GraphError(f"No inbound link found to '{source!r}'.")
 
 		link.Delete()
 
@@ -1464,10 +1464,10 @@ class Vertex(
 		:param linkingKeyFromOriginalVertex: Optional, if not ``None``, add a key-value-pair using this parameter as key
 		                                     from original vertex to the new vertex.
 		:returns:                            The newly created vertex.
-		:raises GraphException:              If source graph and destination graph are the same.
+		:raises GraphError:              If source graph and destination graph are the same.
 		"""
 		if graph is self._graph:
-			raise GraphException("Graph to copy this vertex to, is the same graph.")
+			raise GraphError("Graph to copy this vertex to, is the same graph.")
 
 		vertex = Vertex(self._id, self._value, self._weight, graph=graph)
 		if copyDict:
@@ -3240,3 +3240,9 @@ class Graph(
 			return f"Graph: unnamed graph"
 		else:
 			return f"Graph: '{self._name}'"
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+GraphException = GraphError

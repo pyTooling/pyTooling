@@ -70,7 +70,7 @@ _ParentType = TypeVar("_ParentType", bound="Element")
 
 
 @export
-class FilesystemException(ToolingException):
+class FilesystemError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Filesystem`."""
 
 
@@ -179,10 +179,10 @@ class Base(metaclass=ExtendedType, slots=True):
 		Read-only property to access the element's size in Bytes.
 
 		:returns:                    Size in Bytes.
-		:raises FilesystemException: If size is not computed, yet.
+		:raises FilesystemError: If size is not computed, yet.
 		"""
 		if self._size is None:
-			raise FilesystemException("Size is not computed, yet.")
+			raise FilesystemError("Size is not computed, yet.")
 
 		return self._size
 
@@ -398,12 +398,12 @@ class Directory(Element["Directory"]):
 		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
 		the collected statistics are incomplete by exactly that path.
 
-		:raises FilesystemException: If this directory isn't attached to a :class:`Root`, which owns the ID table.
-		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
+		:raises FilesystemError: If this directory isn't attached to a :class:`Root`, which owns the ID table.
+		:raises FilesystemError: If the directory contains an element that is neither a directory, a file nor a
 		                             symbolic link.
 		"""
 		if (root := self._root) is None:
-			raise FilesystemException(f"Directory '{self._name}' is not attached to a filesystem root.")
+			raise FilesystemError(f"Directory '{self._name}' is not attached to a filesystem root.")
 
 		with Stopwatch() as sw1:
 			try:
@@ -430,7 +430,7 @@ class Directory(Element["Directory"]):
 					target = Path(readlink(directoryPath / dirEntry.name))
 					_ = SymbolicLink(dirEntry.name, target, parent=self)
 				else:
-					raise FilesystemException(f"Unknown directory element.")
+					raise FilesystemError(f"Unknown directory element.")
 
 		self._scanDuration = sw1.Duration
 
@@ -667,13 +667,13 @@ class Directory(Element["Directory"]):
 		Read-only property to access the equivalent Path instance for accessing the represented directory.
 
 		:returns:                    Path to the directory.
-		:raises FilesystemException: If no parent is set.
+		:raises FilesystemError: If no parent is set.
 		"""
 		if self._path is not None:
 			return self._path
 
 		if self._parent is None:
-			raise FilesystemException(f"No parent or root set for directory.")
+			raise FilesystemError(f"No parent or root set for directory.")
 
 		self._path = self._parent.Path / self._name
 		return self._path
@@ -684,10 +684,10 @@ class Directory(Element["Directory"]):
 		Read-only property to access the time needed to scan a directory structure including all subelements (recursively).
 
 		:returns:                    The scan duration in seconds.
-		:raises FilesystemException: If the directory was not scanned.
+		:raises FilesystemError: If the directory was not scanned.
 		"""
 		if self._scanDuration is None:
-			raise FilesystemException(f"Directory was not scanned, yet.")
+			raise FilesystemError(f"Directory was not scanned, yet.")
 
 		return self._scanDuration
 
@@ -697,10 +697,10 @@ class Directory(Element["Directory"]):
 		Read-only property to access the time needed to aggregate the directory's and subelement's properties (recursively).
 
 		:returns:                    The aggregation duration in seconds.
-		:raises FilesystemException: If the directory properties were not aggregated.
+		:raises FilesystemError: If the directory properties were not aggregated.
 		"""
 		if self._scanDuration is None:
-			raise FilesystemException(f"Directory properties were not aggregated, yet.")
+			raise FilesystemError(f"Directory properties were not aggregated, yet.")
 
 		return self._aggregateDuration
 
@@ -1591,3 +1591,9 @@ class File(Base):
 
 		if filename._root is not None:
 			self._root = filename._root
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+FilesystemException = FilesystemError

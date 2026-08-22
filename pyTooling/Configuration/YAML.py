@@ -40,19 +40,19 @@ from __future__           import annotations
 from pathlib              import Path
 from typing               import Any, Union, Iterator as typing_Iterator, Self
 
-from pyTooling.Exceptions import MissingDependencyException
+from pyTooling.Exceptions import MissingDependencyError
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyException(dependency="ruamel.yaml", extra="yaml") from ex
+	raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, InheritDocString
 from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
-from pyTooling.Configuration   import InterpolationException, KeyNotFoundException, PathExpressionException
-from pyTooling.Configuration   import UnsupportedValueTypeException
+from pyTooling.Configuration   import ConfigurationError, KeyT, NodeT, ValueT
+from pyTooling.Configuration   import InterpolationError, KeyNotFoundError, PathExpressionError
+from pyTooling.Configuration   import UnsupportedValueTypeError
 from pyTooling.Configuration   import Node as Abstract_Node
 from pyTooling.Configuration   import Dictionary as Abstract_Dict
 from pyTooling.Configuration   import Sequence as Abstract_Seq
@@ -136,7 +136,7 @@ class Node(Abstract_Node):
 
 		:param key:                   Key or index to look up.
 		:returns:                     The raw value as returned by the YAML parser.
-		:raises KeyNotFoundException: If the key exists neither as string, nor as integer or float.
+		:raises KeyNotFoundError: If the key exists neither as string, nor as integer or float.
 		"""
 		try:
 			return self._yamlNode[key]
@@ -154,7 +154,7 @@ class Node(Abstract_Node):
 			except (KeyError, IndexError, TypeError):
 				pass
 
-		ex = KeyNotFoundException(f"Key '{key}' not found in node '{self._key}'.")
+		ex = KeyNotFoundError(f"Key '{key}' not found in node '{self._key}'.")
 		ex.add_note(self._DescribeKeys())
 		raise ex
 
@@ -185,8 +185,8 @@ class Node(Abstract_Node):
 		:param key:                            Key or index to look up.
 		:returns:                              A dictionary node, a sequence node, or a scalar value with its variables
 		                                       resolved.
-		:raises KeyNotFoundException:          If the key doesn't exist in this node.
-		:raises UnsupportedValueTypeException: If the YAML parser returned a value that is neither a scalar, nor a
+		:raises KeyNotFoundError:          If the key doesn't exist in this node.
+		:raises UnsupportedValueTypeError: If the YAML parser returned a value that is neither a scalar, nor a
 		                                       node.
 		"""
 		try:
@@ -204,7 +204,7 @@ class Node(Abstract_Node):
 				value = self.SEQ_TYPE(self, self, key, value)
 			else:
 				typeName = getFullyQualifiedName(value)
-				ex = UnsupportedValueTypeException(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
+				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
 				ex.add_note(f"The YAML parser returned a value that is neither a scalar (str, int, float), nor a map or sequence.")
 				raise ex
 
@@ -221,10 +221,10 @@ class Node(Abstract_Node):
 
 		:param value:                   The raw value, possibly containing variables.
 		:returns:                       The value with every variable replaced by what it references.
-		:raises InterpolationException: If a variable is malformed - a dangling ``$`` at the end of the value, or a
+		:raises InterpolationError: If a variable is malformed - a dangling ``$`` at the end of the value, or a
 		                                missing closing ``}`` for a ``${`` at some position. |br|
 		                                Use ``$$`` to escape a literal dollar sign.
-		:raises KeyNotFoundException:   If a referenced key doesn't exist.
+		:raises KeyNotFoundError:   If a referenced key doesn't exist.
 		"""
 		if value == "":
 			return ""
@@ -243,7 +243,7 @@ class Node(Abstract_Node):
 			else:
 				result += rawValue[:beginPos]
 				if beginPos + 1 >= len(rawValue):
-					ex = InterpolationException(f"Dangling '$' at the end of value '{value}'.")
+					ex = InterpolationError(f"Dangling '$' at the end of value '{value}'.")
 					ex.add_note(f"Use '$$' to escape a literal dollar sign.")
 					raise ex
 				elif rawValue[beginPos + 1] == "$":
@@ -253,7 +253,7 @@ class Node(Abstract_Node):
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
 					if endPos < 0:
-						ex = InterpolationException(f"Unclosed variable reference in value '{value}'.")
+						ex = InterpolationError(f"Unclosed variable reference in value '{value}'.")
 						ex.add_note(f"Missing closing '}}' for the '${{' at position {beginPos}.")
 						raise ex
 					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
@@ -276,8 +276,8 @@ class Node(Abstract_Node):
 
 		:param path:                     Path elements, where ``..`` selects the parent node.
 		:returns:                        The scalar value at that path.
-		:raises KeyNotFoundException:    If a path element doesn't exist.
-		:raises PathExpressionException: If the path resolves to a node instead of a value. Extend the path expression
+		:raises KeyNotFoundError:    If a path element doesn't exist.
+		:raises PathExpressionError: If the path resolves to a node instead of a value. Extend the path expression
 		                                 to address a scalar value.
 		"""
 		node = self
@@ -289,7 +289,7 @@ class Node(Abstract_Node):
 
 		if isinstance(node, Dictionary):
 			pathExpression = ":".join(str(element) for element in path)
-			ex = PathExpressionException(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
+			ex = PathExpressionError(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
 			ex.add_note(f"Element '{p}' is a dictionary. Extend the path expression to address a scalar value.")
 			raise ex
 
@@ -301,7 +301,7 @@ class Node(Abstract_Node):
 
 		:param path:                  Path elements, where ``..`` selects the parent node.
 		:returns:                     A node or a scalar value at that path.
-		:raises KeyNotFoundException: If a path element doesn't exist.
+		:raises KeyNotFoundError: If a path element doesn't exist.
 		"""
 		node = self
 		for p in path:
@@ -475,10 +475,10 @@ class Configuration(Dictionary, Abstract_Configuration):
 		All sequence items or dictionaries key-value-pairs in the YAML file are accessible via Python's dictionary syntax.
 
 		:param configFile:              Configuration file to read and parse.
-		:raises ConfigurationException: If the YAML file doesn't exist or can't be parsed.
+		:raises ConfigurationError: If the YAML file doesn't exist or can't be parsed.
 		"""
 		if not configFile.exists():
-			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
+			raise ConfigurationError(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
 		with configFile.open("r", encoding="utf-8") as file:
 			self._yamlConfig = YAML().load(file)

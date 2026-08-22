@@ -44,29 +44,29 @@ from functools            import wraps, update_wrapper
 from threading            import RLock
 from typing               import Optional as Nullable, Union, Iterable, Mapping
 
-from pyTooling.Exceptions import MissingDependencyException
+from pyTooling.Exceptions import MissingDependencyError
 
 try:
 	from aiohttp import ClientSession
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyException(dependency="aiohttp", extra="pypi") from ex
+	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
 
 try:
 	from packaging.requirements import Requirement
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyException(dependency="packaging", extra="pypi") from ex
+	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
 
 try:
 	from requests import Session, HTTPError
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyException(dependency="requests", extra="pypi") from ex
+	raise MissingDependencyError(dependency="requests", extra="pypi") from ex
 
 from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import BrokenRequirementWarning, NoSessionAvailableException, ProjectNotFoundException
-from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundException
+from pyTooling.Dependency      import BrokenRequirementWarning, NoSessionAvailableError, ProjectNotFoundError
+from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
@@ -387,13 +387,13 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download this release's details from the package index and load the projects it requires.
 
-		:raises NoSessionAvailableException: If the release wasn't created by a package index, so it has no session. |br|
+		:raises NoSessionAvailableError: If the release wasn't created by a package index, so it has no session. |br|
 		                                     A session is opened by the package index and handed to the objects it
 		                                     creates.
-		:raises ReleaseNotFoundException:    If the index doesn't know this release.
+		:raises ReleaseNotFoundError:    If the index doesn't know this release.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableException(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
+			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
 			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
@@ -402,7 +402,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 			response.raise_for_status()
 		except HTTPError as ex:
 			if ex.response is not None and ex.response.status_code == 404:
-				raise ReleaseNotFoundException(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
+				raise ReleaseNotFoundError(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
@@ -612,13 +612,13 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download this project's details and its list of releases from the package index.
 
-		:raises NoSessionAvailableException: If the project wasn't created by a package index, so it has no session. |br|
+		:raises NoSessionAvailableError: If the project wasn't created by a package index, so it has no session. |br|
 		                                     A session is opened by the package index and handed to the objects it
 		                                     creates.
-		:raises ProjectNotFoundException:    If the index doesn't know this project.
+		:raises ProjectNotFoundError:    If the index doesn't know this project.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableException(f"No session available to download details of package '{self._name}'.")
+			ex = NoSessionAvailableError(f"No session available to download details of package '{self._name}'.")
 			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
@@ -627,7 +627,7 @@ class Project(Package, LazyLoadableMixin):
 			response.raise_for_status()
 		except HTTPError as ex:
 			if ex.response is not None and ex.response.status_code == 404:
-				raise ProjectNotFoundException(f"Package '{self._name}' not found.") from ex
+				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from ex
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 

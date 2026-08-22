@@ -35,20 +35,20 @@ Predefined exceptions of ``pyTooling.Exceptions``.
    :parts: 1
 
 
-EnvironmentException
+EnvironmentVariableError
 ********************
 
-.. todo:: EXCEPTION:: Needs documentation for EnvironmentException
+.. todo:: EXCEPTION:: Needs documentation for EnvironmentVariableError
 
-PlatformNotSupportedException
+PlatformNotSupportedError
 *****************************
 
-.. todo:: EXCEPTION:: Needs documentation for PlatformNotSupportedException
+.. todo:: EXCEPTION:: Needs documentation for PlatformNotSupportedError
 
-NotConfiguredException
+NotConfiguredError
 **********************
 
-.. todo:: EXCEPTION:: Needs documentation for NotConfiguredException
+.. todo:: EXCEPTION:: Needs documentation for NotConfiguredError
 
 .. seealso::
 

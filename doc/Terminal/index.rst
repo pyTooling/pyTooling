@@ -125,7 +125,7 @@ once in the constructor by :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.
 supports native Windows (``kernel32.dll:GetConsoleScreenBufferInfo``) as well as Linux, macOS, FreeBSD, MinGW32/64,
 UCRT64, Clang64 and Cygwin (``ioctl(TIOCGWINSZ)``, falling back to the environment variables ``COLUMNS`` and ``LINES``).
 If the size can't be determined, ``(80, 25)`` is assumed; on an unsupported platform, a
-:exc:`~pyTooling.Exceptions.PlatformNotSupportedException` is raised.
+:exc:`~pyTooling.Exceptions.PlatformNotSupportedError` is raised.
 
 
 .. _TERM/LowLevelWriting:

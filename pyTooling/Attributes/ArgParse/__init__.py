@@ -56,7 +56,7 @@ M = TypeVar("M", bound=Callable[..., Any])
 
 
 @export
-class ArgParseException(ToolingException):
+class ArgParseError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Attributes.ArgParse`."""
 
 
@@ -319,7 +319,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		:class:`ArgumentParser` constructor.
 
 		:param kwargs:             Named parameters forwarded to the :class:`~argparse.ArgumentParser` constructor.
-		:raises ArgParseException: If more than one method is marked as the default handler.
+		:raises ArgParseError: If more than one method is marked as the default handler.
 		"""
 		from .Argument import CommandLineArgument
 
@@ -344,7 +344,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		if (methodCount := len(methods)) == 1:
 			defaultMethod, attributes = firstPair(methods)
 			if len(attributes) > 1:
-				raise ArgParseException("Marked default handler multiple times with 'DefaultAttribute'.")
+				raise ArgParseError("Marked default handler multiple times with 'DefaultAttribute'.")
 
 			# set default handler for the main parser
 			self._mainParser.set_defaults(func=firstElement(attributes).Handler)
@@ -355,7 +355,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				self._mainParser.add_argument(*methodAttribute.Args, **methodAttribute.KWArgs)
 
 		elif methodCount > 1:
-			raise ArgParseException("Marked more then one handler as default handler with 'DefaultAttribute'.")
+			raise ArgParseError("Marked more then one handler as default handler with 'DefaultAttribute'.")
 
 		# Search for 'CommandHandler' marked methods
 		methods: dict[Callable[..., Any], tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
@@ -364,7 +364,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				self._subParser = self._mainParser.add_subparsers(help='sub-command help')
 
 			if len(attributes) > 1:
-				raise ArgParseException("Marked command handler multiple times with 'CommandHandler'.")
+				raise ArgParseError("Marked command handler multiple times with 'CommandHandler'.")
 
 			# Add a sub parser for each command / handler pair
 			attribute = firstElement(attributes)
@@ -456,3 +456,8 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 # OptionalValued --option --option=foo
 # ValuedTuple
 
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+ArgParseException = ArgParseError

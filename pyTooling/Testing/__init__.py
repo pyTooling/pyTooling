@@ -54,7 +54,7 @@ _ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")   #: Pattern matching an ANSI 
 
 
 @export
-class TestingException(ToolingException):
+class TestingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Testing`."""
 
 
@@ -152,20 +152,20 @@ class ApplicationTestcase(Testcase):
 		"""
 		Check the test class is set up, and resolve the console script on ``PATH``, once per class.
 
-		:raises TestingException: If the test class named neither a console script nor a runnable module, or if the
+		:raises TestingError: If the test class named neither a console script nor a runnable module, or if the
 		                          console script it named is not installed. Every testcase in the class would
 		                          otherwise fail, each with a less obvious error.
 		"""
 		super().setUpClass()
 
 		if cls._consoleScript is None:
-			raise TestingException(f"Testcase '{cls.__name__}' has no console script. Set '_consoleScript'.")
+			raise TestingError(f"Testcase '{cls.__name__}' has no console script. Set '_consoleScript'.")
 
 		if cls._runnableModule is None:
-			raise TestingException(f"Testcase '{cls.__name__}' has no runnable module. Set '_runnableModule'.")
+			raise TestingError(f"Testcase '{cls.__name__}' has no runnable module. Set '_runnableModule'.")
 
 		if (resolved := which(cls._consoleScript)) is None:
-			ex = TestingException(f"Console script '{cls._consoleScript}' was not found in PATH.")
+			ex = TestingError(f"Console script '{cls._consoleScript}' was not found in PATH.")
 			raise ex from FileNotFoundError(str(cls._consoleScript))
 
 		cls._executable = resolved
@@ -251,3 +251,9 @@ class ApplicationTestcase(Testcase):
 				f"--- stderr ---\n{result.stderr}"
 			)
 		)
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+TestingException = TestingError

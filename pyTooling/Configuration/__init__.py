@@ -63,12 +63,12 @@ ValueT = Union[NodeT, str, int, float]    #: Type variable for values.
 
 
 @export
-class ConfigurationException(ToolingException):
+class ConfigurationError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Configuration`."""
 
 
 @export
-class KeyNotFoundException(ConfigurationException):
+class KeyNotFoundError(ConfigurationError):
 	"""
 	The requested key or index doesn't exist in the configuration node.
 
@@ -78,7 +78,7 @@ class KeyNotFoundException(ConfigurationException):
 
 
 @export
-class UnsupportedValueTypeException(ConfigurationException):
+class UnsupportedValueTypeError(ConfigurationError):
 	"""
 	The configuration file parser returned a value of a type that isn't supported by :mod:`pyTooling.Configuration`.
 
@@ -87,12 +87,12 @@ class UnsupportedValueTypeException(ConfigurationException):
 
 
 @export
-class InterpolationException(ConfigurationException):
+class InterpolationError(ConfigurationError):
 	"""A variable reference (``${...}``) in a configuration value is malformed or can't be resolved."""
 
 
 @export
-class PathExpressionException(ConfigurationException):
+class PathExpressionError(ConfigurationError):
 	"""A path expression (``a:b:c``) doesn't describe a valid node or value in the configuration."""
 
 
@@ -269,3 +269,13 @@ class Configuration(Node):
 		:returns: Path to the configuration file.
 		"""
 		return self._configFile
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+ConfigurationException        = ConfigurationError
+InterpolationException        = InterpolationError
+KeyNotFoundException          = KeyNotFoundError
+PathExpressionException       = PathExpressionError
+UnsupportedValueTypeException = UnsupportedValueTypeError
