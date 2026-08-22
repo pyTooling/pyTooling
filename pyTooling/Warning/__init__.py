@@ -307,16 +307,16 @@ class WarningCollector:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
-		:param warning:                            Warning to send upwards in the call stack.
-		:param cause:                              Optional, root cause to be added to the warning.
-		:param notes:                              Optional, a single note or a list of notes to be added to the warning.
+		:param warning:                        Warning to send upwards in the call stack.
+		:param cause:                          Optional, root cause to be added to the warning.
+		:param notes:                          Optional, a single note or a list of notes to be added to the warning.
 		:raises EscalatedWarningError:         If the warning collector asks for the warning to be raised.
 		:raises UnhandledExceptionError:       If no warning collector was found along the call-hierarchy to collect and
-		                                           handle an exception.
-		:raises UnhandledCriticalWarningError:  If no warning collector was found along the call-hierarchy to collect
-		                                           and handle a critical warning. |br|
-		                                           Add a with-statement using :class:`WarningCollector` somewhere up the
-		                                           call-hierarchy to receive and collect warnings.
+		                                       handle an exception.
+		:raises UnhandledCriticalWarningError: If no warning collector was found along the call-hierarchy to collect
+		                                       and handle a critical warning. |br|
+		                                       Add a with-statement using :class:`WarningCollector` somewhere up the
+		                                       call-hierarchy to receive and collect warnings.
 		"""
 		global _threadLocalData
 
@@ -403,7 +403,7 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Enter the warning collector context.
 
-		:returns:                                    The warning collector instance.
+		:returns:                                The warning collector instance.
 		:raises SupervisedWarningCollectorError: If this collector is not the top-most warning collector of its thread.
 		"""
 		global _threadLocalData
@@ -629,10 +629,10 @@ class ThreadSupervisor:
 		A single exception is re-raised as itself - wrapped in a :exc:`SupervisedThreadError` naming its thread,
 		unless ``unwrapped`` is set. Several exceptions are raised as an :exc:`ExceptionGroup`, so none of them is lost.
 
-		:param unwrapped:                  Optional, if ``True``, a single exception is raised as it was, without naming its
-		                                   thread.
+		:param unwrapped:              Optional, if ``True``, a single exception is raised as it was, without naming its
+		                               thread.
 		:raises SupervisedThreadError: If exactly one thread failed.
-		:raises ExceptionGroup:            If more than one thread failed.
+		:raises ExceptionGroup:        If more than one thread failed.
 		"""
 		with self._lock:
 			if len(self._exceptions) == 0:

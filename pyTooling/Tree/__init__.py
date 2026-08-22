@@ -187,10 +187,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:param format:        Optional, node formatting function returning a one-line representation for
 		                      tree-rendering.
 
-		:raises TypeError:    If parameter parent is not an instance of Node.
-		:raises ValueError:   If nodeID already exists in the tree.
-		:raises TypeError:    If parameter children is not iterable.
-		:raises ValueError:   If an element of children is not an instance of Node.
+		:raises TypeError:  If parameter parent is not an instance of Node.
+		:raises ValueError: If nodeID already exists in the tree.
+		:raises TypeError:  If parameter children is not iterable.
+		:raises ValueError: If an element of children is not an instance of Node.
 		"""
 
 		self._id = nodeID
@@ -293,7 +293,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	def __delitem__(self, key: DictKeyType) -> None:
 		"""
 		.. todo:: TREE::Node::__delitem__ Needs documentation.
-
 		"""
 		del self._dict[key]
 

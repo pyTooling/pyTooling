@@ -178,7 +178,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the element's size in Bytes.
 
-		:returns:                    Size in Bytes.
+		:returns:                Size in Bytes.
 		:raises FilesystemError: If size is not computed, yet.
 		"""
 		if self._size is None:
@@ -194,7 +194,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
 		will be stored in the node's key-value store.
 
-		:returns:                    A tree's node referencing this filesystem element.
+		:returns: A tree's node referencing this filesystem element.
 		"""
 		raise NotImplementedError()
 
@@ -291,7 +291,7 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Read-only property to access the element's path.
 
-		:returns:                    Path of the element.
+		:returns: Path of the element.
 		"""
 		raise NotImplementedError(f"Property 'Path' is abstract.")
 
@@ -400,7 +400,7 @@ class Directory(Element["Directory"]):
 
 		:raises FilesystemError: If this directory isn't attached to a :class:`Root`, which owns the ID table.
 		:raises FilesystemError: If the directory contains an element that is neither a directory, a file nor a
-		                             symbolic link.
+		                         symbolic link.
 		"""
 		if (root := self._root) is None:
 			raise FilesystemError(f"Directory '{self._name}' is not attached to a filesystem root.")
@@ -666,7 +666,7 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the equivalent Path instance for accessing the represented directory.
 
-		:returns:                    Path to the directory.
+		:returns:                Path to the directory.
 		:raises FilesystemError: If no parent is set.
 		"""
 		if self._path is not None:
@@ -683,7 +683,7 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the time needed to scan a directory structure including all subelements (recursively).
 
-		:returns:                    The scan duration in seconds.
+		:returns:                The scan duration in seconds.
 		:raises FilesystemError: If the directory was not scanned.
 		"""
 		if self._scanDuration is None:
@@ -696,7 +696,7 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the time needed to aggregate the directory's and subelement's properties (recursively).
 
-		:returns:                    The aggregation duration in seconds.
+		:returns:                The aggregation duration in seconds.
 		:raises FilesystemError: If the directory properties were not aggregated.
 		"""
 		if self._scanDuration is None:

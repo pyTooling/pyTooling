@@ -277,7 +277,7 @@ class LayerCake(metaclass=ExtendedType):
 		"""
 		Read-only property to access the time needed to slice the filesystem structure into docker layers.
 
-		:returns:                    The slicing duration in seconds.
+		:returns:                The slicing duration in seconds.
 		:raises FilesystemError: If the filesystem was not sliced into layers.
 		"""
 		if self._slicingDuration is None:

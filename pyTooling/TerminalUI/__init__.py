@@ -205,7 +205,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Returns the terminal size as tuple (width, height) for Windows, macOS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows).
 
-		:returns:                              A tuple containing width and height of the terminal's size in characters.
+		:returns:                          A tuple containing width and height of the terminal's size in characters.
 		:raises PlatformNotSupportedError: When a platform is not yet supported.
 		"""
 		platform = Platform()
@@ -381,7 +381,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Exit the terminal application by uninitializing color support and returning a fatal Exit code.
 
-		:param returnCode:  Optional, return code for application exit.
+		:param returnCode: Optional, return code for application exit.
 		"""
 		self.Exit(self.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
 

@@ -128,8 +128,8 @@ class Node(Abstract_Node):
 		"""
 		Look up a key in the JSON node, trying it as string, integer and float.
 
-		:param key:                   Key or index to look up.
-		:returns:                     The raw value as returned by the JSON parser.
+		:param key:               Key or index to look up.
+		:returns:                 The raw value as returned by the JSON parser.
 		:raises KeyNotFoundError: If the key exists neither as string, nor as integer or float.
 		"""
 		try:
@@ -176,12 +176,12 @@ class Node(Abstract_Node):
 
 		The converted object is cached, so a second access returns the same node object rather than a new one.
 
-		:param key:                            Key or index to look up.
-		:returns:                              A dictionary node, a sequence node, or a scalar value with its variables
-		                                       resolved.
+		:param key:                        Key or index to look up.
+		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
+		                                   resolved.
 		:raises KeyNotFoundError:          If the key doesn't exist in this node.
 		:raises UnsupportedValueTypeError: If the JSON parser returned a value that is neither a scalar, nor a
-		                                       node.
+		                                   node.
 		"""
 		try:
 			value = self._cache[key]
@@ -213,11 +213,11 @@ class Node(Abstract_Node):
 		A variable references another node by a path expression, so a value can be composed from other values of the
 		same configuration.
 
-		:param value:                   The raw value, possibly containing variables.
-		:returns:                       The value with every variable replaced by what it references.
+		:param value:               The raw value, possibly containing variables.
+		:returns:                   The value with every variable replaced by what it references.
 		:raises InterpolationError: If a variable is malformed - a dangling ``$`` at the end of the value, or a
-		                                missing closing ``}`` for a ``${`` at some position. |br|
-		                                Use ``$$`` to escape a literal dollar sign.
+		                            missing closing ``}`` for a ``${`` at some position. |br|
+		                            Use ``$$`` to escape a literal dollar sign.
 		:raises KeyNotFoundError:   If a referenced key doesn't exist.
 		"""
 		if value == "":
@@ -268,11 +268,11 @@ class Node(Abstract_Node):
 		"""
 		Return the value the given path refers to.
 
-		:param path:                     Path elements, where ``..`` selects the parent node.
-		:returns:                        The scalar value at that path.
+		:param path:                 Path elements, where ``..`` selects the parent node.
+		:returns:                    The scalar value at that path.
 		:raises KeyNotFoundError:    If a path element doesn't exist.
 		:raises PathExpressionError: If the path resolves to a node instead of a value. Extend the path expression
-		                                 to address a scalar value.
+		                             to address a scalar value.
 		"""
 		node = self
 		for p in path:
@@ -293,8 +293,8 @@ class Node(Abstract_Node):
 		"""
 		Return the node or value the given path refers to.
 
-		:param path:                  Path elements, where ``..`` selects the parent node.
-		:returns:                     A node or a scalar value at that path.
+		:param path:              Path elements, where ``..`` selects the parent node.
+		:returns:                 A node or a scalar value at that path.
 		:raises KeyNotFoundError: If a path element doesn't exist.
 		"""
 		node = self
@@ -469,7 +469,7 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the JSON file are accessible via Python's dictionary syntax.
 
-		:param configFile:              Configuration file to read and parse.
+		:param configFile:          Configuration file to read and parse.
 		:raises ConfigurationError: If the JSON file doesn't exist or can't be parsed.
 		"""
 		if not configFile.exists():

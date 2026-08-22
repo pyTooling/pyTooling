@@ -374,7 +374,7 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		If the span is not yet stopped, the duration from start to now is returned.
 
-		:returns:                 Duration since span was started in seconds.
+		:returns:             Duration since span was started in seconds.
 		:raises TracingError: When span was never started.
 		"""
 		if self._startTime is None:
@@ -404,9 +404,9 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		A span will be started.
 
-		:returns:                 The span itself.
+		:returns:             The span itself.
 		:raises TracingError: If no trace is active, so the span has nothing to attach to. |br|
-		                          Use a with-statement on :class:`Trace` to set up software execution tracing.
+		                      Use a with-statement on :class:`Trace` to set up software execution tracing.
 		"""
 		global _threadLocalData
 
@@ -555,7 +555,7 @@ class Trace(Span):
 		"""
 		Initializes a software execution trace.
 
-		:param name:   Name of the trace.
+		:param name: Name of the trace.
 		"""
 		super().__init__(name)
 

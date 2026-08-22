@@ -230,9 +230,9 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		"""
 		Insert a node before this node.
 
-		:param node:                 Node to insert.
-		:raises ValueError:          If parameter 'node' is ``None``.
-		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:param node:             Node to insert.
+		:raises ValueError:      If parameter 'node' is ``None``.
+		:raises TypeError:       If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListError: If parameter 'node' is already part of another linked list.
 		:raises LinkedListError: If this node is not part of a linked list.
 		"""
@@ -264,9 +264,9 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		"""
 		Insert a node after this node.
 
-		:param node:                 Node to insert.
-		:raises ValueError:          If parameter 'node' is ``None``.
-		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:param node:             Node to insert.
+		:raises ValueError:      If parameter 'node' is ``None``.
+		:raises TypeError:       If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListError: If parameter 'node' is already part of another linked list.
 		:raises LinkedListError: If this node is not part of a linked list.
 		"""
@@ -416,9 +416,9 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		Optionally, an iterable can be given to initialize the linked list. The order is preserved.
 
-		:param nodes:                Optional, iterable to initialize the linked list.
-		:raises TypeError:           If parameter 'nodes' is not an :class:`iterable <typing.Iterable>`.
-		:raises TypeError:           If parameter 'nodes' items are not of type :class:`Node`.
+		:param nodes:            Optional, iterable to initialize the linked list.
+		:raises TypeError:       If parameter 'nodes' is not an :class:`iterable <typing.Iterable>`.
+		:raises TypeError:       If parameter 'nodes' items are not of type :class:`Node`.
 		:raises LinkedListError: If parameter 'nodes' contains items which are already part of another linked list.
 		"""
 		if nodes is None:
@@ -529,9 +529,9 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Insert a node before the first node.
 
-		:param node:                 Node to insert.
-		:raises ValueError:          If parameter 'node' is ``None``.
-		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:param node:             Node to insert.
+		:raises ValueError:      If parameter 'node' is ``None``.
+		:raises TypeError:       If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListError: If parameter 'node' is already part of another linked list.
 		"""
 		if node is None:
@@ -559,9 +559,9 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Insert a node after the last node.
 
-		:param node:                 Node to insert.
-		:raises ValueError:          If parameter 'node' is ``None``.
-		:raises TypeError:           If parameter 'node' is not of type :class:`Node`.
+		:param node:             Node to insert.
+		:raises ValueError:      If parameter 'node' is ``None``.
+		:raises TypeError:       If parameter 'node' is not of type :class:`Node`.
 		:raises LinkedListError: If parameter 'node' is already part of another linked list.
 		"""
 		if node is None:
@@ -589,7 +589,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Remove first node from linked list.
 
-		:returns:                    First node.
+		:returns:                First node.
 		:raises LinkedListError: If linked list is empty.
 		"""
 		if self._firstNode is None:
@@ -612,7 +612,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Remove last node from linked list.
 
-		:returns:                    Last node.
+		:returns:                Last node.
 		:raises LinkedListError: If linked list is empty.
 		"""
 		if self._lastNode is None:
@@ -636,9 +636,9 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Access a node in the linked list by position.
 
-		:param index:                Node position to access.
-		:returns:                    Node at the given position.
-		:raises ValueError:          If parameter 'position' is out of range.
+		:param index:            Node position to access.
+		:returns:                Node at the given position.
+		:raises ValueError:      If parameter 'position' is out of range.
 		:raises LinkedListError: If the list is empty, or the index is out of range.
 
 		.. note::
@@ -686,9 +686,9 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Search the list for the first node matching a predicate.
 
-		:param predicate:            Filter function accepting a node and returning a boolean.
-		:param reverse:              Optional, if ``True``, search from the last node towards the first.
-		:returns:                    The first matching node.
+		:param predicate:        Filter function accepting a node and returning a boolean.
+		:param reverse:          Optional, if ``True``, search from the last node towards the first.
+		:returns:                The first matching node.
 		:raises LinkedListError: If the list is empty, or no node matches.
 		"""
 		if self._firstNode is None:

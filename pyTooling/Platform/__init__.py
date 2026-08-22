@@ -562,7 +562,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``""`` (empty string)
 		* Windows: ``"exe"``
 
-		:returns:                                File extension of an executable.
+		:returns:                            File extension of an executable.
 		:raises UnknownOperatingSystemError: If the operating system is unknown.
 		"""
 
@@ -587,7 +587,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``"lib"``
 		* Windows: ``"lib"``
 
-		:returns:                                File extension of a static library.
+		:returns:                            File extension of a static library.
 		:raises UnknownOperatingSystemError: If the operating system is unknown.
 		"""
 		if Platforms.OS_FreeBSD in self._platform:
@@ -611,7 +611,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``"dylib"``
 		* Windows: ``"dll"``
 
-		:returns:                                File extension of a dynamic library.
+		:returns:                            File extension of a dynamic library.
 		:raises UnknownOperatingSystemError: If the operating system is unknown.
 		"""
 		if Platforms.OS_FreeBSD in self._platform:

@@ -123,7 +123,7 @@ class ExceptionBase(Exception):
 		"""
 		ExceptionBase initializer.
 
-		:param message:   Optional, the exception message.
+		:param message: Optional, the exception message.
 		"""
 		super().__init__()
 		self.message = message

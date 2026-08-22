@@ -59,6 +59,17 @@ class TestingError(ToolingException):
 
 
 @export
+class ApplicationTestingError(TestingError):
+	"""
+	The exception is raised when a testcase exercising an application through its command line is not set up.
+
+	It reports what the test class did not declare - a console script or a runnable module - or that the console
+	script it named is not installed, because every testcase in that class would otherwise fail with a less obvious
+	error.
+	"""
+
+
+@export
 def stripANSIColorCodes(text: str) -> str:
 	"""
 	Remove ANSI color codes from a text, so it can be compared to an expected output.
@@ -152,20 +163,20 @@ class ApplicationTestcase(Testcase):
 		"""
 		Check the test class is set up, and resolve the console script on ``PATH``, once per class.
 
-		:raises TestingError: If the test class named neither a console script nor a runnable module, or if the
-		                          console script it named is not installed. Every testcase in the class would
-		                          otherwise fail, each with a less obvious error.
+		:raises ApplicationTestingError: If the test class named neither a console script nor a runnable module, or if the
+		                                 console script it named is not installed. Every testcase in the class would
+		                                 otherwise fail, each with a less obvious error.
 		"""
 		super().setUpClass()
 
 		if cls._consoleScript is None:
-			raise TestingError(f"Testcase '{cls.__name__}' has no console script. Set '_consoleScript'.")
+			raise ApplicationTestingError(f"Testcase '{cls.__name__}' has no console script. Set '_consoleScript'.")
 
 		if cls._runnableModule is None:
-			raise TestingError(f"Testcase '{cls.__name__}' has no runnable module. Set '_runnableModule'.")
+			raise ApplicationTestingError(f"Testcase '{cls.__name__}' has no runnable module. Set '_runnableModule'.")
 
 		if (resolved := which(cls._consoleScript)) is None:
-			ex = TestingError(f"Console script '{cls._consoleScript}' was not found in PATH.")
+			ex = ApplicationTestingError(f"Console script '{cls._consoleScript}' was not found in PATH.")
 			raise ex from FileNotFoundError(str(cls._consoleScript))
 
 		cls._executable = resolved

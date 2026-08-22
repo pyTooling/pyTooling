@@ -191,7 +191,7 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first split.
 		* the duration from last resume to this split.
 
-		:returns:                   Duration in seconds since last stopwatch operation
+		:returns:               Duration in seconds since last stopwatch operation
 		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		pauseTime = perf_counter_ns()
@@ -216,7 +216,7 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first pause.
 		* the duration from last resume to this pause.
 
-		:returns:                   Duration in seconds since last stopwatch operation
+		:returns:               Duration in seconds since last stopwatch operation
 		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		self._pauseTime = perf_counter_ns()
@@ -238,7 +238,7 @@ class Stopwatch(SlottedObject):
 		and the resume operation is possible. |br|
 		The time delta will be the duration from last pause to this resume.
 
-		:returns:                   Duration in seconds since last pause operation
+		:returns:               Duration in seconds since last pause operation
 		:raises StopwatchError: If stopwatch was not paused.
 		"""
 		self._resumeTime = perf_counter_ns()
@@ -263,7 +263,7 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the stop operation.
 		* the duration from last resume to the stop operation.
 
-		:returns:                   Duration in seconds since last stopwatch operation
+		:returns:               Duration in seconds since last stopwatch operation
 		:raises StopwatchError: If stopwatch was not started.
 		:raises StopwatchError: If stopwatch was already stopped.
 		"""
@@ -414,7 +414,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is currently running, the duration since start or last resume operation will be included.
 
 		:returns: Duration of all active split times in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -430,7 +430,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is currently paused, the duration since last pause operation will be included.
 
 		:returns: Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -446,7 +446,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is not yet stopped, the duration from start to now is returned.
 
 		:returns: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -472,7 +472,7 @@ class Stopwatch(SlottedObject):
 
 		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
 
-		:returns:                   The stopwatch itself.
+		:returns:               The stopwatch itself.
 		:raises StopwatchError: If the stopwatch was already started.
 		"""
 		if self._startTime is None:           # start stopwatch
@@ -504,10 +504,10 @@ class Stopwatch(SlottedObject):
 
 		A running stopwatch will be paused or stopped depending on the configured ``preferPause`` behavior.
 
-		:param exc_type:            Exception type, otherwise None.
-		:param exc_val:             Exception object, otherwise None.
-		:param exc_tb:              Exception's traceback, otherwise None.
-		:returns:                   True, if exceptions should be suppressed.
+		:param exc_type:        Exception type, otherwise None.
+		:param exc_val:         Exception object, otherwise None.
+		:param exc_tb:          Exception's traceback, otherwise None.
+		:returns:               True, if exceptions should be suppressed.
 		:raises StopwatchError: If the stopwatch was already stopped.
 		"""
 		if self._startTime is None:           # never started?
@@ -560,8 +560,8 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is not stopped yet, the last split won't be included.
 
 		:returns: Iterator of split time tuples of: |br|
-		         (1) delta time to the previous stopwatch operation and |br|
-		         (2) a boolean indicating if the split was an activity (true) or inactivity (false).
+		          (1) delta time to the previous stopwatch operation and |br|
+		          (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		"""
 		return self._splits.__iter__()
 

@@ -168,7 +168,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			``SC_PAGESIZE`` is typically 4096 bytes, but can be 16kiB (ARM64) or 64kiB (PowerPC/RHEL9+). :func:`os.sysconf`
 			reads it from the aux vector — no syscall overhead.
 
-			:returns:                  Physical memory usage (VmRSS) in bytes.
+			:returns:              Physical memory usage (VmRSS) in bytes.
 			:raises PlatformError: If the process' memory usage couldn't be read.
 			"""
 
@@ -221,7 +221,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			proc_pidinfo() returns the number of bytes written; ≤ 0 means error
 			(errno is set).  PROC_PIDTASKINFO = 4.
 
-			:returns:                  Memory usage of the current process.
+			:returns:              Memory usage of the current process.
 			:raises PlatformError: If ``proc_pidinfo`` reported an error.
 			"""
 			from ctypes import CDLL, byref, sizeof, get_errno

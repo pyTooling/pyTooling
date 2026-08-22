@@ -36,17 +36,17 @@ Predefined exceptions of ``pyTooling.Exceptions``.
 
 
 EnvironmentVariableError
-********************
+************************
 
 .. todo:: EXCEPTION:: Needs documentation for EnvironmentVariableError
 
 PlatformNotSupportedError
-*****************************
+*************************
 
 .. todo:: EXCEPTION:: Needs documentation for PlatformNotSupportedError
 
 NotConfiguredError
-**********************
+******************
 
 .. todo:: EXCEPTION:: Needs documentation for NotConfiguredError
 

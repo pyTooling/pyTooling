@@ -220,10 +220,10 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		.. todo:: Document algorithm
 
-		:param executablePath:           Optional, path to the executable.
-		:param binaryDirectoryPath:      Optional, path to the executable's directory.
-		:param dryRun:                   Optional, ``True``, when the program should run in dryrun mode.
-		:raises TypeError:               If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
+		:param executablePath:       Optional, path to the executable.
+		:param binaryDirectoryPath:  Optional, path to the executable's directory.
+		:param dryRun:               Optional, ``True``, when the program should run in dryrun mode.
+		:raises TypeError:           If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
 		:raises CLIAbstractionError: If the executable doesn't exist at the given path.
 		"""
 		self._platform =    system()
@@ -454,8 +454,8 @@ class Executable(Program):  # (ILogable):
 		"""
 		Start the executable as a child-process.
 
-		:param environment:              Optional, environment that should be setup when launching the executable. |br|
-		                                 If ``None``, the :attr:`_environment` is used.
+		:param environment:          Optional, environment that should be setup when launching the executable. |br|
+		                             If ``None``, the :attr:`_environment` is used.
 		:raises CLIAbstractionError: When an :exc:`OSError` occurs while launching the child-process.
 		"""
 		if self._dryRun:
@@ -490,8 +490,8 @@ class Executable(Program):  # (ILogable):
 		"""
 		Send a string to STDIN of the running child-process.
 
-		:param line:                     Line to send.
-		:param end:                      Optional, line end character.
+		:param line:                 Line to send.
+		:param end:                  Optional, line end character.
 		:raises CLIAbstractionError: If the child-process was not started, or has no standard input.
 		:raises CLIAbstractionError: When any error occurs while sending data to the child-process.
 		"""
@@ -514,7 +514,7 @@ class Executable(Program):  # (ILogable):
 		"""
 		Return a line-reader for STDOUT.
 
-		:returns:                        A generator object to read from STDOUT line-by-line.
+		:returns:                    A generator object to read from STDOUT line-by-line.
 		:raises DryRunError:         In case dryrun mode is active.
 		:raises CLIAbstractionError: When any error occurs while reading outputs from the child-process.
 		"""
@@ -540,11 +540,11 @@ class Executable(Program):  # (ILogable):
 
 		When the timeout period exceeds, the child-process can be forcefully terminated.
 
-		:param timeout:                  Optional, timeout in seconds. |br|
-		                                 Default: infinitely wait on the child-process.
-		:param kill:                     Optional, if ``True``, terminate (kill) the child-process if it didn't terminate by
-		                                 itself within the timeout period.
-		:returns:                        ``None`` when the child-process is still running, otherwise the exit code.
+		:param timeout:              Optional, timeout in seconds. |br|
+		                             Default: infinitely wait on the child-process.
+		:param kill:                 Optional, if ``True``, terminate (kill) the child-process if it didn't terminate by
+		                             itself within the timeout period.
+		:returns:                    ``None`` when the child-process is still running, otherwise the exit code.
 		:raises CLIAbstractionError: When the child-process is not started yet.
 
 		.. topic:: Usecases
@@ -590,7 +590,7 @@ class Executable(Program):  # (ILogable):
 		"""
 		Terminate the child-process.
 
-		:returns:                        The child-process' exit code.
+		:returns:                    The child-process' exit code.
 		:raises CLIAbstractionError: When the child-process is not started yet.
 
 		.. seealso::
