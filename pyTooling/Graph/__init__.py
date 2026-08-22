@@ -261,6 +261,21 @@ class NotATreeError(GraphError):
 
 
 @export
+class EdgeNotFoundError(GraphError):
+	"""The exception is raised when no edge matching the given source or destination vertex was found."""
+
+
+@export
+class LinkNotFoundError(GraphError):
+	"""The exception is raised when no link matching the given source or destination vertex was found."""
+
+
+@export
+class SameGraphError(GraphError):
+	"""The exception is raised when a vertex is copied into the graph it already belongs to."""
+
+
+@export
 class CycleError(GraphError):
 	"""The exception is raised when a not permitted cycle is found."""
 
@@ -1386,13 +1401,13 @@ class Vertex(
 		Delete the outbound edge to the given vertex.
 
 		:param destination: The vertex the edge points to.
-		:raises GraphError: If no outbound edge to that vertex exists.
+		:raises EdgeNotFoundError: If no outbound edge to that vertex exists.
 		"""
 		for edge in self._outboundEdges:
 			if edge._destination is destination:
 				break
 		else:
-			raise GraphError(f"No outbound edge found to '{destination!r}'.")
+			raise EdgeNotFoundError(f"No outbound edge found to '{destination!r}'.")
 
 		edge.Delete()
 
@@ -1401,13 +1416,13 @@ class Vertex(
 		Delete the inbound edge from the given vertex.
 
 		:param source:      The vertex the edge comes from.
-		:raises GraphError: If no inbound edge from that vertex exists.
+		:raises EdgeNotFoundError: If no inbound edge from that vertex exists.
 		"""
 		for edge in self._inboundEdges:
 			if edge._source is source:
 				break
 		else:
-			raise GraphError(f"No inbound edge found to '{source!r}'.")
+			raise EdgeNotFoundError(f"No inbound edge found to '{source!r}'.")
 
 		edge.Delete()
 
@@ -1416,13 +1431,13 @@ class Vertex(
 		Delete the outbound link to the given vertex.
 
 		:param destination: The vertex the link points to.
-		:raises GraphError: If no outbound link to that vertex exists.
+		:raises LinkNotFoundError: If no outbound link to that vertex exists.
 		"""
 		for link in self._outboundLinks:
 			if link._destination is destination:
 				break
 		else:
-			raise GraphError(f"No outbound link found to '{destination!r}'.")
+			raise LinkNotFoundError(f"No outbound link found to '{destination!r}'.")
 
 		link.Delete()
 
@@ -1431,13 +1446,13 @@ class Vertex(
 		Delete the inbound link from the given vertex.
 
 		:param source:      The vertex the link comes from.
-		:raises GraphError: If no inbound link from that vertex exists.
+		:raises LinkNotFoundError: If no inbound link from that vertex exists.
 		"""
 		for link in self._inboundLinks:
 			if link._source is source:
 				break
 		else:
-			raise GraphError(f"No inbound link found to '{source!r}'.")
+			raise LinkNotFoundError(f"No inbound link found to '{source!r}'.")
 
 		link.Delete()
 
@@ -1455,10 +1470,10 @@ class Vertex(
 		:param linkingKeyFromOriginalVertex: Optional, if not ``None``, add a key-value-pair using this parameter as key
 		                                     from original vertex to the new vertex.
 		:returns:                            The newly created vertex.
-		:raises GraphError:                  If source graph and destination graph are the same.
+		:raises SameGraphError:              If source graph and destination graph are the same.
 		"""
 		if graph is self._graph:
-			raise GraphError("Graph to copy this vertex to, is the same graph.")
+			raise SameGraphError("Graph to copy this vertex to, is the same graph.")
 
 		vertex = Vertex(self._id, self._value, self._weight, graph=graph)
 		if copyDict:
