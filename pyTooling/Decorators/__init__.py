@@ -290,6 +290,7 @@ class DocStringMergeOrder(Enum):
 def InheritDocString(
 	baseClass: type,
 	merge: bool = False,
+	summaryOnly: bool = False,
 	order: DocStringMergeOrder = DocStringMergeOrder.BaseFirst,
 	prefix: str = "",
 	interfix: str = "\n\n",
@@ -338,15 +339,17 @@ def InheritDocString(
 	      class Class2(Class1):
 	        '''What is specific to Class2.'''
 
-	:param baseClass: Base-class to copy the doc-string from to the class or method being decorated.
-	:param merge:     Optional, if ``True``, combine both doc-strings instead of replacing the derived one; defaults to
-	                  ``False``.
-	:param order:     Optional, order in which both doc-strings are arranged when merging; defaults to
-	                  :attr:`~DocStringMergeOrder.BaseFirst`.
-	:param prefix:    Optional, text inserted in front of the merged doc-string; defaults to an empty string.
-	:param interfix:  Optional, text inserted between both doc-strings; defaults to a blank line (``"\\n\\n"``).
-	:param postfix:   Optional, text appended to the merged doc-string; defaults to an empty string.
-	:returns:         Decorator function that copies or merges the doc-string.
+	:param baseClass:   Base-class to copy the doc-string from to the class or method being decorated.
+	:param merge:       Optional, if ``True``, combine both doc-strings instead of replacing the derived one; defaults
+	                    to ``False``.
+	:param summaryOnly: Optional, if ``True``, take only the base doc-string's **summary** - its first paragraph -
+	                    instead of the whole text; defaults to ``False``.
+	:param order:       Optional, order in which both doc-strings are arranged when merging; defaults to
+	                    :attr:`~DocStringMergeOrder.BaseFirst`.
+	:param prefix:      Optional, text inserted in front of the merged doc-string; defaults to an empty string.
+	:param interfix:    Optional, text inserted between both doc-strings; defaults to a blank line (``"\\n\\n"``).
+	:param postfix:     Optional, text appended to the merged doc-string; defaults to an empty string.
+	:returns:           Decorator function that copies or merges the doc-string.
 
 	.. seealso::
 
@@ -366,6 +369,9 @@ def InheritDocString(
 			baseDoc = getattr(baseClass, param.__name__).__doc__
 		else:
 			return param
+
+		if summaryOnly and baseDoc is not None:
+			baseDoc = baseDoc.split("\n\n", 1)[0] if "\n\n" in (baseDoc := cleandoc(baseDoc)) else baseDoc
 
 		if merge:
 			derivedDoc = param.__doc__

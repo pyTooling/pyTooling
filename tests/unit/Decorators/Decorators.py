@@ -351,3 +351,53 @@ class InheritDocStrings(Testcase):
 				"""Derived method's doc-string."""
 
 		self.assertEqual("Derived method's doc-string.\n\nBase method's doc-string.", Class2.method.__doc__)
+
+
+class InheritSummaryOnly(Testcase):
+	"""'summaryOnly' takes the base doc-string's first paragraph and leaves its field list behind."""
+
+	class Base:
+		def method(self) -> None:
+			"""
+			Summary line of the base.
+
+			:param value: A parameter the derived method does not have.
+			:returns:     Something.
+			"""
+
+	def test_MergeKeepsTheDerivedFieldList(self) -> None:
+		class Derived(self.Base):
+			@InheritDocString(InheritSummaryOnly.Base, merge=True, summaryOnly=True)
+			def method(self, caseNode) -> None:
+				""":param caseNode: The node this variant takes first."""
+
+		expected = "Summary line of the base.\n\n:param caseNode: The node this variant takes first."
+		self.assertEqual(expected, Derived.method.__doc__)
+
+	def test_WithoutMergeItReplacesWithTheSummary(self) -> None:
+		class Derived(self.Base):
+			@InheritDocString(InheritSummaryOnly.Base, summaryOnly=True)
+			def method(self) -> None:
+				"""Will be replaced."""
+
+		self.assertEqual("Summary line of the base.", Derived.method.__doc__)
+
+	def test_ASingleParagraphBaseIsUnchanged(self) -> None:
+		class SingleParagraph:
+			def method(self) -> None:
+				"""Only a summary."""
+
+		class Derived(SingleParagraph):
+			@InheritDocString(SingleParagraph, summaryOnly=True)
+			def method(self) -> None:
+				"""Will be replaced."""
+
+		self.assertEqual("Only a summary.", Derived.method.__doc__)
+
+	def test_WithoutSummaryOnlyTheWholeBaseIsUsed(self) -> None:
+		class Derived(self.Base):
+			@InheritDocString(InheritSummaryOnly.Base, merge=True)
+			def method(self, caseNode) -> None:
+				""":param caseNode: The node this variant takes first."""
+
+		self.assertIn(":param value:", Derived.method.__doc__)
