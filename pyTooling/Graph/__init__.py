@@ -2446,7 +2446,6 @@ class BaseGraph(
 		:returns:              A generator to iterate all vertices in topological order.
 		:raises CycleError:    If the graph contains a cycle, so no topological order exists.
 		:raises InternalError: If the algorithm's internal state became inconsistent.
-		                       :except CycleError: Raised if graph is cyclic, thus topological sorting isn't possible.
 		"""
 		outboundEdgeCounts = {}
 		leafVertices = []

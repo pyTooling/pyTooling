@@ -51,7 +51,7 @@ from typing                import Union, ClassVar, Iterator, Optional as Nullabl
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import ConfigurationError
 
 
 __all__ = ["KeyT", "NodeT", "ValueT"]
@@ -60,11 +60,6 @@ __all__ = ["KeyT", "NodeT", "ValueT"]
 KeyT =   Union[str, int]                  #: Type variable for keys.
 NodeT =  Union["Dictionary", "Sequence"]  #: Type variable for nodes.
 ValueT = Union[NodeT, str, int, float]    #: Type variable for values.
-
-
-@export
-class ConfigurationError(ToolingException):
-	"""Base-exception of all exceptions raised by :mod:`pyTooling.Configuration`."""
 
 
 @export

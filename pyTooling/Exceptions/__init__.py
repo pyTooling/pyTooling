@@ -164,8 +164,26 @@ class EnvironmentVariableError(ExceptionBase):
 	"""The exception is raised when an expected environment variable is missing."""
 
 
-# ConfigurationError
-#
+@export
+class ConfigurationError(ExceptionBase):
+	"""
+	The exception is raised when a configuration is invalid.
+
+	It is the base-exception for configuration problems in pyTooling **and in packages building on it**, so an
+	application reading configuration files from several sources can catch them all with one clause instead of one
+	per package. :mod:`pyTooling.Configuration` derives its own exceptions from it.
+
+	Attach the details as notes rather than folding them into the message - the value that was rejected, the file it
+	came from, the values that would have been accepted:
+
+	.. code-block:: Python
+
+	   ex = ConfigurationError(f"Unknown log level '{value}'.")
+	   ex.add_note(f"Configuration file: {path}")
+	   ex.add_note(f"Allowed values: {', '.join(levels)}")
+	   raise ex
+	"""
+
 
 @export
 class PlatformNotSupportedError(ExceptionBase):
