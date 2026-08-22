@@ -292,7 +292,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	def __delitem__(self, key: DictKeyType) -> None:
 		"""
-		.. todo:: TREE::Node::__delitem__ Needs documentation.
+		Remove an attached attribute (key-value-pair) from the node by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If the key does not exist.
 		"""
 		del self._dict[key]
 
