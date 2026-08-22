@@ -1429,6 +1429,7 @@ class ExtendedType(type):
 				The message names the methods to override, or says that the class needs to be derived when it was declared
 				abstract without having abstract methods.
 
+				:param cls:                 The abstract class an instance was requested of.
 				:raises AbstractClassError: Always, because an abstract class can't be instantiated.
 				"""
 				if len(newClass.__abstractMethods__) > 0:
