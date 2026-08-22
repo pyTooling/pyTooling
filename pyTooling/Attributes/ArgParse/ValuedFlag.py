@@ -50,16 +50,14 @@ class ValuedFlag(NamedAndValuedArgument):
 
 	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
 		"""
-		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
-		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
+		Construct a flag argument taking a value.
 
-		To implement a switch argument, the following named parameters are predefined:
-
-		* ``action="store_const"``
-		* ``const=True``
-		* ``default=False``
-
-		This implements a boolean parameter passed to the handler method.
+		:param short:    Optional, short option name including the dash, e.g. ``"-o"``. Default: ``None``.
+		:param long:     Optional, long option name including the dashes, e.g. ``"--output"``. Default: ``None``.
+		:param dest:     Optional, name the value is stored under in the :class:`~argparse.Namespace`. Default: ``None``.
+		:param metaName: Optional, name shown for the value in the help page (``metavar``). Default: ``None``.
+		:param optional: Optional, if ``True``, the value may be omitted. Default: ``False``.
+		:param help:     Optional, help text shown for this argument. Default: ``None``.
 		"""
 		args = []
 		if short is not None:
