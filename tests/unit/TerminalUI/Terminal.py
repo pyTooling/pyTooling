@@ -36,6 +36,7 @@ and the exit-on-counter methods, and which messages reach ``STDOUT`` and ``STDER
 from io                   import StringIO
 
 from pyTooling.TerminalUI import TerminalApplication, Severity, Mode
+from pyTooling.Exceptions import ToolingException
 from pyTooling.Testing    import Testcase
 
 
@@ -755,3 +756,19 @@ class Indentation(Testcase):
 
 		self.assertEqual(5, program.Lines[0].Indent)
 		self.assertIn(f"{TerminalApplication.INDENT * 5}deeper", buffer.getvalue())
+
+
+class PrintHelpWithoutAParser(Testcase):
+	"""'_PrintHelp()' needs an argument parser, which 'TerminalApplication' alone does not provide."""
+
+	def test_ReportsTheMissingMixin(self) -> None:
+		class TestApplication(TerminalApplication):    # own class: the base class is a singleton
+			pass
+
+		program = TestApplication()
+
+		with self.assertRaises(ToolingException) as context:
+			program._PrintHelp()
+
+		self.assertIn("has no command line parser", str(context.exception))
+		self.assertTrue(any("ArgParseHelperMixin" in note for note in context.exception.Notes))

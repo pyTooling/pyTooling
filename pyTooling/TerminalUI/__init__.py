@@ -60,7 +60,7 @@ except ImportError as ex:  # pragma: no cover
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, mixin
-from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
+from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase, ToolingException
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
 
@@ -1115,8 +1115,22 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Helper function to print the command line parsers help page(s).
 
-		:param command: Optional, the subcommand to print the help page(s) for.
+		.. attention::
+
+		   This method needs an argument parser, which :class:`TerminalApplication` does not provide. It reads
+		   ``MainParser`` and ``SubParsers`` from
+		   :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, so the application class has to derive from
+		   **both**. It writes through this class' ``Write*`` methods, so the mixin alone is not enough either.
+
+		:param command:           Optional, the subcommand to print the help page(s) for. Default: ``None``.
+		:raises ToolingException: If the application class does not also derive from ``ArgParseHelperMixin``.
 		"""
+		if not hasattr(self, "MainParser"):
+			ex = ToolingException(f"Class '{getFullyQualifiedName(self)}' has no command line parser.")
+			ex.add_note(f"'{self.__class__.__name__}._PrintHelp()' needs 'MainParser' and 'SubParsers'.")
+			ex.add_note("Derive the application from 'pyTooling.Attributes.ArgParse.ArgParseHelperMixin' as well.")
+			raise ex
+
 		if command is None:
 			self.MainParser.print_help()
 		elif command == "help":
