@@ -64,10 +64,10 @@ dependency graph is otherwise thousands of HTTP requests wide.
 Exceptions and Warnings
 #######################
 
-:exc:`~pyTooling.Dependency.DependencyException` is the base of the module's exceptions:
-:exc:`~pyTooling.Dependency.NoSessionAvailableException` when a query is attempted without an open session,
-:exc:`~pyTooling.Dependency.ProjectNotFoundException` and
-:exc:`~pyTooling.Dependency.ReleaseNotFoundException` when the index does not know what was asked for.
+:exc:`~pyTooling.Dependency.DependencyError` is the base of the module's exceptions:
+:exc:`~pyTooling.Dependency.NoSessionAvailableError` when a query is attempted without an open session,
+:exc:`~pyTooling.Dependency.ProjectNotFoundError` and
+:exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for.
 
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or

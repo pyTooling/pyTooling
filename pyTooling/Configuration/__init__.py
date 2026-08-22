@@ -51,7 +51,7 @@ from typing                import Union, ClassVar, Iterator, Optional as Nullabl
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import ConfigurationError
 
 
 __all__ = ["KeyT", "NodeT", "ValueT"]
@@ -63,12 +63,7 @@ ValueT = Union[NodeT, str, int, float]    #: Type variable for values.
 
 
 @export
-class ConfigurationException(ToolingException):
-	"""Base-exception of all exceptions raised by :mod:`pyTooling.Configuration`."""
-
-
-@export
-class KeyNotFoundException(ConfigurationException):
+class KeyNotFoundError(ConfigurationError):
 	"""
 	The requested key or index doesn't exist in the configuration node.
 
@@ -78,7 +73,7 @@ class KeyNotFoundException(ConfigurationException):
 
 
 @export
-class UnsupportedValueTypeException(ConfigurationException):
+class UnsupportedValueTypeError(ConfigurationError):
 	"""
 	The configuration file parser returned a value of a type that isn't supported by :mod:`pyTooling.Configuration`.
 
@@ -87,12 +82,12 @@ class UnsupportedValueTypeException(ConfigurationException):
 
 
 @export
-class InterpolationException(ConfigurationException):
+class InterpolationError(ConfigurationError):
 	"""A variable reference (``${...}``) in a configuration value is malformed or can't be resolved."""
 
 
 @export
-class PathExpressionException(ConfigurationException):
+class PathExpressionError(ConfigurationError):
 	"""A path expression (``a:b:c``) doesn't describe a valid node or value in the configuration."""
 
 
@@ -128,8 +123,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Access an element in the node by index or key.
 
-		:param key:                  Index or key of the element.
-		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
+		:param key: Index or key of the element.
+		:returns:   A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 
 	def __setitem__(self, key: KeyT, value: ValueT) -> None:
@@ -151,7 +146,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Returns an iterator to iterate a node.
 
-		:returns:                    Node iterator.
+		:returns: Node iterator.
 		"""
 
 	@property
@@ -159,7 +154,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the node's key.
 
-		:returns:                    Key of the node.
+		:returns: Key of the node.
 		"""
 		raise NotImplementedError()
 
@@ -172,8 +167,8 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Return a node or value based on a path description to that node or value.
 
-		:param query:                String describing the path to the node or value.
-		:returns:                    A node (sequence or dictionary) or scalar value (int, float, str).
+		:param query: String describing the path to the node or value.
+		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
 
 
@@ -269,3 +264,13 @@ class Configuration(Node):
 		:returns: Path to the configuration file.
 		"""
 		return self._configFile
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+ConfigurationException        = ConfigurationError
+InterpolationException        = InterpolationError
+KeyNotFoundException          = KeyNotFoundError
+PathExpressionException       = PathExpressionError
+UnsupportedValueTypeException = UnsupportedValueTypeError

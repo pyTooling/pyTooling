@@ -31,7 +31,7 @@
 from sys                  import argv
 from typing               import ClassVar, NoReturn
 
-from pyTooling.Exceptions import ExceptionBase, MissingDependencyException
+from pyTooling.Exceptions import ExceptionBase, MissingDependencyError
 from pyTooling.TerminalUI import TerminalApplication
 
 from myPackage            import MyPackageException, __issue_tracker_url__
@@ -62,7 +62,7 @@ def main() -> NoReturn:
 		program.PrintExceptionBase(ex)                      # exit code 241, a known exception
 	except NotImplementedError as ex:
 		program.PrintNotImplementedError(ex)                # exit code 240, an unimplemented function was called
-	except MissingDependencyException as ex:
+	except MissingDependencyError as ex:
 		program.PrintMissingDependencyException(ex)         # exit code 242, an installation problem
 	except Exception as ex:
 		program.PrintException(ex)                          # exit code 241, an unexpected exception

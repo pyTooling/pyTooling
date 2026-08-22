@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.LinkedList`: insertion, removal, searching, iteration and the conversions
 from and to Python's own sequence types.
 """
-from pyTooling.LinkedList import Node, LinkedList, LinkedListException
+from pyTooling.LinkedList import Node, LinkedList, LinkedListError
 from pyTooling.Testing    import Testcase
 
 
@@ -138,7 +138,7 @@ class Instantiation(Testcase):
 		node0._linkedList = "list"
 		nodes = (node0, )
 
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			_ = LinkedList(nodes)
 
 	def test_LinkedList_Tuple2(self) -> None:
@@ -158,7 +158,7 @@ class Instantiation(Testcase):
 		node1._linkedList = "list"
 		nodes = (node0, node1)
 
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			_ = LinkedList(nodes)
 
 	def test_LinkedList_Tuple3(self) -> None:
@@ -238,7 +238,7 @@ class Insert(Testcase):
 
 		node = Node(0)
 		node._linkedList = "list"
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			ll.InsertBeforeFirst(node)
 
 	def test_InsertLast(self) -> None:
@@ -289,7 +289,7 @@ class Insert(Testcase):
 
 		node = Node(0)
 		node._linkedList = "list"
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			ll.InsertAfterLast(node)
 
 	def test_InserBefore(self) -> None:
@@ -355,7 +355,7 @@ class Insert(Testcase):
 
 		node0 = Node(0)
 		node0._linkedList = "list"
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			node1.InsertNodeBefore(node0)
 
 	def test_InserAfter(self) -> None:
@@ -421,7 +421,7 @@ class Insert(Testcase):
 
 		node0 = Node(0)
 		node0._linkedList = "list"
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			node1.InsertNodeAfter(node0)
 
 
@@ -429,7 +429,7 @@ class Remove(Testcase):
 	def test_RemoveFirst_EmptyList(self) -> None:
 		ll = LinkedList()
 
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			ll.RemoveFirst()
 
 	def test_RemoveFirst(self) -> None:
@@ -480,7 +480,7 @@ class Remove(Testcase):
 	def test_RemoveLast_EmptyList(self) -> None:
 		ll = LinkedList()
 
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			ll.RemoveLast()
 
 	def test_RemoveLast(self) -> None:
@@ -813,7 +813,7 @@ class Search(Testcase):
 	def test_Search_Empty(self) -> None:
 		ll = LinkedList()
 
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			ll.Search(lambda n: n.Value == 4)
 
 	def test_Search_NotFound(self) -> None:
@@ -822,7 +822,7 @@ class Search(Testcase):
 		for i in range(1, 6):
 			ll.InsertAfterLast(Node(i))
 
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			ll.Search(lambda n: n.Value == 10)
 
 	def test_Search_NotFound_Reverse(self) -> None:
@@ -831,7 +831,7 @@ class Search(Testcase):
 		for i in range(1, 6):
 			ll.InsertAfterLast(Node(i))
 
-		with self.assertRaises(LinkedListException):
+		with self.assertRaises(LinkedListError):
 			ll.Search(lambda n: n.Value == 10, reverse=True)
 
 	def test_Search(self) -> None:

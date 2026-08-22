@@ -59,7 +59,7 @@ _threadLocalData = local()
 
 
 @export
-class TracingException(ToolingException):
+class TracingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
 
 
@@ -374,11 +374,11 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		If the span is not yet stopped, the duration from start to now is returned.
 
-		:returns:                 Duration since span was started in seconds.
-		:raises TracingException: When span was never started.
+		:returns:             Duration since span was started in seconds.
+		:raises TracingError: When span was never started.
 		"""
 		if self._startTime is None:
-			raise TracingException(f"{self.__class__.__name__} was never started.")
+			raise TracingError(f"{self.__class__.__name__} was never started.")
 
 		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
 
@@ -404,16 +404,16 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		A span will be started.
 
-		:returns:                 The span itself.
-		:raises TracingException: If no trace is active, so the span has nothing to attach to. |br|
-		                          Use a with-statement on :class:`Trace` to set up software execution tracing.
+		:returns:             The span itself.
+		:raises TracingError: If no trace is active, so the span has nothing to attach to. |br|
+		                      Use a with-statement on :class:`Trace` to set up software execution tracing.
 		"""
 		global _threadLocalData
 
 		try:
 			currentSpan =  _threadLocalData.currentSpan
 		except AttributeError:
-			ex = TracingException("Can't setup span. No active trace.")
+			ex = TracingError("Can't setup span. No active trace.")
 			ex.add_note("Use with-statement using 'Trace()' to setup software execution tracing.")
 			raise ex
 
@@ -555,7 +555,7 @@ class Trace(Span):
 		"""
 		Initializes a software execution trace.
 
-		:param name:   Name of the trace.
+		:param name: Name of the trace.
 		"""
 		super().__init__(name)
 
@@ -635,3 +635,9 @@ class Trace(Span):
 			result.extend(span.Format(indent + 1, columnSize - 2))
 
 		return result
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+TracingException = TracingError

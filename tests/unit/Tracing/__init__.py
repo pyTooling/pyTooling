@@ -33,7 +33,7 @@ Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attach
 """
 from time              import sleep
 
-from pyTooling.Tracing import TracingException, Trace, Span, Event
+from pyTooling.Tracing import TracingError, Trace, Span, Event
 from pyTooling.Testing import Testcase
 
 
@@ -61,7 +61,7 @@ class Instantiation(Testcase):
 		self.assertEqual(0, len(t))
 		self.assertEqual(0, len([a for a in t]))
 
-		with self.assertRaises(TracingException) as ex:
+		with self.assertRaises(TracingError) as ex:
 			_ = t.Duration
 
 	def test_Span(self) -> None:

@@ -66,12 +66,12 @@ DictValueType = TypeVar("DictValueType")
 
 
 @export
-class TreeException(ToolingException):
+class TreeError(ToolingException):
 	"""Base exception of all exceptions raised by :mod:`pyTooling.Tree`."""
 
 
 @export
-class InternalError(TreeException):
+class InternalError(TreeError):
 	"""
 	The exception is raised when a data structure corruption is detected.
 
@@ -85,7 +85,7 @@ class InternalError(TreeException):
 
 
 @export
-class NoSiblingsError(TreeException):
+class NoSiblingsError(TreeError):
 	"""
 	The exception is raised when a node has no parent and thus has no siblings.
 
@@ -96,7 +96,7 @@ class NoSiblingsError(TreeException):
 
 
 @export
-class AlreadyInTreeError(TreeException):
+class AlreadyInTreeError(TreeError):
 	"""
 	The exception is raised when the current node and the other node are already in the same tree.
 
@@ -107,7 +107,7 @@ class AlreadyInTreeError(TreeException):
 
 
 @export
-class NotInSameTreeError(TreeException):
+class NotInSameTreeError(TreeError):
 	"""The exception is raised when the current node and the other node are not in the same tree."""
 
 
@@ -187,10 +187,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:param format:        Optional, node formatting function returning a one-line representation for
 		                      tree-rendering.
 
-		:raises TypeError:    If parameter parent is not an instance of Node.
-		:raises ValueError:   If nodeID already exists in the tree.
-		:raises TypeError:    If parameter children is not iterable.
-		:raises ValueError:   If an element of children is not an instance of Node.
+		:raises TypeError:  If parameter parent is not an instance of Node.
+		:raises ValueError: If nodeID already exists in the tree.
+		:raises TypeError:  If parameter children is not iterable.
+		:raises ValueError: If an element of children is not an instance of Node.
 		"""
 
 		self._id = nodeID
@@ -293,7 +293,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	def __delitem__(self, key: DictKeyType) -> None:
 		"""
 		.. todo:: TREE::Node::__delitem__ Needs documentation.
-
 		"""
 		del self._dict[key]
 
@@ -1051,3 +1050,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		result.extend(_render(self, ""))
 
 		return "".join(result)
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+TreeException = TreeError

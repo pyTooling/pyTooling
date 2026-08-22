@@ -36,7 +36,7 @@ from shutil     import which
 from subprocess import TimeoutExpired
 
 from pyTooling.Platform import CurrentPlatform
-from pyTooling.Testing  import ApplicationTestcase, Testcase, TestingException, stripANSIColorCodes
+from pyTooling.Testing  import ApplicationTestcase, Testcase, TestingError, stripANSIColorCodes
 
 
 #: Names the Python interpreter may be installed under. Which of them exists is not decided by the platform alone:
@@ -113,7 +113,7 @@ class ATestcaseThatIsNotSetUp(Testcase):
 		class Missing(ApplicationTestcase):
 			_runnableModule = "json.tool"
 
-		with self.assertRaises(TestingException) as context:
+		with self.assertRaises(TestingError) as context:
 			Missing.setUpClass()
 
 		self.assertIn("_consoleScript", str(context.exception))
@@ -122,7 +122,7 @@ class ATestcaseThatIsNotSetUp(Testcase):
 		class Missing(ApplicationTestcase):
 			_consoleScript = PYTHON_CONSOLE_SCRIPT
 
-		with self.assertRaises(TestingException) as context:
+		with self.assertRaises(TestingError) as context:
 			Missing.setUpClass()
 
 		self.assertIn("_runnableModule", str(context.exception))
@@ -132,7 +132,7 @@ class ATestcaseThatIsNotSetUp(Testcase):
 			_consoleScript =  "no-such-program-here"
 			_runnableModule = "json.tool"
 
-		with self.assertRaises(TestingException) as context:
+		with self.assertRaises(TestingError) as context:
 			Missing.setUpClass()
 
 		self.assertIn("no-such-program-here", str(context.exception))

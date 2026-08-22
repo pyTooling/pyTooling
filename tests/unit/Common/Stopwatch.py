@@ -37,7 +37,7 @@ from time                 import sleep
 from pyTooling.Exceptions import ToolingException
 
 from pyTooling.Platform   import CurrentPlatform
-from pyTooling.Stopwatch  import Stopwatch, StopwatchException
+from pyTooling.Stopwatch  import Stopwatch, StopwatchError
 from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -273,7 +273,7 @@ class ContextManagerProtocol(Testcase):
 		self.assertLessEqual(sw.Activity, self.DELAY * self.INACCURACY)
 		self.assertLessEqual(sw.Duration, self.DELAY * self.INACCURACY)
 
-		with self.assertRaises(StopwatchException):
+		with self.assertRaises(StopwatchError):
 			with sw:
 				sleep(self.DELAY)  # 500 ms
 
