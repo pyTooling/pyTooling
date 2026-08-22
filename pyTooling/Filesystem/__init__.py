@@ -409,7 +409,8 @@ class Directory(Element["Directory"]):
 			try:
 				items = scandir(directoryPath := self.Path)
 			except PermissionError as ex:
-				return WarningCollector.Raise(PermissionWarning(self.Path), ex)
+				WarningCollector.Raise(PermissionWarning(self.Path), ex)
+				return
 
 			for dirEntry in items:
 				if dirEntry.is_dir(follow_symlinks=False):
