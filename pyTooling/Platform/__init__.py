@@ -54,12 +54,12 @@ __all__ = ["CurrentPlatform"]
 
 
 @export
-class PlatformException(ToolingException):
+class PlatformError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Platform`."""
 
 
 @export
-class UnknownPlatformException(PlatformException):
+class UnknownPlatformError(PlatformError):
 	"""
 	The exception is raised by pyTooling.Platform when the platform can't be determined.
 
@@ -69,7 +69,7 @@ class UnknownPlatformException(PlatformException):
 
 	def __init__(self, *args) -> None:
 		"""
-		Initialize a new :class:`UnknownPlatformException` instance and add notes with further debugging information.
+		Initialize a new :class:`UnknownPlatformError` instance and add notes with further debugging information.
 
 		:param args: Forward positional parameters.
 		"""
@@ -89,7 +89,7 @@ class UnknownPlatformException(PlatformException):
 
 
 @export
-class UnknownOperatingSystemException(PlatformException):
+class UnknownOperatingSystemError(PlatformError):
 	"""The exception is raised by pyTooling.Platform when the operating system is unknown."""
 
 
@@ -189,7 +189,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		"""
 		Initializes a platform by accessing multiple APIs of Python to gather all necessary information.
 
-		:raises UnknownPlatformException: If the operating system or the Python implementation isn't known to pyTooling.
+		:raises UnknownPlatformError: If the operating system or the Python implementation isn't known to pyTooling.
 		"""
 		import sys
 		import os
@@ -239,7 +239,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				if machine == "AMD64":
 					self._platform |= Platforms.ARCH_x86_64
 				else:  # pragma: no cover
-					raise UnknownPlatformException(f"Unknown architecture '{machine}' for Windows.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for Windows.")
 
 				if sysconfig_platform == "mingw_i686_msvcrt_gnu":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW32
@@ -258,9 +258,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif sysconfig_platform == "mingw_x86_64_clang":  # pragma: no cover
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
 				else:  # pragma: no cover
-					raise UnknownPlatformException(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
+					raise UnknownPlatformError(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
 			else:  # pragma: no cover
-				raise UnknownPlatformException(f"Unknown platform '{sysconfig_platform}' running on Windows.")
+				raise UnknownPlatformError(f"Unknown platform '{sysconfig_platform}' running on Windows.")
 
 		elif os.name == "posix":
 			if sys_platform == "linux":
@@ -271,7 +271,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
 					self._platform |= Platforms.ARCH_AArch64
 				else:  # pragma: no cover
-					raise UnknownPlatformException(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
+					raise UnknownPlatformError(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
 
 			elif sys_platform == "darwin":
 				self._platform |= Platforms.OS_MacOS | Platforms.ENV_Native
@@ -281,7 +281,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif machine == "arm64":
 					self._platform |= Platforms.ARCH_AArch64
 				else:  # pragma: no cover
-					raise UnknownPlatformException(f"Unknown architecture '{machine}' for a native macOS.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for a native macOS.")
 
 			elif sys_platform == "msys":
 				self._platform |= Platforms.OS_Windows | Platforms.ENV_MSYS2 | Platforms.MSYS
@@ -291,7 +291,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif machine == "x86_64":
 					self._platform |= Platforms.ARCH_x86_64
 				else:  # pragma: no cover
-					raise UnknownPlatformException(f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.")
 
 			elif sys_platform == "cygwin":
 				self._platform |= Platforms.OS_Windows
@@ -301,17 +301,17 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif machine == "x86_64":
 					self._platform |= Platforms.ARCH_x86_64
 				else:  # pragma: no cover
-					raise UnknownPlatformException(f"Unknown architecture '{machine}' for Cygwin on Windows.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 
 			elif sys_platform.startswith("freebsd"):
 				if machine == "amd64":
 					self._platform = Platforms.FreeBSD
 				else:  # pragma: no cover
-					raise UnknownPlatformException(f"Unknown architecture '{machine}' for FreeBSD.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for FreeBSD.")
 			else:  # pragma: no cover
-				raise UnknownPlatformException(f"Unknown POSIX platform '{sys_platform}'.")
+				raise UnknownPlatformError(f"Unknown POSIX platform '{sys_platform}'.")
 		else:  # pragma: no cover
-			raise UnknownPlatformException(f"Unknown operating system '{os.name}'.")
+			raise UnknownPlatformError(f"Unknown operating system '{os.name}'.")
 
 	@readonly
 	def PythonImplementation(self) -> PythonImplementation:
@@ -562,8 +562,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``""`` (empty string)
 		* Windows: ``"exe"``
 
-		:returns:                                File extension of an executable.
-		:raises UnknownOperatingSystemException: If the operating system is unknown.
+		:returns:                            File extension of an executable.
+		:raises UnknownOperatingSystemError: If the operating system is unknown.
 		"""
 
 		if Platforms.OS_FreeBSD in self._platform:
@@ -575,7 +575,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.OS_Windows in self._platform:
 			return "exe"
 		else:  # pragma: no cover
-			raise UnknownOperatingSystemException("Unknown operating system.")
+			raise UnknownOperatingSystemError("Unknown operating system.")
 
 	@readonly
 	def StaticLibraryExtension(self) -> str:
@@ -587,8 +587,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``"lib"``
 		* Windows: ``"lib"``
 
-		:returns:                                File extension of a static library.
-		:raises UnknownOperatingSystemException: If the operating system is unknown.
+		:returns:                            File extension of a static library.
+		:raises UnknownOperatingSystemError: If the operating system is unknown.
 		"""
 		if Platforms.OS_FreeBSD in self._platform:
 			return "a"
@@ -599,7 +599,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.OS_Windows in self._platform:
 			return "lib"
 		else:  # pragma: no cover
-			raise UnknownOperatingSystemException("Unknown operating system.")
+			raise UnknownOperatingSystemError("Unknown operating system.")
 
 	@readonly
 	def DynamicLibraryExtension(self) -> str:
@@ -611,8 +611,8 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		* macOS: ``"dylib"``
 		* Windows: ``"dll"``
 
-		:returns:                                File extension of a dynamic library.
-		:raises UnknownOperatingSystemException: If the operating system is unknown.
+		:returns:                            File extension of a dynamic library.
+		:raises UnknownOperatingSystemError: If the operating system is unknown.
 		"""
 		if Platforms.OS_FreeBSD in self._platform:
 			return "so"
@@ -623,7 +623,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		elif Platforms.OS_Windows in self._platform:
 			return "dll"
 		else:  # pragma: no cover
-			raise UnknownOperatingSystemException("Unknown operating system.")
+			raise UnknownOperatingSystemError("Unknown operating system.")
 
 	def __repr__(self) -> str:
 		"""
@@ -692,3 +692,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 
 CurrentPlatform = Platform()     #: Gathered information for the current platform.
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+PlatformException               = PlatformError
+UnknownOperatingSystemException = UnknownOperatingSystemError
+UnknownPlatformException        = UnknownPlatformError

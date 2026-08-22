@@ -58,12 +58,12 @@ from pyTooling.Warning     import Warning
 
 
 @export
-class DependencyException(ToolingException):
+class DependencyError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Dependency`."""
 
 
 @export
-class NoSessionAvailableException(DependencyException):
+class NoSessionAvailableError(DependencyError):
 	"""
 	The operation needs a session to the package index, but no session was opened.
 
@@ -72,12 +72,12 @@ class NoSessionAvailableException(DependencyException):
 
 
 @export
-class ProjectNotFoundException(DependencyException):
+class ProjectNotFoundError(DependencyError):
 	"""The package index doesn't know a project of that name."""
 
 
 @export
-class ReleaseNotFoundException(DependencyException):
+class ReleaseNotFoundError(DependencyError):
 	"""The project exists in the package index, but not in the requested version."""
 
 
@@ -789,3 +789,12 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 			return f"{self._name} (empty)"
 		else:
 			return f"{self._name} ({count})"
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+DependencyException         = DependencyError
+NoSessionAvailableException = NoSessionAvailableError
+ProjectNotFoundException    = ProjectNotFoundError
+ReleaseNotFoundException    = ReleaseNotFoundError

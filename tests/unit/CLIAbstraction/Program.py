@@ -38,7 +38,7 @@ from typing       import Any, Self
 from pytest       import mark
 from sys          import platform as sys_platform
 
-from pyTooling.CLIAbstraction import Program, CLIAbstractionException, CLIArgument
+from pyTooling.CLIAbstraction import Program, CLIAbstractionError, CLIArgument
 from pyTooling.CLIAbstraction.Flag import LongFlag
 from pyTooling.Testing        import Testcase
 from .                        import Helper
@@ -99,7 +99,7 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
 	def test_ExecutablePath(self) -> None:
@@ -116,7 +116,7 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
 
 
@@ -138,7 +138,7 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
 	def test_ExecutablePath(self) -> None:
@@ -155,7 +155,7 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
 
 
@@ -177,7 +177,7 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
 	def test_ExecutablePath(self) -> None:
@@ -194,21 +194,21 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git.exe"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt.exe")
 
 
 class CommonOptions(Testcase, Helper):
 	def test_UnknownOS(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = GitUnknownOS()
 
 	def test_BinaryDirectory_UnknownOS(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = GitUnknownOS(binaryDirectoryPath=Path(""))
 
 	def test_NotInPath(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Gitt()
 
 	def test_SetUnknownFlag(self) -> None:

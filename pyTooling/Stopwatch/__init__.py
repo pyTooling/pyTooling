@@ -55,7 +55,7 @@ from pyTooling.Exceptions  import ToolingException
 
 
 @export
-class StopwatchException(ToolingException):
+class StopwatchError(ToolingException):
 	"""This exception is caused by wrong usage of the stopwatch."""
 
 
@@ -169,13 +169,13 @@ class Stopwatch(SlottedObject):
 
 		A stopwatch can only be started once. There is no restart or reset operation provided.
 
-		:raises StopwatchException: If stopwatch was already started.
-		:raises StopwatchException: If stopwatch was already started and stopped.
+		:raises StopwatchError: If stopwatch was already started.
+		:raises StopwatchError: If stopwatch was already started and stopped.
 		"""
 		if self._startTime is not None:
-			raise StopwatchException("Stopwatch was already started.")
+			raise StopwatchError("Stopwatch was already started.")
 		if self._stopTime is not None:
-			raise StopwatchException("Stopwatch was already used (started and stopped).")
+			raise StopwatchError("Stopwatch was already used (started and stopped).")
 
 		self._beginTime = datetime.now()
 		self._resumeTime = self._startTime = perf_counter_ns()
@@ -191,13 +191,13 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first split.
 		* the duration from last resume to this split.
 
-		:returns:                   Duration in seconds since last stopwatch operation
-		:raises StopwatchException: If stopwatch was not started or resumed.
+		:returns:               Duration in seconds since last stopwatch operation
+		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		pauseTime = perf_counter_ns()
 
 		if self._resumeTime is None:
-			raise StopwatchException("Stopwatch was not started or resumed.")
+			raise StopwatchError("Stopwatch was not started or resumed.")
 
 		diff = (pauseTime - self._resumeTime) / 1e9
 		self._splits.append((diff, True))
@@ -216,13 +216,13 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first pause.
 		* the duration from last resume to this pause.
 
-		:returns:                   Duration in seconds since last stopwatch operation
-		:raises StopwatchException: If stopwatch was not started or resumed.
+		:returns:               Duration in seconds since last stopwatch operation
+		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		self._pauseTime = perf_counter_ns()
 
 		if self._resumeTime is None:
-			raise StopwatchException("Stopwatch was not started or resumed.")
+			raise StopwatchError("Stopwatch was not started or resumed.")
 
 		diff = (self._pauseTime - self._resumeTime) / 1e9
 		self._splits.append((diff, True))
@@ -238,13 +238,13 @@ class Stopwatch(SlottedObject):
 		and the resume operation is possible. |br|
 		The time delta will be the duration from last pause to this resume.
 
-		:returns:                   Duration in seconds since last pause operation
-		:raises StopwatchException: If stopwatch was not paused.
+		:returns:               Duration in seconds since last pause operation
+		:raises StopwatchError: If stopwatch was not paused.
 		"""
 		self._resumeTime = perf_counter_ns()
 
 		if self._pauseTime is None:
-			raise StopwatchException("Stopwatch was not paused.")
+			raise StopwatchError("Stopwatch was not paused.")
 
 		diff = (self._resumeTime - self._pauseTime) / 1e9
 		self._splits.append((diff, False))
@@ -263,17 +263,17 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the stop operation.
 		* the duration from last resume to the stop operation.
 
-		:returns:                   Duration in seconds since last stopwatch operation
-		:raises StopwatchException: If stopwatch was not started.
-		:raises StopwatchException: If stopwatch was already stopped.
+		:returns:               Duration in seconds since last stopwatch operation
+		:raises StopwatchError: If stopwatch was not started.
+		:raises StopwatchError: If stopwatch was already stopped.
 		"""
 		self._stopTime = perf_counter_ns()
 		self._endTime =  datetime.now()
 
 		if self._startTime is None:
-			raise StopwatchException("Stopwatch was never started.")
+			raise StopwatchError("Stopwatch was never started.")
 		if self._totalTime is not None:
-			raise StopwatchException("Stopwatch was already stopped.")
+			raise StopwatchError("Stopwatch was already stopped.")
 
 		if len(self._splits) == 0:    # was never paused
 			diff = (self._stopTime - self._startTime) / 1e9
@@ -414,7 +414,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is currently running, the duration since start or last resume operation will be included.
 
 		:returns: Duration of all active split times in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -430,7 +430,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is currently paused, the duration since last pause operation will be included.
 
 		:returns: Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -446,7 +446,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is not yet stopped, the duration from start to now is returned.
 
 		:returns: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -472,8 +472,8 @@ class Stopwatch(SlottedObject):
 
 		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
 
-		:returns:                   The stopwatch itself.
-		:raises StopwatchException: If the stopwatch was already started.
+		:returns:               The stopwatch itself.
+		:raises StopwatchError: If the stopwatch was already started.
 		"""
 		if self._startTime is None:           # start stopwatch
 			self._beginTime = datetime.now()
@@ -485,11 +485,11 @@ class Stopwatch(SlottedObject):
 			self._splits.append((diff, False))
 			self._pauseTime = None
 		elif self._resumeTime is not None:    # is running?
-			raise StopwatchException("Stopwatch is currently running and can not be started/resumed again.")
+			raise StopwatchError("Stopwatch is currently running and can not be started/resumed again.")
 		elif self._stopTime is not None:      # is stopped?
-			raise StopwatchException(f"Stopwatch was already stopped.")
+			raise StopwatchError(f"Stopwatch was already stopped.")
 		else:
-			raise StopwatchException(f"Internal error.")
+			raise StopwatchError(f"Internal error.")
 
 		return self
 
@@ -504,16 +504,16 @@ class Stopwatch(SlottedObject):
 
 		A running stopwatch will be paused or stopped depending on the configured ``preferPause`` behavior.
 
-		:param exc_type:            Exception type, otherwise None.
-		:param exc_val:             Exception object, otherwise None.
-		:param exc_tb:              Exception's traceback, otherwise None.
-		:returns:                   True, if exceptions should be suppressed.
-		:raises StopwatchException: If the stopwatch was already stopped.
+		:param exc_type:        Exception type, otherwise None.
+		:param exc_val:         Exception object, otherwise None.
+		:param exc_tb:          Exception's traceback, otherwise None.
+		:returns:               True, if exceptions should be suppressed.
+		:raises StopwatchError: If the stopwatch was already stopped.
 		"""
 		if self._startTime is None:           # never started?
-			raise StopwatchException("Stopwatch was never started.")
+			raise StopwatchError("Stopwatch was never started.")
 		elif self._stopTime is not None:
-			raise StopwatchException("Stopwatch was already stopped.")
+			raise StopwatchError("Stopwatch was already stopped.")
 		elif self._resumeTime is not None:    # pause or stop
 			if self._preferPause:
 				self._pauseTime = perf_counter_ns()
@@ -531,7 +531,7 @@ class Stopwatch(SlottedObject):
 				self._resumeTime = None
 				self._totalTime =  self._stopTime - self._startTime
 		else:
-			raise StopwatchException("Stopwatch was not resumed.")
+			raise StopwatchError("Stopwatch was not resumed.")
 
 	def __len__(self) -> int:
 		"""
@@ -560,8 +560,8 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is not stopped yet, the last split won't be included.
 
 		:returns: Iterator of split time tuples of: |br|
-		         (1) delta time to the previous stopwatch operation and |br|
-		         (2) a boolean indicating if the split was an activity (true) or inactivity (false).
+		          (1) delta time to the previous stopwatch operation and |br|
+		          (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		"""
 		return self._splits.__iter__()
 
@@ -580,3 +580,9 @@ class Stopwatch(SlottedObject):
 			return f"Stopwatch{name} (paused): {self._beginTime} -> now: {self.Duration}"
 		else:
 			return f"Stopwatch{name}: not started"
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+StopwatchException = StopwatchError

@@ -79,7 +79,7 @@ of the test suite.
 
 Both class variables are mandatory: a test class naming neither cannot run anything, so
 :meth:`~pyTooling.Testing.ApplicationTestcase.setUpClass` raises a
-:exc:`~pyTooling.Testing.TestingException` instead of letting every testcase in the class fail with a less obvious
+:exc:`~pyTooling.Testing.TestingError` instead of letting every testcase in the class fail with a less obvious
 error. A console script that is not installed is reported the same way.
 
 .. _TESTING/Application/Assertions:

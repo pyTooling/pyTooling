@@ -37,7 +37,7 @@ from typing   import Any, Optional as Nullable, List, Tuple, Callable
 from pyTooling.Decorators import readonly
 from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
-from pyTooling.Graph      import GraphException, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
+from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
 from pyTooling.Testing    import Testcase
 
@@ -520,7 +520,7 @@ class Subgraphs(Testcase):
 
 		vertex1 = Vertex(graph=graph)
 		vertex2 = Vertex(subgraph=subgraph1)
-		with self.assertRaises(GraphException):
+		with self.assertRaises(GraphError):
 			edge12 = vertex1.EdgeToVertex(vertex2)
 
 		link12 = vertex1.LinkToVertex(vertex2)
@@ -1326,7 +1326,7 @@ class VertexOperations(Iterate):
 		graph1 = Graph()
 		vertex1 = Vertex(graph=graph1)
 
-		with self.assertRaises(GraphException):
+		with self.assertRaises(GraphError):
 			vertex1.Copy(graph1)
 
 	def test_Copy(self) -> None:

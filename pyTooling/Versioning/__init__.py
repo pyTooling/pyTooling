@@ -56,7 +56,7 @@ from pyTooling.Common      import getFullyQualifiedName
 
 
 @export
-class VersionValidatorException(ToolingException):
+class VersionValidatorError(ToolingException):
 	"""
 	Raised when a parsed version is rejected by the validator it was parsed with.
 
@@ -123,9 +123,9 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is equal to the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is equal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is equal the second operand's release level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -142,9 +142,9 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is unequal to the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is unequal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is unequal the second operand's release level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -161,9 +161,9 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is less than the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is less than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is less than the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -180,9 +180,9 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is less than or equal the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is less than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is less than or equal the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -199,9 +199,9 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is greater than the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is greater than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is greater than the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -218,9 +218,9 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is greater than or equal the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is greater than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is greater than or equal the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
@@ -909,7 +909,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -948,7 +948,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
@@ -990,7 +990,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
 			raise ValueError(f"Second operand is None.")
@@ -1029,7 +1029,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
@@ -1191,14 +1191,14 @@ class SemanticVersion(Version):
 		* ``r|R`` - release, revision
 		* ``rev|REV`` - revision
 
-		:param versionString:              The version string to parse.
-		:param validator:                  Optional, a validation function.
-		:returns:                          An object representing a semantic version.
-		:raises TypeError:                 When parameter ``versionString`` is not a string.
-		:raises ValueError:                When parameter ``versionString`` is None or empty.
-		:raises ValueError:                When parameter ``versionString`` isn't a semantic version number. |br|
-		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
-		:raises VersionValidatorException: When the parsed version is rejected by ``validator``.
+		:param versionString:          The version string to parse.
+		:param validator:              Optional, a validation function.
+		:returns:                      An object representing a semantic version.
+		:raises TypeError:             When parameter ``versionString`` is not a string.
+		:raises ValueError:            When parameter ``versionString`` is None or empty.
+		:raises ValueError:            When parameter ``versionString`` isn't a semantic version number. |br|
+		                               It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
+		:raises VersionValidatorError: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1273,7 +1273,7 @@ class SemanticVersion(Version):
 		)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
+			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -1629,18 +1629,18 @@ class CalendarVersion(Version):
 		:class:`YearWeekVersion` and :class:`YearReleaseVersion` describe two parts, so a third part is rejected for
 		them.
 
-		:param versionString:              The version string to parse.
-		:param validator:                  Optional, a validation function.
-		:returns:                          An object representing a calendar version.
-		:raises TypeError:                 If parameter ``versionString`` is not a string.
-		:raises ValueError:                If parameter ``versionString`` is None or empty.
-		:raises ValueError:                If parameter ``versionString`` isn't a calendar version number. |br|
-		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g.
-		                                   ``v2024.04``.
-		:raises ValueError:                If parameter ``versionString`` has more parts than the class describes. |br|
-		                                   Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
-		                                   three-part calendar version number.
-		:raises VersionValidatorException: If the parsed version is rejected by ``validator``.
+		:param versionString:          The version string to parse.
+		:param validator:              Optional, a validation function.
+		:returns:                      An object representing a calendar version.
+		:raises TypeError:             If parameter ``versionString`` is not a string.
+		:raises ValueError:            If parameter ``versionString`` is None or empty.
+		:raises ValueError:            If parameter ``versionString`` isn't a calendar version number. |br|
+		                               It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g.
+		                               ``v2024.04``.
+		:raises ValueError:            If parameter ``versionString`` has more parts than the class describes. |br|
+		                               Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
+		                               three-part calendar version number.
+		:raises VersionValidatorError: If the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
@@ -1675,7 +1675,7 @@ class CalendarVersion(Version):
 		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
+			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -2308,9 +2308,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version range and a version numbers if the version range is less than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is less than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is less than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2330,9 +2330,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version range and a version numbers if the version range is less than or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is less than  or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is less than  or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2355,9 +2355,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version range and a version numbers if the version range is greater than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is greater than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is greater than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2377,9 +2377,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version range and a version numbers if the version range is greater than  or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is greater than or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is greater than or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2563,9 +2563,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is less than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is less than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is less than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2580,9 +2580,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is less than or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is less than or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is less than or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2597,9 +2597,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is greater than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is greater than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is greater than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2614,9 +2614,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is greater than or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is greater than or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is greater than or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
@@ -2664,3 +2664,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]
+
+
+# ==================================================================================================================== #
+# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# ==================================================================================================================== #
+VersionValidatorException = VersionValidatorError

@@ -812,11 +812,11 @@ Decorators
 Exceptions
 ==========
 
-* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+* :exc:`~pyTooling.Exceptions.EnvironmentVariableError` |br|
   ... is raised when an expected environment variable is missing.
-* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+* :exc:`~pyTooling.Exceptions.PlatformNotSupportedError` |br|
   ... is raise if the platform is not supported.
-* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+* :exc:`~pyTooling.Exceptions.NotConfiguredError` |br|
   ... is raise if the requested setting is not configured.
 
 

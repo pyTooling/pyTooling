@@ -50,17 +50,17 @@ from sys                     import stdin, stdout, stderr
 from textwrap                import dedent
 from types                   import ModuleType
 from typing                  import NoReturn, Any, Optional as Nullable, Callable, ClassVar
-from pyTooling.Exceptions    import MissingDependencyException
+from pyTooling.Exceptions    import MissingDependencyError
 from pyTooling.Versioning    import PythonVersion
 
 try:
 	from colorama import Fore as Foreground
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyException(dependency="colorama", extra="terminal") from ex
+	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, mixin
-from pyTooling.Exceptions  import PlatformNotSupportedException, ExceptionBase
+from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
 
@@ -78,7 +78,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
 	#: Return code (242), if an optional dependency is missing. The value lives on the exception, which stays
 	#: importable when this module is not - see :meth:`PrintMissingDependencyException`.
-	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyException.EXIT_CODE
+	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyError.EXIT_CODE
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
@@ -205,8 +205,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Returns the terminal size as tuple (width, height) for Windows, macOS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows).
 
-		:returns:                              A tuple containing width and height of the terminal's size in characters.
-		:raises PlatformNotSupportedException: When a platform is not yet supported.
+		:returns:                          A tuple containing width and height of the terminal's size in characters.
+		:raises PlatformNotSupportedError: When a platform is not yet supported.
 		"""
 		platform = Platform()
 		if platform.IsNativeWindows:
@@ -215,7 +215,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 					or platform.IsUCRT64OnWindows or platform.IsCygwin32OnWindows or platform.IsClang64OnWindows):
 			size = TerminalBaseApplication.__GetTerminalSizeOnLinux()
 		else:  # pragma: no cover
-			raise PlatformNotSupportedException(f"Platform '{platform}' not yet supported.")
+			raise PlatformNotSupportedError(f"Platform '{platform}' not yet supported.")
 
 		if size is None:   # pragma: no cover
 			size = (80, 25)  # default size
@@ -381,7 +381,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Exit the terminal application by uninitializing color support and returning a fatal Exit code.
 
-		:param returnCode:  Optional, return code for application exit.
+		:param returnCode: Optional, return code for application exit.
 		"""
 		self.Exit(self.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
 
@@ -448,14 +448,14 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
-	def PrintMissingDependencyException(self, ex: MissingDependencyException) -> NoReturn:
+	def PrintMissingDependencyException(self, ex: MissingDependencyError) -> NoReturn:
 		"""
 		Print a missing optional dependency and the command lines installing it.
 
 		Unlike the other printers, this one does **not** report a bug: there is no traceback, and no invitation to
 		open an issue, because nothing is wrong with the program - a package it can use is not installed. The message
 		names the missing package and every installation option the exception carries
-		(:attr:`~pyTooling.Exceptions.MissingDependencyException.InstallCommands`).
+		(:attr:`~pyTooling.Exceptions.MissingDependencyError.InstallCommands`).
 
 		.. attention::
 
@@ -466,13 +466,13 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		   .. code-block:: python
 
-		      from pyTooling.Exceptions import MissingDependencyException
+		      from pyTooling.Exceptions import MissingDependencyError
 
 		      try:
 		        from pyTooling.TerminalUI import TerminalApplication
-		      except MissingDependencyException as ex:
+		      except MissingDependencyError as ex:
 		        print(f"{ex}\n" + "\n".join(f"  {command}" for command in ex.InstallCommands))
-		        raise SystemExit(MissingDependencyException.EXIT_CODE) from ex
+		        raise SystemExit(MissingDependencyError.EXIT_CODE) from ex
 
 		:param ex: The exception to print.
 		:returns:  Never - the method exits the application with :attr:`MISSING_DEPENDENCY_EXIT_CODE`.
