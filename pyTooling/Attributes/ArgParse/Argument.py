@@ -104,8 +104,14 @@ class PositionalArgument(ValuedArgument):
 
 	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param type:     Optional, callable converting the argument's string to the target type. Default: :class:`str`.
+		:param optional: Optional, if ``True``, the argument may be omitted (``nargs="?"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		args: list[str] = []
 		kwargs = {
@@ -130,8 +136,13 @@ class StringArgument(PositionalArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, the argument may be omitted (``nargs="?"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, str, optional, help)
 
@@ -146,8 +157,13 @@ class IntegerArgument(PositionalArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, the argument may be omitted (``nargs="?"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, int, optional, help)
 
@@ -162,8 +178,13 @@ class FloatArgument(PositionalArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, the argument may be omitted (``nargs="?"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, float, optional, help)
 
@@ -179,8 +200,13 @@ class PathArgument(PositionalArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, the argument may be omitted (``nargs="?"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, Path, optional, help)
 
@@ -193,8 +219,15 @@ class ListArgument(ValuedArgument):
 
 	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument accepting a list of values.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param type:     Optional, callable converting each value's string to the target type. Default: :class:`str`.
+		:param optional: Optional, if ``True``, an empty list is accepted (``nargs="*"``); otherwise at least one value is
+		                 required (``nargs="+"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		args: list[str] = []
 		kwargs = {
@@ -215,8 +248,14 @@ class StringListArgument(ListArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument accepting a list of values.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, an empty list is accepted (``nargs="*"``); otherwise at least one value is
+		                 required (``nargs="+"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, str, optional, help)
 
@@ -229,8 +268,14 @@ class IntegerListArgument(ListArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument accepting a list of values.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, an empty list is accepted (``nargs="*"``); otherwise at least one value is
+		                 required (``nargs="+"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, int, optional, help)
 
@@ -243,8 +288,14 @@ class FloatListArgument(ListArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument accepting a list of values.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, an empty list is accepted (``nargs="*"``); otherwise at least one value is
+		                 required (``nargs="+"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, float, optional, help)
 
@@ -257,7 +308,13 @@ class PathListArgument(ListArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Construct a positional argument accepting a list of values.
+
+		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		                 handler method reads it by.
+		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
+		:param optional: Optional, if ``True``, an empty list is accepted (``nargs="*"``); otherwise at least one value is
+		                 required (``nargs="+"``). Default: ``False``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``""``.
 		"""
 		super().__init__(dest, metaName, Path, optional, help)
