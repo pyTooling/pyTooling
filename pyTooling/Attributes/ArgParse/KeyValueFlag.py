@@ -43,7 +43,7 @@ from pyTooling.Attributes.ArgParse.Argument import NamedAndValuedArgument
 @export
 class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 	"""
-	Defines a switch argument like ``--help``.
+	Defines a key-value argument like ``-Dkey=value``.
 
 	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
 	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument
@@ -54,8 +54,24 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 		"""
 		Initializes a flag argument.
 
-		The flag is implemented as ``action="store_const"`` with ``const=True`` and ``default=False``, so the handler
-		method receives a boolean.
+		.. admonition:: ArgParse parameterization
+
+		   :meth:`~argparse.ArgumentParser.add_argument` is called with the option strings from ``short`` and ``long``
+		   as positional parameters, and with these named parameters:
+
+		   * ``dest=dest``
+		   * ``action="store_const"``
+		   * ``const=True``
+		   * ``default=False``
+		   * ``help=help``
+
+		   ``action="store_const"`` with ``const=True`` and ``default=False`` is what makes the handler method receive a
+		   boolean.
+
+		.. attention::
+
+		   This is exactly :class:`~pyTooling.Attributes.ArgParse.Flag.FlagArgument`'s parameterization, so no
+		   key-value pair is parsed and the handler method receives a boolean. See the class doc-string.
 
 		:param short: Optional, short option name including the dash, e.g. ``"-v"``. Default: ``None``.
 		:param long:  Optional, long option name including the dashes, e.g. ``"--verbose"``. Default: ``None``.

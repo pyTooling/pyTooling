@@ -54,8 +54,19 @@ class FlagArgument(NamedArgument):
 		"""
 		Initializes a flag argument.
 
-		The flag is implemented as ``action="store_const"`` with ``const=True`` and ``default=False``, so the handler
-		method receives a boolean.
+		.. admonition:: ArgParse parameterization
+
+		   :meth:`~argparse.ArgumentParser.add_argument` is called with the option strings from ``short`` and ``long``
+		   as positional parameters, and with these named parameters:
+
+		   * ``dest=dest``
+		   * ``action="store_const"``
+		   * ``const=True``
+		   * ``default=False``
+		   * ``help=help``
+
+		   ``action="store_const"`` with ``const=True`` and ``default=False`` is what makes the handler method receive a
+		   boolean.
 
 		:param short: Optional, short option name including the dash, e.g. ``"-v"``. Default: ``None``.
 		:param long:  Optional, long option name including the dashes, e.g. ``"--verbose"``. Default: ``None``.
