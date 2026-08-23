@@ -236,8 +236,8 @@ Documentation
       decorator :deco:`~pyTooling.Decorators.InheritDocString` can be used to copy the doc-string from base-class'
       method to the method in the derived class.
 
-      If the derived class or method has something of its own to say, ``merge=True`` combines both doc-strings instead
-      of replacing the derived one.
+      If the derived class or method has something of its own to say, both doc-strings are combined. Which parts are
+      taken from which doc-string, and in which order, is selected with ``strategy``.
 
    .. grid-item::
       :columns: 6
@@ -251,9 +251,9 @@ Documentation
                class BaseClass:
                  """Method's doc-string."""
 
-               @InheritDocString(BaseClass, merge=True)
+               @InheritDocString(BaseClass)
                class DerivedClass(BaseClass):
-                 """Will be written underneath"""
+                 """Will be written on top"""
 
 
          .. tab-item:: Inherit method documentation
@@ -281,9 +281,17 @@ Merging doc-strings
    .. grid-item::
       :columns: 6
 
-      When merging, the result is assembled as ``prefix + first + interfix + second + postfix``. Which doc-string comes
-      first is chosen with ``order``, using :class:`~pyTooling.Decorators.DocStringMergeOrder`. If either doc-string is
-      missing, that part and the ``interfix`` are omitted; if both are missing, the doc-string is left unchanged.
+      The result is assembled as ``prefix + part + interfix + part ... + postfix``. Which parts are used, and in which
+      order, is chosen with ``strategy``, using :class:`~pyTooling.Decorators.DocStringMergeStrategy`. A part that is
+      empty - a missing doc-string, or a body the strategy asked for that doesn't exist - is omitted together with its
+      ``interfix``; if nothing remains, the doc-string is left unchanged.
+
+      A doc-string's **summary** is its first paragraph.
+      :attr:`~pyTooling.Decorators.DocStringMergeStrategy.SummaryOnly` inherits just that, so the derived field list
+      keeps its own summary line instead of the base-class' parameters. The two *WithoutSummary* strategies go the other
+      way and drop the base-class' summary, because the derived doc-string already carries one -
+      :attr:`~pyTooling.Decorators.DocStringMergeStrategy.BaseInBetweenWithoutSummary` puts what is left of the
+      inherited description between the derived summary and the derived body.
 
       Both doc-strings are dedented with :func:`inspect.cleandoc` before they are combined.
 
@@ -310,8 +318,7 @@ Merging doc-strings
 
          @InheritDocString(
            BaseClass,
-           merge=True,
-           order=DocStringMergeOrder.DerivedFirst,
+           DocStringMergeStrategy.BaseLast,
            interfix="\n\n**Inherited:**\n\n"
          )
          class DerivedClass(BaseClass):
