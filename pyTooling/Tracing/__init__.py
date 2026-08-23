@@ -635,9 +635,3 @@ class Trace(Span):
 			result.extend(span.Format(indent + 1, columnSize - 2))
 
 		return result
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-TracingException = TracingError

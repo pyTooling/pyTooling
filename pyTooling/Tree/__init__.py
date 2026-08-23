@@ -1053,9 +1053,3 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		result.extend(_render(self, ""))
 
 		return "".join(result)
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-TreeException = TreeError

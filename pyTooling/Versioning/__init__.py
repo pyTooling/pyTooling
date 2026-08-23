@@ -2664,9 +2664,3 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-VersionValidatorException = VersionValidatorError

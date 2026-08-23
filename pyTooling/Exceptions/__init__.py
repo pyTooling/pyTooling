@@ -303,12 +303,3 @@ class ToolingException(Exception):
 		:returns: Attached notes.
 		"""
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-EnvironmentException          = EnvironmentVariableError
-MissingDependencyException    = MissingDependencyError
-NotConfiguredException        = NotConfiguredError
-PlatformNotSupportedException = PlatformNotSupportedError

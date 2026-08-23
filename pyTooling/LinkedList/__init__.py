@@ -936,9 +936,3 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		node = self.GetNodeByIndex(index)
 		node.Remove()
 		return node._value
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-LinkedListException = LinkedListError

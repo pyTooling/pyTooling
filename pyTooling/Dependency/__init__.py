@@ -789,12 +789,3 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 			return f"{self._name} (empty)"
 		else:
 			return f"{self._name} ({count})"
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-DependencyException         = DependencyError
-NoSessionAvailableException = NoSessionAvailableError
-ProjectNotFoundException    = ProjectNotFoundError
-ReleaseNotFoundException    = ReleaseNotFoundError

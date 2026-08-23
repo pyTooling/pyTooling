@@ -264,13 +264,3 @@ class Configuration(Node):
 		:returns: Path to the configuration file.
 		"""
 		return self._configFile
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-ConfigurationException        = ConfigurationError
-InterpolationException        = InterpolationError
-KeyNotFoundException          = KeyNotFoundError
-PathExpressionException       = PathExpressionError
-UnsupportedValueTypeException = UnsupportedValueTypeError

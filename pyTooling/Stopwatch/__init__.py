@@ -580,9 +580,3 @@ class Stopwatch(SlottedObject):
 			return f"Stopwatch{name} (paused): {self._beginTime} -> now: {self.Duration}"
 		else:
 			return f"Stopwatch{name}: not started"
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-StopwatchException = StopwatchError

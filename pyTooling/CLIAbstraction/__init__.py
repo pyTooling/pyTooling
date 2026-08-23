@@ -680,10 +680,3 @@ class OutputFilteredExecutable(Executable):
 		:returns: ``True``, if at least one fatal error was found.
 		"""
 		return self._hasErrors
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-CLIAbstractionException = CLIAbstractionError
-DryRunException         = DryRunError
