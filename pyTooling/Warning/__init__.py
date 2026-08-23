@@ -660,13 +660,3 @@ class ThreadSupervisor:
 					for threadName, ex in exceptions
 				]
 			)
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-EscalatedWarningException           = EscalatedWarningError
-SupervisedThreadException           = SupervisedThreadError
-SupervisedWarningCollectorException = SupervisedWarningCollectorError
-UnhandledCriticalWarningException   = UnhandledCriticalWarningError
-UnhandledExceptionException         = UnhandledExceptionError

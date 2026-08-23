@@ -262,9 +262,3 @@ class ApplicationTestcase(Testcase):
 				f"--- stderr ---\n{result.stderr}"
 			)
 		)
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-TestingException = TestingError

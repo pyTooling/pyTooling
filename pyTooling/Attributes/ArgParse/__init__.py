@@ -468,9 +468,3 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 # ValuedFlagList --option=foo --option=bar
 # OptionalValued --option --option=foo
 # ValuedTuple
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-ArgParseException = ArgParseError

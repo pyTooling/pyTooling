@@ -1592,9 +1592,3 @@ class File(Base):
 
 		if filename._root is not None:
 			self._root = filename._root
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-FilesystemException = FilesystemError

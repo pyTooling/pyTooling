@@ -3236,9 +3236,3 @@ class Graph(
 			return f"Graph: unnamed graph"
 		else:
 			return f"Graph: '{self._name}'"
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-GraphException = GraphError

@@ -47,11 +47,11 @@ def raise_EnvironmentExecption() -> None:
 	raise EnvironmentVariableError("Environment does not provide 'PATH'.")
 
 
-def raise_PlatformNotSupportedException() -> None:
+def raise_PlatformNotSupportedError() -> None:
 	raise PlatformNotSupportedError("Platform 'macOS' is not supported.")
 
 
-def raise_NotConfiguredException() -> None:
+def raise_NotConfiguredError() -> None:
 	raise NotConfiguredError("Option 'WorkingDirectory' is not specified in the configuration file.")
 
 
@@ -63,12 +63,12 @@ class Exceptions(Testcase):
 
 	def test_PlatformNotSupportedError(self) -> None:
 		with self.assertRaises(PlatformNotSupportedError):
-			raise_PlatformNotSupportedException()
+			raise_PlatformNotSupportedError()
 		# self.assertEqual(context.exception.message, "Platform 'OSX' is not supported.")
 
 	def test_NotConfiguredError(self) -> None:
 		with self.assertRaises(NotConfiguredError):
-			raise_NotConfiguredException()
+			raise_NotConfiguredError()
 		# self.assertEqual(context.exception.message, "Option 'WorkingDirectory' is not specified in the configuration file.")
 
 

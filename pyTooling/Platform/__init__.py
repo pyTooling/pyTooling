@@ -692,11 +692,3 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 
 CurrentPlatform = Platform()     #: Gathered information for the current platform.
-
-
-# ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
-# ==================================================================================================================== #
-PlatformException               = PlatformError
-UnknownOperatingSystemException = UnknownOperatingSystemError
-UnknownPlatformException        = UnknownPlatformError
