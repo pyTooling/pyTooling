@@ -366,8 +366,8 @@ def InheritDocString(
 		Split a doc-string into its summary and its body.
 
 		The doc-string is dedented with :func:`inspect.cleandoc` first. The summary is the first paragraph, the body is
-		whatever follows the first blank line. Both are empty strings if the doc-string is ``None``, and the body is an empty
-		string if the doc-string is a single paragraph.
+		whatever follows the first blank line. Both are empty strings if the doc-string is ``None``, and the body is an
+		empty string if the doc-string is a single paragraph.
 
 		:param docString: The doc-string to split, or ``None``.
 		:returns:         A tuple of summary and body.
