@@ -471,6 +471,6 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 
 
 # ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
 # ==================================================================================================================== #
 ArgParseException = ArgParseError
