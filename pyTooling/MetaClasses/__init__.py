@@ -481,17 +481,17 @@ def expects(*memberNames: str) -> Callable[[M], M]:
 
 	   .. code-block:: python
 
-	      class TerminalApplication(metaclass=ExtendedType, slots=True):
+	      class Terminal(metaclass=ExtendedType, slots=True):
 	        @expects("MainParser", "SubParsers")
 	        def PrintHelp(self) -> None:
 	          self.MainParser.print_help()
 
-	      TerminalApplication().PrintHelp()          # UnfulfilledExpectationError
+	      Terminal().PrintHelp()                  # UnfulfilledExpectationError
 
-	      class Application(TerminalApplication, ArgParseHelperMixin):
+	      class Application(Terminal, ArgParseHelperMixin):
 	        pass
 
-	      Application().PrintHelp()                  # fine
+	      Application().PrintHelp()               # fine
 
 	:param memberNames: Names of the members the method needs from its class.
 	:returns:           Decorator marking the method with an ``<method>.__expectedMembers__`` field.
@@ -1659,8 +1659,7 @@ class ExtendedType(type):
 
 					:raises UnfulfilledExpectationError: Always, because the class doesn't provide every expected member.
 					"""
-					className = type(self).__name__
-					message = f"Method '{className}.{methodName}()' expects members class '{className}' doesn't provide."
+					message = f"Method '{type(self).__name__}.{methodName}()' expects members this class doesn't provide."
 					ex = UnfulfilledExpectationError(message)
 					for memberName in missingMembers:
 						ex.add_note(f"Missing '{memberName}'.")

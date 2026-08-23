@@ -110,17 +110,17 @@ The :deco:`~pyTooling.MetaClasses.expects` decorator moves the expectation to wh
 
    from pyTooling.MetaClasses import ExtendedType, expects
 
-   class TerminalApplication(metaclass=ExtendedType, slots=True):
+   class Terminal(metaclass=ExtendedType, slots=True):
      @expects("MainParser", "SubParsers")
      def PrintHelp(self) -> None:
        self.MainParser.print_help()
 
-   TerminalApplication().PrintHelp()          # UnfulfilledExpectationError
+   Terminal().PrintHelp()                  # UnfulfilledExpectationError
 
-   class Application(TerminalApplication, ArgParseHelperMixin):
+   class Application(Terminal, ArgParseHelperMixin):
      pass
 
-   Application().PrintHelp()                  # fine
+   Application().PrintHelp()               # fine
 
 The class stays usable - constructing it, instantiating it and calling every other method is unaffected. Only the
 method that cannot work is replaced, by one raising an
@@ -128,7 +128,7 @@ method that cannot work is replaced, by one raising an
 
 .. code-block:: text
 
-   pyTooling.MetaClasses.UnfulfilledExpectationError: Method 'TerminalApplication.PrintHelp()' expects members class 'TerminalApplication' doesn't provide.
+   UnfulfilledExpectationError: Method 'Terminal.PrintHelp()' expects members this class doesn't provide.
    Missing 'MainParser'.
    Missing 'SubParsers'.
    A method names what it needs from its class with the 'expects' decorator.

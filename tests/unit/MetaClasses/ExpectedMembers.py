@@ -50,6 +50,7 @@ class Host(metaclass=ExtendedType, slots=True):
 	_counter: int
 
 	def __init__(self) -> None:
+		"""Initializes the counter the mixin reports."""
 		self._counter = 0
 
 	def Write(self, message: str) -> bool:
@@ -262,7 +263,7 @@ class ExpectingMethods(Testcase):
 			Terminal().PrintHelp()
 
 		self.assertEqual(
-			"Method 'Terminal.PrintHelp()' expects members class 'Terminal' doesn't provide.",
+			"Method 'Terminal.PrintHelp()' expects members this class doesn't provide.",
 			str(exceptionCapture.exception)
 		)
 		self.assertIn("Missing 'MainParser'.", exceptionCapture.exception.__notes__)
@@ -296,7 +297,7 @@ class ExpectingMethods(Testcase):
 			Derived().PrintHelp()
 
 		self.assertEqual(
-			"Method 'Derived.PrintHelp()' expects members class 'Derived' doesn't provide.",
+			"Method 'Derived.PrintHelp()' expects members this class doesn't provide.",
 			str(exceptionCapture.exception)
 		)
 
