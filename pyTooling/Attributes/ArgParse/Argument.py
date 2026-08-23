@@ -150,7 +150,7 @@ class StringArgument(PositionalArgument):
 		Initializes a positional string argument.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=str``.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type`` set to :class:`str`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -174,7 +174,7 @@ class IntegerArgument(PositionalArgument):
 		Initializes a positional integer argument.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=int``.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type`` set to :class:`int`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -198,7 +198,7 @@ class FloatArgument(PositionalArgument):
 		Initializes a positional floating point number argument.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=float``.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type`` set to :class:`float`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -223,7 +223,8 @@ class PathArgument(PositionalArgument):
 		Initializes a positional path argument.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=:class:`~pathlib.Path```.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type`` set to
+		:class:`~pathlib.Path`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -285,7 +286,7 @@ class StringListArgument(ListArgument):
 		Initializes a positional argument accepting a list of string values.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=str``.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type`` set to :class:`str`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -308,7 +309,7 @@ class IntegerListArgument(ListArgument):
 		Initializes a positional argument accepting a list of integer numbers.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=int``.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type`` set to :class:`int`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -331,7 +332,7 @@ class FloatListArgument(ListArgument):
 		Initializes a positional argument accepting a list of floating point numbers.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=float``.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type`` set to :class:`float`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -354,7 +355,8 @@ class PathListArgument(ListArgument):
 		Initializes a positional argument accepting a list of path arguments.
 
 		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
-		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=:class:`~pathlib.Path```.
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type`` set to
+		:class:`~pathlib.Path`.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
