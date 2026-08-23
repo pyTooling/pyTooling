@@ -50,7 +50,7 @@ class ValuedFlag(NamedAndValuedArgument):
 
 	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
 		"""
-		Construct a flag argument taking a value.
+		Initializes a flag argument taking a value.
 
 		:param short:    Optional, short option name including the dash, e.g. ``"-o"``. Default: ``None``.
 		:param long:     Optional, long option name including the dashes, e.g. ``"--output"``. Default: ``None``.

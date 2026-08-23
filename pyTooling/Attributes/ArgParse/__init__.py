@@ -125,7 +125,7 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
-		Construct a command line argument.
+		Initializes a command line argument.
 
 		This base-class collects the parameters :meth:`~argparse.ArgumentParser.add_argument` will be called with; the
 		derived classes assemble them from named parameters instead.
@@ -167,7 +167,7 @@ class CommandGroupAttribute(ArgParseAttribute):
 
 	def __init__(self, groupName: str) -> None:
 		"""
-		Construct a command group attribute.
+		Initializes a command group attribute.
 
 		:param groupName: Name of the group the annotated commands are listed under in the help page.
 		"""
@@ -254,7 +254,7 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 
 	def __init__(self, command: str, help: str = "", **kwargs: Any) -> None:
 		"""
-		Construct a command handler attribute.
+		Initializes a command handler attribute.
 
 		:param command: Name of the sub-command on the command line.
 		:param help:    Optional, help text shown for the sub-command. Default: ``""``.
