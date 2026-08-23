@@ -404,7 +404,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise NoSiblingsError(f"Root node has no siblings.")
+			raise NoSiblingsError("Root node has no siblings.")
 
 		return tuple([node for node in self._parent if node is not self])
 
@@ -423,7 +423,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		                         children.
 		"""
 		if self._parent is None:
-			raise NoSiblingsError(f"Root node has no siblings.")
+			raise NoSiblingsError("Root node has no siblings.")
 
 		result = []
 		for node in self._parent:
@@ -432,7 +432,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			else:
 				break
 		else:
-			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError("Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		return tuple(result)
 
@@ -451,7 +451,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		                         children.
 		"""
 		if self._parent is None:
-			raise NoSiblingsError(f"Root node has no siblings.")
+			raise NoSiblingsError("Root node has no siblings.")
 
 		result = []
 		iterator = iter(self._parent)
@@ -459,7 +459,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			if node is self:
 				break
 		else:
-			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError("Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		for node in iterator:
 			result.append(node)
@@ -576,7 +576,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		      |rarr| Add multiple children at once.
 		"""
 		if not isinstance(child, Node):
-			ex = TypeError(f"Parameter 'child' is not of type 'Node'.")
+			ex = TypeError("Parameter 'child' is not of type 'Node'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 			raise ex
 
@@ -668,7 +668,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 			# Check if both are in the same tree.
 			if self._root is not others._root:
-				raise NotInSameTreeError(f"Node 'others' is not in the same tree.")
+				raise NotInSameTreeError("Node 'others' is not in the same tree.")
 
 			# Compute paths top-down and walk both paths until they deviate
 			for left, right in zip(self.Path, others.Path):
@@ -677,7 +677,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 				else:
 					return
 		elif isinstance(others, Iterable):
-			raise NotImplementedError(f"Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
+			raise NotImplementedError("Generator 'GetCommonAncestors' does not yet support an iterable of siblings to compute the common ancestors.")
 
 	def GetChildren(self) -> Generator[Node, None, None]:
 		"""
@@ -709,7 +709,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:raises NoSiblingsError: If the current node has no parent node and thus no siblings.
 		"""
 		if self._parent is None:
-			raise NoSiblingsError(f"Root node has no siblings.")
+			raise NoSiblingsError("Root node has no siblings.")
 
 		for node in self._parent:
 			if node is self:
@@ -729,7 +729,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		                         parent's children.
 		"""
 		if self._parent is None:
-			raise NoSiblingsError(f"Root node has no siblings.")
+			raise NoSiblingsError("Root node has no siblings.")
 
 		for node in self._parent:
 			if node is self:
@@ -737,7 +737,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 			yield node
 		else:
-			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError("Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 	def GetRightSiblings(self) -> Generator[Node, None, None]:
 		"""
@@ -751,14 +751,14 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		                         parent's children.
 		"""
 		if self._parent is None:
-			raise NoSiblingsError(f"Root node has no siblings.")
+			raise NoSiblingsError("Root node has no siblings.")
 
 		iterator = iter(self._parent)
 		for node in iterator:
 			if node is self:
 				break
 		else:
-			raise InternalError(f"Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
+			raise InternalError("Data structure corruption: Self is not part of parent's children.")  # pragma: no cover
 
 		for node in iterator:
 			yield node
@@ -910,7 +910,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		# Check if both are in the same tree.
 		if self._root is not other._root:
-			raise NotInSameTreeError(f"Node 'other' is not in the same tree.")
+			raise NotInSameTreeError("Node 'other' is not in the same tree.")
 
 		# Compute both paths to the root.
 		# 1. Walk from self to root, until a first common ancestor is found.
@@ -937,7 +937,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:raises KeyError:   If parameter ``nodeID`` is not found in the tree.
 		"""
 		if nodeID is None:
-			raise ValueError(f"'None' is not supported as an ID value.")
+			raise ValueError("'None' is not supported as an ID value.")
 
 		return self._root._nodesWithID[nodeID]
 
@@ -949,7 +949,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:returns:                    A generator yielding the matching nodes.
 		:raises NotImplementedError: Searching a tree is not implemented yet.
 		"""
-		raise NotImplementedError(f"Method 'Find' is not yet implemented.")
+		raise NotImplementedError("Method 'Find' is not yet implemented.")
 
 	def __iter__(self) -> Iterator[Node]:
 		"""

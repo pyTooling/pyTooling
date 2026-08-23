@@ -87,7 +87,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		if isinstance(name, str):
 			if name == "":
-				raise ValueError(f"Parameter 'name' is empty.")
+				raise ValueError("Parameter 'name' is empty.")
 
 			self._name = name
 		else:
@@ -237,7 +237,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		if isinstance(name, str):
 			if name == "":
-				raise ValueError(f"Parameter 'name' is empty.")
+				raise ValueError("Parameter 'name' is empty.")
 
 			self._name = name
 		else:

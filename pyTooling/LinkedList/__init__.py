@@ -135,7 +135,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		# Attache to previous node
 		if previousNode is not None:
 			if not isinstance(previousNode, Node):
-				ex = TypeError(f"Parameter 'previous' is not of type Node.")
+				ex = TypeError("Parameter 'previous' is not of type Node.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(previousNode)}'.")
 				raise ex
 
@@ -158,7 +158,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 			if nextNode is not None:
 				if not isinstance(nextNode, Node):
-					ex = TypeError(f"Parameter 'next' is not of type Node.")
+					ex = TypeError("Parameter 'next' is not of type Node.")
 					ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
 					raise ex
 
@@ -172,7 +172,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 				previousNode._nextNode = self
 		elif nextNode is not None:
 			if not isinstance(nextNode, Node):
-				ex = TypeError(f"Parameter 'next' is not of type Node.")
+				ex = TypeError("Parameter 'next' is not of type Node.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(nextNode)}'.")
 				raise ex
 
@@ -267,18 +267,18 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:raises NotInAListError:    If this node is not part of a linked list.
 		"""
 		if node is None:
-			raise ValueError(f"Parameter 'node' is None.")
+			raise ValueError("Parameter 'node' is None.")
 
 		if not isinstance(node, Node):
-			ex = TypeError(f"Parameter 'node' is not of type Node.")
+			ex = TypeError("Parameter 'node' is not of type Node.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
-			raise NotInSameListError(f"Parameter 'node' belongs to another linked list.")
+			raise NotInSameListError("Parameter 'node' belongs to another linked list.")
 
 		if self._linkedList is None:
-			raise NotInAListError(f"Node is not part of a linked list.")
+			raise NotInAListError("Node is not part of a linked list.")
 
 		node._linkedList = self._linkedList
 		node._nextNode = self
@@ -301,18 +301,18 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		:raises NotInAListError:    If this node is not part of a linked list.
 		"""
 		if node is None:
-			raise ValueError(f"Parameter 'node' is None.")
+			raise ValueError("Parameter 'node' is None.")
 
 		if not isinstance(node, Node):
-			ex = TypeError(f"Parameter 'node' is not of type Node.")
+			ex = TypeError("Parameter 'node' is not of type Node.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
-			raise NotInSameListError(f"Parameter 'node' belongs to another linked list.")
+			raise NotInSameListError("Parameter 'node' belongs to another linked list.")
 
 		if self._linkedList is None:
-			raise NotInAListError(f"Node is not part of a linked list.")
+			raise NotInAListError("Node is not part of a linked list.")
 
 		node._linkedList = self._linkedList
 		node._previousNode = self
@@ -456,7 +456,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			self._lastNode = None
 			self._count = 0
 		elif not isinstance(nodes, Iterable):
-			ex = TypeError(f"Parameter 'nodes' is not an iterable.")
+			ex = TypeError("Parameter 'nodes' is not an iterable.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 		else:
@@ -475,11 +475,11 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 				return
 
 			if not isinstance(first, Node):
-				ex = TypeError(f"First element in parameter 'nodes' is not of type Node.")
+				ex = TypeError("First element in parameter 'nodes' is not of type Node.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(first)}'.")
 				raise ex
 			elif first._linkedList is not None:
-				raise NotInSameListError(f"First element in parameter 'nodes' is assigned to different list.")
+				raise NotInSameListError("First element in parameter 'nodes' is assigned to different list.")
 
 			position = 1
 			first._linkedList = self
@@ -565,15 +565,15 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		:raises NotInSameListError: If parameter 'node' is already part of another linked list.
 		"""
 		if node is None:
-			raise ValueError(f"Parameter 'node' is None.")
+			raise ValueError("Parameter 'node' is None.")
 
 		if not isinstance(node, Node):
-			ex = TypeError(f"Parameter 'node' is not of type Node.")
+			ex = TypeError("Parameter 'node' is not of type Node.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
-			raise NotInSameListError(f"Parameter 'node' belongs to another linked list.")
+			raise NotInSameListError("Parameter 'node' belongs to another linked list.")
 
 		node._linkedList = self
 		node._previousNode = None
@@ -595,15 +595,15 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		:raises NotInSameListError: If parameter 'node' is already part of another linked list.
 		"""
 		if node is None:
-			raise ValueError(f"Parameter 'node' is None.")
+			raise ValueError("Parameter 'node' is None.")
 
 		if not isinstance(node, Node):
-			ex = TypeError(f"Parameter 'node' is not of type Node.")
+			ex = TypeError("Parameter 'node' is not of type Node.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
 			raise ex
 
 		if node._linkedList is not None:
-			raise NotInSameListError(f"Parameter 'node' belongs to another linked list.")
+			raise NotInSameListError("Parameter 'node' belongs to another linked list.")
 
 		node._linkedList = self
 		node._nextNode = None
@@ -623,7 +623,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		:raises EmptyListError: If linked list is empty.
 		"""
 		if self._firstNode is None:
-			raise EmptyListError(f"Linked list is empty.")
+			raise EmptyListError("Linked list is empty.")
 
 		node = self._firstNode
 		self._firstNode = node._nextNode
@@ -646,7 +646,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		:raises EmptyListError: If linked list is empty.
 		"""
 		if self._lastNode is None:
-			raise EmptyListError(f"Linked list is empty.")
+			raise EmptyListError("Linked list is empty.")
 
 		node = self._lastNode
 		self._lastNode = node._previousNode
@@ -678,7 +678,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		if self._firstNode is None or self._lastNode is None:
 			ex = ValueError("Parameter 'position' is out of range.")
-			ex.add_note(f"Linked list is empty.")
+			ex.add_note("Linked list is empty.")
 			raise ex
 
 		if index == 0:
@@ -700,7 +700,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 				node = node._nextNode
 				pos += 1
 			else:  # pragma: no cover
-				raise InternalError(f"Node position not found.")
+				raise InternalError("Node position not found.")
 		else:
 			pos = self._count - 2
 			node = self._lastNode._previousNode
@@ -711,7 +711,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 				node = node._previousNode
 				pos -= 1
 			else:  # pragma: no cover
-				raise InternalError(f"Node position not found.")
+				raise InternalError("Node position not found.")
 
 	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
 		"""
@@ -724,7 +724,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		:raises NodeNotFoundError: If no node matches the predicate.
 		"""
 		if self._firstNode is None:
-			raise EmptyListError(f"Linked list is empty.")
+			raise EmptyListError("Linked list is empty.")
 
 		if not reverse:
 			node = self._firstNode
@@ -734,7 +734,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 				node = node._nextNode
 			else:
-				raise NodeNotFoundError(f"Node not found.")
+				raise NodeNotFoundError("Node not found.")
 		else:
 			node = self._lastNode
 			while node is not None:
@@ -743,7 +743,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 				node = node._previousNode
 			else:
-				raise NodeNotFoundError(f"Node not found.")
+				raise NodeNotFoundError("Node not found.")
 
 		return node
 

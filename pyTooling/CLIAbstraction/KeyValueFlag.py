@@ -89,11 +89,11 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument[str], pattern="{0}{1}={2
 
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):
-				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
+				ex = TypeError("Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
 				raise ex
 			elif not isinstance(value, str):
-				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
+				ex = TypeError("Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 
@@ -118,11 +118,11 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument[str], pattern="{0}{1}={2
 		innerDict.clear()
 		for key, value in keyValuePairs.items():
 			if not isinstance(key, str):
-				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
+				ex = TypeError("Parameter 'keyValuePairs' contains a pair, where the key is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
 				raise ex
 			elif not isinstance(value, str):
-				ex = TypeError(f"Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
+				ex = TypeError("Parameter 'keyValuePairs' contains a pair, where the value is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 
@@ -137,7 +137,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument[str], pattern="{0}{1}={2
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		return [self._pattern.format(self._name, key, value) for key, value in self._value.items()]
 

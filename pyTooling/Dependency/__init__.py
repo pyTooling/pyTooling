@@ -235,7 +235,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		if isinstance(package, str):
 			package = self._package._storage._packages[package]
 		elif not isinstance(package, Package):
-			ex = TypeError(f"Parameter 'package' is not of type 'str' nor 'Package'.")
+			ex = TypeError("Parameter 'package' is not of type 'str' nor 'Package'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(package)}'.")
 			raise ex
 
@@ -246,7 +246,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 				if isinstance(v, str):
 					v = SemanticVersion.Parse(v)
 				elif not isinstance(v, SemanticVersion):
-					ex = TypeError(f"Parameter 'version' contains an element, which is not of type 'str' nor 'SemanticVersion'.")
+					ex = TypeError("Parameter 'version' contains an element, which is not of type 'str' nor 'SemanticVersion'.")
 					ex.add_note(f"Got type '{getFullyQualifiedName(v)}'.")
 					raise ex#
 
@@ -255,7 +255,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 			return
 		elif not isinstance(version, SemanticVersion):
-			ex = TypeError(f"Parameter 'version' is not of type 'str' nor 'SemanticVersion'.")
+			ex = TypeError("Parameter 'version' is not of type 'str' nor 'SemanticVersion'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
 			raise ex
 

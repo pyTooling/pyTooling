@@ -119,7 +119,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 	:raises FileNotFoundError: If README file does not exist.
 	"""
 	if not isinstance(readmeFile, Path):
-		ex = TypeError(f"Parameter 'readmeFile' is not of type 'Path'.")
+		ex = TypeError("Parameter 'readmeFile' is not of type 'Path'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 
@@ -346,7 +346,7 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	:raises ToolingException:  If a dunder variable has an unexpected format.
 	"""
 	if not isinstance(sourceFile, Path):
-		ex = TypeError(f"Parameter 'sourceFile' is not of type 'Path'.")
+		ex = TypeError("Parameter 'sourceFile' is not of type 'Path'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(sourceFile)}'.")
 		raise ex
 
@@ -384,15 +384,15 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 					_email = value.value
 			if isinstance(target, Name) and target.id == "__keywords__":
 				if isinstance(value, Constant) and isinstance(value.value, str):           # pragma: no cover
-					raise TypeError(f"Variable '__keywords__' should be a list of strings.")
+					raise TypeError("Variable '__keywords__' should be a list of strings.")
 				elif isinstance(value, ast_List):
 					for const in value.elts:
 						if isinstance(const, Constant) and isinstance(const.value, str):
 							_keywords.append(const.value)
 						else:                                                                  # pragma: no cover
-							raise TypeError(f"List elements in '__keywords__' should be strings.")
+							raise TypeError("List elements in '__keywords__' should be strings.")
 				else:                                                                      # pragma: no cover
-					raise TypeError(f"Used unsupported type for variable '__keywords__'.")
+					raise TypeError("Used unsupported type for variable '__keywords__'.")
 			if isinstance(target, Name) and target.id == "__license__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					_license = value.value
@@ -672,7 +672,7 @@ def DescribePythonPackage(
 
 	# Read README for upload to PyPI
 	if not isinstance(readmeFile, Path):
-		ex = TypeError(f"Parameter 'readmeFile' is not of type 'Path'.")
+		ex = TypeError("Parameter 'readmeFile' is not of type 'Path'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 	elif not readmeFile.exists():
@@ -682,7 +682,7 @@ def DescribePythonPackage(
 
 	# Read requirements file and add them to package dependency list (remove duplicates)
 	if not isinstance(requirementsFile, Path):
-		ex = TypeError(f"Parameter 'requirementsFile' is not of type 'Path'.")
+		ex = TypeError("Parameter 'requirementsFile' is not of type 'Path'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
 		raise ex
 	elif not requirementsFile.exists():
@@ -693,7 +693,7 @@ def DescribePythonPackage(
 	extraRequirements: dict[str, list[str]] = {}
 	if documentationRequirementsFile is not None:
 		if not isinstance(documentationRequirementsFile, Path):
-			ex = TypeError(f"Parameter 'documentationRequirementsFile' is not of type 'Path'.")
+			ex = TypeError("Parameter 'documentationRequirementsFile' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(documentationRequirementsFile)}'.")
 			raise ex
 		elif not documentationRequirementsFile.exists():
@@ -706,7 +706,7 @@ def DescribePythonPackage(
 
 	if unittestRequirementsFile is not None:
 		if not isinstance(unittestRequirementsFile, Path):
-			ex = TypeError(f"Parameter 'unittestRequirementsFile' is not of type 'Path'.")
+			ex = TypeError("Parameter 'unittestRequirementsFile' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(unittestRequirementsFile)}'.")
 			raise ex
 		elif not unittestRequirementsFile.exists():
@@ -719,7 +719,7 @@ def DescribePythonPackage(
 
 	if packagingRequirementsFile is not None:
 		if not isinstance(packagingRequirementsFile, Path):
-			ex = TypeError(f"Parameter 'packagingRequirementsFile' is not of type 'Path'.")
+			ex = TypeError("Parameter 'packagingRequirementsFile' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(packagingRequirementsFile)}'.")
 			raise ex
 		elif not packagingRequirementsFile.exists():
@@ -739,7 +739,7 @@ def DescribePythonPackage(
 
 	# Read __author__, __email__, __version__ from source file
 	if not isinstance(sourceFileWithVersion, Path):
-		ex = TypeError(f"Parameter 'sourceFileWithVersion' is not of type 'Path'.")
+		ex = TypeError("Parameter 'sourceFileWithVersion' is not of type 'Path'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(sourceFileWithVersion)}'.")
 		raise ex
 	elif not sourceFileWithVersion.exists():
@@ -749,7 +749,7 @@ def DescribePythonPackage(
 
 	# Scan for packages and source files
 	if debug:
-		print(f"[pyTooling.Packaging] Exclude list for find_(namespace_)packages:")
+		print("[pyTooling.Packaging] Exclude list for find_(namespace_)packages:")
 	exclude = []
 	rootNamespace = firstElement(packageName.split("."))
 	for dirName in (dirItem.name for dirItem in os_scandir(Path.cwd()) if dirItem.is_dir() and "." not in dirItem.name and dirItem.name != rootNamespace):
@@ -779,7 +779,7 @@ def DescribePythonPackage(
 
 	# Translate license to classifier
 	if not isinstance(license, License):
-		ex = TypeError(f"Parameter 'license' is not of type 'License'.")
+		ex = TypeError("Parameter 'license' is not of type 'License'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 	classifiers.append(license.PythonClassifier)
