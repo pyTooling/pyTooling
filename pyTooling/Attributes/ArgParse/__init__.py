@@ -125,8 +125,13 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Initializes a command line argument.
+
+		This base-class collects the parameters :meth:`~argparse.ArgumentParser.add_argument` will be called with; the
+		derived classes assemble them from named parameters instead.
+
+		:param args:   Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
+		:param kwargs: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
 		"""
 		super().__init__()
 		self._args =   args
@@ -162,7 +167,9 @@ class CommandGroupAttribute(ArgParseAttribute):
 
 	def __init__(self, groupName: str) -> None:
 		"""
-		The constructor expects a 'groupName' which can be used to group sub-commands for better readability.
+		Initializes a command group attribute.
+
+		:param groupName: Name of the group the annotated commands are listed under in the help page.
 		"""
 		super().__init__()
 		self.__groupName = groupName
@@ -246,8 +253,12 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 	_kwargs:  dict[str, Any]   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
 
 	def __init__(self, command: str, help: str = "", **kwargs: Any) -> None:
-		"""The constructor expects a 'command' and an optional list of named parameters
-		(keyword arguments) which are passed without modification to :meth:`~ArgumentParser.add_subparsers`.
+		"""
+		Initializes a command handler attribute.
+
+		:param command: Name of the sub-command on the command line.
+		:param help:    Optional, help text shown for the sub-command. Default: ``""``.
+		:param kwargs:  Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
 		"""
 		super().__init__()
 		self._command = command
