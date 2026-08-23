@@ -1056,6 +1056,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 
 # ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
 # ==================================================================================================================== #
 TreeException = TreeError

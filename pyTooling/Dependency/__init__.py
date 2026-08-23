@@ -792,7 +792,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 
 
 # ==================================================================================================================== #
-# Deprecated names, kept for backwards compatibility. Removed in v10.0.0.
+# Deprecated names, kept for backwards compatibility. Removed in v11.0.0.
 # ==================================================================================================================== #
 DependencyException         = DependencyError
 NoSessionAvailableException = NoSessionAvailableError

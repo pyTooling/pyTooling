@@ -22,7 +22,8 @@ single clause.
    package's own base-exception — :exc:`ToolingException` here.
 
    The former names (:pycode:`ConfigurationException`, :pycode:`MissingDependencyException`, …) remain available as
-   deprecated aliases and are removed in ``v10.0.0``.
+   deprecated aliases and are removed in ``v11.0.0``. ``v10.0.0`` is the release to move to the new names in: both
+   spellings work there.
 
 
 .. _EXCEPTION/Base:
