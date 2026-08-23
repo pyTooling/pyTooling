@@ -666,8 +666,8 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		"""
 		Access a node in the linked list by position.
 
-		:param index:           Node position to access.
-		:returns:               Node at the given position.
+		:param index:          Node position to access.
+		:returns:              Node at the given position.
 		:raises ValueError:    If parameter 'position' is out of range, which includes an empty list.
 		:raises InternalError: If the node at that position could not be reached, so the list's internal state is
 		                       inconsistent.
