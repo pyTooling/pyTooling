@@ -21,9 +21,6 @@ single clause.
    exception names (if the exception actually is an error)"*. The suffix ``***Exception`` is reserved for a
    package's own base-exception — :exc:`ToolingException` here.
 
-   The former names (:pycode:`ConfigurationException`, :pycode:`MissingDependencyException`, …) were kept as
-   deprecated aliases in ``v9.x`` and are **removed** in ``v10.0.0``. Rename at the use site.
-
 
 .. _EXCEPTION/Base:
 
