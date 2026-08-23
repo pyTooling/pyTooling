@@ -604,8 +604,8 @@ class ExtendedType(type):
 		:param members:         The dictionary of members for the constructed class.
 		:param slots:           Optional, if ``True``, store object attributes in :term:`__slots__ <slots>` instead of
 		                        ``__dict__``.
-		:param mixin:          Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
-		                       ``slots``
+		:param mixin:           Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
+		                        ``slots``
 		                        is true. If ``None``, preserve behavior of primary base-class.
 		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as

@@ -1400,7 +1400,7 @@ class Vertex(
 		"""
 		Delete the outbound edge to the given vertex.
 
-		:param destination: The vertex the edge points to.
+		:param destination:        The vertex the edge points to.
 		:raises EdgeNotFoundError: If no outbound edge to that vertex exists.
 		"""
 		for edge in self._outboundEdges:
@@ -1415,7 +1415,7 @@ class Vertex(
 		"""
 		Delete the inbound edge from the given vertex.
 
-		:param source:      The vertex the edge comes from.
+		:param source:             The vertex the edge comes from.
 		:raises EdgeNotFoundError: If no inbound edge from that vertex exists.
 		"""
 		for edge in self._inboundEdges:
@@ -1430,7 +1430,7 @@ class Vertex(
 		"""
 		Delete the outbound link to the given vertex.
 
-		:param destination: The vertex the link points to.
+		:param destination:        The vertex the link points to.
 		:raises LinkNotFoundError: If no outbound link to that vertex exists.
 		"""
 		for link in self._outboundLinks:
@@ -1445,7 +1445,7 @@ class Vertex(
 		"""
 		Delete the inbound link from the given vertex.
 
-		:param source:      The vertex the link comes from.
+		:param source:             The vertex the link comes from.
 		:raises LinkNotFoundError: If no inbound link from that vertex exists.
 		"""
 		for link in self._inboundLinks:
