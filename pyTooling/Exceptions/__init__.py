@@ -268,7 +268,7 @@ class MissingDependencyError(ImportError):
 		The extra comes first, because it installs the package *and* records why it is needed. Both commands are
 		plain text and need no terminal support: an application that cannot even import :mod:`pyTooling.TerminalUI` -
 		because *colorama* is the missing package - can print them itself, and
-		:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyException` formats them when it can.
+		:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` formats them when it can.
 
 		:returns: One command line per installation option, most specific first.
 		"""

@@ -195,7 +195,7 @@ dependency raises this exception, and it carries what to install and which extra
      raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 
 :class:`~pyTooling.TerminalUI.TerminalApplication` prints it with
-:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyException`, which names the package and
+:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError`, which names the package and
 the command that installs it — and, unlike the other exception printers, does *not* invite a bug report, because
 nothing is wrong with the program.
 

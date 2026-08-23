@@ -135,7 +135,7 @@ class MissingDependency(Testcase):
 		application = Application()
 		application._stderr = StringIO()
 		with self.assertRaises(SystemExit) as context:
-			application.PrintMissingDependencyException(ex)
+			application.PrintMissingDependencyError(ex)
 
 		self.assertEqual(TerminalApplication.MISSING_DEPENDENCY_EXIT_CODE, context.exception.code)
 		return application._stderr.getvalue()

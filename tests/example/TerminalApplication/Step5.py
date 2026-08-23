@@ -63,7 +63,7 @@ def main() -> NoReturn:
 	except NotImplementedError as ex:
 		program.PrintNotImplementedError(ex)                # exit code 240, an unimplemented function was called
 	except MissingDependencyError as ex:
-		program.PrintMissingDependencyException(ex)         # exit code 242, an installation problem
+		program.PrintMissingDependencyError(ex)         # exit code 242, an installation problem
 	except Exception as ex:
 		program.PrintException(ex)                          # exit code 241, an unexpected exception
 
