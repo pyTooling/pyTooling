@@ -30,11 +30,12 @@
 """
 Unit tests for the ``expects`` class keyword argument of :class:`pyTooling.MetaClasses.ExtendedType`.
 
-A mixin-class lists the members it needs from whichever class it is mixed into. The expectation is resolved when the
-class is constructed and rejected on instantiation, the same way an abstract class is handled.
+An expectation is declared in one of two places: a class lists the members it needs from whichever class it is mixed
+into (``expects=``), or a single method lists what it needs from its class (:deco:`expects`). The first rejects
+instantiation, the second rejects that one call.
 """
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
-from pyTooling.MetaClasses import abstractclass, abstractmethod, mixin
+from pyTooling.MetaClasses import abstractclass, abstractmethod, expects, mixin
 from pyTooling.Testing     import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -228,3 +229,85 @@ class Inheritance(Testcase):
 		Recreated = mixin(Decorated)
 
 		self.assertEqual({"Write": "Decorated"}, Recreated.__expectedMembers__)
+
+
+class Terminal(metaclass=ExtendedType, slots=True):
+	"""A class that is perfectly usable on its own, with one method needing what a mixin contributes."""
+
+	@expects("MainParser", "SubParsers")
+	def PrintHelp(self) -> str:
+		return f"help from {self.MainParser}"
+
+	def Write(self, message: str) -> bool:
+		return True
+
+
+class ParserMixin(metaclass=ExtendedType, mixin=True):
+	"""A mixin-class contributing the two members ``PrintHelp`` needs."""
+
+	MainParser:  str
+	SubParsers:  dict
+
+
+class ExpectingMethods(Testcase):
+	"""A method names what it needs from its class, and only that method is rejected."""
+
+	def test_TheClassStaysUsable(self) -> None:
+		terminal = Terminal()
+
+		self.assertTrue(terminal.Write("still works"))
+
+	def test_CallingItReportsTheMissingMembers(self) -> None:
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			Terminal().PrintHelp()
+
+		self.assertEqual(
+			"Method 'Terminal.PrintHelp()' expects members class 'Terminal' doesn't provide.",
+			str(exceptionCapture.exception)
+		)
+		self.assertIn("Missing 'MainParser'.", exceptionCapture.exception.__notes__)
+		self.assertIn("Missing 'SubParsers'.", exceptionCapture.exception.__notes__)
+
+	def test_TheMarkerIsOnTheMethod(self) -> None:
+		self.assertEqual(("MainParser", "SubParsers"), Terminal.PrintHelp.__wrapped__.__expectedMembers__)
+
+	def test_WithTheMixinTheOriginalMethodIsRestored(self) -> None:
+		class Application(Terminal, ParserMixin):
+			def __init__(self) -> None:
+				self.MainParser = "<parser>"
+				self.SubParsers = {}
+
+		self.assertIs(Terminal.__dict__["PrintHelp"].__wrapped__, Application.__dict__["PrintHelp"])
+		self.assertEqual("help from <parser>", Application().PrintHelp())
+
+	def test_NoWrapperWhenTheExpectationIsFulfilled(self) -> None:
+		"""A fulfilled expectation costs nothing per call - the class holds the original function."""
+
+		class Application(Terminal, ParserMixin):
+			pass
+
+		self.assertFalse(hasattr(Application.PrintHelp, "__raises_unfulfilled_expectation_error__"))
+
+	def test_ASubclassInheritsTheReplacement(self) -> None:
+		class Derived(Terminal):
+			pass
+
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			Derived().PrintHelp()
+
+		self.assertEqual(
+			"Method 'Derived.PrintHelp()' expects members class 'Derived' doesn't provide.",
+			str(exceptionCapture.exception)
+		)
+
+	def test_ASubclassProvidingOneMemberReportsOnlyTheOther(self) -> None:
+		class HalfDerived(Terminal):
+			MainParser: str
+
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			HalfDerived().PrintHelp()
+
+		self.assertEqual(("Missing 'SubParsers'.", ), tuple(exceptionCapture.exception.__notes__)[:1])
+
+	def test_AMethodWithoutTheMarkerIsUntouched(self) -> None:
+		self.assertIs(Terminal.__dict__["Write"], Terminal.Write)
