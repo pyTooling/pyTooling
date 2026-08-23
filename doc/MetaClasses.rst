@@ -44,6 +44,60 @@ Mixin
 *****
 
 
+.. _META/ExpectedMembers:
+
+Expected Members
+****************
+
+A mixin-class regularly uses members it doesn't define itself: it expects them from whichever class it is mixed
+into. Nothing states that contract, so a host class that forgets one fails with an :exc:`AttributeError` on first
+access - somewhere else entirely, and only if that code path runs.
+
+The ``expects`` class keyword argument names those members.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from pyTooling.MetaClasses import ExtendedType
+
+   class ReportMixin(metaclass=ExtendedType, mixin=True, expects=("_counter", "Write")):
+     def Report(self) -> bool:
+       return self.Write(f"{self._counter}")
+
+   class Application(TerminalApplication, ReportMixin):
+     pass
+
+   Application()   # fine, if 'TerminalApplication' provides '_counter' and 'Write'
+
+A member is provided when it is reachable on the class: a method, a property, a class variable, or a field, for
+which :class:`~pyTooling.MetaClasses.ExtendedType` created a slot descriptor when the mixin joined the primary
+inheritance line. So a field declared as an annotation counts, and both kinds of member are covered by one list.
+
+When something is missing, instantiating the class raises an
+:exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError` naming every missing member and the class expecting it:
+
+.. code-block:: text
+
+   pyTooling.MetaClasses.UnfulfilledExpectationError: Class 'Application' doesn't provide every expected member.
+   Missing 'Write', expected by 'ReportMixin'.
+   A mixin-class names what it needs from its host class with the 'expects' class keyword argument.
+
+Which members are missing is computed once, when the class is constructed, and kept in ``__missingMembers__``; the
+exception is raised on instantiation. That is the same mechanism an :ref:`abstract class <META/AbstractClass>` uses,
+and it has the same consequence: a class may stay incomplete as long as nothing instantiates it, so an intermediate
+class can pass an expectation on to its own subclasses. A class that fulfills it again is instantiable, without the
+intermediate class having to say anything.
+
+``expects`` is not limited to mixin-classes - any class can state what its subclasses have to provide. A
+mixin-class is the case it exists for, and a mixin-class is never itself incomplete, because it cannot provide what
+it expects from its host.
+
+.. seealso::
+
+   :ref:`@abstractmethod <META/AbstractMethod>`
+      |rarr| Mark a *method* as abstract, when the class itself declares what has to be overridden.
+
+
 .. _META/AbstractClass:
 
 Abstract Class
