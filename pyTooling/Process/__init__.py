@@ -113,7 +113,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 		_kernel32:      WinDLL
 		_processHandle: Any
 	elif CurrentPlatform.IsNativeLinux:
-		_processStatusFile: ClassVar[Path] = Path(f"/proc/self/statm")
+		_processStatusFile: ClassVar[Path] = Path("/proc/self/statm")
 
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
@@ -244,7 +244,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			ret = _libproc.proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, byref(taskInfo), sizeof(taskInfo))
 			if ret <= 0:
 				err = get_errno()
-				raise PlatformError(f"Failed to get current process' information.") from OSError(err, strerror(err), "proc_pidinfo")
+				raise PlatformError("Failed to get current process' information.") from OSError(err, strerror(err), "proc_pidinfo")
 
 			return MemoryInfo(taskInfo.pti_resident_size, taskInfo.pti_virtual_size)
 

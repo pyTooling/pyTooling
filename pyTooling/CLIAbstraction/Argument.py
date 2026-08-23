@@ -97,7 +97,7 @@ class CommandLineArgument(metaclass=ExtendedType):
 		:returns:                    Formatted argument.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
-		raise NotImplementedError(f"Method 'AsArgument' is an abstract method and must be implemented by a subclass.")
+		raise NotImplementedError("Method 'AsArgument' is an abstract method and must be implemented by a subclass.")
 
 	@abstractmethod
 	def __str__(self) -> str:  # type: ignore[empty-body]
@@ -107,7 +107,7 @@ class CommandLineArgument(metaclass=ExtendedType):
 		:returns:                    Argument formatted and enclosed in double quotes.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
-		raise NotImplementedError(f"Method '__str__' is an abstract method and must be implemented by a subclass.")
+		raise NotImplementedError("Method '__str__' is an abstract method and must be implemented by a subclass.")
 
 	@abstractmethod
 	def __repr__(self) -> str:  # type: ignore[empty-body]
@@ -119,7 +119,7 @@ class CommandLineArgument(metaclass=ExtendedType):
 		:returns:                    Argument formatted and enclosed in double quotes.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
-		raise NotImplementedError(f"Method '__repr__' is an abstract method and must be implemented by a subclass.")
+		raise NotImplementedError("Method '__repr__' is an abstract method and must be implemented by a subclass.")
 
 
 @export
@@ -261,7 +261,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		return self._pattern.format(self._name)
 
@@ -322,7 +322,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	@Value.setter
 	def Value(self, value: ValueT) -> None:
 		if value is None:
-			raise ValueError(f"Value to set is None.")
+			raise ValueError("Value to set is None.")
 
 		self._value = value
 
@@ -385,7 +385,7 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument[ValueT], Generic[Valu
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		return self._pattern.format(self._name, self._value)
 
@@ -458,7 +458,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT]
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		return (
 			self._pattern.format(self._name),
@@ -518,7 +518,7 @@ class StringListArgument(ValuedArgument[str]):
 		self._values = []
 		for value in values:
 			if not isinstance(value, str):
-				ex = TypeError(f"Parameter 'values' contains elements which are not of type 'str'.")
+				ex = TypeError("Parameter 'values' contains elements which are not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(values)}'.")
 				raise ex
 
@@ -542,7 +542,7 @@ class StringListArgument(ValuedArgument[str]):
 		self._values.clear()
 		for value in value:
 			if not isinstance(value, str):
-				ex = TypeError(f"Value contains elements which are not of type 'str'.")
+				ex = TypeError("Value contains elements which are not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 			self._values.append(value)
@@ -654,7 +654,7 @@ class PathListArgument(CommandLineArgument):
 		self._paths = []
 		for path in paths:
 			if not isinstance(path, Path):
-				ex = TypeError(f"Parameter 'paths' contains elements which are not of type 'Path'.")
+				ex = TypeError("Parameter 'paths' contains elements which are not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 				raise ex
 
@@ -678,7 +678,7 @@ class PathListArgument(CommandLineArgument):
 		self._paths.clear()
 		for path in value:
 			if not isinstance(path, Path):
-				ex = TypeError(f"Value contains elements which are not of type 'Path'.")
+				ex = TypeError("Value contains elements which are not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 				raise ex
 			self._paths.append(path)

@@ -245,20 +245,20 @@ class URL:
 		self._user = user
 
 		if password is not None and not isinstance(password, str):
-			ex = TypeError(f"Parameter 'password' is not of type 'str'.")
+			ex = TypeError("Parameter 'password' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
 			raise ex
 
 		self._password = password
 
 		if host is not None and not isinstance(host, Host):
-			ex = TypeError(f"Parameter 'host' is not of type 'Host'.")
+			ex = TypeError("Parameter 'host' is not of type 'Host'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
 			raise ex
 		self._host = host
 
 		if path is not None and not isinstance(path, Path):
-			ex = TypeError(f"Parameter 'path' is not of type 'Path'.")
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
 
@@ -266,7 +266,7 @@ class URL:
 
 		if query is not None:
 			if not isinstance(query, Mapping):
-				ex = TypeError(f"Parameter 'query' is not a mapping ('dict', ...).")
+				ex = TypeError("Parameter 'query' is not a mapping ('dict', ...).")
 				ex.add_note(f"Got type '{getFullyQualifiedName(query)}'.")
 				raise ex
 
@@ -275,7 +275,7 @@ class URL:
 			self._query = None
 
 		if fragment is not None and not isinstance(fragment, str):
-			ex = TypeError(f"Parameter 'fragment' is not of type 'str'.")
+			ex = TypeError("Parameter 'fragment' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(fragment)}'.")
 			raise ex
 

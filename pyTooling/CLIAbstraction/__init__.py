@@ -237,7 +237,7 @@ class Program(metaclass=ExtendedType, slots=True):
 					else:
 						raise CLIAbstractionError(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
-				ex = TypeError(f"Parameter 'executablePath' is not of type 'Path'.")
+				ex = TypeError("Parameter 'executablePath' is not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(executablePath)}'.")
 				raise ex
 		elif binaryDirectoryPath is not None:
@@ -259,7 +259,7 @@ class Program(metaclass=ExtendedType, slots=True):
 					else:
 						raise CLIAbstractionError(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
-				ex = TypeError(f"Parameter 'binaryDirectoryPath' is not of type 'Path'.")
+				ex = TypeError("Parameter 'binaryDirectoryPath' is not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(binaryDirectoryPath)}'.")
 				raise ex
 		else:
@@ -282,7 +282,7 @@ class Program(metaclass=ExtendedType, slots=True):
 						# self.LogDryRun(f"File check for '{fullExecutablePath}' failed. [SKIPPING]")
 			else:
 				if resolvedExecutable is None:
-					raise CLIAbstractionError(f"Program could not be found in PATH.") from FileNotFoundError(executablePath)
+					raise CLIAbstractionError("Program could not be found in PATH.") from FileNotFoundError(executablePath)
 
 				fullExecutablePath = Path(resolvedExecutable)
 				if not fullExecutablePath.exists():
@@ -572,7 +572,7 @@ class Executable(Program):  # (ILogable):
 		   :meth:`Terminate` - Terminate the child-process.
 		"""
 		if self._process is None:
-			raise CLIAbstractionError(f"Process not yet started.")
+			raise CLIAbstractionError("Process not yet started.")
 
 		try:
 			self._exitCode = self._process.wait(timeout=timeout)

@@ -205,7 +205,7 @@ class Node(Abstract_Node):
 			else:
 				typeName = getFullyQualifiedName(value)
 				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
-				ex.add_note(f"The YAML parser returned a value that is neither a scalar (str, int, float), nor a map or sequence.")
+				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float), nor a map or sequence.")
 				raise ex
 
 			self._cache[key] = value
@@ -244,7 +244,7 @@ class Node(Abstract_Node):
 				result += rawValue[:beginPos]
 				if beginPos + 1 >= len(rawValue):
 					ex = InterpolationError(f"Dangling '$' at the end of value '{value}'.")
-					ex.add_note(f"Use '$$' to escape a literal dollar sign.")
+					ex.add_note("Use '$$' to escape a literal dollar sign.")
 					raise ex
 				elif rawValue[beginPos + 1] == "$":
 					result  += "$"

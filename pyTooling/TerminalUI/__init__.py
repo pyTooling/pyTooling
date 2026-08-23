@@ -621,9 +621,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value == other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -637,9 +637,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value != other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __lt__(self, other: Any) -> bool:
@@ -653,9 +653,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value < other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
@@ -669,9 +669,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value <= other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex = TypeError("Second operand is not supported by <= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __gt__(self, other: Any) -> bool:
@@ -685,9 +685,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >	other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __ge__(self, other: Any) -> bool:
@@ -701,9 +701,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >= other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 
