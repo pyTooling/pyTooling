@@ -1416,6 +1416,9 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Print a formatted line to the underlying terminal/console offered by the operating system.
 
+		The message is indented by :attr:`INDENT` repeated :attr:`Line.Indent` times. The indentation is applied to the
+		message, not to the whole line, so the severity markers stay in one column.
+
 		:param line: Line object to indent, format and print.
 		:returns:    True, if line was actually written.
 		"""
@@ -1424,7 +1427,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 		self._lines.append(line)
 		for method in self._LOG_LEVEL_ROUTING__[line.Severity]:
-			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=line.Message, **self.Foreground), end="\n" if line.AppendLinebreak else "")
+			indentedMessage = self.INDENT * line.Indent + line.Message
+			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=indentedMessage, **self.Foreground), end="\n" if line.AppendLinebreak else "")
 
 		return True
 

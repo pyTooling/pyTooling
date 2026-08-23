@@ -712,3 +712,46 @@ class DataToStdOut(Testcase):
 
 		self.assertEqual(0, out.tell())
 		self.assertEqual(0, err.tell())
+
+
+class Indentation(Testcase):
+	"""The indentation recorded on a line is applied when the line is printed."""
+
+	@staticmethod
+	def _Capture(program: TerminalApplication) -> str:
+		"""Redirect the application's STDOUT into a buffer and return what was written."""
+		program._stdout = StringIO()
+		return program._stdout
+
+	def test_IndentIsPrinted(self) -> None:
+		class TestApplication(TerminalApplication):    # own class: the base class is a singleton
+			pass
+
+		program = TestApplication()
+		buffer = self._Capture(program)
+		program.WriteNormal("indented", indent=2)
+
+		self.assertEqual(2, program.Lines[0].Indent)
+		self.assertIn(f"{TerminalApplication.INDENT * 2}indented", buffer.getvalue())
+
+	def test_NoIndentPrintsNoLeadingSpace(self) -> None:
+		class TestApplication(TerminalApplication):    # own class: the base class is a singleton
+			pass
+
+		program = TestApplication()
+		buffer = self._Capture(program)
+		program.WriteNormal("plain")
+
+		self.assertNotIn(f"{TerminalApplication.INDENT}plain", buffer.getvalue())
+
+	def test_BaseIndentAddsToTheLineIndent(self) -> None:
+		class TestApplication(TerminalApplication):    # own class: the base class is a singleton
+			pass
+
+		program = TestApplication()
+		buffer = self._Capture(program)
+		program.BaseIndent = 2
+		program.WriteNormal("deeper", indent=3)
+
+		self.assertEqual(5, program.Lines[0].Indent)
+		self.assertIn(f"{TerminalApplication.INDENT * 5}deeper", buffer.getvalue())
