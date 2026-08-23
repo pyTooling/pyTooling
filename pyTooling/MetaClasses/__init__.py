@@ -1529,7 +1529,7 @@ class ExtendedType(type):
 			ex = UnfulfilledExpectationError(f"Class '{cls.__name__}' doesn't provide every expected member.")
 			for memberName in newClass.__missingMembers__:
 				ex.add_note(f"Missing '{memberName}', expected by '{newClass.__expectedMembers__[memberName]}'.")
-			ex.add_note(f"A mixin-class names what it needs from its host class with the 'expects' class keyword argument.")
+			ex.add_note("A mixin-class names what it needs from its host class with the 'expects' class keyword argument.")
 			raise ex
 
 		unfulfilled_new.__raises_unfulfilled_expectation_error__ = True
