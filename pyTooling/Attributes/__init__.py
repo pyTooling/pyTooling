@@ -102,8 +102,13 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 	# Ensure each derived class has its own instances of class variables.
 	def __init_subclass__(cls, **kwargs: Any) -> None:
 		"""
-		Ensure each derived class has its own instance of ``_functions``, ``_classes`` and ``_methods`` to register the
-		usage of that Attribute.
+		Ensure each derived attribute class gets its own registry of annotated entities.
+
+		The registries :attr:`_functions`, :attr:`_classes` and :attr:`_methods` are class variables, so a derived
+		attribute class would otherwise share the base-class' lists and report entities it was never attached to. Fresh
+		lists are assigned per derived class to prevent that.
+
+		:param kwargs: Class keyword arguments forwarded to the base-class.
 		"""
 		super().__init_subclass__(**kwargs)
 		cls._functions = []
@@ -242,9 +247,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope:     Optional, class or module the methods' classes have to be nested in or defined in; ``None``
-		                  accepts every method.
-		:returns:         A sequence of methods where this attribute is attached to.
+		:param scope: Optional, class or module the methods' classes have to be nested in or defined in; ``None``
+		              accepts every method.
+		:returns:     A sequence of methods where this attribute is attached to.
 		"""
 		if scope is None:
 			for c in cls._methods:
@@ -262,7 +267,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		:param method:            Method to search attributes for.
 		:param includeSubClasses: Optional, if ``True``, attributes of derived attribute classes are included too.
 		:returns:                 Tuple of attached attributes of this kind.
-		:raises TypeError:
+		:raises TypeError:        If the method's attribute field is not a list.
 		"""
 		if hasattr(method, ATTRIBUTES_MEMBER_NAME):
 			attributes = getattr(method, ATTRIBUTES_MEMBER_NAME)
