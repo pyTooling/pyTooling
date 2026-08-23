@@ -272,9 +272,13 @@ class readonly(property, Generic[_ReturnType]):
 
 @export
 @unique
-class DocStringMergeOrder(Enum):
+class DocStringMergeStrategy(Enum):
 	"""
-	Order in which :func:`InheritDocString` arranges the base-class' and the derived entity's doc-strings.
+	Strategy :func:`InheritDocString` follows when it combines the base-class' and the derived entity's doc-strings.
+
+	A doc-string's **summary** is its first paragraph - the text up to the first blank line. Whatever follows is its
+	**body**. A strategy naming *WithoutSummary* drops the summary of the doc-string it is applied to, because the other
+	doc-string already provides one.
 
 	.. seealso::
 
@@ -282,40 +286,64 @@ class DocStringMergeOrder(Enum):
 	      |rarr| Copy or merge a base-class' doc-string into the derived entity.
 	"""
 
-	BaseFirst =    0  #: The base-class' doc-string comes first, the derived entity's doc-string second.
-	DerivedFirst = 1  #: The derived entity's doc-string comes first, the base-class' doc-string second.
+	SummaryOnly =                 0  #: The base-class' summary, then the derived entity's doc-string.
+	BaseLast =                    1  #: The derived entity's doc-string, then the base-class' doc-string.
+	BaseLastWithoutSummary =      2  #: The derived entity's doc-string, then the base-class' body.
+	BaseFirst =                   3  #: The base-class' doc-string, then the derived entity's doc-string.
+	BaseInBetweenWithoutSummary = 4  #: The derived entity's summary, the base-class' body, then the derived body.
+
+
+def _SplitDocString(docString: Nullable[str]) -> tuple[str, str]:
+	"""
+	Split a doc-string into its summary and its body.
+
+	The doc-string is dedented with :func:`inspect.cleandoc` first. The summary is the first paragraph, the body is
+	whatever follows the first blank line. Both are empty strings if the doc-string is ``None``, and the body is an empty
+	string if the doc-string is a single paragraph.
+
+	:param docString: The doc-string to split, or ``None``.
+	:returns:         A tuple of summary and body.
+	"""
+	if docString is None:
+		return "", ""
+
+	summary, _, body = cleandoc(docString).partition("\n\n")
+	return summary, body
 
 
 @export
 def InheritDocString(
 	baseClass: type,
-	merge: bool = False,
-	summaryOnly: bool = False,
-	order: DocStringMergeOrder = DocStringMergeOrder.BaseFirst,
+	strategy: DocStringMergeStrategy = DocStringMergeStrategy.BaseLast,
 	prefix: str = "",
 	interfix: str = "\n\n",
 	postfix: str = ""
 ) -> Callable[[Func | type], Func | type]:
 	"""
-	Copy the doc-string from given base-class to the class or method this decorator is applied to.
+	Merge the doc-string from given base-class into the class or method this decorator is applied to.
 
-	By default, the base-class' doc-string *replaces* the doc-string of the decorated class or method. If ``merge`` is
-	enabled, both doc-strings are combined instead, so a derived entity can add what is specific to it without repeating
-	the description it inherits.
+	The decorated entity keeps what is specific to it and inherits the rest, so a description doesn't have to be
+	repeated. Which parts are taken from which doc-string, and in which order they are arranged, is selected with
+	``strategy``; by default the base-class' doc-string is appended to the derived entity's doc-string
+	(:attr:`~DocStringMergeStrategy.BaseLast`).
 
-	When merging, both doc-strings are dedented with :func:`inspect.cleandoc` before they are combined. This matters for
-	Python versions before 3.13, where the compiler does not strip a doc-string's indentation: combining a tab-indented
+	A derived entity without a doc-string of its own inherits the base-class' doc-string unchanged - that is the plain
+	copy this decorator started out as, and it needs no special strategy.
+
+	Both doc-strings are dedented with :func:`inspect.cleandoc` before they are combined. This matters for Python
+	versions before 3.13, where the compiler does not strip a doc-string's indentation: combining a tab-indented
 	base-class doc-string with a space-indented derived doc-string would otherwise leave the first part indented relative
 	to the second, which renders as a block quote.
 
-	The merged doc-string is assembled as ``prefix + first + interfix + second + postfix``. If either doc-string is
-	missing, that part and the ``interfix`` are omitted. If both are missing, the doc-string is left unchanged.
+	The result is assembled as ``prefix + part + interfix + part ... + postfix``. Parts that are empty - a missing
+	doc-string, or a body the strategy asked for that doesn't exist - are omitted together with their ``interfix``. If
+	nothing remains, the decorated entity's doc-string is left unchanged.
 
 	.. admonition:: ``example.py``
 
 	   .. code-block:: python
 
-	      from pyTooling.Decorators import InheritDocString, DocStringMergeOrder
+	      from pyTooling.Decorators import InheritDocString, DocStringMergeStrategy
 
 	      class Class1:
 	        def method(self):
@@ -332,35 +360,30 @@ def InheritDocString(
 
 	      @InheritDocString(
 	        Class1,
-	        merge=True,
-	        order=DocStringMergeOrder.DerivedFirst,
+	        DocStringMergeStrategy.BaseLastWithoutSummary,
 	        interfix="\\n\\n**Inherited:**\\n\\n"
 	      )
 	      class Class2(Class1):
 	        '''What is specific to Class2.'''
 
-	:param baseClass:   Base-class to copy the doc-string from to the class or method being decorated.
-	:param merge:       Optional, if ``True``, combine both doc-strings instead of replacing the derived one; defaults
-	                    to ``False``.
-	:param summaryOnly: Optional, if ``True``, take only the base doc-string's **summary** - its first paragraph -
-	                    instead of the whole text; defaults to ``False``.
-	:param order:       Optional, order in which both doc-strings are arranged when merging; defaults to
-	                    :attr:`~DocStringMergeOrder.BaseFirst`.
-	:param prefix:      Optional, text inserted in front of the merged doc-string; defaults to an empty string.
-	:param interfix:    Optional, text inserted between both doc-strings; defaults to a blank line (``"\\n\\n"``).
-	:param postfix:     Optional, text appended to the merged doc-string; defaults to an empty string.
-	:returns:           Decorator function that copies or merges the doc-string.
+	:param baseClass: Base-class to copy the doc-string from to the class or method being decorated.
+	:param strategy:  Optional, which parts of both doc-strings are used and in which order they are arranged; defaults
+	                  to :attr:`~DocStringMergeStrategy.BaseLast`.
+	:param prefix:    Optional, text inserted in front of the merged doc-string; defaults to an empty string.
+	:param interfix:  Optional, text inserted between the parts; defaults to a blank line (``"\\n\\n"``).
+	:param postfix:   Optional, text appended to the merged doc-string; defaults to an empty string.
+	:returns:         Decorator function that merges the doc-string.
 
 	.. seealso::
 
-	   :class:`DocStringMergeOrder`
-	      |rarr| Selects which doc-string comes first when both are merged.
+	   :class:`DocStringMergeStrategy`
+	      |rarr| Selects which parts of both doc-strings are merged, and in which order.
 	"""
 	def decorator(param: Func | type) -> Func | type:
 		"""
-		Decorator function, which copies or merges the doc-string from base-class' method to method ``m``.
+		Decorator function, which merges the doc-string from base-class' method into method ``m``.
 
-		:param param: Method to which the doc-string from a method in ``baseClass`` (with same className) should be copied.
+		:param param: Method to which the doc-string from a method in ``baseClass`` (with same className) should be merged.
 		:returns:     Same method, but with overwritten doc-string field (``__doc__``).
 		"""
 		if isinstance(param, type):
@@ -370,22 +393,27 @@ def InheritDocString(
 		else:
 			return param
 
-		if summaryOnly and baseDoc is not None:
-			baseDoc = baseDoc.split("\n\n", 1)[0] if "\n\n" in (baseDoc := cleandoc(baseDoc)) else baseDoc
+		derivedDoc = param.__doc__
+		baseSummary, baseBody = _SplitDocString(baseDoc)
+		derivedSummary, derivedBody = _SplitDocString(derivedDoc)
+		base = cleandoc(baseDoc) if baseDoc is not None else ""
+		derived = cleandoc(derivedDoc) if derivedDoc is not None else ""
 
-		if merge:
-			derivedDoc = param.__doc__
-			if baseDoc is None:
-				if derivedDoc is not None:
-					param.__doc__ = f"{prefix}{cleandoc(derivedDoc)}{postfix}"
-			elif derivedDoc is None:
-				param.__doc__ = f"{prefix}{cleandoc(baseDoc)}{postfix}"
-			elif order is DocStringMergeOrder.DerivedFirst:
-				param.__doc__ = f"{prefix}{cleandoc(derivedDoc)}{interfix}{cleandoc(baseDoc)}{postfix}"
-			else:
-				param.__doc__ = f"{prefix}{cleandoc(baseDoc)}{interfix}{cleandoc(derivedDoc)}{postfix}"
+		parts: tuple[str, ...]
+		if strategy is DocStringMergeStrategy.SummaryOnly:
+			parts = (baseSummary, derived)
+		elif strategy is DocStringMergeStrategy.BaseLast:
+			parts = (derived, base)
+		elif strategy is DocStringMergeStrategy.BaseLastWithoutSummary:
+			parts = (derived, baseBody)
+		elif strategy is DocStringMergeStrategy.BaseFirst:
+			parts = (base, derived)
 		else:
-			param.__doc__ = baseDoc
+			parts = (derivedSummary, baseBody, derivedBody)
+
+		merged = interfix.join(part for part in parts if part != "")
+		if merged != "":
+			param.__doc__ = f"{prefix}{merged}{postfix}"
 
 		return param
 
