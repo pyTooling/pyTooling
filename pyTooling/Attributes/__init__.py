@@ -104,6 +104,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		"""
 		Ensure each derived attribute class gets its own registry of annotated entities.
 
+		The registries :attr:`_functions`, :attr:`_classes` and :attr:`_methods` are class variables, so a derived
+		attribute class would otherwise share the base-class' lists and report entities it was never attached to. Fresh
+		lists are assigned per derived class to prevent that.
+
 		:param kwargs: Class keyword arguments forwarded to the base-class.
 		"""
 		super().__init_subclass__(**kwargs)
@@ -263,7 +267,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		:param method:            Method to search attributes for.
 		:param includeSubClasses: Optional, if ``True``, attributes of derived attribute classes are included too.
 		:returns:                 Tuple of attached attributes of this kind.
-		                          :raises TypeError:
+		:raises TypeError:        If the method's attribute field is not a list.
 		"""
 		if hasattr(method, ATTRIBUTES_MEMBER_NAME):
 			attributes = getattr(method, ATTRIBUTES_MEMBER_NAME)

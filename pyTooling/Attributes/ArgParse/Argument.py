@@ -104,7 +104,7 @@ class PositionalArgument(ValuedArgument):
 
 	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument.
+		Initializes a positional argument.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -136,7 +136,7 @@ class StringArgument(PositionalArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument.
+		Initializes a positional string argument.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -152,12 +152,12 @@ class IntegerArgument(PositionalArgument):
 	"""
 	Represents an integer argument.
 
-	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
+	A list of integer numbers is available as :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument.
+		Initializes a positional integer argument.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -173,12 +173,12 @@ class FloatArgument(PositionalArgument):
 	"""
 	Represents a floating point number argument.
 
-	A list of strings is available as :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`.
+	A list of floating point numbers is available as :class:`~pyTooling.Attributes.ArgParse.Argument.FloatListArgument`.
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument.
+		Initializes a positional floating point number argument.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -200,7 +200,7 @@ class PathArgument(PositionalArgument):
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument.
+		Initializes a positional path argument.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -214,12 +214,12 @@ class PathArgument(PositionalArgument):
 @export
 class ListArgument(ValuedArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
+	Represents a list of values (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument accepting a list of values.
+		Initializes a positional argument accepting a list of values.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -243,12 +243,12 @@ class ListArgument(ValuedArgument):
 @export
 class StringListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
+	Represents a list of string arguments (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument accepting a list of values.
+		Initializes a positional argument accepting a list of string values.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -263,12 +263,12 @@ class StringListArgument(ListArgument):
 @export
 class IntegerListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
+	Represents a list of integer number arguments (:class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument accepting a list of values.
+		Initializes a positional argument accepting a list of integer numbers.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -283,12 +283,12 @@ class IntegerListArgument(ListArgument):
 @export
 class FloatListArgument(ListArgument):
 	"""
-	Represents a list of string argument (:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`).
+	Represents a list of floating point number arguments (:class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument accepting a list of values.
+		Initializes a positional argument accepting a list of floating point numbers.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -303,12 +303,12 @@ class FloatListArgument(ListArgument):
 @export
 class PathListArgument(ListArgument):
 	"""
-	Represents a list of path arguments  (:class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`).
+	Represents a list of path arguments (:class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`).
 	"""
 
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
-		Construct a positional argument accepting a list of values.
+		Initializes a positional argument accepting a list of path arguments.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.

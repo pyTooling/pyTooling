@@ -52,7 +52,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 
 	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		"""
-		Construct a flag argument.
+		Initializes a flag argument.
 
 		The flag is implemented as ``action="store_const"`` with ``const=True`` and ``default=False``, so the handler
 		method receives a boolean.
