@@ -77,7 +77,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
 	#: Return code (242), if an optional dependency is missing. The value lives on the exception, which stays
-	#: importable when this module is not - see :meth:`PrintMissingDependencyException`.
+	#: importable when this module is not - see :meth:`PrintMissingDependencyError`.
 	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyError.EXIT_CODE
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
@@ -448,7 +448,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
-	def PrintMissingDependencyException(self, ex: MissingDependencyError) -> NoReturn:
+	def PrintMissingDependencyError(self, ex: MissingDependencyError) -> NoReturn:
 		"""
 		Print a missing optional dependency and the command lines installing it.
 
