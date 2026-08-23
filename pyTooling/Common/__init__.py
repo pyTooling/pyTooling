@@ -295,7 +295,7 @@ def firstItem(iterable: Iterable[_Element]) -> _Element:
 	try:
 		return next(i)
 	except StopIteration:
-		raise ValueError(f"Iterable contains no items.")
+		raise ValueError("Iterable contains no items.")
 
 
 @export
@@ -311,7 +311,7 @@ def lastItem(iterable: Iterable[_Element]) -> _Element:
 	try:
 		element = next(i)
 	except StopIteration:
-		raise ValueError(f"Iterable contains no items.")
+		raise ValueError("Iterable contains no items.")
 
 	for element in i:
 		pass
@@ -337,7 +337,7 @@ def firstKey(d: dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
-		raise ValueError(f"Dictionary is empty.")
+		raise ValueError("Dictionary is empty.")
 
 	return next(iter(d.keys()))
 
@@ -352,7 +352,7 @@ def firstValue(d: dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
-		raise ValueError(f"Dictionary is empty.")
+		raise ValueError("Dictionary is empty.")
 
 	return next(iter(d.values()))
 
@@ -367,7 +367,7 @@ def firstPair(d: dict[_DictKey1, _DictValue1]) -> tuple[_DictKey1, _DictValue1]:
 	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
-		raise ValueError(f"Dictionary is empty.")
+		raise ValueError("Dictionary is empty.")
 
 	return next(iter(d.items()))
 
@@ -393,7 +393,7 @@ def mergedicts(
 	   `How do I merge two dictionaries in a single expression in Python? <https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-in-python>`__
 	"""
 	if len(dicts) == 0:
-		raise ValueError(f"Called 'mergedicts' without any dictionary parameter.")
+		raise ValueError("Called 'mergedicts' without any dictionary parameter.")
 
 	if filter is None:
 		return {k: v for d in dicts for k, v in d.items()}
@@ -419,10 +419,10 @@ def zipdicts(*dicts: dict[Hashable, Any]) -> Generator[tuple[Any, ...], None, No
 	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
 	"""
 	if len(dicts) == 0:
-		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
+		raise ValueError("Called 'zipdicts' without any dictionary parameter.")
 
 	if any(len(d) != len(dicts[0]) for d in dicts):
-		raise ValueError(f"All given dictionaries must have the same length.")
+		raise ValueError("All given dictionaries must have the same length.")
 
 	def gen(ds: tuple[dict[Hashable, Any], ...]) -> Generator[tuple[Any, ...], None, None]:
 		"""

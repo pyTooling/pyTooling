@@ -178,7 +178,7 @@ class License(metaclass=ExtendedType, slots=True):
 		try:
 			item: PythonLicenseName = PYTHON_LICENSE_NAMES[self._spdxIdentifier]
 		except KeyError as ex:
-			raise ValueError(f"License has no Python specify information.") from ex
+			raise ValueError("License has no Python specify information.") from ex
 
 		osi = "OSI Approved :: " if self._osiApproved else ""
 		return f"License :: {osi}{item.Classifier}"
@@ -194,9 +194,9 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand is not supported by equal operator.")
+			ex = TypeError("Second operand is not supported by equal operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: License, str")
+			ex.add_note("Supported types for second operand: License, str")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -210,9 +210,9 @@ class License(metaclass=ExtendedType, slots=True):
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
 		else:
-			ex = TypeError(f"Second operand is not supported by unequal operator.")
+			ex = TypeError("Second operand is not supported by unequal operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: License, str")
+			ex.add_note("Supported types for second operand: License, str")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:

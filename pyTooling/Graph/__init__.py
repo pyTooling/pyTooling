@@ -950,8 +950,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this subgraph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1016,8 +1016,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1090,8 +1090,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1164,8 +1164,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1208,8 +1208,8 @@ class Vertex(
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
-			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
-			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			ex.add_note("A link can only connect vertices across subgraph boundaries.")
+			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
 			link = Link(self, vertex, linkID, linkValue, linkWeight, keyValuePairs)
@@ -1277,8 +1277,8 @@ class Vertex(
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
-			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
-			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			ex.add_note("A link can only connect vertices across subgraph boundaries.")
+			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
 			link = Link(vertex, self, linkID, linkValue, linkWeight, keyValuePairs)
@@ -1681,8 +1681,8 @@ class Vertex(
 				edge = next(iteratorStack[-1])
 				nextVertex = edge._destination
 				if nextVertex in visited:
-					ex = CycleError(f"Loop detected.")
-					ex.add_note(f"First loop is:")
+					ex = CycleError("Loop detected.")
+					ex.add_note("First loop is:")
 					for i, vertex in enumerate(vertexStack):
 						ex.add_note(f"  {i}: {vertex!r}")
 					raise ex
@@ -1785,7 +1785,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise DestinationNotReachable(f"Destination is not reachable.")
+				raise DestinationNotReachable("Destination is not reachable.")
 
 		# Reverse order of linked list from destinationNode to startNode
 		currentNode = destinationNode
@@ -1902,7 +1902,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise DestinationNotReachable(f"Destination is not reachable.")
+				raise DestinationNotReachable("Destination is not reachable.")
 
 		# Reverse order of linked-list from destinationNode to startNode
 		currentNode = destinationNode
@@ -1965,7 +1965,7 @@ class Vertex(
 					if len(nextVertex._outboundEdges) != 0:
 						stack.append((node, iter(nextVertex._outboundEdges)))
 				else:
-					raise NotATreeError(f"The directed subgraph is not a tree.")
+					raise NotATreeError("The directed subgraph is not a tree.")
 					# TODO: compute cycle:
 					#       a) branch 1 is described in stack
 					#       b) branch 2 can be found by walking from joint to root in the tree
@@ -2132,7 +2132,7 @@ class Edge(
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
 		if source._graph is not destination._graph:
-			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
+			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
 		super().__init__(source, destination, edgeID, value, weight, keyValuePairs)
 
@@ -2226,7 +2226,7 @@ class Link(
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
 		if source._graph is not destination._graph:
-			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
+			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
 		super().__init__(source, destination, linkID, value, weight, keyValuePairs)
 
@@ -2478,7 +2478,7 @@ class BaseGraph(
 				outboundEdgeCounts[vertex] = count
 
 		if not leafVertices:
-			raise CycleError(f"Graph has no leafs. Thus, no topological sorting exists.")
+			raise CycleError("Graph has no leafs. Thus, no topological sorting exists.")
 
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
@@ -2512,9 +2512,9 @@ class BaseGraph(
 		if overallCount == 0:
 			return
 		elif overallCount > 0:
-			raise CycleError(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
+			raise CycleError("Graph has remaining vertices. Thus, the graph has at least one cycle.")
 
-		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
 	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
@@ -2773,7 +2773,7 @@ class BaseGraph(
 		elif overallCount > 0:
 			return True
 
-		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
 
 @export
@@ -3110,9 +3110,9 @@ class Graph(
 			if (l := len(self._verticesWithoutID)) == 1:
 				return self._verticesWithoutID[0]
 			elif l == 0:
-				raise KeyError(f"Found no vertex with ID `None`.")
+				raise KeyError("Found no vertex with ID `None`.")
 			else:
-				raise KeyError(f"Found multiple vertices with ID `None`.")
+				raise KeyError("Found multiple vertices with ID `None`.")
 		else:
 			return self._verticesWithID[vertexID]
 
@@ -3233,6 +3233,6 @@ class Graph(
 		:returns: The graph's name, or ``"Unnamed graph"`` if it has none.
 		"""
 		if self._name is None:
-			return f"Graph: unnamed graph"
+			return "Graph: unnamed graph"
 		else:
 			return f"Graph: '{self._name}'"

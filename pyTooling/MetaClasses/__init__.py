@@ -206,7 +206,7 @@ def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
 		metaClass = cls.__class__
 		ex = IncompatibleMetaClassError(f"Class '{cls.__name__}' decorated with '@{decoratorName}' uses an incompatible meta-class.")
 		ex.add_note(f"Meta-class is '{metaClass.__module__}.{metaClass.__name__}'.")
-		ex.add_note(f"A decorated class must use 'type' or a meta-class derived from 'pyTooling.MetaClasses.ExtendedType'.")
+		ex.add_note("A decorated class must use 'type' or a meta-class derived from 'pyTooling.MetaClasses.ExtendedType'.")
 		raise ex
 
 	bases = tuple(base for base in cls.__bases__ if base is not object)
@@ -326,7 +326,7 @@ def abstractclass(cls: C) -> C:
 	"""
 	if not isinstance(cls, ExtendedType):
 		ex = AttributeError(f"Class '{cls.__name__}' is not created by meta-class 'ExtendedType'.")
-		ex.add_note(f"Add 'metaclass=ExtendedType' to the class definition, so abstractness is computed.")
+		ex.add_note("Add 'metaclass=ExtendedType' to the class definition, so abstractness is computed.")
 		raise ex
 
 	cls.__abstractClass__ = True
@@ -718,11 +718,11 @@ class ExtendedType(type):
 			elif isinstance(predicate, Iterable):
 				for attribute in predicate:
 					if not issubclass(attribute, Attribute):
-						raise ValueError(f"Parameter 'predicate' contains an element which is not a sub-class of 'Attribute'.")
+						raise ValueError("Parameter 'predicate' contains an element which is not a sub-class of 'Attribute'.")
 
 				predicate = tuple(predicate)
 			elif not issubclass(predicate, Attribute):
-				raise ValueError(f"Parameter 'predicate' is not a sub-class of 'Attribute'.")
+				raise ValueError("Parameter 'predicate' is not a sub-class of 'Attribute'.")
 
 			methodAttributePairs = {}
 			for method in newClass.__methodsWithAttributes__:
@@ -979,7 +979,7 @@ class ExtendedType(type):
 				UnannotatedFieldWarning(f"Class '{className}' declares {len(unannotatedFields)} field(s) without a type annotation."),
 				notes=(
 					f"Field(s) without a type annotation: '{fieldNames}'.",
-					f"Annotate a class variable as 'ClassVar[...]' or an object field with its type.",
+					"Annotate a class variable as 'ClassVar[...]' or an object field with its type.",
 				)
 			)
 
@@ -1030,7 +1030,7 @@ class ExtendedType(type):
 
 				if not hasattr(baseClass, "__slots__"):
 					ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
-					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
+					ex.add_note("All base-classes of a class using '__slots__' must use '__slots__' itself.")
 					raise ex
 
 			# Non-empty __slots__ on secondary base-classes are rejected by _aggregateMixinSlots below.
@@ -1082,12 +1082,12 @@ class ExtendedType(type):
 				ex = DuplicateFieldInSlotsError(f"Slot '{fieldName}' is shadowed by a class member in class '{className}'.")
 				if (baseClass := shadowedSlots[fieldName]) is not None:
 					ex.add_note(f"Slot '{fieldName}' is declared in base-class '{baseClass.__module__}.{baseClass.__name__}'.")
-					ex.add_note(f"An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
-					ex.add_note(f"Reading the field works, but assigning it on an instance raises an AttributeError.")
+					ex.add_note("An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
+					ex.add_note("Reading the field works, but assigning it on an instance raises an AttributeError.")
 				else:
 					ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class and materialized in this class' '__slots__'.")
-					ex.add_note(f"Python doesn't allow a name to be listed in '__slots__' and assigned in the class body.")
-				ex.add_note(f"Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
+					ex.add_note("Python doesn't allow a name to be listed in '__slots__' and assigned in the class body.")
+				ex.add_note("Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
 				raise ex
 		else:
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
@@ -1148,7 +1148,7 @@ class ExtendedType(type):
 				for t in typePath:
 					if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
 						ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
-						ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
+						ex.add_note("In Python, only one inheritance branch can use non-empty __slots__.")
 						# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
 						# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
 						raise ex
@@ -1386,7 +1386,7 @@ class ExtendedType(type):
 						cls.__singletonInstanceInit__ = False
 						cv.notify_all()
 					elif args or kwargs:
-						raise ValueError(f"A further instance of a singleton can't be reinitialized with parameters.")
+						raise ValueError("A further instance of a singleton can't be reinitialized with parameters.")
 					else:
 						while cls.__singletonInstanceInit__:
 							cv.wait()

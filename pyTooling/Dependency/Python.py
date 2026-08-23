@@ -394,7 +394,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		if self._session is None:
 			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
-			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
+			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
@@ -619,7 +619,7 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		if self._session is None:
 			ex = NoSessionAvailableError(f"No session available to download details of package '{self._name}'.")
-			ex.add_note(f"A session is opened by the package index and handed to the objects it creates.")
+			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
