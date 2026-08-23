@@ -92,6 +92,52 @@ intermediate class having to say anything.
 mixin-class is the case it exists for, and a mixin-class is never itself incomplete, because it cannot provide what
 it expects from its host.
 
+
+.. _META/ExpectedMembers/Method:
+
+A single method's expectation
+=============================
+
+Sometimes only *one* method needs what a mixin-class contributes, while the class itself is perfectly usable
+without it. A terminal application that prints a help page needs an argument parser for that one method - and a
+terminal application without argparse is legitimate. The class keyword argument would be too strict here: it would
+reject a class that never calls the method.
+
+The :deco:`~pyTooling.MetaClasses.expects` decorator moves the expectation to where it belongs.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from pyTooling.MetaClasses import ExtendedType, expects
+
+   class TerminalApplication(metaclass=ExtendedType, slots=True):
+     @expects("MainParser", "SubParsers")
+     def PrintHelp(self) -> None:
+       self.MainParser.print_help()
+
+   TerminalApplication().PrintHelp()          # UnfulfilledExpectationError
+
+   class Application(TerminalApplication, ArgParseHelperMixin):
+     pass
+
+   Application().PrintHelp()                  # fine
+
+The class stays usable - constructing it, instantiating it and calling every other method is unaffected. Only the
+method that cannot work is replaced, by one raising an
+:exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError` that names the missing members:
+
+.. code-block:: text
+
+   pyTooling.MetaClasses.UnfulfilledExpectationError: Method 'TerminalApplication.PrintHelp()' expects members class 'TerminalApplication' doesn't provide.
+   Missing 'MainParser'.
+   Missing 'SubParsers'.
+   A method names what it needs from its class with the 'expects' decorator.
+
+The check runs per class, so **a fulfilled expectation costs nothing**: the replacement is not installed at all and
+the class holds the original function, with no per-call test. A replacement inherited from a base-class is removed
+again as soon as a class provides the members, and a subclass that provides only some of them reports exactly the
+ones still missing.
+
 .. seealso::
 
    :ref:`@abstractmethod <META/AbstractMethod>`

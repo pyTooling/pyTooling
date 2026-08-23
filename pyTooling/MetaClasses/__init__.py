@@ -135,16 +135,24 @@ class UnfulfilledExpectationError(ExtendedTypeError):
 	"""
 	This exception is raised when a class doesn't provide the members a mixin-class in its hierarchy expects.
 
-	A mixin-class lists what it needs from whichever class it is mixed into, with the ``expects`` class keyword
-	argument. Which members are missing is determined when the class is constructed, and instantiating a class that
-	still misses one raises this exception - instead of an :exc:`AttributeError` on first access, somewhere else
-	entirely. A class is allowed to stay incomplete as long as nothing instantiates it, so an intermediate class can
-	pass the expectation on to its own subclasses.
+	An expectation is declared in one of two places, and this exception is raised at the matching moment:
+
+	* A **class** lists what it needs from whichever class it is mixed into, with the ``expects`` class keyword
+	  argument. Which members are missing is determined when the class is constructed, and instantiating a class that
+	  still misses one raises this exception. A class may stay incomplete as long as nothing instantiates it, so an
+	  intermediate class can pass the expectation on to its own subclasses.
+	* A single **method** lists what it needs from its class, with the :deco:`expects` decorator. The class stays
+	  usable; only calling that method raises this exception.
+
+	Either way the alternative is an :exc:`AttributeError` on first access, somewhere else entirely, and only if that
+	code path runs.
 
 	.. seealso::
 
 	   :exc:`~pyTooling.MetaClasses.AbstractClassError`
 	      |rarr| The same mechanism, for a class with methods that still need to be overridden.
+	   :deco:`~pyTooling.MetaClasses.expects`
+	      |rarr| Mark a *method* as needing members its class provides only in some combinations.
 
 	.. seealso::
 
@@ -454,6 +462,62 @@ def mustoverride(method: M) -> M:
 	return method
 
 
+@export
+def expects(*memberNames: str) -> Callable[[M], M]:
+	"""
+	Mark a method as needing members its class provides only in some combinations, usually through a mixin-class.
+
+	A class regularly has one method that reaches for what a mixin-class contributes, while the class itself is
+	perfectly usable without that mixin. The requirement belongs to the method, not to the class, so ``expects`` as a
+	class keyword argument would be too strict: it would reject a class that never calls the method.
+
+	:class:`ExtendedType` checks the marked method against every class it is reachable from. If a class provides the
+	members, the method is left untouched, so a fulfilled expectation costs nothing per call. If it doesn't, the
+	method is replaced by one raising an :exc:`UnfulfilledExpectationError` when called - naming the missing members,
+	instead of an :exc:`AttributeError` from somewhere in the method's body. A replacement inherited from a
+	base-class is removed again as soon as a class provides the missing members.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      class TerminalApplication(metaclass=ExtendedType, slots=True):
+	        @expects("MainParser", "SubParsers")
+	        def PrintHelp(self) -> None:
+	          self.MainParser.print_help()
+
+	      TerminalApplication().PrintHelp()          # UnfulfilledExpectationError
+
+	      class Application(TerminalApplication, ArgParseHelperMixin):
+	        pass
+
+	      Application().PrintHelp()                  # fine
+
+	:param memberNames: Names of the members the method needs from its class.
+	:returns:           Decorator marking the method with an ``<method>.__expectedMembers__`` field.
+
+	.. seealso::
+
+	   :class:`~pyTooling.MetaClasses.ExtendedType`
+	      |rarr| The ``expects`` class keyword argument, for a class that needs the members as a whole.
+	   :exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError`
+	      |rarr| The exception raised when a missing member is reached for.
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract*, when the class itself declares what has to be overridden.
+	"""
+	def decorator(method: M) -> M:
+		"""
+		Attach the expected member names to the decorated method.
+
+		:param method: Method that expects members from its class.
+		:returns:      Same method, but with additional ``<method>.__expectedMembers__`` field.
+		"""
+		method.__expectedMembers__ = memberNames
+		return method
+
+	return decorator
+
+
 # @export
 # def overloadable(method: M) -> M:
 # 	method.__overloadable__ = True
@@ -553,8 +617,9 @@ class ExtendedType(type):
 	  Further instantiations will return the previously create instance (identical object).
 	* Define methods as :term:`abstract <abstract method>` or :term:`must-override <mustoverride method>` and prohibit
 	  instantiation of :term:`abstract classes <abstract class>`.
-	* Let a mixin-class state which members it expects from its host class (``expects``) and check that expectation
-	  when a concrete class is constructed.
+	* Let a mixin-class state which members it expects from its host class (``expects``), or a single method state
+	  what it needs from its class (:deco:`expects`), and reject instantiation resp. that call while a member is
+	  missing.
 
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 
@@ -572,6 +637,7 @@ class ExtendedType(type):
 	:__expectedMembers__:        Mapping of a member name expected from the host class to the name of the class
 	                             expecting it.
 	:__missingMembers__:         Tuple of expected members this class doesn't provide (yet).
+	:__expectedMembers__:        (on a method) Tuple of members the method needs from its class.
 	:__abstractClass__:          True, if this class was decorated with :deco:`abstractclass`.
 	:__isAbstract__:             True, if class is abstract.
 	:__isSingleton__:            True, if class is a singleton
@@ -733,6 +799,9 @@ class ExtendedType(type):
 		# Add new fields for found methods
 		newClass.__methods__ = tuple(methods)
 		newClass.__methodsWithAttributes__ = tuple(methodsWithAttributes)
+
+		# Reject calling a method that expects members this class doesn't provide
+		self._wrapMethodsWithUnfulfilledExpectations(newClass)
 
 		# Additional methods on a class
 		def GetMethodsWithAttributes(
@@ -1536,6 +1605,78 @@ class ExtendedType(type):
 
 		newClass.__new__ = unfulfilled_new
 		return True
+
+	@classmethod
+	def _wrapMethodsWithUnfulfilledExpectations(metacls, newClass) -> tuple[str, ...]:
+		"""
+		Replace every method marked with :deco:`expects` whose expected members the class doesn't provide.
+
+		The replacement raises an :exc:`UnfulfilledExpectationError` when it is called, so the class stays usable and
+		only the method that can't work is rejected. A method whose expectation is fulfilled is left alone - the
+		original function stays in the class, so a fulfilled expectation costs nothing per call. A replacement
+		inherited from a base-class is removed again as soon as a class provides the missing members.
+
+		:param newClass: The newly constructed class for further modifications.
+		:returns:        Tuple of method names that were replaced.
+		"""
+		# Collect every marked method reachable on this class, looking underneath a replacement from a base-class
+		marked: dict[str, Callable[..., Any]] = {}
+		for baseClass in reversed(newClass.__mro__):
+			for memberName, member in vars(baseClass).items():
+				original = getattr(member, "__wrapped__", member)
+				if hasattr(original, "__expectedMembers__"):
+					marked[memberName] = original
+
+		wrapped: list[str] = []
+		for memberName, original in marked.items():
+			missing = tuple(name for name in original.__expectedMembers__ if not hasattr(newClass, name))
+			inherited = getattr(newClass, memberName)
+			isReplaced = hasattr(inherited, "__raises_unfulfilled_expectation_error__")
+
+			if len(missing) == 0:
+				# the class provides the members now, so the original method is reachable again
+				if isReplaced:
+					setattr(newClass, memberName, original)
+				continue
+
+			wrapped.append(memberName)
+			if isReplaced and inherited.__missingMembers__ == missing:
+				# the inherited replacement already reports exactly these members
+				continue
+
+			def unfulfilledMethodFactory(methodName: str, missingMembers: tuple[str, ...]) -> Callable[..., NoReturn]:
+				"""
+				Create the replacement for one method, binding the names it is missing.
+
+				:param methodName:     Name of the method that is replaced.
+				:param missingMembers: Names of the members the method needs and the class doesn't provide.
+				:returns:              Replacement method raising an :exc:`UnfulfilledExpectationError`.
+				"""
+				@wraps(original)
+				def unfulfilledMethod(self, *_, **__) -> NoReturn:
+					"""
+					Replacement method, which rejects a call that would fail on a missing member.
+
+					:raises UnfulfilledExpectationError: Always, because the class doesn't provide every expected member.
+					"""
+					className = type(self).__name__
+					message = f"Method '{className}.{methodName}()' expects members class '{className}' doesn't provide."
+					ex = UnfulfilledExpectationError(message)
+					for memberName in missingMembers:
+						ex.add_note(f"Missing '{memberName}'.")
+					ex.add_note("A method names what it needs from its class with the 'expects' decorator.")
+					raise ex
+
+				return unfulfilledMethod
+
+			replacement = unfulfilledMethodFactory(memberName, missing)
+
+			replacement.__raises_unfulfilled_expectation_error__ = True
+			replacement.__missingMembers__ = missing
+
+			setattr(newClass, memberName, replacement)
+
+		return tuple(wrapped)
 
 	@classmethod
 	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
