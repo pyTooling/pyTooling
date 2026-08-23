@@ -106,6 +106,17 @@ class PositionalArgument(ValuedArgument):
 		"""
 		Initializes a positional argument.
 
+		.. admonition:: ArgParse parameterization
+
+		   :meth:`~argparse.ArgumentParser.add_argument` is called without positional parameters, and with these named
+		   parameters:
+
+		   * ``dest=dest``
+		   * ``metavar=metaName``
+		   * ``type=type``
+		   * ``help=help``
+		   * ``nargs="?"`` - only if ``optional`` is ``True``
+
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
 		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
@@ -138,6 +149,9 @@ class StringArgument(PositionalArgument):
 		"""
 		Initializes a positional string argument.
 
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=str``.
+
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
 		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
@@ -159,6 +173,9 @@ class IntegerArgument(PositionalArgument):
 		"""
 		Initializes a positional integer argument.
 
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=int``.
+
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
 		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
@@ -179,6 +196,9 @@ class FloatArgument(PositionalArgument):
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
 		Initializes a positional floating point number argument.
+
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=float``.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -202,6 +222,9 @@ class PathArgument(PositionalArgument):
 		"""
 		Initializes a positional path argument.
 
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument` does, with ``type=:class:`~pathlib.Path```.
+
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
 		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
@@ -220,6 +243,17 @@ class ListArgument(ValuedArgument):
 	def __init__(self, dest: str, metaName: str, type: type = str, optional: bool = False, help: str = "") -> None:
 		"""
 		Initializes a positional argument accepting a list of values.
+
+		.. admonition:: ArgParse parameterization
+
+		   :meth:`~argparse.ArgumentParser.add_argument` is called without positional parameters, and with these named
+		   parameters:
+
+		   * ``dest=dest``
+		   * ``metavar=metaName``
+		   * ``nargs="*"`` if ``optional`` is ``True``, otherwise ``"+"``
+		   * ``type=type``
+		   * ``help=help``
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -250,6 +284,9 @@ class StringListArgument(ListArgument):
 		"""
 		Initializes a positional argument accepting a list of string values.
 
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=str``.
+
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
 		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
@@ -269,6 +306,9 @@ class IntegerListArgument(ListArgument):
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
 		Initializes a positional argument accepting a list of integer numbers.
+
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=int``.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
@@ -290,6 +330,9 @@ class FloatListArgument(ListArgument):
 		"""
 		Initializes a positional argument accepting a list of floating point numbers.
 
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=float``.
+
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
 		:param metaName: Name shown for the value in the usage line and the help page (argparse's ``metavar``).
@@ -309,6 +352,9 @@ class PathListArgument(ListArgument):
 	def __init__(self, dest: str, metaName: str, optional: bool = False, help: str = "") -> None:
 		"""
 		Initializes a positional argument accepting a list of path arguments.
+
+		Parameterizes :meth:`~argparse.ArgumentParser.add_argument` like
+		:class:`~pyTooling.Attributes.ArgParse.Argument.ListArgument` does, with ``type=:class:`~pathlib.Path```.
 
 		:param dest:     Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
 		                 handler method reads it by.
