@@ -35,8 +35,9 @@ and the exit-on-counter methods, and which messages reach ``STDOUT`` and ``STDER
 """
 from io                   import StringIO
 
-from pyTooling.TerminalUI import TerminalApplication, Severity, Mode
-from pyTooling.Testing    import Testcase
+from pyTooling.MetaClasses import UnfulfilledExpectationError
+from pyTooling.TerminalUI  import TerminalApplication, Severity, Mode
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -755,3 +756,43 @@ class Indentation(Testcase):
 
 		self.assertEqual(5, program.Lines[0].Indent)
 		self.assertIn(f"{TerminalApplication.INDENT * 5}deeper", buffer.getvalue())
+
+
+class PrintHelpWithoutAParser(Testcase):
+	"""'_PrintHelp()' needs an argument parser, which 'TerminalApplication' alone does not provide."""
+
+	def test_ReportsTheMissingMembers(self) -> None:
+		class TestApplication(TerminalApplication):    # own class: the base class is a singleton
+			pass
+
+		program = TestApplication()
+
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			program._PrintHelp()
+
+		self.assertEqual(
+			"Method 'TestApplication._PrintHelp()' expects members this class doesn't provide.",
+			str(exceptionCapture.exception)
+		)
+		self.assertIn("Missing 'MainParser'.", exceptionCapture.exception.__notes__)
+		self.assertIn("Missing 'SubParsers'.", exceptionCapture.exception.__notes__)
+
+	def test_TheApplicationIsOtherwiseUsable(self) -> None:
+		"""Only the one method that needs a parser is rejected; the application itself works."""
+
+		class TestApplication(TerminalApplication):    # own class: the base class is a singleton
+			pass
+
+		program = TestApplication()
+		program._stdout = StringIO()
+		program.WriteNormal("still works")
+
+		self.assertIn("still works", program._stdout.getvalue())
+
+	def test_WithTheMixinTheOriginalMethodIsRestored(self) -> None:
+		from pyTooling.Attributes.ArgParse import ArgParseHelperMixin
+
+		class TestApplication(TerminalApplication, ArgParseHelperMixin):    # own class: the base class is a singleton
+			pass
+
+		self.assertFalse(hasattr(TestApplication._PrintHelp, "__raises_unfulfilled_expectation_error__"))
