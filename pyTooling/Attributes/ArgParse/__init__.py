@@ -242,8 +242,10 @@ class DefaultHandler(ArgParseAttribute, _HandlerMixin):
 
 @export
 class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
-	"""Marks a handler method as responsible for the given 'command'. This constructs
-	a sub-command parser using :meth:`~ArgumentParser.add_subparsers`.
+	"""
+	Marks a handler method as responsible for the given command.
+
+	A sub-command parser is constructed for it with :meth:`~argparse.ArgumentParser.add_subparsers`.
 	"""
 
 	_command: str    #: Name of the sub-command this handler is responsible for.
