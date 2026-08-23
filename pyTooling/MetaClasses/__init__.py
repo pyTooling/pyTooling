@@ -131,6 +131,29 @@ class UnannotatedFieldWarning(Warning):
 
 
 @export
+class UnfulfilledExpectationError(ExtendedTypeError):
+	"""
+	This exception is raised when a class doesn't provide the members a mixin-class in its hierarchy expects.
+
+	A mixin-class lists what it needs from whichever class it is mixed into, with the ``expects`` class keyword
+	argument. Which members are missing is determined when the class is constructed, and instantiating a class that
+	still misses one raises this exception - instead of an :exc:`AttributeError` on first access, somewhere else
+	entirely. A class is allowed to stay incomplete as long as nothing instantiates it, so an intermediate class can
+	pass the expectation on to its own subclasses.
+
+	.. seealso::
+
+	   :exc:`~pyTooling.MetaClasses.AbstractClassError`
+	      |rarr| The same mechanism, for a class with methods that still need to be overridden.
+
+	.. seealso::
+
+	   :class:`~pyTooling.MetaClasses.ExtendedType`
+	      |rarr| The meta-class implementing the check.
+	"""
+
+
+@export
 class IncompatibleMetaClassError(ExtendedTypeError):
 	"""
 	This exception is raised when a class decorated with :deco:`slotted`, :deco:`mixin` or :deco:`singleton` uses a
@@ -183,13 +206,13 @@ M = TypeVar("M", bound=Callable[..., Any])   #: A type variable for methods.
 C = TypeVar("C", bound=type)       #: A type variable for classes.
 
 
-def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
+def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 	"""
 	Recreate a class with :class:`ExtendedType` (or the class' own compatible meta-class) applying the given options.
 
 	:param cls:                         Class to recreate.
 	:param decoratorName:               Name of the calling decorator. It's used in the error message.
-	:param options:                     Meta-class options like ``slots``, ``mixin`` or ``singleton``.
+	:param options:                     Meta-class options like ``slots``, ``mixin``, ``singleton`` or ``expects``.
 	:returns:                           The recreated class.
 	:raises IncompatibleMetaClassError: If the class' meta-class is neither :class:`type`, nor derived from
 	                                    :class:`ExtendedType`. |br|
@@ -530,6 +553,8 @@ class ExtendedType(type):
 	  Further instantiations will return the previously create instance (identical object).
 	* Define methods as :term:`abstract <abstract method>` or :term:`must-override <mustoverride method>` and prohibit
 	  instantiation of :term:`abstract classes <abstract class>`.
+	* Let a mixin-class state which members it expects from its host class (``expects``) and check that expectation
+	  when a concrete class is constructed.
 
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 
@@ -544,6 +569,9 @@ class ExtendedType(type):
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
+	:__expectedMembers__:        Mapping of a member name expected from the host class to the name of the class
+	                             expecting it.
+	:__missingMembers__:         Tuple of expected members this class doesn't provide (yet).
 	:__abstractClass__:          True, if this class was decorated with :deco:`abstractclass`.
 	:__isAbstract__:             True, if class is abstract.
 	:__isSingleton__:            True, if class is a singleton
@@ -594,6 +622,7 @@ class ExtendedType(type):
 		slots: bool = False,
 		mixin: bool = False,
 		singleton: bool = False,
+		expects: Iterable[str] = (),
 		**kwargs: Any
 	) -> Self:
 		"""
@@ -608,11 +637,13 @@ class ExtendedType(type):
 		                        ``slots``
 		                        is true. If ``None``, preserve behavior of primary base-class.
 		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
+		:param expects:         Optional, names of members this class needs from whichever class it is mixed into. |br|
+		                        See :attr:`__expectedMembers__`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
 		                        :func:`type` does.
-		:returns:               The new class.
-		:raises AttributeError: If base-class has no '__slots__' attribute.
-		:raises AttributeError: If slot already exists in base-class.
+		:returns:                            The new class.
+		:raises AttributeError:              If base-class has no '__slots__' attribute.
+		:raises AttributeError:              If slot already exists in base-class.
 		"""
 		from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 
@@ -641,6 +672,12 @@ class ExtendedType(type):
 		newClass.__abstractClass__ = False
 		newClass.__isAbstract__ =    self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ =   self._wrapNewMethodIfSingleton(newClass, singleton)
+
+		# Collect the members expected from the host class and reject instantiation while any of them is missing
+		newClass.__expectedMembers__ = self._collectExpectedMembers(className, baseClasses, members, expects)
+		newClass.__missingMembers__ = self._computeMissingMembers(newClass, mixin)
+		if not newClass.__isAbstract__:
+			self._wrapNewMethodIfExpectationUnfulfilled(newClass)
 
 		if slots:
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
@@ -1402,6 +1439,103 @@ class ExtendedType(type):
 			return True
 
 		return False
+
+	@classmethod
+	def _collectExpectedMembers(
+		metacls,
+		className: str,
+		baseClasses: tuple[type, ...],
+		members: dict[str, Any],
+		expects: Iterable[str]
+	) -> dict[str, str]:
+		"""
+		Collect the members expected by this class and by every class in its inheritance hierarchy.
+
+		A mixin-class states what it needs from the class it is mixed into, and that expectation has to survive until a
+		concrete class can satisfy it. The result maps each expected member's name to the name of the class expecting
+		it, so an error message can name the origin.
+
+		:param className:   The name of the class being constructed.
+		:param baseClasses: The tuple of base-classes the class is derived from.
+		:param members:     The dictionary of members for the constructed class.
+		:param expects:     Names of members the class being constructed expects.
+		:returns:           Dictionary mapping an expected member's name to the name of the class expecting it.
+		"""
+		expected: dict[str, str] = {}
+		for baseClass in baseClasses:
+			for memberName, origin in getattr(baseClass, "__expectedMembers__", {}).items():
+				expected.setdefault(memberName, origin)
+
+		# a class recreated by '@mixin' and friends carries its own expectations in the copied members
+		for memberName, origin in members.get("__expectedMembers__", {}).items():
+			expected.setdefault(memberName, origin)
+
+		for memberName in expects:
+			expected.setdefault(memberName, className)
+
+		return expected
+
+	@classmethod
+	def _computeMissingMembers(metacls, newClass: type, mixin: bool) -> tuple[str, ...]:
+		"""
+		Determine which of the expected members the class doesn't provide.
+
+		A member is provided when it is reachable on the class: a method, a property, a class variable, or a field, for
+		which :class:`ExtendedType` created a slot descriptor when the mixin-class joined the primary inheritance line.
+
+		A mixin-class is never missing anything, because it can't provide what it expects from its host class.
+
+		:param newClass: The newly constructed class.
+		:param mixin:    ``True``, if the class is a mixin-class.
+		:returns:        Tuple of expected member names the class doesn't provide.
+		"""
+		if mixin:
+			return tuple()
+
+		return tuple(memberName for memberName in newClass.__expectedMembers__ if not hasattr(newClass, memberName))
+
+	@classmethod
+	def _wrapNewMethodIfExpectationUnfulfilled(metacls, newClass) -> bool:
+		"""
+		If the class doesn't provide every expected member, replace the ``__new__`` method, so it raises an exception.
+
+		The diagnosis happens here, at class construction time, but the exception is raised on instantiation - the same
+		way an abstract class is handled. A class is allowed to stay incomplete as long as nothing instantiates it, so
+		an intermediate class can pass an expectation on to its own subclasses.
+
+		:param newClass: The newly constructed class for further modifications.
+		:returns:        ``True``, if the class has unfulfilled expectations.
+		"""
+		if len(newClass.__missingMembers__) == 0:
+			# skip an intermediate 'new' function if the class fulfills its expectations again
+			oldnew = newClass.__new__
+			if hasattr(oldnew, "__raises_unfulfilled_expectation_error__"):
+				newClass.__new__ = oldnew.__wrapped__
+
+			return False
+
+		oldnew = newClass.__new__
+		if hasattr(oldnew, "__raises_unfulfilled_expectation_error__"):
+			oldnew = oldnew.__wrapped__
+
+		@wraps(oldnew)
+		def unfulfilled_new(cls, *_, **__):
+			"""
+			Replacement ``__new__`` method, which rejects the instantiation of a class with unfulfilled expectations.
+
+			:param cls:                          The class an instance was requested of.
+			:raises UnfulfilledExpectationError: Always, because the class doesn't provide every expected member.
+			"""
+			ex = UnfulfilledExpectationError(f"Class '{cls.__name__}' doesn't provide every expected member.")
+			for memberName in newClass.__missingMembers__:
+				ex.add_note(f"Missing '{memberName}', expected by '{newClass.__expectedMembers__[memberName]}'.")
+			ex.add_note(f"A mixin-class names what it needs from its host class with the 'expects' class keyword argument.")
+			raise ex
+
+		unfulfilled_new.__raises_unfulfilled_expectation_error__ = True
+
+		newClass.__new__ = unfulfilled_new
+		return True
 
 	@classmethod
 	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
