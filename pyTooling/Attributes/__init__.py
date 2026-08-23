@@ -158,7 +158,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		elif isinstance(entity, type):
 			attribute._classes.append(entity)
 		else:
-			ex = TypeError(f"Parameter 'entity' is not a function, class nor method.")
+			ex = TypeError("Parameter 'entity' is not a function, class nor method.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
 			raise ex
 
@@ -197,7 +197,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 				if c in elementsInScope:
 					yield c
 		else:
-			raise NotImplementedError(f"Parameter 'scope' is a class isn't supported yet.")
+			raise NotImplementedError("Parameter 'scope' is a class isn't supported yet.")
 
 	@classmethod
 	def GetClasses(cls, scope: Nullable[type | ModuleType] = None, subclassOf: Nullable[type] = None) -> Generator[TAttr, None, None]:

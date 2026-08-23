@@ -487,9 +487,9 @@ class Stopwatch(SlottedObject):
 		elif self._resumeTime is not None:    # is running?
 			raise StopwatchError("Stopwatch is currently running and can not be started/resumed again.")
 		elif self._stopTime is not None:      # is stopped?
-			raise StopwatchError(f"Stopwatch was already stopped.")
+			raise StopwatchError("Stopwatch was already stopped.")
 		else:
-			raise StopwatchError(f"Internal error.")
+			raise StopwatchError("Internal error.")
 
 		return self
 

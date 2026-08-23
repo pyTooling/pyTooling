@@ -254,7 +254,7 @@ class readonly(property, Generic[_ReturnType]):
 		                        Use :deco:`property` instead of :deco:`readonly`, if the property should be writable.
 		"""
 		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a setter.")
-		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be writable.")
+		ex.add_note("Use '@property' instead of '@readonly', if the property should be writable.")
 		raise ex
 
 	def deleter(self, fdel: Callable[..., Any]) -> NoReturn:
@@ -266,7 +266,7 @@ class readonly(property, Generic[_ReturnType]):
 		                        Use :deco:`property` instead of :deco:`readonly`, if the property should be deletable.
 		"""
 		ex = AttributeError(f"Property '{self.fget.__name__}' is read-only, so it can't have a deleter.")
-		ex.add_note(f"Use '@property' instead of '@readonly', if the property should be deletable.")
+		ex.add_note("Use '@property' instead of '@readonly', if the property should be deletable.")
 		raise ex
 
 

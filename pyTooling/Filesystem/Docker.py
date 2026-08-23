@@ -153,7 +153,7 @@ class Layer(metaclass=ExtendedType):
 			self._files.append(element)
 			usedFiles.add(element)
 		else:
-			ex = TypeError(f"Parameter 'element' is not a filename nor symbolic link.")
+			ex = TypeError("Parameter 'element' is not a filename nor symbolic link.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
 			raise ex
 
@@ -281,7 +281,7 @@ class LayerCake(metaclass=ExtendedType):
 		:raises FilesystemError: If the filesystem was not sliced into layers.
 		"""
 		if self._slicingDuration is None:
-			raise FilesystemError(f"Filesystem was not sliced, yet.")
+			raise FilesystemError("Filesystem was not sliced, yet.")
 
 		return self._slicingDuration
 

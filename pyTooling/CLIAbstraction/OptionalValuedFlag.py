@@ -103,7 +103,7 @@ class OptionalValuedFlag(NamedAndValuedArgument[str], pattern="{0"):
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		pattern = self._pattern if self._value is None else self._patternWithValue
 		return pattern.format(self._name, self._value)

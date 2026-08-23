@@ -178,12 +178,12 @@ class WarningCollector:
 		if warnings is None:
 			warnings = []
 		elif not isinstance(warnings, list):
-			ex = TypeError(f"Parameter 'warnings' is not a list.")
+			ex = TypeError("Parameter 'warnings' is not a list.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(warnings)}'.")
 			raise ex
 
 		if handler is not None and not isinstance(handler, Callable):
-			ex = TypeError(f"Parameter 'handler' is not callable.")
+			ex = TypeError("Parameter 'handler' is not callable.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(handler)}'.")
 			raise ex
 
@@ -288,7 +288,7 @@ class WarningCollector:
 		if warning is None:
 			raise ValueError("Parameter 'warning' is None.")
 		elif not isinstance(warning, (Warning, CriticalWarning, Exception)):
-			ex = TypeError(f"Parameter 'warning' is not of type 'Warning', 'CriticalWarning' or 'Exception'.")
+			ex = TypeError("Parameter 'warning' is not of type 'Warning', 'CriticalWarning' or 'Exception'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(warning)}'.")
 			raise ex
 
