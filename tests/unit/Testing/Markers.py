@@ -388,13 +388,13 @@ class ReportFormat(ApplicationTestcase):
 	def test_TheReportValidatesAgainstItsSchema(self) -> None:
 		from xmlschema import XMLSchema
 
-		from pyTooling.Testing.ReportWriter import SCHEMA
+		from pyTooling.Testing.ReportWriter import getSchemaFile
 
 		with TemporaryDirectory() as directory:
 			result, report = self._RunPyTest(Path(directory))
 
 			self.assertExitCode(result)
-			XMLSchema(SCHEMA).validate(report)
+			XMLSchema(getSchemaFile()).validate(report)
 
 	def test_TestsuitesAreNested(self) -> None:
 		"""What a dotted 'classname' cannot express: one element per level."""
