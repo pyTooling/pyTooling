@@ -1,17 +1,98 @@
-.. _TUTORIAL/TestcaseNaming:
+.. _TUTORIAL/UnitTesting:
 
-Naming Testcases
-################
+Unit Testing
+############
+
+A unit test suite has two problems that have nothing to do with each other: deciding **what to test, in which
+order**, and deciding **what the report calls it**. This tutorial takes them in that order.
+
+.. seealso::
+
+   :ref:`TUTORIAL/ApplicationTesting`
+      |rarr| The other half - testing the program the way a user starts it.
+
+
+.. _TUTORIAL/UnitTesting/Levels:
+
+Levels of testing
+*****************
+
+Tests are written in levels, each building on the one below. The point of the order is that a failure at a lower
+level explains a failure at a higher one: if constructing an object is broken, every algorithm over a network of
+those objects fails too, and only the first level says *why*.
+
+.. rubric:: 1. Instantiation of (data model) classes
+
+Construct **one** object and look at it. Nothing else is involved yet, so a failure here is unambiguous.
+
+* Check the initializer.
+
+  * Check the default parameters.
+  * Check the parameter checkers: type checks, value range checks, and so on.
+  * Check the optional parameters, one at a time.
+
+* Check class variables, class fields and properties.
+
+  * Also check that the optional parameters are accessible through properties.
+
+* Check :meth:`~object.__str__`, and :meth:`~object.__repr__`.
+
+.. rubric:: 2. Neighbouring classes and a simple network of objects
+
+Two or three objects, wired together. This is where a data model's *relations* are tested, not its values.
+
+* Instantiate parent and child classes and create a hierarchy.
+
+  * A hierarchy should be constructable **top-down and bottom-up** - both orders are used by real code.
+
+* Add further children to a parent.
+* Set a child's parent relation.
+* If the model supports it:
+
+  * Remove children from a parent.
+  * Set the parent relation to ``None`` and unregister the child from its parent.
+
+.. rubric:: 3. Algorithms on multiple connected instances
+
+Now the network is big enough for an algorithm to have something to walk.
+
+* Test iterators and generators.
+
+  * Check their options, such as reversing or filtering.
+
+.. rubric:: 4. Full example testing
+
+End to end, with real input.
+
+* Read files, parse their content, and access the parsed data through the data model.
+* Transform input data into output data, e.g. a format conversion.
+
+.. rubric:: 5. Application testing
+
+The program as a user starts it. That is a tutorial of its own -
+see :ref:`TUTORIAL/ApplicationTesting`.
+
+.. hint::
+
+   The levels map onto the test suite's directory layout: a package per level or capability, a module per feature
+   group, a class per feature, and a method per *variant* of it. A failure then reads as a path from the broad to
+   the specific.
+
+
+.. _TUTORIAL/UnitTesting/Naming:
+
+Naming testcases
+****************
 
 A test report is read by people who did not write the test - a reviewer scanning a failure, a maintainer looking at
 a nightly run, someone opening the HTML report attached to a pull-request. What they see is the name of the
-testcase. This tutorial is about why that name is hard to get right with name-based collection, and what changes
-when a marker takes over the job.
+testcase. The rest of this tutorial is about why that name is hard to get right with name-based collection, and
+what changes when a marker takes over the job.
 
-.. _TUTORIAL/TestcaseNaming/NameBased:
+.. _TUTORIAL/UnitTesting/Naming/NameBased:
 
 The name does two jobs
-**********************
+======================
 
 .. grid:: 2
 
@@ -56,10 +137,10 @@ Three consequences follow, and none of them is fixed by naming things more caref
 * **A helper needs a naming rule.** A method in a test class that is not a testcase has to *avoid* the prefix, so
   the convention has to be known and followed in both directions.
 
-.. _TUTORIAL/TestcaseNaming/Markers:
+.. _TUTORIAL/UnitTesting/Naming/Markers:
 
 Marking instead of naming
-*************************
+=========================
 
 .. grid:: 2
 
@@ -116,10 +197,10 @@ The same three consequences turn around:
   from the suite. Removing the *marker* does - and that is a visible, deliberate edit.
 * **A helper needs no rule.** It is simply not marked.
 
-.. _TUTORIAL/TestcaseNaming/Migration:
+.. _TUTORIAL/UnitTesting/Naming/Migration:
 
 Migrating a suite
-*****************
+=================
 
 Enabling the plugin does not change an existing suite: nothing is marked yet, so nothing collects differently.
 

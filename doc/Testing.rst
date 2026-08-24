@@ -199,5 +199,6 @@ What the plugin does
 
 .. seealso::
 
-   :ref:`Tutorial: naming testcases <TUTORIAL/TestcaseNaming>`
-      |rarr| Why the name a report shows and the name Python needs are different problems.
+   :ref:`Tutorial: unit testing <TUTORIAL/UnitTesting>`
+      |rarr| The levels a test suite is written in, and why the title a report shows and the name Python needs are
+      different problems.
