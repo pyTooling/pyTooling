@@ -230,25 +230,29 @@ per testcase whenever someone has a reason to.
 
 .. _TUTORIAL/UnitTesting/Naming/DocString:
 
-Letting the doc-string do it
-============================
+Deriving a testcase description from the doc-string
+===================================================
 
-A testcase that already has a doc-string has already been described once. The markers read it: the summary becomes
-the title, the body becomes a description that travels into the report as a property.
+A testcase that already has a doc-string has already been described once, so the markers read it. That gives a test
+item **four** names - the ID Python needs, a title from the marker, a summary from the doc-string's first
+paragraph, and the doc-string itself as the description:
 
 .. code-block:: python
 
-   @testcase
+   @testcase("A newer version compares greater.")
    def NewerIsGreater(self) -> None:
      """
-     A newer version compares greater.
+     A newer version compares greater than an older one.
 
      Only the minor number differs here, so this also pins that it is not a string
      comparison, where "2.0" < "1.9" would hold.
      """
 
-Nothing is written twice, and the *why* - which rarely fits a title at all - is now in the report next to the
-result, where someone reading a failure can see it.
+They are four values rather than a chain of fallbacks, so nothing has to be written twice and nothing is lost by
+adding one of them. The *why* - which rarely fits a title at all - is now in the report next to the result, where
+someone reading a failure can see it.
+
+The reference for all four is :ref:`TESTING/Markers/Names`.
 
 .. topic:: When name-based collection is the better choice
 

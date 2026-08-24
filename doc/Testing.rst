@@ -136,26 +136,7 @@ it names the entity *and* it enables collection.
        self.assertGreater(Version("2.0"), Version("1.9"))
 
 The class is collected because it is *marked*, not because of how it is spelled, and the title travels into the
-report as a **property**:
-
-.. code-block:: xml
-
-   <testsuites name="pytest tests">
-     <testsuite name="pytest" errors="0" failures="0" skipped="0"
-                tests="1" time="0.016" timestamp="2026-08-24T23:55:41+00:00" hostname="build-01">
-       <testcase classname="tests.unit.Versioning.Comparison.VersionComparison"
-                 name="test_NewerIsGreater" time="0.001">
-         <properties>
-           <property name="title" value="A newer version compares greater." />
-           <property name="testsuiteTitle" value="Version comparison" />
-         </properties>
-       </testcase>
-     </testsuite>
-   </testsuites>
-
-``classname`` is the testcase's **package path** - the directories below the root, then the module, then the class
-- so a testcase in :file:`tests/unit/Versioning/Comparison.py` is reported as
-``tests.unit.Versioning.Comparison.VersionComparison``.
+report as a **property** - see :ref:`TESTING/Markers/Names`.
 
 .. important::
 
@@ -167,65 +148,83 @@ report as a **property**:
 
    A title is additional information, so it is reported as additional information.
 
-.. note::
+.. _TESTING/Markers/Names:
 
-   The title of the *test suite* is reported per testcase, as ``testsuiteTitle``, rather than on a surrounding
-   element. pytest's JUnit writer emits exactly **one** ``<testsuite name="pytest">`` for the whole session, not
-   one per class, so a per-class title has no element of its own to sit on.
+The four names of a test item
+=============================
 
-.. _TESTING/Markers/Descriptions:
+A test item - a test suite or a testcase - has **four** names, and only the first is what Python calls it:
 
-Titles and descriptions
-=======================
+.. list-table::
+   :header-rows: 1
+   :widths: 22 78
 
-Both decorators take an optional ``title`` and ``description``, and both fall back to the **doc-string**: its
-summary becomes the title, its body becomes the description.
+   * - Name
+     - Where it comes from
+   * - **ID**
+     - the module, class or method name. It is the item's ``classname``/``name``, and what selects the test.
+   * - **title**
+     - what the marker was given. Defaults to the ID.
+   * - **summary**
+     - the first paragraph of the doc-string.
+   * - **description**
+     - the doc-string.
+
+They are four values, not a fallback chain: a title never replaces a summary, and a summary never becomes a title.
+A testcase can therefore carry a short label *and* a sentence *and* the full prose, and a report can show whichever
+of them it has room for.
 
 .. code-block:: python
 
-   @testsuite
+   @testsuite("Version comparison.")
    class VersionComparison(Testcase):
      """
-     Version comparison.
+     Compare two release versions.
 
-     Everything about comparing two release versions.
+     Everything about comparing them.
      """
 
-     @testcase
+     @testcase("A newer version compares greater.")
      def NewerIsGreater(self) -> None:
        """
-       A newer version compares greater.
+       A newer version compares greater than an older one.
 
-       Only the minor number differs here, so this also pins that it is not a string
-       comparison, where "2.0" < "1.9" would hold.
+       Only the minor number differs here.
        """
 
-All four reach the report as properties:
+All of them except the ID reach the report as properties:
 
 .. code-block:: xml
 
-   <testcase classname="test_versioning.VersionComparison" name="test_NewerIsGreater">
-     <properties>
-       <property name="title" value="A newer version compares greater." />
-       <property name="description" value="Only the minor number differs here, ..." />
-       <property name="testsuiteTitle" value="Version comparison." />
-       <property name="testsuiteDescription" value="Everything about comparing two release versions." />
-     </properties>
-   </testcase>
-
-Three sources can title a testcase, tried in this order:
-
-1. the decorator's ``title`` argument,
-2. the doc-string's summary - a summary spanning several lines is joined into one,
-3. the identifier, when there is no doc-string.
-
-The same order applies to ``description`` with the doc-string's body. An explicit argument replaces *its own* part
-only: giving a ``title`` discards the summary but keeps the body as the description.
+   <testsuites name="pytest tests">
+     <testsuite name="pytest" tests="1" time="0.010">
+       <testcase classname="test_versioning.VersionComparison" name="test_NewerIsGreater" time="0.000">
+         <properties>
+           <property name="title" value="A newer version compares greater." />
+           <property name="summary" value="A newer version compares greater than an older one." />
+           <property name="description"
+                     value="A newer version compares greater than an older one.&#10;&#10;Only the minor ..." />
+           <property name="testsuiteTitle" value="Version comparison." />
+           <property name="testsuiteSummary" value="Compare two release versions." />
+           <property name="testsuiteDescription"
+                     value="Compare two release versions.&#10;&#10;Everything about comparing them." />
+         </properties>
+       </testcase>
+     </testsuite>
+   </testsuites>
 
 .. hint::
 
-   Because the identifier is the last fallback, a marker can be added to an existing testcase without changing
-   anything a report says about it - which is what makes a suite migratable one class at a time.
+   Because the title defaults to the ID, a marker can be added to an existing testcase without changing anything a
+   report says about it - which is what makes a suite migratable one class at a time.
+
+.. note::
+
+   The test suite's names are reported per testcase, prefixed with ``testsuite``, rather than on the surrounding
+   ``<testsuite>`` element. pytest's JUnit writer emits exactly **one** ``<testsuite name="pytest">`` for the whole
+   session, not one per class, so a per-class name has no element of its own to sit on. The
+   `PyTest-JUnit schema <https://github.com/edaa-org/pyEDAA.Reports>`__ does allow ``<properties>`` there - it is
+   pytest that has nowhere to put them.
 
 .. _TESTING/Markers/Enabling:
 
