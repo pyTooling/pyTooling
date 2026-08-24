@@ -89,9 +89,10 @@ Marking instead of naming
 
       Reported as:
 
-      .. code-block:: text
+      .. code-block:: xml
 
-         Version comparison::a newer version compares greater
+         <testcase classname="Version comparison"
+                   name="a newer version compares greater" />
 
 Read the two reports next to each other:
 
@@ -99,6 +100,9 @@ Read the two reports next to each other:
 
    TestVersionComparison::test_newer_version_is_greater      # what Python needed
    Version comparison::a newer version compares greater      # what the reader needed
+
+The method keeps its identifier where Python needs one. Only the *report* is renamed, so ``pytest`` still selects
+the testcase by its node ID and an IDE's *run this test* keeps working - see :ref:`TESTING/Markers/Behavior`.
 
 The same three consequences turn around:
 
