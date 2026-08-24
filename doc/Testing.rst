@@ -99,3 +99,82 @@ Helpers
 :func:`~pyTooling.Testing.stripANSIColorCodes` removes ANSI escape sequences from a text. A program writing to a
 terminal colors its output while the same program in a pipe usually does not - comparing the stripped text is more
 robust than encoding a rule about when the codes appear.
+
+.. _TESTING/Markers:
+
+Marker-based Collection
+#######################
+
+A test runner has to decide what a test is, and by default it decides from a **name**: pytest collects classes
+matching ``python_classes`` (``Test*``) and functions matching ``python_functions`` (``test_*``), and
+:mod:`unittest`'s loader collects methods starting with ``test``. The identifier therefore does two jobs at once -
+it names the entity *and* it enables collection.
+
+:deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase` separate them.
+
+.. code-block:: python
+
+   from pyTooling.Testing import Testcase, testsuite, testcase
+
+
+   @testsuite("Version comparison")
+   class VersionComparison(Testcase):
+     @testcase("a newer version compares greater")
+     def NewerIsGreater(self) -> None:
+       self.assertGreater(Version("2.0"), Version("1.9"))
+
+The class is collected because it is *marked*, not because of how it is spelled, and it is reported under the name
+the marker gives it:
+
+.. code-block:: text
+
+   test_versioning.py::Version comparison::a newer version compares greater
+
+.. code-block:: xml
+
+   <testcase classname="test_versioning.Version comparison" name="a newer version compares greater" />
+
+Both decorators take an optional name. Without one, the identifier is used, so a marker can be added to an existing
+testcase without changing what a report says about it.
+
+.. _TESTING/Markers/Enabling:
+
+Enabling the plugin
+===================
+
+The collection itself is a pytest plugin, :mod:`pyTooling.Testing.PyTest`. It is **not** registered automatically -
+add it in the root :file:`conftest.py`
+
+.. code-block:: python
+
+   pytest_plugins = ["pyTooling.Testing.PyTest"]
+
+or pass it per run:
+
+.. code-block:: bash
+
+   pytest -p pyTooling.Testing.PyTest tests/unit
+
+The plugin is inert until something is marked, so enabling it changes nothing for a test suite that collects by
+name. Both styles work in one session and even in one file, which is what makes a gradual migration possible.
+
+.. _TESTING/Markers/Behavior:
+
+What the plugin does
+====================
+
+* :func:`~pyTooling.Testing.PyTest.pytest_pycollect_makeitem` turns a marked class into a collector and a marked
+  method into a test item, so neither has to match ``python_classes`` or ``python_functions``.
+* :func:`~pyTooling.Testing.PyTest.pytest_collection_modifyitems` renames each collected item to the name its
+  marker declares. That name is what reaches the terminal, the JUnit report and a failure message.
+* An **unmarked** method in a marked class is not collected. Marking is the whole statement of intent, so a helper
+  method needs no naming convention to stay out of the report.
+* A marked :class:`unittest.TestCase` is a special case. Such a class is collected by pytest's :mod:`unittest`
+  support, which asks :mod:`unittest`'s own loader for the test methods, and that loader recognises the ``test``
+  prefix only. The plugin therefore aliases each marked method under a name the loader accepts and lets pytest
+  collect the class as usual; the alias never reaches the report, because the item is renamed afterwards.
+
+.. seealso::
+
+   :ref:`Tutorial: naming testcases <TUTORIAL/TestcaseNaming>`
+      |rarr| Why the name a report shows and the name Python needs are different problems.

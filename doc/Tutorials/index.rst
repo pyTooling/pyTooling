@@ -16,3 +16,4 @@ Tutorials
    ExceptionHierarchy
    MetaClasses
    TerminalApplication
+   TestcaseNaming
