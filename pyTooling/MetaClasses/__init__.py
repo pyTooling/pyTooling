@@ -722,9 +722,9 @@ class ExtendedType(type):
 		                        See :attr:`__expectedMembers__`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
 		                        :func:`type` does.
-		:returns:                            The new class.
-		:raises AttributeError:              If base-class has no '__slots__' attribute.
-		:raises AttributeError:              If slot already exists in base-class.
+		:returns:               The new class.
+		:raises AttributeError: If base-class has no '__slots__' attribute.
+		:raises AttributeError: If slot already exists in base-class.
 		"""
 		from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
 
