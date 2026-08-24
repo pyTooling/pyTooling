@@ -467,15 +467,18 @@ def expects(*memberNames: str) -> Callable[[M], M]:
 	"""
 	Mark a method as needing members its class provides only in some combinations, usually through a mixin-class.
 
-	A class regularly has one method that reaches for what a mixin-class contributes, while the class itself is
-	perfectly usable without that mixin. The requirement belongs to the method, not to the class, so ``expects`` as a
-	class keyword argument would be too strict: it would reject a class that never calls the method.
+	The marked method sits on the class in the **primary inheritance line** and waits for a :term:`mixin-class`
+	further along the bases to supply what it reads, while the class itself stays perfectly usable without that
+	mixin. The requirement belongs to the method, not to the class, so ``expects`` as a class keyword argument would
+	be too strict: it would reject a class that never calls the method. It is the opposite direction of
+	``ExtendedType``'s ``expects`` keyword, where a mixin-class states what it needs from its host.
 
 	:class:`ExtendedType` checks the marked method against every class it is reachable from. If a class provides the
 	members, the method is left untouched, so a fulfilled expectation costs nothing per call. If it doesn't, the
 	method is replaced by one raising an :exc:`UnfulfilledExpectationError` when called - naming the missing members,
 	instead of an :exc:`AttributeError` from somewhere in the method's body. A replacement inherited from a
-	base-class is removed again as soon as a class provides the missing members.
+	base-class is removed again as soon as a class provides the missing members, so the mixin-class may join any
+	number of levels further down.
 
 	.. admonition:: ``example.py``
 

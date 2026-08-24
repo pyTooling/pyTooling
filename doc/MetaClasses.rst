@@ -49,11 +49,32 @@ Mixin
 Expected Members
 ****************
 
-A mixin-class regularly uses members it doesn't define itself: it expects them from whichever class it is mixed
-into. Nothing states that contract, so a host class that forgets one fails with an :exc:`AttributeError` on first
-access - somewhere else entirely, and only if that code path runs.
+A class that is only complete once it is combined with another uses members it doesn't define itself. Nothing
+states that contract, so the class that forgets one fails with an :exc:`AttributeError` on first access - somewhere
+else entirely, and only if that code path runs.
 
-The ``expects`` class keyword argument names those members.
+``expects`` names those members, and it works in **both directions**:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 46 32
+
+   * - Declared on
+     - Meaning
+     - Rejected
+   * - a class (``expects=(...)``)
+     - *"whatever I am mixed into must provide these"* - the mixin-class case
+     - instantiating the combined class
+   * - a **method** (:deco:`expects`)
+     - *"my class must provide these"* - including a method on the **primary inheritance line** waiting for a
+       mixin-class to contribute them
+     - calling that method
+
+The second is the one a :term:`mixin-class` does *not* cover: a class on the primary inheritance line cannot
+declare the members class-wide, because it has to stay usable without the mixin. See
+:ref:`META/ExpectedMembers/Method`.
+
+The class keyword argument names the members a class needs from whichever class it is mixed into.
 
 .. rubric:: Example:
 .. code-block:: Python
@@ -95,13 +116,18 @@ it expects from its host.
 
 .. _META/ExpectedMembers/Method:
 
-A single method's expectation
-=============================
+A method expecting what a mixin-class contributes
+=================================================
 
 Sometimes only *one* method needs what a mixin-class contributes, while the class itself is perfectly usable
-without it. A terminal application that prints a help page needs an argument parser for that one method - and a
-terminal application without argparse is legitimate. The class keyword argument would be too strict here: it would
-reject a class that never calls the method.
+without it. **The marked method sits on the class in the primary inheritance line**, and it waits for a
+mixin-class further along the bases to supply what it reads.
+
+`pyTooling.TerminalUI` is the real example. A terminal application that prints a help page needs an argument
+parser for that one method, and a terminal application without argparse is legitimate - so
+:meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHelp` expects ``MainParser`` and ``SubParsers`` from
+:class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, while every other method of the class works without
+it. The class keyword argument would be too strict here: it would reject a class that never calls the method.
 
 The :deco:`~pyTooling.MetaClasses.expects` decorator moves the expectation to where it belongs.
 
@@ -137,6 +163,24 @@ The check runs per class, so **a fulfilled expectation costs nothing**: the repl
 the class holds the original function, with no per-call test. A replacement inherited from a base-class is removed
 again as soon as a class provides the members, and a subclass that provides only some of them reports exactly the
 ones still missing.
+
+Because it is evaluated per class rather than once at the declaring class, **the mixin-class may arrive any number
+of levels further down** - and a sibling that does not mix it in still reports the missing members:
+
+.. code-block:: Python
+
+   class Middle(Terminal):                       # still incomplete, still fine
+     pass
+
+   class Application(Middle, ArgParseHelperMixin):
+     pass
+
+   Application().PrintHelp()                     # fine
+   Terminal().PrintHelp()                        # UnfulfilledExpectationError
+
+A member counts whether it is a method, a property, a class variable, or a field the mixin-class declared as an
+annotation - :class:`~pyTooling.MetaClasses.ExtendedType` materialises those as slots when the mixin joins the
+primary inheritance line, which is what makes them visible to the check.
 
 .. seealso::
 
