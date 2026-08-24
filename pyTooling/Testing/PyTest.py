@@ -43,11 +43,18 @@ styles can live in the same run, and even in the same file.
 
    See :ref:`high-level help <TESTING/Markers>` for explanations and usage examples.
 """
-from typing   import Any, Optional as Nullable
+from inspect  import cleandoc
+from pathlib  import PurePath
+from sys      import modules as loadedModules
+from typing   import Any, Callable, Optional as Nullable
 from unittest import TestCase
 
-from pytest               import Class, Collector, Item
-from pyTooling.Decorators import export
+from pytest               import Class, Collector, Config, Item, StashKey, fixture
+from pyTooling.Decorators import export, splitDocString
+
+
+hierarchyKey: StashKey[dict[str, dict[str, str]]] = StashKey()
+"""Where the names of every test suite level are stashed, keyed by the dotted path matching ``classname``."""
 
 
 @export
@@ -98,6 +105,67 @@ def pytest_pycollect_makeitem(collector: Collector, name: str, obj: Any) -> Null
 	return None
 
 
+def _namesOf(holder: Any) -> dict[str, str]:
+	"""
+	Return the names an object carries as a test suite level.
+
+	A class marked with :deco:`~pyTooling.Testing.testsuite` carries all three in its ``__testsuite_***__`` fields.
+	Anything else - a package or a module - has only its doc-string, whose summary and full text are the summary and
+	the description.
+
+	:param holder: The package, module or class to read the names from.
+	:returns:      Dictionary of a name's kind to its value, holding only the ones that are not empty.
+	"""
+	if hasattr(holder, "__testsuite_title__"):
+		names = {
+			"title":       holder.__testsuite_title__,
+			"summary":     holder.__testsuite_summary__,
+			"description": holder.__testsuite_description__,
+		}
+	else:
+		summary, _ = splitDocString(holder.__doc__)
+		names = {
+			"summary":     summary,
+			"description": "" if holder.__doc__ is None else cleandoc(holder.__doc__),
+		}
+
+	return {kind: value for kind, value in names.items() if value != ""}
+
+
+@export
+def getLevelNames(item: Item) -> dict[str, dict[str, str]]:
+	"""
+	Return the names of every test suite level a testcase sits in, keyed by the level's dotted path.
+
+	The path is built the way pytest builds a testcase's ``classname``: the module's dotted path, then every class
+	between the module and the testcase. So the keys of the result are prefixes of - and finally equal to - the
+	``classname`` the same testcase gets in the JUnit report, which is what lets a reader join the two.
+
+	A level contributes only the names it has, and a level with none is skipped, so an unmarked test suite of
+	undocumented packages produces an empty result.
+
+	:param item: The collected testcase to walk the levels of.
+	:returns:    Dictionary of a level's dotted path to its names.
+	"""
+	modulePath, _, remainder = item.nodeid.partition("::")
+	classNames = remainder.split("::")[:-1]
+
+	levels: dict[str, dict[str, str]] = {}
+	path, holder = "", None
+	for level in (*PurePath(modulePath).with_suffix("").parts, *classNames):
+		path = f"{path}.{level}" if path != "" else level
+
+		# below the module, the levels are classes reached from it; at and above it, they are loaded modules
+		holder = getattr(holder, level, None) if level in classNames else loadedModules.get(path, None)
+		if holder is None:
+			continue
+
+		if len(names := _namesOf(holder)) > 0:
+			levels[path] = names
+
+	return levels
+
+
 @export
 def pytest_collection_modifyitems(items: list[Item]) -> None:
 	"""
@@ -120,22 +188,46 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
 
 	:param items: The collected items, modified in place.
 	"""
+	hierarchy = items[0].config.stash.setdefault(hierarchyKey, {}) if len(items) > 0 else {}
+
 	for item in items:
+		hierarchy.update(getLevelNames(item))
+
 		testcaseTitle = getattr(getattr(item, "function", None), "__testcase_title__", None)
 		if testcaseTitle is None:
 			continue
 
 		function = item.function
-		cls = getattr(item, "cls", None)
 
-		# an item has four names: the ID (its 'classname'/'name'), a title, a summary and a description
+		# an item has four names: the ID (its 'classname'/'name'), a title, a summary and a description.
+		# The test suite's own names are not repeated here - they are in the session's properties, keyed by the
+		# level's dotted path, so they are written once instead of once per testcase.
 		for propertyName, value in (
-			("title",                 testcaseTitle),
-			("summary",               getattr(function, "__testcase_summary__", "")),
-			("description",           getattr(function, "__testcase_description__", "")),
-			("testsuiteTitle",        getattr(cls, "__testsuite_title__", "")),
-			("testsuiteSummary",      getattr(cls, "__testsuite_summary__", "")),
-			("testsuiteDescription",  getattr(cls, "__testsuite_description__", "")),
+			("title",       testcaseTitle),
+			("summary",     getattr(function, "__testcase_summary__", "")),
+			("description", getattr(function, "__testcase_description__", "")),
 		):
 			if value != "":
 				item.user_properties.append((propertyName, value))
+
+
+@export
+@fixture(scope="session", autouse=True)
+def _recordTestsuiteHierarchy(request, record_testsuite_property: Callable[[str, object], None]) -> None:
+	"""
+	Write the names of every test suite level into the report's session-level ``<properties>``.
+
+	JUnit has one flat ``<testsuite>`` element and squeezes the hierarchy into a dotted ``classname``, so a level
+	between the root and the class has no element that could carry a title or a description. The names are therefore
+	written as *keys*: ``tests.unit.Versioning.description`` names the level whose path is ``tests.unit.Versioning``,
+	which is a prefix of that testcase's ``classname``.
+
+	They are written **once per session**, not once per testcase - a property inside ``<testcase>`` would repeat for
+	every testcase in the level.
+
+	:param request:                  The fixture request, holding the configuration the levels were stashed on.
+	:param record_testsuite_property: pytest's fixture writing a property into the session's ``<testsuite>``.
+	"""
+	for path, names in request.config.stash.get(hierarchyKey, {}).items():
+		for kind, value in names.items():
+			record_testsuite_property(f"{path}.{kind}", value)

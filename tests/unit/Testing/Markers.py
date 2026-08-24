@@ -341,16 +341,12 @@ class PyTestPlugin(ApplicationTestcase):
 				for testcaseElement in xml_parse(report).getroot().iter("testcase")
 			}
 
-		self.assertEqual(
-			{"title": "A newer version compares greater.", "testsuiteTitle": "Version comparison"},
-			properties["test_NewerIsGreater"]
-		)
+		self.assertEqual({"title": "A newer version compares greater."}, properties["test_NewerIsGreater"])
 		self.assertEqual(
 			{
-				"title":          "DescribedByItsDocString",
-				"summary":        "An equal version compares equal.",
-				"description":    "An equal version compares equal.\n\nThe description reaches the report as a property.",
-				"testsuiteTitle": "Version comparison"
+				"title":       "DescribedByItsDocString",
+				"summary":     "An equal version compares equal.",
+				"description": "An equal version compares equal.\n\nThe description reaches the report as a property.",
 			},
 			properties["test_DescribedByItsDocString"]
 		)
@@ -452,3 +448,113 @@ class ReportFormat(ApplicationTestcase):
 
 		self.assertEqual([], children)
 
+
+class Hierarchy(ApplicationTestcase):
+	"""The names of every test suite level, keyed by the dotted path matching a testcase's 'classname'."""
+
+	_consoleScript  = "pytest"
+	_runnableModule = "pytest"
+
+	PACKAGE_DOCSTRING = '''"""
+The version handling test suite.
+
+Everything about parsing and comparing versions.
+"""
+'''   #: The '__init__.py' of the generated package, whose doc-string names the outermost level.
+
+	MODULE = '''"""
+Version comparison tests.
+
+The module\'s own description.
+"""
+from pyTooling.Testing import Testcase, testsuite, testcase
+
+
+@testsuite("Version comparison.")
+class VersionComparison(Testcase):
+	"""
+	Compare two release versions.
+
+	Everything about comparing them.
+	"""
+
+	@testcase("A newer version compares greater.")
+	def NewerIsGreater(self) -> None:
+		self.assertGreater((2, 0), (1, 9))
+'''   #: A test module inside that package, whose class carries a marker.
+
+	def _RunPyTest(self, directory: Path) -> tuple[object, Path]:
+		"""
+		Write a package with a documented '__init__.py' and one test module, and run pytest over it.
+
+		:param directory: Directory to write the package and the report into.
+		:returns:         Tuple of the completed process and the path of the JUnit report.
+		"""
+		package = directory / "versioning"
+		package.mkdir()
+		(package / "__init__.py").write_text(self.PACKAGE_DOCSTRING, encoding="utf-8")
+		(package / "test_comparison.py").write_text(self.MODULE, encoding="utf-8")
+		(directory / "pytest.ini").write_text(PYTEST_CONFIGURATION, encoding="utf-8")
+		report = directory / "report.xml"
+
+		repositoryRoot = Path(__file__).resolve().parent.parent.parent.parent
+
+		result = self.RunModule(
+			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest",
+			f"--junit-xml={report}", "versioning",
+			environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+			workingDirectory=directory
+		)
+
+		return result, report
+
+	def test_EveryLevelIsKeyedByItsDottedPath(self) -> None:
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			testsuiteElement = xml_parse(report).getroot().find("testsuite")
+			properties = {
+				propertyElement.get("name"): propertyElement.get("value")
+				for propertyElement in testsuiteElement.find("properties")
+			}
+			classname = testsuiteElement.find("testcase").get("classname")
+
+		self.assertEqual("The version handling test suite.", properties["versioning.summary"])
+		self.assertEqual("Version comparison tests.", properties["versioning.test_comparison.summary"])
+		self.assertEqual(
+			"Version comparison.",
+			properties["versioning.test_comparison.VersionComparison.title"]
+		)
+		self.assertEqual(
+			"versioning.test_comparison.VersionComparison",
+			classname,
+			"The innermost key is the testcase's 'classname', which is what joins the two."
+		)
+
+	def test_ThePackageDescriptionIsItsWholeDocString(self) -> None:
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			properties = {
+				propertyElement.get("name"): propertyElement.get("value")
+				for propertyElement in xml_parse(report).getroot().find("testsuite").find("properties")
+			}
+
+		self.assertEqual(
+			"The version handling test suite.\n\nEverything about parsing and comparing versions.",
+			properties["versioning.description"]
+		)
+
+	def test_TheyAreWrittenOncePerSessionNotPerTestcase(self) -> None:
+		"""The reason the keys are on the test suite: a testcase property would repeat for every testcase."""
+
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			testcaseElement = xml_parse(report).getroot().find("testsuite").find("testcase")
+			names = [propertyElement.get("name") for propertyElement in testcaseElement.iter("property")]
+
+		self.assertEqual(["title"], names)
