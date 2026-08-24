@@ -100,21 +100,7 @@ def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 	This decorator separates them. The class is collected because it is marked, and it is reported under the title
 	given here, which can be a sentence.
 
-	It is usable with and without parentheses, and with or without a title:
-
-	.. code-block:: python
-
-	   @testsuite
-	   class FirstTests:
-	     ...
-
-	   @testsuite()
-	   class SecondTests:
-	     ...
-
-	   @testsuite("My third set of tests.")
-	   class ThirdTests:
-	     ...
+	It is usable with and without parentheses, and with or without a title.
 
 	.. admonition:: ``example.py``
 

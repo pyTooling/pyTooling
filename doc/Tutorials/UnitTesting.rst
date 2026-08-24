@@ -159,12 +159,10 @@ Marking instead of naming
 
       .. code-block:: python
 
-         from pyTooling.Testing import Testcase, testsuite, testcase
-
-
          @testsuite("Version comparison")
          class VersionComparison(Testcase):
-           @testcase("a newer version compares greater")
+
+           @testcase("A newer version compares greater.")
            def NewerIsGreater(self) -> None:
              self.assertGreater(Version("2.0"), Version("1.9"))
 
@@ -172,13 +170,18 @@ Marking instead of naming
 
       .. code-block:: xml
 
-         <testcase classname="VersionComparison"
-                   name="NewerIsGreater">
-           <properties>
-             <property name="title"
-                       value="A newer version compares greater." />
-           </properties>
-         </testcase>
+         <testsuites name="pytest tests">
+           <testsuite name="pytest" errors="0" failures="0" skipped="0"
+                      tests="1" time="0.016" timestamp="2026-08-24T23:55:41+00:00" hostname="build-01">
+             <testcase classname="tests.unit.Versioning.Comparison.VersionComparison"
+                       name="test_NewerIsGreater" time="0.001">
+               <properties>
+                 <property name="title" value="A newer version compares greater." />
+                 <property name="testsuiteTitle" value="Version comparison" />
+               </properties>
+             </testcase>
+           </testsuite>
+         </testsuites>
 
 Read the two reports next to each other:
 
@@ -214,9 +217,10 @@ file. A useful intermediate step is to mark without naming:
 
 .. code-block:: python
 
-   @testsuite()
+   @testsuite
    class VersionComparison(Testcase):
-     @testcase()
+
+     @testcase
      def NewerIsGreater(self) -> None:
        ...
 
