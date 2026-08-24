@@ -134,15 +134,17 @@ class PyTestPlugin(Testcase):
 	"""The plugin collects what is marked, reports it under the declared name, and leaves name-based tests alone."""
 
 	@staticmethod
-	def _RunPyTest(directory: Path) -> tuple[int, str, Path]:
+	def _RunPyTest(directory: Path, *arguments: str) -> tuple[int, str, Path]:
 		"""
 		Write the test module above into the given directory and run pytest over it.
 
 		:param directory: Directory to write the test module and the report into.
+		:param arguments: Optional, what pytest should collect. Default: the whole directory.
 		:returns:         Tuple of the exit code, the captured output, and the path of the JUnit report.
 		"""
 		(directory / "test_marked.py").write_text(TEST_MODULE, encoding="utf-8")
-		(directory / "pytest.ini").write_text("[pytest]\npython_files = test_*\npython_functions = test_*\n", encoding="utf-8")
+		configuration = "[pytest]\npython_files = test_*\npython_functions = test_*\n"
+		(directory / "pytest.ini").write_text(configuration, encoding="utf-8")
 		report = directory / "report.xml"
 
 		# the subprocess runs elsewhere, so point it at the sources under test rather than an installed copy
@@ -152,12 +154,22 @@ class PyTestPlugin(Testcase):
 		process = subprocess_run(
 			(
 				PythonExecutable, "-m", "pytest", "-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest",
-				f"--junit-xml={report}", str(directory)
+				f"--junit-xml={report}", *(arguments if len(arguments) > 0 else (str(directory), ))
 			),
 			capture_output=True, encoding="utf-8", cwd=directory, env={**environ, "PYTHONPATH": pythonPath}
 		)
 
 		return process.returncode, process.stdout, report
+
+	def test_TheNodeIDStaysCanonicalSoATestcaseCanBeSelected(self) -> None:
+		"""The report is renamed, the item is not - so an IDE, a command line and '--last-failed' still work."""
+
+		with TemporaryDirectory() as directory:
+			path = Path(directory)
+			returnCode, output, _ = self._RunPyTest(path, "test_marked.py::VersionComparison::test_NewerIsGreater")
+
+			self.assertEqual(0, returnCode, output)
+			self.assertIn("1 passed", output)
 
 	def test_MarkedAndNameBasedTestsRunInOneSession(self) -> None:
 		with TemporaryDirectory() as directory:
@@ -175,3 +187,23 @@ class PyTestPlugin(Testcase):
 		self.assertIn(("A plain class", "a class that is no TestCase works too"), names)
 		self.assertIn(("NameBased", "test_StillCollectedByName"), names)
 		self.assertEqual(4, len(names), f"An unmarked method was collected: {names}")
+
+	def test_TheDeclaredNamesAreAlsoReportedAsProperties(self) -> None:
+		with TemporaryDirectory() as directory:
+			returnCode, output, report = self._RunPyTest(Path(directory))
+
+			self.assertEqual(0, returnCode, output)
+
+			properties = {
+				testcaseElement.get("name"): {
+					propertyElement.get("name"): propertyElement.get("value")
+					for propertyElement in testcaseElement.iter("property")
+				}
+				for testcaseElement in xml_parse(report).getroot().iter("testcase")
+			}
+
+		self.assertEqual(
+			{"testcase": "a newer version compares greater", "testsuite": "Version comparison"},
+			properties["a newer version compares greater"]
+		)
+		self.assertEqual({}, properties["test_StillCollectedByName"], "An unmarked testcase carries no properties.")

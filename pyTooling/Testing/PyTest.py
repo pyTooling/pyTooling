@@ -48,8 +48,11 @@ from unittest import TestCase
 
 import pytest
 
+from _pytest.junitxml     import xml_key
+from pyTooling.Decorators import export
 
-__all__ = ["pytest_pycollect_makeitem", "pytest_collection_modifyitems"]
+
+__all__ = ["pytest_pycollect_makeitem", "pytest_collection_modifyitems", "pytest_configure", "JUnitReportRenamer"]
 
 
 def _markedMethods(cls: type) -> dict[str, Any]:
@@ -95,23 +98,83 @@ def pytest_pycollect_makeitem(collector, name: str, obj: Any) -> Nullable[Any]:
 
 def pytest_collection_modifyitems(items: list) -> None:
 	"""
-	Report every marked item under the name its marker gives it.
+	Attach the declared names of every marked item to the item, for the report to pick up.
 
-	The name a testcase is reported under - in the terminal, in the JUnit report and in a failure - comes from the
-	item, so renaming it here is what makes the marker's name visible. An unmarked item is left alone.
+	They travel as :attr:`~_pytest.nodes.Item.user_properties`, which is the same channel the
+	:func:`~_pytest.python_api.record_property` fixture writes to: it is part of the test report, so it survives
+	being sent from a ``pytest-xdist`` worker, and it reaches the JUnit report as a ``<property>``.
+
+	**The item's own name and node ID are deliberately left alone.** They are what selects a test - on the command
+	line, from an IDE, and from ``--last-failed``'s cache - so renaming the item would make a testcase impossible to
+	re-run under the name it was reported with.
 
 	:param items: The collected items, modified in place.
 	"""
 	for item in items:
-		function = getattr(item, "function", None)
-		declaredCase = getattr(function, "__testcase__", None)
+		declaredCase = getattr(getattr(item, "function", None), "__testcase__", None)
 		if declaredCase is None:
 			continue
 
-		declaredSuite = getattr(getattr(item, "cls", None), "__testsuite__", None)
-		if declaredSuite is None:
-			continue
+		item.user_properties.append(("testcase", declaredCase))
 
-		modulePath = item.nodeid.rsplit("::", 2)[0]
-		item._nodeid = f"{modulePath}::{declaredSuite}::{declaredCase}"
-		item.name = declaredCase
+		declaredSuite = getattr(getattr(item, "cls", None), "__testsuite__", None)
+		if declaredSuite is not None:
+			item.user_properties.append(("testsuite", declaredSuite))
+
+
+@export
+class JUnitReportRenamer:
+	"""
+	Renames a marked testcase in the JUnit report, and only there.
+
+	The ``name`` and ``classname`` attributes of a ``<testcase>`` are derived from the item's node ID by pytest's
+	JUnit writer, so they cannot be set through a report property. This plugin reaches the writer's node reporter
+	and overwrites them, which leaves collection, selection and every node ID untouched.
+	"""
+
+	_config: pytest.Config   #: The session's configuration, holding the JUnit writer.
+
+	def __init__(self, config: pytest.Config) -> None:
+		"""
+		Initializes the renamer with the session's configuration.
+
+		:param config: The session's configuration.
+		"""
+		self._config = config
+
+	@pytest.hookimpl(trylast=True)
+	def pytest_runtest_logreport(self, report: Any) -> None:
+		"""
+		Overwrite the entry's ``name`` and ``classname`` in the JUnit report.
+
+		This runs **after** pytest's JUnit writer, so the entry for this phase exists already and is looked up rather
+		than created. Creating one would add a second ``<testcase>`` for every marked testcase, because the writer
+		opens an entry only for the phase it reports.
+
+		:param report: The report of one phase of one testcase.
+		"""
+		properties = dict(report.user_properties)
+		if "testcase" not in properties:
+			return
+
+		logXML = self._config.stash.get(xml_key, None)
+		if logXML is None:                                 # no JUnit report was requested
+			return
+
+		# the writer keys its entries by node ID and, under 'pytest-xdist', the worker node the report came from
+		reporter = logXML.node_reporters.get((report.nodeid, getattr(report, "node", None)), None)
+		if reporter is None:
+			return
+
+		reporter.attrs["name"] = properties["testcase"]
+		if "testsuite" in properties:
+			reporter.attrs["classname"] = properties["testsuite"]
+
+
+def pytest_configure(config: pytest.Config) -> None:
+	"""
+	Register the renamer, which needs the session's configuration to reach the JUnit writer.
+
+	:param config: The session's configuration.
+	"""
+	config.pluginmanager.register(JUnitReportRenamer(config), "pyTooling.Testing.JUnitReportRenamer")
