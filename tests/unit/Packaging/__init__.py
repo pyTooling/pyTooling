@@ -191,3 +191,81 @@ class DescribePackage(Testcase):
 		self.assertEqual(16, len(packageInformation))
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
+
+
+class EntryPoints(Testcase):
+	"""Entry points of any group, with 'consoleScripts' as the shorthand for one of them."""
+
+	def test_NoEntryPointsAtAll(self) -> None:
+		from pyTooling.Packaging import _mergeEntryPoints
+
+		self.assertIsNone(_mergeEntryPoints(None, None))
+
+	def test_ConsoleScriptsStillWork(self) -> None:
+		from pyTooling.Packaging import _mergeEntryPoints
+
+		self.assertEqual(
+			{"console_scripts": ["prog = myPackage.CLI:main"]},
+			_mergeEntryPoints({"prog": "myPackage.CLI:main"}, None)
+		)
+
+	def test_AnyGroupCanBeDeclared(self) -> None:
+		from pyTooling.Packaging import _mergeEntryPoints
+
+		self.assertEqual(
+			{"pytest11": ["pyTooling = pyTooling.Testing.PyTest"]},
+			_mergeEntryPoints(None, {"pytest11": {"pyTooling": "pyTooling.Testing.PyTest"}})
+		)
+
+	def test_BothAreMerged(self) -> None:
+		from pyTooling.Packaging import _mergeEntryPoints
+
+		self.assertEqual(
+			{"pytest11": ["myPlugin = myPackage.PyTest"], "console_scripts": ["prog = myPackage.CLI:main"]},
+			_mergeEntryPoints({"prog": "myPackage.CLI:main"}, {"pytest11": {"myPlugin": "myPackage.PyTest"}})
+		)
+
+	def test_TheShorthandAddsToItsOwnGroup(self) -> None:
+		from pyTooling.Packaging import _mergeEntryPoints
+
+		self.assertEqual(
+			{"console_scripts": ["other = myPackage.Other:main", "prog = myPackage.CLI:main"]},
+			_mergeEntryPoints(
+				{"prog": "myPackage.CLI:main"},
+				{"console_scripts": {"other": "myPackage.Other:main"}}
+			)
+		)
+
+	def test_ANameDeclaredTwiceIsRejected(self) -> None:
+		from pyTooling.Packaging import _mergeEntryPoints
+
+		with self.assertRaises(ValueError) as exceptionCapture:
+			_mergeEntryPoints({"prog": "a"}, {"console_scripts": {"prog": "b"}})
+
+		self.assertEqual(
+			"Entry point 'prog' is declared twice in group 'console_scripts'.",
+			str(exceptionCapture.exception)
+		)
+		self.assertIn("'entryPoints' gives 'b', 'consoleScripts' gives 'a'.", exceptionCapture.exception.__notes__)
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_TheyReachTheDescription(self) -> None:
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife"),
+			entryPoints={"pytest11": {"myPlugin": "myPackage.PyTest"}}
+		)
+
+		self.assertEqual({"pytest11": ["myPlugin = myPackage.PyTest"]}, packageInformation["entry_points"])
+
