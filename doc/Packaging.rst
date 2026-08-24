@@ -280,6 +280,39 @@ Handling of keywords
 If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``
 will be used. Otherwise, the content of the parameter, if not None or empty.
 
+.. _PACKAGING/Descriptions/EntryPoints:
+
+Handling of entry points
+========================
+
+A package advertises what it offers through **entry point groups**: ``console_scripts`` for a command line program,
+``pytest11`` for a pytest plugin, ``sphinx.html_themes`` for a Sphinx theme, and whatever group another tool
+defines for its plugins.
+
+Parameter ``entryPoints`` declares any of them - a dictionary mapping a group to the names and entry points in it:
+
+.. code-block:: Python
+
+   entryPoints={
+     "pytest11": {"myPlugin": "myPackage.PyTest"}
+   }
+
+Parameter ``consoleScripts`` is the shorthand for the group a package uses most often, so these two are the same
+description:
+
+.. code-block:: Python
+
+   consoleScripts={"prog": "myPackage.CLI:main"}
+   entryPoints={"console_scripts": {"prog": "myPackage.CLI:main"}}
+
+Both may be given at once and are merged. A name declared twice **in the same group** is an error rather than a
+silent overwrite, because which of the two would win is not something a reader of the ``setup.py`` could tell:
+
+.. code-block:: text
+
+   ValueError: Entry point 'prog' is declared twice in group 'console_scripts'.
+   'entryPoints' gives 'b', 'consoleScripts' gives 'a'.
+
 
 .. _PACKAGING/Descriptions/GitHub:
 
