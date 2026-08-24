@@ -125,7 +125,7 @@ def testsuite(name: Nullable[str] = None) -> Callable[[C], C]:
 	      |rarr| How a test runner is taught to collect what is marked.
 	"""
 	if name is not None and not isinstance(name, str):
-		ex = TypeError(f"Parameter 'name' is not a string.")
+		ex = TypeError("Parameter 'name' is not a string.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 		raise ex
 
@@ -139,7 +139,7 @@ def testsuite(name: Nullable[str] = None) -> Callable[[C], C]:
 		"""
 		if not isinstance(cls, type):
 			ex = TypeError(f"Decorator 'testsuite' is applied to '{getFullyQualifiedName(cls)}' instead of a class.")
-			ex.add_note(f"A method is marked as a testcase with the 'testcase' decorator.")
+			ex.add_note("A method is marked as a testcase with the 'testcase' decorator.")
 			raise ex
 
 		cls.__testsuite__ = cls.__name__ if name is None else name
@@ -181,7 +181,7 @@ def testcase(name: Nullable[str] = None) -> Callable[[M], M]:
 	      |rarr| How a test runner is taught to collect what is marked.
 	"""
 	if name is not None and not isinstance(name, str):
-		ex = TypeError(f"Parameter 'name' is not a string.")
+		ex = TypeError("Parameter 'name' is not a string.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 		raise ex
 
@@ -195,7 +195,7 @@ def testcase(name: Nullable[str] = None) -> Callable[[M], M]:
 		"""
 		if isinstance(method, type):
 			ex = TypeError(f"Decorator 'testcase' is applied to class '{method.__name__}' instead of a method.")
-			ex.add_note(f"A class is marked as a test suite with the 'testsuite' decorator.")
+			ex.add_note("A class is marked as a test suite with the 'testsuite' decorator.")
 			raise ex
 
 		method.__testcase__ = method.__name__ if name is None else name
