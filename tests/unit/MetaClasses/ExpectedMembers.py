@@ -312,3 +312,26 @@ class ExpectingMethods(Testcase):
 
 	def test_AMethodWithoutTheMarkerIsUntouched(self) -> None:
 		self.assertIs(Terminal.__dict__["Write"], Terminal.Write)
+
+	def test_TheMixinMayArriveLevelsFurtherDown(self) -> None:
+		"""The marked method is on the primary inheritance line; the mixin-class joins two levels below."""
+
+		class Middle(Terminal):
+			pass
+
+		class Application(Middle, ParserMixin):
+			def __init__(self) -> None:
+				self.MainParser = "<parser>"
+				self.SubParsers = {}
+
+		self.assertEqual("help from <parser>", Application().PrintHelp())
+
+	def test_ASiblingWithoutTheMixinStillReports(self) -> None:
+		class Application(Terminal, ParserMixin):
+			pass
+
+		class Sibling(Terminal):
+			pass
+
+		with self.assertRaises(UnfulfilledExpectationError):
+			Sibling().PrintHelp()
