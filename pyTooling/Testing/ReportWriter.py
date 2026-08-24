@@ -49,11 +49,26 @@ from typing                import Any, Optional as Nullable
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
 from pytest                import Config, Parser, Session, StashKey
-from pyTooling.Common      import __version__
+from pyTooling.Common      import __version__, getResourceFile
 from pyTooling.Decorators  import export
+from pyTooling.Testing     import Resources
 
 
-SCHEMA = Path(__file__).parent / "Resources" / "TestReport.xsd"   #: The schema the written report adheres to.
+SCHEMA_FILE = "TestReport.xsd"   #: Name of the schema the written report adheres to.
+
+
+@export
+def getSchemaFile() -> Path:
+	"""
+	Return the path of the schema a written report adheres to.
+
+	It is read through :func:`~pyTooling.Common.getResourceFile`, so it is found whether the package is installed,
+	inside a wheel, or a checkout.
+
+	:returns:                 Path of :file:`TestReport.xsd`.
+	:raises ToolingException: If the schema file is missing from the resource package.
+	"""
+	return getResourceFile(Resources, SCHEMA_FILE)
 
 _STATUS = {
 	(True,  False): "passed",
@@ -134,7 +149,7 @@ class TestReportWriter:
 		statuses = [entry.get("status", "errored") for entry in self._results.values()]
 		root = Element("TestReport", {
 			"xmlns:xsi":                     "http://www.w3.org/2001/XMLSchema-instance",
-			"xsi:noNamespaceSchemaLocation": SCHEMA.name,
+			"xsi:noNamespaceSchemaLocation": SCHEMA_FILE,
 			"tool":                          "pyTooling",
 			"version":                       __version__,
 			"timestamp":                     datetime.now(timezone.utc).isoformat(),

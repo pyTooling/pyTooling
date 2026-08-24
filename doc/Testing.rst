@@ -337,8 +337,22 @@ understands while the richer file is produced beside it.
 The schema
 ==========
 
-:file:`pyTooling/Testing/Resources/TestReport.xsd` is shipped with the package, and every generated file points at
-it with ``xsi:noNamespaceSchemaLocation``, so a reader can validate without being told where the schema lives.
+The schema lives in the resource package :mod:`pyTooling.Testing.Resources` and is shipped with the distribution.
+Every generated file points at it with ``xsi:noNamespaceSchemaLocation``, so a reader can validate without being
+told where it lives, and :func:`~pyTooling.Testing.ReportWriter.getSchemaFile` returns its path - read through
+:func:`~pyTooling.Common.getResourceFile`, so it is found whether pyTooling is installed, inside a wheel, or a
+checkout:
+
+.. code-block:: python
+
+   from xmlschema                     import XMLSchema
+   from pyTooling.Testing.ReportWriter import getSchemaFile
+
+   XMLSchema(getSchemaFile()).validate("report/unit/TestReport.xml")
+
+Validating needs an XML schema library such as `xmlschema <https://pypi.org/project/xmlschema/>`__. **pyTooling
+does not depend on one**: writing a report uses :mod:`xml.etree.ElementTree` from the standard library, so the
+schema is there for whoever reads the file.
 
 * ``name`` is an **attribute** on every item, because it is an identifier. ``Title``, ``Summary`` and
   ``Description`` are **elements**, because they are prose - ``Description`` is typed ``preservingstring``, so its

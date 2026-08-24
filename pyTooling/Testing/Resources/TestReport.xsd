@@ -41,7 +41,9 @@
 		<xsd:sequence>
 			<xsd:element name="Title" type="xsd:string" minOccurs="0" maxOccurs="1">
 				<xsd:annotation>
-					<xsd:documentation xml:lang="en">A short label, written for a reader rather than for Python.</xsd:documentation>
+					<xsd:documentation xml:lang="en">
+						A short label, written for a reader rather than for Python.
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>
 			<xsd:element name="Summary" type="xsd:string" minOccurs="0" maxOccurs="1">
@@ -62,7 +64,9 @@
 			<xsd:group ref="names" />
 			<xsd:element name="Message" type="preservingstring" minOccurs="0" maxOccurs="1">
 				<xsd:annotation>
-					<xsd:documentation xml:lang="en">Why the testcase did not pass: the failure, error or skip reason.</xsd:documentation>
+					<xsd:documentation xml:lang="en">
+						Why the testcase did not pass: the failure, error or skip reason.
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>
 		</xsd:sequence>
