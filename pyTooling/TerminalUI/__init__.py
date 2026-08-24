@@ -1111,22 +1111,6 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HeadLine, **TerminalApplication.Foreground))
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
 
-	def _PrintHelp(self, command: Nullable[str] = None) -> None:
-		"""
-		Helper function to print the command line parsers help page(s).
-
-		:param command: Optional, the subcommand to print the help page(s) for.
-		"""
-		if command is None:
-			self.MainParser.print_help()
-		elif command == "help":
-			self.WriteWarning("This is a recursion ...")
-		else:
-			try:
-				self.SubParsers[command].print_help()
-			except KeyError:
-				self.WriteError(f"Command {command} is unknown.")
-
 	def _PrintVersion(
 		self,
 		dunderModule:        ModuleType,
