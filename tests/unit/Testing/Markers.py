@@ -68,6 +68,39 @@ class TestsuiteMarker(Testcase):
 
 		self.assertEqual("My third set of tests.", Suite.__testsuite_title__)
 
+	def test_TheTitleComesFromTheDocStringSummary(self) -> None:
+		@testsuite
+		class Suite:
+			"""Version comparison."""
+
+		self.assertEqual("Version comparison.", Suite.__testsuite_title__)
+		self.assertEqual("", Suite.__testsuite_description__)
+
+	def test_TheDescriptionComesFromTheDocStringBody(self) -> None:
+		@testsuite
+		class Suite:
+			"""
+			Version comparison.
+
+			Everything about comparing two versions.
+			"""
+
+		self.assertEqual("Version comparison.", Suite.__testsuite_title__)
+		self.assertEqual("Everything about comparing two versions.", Suite.__testsuite_description__)
+
+	def test_AnExplicitTitleWinsOverTheDocString(self) -> None:
+		@testsuite("An explicit title wins.")
+		class Suite:
+			"""This summary must not win."""
+
+		self.assertEqual("An explicit title wins.", Suite.__testsuite_title__)
+
+	def test_TheDescriptionMustBeAString(self) -> None:
+		with self.assertRaises(TypeError) as exceptionCapture:
+			testsuite(description=42)
+
+		self.assertEqual("Parameter 'description' is not a string.", str(exceptionCapture.exception))
+
 	def test_TheTitleMustBeAStringOrAClass(self) -> None:
 		with self.assertRaises(TypeError) as exceptionCapture:
 			testsuite(42)
@@ -110,6 +143,70 @@ class TestcaseMarker(Testcase):
 
 		self.assertEqual("A newer version compares greater.", Suite.Method.__testcase_title__)
 
+	def test_TheTitleComesFromTheDocStringSummary(self) -> None:
+		class Suite:
+			@testcase
+			def Method(self) -> None:
+				"""A newer version compares greater."""
+
+		self.assertEqual("A newer version compares greater.", Suite.Method.__testcase_title__)
+		self.assertEqual("", Suite.Method.__testcase_description__)
+
+	def test_TheDescriptionComesFromTheDocStringBody(self) -> None:
+		class Suite:
+			@testcase
+			def Method(self) -> None:
+				"""
+				A newer version compares greater.
+
+				Only the minor number differs, so this also pins
+				that it is no string comparison.
+				"""
+
+		self.assertEqual("A newer version compares greater.", Suite.Method.__testcase_title__)
+		self.assertEqual(
+			"Only the minor number differs, so this also pins\nthat it is no string comparison.",
+			Suite.Method.__testcase_description__
+		)
+
+	def test_AMultiLineSummaryBecomesOneLine(self) -> None:
+		class Suite:
+			@testcase
+			def Method(self) -> None:
+				"""
+				A newer version
+				compares greater.
+				"""
+
+		self.assertEqual("A newer version compares greater.", Suite.Method.__testcase_title__)
+
+	def test_AnExplicitTitleWinsOverTheDocString(self) -> None:
+		class Suite:
+			@testcase("An explicit title wins.")
+			def Method(self) -> None:
+				"""This summary must not win."""
+
+		self.assertEqual("An explicit title wins.", Suite.Method.__testcase_title__)
+
+	def test_AnExplicitDescriptionWinsOverTheDocString(self) -> None:
+		class Suite:
+			@testcase(description="An explicit description wins.")
+			def Method(self) -> None:
+				"""
+				A summary.
+
+				A body that must not win.
+				"""
+
+		self.assertEqual("A summary.", Suite.Method.__testcase_title__)
+		self.assertEqual("An explicit description wins.", Suite.Method.__testcase_description__)
+
+	def test_TheDescriptionMustBeAString(self) -> None:
+		with self.assertRaises(TypeError) as exceptionCapture:
+			testcase(description=42)
+
+		self.assertEqual("Parameter 'description' is not a string.", str(exceptionCapture.exception))
+
 	def test_TheTitleMustBeAStringOrAMethod(self) -> None:
 		with self.assertRaises(TypeError) as exceptionCapture:
 			testcase(42)
@@ -138,6 +235,14 @@ class VersionComparison(Testcase):
 	@testcase
 	def UnnamedKeepsItsIdentifier(self) -> None:
 		self.assertTrue(True)
+
+	@testcase
+	def TitledByItsDocString(self) -> None:
+		"""An equal version compares equal.
+
+		The description reaches the report as a property.
+		"""
+		self.assertEqual((1, 0), (1, 0))
 
 	def NotMarkedSoNotCollected(self) -> None:
 		raise AssertionError("must never run")
@@ -219,7 +324,8 @@ class PyTestPlugin(ApplicationTestcase):
 		self.assertIn(("VersionComparison", "test_UnnamedKeepsItsIdentifier"), names)
 		self.assertIn(("PlainSuite", "PlainWorks"), names)
 		self.assertIn(("NameBased", "test_StillCollectedByName"), names)
-		self.assertEqual(4, len(names), f"An unmarked method was collected: {names}")
+		self.assertIn(("VersionComparison", "test_TitledByItsDocString"), names)
+		self.assertEqual(5, len(names), f"An unmarked method was collected: {names}")
 
 	def test_TheTitlesAreReportedAsProperties(self) -> None:
 		"""'classname' and 'name' stay identifiers; the titles are additional information."""
@@ -240,5 +346,13 @@ class PyTestPlugin(ApplicationTestcase):
 		self.assertEqual(
 			{"title": "A newer version compares greater.", "testsuiteTitle": "Version comparison"},
 			properties["test_NewerIsGreater"]
+		)
+		self.assertEqual(
+			{
+				"title":         "An equal version compares equal.",
+				"description":   "The description reaches the report as a property.",
+				"testsuiteTitle": "Version comparison"
+			},
+			properties["test_TitledByItsDocString"]
 		)
 		self.assertEqual({}, properties["test_StillCollectedByName"], "An unmarked testcase carries no properties.")

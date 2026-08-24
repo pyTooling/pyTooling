@@ -101,7 +101,7 @@ def pytest_pycollect_makeitem(collector: Collector, name: str, obj: Any) -> Null
 @export
 def pytest_collection_modifyitems(items: list[Item]) -> None:
 	"""
-	Attach the titles of every marked item to the item, for the report to pick up.
+	Attach the titles and descriptions of every marked item to the item, for the report to pick up.
 
 	They travel as :attr:`~_pytest.nodes.Item.user_properties`, which is the channel the
 	:func:`~_pytest.python_api.record_property` fixture writes to: they are part of the test report, so they survive
@@ -120,6 +120,15 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
 
 		item.user_properties.append(("title", testcaseTitle))
 
-		testsuiteTitle = getattr(getattr(item, "cls", None), "__testsuite_title__", None)
+		description = getattr(getattr(item, "function", None), "__testcase_description__", "")
+		if description != "":
+			item.user_properties.append(("description", description))
+
+		cls = getattr(item, "cls", None)
+		testsuiteTitle = getattr(cls, "__testsuite_title__", None)
 		if testsuiteTitle is not None:
 			item.user_properties.append(("testsuiteTitle", testsuiteTitle))
+
+			testsuiteDescription = getattr(cls, "__testsuite_description__", "")
+			if testsuiteDescription != "":
+				item.user_properties.append(("testsuiteDescription", testsuiteDescription))

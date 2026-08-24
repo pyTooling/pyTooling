@@ -228,6 +228,28 @@ The identifiers are unchanged, the report is unchanged, but collection no longer
 ``test_`` prefixes can now be dropped in a separate commit whose diff is only renames, and a sentence can be added
 per testcase whenever someone has a reason to.
 
+.. _TUTORIAL/UnitTesting/Naming/DocString:
+
+Letting the doc-string do it
+============================
+
+A testcase that already has a doc-string has already been described once. The markers read it: the summary becomes
+the title, the body becomes a description that travels into the report as a property.
+
+.. code-block:: python
+
+   @testcase
+   def NewerIsGreater(self) -> None:
+     """
+     A newer version compares greater.
+
+     Only the minor number differs here, so this also pins that it is not a string
+     comparison, where "2.0" < "1.9" would hold.
+     """
+
+Nothing is written twice, and the *why* - which rarely fits a title at all - is now in the report next to the
+result, where someone reading a failure can see it.
+
 .. topic:: When name-based collection is the better choice
 
    Marking costs an import and a decorator per testcase. For a small suite whose testcase names are already

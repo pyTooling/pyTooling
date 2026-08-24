@@ -173,8 +173,59 @@ report as a **property**:
    element. pytest's JUnit writer emits exactly **one** ``<testsuite name="pytest">`` for the whole session, not
    one per class, so a per-class title has no element of its own to sit on.
 
-Both decorators take an optional name. Without one, the identifier is used, so a marker can be added to an existing
-testcase without changing what a report says about it.
+.. _TESTING/Markers/Descriptions:
+
+Titles and descriptions
+=======================
+
+Both decorators take an optional ``title`` and ``description``, and both fall back to the **doc-string**: its
+summary becomes the title, its body becomes the description.
+
+.. code-block:: python
+
+   @testsuite
+   class VersionComparison(Testcase):
+     """
+     Version comparison.
+
+     Everything about comparing two release versions.
+     """
+
+     @testcase
+     def NewerIsGreater(self) -> None:
+       """
+       A newer version compares greater.
+
+       Only the minor number differs here, so this also pins that it is not a string
+       comparison, where "2.0" < "1.9" would hold.
+       """
+
+All four reach the report as properties:
+
+.. code-block:: xml
+
+   <testcase classname="test_versioning.VersionComparison" name="test_NewerIsGreater">
+     <properties>
+       <property name="title" value="A newer version compares greater." />
+       <property name="description" value="Only the minor number differs here, ..." />
+       <property name="testsuiteTitle" value="Version comparison." />
+       <property name="testsuiteDescription" value="Everything about comparing two release versions." />
+     </properties>
+   </testcase>
+
+Three sources can title a testcase, tried in this order:
+
+1. the decorator's ``title`` argument,
+2. the doc-string's summary - a summary spanning several lines is joined into one,
+3. the identifier, when there is no doc-string.
+
+The same order applies to ``description`` with the doc-string's body. An explicit argument replaces *its own* part
+only: giving a ``title`` discards the summary but keeps the body as the description.
+
+.. hint::
+
+   Because the identifier is the last fallback, a marker can be added to an existing testcase without changing
+   anything a report says about it - which is what makes a suite migratable one class at a time.
 
 .. _TESTING/Markers/Enabling:
 

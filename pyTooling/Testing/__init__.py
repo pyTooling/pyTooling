@@ -39,6 +39,7 @@ argument parsing or the exit codes.
 
   See :ref:`high-level help <TESTING>` for explanations and usage examples.
 """
+from inspect    import cleandoc
 from pathlib    import Path
 from re         import compile as re_compile
 from shutil     import which
@@ -87,8 +88,40 @@ def stripANSIColorCodes(text: str) -> str:
 	return _ANSI_COLOR_CODES.sub("", text)
 
 
+def _checkTitle(parameterName: str, value: Nullable[str]) -> None:
+	"""
+	Reject a marker's text that is given but is not a string.
+
+	:param parameterName: Name of the parameter being checked, for the message.
+	:param value:         The value to check.
+	:raises TypeError:    If the value is neither ``None`` nor a string.
+	"""
+	if value is not None and not isinstance(value, str):
+		ex = TypeError(f"Parameter '{parameterName}' is not a string.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		raise ex
+
+
+def _splitDocString(docString: Nullable[str]) -> tuple[str, str]:
+	"""
+	Split a doc-string into its summary and its body.
+
+	The doc-string is dedented with :func:`inspect.cleandoc` first. The summary is the first paragraph, joined into
+	one line, and the body is whatever follows the first blank line. Both are empty strings if there is no
+	doc-string.
+
+	:param docString: The doc-string to split, or ``None``.
+	:returns:         A tuple of summary and body.
+	"""
+	if docString is None:
+		return "", ""
+
+	summary, _, body = cleandoc(docString).partition("\n\n")
+	return summary.replace("\n", " "), body
+
+
 @export
-def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
+def testsuite(title: Union[str, C, None] = None, description: Nullable[str] = None) -> Union[C, Callable[[C], C]]:
 	"""
 	Mark a class as a test suite, so it is collected however it is named.
 
@@ -114,11 +147,14 @@ def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 	        def NewerIsGreater(self) -> None:
 	          self.assertGreater(Version("2.0"), Version("1.9"))
 
-	:param title:      Optional, title the test suite is reported under, or the class itself when the decorator is
-	                   used without parentheses. Default: the class' name.
-	:returns:          Decorator marking the class with a ``<class>.__testsuite_title__`` field, or the marked class
-	                   itself when used without parentheses.
-	:raises TypeError: If parameter 'title' is neither a string nor a class.
+	:param title:       Optional, title the test suite is reported under, or the class itself when the decorator is
+	                    used without parentheses. Default: its doc-string's summary, or the class' name.
+	:param description: Optional, a longer text describing the test suite. Default: its doc-string's body.
+	:returns:           Decorator marking the class with ``<class>.__testsuite_title__`` and
+	                    ``<class>.__testsuite_description__``, or the marked class itself when used without
+	                    parentheses.
+	:raises TypeError:  If parameter 'title' is neither a string nor a class.
+	:raises TypeError:  If parameter 'description' is not a string.
 
 	.. seealso::
 
@@ -140,8 +176,13 @@ def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 			ex.add_note("A method is marked as a testcase with the 'testcase' decorator.")
 			raise ex
 
-		cls.__testsuite_title__ = cls.__name__ if title is None or isinstance(title, type) else title
+		summary, body = _splitDocString(cls.__doc__)
+		explicitTitle = None if title is None or isinstance(title, type) else title
+		cls.__testsuite_title__ = explicitTitle if explicitTitle is not None else (summary or cls.__name__)
+		cls.__testsuite_description__ = description if description is not None else body
 		return cls
+
+	_checkTitle("description", description)
 
 	if isinstance(title, type):                          # used without parentheses: the class itself was passed
 		return decorator(title)
@@ -155,7 +196,7 @@ def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 
 
 @export
-def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
+def testcase(title: Union[str, M, None] = None, description: Nullable[str] = None) -> Union[M, Callable[[M], M]]:
 	"""
 	Mark a method as a testcase, so it is collected however it is named.
 
@@ -175,11 +216,14 @@ def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
 	        with self.assertRaises(EmptyListError):
 	          _ = LinkedList().FirstElement
 
-	:param title:      Optional, title the testcase is reported under, or the method itself when the decorator is
-	                   used without parentheses. Default: the method's name.
-	:returns:          Decorator marking the method with a ``<method>.__testcase_title__`` field, or the marked
-	                   method itself when used without parentheses.
-	:raises TypeError: If parameter 'title' is neither a string nor a method.
+	:param title:       Optional, title the testcase is reported under, or the method itself when the decorator is
+	                    used without parentheses. Default: its doc-string's summary, or the method's name.
+	:param description: Optional, a longer text describing the testcase. Default: its doc-string's body.
+	:returns:           Decorator marking the method with ``<method>.__testcase_title__`` and
+	                    ``<method>.__testcase_description__``, or the marked method itself when used without
+	                    parentheses.
+	:raises TypeError:  If parameter 'title' is neither a string nor a method.
+	:raises TypeError:  If parameter 'description' is not a string.
 
 	.. seealso::
 
@@ -201,8 +245,13 @@ def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
 			ex.add_note("A class is marked as a test suite with the 'testsuite' decorator.")
 			raise ex
 
-		method.__testcase_title__ = method.__name__ if title is None or callable(title) else title
+		summary, body = _splitDocString(method.__doc__)
+		explicitTitle = None if title is None or callable(title) else title
+		method.__testcase_title__ = explicitTitle if explicitTitle is not None else (summary or method.__name__)
+		method.__testcase_description__ = description if description is not None else body
 		return method
+
+	_checkTitle("description", description)
 
 	if title is None or isinstance(title, str):
 		return decorator
