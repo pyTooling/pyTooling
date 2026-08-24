@@ -32,9 +32,9 @@
 A pytest plugin collecting what :deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase` mark.
 
 pytest decides what a test is from a *name*: ``python_classes`` matches ``Test*`` and ``python_functions`` matches
-``test_*``. The identifier therefore has to enable collection as well as describe the check, and ``test_`` reaches
-the JUnit report. This plugin adds a second route in - a class or method carrying a marker is collected whatever it
-is called, and it is reported under the name the marker gives it.
+``test_*``. The identifier therefore has to enable collection as well as describe the check. This plugin adds a
+second route in - a class or method carrying a marker is collected whatever it is called - and reports the title
+its marker gives it as a JUnit property.
 
 The plugin is inert until something is marked, so enabling it changes nothing for a name-based test suite. Both
 styles can live in the same run, and even in the same file.
@@ -46,135 +46,80 @@ styles can live in the same run, and even in the same file.
 from typing   import Any, Optional as Nullable
 from unittest import TestCase
 
-import pytest
-
-from _pytest.junitxml     import xml_key
+from pytest               import Class, Collector, Item
 from pyTooling.Decorators import export
 
 
-__all__ = ["pytest_pycollect_makeitem", "pytest_collection_modifyitems", "pytest_configure", "JUnitReportRenamer"]
-
-
-def _markedMethods(cls: type) -> dict[str, Any]:
+@export
+def getTestcases(cls: type) -> dict[str, Any]:
 	"""
-	Return the marked methods a class declares itself.
+	Return the methods marked as testcases.
 
 	:param cls: Class to search for marked methods.
-	:returns:   Dictionary of a method's name to the method, for every method carrying ``__testcase__``.
+	:returns:   Dictionary of a method's name to the method, for every method carrying ``__testcase_title__``.
 	"""
-	return {name: member for name, member in vars(cls).items() if callable(member) and hasattr(member, "__testcase__")}
+	return {
+		name: member
+		for name, member in vars(cls).items()
+		if callable(member) and hasattr(member, "__testcase_title__")
+	}
 
 
-def pytest_pycollect_makeitem(collector, name: str, obj: Any) -> Nullable[Any]:
+@export
+def pytest_pycollect_makeitem(collector: Collector, name: str, obj: Any) -> Nullable[Any]:
 	"""
 	Collect a marked class or a marked method, whatever it is named.
 
 	A marked :class:`unittest.TestCase` is a special case: such a class is collected by pytest's :mod:`unittest`
-	support, which asks :mod:`unittest`'s own loader for the test methods, and that loader finds them by the
-	``test`` prefix alone. Each marked method is therefore aliased under a name the loader accepts, and the class is
-	handed back to pytest - which collects a :class:`~unittest.TestCase` subclass regardless of ``python_classes``.
-	The alias never reaches the report, because the item is renamed afterwards.
+	support, which asks :meth:`unittest.TestLoader.getTestCaseNames` for the test methods - and that loader matches
+	:attr:`~unittest.TestLoader.testMethodPrefix`, which is ``"test"`` and is *not* the ``python_functions`` setting.
+	Each marked method is therefore aliased under a name that loader accepts, and the class is handed back to pytest,
+	which collects a :class:`~unittest.TestCase` subclass regardless of ``python_classes``. The alias reaches no
+	report, because the entry is titled from the marker.
 
 	:param collector: The module collector asking about the object.
 	:param name:      Name the object is bound to in the module.
 	:param obj:       The object to decide about.
 	:returns:         A collector or a list of items for a marked entity, otherwise ``None`` to let pytest decide.
 	"""
-	if isinstance(obj, type) and hasattr(obj, "__testsuite__"):
+	if isinstance(obj, type) and hasattr(obj, "__testsuite_title__"):
 		if issubclass(obj, TestCase):
-			for methodName, method in _markedMethods(obj).items():
+			for methodName, method in getTestcases(obj).items():
 				if not methodName.startswith("test"):
 					setattr(obj, f"test_{methodName}", method)
 
 			return None
 
-		return pytest.Class.from_parent(collector, name=name)
+		return Class.from_parent(collector, name=name)
 
-	if callable(obj) and hasattr(obj, "__testcase__"):
+	if callable(obj) and hasattr(obj, "__testcase_title__"):
 		return list(collector._genfunctions(name, obj))
 
 	return None
 
 
-def pytest_collection_modifyitems(items: list) -> None:
+@export
+def pytest_collection_modifyitems(items: list[Item]) -> None:
 	"""
-	Attach the declared names of every marked item to the item, for the report to pick up.
+	Attach the titles of every marked item to the item, for the report to pick up.
 
-	They travel as :attr:`~_pytest.nodes.Item.user_properties`, which is the same channel the
-	:func:`~_pytest.python_api.record_property` fixture writes to: it is part of the test report, so it survives
-	being sent from a ``pytest-xdist`` worker, and it reaches the JUnit report as a ``<property>``.
+	They travel as :attr:`~_pytest.nodes.Item.user_properties`, which is the channel the
+	:func:`~_pytest.python_api.record_property` fixture writes to: they are part of the test report, so they survive
+	being sent from a ``pytest-xdist`` worker, and they reach the JUnit report as ``<property>`` elements.
 
 	**The item's own name and node ID are deliberately left alone.** They are what selects a test - on the command
-	line, from an IDE, and from ``--last-failed``'s cache - so renaming the item would make a testcase impossible to
-	re-run under the name it was reported with.
+	line, from an IDE, and from ``--last-failed``'s cache - and post-processing tools expect them to be identifiers,
+	free of spaces and punctuation. The title is additional information, not a replacement.
 
 	:param items: The collected items, modified in place.
 	"""
 	for item in items:
-		declaredCase = getattr(getattr(item, "function", None), "__testcase__", None)
-		if declaredCase is None:
+		testcaseTitle = getattr(getattr(item, "function", None), "__testcase_title__", None)
+		if testcaseTitle is None:
 			continue
 
-		item.user_properties.append(("testcase", declaredCase))
+		item.user_properties.append(("title", testcaseTitle))
 
-		declaredSuite = getattr(getattr(item, "cls", None), "__testsuite__", None)
-		if declaredSuite is not None:
-			item.user_properties.append(("testsuite", declaredSuite))
-
-
-@export
-class JUnitReportRenamer:
-	"""
-	Renames a marked testcase in the JUnit report, and only there.
-
-	The ``name`` and ``classname`` attributes of a ``<testcase>`` are derived from the item's node ID by pytest's
-	JUnit writer, so they cannot be set through a report property. This plugin reaches the writer's node reporter
-	and overwrites them, which leaves collection, selection and every node ID untouched.
-	"""
-
-	_config: pytest.Config   #: The session's configuration, holding the JUnit writer.
-
-	def __init__(self, config: pytest.Config) -> None:
-		"""
-		Initializes the renamer with the session's configuration.
-
-		:param config: The session's configuration.
-		"""
-		self._config = config
-
-	@pytest.hookimpl(trylast=True)
-	def pytest_runtest_logreport(self, report: Any) -> None:
-		"""
-		Overwrite the entry's ``name`` and ``classname`` in the JUnit report.
-
-		This runs **after** pytest's JUnit writer, so the entry for this phase exists already and is looked up rather
-		than created. Creating one would add a second ``<testcase>`` for every marked testcase, because the writer
-		opens an entry only for the phase it reports.
-
-		:param report: The report of one phase of one testcase.
-		"""
-		properties = dict(report.user_properties)
-		if "testcase" not in properties:
-			return
-
-		logXML = self._config.stash.get(xml_key, None)
-		if logXML is None:                                 # no JUnit report was requested
-			return
-
-		# the writer keys its entries by node ID and, under 'pytest-xdist', the worker node the report came from
-		reporter = logXML.node_reporters.get((report.nodeid, getattr(report, "node", None)), None)
-		if reporter is None:
-			return
-
-		reporter.attrs["name"] = properties["testcase"]
-		if "testsuite" in properties:
-			reporter.attrs["classname"] = properties["testsuite"]
-
-
-def pytest_configure(config: pytest.Config) -> None:
-	"""
-	Register the renamer, which needs the session's configuration to reach the JUnit writer.
-
-	:param config: The session's configuration.
-	"""
-	config.pluginmanager.register(JUnitReportRenamer(config), "pyTooling.Testing.JUnitReportRenamer")
+		testsuiteTitle = getattr(getattr(item, "cls", None), "__testsuite_title__", None)
+		if testsuiteTitle is not None:
+			item.user_properties.append(("testsuiteTitle", testsuiteTitle))

@@ -28,17 +28,14 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 """
-Unit tests for :deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase`, and for the pytest
-plugin collecting what they mark.
+Unit tests for :mod:`pyTooling.Testing`'s markers :deco:`~pyTooling.Testing.testsuite` and
+:deco:`~pyTooling.Testing.testcase`, and for :mod:`pyTooling.Testing.PyTest`, the plugin collecting what they mark.
 """
-from os         import environ, pathsep
-from pathlib    import Path
-from subprocess import run as subprocess_run
-from sys        import executable as PythonExecutable
-from tempfile   import TemporaryDirectory
+from pathlib               import Path
+from tempfile              import TemporaryDirectory
 from xml.etree.ElementTree import parse as xml_parse
 
-from pyTooling.Testing import Testcase, testsuite, testcase
+from pyTooling.Testing     import ApplicationTestcase, Testcase, testsuite, testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -46,43 +43,37 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Markers(Testcase):
-	"""The decorators attach the name a test runner should report."""
+class TestsuiteMarker(Testcase):
+	"""':deco:`testsuite`' attaches the title a test runner should report for a class."""
 
-	def test_TheClassKeepsItsIdentifierByDefault(self) -> None:
+	def test_WithoutParentheses(self) -> None:
+		@testsuite
+		class Suite:
+			pass
+
+		self.assertEqual("Suite", Suite.__testsuite_title__)
+
+	def test_WithEmptyParentheses(self) -> None:
 		@testsuite()
 		class Suite:
 			pass
 
-		self.assertEqual("Suite", Suite.__testsuite__)
+		self.assertEqual("Suite", Suite.__testsuite_title__)
 
-	def test_TheMethodKeepsItsIdentifierByDefault(self) -> None:
+	def test_WithATitle(self) -> None:
+		@testsuite("My third set of tests.")
 		class Suite:
-			@testcase()
-			def Method(self) -> None:
-				pass
+			pass
 
-		self.assertEqual("Method", Suite.Method.__testcase__)
+		self.assertEqual("My third set of tests.", Suite.__testsuite_title__)
 
-	def test_ADeclaredNameMayBeASentence(self) -> None:
-		@testsuite("Version comparison")
-		class Suite:
-			@testcase("a newer version compares greater")
-			def Method(self) -> None:
-				pass
+	def test_TheTitleMustBeAStringOrAClass(self) -> None:
+		with self.assertRaises(TypeError) as exceptionCapture:
+			testsuite(42)
 
-		self.assertEqual("Version comparison", Suite.__testsuite__)
-		self.assertEqual("a newer version compares greater", Suite.Method.__testcase__)
+		self.assertEqual("Parameter 'title' is neither a string nor a class.", str(exceptionCapture.exception))
 
-	def test_TheNameMustBeAString(self) -> None:
-		for decorator in (testsuite, testcase):
-			with self.subTest(decorator=decorator.__name__):
-				with self.assertRaises(TypeError) as exceptionCapture:
-					decorator(42)
-
-				self.assertEqual("Parameter 'name' is not a string.", str(exceptionCapture.exception))
-
-	def test_TestsuiteRejectsAMethod(self) -> None:
+	def test_ItRejectsAMethod(self) -> None:
 		with self.assertRaises(TypeError) as exceptionCapture:
 			@testsuite("Suite")
 			def method() -> None:
@@ -90,7 +81,41 @@ class Markers(Testcase):
 
 		self.assertIn("instead of a class", str(exceptionCapture.exception))
 
-	def test_TestcaseRejectsAClass(self) -> None:
+
+class TestcaseMarker(Testcase):
+	"""':deco:`testcase`' attaches the title a test runner should report for a method."""
+
+	def test_WithoutParentheses(self) -> None:
+		class Suite:
+			@testcase
+			def Method(self) -> None:
+				pass
+
+		self.assertEqual("Method", Suite.Method.__testcase_title__)
+
+	def test_WithEmptyParentheses(self) -> None:
+		class Suite:
+			@testcase()
+			def Method(self) -> None:
+				pass
+
+		self.assertEqual("Method", Suite.Method.__testcase_title__)
+
+	def test_WithATitle(self) -> None:
+		class Suite:
+			@testcase("A newer version compares greater.")
+			def Method(self) -> None:
+				pass
+
+		self.assertEqual("A newer version compares greater.", Suite.Method.__testcase_title__)
+
+	def test_TheTitleMustBeAStringOrAMethod(self) -> None:
+		with self.assertRaises(TypeError) as exceptionCapture:
+			testcase(42)
+
+		self.assertEqual("Parameter 'title' is neither a string nor a method.", str(exceptionCapture.exception))
+
+	def test_ItRejectsAClass(self) -> None:
 		with self.assertRaises(TypeError) as exceptionCapture:
 			@testcase("Case")
 			class Suite:
@@ -105,11 +130,11 @@ from pyTooling.Testing import Testcase, testsuite, testcase
 
 @testsuite("Version comparison")
 class VersionComparison(Testcase):
-	@testcase("a newer version compares greater")
+	@testcase("A newer version compares greater.")
 	def NewerIsGreater(self) -> None:
 		self.assertGreater((2, 0), (1, 9))
 
-	@testcase()
+	@testcase
 	def UnnamedKeepsItsIdentifier(self) -> None:
 		self.assertTrue(True)
 
@@ -119,7 +144,7 @@ class VersionComparison(Testcase):
 
 @testsuite("A plain class")
 class PlainSuite:
-	@testcase("a class that is no TestCase works too")
+	@testcase("A class that is no TestCase works too.")
 	def PlainWorks(self) -> None:
 		assert True
 
@@ -127,72 +152,78 @@ class PlainSuite:
 class NameBased(Testcase):
 	def test_StillCollectedByName(self) -> None:
 		self.assertTrue(True)
-'''   #: A test module using both styles, run by the integration test below.
+'''   #: A test module using both styles, run by the integration tests below.
+
+PYTEST_CONFIGURATION = """\
+[pytest]
+python_files = test_*
+python_functions = test_*
+"""   #: The pytest settings the generated module is run with.
 
 
-class PyTestPlugin(Testcase):
-	"""The plugin collects what is marked, reports it under the declared name, and leaves name-based tests alone."""
+class PyTestPlugin(ApplicationTestcase):
+	"""The plugin collects what is marked, titles it in the report, and leaves name-based tests alone."""
 
-	@staticmethod
-	def _RunPyTest(directory: Path, *arguments: str) -> tuple[int, str, Path]:
+	_consoleScript  = "pytest"
+	_runnableModule = "pytest"
+
+	def _RunPyTest(self, directory: Path, *arguments: str) -> tuple[object, Path]:
 		"""
 		Write the test module above into the given directory and run pytest over it.
 
 		:param directory: Directory to write the test module and the report into.
 		:param arguments: Optional, what pytest should collect. Default: the whole directory.
-		:returns:         Tuple of the exit code, the captured output, and the path of the JUnit report.
+		:returns:         Tuple of the completed process and the path of the JUnit report.
 		"""
 		(directory / "test_marked.py").write_text(TEST_MODULE, encoding="utf-8")
-		configuration = "[pytest]\npython_files = test_*\npython_functions = test_*\n"
-		(directory / "pytest.ini").write_text(configuration, encoding="utf-8")
+		(directory / "pytest.ini").write_text(PYTEST_CONFIGURATION, encoding="utf-8")
 		report = directory / "report.xml"
 
 		# the subprocess runs elsewhere, so point it at the sources under test rather than an installed copy
 		repositoryRoot = Path(__file__).resolve().parent.parent.parent.parent
-		pythonPath = f"{repositoryRoot}{pathsep}{environ['PYTHONPATH']}" if "PYTHONPATH" in environ else str(repositoryRoot)
 
-		process = subprocess_run(
-			(
-				PythonExecutable, "-m", "pytest", "-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest",
-				f"--junit-xml={report}", *(arguments if len(arguments) > 0 else (str(directory), ))
-			),
-			capture_output=True, encoding="utf-8", cwd=directory, env={**environ, "PYTHONPATH": pythonPath}
+		result = self.RunModule(
+			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest",
+			f"--junit-xml={report}", *(arguments if len(arguments) > 0 else (str(directory), )),
+			environment={"PYTHONPATH": str(repositoryRoot)},
+			workingDirectory=directory
 		)
 
-		return process.returncode, process.stdout, report
+		return result, report
 
 	def test_TheNodeIDStaysCanonicalSoATestcaseCanBeSelected(self) -> None:
-		"""The report is renamed, the item is not - so an IDE, a command line and '--last-failed' still work."""
+		"""The report is titled, the item is not - so an IDE, a command line and '--last-failed' still work."""
 
 		with TemporaryDirectory() as directory:
-			path = Path(directory)
-			returnCode, output, _ = self._RunPyTest(path, "test_marked.py::VersionComparison::test_NewerIsGreater")
+			result, _ = self._RunPyTest(Path(directory), "test_marked.py::VersionComparison::test_NewerIsGreater")
 
-			self.assertEqual(0, returnCode, output)
-			self.assertIn("1 passed", output)
+			self.assertExitCode(result)
+			self.assertIn("1 passed", result.stdout)
 
 	def test_MarkedAndNameBasedTestsRunInOneSession(self) -> None:
 		with TemporaryDirectory() as directory:
-			returnCode, output, report = self._RunPyTest(Path(directory))
+			result, report = self._RunPyTest(Path(directory))
 
-			self.assertEqual(0, returnCode, output)
+			self.assertExitCode(result)
 
 			names = [
 				(testcaseElement.get("classname").rsplit(".", 1)[-1], testcaseElement.get("name"))
 				for testcaseElement in xml_parse(report).getroot().iter("testcase")
 			]
 
-		self.assertIn(("Version comparison", "a newer version compares greater"), names)
-		self.assertIn(("Version comparison", "UnnamedKeepsItsIdentifier"), names)
-		self.assertIn(("A plain class", "a class that is no TestCase works too"), names)
+		self.assertIn(("VersionComparison", "test_NewerIsGreater"), names)
+		self.assertIn(("VersionComparison", "test_UnnamedKeepsItsIdentifier"), names)
+		self.assertIn(("PlainSuite", "PlainWorks"), names)
 		self.assertIn(("NameBased", "test_StillCollectedByName"), names)
 		self.assertEqual(4, len(names), f"An unmarked method was collected: {names}")
 
-	def test_TheDeclaredNamesAreAlsoReportedAsProperties(self) -> None:
-		with TemporaryDirectory() as directory:
-			returnCode, output, report = self._RunPyTest(Path(directory))
+	def test_TheTitlesAreReportedAsProperties(self) -> None:
+		"""'classname' and 'name' stay identifiers; the titles are additional information."""
 
-			self.assertEqual(0, returnCode, output)
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
 
 			properties = {
 				testcaseElement.get("name"): {
@@ -203,7 +234,7 @@ class PyTestPlugin(Testcase):
 			}
 
 		self.assertEqual(
-			{"testcase": "a newer version compares greater", "testsuite": "Version comparison"},
-			properties["a newer version compares greater"]
+			{"title": "A newer version compares greater.", "testsuiteTitle": "Version comparison"},
+			properties["test_NewerIsGreater"]
 		)
 		self.assertEqual({}, properties["test_StillCollectedByName"], "An unmarked testcase carries no properties.")
