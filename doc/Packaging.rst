@@ -285,33 +285,29 @@ will be used. Otherwise, the content of the parameter, if not None or empty.
 Handling of entry points
 ========================
 
-A package advertises what it offers through **entry point groups**: ``console_scripts`` for a command line program,
-``pytest11`` for a pytest plugin, ``sphinx.html_themes`` for a Sphinx theme, and whatever group another tool
-defines for its plugins.
-
-Parameter ``entryPoints`` declares any of them - a dictionary mapping a group to the names and entry points in it:
+A package advertises what it offers through *entry point groups*, but a caller of these functions says **what it
+provides**, not which group that is declared in:
 
 .. code-block:: Python
 
-   entryPoints={
-     "pytest11": {"myPlugin": "myPackage.PyTest"}
-   }
+   consoleScripts={"prog":     "myPackage.CLI:main"},   # -> console_scripts
+   guiScripts={"prog-gui":     "myPackage.GUI:main"},   # -> gui_scripts
+   pytestPlugins={"myPlugin":  "myPackage.PyTest"},     # -> pytest11
 
-Parameter ``consoleScripts`` is the shorthand for the group a package uses most often, so these two are the same
-description:
+``guiScripts`` is ``consoleScripts`` for a windowed program: on Windows, such an entry point is generated against
+``pythonw`` and starts without a console window.
 
-.. code-block:: Python
+``pytestPlugins`` also adds the classifier ``Framework :: Pytest``, so a package that ships a plugin says so on
+PyPI without the caller having to repeat itself. It is not added twice if ``classifiers`` already lists it.
 
-   consoleScripts={"prog": "myPackage.CLI:main"}
-   entryPoints={"console_scripts": {"prog": "myPackage.CLI:main"}}
+Any of them may be given together, and a package that advertises nothing gets no ``entry_points`` at all.
 
-Both may be given at once and are merged. A name declared twice **in the same group** is an error rather than a
-silent overwrite, because which of the two would win is not something a reader of the ``setup.py`` could tell:
+.. topic:: Why not a general parameter?
 
-.. code-block:: text
-
-   ValueError: Entry point 'prog' is declared twice in group 'console_scripts'.
-   'entryPoints' gives 'b', 'consoleScripts' gives 'a'.
+   An earlier draft took a general ``entryPoints={"pytest11": {...}}`` mapping. It was rejected deliberately: the
+   point of :func:`~pyTooling.Packaging.DescribePythonPackage` is to *abstract* packaging, so knowing that a pytest
+   plugin lives in a group called ``pytest11`` - and that it also wants a classifier - belongs here rather than in
+   every :file:`setup.py`. A named parameter per kind of thing keeps that knowledge in one place.
 
 
 .. _PACKAGING/Descriptions/GitHub:

@@ -194,62 +194,58 @@ class DescribePackage(Testcase):
 
 
 class EntryPoints(Testcase):
-	"""Entry points of any group, with 'consoleScripts' as the shorthand for one of them."""
+	"""A package advertises what it offers; the describe-functions know which group it is declared in."""
 
-	def test_NoEntryPointsAtAll(self) -> None:
-		from pyTooling.Packaging import _mergeEntryPoints
+	def test_APackageMayAdvertiseNothing(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
 
-		self.assertIsNone(_mergeEntryPoints(None, None))
+		self.assertIsNone(_collectEntryPoints(None, None, None))
+		self.assertIsNone(_collectEntryPoints({}, {}, {}), "An empty mapping declares nothing.")
 
-	def test_ConsoleScriptsStillWork(self) -> None:
-		from pyTooling.Packaging import _mergeEntryPoints
+	def test_ConsoleScripts(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
 
 		self.assertEqual(
 			{"console_scripts": ["prog = myPackage.CLI:main"]},
-			_mergeEntryPoints({"prog": "myPackage.CLI:main"}, None)
+			_collectEntryPoints({"prog": "myPackage.CLI:main"}, None, None)
 		)
 
-	def test_AnyGroupCanBeDeclared(self) -> None:
-		from pyTooling.Packaging import _mergeEntryPoints
+	def test_GuiScripts(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
 
 		self.assertEqual(
-			{"pytest11": ["pyTooling = pyTooling.Testing.PyTest"]},
-			_mergeEntryPoints(None, {"pytest11": {"pyTooling": "pyTooling.Testing.PyTest"}})
+			{"gui_scripts": ["prog = myPackage.GUI:main"]},
+			_collectEntryPoints(None, {"prog": "myPackage.GUI:main"}, None)
 		)
 
-	def test_BothAreMerged(self) -> None:
-		from pyTooling.Packaging import _mergeEntryPoints
+	def test_PytestPlugins(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
 
 		self.assertEqual(
-			{"pytest11": ["myPlugin = myPackage.PyTest"], "console_scripts": ["prog = myPackage.CLI:main"]},
-			_mergeEntryPoints({"prog": "myPackage.CLI:main"}, {"pytest11": {"myPlugin": "myPackage.PyTest"}})
+			{"pytest11": ["myPlugin = myPackage.PyTest"]},
+			_collectEntryPoints(None, None, {"myPlugin": "myPackage.PyTest"})
 		)
 
-	def test_TheShorthandAddsToItsOwnGroup(self) -> None:
-		from pyTooling.Packaging import _mergeEntryPoints
+	def test_AllThreeAtOnce(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
 
 		self.assertEqual(
-			{"console_scripts": ["other = myPackage.Other:main", "prog = myPackage.CLI:main"]},
-			_mergeEntryPoints(
+			{
+				"console_scripts": ["prog = myPackage.CLI:main"],
+				"gui_scripts":     ["prog-gui = myPackage.GUI:main"],
+				"pytest11":        ["myPlugin = myPackage.PyTest"],
+			},
+			_collectEntryPoints(
 				{"prog": "myPackage.CLI:main"},
-				{"console_scripts": {"other": "myPackage.Other:main"}}
+				{"prog-gui": "myPackage.GUI:main"},
+				{"myPlugin": "myPackage.PyTest"}
 			)
 		)
 
-	def test_ANameDeclaredTwiceIsRejected(self) -> None:
-		from pyTooling.Packaging import _mergeEntryPoints
-
-		with self.assertRaises(ValueError) as exceptionCapture:
-			_mergeEntryPoints({"prog": "a"}, {"console_scripts": {"prog": "b"}})
-
-		self.assertEqual(
-			"Entry point 'prog' is declared twice in group 'console_scripts'.",
-			str(exceptionCapture.exception)
-		)
-		self.assertIn("'entryPoints' gives 'b', 'consoleScripts' gives 'a'.", exceptionCapture.exception.__notes__)
-
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
-	def test_TheyReachTheDescription(self) -> None:
+	def test_APytestPluginIsClassified(self) -> None:
+		"""Declaring a pytest plugin says so on PyPI too, without the caller repeating it."""
+
 		from pyTooling.Packaging import DescribePythonPackage
 
 		packageName = "pyPackage.Tool"
@@ -264,8 +260,29 @@ class EntryPoints(Testcase):
 			issueTrackerCodeURL="https://",
 			sourceFileWithVersion=packagePath / "__init__.py",
 			keywords=("Swiss", "Knife"),
-			entryPoints={"pytest11": {"myPlugin": "myPackage.PyTest"}}
+			pytestPlugins={"myPlugin": "myPackage.PyTest"}
 		)
 
 		self.assertEqual({"pytest11": ["myPlugin = myPackage.PyTest"]}, packageInformation["entry_points"])
+		self.assertIn("Framework :: Pytest", packageInformation["classifiers"])
 
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_WithoutAPluginThereIsNoClassifier(self) -> None:
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife")
+		)
+
+		self.assertNotIn("Framework :: Pytest", packageInformation["classifiers"])
+		self.assertNotIn("entry_points", packageInformation)
