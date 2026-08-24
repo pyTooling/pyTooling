@@ -44,9 +44,9 @@ the command line's structure is written down once - next to the code implementin
       |rarr| Marks the method implementing a sub-command.
 """
 from argparse              import ArgumentParser, Namespace
-from typing                import Callable, Any, TypeVar
+from typing                import Callable, Any, TypeVar, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, expects
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import firstElement, firstPair
 from pyTooling.Attributes  import Attribute
@@ -396,6 +396,32 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				subParser.add_argument(*methodAttribute.Args, **methodAttribute.KWArgs)
 
 			self._subParsers[attribute.Command] = subParser
+
+	@expects("WriteWarning", "WriteError")
+	def _PrintHelp(self, command: Nullable[str] = None) -> None:
+		"""
+		Helper method to print the command line parser's help page, or the help page of one sub-command.
+
+		.. attention::
+
+		   This method writes through the ``Write***`` methods of
+		   :class:`~pyTooling.TerminalUI.TerminalApplication`, which this mixin-class does not provide, so the
+		   application class has to derive from **both**.
+
+		:param command:                      Optional, the sub-command to print the help page for. If ``None``, the main
+		                                     parser's help page is printed. Default: ``None``.
+		:raises UnfulfilledExpectationError: If the application class doesn't also derive from
+		                                     :class:`~pyTooling.TerminalUI.TerminalApplication`.
+		"""
+		if command is None:
+			self._mainParser.print_help()
+		elif command == "help":
+			self.WriteWarning("This is a recursion ...")
+		else:
+			try:
+				self._subParsers[command].print_help()
+			except KeyError:
+				self.WriteError(f"Command {command} is unknown.")
 
 	def Run(self, enableAutoComplete: bool = True) -> None:
 		"""

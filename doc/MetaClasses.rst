@@ -51,7 +51,7 @@ Expected Members
 
 A class that is only complete once it is combined with another uses members it doesn't define itself. Nothing
 states that contract, so the class that forgets one fails with an :exc:`AttributeError` on first access - somewhere
-else entirely, and only if that code path runs.
+else entirely, and only if that code path ever runs.
 
 ``expects`` names those members, and it works in **both directions**:
 
@@ -123,11 +123,14 @@ Sometimes only *one* method needs what a mixin-class contributes, while the clas
 without it. **The marked method sits on the class in the primary inheritance line**, and it waits for a
 mixin-class further along the bases to supply what it reads.
 
-`pyTooling.TerminalUI` is the real example. A terminal application that prints a help page needs an argument
-parser for that one method, and a terminal application without argparse is legitimate - so
-:meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHelp` expects ``MainParser`` and ``SubParsers`` from
-:class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, while every other method of the class works without
-it. The class keyword argument would be too strict here: it would reject a class that never calls the method.
+The class keyword argument would be too strict here: it would reject a class that never calls the method.
+
+The decorator works from a mixin-class too, and pyTooling uses it that way:
+:meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin._PrintHelp` has the parsers - they are the mixin's own
+fields - but it *writes* through the ``Write***`` methods of
+:class:`~pyTooling.TerminalUI.TerminalApplication`, so it expects those. Everything else the mixin does works
+without a terminal. Which side declares the expectation is decided by which side owns the method, not by which
+side is the mixin.
 
 The :deco:`~pyTooling.MetaClasses.expects` decorator moves the expectation to where it belongs.
 

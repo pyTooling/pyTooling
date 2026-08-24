@@ -56,6 +56,7 @@ from types                import BuiltinFunctionType, FunctionType, MethodType
 from typing               import Any, Callable, Generator, Iterator, Iterable, Union, NoReturn, Self
 from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
+from pyTooling.Common     import getFullyQualifiedName
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
 from pyTooling.Warning    import Warning, WarningCollector
@@ -153,9 +154,6 @@ class UnfulfilledExpectationError(ExtendedTypeError):
 	      |rarr| The same mechanism, for a class with methods that still need to be overridden.
 	   :deco:`~pyTooling.MetaClasses.expects`
 	      |rarr| Mark a *method* as needing members its class provides only in some combinations.
-
-	.. seealso::
-
 	   :class:`~pyTooling.MetaClasses.ExtendedType`
 	      |rarr| The meta-class implementing the check.
 	"""
@@ -498,6 +496,7 @@ def expects(*memberNames: str) -> Callable[[M], M]:
 
 	:param memberNames: Names of the members the method needs from its class.
 	:returns:           Decorator marking the method with an ``<method>.__expectedMembers__`` field.
+	:raises TypeError:  If an element of parameter 'memberNames' is not a string.
 
 	.. seealso::
 
@@ -508,13 +507,27 @@ def expects(*memberNames: str) -> Callable[[M], M]:
 	   :deco:`~pyTooling.MetaClasses.abstractmethod`
 	      |rarr| Mark a method as *abstract*, when the class itself declares what has to be overridden.
 	"""
+	for memberName in memberNames:
+		if not isinstance(memberName, str):
+			ex = TypeError(f"Parameter 'memberNames' contains an element that is not a string.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(memberName)}'.")
+			raise ex
+
 	def decorator(method: M) -> M:
 		"""
 		Attach the expected member names to the decorated method.
 
-		:param method: Method that expects members from its class.
-		:returns:      Same method, but with additional ``<method>.__expectedMembers__`` field.
+		:param method:     Method that expects members from its class.
+		:returns:          Same method, but with additional ``<method>.__expectedMembers__`` field.
+		:raises TypeError: If applied to a class instead of a method. |br|
+		                   A class states what it expects with the ``expects`` class keyword argument of
+		                   :class:`ExtendedType`.
 		"""
+		if isinstance(method, type):
+			ex = TypeError(f"Decorator 'expects' is applied to class '{method.__name__}' instead of a method.")
+			ex.add_note(f"A class names what it expects with the 'expects' class keyword argument of 'ExtendedType'.")
+			raise ex
+
 		method.__expectedMembers__ = memberNames
 		return method
 
@@ -640,7 +653,6 @@ class ExtendedType(type):
 	:__expectedMembers__:        Mapping of a member name expected from the host class to the name of the class
 	                             expecting it.
 	:__missingMembers__:         Tuple of expected members this class doesn't provide (yet).
-	:__expectedMembers__:        (on a method) Tuple of members the method needs from its class.
 	:__abstractClass__:          True, if this class was decorated with :deco:`abstractclass`.
 	:__isAbstract__:             True, if class is abstract.
 	:__isSingleton__:            True, if class is a singleton
@@ -1532,7 +1544,21 @@ class ExtendedType(type):
 		:param members:     The dictionary of members for the constructed class.
 		:param expects:     Names of members the class being constructed expects.
 		:returns:           Dictionary mapping an expected member's name to the name of the class expecting it.
+		:raises TypeError:  If parameter 'expects' is not an iterable of strings.
+		:raises TypeError:  If an element of parameter 'expects' is not a string.
 		"""
+		if isinstance(expects, str) or not isinstance(expects, Iterable):
+			ex = TypeError(f"Parameter 'expects' is not an iterable of strings.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(expects)}'.")
+			raise ex
+
+		expects = tuple(expects)
+		for memberName in expects:
+			if not isinstance(memberName, str):
+				ex = TypeError(f"Parameter 'expects' contains an element that is not a string.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(memberName)}'.")
+				raise ex
+
 		expected: dict[str, str] = {}
 		for baseClass in baseClasses:
 			for memberName, origin in getattr(baseClass, "__expectedMembers__", {}).items():
@@ -1601,7 +1627,6 @@ class ExtendedType(type):
 			ex = UnfulfilledExpectationError(f"Class '{cls.__name__}' doesn't provide every expected member.")
 			for memberName in newClass.__missingMembers__:
 				ex.add_note(f"Missing '{memberName}', expected by '{newClass.__expectedMembers__[memberName]}'.")
-			ex.add_note("A mixin-class names what it needs from its host class with the 'expects' class keyword argument.")
 			raise ex
 
 		unfulfilled_new.__raises_unfulfilled_expectation_error__ = True
@@ -1666,7 +1691,6 @@ class ExtendedType(type):
 					ex = UnfulfilledExpectationError(message)
 					for memberName in missingMembers:
 						ex.add_note(f"Missing '{memberName}'.")
-					ex.add_note("A method names what it needs from its class with the 'expects' decorator.")
 					raise ex
 
 				return unfulfilledMethod

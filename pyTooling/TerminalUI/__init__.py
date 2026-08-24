@@ -59,7 +59,7 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, expects, mixin
+from pyTooling.MetaClasses import ExtendedType, mixin
 from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
@@ -1110,32 +1110,6 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
 		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HeadLine, **TerminalApplication.Foreground))
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
-
-	@expects("MainParser", "SubParsers")
-	def _PrintHelp(self, command: Nullable[str] = None) -> None:
-		"""
-		Helper function to print the command line parsers help page(s).
-
-		.. attention::
-
-		   This method needs an argument parser, which :class:`TerminalApplication` does not provide. It reads
-		   ``MainParser`` and ``SubParsers`` from :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, so the
-		   application class has to derive from **both**. It writes through this class' ``Write*`` methods, so the mixin
-		   alone is not enough either.
-
-		:param command:                      Optional, the subcommand to print the help page(s) for. Default: ``None``.
-		:raises UnfulfilledExpectationError: If the application class doesn't also derive from
-		                                     :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`.
-		"""
-		if command is None:
-			self.MainParser.print_help()
-		elif command == "help":
-			self.WriteWarning("This is a recursion ...")
-		else:
-			try:
-				self.SubParsers[command].print_help()
-			except KeyError:
-				self.WriteError(f"Command {command} is unknown.")
 
 	def _PrintVersion(
 		self,
