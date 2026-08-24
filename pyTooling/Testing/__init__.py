@@ -45,16 +45,15 @@ from shutil     import which
 from subprocess import CompletedProcess, run as subprocess_run
 from unittest   import TestCase
 from sys        import executable as PythonExecutable, version_info
-from typing     import Any, Callable, ClassVar, TypeVar, Optional as Nullable
-from pyTooling.Common     import getFullyQualifiedName
-from pyTooling.Decorators import export
-from pyTooling.Exceptions import ToolingException
+from typing     import Any, Callable, ClassVar, Union, Optional as Nullable
+
+from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.Decorators  import export
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.MetaClasses import C, M
 
 
 _ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")   #: Pattern matching an ANSI escape sequence selecting a color.
-
-C = TypeVar("C", bound=type)          #: A type variable for a class.
-M = TypeVar("M", bound=Callable)      #: A type variable for a method.
 
 
 @export
@@ -89,7 +88,7 @@ def stripANSIColorCodes(text: str) -> str:
 
 
 @export
-def testsuite(name: Nullable[str] = None) -> Callable[[C], C]:
+def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 	"""
 	Mark a class as a test suite, so it is collected however it is named.
 
@@ -98,8 +97,24 @@ def testsuite(name: Nullable[str] = None) -> Callable[[C], C]:
 	therefore carries two jobs at once - it identifies the class *and* it enables collection - and the reader of a
 	test report sees the identifier rather than a description.
 
-	This decorator separates them. The class is collected because it is marked, and it is reported under the name
+	This decorator separates them. The class is collected because it is marked, and it is reported under the title
 	given here, which can be a sentence.
+
+	It is usable with and without parentheses, and with or without a title:
+
+	.. code-block:: python
+
+	   @testsuite
+	   class FirstTests:
+	     ...
+
+	   @testsuite()
+	   class SecondTests:
+	     ...
+
+	   @testsuite("My third set of tests.")
+	   class ThirdTests:
+	     ...
 
 	.. admonition:: ``example.py``
 
@@ -109,13 +124,15 @@ def testsuite(name: Nullable[str] = None) -> Callable[[C], C]:
 
 	      @testsuite("Version comparison")
 	      class VersionComparison(Testcase):
-	        @testcase("a newer version compares greater")
+	        @testcase("A newer version compares greater.")
 	        def NewerIsGreater(self) -> None:
 	          self.assertGreater(Version("2.0"), Version("1.9"))
 
-	:param name:       Optional, name the test suite is reported under. Default: the class' name.
-	:returns:          Decorator marking the class with a ``<class>.__testsuite__`` field.
-	:raises TypeError: If parameter 'name' is not a string.
+	:param title:      Optional, title the test suite is reported under, or the class itself when the decorator is
+	                   used without parentheses. Default: the class' name.
+	:returns:          Decorator marking the class with a ``<class>.__testsuite_title__`` field, or the marked class
+	                   itself when used without parentheses.
+	:raises TypeError: If parameter 'title' is neither a string nor a class.
 
 	.. seealso::
 
@@ -124,17 +141,12 @@ def testsuite(name: Nullable[str] = None) -> Callable[[C], C]:
 	   :ref:`TESTING/Markers`
 	      |rarr| How a test runner is taught to collect what is marked.
 	"""
-	if name is not None and not isinstance(name, str):
-		ex = TypeError("Parameter 'name' is not a string.")
-		ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
-		raise ex
-
 	def decorator(cls: C) -> C:
 		"""
-		Attach the test suite's name to the decorated class.
+		Attach the test suite's title to the decorated class.
 
 		:param cls:        Class that is marked as a test suite.
-		:returns:          Same class, but with an additional ``<class>.__testsuite__`` field.
+		:returns:          Same class, but with an additional ``<class>.__testsuite_title__`` field.
 		:raises TypeError: If applied to anything but a class.
 		"""
 		if not isinstance(cls, type):
@@ -142,14 +154,22 @@ def testsuite(name: Nullable[str] = None) -> Callable[[C], C]:
 			ex.add_note("A method is marked as a testcase with the 'testcase' decorator.")
 			raise ex
 
-		cls.__testsuite__ = cls.__name__ if name is None else name
+		cls.__testsuite_title__ = cls.__name__ if title is None or isinstance(title, type) else title
 		return cls
+
+	if isinstance(title, type):                          # used without parentheses: the class itself was passed
+		return decorator(title)
+
+	if title is not None and not isinstance(title, str):
+		ex = TypeError("Parameter 'title' is neither a string nor a class.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(title)}'.")
+		raise ex
 
 	return decorator
 
 
 @export
-def testcase(name: Nullable[str] = None) -> Callable[[M], M]:
+def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
 	"""
 	Mark a method as a testcase, so it is collected however it is named.
 
@@ -158,7 +178,7 @@ def testcase(name: Nullable[str] = None) -> Callable[[M], M]:
 	and what the testcase actually checks has to be squeezed into an identifier.
 
 	This decorator separates the two. The method is collected because it is marked, and it is reported under the
-	name given here.
+	title given here. Like :deco:`testsuite`, it is usable with and without parentheses.
 
 	.. admonition:: ``example.py``
 
@@ -169,9 +189,11 @@ def testcase(name: Nullable[str] = None) -> Callable[[M], M]:
 	        with self.assertRaises(EmptyListError):
 	          _ = LinkedList().FirstElement
 
-	:param name:       Optional, name the testcase is reported under. Default: the method's name.
-	:returns:          Decorator marking the method with a ``<method>.__testcase__`` field.
-	:raises TypeError: If parameter 'name' is not a string.
+	:param title:      Optional, title the testcase is reported under, or the method itself when the decorator is
+	                   used without parentheses. Default: the method's name.
+	:returns:          Decorator marking the method with a ``<method>.__testcase_title__`` field, or the marked
+	                   method itself when used without parentheses.
+	:raises TypeError: If parameter 'title' is neither a string nor a method.
 
 	.. seealso::
 
@@ -180,17 +202,12 @@ def testcase(name: Nullable[str] = None) -> Callable[[M], M]:
 	   :ref:`TESTING/Markers`
 	      |rarr| How a test runner is taught to collect what is marked.
 	"""
-	if name is not None and not isinstance(name, str):
-		ex = TypeError("Parameter 'name' is not a string.")
-		ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
-		raise ex
-
 	def decorator(method: M) -> M:
 		"""
-		Attach the testcase's name to the decorated method.
+		Attach the testcase's title to the decorated method.
 
 		:param method:     Method that is marked as a testcase.
-		:returns:          Same method, but with an additional ``<method>.__testcase__`` field.
+		:returns:          Same method, but with an additional ``<method>.__testcase_title__`` field.
 		:raises TypeError: If applied to a class instead of a method.
 		"""
 		if isinstance(method, type):
@@ -198,10 +215,18 @@ def testcase(name: Nullable[str] = None) -> Callable[[M], M]:
 			ex.add_note("A class is marked as a test suite with the 'testsuite' decorator.")
 			raise ex
 
-		method.__testcase__ = method.__name__ if name is None else name
+		method.__testcase_title__ = method.__name__ if title is None or callable(title) else title
 		return method
 
-	return decorator
+	if title is None or isinstance(title, str):
+		return decorator
+
+	if not callable(title):                              # used without parentheses: the method itself was passed
+		ex = TypeError("Parameter 'title' is neither a string nor a method.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(title)}'.")
+		raise ex
+
+	return decorator(title)
 
 
 @export

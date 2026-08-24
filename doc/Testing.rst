@@ -123,24 +123,33 @@ it names the entity *and* it enables collection.
      def NewerIsGreater(self) -> None:
        self.assertGreater(Version("2.0"), Version("1.9"))
 
-The class is collected because it is *marked*, not because of how it is spelled, and the **report** shows the name
-the marker gives it:
+The class is collected because it is *marked*, not because of how it is spelled, and the title travels into the
+report as a **property**:
 
 .. code-block:: xml
 
-   <testcase classname="Version comparison" name="a newer version compares greater">
+   <testcase classname="test_versioning.VersionComparison" name="test_NewerIsGreater">
      <properties>
-       <property name="testcase" value="a newer version compares greater" />
-       <property name="testsuite" value="Version comparison" />
+       <property name="title" value="A newer version compares greater." />
+       <property name="testsuiteTitle" value="Version comparison" />
      </properties>
    </testcase>
 
 .. important::
 
-   Only the report is renamed. The testcase keeps its **node ID** -
-   ``test_versioning.py::VersionComparison::test_NewerIsGreater`` - because that is what *selects* a test: on the
-   command line, from an IDE's *run this test*, and from the cache ``--last-failed`` reads. A plugin that renamed
-   the item would produce a name nothing can be re-run by.
+   ``classname`` and ``name`` keep the **identifiers** and are not replaced by the titles, for two reasons.
+
+   They are the testcase's **node ID**, which is what *selects* a test: on the command line, from an IDE's *run
+   this test*, and from the cache ``--last-failed`` reads. And a post-processing tool may reasonably expect them to
+   be identifiers - free of spaces and punctuation - so a title in that position could break it.
+
+   A title is additional information, so it is reported as additional information.
+
+.. note::
+
+   The title of the *test suite* is reported per testcase, as ``testsuiteTitle``, rather than on a surrounding
+   element. pytest's JUnit writer emits exactly **one** ``<testsuite name="pytest">`` for the whole session, not
+   one per class, so a per-class title has no element of its own to sit on.
 
 Both decorators take an optional name. Without one, the identifier is used, so a marker can be added to an existing
 testcase without changing what a report says about it.
@@ -173,23 +182,20 @@ What the plugin does
 
 * :func:`~pyTooling.Testing.PyTest.pytest_pycollect_makeitem` turns a marked class into a collector and a marked
   method into a test item, so neither has to match ``python_classes`` or ``python_functions``.
-* :func:`~pyTooling.Testing.PyTest.pytest_collection_modifyitems` attaches the declared names to the item as
+* :func:`~pyTooling.Testing.PyTest.pytest_collection_modifyitems` attaches the titles to the item as
   :attr:`~_pytest.nodes.Item.user_properties` - the channel the :func:`record_property` fixture uses. They are part
   of the test report, so they survive a ``pytest-xdist`` worker and reach the JUnit report as ``<property>``
   elements.
-* :class:`~pyTooling.Testing.PyTest.JUnitReportRenamer` overwrites the ``name`` and ``classname`` attributes of the
-  ``<testcase>`` entry, which are derived from the node ID and therefore cannot be set through a property. It runs
-  after pytest's JUnit writer and looks the entry up rather than creating one - creating one would emit a second
-  ``<testcase>`` per testcase, because the writer opens an entry only for the phase it reports.
 * **Node IDs are never touched**, so selection, ``pytest-xdist``, ``--last-failed`` and IDE integration work exactly
-  as they do without the plugin. The terminal keeps showing the identifier; it is the report that is written for
-  someone else to read.
+  as they do without the plugin.
 * An **unmarked** method in a marked class is not collected. Marking is the whole statement of intent, so a helper
   method needs no naming convention to stay out of the report.
 * A marked :class:`unittest.TestCase` is a special case. Such a class is collected by pytest's :mod:`unittest`
-  support, which asks :mod:`unittest`'s own loader for the test methods, and that loader recognises the ``test``
-  prefix only. The plugin therefore aliases each marked method under a name the loader accepts and lets pytest
-  collect the class as usual; the alias never reaches the report, because the item is renamed afterwards.
+  support, which asks :meth:`unittest.TestLoader.getTestCaseNames` for the test methods - and that loader matches
+  :attr:`~unittest.TestLoader.testMethodPrefix`, which is ``"test"``. It is **not** the ``python_functions``
+  setting: with ``python_functions = check_*``, a plain class collects ``check_*`` methods while a
+  :class:`~unittest.TestCase` still collects ``test_*`` ones. The plugin therefore aliases each marked method under
+  a name that loader accepts and lets pytest collect the class as usual.
 
 .. seealso::
 

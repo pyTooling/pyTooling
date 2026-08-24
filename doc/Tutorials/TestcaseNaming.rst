@@ -91,18 +91,23 @@ Marking instead of naming
 
       .. code-block:: xml
 
-         <testcase classname="Version comparison"
-                   name="a newer version compares greater" />
+         <testcase classname="VersionComparison"
+                   name="NewerIsGreater">
+           <properties>
+             <property name="title"
+                       value="A newer version compares greater." />
+           </properties>
+         </testcase>
 
 Read the two reports next to each other:
 
 .. code-block:: text
 
-   TestVersionComparison::test_newer_version_is_greater      # what Python needed
-   Version comparison::a newer version compares greater      # what the reader needed
+   test_newer_version_is_greater             # what Python needed
+   A newer version compares greater.         # what the reader needed
 
-The method keeps its identifier where Python needs one. Only the *report* is renamed, so ``pytest`` still selects
-the testcase by its node ID and an IDE's *run this test* keeps working - see :ref:`TESTING/Markers/Behavior`.
+The identifier is still there, where Python and every tool that re-runs a testcase need one. What the marker adds
+is a *title* beside it - see :ref:`TESTING/Markers/Behavior` for why beside rather than instead.
 
 The same three consequences turn around:
 
