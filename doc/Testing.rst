@@ -116,11 +116,23 @@ it names the entity *and* it enables collection.
 
    from pyTooling.Testing import Testcase, testsuite, testcase
 
-
    @testsuite("Version comparison")
    class VersionComparison(Testcase):
-     @testcase("a newer version compares greater")
+     """
+     This is a testsuite summary.
+     
+     Here follows a multiline
+     testsuite description.
+     """
+   
+     @testcase("A newer version compares greater")
      def NewerIsGreater(self) -> None:
+       """
+       This is a testcase summary.
+       
+       This can describe a testcase with more details
+       using multiple lines.
+       """
        self.assertGreater(Version("2.0"), Version("1.9"))
 
 The class is collected because it is *marked*, not because of how it is spelled, and the title travels into the
