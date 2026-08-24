@@ -19,3 +19,6 @@ setuptools >= 83.0
 
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6
+
+# For pyTooling.Testing.ReportWriter testing - validates the report against its schema
+xmlschema ~= 4.3

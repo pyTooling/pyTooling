@@ -280,3 +280,84 @@ What the plugin does
    :ref:`Tutorial: unit testing <TUTORIAL/UnitTesting>`
       |rarr| The levels a test suite is written in, and why the title a report shows and the name Python needs are
       different problems.
+
+.. _TESTING/ReportFormat:
+
+A Report Format of One's Own
+############################
+
+JUnit XML cannot express two things a marked test suite has.
+
+**Test suites do not nest.** A JUnit document holds one flat list of ``<testcase>`` elements, and the hierarchy is
+squeezed into a dotted ``classname`` - ``tests.unit.Versioning.VersionComparison``. Every level between the root
+and the class is a substring, so nothing can be said *about* a level: it has no element to carry a title or a
+description.
+
+**An item has one name.** :ref:`TESTING/Markers/Names` gives it four, and JUnit's only place for the other three is
+a flat ``<property name= value=>`` pair, whose value is an attribute and therefore a single line.
+
+:mod:`pyTooling.Testing.ReportWriter` writes a format that has both. It is opt-in and additional:
+
+.. code-block:: bash
+
+   pytest -p pyTooling.Testing.PyTest -p pyTooling.Testing.ReportWriter \
+          --pytooling-xml=report/unit/TestReport.xml --junit-xml=report/unit/unittest.xml
+
+Both files are written in one session from the same reports, so a pipeline keeps the format its dashboard
+understands while the richer file is produced beside it.
+
+.. code-block:: xml
+
+   <?xml version='1.0' encoding='utf-8'?>
+   <TestReport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="TestReport.xsd"
+               tool="pyTooling" version="10.0.0" timestamp="2026-08-24T22:42:35+00:00"
+               duration="0.000691" tests="2" failures="0" errors="0" skipped="0">
+     <Testsuite name="test_versioning">
+       <Testsuite name="VersionComparison">
+         <Title>Version comparison.</Title>
+         <Summary>Compare two release versions.</Summary>
+         <Description>Compare two release versions.
+
+   Everything about comparing them.</Description>
+         <Testcase name="test_NewerIsGreater" status="passed" duration="0.000428"
+                   nodeID="test_versioning.py::VersionComparison::test_NewerIsGreater">
+           <Title>A newer version compares greater.</Title>
+           <Summary>A newer version compares greater than an older one.</Summary>
+           <Description>A newer version compares greater than an older one.
+
+   Only the minor number differs here.</Description>
+         </Testcase>
+       </Testsuite>
+     </Testsuite>
+   </TestReport>
+
+.. _TESTING/ReportFormat/Schema:
+
+The schema
+==========
+
+:file:`pyTooling/Testing/Resources/TestReport.xsd` is shipped with the package, and every generated file points at
+it with ``xsi:noNamespaceSchemaLocation``, so a reader can validate without being told where the schema lives.
+
+* ``name`` is an **attribute** on every item, because it is an identifier. ``Title``, ``Summary`` and
+  ``Description`` are **elements**, because they are prose - ``Description`` is typed ``preservingstring``, so its
+  line breaks survive.
+* ``<Testsuite>`` is recursive, so the hierarchy is as deep as the test suite is.
+* ``<Testcase>`` carries ``status`` from a fixed list, ``duration``, and a ``nodeID`` - the test runner's own
+  identifier, so a reader of the report can re-run exactly that testcase.
+* An item writes only the names it has, so an unmarked testcase produces a ``<Testcase>`` element with no children.
+
+.. _TESTING/ReportFormat/Nesting:
+
+Where the nesting comes from
+============================
+
+The levels are the node ID's own parts: the module path, then each class between it and the testcase. So
+``tests/unit/Versioning.py::VersionComparison::test_NewerIsGreater`` becomes ``tests`` → ``unit`` → ``Versioning``
+→ ``VersionComparison``, and a title or description attaches to whichever level declared one.
+
+.. seealso::
+
+   :ref:`TESTING/Markers`
+      |rarr| Where the titles, summaries and descriptions come from.
