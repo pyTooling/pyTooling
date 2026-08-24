@@ -46,7 +46,8 @@ styles can live in the same run, and even in the same file.
 from inspect  import cleandoc
 from pathlib  import PurePath
 from sys      import modules as loadedModules
-from typing   import Any, Callable, Optional as Nullable
+from types    import ModuleType
+from typing   import Any, Callable, Union, Optional as Nullable
 from unittest import TestCase
 
 from pytest               import Class, Collector, Config, Item, StashKey, fixture
@@ -105,13 +106,13 @@ def pytest_pycollect_makeitem(collector: Collector, name: str, obj: Any) -> Null
 	return None
 
 
-def _namesOf(holder: Any) -> dict[str, str]:
+@export
+def getNamesOfTestItem(holder: Union[ModuleType, type]) -> dict[str, str]:
 	"""
-	Return the names an object carries as a test suite level.
+	Return the names an item carries as a test suite level.
 
 	A class marked with :deco:`~pyTooling.Testing.testsuite` carries all three in its ``__testsuite_***__`` fields.
-	Anything else - a package or a module - has only its doc-string, whose summary and full text are the summary and
-	the description.
+	A package or a module has only its doc-string, whose summary and full text are the summary and the description.
 
 	:param holder: The package, module or class to read the names from.
 	:returns:      Dictionary of a name's kind to its value, holding only the ones that are not empty.
@@ -160,7 +161,7 @@ def getLevelNames(item: Item) -> dict[str, dict[str, str]]:
 		if holder is None:
 			continue
 
-		if len(names := _namesOf(holder)) > 0:
+		if len(names := getNamesOfTestItem(holder)) > 0:
 			levels[path] = names
 
 	return levels
