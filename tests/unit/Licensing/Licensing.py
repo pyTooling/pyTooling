@@ -105,9 +105,9 @@ class SPDXIndex(Testcase):
 	def test_TheIndexIsKeyedByTheSPDXIdentifier(self) -> None:
 		from pyTooling.Licensing import SPDX_INDEX
 
-		for spdxIdentifier, license in SPDX_INDEX.items():
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
-				self.assertEqual(spdxIdentifier, license.SPDXIdentifier)
+				self.assertEqual(spdxIdentifier, spdxLicense.SPDXIdentifier)
 
 	def test_EveryClassifierIsARealClassifier(self) -> None:
 		"""The strings are checked against PyPI's own list, not against what looked right when they were typed."""
@@ -115,20 +115,20 @@ class SPDXIndex(Testcase):
 		from trove_classifiers    import classifiers
 		from pyTooling.Licensing  import SPDX_INDEX
 
-		for spdxIdentifier, license in SPDX_INDEX.items():
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
-				self.assertIn(license.PythonClassifier, classifiers)
+				self.assertIn(spdxLicense.PythonClassifier, classifiers)
 
 	def test_OSIApprovalMatchesTheClassifier(self) -> None:
 		"""PyPI puts an OSI-approved license under 'OSI Approved ::', so the flag and the string must agree."""
 
 		from pyTooling.Licensing import SPDX_INDEX
 
-		for spdxIdentifier, license in SPDX_INDEX.items():
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
 				self.assertEqual(
-					license.OSIApproved,
-					license.PythonClassifier.startswith("License :: OSI Approved :: ")
+					spdxLicense.OSIApproved,
+					spdxLicense.PythonClassifier.startswith("License :: OSI Approved :: ")
 				)
 
 	def test_CC0IsNotOSIApproved(self) -> None:
@@ -146,9 +146,9 @@ class SPDXIndex(Testcase):
 	def test_EveryLicenseHasAPythonName(self) -> None:
 		from pyTooling.Licensing import SPDX_INDEX
 
-		for spdxIdentifier, license in SPDX_INDEX.items():
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
-				self.assertNotEqual("", license.PythonLicenseName)
+				self.assertNotEqual("", spdxLicense.PythonLicenseName)
 
 	def test_TheOriginalFourAreUnchanged(self) -> None:
 		"""The licenses that existed before keep their identifiers, names and short names."""

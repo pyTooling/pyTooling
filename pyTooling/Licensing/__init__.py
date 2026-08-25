@@ -323,8 +323,8 @@ AGPL_3_0_or_later =      License("AGPL-3.0-or-later", "GNU Affero General Public
 
 #: Mapping of predefined licenses
 SPDX_INDEX: dict[str, License] = {
-	license.SPDXIdentifier: license
-	for license in (
+	spdxLicense.SPDXIdentifier: spdxLicense
+	for spdxLicense in (
 		Apache_2_0_License, BSD_2_Clause_License, BSD_3_Clause_License, MIT_License, ISC_License, MPL_2_0_License,
 		BSL_1_0_License, Zlib_License, PSF_2_0_License, Unlicense, CC0_1_0, EPL_1_0_License, EPL_2_0_License,
 		LGPL_2_1_only, LGPL_2_1_or_later, LGPL_3_0_only, LGPL_3_0_or_later,
