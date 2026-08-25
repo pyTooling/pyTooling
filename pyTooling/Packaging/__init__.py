@@ -425,18 +425,18 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					email = value.value
 			if isinstance(target, Name) and target.id == "__keywords__":
-				if isinstance(value, Constant) and isinstance(value.value, str):           # pragma: no cover
+				if isinstance(value, Constant) and isinstance(value.value, str):
 					cause = TypeError("Variable '__keywords__' should be a list of strings.")
 					raise PackagingError(f"Couldn't extract '__keywords__' from '{sourceFile}'.") from cause
 				elif isinstance(value, ast_List):
 					for const in value.elts:
 						if isinstance(const, Constant) and isinstance(const.value, str):
 							keywords.append(const.value)
-						else:                                                                  # pragma: no cover
+						else:
 							cause = TypeError("List elements in '__keywords__' should be strings.")
 							raise PackagingError(f"Couldn't extract '__keywords__' from '{sourceFile}'.") from cause
-				else:                                                                      # pragma: no cover
-					cause = TypeError(f"Used unsupported type '{value.__class__.__name__}' for variable '__keywords__'.")
+				else:
+					cause = TypeError(f"Used unsupported type '{getFullyQualifiedName(value)}' for variable '__keywords__'.")
 					raise PackagingError(f"Couldn't extract '__keywords__' from '{sourceFile}'.") from cause
 			if isinstance(target, Name) and target.id == "__license__":
 				if isinstance(value, Constant) and isinstance(value.value, str):

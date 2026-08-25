@@ -145,7 +145,7 @@ The package's short description has no dunder variable, because a package alread
 folded into a single line, and emphasis around the whole paragraph is removed - ``**An abstract VHDL language
 model.**`` is markup for the rendered documentation, and nothing renders it where a short description is displayed.
 
-A description longer than :data:`~pyTooling.Documentation.DEFAULT_MAXIMUM_SUMMARY_LENGTH` characters is rejected with
+A description longer than :data:`~pyTooling.Documentation.MAXIMUM_SUMMARY_LENGTH` characters is rejected with
 a :exc:`~pyTooling.Documentation.DocumentationError`: a first paragraph that long is a body that lost its summary,
 and it is not a *short* description. See :ref:`DOC/SummaryLength`.
 

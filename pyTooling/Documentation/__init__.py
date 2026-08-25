@@ -84,7 +84,7 @@ def splitDocString(
 
 	:param docString:           The doc-string to split, or ``None``.
 	:param maxSummaryLength:    Optional, number of characters the summary may have. Pass ``0`` for no limit.
-	                            Default: :data:`DEFAULT_MAXIMUM_SUMMARY_LENGTH`.
+	                            Default: :data:`MAXIMUM_SUMMARY_LENGTH`.
 	:returns:                   A tuple of summary and body.
 	:raises DocumentationError: If the summary is longer than ``maxSummaryLength`` characters.
 	"""
