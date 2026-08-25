@@ -51,9 +51,9 @@ from pyTooling.Decorators import export
 from pyTooling.Exceptions import ToolingException
 
 
-__all__ = ["DEFAULT_MAXIMUM_SUMMARY_LENGTH"]
+__all__ = ["MAXIMUM_SUMMARY_LENGTH"]
 
-DEFAULT_MAXIMUM_SUMMARY_LENGTH = 200
+MAXIMUM_SUMMARY_LENGTH = 200
 """
 Number of characters a doc-string's summary may have by default.
 
