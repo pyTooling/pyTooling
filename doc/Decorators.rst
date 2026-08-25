@@ -337,6 +337,36 @@ Merging doc-strings
          Represents a signal.
 
 
+.. _DECO/splitDocString:
+
+splitDocString
+**************
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      :func:`~pyTooling.Decorators.splitDocString` is the split the strategies above are expressed in: it dedents a
+      doc-string with :func:`inspect.cleandoc` and returns its **summary** - the first paragraph - and its **body** -
+      whatever follows the first blank line.
+
+      It is a function rather than a decorator, because the same split is what tells a package's short description
+      from its long one. :func:`~pyTooling.Packaging.extractVersionInformation` reads a package's description with it.
+
+      A doc-string of ``None`` yields two empty strings, and a single-paragraph doc-string yields an empty body, so a
+      caller needs no special case for either.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: Python
+
+         from pyTooling.Decorators import splitDocString
+
+         summary, body = splitDocString(MyClass.__doc__)
+
+
 .. _DECO/Performance:
 
 Performance
