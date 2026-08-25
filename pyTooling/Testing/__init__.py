@@ -39,6 +39,7 @@ argument parsing or the exit codes.
 
   See :ref:`high-level help <TESTING>` for explanations and usage examples.
 """
+from inspect    import cleandoc
 from pathlib    import Path
 from re         import compile as re_compile
 from shutil     import which
@@ -48,7 +49,7 @@ from sys        import executable as PythonExecutable, version_info
 from typing     import Any, Callable, ClassVar, Union, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Decorators  import export
+from pyTooling.Decorators  import export, splitDocString
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import C, M
 
@@ -116,8 +117,8 @@ def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 
 	:param title:      Optional, title the test suite is reported under, or the class itself when the decorator is
 	                   used without parentheses. Default: the class' name.
-	:returns:          Decorator marking the class with a ``<class>.__testsuite_title__`` field, or the marked class
-	                   itself when used without parentheses.
+	:returns:          Decorator marking the class with ``__testsuite_title__``, ``__testsuite_summary__`` and
+	                   ``__testsuite_description__``, or the marked class itself when used without parentheses.
 	:raises TypeError: If parameter 'title' is neither a string nor a class.
 
 	.. seealso::
@@ -141,6 +142,8 @@ def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 			raise ex
 
 		cls.__testsuite_title__ = cls.__name__ if title is None or isinstance(title, type) else title
+		cls.__testsuite_summary__, _ = splitDocString(cls.__doc__)
+		cls.__testsuite_description__ = "" if cls.__doc__ is None else cleandoc(cls.__doc__)
 		return cls
 
 	if isinstance(title, type):                          # used without parentheses: the class itself was passed
@@ -177,8 +180,8 @@ def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
 
 	:param title:      Optional, title the testcase is reported under, or the method itself when the decorator is
 	                   used without parentheses. Default: the method's name.
-	:returns:          Decorator marking the method with a ``<method>.__testcase_title__`` field, or the marked
-	                   method itself when used without parentheses.
+	:returns:          Decorator marking the method with ``__testcase_title__``, ``__testcase_summary__`` and
+	                   ``__testcase_description__``, or the marked method itself when used without parentheses.
 	:raises TypeError: If parameter 'title' is neither a string nor a method.
 
 	.. seealso::
@@ -202,6 +205,8 @@ def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
 			raise ex
 
 		method.__testcase_title__ = method.__name__ if title is None or callable(title) else title
+		method.__testcase_summary__, _ = splitDocString(method.__doc__)
+		method.__testcase_description__ = "" if method.__doc__ is None else cleandoc(method.__doc__)
 		return method
 
 	if title is None or isinstance(title, str):
