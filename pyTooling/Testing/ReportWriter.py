@@ -45,7 +45,7 @@ keeps the format its dashboard understands while the richer file is produced fro
 from datetime              import datetime, timezone
 from pathlib               import Path
 from socket                import gethostname
-from typing                import Any, Optional as Nullable
+from typing                import Any
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
 from pytest                import Config, Parser, Session, StashKey
