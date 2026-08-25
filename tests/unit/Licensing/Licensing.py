@@ -31,7 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
 """
-from pyTooling.Licensing import LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
+from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Testing   import Testcase
 
 
@@ -99,6 +99,31 @@ class SPDXLicenses(Testcase):
 # 			self.assertEqual("OSI Approved" in item.Classifier, license.OSIApproved)
 
 
+class Hashing(Testcase):
+	"""A license is hashable, so it can be a set element or a dictionary key."""
+
+	def test_ALicenseDoesNotShareItsBucketWithItsIdentifier(self) -> None:
+		"""A license is not equal to a string, so it must not hash like one - a mixed set would raise."""
+		self.assertNotEqual(hash("Apache-2.0"), hash(Apache_2_0_License))
+		self.assertFalse(Apache_2_0_License in {"Apache-2.0"})
+
+	def test_EqualLicensesHashEqually(self) -> None:
+		"""Two objects that compare equal must hash equally - a set and a dict rely on it."""
+		other = License("Apache-2.0", "A different name for the same license")
+
+		self.assertEqual(Apache_2_0_License, other)
+		self.assertEqual(hash(Apache_2_0_License), hash(other))
+
+	def test_ALicenseIsASetElement(self) -> None:
+		self.assertSetEqual({Apache_2_0_License}, {Apache_2_0_License, License("Apache-2.0", "same identifier")})
+
+	def test_ALicenseIsADictionaryKey(self) -> None:
+		self.assertEqual("found", {Apache_2_0_License: "found"}[License("Apache-2.0", "same identifier")])
+
+	def test_EveryPredefinedLicenseIsDistinct(self) -> None:
+		self.assertEqual(len(LICENSES), len(set(LICENSES)), "Two predefined licenses share an SPDX identifier.")
+
+
 class SPDXIndex(Testcase):
 	"""Every predefined license is consistent with SPDX and with PyPI's classifier list."""
 
@@ -106,8 +131,7 @@ class SPDXIndex(Testcase):
 		"""'LICENSES' is the list; 'SPDX_INDEX' is that list keyed by identifier, so neither can drift."""
 
 		self.assertEqual(len(LICENSES), len(SPDX_INDEX), "A license is listed twice under the same identifier.")
-		# A 'License' defines '__eq__' without '__hash__', so it can't go into a set - compare the sequences.
-		self.assertListEqual(list(LICENSES), list(SPDX_INDEX.values()))
+		self.assertSetEqual(set(LICENSES), set(SPDX_INDEX.values()))
 
 	def test_TheIndexIsKeyedByTheSPDXIdentifier(self) -> None:
 		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
@@ -153,7 +177,7 @@ class SPDXIndex(Testcase):
 	def test_TheOriginalFourAreUnchanged(self) -> None:
 		"""The licenses that existed before keep their identifiers, names and short names."""
 
-		from pyTooling.Licensing import Apache_2_0_License, BSD_3_Clause_License, GPL_2_0_or_later, MIT_License
+		from pyTooling.Licensing import BSD_3_Clause_License, GPL_2_0_or_later, MIT_License
 
 		self.assertEqual("Apache 2.0", Apache_2_0_License.PythonLicenseName)
 		self.assertEqual("BSD", BSD_3_Clause_License.PythonLicenseName)
