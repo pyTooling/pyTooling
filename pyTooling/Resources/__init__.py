@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _                                                                                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _                                                                          #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |                                                                         #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |                                                                         #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, |                                                                         #
+#             _____           _ _               ____                                                                   #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \ ___  ___  ___  _   _ _ __ ___ ___  ___                           #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |_) / _ \/ __|/ _ \| | | | '__/ __/ _ \/ __|                          #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_|  _ <  __/\__ \ (_) | |_| | | | (_|  __/\__ \                          #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_| \_\___||___/\___/ \__,_|_|  \___\___||___/                          #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -27,51 +27,32 @@
 #                                                                                                                      #
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
-#
 """
-Package installer for 'pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and
-exceptions.'.
+A resource package holding the data files shipped with pyTooling.
+
+It is one package for the whole library rather than one per sub-package, so a consumer looking for a schema has a
+single place to look and a file can be shared by more than one module.
+
+.. rubric:: XML Schema Files
+
+* :file:`TestReport-v0.1.xsd` - the schema of :ref:`pyTooling's own test report format <TESTING/ReportFormat>`,
+  which :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at. The file name carries
+  the format's version, so a later version is added beside it rather than replacing it.
+
+.. rubric:: Usage
+
+Two functions reach a resource file, and both work whether pyTooling is installed, inside a wheel, or a checkout:
+:func:`~pyTooling.Common.getResourceFile` returns its **path**, for a consumer handing the file to another tool,
+and :func:`~pyTooling.Common.readResourceFile` returns its **content**, for a consumer reading it directly.
+
+.. admonition:: ``example.py``
+
+   .. code-block:: python
+
+      from pathlib          import Path
+      from pyTooling        import Resources
+      from pyTooling.Common import getResourceFile, readResourceFile
+
+      schemaPath:    Path = getResourceFile(Resources, "TestReport-v0.1.xsd")
+      schemaContent: str  = readResourceFile(Resources, "TestReport-v0.1.xsd")
 """
-# Add package itself to PYTHON_PATH, so it can be used to package itself.
-from os.path    import dirname
-from sys        import path as sys_path
-sys_path.insert(0, dirname(__file__))
-
-from setuptools import setup
-
-from pathlib    import Path
-from pyTooling.Packaging  import DescribePythonPackageHostedOnGitHub
-
-gitHubNamespace =        "pyTooling"
-packageName =            "pyTooling.*"
-packageDirectory =       packageName[:-2]
-packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
-
-setup(
-	**DescribePythonPackageHostedOnGitHub(
-		packageName=packageName,
-		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-		gitHubNamespace=gitHubNamespace,
-		unittestRequirementsFile=Path("tests/requirements.txt"),
-		additionalRequirements={
-			"pypi":      ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
-			"packaging": ["setuptools >= 83.0"],
-			"terminal":  ["colorama ~= 0.4.6"],
-			"testing":   ["pytest ~= 9.1"],
-			"yaml":      ["ruamel.yaml ~= 0.19"],
-		},
-		sourceFileWithVersion=packageInformationFile,
-		pythonVersions=("3.11", "3.12", "3.13", "3.14"),
-		dataFiles={
-			packageName[:-1] + "Common": ["../py.typed"],
-			packageName[:-1] + "Resources": ["*.xsd"]
-		},
-		pytestPlugins={
-			# The entry point's name is the module's name on purpose, so '-p <module>' finds the plugin already
-			# registered instead of importing and registering it a second time.
-			"pyTooling.Testing.PyTest":       "pyTooling.Testing.PyTest",
-			"pyTooling.Testing.ReportWriter": "pyTooling.Testing.ReportWriter",
-		},
-		debug=True
-	)
-)

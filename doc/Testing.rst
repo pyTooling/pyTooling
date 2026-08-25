@@ -237,21 +237,21 @@ All of them except the ID reach the report as properties:
 Enabling the plugin
 ===================
 
-The collection itself is a pytest plugin, :mod:`pyTooling.Testing.PyTest`. It is **not** registered automatically -
-add it in the root :file:`conftest.py`
+The collection itself is a pytest plugin, :mod:`pyTooling.Testing.PyTest`. pyTooling declares it as a ``pytest11``
+entry point, so **an installed pyTooling registers it automatically** and a test suite only has to mark something.
 
-.. code-block:: python
+The plugin is inert until something is marked, so its presence changes nothing for a test suite that collects by
+name. Both styles work in one session and even in one file, which is what makes a gradual migration possible.
 
-   pytest_plugins = ["pyTooling.Testing.PyTest"]
-
-or pass it per run:
+Two cases still name it explicitly:
 
 .. code-block:: bash
 
-   pytest -p pyTooling.Testing.PyTest tests/unit
+   pytest -p pyTooling.Testing.PyTest tests/unit      # a checkout that is not installed
+   pytest -p no:pyTooling.Testing.PyTest tests/unit   # switch the plugin off
 
-The plugin is inert until something is marked, so enabling it changes nothing for a test suite that collects by
-name. Both styles work in one session and even in one file, which is what makes a gradual migration possible.
+The entry point's name **is** the module's name, so both spellings address the same plugin, and passing ``-p`` for
+an already registered plugin does nothing rather than registering it twice.
 
 .. _TESTING/Markers/Behavior:
 
@@ -280,3 +280,106 @@ What the plugin does
    :ref:`Tutorial: unit testing <TUTORIAL/UnitTesting>`
       |rarr| The levels a test suite is written in, and why the title a report shows and the name Python needs are
       different problems.
+
+.. _TESTING/ReportFormat:
+
+A Report Format of One's Own
+############################
+
+JUnit XML cannot express two things a marked test suite has.
+
+**Test suites do not nest.** A JUnit document holds one flat list of ``<testcase>`` elements, and the hierarchy is
+squeezed into a dotted ``classname`` - ``tests.unit.Versioning.VersionComparison``. Every level between the root
+and the class is a substring, so nothing can be said *about* a level: it has no element to carry a title or a
+description.
+
+**An item has one name.** :ref:`TESTING/Markers/Names` gives it four, and JUnit's only place for the other three is
+a flat ``<property name= value=>`` pair, whose value is an attribute and therefore a single line.
+
+:mod:`pyTooling.Testing.ReportWriter` writes a format that has both. It is a ``pytest11`` entry point as well, so
+it needs no registration either - only the switch that turns it on:
+
+.. code-block:: bash
+
+   pytest --pytooling-xml=report/unit/TestReport.xml --junit-xml=report/unit/unittest.xml
+
+Both files are written in one session from the same reports, so a pipeline keeps the format its dashboard
+understands while the richer file is produced beside it.
+
+.. code-block:: xml
+
+   <?xml version='1.0' encoding='utf-8'?>
+   <TestReport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="TestReport-v0.1.xsd"
+               timestamp="2026-08-25T18:15:26.819107+00:00"
+               duration="0.000671" tests="2" failures="0" errors="0" skipped="0">
+     <Testsuite name="test_versioning">
+       <Testsuite name="VersionComparison">
+         <Title>Version comparison.</Title>
+         <Summary>Compare two release versions.</Summary>
+         <Description>Compare two release versions.
+
+   Everything about comparing them.</Description>
+         <Testcase name="test_NewerIsGreater" status="passed" duration="0.000428"
+                   nodeID="test_versioning.py::VersionComparison::test_NewerIsGreater">
+           <Title>A newer version compares greater.</Title>
+           <Summary>A newer version compares greater than an older one.</Summary>
+           <Description>A newer version compares greater than an older one.
+
+   Only the minor number differs here.</Description>
+         </Testcase>
+       </Testsuite>
+     </Testsuite>
+   </TestReport>
+
+.. _TESTING/ReportFormat/Schema:
+
+The schema
+==========
+
+The schema lives in the resource package :mod:`pyTooling.Resources` and is shipped with the distribution.
+Every generated file points at it with ``xsi:noNamespaceSchemaLocation``, so a reader can validate without being
+told where it lives. :func:`~pyTooling.Common.getResourceFile` returns its path, whether pyTooling is installed,
+inside a wheel, or a checkout:
+
+.. code-block:: python
+
+   from pathlib                        import Path
+   from xmlschema                      import XMLSchema
+   from pyTooling                      import Resources
+   from pyTooling.Common               import getResourceFile
+   from pyTooling.Testing.ReportWriter import SCHEMA_FILES, SCHEMA_VERSION_LATEST
+
+   schemaPath: Path = getResourceFile(Resources, SCHEMA_FILES[SCHEMA_VERSION_LATEST])
+   XMLSchema(schemaPath).validate("report/unit/TestReport.xml")
+
+Validating needs an XML schema library such as `xmlschema <https://pypi.org/project/xmlschema/>`__. **pyTooling
+does not depend on one**: writing a report uses :mod:`xml.etree.ElementTree` from the standard library, so the
+schema is there for whoever reads the file.
+
+**The file name carries the format's version.** :data:`~pyTooling.Testing.ReportWriter.SCHEMA_FILES` maps a version
+to its schema file, so a later version of the format is added beside the current one rather than replacing it, and
+a reader learns from a report's ``xsi:noNamespaceSchemaLocation`` which version it is holding. The format states
+its own version this way; the report does **not** name the tool that wrote it, nor the machine it ran on.
+
+* ``name`` is an **attribute** on every item, because it is an identifier. ``Title``, ``Summary`` and
+  ``Description`` are **elements**, because they are prose - ``Description`` is typed ``preservingstring``, so its
+  line breaks survive.
+* ``<Testsuite>`` is recursive, so the hierarchy is as deep as the test suite is.
+* ``<Testcase>`` carries ``status`` from a fixed list, ``duration``, and a ``nodeID`` - the test runner's own
+  identifier, so a reader of the report can re-run exactly that testcase.
+* An item writes only the names it has, so an unmarked testcase produces a ``<Testcase>`` element with no children.
+
+.. _TESTING/ReportFormat/Nesting:
+
+Where the nesting comes from
+============================
+
+The levels are the node ID's own parts: the module path, then each class between it and the testcase. So
+``tests/unit/Versioning.py::VersionComparison::test_NewerIsGreater`` becomes ``tests`` → ``unit`` → ``Versioning``
+→ ``VersionComparison``, and a title or description attaches to whichever level declared one.
+
+.. seealso::
+
+   :ref:`TESTING/Markers`
+      |rarr| Where the titles, summaries and descriptions come from.
