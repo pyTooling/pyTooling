@@ -157,6 +157,9 @@ def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
 	return decorator
 
 
+testsuite.__test__ = False   #: The marker is not a testcase itself, whatever a test runner makes of its name.
+
+
 @export
 def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
 	"""
@@ -218,6 +221,9 @@ def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
 		raise ex
 
 	return decorator(title)
+
+
+testcase.__test__ = False   #: The marker is not a testcase itself, whatever a test runner makes of its name.
 
 
 @export
