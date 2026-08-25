@@ -57,6 +57,13 @@ class HelperFunctions(Testcase):
 		self.assertEqual(43, len(versionInformation.Keywords))
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_DescriptionFromModuleDocString(self) -> None:
+		from pyTooling.Packaging import extractVersionInformation
+
+		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
+		self.assertEqual("Common types, helper functions and classes.", versionInformation.Description)
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeTXT(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -141,6 +148,48 @@ class VersionInformation(Testcase):
 		self.assertListEqual(["keyword1", "keyword2"], versionInfo.Keywords)
 
 
+class Description(Testcase):
+	"""The short description is the first paragraph of the package's module doc-string."""
+
+	_dataDirectory = Path("tests/data/Packaging")
+
+	def _Description(self, fileName: str) -> str:
+		from pyTooling.Packaging import extractVersionInformation
+
+		return extractVersionInformation(self._dataDirectory / fileName).Description
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_SingleParagraph(self) -> None:
+		self.assertEqual("A package whose doc-string is a single line.", self._Description("SingleParagraph.py"))
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_WrappedParagraphIsFolded(self) -> None:
+		"""A short description is one line, while a doc-string is wrapped to the source file's line length."""
+		description = self._Description("WrappedParagraph.py")
+
+		self.assertNotIn("\n", description)
+		self.assertTrue(description.startswith("A package whose first paragraph is wrapped over several lines,"))
+		self.assertTrue(description.endswith("a sentence describing a package is longer than a line."))
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_SecondParagraphIsNotPartOfIt(self) -> None:
+		self.assertNotIn("second paragraph", self._Description("WrappedParagraph.py"))
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_EmphasisAroundTheWholeParagraphIsRemoved(self) -> None:
+		"""Nothing renders ReST markup where a short description is displayed."""
+		self.assertEqual("A package whose summary is emphasized as a whole.", self._Description("EmphasizedParagraph.py"))
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_EmphasisOfOneWordIsKept(self) -> None:
+		"""Only emphasis wrapping the entire paragraph is markup around the description rather than inside it."""
+		self.assertEqual("A package emphasizing **one word** of its summary.", self._Description("PartlyEmphasized.py"))
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_NoDocString(self) -> None:
+		self.assertEqual("", self._Description("NoDocString.py"))
+
+
 class DescribePackage(Testcase):
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackage(self) -> None:
@@ -165,6 +214,50 @@ class DescribePackage(Testcase):
 		self.assertEqual(16, len(packageInformation))
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_PythonPackageWithoutDescription(self) -> None:
+		"""Without the parameter, the package describes itself in its module doc-string."""
+		print()
+
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py"
+		)
+
+		self.assertEqual(
+			"An example package with a console script, used to test the packaging helpers for an installed tool.",
+			packageInformation["description"]
+		)
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_PythonPackageWithoutDescriptionAndWithoutDocString(self) -> None:
+		"""Neither source of a description is a reason to publish a package without one."""
+		print()
+
+		from pyTooling.Exceptions import ToolingException
+		from pyTooling.Packaging  import DescribePythonPackage
+
+		with self.assertRaises(ToolingException) as context:
+			_ = DescribePythonPackage(
+				packageName="pyPackage.Tool",
+				projectURL="https://",
+				sourceCodeURL="https://",
+				documentationURL="https://",
+				issueTrackerCodeURL="https://",
+				sourceFileWithVersion=Path("tests/data/Packaging/NoDocString.py")
+			)
+
+		self.assertIn("has no description", str(context.exception))
 
 	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackageFromGitHub(self) -> None:

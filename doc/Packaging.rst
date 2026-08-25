@@ -140,6 +140,11 @@ file (module). Usually these module variables are defined in a ``__init__.py`` f
 * Version number (``__version__``)
 * Keywords (``__keywords__``)
 
+The package's short description has no dunder variable, because a package already describes itself: it is the first
+paragraph of the source file's **module doc-string**. The paragraph is folded into a single line, and emphasis around
+the whole paragraph is removed - ``**An abstract VHDL language model.**`` is markup for the rendered documentation,
+and nothing renders it where a short description is displayed.
+
 The function returns an instance of :class:`~pyTooling.Packaging.VersionInformation`, which offers the gathered
 information as properties.
 
@@ -163,6 +168,7 @@ information as properties.
               version=versionInformation.Version,
               author=versionInformation.Author,
               author_email=versionInformation.Email,
+              description=versionInformation.Description,
               keywords=versionInformation.Keywords,
               # ...
             )
@@ -174,6 +180,11 @@ information as properties.
 
          .. code-block:: python
 
+            """
+            Common types, helper functions and classes.
+
+            This second paragraph is not part of the short description.
+            """
             __author__ =    "Patrick Lehmann"
             __email__ =     "Paebbels@gmail.com"
             __copyright__ = "2017-2026, Patrick Lehmann"
@@ -214,6 +225,22 @@ Handling of minimal Python version
 ==================================
 
 The minimal required Python version is selected from parameter ``pythonVersions``.
+
+Handling of the description
+===========================
+
+If parameter ``description`` is not specified, the first paragraph of the module doc-string in
+``sourceFileWithVersion`` is used, so a package is described in one place instead of two. An explicitly passed
+description always wins - including an empty one.
+
+If neither is available, a :exc:`~pyTooling.Exceptions.ToolingException` is raised, because a package published
+without a summary is worse than a failing ``setup.py``.
+
+.. note::
+
+   The doc-string that is read is the one of the file named by ``sourceFileWithVersion``. For a namespace package
+   whose dunder variables live in a sub-package - like ``pyTooling/Common/__init__.py`` - that doc-string describes
+   the sub-package, not the distribution, so such a package passes ``description`` explicitly.
 
 Handling of dunder variables
 ============================
@@ -390,7 +417,6 @@ knowing the GitHub namespace and repository name: issue tracker URL, source code
       setup(
         **DescribePythonPackageHostedOnGitHub(
           packageName=packageName,
-          description="A set of helper functions to describe a Python package for setuptools.",
           gitHubNamespace="pyTooling",
           keywords="Python3 setuptools package wheel installation",
           sourceFileWithVersion=Path(f"{packageName.replace('.', '/')}/__init__.py"),
