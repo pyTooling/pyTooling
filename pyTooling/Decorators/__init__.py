@@ -271,30 +271,6 @@ class readonly(property, Generic[_ReturnType]):
 
 
 @export
-def splitDocString(docString: Nullable[str]) -> tuple[str, str]:
-	"""
-	Split a doc-string into its summary and its body.
-
-	The doc-string is dedented with :func:`inspect.cleandoc` first. The summary is the first paragraph, the body is
-	whatever follows the first blank line. Both are empty strings if the doc-string is ``None``, and the body is an
-	empty string if the doc-string is a single paragraph.
-
-	:param docString: The doc-string to split, or ``None``.
-	:returns:         A tuple of summary and body.
-
-	.. seealso::
-
-	   :deco:`~pyTooling.Decorators.InheritDocString`
-	      |rarr| Merges two doc-strings, using this split to select their parts.
-	"""
-	if docString is None:
-		return "", ""
-
-	summary, _, body = cleandoc(docString).partition("\n\n")
-	return summary, body
-
-
-@export
 @unique
 class DocStringMergeStrategy(Enum):
 	"""
@@ -392,6 +368,9 @@ def InheritDocString(
 		:param param: Method to which the doc-string from a method in ``baseClass`` (with same className) should be merged.
 		:returns:     Same method, but with overwritten doc-string field (``__doc__``).
 		"""
+		# Imported here, because 'pyTooling.Documentation' imports 'export' from this module.
+		from pyTooling.Documentation import splitDocString
+
 		if isinstance(param, type):
 			baseDoc = baseClass.__doc__
 		elif callable(param):
@@ -400,8 +379,12 @@ def InheritDocString(
 			return param
 
 		derivedDoc = param.__doc__
-		baseSummary, baseBody = splitDocString(baseDoc)
-		derivedSummary, derivedBody = splitDocString(derivedDoc)
+
+		# 'maxSummaryLength=0': merging doc-strings is not the place to enforce a length. A base-class' doc-string
+		# belongs to whoever wrote it, and rejecting it here would turn a documentation style issue into an
+		# 'ImportError' in a package that only derives from that class.
+		baseSummary, baseBody = splitDocString(baseDoc, maxSummaryLength=0)
+		derivedSummary, derivedBody = splitDocString(derivedDoc, maxSummaryLength=0)
 		base = cleandoc(baseDoc) if baseDoc is not None else ""
 		derived = cleandoc(derivedDoc) if derivedDoc is not None else ""
 
