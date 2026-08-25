@@ -1160,6 +1160,12 @@ License
 
    Testing
 
+.. toctree::
+   :caption: Tracing
+   :hidden:
+
+   Tracing
+
 .. raw:: latex
 
    \part{References and Reports}
