@@ -29,6 +29,8 @@ of their names, because some tools use differing names for the same license.
    +------------------+------------------------------+--------------------------+--------------------------------------------------------+
    | ``BSD-3-Clause`` | The 3-Clause BSD License     | ``BSD``                  | ``License :: OSI Approved :: BSD License``             |
    +------------------+------------------------------+--------------------------+--------------------------------------------------------+
+   | ``MPL-2.0``      | Mozilla Public License 2.0   | ``MPL-2.0``              | ``License :: OSI Approved :: Mozilla Public ...``      |
+   +------------------+------------------------------+--------------------------+--------------------------------------------------------+
 
 .. _LICENSING/License:
 
@@ -76,12 +78,53 @@ equality (``==``, ``!=``) based on there SPDX identifier.
 
 The licenses supported by this package are available as individual package variables.
 
-Package variables of predefined licenses:
+Package variables of predefined licenses, grouped by family:
 
-* :data:`~pyTooling.Licensing.Apache_2_0_License`
-* :data:`~pyTooling.Licensing.BSD_3_Clause_License`
-* :data:`~pyTooling.Licensing.GPL_2_0_or_later`
-* :data:`~pyTooling.Licensing.MIT_License`
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30 40
+
+   * - Permissive
+     - Weak copyleft
+     - Strong copyleft
+   * - | :data:`~pyTooling.Licensing.Apache_2_0_License`
+       | :data:`~pyTooling.Licensing.BSD_2_Clause_License`
+       | :data:`~pyTooling.Licensing.BSD_3_Clause_License`
+       | :data:`~pyTooling.Licensing.MIT_License`
+       | :data:`~pyTooling.Licensing.ISC_License`
+       | :data:`~pyTooling.Licensing.BSL_1_0_License`
+       | :data:`~pyTooling.Licensing.Zlib_License`
+       | :data:`~pyTooling.Licensing.PSF_2_0_License`
+     - | :data:`~pyTooling.Licensing.MPL_2_0_License`
+       | :data:`~pyTooling.Licensing.EPL_1_0_License`
+       | :data:`~pyTooling.Licensing.EPL_2_0_License`
+       | :data:`~pyTooling.Licensing.LGPL_2_1_only`
+       | :data:`~pyTooling.Licensing.LGPL_2_1_or_later`
+       | :data:`~pyTooling.Licensing.LGPL_3_0_only`
+       | :data:`~pyTooling.Licensing.LGPL_3_0_or_later`
+     - | :data:`~pyTooling.Licensing.GPL_2_0_only`
+       | :data:`~pyTooling.Licensing.GPL_2_0_or_later`
+       | :data:`~pyTooling.Licensing.GPL_3_0_only`
+       | :data:`~pyTooling.Licensing.GPL_3_0_or_later`
+       | :data:`~pyTooling.Licensing.AGPL_3_0_only`
+       | :data:`~pyTooling.Licensing.AGPL_3_0_or_later`
+
+Public domain dedications and waivers: :data:`~pyTooling.Licensing.Unlicense` and
+:data:`~pyTooling.Licensing.CC0_1_0`.
+
+.. note::
+
+   :data:`~pyTooling.Licensing.CC0_1_0` is the one predefined license that is **not** OSI-approved, so its
+   classifier is ``License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication`` without the
+   ``OSI Approved ::`` prefix. :attr:`~pyTooling.Licensing.License.OSIApproved` says so.
+
+.. hint::
+
+   The ``-only`` and ``-or-later`` pairs are SPDX's replacement for the old ``+`` suffix, and PyPI has a separate
+   classifier for each - ``GNU General Public License v3 (GPLv3)`` versus ``... v3 or later (GPLv3+)``. Picking the
+   wrong one of a pair states a different license, so they are separate variables rather than one with a flag.
+
+:data:`~pyTooling.Licensing.SPDX_INDEX` maps every SPDX identifier above to its license.
 
 .. code-block:: python
 
