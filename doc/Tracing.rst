@@ -63,9 +63,14 @@ Three methods, for the three things a caller does with the document:
    * - :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`
      - nothing - it writes the document to the given :class:`~pathlib.Path`
 
+All three take ``scopeName`` and ``scopeVersion``, which name the **instrumentation scope** - the library the spans
+are reported as coming from. They default to :data:`~pyTooling.Tracing.OTLP_SCOPE_NAME` and pyTooling's version, so
+a program that wraps this tracing in its own API reports itself by passing them rather than by patching the module.
+
 A :class:`~pyTooling.Tracing.Span` and an :class:`~pyTooling.Tracing.Event` convert themselves too, but not
-publicly: a lone span is no OTLP document, because it has neither a ``traceId`` nor a service to be reported
-under. The trace walks its tree and asks each of them in turn.
+publicly: a lone span is no OTLP document, because it has no service to be reported under. Each level returns its
+own part - ``Span._ToOTLPJSON()`` returns itself and everything below it, flattened - and the trace wraps the
+result in the document envelope.
 
 The document is not an untyped mapping: every level of it is a :class:`~typing.TypedDict` named after the OTLP
 message it encodes, from :class:`~pyTooling.Tracing.OTLPDocument` down to
@@ -87,6 +92,10 @@ How a trace is mapped
      - one ``resourceSpans`` entry, whose ``service.name`` attribute is ``serviceName`` - or the trace's name
    * - the tree of spans
      - a **flat** list, whose ``parentSpanId`` references carry the hierarchy
+   * - :attr:`~pyTooling.Tracing.Trace.TraceID`, drawn when the trace is constructed
+     - ``traceId`` on every span of the trace
+   * - :attr:`~pyTooling.Tracing.Span.SpanID`, drawn when the timespan is constructed
+     - ``spanId``, and the ``parentSpanId`` of everything below it
    * - :attr:`~pyTooling.Tracing.Span.StartTime` and :attr:`~pyTooling.Tracing.Span.Duration`
      - ``startTimeUnixNano`` and ``endTimeUnixNano``
    * - a span's attributes
@@ -104,12 +113,26 @@ Three details of the encoding are easy to get wrong, and each has a testcase:
   computed from it rather than from :attr:`~pyTooling.Tracing.Span.StopTime`, because the duration comes from a
   nanosecond performance counter while the wall clock has microsecond resolution.
 
+.. _TRACING/OTLP/Attributes:
+
+What an attribute may hold
+==========================
+
+An attribute's value is one of :data:`~pyTooling.Tracing.AttributeValue`: :class:`bool`, :class:`int`,
+:class:`float`, :class:`str`, :class:`bytes`, or a :class:`list`, :class:`tuple` or :class:`dict` of those, nested
+as deeply as needed. Each maps to the matching field of OTLP's ``AnyValue``, with :class:`bytes` encoded as base64
+and a :class:`dict` becoming a ``kvlistValue``.
+
+A value of any other type raises a :exc:`~pyTooling.Tracing.TracingError` when the trace is exported. Rendering it
+with :func:`str` instead would put a Python ``repr`` into a document that a backend then indexes and offers as a
+searchable field, which is worse than a failed export.
+
 .. note::
 
-   The identifiers are generated per export, so exporting one trace twice yields two different ``traceId`` values.
-   That is enough to view a trace, but not for the distributed case the :class:`~pyTooling.Tracing.Trace`
-   documentation describes, where spans recorded by several processes are grouped by a shared identifier. Carrying
-   identifiers in the data model - and propagating them between processes - is the step that would enable it.
+   Both identifiers are drawn when the object is **constructed**, so exporting one trace twice reports the same
+   ``traceId`` and the same ``spanId`` values, and :attr:`~pyTooling.Tracing.Trace.TraceID` can be handed to another
+   process. That is the identifier a distributed trace is grouped by, as the :class:`~pyTooling.Tracing.Trace`
+   documentation describes; propagating it between processes is the remaining step.
 
 .. attention::
 
