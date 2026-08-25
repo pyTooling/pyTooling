@@ -178,6 +178,7 @@ extensions = [
 	"autoapi.sphinx",
 	"sphinx_reports",
 # User defined extensions
+	"XSDGraphviz",
 ]
 
 
