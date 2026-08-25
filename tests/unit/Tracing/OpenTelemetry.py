@@ -53,12 +53,12 @@ def _exampleTrace() -> Trace:
 	"""
 	with Trace("build") as trace:
 		trace["version"] = "10.0.0"
-		with Span("compile") as compile:
-			compile["files"] = 12
-			compile["optimized"] = True
-			compile["ratio"] = 0.5
-			compile["targets"] = ["a", "b"]
-			Event("cache miss", parent=compile)
+		with Span("compile") as compileSpan:
+			compileSpan["files"] = 12
+			compileSpan["optimized"] = True
+			compileSpan["ratio"] = 0.5
+			compileSpan["targets"] = ["a", "b"]
+			Event("cache miss", parent=compileSpan)
 			sleep(0.001)
 		with Span("link"):
 			pass
@@ -68,18 +68,15 @@ def _exampleTrace() -> Trace:
 
 class AttributeValues(Testcase):
 	"""A Python value is wrapped in the one-key mapping OTLP expects for its type."""
-
 	def test_String(self) -> None:
 		self.assertEqual({"stringValue": "text"}, toAttributeValue("text"))
 
 	def test_Integer(self) -> None:
 		"""A 64-bit integer is a string in OTLP/JSON, because JSON numbers cannot carry 64 bits exactly."""
-
 		self.assertEqual({"intValue": "42"}, toAttributeValue(42))
 
 	def test_BooleanIsNotAnInteger(self) -> None:
 		"""``bool`` is a subclass of ``int``, so the order of the checks decides this one."""
-
 		self.assertEqual({"boolValue": True}, toAttributeValue(True))
 
 	def test_Float(self) -> None:
@@ -97,7 +94,6 @@ class AttributeValues(Testcase):
 
 class Document(Testcase):
 	"""The exported document's shape."""
-
 	def test_TheEnvelopeNamesTheServiceAndTheScope(self) -> None:
 		document = ToOTLP(_exampleTrace(), serviceName="myProgram")
 		resourceSpans = document["resourceSpans"][0]
@@ -125,7 +121,6 @@ class Document(Testcase):
 
 class Spans(Testcase):
 	"""OTLP has no nesting, so the tree is flattened and carried by 'parentSpanId'."""
-
 	@staticmethod
 	def _Spans(document) -> dict:
 		"""
@@ -164,18 +159,16 @@ class Spans(Testcase):
 				self.assertEqual(span["spanId"], span["spanId"].lower(), "OTLP/JSON uses lower-case hex.")
 
 	def test_TheDurationSurvives(self) -> None:
-		"""'Duration' is in seconds and OTLP wants nanoseconds, which is the easy factor to get wrong."""
-
+		"""A span's duration is in seconds while OTLP wants nanoseconds, which is the easy factor to get wrong."""
 		spans = self._Spans(ToOTLP(_exampleTrace()))
-		compile = spans["compile"]
-		duration = int(compile["endTimeUnixNano"]) - int(compile["startTimeUnixNano"])
+		compileSpan = spans["compile"]
+		duration = int(compileSpan["endTimeUnixNano"]) - int(compileSpan["startTimeUnixNano"])
 
 		self.assertGreater(duration, 1_000_000, "The span slept for a millisecond, so it lasted at least that.")
 		self.assertLess(duration, 10_000_000_000, "A millisecond must not be reported as seconds.")
 
 	def test_TheTimestampsAreStrings(self) -> None:
 		"""proto3's JSON mapping encodes a 64-bit integer as a string."""
-
 		for span in self._Spans(ToOTLP(_exampleTrace())).values():
 			with self.subTest(span=span["name"]):
 				self.assertIsInstance(span["startTimeUnixNano"], str)
@@ -198,7 +191,6 @@ class Spans(Testcase):
 
 class Events(Testcase):
 	"""An event belongs to the span it was created in."""
-
 	def test_TheEventIsExported(self) -> None:
 		spans = {
 			span["name"]: span
@@ -210,8 +202,7 @@ class Events(Testcase):
 		self.assertEqual("cache miss", events[0]["name"])
 
 	def test_AnEventWithoutATimeFallsBackToItsSpan(self) -> None:
-		"""'Event' doesn't stamp the current time, and OTLP reads a missing one as the Unix epoch."""
-
+		"""An event doesn't stamp the current time, and OTLP reads a missing one as the Unix epoch."""
 		with Trace("trace") as trace:
 			with Span("span") as span:
 				Event("no time of its own", parent=span)
@@ -241,7 +232,6 @@ class Events(Testcase):
 
 class WrittenFile(Testcase):
 	"""The document reaches a file as JSON."""
-
 	def test_TheFileIsValidJSONAndRoundTrips(self) -> None:
 		trace = _exampleTrace()
 

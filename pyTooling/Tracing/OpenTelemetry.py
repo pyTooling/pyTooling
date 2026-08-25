@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2025-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -48,8 +48,7 @@ accepted OTLP since v1.35, so a trace written here can be posted to either witho
 
    .. code-block:: bash
 
-      curl -X POST -H "Content-Type: application/json" -d @trace.json \\
-           http://localhost:4318/v1/traces
+      curl -X POST -H "Content-Type: application/json" -d @trace.json http://localhost:4318/v1/traces
 
 .. hint::
 
@@ -58,7 +57,7 @@ accepted OTLP since v1.35, so a trace written here can be posted to either witho
 from datetime  import datetime
 from json      import dump as json_dump
 from pathlib   import Path
-from random    import getrandbits
+from secrets   import randbits
 from typing    import Any, Union, Optional as Nullable
 
 from pyTooling.Common     import __version__
@@ -127,7 +126,7 @@ def _newIdentifier(bits: int) -> str:
 	:param bits: Width of the identifier: 128 for a trace, 64 for a span.
 	:returns:    The identifier as a lower-case hex string.
 	"""
-	while (identifier := getrandbits(bits)) == 0:  # pragma: no cover
+	while (identifier := randbits(bits)) == 0:  # pragma: no cover
 		pass
 
 	return f"{identifier:0{bits // 4}x}"
