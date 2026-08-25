@@ -318,17 +318,14 @@ class LicenseExpression(Testcase):
 			**kwargs
 		)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_TheLicenseIsAnSPDXExpression(self) -> None:
 		self.assertEqual("Apache-2.0", self._Describe()["license"])
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_NoLicenseClassifierIsAdded(self) -> None:
 		classifiers = self._Describe()["classifiers"]
 
 		self.assertEqual([], [classifier for classifier in classifiers if classifier.startswith("License ::")])
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_ACallersLicenseClassifierIsReported(self) -> None:
 		"""It goes to the setup.py output, where the rest of this function's messages go."""
 
@@ -342,7 +339,6 @@ class LicenseExpression(Testcase):
 		self.assertIn("License :: OSI Approved :: MIT License", printed)
 		self.assertIn("[pyTooling.Packaging]", printed, "It carries the prefix every other message here carries.")
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_WithoutOneNothingIsReported(self) -> None:
 		output = StringIO()
 		with redirect_stdout(output):
@@ -350,7 +346,6 @@ class LicenseExpression(Testcase):
 
 		self.assertNotIn("deprecated", output.getvalue())
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_TheLicenseMustBeALicense(self) -> None:
 		"""The note names the parameter that was wrong - it used to report the README file instead."""
 
