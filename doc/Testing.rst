@@ -348,9 +348,9 @@ inside a wheel, or a checkout:
    from xmlschema                      import XMLSchema
    from pyTooling                      import Resources
    from pyTooling.Common               import getResourceFile
-   from pyTooling.Testing.ReportWriter import SCHEMA_FILES, SCHEMA_VERSION
+   from pyTooling.Testing.ReportWriter import SCHEMA_FILES, SCHEMA_VERSION_LATEST
 
-   schemaPath: Path = getResourceFile(Resources, SCHEMA_FILES[SCHEMA_VERSION])
+   schemaPath: Path = getResourceFile(Resources, SCHEMA_FILES[SCHEMA_VERSION_LATEST])
    XMLSchema(schemaPath).validate("report/unit/TestReport.xml")
 
 Validating needs an XML schema library such as `xmlschema <https://pypi.org/project/xmlschema/>`__. **pyTooling
