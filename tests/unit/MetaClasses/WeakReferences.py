@@ -32,9 +32,13 @@ Unit tests for the ``weakref`` class keyword argument of :class:`pyTooling.MetaC
 
 A slotted class cannot be referenced weakly unless ``__weakref__`` is one of its slots.
 """
+from gc      import collect as gc_collect
 from weakref import ref as WeakReference
 
+from pytest                import mark
+
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Platform    import CurrentPlatform
 from pyTooling.Testing     import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -46,11 +50,19 @@ if __name__ == "__main__":  # pragma: no cover
 class WeakReferences(Testcase):
 	"""``weakref=True`` adds ``__weakref__`` to a slotted class' slots."""
 
-	def test_ASlottedClassIsNotWeakReferenceableByDefault(self) -> None:
+	def test_ASlottedClassHasNoWeakrefSlotByDefault(self) -> None:
 		class Slotted(metaclass=ExtendedType, slots=True):
 			_field: int
 
 		self.assertNotIn("__weakref__", Slotted.__slots__)
+
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="PyPy makes every object weak-referenceable, slots or not.")
+	def test_OnCPythonThatMakesItUnreferenceable(self) -> None:
+		"""The restriction this keyword lifts is CPython's: no ``__weakref__`` slot, no weak reference."""
+
+		class Slotted(metaclass=ExtendedType, slots=True):
+			_field: int
+
 		with self.assertRaises(TypeError):
 			WeakReference(Slotted())
 
@@ -76,6 +88,7 @@ class WeakReferences(Testcase):
 		instance = Slotted()
 		reference = WeakReference(instance)
 		del instance
+		gc_collect()   # PyPy doesn't count references, so the object is not collected at 'del'.
 
 		self.assertIsNone(reference(), "A weak reference doesn't keep its object alive.")
 

@@ -96,6 +96,12 @@ the child lives, and a weak reference is how that cycle is avoided.
    A class **without** slots is weak-referenceable already, because it has a ``__dict__``. ``weakref=True`` is
    therefore only meaningful together with ``slots=True``.
 
+.. note::
+
+   The restriction is **CPython's**. On PyPy every object is weak-referenceable whether or not the class uses
+   slots, so ``weakref=True`` adds the slot but changes nothing observable there. Code written for both keeps the
+   keyword: it is what makes the class work on CPython.
+
 
 .. _META/ExpectedMembers:
 
