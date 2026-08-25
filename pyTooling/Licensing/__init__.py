@@ -102,34 +102,28 @@ class PythonLicenseName:
 #: Mapping of SPDX identifiers to Python license names
 PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 	"Apache-2.0":        PythonLicenseName("Apache 2.0",        "Apache Software License"),
-	"BSD-2-Clause":     PythonLicenseName("BSD-2-Clause",     "BSD License"),
-	"BSD-3-Clause":     PythonLicenseName("BSD",              "BSD License"),
-	"MIT":              PythonLicenseName("MIT",              "MIT License"),
-	"ISC":              PythonLicenseName("ISC",              "ISC License (ISCL)"),
-	"MPL-2.0":          PythonLicenseName("MPL-2.0",          "Mozilla Public License 2.0 (MPL 2.0)"),
-	"BSL-1.0":          PythonLicenseName("BSL-1.0",          "Boost Software License 1.0 (BSL-1.0)"),
-	"Zlib":             PythonLicenseName("Zlib",             "zlib/libpng License"),
-	"PSF-2.0":          PythonLicenseName("PSF-2.0",          "Python Software Foundation License"),
-	"Unlicense":        PythonLicenseName("Unlicense",        "The Unlicense (Unlicense)"),
-	"CC0-1.0":          PythonLicenseName("CC0-1.0",          "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication"),
-	"EPL-1.0":          PythonLicenseName("EPL-1.0",          "Eclipse Public License 1.0 (EPL-1.0)"),
-	"EPL-2.0":          PythonLicenseName("EPL-2.0",          "Eclipse Public License 2.0 (EPL-2.0)"),
-	"LGPL-2.1-only":    PythonLicenseName("LGPL-2.1-only",    "GNU Lesser General Public License v2 (LGPLv2)"),
-	"LGPL-2.1-or-later": PythonLicenseName(
-		"LGPL-2.1-or-later", "GNU Lesser General Public License v2 or later (LGPLv2+)"
-	),
-	"LGPL-3.0-only":    PythonLicenseName("LGPL-3.0-only",    "GNU Lesser General Public License v3 (LGPLv3)"),
-	"LGPL-3.0-or-later": PythonLicenseName(
-		"LGPL-3.0-or-later", "GNU Lesser General Public License v3 or later (LGPLv3+)"
-	),
-	"GPL-2.0-only":     PythonLicenseName("GPL-2.0-only",     "GNU General Public License v2 (GPLv2)"),
-	"GPL-2.0-or-later": PythonLicenseName("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
-	"GPL-3.0-only":     PythonLicenseName("GPL-3.0-only",     "GNU General Public License v3 (GPLv3)"),
-	"GPL-3.0-or-later": PythonLicenseName("GPL-3.0-or-later", "GNU General Public License v3 or later (GPLv3+)"),
-	"AGPL-3.0-only":    PythonLicenseName("AGPL-3.0-only",    "GNU Affero General Public License v3"),
-	"AGPL-3.0-or-later": PythonLicenseName(
-		"AGPL-3.0-or-later", "GNU Affero General Public License v3 or later (AGPLv3+)"
-	),
+	"BSD-2-Clause":      PythonLicenseName("BSD-2-Clause",      "BSD License"),
+	"BSD-3-Clause":      PythonLicenseName("BSD",               "BSD License"),
+	"MIT":               PythonLicenseName("MIT",               "MIT License"),
+	"ISC":               PythonLicenseName("ISC",               "ISC License (ISCL)"),
+	"MPL-2.0":           PythonLicenseName("MPL-2.0",           "Mozilla Public License 2.0 (MPL 2.0)"),
+	"BSL-1.0":           PythonLicenseName("BSL-1.0",           "Boost Software License 1.0 (BSL-1.0)"),
+	"Zlib":              PythonLicenseName("Zlib",              "zlib/libpng License"),
+	"PSF-2.0":           PythonLicenseName("PSF-2.0",           "Python Software Foundation License"),
+	"Unlicense":         PythonLicenseName("Unlicense",         "The Unlicense (Unlicense)"),
+	"CC0-1.0":           PythonLicenseName("CC0-1.0",           "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication"),
+	"EPL-1.0":           PythonLicenseName("EPL-1.0",           "Eclipse Public License 1.0 (EPL-1.0)"),
+	"EPL-2.0":           PythonLicenseName("EPL-2.0",           "Eclipse Public License 2.0 (EPL-2.0)"),
+	"LGPL-2.1-only":     PythonLicenseName("LGPL-2.1-only",     "GNU Lesser General Public License v2 (LGPLv2)"),
+	"LGPL-2.1-or-later": PythonLicenseName("LGPL-2.1-or-later", "GNU Lesser General Public License v2 or later (LGPLv2+)"),
+	"LGPL-3.0-only":     PythonLicenseName("LGPL-3.0-only",     "GNU Lesser General Public License v3 (LGPLv3)"),
+	"LGPL-3.0-or-later": PythonLicenseName("LGPL-3.0-or-later", "GNU Lesser General Public License v3 or later (LGPLv3+)"),
+	"GPL-2.0-only":      PythonLicenseName("GPL-2.0-only",      "GNU General Public License v2 (GPLv2)"),
+	"GPL-2.0-or-later":  PythonLicenseName("GPL-2.0-or-later",  "GNU General Public License v2 or later (GPLv2+)"),
+	"GPL-3.0-only":      PythonLicenseName("GPL-3.0-only",      "GNU General Public License v3 (GPLv3)"),
+	"GPL-3.0-or-later":  PythonLicenseName("GPL-3.0-or-later",  "GNU General Public License v3 or later (GPLv3+)"),
+	"AGPL-3.0-only":     PythonLicenseName("AGPL-3.0-only",     "GNU Affero General Public License v3"),
+	"AGPL-3.0-or-later": PythonLicenseName("AGPL-3.0-or-later", "GNU Affero General Public License v3 or later (AGPLv3+)"),
 }
 
 
@@ -321,14 +315,14 @@ AGPL_3_0_only =          License("AGPL-3.0-only",     "GNU Affero General Public
 AGPL_3_0_or_later =      License("AGPL-3.0-or-later", "GNU Affero General Public License v3.0 or later", True, True)
 
 
-#: Mapping of predefined licenses
-SPDX_INDEX: dict[str, License] = {
-	spdxLicense.SPDXIdentifier: spdxLicense
-	for spdxLicense in (
-		Apache_2_0_License, BSD_2_Clause_License, BSD_3_Clause_License, MIT_License, ISC_License, MPL_2_0_License,
-		BSL_1_0_License, Zlib_License, PSF_2_0_License, Unlicense, CC0_1_0, EPL_1_0_License, EPL_2_0_License,
-		LGPL_2_1_only, LGPL_2_1_or_later, LGPL_3_0_only, LGPL_3_0_or_later,
-		GPL_2_0_only, GPL_2_0_or_later, GPL_3_0_only, GPL_3_0_or_later,
-		AGPL_3_0_only, AGPL_3_0_or_later,
-	)
-}
+#: All predefined licenses, in the order they are defined above.
+LICENSES: tuple[License, ...] = (
+	Apache_2_0_License, BSD_2_Clause_License, BSD_3_Clause_License, MIT_License, ISC_License, MPL_2_0_License,
+	BSL_1_0_License, Zlib_License, PSF_2_0_License, Unlicense, CC0_1_0, EPL_1_0_License, EPL_2_0_License,
+	LGPL_2_1_only, LGPL_2_1_or_later, LGPL_3_0_only, LGPL_3_0_or_later,
+	GPL_2_0_only, GPL_2_0_or_later, GPL_3_0_only, GPL_3_0_or_later,
+	AGPL_3_0_only, AGPL_3_0_or_later,
+)
+
+#: Mapping of predefined licenses, indexed by their SPDX identifier.
+SPDX_INDEX: dict[str, License] = {spdxLicense.SPDXIdentifier: spdxLicense for spdxLicense in LICENSES}

@@ -102,6 +102,15 @@ class SPDXLicenses(Testcase):
 class SPDXIndex(Testcase):
 	"""Every predefined license is consistent with SPDX and with PyPI's classifier list."""
 
+	def test_TheIndexIsBuiltFromTheLicenseTuple(self) -> None:
+		"""'LICENSES' is the list; 'SPDX_INDEX' is that list keyed by identifier, so neither can drift."""
+
+		from pyTooling.Licensing import LICENSES, SPDX_INDEX
+
+		self.assertEqual(len(LICENSES), len(SPDX_INDEX), "A license is listed twice under the same identifier.")
+		# A 'License' defines '__eq__' without '__hash__', so it can't go into a set - compare the sequences.
+		self.assertListEqual(list(LICENSES), list(SPDX_INDEX.values()))
+
 	def test_TheIndexIsKeyedByTheSPDXIdentifier(self) -> None:
 		from pyTooling.Licensing import SPDX_INDEX
 
