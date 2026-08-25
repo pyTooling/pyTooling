@@ -20,6 +20,15 @@ Version 10.x (2026)
        class keyword argument. The contract is checked at class construction and reported on instantiation, like an
        abstract class.
 
+   * :mod:`pyTooling.Documentation` is a new module holding the helpers that work on doc-strings.
+
+     * :func:`~pyTooling.Documentation.splitDocString` splits a doc-string into its **summary** - the first
+       paragraph - and its **body**. Three unrelated features read a doc-string that way: the doc-string merge
+       strategies, a package's short description, and a testcase's names.
+     * A summary is a single sentence, so its length is bounded by
+       :data:`~pyTooling.Documentation.MAXIMUM_SUMMARY_LENGTH`. A longer first paragraph raises a
+       :exc:`~pyTooling.Documentation.DocumentationError`, because it is a body that lost its summary.
+
    * :mod:`pyTooling.Testing`
 
      * :deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase` mark what a test runner
@@ -28,12 +37,52 @@ Version 10.x (2026)
        becomes the description. A test item has four names - an ID, a title, a summary and a description.
      * :mod:`pyTooling.Testing.PyTest` is a new pytest plugin collecting what the markers mark. Node IDs are left
        untouched, so test selection, ``pytest-xdist``, ``--last-failed`` and IDE integration are unaffected.
+     * :mod:`pyTooling.Testing.ReportWriter` is a second plugin writing a **test report format of our own**,
+       opt-in through ``--pytooling-xml=PATH`` and additional - it runs in the same session as ``--junit-xml``, so
+       a pipeline keeps the format its dashboard understands while the richer file appears beside it. Test suites
+       **nest** instead of being flattened into a dotted ``classname``, every level can carry a title and a
+       description, and a description's line breaks survive.
+     * The format has a versioned schema, :file:`TestReport-v0.1.xsd`, shipped as a package resource and published
+       in the documentation.
+     * The names of every test suite level reach the **JUnit** report too, as test suite properties keyed by the
+       level's dotted path. The innermost key is the testcase's ``classname`` and every outer one is a prefix of
+       it, which is what lets a reader join the two.
+
+   * :mod:`pyTooling.Licensing`
+
+     * **Nineteen more SPDX licenses**, taking ``SPDX_INDEX`` from 4 to 23 - permissive, weak and strong copyleft,
+       and public domain. The ``-only``/``-or-later`` pairs are separate licenses, as SPDX defines them, because
+       PyPI has a distinct classifier for each.
+     * ``SPDX_INDEX`` is built from the licenses rather than repeating each identifier, so the two can no longer
+       disagree.
+     * A :class:`~pyTooling.Licensing.License` is hashable and compares equal to its SPDX identifier as a string,
+       so it can be a dictionary key and be looked up by what a user writes.
+
+   * :mod:`pyTooling.Tracing`
+
+     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
+       :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
+       format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
+       accepted it since v1.35.
+     * The document is typed rather than a mapping of :class:`~typing.Any`: ten :class:`~typing.TypedDict` classes
+       name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
+       :class:`~pyTooling.Tracing.OTLPAnyValue`.
+     * A trace and each of its timespans draw their identifiers when they are **constructed**, so exporting one
+       trace twice reports the same ``traceId``, and :attr:`~pyTooling.Tracing.Trace.TraceID` can be handed to
+       another process.
+     * An attribute's value is a :data:`~pyTooling.Tracing.AttributeValue` - the types OTLP's ``AnyValue`` carries,
+       nested as deeply as needed. A value of any other type is rejected rather than stringified.
 
    * :mod:`pyTooling.Packaging`
 
      * :func:`~pyTooling.Packaging.DescribePythonPackage` declares ``consoleScripts``, ``guiScripts`` and
        ``pytestPlugins``, each knowing the entry point group it belongs to. Previously only ``console_scripts`` was
        reachable.
+     * A package's **short description is the first paragraph of its module doc-string**, so a package is described
+       in one place instead of two. The paragraph is folded into a single line and emphasis around the whole of it
+       is removed, because nothing renders ReST where a short description is displayed.
+     * The module raises its own :exc:`~pyTooling.Packaging.PackagingError`, so a caller can catch what this module
+       reports without catching everything derived from :exc:`~pyTooling.Exceptions.ToolingException`.
 
    * :mod:`pyTooling.Decorators`
 
@@ -54,12 +103,28 @@ Version 10.x (2026)
      clause naming one has to be updated.
    * ``TerminalApplication._PrintHelp`` moved to
      :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which owns the parsers it prints.
+   * :func:`~pyTooling.Packaging.DescribePythonPackage` **raises when it can find no description**, instead of
+     publishing a package without one. Either pass ``description``, or give the file named by
+     ``sourceFileWithVersion`` a module doc-string.
+   * The ``description`` parameter of both ``Describe***`` functions moved behind the required parameters, so a
+     caller passing it positionally has to name it.
 
    .. rubric:: Changes
 
+   * **A package's license is stated as an SPDX expression only; no** ``License ::`` **classifier is added.**
+     setuptools deprecated them, and the expression was already there - ``license`` has always been filled from
+     :attr:`~pyTooling.Licensing.License.SPDXIdentifier`. A classifier passed by the caller is kept, because it is
+     their statement, and reported on the console.
    * 339 f-strings that interpolate nothing lost their ``f`` prefix, across 33 modules.
 
    .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Testing`
+
+     * The markers were collected as testcases themselves. :deco:`~pyTooling.Testing.testsuite` and
+       :deco:`~pyTooling.Testing.testcase` are module-level callables whose names start with ``test``, which is
+       what pytest's **default** ``python_functions = ["test*"]`` matches - so importing them put two phantom
+       testcases into every module that used them. They passed, which is why nothing looked wrong.
 
    * :mod:`pyTooling.TerminalUI`
 
@@ -75,6 +140,18 @@ Version 10.x (2026)
      sentence describing ``*args``/``**kwargs``, which none of them takes.
    * The four documentation-coverage findings that were real are fixed: :meth:`pyTooling.Tree.Node.__delitem__`,
      both comparison operators of :class:`~pyTooling.Licensing.License`, and ``abstract_new()``.
+   * :ref:`SCHEMAS` is a new section, last in *References and Reports*: a page per schema showing its full source
+     with a copy button, and offering the file itself for download. The page includes the schema from the package,
+     so there is no second copy to drift.
+   * A schema is also **drawn**. The ``.. xsd-graph::`` directive in :file:`doc/_extensions/XSDGraphviz.py` reads a
+     schema with ``xmlschema`` and renders it with ``sphinx.ext.graphviz`` - complex types as records, containment
+     as labelled edges carrying the cardinality, and a node for an enumeration.
+   * This release history was written, covering every release back to v0.5.0.
+
+   .. rubric:: Unit Tests
+
+   * Five FigLet banners named a module the file has nothing to do with, copied along with the file they were
+     copied from.
 
 Version 9.x (2026)
 ******************
