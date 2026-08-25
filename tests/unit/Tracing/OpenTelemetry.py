@@ -232,21 +232,26 @@ class Events(Testcase):
 
 	def test_AnEventWithoutATimeIsStampedWithTheCurrentTime(self) -> None:
 		"""The constructor stamps the current time, so an event always has one - OTLP reads a missing one as the epoch."""
+		# The bracket is read from the same clock as the stamp. A span's 'endTimeUnixNano' would be the wrong bound:
+		# it is its wall-clock start plus a duration measured by the performance counter, so on a platform with a
+		# coarse wall clock it can land before an event stamped inside the span.
+		before = datetime.now()
 		with Trace("trace") as trace:
 			with Span("span") as span:
-				sleep(0.001)
 				event = Event("no time of its own", parent=span)
-				sleep(0.001)
+		after = datetime.now()
 
 		spans = {
 			exported["name"]: exported
 			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
-		exportedSpan = spans["span"]
 
-		self.assertIsNotNone(event.Time)
-		self.assertLess(int(exportedSpan["startTimeUnixNano"]), int(exportedSpan["events"][0]["timeUnixNano"]))
-		self.assertGreater(int(exportedSpan["endTimeUnixNano"]), int(exportedSpan["events"][0]["timeUnixNano"]))
+		self.assertGreaterEqual(event.Time, before)
+		self.assertLessEqual(event.Time, after)
+		self.assertEqual(
+			str(int(event.Time.timestamp() * 1_000_000_000)),
+			spans["span"]["events"][0]["timeUnixNano"]
+		)
 
 	def test_AnEventWithATimeKeepsIt(self) -> None:
 		time = datetime(2026, 8, 25, 12, 0, 0)
