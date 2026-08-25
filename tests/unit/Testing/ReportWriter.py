@@ -84,7 +84,6 @@ class Report:
 
 class Document(Testcase):
 	"""The document the writer assembles from the reports it collects."""
-
 	@staticmethod
 	def _Write(*reports: Report) -> Element:
 		"""
@@ -108,14 +107,12 @@ class Document(Testcase):
 
 	def test_TheDirectoryIsCreated(self) -> None:
 		"""'report/unit/' rarely exists when a pipeline asks for a report in it."""
-
 		root = self._Write(Report("tests/unit/Versioning.py::Comparison::test_Newer"))
 
 		self.assertEqual("TestReport", root.tag)
 
 	def test_TheReportPointsAtItsSchema(self) -> None:
 		"""So a reader can validate the file without being told where the schema is."""
-
 		root = self._Write(Report("tests/unit/Versioning.py::Comparison::test_Newer"))
 
 		# The document is written with the 'xsi:' prefix; parsing it expands the prefix to the namespace URI.
@@ -126,7 +123,6 @@ class Document(Testcase):
 
 	def test_TestsuitesNest(self) -> None:
 		"""What a dotted 'classname' cannot express: one element per level."""
-
 		root = self._Write(Report("tests/unit/Versioning.py::Comparison::test_Newer"))
 
 		tests = root.find("Testsuite")
@@ -153,7 +149,6 @@ class Document(Testcase):
 
 	def test_ATestcaseCarriesItsNodeID(self) -> None:
 		"""The ID selects the testcase, so it is in the document even though the levels repeat it."""
-
 		nodeID = "tests/unit/Versioning.py::Comparison::test_Newer"
 		root = self._Write(Report(nodeID))
 
@@ -172,7 +167,6 @@ class Document(Testcase):
 
 	def test_TheNamesBecomeElements(self) -> None:
 		"""A title is prose, so it is an element rather than an attribute."""
-
 		root = self._Write(Report(
 			"tests/unit/Versioning.py::Comparison::test_Newer",
 			title="A newer version compares greater.",
@@ -199,7 +193,6 @@ class Document(Testcase):
 
 	def test_ATestsuiteIsTitledOnce(self) -> None:
 		"""Every testcase of a class repeats its test suite's names; the element must not."""
-
 		root = self._Write(
 			Report("tests/unit/Versioning.py::Comparison::test_Newer", testsuiteTitle="Version comparison."),
 			Report("tests/unit/Versioning.py::Comparison::test_Older", testsuiteTitle="Version comparison.")
@@ -212,7 +205,6 @@ class Document(Testcase):
 
 class Statuses(Testcase):
 	"""A phase decides what a testcase's status is, and the root counts them."""
-
 	@staticmethod
 	def _Write(*reports: Report) -> Element:
 		"""
@@ -244,7 +236,6 @@ class Statuses(Testcase):
 
 	def test_AFailureOutsideTheCallPhaseIsAnError(self) -> None:
 		"""A testcase that never ran didn't fail - its fixture did."""
-
 		root = self._Write(Report(
 			"tests/unit/Versioning.py::Comparison::test_Newer",
 			status="failed",
@@ -278,7 +269,6 @@ class Statuses(Testcase):
 
 class PluginWiring(Testcase):
 	"""The two hooks that connect the writer to a session: the switch, and what the switch turns on."""
-
 	def test_TheOptionIsOffered(self) -> None:
 		from pyTooling.Testing.ReportWriter import pytest_addoption
 
