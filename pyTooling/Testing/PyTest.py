@@ -50,7 +50,7 @@ from types    import ModuleType
 from typing   import Any, Callable, Union, Optional as Nullable
 from unittest import TestCase
 
-from pytest               import Class, Collector, Config, Item, StashKey, fixture
+from pytest               import Class, Collector, Item, StashKey, fixture
 from pyTooling.Decorators import export, splitDocString
 
 
