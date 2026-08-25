@@ -37,6 +37,7 @@ from tempfile  import TemporaryDirectory
 from time      import sleep
 from unittest  import mock
 
+from pyTooling.Common  import __version__
 from pyTooling.Testing import Testcase
 from pyTooling.Tracing import OTLP_SCOPE_NAME, Event, Span, Trace, TracingError, _newIdentifier, _toAttributeValue
 
@@ -90,8 +91,40 @@ class AttributeValues(Testcase):
 			_toAttributeValue(["a", 1])
 		)
 
-	def test_AnythingElseBecomesAString(self) -> None:
-		self.assertEqual({"stringValue": "None"}, _toAttributeValue(None))
+	def test_TupleIsAnArrayToo(self) -> None:
+		self.assertEqual({"arrayValue": {"values": [{"intValue": "1"}]}}, _toAttributeValue((1,)))
+
+	def test_Dictionary(self) -> None:
+		"""OTLP's 'KeyValueList' is a mapping, and it nests - a value of it is an 'AnyValue' again."""
+		self.assertEqual(
+			{"kvlistValue": {"values": [
+				{"key": "a", "value": {"intValue": "1"}},
+				{"key": "b", "value": {"arrayValue": {"values": [{"boolValue": True}]}}},
+			]}},
+			_toAttributeValue({"a": 1, "b": [True]})
+		)
+
+	def test_Bytes(self) -> None:
+		"""'bytesValue' is a 'bytes' field in proto3, and proto3's JSON mapping encodes those as base64."""
+		self.assertEqual({"bytesValue": "AAH/"}, _toAttributeValue(b"\x00\x01\xff"))
+
+	def test_AnUnsupportedTypeIsRejected(self) -> None:
+		"""A silent 'str(value)' would put a Python repr into a document a backend then indexes."""
+		with self.assertRaises(TracingError) as exceptionCapture:
+			_toAttributeValue(object())
+
+		self.assertEqual(
+			"Attribute value of type 'object' can't be represented in OTLP.",
+			str(exceptionCapture.exception)
+		)
+		self.assertEqual(
+			["Supported are: bool, int, float, str, bytes, and a list, tuple or dict of these."],
+			exceptionCapture.exception.__notes__
+		)
+
+	def test_AnUnsupportedTypeIsRejectedInsideAContainer(self) -> None:
+		with self.assertRaises(TracingError):
+			_toAttributeValue(["fine", None])
 
 
 class Document(Testcase):
@@ -287,36 +320,10 @@ class WrittenFile(Testcase):
 class Encoding(Testcase):
 	"""The two ways a trace hands its document out, beside the mapping itself."""
 
-	@staticmethod
-	def _WithoutIdentifiers(document: dict) -> dict:
-		"""
-		Strip the generated identifiers from a document, so two conversions of one trace can be compared.
-
-		:param document: The document to strip.
-		:returns:        The document, with every ``traceId``, ``spanId`` and ``parentSpanId`` removed.
-		"""
-		for span in document["resourceSpans"][0]["scopeSpans"][0]["spans"]:
-			for key in ("traceId", "spanId", "parentSpanId"):
-				span.pop(key, None)
-
-		return document
-
 	def test_TheStringIsTheEncodedDocument(self) -> None:
 		trace = _exampleTrace()
 
-		self.assertEqual(
-			self._WithoutIdentifiers(trace.ToJSON()),
-			self._WithoutIdentifiers(json_loads(trace.ToJSONString()))
-		)
-
-	def test_TheIdentifiersAreGeneratedPerCall(self) -> None:
-		"""The data model doesn't carry them, so converting one trace twice yields two different traces."""
-
-		trace = _exampleTrace()
-		first = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["traceId"]
-		second = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["traceId"]
-
-		self.assertNotEqual(first, second)
+		self.assertEqual(trace.ToJSON(), json_loads(trace.ToJSONString()))
 
 	def test_TheCompactFormIsTheDefault(self) -> None:
 		"""That is what a collector expects; an indent is for a human reading the file."""
@@ -392,3 +399,103 @@ class WriteErrors(Testcase):
 
 		self.assertEqual(f"OTLP/JSON file '{path}' couldn't be written.", str(exceptionCapture.exception))
 		self.assertIsInstance(exceptionCapture.exception.__cause__, PermissionError)
+
+
+class Identity(Testcase):
+	"""The identifiers belong to the data model, not to a conversion."""
+
+	def test_ATraceKeepsItsIdentifierAcrossConversions(self) -> None:
+		"""This is what the by-call generation couldn't do: two exports describe one trace, not two."""
+		trace = _exampleTrace()
+
+		first = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		second = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+
+		self.assertEqual(first, second)
+		self.assertEqual(trace.TraceID, first[0]["traceId"])
+
+	def test_ASpanKnowsItsOwnIdentifierAndItsTrace(self) -> None:
+		with Trace("trace") as trace:
+			with Span("span") as span:
+				pass
+
+		exported = {
+			converted["name"]: converted
+			for converted in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		}
+
+		self.assertIs(trace, span.Trace)
+		self.assertEqual(span.SpanID, exported["span"]["spanId"])
+		self.assertEqual(trace.TraceID, exported["span"]["traceId"])
+
+	def test_TheParentSpanIdIsReadOffTheParentRelation(self) -> None:
+		with Trace("trace") as trace:
+			with Span("outer") as outer:
+				with Span("inner") as inner:
+					pass
+
+		exported = {
+			converted["name"]: converted
+			for converted in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		}
+
+		self.assertIs(outer, inner.Parent)
+		self.assertEqual(outer.SpanID, exported["inner"]["parentSpanId"])
+		self.assertEqual(trace.SpanID, exported["outer"]["parentSpanId"])
+		self.assertNotIn("parentSpanId", exported["trace"], "The trace itself has no parent.")
+
+	def test_EveryIdentifierOfATraceIsDistinct(self) -> None:
+		spans = _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		identifiers = [span["spanId"] for span in spans]
+
+		self.assertEqual(len(identifiers), len(set(identifiers)))
+
+	def test_ASpanOutsideATraceCannotBeExported(self) -> None:
+		"""A lone span has no 'traceId' to carry, and OTLP has no way of saying so."""
+		span = Span("orphan")
+
+		self.assertIsNone(span.Trace)
+		with self.assertRaises(TracingError) as exceptionCapture:
+			span._ToOTLPJSON()
+
+		self.assertEqual("Timespan 'orphan' is not part of a trace.", str(exceptionCapture.exception))
+
+	def test_TheConversionReturnsTheFlattenedList(self) -> None:
+		"""Every level returns its own list, so no caller passes one in to be filled."""
+		trace = _exampleTrace()
+		spans = trace._ToOTLPJSON()
+
+		self.assertIsInstance(spans, list)
+		self.assertListEqual(["build", "compile", "link"], [span["name"] for span in spans])
+
+
+class InstrumentationScope(Testcase):
+	"""Which library the spans are reported as coming from."""
+
+	def test_ThePyToolingScopeIsTheDefault(self) -> None:
+		scope = _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["scope"]
+
+		self.assertEqual(OTLP_SCOPE_NAME, scope["name"])
+		self.assertEqual(__version__, scope["version"])
+
+	def test_ItIsInjectedRatherThanPatched(self) -> None:
+		"""A program wrapping pyTooling's tracing reports its own name, without touching the module."""
+		scope = _exampleTrace().ToJSON(
+			scopeName="myProgram.Instrumentation",
+			scopeVersion="2.1.0"
+		)["resourceSpans"][0]["scopeSpans"][0]["scope"]
+
+		self.assertEqual({"name": "myProgram.Instrumentation", "version": "2.1.0"}, scope)
+
+	def test_ItReachesTheStringAndTheFile(self) -> None:
+		trace = _exampleTrace()
+
+		document = json_loads(trace.ToJSONString(scopeName="myProgram", scopeVersion="2.1.0"))
+		self.assertEqual("myProgram", document["resourceSpans"][0]["scopeSpans"][0]["scope"]["name"])
+
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "trace.json"
+			trace.WriteJSONFile(path, scopeName="myProgram", scopeVersion="2.1.0")
+			written = json_loads(path.read_text(encoding="utf-8"))
+
+		self.assertEqual("myProgram", written["resourceSpans"][0]["scopeSpans"][0]["scope"]["name"])
