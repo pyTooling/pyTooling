@@ -226,7 +226,7 @@ def _recordTestsuiteHierarchy(request, record_testsuite_property: Callable[[str,
 	They are written **once per session**, not once per testcase - a property inside ``<testcase>`` would repeat for
 	every testcase in the level.
 
-	:param request:                  The fixture request, holding the configuration the levels were stashed on.
+	:param request:                   The fixture request, holding the configuration the levels were stashed on.
 	:param record_testsuite_property: pytest's fixture writing a property into the session's ``<testsuite>``.
 	"""
 	for path, names in request.config.stash.get(hierarchyKey, {}).items():

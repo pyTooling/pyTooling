@@ -433,6 +433,22 @@ class ReportFormat(ApplicationTestcase):
 		self.assertEqual("passed", status)
 		self.assertIn("::test_DescribedByItsDocString", nodeID, "The node ID lets a reader re-run the testcase.")
 
+	def test_ATestsuiteElementCarriesItsOwnNames(self) -> None:
+		"""The names of a level come from the marker plugin's hierarchy, not from the testcases inside it."""
+
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			suite = next(
+				element for element in xml_parse(report).getroot().iter("Testsuite")
+				if element.get("name") == "VersionComparison"
+			)
+			names = {child.tag: child.text for child in suite if child.tag in ("Title", "Summary", "Description")}
+
+		self.assertEqual("Version comparison", names["Title"], "The marker's title reaches the Testsuite element.")
+		self.assertNotIn("Summary", names, "That class has no doc-string, so the level has no summary.")
+
 	def test_AnUnmarkedTestcaseCarriesNoNames(self) -> None:
 		with TemporaryDirectory() as directory:
 			result, report = self._RunPyTest(Path(directory))
