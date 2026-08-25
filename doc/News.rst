@@ -12,15 +12,6 @@ Version 10.x (2026)
 
 .. topic:: `v10.0.0 - unreleased <https://github.com/pyTooling/pyTooling/releases/v10.0.0>`__
 
-   .. rubric:: Breaking Changes
-
-   * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
-     :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. The old
-     names were briefly kept as aliases and are removed in the same release, so an ``import`` or an ``except``
-     clause naming one has to be updated.
-   * ``TerminalApplication._PrintHelp`` moved to
-     :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which owns the parsers it prints.
-
    .. rubric:: New Features
 
    * :mod:`pyTooling.MetaClasses`
@@ -54,6 +45,15 @@ Version 10.x (2026)
 
      * Neither module raises its own base exception any more. ``LinkedList`` gained five specific errors and
        ``Graph`` three, so 20 raise sites name what went wrong.
+
+   .. rubric:: Breaking Changes
+
+   * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
+     :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. The old
+     names were briefly kept as aliases and are removed in the same release, so an ``import`` or an ``except``
+     clause naming one has to be updated.
+   * ``TerminalApplication._PrintHelp`` moved to
+     :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which owns the parsers it prints.
 
    .. rubric:: Changes
 
