@@ -37,7 +37,7 @@ text is laid out - and it is generated at build time from the shipped file, so i
 from pathlib   import Path
 from typing    import Any, ClassVar
 
-from docutils        import nodes
+from docutils             import nodes
 from docutils.parsers.rst import directives
 from sphinx.application   import Sphinx
 from sphinx.ext.graphviz  import graphviz, figure_wrapper
