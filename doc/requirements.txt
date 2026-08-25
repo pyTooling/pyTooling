@@ -19,3 +19,6 @@ sphinx_design ~= 0.7.0
 sphinx-copybutton >= 0.5.2
 sphinx_autodoc_typehints ~= 3.12
 sphinx_reports ~= 0.11.0
+
+# Used by the 'XSDGraphviz' extension to read a schema
+xmlschema ~= 4.3
