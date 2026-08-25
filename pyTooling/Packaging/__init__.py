@@ -822,6 +822,7 @@ def DescribePythonPackage(
 		ex = TypeError("Parameter 'license' is not of type 'License'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(license)}'.")
 		raise ex
+
 	if pytestPlugins is not None and "Framework :: Pytest" not in classifiers:
 		classifiers.append("Framework :: Pytest")
 

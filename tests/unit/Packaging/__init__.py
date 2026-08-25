@@ -350,6 +350,16 @@ class LicenseExpression(Testcase):
 
 		self.assertNotIn("deprecated", output.getvalue())
 
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_TheLicenseMustBeALicense(self) -> None:
+		"""The note names the parameter that was wrong - it used to report the README file instead."""
+
+		with self.assertRaises(TypeError) as context:
+			self._Describe(license="Apache-2.0")
+
+		self.assertEqual("Parameter 'license' is not of type 'License'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
 	def test_TheLicenseStillOffersItsClassifier(self) -> None:
 		"""'License.PythonClassifier' stays - it is public API, and a caller may still need it elsewhere."""
 
