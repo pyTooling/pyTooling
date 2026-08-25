@@ -10,9 +10,11 @@ Tutorials
 .. toctree::
    :hidden:
 
+   ApplicationTesting
    Attributes
    CLIAbstraction
    Decorators
    ExceptionHierarchy
    MetaClasses
    TerminalApplication
+   UnitTesting
