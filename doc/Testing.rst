@@ -197,8 +197,10 @@ All of them except the ID reach the report as properties:
 .. code-block:: xml
 
    <testsuites name="pytest tests">
-     <testsuite name="pytest" tests="1" time="0.010">
-       <testcase classname="test_versioning.VersionComparison" name="test_NewerIsGreater" time="0.000">
+     <testsuite name="pytest" errors="0" failures="0" skipped="0"
+                tests="1" time="0.016" timestamp="2026-08-24T23:55:41+00:00" hostname="build-01">
+       <testcase classname="tests.unit.Versioning.Comparison.VersionComparison"
+                 name="test_NewerIsGreater" time="0.001">
          <properties>
            <property name="title" value="A newer version compares greater." />
            <property name="summary" value="A newer version compares greater than an older one." />
@@ -212,6 +214,10 @@ All of them except the ID reach the report as properties:
        </testcase>
      </testsuite>
    </testsuites>
+
+``classname`` is the testcase's **package path** - the directories below the root, then the module, then the class
+- so a testcase in :file:`tests/unit/Versioning/Comparison.py` is reported as
+``tests.unit.Versioning.Comparison.VersionComparison``. Its **ID**, in the table above, is the last part of that.
 
 .. hint::
 
