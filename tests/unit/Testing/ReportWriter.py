@@ -85,18 +85,19 @@ class Report:
 class Document(Testcase):
 	"""The document the writer assembles from the reports it collects."""
 	@staticmethod
-	def _Write(*reports: Report) -> Element:
+	def _Write(*reports: Report, hierarchy: dict = None) -> Element:
 		"""
 		Hand the reports to a writer and return the root of the document it wrote.
 
-		:param reports: The reports to collect, in the order a session would produce them.
-		:returns:       Root element of the written document.
+		:param reports:   The reports to collect, in the order a session would produce them.
+		:param hierarchy: Optional, the names of every test suite level, as the marker plugin stashes them.
+		:returns:         Root element of the written document.
 		"""
 		from pyTooling.Testing.ReportWriter import TestReportWriter
 
 		with TemporaryDirectory() as directory:
 			path = Path(directory) / "report" / "TestReport.xml"
-			writer = TestReportWriter(path)
+			writer = TestReportWriter(path, hierarchy)
 
 			for report in reports:
 				writer.pytest_runtest_logreport(report)
@@ -178,17 +179,36 @@ class Document(Testcase):
 			"tests/unit/Versioning.py::Comparison::test_Newer",
 			title="A newer version compares greater.",
 			summary="Compare two versions.",
-			description="Compare two versions.\n\nOnly the minor number differs.",
-			testsuiteTitle="Version comparison."
+			description="Compare two versions.\n\nOnly the minor number differs."
 		))
-
 		testcase = root.find(".//Testcase")
-		comparison = root.find("Testsuite/Testsuite/Testsuite/Testsuite")
 
 		self.assertEqual("A newer version compares greater.", testcase.find("Title").text)
 		self.assertEqual("Compare two versions.", testcase.find("Summary").text)
 		self.assertEqual("Compare two versions.\n\nOnly the minor number differs.", testcase.find("Description").text)
+
+	def test_ALevelIsNamedFromTheHierarchy(self) -> None:
+		"""A test suite's names come from the marker plugin, keyed by the level's dotted path - not from a testcase."""
+		root = self._Write(
+			Report("tests/unit/Versioning.py::Comparison::test_Newer"),
+			hierarchy={"tests.unit.Versioning.Comparison": {
+				"title":   "Version comparison.",
+				"summary": "Compare two release versions."
+			}}
+		)
+		comparison = root.find("Testsuite/Testsuite/Testsuite/Testsuite")
+
 		self.assertEqual("Version comparison.", comparison.find("Title").text)
+		self.assertEqual("Compare two release versions.", comparison.find("Summary").text)
+		self.assertIsNone(comparison.find("Description"), "A level contributes only the names it has.")
+
+	def test_WithoutAHierarchyALevelIsUnnamed(self) -> None:
+		"""The writer runs without the marker plugin; then nothing knows a level's names."""
+		root = self._Write(Report("tests/unit/Versioning.py::Comparison::test_Newer"))
+		comparison = root.find("Testsuite/Testsuite/Testsuite/Testsuite")
+
+		self.assertEqual("Comparison", comparison.get("name"))
+		self.assertIsNone(comparison.find("Title"))
 
 	def test_AnUnmarkedTestcaseCarriesNoNames(self) -> None:
 		root = self._Write(Report("tests/unit/Versioning.py::Comparison::test_Newer"))
@@ -199,15 +219,16 @@ class Document(Testcase):
 		self.assertIsNone(testcase.find("Description"))
 
 	def test_ATestsuiteIsTitledOnce(self) -> None:
-		"""Every testcase of a class repeats its test suite's names; the element must not."""
+		"""However many testcases a level holds, it is created - and named - once."""
 		root = self._Write(
-			Report("tests/unit/Versioning.py::Comparison::test_Newer", testsuiteTitle="Version comparison."),
-			Report("tests/unit/Versioning.py::Comparison::test_Older", testsuiteTitle="Version comparison.")
+			Report("tests/unit/Versioning.py::Comparison::test_Newer"),
+			Report("tests/unit/Versioning.py::Comparison::test_Older"),
+			hierarchy={"tests.unit.Versioning.Comparison": {"title": "Version comparison."}}
 		)
-
 		comparison = root.find("Testsuite/Testsuite/Testsuite/Testsuite")
 
 		self.assertEqual(1, len(comparison.findall("Title")))
+		self.assertEqual(2, len(comparison.findall("Testcase")))
 
 
 class Statuses(Testcase):

@@ -224,13 +224,62 @@ All of them except the ID reach the report as properties:
    Because the title defaults to the ID, a marker can be added to an existing testcase without changing anything a
    report says about it - which is what makes a suite migratable one class at a time.
 
+.. _TESTING/Markers/Hierarchy:
+
+The names of a test suite level
+===============================
+
+A JUnit document has exactly **one** ``<testsuite>`` element for the whole session, and squeezes the hierarchy into
+a dotted ``classname`` - so a level between the root and the class has no element that could carry a title or a
+description.
+
+The names of every level are therefore written as **keys** in the session's ``<properties>``, where the key is the
+level's dotted path:
+
+.. code-block:: xml
+
+   <?xml version="1.0" encoding="utf-8"?>
+   <testsuites name="pytest tests">
+     <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.011"
+                timestamp="2026-08-25T07:01:50.230489+00:00" hostname="build-01">
+       <properties>
+         <property name="versioning.summary" value="The version handling test suite." />
+         <property name="versioning.description"
+                   value="The version handling test suite.&#10;&#10;Everything about parsing ..." />
+         <property name="versioning.test_comparison.summary" value="Version comparison tests." />
+         <property name="versioning.test_comparison.description" value="Version comparison tests." />
+         <property name="versioning.test_comparison.VersionComparison.title" value="Version comparison." />
+       </properties>
+       <testcase classname="versioning.test_comparison.VersionComparison" name="test_NewerIsGreater" time="0.004">
+         <properties>
+           <property name="title" value="A newer version compares greater." />
+         </properties>
+       </testcase>
+     </testsuite>
+   </testsuites>
+
+The innermost key **is** the testcase's ``classname``, and every outer one is a prefix of it - which is what lets a
+reader join the two.
+
+Where a level's names come from depends on what the level is:
+
+* a **package** or a **module** has only its doc-string, so its summary and full text become the summary and the
+  description - the doc-string in :file:`__init__.py` names the package;
+* a **class** carries a :deco:`~pyTooling.Testing.testsuite` marker, so it has a title as well.
+
+A level contributes only the names it has, and a level with none is skipped.
+
+.. important::
+
+   They are written **once per session**, not once per testcase. A ``<property>`` inside ``<testcase>`` would
+   repeat for every testcase in that level, which is why the testcase carries only its own names.
+
 .. note::
 
-   The test suite's names are reported per testcase, prefixed with ``testsuite``, rather than on the surrounding
-   ``<testsuite>`` element. pytest's JUnit writer emits exactly **one** ``<testsuite name="pytest">`` for the whole
-   session, not one per class, so a per-class name has no element of its own to sit on. The
-   `PyTest-JUnit schema <https://github.com/edaa-org/pyEDAA.Reports>`__ does allow ``<properties>`` there - it is
-   pytest that has nowhere to put them.
+   The `PyTest-JUnit schema <https://github.com/edaa-org/pyEDAA.Reports>`__ does allow ``<properties>`` on a
+   ``<testsuite>`` element - it is pytest emitting a single one that leaves nowhere to put a per-class name.
+   :ref:`TESTING/ReportFormat` is the format where the hierarchy is expressed directly instead of being encoded in
+   a key.
 
 .. _TESTING/Markers/Enabling:
 
