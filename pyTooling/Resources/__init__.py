@@ -28,7 +28,7 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 """
-This package is a resource package containing the data files shipped with pyTooling.
+A resource package holding the data files shipped with pyTooling.
 
 It is one package for the whole library rather than one per sub-package, so a consumer looking for a schema has a
 single place to look and a file can be shared by more than one module.
