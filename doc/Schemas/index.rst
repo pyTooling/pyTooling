@@ -43,9 +43,9 @@ pyTooling doesn't need the copy published here.
 
    .. code-block:: python
 
-      from pathlib                       import Path
-      from pyTooling                     import Resources
-      from pyTooling.Common              import getResourceFile
+      from pathlib                        import Path
+      from pyTooling                      import Resources
+      from pyTooling.Common               import getResourceFile
       from pyTooling.Testing.ReportWriter import SCHEMA_FILES, SCHEMA_VERSION_LATEST
 
       schemaPath: Path = getResourceFile(Resources, SCHEMA_FILES[SCHEMA_VERSION_LATEST])
