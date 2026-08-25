@@ -274,6 +274,39 @@ User-defined
   If any of the above was added, an additional extra requirement called ``all`` will be added, summarizing all
   extra requirements.
 
+.. _PACKAGING/Descriptions/License:
+
+Handling of the license
+=======================
+
+A package states its license as an **SPDX expression** in the ``license`` field, taken from the ``license``
+parameter's :attr:`~pyTooling.Licensing.License.SPDXIdentifier`:
+
+.. code-block:: Python
+
+   license=Apache_2_0_License      # -> license = "Apache-2.0"
+
+**No** ``License ::`` classifier is added. Since :pep:`639` the expression is the authoritative statement, and
+``setuptools`` deprecated the classifiers:
+
+.. code-block:: text
+
+   SetuptoolsDeprecationWarning: License classifiers are deprecated.
+   Please consider removing the following classifiers in favor of a SPDX license expression:
+       License :: OSI Approved :: Apache Software License
+
+A ``License ::`` classifier passed through the ``classifiers`` parameter is **kept** - it is the caller's
+statement, not this function's, and dropping it silently would hide what they wrote - but it is reported in the
+``setup.py`` output, where the rest of this function's messages go:
+
+.. code-block:: text
+
+   [pyTooling.Packaging] License classifiers are deprecated: 'License :: OSI Approved :: MIT License'.
+   [pyTooling.Packaging]   Remove them; the 'license' parameter becomes the SPDX expression setuptools wants.
+
+:attr:`~pyTooling.Licensing.License.PythonClassifier` remains available for a caller that needs the classifier for
+something else.
+
 Handling of keywords
 ====================
 
