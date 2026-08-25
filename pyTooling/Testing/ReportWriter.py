@@ -78,9 +78,9 @@ from pathlib               import Path
 from typing                import Any, TypedDict, Optional as Nullable
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
-from pytest                  import Config, Parser, Session, StashKey
-from pyTooling.Decorators    import export
-from pyTooling.MetaClasses   import ExtendedType
+from pytest                   import Config, Parser, Session, StashKey
+from pyTooling.Decorators     import export
+from pyTooling.MetaClasses    import ExtendedType
 from pyTooling.Testing.PyTest import hierarchyKey
 
 
