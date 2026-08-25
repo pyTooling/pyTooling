@@ -191,3 +191,98 @@ class DescribePackage(Testcase):
 		self.assertEqual(16, len(packageInformation))
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
+
+
+class EntryPoints(Testcase):
+	"""A package advertises what it offers; the describe-functions know which group it is declared in."""
+
+	def test_APackageMayAdvertiseNothing(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertIsNone(_collectEntryPoints(None, None, None))
+		self.assertIsNone(_collectEntryPoints({}, {}, {}), "An empty mapping declares nothing.")
+
+	def test_ConsoleScripts(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{"console_scripts": ["prog = myPackage.CLI:main"]},
+			_collectEntryPoints({"prog": "myPackage.CLI:main"}, None, None)
+		)
+
+	def test_GuiScripts(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{"gui_scripts": ["prog = myPackage.GUI:main"]},
+			_collectEntryPoints(None, {"prog": "myPackage.GUI:main"}, None)
+		)
+
+	def test_PytestPlugins(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{"pytest11": ["myPlugin = myPackage.PyTest"]},
+			_collectEntryPoints(None, None, {"myPlugin": "myPackage.PyTest"})
+		)
+
+	def test_AllThreeAtOnce(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{
+				"console_scripts": ["prog = myPackage.CLI:main"],
+				"gui_scripts":     ["prog-gui = myPackage.GUI:main"],
+				"pytest11":        ["myPlugin = myPackage.PyTest"],
+			},
+			_collectEntryPoints(
+				{"prog": "myPackage.CLI:main"},
+				{"prog-gui": "myPackage.GUI:main"},
+				{"myPlugin": "myPackage.PyTest"}
+			)
+		)
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_APytestPluginIsClassified(self) -> None:
+		"""Declaring a pytest plugin says so on PyPI too, without the caller repeating it."""
+
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife"),
+			pytestPlugins={"myPlugin": "myPackage.PyTest"}
+		)
+
+		self.assertEqual({"pytest11": ["myPlugin = myPackage.PyTest"]}, packageInformation["entry_points"])
+		self.assertIn("Framework :: Pytest", packageInformation["classifiers"])
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_WithoutAPluginThereIsNoClassifier(self) -> None:
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife")
+		)
+
+		self.assertNotIn("Framework :: Pytest", packageInformation["classifiers"])
+		self.assertNotIn("entry_points", packageInformation)

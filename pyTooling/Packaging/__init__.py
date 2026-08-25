@@ -504,6 +504,39 @@ if parameter ``packagingRequirementsFile`` is not assigned.
 DEFAULT_VERSION_FILE = Path("__init__.py")
 
 
+def _collectEntryPoints(
+	consoleScripts: Nullable[dict[str, str]],
+	guiScripts: Nullable[dict[str, str]],
+	pytestPlugins: Nullable[dict[str, str]]
+) -> Nullable[dict[str, list[str]]]:
+	"""
+	Collect what a package advertises into setuptools' entry point groups.
+
+	Each parameter names one kind of thing a package can offer, so a caller says *what* it provides and this
+	function knows *how* it is declared - which group it belongs to, and setuptools' ``"name = entry.point"``
+	spelling.
+
+	:param consoleScripts: Optional, command line programs, declared as ``console_scripts``.
+	:param guiScripts:     Optional, windowed programs, declared as ``gui_scripts``.
+	:param pytestPlugins:  Optional, pytest plugins, declared as ``pytest11``.
+	:returns:              A dictionary mapping a group to its entry point lines, or ``None`` if a package
+	                       advertises nothing.
+	"""
+	groups = {
+		"console_scripts": consoleScripts,
+		"gui_scripts":     guiScripts,
+		"pytest11":        pytestPlugins,
+	}
+
+	entryPoints = {
+		groupName: [f"{name} = {entryPoint}" for name, entryPoint in group.items()]
+		for groupName, group in groups.items()
+		if group is not None and len(group) > 0
+	}
+
+	return entryPoints if len(entryPoints) > 0 else None
+
+
 @export
 def DescribePythonPackage(
 	packageName: str,
@@ -525,6 +558,8 @@ def DescribePythonPackage(
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
 	consoleScripts: dict[str, str] = None,
+	guiScripts: dict[str, str] = None,
+	pytestPlugins: dict[str, str] = None,
 	dataFiles: dict[str, list[str]] = None,
 	debug: bool = False
 ) -> dict[str, Any]:
@@ -640,8 +675,13 @@ def DescribePythonPackage(
 	                                      :const:`STATUS` for supported status values)
 	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
 	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
-	                                      None)
+	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points, declared
+	                                      as ``console_scripts``. (Default: None)
+	:param guiScripts:                    Optional, like ``consoleScripts``, but declared as ``gui_scripts`` - on
+	                                      Windows such a program starts without a console window. (Default: None)
+	:param pytestPlugins:                 Optional, a dictionary mapping plugin names to entry points, declared as
+	                                      ``pytest11``. The classifier ``Framework :: Pytest`` is added with it.
+	                                      (Default: None)
 	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
 	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
@@ -783,6 +823,8 @@ def DescribePythonPackage(
 		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
 		raise ex
 	classifiers.append(license.PythonClassifier)
+	if pytestPlugins is not None and "Framework :: Pytest" not in classifiers:
+		classifiers.append("Framework :: Pytest")
 
 	def _naturalSorting(array: Iterable[str]) -> list[str]:
 		"""
@@ -854,14 +896,8 @@ def DescribePythonPackage(
 	if len(extraRequirements) > 0:
 		parameters["extras_require"] = extraRequirements
 
-	if consoleScripts is not None:
-		scripts = []
-		for scriptName, entryPoint in consoleScripts.items():
-			scripts.append(f"{scriptName} = {entryPoint}")
-
-		parameters["entry_points"] = {
-			"console_scripts": scripts
-		}
+	if (groups := _collectEntryPoints(consoleScripts, guiScripts, pytestPlugins)) is not None:
+		parameters["entry_points"] = groups
 
 	if dataFiles:
 		parameters["package_data"] = dataFiles
@@ -889,6 +925,8 @@ def DescribePythonPackageHostedOnGitHub(
 	developmentStatus: str = "stable",
 	pythonVersions: Sequence[str] = DEFAULT_PY_VERSIONS,
 	consoleScripts: dict[str, str] = None,
+	guiScripts: dict[str, str] = None,
+	pytestPlugins: dict[str, str] = None,
 	dataFiles: dict[str, list[str]] = None,
 	debug: bool = False
 ) -> dict[str, Any]:
@@ -926,8 +964,13 @@ def DescribePythonPackageHostedOnGitHub(
 	                                      :const:`STATUS` for supported status values)
 	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
 	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points. (Default:
-	                                      None)
+	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points, declared
+	                                      as ``console_scripts``. (Default: None)
+	:param guiScripts:                    Optional, like ``consoleScripts``, but declared as ``gui_scripts`` - on
+	                                      Windows such a program starts without a console window. (Default: None)
+	:param pytestPlugins:                 Optional, a dictionary mapping plugin names to entry points, declared as
+	                                      ``pytest11``. The classifier ``Framework :: Pytest`` is added with it.
+	                                      (Default: None)
 	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
 	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
@@ -981,6 +1024,8 @@ def DescribePythonPackageHostedOnGitHub(
 		developmentStatus=developmentStatus,
 		pythonVersions=pythonVersions,
 		consoleScripts=consoleScripts,
+		guiScripts=guiScripts,
+		pytestPlugins=pytestPlugins,
 		dataFiles=dataFiles,
 		debug=debug,
 	)

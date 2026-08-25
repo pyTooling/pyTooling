@@ -280,6 +280,35 @@ Handling of keywords
 If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``
 will be used. Otherwise, the content of the parameter, if not None or empty.
 
+.. _PACKAGING/Descriptions/EntryPoints:
+
+Handling of entry points
+========================
+
+A package advertises what it offers through *entry point groups*, but a caller of these functions says **what it
+provides**, not which group that is declared in:
+
+.. code-block:: Python
+
+   consoleScripts={"prog":     "myPackage.CLI:main"},   # -> console_scripts
+   guiScripts={"prog-gui":     "myPackage.GUI:main"},   # -> gui_scripts
+   pytestPlugins={"myPlugin":  "myPackage.PyTest"},     # -> pytest11
+
+``guiScripts`` is ``consoleScripts`` for a windowed program: on Windows, such an entry point is generated against
+``pythonw`` and starts without a console window.
+
+``pytestPlugins`` also adds the classifier ``Framework :: Pytest``, so a package that ships a plugin says so on
+PyPI without the caller having to repeat itself. It is not added twice if ``classifiers`` already lists it.
+
+Any of them may be given together, and a package that advertises nothing gets no ``entry_points`` at all.
+
+.. topic:: Why not a general parameter?
+
+   An earlier draft took a general ``entryPoints={"pytest11": {...}}`` mapping. It was rejected deliberately: the
+   point of :func:`~pyTooling.Packaging.DescribePythonPackage` is to *abstract* packaging, so knowing that a pytest
+   plugin lives in a group called ``pytest11`` - and that it also wants a classifier - belongs here rather than in
+   every :file:`setup.py`. A named parameter per kind of thing keeps that knowledge in one place.
+
 
 .. _PACKAGING/Descriptions/GitHub:
 
