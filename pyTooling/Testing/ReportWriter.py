@@ -73,10 +73,10 @@ beside it and a reader knows from ``xsi:noNamespaceSchemaLocation`` which one it
 
    See :ref:`high-level help <TESTING/ReportFormat>` for the schema and an example.
 """
-from datetime              import datetime, timezone
-from pathlib               import Path
-from typing                import Any, TypedDict, Optional as Nullable
-from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
+from datetime                 import datetime, timezone
+from pathlib                  import Path
+from typing                   import Any, TypedDict, Optional as Nullable
+from xml.etree.ElementTree    import Element, ElementTree, SubElement, indent
 
 from pytest                   import Config, Parser, Session, StashKey
 from pyTooling.Decorators     import export
@@ -170,7 +170,13 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 			path = f"{path}.{level}" if path != "" else level
 			if (suite := suites.get(path)) is None:
 				suite = suites[path] = SubElement(parent, "Testsuite", {"name": level})
-				_addLevelNames(suite, self._hierarchy.get(path, {}))
+
+				# The names are the level's own, so they are written where the level is created - once, however many
+				# testcases it holds. The schema requires this order, and a level contributes only the names it has.
+				levelNames = self._hierarchy.get(path, {})
+				for name in ("Title", "Summary", "Description"):
+					if (value := levelNames.get(name[0].lower() + name[1:], "")) != "":
+						SubElement(suite, name).text = value
 
 			parent = suite
 
@@ -205,7 +211,11 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 				"duration": f"{entry['duration']:.6f}",
 				"nodeID":   entry["nodeID"],
 			})
-			_addNames(testcase, entry)
+			# Ordered as the schema requires; an unmarked testcase carries none of them.
+			for name in ("Title", "Summary", "Description"):
+				if (value := entry.get(name[0].lower() + name[1:], "")) != "":
+					SubElement(testcase, name).text = value
+
 			if entry["message"] != "":
 				SubElement(testcase, "Message").text = entry["message"]
 
@@ -213,33 +223,6 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 		indent(tree, space="\t")
 		self._path.parent.mkdir(parents=True, exist_ok=True)
 		tree.write(self._path, encoding="utf-8", xml_declaration=True)
-
-
-def _addNames(element: Element, entry: _Result) -> None:
-	"""
-	Add the ``Title``, ``Summary`` and ``Description`` elements a testcase carries, if it carries them.
-
-	The elements are ordered as the schema requires, and one is written only when its value is not empty, so an
-	unmarked testcase produces none of them.
-
-	:param element: The ``Testcase`` element to add the names to.
-	:param entry:   The collected result the names are read from.
-	"""
-	for name in ("Title", "Summary", "Description"):
-		if (value := entry.get(name[0].lower() + name[1:], "")) != "":
-			SubElement(element, name).text = value
-
-
-def _addLevelNames(element: Element, names: dict[str, str]) -> None:
-	"""
-	Add the ``Title``, ``Summary`` and ``Description`` elements a test suite level carries.
-
-	:param element: The ``Testsuite`` element to add the names to.
-	:param names:   The level's names, keyed as :func:`pyTooling.Testing.PyTest.getNamesOfTestItem` returns them.
-	"""
-	for name in ("Title", "Summary", "Description"):
-		if (value := names.get(name[0].lower() + name[1:], "")) != "":
-			SubElement(element, name).text = value
 
 
 @export
