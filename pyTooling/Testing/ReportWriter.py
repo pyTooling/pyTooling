@@ -49,26 +49,13 @@ from typing                import Any
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
 from pytest                import Config, Parser, Session, StashKey
-from pyTooling             import Resources
-from pyTooling.Common      import __version__, getResourceFile
+from pyTooling.Common      import __version__
 from pyTooling.Decorators  import export
+from pyTooling.MetaClasses import ExtendedType
 
 
 SCHEMA_FILE = "TestReport.xsd"   #: Name of the schema the written report adheres to.
 
-
-@export
-def getSchemaFile() -> Path:
-	"""
-	Return the path of the schema a written report adheres to.
-
-	It is read through :func:`~pyTooling.Common.getResourceFile`, so it is found whether the package is installed,
-	inside a wheel, or a checkout.
-
-	:returns:                 Path of :file:`TestReport.xsd`.
-	:raises ToolingException: If the schema file is missing from the resource package.
-	"""
-	return getResourceFile(Resources, SCHEMA_FILE)
 
 _STATUS = {
 	(True,  False): "passed",
@@ -79,7 +66,7 @@ reportWriterKey: StashKey["TestReportWriter"] = StashKey()   #: Where the writer
 
 
 @export
-class TestReportWriter:
+class TestReportWriter(metaclass=ExtendedType, slots=True):
 	"""
 	Collects the reports of a session and writes them as one nested XML document.
 

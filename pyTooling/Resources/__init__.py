@@ -1,10 +1,10 @@
 # ==================================================================================================================== #
-#             _____           _ _             _____         _   _                                                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _|__  ___| |_(_)_ __   __ _                                          #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |/ _ \/ __| __| | '_ \ / _` |                                         #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  __/\__ \ |_| | | | | (_| |                                         #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|\___||___/\__|_|_| |_|\__, |                                         #
-# |_|    |___/                          |___/                           |___/                                          #
+#             _____           _ _               ____                                                                   #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \ ___  ___  ___  _   _ _ __ ___ ___  ___                           #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |_) / _ \/ __|/ _ \| | | | '__/ __/ _ \/ __|                          #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_|  _ <  __/\__ \ (_) | |_| | | | (_|  __/\__ \                          #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_| \_\___||___/\___/ \__,_|_|  \___\___||___/                          #
+# |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
@@ -40,15 +40,18 @@ single place to look and a file can be shared by more than one module.
 
 .. rubric:: Usage
 
-Reach a file through :func:`~pyTooling.Common.getResourceFile`, which works whether pyTooling is installed, inside
-a wheel, or a checkout:
+Two functions reach a resource file, and both work whether pyTooling is installed, inside a wheel, or a checkout:
+:func:`~pyTooling.Common.getResourceFile` returns its **path**, for a consumer handing the file to another tool,
+and :func:`~pyTooling.Common.readResourceFile` returns its **content**, for a consumer reading it directly.
 
 .. admonition:: ``example.py``
 
    .. code-block:: python
 
-      from pyTooling.Common    import getResourceFile
-      from pyTooling           import Resources
+      from pathlib          import Path
+      from pyTooling        import Resources
+      from pyTooling.Common import getResourceFile, readResourceFile
 
-      schema = getResourceFile(Resources, "TestReport.xsd")
+      schemaPath: Path = getResourceFile(Resources, "TestReport.xsd")
+      schema:     str  = readResourceFile(Resources, "TestReport.xsd")
 """
