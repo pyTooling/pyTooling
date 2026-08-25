@@ -171,6 +171,84 @@ class Description(Testcase):
 		self.assertEqual("", self._Description("NoDocString.py"))
 
 
+class SourceFileErrors(Testcase):
+	"""What 'extractVersionInformation' does with a file it can't read."""
+
+	def test_APathIsAPath(self) -> None:
+		from pyTooling.Packaging import extractVersionInformation
+
+		with self.assertRaises(TypeError) as exceptionCapture:
+			extractVersionInformation("pyTooling/Common/__init__.py")
+
+		self.assertEqual("Parameter 'sourceFile' is not of type 'Path'.", str(exceptionCapture.exception))
+		self.assertEqual(["Got type 'str'."], exceptionCapture.exception.__notes__)
+
+	def test_AMissingFileIsReportedWithItsCause(self) -> None:
+		"""It used to 'raise FileNotFoundError' - the class - which discarded both the path and the cause."""
+		from pyTooling.Packaging import extractVersionInformation, PackagingError
+
+		missing = Path("tests/data/Packaging/ThereIsNoSuchFile.py")
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			extractVersionInformation(missing)
+
+		self.assertEqual(f"Source file '{missing}' couldn't be read.", str(exceptionCapture.exception))
+		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)
+
+	def test_ADirectoryIsReportedToo(self) -> None:
+		"""The 'except' is 'OSError', not 'FileNotFoundError' - every way a file can't be read means the same."""
+		from pyTooling.Packaging import extractVersionInformation, PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			extractVersionInformation(Path("tests/data/Packaging"))
+
+		self.assertIsInstance(exceptionCapture.exception.__cause__, OSError)
+
+
+class MalformedKeywords(Testcase):
+	"""A '__keywords__' that isn't a list of strings names the file, and keeps the reason as the cause."""
+
+	_dataDirectory = Path("tests/data/Packaging")
+
+	def _Extract(self, fileName: str) -> None:
+		from pyTooling.Packaging import extractVersionInformation
+
+		extractVersionInformation(self._dataDirectory / fileName)
+
+	def test_AStringInsteadOfAList(self) -> None:
+		from pyTooling.Packaging import PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			self._Extract("KeywordsAsString.py")
+
+		self.assertIn("KeywordsAsString.py", str(exceptionCapture.exception))
+		self.assertEqual(
+			"Variable '__keywords__' should be a list of strings.",
+			str(exceptionCapture.exception.__cause__)
+		)
+
+	def test_AListWithANonStringElement(self) -> None:
+		from pyTooling.Packaging import PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			self._Extract("KeywordsWithNonString.py")
+
+		self.assertEqual(
+			"List elements in '__keywords__' should be strings.",
+			str(exceptionCapture.exception.__cause__)
+		)
+
+	def test_AnythingElseNamesTheTypeItFound(self) -> None:
+		from pyTooling.Packaging import PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			self._Extract("KeywordsAsDict.py")
+
+		self.assertEqual(
+			"Used unsupported type 'ast.Dict' for variable '__keywords__'.",
+			str(exceptionCapture.exception.__cause__)
+		)
+
+
 class DescribePackage(Testcase):
 	def test_PythonPackage(self) -> None:
 		print()

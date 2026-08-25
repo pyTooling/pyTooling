@@ -47,7 +47,7 @@ How long a summary may be
       :columns: 6
 
       A summary is a single sentence, so it is length-limited. The default of
-      :data:`~pyTooling.Documentation.DEFAULT_MAXIMUM_SUMMARY_LENGTH` characters leaves room for a sentence of the
+      :data:`~pyTooling.Documentation.MAXIMUM_SUMMARY_LENGTH` characters leaves room for a sentence of the
       usual 120 columns plus an embedded link or other markup. A longer first paragraph is a body that lost its
       summary, and a :exc:`~pyTooling.Documentation.DocumentationError` says so.
 

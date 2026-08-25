@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers."""
-from pyTooling.Documentation import DEFAULT_MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
+from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
 from pyTooling.Testing       import Testcase
 
 
@@ -84,16 +84,16 @@ class SummaryLength(Testcase):
 	"""A summary is a single sentence, so it is length-limited."""
 
 	def test_TheDefaultIsTwoHundredCharacters(self) -> None:
-		self.assertEqual(200, DEFAULT_MAXIMUM_SUMMARY_LENGTH)
+		self.assertEqual(200, MAXIMUM_SUMMARY_LENGTH)
 
 	def test_ASummaryOfExactlyTheLimitIsAccepted(self) -> None:
-		summary, _ = splitDocString("x" * DEFAULT_MAXIMUM_SUMMARY_LENGTH)
+		summary, _ = splitDocString("x" * MAXIMUM_SUMMARY_LENGTH)
 
-		self.assertEqual(DEFAULT_MAXIMUM_SUMMARY_LENGTH, len(summary))
+		self.assertEqual(MAXIMUM_SUMMARY_LENGTH, len(summary))
 
 	def test_OneCharacterMoreIsRejected(self) -> None:
 		with self.assertRaises(DocumentationError) as exceptionCapture:
-			splitDocString("x" * (DEFAULT_MAXIMUM_SUMMARY_LENGTH + 1))
+			splitDocString("x" * (MAXIMUM_SUMMARY_LENGTH + 1))
 
 		self.assertEqual(
 			"The doc-string's summary is longer than 200 characters.",
