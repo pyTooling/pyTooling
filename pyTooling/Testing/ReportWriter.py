@@ -49,9 +49,9 @@ from typing                import Any
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
 from pytest                import Config, Parser, Session, StashKey
+from pyTooling             import Resources
 from pyTooling.Common      import __version__, getResourceFile
 from pyTooling.Decorators  import export
-from pyTooling.Testing     import Resources
 
 
 SCHEMA_FILE = "TestReport.xsd"   #: Name of the schema the written report adheres to.
