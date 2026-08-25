@@ -31,7 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
 """
-from pyTooling.Licensing import PYTHON_LICENSE_NAMES, SPDX_INDEX, License
+from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Testing   import Testcase
 
 
@@ -65,10 +65,13 @@ class LicenseDataClass(Testcase):
 
 		self.assertTrue(license1 == license2)
 		self.assertTrue(license1 != license3)
+		self.assertTrue(license1 == "spdx", "A license equals its SPDX identifier as a string.")
+		self.assertTrue(license1 != "other", "A different identifier is a different license.")
+		self.assertTrue("spdx" == license1, "The comparison is symmetric - 'str' defers to the reflected operand.")
 		with self.assertRaises(TypeError):
-			_ = license1 == "spdx"
+			_ = license1 == 42
 		with self.assertRaises(TypeError):
-			_ = license1 != "spdx"
+			_ = license1 != 42
 
 	def test_Compatibility(self) -> None:
 		license1 = License("spdx", "License Name", False, False)
@@ -97,3 +100,93 @@ class SPDXLicenses(Testcase):
 # 		for spdxId, item in PYTHON_LICENSE_NAMES.items():
 # 			license = SPDX_INDEX[spdxId]
 # 			self.assertEqual("OSI Approved" in item.Classifier, license.OSIApproved)
+
+
+class Hashing(Testcase):
+	"""A license is hashable, so it can be a set element or a dictionary key."""
+
+	def test_TheHashIsTheIdentifiersHash(self) -> None:
+		""":meth:`~pyTooling.Licensing.License.__eq__` compares the identifier, so the hash has to follow it."""
+		self.assertEqual(hash("Apache-2.0"), hash(Apache_2_0_License))
+
+	def test_ALicenseIsFoundAmongItsIdentifiers(self) -> None:
+		"""Equal to the string and hashing like it, so a set of identifiers contains the license."""
+		self.assertIn(Apache_2_0_License, {"Apache-2.0", "MIT"})
+
+	def test_EqualLicensesHashEqually(self) -> None:
+		"""Two objects that compare equal must hash equally - a set and a dict rely on it."""
+		other = License("Apache-2.0", "A different name for the same license")
+
+		self.assertEqual(Apache_2_0_License, other)
+		self.assertEqual(hash(Apache_2_0_License), hash(other))
+
+	def test_ALicenseIsASetElement(self) -> None:
+		self.assertSetEqual({Apache_2_0_License}, {Apache_2_0_License, License("Apache-2.0", "same identifier")})
+
+	def test_ALicenseIsADictionaryKey(self) -> None:
+		self.assertEqual("found", {Apache_2_0_License: "found"}[License("Apache-2.0", "same identifier")])
+
+	def test_EveryPredefinedLicenseIsDistinct(self) -> None:
+		self.assertEqual(len(LICENSES), len(set(LICENSES)), "Two predefined licenses share an SPDX identifier.")
+
+
+class SPDXIndex(Testcase):
+	"""Every predefined license is consistent with SPDX and with PyPI's classifier list."""
+
+	def test_TheIndexIsBuiltFromTheLicenseTuple(self) -> None:
+		"""'LICENSES' is the list; 'SPDX_INDEX' is that list keyed by identifier, so neither can drift."""
+
+		self.assertEqual(len(LICENSES), len(SPDX_INDEX), "A license is listed twice under the same identifier.")
+		self.assertSetEqual(set(LICENSES), set(SPDX_INDEX.values()))
+
+	def test_TheIndexIsKeyedByTheSPDXIdentifier(self) -> None:
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
+			with self.subTest(license=spdxIdentifier):
+				self.assertEqual(spdxIdentifier, spdxLicense.SPDXIdentifier)
+
+	def test_EveryClassifierIsARealClassifier(self) -> None:
+		"""The strings are checked against PyPI's own list, not against what looked right when they were typed."""
+
+		from trove_classifiers import classifiers
+
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
+			with self.subTest(license=spdxIdentifier):
+				self.assertIn(spdxLicense.PythonClassifier, classifiers)
+
+	def test_OSIApprovalMatchesTheClassifier(self) -> None:
+		"""PyPI puts an OSI-approved license under 'OSI Approved ::', so the flag and the string must agree."""
+
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
+			with self.subTest(license=spdxIdentifier):
+				self.assertEqual(
+					spdxLicense.OSIApproved,
+					spdxLicense.PythonClassifier.startswith("License :: OSI Approved :: ")
+				)
+
+	def test_CC0IsNotOSIApproved(self) -> None:
+		"""One license where the two differ, so the check above cannot pass vacuously."""
+
+		from pyTooling.Licensing import CC0_1_0
+
+		self.assertFalse(CC0_1_0.OSIApproved)
+		self.assertTrue(CC0_1_0.FSFApproved)
+		self.assertEqual(
+			"License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+			CC0_1_0.PythonClassifier
+		)
+
+	def test_EveryLicenseHasAPythonName(self) -> None:
+		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
+			with self.subTest(license=spdxIdentifier):
+				self.assertNotEqual("", spdxLicense.PythonLicenseName)
+
+	def test_TheOriginalFourAreUnchanged(self) -> None:
+		"""The licenses that existed before keep their identifiers, names and short names."""
+
+		from pyTooling.Licensing import BSD_3_Clause_License, GPL_2_0_or_later, MIT_License
+
+		self.assertEqual("Apache 2.0", Apache_2_0_License.PythonLicenseName)
+		self.assertEqual("BSD", BSD_3_Clause_License.PythonLicenseName)
+		self.assertEqual("MIT", MIT_License.PythonLicenseName)
+		self.assertEqual("GPL-2.0-or-later", GPL_2_0_or_later.PythonLicenseName)
+

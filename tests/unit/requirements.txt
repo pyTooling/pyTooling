@@ -17,6 +17,9 @@ ruamel.yaml ~= 0.19.1
 # For pyTooling.Packaging testing
 setuptools >= 83.0
 
+# For pyTooling.Licensing testing - PyPI's canonical classifier list
+trove-classifiers >= 2025.1
+
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6
 
