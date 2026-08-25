@@ -35,8 +35,9 @@ single place to look and a file can be shared by more than one module.
 
 .. rubric:: XML Schema Files
 
-* :file:`TestReport.xsd` - the schema of :ref:`pyTooling's own test report format <TESTING/ReportFormat>`, which
-  :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at.
+* :file:`TestReport-v0.1.xsd` - the schema of :ref:`pyTooling's own test report format <TESTING/ReportFormat>`,
+  which :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at. The file name carries
+  the format's version, so a later version is added beside it rather than replacing it.
 
 .. rubric:: Usage
 
@@ -52,6 +53,6 @@ and :func:`~pyTooling.Common.readResourceFile` returns its **content**, for a co
       from pyTooling        import Resources
       from pyTooling.Common import getResourceFile, readResourceFile
 
-      schemaPath: Path = getResourceFile(Resources, "TestReport.xsd")
-      schema:     str  = readResourceFile(Resources, "TestReport.xsd")
+      schemaPath:    Path = getResourceFile(Resources, "TestReport-v0.1.xsd")
+      schemaContent: str  = readResourceFile(Resources, "TestReport-v0.1.xsd")
 """

@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -111,6 +111,14 @@ class Document(Testcase):
 
 		self.assertEqual("TestReport", root.tag)
 
+	def test_TheReportNamesNeitherItsGeneratorNorItsHost(self) -> None:
+		"""The version is the schema's, and a hostname is private information a consumer has no use for."""
+		root = self._Write(Report("tests/unit/Versioning.py::Comparison::test_Newer"))
+
+		self.assertIsNone(root.get("tool"))
+		self.assertIsNone(root.get("version"))
+		self.assertIsNone(root.get("hostname"))
+
 	def test_TheReportPointsAtItsSchema(self) -> None:
 		"""So a reader can validate the file without being told where the schema is."""
 		root = self._Write(Report("tests/unit/Versioning.py::Comparison::test_Newer"))
@@ -118,8 +126,7 @@ class Document(Testcase):
 		# The document is written with the 'xsi:' prefix; parsing it expands the prefix to the namespace URI.
 		schemaLocation = "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation"
 
-		self.assertEqual("TestReport.xsd", root.get(schemaLocation))
-		self.assertEqual("pyTooling", root.get("tool"))
+		self.assertEqual("TestReport-v0.1.xsd", root.get(schemaLocation))
 
 	def test_TestsuitesNest(self) -> None:
 		"""What a dotted 'classname' cannot express: one element per level."""
@@ -301,14 +308,14 @@ class PluginWiring(Testcase):
 		self.assertEqual({}, configuration.stash)
 
 	def test_WithThePathTheWriterIsRegistered(self) -> None:
-		from pyTooling.Testing.ReportWriter import TestReportWriter, pytest_configure, reportWriterKey
+		from pyTooling.Testing.ReportWriter import TestReportWriter, pytest_configure, REPORT_WRITER_KEY
 
 		configuration = self._Configuration("report/unit/TestReport.xml")
 		pytest_configure(configuration)
 
 		self.assertEqual(1, len(configuration.pluginmanager.registered))
-		self.assertIsInstance(configuration.stash[reportWriterKey], TestReportWriter)
-		self.assertIs(configuration.stash[reportWriterKey], configuration.pluginmanager.registered[0][0])
+		self.assertIsInstance(configuration.stash[REPORT_WRITER_KEY], TestReportWriter)
+		self.assertIs(configuration.stash[REPORT_WRITER_KEY], configuration.pluginmanager.registered[0][0])
 
 	@staticmethod
 	def _Configuration(path: str) -> object:
