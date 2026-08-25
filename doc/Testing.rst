@@ -310,9 +310,9 @@ understands while the richer file is produced beside it.
 
    <?xml version='1.0' encoding='utf-8'?>
    <TestReport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xsi:noNamespaceSchemaLocation="TestReport.xsd"
-               tool="pyTooling" version="10.0.0" timestamp="2026-08-24T22:42:35+00:00"
-               duration="0.000691" tests="2" failures="0" errors="0" skipped="0">
+               xsi:noNamespaceSchemaLocation="TestReport-v0.1.xsd"
+               timestamp="2026-08-25T18:15:26.819107+00:00"
+               duration="0.000671" tests="2" failures="0" errors="0" skipped="0">
      <Testsuite name="test_versioning">
        <Testsuite name="VersionComparison">
          <Title>Version comparison.</Title>
@@ -344,18 +344,23 @@ inside a wheel, or a checkout:
 
 .. code-block:: python
 
-   from pathlib                       import Path
-   from xmlschema                     import XMLSchema
-   from pyTooling                     import Resources
-   from pyTooling.Common              import getResourceFile
-   from pyTooling.Testing.ReportWriter import SCHEMA_FILE
+   from pathlib                        import Path
+   from xmlschema                      import XMLSchema
+   from pyTooling                      import Resources
+   from pyTooling.Common               import getResourceFile
+   from pyTooling.Testing.ReportWriter import SCHEMA_FILES, SCHEMA_VERSION
 
-   schemaPath: Path = getResourceFile(Resources, SCHEMA_FILE)
+   schemaPath: Path = getResourceFile(Resources, SCHEMA_FILES[SCHEMA_VERSION])
    XMLSchema(schemaPath).validate("report/unit/TestReport.xml")
 
 Validating needs an XML schema library such as `xmlschema <https://pypi.org/project/xmlschema/>`__. **pyTooling
 does not depend on one**: writing a report uses :mod:`xml.etree.ElementTree` from the standard library, so the
 schema is there for whoever reads the file.
+
+**The file name carries the format's version.** :data:`~pyTooling.Testing.ReportWriter.SCHEMA_FILES` maps a version
+to its schema file, so a later version of the format is added beside the current one rather than replacing it, and
+a reader learns from a report's ``xsi:noNamespaceSchemaLocation`` which version it is holding. The format states
+its own version this way; the report does **not** name the tool that wrote it, nor the machine it ran on.
 
 * ``name`` is an **attribute** on every item, because it is an identifier. ``Title``, ``Summary`` and
   ``Description`` are **elements**, because they are prose - ``Description`` is typed ``preservingstring``, so its

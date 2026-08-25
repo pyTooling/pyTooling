@@ -38,31 +38,76 @@ where JUnit has one name and a bag of flat ``<property>`` pairs.
 This writer is opt-in through ``--pytooling-xml=PATH`` and runs happily alongside ``--junit-xml``, so a pipeline
 keeps the format its dashboard understands while the richer file is produced from the same reports.
 
+The format's version is the version of its schema - :file:`TestReport-v0.1.xsd` today - so a later version is added
+beside it and a reader knows from ``xsi:noNamespaceSchemaLocation`` which one it is holding.
+
+.. todo:: TESTING::ReportWriter Name the generator in a ``<Generator>`` element
+
+   The tool that wrote a report is not part of the format's version, so it is no longer an attribute on the root
+   element. Where it belongs is an element of its own at root level, carrying the tool's name and version and
+   whatever further meta information a tool wants to add.
+
+.. todo:: TESTING::ReportWriter Add a ``<TestRun>`` level between the report and its test suites
+
+   A run happens on one machine, in one environment, at one time - so a report can hold several of them, and the
+   things that describe a run belong to the run rather than to the report:
+
+   .. code-block:: text
+
+      <TestReport>
+        <TestRun timestamp="..." duration="...">
+          <Environment>
+            <Hostname>...</Hostname>
+            <OperatingSystem>...</OperatingSystem>
+          </Environment>
+          <Summary>...</Summary>
+          <Description>...</Description>
+          <Testsuite ... />
+        </TestRun>
+      </TestReport>
+
+   The environment is optional, which is what makes a hostname acceptable there: it is written when whoever
+   generates the report decides it belongs in it, not by default.
+
 .. hint::
 
    See :ref:`high-level help <TESTING/ReportFormat>` for the schema and an example.
 """
 from datetime              import datetime, timezone
 from pathlib               import Path
-from socket                import gethostname
-from typing                import Any
+from typing                import Any, TypedDict
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
 from pytest                import Config, Parser, Session, StashKey
-from pyTooling.Common      import __version__
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
 
 
-SCHEMA_FILE = "TestReport.xsd"   #: Name of the schema the written report adheres to.
+__all__ = ["SCHEMA_VERSION", "SCHEMA_FILES", "REPORT_WRITER_KEY"]
 
 
-_STATUS = {
-	(True,  False): "passed",
-	(False, True):  "skipped",
-}   #: Maps (passed, skipped) of a report to a status name; everything else is decided from the phase.
+SCHEMA_VERSION = "v0.1"   #: Version of the report format this writer produces.
 
-reportWriterKey: StashKey["TestReportWriter"] = StashKey()   #: Where the writer is stashed on the configuration.
+SCHEMA_FILES: dict[str, str] = {
+	"v0.1": "TestReport-v0.1.xsd",
+}   #: Schema file per format version, so a later version is added beside the one in use, not instead of it.
+
+REPORT_WRITER_KEY: StashKey["TestReportWriter"] = StashKey()   #: Where the writer is stashed on the configuration.
+
+
+class _Result(TypedDict, total=False):
+	"""What is collected per testcase, assembled from the reports of its phases."""
+
+	nodeID:               str    #: Node ID of the testcase, whose parts name the test suite levels.
+	duration:             float  #: Sum of the durations of the testcase's phases.
+	message:              str    #: Text of the failure, or an empty string.
+	status:               str    #: ``passed``, ``failed``, ``errored`` or ``skipped``.
+	title:                str    #: Title of the testcase, if it is marked.
+	summary:              str    #: Summary of the testcase, if its doc-string has one.
+	description:          str    #: Description of the testcase, if its doc-string has one.
+	testsuiteTitle:       str    #: Title of the test suite the testcase belongs to.
+	testsuiteSummary:     str    #: Summary of that test suite.
+	testsuiteDescription: str    #: Description of that test suite.
 
 
 @export
@@ -74,8 +119,8 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 	of ``<Testsuite>``, so a reader sees the hierarchy the test suite actually has.
 	"""
 
-	_path:    Path             #: Where the report is written.
-	_results: dict[str, dict]  #: Collected results, keyed by node ID.
+	_path:    Path                 #: Where the report is written.
+	_results: dict[str, _Result]   #: Collected results, keyed by node ID.
 
 	def __init__(self, path: Path) -> None:
 		"""
@@ -83,7 +128,7 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 
 		:param path: Path of the report file to write.
 		"""
-		self._path = path
+		self._path =    path
 		self._results = {}
 
 	def pytest_runtest_logreport(self, report: Any) -> None:
@@ -116,7 +161,8 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 		modulePath, _, remainder = nodeID.partition("::")
 		levels = [*Path(modulePath).with_suffix("").parts, *remainder.split("::")[:-1]]
 
-		parent, path = root, ""
+		parent = root
+		path = ""
 		for level in levels:
 			path = f"{path}.{level}" if path != "" else level
 			if (suite := suites.get(path)) is None:
@@ -136,11 +182,8 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 		statuses = [entry.get("status", "errored") for entry in self._results.values()]
 		root = Element("TestReport", {
 			"xmlns:xsi":                     "http://www.w3.org/2001/XMLSchema-instance",
-			"xsi:noNamespaceSchemaLocation": SCHEMA_FILE,
-			"tool":                          "pyTooling",
-			"version":                       __version__,
+			"xsi:noNamespaceSchemaLocation": SCHEMA_FILES[SCHEMA_VERSION],
 			"timestamp":                     datetime.now(timezone.utc).isoformat(),
-			"hostname":                      gethostname(),
 			"duration":                      f"{sum(entry['duration'] for entry in self._results.values()):.6f}",
 			"tests":                         str(len(statuses)),
 			"failures":                      str(statuses.count("failed")),
@@ -210,5 +253,5 @@ def pytest_configure(config: Config) -> None:
 	"""
 	if (path := config.getoption("--pytooling-xml")) is not None:
 		writer = TestReportWriter(Path(path))
-		config.stash[reportWriterKey] = writer
+		config.stash[REPORT_WRITER_KEY] = writer
 		config.pluginmanager.register(writer, "pyTooling.Testing.TestReportWriter")

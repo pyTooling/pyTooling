@@ -20,7 +20,7 @@
 	SPDX-License-Identifier: Apache-2.0
 -->
 <xsd:schema
-	version="1.0"
+	version="0.1"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<xsd:annotation>
 		<xsd:documentation xml:lang="en">
@@ -118,11 +118,8 @@
 			<xsd:group ref="names" />
 			<xsd:element name="Testsuite" type="testsuite" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
-		<xsd:attribute name="tool" type="xsd:string" use="optional" />
-		<xsd:attribute name="version" type="xsd:string" use="optional" />
 		<xsd:attribute name="timestamp" type="xsd:dateTime" use="optional" />
 		<xsd:attribute name="duration" type="xsd:float" use="optional" />
-		<xsd:attribute name="hostname" type="xsd:string" use="optional" />
 		<xsd:attribute name="tests" type="xsd:nonNegativeInteger" use="optional" />
 		<xsd:attribute name="failures" type="xsd:nonNegativeInteger" use="optional" />
 		<xsd:attribute name="errors" type="xsd:nonNegativeInteger" use="optional" />
