@@ -355,3 +355,100 @@ class PyTestPlugin(ApplicationTestcase):
 			properties["test_DescribedByItsDocString"]
 		)
 		self.assertEqual({}, properties["test_StillCollectedByName"], "An unmarked testcase carries no properties.")
+
+
+class ReportFormat(ApplicationTestcase):
+	"""pyTooling's own report format: nested test suites, four names, and a schema the file points at."""
+
+	_consoleScript  = "pytest"
+	_runnableModule = "pytest"
+
+	def _RunPyTest(self, directory: Path) -> tuple[object, Path]:
+		"""
+		Write the test module into the given directory and run pytest with the report writer enabled.
+
+		:param directory: Directory to write the test module and the report into.
+		:returns:         Tuple of the completed process and the path of the report.
+		"""
+		(directory / "test_marked.py").write_text(TEST_MODULE, encoding="utf-8")
+		(directory / "pytest.ini").write_text(PYTEST_CONFIGURATION, encoding="utf-8")
+		report = directory / "report.xml"
+
+		repositoryRoot = Path(__file__).resolve().parent.parent.parent.parent
+
+		result = self.RunModule(
+			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest", "-p", "pyTooling.Testing.ReportWriter",
+			f"--pytooling-xml={report}", str(directory),
+			environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+			workingDirectory=directory
+		)
+
+		return result, report
+
+	def test_TheReportValidatesAgainstItsSchema(self) -> None:
+		from xmlschema import XMLSchema
+
+		from pyTooling                      import Resources
+		from pyTooling.Common               import getResourceFile
+		from pyTooling.Testing.ReportWriter import SCHEMA_FILES, SCHEMA_VERSION_LATEST
+
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			XMLSchema(getResourceFile(Resources, SCHEMA_FILES[SCHEMA_VERSION_LATEST])).validate(report)
+
+	def test_TestsuitesAreNested(self) -> None:
+		"""What a dotted 'classname' cannot express: one element per level."""
+
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			root = xml_parse(report).getroot()
+
+			outer = root.find("Testsuite")
+			self.assertEqual("test_marked", outer.get("name"))
+
+			inner = {element.get("name") for element in outer.findall("Testsuite")}
+
+		self.assertIn("VersionComparison", inner)
+		self.assertIn("PlainSuite", inner)
+		self.assertIn("NameBased", inner)
+
+	def test_EveryNameIsItsOwnElement(self) -> None:
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			root = xml_parse(report).getroot()
+
+			testcase = next(
+				element for element in root.iter("Testcase")
+				if element.get("name") == "test_DescribedByItsDocString"
+			)
+			names = {child.tag: child.text for child in testcase if child.tag in ("Title", "Summary", "Description")}
+			status = testcase.get("status")
+			nodeID = testcase.get("nodeID")
+
+		self.assertEqual("DescribedByItsDocString", names["Title"])
+		self.assertEqual("An equal version compares equal.", names["Summary"])
+		self.assertIn("The description reaches the report as a property.", names["Description"])
+		self.assertEqual("passed", status)
+		self.assertIn("::test_DescribedByItsDocString", nodeID, "The node ID lets a reader re-run the testcase.")
+
+	def test_AnUnmarkedTestcaseCarriesNoNames(self) -> None:
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			root = xml_parse(report).getroot()
+
+			testcase = next(
+				element for element in root.iter("Testcase")
+				if element.get("name") == "test_StillCollectedByName"
+			)
+			children = [child.tag for child in testcase]
+
+		self.assertEqual([], children)
+
