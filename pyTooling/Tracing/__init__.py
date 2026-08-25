@@ -37,6 +37,10 @@ Tools for software execution tracing.
       |rarr| A single measurement instead of nested timespans.
    :mod:`pyTooling.Tree`
       |rarr| The tree data structure spans and their sub-spans form.
+
+.. hint::
+
+   See :ref:`high-level help <TRACING>` for explanations and usage examples.
 """
 from __future__            import annotations
 
