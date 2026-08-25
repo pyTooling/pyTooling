@@ -1124,6 +1124,12 @@ License
    Decorators
 
 .. toctree::
+   :caption: Documentation
+   :hidden:
+
+   Documentation
+
+.. toctree::
    :caption: Exceptions and Warnings
    :hidden:
 

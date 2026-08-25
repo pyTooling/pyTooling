@@ -48,10 +48,11 @@ from unittest   import TestCase
 from sys        import executable as PythonExecutable, version_info
 from typing     import Any, Callable, ClassVar, Union, Optional as Nullable
 
-from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Decorators  import export, splitDocString
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import C, M
+from pyTooling.Common        import getFullyQualifiedName
+from pyTooling.Decorators    import export
+from pyTooling.Documentation import splitDocString
+from pyTooling.Exceptions    import ToolingException
+from pyTooling.MetaClasses   import C, M
 
 
 _ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")   #: Pattern matching an ANSI escape sequence selecting a color.

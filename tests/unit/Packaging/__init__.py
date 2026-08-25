@@ -35,10 +35,8 @@ package, and the description assembled for setuptools.
 from contextlib import redirect_stdout
 from io         import StringIO
 from pathlib    import Path
-from pytest     import mark
 
-from pyTooling.Platform import CurrentPlatform
-from pyTooling.Testing  import Testcase
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -48,7 +46,6 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class HelperFunctions(Testcase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
@@ -56,14 +53,12 @@ class HelperFunctions(Testcase):
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(43, len(versionInformation.Keywords))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_DescriptionFromModuleDocString(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
 		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
 		self.assertEqual("Common types, helper functions and classes.", versionInformation.Description)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeTXT(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -71,7 +66,6 @@ class HelperFunctions(Testcase):
 		self.assertIn("1. pyPackage", readme.Content)
 		self.assertEqual("text/plain", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -79,7 +73,6 @@ class HelperFunctions(Testcase):
 		self.assertIn("# pyPackage", readme.Content)
 		self.assertEqual("text/markdown", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeReST(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -88,35 +81,30 @@ class HelperFunctions(Testcase):
 		self.assertIn("#########", readme.Content)
 		self.assertEqual("text/x-rst", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeOther(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
 		with self.assertRaises(ValueError):
 			_ = loadReadmeFile(Path("tests/pyPackage/README.ascii"))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
 		self.assertEqual(12, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsGit(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.Git.txt"))
 		self.assertEqual(2, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsRemoteZIP(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.HTTPS-ZIP.txt"))
 		self.assertEqual(1, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsRecursive(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
@@ -125,7 +113,6 @@ class HelperFunctions(Testcase):
 
 
 class VersionInformation(Testcase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import VersionInformation
 
@@ -158,11 +145,9 @@ class Description(Testcase):
 
 		return extractVersionInformation(self._dataDirectory / fileName).Description
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_SingleParagraph(self) -> None:
 		self.assertEqual("A package whose doc-string is a single line.", self._Description("SingleParagraph.py"))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_WrappedParagraphIsFolded(self) -> None:
 		"""A short description is one line, while a doc-string is wrapped to the source file's line length."""
 		description = self._Description("WrappedParagraph.py")
@@ -171,27 +156,22 @@ class Description(Testcase):
 		self.assertTrue(description.startswith("A package whose first paragraph is wrapped over several lines,"))
 		self.assertTrue(description.endswith("a sentence describing a package is longer than a line."))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_SecondParagraphIsNotPartOfIt(self) -> None:
 		self.assertNotIn("second paragraph", self._Description("WrappedParagraph.py"))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_EmphasisAroundTheWholeParagraphIsRemoved(self) -> None:
 		"""Nothing renders ReST markup where a short description is displayed."""
 		self.assertEqual("A package whose summary is emphasized as a whole.", self._Description("EmphasizedParagraph.py"))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_EmphasisOfOneWordIsKept(self) -> None:
 		"""Only emphasis wrapping the entire paragraph is markup around the description rather than inside it."""
 		self.assertEqual("A package emphasizing **one word** of its summary.", self._Description("PartlyEmphasized.py"))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_NoDocString(self) -> None:
 		self.assertEqual("", self._Description("NoDocString.py"))
 
 
 class DescribePackage(Testcase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackage(self) -> None:
 		print()
 
@@ -215,7 +195,6 @@ class DescribePackage(Testcase):
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackageWithoutDescription(self) -> None:
 		"""Without the parameter, the package describes itself in its module doc-string."""
 		print()
@@ -239,7 +218,6 @@ class DescribePackage(Testcase):
 			packageInformation["description"]
 		)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackageWithoutDescriptionAndWithoutDocString(self) -> None:
 		"""Neither source of a description is a reason to publish a package without one."""
 		print()
@@ -259,7 +237,6 @@ class DescribePackage(Testcase):
 
 		self.assertIn("has no description", str(context.exception))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackageFromGitHub(self) -> None:
 		print()
 
@@ -337,7 +314,6 @@ class EntryPoints(Testcase):
 			)
 		)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_APytestPluginIsClassified(self) -> None:
 		"""Declaring a pytest plugin says so on PyPI too, without the caller repeating it."""
 
@@ -361,7 +337,6 @@ class EntryPoints(Testcase):
 		self.assertEqual({"pytest11": ["myPlugin = myPackage.PyTest"]}, packageInformation["entry_points"])
 		self.assertIn("Framework :: Pytest", packageInformation["classifiers"])
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_WithoutAPluginThereIsNoClassifier(self) -> None:
 		from pyTooling.Packaging import DescribePythonPackage
 
