@@ -1,10 +1,10 @@
 # ==================================================================================================================== #
-#             _____           _ _               __  __      _         ____ _                                           #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  \/  | ___| |_ __ _ / ___| | __ _ ___ ___  ___  ___                   #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |\/| |/ _ \ __/ _` | |   | |/ _` / __/ __|/ _ \/ __|                  #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |  | |  __/ || (_| | |___| | (_| \__ \__ \  __/\__ \                  #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_|  |_|\___|\__\__,_|\____|_|\__,_|___/___/\___||___/                  #
-# |_|    |___/                          |___/                                                                          #
+#             _____           _ _             _____               _                                                    #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _| __ __ _  ___(_)_ __   __ _                                        #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | || '__/ _` |/ __| | '_ \ / _` |                                       #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| || | | (_| | (__| | | | | (_| |                                       #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_||_|  \__,_|\___|_|_| |_|\__, |                                       #
+# |_|    |___/                          |___/                             |___/                                        #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
@@ -36,8 +36,7 @@ from tempfile import TemporaryDirectory
 from time     import sleep
 
 from pyTooling.Testing                import Testcase
-from pyTooling.Tracing                import Event, Span, Trace
-from pyTooling.Tracing.OpenTelemetry  import SCOPE_NAME, ToOTLP, WriteOTLP, toAttributeValue, toUnixNano
+from pyTooling.Tracing import OTLP_SCOPE_NAME, Event, Span, Trace, _toAttributeValue, _toUnixNano
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -70,55 +69,55 @@ class AttributeValues(Testcase):
 	"""A Python value is wrapped in the one-key mapping OTLP expects for its type."""
 
 	def test_String(self) -> None:
-		self.assertEqual({"stringValue": "text"}, toAttributeValue("text"))
+		self.assertEqual({"stringValue": "text"}, _toAttributeValue("text"))
 
 	def test_Integer(self) -> None:
 		"""A 64-bit integer is a string in OTLP/JSON, because JSON numbers cannot carry 64 bits exactly."""
-		self.assertEqual({"intValue": "42"}, toAttributeValue(42))
+		self.assertEqual({"intValue": "42"}, _toAttributeValue(42))
 
 	def test_BooleanIsNotAnInteger(self) -> None:
 		"""``bool`` is a subclass of ``int``, so the order of the checks decides this one."""
-		self.assertEqual({"boolValue": True}, toAttributeValue(True))
+		self.assertEqual({"boolValue": True}, _toAttributeValue(True))
 
 	def test_Float(self) -> None:
-		self.assertEqual({"doubleValue": 0.5}, toAttributeValue(0.5))
+		self.assertEqual({"doubleValue": 0.5}, _toAttributeValue(0.5))
 
 	def test_List(self) -> None:
 		self.assertEqual(
 			{"arrayValue": {"values": [{"stringValue": "a"}, {"intValue": "1"}]}},
-			toAttributeValue(["a", 1])
+			_toAttributeValue(["a", 1])
 		)
 
 	def test_AnythingElseBecomesAString(self) -> None:
-		self.assertEqual({"stringValue": "None"}, toAttributeValue(None))
+		self.assertEqual({"stringValue": "None"}, _toAttributeValue(None))
 
 
 class Document(Testcase):
 	"""The exported document's shape."""
 
 	def test_TheEnvelopeNamesTheServiceAndTheScope(self) -> None:
-		document = ToOTLP(_exampleTrace(), serviceName="myProgram")
+		document = _exampleTrace().ToJSON(serviceName="myProgram")
 		resourceSpans = document["resourceSpans"][0]
 
 		self.assertEqual(
 			[{"key": "service.name", "value": {"stringValue": "myProgram"}}],
 			resourceSpans["resource"]["attributes"]
 		)
-		self.assertEqual(SCOPE_NAME, resourceSpans["scopeSpans"][0]["scope"]["name"])
+		self.assertEqual(OTLP_SCOPE_NAME, resourceSpans["scopeSpans"][0]["scope"]["name"])
 
 	def test_TheServiceNameDefaultsToTheTracesName(self) -> None:
-		document = ToOTLP(_exampleTrace())
+		document = _exampleTrace().ToJSON()
 
 		self.assertEqual(
 			[{"key": "service.name", "value": {"stringValue": "build"}}],
 			document["resourceSpans"][0]["resource"]["attributes"]
 		)
 
-	def test_ATraceIsNotASpan(self) -> None:
-		with self.assertRaises(TypeError) as exceptionCapture:
-			ToOTLP(Span("not a trace"))
+	def test_OnlyATraceConvertsToADocument(self) -> None:
+		"""A lone span is not an OTLP document - it has no 'traceId' and no service to be reported under."""
 
-		self.assertEqual("Parameter 'trace' is not of type 'Trace'.", str(exceptionCapture.exception))
+		self.assertFalse(hasattr(Span("not a trace"), "ToJSON"))
+		self.assertTrue(hasattr(Trace("a trace"), "ToJSON"))
 
 
 class Spans(Testcase):
@@ -135,26 +134,26 @@ class Spans(Testcase):
 		return {span["name"]: span for span in document["resourceSpans"][0]["scopeSpans"][0]["spans"]}
 
 	def test_EverySpanIsExported(self) -> None:
-		spans = self._Spans(ToOTLP(_exampleTrace()))
+		spans = self._Spans(_exampleTrace().ToJSON())
 
 		self.assertEqual({"build", "compile", "link"}, set(spans))
 
 	def test_AllSpansShareOneTraceIdentifier(self) -> None:
-		spans = self._Spans(ToOTLP(_exampleTrace()))
+		spans = self._Spans(_exampleTrace().ToJSON())
 		identifiers = {span["traceId"] for span in spans.values()}
 
 		self.assertEqual(1, len(identifiers))
 		self.assertEqual(32, len(identifiers.pop()), "A trace identifier is 16 bytes, hex-encoded.")
 
 	def test_TheHierarchyIsCarriedByParentSpanId(self) -> None:
-		spans = self._Spans(ToOTLP(_exampleTrace()))
+		spans = self._Spans(_exampleTrace().ToJSON())
 
 		self.assertNotIn("parentSpanId", spans["build"], "The trace itself has no parent.")
 		self.assertEqual(spans["build"]["spanId"], spans["compile"]["parentSpanId"])
 		self.assertEqual(spans["build"]["spanId"], spans["link"]["parentSpanId"])
 
 	def test_ASpanIdentifierIsEightBytes(self) -> None:
-		spans = self._Spans(ToOTLP(_exampleTrace()))
+		spans = self._Spans(_exampleTrace().ToJSON())
 
 		for name, span in spans.items():
 			with self.subTest(span=name):
@@ -163,7 +162,7 @@ class Spans(Testcase):
 
 	def test_TheDurationSurvives(self) -> None:
 		"""A span's duration is in seconds while OTLP wants nanoseconds, which is the easy factor to get wrong."""
-		spans = self._Spans(ToOTLP(_exampleTrace()))
+		spans = self._Spans(_exampleTrace().ToJSON())
 		compileSpan = spans["compile"]
 		duration = int(compileSpan["endTimeUnixNano"]) - int(compileSpan["startTimeUnixNano"])
 
@@ -172,13 +171,13 @@ class Spans(Testcase):
 
 	def test_TheTimestampsAreStrings(self) -> None:
 		"""proto3's JSON mapping encodes a 64-bit integer as a string."""
-		for span in self._Spans(ToOTLP(_exampleTrace())).values():
+		for span in self._Spans(_exampleTrace().ToJSON()).values():
 			with self.subTest(span=span["name"]):
 				self.assertIsInstance(span["startTimeUnixNano"], str)
 				self.assertIsInstance(span["endTimeUnixNano"], str)
 
 	def test_AttributesAreExported(self) -> None:
-		spans = self._Spans(ToOTLP(_exampleTrace()))
+		spans = self._Spans(_exampleTrace().ToJSON())
 		attributes = {entry["key"]: entry["value"] for entry in spans["compile"]["attributes"]}
 
 		self.assertEqual({"intValue": "12"}, attributes["files"])
@@ -186,7 +185,7 @@ class Spans(Testcase):
 		self.assertEqual({"doubleValue": 0.5}, attributes["ratio"])
 
 	def test_ASpanWithoutAttributesHasNoAttributeKey(self) -> None:
-		spans = self._Spans(ToOTLP(_exampleTrace()))
+		spans = self._Spans(_exampleTrace().ToJSON())
 
 		self.assertNotIn("attributes", spans["link"])
 		self.assertNotIn("events", spans["link"])
@@ -198,7 +197,7 @@ class Events(Testcase):
 	def test_TheEventIsExported(self) -> None:
 		spans = {
 			span["name"]: span
-			for span in ToOTLP(_exampleTrace())["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for span in _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 		events = spans["compile"]["events"]
 
@@ -213,7 +212,7 @@ class Events(Testcase):
 
 		spans = {
 			exported["name"]: exported
-			for exported in ToOTLP(trace)["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
 		self.assertEqual(spans["span"]["startTimeUnixNano"], spans["span"]["events"][0]["timeUnixNano"])
@@ -228,10 +227,10 @@ class Events(Testcase):
 
 		spans = {
 			exported["name"]: exported
-			for exported in ToOTLP(trace)["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
-		self.assertEqual(toUnixNano(time), spans["span"]["events"][0]["timeUnixNano"])
+		self.assertEqual(_toUnixNano(time), spans["span"]["events"][0]["timeUnixNano"])
 
 
 class WrittenFile(Testcase):
@@ -242,10 +241,78 @@ class WrittenFile(Testcase):
 
 		with TemporaryDirectory() as directory:
 			path = Path(directory) / "trace.json"
-			WriteOTLP(trace, path, serviceName="myProgram", indent="\t")
+			trace.WriteJSONFile(path, serviceName="myProgram", indent=2)
 
 			document = json_loads(path.read_text(encoding="utf-8"))
 
-		self.assertEqual(ToOTLP(trace, "myProgram")["resourceSpans"][0]["scopeSpans"][0]["scope"],
+		self.assertEqual(trace.ToJSON("myProgram")["resourceSpans"][0]["scopeSpans"][0]["scope"],
 		                 document["resourceSpans"][0]["scopeSpans"][0]["scope"])
 		self.assertEqual(3, len(document["resourceSpans"][0]["scopeSpans"][0]["spans"]))
+
+
+class Encoding(Testcase):
+	"""The two ways a trace hands its document out, beside the mapping itself."""
+
+	@staticmethod
+	def _WithoutIdentifiers(document: dict) -> dict:
+		"""
+		Strip the generated identifiers from a document, so two conversions of one trace can be compared.
+
+		:param document: The document to strip.
+		:returns:        The document, with every ``traceId``, ``spanId`` and ``parentSpanId`` removed.
+		"""
+		for span in document["resourceSpans"][0]["scopeSpans"][0]["spans"]:
+			for key in ("traceId", "spanId", "parentSpanId"):
+				span.pop(key, None)
+
+		return document
+
+	def test_TheStringIsTheEncodedDocument(self) -> None:
+		trace = _exampleTrace()
+
+		self.assertEqual(
+			self._WithoutIdentifiers(trace.ToJSON()),
+			self._WithoutIdentifiers(json_loads(trace.ToJSONString()))
+		)
+
+	def test_TheIdentifiersAreGeneratedPerCall(self) -> None:
+		"""The data model doesn't carry them, so converting one trace twice yields two different traces."""
+
+		trace = _exampleTrace()
+		first = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["traceId"]
+		second = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["traceId"]
+
+		self.assertNotEqual(first, second)
+
+	def test_TheCompactFormIsTheDefault(self) -> None:
+		"""That is what a collector expects; an indent is for a human reading the file."""
+
+		trace = _exampleTrace()
+
+		self.assertNotIn("\n", trace.ToJSONString())
+		self.assertIn("\n", trace.ToJSONString(indent=2))
+
+	def test_TheServiceNameReachesTheString(self) -> None:
+		document = json_loads(_exampleTrace().ToJSONString(serviceName="myProgram"))
+
+		self.assertEqual(
+			[{"key": "service.name", "value": {"stringValue": "myProgram"}}],
+			document["resourceSpans"][0]["resource"]["attributes"]
+		)
+
+	def test_TheDirectoryIsCreated(self) -> None:
+		"""'report/' rarely exists when a pipeline asks for a trace inside it."""
+
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "report" / "trace.json"
+			_exampleTrace().WriteJSONFile(path)
+
+			self.assertTrue(path.exists())
+
+	def test_APathIsAPath(self) -> None:
+		with TemporaryDirectory() as directory:
+			with self.assertRaises(TypeError) as exceptionCapture:
+				_exampleTrace().WriteJSONFile(f"{directory}/trace.json")
+
+		self.assertEqual("Parameter 'jsonFile' is not of type 'Path'.", str(exceptionCapture.exception))
+		self.assertEqual(["Got type 'str'."], exceptionCapture.exception.__notes__)
