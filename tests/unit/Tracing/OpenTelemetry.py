@@ -28,15 +28,17 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 """
-Unit tests for :mod:`pyTooling.Tracing.OpenTelemetry`, which exports a software execution trace as OTLP/JSON.
+Unit tests for the **OTLP/JSON** export of :mod:`pyTooling.Tracing`.
 """
-from json     import loads as json_loads
-from pathlib  import Path
-from tempfile import TemporaryDirectory
-from time     import sleep
+from datetime  import datetime
+from json      import loads as json_loads
+from pathlib   import Path
+from tempfile  import TemporaryDirectory
+from time      import sleep
+from unittest  import mock
 
-from pyTooling.Testing                import Testcase
-from pyTooling.Tracing import OTLP_SCOPE_NAME, Event, Span, Trace, _toAttributeValue, _toUnixNano
+from pyTooling.Testing import Testcase
+from pyTooling.Tracing import OTLP_SCOPE_NAME, Event, Span, Trace, TracingError, _newIdentifier, _toAttributeValue
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -204,22 +206,49 @@ class Events(Testcase):
 		self.assertEqual(1, len(events))
 		self.assertEqual("cache miss", events[0]["name"])
 
-	def test_AnEventWithoutATimeFallsBackToItsSpan(self) -> None:
-		"""An event doesn't stamp the current time, and OTLP reads a missing one as the Unix epoch."""
+	def test_ItsAttributesAreExported(self) -> None:
 		with Trace("trace") as trace:
 			with Span("span") as span:
-				Event("no time of its own", parent=span)
+				event = Event("cache miss", parent=span)
+				event["key"] = "value"
 
 		spans = {
 			exported["name"]: exported
 			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
-		self.assertEqual(spans["span"]["startTimeUnixNano"], spans["span"]["events"][0]["timeUnixNano"])
+		self.assertListEqual(
+			[{"key": "key", "value": {"stringValue": "value"}}],
+			spans["span"]["events"][0]["attributes"]
+		)
+
+	def test_AnEventWithoutAttributesHasNoAttributeKey(self) -> None:
+		spans = {
+			span["name"]: span
+			for span in _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		}
+
+		self.assertNotIn("attributes", spans["compile"]["events"][0])
+
+	def test_AnEventWithoutATimeIsStampedWithTheCurrentTime(self) -> None:
+		"""The constructor stamps the current time, so an event always has one - OTLP reads a missing one as the epoch."""
+		with Trace("trace") as trace:
+			with Span("span") as span:
+				sleep(0.001)
+				event = Event("no time of its own", parent=span)
+				sleep(0.001)
+
+		spans = {
+			exported["name"]: exported
+			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		}
+		exportedSpan = spans["span"]
+
+		self.assertIsNotNone(event.Time)
+		self.assertLess(int(exportedSpan["startTimeUnixNano"]), int(exportedSpan["events"][0]["timeUnixNano"]))
+		self.assertGreater(int(exportedSpan["endTimeUnixNano"]), int(exportedSpan["events"][0]["timeUnixNano"]))
 
 	def test_AnEventWithATimeKeepsIt(self) -> None:
-		from datetime import datetime
-
 		time = datetime(2026, 8, 25, 12, 0, 0)
 		with Trace("trace") as trace:
 			with Span("span") as span:
@@ -230,7 +259,7 @@ class Events(Testcase):
 			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
-		self.assertEqual(_toUnixNano(time), spans["span"]["events"][0]["timeUnixNano"])
+		self.assertEqual(str(int(time.timestamp() * 1_000_000_000)), spans["span"]["events"][0]["timeUnixNano"])
 
 
 class WrittenFile(Testcase):
@@ -316,3 +345,45 @@ class Encoding(Testcase):
 
 		self.assertEqual("Parameter 'jsonFile' is not of type 'Path'.", str(exceptionCapture.exception))
 		self.assertEqual(["Got type 'str'."], exceptionCapture.exception.__notes__)
+
+
+class Identifiers(Testcase):
+	"""An all-zero identifier is invalid in OTLP, so it is drawn again - but not forever."""
+
+	def test_AZeroIsDrawnAgain(self) -> None:
+		with mock.patch("pyTooling.Tracing.randbits", side_effect=(0, 0, 0x0123456789ABCDEF)):
+			identifier = _newIdentifier(64)
+
+		self.assertEqual("0123456789abcdef", identifier)
+
+	def test_OnlyZerosRaisesATracingError(self) -> None:
+		with mock.patch("pyTooling.Tracing.randbits", return_value=0):
+			with self.assertRaises(TracingError) as exceptionCapture:
+				_newIdentifier(64)
+
+		self.assertEqual("Couldn't draw a non-zero 64-bit random identifier.", str(exceptionCapture.exception))
+		self.assertEqual(["Tried 4 times."], exceptionCapture.exception.__notes__)
+
+
+class WriteErrors(Testcase):
+	"""A filesystem error is reported as a :exc:`~pyTooling.Tracing.TracingError` naming what failed."""
+
+	def test_AnUncreatableDirectoryIsReported(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "report" / "trace.json"
+			with mock.patch("pathlib.Path.mkdir", side_effect=PermissionError("denied")):
+				with self.assertRaises(TracingError) as exceptionCapture:
+					_exampleTrace().WriteJSONFile(path)
+
+		self.assertEqual(f"Directory '{path.parent}' couldn't be created.", str(exceptionCapture.exception))
+		self.assertIsInstance(exceptionCapture.exception.__cause__, PermissionError)
+
+	def test_AnUnwritableFileIsReported(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "trace.json"
+			with mock.patch("pathlib.Path.open", side_effect=PermissionError("denied")):
+				with self.assertRaises(TracingError) as exceptionCapture:
+					_exampleTrace().WriteJSONFile(path)
+
+		self.assertEqual(f"OTLP/JSON file '{path}' couldn't be written.", str(exceptionCapture.exception))
+		self.assertIsInstance(exceptionCapture.exception.__cause__, PermissionError)

@@ -57,7 +57,7 @@ Three methods, for the three things a caller does with the document:
    * - Method
      - Returns
    * - :meth:`~pyTooling.Tracing.Trace.ToJSON`
-     - the document as a :class:`dict`, for a caller posting it directly
+     - the document as an :class:`~pyTooling.Tracing.OTLPDocument`, for a caller posting it directly
    * - :meth:`~pyTooling.Tracing.Trace.ToJSONString`
      - the document encoded as a :class:`str`
    * - :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`
@@ -66,6 +66,11 @@ Three methods, for the three things a caller does with the document:
 A :class:`~pyTooling.Tracing.Span` and an :class:`~pyTooling.Tracing.Event` convert themselves too, but not
 publicly: a lone span is no OTLP document, because it has neither a ``traceId`` nor a service to be reported
 under. The trace walks its tree and asks each of them in turn.
+
+The document is not an untyped mapping: every level of it is a :class:`~typing.TypedDict` named after the OTLP
+message it encodes, from :class:`~pyTooling.Tracing.OTLPDocument` down to
+:class:`~pyTooling.Tracing.OTLPAnyValue`. A caller can annotate what it received, and a typo in a key is a typing
+error rather than a document a collector silently rejects.
 
 .. _TRACING/OTLP/Mapping:
 
@@ -108,7 +113,6 @@ Three details of the encoding are easy to get wrong, and each has a testcase:
 
 .. attention::
 
-   An :class:`~pyTooling.Tracing.Event` constructed without an explicit ``time`` carries none, because the
-   constructor does not stamp the current time. OTLP has no way to say *unknown* - a missing ``timeUnixNano`` reads
-   as the Unix epoch - so the exporter substitutes the enclosing span's start time, which at least places the event
-   inside the span it belongs to.
+   An :class:`~pyTooling.Tracing.Event` always carries a timestamp: the constructor stamps the current system time
+   when none is given. OTLP has no way to say *unknown* - a missing ``timeUnixNano`` reads as the Unix epoch - so an
+   event without a time would be exported as having happened in 1970.
