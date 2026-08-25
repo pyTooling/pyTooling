@@ -32,8 +32,10 @@
 Unit tests for :mod:`pyTooling.Packaging`: the helper functions, the version information read from a
 package, and the description assembled for setuptools.
 """
-from pathlib  import Path
-from pytest   import mark
+from contextlib import redirect_stdout
+from io         import StringIO
+from pathlib    import Path
+from pytest     import mark
 
 from pyTooling.Platform import CurrentPlatform
 from pyTooling.Testing  import Testcase
@@ -286,3 +288,72 @@ class EntryPoints(Testcase):
 
 		self.assertNotIn("Framework :: Pytest", packageInformation["classifiers"])
 		self.assertNotIn("entry_points", packageInformation)
+
+
+class LicenseExpression(Testcase):
+	"""A package states its license as an SPDX expression, not as a deprecated classifier."""
+
+	@staticmethod
+	def _Describe(**kwargs):
+		"""
+		Describe a minimal package, so a testcase can look at one field of the result.
+
+		:param kwargs: Additional parameters forwarded to :func:`DescribePythonPackage`.
+		:returns:      The package description.
+		"""
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		return DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife"),
+			**kwargs
+		)
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_TheLicenseIsAnSPDXExpression(self) -> None:
+		self.assertEqual("Apache-2.0", self._Describe()["license"])
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_NoLicenseClassifierIsAdded(self) -> None:
+		classifiers = self._Describe()["classifiers"]
+
+		self.assertEqual([], [classifier for classifier in classifiers if classifier.startswith("License ::")])
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_ACallersLicenseClassifierIsReported(self) -> None:
+		"""It goes to the setup.py output, where the rest of this function's messages go."""
+
+		output = StringIO()
+		with redirect_stdout(output):
+			self._Describe(classifiers=("License :: OSI Approved :: MIT License", ))
+
+		printed = output.getvalue()
+
+		self.assertIn("License classifiers are deprecated", printed)
+		self.assertIn("License :: OSI Approved :: MIT License", printed)
+		self.assertIn("[pyTooling.Packaging]", printed, "It carries the prefix every other message here carries.")
+
+	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_WithoutOneNothingIsReported(self) -> None:
+		output = StringIO()
+		with redirect_stdout(output):
+			self._Describe()
+
+		self.assertNotIn("deprecated", output.getvalue())
+
+	def test_TheLicenseStillOffersItsClassifier(self) -> None:
+		"""'License.PythonClassifier' stays - it is public API, and a caller may still need it elsewhere."""
+
+		from pyTooling.Licensing import Apache_2_0_License
+
+		self.assertEqual("License :: OSI Approved :: Apache Software License", Apache_2_0_License.PythonClassifier)
+

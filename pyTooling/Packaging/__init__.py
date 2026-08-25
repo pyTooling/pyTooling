@@ -817,14 +817,18 @@ def DescribePythonPackage(
 	# Assemble classifiers
 	classifiers = list(classifiers)
 
-	# Translate license to classifier
+	# Check the license; it reaches setuptools as an SPDX expression, not as a classifier
 	if not isinstance(license, License):
 		ex = TypeError("Parameter 'license' is not of type 'License'.")
-		ex.add_note(f"Got type '{getFullyQualifiedName(readmeFile)}'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(license)}'.")
 		raise ex
-	classifiers.append(license.PythonClassifier)
 	if pytestPlugins is not None and "Framework :: Pytest" not in classifiers:
 		classifiers.append("Framework :: Pytest")
+
+	if (deprecated := [classifier for classifier in classifiers if classifier.startswith("License ::")]) != []:
+		names = "', '".join(deprecated)
+		print(f"[pyTooling.Packaging] License classifiers are deprecated: '{names}'.")
+		print( "[pyTooling.Packaging]   Remove them; the 'license' parameter becomes the SPDX expression setuptools wants.")
 
 	def _naturalSorting(array: Iterable[str]) -> list[str]:
 		"""
