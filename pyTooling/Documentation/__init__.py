@@ -70,7 +70,7 @@ class DocumentationError(ToolingException):
 @export
 def splitDocString(
 	docString: Nullable[str],
-	maxSummaryLength: int = DEFAULT_MAXIMUM_SUMMARY_LENGTH
+	maxSummaryLength: int = MAXIMUM_SUMMARY_LENGTH
 ) -> tuple[str, str]:
 	"""
 	Split a doc-string into its summary and its body.
