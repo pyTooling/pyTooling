@@ -619,11 +619,13 @@ class ExtendedType(type):
 	An updates meta-class to construct new classes with an extended feature set.
 
 	.. todo:: META::ExtendedType Needs documentation.
-	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
+	.. todo:: META::ExtendedType allow __dict__ if slotted is enabled
 
 	.. rubric:: Features:
 
 	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
+
+	  * Let instances be referenced weakly (``weakref=True``), which a slotted class otherwise cannot be.
 
 	  * Implement ``__slots__`` only on primary inheritance line.
 	  * Collect class variables on secondary inheritance lines (mixin-classes) and defer implementation as ``__slots__``.
@@ -703,6 +705,7 @@ class ExtendedType(type):
 		slots: bool = False,
 		mixin: bool = False,
 		singleton: bool = False,
+		weakref: bool = False,
 		expects: Iterable[str] = (),
 		**kwargs: Any
 	) -> Self:
@@ -718,6 +721,8 @@ class ExtendedType(type):
 		                        ``slots``
 		                        is true. If ``None``, preserve behavior of primary base-class.
 		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
+		:param weakref:         Optional, if ``True``, let instances of a slotted class be referenced weakly by adding
+		                        ``__weakref__`` to :term:`__slots__ <slots>`.
 		:param expects:         Optional, names of members this class needs from whichever class it is mixed into. |br|
 		                        See :attr:`__expectedMembers__`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
@@ -735,7 +740,7 @@ class ExtendedType(type):
 				slots = primaryBaseClass.__slotted__
 
 		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
-		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin)
+		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin, weakref)
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
@@ -1109,7 +1114,8 @@ class ExtendedType(type):
 		baseClasses: tuple[type],
 		members:     dict[str, Any],
 		slots:       bool,
-		mixin:       bool
+		mixin:       bool,
+		weakref:     bool = False
 	) -> tuple[dict[str, Any], dict[str, Any]]:
 		"""
 		Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
@@ -1241,6 +1247,12 @@ class ExtendedType(type):
 			members["__mixinSlots__"] = tuple(mixinSlots)
 		elif slots:
 			slottedFields.extend(mixinSlots)
+
+			# '__weakref__' may be listed once in a hierarchy; if a base-class already provides it, instances can
+			# already be referenced weakly and listing it again is a TypeError.
+			if weakref and not any(hasattr(baseClass, "__weakref__") for baseClass in baseClasses):
+				slottedFields.append("__weakref__")
+
 			members["__slotted__"] = True
 			members["__slots__"] = tuple(slottedFields)
 			members["__allSlots__"] = set(chain(slottedFields, inheritedSlottedFields.keys()))
