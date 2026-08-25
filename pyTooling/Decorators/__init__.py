@@ -379,12 +379,8 @@ def InheritDocString(
 			return param
 
 		derivedDoc = param.__doc__
-
-		# 'maxSummaryLength=0': merging doc-strings is not the place to enforce a length. A base-class' doc-string
-		# belongs to whoever wrote it, and rejecting it here would turn a documentation style issue into an
-		# 'ImportError' in a package that only derives from that class.
-		baseSummary, baseBody = splitDocString(baseDoc, maxSummaryLength=0)
-		derivedSummary, derivedBody = splitDocString(derivedDoc, maxSummaryLength=0)
+		baseSummary,    baseBody =    splitDocString(baseDoc, maxSummaryLength=0)     # Disable summary length check
+		derivedSummary, derivedBody = splitDocString(derivedDoc, maxSummaryLength=0)  # Disable summary length check
 		base = cleandoc(baseDoc) if baseDoc is not None else ""
 		derived = cleandoc(derivedDoc) if derivedDoc is not None else ""
 
