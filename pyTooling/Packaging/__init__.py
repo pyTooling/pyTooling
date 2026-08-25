@@ -44,18 +44,20 @@ A set of helper functions to describe a Python package for setuptools.
    :mod:`pyTooling.Testing`
       |rarr| Testing the console scripts a package installs.
 """
-from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
+from ast             import parse as ast_parse, get_docstring as ast_get_docstring, iter_child_nodes, Assign, \
+                            Constant, Name, List as ast_List
 from collections.abc import Sized
 from os              import scandir as os_scandir
 from pathlib         import Path
 from re              import split as re_split
 from sys             import version_info
 from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
-from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException, MissingDependencyError
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
-from pyTooling.Licensing   import License, Apache_2_0_License
+from pyTooling.Decorators    import export, readonly
+from pyTooling.Documentation import splitDocString
+from pyTooling.Exceptions    import ToolingException, MissingDependencyError
+from pyTooling.MetaClasses   import ExtendedType
+from pyTooling.Common        import __version__, getFullyQualifiedName, firstElement
+from pyTooling.Licensing     import License, Apache_2_0_License
 
 
 __all__ = [
@@ -63,6 +65,11 @@ __all__ = [
 	"DEFAULT_DOCUMENTATION_REQUIREMENTS", "DEFAULT_TEST_REQUIREMENTS", "DEFAULT_PACKAGING_REQUIREMENTS",
 	"DEFAULT_VERSION_FILE"
 ]
+
+
+@export
+class PackagingError(ToolingException):
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Packaging`."""
 
 
 @export
@@ -324,6 +331,36 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		return f"{self._version}"
 
 
+def _extractDescription(docString: Nullable[str]) -> str:
+	"""
+	Read a package's short description from the first paragraph of its module doc-string.
+
+	A package's short description **is** the summary of its module doc-string - the first paragraph - so the two are
+	one text in two places, and :func:`~pyTooling.Documentation.splitDocString` reads it.
+
+	It is folded into a single line, because a short description is one line of plain text while a doc-string is
+	wrapped to the source file's line length. Strong emphasis around the whole paragraph is removed for the same
+	reason: ``**An abstract VHDL language model.**`` is markup for the rendered documentation, and nothing renders it
+	where a short description is displayed.
+
+	:param docString:           The module's doc-string, or ``None`` if it has none.
+	:returns:                   The description as a single line, or an empty string if there is no doc-string.
+	:raises DocumentationError: If the first paragraph is too long to be a description.
+
+	.. seealso::
+
+	   :func:`~pyTooling.Documentation.splitDocString`
+	      |rarr| Reads the first paragraph, and rejects one that is too long to be a summary.
+	"""
+	description, _ = splitDocString(docString)
+	description = " ".join(description.split())
+
+	if description.startswith("**") and description.endswith("**") and "**" not in description[2:-2]:
+		description = description[2:-2]
+
+	return description
+
+
 @export
 def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	"""
@@ -338,36 +375,41 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	* ``__license__``
 	* ``__version__``
 
-	:param sourceFile:         Path to a Python source file as an instance of :class:`Path`.
-	:returns:                  An instance of :class:`VersionInformation` with gathered variable contents.
-	:raises TypeError:         If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError: If the given file doesn't exist.
-	:raises AssertionError:    If a dunder variable is missing in the given file.
-	:raises ToolingException:  If a dunder variable has an unexpected format.
+	The package's short description is not a dunder variable - it is the first paragraph of the source file's module
+	doc-string, which is where a package already describes itself.
+
+	:param sourceFile:        Path to a Python source file as an instance of :class:`Path`.
+	:returns:                 An instance of :class:`VersionInformation` with gathered variable contents.
+	:raises TypeError:        If parameter 'sourceFile' is not of type :class:`~pathlib.Path`.
+	:raises PackagingError:   If the given file doesn't exist.
+	:raises PackagingError:   If the given file can't be parsed as Python source code.
+	:raises PackagingError:   If a dunder variable has an unexpected format.
+	:raises AssertionError:   If a dunder variable is missing in the given file.
 	"""
 	if not isinstance(sourceFile, Path):
 		ex = TypeError("Parameter 'sourceFile' is not of type 'Path'.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(sourceFile)}'.")
 		raise ex
 
-	_author =      None
-	_copyright =   None
-	_description = ""
-	_email =       None
-	_keywords =    []
-	_license =     None
-	_version =     None
+	author =      None
+	copyright =   None
+	email =       None
+	keywords =    []
+	license =     None
+	version =     None
 
 	try:
 		with sourceFile.open("r", encoding="utf-8") as file:
 			content = file.read()
-	except FileNotFoundError as ex:
-		raise FileNotFoundError
+	except OSError as ex:
+		raise PackagingError(f"Source file '{sourceFile}' couldn't be read.") from ex
 
 	try:
 		ast = ast_parse(content)
 	except Exception as ex:                                                          # pragma: no cover
-		raise ToolingException(f"Internal error when parsing '{sourceFile}'.") from ex
+		raise PackagingError(f"Source file '{sourceFile}' couldn't be parsed as Python source code.") from ex
+
+	description = _extractDescription(ast_get_docstring(ast))
 
 	for item in iter_child_nodes(ast):
 		if isinstance(item, Assign) and len(item.targets) == 1:
@@ -375,43 +417,46 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 			value = item.value
 			if isinstance(target, Name) and target.id == "__author__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
-					_author = value.value
+					author = value.value
 			if isinstance(target, Name) and target.id == "__copyright__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
-					_copyright = value.value
+					copyright = value.value
 			if isinstance(target, Name) and target.id == "__email__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
-					_email = value.value
+					email = value.value
 			if isinstance(target, Name) and target.id == "__keywords__":
-				if isinstance(value, Constant) and isinstance(value.value, str):           # pragma: no cover
-					raise TypeError("Variable '__keywords__' should be a list of strings.")
+				if isinstance(value, Constant) and isinstance(value.value, str):
+					cause = TypeError("Variable '__keywords__' should be a list of strings.")
+					raise PackagingError(f"Couldn't extract '__keywords__' from '{sourceFile}'.") from cause
 				elif isinstance(value, ast_List):
 					for const in value.elts:
 						if isinstance(const, Constant) and isinstance(const.value, str):
-							_keywords.append(const.value)
-						else:                                                                  # pragma: no cover
-							raise TypeError("List elements in '__keywords__' should be strings.")
-				else:                                                                      # pragma: no cover
-					raise TypeError("Used unsupported type for variable '__keywords__'.")
+							keywords.append(const.value)
+						else:
+							cause = TypeError("List elements in '__keywords__' should be strings.")
+							raise PackagingError(f"Couldn't extract '__keywords__' from '{sourceFile}'.") from cause
+				else:
+					cause = TypeError(f"Used unsupported type '{getFullyQualifiedName(value)}' for variable '__keywords__'.")
+					raise PackagingError(f"Couldn't extract '__keywords__' from '{sourceFile}'.") from cause
 			if isinstance(target, Name) and target.id == "__license__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
-					_license = value.value
+					license = value.value
 			if isinstance(target, Name) and target.id == "__version__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
-					_version = value.value
+					version = value.value
 
-	if _author is None:
+	if author is None:
 		raise AssertionError(f"Could not extract '__author__' from '{sourceFile}'.")     # pragma: no cover
-	if _copyright is None:
+	if copyright is None:
 		raise AssertionError(f"Could not extract '__copyright__' from '{sourceFile}'.")  # pragma: no cover
-	if _email is None:
+	if email is None:
 		raise AssertionError(f"Could not extract '__email__' from '{sourceFile}'.")      # pragma: no cover
-	if _license is None:
+	if license is None:
 		raise AssertionError(f"Could not extract '__license__' from '{sourceFile}'.")    # pragma: no cover
-	if _version is None:
+	if version is None:
 		raise AssertionError(f"Could not extract '__version__' from '{sourceFile}'.")    # pragma: no cover
 
-	return VersionInformation(_author, _email, _copyright, _license, _version, _description, _keywords)
+	return VersionInformation(author, email, copyright, license, version, description, keywords)
 
 
 STATUS: dict[str, str] = {
@@ -540,11 +585,11 @@ def _collectEntryPoints(
 @export
 def DescribePythonPackage(
 	packageName: str,
-	description: str,
 	projectURL: str,
 	sourceCodeURL: str,
 	documentationURL: str,
 	issueTrackerCodeURL: str,
+	description: Nullable[str] = None,
 	keywords: Iterable[str] = None,
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = DEFAULT_README,
@@ -646,12 +691,20 @@ def DescribePythonPackage(
 	   If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``
 	   will be used. Otherwise, the content of the parameter, if not None or empty.
 
+	.. topic:: Handling of the description
+
+	   If parameter ``description`` is not specified, the first paragraph of the module doc-string in
+	   ``sourceFileWithVersion`` is used, so a package describes itself in one place. An explicitly passed description
+	   always wins - including an empty one.
+
 	:param packageName:                   Name of the Python package.
-	:param description:                   Short description of the package. The long description will be read from README file.
-	:param projectURL:                    Optional, URL to the Python project.
+	:param projectURL:                    URL to the Python project.
 	:param sourceCodeURL:                 URL to the Python source code.
 	:param documentationURL:              URL to the package's documentation.
 	:param issueTrackerCodeURL:           URL to the projects issue tracker (ticket system).
+	:param description:                   Optional, short description of the package. (Default: the first paragraph
+	                                      of the module doc-string in ``sourceFileWithVersion``.) The long description
+	                                      is read from the README file.
 	:param keywords:                      Optional, a list of keywords.
 	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
 	                                      :const:`DEFAULT_LICENSE`)
@@ -702,6 +755,7 @@ def DescribePythonPackage(
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
 	:raises Exception:                    If the package's directory doesn't exist, or if a requirements file is
 	                                      malformed.
+	:raises PackagingError:               If no description was given and the package file has no module doc-string.
 	"""
 	try:
 		from setuptools import find_packages, find_namespace_packages
@@ -814,6 +868,15 @@ def DescribePythonPackage(
 	if keywords is None or isinstance(keywords, Sized) and len(keywords) == 0:
 		keywords = versionInformation.Keywords
 
+	if description is None:
+		description = versionInformation.Description
+
+		if len(description) == 0:
+			ex = PackagingError(f"Package '{packageName}' has no description.")
+			ex.add_note(f"Neither was parameter 'description' given, nor has '{sourceFileWithVersion}' a module doc-string.")
+			ex.add_note("Describe the package in the first paragraph of that doc-string, or pass parameter 'description'.")
+			raise ex
+
 	# Assemble classifiers
 	classifiers = list(classifiers)
 
@@ -913,10 +976,10 @@ def DescribePythonPackage(
 @export
 def DescribePythonPackageHostedOnGitHub(
 	packageName: str,
-	description: str,
 	gitHubNamespace: str,
 	gitHubRepository: str = None,
 	projectURL: str = None,
+	description: Nullable[str] = None,
 	keywords: Iterable[str] = None,
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = DEFAULT_README,
@@ -942,10 +1005,12 @@ def DescribePythonPackageHostedOnGitHub(
 	namespace and repository name: issue tracker URL, source code URL, ...
 
 	:param packageName:                   Name of the Python package.
-	:param description:                   Short description of the package. The long description will be read from README file.
 	:param gitHubNamespace:               Name of the GitHub namespace (organization or user).
 	:param gitHubRepository:              Optional, name of the GitHub repository.
 	:param projectURL:                    Optional, URL to the Python project.
+	:param description:                   Optional, short description of the package. (Default: the first paragraph
+	                                      of the module doc-string in ``sourceFileWithVersion``.) The long description
+	                                      is read from the README file.
 	:param keywords:                      Optional, a list of keywords.
 	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
 	                                      :const:`DEFAULT_LICENSE`)
@@ -994,6 +1059,7 @@ def DescribePythonPackageHostedOnGitHub(
 	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
+	:raises PackagingError:               If no description was given and the package file has no module doc-string.
 	"""
 	if gitHubRepository is None:
 		# Assign GitHub repository name without '.*', if derived from Python package name.

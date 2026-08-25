@@ -28,99 +28,75 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers."""
-from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
-from pyTooling.Testing       import Testcase
+"""
+Helper functions to work with doc-strings.
+
+.. hint::
+
+   See :ref:`high-level help <DOC>` for explanations and usage examples.
+
+.. seealso::
+
+   :deco:`pyTooling.Decorators.InheritDocString`
+      |rarr| Merges a base-class' doc-string into a derived entity, using the split offered here.
+   :func:`pyTooling.Packaging.extractVersionInformation`
+      |rarr| Reads a package's short description from the summary of its module doc-string.
+"""
+from __future__           import annotations
+
+from inspect              import cleandoc
+from typing               import Optional as Nullable
+
+from pyTooling.Decorators import export
+from pyTooling.Exceptions import ToolingException
 
 
-if __name__ == "__main__":  # pragma: no cover
-	print("ERROR: you called a testcase declaration file as an executable module.")
-	print("Use: 'python -m unittest <testcase module>'")
-	exit(1)
+__all__ = ["MAXIMUM_SUMMARY_LENGTH"]
+
+MAXIMUM_SUMMARY_LENGTH = 200
+"""
+Number of characters a doc-string's summary may have by default.
+
+A summary is a single sentence, so a line of the usual 120 columns plus room for an embedded link or other markup is
+a generous bound. A first paragraph longer than that is a body that lost its summary.
+"""
 
 
-class Splitting(Testcase):
-	"""A doc-string is its summary - the first paragraph - followed by its body."""
-
-	def test_NoDocStringIsTwoEmptyStrings(self) -> None:
-		self.assertEqual(("", ""), splitDocString(None))
-
-	def test_ASingleParagraphHasNoBody(self) -> None:
-		summary, body = splitDocString("A single sentence.")
-
-		self.assertEqual("A single sentence.", summary)
-		self.assertEqual("", body)
-
-	def test_TheBodyIsWhateverFollowsTheFirstBlankLine(self) -> None:
-		summary, body = splitDocString("The summary.\n\nThe first paragraph.\n\nThe second paragraph.")
-
-		self.assertEqual("The summary.", summary)
-		self.assertEqual("The first paragraph.\n\nThe second paragraph.", body)
-
-	def test_TheDocStringIsDedented(self) -> None:
-		"""An indented doc-string is what 'cleandoc' sees in a source file, so both parts arrive dedented."""
-
-		def documented() -> None:
-			"""
-			The summary.
-
-			The body,
-			over two lines.
-			"""
-
-		summary, body = splitDocString(documented.__doc__)
-
-		self.assertEqual("The summary.", summary)
-		self.assertEqual("The body,\nover two lines.", body)
-
-	def test_AWrappedSummaryKeepsItsLineBreaks(self) -> None:
-		"""The split doesn't fold - a caller that needs one line joins the words itself."""
-		summary, _ = splitDocString("A summary wrapped\nover two lines.")
-
-		self.assertEqual("A summary wrapped\nover two lines.", summary)
+@export
+class DocumentationError(ToolingException):
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Documentation`."""
 
 
-class SummaryLength(Testcase):
-	"""A summary is a single sentence, so it is length-limited."""
+@export
+def splitDocString(
+	docString: Nullable[str],
+	maxSummaryLength: int = MAXIMUM_SUMMARY_LENGTH
+) -> tuple[str, str]:
+	"""
+	Split a doc-string into its summary and its body.
 
-	def test_TheDefaultIsTwoHundredCharacters(self) -> None:
-		self.assertEqual(200, MAXIMUM_SUMMARY_LENGTH)
+	The doc-string is dedented with :func:`inspect.cleandoc` first. The summary is the first paragraph, the body is
+	whatever follows the first blank line. Both are empty strings if the doc-string is ``None``, and the body is an
+	empty string if the doc-string is a single paragraph, so a caller needs no special case for either.
 
-	def test_ASummaryOfExactlyTheLimitIsAccepted(self) -> None:
-		summary, _ = splitDocString("x" * MAXIMUM_SUMMARY_LENGTH)
+	A summary is a single sentence, so its length is bounded by ``maxSummaryLength``; everything else belongs behind
+	a blank line.
 
-		self.assertEqual(MAXIMUM_SUMMARY_LENGTH, len(summary))
+	:param docString:           The doc-string to split, or ``None``.
+	:param maxSummaryLength:    Optional, number of characters the summary may have. Pass ``0`` for no limit.
+	                            Default: :data:`MAXIMUM_SUMMARY_LENGTH`.
+	:returns:                   A tuple of summary and body.
+	:raises DocumentationError: If the summary is longer than ``maxSummaryLength`` characters.
+	"""
+	if docString is None:
+		return "", ""
 
-	def test_OneCharacterMoreIsRejected(self) -> None:
-		with self.assertRaises(DocumentationError) as exceptionCapture:
-			splitDocString("x" * (MAXIMUM_SUMMARY_LENGTH + 1))
+	summary, _, body = cleandoc(docString).partition("\n\n")
 
-		self.assertEqual(
-			"The doc-string's summary is longer than 200 characters.",
-			str(exceptionCapture.exception)
-		)
-		self.assertEqual("Got 201 characters.", exceptionCapture.exception.__notes__[0])
+	if 0 < maxSummaryLength < len(summary):
+		ex = DocumentationError(f"The doc-string's summary is longer than {maxSummaryLength} characters.")
+		ex.add_note(f"Got {len(summary)} characters.")
+		ex.add_note("A summary is the first sentence of a doc-string; everything else belongs behind a blank line.")
+		raise ex
 
-	def test_OnlyTheSummaryIsMeasuredNotTheBody(self) -> None:
-		"""A long body is normal - it is the first paragraph that has to stay short."""
-		summary, body = splitDocString("The summary.\n\n" + "x" * 1000)
-
-		self.assertEqual("The summary.", summary)
-		self.assertEqual(1000, len(body))
-
-	def test_ZeroDisablesTheCheck(self) -> None:
-		summary, _ = splitDocString("x" * 1000, maxSummaryLength=0)
-
-		self.assertEqual(1000, len(summary))
-
-	def test_TheLimitIsAParameter(self) -> None:
-		summary, _ = splitDocString("x" * 30, maxSummaryLength=30)
-		self.assertEqual(30, len(summary))
-
-		with self.assertRaises(DocumentationError) as exceptionCapture:
-			splitDocString("x" * 31, maxSummaryLength=30)
-
-		self.assertEqual(
-			"The doc-string's summary is longer than 30 characters.",
-			str(exceptionCapture.exception)
-		)
+	return summary, body

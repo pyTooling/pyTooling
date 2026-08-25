@@ -50,8 +50,9 @@ from types    import ModuleType
 from typing   import Any, Callable, Union, Optional as Nullable
 from unittest import TestCase
 
-from pytest               import Class, Collector, Item, StashKey, fixture
-from pyTooling.Decorators import export, splitDocString
+from pytest                  import Class, Collector, Item, StashKey, fixture
+from pyTooling.Decorators    import export
+from pyTooling.Documentation import splitDocString
 
 
 hierarchyKey: StashKey[dict[str, dict[str, str]]] = StashKey()

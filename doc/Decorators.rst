@@ -9,6 +9,9 @@ The :mod:`pyTooling.Decorators` package provides decorators to:
 * control the visibility of classes and functions defined in a module.
 * help with copying doc-strings from base-classes.
 
+The helper the last one is built on - splitting a doc-string into its summary and its body - is not a decorator
+and lives in :ref:`pyTooling.Documentation <DOC>`.
+
 .. #contents:: Table of Contents
    :depth: 2
 
