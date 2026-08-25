@@ -28,7 +28,10 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 """
-This package is a resource package containing data files shipped with :mod:`pyTooling.Testing`.
+This package is a resource package containing the data files shipped with pyTooling.
+
+It is one package for the whole library rather than one per sub-package, so a consumer looking for a schema has a
+single place to look and a file can be shared by more than one module.
 
 .. rubric:: XML Schema Files
 
@@ -37,15 +40,15 @@ This package is a resource package containing data files shipped with :mod:`pyTo
 
 .. rubric:: Usage
 
-Reach a file through :func:`~pyTooling.Common.getResourceFile`, which works whether the package is installed, in a
-wheel, or a checkout:
+Reach a file through :func:`~pyTooling.Common.getResourceFile`, which works whether pyTooling is installed, inside
+a wheel, or a checkout:
 
 .. admonition:: ``example.py``
 
    .. code-block:: python
 
-      from pyTooling.Common          import getResourceFile
-      from pyTooling.Testing         import Resources
+      from pyTooling.Common    import getResourceFile
+      from pyTooling           import Resources
 
       schema = getResourceFile(Resources, "TestReport.xsd")
 """

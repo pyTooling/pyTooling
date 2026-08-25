@@ -337,7 +337,7 @@ understands while the richer file is produced beside it.
 The schema
 ==========
 
-The schema lives in the resource package :mod:`pyTooling.Testing.Resources` and is shipped with the distribution.
+The schema lives in the resource package :mod:`pyTooling.Resources` and is shipped with the distribution.
 Every generated file points at it with ``xsi:noNamespaceSchemaLocation``, so a reader can validate without being
 told where it lives, and :func:`~pyTooling.Testing.ReportWriter.getSchemaFile` returns its path - read through
 :func:`~pyTooling.Common.getResourceFile`, so it is found whether pyTooling is installed, inside a wheel, or a
