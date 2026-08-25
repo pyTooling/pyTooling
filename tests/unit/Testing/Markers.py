@@ -127,6 +127,12 @@ class TestsuiteMarker(Testcase):
 
 		self.assertIn("instead of a class", str(exceptionCapture.exception))
 
+	def test_TheMarkerIsNotItselfATestcase(self) -> None:
+		"""Its name starts with 'test', so a test runner has to be told otherwise."""
+
+		self.assertFalse(testsuite.__test__)
+		self.assertFalse(testcase.__test__)
+
 
 class TestcaseMarker(Testcase):
 	"""':deco:`testcase`' attaches the title a test runner should report for a method."""
@@ -297,6 +303,42 @@ class PyTestPlugin(ApplicationTestcase):
 		)
 
 		return result, report
+
+	def test_TheMarkersAreNotCollectedAsTestcases(self) -> None:
+		"""'testsuite' and 'testcase' start with 'test', which is what pytest's default 'python_functions' matches."""
+
+		module = """\
+from pyTooling.Testing import testsuite, testcase
+
+
+@testsuite("A marked suite")
+class Suite:
+	@testcase("A marked case")
+	def Case(self) -> None:
+		assert True
+"""
+		configuration = """\
+[pytest]
+python_files = test_*
+python_functions = test*
+"""
+
+		with TemporaryDirectory() as directory:
+			directory = Path(directory)
+			(directory / "test_importing.py").write_text(module, encoding="utf-8")
+			(directory / "pytest.ini").write_text(configuration, encoding="utf-8")
+
+			repositoryRoot = Path(__file__).resolve().parent.parent.parent.parent
+			result = self.RunModule(
+				"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest", "--collect-only", "-q", str(directory),
+				environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+				workingDirectory=directory
+			)
+
+		self.assertExitCode(result)
+		self.assertNotIn("::testsuite", result.stdout, "The 'testsuite' decorator was collected as a testcase.")
+		self.assertNotIn("::testcase", result.stdout, "The 'testcase' decorator was collected as a testcase.")
+		self.assertIn("::Suite::Case", result.stdout, "The marked testcase was not collected.")
 
 	def test_TheNodeIDStaysCanonicalSoATestcaseCanBeSelected(self) -> None:
 		"""The report is titled, the item is not - so an IDE, a command line and '--last-failed' still work."""
