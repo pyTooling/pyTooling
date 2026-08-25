@@ -36,6 +36,20 @@ description - instead of one name and a bag of ``<property>`` pairs.
    :ref:`TESTING/ReportFormat/Schema`
       |rarr| Reaching the schema from Python and validating with `xmlschema <https://pypi.org/project/xmlschema/>`__.
 
+.. _SCHEMAS/TestReport-v0.1/Diagram:
+
+Diagram
+*******
+
+Every complex type is a record of three compartments - its name, its attributes, and its simple-typed child
+elements with their cardinality. A complex-typed child element is an **edge**, so containment is visible as
+structure rather than as a repeated type name, and ``testsuite``'s edge to itself is what makes a test suite
+nest. A simple type gets a node of its own only when it is an enumeration, because its values are what a type
+name cannot say.
+
+.. xsd-graph:: ../../pyTooling/Resources/TestReport-v0.1.xsd
+   :caption: The types of :file:`TestReport-v0.1.xsd`, drawn from the schema at documentation build time.
+
 .. _SCHEMAS/TestReport-v0.1/Source:
 
 Source
