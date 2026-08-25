@@ -253,6 +253,22 @@ class License(metaclass=ExtendedType, slots=True):
 			ex.add_note("Supported types for second operand: License, str")
 			raise ex
 
+	def __hash__(self) -> int:
+		"""
+		Compute a hash from the license's SPDX identifier, so a license can be a set element or a dictionary key.
+
+		The identifier is what :meth:`__eq__` compares, so two licenses that compare equal hash equally - which is
+		what a :class:`set` and a :class:`dict` rely on.
+
+		The class is part of the hash, because a license is **not** equal to its identifier as a string:
+		:meth:`__eq__` raises a :exc:`TypeError` for anything but a :class:`License`. Hashing the bare identifier
+		would put a license and its identifier in the same hash bucket, where a plain ``in`` or ``&`` on a mixed
+		set would reach that :exc:`TypeError` instead of answering.
+
+		:returns: Hash of the license.
+		"""
+		return hash((License, self._spdxIdentifier))
+
 	def __le__(self, other: Any) -> bool:
 		"""
 		Returns true, if both licenses are compatible.
