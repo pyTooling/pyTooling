@@ -12,14 +12,16 @@ Version 10.x (2026)
 
 .. topic:: `v10.0.0 - unreleased <https://github.com/pyTooling/pyTooling/releases/v10.0.0>`__
 
-   * Breaking changes
+   .. rubric:: Breaking Changes
 
-     * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
-       :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``.
-       The old names were briefly kept as aliases and are removed in the same release, so an ``import`` or an
-       ``except`` clause naming one has to be updated.
-     * ``TerminalApplication._PrintHelp`` moved to
-       :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which owns the parsers it prints.
+   * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
+     :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. The old
+     names were briefly kept as aliases and are removed in the same release, so an ``import`` or an ``except``
+     clause naming one has to be updated.
+   * ``TerminalApplication._PrintHelp`` moved to
+     :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which owns the parsers it prints.
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.MetaClasses`
 
@@ -39,8 +41,8 @@ Version 10.x (2026)
    * :mod:`pyTooling.Packaging`
 
      * :func:`~pyTooling.Packaging.DescribePythonPackage` declares ``consoleScripts``, ``guiScripts`` and
-       ``pytestPlugins``, each knowing the entry point group it belongs to. Previously only ``console_scripts``
-       was reachable.
+       ``pytestPlugins``, each knowing the entry point group it belongs to. Previously only ``console_scripts`` was
+       reachable.
 
    * :mod:`pyTooling.Decorators`
 
@@ -53,29 +55,33 @@ Version 10.x (2026)
      * Neither module raises its own base exception any more. ``LinkedList`` gained five specific errors and
        ``Graph`` three, so 20 raise sites name what went wrong.
 
-   * Bug fixes
+   .. rubric:: Changes
 
-     * :mod:`pyTooling.TerminalUI`: a message's indentation was recorded and never printed. ``BaseIndent`` and the
-       ``indent`` parameter of every ``Write*`` method reached :attr:`~pyTooling.TerminalUI.Line.Indent` and got
-       lost on the way to the terminal.
-     * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``,
-       so nine modules were documented from the *installed* package and the rest from the checkout.
+   * 339 f-strings that interpolate nothing lost their ``f`` prefix, across 33 modules.
 
-   * Changes
+   .. rubric:: Bug Fixes
 
-     * 339 f-strings that interpolate nothing lost their ``f`` prefix, across 33 modules.
+   * :mod:`pyTooling.TerminalUI`
 
-   * Documentation
+     * A message's indentation was recorded and never printed. ``BaseIndent`` and the ``indent`` parameter of every
+       ``Write*`` method reached :attr:`~pyTooling.TerminalUI.Line.Indent` and got lost on the way to the terminal.
 
-     * The eighteen constructors in :mod:`pyTooling.Attributes` document their parameters. Each carried the same
-       sentence describing ``*args``/``**kwargs``, which none of them takes.
-     * The four documentation-coverage findings that were real are fixed: :meth:`pyTooling.Tree.Node.__delitem__`,
-       both comparison operators of :class:`~pyTooling.Licensing.License`, and ``abstract_new()``.
+   * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
+     nine modules were documented from the *installed* package and the rest from the checkout.
+
+   .. rubric:: Documentation
+
+   * The eighteen constructors in :mod:`pyTooling.Attributes` document their parameters. Each carried the same
+     sentence describing ``*args``/``**kwargs``, which none of them takes.
+   * The four documentation-coverage findings that were real are fixed: :meth:`pyTooling.Tree.Node.__delitem__`,
+     both comparison operators of :class:`~pyTooling.Licensing.License`, and ``abstract_new()``.
 
 Version 9.x (2026)
 ******************
 
 .. topic:: `v9.0.0 - 20.08.2026 <https://github.com/pyTooling/pyTooling/releases/v9.0.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.Testing` is a new module: enhanced classes for writing unit tests with Python's
      :mod:`unittest` framework, which pytest runs as well.
@@ -85,49 +91,51 @@ Version 9.x (2026)
      * :class:`~pyTooling.Testing.Testcase` adds the assertions newer Python versions gained, so a test suite can
        use them whichever interpreter runs it.
 
-   * Breaking changes
-
-     * ``TerminalBaseApplication.CheckPythonVersion()`` and its exit code are removed - a package's
-       ``python_requires`` metadata makes the check unnecessary.
-     * ``pyTooling.Warning.UnhandledWarningException`` is removed, as v9.0.0 was announced to do.
-     * 34 base-classes in :mod:`pyTooling.CLIAbstraction` raise
-       :exc:`~pyTooling.MetaClasses.AbstractClassError` instead of :exc:`TypeError` when instantiated directly.
-     * A configuration is read-only: :meth:`pyTooling.Configuration.Node.__setitem__` says so once instead of four
-       stubs, and the four methods every backend implements are ``@abstractmethod``.
-     * :class:`~pyTooling.Versioning.CalendarVersion` renders only the parts it was given.
-       ``YearMonthVersion(2024, 10)`` was ``'2024.10.0'``.
-     * :class:`pyTooling.GenericPath.URL.Protocols` is a :class:`~enum.Flag` whose secured schemes are named
-       composites, so ``Protocols.TLS in url.Scheme`` answers whether a scheme is encrypted. The numeric values
-       change.
-     * ``SupervisedThreadException`` takes its message positionally and the attached objects by keyword.
-     * Annotations in 26 modules are no longer evaluated at definition time. On Python 3.11-3.13
-       ``__annotations__`` yields strings; use :func:`typing.get_type_hints`.
-
    * :mod:`pyTooling.MetaClasses`
 
      * :deco:`~pyTooling.MetaClasses.abstractclass` marks a class abstract although it has no abstract method.
      * :class:`~pyTooling.MetaClasses.ExtendedType` forwards any further class keyword argument to
        :meth:`~object.__init_subclass__`.
 
-   * :mod:`pyTooling.Decorators`
+   .. rubric:: Breaking Changes
 
-     * A :deco:`~pyTooling.Decorators.readonly` property hands out the getter's type instead of :class:`~typing.Any`.
+   * ``TerminalBaseApplication.CheckPythonVersion()`` and its exit code are removed - a package's
+     ``python_requires`` metadata makes the check unnecessary.
+   * ``pyTooling.Warning.UnhandledWarningException`` is removed, as v9.0.0 was announced to do.
+   * 34 base-classes in :mod:`pyTooling.CLIAbstraction` raise :exc:`~pyTooling.MetaClasses.AbstractClassError`
+     instead of :exc:`TypeError` when instantiated directly.
+   * A configuration is read-only: :meth:`pyTooling.Configuration.Node.__setitem__` says so once instead of four
+     stubs, and the four methods every backend implements are ``@abstractmethod``.
+   * :class:`~pyTooling.Versioning.CalendarVersion` renders only the parts it was given.
+     ``YearMonthVersion(2024, 10)`` was ``'2024.10.0'``.
+   * :class:`pyTooling.GenericPath.URL.Protocols` is a :class:`~enum.Flag` whose secured schemes are named
+     composites, so ``Protocols.TLS in url.Scheme`` answers whether a scheme is encrypted. The numeric values
+     change.
+   * ``SupervisedThreadException`` takes its message positionally and the attached objects by keyword.
+   * Annotations in 26 modules are no longer evaluated at definition time. On Python 3.11-3.13
+     ``__annotations__`` yields strings; use :func:`typing.get_type_hints`.
 
-   * Documentation
+   .. rubric:: Changes
 
-     * Doc-strings for 10 modules, 47 classes, 127 class fields, 109 dunder methods and the methods that had none;
-       134 ``:param:``, 89 ``:returns:`` and 27 ``:raises:`` fields filled in.
-     * 41 cross-references pointed nowhere and were corrected; neighbouring modules cross-reference each other.
-     * New pages: :file:`doc/Testing.rst` and :file:`doc/Dependency.rst`.
+   * A :deco:`~pyTooling.Decorators.readonly` property hands out the getter's type instead of :class:`~typing.Any`.
 
-   * Unit tests
+   .. rubric:: Documentation
 
-     * The whole suite derives from :class:`pyTooling.Testing.Testcase` instead of :class:`unittest.TestCase`.
+   * Doc-strings for 10 modules, 47 classes, 127 class fields, 109 dunder methods and the methods that had none;
+     134 ``:param:``, 89 ``:returns:`` and 27 ``:raises:`` fields filled in.
+   * 41 cross-references pointed nowhere and were corrected; neighbouring modules cross-reference each other.
+   * New pages: :file:`doc/Testing.rst` and :file:`doc/Dependency.rst`.
+
+   .. rubric:: Unit Tests
+
+   * The whole suite derives from :class:`pyTooling.Testing.Testcase` instead of :class:`unittest.TestCase`.
 
 Version 8.x (2025/2026)
 ***********************
 
 .. topic:: `v8.19.0 - 31.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.19.0>`__
+
+   .. rubric:: Changes
 
    * :mod:`pyTooling.Versioning`, :mod:`pyTooling.Attributes`, :mod:`pyTooling.Warning`
 
@@ -138,20 +146,24 @@ Version 8.x (2025/2026)
      * :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` distinguishes its two causes in the notes: a slot
        inherited from a base-class, and a slot contributed by a mixin-class.
 
-   * Bug fixes
+   .. rubric:: Bug Fixes
 
-     * :mod:`pyTooling.Filesystem`: ``Element.Path`` raised ``NotImplemented(...)``, which is a singleton rather
-       than an exception class, so it raised :exc:`TypeError` instead of :exc:`NotImplementedError`.
+   * :mod:`pyTooling.Filesystem`
 
-   * Documentation
+     * ``Element.Path`` raised ``NotImplemented(...)``, which is a singleton rather than an exception class, so it
+       raised :exc:`TypeError` instead of :exc:`NotImplementedError`.
 
-     * All 337 properties in the package carry a doc-string with a ``:returns:`` field. 80 had none and 25 more had
-       no ``:returns:``.
-     * A property that computes its result reads *"Read-only property to return ..."*, a plain field access keeps
-       *"to access"*.
-     * Documentation coverage rose from 76.28 % to 80.97 %.
+   .. rubric:: Documentation
+
+   * All 337 properties in the package carry a doc-string with a ``:returns:`` field. 80 had none and 25 more had
+     no ``:returns:``.
+   * A property that computes its result reads *"Read-only property to return ..."*, a plain field access keeps
+     *"to access"*.
+   * Documentation coverage rose from 76.28 % to 80.97 %.
 
 .. topic:: `v8.18.0 - 30.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.18.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.Configuration`
 
@@ -166,28 +178,42 @@ Version 8.x (2025/2026)
 
      * :class:`~pyTooling.MetaClasses.ExtendedType` reports every field assigned in a class body without a type
        annotation, and rejects a slot shadowed by a class member.
-     * A :class:`~typing.ClassVar` without an initial value no longer becomes a slot.
-
-   * :mod:`pyTooling.Decorators`
-
-     * :deco:`~pyTooling.Decorators.readonly` is a class deriving from :class:`property`, and rejects
-       ``.setter`` and ``.deleter``. A property declared read-only could be made writable further down the class
-       body.
 
    * :mod:`pyTooling.Versioning`
 
      * :class:`~pyTooling.Versioning.CalendarVersion` accepts the same prefixes as
        :class:`~pyTooling.Versioning.SemanticVersion` and carries a third numeric part.
 
-   * Bug fixes
+   .. rubric:: Changes
 
-     * A missing configuration key raised :exc:`ValueError` from an unguarded ``int(key)`` conversion; a missing
-       numeric key and a ``null`` value raised an exception with an empty message.
+   * :mod:`pyTooling.Decorators`
+
+     * :deco:`~pyTooling.Decorators.readonly` is a class deriving from :class:`property`, and rejects ``.setter``
+       and ``.deleter``. A property declared read-only could be made writable further down the class body.
+
+   * :mod:`pyTooling.MetaClasses`
+
+     * A :class:`~typing.ClassVar` without an initial value no longer becomes a slot.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Configuration`
+
+     * A missing key raised :exc:`ValueError` from an unguarded ``int(key)`` conversion; a missing numeric key and
+       a ``null`` value raised an exception with an empty message.
+
+   * :mod:`pyTooling.MetaClasses`
+
      * The non-slots branch of ``_computeSlots`` had no :pep:`649` fallback, so it saw no annotations on
        Python 3.14.
+
+   * :mod:`pyTooling.Versioning`
+
      * ``YearMonthDayVersion`` dropped the day from ``__str__`` and ``__repr__``.
 
 .. topic:: `v8.17.0 - 20.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.17.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.Streaming`
 
@@ -199,9 +225,13 @@ Version 8.x (2025/2026)
 
 .. topic:: `v8.16.1 - 08.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.16.1>`__
 
+   .. rubric:: Bug Fixes
+
    * Reverted a wrong dependency upgrade. Same day as v8.16.0, which carries the features below.
 
 .. topic:: `v8.16.0 - 08.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.16.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.TerminalUI`
 
@@ -210,6 +240,8 @@ Version 8.x (2025/2026)
      * Added ``_GetLatestVersion``, showing whether a newer version is available.
 
 .. topic:: `v8.15.0 - 21.06.2026 <https://github.com/pyTooling/pyTooling/releases/v8.15.0>`__
+
+   .. rubric:: New Features
 
    * Notes can be attached to warnings raised through ``WarningCollector.Raise``.
    * Added read-only properties ``HasNotes`` and ``Notes`` to all exceptions, and the helper function
@@ -222,6 +254,8 @@ Version 8.x (2025/2026)
 
 .. topic:: `v8.14.0 - 21.03.2026 <https://github.com/pyTooling/pyTooling/releases/v8.14.0>`__
 
+   .. rubric:: New Features
+
    * :mod:`pyTooling.Filesystem`
 
      * Added method ``IterateDirectories``.
@@ -229,9 +263,16 @@ Version 8.x (2025/2026)
    * ``pyTooling.Filesystem.Docker``
 
      * Added ``EmptyDirectories``, ``EmptyDirectoryCount`` and ``WriteEmptyDirectoryFile``.
+
+   .. rubric:: Changes
+
+   * ``pyTooling.Filesystem.Docker``
+
      * ``WriteLayerFiles`` accepts an optional ``fileNamePattern``.
 
 .. topic:: `v8.13.0 - 19.03.2026 <https://github.com/pyTooling/pyTooling/releases/v8.13.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.Filesystem`
 
@@ -243,14 +284,25 @@ Version 8.x (2025/2026)
    * ``pyTooling.Filesystem.Docker`` is a new module computing file lists for Docker image layers, with ``Layer``
      and ``LayerCake``.
 
-   * ``WarningCollector.Raise`` accepts an optional ``cause`` parameter.
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.Warning`
+
+     * ``WarningCollector.Raise`` accepts an optional ``cause`` parameter.
 
 .. topic:: `v8.12.0 - 07.02.2026 <https://github.com/pyTooling/pyTooling/releases/v8.12.0>`__
 
+   .. rubric:: Changes
+
    * Removed bootstrap code (contributed by `@gtsiam <https://github.com/gtsiam>`__).
+
+   .. rubric:: Bug Fixes
+
    * Fixed a buffer overflow exception caused by ``__GetTerminalSizeOnLinux``.
 
 .. topic:: `v8.11.0 - 18.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.11.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.Platform`
 
@@ -259,29 +311,42 @@ Version 8.x (2025/2026)
 
 .. topic:: `v8.10.0 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.10.0>`__
 
+   .. rubric:: New Features
+
    * :mod:`pyTooling.CLIAbstraction`
 
      * Added ``Executable.Wait()``.
+
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.CLIAbstraction`
+
      * Reworked ``Executable.Terminate()`` and ``Executable.ExitCode``.
 
 .. topic:: `v8.9.1 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.9.1>`__
+
+   .. rubric:: Changes
 
    * Bumped copyright information.
 
 .. topic:: `v8.9.0 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.9.0>`__
 
+   .. rubric:: New Features
+
    * Added pickle support for all classes using the :class:`~pyTooling.MetaClasses.ExtendedType` metaclass with
      slots enabled.
    * :mod:`pyTooling.Tracing` is a new module for software execution tracing: a ``Trace`` is made of ``Span``\ s,
      each with optional ``Event``\ s.
-   * :mod:`pyTooling.Dependency` is a new module with a package dependency graph and a resolution algorithm, plus a
-     Python specific variant handling PyPI in ``pyTooling.Dependency.Python``.
+   * :mod:`pyTooling.Dependency` is a new module with a package dependency graph and a resolution algorithm, plus
+     a Python specific variant handling PyPI in ``pyTooling.Dependency.Python``.
 
-   * Bug fixes
+   .. rubric:: Bug Fixes
 
-     * Fixed the uninitialized field ``_nodesWithoutID`` in :class:`pyTooling.Tree.Node`.
+   * Fixed the uninitialized field ``_nodesWithoutID`` in :class:`pyTooling.Tree.Node`.
 
 .. topic:: `v8.8.0 - 10.11.2025 <https://github.com/pyTooling/pyTooling/releases/v8.8.0>`__
+
+   .. rubric:: New Features
 
    * Added support for critical warnings: a warning that is raised and not handled causes an exception.
 
@@ -289,40 +354,61 @@ Version 8.x (2025/2026)
        ``UnhandledExceptionException`` exceptions.
      * ``WarningCollector`` supports iteration, length and item indexing.
 
+   .. rubric:: Changes
+
    * Removed code specific to Python versions before 3.11.
 
-   * Bug fixes
+   .. rubric:: Bug Fixes
 
-     * Removed a wrong ``with_traceback`` overload from ``ExceptionBase``, which caused faults in pytest.
+   * Removed a wrong ``with_traceback`` overload from ``ExceptionBase``, which caused faults in pytest.
 
 .. topic:: `v8.7.6 - 28.10.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.6>`__
+
+   .. rubric:: New Features
 
    * Implemented ``__str__`` for :class:`~pyTooling.Packaging.VersionInformation`.
 
 .. topic:: `v8.7.5 - 27.10.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.5>`__
+
+   .. rubric:: Changes
 
    * Bumped dependencies.
    * Fixed a missing ``needs`` rule in the pipeline.
 
 .. topic:: `v8.7.4 - 19.10.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.4>`__
 
+   .. rubric:: Changes
+
    * Added Python 3.14 support to the wheel package, and dropped Python 3.9 and 3.10.
 
 .. topic:: `v8.7.3 - 21.09.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.3>`__
 
+   .. rubric:: New Features
+
    * Supports Python 3.14 (tested with 3.14rc2).
 
-     * Reworked accessing annotations in the metaclasses due to :pep:`649`.
-     * Worked around a packaging problem with :file:`py.typed`.
+   .. rubric:: Changes
 
    * ``WarningCollector`` uses thread local data, which improves performance and allows nested contexts.
 
+   .. rubric:: Bug Fixes
+
+   * Reworked accessing annotations in the metaclasses due to :pep:`649`.
+   * Worked around a packaging problem with :file:`py.typed`.
+
 .. topic:: `v8.7.2 - 04.09.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.2>`__
 
+   .. rubric:: Bug Fixes
+
    * Accept :exc:`Exception` instances as warnings (from the failed v8.7.1 release).
-   * Disabled Ubuntu ARM images in the pipeline due to instability at GitHub.
+
+   .. rubric:: CI Pipeline
+
+   * Disabled Ubuntu ARM images due to instability at GitHub.
 
 .. topic:: `v8.7.0 - 23.08.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.Versioning`
 
@@ -332,20 +418,27 @@ Version 8.x (2025/2026)
 
      * Added support for Linux AArch64 and Windows AArch64.
 
+   .. rubric:: Changes
+
    * Removed the experimental ``classproperty`` decorator - support was explicitly revoked by Python.
 
 .. topic:: `v8.6.0 - 12.08.2025 <https://github.com/pyTooling/pyTooling/releases/v8.6.0>`__
 
+   .. rubric:: New Features
+
    * :mod:`pyTooling.Versioning`
 
-     * Added the classes :class:`~pyTooling.Versioning.VersionRange` and
-       :class:`~pyTooling.Versioning.VersionSet`.
+     * Added the classes :class:`~pyTooling.Versioning.VersionRange` and :class:`~pyTooling.Versioning.VersionSet`.
 
 .. topic:: `v8.5.1 - 14.06.2025 <https://github.com/pyTooling/pyTooling/releases/v8.5.1>`__
+
+   .. rubric:: Bug Fixes
 
    * Fixed the instantiation of ``YearReleaseVersion`` from ``CalendarVersion.Parse``.
 
 .. topic:: `v8.5.0 - 31.05.2025 <https://github.com/pyTooling/pyTooling/releases/v8.5.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.Common`
 
@@ -355,6 +448,8 @@ Version 8.x (2025/2026)
 
      * New ``_PrintHeadline`` and ``_PrintVersion`` methods.
 
+   .. rubric:: Bug Fixes
+
    * :mod:`pyTooling.Packaging`
 
      * Fixed the directory (package) excludes: the exclude list is computed with :func:`os.scandir`, and any
@@ -362,6 +457,8 @@ Version 8.x (2025/2026)
        without notice.
 
 .. topic:: `v8.4.0 - 17.04.2025 <https://github.com/pyTooling/pyTooling/releases/v8.4.0>`__
+
+   .. rubric:: New Features
 
    * :mod:`pyTooling.LinkedList` is a new module: construct from an iterable, insert at either end or around a
      node, sort, reverse, iterate in both directions, and convert to a tuple or list.
