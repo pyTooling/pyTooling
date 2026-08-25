@@ -237,21 +237,21 @@ All of them except the ID reach the report as properties:
 Enabling the plugin
 ===================
 
-The collection itself is a pytest plugin, :mod:`pyTooling.Testing.PyTest`. It is **not** registered automatically -
-add it in the root :file:`conftest.py`
+The collection itself is a pytest plugin, :mod:`pyTooling.Testing.PyTest`. pyTooling declares it as a ``pytest11``
+entry point, so **an installed pyTooling registers it automatically** and a test suite only has to mark something.
 
-.. code-block:: python
+The plugin is inert until something is marked, so its presence changes nothing for a test suite that collects by
+name. Both styles work in one session and even in one file, which is what makes a gradual migration possible.
 
-   pytest_plugins = ["pyTooling.Testing.PyTest"]
-
-or pass it per run:
+Two cases still name it explicitly:
 
 .. code-block:: bash
 
-   pytest -p pyTooling.Testing.PyTest tests/unit
+   pytest -p pyTooling.Testing.PyTest tests/unit      # a checkout that is not installed
+   pytest -p no:pyTooling.Testing.PyTest tests/unit   # switch the plugin off
 
-The plugin is inert until something is marked, so enabling it changes nothing for a test suite that collects by
-name. Both styles work in one session and even in one file, which is what makes a gradual migration possible.
+The entry point's name **is** the module's name, so both spellings address the same plugin, and passing ``-p`` for
+an already registered plugin does nothing rather than registering it twice.
 
 .. _TESTING/Markers/Behavior:
 
@@ -296,12 +296,12 @@ description.
 **An item has one name.** :ref:`TESTING/Markers/Names` gives it four, and JUnit's only place for the other three is
 a flat ``<property name= value=>`` pair, whose value is an attribute and therefore a single line.
 
-:mod:`pyTooling.Testing.ReportWriter` writes a format that has both. It is opt-in and additional:
+:mod:`pyTooling.Testing.ReportWriter` writes a format that has both. It is a ``pytest11`` entry point as well, so
+it needs no registration either - only the switch that turns it on:
 
 .. code-block:: bash
 
-   pytest -p pyTooling.Testing.PyTest -p pyTooling.Testing.ReportWriter \
-          --pytooling-xml=report/unit/TestReport.xml --junit-xml=report/unit/unittest.xml
+   pytest --pytooling-xml=report/unit/TestReport.xml --junit-xml=report/unit/unittest.xml
 
 Both files are written in one session from the same reports, so a pipeline keeps the format its dashboard
 understands while the richer file is produced beside it.
@@ -339,16 +339,19 @@ The schema
 
 The schema lives in the resource package :mod:`pyTooling.Resources` and is shipped with the distribution.
 Every generated file points at it with ``xsi:noNamespaceSchemaLocation``, so a reader can validate without being
-told where it lives, and :func:`~pyTooling.Testing.ReportWriter.getSchemaFile` returns its path - read through
-:func:`~pyTooling.Common.getResourceFile`, so it is found whether pyTooling is installed, inside a wheel, or a
-checkout:
+told where it lives. :func:`~pyTooling.Common.getResourceFile` returns its path, whether pyTooling is installed,
+inside a wheel, or a checkout:
 
 .. code-block:: python
 
+   from pathlib                       import Path
    from xmlschema                     import XMLSchema
-   from pyTooling.Testing.ReportWriter import getSchemaFile
+   from pyTooling                     import Resources
+   from pyTooling.Common              import getResourceFile
+   from pyTooling.Testing.ReportWriter import SCHEMA_FILE
 
-   XMLSchema(getSchemaFile()).validate("report/unit/TestReport.xml")
+   schemaPath: Path = getResourceFile(Resources, SCHEMA_FILE)
+   XMLSchema(schemaPath).validate("report/unit/TestReport.xml")
 
 Validating needs an XML schema library such as `xmlschema <https://pypi.org/project/xmlschema/>`__. **pyTooling
 does not depend on one**: writing a report uses :mod:`xml.etree.ElementTree` from the standard library, so the

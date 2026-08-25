@@ -66,6 +66,12 @@ setup(
 			packageName[:-1] + "Common": ["../py.typed"],
 			packageName[:-1] + "Resources": ["*.xsd"]
 		},
+		pytestPlugins={
+			# The entry point's name is the module's name on purpose, so '-p <module>' finds the plugin already
+			# registered instead of importing and registering it a second time.
+			"pyTooling.Testing.PyTest":       "pyTooling.Testing.PyTest",
+			"pyTooling.Testing.ReportWriter": "pyTooling.Testing.ReportWriter",
+		},
 		debug=True
 	)
 )
