@@ -471,230 +471,476 @@ Version 8.x (2025/2026)
 
 .. topic:: `v8.3.0 - 16.03.2025 <https://github.com/pyTooling/pyTooling/releases/v8.3.0>`__
 
-   * New count function to count the number of elements in an iterator/generator.
-   * Added __setitem__ on pyTooling.CLIAbstraction.Environment.
-   * Added __delitem__ on pyTooling.CLIAbstraction.Environment.
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Common`
+
+     * New :func:`~pyTooling.Common.count` function counting the elements of an iterator or generator.
+
+   * :mod:`pyTooling.CLIAbstraction`
+
+     * Added ``__setitem__`` and ``__delitem__`` on ``Environment``.
+
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.CLIAbstraction`
+
+     * The initializer of ``Environment`` allows setting additional variables and deleting existing ones.
+
+   .. rubric:: Documentation
+
+   * Added the :mod:`pyTooling.Warning` documentation.
 
 .. topic:: `v8.2.0 - 23.02.2025 <https://github.com/pyTooling/pyTooling/releases/v8.2.0>`__
 
-   * Add WarningCollector to handle warnings similar to exceptions and send them along the call stack.
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Warning`
+
+     * Added ``WarningCollector`` to handle warnings like exceptions and send them along the call stack.
 
 .. topic:: `v8.1.0 - 25.01.2025 <https://github.com/pyTooling/pyTooling/releases/v8.1.0>`__
 
-   * Graph
+   .. rubric:: New Features
 
-     * Added methods HasVertexByID, HasVertexByValue.
-     * Added method GetVertexByValue.
+   * :mod:`pyTooling.Graph`
 
-   * Versioning
+     * Added the methods ``HasVertexByID``, ``HasVertexByValue`` and ``GetVertexByValue``.
 
-     * Version classes are now hashable.
-     * Added gamma release level.
+   * :mod:`pyTooling.Versioning`
 
-   * Stopwatch
+     * Version classes are hashable.
+     * Added the ``gamma`` release level.
 
-     * Added Exclude context manager
+   * ``pyTooling.Stopwatch``
+
+     * Added the ``Exclude`` context manager.
 
 .. topic:: `v8.0.3 - 17.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.3>`__
 
+   .. rubric:: Changes
+
    * :func:`~pyTooling.Common.getResourceFile` and :func:`~pyTooling.Common.readResourceFile` are unconditional in
      the package for Python 3.9+.
-   * Bug fixes
 
-     * README files, requirement files, GraphML files and JSON/YAML configurations are opened with UTF-8 encoding.
+   .. rubric:: Bug Fixes
+
+   * README files, requirement files, GraphML files and JSON/YAML configurations are opened with UTF-8 encoding.
 
 .. topic:: `v8.0.2 - 12.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.2>`__
 
-   * Bug fixes
+   .. rubric:: Bug Fixes
 
-     * :mod:`pyTooling.Versioning`: fixed the usage of a variable ``max`` that was unassigned and fell back to the
-       builtin function.
+   * :mod:`pyTooling.Versioning`
+
+     * Fixed the usage of a variable ``max`` that was unassigned and fell back to the builtin function.
 
 .. topic:: `v8.0.1 - 10.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.1>`__
 
-   * Bug fixes
+   .. rubric:: Bug Fixes
 
-     * Fixed the platform name for MSYS2/MinGW32 with Python 3.12.
+   * Fixed the platform name for MSYS2/MinGW32 with Python 3.12.
 
 .. topic:: `v8.0.0 - 09.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.0>`__
 
-   * Reworked semantic and calendar version classes:
+   .. rubric:: New Features
 
-     * Moved common implementations to Version base-type.
+   * Reworked the semantic and calendar version classes:
 
-       * Moved major, minor, micro, build, post, dev, release level, release number, hash, prefix, postfix parts to the base-type.
-       * Moved implementations of comparison operators to the base-type: __eq__, __ne__, __lt__, __le__, __gt__, __ge__.
-       * Implemented minimum comparison operator using __rshift__ (>>) for PIP's ~= operator.
-       * Implemented a formatting helper method _format.
+     * Moved the common implementations to the ``Version`` base-type - the major, minor, micro, build, post, dev,
+       release level, release number, hash, prefix and postfix parts, and the comparison operators.
+     * Implemented the minimum comparison operator using ``__rshift__`` (``>>``) for PIP's ``~=`` operator.
+     * Reworked :class:`~pyTooling.Versioning.SemanticVersion`: comparisons with strings and integers,
+       and a ``Parse()`` class-method that uses a regular expression and raises on invalid input.
+     * Implemented :class:`~pyTooling.Versioning.CalendarVersion`, previously a dummy, including its comparison
+       operators and its ``Parse()`` class-method.
+     * Added the validator classes ``WordSizeValidator`` and ``MaxValueValidator``.
+     * ``__str__()`` returns only the used version parts, and ``__format__()`` accepts a user defined format
+       specification.
 
-     * Reworked SemanticVersion.
+   .. rubric:: Breaking Changes
 
-       * Additionally allow comparisons with string and integer types.
-       * Enhanced SemanticVersion.Parse() class-method:
+   * Renamed ``SemanticVersion.Patch`` to :attr:`~pyTooling.Versioning.SemanticVersion.Micro`. ``Patch`` remains as
+     an alias.
+   * Moved ``pyTooling.Platform.PythonVersion`` to :class:`pyTooling.Versioning.PythonVersion`.
+   * An instance of the internally used ``PythonVersion`` is created with the class-method
+     ``PythonVersion.FromSysVersionInfo()``, because its constructor was buggy.
 
-         * Raise exceptions on invalid inputs.
-         * Use a regular expression to check and split the input.
+   .. rubric:: Bug Fixes
 
-     * Implemented CalendarVersion (previously a dummy).
+   * Added support for Python 3.12 on MSYS2 environments (MinGW64, UCRT64, Clang64).
 
-       * Added CalendarVersion.Parse() class-method: raise exceptions on invalid inputs.
-       * Implemented comparison operators.
+   .. rubric:: Documentation
 
-     * Added validator classes WordSizeValidator and MaxValueValidator.
-     * Added doc-strings.
-     * Improved __str__() method to return only used version parts.
-     * Added __format__() for user defined formatting specifications.
+   * Added doc-strings to all version classes, and improved the versioning and stopwatch pages.
 
 Version 7.x (2024)
 ******************
 
 .. topic:: `v7.0.0 - 27.10.2024 <https://github.com/pyTooling/pyTooling/releases/v7.0.0>`__
 
-   * Added support for Python 3.13 (and dropped 3.8).
+   .. rubric:: New Features
 
-     * Changed DEFAULT_PY_VERSIONS in pyTooling.Packaging to 3.9...3.13.
+   * Added support for Python 3.13 and dropped 3.8, which changes ``DEFAULT_PY_VERSIONS`` in
+     :mod:`pyTooling.Packaging` to 3.9...3.13.
+   * :deco:`~pyTooling.Decorators.InheritDocString` can be applied to classes too.
 
-   * Reworked faulty Timer class and renamed it to StopWatch.
+   .. rubric:: Breaking Changes
 
-     * Support start, pause, resume, split and stop operations.
-     * Collect active and inactive split times.
-     * Accept a name at instantiation.
-     * Take absolute time at start and stop via datetime.now().
-     * Can be used in a with-statement.
-
-   * @InheritDocString can be applied to classes too.
+   * The faulty ``Timer`` class was reworked and renamed: ``pyTooling.Timer.Timer`` is
+     ``pyTooling.Stopwatch.Stopwatch``. It supports start, pause, resume, split and stop, collects active and
+     inactive split times, accepts a name, takes the absolute time via :meth:`~datetime.datetime.now`, and can be
+     used in a ``with``-statement.
 
 Version 6.x (2024)
 ******************
 
 .. topic:: `v6.7.0 - 29.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.7.0>`__
 
+   .. rubric:: New Features
+
    * :mod:`pyTooling.TerminalUI`
 
-     * Added TerminalApplication.WriteCritical
-     * Added TerminalApplication.ExitOnPreviousCriticalWarnings
+     * Added ``TerminalApplication.WriteCritical()`` and ``TerminalApplication.ExitOnPreviousCriticalWarnings()``.
+
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.Attributes`
+
+     * A ``ValuedFlag`` may be optional.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Platform`
+
+     * Distinguish macOS for Intel (x86-64) from macOS for ARM (aarch64).
+
+.. topic:: `v6.6.2 - 22.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.6.2>`__
+
+   .. rubric:: Bug Fixes
+
+   * Fixed some coding style issues.
+
+.. topic:: `v6.6.1 - 22.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.6.1>`__
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.TerminalUI`
+
+     * ``TerminalBaseApplication.GetTerminalSize``: added the missing check for FreeBSD (provided by
+       `@yurivict <https://github.com/yurivict>`__).
+
+   .. rubric:: CI Pipeline
+
+   * Split the pipeline into a main pipeline, a benchmark pipeline and a performance pipeline.
 
 .. topic:: `v6.6.0 - 18.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.6.0>`__
 
+   .. rubric:: New Features
+
    * :mod:`pyTooling.Graph`
 
-     * Allow setting key-value-pairs for a graph when creating a new graph.
-     * Allow setting key-value-pairs for vertices when creating a new vertex.
-     * Allow setting key-value-pairs for edges when creating a new edge.
-     * Allow setting key-value-pairs for links when creating a new link.
+     * Key-value-pairs can be set when creating a graph, a vertex, an edge or a link.
 
    * :mod:`pyTooling.Packaging`
 
-     * :func:`~pyTooling.Packaging.loadReadmeFile` now supports new content formats:
-
-       * plain text
-       * ReStructured Text
+     * :func:`~pyTooling.Packaging.loadReadmeFile` supports plain text and ReStructured Text.
 
    * :mod:`pyTooling.Platform`
 
      * Added :attr:`~pyTooling.Platform.Platform.StaticLibraryExtension`.
 
-.. topic:: `v6.5.0 - 15.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.5.0>`__
-
-   * :mod:`pyTooling.GenericPath`
-
-     * :class:`pyTooling.GenericPath.URL.URL`:
-
-       * Added support for basic authentication credentials (username and password).
-       * Added :meth:`pyTooling.GenericPath.URL.URL.WithoutCredentials` method.
-
-.. topic:: `v6.4.0 - 04.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.4.0>`__
+   .. rubric:: Breaking Changes
 
    * :mod:`pyTooling.Platform`
 
-     * Added readonly property :attr:`~pyTooling.Platform.Platform.IsNativeFreeBSD` to class Platform.
+     * Renamed ``Platform.SharedLibraryExtension`` to
+       :attr:`~pyTooling.Platform.Platform.DynamicLibraryExtension`.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Packaging`
+
+     * :func:`~pyTooling.Packaging.DescribePythonPackageHostedOnGitHub` created false URLs when a package name
+       contained ``.*`` for the root namespace package.
+
+   * :mod:`pyTooling.Platform`
+
+     * Fixed the extension returned by ``SharedLibraryExtension`` for macOS.
+
+.. topic:: `v6.5.1 - 15.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.5.1>`__
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.GenericPath`
+
+     * Fixed the formatting in ``URL.__str__()`` when the URL has no query part.
+
+.. topic:: `v6.5.0 - 15.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.5.0>`__
+
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.GenericPath`
+
+     * :class:`pyTooling.GenericPath.URL.URL` supports basic authentication credentials (username and password),
+       with a ``WithoutCredentials()`` method.
+
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.GenericPath`
+
+     * Added parameter checks and doc-strings, improved the regular expression validating and parsing a URL, and
+       ``URL.Parse()`` raises a :exc:`~pyTooling.Exceptions.ToolingException` when it doesn't match.
+
+   * :mod:`pyTooling.Packaging`
+
+     * Improved the error message of :func:`~pyTooling.Packaging.loadRequirementsFile` when the file isn't found.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.GenericPath`
+
+     * Fixed the regular expression parsing a URL.
+
+.. topic:: `v6.4.0 - 04.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.4.0>`__
+
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Platform`
+
+     * Added the read-only property :attr:`~pyTooling.Platform.Platform.IsNativeFreeBSD`.
+
+   .. rubric:: Breaking Changes
+
+   * :mod:`pyTooling.Platform`
+
+     * Renamed ``Platforms.OS_BSD`` to ``Platforms.OS_FreeBSD``.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Platform`
+
+     * Fixed ``ExecutableExtension``, ``SharedLibraryExtension`` and ``__str__`` for FreeBSD.
 
 .. topic:: `v6.3.0 - 02.06.2024 <https://github.com/pyTooling/pyTooling/releases/v6.3.0>`__
 
+   .. rubric:: New Features
+
    * :mod:`pyTooling.Tree`
 
-     * Accept a custom formatting function per node to return a one-liner representation of a node for tree rendering.
-     * Accept a key-value-pair mapping (dictionary) for nodes in a tree in the initializer.
+     * Accept a custom formatting function per node, returning a one-liner representation for tree rendering.
+     * Accept a key-value-pair mapping for a node in the initializer.
 
    * :mod:`pyTooling.Graph`
 
-     * Accept a key-value-pair mapping (dictionary) for all data structures (graph, edges, links, vertices, views, ...) in a graph in their initializers.
+     * Accept a key-value-pair mapping in the initializer of every data structure - graph, edge, link, vertex,
+       view.
+
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.Tree`
+
+     * The default ASCII characters for tree rendering are more compact.
 
 .. topic:: `v6.2.0 - 30.05.2024 <https://github.com/pyTooling/pyTooling/releases/v6.2.0>`__
 
+   .. rubric:: New Features
+
    * :mod:`pyTooling.Common`
 
-     * New helper function :func:`pyTooling.Common.getFullyQualifiedName`.
-     * Python 3.8+: New helper functions :func:`pyTooling.Common.getResourceFile` and :func:`pyTooling.Common.readResourceFile`.
-     * Python 3.11+: In case of :class:`TypeError` add a note to the exception describing the parameter/member type.
+     * New helper function :func:`~pyTooling.Common.getFullyQualifiedName`.
+     * New helper functions :func:`~pyTooling.Common.getResourceFile` and
+       :func:`~pyTooling.Common.readResourceFile` (Python 3.8+).
+     * A :exc:`TypeError` carries a note describing the parameter or member type (Python 3.11+).
+
+   .. rubric:: Breaking Changes
+
+   * ``CurrentPlatform`` moved from :mod:`pyTooling.Common` to :mod:`pyTooling.Platform`, because of import
+     cycles.
+
+   .. rubric:: Bug Fixes
+
+   * Some functions raised a :exc:`TypeError` when ``None`` was passed; they raise a :exc:`ValueError` now.
 
 .. topic:: `v6.1.0 - 09.04.2024 <https://github.com/pyTooling/pyTooling/releases/v6.1.0>`__
 
-   .. #empty
+   .. rubric:: Breaking Changes
+
+   * :mod:`pyTooling.Versioning`
+
+     * Removed the method overloads, whose semantics were unclear. The
+       :class:`~pyTooling.Versioning.SemanticVersion` constructor is split into ``__init__(major, minor, patch=0,
+       build=0, flags=Flags.Clean)`` and the ``Parse(versionString)`` class-method.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Attributes`
+
+     * Fixed the search for methods with attributes in multiple inheritance scenarios.
+
+.. topic:: `v6.0.1 - 16.01.2024 <https://github.com/pyTooling/pyTooling/releases/v6.0.1>`__
+
+   .. rubric:: Bug Fixes
+
+   * Implemented the bootstrap feature in all modules.
 
 .. topic:: `v6.0.0 - 14.01.2024 <https://github.com/pyTooling/pyTooling/releases/v6.0.0>`__
 
-   * Integrated ``pyAttributes`` v2.5.1 as :mod:`pyTooling.Attributes`.
-   * Integrated :mod:`pyTooling.CLIAbstraction` v0.4.1.
+   .. rubric:: New Features
+
+   * Integrated the package ``pyAttributes`` v2.5.9 as :mod:`pyTooling.Attributes`.
+
+     * The ``AttributeHelperMixin`` mixin-class is replaced by the meta-class features of
+       :class:`~pyTooling.MetaClasses.ExtendedType`.
+     * :mod:`pyTooling.Attributes.ArgParse` was completely reworked.
+
+   * Integrated the namespace package :mod:`pyTooling.CLIAbstraction` v0.4.1, to minimize maintenance efforts.
+   * :mod:`pyTooling.Common`
+
+     * Implemented :func:`~pyTooling.Common.firstElement` and :func:`~pyTooling.Common.lastElement`, and
+       :func:`~pyTooling.Common.firstItem` and :func:`~pyTooling.Common.lastItem`.
+     * Added ``bind`` to bind a normal function as a method.
+
+   * :mod:`pyTooling.Platform`
+
+     * Added *Cygwin*.
+
+   * :mod:`pyTooling.TerminalUI`
+
+     * Added support for an issue tracker URL.
+
+   .. rubric:: Breaking Changes
+
+   * Renamed ``SemVersion`` to :class:`~pyTooling.Versioning.SemanticVersion` and ``CalVersion`` to
+     :class:`~pyTooling.Versioning.CalendarVersion`.
+   * Renamed ``firstItem`` to :func:`~pyTooling.Common.firstPair`.
+   * Removed the Python 3.7 code and its workarounds.
+
+   .. rubric:: Changes
+
+   * A read-only property uses the :deco:`~pyTooling.Decorators.readonly` decorator instead of
+     :class:`property`.
+   * Improved exception printing, exception messages and type hints.
+
+   .. rubric:: Documentation
+
+   * Switched from the BuildTheDocs theme to the ReadTheDocs theme, and added tabs and grids via
+     ``sphinx-design`` - a description beside its example code, and tabs to switch between Linux and Windows or
+     JSON, YAML and XML.
+   * Integrated the documentation of ``pyAttributes`` and of :mod:`pyTooling.CLIAbstraction`.
+   * Added the *News* chapter.
 
 Version 5.x (2023)
 ******************
 
 .. topic:: `v5.0.0 - 02.07.2023 <https://github.com/pyTooling/pyTooling/releases/v5.0.0>`__
 
-   * New ``ExtendedType`` features:
+   .. rubric:: New Features
 
-     * Added support for mixin-classes and delayed creation of slots.
-     * Added automatic initializers for annotated fields (previously causing an exception due to slots).
-     * Added automatic initializers for annotated class fields (previously causing an exception due to slots).
+   * :mod:`pyTooling.MetaClasses`
 
-   * Added new decorators: ``@slotted``, ``@mixin``, ``@singleton``, ``@readonly``, and ``@notimplemented``.
+     * :class:`~pyTooling.MetaClasses.ExtendedType` supports mixin-classes and the delayed creation of slots, and
+       generates initializers for annotated fields and annotated class fields, which previously raised because of
+       slots (contributed by `@skoehler <https://github.com/skoehler>`__).
+     * New exceptions: ``ExtendedTypeError``, ``BaseClassWithoutSlotsError``, ``BaseClassWithNonEmptySlotsError``,
+       ``BaseClassIsNotAMixinError`` and :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`.
 
-   * Added JSON support for ``pyTooling.Configuration``.
-   * New ``Platform`` features:
+   * :mod:`pyTooling.Decorators`
 
-     * Added ``PythonVersion`` to ``Platform`` to distinguish Python versions.
-     * Added ``PythonImplementation`` to ``Platform`` to distinguish CPython and PyPy.
+     * Added the decorators :deco:`~pyTooling.MetaClasses.slotted`, :deco:`~pyTooling.MetaClasses.mixin`,
+       :deco:`~pyTooling.MetaClasses.singleton`, :deco:`~pyTooling.Decorators.readonly` and
+       :deco:`~pyTooling.Decorators.notimplemented`.
 
-   * New graph features:
+   * :mod:`pyTooling.Configuration`
 
-     * ``GetVertexByID``
-     * ``GetVertexByValue``
-     * New vertex operations: ``IterateAllOutboundPathsAsVertexList``, ``Delete`` (itself), ``DeleteEdgeTo``, ``DeleteEdgeFrom``, ``DeleteLinkTo``, ``DeleteLinkFrom``.
-     * New edge operations: ``Delete`` (itself)
-     * New link operations: ``Delete`` (itself)
+     * Added JSON support.
 
-   * ``pyToolong.StateMachine`` package (alpha version).
+   * :mod:`pyTooling.Platform`
+
+     * Added ``PythonVersion`` and ``PythonImplementation`` to distinguish Python versions, and CPython from PyPy.
+
+   * :mod:`pyTooling.Graph`
+
+     * Added ``GetVertexByID`` and ``GetVertexByValue``, the vertex operations
+       ``IterateAllOutboundPathsAsVertexList``, ``Delete``, ``DeleteEdgeTo``, ``DeleteEdgeFrom``, ``DeleteLinkTo``
+       and ``DeleteLinkFrom``, and ``Delete`` on an edge and on a link.
+
+   * ``pyTooling.StateMachine`` is a new package (alpha).
+
+   .. rubric:: Breaking Changes
+
+   * :class:`~pyTooling.MetaClasses.ExtendedType`: renamed ``useSlots`` to ``slots``.
+   * Renamed ``ObjectWithSlots`` to ``SlottedObject``, ``SemVersion`` to
+     :class:`~pyTooling.Versioning.SemanticVersion` and ``CalVersion`` to
+     :class:`~pyTooling.Versioning.CalendarVersion`.
+   * Moved ``AbstractClassError`` and ``MustOverrideClassError`` from :mod:`pyTooling.Exceptions` to
+     :mod:`pyTooling.MetaClasses`, and the module ``pyTooling.Common.Platform`` to :mod:`pyTooling.Platform`.
+
+   .. rubric:: Changes
+
+   * :class:`~pyTooling.MetaClasses.ExtendedType` supports multiple inheritance and mixins with deferred slots
+     (contributed by `@skoehler <https://github.com/skoehler>`__).
+   * Improved the performance of :func:`~pyTooling.Common.mergedicts` by 10x, and the error handling in
+     :func:`~pyTooling.Common.mergedicts` and :func:`~pyTooling.Common.zipdicts`.
+
+   .. rubric:: Bug Fixes
+
+   * Reworked :class:`~pyTooling.MetaClasses.ExtendedType` for slots in multiple inheritance scenarios, and the
+     internal inheritance graphs, which fixes :mod:`pyTooling.Configuration`, ``pyTooling.GraphML`` and
+     :mod:`pyTooling.TerminalUI` (contributed by `@skoehler <https://github.com/skoehler>`__).
 
 Version 4.x (2023)
 ******************
 
 .. topic:: `v4.0.1 - 26.03.2023 <https://github.com/pyTooling/pyTooling/releases/v4.0.1>`__
 
-   * Graphs are now supporting subgraphs and exporting subgraphs to GraphML.
+   .. rubric:: Changes
 
-     * New ``SubGraph`` class.
-     * New ``Link`` class.
-     * New ``View`` class.
+   * Republished the package to PyPI. Same day as v4.0.0, which carries the changes below.
 
-   * Added ``Vertex.Link***Vertex`` methods to link vertices from disjunctive subgraphs.
-   * Added ``Vertex.HasLink***Vertex`` methods check if two vertices from disjunctive subgraphs are connected.
-   * Added ``Vertex.Iterate***boundLinks`` to iterate links.
-   * Added ``Graph.IterateLinks`` to iterate all links.
-   * Added ``Graph.ReverseLinks``, ``Graph.RemoveLinks``.
-   * Applied generic types when deriving from subclasses.
-   * Added ``in`` operator for key-value
+.. topic:: `v4.0.0 - 26.03.2023 <https://github.com/pyTooling/pyTooling/releases/v4.0.0>`__
+
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Graph`
+
+     * Graphs support subgraphs, and export them to GraphML: the new classes ``SubGraph``, ``Link`` and ``View``.
+     * Added ``Vertex.Link***Vertex`` to link vertices from disjunctive subgraphs, ``Vertex.HasLink***Vertex`` to
+       check whether two such vertices are connected, and ``Vertex.Iterate***boundLinks``.
+     * Added ``Graph.IterateLinks``, ``Graph.ReverseLinks`` and ``Graph.RemoveLinks``.
+     * Added the ``in`` operator for key-value-pairs.
+
+   .. rubric:: Breaking Changes
+
+   * :mod:`pyTooling.Graph`
+
+     * Renamed the ``Link***Vertex`` methods to ``Edge***Vertex`` and the ``HasLink***Vertex`` methods to
+       ``HasEdge***Vertex``.
+     * Added more generic type variables to the graph classes.
+     * Commented out the unimplemented methods, among them ``PathExistsTo``, ``IterateBFS``, ``IterateDFS``,
+       ``IterateTopologically`` and ``MinimumSpanningTree``.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Graph`
+
+     * Fixed the ``Component`` class and the references to components.
 
 Version 3.x (2023)
 ******************
 
 .. topic:: `v3.0.0 - 10.03.2023 <https://github.com/pyTooling/pyTooling/releases/v3.0.0>`__
 
-   * Integrated :mod:`pyTooling.TerminalUI`.
+   .. rubric:: New Features
+
+   * A data model for GraphML - graph, node, edge, key, data and subgraph - and a conversion to GraphML XML files
+     from pyTooling's graph and tree data structures.
    * Support for FreeBSD in ``Platform``.
-   * A data model for GraphML (graph, node, edge, key, data and subgraph).
-   * A conversion from pyTooling's graph data structure to GraphML XML files.
-   * A conversion from pyTooling's tree data structure to GraphML XML files.
+
+   .. rubric:: Breaking Changes
+
+   * Integrated :mod:`pyTooling.TerminalUI` into pyTooling. This is a breaking change, because the two packages
+     overlap in one directory.
 
 Jan. 2023 - Graph enhancements
 ******************************
