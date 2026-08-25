@@ -274,6 +274,50 @@ User-defined
   If any of the above was added, an additional extra requirement called ``all`` will be added, summarizing all
   extra requirements.
 
+.. _PACKAGING/Descriptions/License:
+
+Handling of the license
+=======================
+
+A package states its license as an **SPDX expression** in the ``license`` field, taken from the ``license``
+parameter's :attr:`~pyTooling.Licensing.License.SPDXIdentifier`:
+
+.. code-block:: Python
+
+   license=Apache_2_0_License      # -> license = "Apache-2.0"
+
+A ``License ::`` classifier passed through the ``classifiers`` parameter is **kept** - it is the caller's
+statement, not this function's, and dropping it silently would hide what they wrote - but it is reported in the
+``setup.py`` output, where the rest of this function's messages go:
+
+.. code-block:: text
+
+   [pyTooling.Packaging] License classifiers are deprecated: 'License :: OSI Approved :: MIT License'.
+   [pyTooling.Packaging]   Remove them; the 'license' parameter becomes the SPDX expression setuptools wants.
+
+.. note::
+
+   A bare license identifier **is** an SPDX expression - the simplest one the grammar allows. What cannot be
+   expressed is a **compound** expression like ``MIT OR Apache-2.0`` or
+   ``GPL-2.0-or-later WITH Classpath-exception-2.0``, because a :class:`~pyTooling.Licensing.License` carries one
+   identifier. A package under more than one license passes the expression as a string to ``setuptools.setup()``
+   itself.
+
+.. seealso::
+
+   :pep:`639`
+      |rarr| Improving license clarity with SPDX license expressions - what the ``license`` field means and why the
+      classifiers were deprecated.
+   `SPDX license expressions <https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/>`__
+      |rarr| The grammar: a simple expression is a license identifier, and ``AND``, ``OR`` and ``WITH`` combine
+      them.
+   `SPDX license list <https://spdx.org/licenses/>`__
+      |rarr| The identifiers themselves. :data:`~pyTooling.Licensing.SPDX_INDEX` holds the ones pyTooling
+      predefines.
+
+:attr:`~pyTooling.Licensing.License.PythonClassifier` remains available for a caller that needs the classifier for
+something else.
+
 Handling of keywords
 ====================
 
