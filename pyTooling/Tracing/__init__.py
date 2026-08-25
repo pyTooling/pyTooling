@@ -37,30 +37,224 @@ Tools for software execution tracing.
       |rarr| A single measurement instead of nested timespans.
    :mod:`pyTooling.Tree`
       |rarr| The tree data structure spans and their sub-spans form.
+
+.. hint::
+
+   See :ref:`high-level help <TRACING>` for explanations and usage examples.
 """
 from __future__            import annotations
 
+from base64                import b64encode
 from datetime              import datetime
+from json                  import dumps as json_dumps
+from pathlib               import Path
+from secrets               import randbits
 from time                  import perf_counter_ns
 from threading             import local
 from types                 import TracebackType
-from typing                import Optional as Nullable, Iterator, Self, Iterable, Any
+from typing                import Optional as Nullable, Iterator, Self, Iterable, TypedDict, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.Common      import __version__, getFullyQualifiedName
 
 
-__all__ = ["_threadLocalData"]
+__all__ = ["_threadLocalData", "OTLP_SCOPE_NAME"]
+
+OTLP_SCOPE_NAME = "pyTooling.Tracing"
+"""The instrumentation scope every exported span is reported under."""
 
 _threadLocalData = local()
 """A reference to the thread local data needed by the pyTooling.Tracing classes."""
+
+AttributeValue = Union[
+	bool, int, float, str, bytes,
+	list["AttributeValue"], tuple["AttributeValue", ...], dict[str, "AttributeValue"]
+]
+"""
+A value that can be attached to a trace, a span or an event as an attribute.
+
+These are the types OTLP's ``AnyValue`` can carry, and nothing else - a value of any other type is rejected rather
+than stringified, because a silent ``str(value)`` puts a Python ``repr`` into a document a backend then indexes.
+"""
+
+_MAXIMUM_IDENTIFIER_ATTEMPTS = 4
+"""Number of attempts to draw a non-zero random identifier before giving up."""
 
 
 @export
 class TracingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
+
+
+@export
+class OTLPArrayValue(TypedDict):
+	"""OTLP's ``ArrayValue``: a list of values, as it is nested inside an :class:`OTLPAnyValue`."""
+
+	values: list[OTLPAnyValue]  #: The elements of the array.
+
+
+@export
+class OTLPKeyValueList(TypedDict):
+	"""OTLP's ``KeyValueList``: a mapping of values, as it is nested inside an :class:`OTLPAnyValue`."""
+
+	values: list[OTLPAttribute]  #: The entries of the mapping.
+
+
+@export
+class OTLPAnyValue(TypedDict, total=False):
+	"""
+	OTLP's ``AnyValue``: a value of any supported type, carried in a mapping of exactly one key.
+
+	The key names the type of the value. A 64-bit integer travels as a decimal **string**, because a JSON number can't
+	carry 64 bits exactly. That is proto3's JSON mapping rather than a quirk of OTLP.
+	"""
+
+	boolValue:   bool              #: A boolean value.
+	intValue:    str               #: A 64-bit integer, encoded as a decimal string.
+	doubleValue: float             #: A floating-point value.
+	stringValue: str               #: A string value.
+	bytesValue:  str               #: A byte string, encoded as base64 - this field is ``bytes`` in proto3.
+	arrayValue:  OTLPArrayValue    #: A list of values.
+	kvlistValue: OTLPKeyValueList  #: A mapping of values.
+
+
+@export
+class OTLPAttribute(TypedDict):
+	"""OTLP's ``KeyValue``: a single attribute of a resource, a span or an event."""
+
+	key:   str           #: Name of the attribute.
+	value: OTLPAnyValue  #: Value of the attribute.
+
+
+@export
+class OTLPEvent(TypedDict, total=False):
+	"""OTLP's ``Span.Event``: a named point in time within a span."""
+
+	name:         str                  #: Name of the event.
+	timeUnixNano: str                  #: Time of the event in nanoseconds since the Unix epoch, as a decimal string.
+	attributes:   list[OTLPAttribute]  #: Attributes attached to the event.
+
+
+@export
+class OTLPSpan(TypedDict, total=False):
+	"""
+	OTLP's ``Span``: a single timespan of a trace.
+
+	OTLP doesn't nest spans, so the enclosing span is referenced by :attr:`parentSpanId` instead of containing this one.
+	"""
+
+	traceId:           str                  #: Identifier shared by every span of the trace, as 32 hex digits.
+	spanId:            str                  #: Identifier of this span, as 16 hex digits.
+	parentSpanId:      str                  #: Identifier of the enclosing span, absent for the trace's own span.
+	name:              str                  #: Name of the span.
+	kind:              int                  #: Kind of the span - always ``1`` (``SPAN_KIND_INTERNAL``) here.
+	startTimeUnixNano: str                  #: Start in nanoseconds since the Unix epoch, as a decimal string.
+	endTimeUnixNano:   str                  #: End in nanoseconds since the Unix epoch, as a decimal string.
+	attributes:        list[OTLPAttribute]  #: Attributes attached to the span.
+	events:            list[OTLPEvent]      #: Events that happened within the span.
+
+
+@export
+class OTLPScope(TypedDict):
+	"""OTLP's ``InstrumentationScope``: the library the spans were produced by."""
+
+	name:    str  #: Name of the instrumentation scope.
+	version: str  #: Version of the instrumentation scope.
+
+
+@export
+class OTLPScopeSpans(TypedDict):
+	"""OTLP's ``ScopeSpans``: the spans produced by one instrumentation scope."""
+
+	scope: OTLPScope       #: The instrumentation scope the spans were produced by.
+	spans: list[OTLPSpan]  #: The spans, flattened.
+
+
+@export
+class OTLPResource(TypedDict):
+	"""OTLP's ``Resource``: the entity the spans were produced by."""
+
+	attributes: list[OTLPAttribute]  #: Attributes describing the resource, e.g. ``service.name``.
+
+
+@export
+class OTLPResourceSpans(TypedDict):
+	"""OTLP's ``ResourceSpans``: the spans produced by one resource."""
+
+	resource:   OTLPResource          #: The resource the spans were produced by.
+	scopeSpans: list[OTLPScopeSpans]  #: The spans, grouped by instrumentation scope.
+
+
+@export
+class OTLPDocument(TypedDict):
+	"""OTLP's ``TracesData``: the root of an OTLP/JSON document."""
+
+	resourceSpans: list[OTLPResourceSpans]  #: The spans, grouped by resource.
+
+
+def _toAttributeValue(value: AttributeValue) -> OTLPAnyValue:
+	"""
+	Wrap a Python value in OTLP's ``AnyValue`` representation.
+
+	Supported are :class:`bool`, :class:`int`, :class:`float`, :class:`str`, :class:`bytes`, and a :class:`list`,
+	:class:`tuple` or :class:`dict` of these - see :data:`AttributeValue`.
+
+	:param value:         The value to wrap.
+	:returns:             The value, wrapped in the one-key mapping OTLP expects for its type.
+	:raises TracingError: If the value is of a type OTLP's ``AnyValue`` can't carry.
+	"""
+	# a bool is an int in Python, so it has to be recognized first
+	if isinstance(value, bool):
+		return {"boolValue": value}
+	elif isinstance(value, int):
+		return {"intValue": str(value)}
+	elif isinstance(value, float):
+		return {"doubleValue": value}
+	elif isinstance(value, str):
+		return {"stringValue": value}
+	elif isinstance(value, (bytes, bytearray)):
+		return {"bytesValue": b64encode(value).decode("ascii")}
+	elif isinstance(value, (list, tuple)):
+		return {"arrayValue": {"values": [_toAttributeValue(element) for element in value]}}
+	elif isinstance(value, dict):
+		return {"kvlistValue": {"values": _toAttributes(value.items())}}
+
+	ex = TracingError(f"Attribute value of type '{getFullyQualifiedName(value)}' can't be represented in OTLP.")
+	ex.add_note("Supported are: bool, int, float, str, bytes, and a list, tuple or dict of these.")
+	raise ex
+
+
+def _toAttributes(attributes: Iterable[tuple[str, AttributeValue]]) -> list[OTLPAttribute]:
+	"""
+	Convert key-value pairs to OTLP's list of attributes.
+
+	:param attributes:    The key-value pairs to convert.
+	:returns:             One ``{"key": ..., "value": ...}`` mapping per pair.
+	:raises TracingError: If a value is of a type OTLP's ``AnyValue`` can't carry.
+	"""
+	return [{"key": key, "value": _toAttributeValue(value)} for key, value in attributes]
+
+
+def _newIdentifier(bits: int) -> str:
+	"""
+	Generate a random trace or span identifier.
+
+	OTLP/JSON encodes both as **hex** rather than base64, which is where it deviates from proto3's JSON mapping. An
+	all-zero identifier is invalid, so it is drawn again in that case.
+
+	:param bits:          Width of the identifier: 128 for a trace, 64 for a span.
+	:returns:             The identifier as a lower-case hex string.
+	:raises TracingError: If no non-zero identifier was drawn within :data:`_MAXIMUM_IDENTIFIER_ATTEMPTS` attempts.
+	"""
+	for _ in range(_MAXIMUM_IDENTIFIER_ATTEMPTS):
+		if (identifier := randbits(bits)) != 0:
+			return f"{identifier:0{bits // 4}x}"
+	else:
+		ex = TracingError(f"Couldn't draw a non-zero {bits}-bit random identifier.")
+		ex.add_note(f"Tried {_MAXIMUM_IDENTIFIER_ATTEMPTS} times.")
+		raise ex
 
 
 @export
@@ -72,15 +266,15 @@ class Event(metaclass=ExtendedType, slots=True):
 	"""
 	_name:      str                 #: Name of the event.
 	_parent:    Nullable[Span]      #: Reference to the parent span.
-	_time:      Nullable[datetime]  #: Timestamp of the event.
-	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
+	_time:      datetime            #: Timestamp of the event.
+	_dict:      dict[str, AttributeValue]  #: Dictionary of associated attributes.
 
 	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable[Span] = None) -> None:
 		"""
 		Initializes a named event.
 
 		:param name:        The name of the event.
-		:param time:        Optional, time when the event happened.
+		:param time:        Optional, time when the event happened. Default: the current system time.
 		:param parent:      Optional, reference to the parent span.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
@@ -96,7 +290,7 @@ class Event(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if time is None:
-			self._time = None
+			self._time = datetime.now()
 		elif isinstance(time, datetime):
 			self._time = time
 		else:
@@ -143,7 +337,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		return self._parent
 
-	def __getitem__(self, key: str) -> Any:
+	def __getitem__(self, key: str) -> AttributeValue:
 		"""
 		Read an event's attached attributes (key-value-pairs) by key.
 
@@ -152,7 +346,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		return self._dict[key]
 
-	def __setitem__(self, key: str, value: Any) -> None:
+	def __setitem__(self, key: str, value: AttributeValue) -> None:
 		"""
 		Create or update an event's attached attributes (key-value-pairs) by key.
 
@@ -181,7 +375,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		return key in self._dict
 
-	def __iter__(self) -> Iterator[tuple[str, Any]]:
+	def __iter__(self) -> Iterator[tuple[str, AttributeValue]]:
 		"""
 		Returns an iterator to iterate all associated attributes of this event as :pycode:`(key, value)` tuples.
 
@@ -196,6 +390,23 @@ class Event(metaclass=ExtendedType, slots=True):
 		:returns: Number of attached attributes.
 		"""
 		return len(self._dict)
+
+	def _ToOTLPJSON(self) -> OTLPEvent:
+		"""
+		Convert this event to its **OTLP/JSON** representation.
+
+		:returns:             The event as an OTLP mapping.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		converted: OTLPEvent = {
+			"name":         self._name,
+			"timeUnixNano": str(int(self._time.timestamp() * 1_000_000_000)),
+		}
+
+		if len(attributes := _toAttributes(self._dict.items())) != 0:
+			converted["attributes"] = attributes
+
+		return converted
 
 	def __str__(self) -> str:
 		"""
@@ -215,6 +426,8 @@ class Span(metaclass=ExtendedType, slots=True):
 	"""
 	_name:      str                 #: Name of the timespan
 	_parent:    Nullable[Span]      #: Reference to the parent span (or trace).
+	_trace:     Nullable[Trace]     #: Reference to the trace this timespan belongs to.
+	_spanID:    str                 #: Identifier of this timespan, as 16 hex digits.
 
 	_beginTime: Nullable[datetime]  #: Timestamp when the timespan begins.
 	_endTime:   Nullable[datetime]  #: Timestamp when the timespan ends.
@@ -222,9 +435,9 @@ class Span(metaclass=ExtendedType, slots=True):
 	_stopTime:  Nullable[int]       #: Performance counter in ns when the timespan was stopped.
 	_totalTime: Nullable[int]       #: Duration of this timespan in ns.
 
-	_spans:     list[Span]          #: Sub-timespans
-	_events:    list[Event]         #: Events happened within this timespan
-	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
+	_spans:     list[Span]              #: Sub-timespans
+	_events:    list[Event]             #: Events happened within this timespan
+	_dict:      dict[str, AttributeValue]  #: Dictionary of associated attributes.
 
 	def __init__(self, name: str, parent: Nullable[Span] = None) -> None:
 		"""
@@ -247,13 +460,17 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		if parent is None:
 			self._parent = None
+			self._trace =  None
 		elif isinstance(parent, Span):
 			self._parent = parent
+			self._trace =  parent._trace
 			parent._spans.append(self)
 		else:
 			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
+
+		self._spanID =    _newIdentifier(64)
 
 		self._beginTime = None
 		self._startTime = None
@@ -283,15 +500,39 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return self._parent
 
+	@readonly
+	def SpanID(self) -> str:
+		"""
+		Read-only property to access the timespan's identifier.
+
+		It is drawn when the timespan is constructed, so it identifies *this* timespan for as long as it exists.
+
+		:returns: Identifier of the timespan, as 16 hex digits.
+		"""
+		return self._spanID
+
+	@readonly
+	def Trace(self) -> Nullable[Trace]:
+		"""
+		Read-only property to access the trace this timespan belongs to.
+
+		:returns: The enclosing trace, or ``None`` while the timespan is not part of one.
+		"""
+		return self._trace
+
 	def _AddSpan(self, span: Span) -> Self:
 		"""
 		Append a sub-span to this timespan and set this timespan as its parent.
+
+		The sub-span joins this timespan's trace, because a span entered with a ``with``-statement is constructed
+		before it knows where it belongs.
 
 		:param span: The sub-span to append.
 		:returns:    The appended sub-span.
 		"""
 		self._spans.append(span)
 		span._parent = self
+		span._trace =  self._trace
 
 		return span
 
@@ -451,7 +692,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		currentSpan = _threadLocalData.currentSpan
 		_threadLocalData.currentSpan = currentSpan._parent
 
-	def __getitem__(self, key: str) -> Any:
+	def __getitem__(self, key: str) -> AttributeValue:
 		"""
 		Read an event's attached attributes (key-value-pairs) by key.
 
@@ -460,7 +701,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return self._dict[key]
 
-	def __setitem__(self, key: str, value: Any) -> None:
+	def __setitem__(self, key: str, value: AttributeValue) -> None:
 		"""
 		Create or update an event's attached attributes (key-value-pairs) by key.
 
@@ -489,7 +730,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return key in self._dict
 
-	def __iter__(self) -> Iterator[tuple[str, Any]]:
+	def __iter__(self) -> Iterator[tuple[str, AttributeValue]]:
 		"""
 		Returns an iterator to iterate all associated attributes of this timespan as :pycode:`(key, value)` tuples.
 
@@ -504,6 +745,53 @@ class Span(metaclass=ExtendedType, slots=True):
 		:returns: Number of attached attributes.
 		"""
 		return len(self._dict)
+
+	def _ToOTLPJSON(self) -> list[OTLPSpan]:
+		"""
+		Convert this timespan and its sub-spans to their **OTLP/JSON** representation.
+
+		OTLP has no nesting: the hierarchy is carried by ``parentSpanId``, so the tree is flattened into one list -
+		this timespan first, then the lists its sub-spans return - and reassembled by whoever reads the document.
+
+		Both identifiers come from the data model: ``spanId`` is this timespan's own, ``traceId`` belongs to the
+		trace it is part of, and ``parentSpanId`` is read off the parent relation. A timespan joins a trace through
+		a ``with``-statement, or through the ``parent`` parameter of its constructor.
+
+		:returns:             This timespan and every timespan below it, flattened.
+		:raises TracingError: If this timespan is not part of a trace.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		if self._trace is None:
+			ex = TracingError(f"Timespan '{self._name}' is not part of a trace.")
+			ex.add_note("A span is added to a trace by a 'with'-statement, or by the 'parent' parameter.")
+			raise ex
+
+		converted: OTLPSpan = {
+			"traceId": self._trace._traceID,
+			"spanId":  self._spanID,
+			"name":    self._name,
+			"kind":    1,                # SPAN_KIND_INTERNAL
+		}
+
+		if self._parent is not None:
+			converted["parentSpanId"] = self._parent._spanID
+
+		if self.StartTime is not None:
+			startTimeUnixNano = int(self.StartTime.timestamp() * 1_000_000_000)
+			converted["startTimeUnixNano"] = str(startTimeUnixNano)
+
+			# The wall clock has microsecond resolution while the duration comes from a nanosecond performance
+			# counter, so the end is computed from the duration rather than read from a second wall-clock sample.
+			# 'Duration' is in seconds; OTLP wants nanoseconds.
+			converted["endTimeUnixNano"] = str(startTimeUnixNano + int(self.Duration * 1_000_000_000))
+
+		if len(attributes := _toAttributes(self._dict.items())) != 0:
+			converted["attributes"] = attributes
+
+		if len(events := [event._ToOTLPJSON() for event in self._events]) != 0:
+			converted["events"] = events
+
+		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON())]
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
 		"""
@@ -550,6 +838,7 @@ class Trace(Span):
 
 	A trace may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
+	_traceID: str  #: Identifier shared by every timespan of this trace, as 32 hex digits.
 
 	def __init__(self, name: str) -> None:
 		"""
@@ -558,6 +847,20 @@ class Trace(Span):
 		:param name: Name of the trace.
 		"""
 		super().__init__(name)
+
+		self._traceID = _newIdentifier(128)
+		self._trace =   self
+
+	@readonly
+	def TraceID(self) -> str:
+		"""
+		Read-only property to access the trace's identifier.
+
+		It is drawn when the trace is constructed, so exporting the same trace twice reports the same ``traceId``.
+
+		:returns: Identifier of the trace, as 32 hex digits.
+		"""
+		return self._traceID
 
 	def __enter__(self) -> Self:
 		"""
@@ -619,6 +922,105 @@ class Trace(Span):
 			currentTrace = None
 
 		return currentTrace
+
+	def ToJSON(
+		self,
+		serviceName: Nullable[str] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> OTLPDocument:
+		"""
+		Convert this trace to an **OTLP/JSON** document.
+
+		One format reaches both destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
+		accepted it since v1.35, so nothing has to translate between them.
+
+		Every timespan of the trace carries this trace's ``traceId``, and the tree is flattened into a list whose
+		``parentSpanId`` references carry the structure - which is how OTLP represents a trace.
+
+		:param serviceName:   Optional, the value of the ``service.name`` resource attribute, which is the name a
+		                      backend shows the trace under. Default: the trace's name.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under - the library that
+		                      produced them. Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:returns:             The trace as an OTLP/JSON document, ready for :func:`json.dump`.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		return {
+			"resourceSpans": [{
+				"resource": {
+					"attributes": _toAttributes(
+						{"service.name": self._name if serviceName is None else serviceName}.items()
+					)
+				},
+				"scopeSpans": [{
+					"scope": {"name": scopeName, "version": scopeVersion},
+					"spans": self._ToOTLPJSON(),
+				}],
+			}]
+		}
+
+	def ToJSONString(
+		self,
+		serviceName: Nullable[str] = None,
+		indent: Nullable[int] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> str:
+		"""
+		Convert this trace to an **OTLP/JSON** document and encode it as a string.
+
+		:param serviceName:   Optional, the value of the ``service.name`` resource attribute. Default: the trace's name.
+		:param indent:        Optional, indentation for a human-readable document. Default: ``None``, the compact form
+		                      a collector expects.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under.
+		                      Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:returns:             The OTLP/JSON document, encoded.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		return json_dumps(self.ToJSON(serviceName, scopeName, scopeVersion), indent=indent)
+
+	def WriteJSONFile(
+		self,
+		jsonFile: Path,
+		serviceName: Nullable[str] = None,
+		indent: Nullable[int] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> None:
+		"""
+		Write this trace to a file as an **OTLP/JSON** document.
+
+		Missing parent directories are created, because the directory a pipeline collects its artifacts from - usually
+		``report/`` - rarely exists yet when the trace is written.
+
+		:param jsonFile:      Path of the file to write.
+		:param serviceName:   Optional, the value of the ``service.name`` resource attribute. Default: the trace's name.
+		:param indent:        Optional, indentation for a human-readable file. Default: ``None``, the compact form a
+		                      collector expects.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under.
+		                      Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the parent directories couldn't be created.
+		:raises TracingError: If the file couldn't be written.
+		"""
+		if not isinstance(jsonFile, Path):
+			ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
+			raise ex
+
+		try:
+			jsonFile.parent.mkdir(parents=True, exist_ok=True)
+		except OSError as ex:
+			raise TracingError(f"Directory '{jsonFile.parent}' couldn't be created.") from ex
+
+		try:
+			with jsonFile.open("w", encoding="utf-8") as file:
+				file.write(self.ToJSONString(serviceName, indent, scopeName, scopeVersion))
+		except OSError as ex:
+			raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be written.") from ex
 
 	def Format(self, indent: int = 0, columnSize: int = 25) -> Iterable[str]:
 		"""
