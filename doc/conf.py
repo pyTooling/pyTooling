@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parent
 sys_path.insert(0, abspath("."))
 sys_path.insert(0, abspath(".."))
 sys_path.insert(0, abspath(f"../{directoryName}"))
+sys_path.insert(0, abspath("_extensions"))   # Sphinx extensions written for this documentation.
 
 # pyTooling is a namespace package, so its '__path__' is fixed the first time it is imported. Importing it before the
 # lines above would fix it to an installed copy and document that copy instead of this checkout.
