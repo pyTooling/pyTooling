@@ -231,6 +231,8 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier == other._spdxIdentifier
+		elif isinstance(other, str):
+			return self._spdxIdentifier == other
 		else:
 			ex = TypeError("Second operand is not supported by equal operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -247,6 +249,8 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		if isinstance(other, License):
 			return self._spdxIdentifier != other._spdxIdentifier
+		elif isinstance(other, str):
+			return self._spdxIdentifier != other
 		else:
 			ex = TypeError("Second operand is not supported by unequal operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -260,14 +264,12 @@ class License(metaclass=ExtendedType, slots=True):
 		The identifier is what :meth:`__eq__` compares, so two licenses that compare equal hash equally - which is
 		what a :class:`set` and a :class:`dict` rely on.
 
-		The class is part of the hash, because a license is **not** equal to its identifier as a string:
-		:meth:`__eq__` raises a :exc:`TypeError` for anything but a :class:`License`. Hashing the bare identifier
-		would put a license and its identifier in the same hash bucket, where a plain ``in`` or ``&`` on a mixed
-		set would reach that :exc:`TypeError` instead of answering.
+		A license compares equal to its identifier as a string, so the two hash equally as well - which is what lets
+		``Apache_2_0_License in {"Apache-2.0"}`` answer instead of missing.
 
-		:returns: Hash of the license.
+		:returns: Hash of the SPDX identifier.
 		"""
-		return hash((License, self._spdxIdentifier))
+		return hash(self._spdxIdentifier)
 
 	def __le__(self, other: Any) -> bool:
 		"""
