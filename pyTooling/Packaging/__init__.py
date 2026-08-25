@@ -44,14 +44,15 @@ A set of helper functions to describe a Python package for setuptools.
    :mod:`pyTooling.Testing`
       |rarr| Testing the console scripts a package installs.
 """
-from ast             import parse as ast_parse, iter_child_nodes, Assign, Constant, Name, List as ast_List
+from ast             import parse as ast_parse, get_docstring as ast_get_docstring, iter_child_nodes, Assign, \
+                            Constant, Name, List as ast_List
 from collections.abc import Sized
 from os              import scandir as os_scandir
 from pathlib         import Path
 from re              import split as re_split
 from sys             import version_info
 from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
-from pyTooling.Decorators  import export, readonly
+from pyTooling.Decorators  import export, readonly, splitDocString
 from pyTooling.Exceptions  import ToolingException, MissingDependencyError
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import __version__, getFullyQualifiedName, firstElement
@@ -324,6 +325,32 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		return f"{self._version}"
 
 
+def _extractDescription(docString: Nullable[str]) -> str:
+	"""
+	Derive a package's short description from the first paragraph of its module doc-string.
+
+	The paragraph is folded into a single line, because a short description is one line of plain text, while a
+	doc-string is wrapped to the source file's line length. Strong emphasis around the whole paragraph is removed
+	for the same reason: ``**An abstract VHDL language model.**`` is markup for the rendered documentation, and
+	nothing renders it where a short description is displayed.
+
+	:param docString: The module's doc-string, or ``None`` if it has none.
+	:returns:         The first paragraph as a single line, or an empty string if there is no doc-string.
+
+	.. seealso::
+
+	   :func:`~pyTooling.Decorators.splitDocString`
+	      |rarr| Splits a doc-string into the summary used here and the body.
+	"""
+	summary, _ = splitDocString(docString)
+	description = " ".join(summary.split())
+
+	if description.startswith("**") and description.endswith("**") and "**" not in description[2:-2]:
+		description = description[2:-2]
+
+	return description
+
+
 @export
 def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	"""
@@ -337,6 +364,9 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 	* ``__keywords__``
 	* ``__license__``
 	* ``__version__``
+
+	The package's short description is not a dunder variable - it is the first paragraph of the source file's module
+	doc-string, which is where a package already describes itself.
 
 	:param sourceFile:         Path to a Python source file as an instance of :class:`Path`.
 	:returns:                  An instance of :class:`VersionInformation` with gathered variable contents.
@@ -352,7 +382,6 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 
 	_author =      None
 	_copyright =   None
-	_description = ""
 	_email =       None
 	_keywords =    []
 	_license =     None
@@ -368,6 +397,8 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 		ast = ast_parse(content)
 	except Exception as ex:                                                          # pragma: no cover
 		raise ToolingException(f"Internal error when parsing '{sourceFile}'.") from ex
+
+	_description = _extractDescription(ast_get_docstring(ast))
 
 	for item in iter_child_nodes(ast):
 		if isinstance(item, Assign) and len(item.targets) == 1:
@@ -540,11 +571,11 @@ def _collectEntryPoints(
 @export
 def DescribePythonPackage(
 	packageName: str,
-	description: str,
 	projectURL: str,
 	sourceCodeURL: str,
 	documentationURL: str,
 	issueTrackerCodeURL: str,
+	description: Nullable[str] = None,
 	keywords: Iterable[str] = None,
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = DEFAULT_README,
@@ -646,12 +677,20 @@ def DescribePythonPackage(
 	   If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``
 	   will be used. Otherwise, the content of the parameter, if not None or empty.
 
+	.. topic:: Handling of the description
+
+	   If parameter ``description`` is not specified, the first paragraph of the module doc-string in
+	   ``sourceFileWithVersion`` is used, so a package describes itself in one place. An explicitly passed description
+	   always wins - including an empty one.
+
 	:param packageName:                   Name of the Python package.
-	:param description:                   Short description of the package. The long description will be read from README file.
-	:param projectURL:                    Optional, URL to the Python project.
+	:param projectURL:                    URL to the Python project.
 	:param sourceCodeURL:                 URL to the Python source code.
 	:param documentationURL:              URL to the package's documentation.
 	:param issueTrackerCodeURL:           URL to the projects issue tracker (ticket system).
+	:param description:                   Optional, short description of the package. (Default: the first paragraph
+	                                      of the module doc-string in ``sourceFileWithVersion``.) The long description
+	                                      is read from the README file.
 	:param keywords:                      Optional, a list of keywords.
 	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
 	                                      :const:`DEFAULT_LICENSE`)
@@ -702,6 +741,7 @@ def DescribePythonPackage(
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
 	:raises Exception:                    If the package's directory doesn't exist, or if a requirements file is
 	                                      malformed.
+	:raises ToolingException:             If no description was given and the package file has no module doc-string.
 	"""
 	try:
 		from setuptools import find_packages, find_namespace_packages
@@ -814,6 +854,15 @@ def DescribePythonPackage(
 	if keywords is None or isinstance(keywords, Sized) and len(keywords) == 0:
 		keywords = versionInformation.Keywords
 
+	if description is None:
+		description = versionInformation.Description
+
+		if len(description) == 0:
+			ex = ToolingException(f"Package '{packageName}' has no description.")
+			ex.add_note(f"Neither was parameter 'description' given, nor has '{sourceFileWithVersion}' a module doc-string.")
+			ex.add_note("Describe the package in the first paragraph of that doc-string, or pass parameter 'description'.")
+			raise ex
+
 	# Assemble classifiers
 	classifiers = list(classifiers)
 
@@ -913,10 +962,10 @@ def DescribePythonPackage(
 @export
 def DescribePythonPackageHostedOnGitHub(
 	packageName: str,
-	description: str,
 	gitHubNamespace: str,
 	gitHubRepository: str = None,
 	projectURL: str = None,
+	description: Nullable[str] = None,
 	keywords: Iterable[str] = None,
 	license: License = DEFAULT_LICENSE,
 	readmeFile: Path = DEFAULT_README,
@@ -942,10 +991,12 @@ def DescribePythonPackageHostedOnGitHub(
 	namespace and repository name: issue tracker URL, source code URL, ...
 
 	:param packageName:                   Name of the Python package.
-	:param description:                   Short description of the package. The long description will be read from README file.
 	:param gitHubNamespace:               Name of the GitHub namespace (organization or user).
 	:param gitHubRepository:              Optional, name of the GitHub repository.
 	:param projectURL:                    Optional, URL to the Python project.
+	:param description:                   Optional, short description of the package. (Default: the first paragraph
+	                                      of the module doc-string in ``sourceFileWithVersion``.) The long description
+	                                      is read from the README file.
 	:param keywords:                      Optional, a list of keywords.
 	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
 	                                      :const:`DEFAULT_LICENSE`)
@@ -994,6 +1045,7 @@ def DescribePythonPackageHostedOnGitHub(
 	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
 	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
+	:raises ToolingException:             If no description was given and the package file has no module doc-string.
 	"""
 	if gitHubRepository is None:
 		# Assign GitHub repository name without '.*', if derived from Python package name.
