@@ -31,7 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
 """
-from pyTooling.Licensing import PYTHON_LICENSE_NAMES, SPDX_INDEX, License
+from pyTooling.Licensing import LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Testing   import Testcase
 
 
@@ -105,15 +105,11 @@ class SPDXIndex(Testcase):
 	def test_TheIndexIsBuiltFromTheLicenseTuple(self) -> None:
 		"""'LICENSES' is the list; 'SPDX_INDEX' is that list keyed by identifier, so neither can drift."""
 
-		from pyTooling.Licensing import LICENSES, SPDX_INDEX
-
 		self.assertEqual(len(LICENSES), len(SPDX_INDEX), "A license is listed twice under the same identifier.")
 		# A 'License' defines '__eq__' without '__hash__', so it can't go into a set - compare the sequences.
 		self.assertListEqual(list(LICENSES), list(SPDX_INDEX.values()))
 
 	def test_TheIndexIsKeyedByTheSPDXIdentifier(self) -> None:
-		from pyTooling.Licensing import SPDX_INDEX
-
 		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
 				self.assertEqual(spdxIdentifier, spdxLicense.SPDXIdentifier)
@@ -121,8 +117,7 @@ class SPDXIndex(Testcase):
 	def test_EveryClassifierIsARealClassifier(self) -> None:
 		"""The strings are checked against PyPI's own list, not against what looked right when they were typed."""
 
-		from trove_classifiers    import classifiers
-		from pyTooling.Licensing  import SPDX_INDEX
+		from trove_classifiers import classifiers
 
 		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
@@ -130,8 +125,6 @@ class SPDXIndex(Testcase):
 
 	def test_OSIApprovalMatchesTheClassifier(self) -> None:
 		"""PyPI puts an OSI-approved license under 'OSI Approved ::', so the flag and the string must agree."""
-
-		from pyTooling.Licensing import SPDX_INDEX
 
 		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
@@ -153,8 +146,6 @@ class SPDXIndex(Testcase):
 		)
 
 	def test_EveryLicenseHasAPythonName(self) -> None:
-		from pyTooling.Licensing import SPDX_INDEX
-
 		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
 			with self.subTest(license=spdxIdentifier):
 				self.assertNotEqual("", spdxLicense.PythonLicenseName)
