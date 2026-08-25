@@ -101,7 +101,14 @@ def pytest_pycollect_makeitem(collector: Collector, name: str, obj: Any) -> Null
 @export
 def pytest_collection_modifyitems(items: list[Item]) -> None:
 	"""
-	Attach the titles of every marked item to the item, for the report to pick up.
+	Attach the names of every marked item to the item, for the report to pick up.
+
+	A test item has four names, and only the first of them is what Python calls it:
+
+	* the **ID** - the module, class or method name, which is the item's ``classname``/``name``,
+	* the **title** - what the marker was given,
+	* the **summary** - the first paragraph of the doc-string,
+	* the **description** - the doc-string.
 
 	They travel as :attr:`~_pytest.nodes.Item.user_properties`, which is the channel the
 	:func:`~_pytest.python_api.record_property` fixture writes to: they are part of the test report, so they survive
@@ -118,8 +125,17 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
 		if testcaseTitle is None:
 			continue
 
-		item.user_properties.append(("title", testcaseTitle))
+		function = item.function
+		cls = getattr(item, "cls", None)
 
-		testsuiteTitle = getattr(getattr(item, "cls", None), "__testsuite_title__", None)
-		if testsuiteTitle is not None:
-			item.user_properties.append(("testsuiteTitle", testsuiteTitle))
+		# an item has four names: the ID (its 'classname'/'name'), a title, a summary and a description
+		for propertyName, value in (
+			("title",                 testcaseTitle),
+			("summary",               getattr(function, "__testcase_summary__", "")),
+			("description",           getattr(function, "__testcase_description__", "")),
+			("testsuiteTitle",        getattr(cls, "__testsuite_title__", "")),
+			("testsuiteSummary",      getattr(cls, "__testsuite_summary__", "")),
+			("testsuiteDescription",  getattr(cls, "__testsuite_description__", "")),
+		):
+			if value != "":
+				item.user_properties.append((propertyName, value))

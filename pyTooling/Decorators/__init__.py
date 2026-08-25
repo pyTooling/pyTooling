@@ -271,6 +271,30 @@ class readonly(property, Generic[_ReturnType]):
 
 
 @export
+def splitDocString(docString: Nullable[str]) -> tuple[str, str]:
+	"""
+	Split a doc-string into its summary and its body.
+
+	The doc-string is dedented with :func:`inspect.cleandoc` first. The summary is the first paragraph, the body is
+	whatever follows the first blank line. Both are empty strings if the doc-string is ``None``, and the body is an
+	empty string if the doc-string is a single paragraph.
+
+	:param docString: The doc-string to split, or ``None``.
+	:returns:         A tuple of summary and body.
+
+	.. seealso::
+
+	   :deco:`~pyTooling.Decorators.InheritDocString`
+	      |rarr| Merges two doc-strings, using this split to select their parts.
+	"""
+	if docString is None:
+		return "", ""
+
+	summary, _, body = cleandoc(docString).partition("\n\n")
+	return summary, body
+
+
+@export
 @unique
 class DocStringMergeStrategy(Enum):
 	"""
@@ -361,23 +385,6 @@ def InheritDocString(
 	   :class:`DocStringMergeStrategy`
 	      |rarr| Selects which parts of both doc-strings are merged, and in which order.
 	"""
-	def splitDocString(docString: Nullable[str]) -> tuple[str, str]:
-		"""
-		Split a doc-string into its summary and its body.
-
-		The doc-string is dedented with :func:`inspect.cleandoc` first. The summary is the first paragraph, the body is
-		whatever follows the first blank line. Both are empty strings if the doc-string is ``None``, and the body is an
-		empty string if the doc-string is a single paragraph.
-
-		:param docString: The doc-string to split, or ``None``.
-		:returns:         A tuple of summary and body.
-		"""
-		if docString is None:
-			return "", ""
-
-		summary, _, body = cleandoc(docString).partition("\n\n")
-		return summary, body
-
 	def decorator(param: Func | type) -> Func | type:
 		"""
 		Decorator function, which merges the doc-string from base-class' method into method ``m``.
