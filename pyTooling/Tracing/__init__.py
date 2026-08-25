@@ -51,7 +51,7 @@ from secrets               import randbits
 from time                  import perf_counter_ns
 from threading             import local
 from types                 import TracebackType
-from typing                import Optional as Nullable, Iterator, Self, Iterable, Any
+from typing                import Optional as Nullable, Iterator, Self, Iterable, Any, TypedDict
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -67,21 +67,113 @@ OTLP_SCOPE_NAME = "pyTooling.Tracing"
 _threadLocalData = local()
 """A reference to the thread local data needed by the pyTooling.Tracing classes."""
 
+_MAXIMUM_IDENTIFIER_ATTEMPTS = 4
+"""Number of attempts to draw a non-zero random identifier before giving up."""
 
-def _toUnixNano(timestamp: datetime) -> str:
+
+@export
+class TracingError(ToolingException):
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
+
+
+@export
+class OTLPArrayValue(TypedDict):
+	"""OTLP's ``ArrayValue``: a list of values, as it is nested inside an :class:`OTLPAnyValue`."""
+
+	values: list[OTLPAnyValue]  #: The elements of the array.
+
+
+@export
+class OTLPAnyValue(TypedDict, total=False):
 	"""
-	Convert a timestamp to nanoseconds since the Unix epoch.
+	OTLP's ``AnyValue``: a value of any supported type, carried in a mapping of exactly one key.
 
-	OTLP/JSON encodes a 64-bit integer as a **string**, because a JSON number cannot carry 64 bits exactly. That is
-	proto3's JSON mapping rather than a quirk of this implementation.
-
-	:param timestamp: The timestamp to convert.
-	:returns:         Nanoseconds since the Unix epoch, as a decimal string.
+	The key names the type of the value. A 64-bit integer travels as a decimal **string**, because a JSON number can't
+	carry 64 bits exactly. That is proto3's JSON mapping rather than a quirk of OTLP.
 	"""
-	return str(int(timestamp.timestamp() * 1_000_000_000))
+
+	boolValue:   bool            #: A boolean value.
+	intValue:    str             #: A 64-bit integer, encoded as a decimal string.
+	doubleValue: float           #: A floating-point value.
+	stringValue: str             #: A string value.
+	arrayValue:  OTLPArrayValue  #: A list of values.
 
 
-def _toAttributeValue(value: Any) -> dict[str, Any]:
+@export
+class OTLPAttribute(TypedDict):
+	"""OTLP's ``KeyValue``: a single attribute of a resource, a span or an event."""
+
+	key:   str           #: Name of the attribute.
+	value: OTLPAnyValue  #: Value of the attribute.
+
+
+@export
+class OTLPEvent(TypedDict, total=False):
+	"""OTLP's ``Span.Event``: a named point in time within a span."""
+
+	name:         str                  #: Name of the event.
+	timeUnixNano: str                  #: Time of the event in nanoseconds since the Unix epoch, as a decimal string.
+	attributes:   list[OTLPAttribute]  #: Attributes attached to the event.
+
+
+@export
+class OTLPSpan(TypedDict, total=False):
+	"""
+	OTLP's ``Span``: a single timespan of a trace.
+
+	OTLP doesn't nest spans, so the enclosing span is referenced by :attr:`parentSpanId` instead of containing this one.
+	"""
+
+	traceId:           str                  #: Identifier shared by every span of the trace, as 32 hex digits.
+	spanId:            str                  #: Identifier of this span, as 16 hex digits.
+	parentSpanId:      str                  #: Identifier of the enclosing span, absent for the trace's own span.
+	name:              str                  #: Name of the span.
+	kind:              int                  #: Kind of the span - always ``1`` (``SPAN_KIND_INTERNAL``) here.
+	startTimeUnixNano: str                  #: Start in nanoseconds since the Unix epoch, as a decimal string.
+	endTimeUnixNano:   str                  #: End in nanoseconds since the Unix epoch, as a decimal string.
+	attributes:        list[OTLPAttribute]  #: Attributes attached to the span.
+	events:            list[OTLPEvent]      #: Events that happened within the span.
+
+
+@export
+class OTLPScope(TypedDict):
+	"""OTLP's ``InstrumentationScope``: the library the spans were produced by."""
+
+	name:    str  #: Name of the instrumentation scope.
+	version: str  #: Version of the instrumentation scope.
+
+
+@export
+class OTLPScopeSpans(TypedDict):
+	"""OTLP's ``ScopeSpans``: the spans produced by one instrumentation scope."""
+
+	scope: OTLPScope       #: The instrumentation scope the spans were produced by.
+	spans: list[OTLPSpan]  #: The spans, flattened.
+
+
+@export
+class OTLPResource(TypedDict):
+	"""OTLP's ``Resource``: the entity the spans were produced by."""
+
+	attributes: list[OTLPAttribute]  #: Attributes describing the resource, e.g. ``service.name``.
+
+
+@export
+class OTLPResourceSpans(TypedDict):
+	"""OTLP's ``ResourceSpans``: the spans produced by one resource."""
+
+	resource:   OTLPResource          #: The resource the spans were produced by.
+	scopeSpans: list[OTLPScopeSpans]  #: The spans, grouped by instrumentation scope.
+
+
+@export
+class OTLPDocument(TypedDict):
+	"""OTLP's ``TracesData``: the root of an OTLP/JSON document."""
+
+	resourceSpans: list[OTLPResourceSpans]  #: The spans, grouped by resource.
+
+
+def _toAttributeValue(value: Any) -> OTLPAnyValue:
 	"""
 	Wrap a Python value in OTLP's ``AnyValue`` representation.
 
@@ -103,7 +195,7 @@ def _toAttributeValue(value: Any) -> dict[str, Any]:
 	return {"stringValue": str(value)}
 
 
-def _toAttributes(attributes: Iterable[tuple[str, Any]]) -> list[dict[str, Any]]:
+def _toAttributes(attributes: Iterable[tuple[str, Any]]) -> list[OTLPAttribute]:
 	"""
 	Convert key-value pairs to OTLP's list of attributes.
 
@@ -120,18 +212,17 @@ def _newIdentifier(bits: int) -> str:
 	OTLP/JSON encodes both as **hex** rather than base64, which is where it deviates from proto3's JSON mapping. An
 	all-zero identifier is invalid, so it is drawn again in that case.
 
-	:param bits: Width of the identifier: 128 for a trace, 64 for a span.
-	:returns:    The identifier as a lower-case hex string.
+	:param bits:          Width of the identifier: 128 for a trace, 64 for a span.
+	:returns:             The identifier as a lower-case hex string.
+	:raises TracingError: If no non-zero identifier was drawn within :data:`_MAXIMUM_IDENTIFIER_ATTEMPTS` attempts.
 	"""
-	while (identifier := randbits(bits)) == 0:  # pragma: no cover
-		pass
-
-	return f"{identifier:0{bits // 4}x}"
-
-
-@export
-class TracingError(ToolingException):
-	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
+	for _ in range(_MAXIMUM_IDENTIFIER_ATTEMPTS):
+		if (identifier := randbits(bits)) != 0:
+			return f"{identifier:0{bits // 4}x}"
+	else:
+		ex = TracingError(f"Couldn't draw a non-zero {bits}-bit random identifier.")
+		ex.add_note(f"Tried {_MAXIMUM_IDENTIFIER_ATTEMPTS} times.")
+		raise ex
 
 
 @export
@@ -143,7 +234,7 @@ class Event(metaclass=ExtendedType, slots=True):
 	"""
 	_name:      str                 #: Name of the event.
 	_parent:    Nullable[Span]      #: Reference to the parent span.
-	_time:      Nullable[datetime]  #: Timestamp of the event.
+	_time:      datetime            #: Timestamp of the event.
 	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
 
 	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable[Span] = None) -> None:
@@ -151,7 +242,7 @@ class Event(metaclass=ExtendedType, slots=True):
 		Initializes a named event.
 
 		:param name:        The name of the event.
-		:param time:        Optional, time when the event happened.
+		:param time:        Optional, time when the event happened. Default: the current system time.
 		:param parent:      Optional, reference to the parent span.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
@@ -167,7 +258,7 @@ class Event(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if time is None:
-			self._time = None
+			self._time = datetime.now()
 		elif isinstance(time, datetime):
 			self._time = time
 		else:
@@ -268,26 +359,18 @@ class Event(metaclass=ExtendedType, slots=True):
 		"""
 		return len(self._dict)
 
-	def _ToJSON(self, fallbackTime: Nullable[datetime] = None) -> dict[str, Any]:
+	def _ToJSON(self) -> OTLPEvent:
 		"""
-		Convert this event to its OTLP representation.
+		Convert this event to its JSON OTLP representation.
 
-		An event constructed without an explicit ``time`` has none - the constructor doesn't stamp the current time -
-		and OTLP has no way of saying *unknown*: a missing ``timeUnixNano`` reads as the Unix epoch. The enclosing
-		span's start time is used instead, which at least places the event inside the span it belongs to.
-
-		:param fallbackTime: Optional, the time to use when the event carries none - usually the enclosing span's
-		                     start time.
-		:returns:            The event as an OTLP mapping.
+		:returns: The event as an OTLP mapping.
 		"""
-		converted: dict[str, Any] = {
-			"name": self._name,
+		converted: OTLPEvent = {
+			"name":         self._name,
+			"timeUnixNano": str(int(self._time.timestamp() * 1_000_000_000)),
 		}
 
-		if (time := self._time if self._time is not None else fallbackTime) is not None:
-			converted["timeUnixNano"] = _toUnixNano(time)
-
-		if (attributes := _toAttributes(self._dict.items())) != []:
+		if len(attributes := _toAttributes(self._dict.items())) != 0:
 			converted["attributes"] = attributes
 
 		return converted
@@ -600,7 +683,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return len(self._dict)
 
-	def _ToJSON(self, traceID: str, parentSpanID: Nullable[str], spans: list[dict[str, Any]]) -> None:
+	def _ToJSON(self, traceID: str, parentSpanID: Nullable[str], spans: list[OTLPSpan]) -> None:
 		"""
 		Convert this timespan and its sub-spans, appending each to a flat list.
 
@@ -613,7 +696,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		spanID = _newIdentifier(64)
 
-		converted: dict[str, Any] = {
+		converted: OTLPSpan = {
 			"traceId": traceID,
 			"spanId":  spanID,
 			"name":    self._name,
@@ -624,7 +707,7 @@ class Span(metaclass=ExtendedType, slots=True):
 			converted["parentSpanId"] = parentSpanID
 
 		if self.StartTime is not None:
-			startTimeUnixNano = int(_toUnixNano(self.StartTime))
+			startTimeUnixNano = int(self.StartTime.timestamp() * 1_000_000_000)
 			converted["startTimeUnixNano"] = str(startTimeUnixNano)
 
 			# The wall clock has microsecond resolution while the duration comes from a nanosecond performance
@@ -632,10 +715,10 @@ class Span(metaclass=ExtendedType, slots=True):
 			# 'Duration' is in seconds; OTLP wants nanoseconds.
 			converted["endTimeUnixNano"] = str(startTimeUnixNano + int(self.Duration * 1_000_000_000))
 
-		if (attributes := _toAttributes(self._dict.items())) != []:
+		if len(attributes := _toAttributes(self._dict.items())) != 0:
 			converted["attributes"] = attributes
 
-		if (events := [event._ToJSON(self.StartTime) for event in self._events]) != []:
+		if len(events := [event._ToJSON() for event in self._events]) != 0:
 			converted["events"] = events
 
 		spans.append(converted)
@@ -758,7 +841,7 @@ class Trace(Span):
 
 		return currentTrace
 
-	def ToJSON(self, serviceName: Nullable[str] = None) -> dict[str, Any]:
+	def ToJSON(self, serviceName: Nullable[str] = None) -> OTLPDocument:
 		"""
 		Convert this trace to an **OTLP/JSON** document.
 
@@ -778,7 +861,7 @@ class Trace(Span):
 		                    backend shows the trace under. Default: the trace's name.
 		:returns:           The trace as an OTLP/JSON document, ready for :func:`json.dump`.
 		"""
-		spans: list[dict[str, Any]] = []
+		spans: list[OTLPSpan] = []
 		self._ToJSON(_newIdentifier(128), None, spans)
 
 		return {
@@ -815,20 +898,32 @@ class Trace(Span):
 		"""
 		Write this trace to a file as an **OTLP/JSON** document.
 
-		:param jsonFile:    Path of the file to write.
-		:param serviceName: Optional, the value of the ``service.name`` resource attribute. Default: the trace's name.
-		:param indent:      Optional, indentation for a human-readable file. Default: ``None``, the compact form a
-		                    collector expects.
-		:raises TypeError:  If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		Missing parent directories are created, because the directory a pipeline collects its artifacts from - usually
+		``report/`` - rarely exists yet when the trace is written.
+
+		:param jsonFile:      Path of the file to write.
+		:param serviceName:   Optional, the value of the ``service.name`` resource attribute. Default: the trace's name.
+		:param indent:        Optional, indentation for a human-readable file. Default: ``None``, the compact form a
+		                      collector expects.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the parent directories couldn't be created.
+		:raises TracingError: If the file couldn't be written.
 		"""
 		if not isinstance(jsonFile, Path):
 			ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
 			raise ex
 
-		jsonFile.parent.mkdir(parents=True, exist_ok=True)
-		with jsonFile.open("w", encoding="utf-8") as file:
-			file.write(self.ToJSONString(serviceName, indent))
+		try:
+			jsonFile.parent.mkdir(parents=True, exist_ok=True)
+		except OSError as ex:
+			raise TracingError(f"Directory '{jsonFile.parent}' couldn't be created.") from ex
+
+		try:
+			with jsonFile.open("w", encoding="utf-8") as file:
+				file.write(self.ToJSONString(serviceName, indent))
+		except OSError as ex:
+			raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be written.") from ex
 
 	def Format(self, indent: int = 0, columnSize: int = 25) -> Iterable[str]:
 		"""
