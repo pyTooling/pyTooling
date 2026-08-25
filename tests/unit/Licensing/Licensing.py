@@ -65,10 +65,13 @@ class LicenseDataClass(Testcase):
 
 		self.assertTrue(license1 == license2)
 		self.assertTrue(license1 != license3)
+		self.assertTrue(license1 == "spdx", "A license equals its SPDX identifier as a string.")
+		self.assertTrue(license1 != "other", "A different identifier is a different license.")
+		self.assertTrue("spdx" == license1, "The comparison is symmetric - 'str' defers to the reflected operand.")
 		with self.assertRaises(TypeError):
-			_ = license1 == "spdx"
+			_ = license1 == 42
 		with self.assertRaises(TypeError):
-			_ = license1 != "spdx"
+			_ = license1 != 42
 
 	def test_Compatibility(self) -> None:
 		license1 = License("spdx", "License Name", False, False)
@@ -102,10 +105,13 @@ class SPDXLicenses(Testcase):
 class Hashing(Testcase):
 	"""A license is hashable, so it can be a set element or a dictionary key."""
 
-	def test_ALicenseDoesNotShareItsBucketWithItsIdentifier(self) -> None:
-		"""A license is not equal to a string, so it must not hash like one - a mixed set would raise."""
-		self.assertNotEqual(hash("Apache-2.0"), hash(Apache_2_0_License))
-		self.assertFalse(Apache_2_0_License in {"Apache-2.0"})
+	def test_TheHashIsTheIdentifiersHash(self) -> None:
+		""":meth:`~pyTooling.Licensing.License.__eq__` compares the identifier, so the hash has to follow it."""
+		self.assertEqual(hash("Apache-2.0"), hash(Apache_2_0_License))
+
+	def test_ALicenseIsFoundAmongItsIdentifiers(self) -> None:
+		"""Equal to the string and hashing like it, so a set of identifiers contains the license."""
+		self.assertIn(Apache_2_0_License, {"Apache-2.0", "MIT"})
 
 	def test_EqualLicensesHashEqually(self) -> None:
 		"""Two objects that compare equal must hash equally - a set and a dict rely on it."""
