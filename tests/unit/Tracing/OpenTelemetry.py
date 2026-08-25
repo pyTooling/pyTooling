@@ -68,6 +68,7 @@ def _exampleTrace() -> Trace:
 
 class AttributeValues(Testcase):
 	"""A Python value is wrapped in the one-key mapping OTLP expects for its type."""
+
 	def test_String(self) -> None:
 		self.assertEqual({"stringValue": "text"}, toAttributeValue("text"))
 
@@ -94,6 +95,7 @@ class AttributeValues(Testcase):
 
 class Document(Testcase):
 	"""The exported document's shape."""
+
 	def test_TheEnvelopeNamesTheServiceAndTheScope(self) -> None:
 		document = ToOTLP(_exampleTrace(), serviceName="myProgram")
 		resourceSpans = document["resourceSpans"][0]
@@ -121,6 +123,7 @@ class Document(Testcase):
 
 class Spans(Testcase):
 	"""OTLP has no nesting, so the tree is flattened and carried by 'parentSpanId'."""
+
 	@staticmethod
 	def _Spans(document) -> dict:
 		"""
@@ -191,6 +194,7 @@ class Spans(Testcase):
 
 class Events(Testcase):
 	"""An event belongs to the span it was created in."""
+
 	def test_TheEventIsExported(self) -> None:
 		spans = {
 			span["name"]: span
@@ -232,6 +236,7 @@ class Events(Testcase):
 
 class WrittenFile(Testcase):
 	"""The document reaches a file as JSON."""
+
 	def test_TheFileIsValidJSONAndRoundTrips(self) -> None:
 		trace = _exampleTrace()
 
