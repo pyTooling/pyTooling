@@ -238,14 +238,25 @@ level's dotted path:
 
 .. code-block:: xml
 
-   <testsuite name="pytest" tests="1">
-     <properties>
-       <property name="versioning.summary" value="The version handling test suite." />
-       <property name="versioning.description" value="The version handling test suite.&#10;&#10;Everything ..." />
-       <property name="versioning.test_comparison.summary" value="Version comparison tests." />
-       <property name="versioning.test_comparison.VersionComparison.title" value="Version comparison." />
-     </properties>
-     <testcase classname="versioning.test_comparison.VersionComparison" name="test_NewerIsGreater">
+   <?xml version="1.0" encoding="utf-8"?>
+   <testsuites name="pytest tests">
+     <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.011"
+                timestamp="2026-08-25T07:01:50.230489+00:00" hostname="build-01">
+       <properties>
+         <property name="versioning.summary" value="The version handling test suite." />
+         <property name="versioning.description"
+                   value="The version handling test suite.&#10;&#10;Everything about parsing ..." />
+         <property name="versioning.test_comparison.summary" value="Version comparison tests." />
+         <property name="versioning.test_comparison.description" value="Version comparison tests." />
+         <property name="versioning.test_comparison.VersionComparison.title" value="Version comparison." />
+       </properties>
+       <testcase classname="versioning.test_comparison.VersionComparison" name="test_NewerIsGreater" time="0.004">
+         <properties>
+           <property name="title" value="A newer version compares greater." />
+         </properties>
+       </testcase>
+     </testsuite>
+   </testsuites>
 
 The innermost key **is** the testcase's ``classname``, and every outer one is a prefix of it - which is what lets a
 reader join the two.
