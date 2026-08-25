@@ -55,9 +55,28 @@ __all__ = [
 	"PYTHON_LICENSE_NAMES",
 
 	"Apache_2_0_License",
+	"BSD_2_Clause_License",
 	"BSD_3_Clause_License",
-	"GPL_2_0_or_later",
 	"MIT_License",
+	"ISC_License",
+	"MPL_2_0_License",
+	"BSL_1_0_License",
+	"Zlib_License",
+	"PSF_2_0_License",
+	"Unlicense",
+	"CC0_1_0",
+	"EPL_1_0_License",
+	"EPL_2_0_License",
+	"LGPL_2_1_only",
+	"LGPL_2_1_or_later",
+	"LGPL_3_0_only",
+	"LGPL_3_0_or_later",
+	"GPL_2_0_only",
+	"GPL_2_0_or_later",
+	"GPL_3_0_only",
+	"GPL_3_0_or_later",
+	"AGPL_3_0_only",
+	"AGPL_3_0_or_later",
 
 	"SPDX_INDEX"
 ]
@@ -82,10 +101,35 @@ class PythonLicenseName:
 
 #: Mapping of SPDX identifiers to Python license names
 PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
-	"Apache-2.0":       PythonLicenseName("Apache 2.0",       "Apache Software License"),
+	"Apache-2.0":        PythonLicenseName("Apache 2.0",        "Apache Software License"),
+	"BSD-2-Clause":     PythonLicenseName("BSD-2-Clause",     "BSD License"),
 	"BSD-3-Clause":     PythonLicenseName("BSD",              "BSD License"),
 	"MIT":              PythonLicenseName("MIT",              "MIT License"),
+	"ISC":              PythonLicenseName("ISC",              "ISC License (ISCL)"),
+	"MPL-2.0":          PythonLicenseName("MPL-2.0",          "Mozilla Public License 2.0 (MPL 2.0)"),
+	"BSL-1.0":          PythonLicenseName("BSL-1.0",          "Boost Software License 1.0 (BSL-1.0)"),
+	"Zlib":             PythonLicenseName("Zlib",             "zlib/libpng License"),
+	"PSF-2.0":          PythonLicenseName("PSF-2.0",          "Python Software Foundation License"),
+	"Unlicense":        PythonLicenseName("Unlicense",        "The Unlicense (Unlicense)"),
+	"CC0-1.0":          PythonLicenseName("CC0-1.0",          "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication"),
+	"EPL-1.0":          PythonLicenseName("EPL-1.0",          "Eclipse Public License 1.0 (EPL-1.0)"),
+	"EPL-2.0":          PythonLicenseName("EPL-2.0",          "Eclipse Public License 2.0 (EPL-2.0)"),
+	"LGPL-2.1-only":    PythonLicenseName("LGPL-2.1-only",    "GNU Lesser General Public License v2 (LGPLv2)"),
+	"LGPL-2.1-or-later": PythonLicenseName(
+		"LGPL-2.1-or-later", "GNU Lesser General Public License v2 or later (LGPLv2+)"
+	),
+	"LGPL-3.0-only":    PythonLicenseName("LGPL-3.0-only",    "GNU Lesser General Public License v3 (LGPLv3)"),
+	"LGPL-3.0-or-later": PythonLicenseName(
+		"LGPL-3.0-or-later", "GNU Lesser General Public License v3 or later (LGPLv3+)"
+	),
+	"GPL-2.0-only":     PythonLicenseName("GPL-2.0-only",     "GNU General Public License v2 (GPLv2)"),
 	"GPL-2.0-or-later": PythonLicenseName("GPL-2.0-or-later", "GNU General Public License v2 or later (GPLv2+)"),
+	"GPL-3.0-only":     PythonLicenseName("GPL-3.0-only",     "GNU General Public License v3 (GPLv3)"),
+	"GPL-3.0-or-later": PythonLicenseName("GPL-3.0-or-later", "GNU General Public License v3 or later (GPLv3+)"),
+	"AGPL-3.0-only":    PythonLicenseName("AGPL-3.0-only",    "GNU Affero General Public License v3"),
+	"AGPL-3.0-or-later": PythonLicenseName(
+		"AGPL-3.0-or-later", "GNU Affero General Public License v3 or later (AGPLv3+)"
+	),
 }
 
 
@@ -252,16 +296,39 @@ class License(metaclass=ExtendedType, slots=True):
 		return self._name
 
 
-Apache_2_0_License =   License("Apache-2.0", "Apache License 2.0", True, True)
-BSD_3_Clause_License = License("BSD-3-Clause", "BSD 3-Clause Revised License", True, True)
-GPL_2_0_or_later =     License("GPL-2.0-or-later", "GNU General Public License v2.0 or later", True, True)
-MIT_License =          License("MIT", "MIT License", True, True)
+Apache_2_0_License =     License("Apache-2.0",        "Apache License 2.0",                              True, True)
+BSD_2_Clause_License =   License("BSD-2-Clause",      "BSD 2-Clause Simplified License",                 True, True)
+BSD_3_Clause_License =   License("BSD-3-Clause",      "BSD 3-Clause Revised License",                    True, True)
+MIT_License =            License("MIT",               "MIT License",                                     True, True)
+ISC_License =            License("ISC",               "ISC License",                                     True, True)
+MPL_2_0_License =        License("MPL-2.0",           "Mozilla Public License 2.0",                      True, True)
+BSL_1_0_License =        License("BSL-1.0",           "Boost Software License 1.0",                      True, True)
+Zlib_License =           License("Zlib",              "zlib License",                                    True, True)
+PSF_2_0_License =        License("PSF-2.0",           "Python Software Foundation License 2.0",          True, True)
+Unlicense =              License("Unlicense",         "The Unlicense",                                   True, True)
+CC0_1_0 =                License("CC0-1.0",           "Creative Commons Zero v1.0 Universal",            False, True)
+EPL_1_0_License =        License("EPL-1.0",           "Eclipse Public License 1.0",                      True, True)
+EPL_2_0_License =        License("EPL-2.0",           "Eclipse Public License 2.0",                      True, True)
+LGPL_2_1_only =          License("LGPL-2.1-only",     "GNU Lesser General Public License v2.1 only",     True, True)
+LGPL_2_1_or_later =      License("LGPL-2.1-or-later", "GNU Lesser General Public License v2.1 or later", True, True)
+LGPL_3_0_only =          License("LGPL-3.0-only",     "GNU Lesser General Public License v3.0 only",     True, True)
+LGPL_3_0_or_later =      License("LGPL-3.0-or-later", "GNU Lesser General Public License v3.0 or later", True, True)
+GPL_2_0_only =           License("GPL-2.0-only",      "GNU General Public License v2.0 only",            True, True)
+GPL_2_0_or_later =       License("GPL-2.0-or-later",  "GNU General Public License v2.0 or later",        True, True)
+GPL_3_0_only =           License("GPL-3.0-only",      "GNU General Public License v3.0 only",            True, True)
+GPL_3_0_or_later =       License("GPL-3.0-or-later",  "GNU General Public License v3.0 or later",        True, True)
+AGPL_3_0_only =          License("AGPL-3.0-only",     "GNU Affero General Public License v3.0 only",     True, True)
+AGPL_3_0_or_later =      License("AGPL-3.0-or-later", "GNU Affero General Public License v3.0 or later", True, True)
 
 
 #: Mapping of predefined licenses
 SPDX_INDEX: dict[str, License] = {
-	"Apache-2.0":       Apache_2_0_License,
-	"BSD-3-Clause":     BSD_3_Clause_License,
-	"GPL-2.0-or-later": GPL_2_0_or_later,
-	"MIT":              MIT_License
+	license.SPDXIdentifier: license
+	for license in (
+		Apache_2_0_License, BSD_2_Clause_License, BSD_3_Clause_License, MIT_License, ISC_License, MPL_2_0_License,
+		BSL_1_0_License, Zlib_License, PSF_2_0_License, Unlicense, CC0_1_0, EPL_1_0_License, EPL_2_0_License,
+		LGPL_2_1_only, LGPL_2_1_or_later, LGPL_3_0_only, LGPL_3_0_or_later,
+		GPL_2_0_only, GPL_2_0_or_later, GPL_3_0_only, GPL_3_0_or_later,
+		AGPL_3_0_only, AGPL_3_0_or_later,
+	)
 }
