@@ -73,14 +73,15 @@ beside it and a reader knows from ``xsi:noNamespaceSchemaLocation`` which one it
 
    See :ref:`high-level help <TESTING/ReportFormat>` for the schema and an example.
 """
-from datetime              import datetime, timezone
-from pathlib               import Path
-from typing                import Any, TypedDict
-from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
+from datetime                 import datetime, timezone
+from pathlib                  import Path
+from typing                   import Any, TypedDict, Optional as Nullable
+from xml.etree.ElementTree    import Element, ElementTree, SubElement, indent
 
-from pytest                import Config, Parser, Session, StashKey
-from pyTooling.Decorators  import export
-from pyTooling.MetaClasses import ExtendedType
+from pytest                   import Config, Parser, Session, StashKey
+from pyTooling.Decorators     import export
+from pyTooling.MetaClasses    import ExtendedType
+from pyTooling.Testing.PyTest import hierarchyKey
 
 
 __all__ = ["SCHEMA_VERSION_LATEST", "SCHEMA_FILES", "REPORT_WRITER_KEY"]
@@ -105,9 +106,6 @@ class _Result(TypedDict, total=False):
 	title:                str    #: Title of the testcase, if it is marked.
 	summary:              str    #: Summary of the testcase, if its doc-string has one.
 	description:          str    #: Description of the testcase, if its doc-string has one.
-	testsuiteTitle:       str    #: Title of the test suite the testcase belongs to.
-	testsuiteSummary:     str    #: Summary of that test suite.
-	testsuiteDescription: str    #: Description of that test suite.
 
 
 @export
@@ -119,17 +117,22 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 	of ``<Testsuite>``, so a reader sees the hierarchy the test suite actually has.
 	"""
 
-	_path:    Path                 #: Where the report is written.
-	_results: dict[str, _Result]   #: Collected results, keyed by node ID.
+	_path:      Path                          #: Where the report is written.
+	_results:   dict[str, _Result]            #: Collected results, keyed by node ID.
+	_hierarchy: dict[str, dict[str, str]]     #: Names of every test suite level, keyed by its dotted path.
 
-	def __init__(self, path: Path) -> None:
+	def __init__(self, path: Path, hierarchy: Nullable[dict[str, dict[str, str]]] = None) -> None:
 		"""
 		Initializes the writer with the path it writes to.
 
-		:param path: Path of the report file to write.
+		:param path:      Path of the report file to write.
+		:param hierarchy: Optional, the names of every test suite level, keyed by its dotted path, as
+		                  :mod:`pyTooling.Testing.PyTest` collects them. Without it - when the marker plugin is not
+		                  registered - the test suite elements carry no names.
 		"""
-		self._path =    path
-		self._results = {}
+		self._path =      path
+		self._results =   {}
+		self._hierarchy = {} if hierarchy is None else hierarchy
 
 	def pytest_runtest_logreport(self, report: Any) -> None:
 		"""
@@ -168,6 +171,13 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 			if (suite := suites.get(path)) is None:
 				suite = suites[path] = SubElement(parent, "Testsuite", {"name": level})
 
+				# The names are the level's own, so they are written where the level is created - once, however many
+				# testcases it holds. The schema requires this order, and a level contributes only the names it has.
+				levelNames = self._hierarchy.get(path, {})
+				for name in ("Title", "Summary", "Description"):
+					if (value := levelNames.get(name[0].lower() + name[1:], "")) != "":
+						SubElement(suite, name).text = value
+
 			parent = suite
 
 		return parent
@@ -194,7 +204,6 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 		suites: dict[str, Element] = {}
 		for entry in self._results.values():
 			testsuite = self._testsuiteFor(root, suites, entry["nodeID"])
-			_addNames(testsuite, entry, "testsuite")
 
 			testcase = SubElement(testsuite, "Testcase", {
 				"name":     entry["nodeID"].rsplit("::", 1)[-1],
@@ -202,7 +211,11 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 				"duration": f"{entry['duration']:.6f}",
 				"nodeID":   entry["nodeID"],
 			})
-			_addNames(testcase, entry, "")
+			# Ordered as the schema requires; an unmarked testcase carries none of them.
+			for name in ("Title", "Summary", "Description"):
+				if (value := entry.get(name[0].lower() + name[1:], "")) != "":
+					SubElement(testcase, name).text = value
+
 			if entry["message"] != "":
 				SubElement(testcase, "Message").text = entry["message"]
 
@@ -210,24 +223,6 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 		indent(tree, space="\t")
 		self._path.parent.mkdir(parents=True, exist_ok=True)
 		tree.write(self._path, encoding="utf-8", xml_declaration=True)
-
-
-def _addNames(element: Element, entry: dict, prefix: str) -> None:
-	"""
-	Add the ``Title``, ``Summary`` and ``Description`` elements an item carries, if it carries them.
-
-	The elements are ordered as the schema requires, and an element is written only when its value is not empty, so
-	an unmarked testcase produces none of them.
-
-	:param element: The element to add the names to.
-	:param entry:   The collected result the names are read from.
-	:param prefix:  Property name prefix - ``""`` for a testcase, ``"testsuite"`` for its test suite.
-	"""
-	for name in ("Title", "Summary", "Description"):
-		key = f"{prefix}{name}" if prefix == "" else f"{prefix}{name}"
-		if (value := entry.get(key[0].lower() + key[1:] if prefix == "" else key, "")) != "":
-			if element.find(name) is None:
-				SubElement(element, name).text = value
 
 
 @export
@@ -252,6 +247,8 @@ def pytest_configure(config: Config) -> None:
 	:param config: The session's configuration.
 	"""
 	if (path := config.getoption("--pytooling-xml")) is not None:
-		writer = TestReportWriter(Path(path))
+		# 'setdefault' rather than 'get': this hook runs before collection, so the marker plugin has not filled the
+		# stash yet. Creating the dictionary here hands both plugins the same object, which it then updates in place.
+		writer = TestReportWriter(Path(path), config.stash.setdefault(hierarchyKey, {}))
 		config.stash[REPORT_WRITER_KEY] = writer
 		config.pluginmanager.register(writer, "pyTooling.Testing.TestReportWriter")
