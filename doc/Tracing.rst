@@ -34,23 +34,38 @@ trace is exported.
 OTLP/JSON Export
 ################
 
-:mod:`pyTooling.Tracing.OpenTelemetry` writes a trace as **OTLP/JSON**, the OpenTelemetry Protocol's JSON
-encoding. One format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger
-has accepted it since v1.35 - so no translation step stands between a trace and a viewer.
+A :class:`~pyTooling.Tracing.Trace` converts itself to **OTLP/JSON**, the OpenTelemetry Protocol's JSON encoding.
+One format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
+accepted it since v1.35 - so no translation step stands between a trace and a viewer.
 
 .. code-block:: python
 
-   from pyTooling.Tracing.OpenTelemetry import WriteOTLP
+   from pathlib import Path
 
-   WriteOTLP(trace, "trace.json", serviceName="myProgram")
+   trace.WriteJSONFile(Path("trace.json"), serviceName="myProgram")
 
 .. code-block:: bash
 
-   curl -X POST -H "Content-Type: application/json" -d @trace.json \
-        http://localhost:4318/v1/traces
+   curl -X POST -H "Content-Type: application/json" -d @trace.json http://localhost:4318/v1/traces
 
-:func:`~pyTooling.Tracing.OpenTelemetry.ToOTLP` returns the same document as a dictionary, for a caller that posts
-it directly rather than writing a file.
+Three methods, for the three things a caller does with the document:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Method
+     - Returns
+   * - :meth:`~pyTooling.Tracing.Trace.ToJSON`
+     - the document as a :class:`dict`, for a caller posting it directly
+   * - :meth:`~pyTooling.Tracing.Trace.ToJSONString`
+     - the document encoded as a :class:`str`
+   * - :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`
+     - nothing - it writes the document to the given :class:`~pathlib.Path`
+
+A :class:`~pyTooling.Tracing.Span` and an :class:`~pyTooling.Tracing.Event` convert themselves too, but not
+publicly: a lone span is no OTLP document, because it has neither a ``traceId`` nor a service to be reported
+under. The trace walks its tree and asks each of them in turn.
 
 .. _TRACING/OTLP/Mapping:
 
