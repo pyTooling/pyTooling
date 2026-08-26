@@ -1,5 +1,4 @@
 .. _TUTORIAL/ExceptionHierarchy:
-.. _ExceptionHierarchies:
 
 Exception Hierarchies
 #####################
@@ -75,11 +74,17 @@ it doesn't need a class of its own - a message and a note say it better.
 
       .. code-block:: Python
 
-         class MyPackageError(ExceptionBase): ...
+         class MyPackageError(ExceptionBase):
+           """Base-exception of all exceptions raised by 'myPackage'."""
 
-         class ParserError(MyPackageError): ...
-         class WriterError(MyPackageError): ...
-         class ModelError(MyPackageError): ...
+         class ParserError(MyPackageError):
+           """The parser failed."""
+
+         class WriterError(MyPackageError):
+           """The writer failed."""
+
+         class ModelError(MyPackageError):
+           """The model failed."""
 
       A caller catching ``ParserError`` still doesn't know whether the file was missing, unreadable or malformed -
       and those need three different reactions.
@@ -89,7 +94,8 @@ it doesn't need a class of its own - a message and a note say it better.
 
       .. code-block:: Python
 
-         class MyPackageError(ExceptionBase): ...
+         class MyPackageError(ExceptionBase):
+           """Base-exception of all exceptions raised by 'myPackage'."""
 
          class ResourceError(MyPackageError):
            """A file or a stream couldn't be reached."""
@@ -119,7 +125,9 @@ report stays specific.
 .. code-block:: Python
 
    def readConfiguration(configFile: Path) -> Configuration:
-     if not isinstance(configFile, Path):
+     if configFile is None:
+       raise ValueError("Parameter 'configFile' is None.")
+     elif not isinstance(configFile, Path):
        ex = TypeError("Parameter 'configFile' is not of type 'Path'.")
        ex.add_note(f"Got type '{getFullyQualifiedName(configFile)}'.")
        raise ex
@@ -139,11 +147,16 @@ report stays specific.
 
 Three rules are at work there, and they are worth stating separately:
 
-.. rubric:: A parameter of the wrong *type* stays a :exc:`TypeError`
+.. rubric:: A parameter of the wrong *type* stays a :exc:`TypeError`, a wrong *value* a :exc:`ValueError`
 
 :exc:`TypeError` and :exc:`ValueError` are Python's vocabulary for *the caller passed nonsense*, and every Python
 programmer already catches them. Wrapping those in a package base-exception hides a programming error among the
 runtime failures. pyTooling raises them directly, with a note naming the type that arrived.
+
+The two divide cleanly, and :pycode:`None` is where it matters most: a parameter that is :pycode:`None` has the
+wrong **value**, not the wrong type, so it is a :exc:`ValueError`. Check it first and chain the type check onto it
+with ``elif`` - :pycode:`isinstance(None, Path)` is :pycode:`False`, so a lone type check would report the wrong
+one of the two.
 
 .. rubric:: A failure from below is re-raised **from** its cause
 
@@ -213,6 +226,8 @@ so tempting:
 .. code-block:: Python
 
    # never this
+   try:
+     configuration = readConfiguration(configFile)
    except MyPackageError as ex:
      if "couldn't be read" in str(ex):
        ...
@@ -224,6 +239,8 @@ handler that matched on it breaks silently. A separate class per variant is what
 
 .. code-block:: Python
 
+   try:
+     configuration = readConfiguration(configFile)
    except ResourceError as ex:
      ...   # retry, or offer to create the file
    except FormatError as ex:
@@ -235,11 +252,11 @@ this?"* - if two variants always get the same reaction, they are one class with 
 
 .. _TUTORIAL/ExceptionHierarchy/Documenting:
 
-Step 6: document every exception that escapes
-*********************************************
+Step 6: document every exception a caller can see
+*************************************************
 
-Each function documents what it raises with ``:raises:``, including exceptions raised by something it calls and
-lets through - that is what a caller reads *before* hitting the failure:
+Each function documents what it raises with ``:raises:`` - the ones it raises itself, and the ones a callee raises
+that it deliberately lets through. That is what a caller reads *before* hitting the failure:
 
 .. code-block:: Python
 
@@ -260,10 +277,64 @@ lets through - that is what a caller reads *before* hitting the failure:
    failure; the field list is read before it, which is the cheaper of the two moments.
 
 
+.. _TUTORIAL/ExceptionHierarchy/TopLevel:
+
+Step 7: catch what is left at the top
+*************************************
+
+Every hierarchy needs one place where the exceptions that nobody handled stop, and that place is the program's
+entry point. **A user should never see a raw traceback**: it is the program admitting it didn't anticipate its own
+failure, and it buries the one line that would have helped.
+
+A :class:`~pyTooling.TerminalUI.TerminalApplication` gives that place its shape. The program's **own** exceptions
+come first and are reported as ordinary messages - somebody who passed a wrong option should read one sentence -
+and only what nobody expected reaches the printers:
+
+.. code-block:: Python
+
+   def main() -> NoReturn:
+     program = Application()
+
+     try:
+       program.Run()
+     except MyPackageError as ex:                # our own hierarchy: a message, not a traceback
+       program.WriteLineToStdErr(f"[ERROR] {ex}")
+     except ExceptionBase as ex:
+       program.PrintExceptionBase(ex)            # exit code 241
+     except NotImplementedError as ex:
+       program.PrintNotImplementedError(ex)      # exit code 240
+     except MissingDependencyError as ex:
+       program.PrintMissingDependencyError(ex)   # exit code 242 - an installation problem, not a bug
+     except Exception as ex:
+       program.PrintException(ex)                # exit code 241, the unexpected
+
+     program.Exit()
+
+The order is the argument. ``MyPackageError`` is caught **first** and printed as a message, because reaching it
+means the program worked as designed - it found a broken configuration file and said so. Everything below it means
+the program itself was surprised, and those clauses hand over to a printer.
+
+.. important::
+
+   The printers are why Step 3 and Step 4 pay off. :meth:`~pyTooling.TerminalUI.TerminalApplication.PrintException`
+   renders the exception, **its notes, and its cause chain** - so the ``add_note`` that says *"Re-generate the file
+   with 'myTool config --migrate'"* reaches the user, and the :exc:`OSError` behind a ``ResourceError`` is shown
+   under it. Nothing at the call site has to walk ``__cause__`` or ``__notes__`` by hand.
+
+   Set :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL` and each report ends by inviting the
+   user to file a bug, with the URL - except the missing-dependency report, which names the package to install
+   instead, because nothing is wrong with the program.
+
+.. seealso::
+
+   :ref:`TUTORIAL/TerminalApplication/Step5`
+      |rarr| The same handler built step by step, with the exit codes and what each printer does.
+
+
 .. _TUTORIAL/ExceptionHierarchy/Warnings:
 
-And the other hierarchy: warnings
-*********************************
+Warnings have a hierarchy too
+*****************************
 
 Everything above is about a failure that **stops** the operation. A *warning* is the other case - the operation
 carried on, but something is worth saying - and :mod:`pyTooling.Warning` gives it a hierarchy of its own, built on
