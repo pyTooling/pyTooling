@@ -45,6 +45,7 @@ class UserManager(ArgParseHelperMixin):
 	"""Manage the users of a system."""
 
 	def __init__(self) -> None:
+		"""Initialize the user manager and the parser it declares."""
 		super().__init__(prog="UserManager.py", description="Manage the users of a system.")
 
 	@DefaultHandler()
