@@ -387,7 +387,8 @@ def _readIdentifier(mapping: dict[str, object], key: str, digits: int, path: str
 		ex = TracingError(f"Field '{path}.{key}' is not {digits} hexadecimal digits.")
 		ex.add_note(f"Got '{identifier}'.")
 		raise ex
-	elif set(identifier) == {"0"}:
+
+	if set(identifier) == {"0"}:
 		ex = TracingError(f"Field '{path}.{key}' is all zeros.")
 		ex.add_note("OTLP defines an all-zero identifier as invalid.")
 		raise ex
@@ -1226,7 +1227,8 @@ class Span(metaclass=ExtendedType, slots=True):
 			ex = TracingError(f"Field '{path}.{missing}TimeUnixNano' is missing.")
 			ex.add_note(f"A timespan has both timestamps or neither, and this one has '{present}TimeUnixNano'.")
 			raise ex
-		elif hasStartTime:
+
+		if hasStartTime:
 			startTimeUnixNano = _readNumberField(span, "startTimeUnixNano", int, path)
 			endTimeUnixNano =   _readNumberField(span, "endTimeUnixNano", int, path)
 
@@ -1538,7 +1540,8 @@ class Trace(Span):
 		if traceID is None:
 			if len(spans) == 0:
 				raise TracingError("The OTLP/JSON document contains no spans.")
-			elif len(spans) > 1:
+
+			if len(spans) > 1:
 				ex = TracingError(f"The OTLP/JSON document contains {len(spans)} traces.")
 				ex.add_note(f"Found: {', '.join(spans)}.")
 				ex.add_note("Name the trace to read in parameter 'traceID', or read all of them with")
@@ -1560,7 +1563,8 @@ class Trace(Span):
 			ex.add_note("The span without a 'parentSpanId' is the trace itself, and this document doesn't carry it.")
 			ex.add_note("Use 'TraceCollection.FromOTLPJSON()' to read a trace that isn't complete yet.")
 			raise ex
-		elif len(fragments) > 0:
+
+		if len(fragments) > 0:
 			ex = TracingError(f"{len(fragments)} span(s) of trace '{traceID}' are not part of its tree.")
 			ex.add_note("A 'parentSpanId' names a span this document doesn't carry.")
 			ex.add_note(f"Found: {', '.join(fragment._spanID for fragment, _ in fragments)}.")
@@ -1647,6 +1651,132 @@ def _readOTLPDocument(document: OTLPDocument) -> dict[str, list[tuple[str, dict[
 	return spans
 
 
+def _indexSpansOfTrace(
+	traceID: str,
+	spans: list[tuple[str, dict[str, object]]]
+) -> tuple[dict[str, tuple[str, dict[str, object]]], dict[str, str], dict[str, list[str]], list[str]]:
+	"""
+	Index the timespans of one trace by their identifier, and group them by the parent they name.
+
+	:param traceID:       Identifier of the trace, for the exception's message.
+	:param spans:         The ``(path, mapping)`` pairs of the trace's timespans, in document order.
+	:returns:             Tuple of every timespan by span identifier, the parent each of them names, the identifiers
+	                      of the timespans below each parent, and the identifiers of the timespans naming no parent.
+	:raises TracingError: If two timespans carry the same ``spanId``.
+	:raises TracingError: If a ``spanId`` or ``parentSpanId`` isn't 16 hexadecimal digits, or is all zeros.
+	"""
+	entries:  dict[str, tuple[str, dict[str, object]]] = {}
+	parents:  dict[str, str] = {}
+	children: dict[str, list[str]] = {}
+	roots:    list[str] = []
+
+	for path, span in spans:
+		spanID = _readIdentifier(span, "spanId", 16, path)
+		if spanID in entries:
+			ex = TracingError(f"Trace '{traceID}' has more than one span with identifier '{spanID}'.")
+			ex.add_note(f"Found at '{entries[spanID][0]}' and at '{path}'.")
+			raise ex
+
+		entries[spanID] = (path, span)
+		if span.get("parentSpanId", "") == "":
+			roots.append(spanID)
+		else:
+			parentSpanID =    _readIdentifier(span, "parentSpanId", 16, path)
+			parents[spanID] = parentSpanID
+			children.setdefault(parentSpanID, []).append(spanID)
+
+	return entries, parents, children, roots
+
+
+def _buildTraceRoot(
+	traceID: str,
+	entry: tuple[str, dict[str, object]],
+	traceType: type[_TraceType]
+) -> _TraceType:
+	"""
+	Construct the trace from the timespan that names no parent.
+
+	:param traceID:       Identifier the trace is to carry.
+	:param entry:         The ``(path, mapping)`` pair of the trace's own timespan.
+	:param traceType:     Class to construct the trace with.
+	:returns:             The trace, with its attributes and events but without its sub-spans.
+	:raises TracingError: If the timespan's name is missing or empty.
+	"""
+	path, span = entry
+	name = _readField(span, "name", str, path)
+
+	try:
+		trace = traceType(name)
+	except ValueError as cause:
+		ex = TracingError(f"Field '{path}.name' is empty.")
+		raise ex from cause
+
+	trace._traceID = traceID
+	trace._ReadOTLPJSON(span, path)
+
+	return trace
+
+
+def _collectFragments(
+	entries: dict[str, tuple[str, dict[str, object]]],
+	parents: dict[str, str],
+	pending: list[Span],
+	built: dict[str, Span],
+	spanType: type[Span]
+) -> list[tuple[Span, str]]:
+	"""
+	Construct the timespans whose parent this document doesn't carry.
+
+	A distributed execution is exported per process, so the timespan enclosing a span often travels in a different
+	document than the span itself. Such a span is the root of a **fragment**: the rest of its subtree may well be
+	here, so it is built and kept for a later document to attach it to.
+
+	:param entries:       Every timespan of the trace by span identifier, as ``(path, mapping)``.
+	:param parents:       The parent each timespan names, by span identifier.
+	:param pending:       The timespans whose sub-spans are still to be constructed; extended by this function.
+	:param built:         The timespans constructed so far, extended by this function.
+	:param spanType:      Class to construct a timespan with.
+	:returns:             The ``(fragment, parentSpanID)`` pairs of the fragments' roots, in document order.
+	:raises TracingError: If a mandatory field is missing or is of the wrong type.
+	"""
+	fragments: list[tuple[Span, str]] = []
+	for spanID, parentSpanID in parents.items():
+		if parentSpanID not in entries:
+			path, span = entries[spanID]
+			fragment =   spanType._FromOTLPJSON(span, None, path)
+			built[spanID] = fragment
+			fragments.append((fragment, parentSpanID))
+			pending.append(fragment)
+
+	return fragments
+
+
+def _attachSubSpans(
+	entries: dict[str, tuple[str, dict[str, object]]],
+	children: dict[str, list[str]],
+	pending: list[Span],
+	built: dict[str, Span],
+	spanType: type[Span]
+) -> None:
+	"""
+	Construct every timespan reachable from the ones already built, and attach each to its parent.
+
+	:param entries:       Every timespan of the trace by span identifier, as ``(path, mapping)``.
+	:param children:      The identifiers of the timespans below each parent.
+	:param pending:       The timespans whose sub-spans are still to be constructed; emptied by this function.
+	:param built:         The timespans constructed so far, extended by this function.
+	:param spanType:      Class to construct a timespan with.
+	:raises TracingError: If a mandatory field is missing or is of the wrong type.
+	"""
+	while len(pending) > 0:
+		parent = pending.pop()
+		for spanID in children.get(parent._spanID, []):
+			path, span = entries[spanID]
+			timespan =   spanType._FromOTLPJSON(span, parent, path)
+			built[spanID] = timespan
+			pending.append(timespan)
+
+
 def _buildSpanTree(
 	traceID: str,
 	spans: list[tuple[str, dict[str, object]]],
@@ -1678,77 +1808,34 @@ def _buildSpanTree(
 	:raises TracingError: If timespans reference each other in a cycle.
 	:raises TracingError: If a mandatory field is missing or is of the wrong type.
 	"""
-	mappings: dict[str, dict[str, object]] = {}
-	paths:    dict[str, str] = {}
-	parents:  dict[str, str] = {}
-	subSpans: dict[str, list[tuple[str, dict[str, object]]]] = {}
-	roots:    list[tuple[str, dict[str, object]]] = []
-
-	for path, span in spans:
-		spanID = _readIdentifier(span, "spanId", 16, path)
-		if spanID in paths:
-			ex = TracingError(f"Trace '{traceID}' has more than one span with identifier '{spanID}'.")
-			ex.add_note(f"Found at '{paths[spanID]}' and at '{path}'.")
-			raise ex
-
-		mappings[spanID] = span
-		paths[spanID] =    path
-		if span.get("parentSpanId", "") == "":
-			roots.append((path, span))
-		else:
-			parentSpanID =    _readIdentifier(span, "parentSpanId", 16, path)
-			parents[spanID] = parentSpanID
-			subSpans.setdefault(parentSpanID, []).append((path, span))
+	entries, parents, children, roots = _indexSpansOfTrace(traceID, spans)
 
 	if len(roots) > 1:
 		ex = TracingError(f"Trace '{traceID}' has {len(roots)} spans without a 'parentSpanId'.")
 		ex.add_note("The span without a 'parentSpanId' is the trace itself, so there is at most one of them.")
-		ex.add_note(f"Found: {', '.join(path for path, _ in roots)}.")
+		ex.add_note(f"Found: {', '.join(entries[spanID][0] for spanID in roots)}.")
 		raise ex
 
-	trace:     Nullable[_TraceType] = None
-	built:     dict[str, Span] = {}
-	fragments: list[tuple[Span, str]] = []
-	pending:   list[Span] = []
+	trace:   Nullable[_TraceType] = None
+	built:   dict[str, Span] = {}
+	pending: list[Span] = []
 
 	if len(roots) == 1:
-		rootPath, rootSpan = roots[0]
-		name = _readField(rootSpan, "name", str, rootPath)
-
-		try:
-			trace = traceType(name)
-		except ValueError as cause:
-			ex = TracingError(f"Field '{rootPath}.name' is empty.")
-			raise ex from cause
-
-		trace._traceID = traceID
-		trace._ReadOTLPJSON(rootSpan, rootPath)
+		trace = _buildTraceRoot(traceID, entries[roots[0]], traceType)
 		built[trace._spanID] = trace
 		pending.append(trace)
 
-	for spanID, parentSpanID in parents.items():
-		if parentSpanID not in mappings:
-			fragment = spanType._FromOTLPJSON(mappings[spanID], None, paths[spanID])
-			built[spanID] = fragment
-			fragments.append((fragment, parentSpanID))
-			pending.append(fragment)
+	fragments = _collectFragments(entries, parents, pending, built, spanType)
+	_attachSubSpans(entries, children, pending, built, spanType)
 
-	while len(pending) > 0:
-		parent = pending.pop()
-		for path, span in subSpans.get(parent._spanID, []):
-			timespan = spanType._FromOTLPJSON(span, parent, path)
-			built[timespan._spanID] = timespan
-			pending.append(timespan)
-
-	if len(built) != len(mappings):
-		unreachable = [path for spanID, path in paths.items() if spanID not in built]
+	if len(built) != len(entries):
+		unreachable = [path for spanID, (path, _) in entries.items() if spanID not in built]
 		ex = TracingError(f"{len(unreachable)} span(s) of trace '{traceID}' reference each other in a cycle.")
 		ex.add_note("Every other span is reachable from the trace's root span or from a fragment's root span.")
 		ex.add_note(f"Found: {', '.join(unreachable)}.")
 		raise ex
 
 	return trace, built, fragments
-
 
 @export
 class TraceCollection(metaclass=ExtendedType, slots=True):
