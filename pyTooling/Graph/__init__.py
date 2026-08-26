@@ -2190,8 +2190,8 @@ class Link(
 		self,
 		source: Vertex,
 		destination: Vertex,
-		linkID: LinkIDType = None,
-		value: LinkValueType = None,
+		linkID: Nullable[LinkIDType] = None,
+		value: Nullable[LinkValueType] = None,
 		weight: Nullable[LinkWeightType] = None,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
