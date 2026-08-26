@@ -31,7 +31,7 @@
 Unit tests for the **OTLP/JSON** export and import of :mod:`pyTooling.Tracing`.
 """
 from datetime  import datetime, timedelta
-from json      import loads as json_loads
+from json      import dumps as json_dumps, loads as json_loads
 from math      import inf, isnan
 from pathlib   import Path
 from tempfile  import TemporaryDirectory
@@ -40,7 +40,8 @@ from unittest  import mock
 
 from pyTooling.Common  import __version__
 from pyTooling.Testing import Testcase
-from pyTooling.Tracing import OTLP_SCOPE_NAME, Event, Span, Trace, TracingError, _newIdentifier, _toAttributeValue
+from pyTooling.Tracing import OTLP_SCOPE_NAME, Event, Span, Trace, TraceCollection, TracingError, _newIdentifier
+from pyTooling.Tracing import _toAttributeValue
 from pyTooling.Tracing import _fromAttributes, _fromAttributeValue, _fromUnixNano
 
 if __name__ == "__main__":  # pragma: no cover
@@ -133,7 +134,7 @@ class Document(Testcase):
 	"""The exported document's shape."""
 
 	def test_TheEnvelopeNamesTheServiceAndTheScope(self) -> None:
-		document = _exampleTrace().ToJSON(serviceName="myProgram")
+		document = _exampleTrace().ToOTLPJSON(serviceName="myProgram")
 		resourceSpans = document["resourceSpans"][0]
 
 		self.assertEqual(
@@ -143,7 +144,7 @@ class Document(Testcase):
 		self.assertEqual(OTLP_SCOPE_NAME, resourceSpans["scopeSpans"][0]["scope"]["name"])
 
 	def test_TheServiceNameDefaultsToTheTracesName(self) -> None:
-		document = _exampleTrace().ToJSON()
+		document = _exampleTrace().ToOTLPJSON()
 
 		self.assertEqual(
 			[{"key": "service.name", "value": {"stringValue": "build"}}],
@@ -153,8 +154,8 @@ class Document(Testcase):
 	def test_OnlyATraceConvertsToADocument(self) -> None:
 		"""A lone span is not an OTLP document - it has no 'traceId' and no service to be reported under."""
 
-		self.assertFalse(hasattr(Span("not a trace"), "ToJSON"))
-		self.assertTrue(hasattr(Trace("a trace"), "ToJSON"))
+		self.assertFalse(hasattr(Span("not a trace"), "ToOTLPJSON"))
+		self.assertTrue(hasattr(Trace("a trace"), "ToOTLPJSON"))
 
 
 class Spans(Testcase):
@@ -171,26 +172,26 @@ class Spans(Testcase):
 		return {span["name"]: span for span in document["resourceSpans"][0]["scopeSpans"][0]["spans"]}
 
 	def test_EverySpanIsExported(self) -> None:
-		spans = self._Spans(_exampleTrace().ToJSON())
+		spans = self._Spans(_exampleTrace().ToOTLPJSON())
 
 		self.assertEqual({"build", "compile", "link"}, set(spans))
 
 	def test_AllSpansShareOneTraceIdentifier(self) -> None:
-		spans = self._Spans(_exampleTrace().ToJSON())
+		spans = self._Spans(_exampleTrace().ToOTLPJSON())
 		identifiers = {span["traceId"] for span in spans.values()}
 
 		self.assertEqual(1, len(identifiers))
 		self.assertEqual(32, len(identifiers.pop()), "A trace identifier is 16 bytes, hex-encoded.")
 
 	def test_TheHierarchyIsCarriedByParentSpanId(self) -> None:
-		spans = self._Spans(_exampleTrace().ToJSON())
+		spans = self._Spans(_exampleTrace().ToOTLPJSON())
 
 		self.assertNotIn("parentSpanId", spans["build"], "The trace itself has no parent.")
 		self.assertEqual(spans["build"]["spanId"], spans["compile"]["parentSpanId"])
 		self.assertEqual(spans["build"]["spanId"], spans["link"]["parentSpanId"])
 
 	def test_ASpanIdentifierIsEightBytes(self) -> None:
-		spans = self._Spans(_exampleTrace().ToJSON())
+		spans = self._Spans(_exampleTrace().ToOTLPJSON())
 
 		for name, span in spans.items():
 			with self.subTest(span=name):
@@ -199,7 +200,7 @@ class Spans(Testcase):
 
 	def test_TheDurationSurvives(self) -> None:
 		"""A span's duration is in seconds while OTLP wants nanoseconds, which is the easy factor to get wrong."""
-		spans = self._Spans(_exampleTrace().ToJSON())
+		spans = self._Spans(_exampleTrace().ToOTLPJSON())
 		compileSpan = spans["compile"]
 		duration = int(compileSpan["endTimeUnixNano"]) - int(compileSpan["startTimeUnixNano"])
 
@@ -212,19 +213,19 @@ class Spans(Testcase):
 			with Span("span") as span:
 				sleep(0.001)
 
-		exported = self._Spans(trace.ToJSON())["span"]
+		exported = self._Spans(trace.ToOTLPJSON())["span"]
 
 		self.assertEqual(span._totalTime, int(exported["endTimeUnixNano"]) - int(exported["startTimeUnixNano"]))
 
 	def test_TheTimestampsAreStrings(self) -> None:
 		"""proto3's JSON mapping encodes a 64-bit integer as a string."""
-		for span in self._Spans(_exampleTrace().ToJSON()).values():
+		for span in self._Spans(_exampleTrace().ToOTLPJSON()).values():
 			with self.subTest(span=span["name"]):
 				self.assertIsInstance(span["startTimeUnixNano"], str)
 				self.assertIsInstance(span["endTimeUnixNano"], str)
 
 	def test_AttributesAreExported(self) -> None:
-		spans = self._Spans(_exampleTrace().ToJSON())
+		spans = self._Spans(_exampleTrace().ToOTLPJSON())
 		attributes = {entry["key"]: entry["value"] for entry in spans["compile"]["attributes"]}
 
 		self.assertEqual({"intValue": "12"}, attributes["files"])
@@ -232,7 +233,7 @@ class Spans(Testcase):
 		self.assertEqual({"doubleValue": 0.5}, attributes["ratio"])
 
 	def test_ASpanWithoutAttributesHasNoAttributeKey(self) -> None:
-		spans = self._Spans(_exampleTrace().ToJSON())
+		spans = self._Spans(_exampleTrace().ToOTLPJSON())
 
 		self.assertNotIn("attributes", spans["link"])
 		self.assertNotIn("events", spans["link"])
@@ -244,7 +245,7 @@ class Events(Testcase):
 	def test_TheEventIsExported(self) -> None:
 		spans = {
 			span["name"]: span
-			for span in _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for span in _exampleTrace().ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 		events = spans["compile"]["events"]
 
@@ -259,7 +260,7 @@ class Events(Testcase):
 
 		spans = {
 			exported["name"]: exported
-			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for exported in trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
 		self.assertListEqual(
@@ -270,7 +271,7 @@ class Events(Testcase):
 	def test_AnEventWithoutAttributesHasNoAttributeKey(self) -> None:
 		spans = {
 			span["name"]: span
-			for span in _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for span in _exampleTrace().ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
 		self.assertNotIn("attributes", spans["compile"]["events"][0])
@@ -288,7 +289,7 @@ class Events(Testcase):
 
 		spans = {
 			exported["name"]: exported
-			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for exported in trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
 		self.assertGreaterEqual(event.Time, before)
@@ -306,7 +307,7 @@ class Events(Testcase):
 
 		spans = {
 			exported["name"]: exported
-			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for exported in trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
 		self.assertEqual(str(int(time.timestamp() * 1_000_000_000)), spans["span"]["events"][0]["timeUnixNano"])
@@ -320,11 +321,11 @@ class WrittenFile(Testcase):
 
 		with TemporaryDirectory() as directory:
 			path = Path(directory) / "trace.json"
-			trace.WriteJSONFile(path, serviceName="myProgram", indent=2)
+			trace.WriteOTLPJSONFile(path, serviceName="myProgram", indent=2)
 
 			document = json_loads(path.read_text(encoding="utf-8"))
 
-		self.assertEqual(trace.ToJSON("myProgram")["resourceSpans"][0]["scopeSpans"][0]["scope"],
+		self.assertEqual(trace.ToOTLPJSON("myProgram")["resourceSpans"][0]["scopeSpans"][0]["scope"],
 		                 document["resourceSpans"][0]["scopeSpans"][0]["scope"])
 		self.assertEqual(3, len(document["resourceSpans"][0]["scopeSpans"][0]["spans"]))
 
@@ -335,18 +336,18 @@ class Encoding(Testcase):
 	def test_TheStringIsTheEncodedDocument(self) -> None:
 		trace = _exampleTrace()
 
-		self.assertEqual(trace.ToJSON(), json_loads(trace.ToJSONString()))
+		self.assertEqual(trace.ToOTLPJSON(), json_loads(trace.ToOTLPJSONString()))
 
 	def test_TheCompactFormIsTheDefault(self) -> None:
 		"""That is what a collector expects; an indent is for a human reading the file."""
 
 		trace = _exampleTrace()
 
-		self.assertNotIn("\n", trace.ToJSONString())
-		self.assertIn("\n", trace.ToJSONString(indent=2))
+		self.assertNotIn("\n", trace.ToOTLPJSONString())
+		self.assertIn("\n", trace.ToOTLPJSONString(indent=2))
 
 	def test_TheServiceNameReachesTheString(self) -> None:
-		document = json_loads(_exampleTrace().ToJSONString(serviceName="myProgram"))
+		document = json_loads(_exampleTrace().ToOTLPJSONString(serviceName="myProgram"))
 
 		self.assertEqual(
 			[{"key": "service.name", "value": {"stringValue": "myProgram"}}],
@@ -358,14 +359,14 @@ class Encoding(Testcase):
 
 		with TemporaryDirectory() as directory:
 			path = Path(directory) / "report" / "trace.json"
-			_exampleTrace().WriteJSONFile(path)
+			_exampleTrace().WriteOTLPJSONFile(path)
 
 			self.assertTrue(path.exists())
 
 	def test_APathIsAPath(self) -> None:
 		with TemporaryDirectory() as directory:
 			with self.assertRaises(TypeError) as exceptionCapture:
-				_exampleTrace().WriteJSONFile(f"{directory}/trace.json")
+				_exampleTrace().WriteOTLPJSONFile(f"{directory}/trace.json")
 
 		self.assertEqual("Parameter 'jsonFile' is not of type 'Path'.", str(exceptionCapture.exception))
 		self.assertEqual(["Got type 'str'."], exceptionCapture.exception.__notes__)
@@ -397,7 +398,7 @@ class WriteErrors(Testcase):
 			path = Path(directory) / "report" / "trace.json"
 			with mock.patch("pathlib.Path.mkdir", side_effect=PermissionError("denied")):
 				with self.assertRaises(TracingError) as exceptionCapture:
-					_exampleTrace().WriteJSONFile(path)
+					_exampleTrace().WriteOTLPJSONFile(path)
 
 		self.assertEqual(f"Directory '{path.parent}' couldn't be created.", str(exceptionCapture.exception))
 		self.assertIsInstance(exceptionCapture.exception.__cause__, PermissionError)
@@ -407,7 +408,7 @@ class WriteErrors(Testcase):
 			path = Path(directory) / "trace.json"
 			with mock.patch("pathlib.Path.open", side_effect=PermissionError("denied")):
 				with self.assertRaises(TracingError) as exceptionCapture:
-					_exampleTrace().WriteJSONFile(path)
+					_exampleTrace().WriteOTLPJSONFile(path)
 
 		self.assertEqual(f"OTLP/JSON file '{path}' couldn't be written.", str(exceptionCapture.exception))
 		self.assertIsInstance(exceptionCapture.exception.__cause__, PermissionError)
@@ -420,8 +421,8 @@ class Identity(Testcase):
 		"""This is what the by-call generation couldn't do: two exports describe one trace, not two."""
 		trace = _exampleTrace()
 
-		first = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
-		second = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		first = trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		second = trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 
 		self.assertEqual(first, second)
 		self.assertEqual(trace.TraceID, first[0]["traceId"])
@@ -433,7 +434,7 @@ class Identity(Testcase):
 
 		exported = {
 			converted["name"]: converted
-			for converted in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for converted in trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
 		self.assertIs(trace, span.Trace)
@@ -448,7 +449,7 @@ class Identity(Testcase):
 
 		exported = {
 			converted["name"]: converted
-			for converted in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+			for converted in trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
 		self.assertIs(outer, inner.Parent)
@@ -457,7 +458,7 @@ class Identity(Testcase):
 		self.assertNotIn("parentSpanId", exported["trace"], "The trace itself has no parent.")
 
 	def test_EveryIdentifierOfATraceIsDistinct(self) -> None:
-		spans = _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		spans = _exampleTrace().ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		identifiers = [span["spanId"] for span in spans]
 
 		self.assertEqual(len(identifiers), len(set(identifiers)))
@@ -485,14 +486,14 @@ class InstrumentationScope(Testcase):
 	"""Which library the spans are reported as coming from."""
 
 	def test_ThePyToolingScopeIsTheDefault(self) -> None:
-		scope = _exampleTrace().ToJSON()["resourceSpans"][0]["scopeSpans"][0]["scope"]
+		scope = _exampleTrace().ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["scope"]
 
 		self.assertEqual(OTLP_SCOPE_NAME, scope["name"])
 		self.assertEqual(__version__, scope["version"])
 
 	def test_ItIsInjectedRatherThanPatched(self) -> None:
 		"""A program wrapping pyTooling's tracing reports its own name, without touching the module."""
-		scope = _exampleTrace().ToJSON(
+		scope = _exampleTrace().ToOTLPJSON(
 			scopeName="myProgram.Instrumentation",
 			scopeVersion="2.1.0"
 		)["resourceSpans"][0]["scopeSpans"][0]["scope"]
@@ -502,12 +503,12 @@ class InstrumentationScope(Testcase):
 	def test_ItReachesTheStringAndTheFile(self) -> None:
 		trace = _exampleTrace()
 
-		document = json_loads(trace.ToJSONString(scopeName="myProgram", scopeVersion="2.1.0"))
+		document = json_loads(trace.ToOTLPJSONString(scopeName="myProgram", scopeVersion="2.1.0"))
 		self.assertEqual("myProgram", document["resourceSpans"][0]["scopeSpans"][0]["scope"]["name"])
 
 		with TemporaryDirectory() as directory:
 			path = Path(directory) / "trace.json"
-			trace.WriteJSONFile(path, scopeName="myProgram", scopeVersion="2.1.0")
+			trace.WriteOTLPJSONFile(path, scopeName="myProgram", scopeVersion="2.1.0")
 			written = json_loads(path.read_text(encoding="utf-8"))
 
 		self.assertEqual("myProgram", written["resourceSpans"][0]["scopeSpans"][0]["scope"]["name"])
@@ -667,13 +668,13 @@ class RoundTrip(Testcase):
 
 	def test_TheDocumentIsTheSameAgain(self) -> None:
 		"""The strongest statement available: exporting the trace that was read produces the same document."""
-		exported = _exampleTrace().ToJSONString(indent=2)
+		exported = _exampleTrace().ToOTLPJSONString(indent=2)
 
-		self.assertEqual(exported, Trace.FromOTLPJSONString(exported).ToJSONString(indent=2))
+		self.assertEqual(exported, Trace.FromOTLPJSONString(exported).ToOTLPJSONString(indent=2))
 
 	def test_TheIdentifiersSurvive(self) -> None:
 		trace = _exampleTrace()
-		read = Trace.FromOTLPJSON(trace.ToJSON())
+		read = Trace.FromOTLPJSON(trace.ToOTLPJSON())
 
 		self.assertEqual(trace.TraceID, read.TraceID)
 		self.assertEqual(trace.SpanID, read.SpanID)
@@ -684,7 +685,7 @@ class RoundTrip(Testcase):
 
 	def test_TheTreeSurvives(self) -> None:
 		"""OTLP has no nesting, so this is the 'parentSpanId' references being resolved back into a tree."""
-		read = Trace.FromOTLPJSON(_exampleTrace().ToJSON())
+		read = Trace.FromOTLPJSON(_exampleTrace().ToOTLPJSON())
 
 		self.assertEqual("build", read.Name)
 		self.assertEqual(["compile", "link"], [span.Name for span in read.IterateSubSpans()])
@@ -694,7 +695,7 @@ class RoundTrip(Testcase):
 	def test_TheTimestampsSurvive(self) -> None:
 		"""A 'datetime' holds microseconds and the document holds nanoseconds, so the value is rounded, not cut."""
 		trace = _exampleTrace()
-		read = Trace.FromOTLPJSON(trace.ToJSON())
+		read = Trace.FromOTLPJSON(trace.ToOTLPJSON())
 
 		self.assertEqual(trace.StartTime, read.StartTime)
 		self.assertEqual(trace.Duration, read.Duration)
@@ -709,7 +710,7 @@ class RoundTrip(Testcase):
 
 	def test_TheAttributesSurvive(self) -> None:
 		trace = _exampleTrace()
-		read = Trace.FromOTLPJSON(trace.ToJSON())
+		read = Trace.FromOTLPJSON(trace.ToOTLPJSON())
 		compileSpan = next(read.IterateSubSpans())
 
 		self.assertEqual("10.0.0", read["version"])
@@ -723,11 +724,11 @@ class RoundTrip(Testcase):
 		with Trace("trace") as trace:
 			trace["targets"] = ("a", "b")
 
-		self.assertEqual(["a", "b"], Trace.FromOTLPJSON(trace.ToJSON())["targets"])
+		self.assertEqual(["a", "b"], Trace.FromOTLPJSON(trace.ToOTLPJSON())["targets"])
 
 	def test_TheEventsSurvive(self) -> None:
 		trace = _exampleTrace()
-		read = Trace.FromOTLPJSON(trace.ToJSON())
+		read = Trace.FromOTLPJSON(trace.ToOTLPJSON())
 		event = next(next(read.IterateSubSpans()).IterateEvents())
 		original = next(next(trace.IterateSubSpans()).IterateEvents())
 
@@ -737,7 +738,7 @@ class RoundTrip(Testcase):
 
 	def test_ATraceThatWasNeverEnteredHasNoTimestamps(self) -> None:
 		"""Its exported mapping has none either, so both are read back as absent rather than as the Unix epoch."""
-		read = Trace.FromOTLPJSON(Trace("never entered").ToJSON())
+		read = Trace.FromOTLPJSON(Trace("never entered").ToOTLPJSON())
 
 		self.assertIsNone(read.StartTime)
 		self.assertIsNone(read.StopTime)
@@ -746,7 +747,7 @@ class RoundTrip(Testcase):
 		trace = _exampleTrace()
 		with TemporaryDirectory() as directory:
 			jsonFile = Path(directory) / "report" / "trace.json"
-			trace.WriteJSONFile(jsonFile, indent=2)
+			trace.WriteOTLPJSONFile(jsonFile, indent=2)
 
 			self.assertEqual(trace.TraceID, Trace.ReadOTLPJSONFile(jsonFile).TraceID)
 
@@ -905,18 +906,35 @@ class ReadBrokenTrees(Testcase):
 				_span("two", "2222222222222222", "1111111111111111"),
 			))
 
-		self.assertEqual(f"Trace '{TRACE_ID}' has 0 spans without a 'parentSpanId'.", str(exceptionCapture.exception))
+		self.assertEqual(
+			f"2 span(s) of trace '{TRACE_ID}' reference each other in a cycle.",
+			str(exceptionCapture.exception)
+		)
 
-	def test_AnOrphanIsReported(self) -> None:
-		"""Its 'parentSpanId' names a span the document doesn't contain, so it has nowhere to be attached."""
+	def test_AFragmentIsRejectedByTrace(self) -> None:
+		"""Its 'parentSpanId' names a span this document doesn't carry - a 'TraceCollection' keeps it, a trace can't."""
 		with self.assertRaises(TracingError) as exceptionCapture:
 			Trace.FromOTLPJSON(_document(
 				_span("root", "1111111111111111"),
-				_span("orphan", "2222222222222222", "3333333333333333"),
+				_span("fragment", "2222222222222222", "3333333333333333"),
 			))
 
 		self.assertEqual(
-			f"1 span(s) of trace '{TRACE_ID}' can't be reached from its root span.",
+			f"1 span(s) of trace '{TRACE_ID}' are not part of its tree.",
+			str(exceptionCapture.exception)
+		)
+		self.assertIn(
+			"Use 'TraceCollection.FromOTLPJSON()' to keep such a fragment until its parent arrives.",
+			exceptionCapture.exception.__notes__
+		)
+
+	def test_ATraceWithoutItsRootSpanIsRejectedByTrace(self) -> None:
+		"""Every span names a parent, and the one they lead up to hasn't been delivered."""
+		with self.assertRaises(TracingError) as exceptionCapture:
+			Trace.FromOTLPJSON(_document(_span("child", "2222222222222222", "1111111111111111")))
+
+		self.assertEqual(
+			f"Trace '{TRACE_ID}' has no span without a 'parentSpanId'.",
 			str(exceptionCapture.exception)
 		)
 
@@ -930,7 +948,7 @@ class ReadBrokenTrees(Testcase):
 			))
 
 		self.assertEqual(
-			f"2 span(s) of trace '{TRACE_ID}' can't be reached from its root span.",
+			f"2 span(s) of trace '{TRACE_ID}' reference each other in a cycle.",
 			str(exceptionCapture.exception)
 		)
 
@@ -1085,3 +1103,353 @@ class ReadErrors(Testcase):
 				Trace.ReadOTLPJSONFile(jsonFile)
 
 			self.assertEqual(f"OTLP/JSON file '{jsonFile}' couldn't be read.", str(exceptionCapture.exception))
+
+
+OTHER_TRACE_ID = "fedcba9876543210fedcba9876543210"
+"""A second syntactically valid trace identifier, for the documents holding two traces."""
+
+
+def _timedSpan(name: str, spanId: str, parentSpanId: str = None, start: int = 0, duration: int = 1_000_000) -> dict:
+	"""
+	Assemble one OTLP span mapping carrying timestamps.
+
+	:param name:         Name of the timespan.
+	:param spanId:       Identifier of the timespan.
+	:param parentSpanId: Optional, identifier of the enclosing timespan.
+	:param start:        Optional, nanoseconds to add to a fixed epoch for the start timestamp.
+	:param duration:     Optional, duration of the timespan in nanoseconds.
+	:returns:            The span as an OTLP mapping.
+	"""
+	startTimeUnixNano = 1_787_659_200_000_000_000 + start
+
+	return _span(
+		name, spanId, parentSpanId,
+		startTimeUnixNano=str(startTimeUnixNano),
+		endTimeUnixNano=str(startTimeUnixNano + duration)
+	)
+
+
+def _splitExample() -> tuple[Trace, dict, dict]:
+	"""
+	Export a trace and cut the document in two, the way two processes would have written it.
+
+	:returns: Tuple of the original trace, the document holding its root and one branch, and the document holding
+	          the other branch - whose root is a fragment, because its parent is in the first document.
+	"""
+	with Trace("build") as trace:
+		with Span("compile"):
+			with Span("parse"):
+				sleep(0.001)
+		with Span("link"):
+			sleep(0.001)
+
+	spans = {span["name"]: span for span in trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]}
+
+	return trace, _document(spans["build"], spans["link"]), _document(spans["compile"], spans["parse"])
+
+
+class Collections(Testcase):
+	"""A collection holds what a document carries: several traces, and timespans that aren't part of one yet."""
+
+	def test_ACompleteTraceIsATrace(self) -> None:
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_span("root", "1111111111111111"),
+			_span("child", "2222222222222222", "1111111111111111"),
+		))
+
+		self.assertEqual(1, collection.TraceCount)
+		self.assertEqual(2, collection.SpanCount)
+		self.assertEqual(0, collection.FragmentCount)
+		self.assertFalse(collection.HasFragments)
+		self.assertEqual("root", collection.Traces[0].Name)
+
+	def test_SeveralTracesAreAllRead(self) -> None:
+		"""This is what a collection is for - 'Trace.FromOTLPJSON' reads one of them and rejects the rest."""
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_span("one", "1111111111111111"),
+			_span("two", "2222222222222222", traceId=OTHER_TRACE_ID),
+		))
+
+		self.assertEqual(2, collection.TraceCount)
+		self.assertEqual(["one", "two"], [trace.Name for trace in collection])
+		self.assertEqual(TRACE_ID, collection[TRACE_ID].TraceID)
+		self.assertEqual(OTHER_TRACE_ID, collection[OTHER_TRACE_ID].TraceID)
+
+	def test_ASpanWithoutItsParentIsAFragment(self) -> None:
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_span("root", "1111111111111111"),
+			_span("fragment", "2222222222222222", "3333333333333333"),
+		))
+
+		self.assertEqual(1, collection.TraceCount)
+		self.assertEqual(1, collection.FragmentCount)
+		self.assertTrue(collection.HasFragments)
+		self.assertEqual("fragment", collection.Fragments[0].Name)
+		self.assertIsNone(collection.Fragments[0].Parent)
+		self.assertIsNone(collection.Fragments[0].Trace)
+
+	def test_AFragmentKeepsItsOwnSubSpans(self) -> None:
+		"""Only the fragment's *place* is unknown; the part of the tree that came with it is built."""
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_span("fragment", "2222222222222222", "3333333333333333"),
+			_span("below", "4444444444444444", "2222222222222222"),
+		))
+
+		self.assertEqual(0, collection.TraceCount)
+		self.assertEqual(1, collection.FragmentCount)
+		self.assertEqual(["below"], [span.Name for span in collection.Fragments[0].IterateSubSpans()])
+
+	def test_ATraceWithoutItsRootSpanIsOnlyFragments(self) -> None:
+		collection = TraceCollection.FromOTLPJSON(_document(_span("child", "2222222222222222", "1111111111111111")))
+
+		self.assertEqual(0, collection.TraceCount)
+		self.assertEqual(1, collection.FragmentCount)
+		self.assertEqual(TRACE_ID, collection.TraceIDOfSpan("2222222222222222"))
+
+	def test_ACycleIsStillRejected(self) -> None:
+		"""A fragment's parent is merely absent; a cycle's spans point at each other and can be placed nowhere."""
+		with self.assertRaises(TracingError) as exceptionCapture:
+			TraceCollection.FromOTLPJSON(_document(
+				_span("one", "1111111111111111", "2222222222222222"),
+				_span("two", "2222222222222222", "1111111111111111"),
+			))
+
+		self.assertEqual(
+			f"2 span(s) of trace '{TRACE_ID}' reference each other in a cycle.",
+			str(exceptionCapture.exception)
+		)
+
+	def test_TwoRootSpansAreStillRejected(self) -> None:
+		with self.assertRaises(TracingError) as exceptionCapture:
+			TraceCollection.FromOTLPJSON(_document(_span("one", "1111111111111111"), _span("two", "2222222222222222")))
+
+		self.assertEqual(f"Trace '{TRACE_ID}' has 2 spans without a 'parentSpanId'.", str(exceptionCapture.exception))
+
+
+class MergingDocuments(Testcase):
+	"""A distributed execution is exported per process, so a trace arrives in pieces and is reassembled."""
+
+	def test_TheFragmentFindsItsParent(self) -> None:
+		trace, first, second = _splitExample()
+		collection = TraceCollection.FromOTLPJSON(first).AddOTLPJSON(second)
+
+		self.assertFalse(collection.HasFragments)
+		self.assertEqual(4, collection.SpanCount)
+		self.assertEqual(trace.ToOTLPJSONString(), collection.Traces[0].ToOTLPJSONString())
+
+	def test_TheParentFindsTheFragment(self) -> None:
+		"""The other order: the fragment waits, and the document carrying its parent collects it."""
+		trace, first, second = _splitExample()
+		collection = TraceCollection.FromOTLPJSON(second)
+
+		self.assertEqual(0, collection.TraceCount)
+		self.assertEqual(1, collection.FragmentCount)
+
+		collection.AddOTLPJSON(first)
+
+		self.assertFalse(collection.HasFragments)
+		self.assertEqual(trace.ToOTLPJSONString(), collection.Traces[0].ToOTLPJSONString())
+
+	def test_TheSiblingsAreOrderedByStartTime(self) -> None:
+		"""A fragment is attached when its parent arrives, which is not the order the timespans ran in."""
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_timedSpan("root", "1111111111111111"),
+			_timedSpan("third", "4444444444444444", "1111111111111111", start=3_000_000),
+		))
+		collection.AddOTLPJSON(_document(
+			_timedSpan("second", "3333333333333333", "1111111111111111", start=2_000_000),
+			_timedSpan("first", "2222222222222222", "1111111111111111", start=1_000_000),
+		))
+
+		self.assertEqual(["first", "second", "third"], [span.Name for span in collection.Traces[0].IterateSubSpans()])
+
+	def test_TheFragmentsSubSpansJoinTheTraceToo(self) -> None:
+		"""'_AddSpan' sets the fragment's trace; everything below it was carrying 'None' and has to be updated."""
+		trace, first, second = _splitExample()
+		collection = TraceCollection.FromOTLPJSON(second).AddOTLPJSON(first)
+		built = collection.Traces[0]
+
+		for span in (*built.IterateSubSpans(), *next(built.IterateSubSpans()).IterateSubSpans()):
+			with self.subTest(span=span.Name):
+				self.assertIs(built, span.Trace)
+
+	def test_TheSameSpanTwiceIsRejected(self) -> None:
+		"""A distributed trace is assembled from spans that were each exported once."""
+		_, _, second = _splitExample()
+		collection = TraceCollection.FromOTLPJSON(second)
+
+		with self.assertRaises(TracingError) as exceptionCapture:
+			collection.AddOTLPJSON(second)
+
+		self.assertIn("The collection already contains a timespan", str(exceptionCapture.exception))
+
+	def test_ASecondRootSpanForOneTraceIsRejected(self) -> None:
+		collection = TraceCollection.FromOTLPJSON(_document(_span("root", "1111111111111111")))
+
+		with self.assertRaises(TracingError) as exceptionCapture:
+			collection.AddOTLPJSON(_document(_span("other root", "2222222222222222")))
+
+		self.assertEqual(f"The collection already contains trace '{TRACE_ID}'.", str(exceptionCapture.exception))
+
+	def test_ARejectedDocumentChangesNothing(self) -> None:
+		"""The whole document is checked before anything is registered, so a collision isn't half applied."""
+		collection = TraceCollection.FromOTLPJSON(_document(_span("root", "1111111111111111")))
+		colliding = _document(
+			_span("fresh", "5555555555555555", traceId=OTHER_TRACE_ID),
+			_span("clash", "1111111111111111", "2222222222222222"),
+		)
+
+		with self.assertRaises(TracingError):
+			collection.AddOTLPJSON(colliding)
+
+		self.assertEqual(1, collection.TraceCount)
+		self.assertEqual(1, collection.SpanCount)
+		self.assertNotIn("5555555555555555", collection)
+
+
+class CollectionLookup(Testcase):
+	"""Traces and timespans are indexed by identifier, which is what lets a fragment be linked to its parent."""
+
+	def _Collection(self) -> TraceCollection:
+		return TraceCollection.FromOTLPJSON(_document(
+			_span("root", "1111111111111111"),
+			_span("child", "2222222222222222", "1111111111111111"),
+			_span("fragment", "3333333333333333", "4444444444444444"),
+		))
+
+	def test_TheLengthDecidesWhichIndexIsSearched(self) -> None:
+		"""A trace identifier is 32 hex digits and a span identifier is 16, so the two can't be confused."""
+		collection = self._Collection()
+
+		self.assertEqual("root", collection[TRACE_ID].Name)
+		self.assertEqual("child", collection["2222222222222222"].Name)
+
+	def test_TheIdentifierIsMatchedInLowerCase(self) -> None:
+		collection = self._Collection()
+
+		self.assertEqual("root", collection[TRACE_ID.upper()].Name)
+		self.assertEqual("child", collection["2222222222222222"].Name)
+
+	def test_AnIdentifierOfAnotherLengthIsNoIdentifier(self) -> None:
+		with self.assertRaises(KeyError):
+			self._Collection()["abc"]
+
+	def test_ContainsAsksTheSameIndexes(self) -> None:
+		collection = self._Collection()
+
+		self.assertIn(TRACE_ID, collection)
+		self.assertIn("2222222222222222", collection)
+		self.assertIn("3333333333333333", collection, "A fragment is a timespan of the collection like any other.")
+		self.assertNotIn(OTHER_TRACE_ID, collection)
+		self.assertNotIn("4444444444444444", collection, "The awaited parent is exactly what isn't here.")
+
+	def test_AFragmentsTraceCanStillBeNamed(self) -> None:
+		"""It has no 'Trace' to ask, but its 'traceId' was in the document all the same."""
+		collection = self._Collection()
+
+		self.assertIsNone(collection["3333333333333333"].Trace)
+		self.assertEqual(TRACE_ID, collection.TraceIDOfSpan("3333333333333333"))
+
+	def test_TheFragmentsOfOneTraceCanBeIterated(self) -> None:
+		collection = self._Collection()
+		collection.AddOTLPJSON(_document(
+			_span("elsewhere", "5555555555555555", "6666666666666666", traceId=OTHER_TRACE_ID)
+		))
+
+		self.assertEqual(["fragment"], [span.Name for span in collection.IterateFragmentsOf(TRACE_ID)])
+		self.assertEqual(["elsewhere"], [span.Name for span in collection.IterateFragmentsOf(OTHER_TRACE_ID)])
+
+	def test_LengthAndIterationAreAboutTraces(self) -> None:
+		"""A fragment is not a trace, so it is neither counted nor iterated as one."""
+		collection = self._Collection()
+
+		self.assertEqual(1, len(collection))
+		self.assertEqual(["root"], [trace.Name for trace in collection])
+
+	def test_TheRepresentationsCountWhatIsThere(self) -> None:
+		collection = self._Collection()
+
+		self.assertEqual("1 traces + 1 fragments", str(collection))
+		self.assertEqual("TraceCollection: 1 traces, 3 spans, 1 fragments", repr(collection))
+
+
+class CollectionDocuments(Testcase):
+	"""A collection writes an OTLP/JSON document back, fragments included."""
+
+	def test_TheDocumentIsTheSameAgain(self) -> None:
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_span("one", "1111111111111111"),
+			_span("two", "2222222222222222", traceId=OTHER_TRACE_ID),
+		))
+		encoded = collection.ToOTLPJSONString(indent=2)
+
+		self.assertEqual(encoded, TraceCollection.FromOTLPJSONString(encoded).ToOTLPJSONString(indent=2))
+
+	def test_AFragmentKeepsTheParentItIsWaitingFor(self) -> None:
+		"""Without its 'parentSpanId' it would read back as a second root span rather than as a fragment."""
+		collection = TraceCollection.FromOTLPJSON(_document(_span("fragment", "2222222222222222", "3333333333333333")))
+		written = collection.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
+
+		self.assertEqual("3333333333333333", written["parentSpanId"])
+		self.assertEqual(1, TraceCollection.FromOTLPJSON(collection.ToOTLPJSON()).FragmentCount)
+
+	def test_ATraceWithoutARootIsNamedByItsIdentifier(self) -> None:
+		"""There is no root span to take a name from, and 'service.name' has to say something."""
+		collection = TraceCollection.FromOTLPJSON(_document(_span("fragment", "2222222222222222", "3333333333333333")))
+		resource = collection.ToOTLPJSON()["resourceSpans"][0]["resource"]
+
+		self.assertEqual(
+			[{"key": "service.name", "value": {"stringValue": TRACE_ID}}],
+			resource["attributes"]
+		)
+
+	def test_EveryTraceGetsItsOwnResourceEntry(self) -> None:
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_span("one", "1111111111111111"),
+			_span("two", "2222222222222222", traceId=OTHER_TRACE_ID),
+		))
+		resourceSpans = collection.ToOTLPJSON()["resourceSpans"]
+
+		self.assertEqual(2, len(resourceSpans))
+		self.assertEqual(
+			["one", "two"],
+			[entry["resource"]["attributes"][0]["value"]["stringValue"] for entry in resourceSpans]
+		)
+
+	def test_TheStringAndTheFileAreReadBackToo(self) -> None:
+		_, first, second = _splitExample()
+
+		with TemporaryDirectory() as directory:
+			jsonFile = Path(directory) / "report" / "traces.json"
+			TraceCollection.FromOTLPJSON(first).WriteOTLPJSONFile(jsonFile, indent=2)
+
+			collection = TraceCollection.ReadOTLPJSONFile(jsonFile)
+			collection.AddOTLPJSONString(json_dumps(second))
+
+		self.assertEqual(1, collection.TraceCount)
+		self.assertFalse(collection.HasFragments)
+
+	def test_AnEmptyCollectionIsAnEmptyDocument(self) -> None:
+		self.assertEqual({"resourceSpans": []}, TraceCollection().ToOTLPJSON())
+
+
+class CollectionFormatting(Testcase):
+	"""'Format' renders the traces, then whatever is still waiting for a parent."""
+
+	def test_TheFragmentsAreListedWithWhatTheyWaitFor(self) -> None:
+		collection = TraceCollection.FromOTLPJSON(_document(
+			_timedSpan("root", "1111111111111111"),
+			_timedSpan("fragment", "2222222222222222", "3333333333333333"),
+		))
+		lines = list(collection.Format())
+
+		self.assertIn("Fragments: 1", lines)
+		self.assertTrue(any("waiting for span 3333333333333333" in line for line in lines))
+		self.assertTrue(any("fragment" in line for line in lines))
+
+	def test_ATimespanWithoutADurationIsNotDivided(self) -> None:
+		"""A trace that was never entered has no duration, and 'Format' used to divide 'None' by 1e6."""
+		lines = list(Trace("never entered").Format())
+
+		self.assertEqual(2, len(lines))
+		self.assertTrue(all("-- ms" in line for line in lines), lines)
