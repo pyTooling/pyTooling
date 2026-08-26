@@ -43,7 +43,7 @@ can't, and a table header is *described* by its columns rather than built node b
 """
 from enum                 import Enum
 from re                   import match as re_match
-from typing               import Any, Optional as Nullable, TypeVar
+from typing               import Optional as Nullable, TypeVar
 
 from docutils             import nodes
 from sphinx.directives    import ObjectDescription
@@ -146,10 +146,11 @@ class BaseDirective(ObjectDescription[str]):
 		"""
 		Read an option that has to match a regular expression.
 
+		The pattern defaults to one or more word characters.
+
 		:param optionName:             Name of the option to read.
 		:param default:                Optional, the value to return when the option wasn't given.
-		:param regexp:                 Optional, the pattern the value has to match. Default: one or more word
-		                               characters.
+		:param regexp:                 Optional, the pattern the value has to match.
 		:returns:                      The option's value.
 		:raises SphinxExtensionError:  If the option wasn't given and has no default.
 		:raises SphinxExtensionError:  If the option's value doesn't match the pattern.
@@ -250,8 +251,10 @@ class BaseDirective(ObjectDescription[str]):
 		"""
 		Create a table whose header spans two rows, so a column can group sub-columns.
 
-		:param columns:    One ``(title, subColumns, width)`` triple per column. ``subColumns`` is ``None`` for a
-		                   column spanning both header rows, otherwise the ``(title, width)`` pairs below it.
+		A column's ``subColumns`` is ``None`` when it spans both header rows, and otherwise holds the
+		``(title, width)`` pairs below it.
+
+		:param columns:    One ``(title, subColumns, width)`` triple per column.
 		:param identifier: Identifier of the table.
 		:param classes:    CSS classes to put on the table.
 		:returns:          The table's column group, with both header rows already in it.
@@ -311,7 +314,7 @@ class BaseDirective(ObjectDescription[str]):
 		table += (tableGroup := nodes.tgroup(cols=len(columns)))
 
 		# Setup column specifications
-		for i, (_, width) in enumerate(columns):
+		for i, _ in enumerate(columns):
 			tableGroup += nodes.colspec(classes=[f"col-{i}"])
 
 		tableGroup += (tableHeader := nodes.thead())

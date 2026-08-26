@@ -110,11 +110,11 @@ def pythonCodeRole(
 	options: Nullable[dict[str, Any]] = None,
 	content: Nullable[list[str]] = None
 ) -> tuple[list[nodes.Node], list[nodes.system_message]]:
-	"""
+	r"""
 	Render inline Python code, syntax-highlighted.
 
 	The docutils ``code`` role does the work; this fixes its language to Python and adds the ``highlight`` class, so
-	a page writes :pycode:`:pycode:\\`isinstance(x, int)\\`` instead of repeating the options at every use.
+	a page writes ``:pycode:`isinstance(x, int)``` instead of repeating the options at every use.
 
 	:param name:       Name the role was invoked by; unused, because the language is fixed.
 	:param rawText:    The role's text including its markup.

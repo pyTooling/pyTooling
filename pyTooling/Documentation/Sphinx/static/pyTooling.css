@@ -1,12 +1,36 @@
-/* Styles for the ReST roles registered by pyTooling.Documentation.Sphinx.                                            */
-/* Previously injected into every document by a 'raw:: html' block in each project's doc/prolog.inc.                  */
+/* Styles for the ReST roles registered by pyTooling.Documentation.Sphinx. */
 
-span.bolditalic  { font-weight: bold; font-style: italic; }
-span.underline   { text-decoration: underline; }
-span.strike      { text-decoration: line-through; }
-span.xlarge      { font-size: x-large; }
+/* Previously injected into every document by a 'raw:: html' block in each project's doc/prolog.inc. */
 
-span.colorred    { color: #CC0000; }
-span.colorgreen  { color: #009933; }
-span.colorblue   { color: #0066FF; }
-span.colorpurple { color: #9900CC; }
+span.bolditalic {
+  font-weight: bold;
+  font-style: italic;
+}
+
+span.underline {
+  text-decoration: underline;
+}
+
+span.strike {
+  text-decoration: line-through;
+}
+
+span.xlarge {
+  font-size: x-large;
+}
+
+span.colorred {
+  color: #c00;
+}
+
+span.colorgreen {
+  color: #093;
+}
+
+span.colorblue {
+  color: #06f;
+}
+
+span.colorpurple {
+  color: #90c;
+}

@@ -80,7 +80,12 @@ from pyTooling.Documentation.Sphinx.Directives   import BaseDirective, SphinxExt
 from pyTooling.Documentation.Sphinx.Roles        import PYTHON_CODE_ROLE, STYLE_ROLES, pythonCodeRole, styleRole
 
 
-__all__ = ["STYLESHEET", "SUBSTITUTIONS"]
+__all__ = [
+	"STYLESHEET", "SUBSTITUTIONS",
+	# re-exported so a consumer imports them from the package rather than from its modules
+	"BaseDirective", "SphinxExtensionError", "CondensedClass", "strip", "stripAndNormalize",
+	"PYTHON_CODE_ROLE", "STYLE_ROLES", "pythonCodeRole", "styleRole",
+]
 
 #: Name of the stylesheet shipped beside this module.
 STYLESHEET = "pyTooling.css"
