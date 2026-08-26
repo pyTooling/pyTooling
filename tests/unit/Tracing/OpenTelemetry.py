@@ -208,7 +208,7 @@ class Spans(Testcase):
 		self.assertLess(duration, 10_000_000_000, "A millisecond must not be reported as seconds.")
 
 	def test_TheDurationIsWrittenAsItWasMeasured(self) -> None:
-		"""'Duration' is the counter's nanoseconds divided by 1e9, and multiplying that back loses up to one of them."""
+		"""The counter's nanoseconds are what 'Duration' divides by 1e9, and multiplying that back loses one of them."""
 		with Trace("trace") as trace:
 			with Span("span") as span:
 				sleep(0.001)
@@ -1133,8 +1133,9 @@ def _splitExample() -> tuple[Trace, dict, dict]:
 	"""
 	Export a trace and cut the document in two, the way two processes would have written it.
 
-	:returns: Tuple of the original trace, the document holding its root and one branch, and the document holding
-	          the other branch - whose root is a fragment, because its parent is in the first document.
+	The second document's root span is a fragment, because the span enclosing it is in the first document.
+
+	:returns: The original trace, the document holding its root and one branch, and the document holding the other.
 	"""
 	with Trace("build") as trace:
 		with Span("compile"):
@@ -1164,7 +1165,7 @@ class Collections(Testcase):
 		self.assertEqual("root", collection.Traces[0].Name)
 
 	def test_SeveralTracesAreAllRead(self) -> None:
-		"""This is what a collection is for - 'Trace.FromOTLPJSON' reads one of them and rejects the rest."""
+		"""A collection is for exactly this - 'Trace.FromOTLPJSON' reads one of them and rejects the rest."""
 		collection = TraceCollection.FromOTLPJSON(_document(
 			_span("one", "1111111111111111"),
 			_span("two", "2222222222222222", traceId=OTHER_TRACE_ID),
@@ -1265,7 +1266,7 @@ class MergingDocuments(Testcase):
 
 	def test_TheFragmentsSubSpansJoinTheTraceToo(self) -> None:
 		"""'_AddSpan' sets the fragment's trace; everything below it was carrying 'None' and has to be updated."""
-		trace, first, second = _splitExample()
+		_, first, second = _splitExample()
 		collection = TraceCollection.FromOTLPJSON(second).AddOTLPJSON(first)
 		built = collection.Traces[0]
 
@@ -1331,8 +1332,10 @@ class CollectionLookup(Testcase):
 		self.assertEqual("child", collection["2222222222222222"].Name)
 
 	def test_AnIdentifierOfAnotherLengthIsNoIdentifier(self) -> None:
+		collection = self._Collection()
+
 		with self.assertRaises(KeyError):
-			self._Collection()["abc"]
+			_ = collection["abc"]
 
 	def test_ContainsAsksTheSameIndexes(self) -> None:
 		collection = self._Collection()
