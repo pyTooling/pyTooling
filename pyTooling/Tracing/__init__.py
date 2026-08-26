@@ -1069,8 +1069,11 @@ class Span(metaclass=ExtendedType, slots=True):
 
 			# The wall clock has microsecond resolution while the duration comes from a nanosecond performance
 			# counter, so the end is computed from the duration rather than read from a second wall-clock sample.
-			# 'Duration' is in seconds; OTLP wants nanoseconds.
-			converted["endTimeUnixNano"] = str(startTimeUnixNano + int(self.Duration * 1_000_000_000))
+			# A finished timespan reports the counter's difference in nanoseconds, which is what OTLP wants, so it
+			# is written as it is - 'Duration' is that number divided by 1e9, and multiplying it back loses up to a
+			# nanosecond to the float. A running timespan has no such number yet and is measured against the counter.
+			duration = self._totalTime if self._totalTime is not None else int(self.Duration * 1_000_000_000)
+			converted["endTimeUnixNano"] = str(startTimeUnixNano + duration)
 
 		if len(attributes := _toAttributes(self._dict.items())) != 0:
 			converted["attributes"] = attributes

@@ -206,6 +206,16 @@ class Spans(Testcase):
 		self.assertGreater(duration, 1_000_000, "The span slept for a millisecond, so it lasted at least that.")
 		self.assertLess(duration, 10_000_000_000, "A millisecond must not be reported as seconds.")
 
+	def test_TheDurationIsWrittenAsItWasMeasured(self) -> None:
+		"""'Duration' is the counter's nanoseconds divided by 1e9, and multiplying that back loses up to one of them."""
+		with Trace("trace") as trace:
+			with Span("span") as span:
+				sleep(0.001)
+
+		exported = self._Spans(trace.ToJSON())["span"]
+
+		self.assertEqual(span._totalTime, int(exported["endTimeUnixNano"]) - int(exported["startTimeUnixNano"]))
+
 	def test_TheTimestampsAreStrings(self) -> None:
 		"""proto3's JSON mapping encodes a 64-bit integer as a string."""
 		for span in self._Spans(_exampleTrace().ToJSON()).values():
