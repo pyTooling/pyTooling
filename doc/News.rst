@@ -64,7 +64,7 @@ Version 10.x (2026)
        :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
        accepted it since v1.35.
-     * The document is typed rather than a mapping of :class:`~typing.Any`: ten :class:`~typing.TypedDict` classes
+     * The document is typed rather than a mapping of :class:`~typing.Any`: eleven :class:`~typing.TypedDict` classes
        name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
        :class:`~pyTooling.Tracing.OTLPAnyValue`.
      * A trace and each of its timespans draw their identifiers when they are **constructed**, so exporting one
