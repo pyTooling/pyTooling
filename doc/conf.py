@@ -178,8 +178,9 @@ extensions = [
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
 	"sphinx_reports",
+# pyTooling extensions
+	"pyTooling.Documentation.Sphinx",
 # User defined extensions
-	"CondensedClass",
 	"XSDGraphviz",
 ]
 
