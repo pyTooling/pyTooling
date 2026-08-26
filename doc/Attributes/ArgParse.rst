@@ -118,11 +118,42 @@ They form a hierarchy, and the leaves are what a program writes:
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.DelimiterArgument`
      - The ``--`` that ends option parsing.
 
-The positional leaves are typed, and the type is what :mod:`argparse` converts the string with:
-:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`,
-:class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`,
-:class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument` and
-:class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`.
+The positional leaves are typed, and the type is what :mod:`argparse` converts the string with - see
+:ref:`ATTR/ArgParse/Positional`.
+
+
+.. _ATTR/ArgParse/Positional:
+
+Positional Arguments
+====================
+
+Each typed variant converts and validates the value before the handler sees it, so a handler never parses a string
+itself:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 42 58
+
+   * - Attribute
+     - ``args.<dest>`` is
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`
+     - a :class:`str`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`
+     - an :class:`int`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument`
+     - a :class:`float`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
+     - a :class:`~pathlib.Path`
+
+All four take ``(dest, metaName, optional=False, help="")``, and ``metaName`` is the placeholder ``--help`` shows
+in place of the value.
+
+.. code-block:: Python
+
+   @CommandHandler("create", help="Create a new user.")
+   @StringArgument(dest="username", metaName="username", help="Name of the user to create.")
+   def HandleCreate(self, args) -> None:
+     print(f"Creating user '{args.username}'.")
 
 
 .. _ATTR/ArgParse/Flags:
@@ -181,8 +212,6 @@ Two variants exist for values that aren't a single string:
 
 .. _ATTR/ArgParse/ValuedTupleFlags:
 
-ValuedTupleFlags
-================
 
 A *tuple* flag is a named argument whose value is a **separate token** - ``--width 100`` rather than
 ``--width=100``, so name and value reach the program as two arguments.
@@ -295,6 +324,12 @@ call.
    def ListUserHandler(self, args) -> None:
      ...
 
+.. attention::
+
+   **An argument declared on the default handler is global; an argument declared on a command handler belongs to
+   that command.** ``UserManager.py --verbose create alice`` is therefore right and ``UserManager.py create alice
+   --verbose`` is not - the same rule :program:`git` follows.
+
 The class itself mixes in :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, whose constructor builds all
 the parsers from the attributes it finds.
 :meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin.Run` then parses and dispatches, and
@@ -358,6 +393,27 @@ program inherits from all of them:
 This is what the *Advantages* list above means by *distributed across multiple classes*, and it is the reason the
 attribute lookup is a class query rather than a scan: the meta-class already collected the annotated methods of
 every base-class by the time the mixin's constructor runs.
+
+
+.. _ATTR/ArgParse/Examples:
+
+A complete program, twice
+*************************
+
+Both programs below offer the same command line. The first is written with :mod:`argparse` directly, the second
+with the attributes of this package:
+
+.. literalinclude:: ../../tests/example/OldStyle.py
+   :language: python
+   :linenos:
+   :caption: tests/example/OldStyle.py
+   :tab-width: 2
+
+.. literalinclude:: ../../tests/example/UserManager.py
+   :language: python
+   :linenos:
+   :caption: tests/example/UserManager.py
+   :tab-width: 2
 
 
 .. _ATTR/ArgParse/Consumers:
