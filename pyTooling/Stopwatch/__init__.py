@@ -134,7 +134,7 @@ class Stopwatch(SlottedObject):
 
 	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
 
-	def __init__(self, name: str = None, started: bool = False, preferPause: bool = False) -> None:
+	def __init__(self, name: Nullable[str] = None, started: bool = False, preferPause: bool = False) -> None:
 		"""
 		Initializes the fields of the stopwatch.
 

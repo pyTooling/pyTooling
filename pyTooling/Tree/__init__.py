@@ -172,7 +172,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		nodeID: Nullable[IDType] = None,
 		value: Nullable[ValueType] = None,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		parent: Node = None,
+		parent: Nullable[Node] = None,
 		children: Nullable[Iterable[Node]] = None,
 		format: Nullable[Callable[[Node], str]] = None
 	) -> None:

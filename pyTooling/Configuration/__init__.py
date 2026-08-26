@@ -100,7 +100,7 @@ class Node(metaclass=ExtendedType, slots=True):
 	_root:     Configuration               #: Reference to the root node.
 	_parent:   Dictionary                  #: Reference to a parent node.
 
-	def __init__(self, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a node.
 
@@ -177,7 +177,7 @@ class Node(metaclass=ExtendedType, slots=True):
 class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
 
-	def __init__(self, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a dictionary.
 
@@ -201,7 +201,7 @@ class Dictionary(Node):
 class Sequence(Node):
 	"""Abstract sequence node in a configuration."""
 
-	def __init__(self, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a sequence.
 
@@ -245,7 +245,7 @@ class Configuration(Node):
 
 	_configFile: Path  #: Path to the configuration file.
 
-	def __init__(self, configFile: Path, root: Configuration = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, configFile: Path, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a configuration.
 
