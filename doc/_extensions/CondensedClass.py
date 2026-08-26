@@ -59,7 +59,8 @@ make up a slotted class' fields - those are implementation. Class *variables* ar
 at class level is part of what a caller may read.
 """
 from ast                  import AST, AnnAssign, Assign, AsyncFunctionDef, ClassDef, FunctionDef, Module, Name
-from ast                  import parse, unparse
+from ast                  import get_source_segment, parse, unparse
+from re                   import sub as re_sub
 from importlib.util       import find_spec
 from pathlib              import Path
 from typing               import Any, ClassVar, Optional as Nullable, Union
@@ -132,6 +133,23 @@ def findClass(tree: Module, classPath: list[str]) -> ClassDef:
 	return definition
 
 
+def render(node: AST, source: str) -> str:
+	"""
+	Render an expression the way it is **written**, not the way :func:`ast.unparse` would spell it.
+
+	:func:`ast.unparse` normalizes as it goes: ``1.5e-3`` comes back as ``0.0015`` and a double-quoted string comes
+	back single-quoted. Reading the source segment instead keeps the literal a reader would find in the file, which
+	is the point of rendering from the source at all. An expression spanning several lines is folded onto one.
+
+	:param node:   The expression to render.
+	:param source: The source text the expression was parsed from.
+	:returns:      The expression as it is written, or :func:`ast.unparse`'s spelling if the segment can't be read.
+	"""
+	segment = get_source_segment(source, node)
+
+	return unparse(node) if segment is None else re_sub(r"\s*\n\s*", " ", segment).strip()
+
+
 def decoratorName(decorator: AST) -> str:
 	"""
 	Return the name a decorator expression ends in.
@@ -145,15 +163,20 @@ def decoratorName(decorator: AST) -> str:
 	return getattr(decorator, "id", None) or getattr(decorator, "attr", None) or ""
 
 
-def formatArguments(function: Function) -> str:
+def formatArguments(function: Function, source: str) -> list[str]:
 	"""
-	Render a function's parameter list the way it is declared.
+	Render a function's parameters the way they are declared, one string each.
 
-	:class:`ast.unparse` writes ``name: str=None`` for an annotated parameter with a default; PEP 8 spaces that as
-	``name: str = None``, which is how the sources are written, so the parts are assembled here instead.
+	The parameters are returned **as a list** rather than joined: an annotation may contain a comma of its own -
+	``dict[str, int]``, ``tuple[int, ...]``, ``Union[int, str]`` - so a joined string cannot be split back into
+	parameters, which is what wrapping a long signature needs to do.
+
+	:class:`ast.unparse` also writes ``name: str=None`` for an annotated parameter with a default; PEP 8 spaces that
+	as ``name: str = None``, which is how the sources are written, so the parts are assembled here instead.
 
 	:param function: The function or method to render the parameters of.
-	:returns:        The parameter list, without the enclosing parentheses.
+	:param source:   The source text the function was parsed from.
+	:returns:        One string per parameter, without the enclosing parentheses.
 	"""
 	arguments = function.args
 	positional = [*arguments.posonlyargs, *arguments.args]
@@ -162,41 +185,42 @@ def formatArguments(function: Function) -> str:
 
 	rendered = []
 	for position, (argument, default) in enumerate(zip(positional, defaults)):
-		rendered.append(formatArgument(argument, default))
+		rendered.append(formatArgument(argument, default, source))
 		if len(arguments.posonlyargs) > 0 and position == len(arguments.posonlyargs) - 1:
 			rendered.append("/")
 
 	if arguments.vararg is not None:
-		rendered.append(f"*{formatArgument(arguments.vararg, None)}")
+		rendered.append(f"*{formatArgument(arguments.vararg, None, source)}")
 	elif len(arguments.kwonlyargs) > 0:
 		rendered.append("*")
 
 	for argument, default in zip(arguments.kwonlyargs, arguments.kw_defaults):
-		rendered.append(formatArgument(argument, default))
+		rendered.append(formatArgument(argument, default, source))
 
 	if arguments.kwarg is not None:
-		rendered.append(f"**{formatArgument(arguments.kwarg, None)}")
+		rendered.append(f"**{formatArgument(arguments.kwarg, None, source)}")
 
-	return ", ".join(rendered)
+	return rendered
 
 
-def formatArgument(argument: Any, default: Nullable[AST]) -> str:
+def formatArgument(argument: Any, default: Nullable[AST], source: str) -> str:
 	"""
 	Render one parameter with its annotation and its default value.
 
 	:param argument: The parameter to render.
 	:param default:  The parameter's default value, or ``None`` if it has none.
+	:param source:   The source text the parameter was parsed from.
 	:returns:        The parameter as it is declared.
 	"""
 	if argument.annotation is None:
-		return argument.arg if default is None else f"{argument.arg}={unparse(default)}"
+		return argument.arg if default is None else f"{argument.arg}={render(default, source)}"
 
-	annotated = f"{argument.arg}: {unparse(argument.annotation)}"
+	annotated = f"{argument.arg}: {render(argument.annotation, source)}"
 
-	return annotated if default is None else f"{annotated} = {unparse(default)}"
+	return annotated if default is None else f"{annotated} = {render(default, source)}"
 
 
-def formatFunction(function: Function, indent: str, width: int) -> list[str]:
+def formatFunction(function: Function, indent: str, width: int, source: str) -> list[str]:
 	"""
 	Render a method as its decorators, its signature and an elided body.
 
@@ -206,19 +230,20 @@ def formatFunction(function: Function, indent: str, width: int) -> list[str]:
 	:param function: The method to render.
 	:param indent:   Indentation of one level.
 	:param width:    Column the signature is wrapped at.
+	:param source:   The source text the method was parsed from.
 	:returns:        The lines the method is rendered as.
 	"""
-	lines = [f"{indent}@{unparse(decorator)}" for decorator in function.decorator_list]
+	lines = [f"{indent}@{render(decorator, source)}" for decorator in function.decorator_list]
 	prefix =    "async def" if isinstance(function, AsyncFunctionDef) else "def"
-	returns =   "" if function.returns is None else f" -> {unparse(function.returns)}"
-	arguments = formatArguments(function)
-	signature = f"{indent}{prefix} {function.name}({arguments}){returns}:"
+	returns =   "" if function.returns is None else f" -> {render(function.returns, source)}"
+	arguments = formatArguments(function, source)
+	signature = f"{indent}{prefix} {function.name}({', '.join(arguments)}){returns}:"
 
-	if len(signature) <= width or arguments == "":
+	if len(signature) <= width or len(arguments) == 0:
 		lines.append(signature)
 	else:
 		lines.append(f"{indent}{prefix} {function.name}(")
-		lines.extend(f"{indent}{indent}{argument}," for argument in arguments.split(", "))
+		lines.extend(f"{indent}{indent}{argument}," for argument in arguments)
 		lines.append(f"{indent}){returns}:")
 
 	lines.append(f"{indent}{indent}...")
@@ -247,15 +272,16 @@ def isClassVariable(statement: AST) -> bool:
 	return hasValue and isinstance(target, Name) and not target.id.startswith("_")
 
 
-def formatClassVariable(statement: Union[AnnAssign, Assign], indent: str) -> str:
+def formatClassVariable(statement: Union[AnnAssign, Assign], indent: str, source: str) -> str:
 	"""
 	Render a class variable with its annotation and its value.
 
 	:param statement: The assignment to render.
 	:param indent:    Indentation of one level.
+	:param source:    The source text the assignment was parsed from.
 	:returns:         The class variable as it is declared.
 	"""
-	return f"{indent}{unparse(statement)}"
+	return f"{indent}{render(statement, source)}"
 
 
 def selectedKinds(members: Nullable[str]) -> frozenset[str]:
@@ -281,7 +307,8 @@ def renderClass(
 	kinds: frozenset[str],
 	excluded: frozenset[str],
 	indent: str,
-	width: int
+	width: int,
+	source: str
 ) -> str:
 	"""
 	Render a class' public interface as Python source.
@@ -291,12 +318,13 @@ def renderClass(
 	:param excluded:   Names not to render.
 	:param indent:     Indentation of one level.
 	:param width:      Column a signature is wrapped at.
+	:param source:     The source text the class was parsed from.
 	:returns:          The condensed class, ready for a literal block.
 	"""
-	lines = [f"@{unparse(decorator)}" for decorator in definition.decorator_list]
+	lines = [f"@{render(decorator, source)}" for decorator in definition.decorator_list]
 	inheritance = ", ".join((
-		*(unparse(base) for base in definition.bases),
-		*(f"{keyword.arg}={unparse(keyword.value)}" for keyword in definition.keywords),
+		*(render(base, source) for base in definition.bases),
+		*(f"{keyword.arg}={render(keyword.value, source)}" for keyword in definition.keywords),
 	))
 
 	lines.append(f"class {definition.name}({inheritance}):" if inheritance != "" else f"class {definition.name}:")
@@ -305,12 +333,12 @@ def renderClass(
 	variables: list[str] = []
 	for statement in definition.body:
 		if "classvars" in kinds and isClassVariable(statement):
-			variables.append(formatClassVariable(statement, indent))
+			variables.append(formatClassVariable(statement, indent, source))
 		elif isinstance(statement, (FunctionDef, AsyncFunctionDef)):
 			if statement.name in excluded or not isSelected(statement, kinds):
 				continue
 
-			members.append(formatFunction(statement, indent, width))
+			members.append(formatFunction(statement, indent, width, source))
 
 	if len(variables) > 0:
 		members.insert(0, variables)
@@ -386,7 +414,8 @@ class CondensedClass(SphinxDirective):
 			excluded = frozenset(
 				name.strip() for name in self.options.get("exclude-members", "").split(",") if name.strip() != ""
 			)
-			definition = findClass(parse(sourceFile.read_text(encoding="utf-8")), classPath)
+			source = sourceFile.read_text(encoding="utf-8")
+			definition = findClass(parse(source), classPath)
 		except (OSError, SyntaxError, ValueError) as cause:
 			return [self.state.document.reporter.error(
 				f"condensed-class: {cause}", line=self.lineno
@@ -395,7 +424,7 @@ class CondensedClass(SphinxDirective):
 		self.env.note_dependency(str(sourceFile))
 
 		code = renderClass(
-			definition, kinds, excluded, " " * self.options.get("indent", 2), self.options.get("width", 100)
+			definition, kinds, excluded, " " * self.options.get("indent", 2), self.options.get("width", 100), source
 		)
 		node = nodes.literal_block(code, code)
 		node["language"] = "Python"
