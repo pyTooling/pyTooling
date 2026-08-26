@@ -94,40 +94,214 @@ Comparison
 Arguments
 *********
 
+An argument attribute is written **above the handler method that receives it**, and each one adds one entry to that
+handler's parser. Every attribute takes ``dest``, which names the field the parsed value appears under in ``args``,
+and ``help``, which is what ``--help`` prints.
+
+.. code-block:: Python
+
+   @CommandHandler("create", help="Create a new user.")
+   @StringArgument(dest="username", metaName="username", help="Name of the user to create.")
+   @LongValuedFlag("--quota", dest="quota", help="Disk quota of the new user.")
+   def HandleCreate(self, args) -> None:
+     print(f"Creating user '{args.username}' with a quota of {args.quota}.")
+
+Two shapes exist, and the difference is the one :mod:`argparse` itself makes:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 26 74
+
+   * - Shape
+     - Written as
+   * - **positional**
+     - a value with no name in front of it - ``UserManager.py create alice``. ``metaName`` is the placeholder
+       ``--help`` shows; ``optional=True`` makes it omissible.
+   * - **flag**
+     - a named option - ``--quota=10G``. The name is the attribute's first parameter, and ``dest`` defaults to it.
+
+.. hint::
+
+   ``dest`` is what the handler reads, so keep it a valid identifier and keep it stable. Renaming the command line
+   spelling later - ``--quota`` to ``--disk-quota`` - then changes one string and leaves the handler alone.
+
+
+.. _ATTR/ArgParse/Positional:
+
+Positional arguments
+====================
+
+Each typed variant converts and validates the value before the handler sees it, so a handler never parses a string
+itself:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 42 58
+
+   * - Attribute
+     - ``args.<dest>`` is
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`
+     - a :class:`str`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`
+     - an :class:`int`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument`
+     - a :class:`float`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
+     - a :class:`~pathlib.Path`
+
+All four take ``(dest, metaName, optional=False, help="")``.
+
+
 .. _ATTR/ArgParse/Flags:
 
 Flags
 =====
+
+A flag is either present or absent, and ``args.<dest>`` is a :class:`bool`.
+:class:`~pyTooling.Attributes.ArgParse.Flag.ShortFlag` writes ``-v``,
+:class:`~pyTooling.Attributes.ArgParse.Flag.LongFlag` writes ``--verbose``:
+
+.. code-block:: Python
+
+   @DefaultHandler()
+   @LongFlag("--verbose", dest="verbose", help="Print verbose messages.")
+   def HandleDefault(self, args) -> None:
+     if args.verbose:
+       ...
+
+:class:`~pyTooling.Attributes.ArgParse.BooleanFlag.LongBooleanFlag` is the pair form, for an option that has to be
+switchable **off** as well: it accepts ``--with-tests`` and ``--without-tests`` and sets one field either way.
+
 
 .. _ATTR/ArgParse/ValuedFlags:
 
 ValuedFlags
 ===========
 
-.. _ATTR/ArgParse/ValuedTupleFlags:
+A valued flag carries a value: ``--quota=10G``.
+:class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ShortValuedFlag` and
+:class:`~pyTooling.Attributes.ArgParse.ValuedFlag.LongValuedFlag` take
+``(long, dest=None, metaName=None, optional=False, help=None)``.
 
-ValuedTupleFlags
-================
+:class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.LongOptionalValuedFlag` accepts **both** forms -
+``--color`` and ``--color=always`` - for the option that means one thing bare and another with a value.
+
+:class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.LongKeyValueFlag` collects repeated ``key=value`` pairs into a
+mapping, which is the shape of ``-D`` in a compiler.
+
 
 .. _ATTR/ArgParse/Lists:
 
 Argument Lists
 **************
 
+Where an argument may be given more than once, the ``***ListArgument`` variants collect the occurrences into a
+:class:`list` instead of keeping the last one:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 46 54
+
+   * - Attribute
+     - ``args.<dest>`` is
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`
+     - ``list[str]``
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerListArgument`
+     - ``list[int]``
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.FloatListArgument`
+     - ``list[float]``
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.PathListArgument`
+     - ``list[Path]``
+
+.. hint::
+
+   A list argument is what makes ``UserManager.py delete alice bob carol`` work. Reach for it whenever the handler
+   would otherwise have to split a comma-separated string - the shell already did that work.
+
+
 .. _ATTR/ArgParse/Commands:
 
 Commands
 ********
+
+A **command** is a sub-parser: ``UserManager.py create ...`` and ``UserManager.py list`` are two commands with
+different arguments. :deco:`~pyTooling.Attributes.ArgParse.CommandHandler` declares one, and the method it decorates
+is what runs when a user types it.
+
+.. code-block:: Python
+
+   @CommandHandler("create", help="Create a new user.")
+   @StringArgument(dest="username", metaName="username", help="Name of the user to create.")
+   def HandleCreate(self, args) -> None:
+     ...
+
+:deco:`~pyTooling.Attributes.ArgParse.DefaultHandler` declares the handler for *no* command - the program called
+bare. A program has at most one, and its arguments are the ones accepted before any command, which is where a
+global ``--verbose`` belongs.
+
+.. attention::
+
+   **Arguments declared on the default handler are global; arguments declared on a command handler belong to that
+   command.** ``UserManager.py --verbose create alice`` is therefore right and ``UserManager.py create alice
+   --verbose`` is not - the same rule :program:`git` follows.
+
 
 .. _ATTR/ArgParse/Grouping:
 
 Grouping Arguments
 ******************
 
+:class:`~pyTooling.Attributes.ArgParse.CommandGroupAttribute` puts related commands under a heading in ``--help``,
+which is what keeps a program with twenty commands readable. Derive a group attribute and apply it to the handlers
+that belong together:
+
+.. code-block:: Python
+
+   class UserCommands(CommandGroupAttribute):
+     """Commands operating on users."""
+
+   class GroupCommands(CommandGroupAttribute):
+     """Commands operating on groups."""
+
+   class UserManager(ArgParseHelperMixin):
+     @UserCommands("User commands")
+     @CommandHandler("create", help="Create a new user.")
+     def HandleCreate(self, args) -> None: ...
+
+     @GroupCommands("Group commands")
+     @CommandHandler("addgroup", help="Create a new group.")
+     def HandleAddGroup(self, args) -> None: ...
+
+
 .. _ATTR/ArgParse/MixIn:
 
 Split Handlers into multiple classes
 ************************************
+
+A program with many commands doesn't have to declare them in one class.
+:class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin` is a mixin, so handlers can be grouped into mixins of
+their own and combined - one file per subject area, and the parser assembled from all of them:
+
+.. code-block:: Python
+
+   from pyTooling.MetaClasses import ExtendedType
+
+   class UserHandlers(metaclass=ExtendedType, mixin=True):
+     @CommandHandler("create", help="Create a new user.")
+     @StringArgument(dest="username", metaName="username", help="Name of the user.")
+     def HandleCreate(self, args) -> None: ...
+
+   class GroupHandlers(metaclass=ExtendedType, mixin=True):
+     @CommandHandler("addgroup", help="Create a new group.")
+     @StringArgument(dest="groupname", metaName="groupname", help="Name of the group.")
+     def HandleAddGroup(self, args) -> None: ...
+
+   class UserManager(ArgParseHelperMixin, UserHandlers, GroupHandlers):
+     def __init__(self) -> None:
+       super().__init__(prog="UserManager.py")
+
+The attributes are found on the assembled class, so a handler moved from one mixin to another needs no change
+anywhere else. See :ref:`META/Mixin` for what ``mixin=True`` does.
 
 
 Classic ``argparse`` Example

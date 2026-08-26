@@ -85,7 +85,7 @@ Example
 
 
          prog = Program()
-         for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):
+         for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase).items():
            pass
 
 
@@ -329,7 +329,41 @@ the parameter is stored in an  instance. The inner field is then accessible via 
 Searching Attributes
 ********************
 
-.. todo:: Attributes:: Searching Attributes
+Searching happens **on the attribute class**, not on the annotated entity: the attribute knows where it was applied,
+because :meth:`~pyTooling.Attributes.Attribute.__call__` recorded each application in a registry of the class it
+belongs to. Three class-methods read those registries, one per kind of language entity:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 44 56
+
+   * - Class-method
+     - Yields
+   * - :meth:`~pyTooling.Attributes.Attribute.GetFunctions`
+     - every **function** annotated with this attribute
+   * - :meth:`~pyTooling.Attributes.Attribute.GetClasses`
+     - every **class** annotated with it
+   * - :meth:`~pyTooling.Attributes.Attribute.GetMethods`
+     - every **method** annotated with it
+
+Each yields the *entity*, not the attribute instance, so reading the annotated data is a second step -
+:meth:`~pyTooling.Attributes.Attribute.GetAttributes` returns the instances attached to one entity:
+
+.. code-block:: Python
+
+   for handler in Command.GetFunctions():
+     for attribute in Command.GetAttributes(handler):
+       print(f"{attribute.Name:<12} {attribute.Help}")
+
+.. attention::
+
+   **An entity is registered when the module defining it is imported**, because that is when the decorator runs. A
+   handler in a plug-in module that nothing has imported is invisible here - a feature when plug-ins are discovered
+   by import, a trap when they are not. If entities are missing, check the imports before the attributes.
+
+   The registry also records **one entry per application**, so an entity carrying the attribute twice is yielded
+   twice. Wrap the result in a :class:`set` - or :func:`dict.fromkeys`, to keep the order - when each entity should
+   be processed once.
 
 
 .. _ATTR/Filtering:
@@ -337,13 +371,39 @@ Searching Attributes
 Filtering Attributes
 ********************
 
-Methods :meth:`~pyTooling.Attributes.Attribute.GetClasses`, :meth:`~pyTooling.Attributes.Attribute.GetMethods`
-:meth:`~pyTooling.Attributes.Attribute.GetFunctions`, :meth:`~pyTooling.Attributes.Attribute.GetAttributes` accept an
-optional ``predicate`` parameter, which needs to be a subclass of :class:`~pyTooling.Attributes.Attribute`.
+The three ``Get***`` methods take a ``scope``, which restricts the result to the entities declared **in** one class
+or module. It is the answer to *"which commands does this plug-in define?"* when several define commands of the same
+name:
 
+.. code-block:: Python
 
+   Command.GetFunctions(scope=myPlugin)      # only the functions declared in that module
+   Command.GetMethods(scope=Application)     # only the methods declared in that class
 
-.. todo:: Attributes:: Filtering Attributes
+:meth:`~pyTooling.Attributes.Attribute.GetClasses` narrows further with ``subclassOf``, which keeps only the
+annotated classes derived from a given base - so a framework can ask for *annotated plug-ins that are also
+handlers*:
+
+.. code-block:: Python
+
+   Plugin.GetClasses(subclassOf=Handler)
+
+:meth:`~pyTooling.Attributes.Attribute.GetAttributes` takes ``includeSubClasses``, which is ``True`` by default: an
+entity annotated with a *derived* attribute is answered when the base is asked. Set it to ``False`` for exactly the
+attribute class asked about.
+
+.. important::
+
+   **The registries themselves are per class, not nested.** ``Command.GetFunctions()`` does *not* return a function
+   annotated with a derived ``@Alias`` - each derived class receives fresh registries in
+   :meth:`~pyTooling.Attributes.Attribute.__init_subclass__`, which is what stops it from reporting entities it was
+   never attached to.
+
+   Where sub-class matching is wanted, it comes from an ``isinstance`` test rather than from a registry:
+   :meth:`~pyTooling.Attributes.Attribute.GetAttributes` with ``includeSubClasses=True``, and
+   :meth:`~pyTooling.MetaClasses.ExtendedType.GetMethodsWithAttributes` with ``predicate=``. The latter is the only
+   one of these methods that has a ``predicate`` parameter, and it lives on the meta-class rather than on
+   :class:`~pyTooling.Attributes.Attribute`.
 
 
 .. _ATTR/Grouping:
@@ -351,7 +411,9 @@ optional ``predicate`` parameter, which needs to be a subclass of :class:`~pyToo
 Grouping Attributes
 *******************
 
-.. todo:: Attributes:: Grouping Attributes
+An attribute can attach **other** attributes instead of itself, by overriding
+:meth:`~pyTooling.Attributes.Attribute.__call__` and appending them to the entity. One annotation in the user's code
+then expands into the several the framework searches for - which keeps a repeated combination in one place:
 
 .. code-block:: Python
 
@@ -383,13 +445,39 @@ Grouping Attributes
 Implementation Details
 **********************
 
-.. todo:: Attributes:: Implementation details
+Two mechanisms carry the whole package, and knowing them explains both what is fast about it and what its limits
+are.
 
-:data:`~pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME`
+.. rubric:: The annotations live on the entity
 
-The annotated data is stored in an additional ``__dict__`` entry for each
-annotated method. By default the entry is called ``__pyattr__``. Multiple
-attributes can be applied to the same method.
+Applying an attribute appends its instance to a list stored in one extra ``__dict__`` entry of the annotated class,
+method or function. The entry is named by :data:`~pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME`, which is
+``__pyattr__``. Several attributes on one entity are several elements of that list, and they read **top-down, in
+source order**: Python applies decorators bottom-up, so each new attribute is *inserted at the front* rather than
+appended, which puts the list back into the order a reader sees in the file.
+
+Reading an annotation is therefore an attribute access on an object that already exists. Nothing is computed when an
+*instance* of the annotated class is created, which is the design goal *"reduce overhead to class creation time"*
+from :ref:`ATTR/Goals`.
+
+.. rubric:: The registries live on the attribute class
+
+Searching goes the other way, so each attribute class also keeps three lists - ``_functions``, ``_classes`` and
+``_methods`` - of the entities it was applied to. They are :class:`~typing.ClassVar`\ s, so
+:meth:`~pyTooling.Attributes.Attribute.__init_subclass__` assigns **fresh** lists to every derived attribute class.
+Without that, a derived attribute would share its base's lists and report entities it was never attached to; with
+it, the base does not collect its children's entities either. That is the trade-off behind the rule in
+:ref:`ATTR/Filtering`.
+
+.. rubric:: What follows from both
+
+* An entity is registered when its **module is imported**, because that is when the decorator runs.
+* An attribute class holds a reference to every entity it annotated, so those entities are never garbage-collected.
+  For a long-running process that constructs classes dynamically, that is a leak worth knowing about.
+* :class:`~pyTooling.Attributes.AttributeScope` on an attribute class records **which entities it is meant for**.
+  It is documentation rather than a check - :meth:`~pyTooling.Attributes.Attribute.__call__` dispatches on what the
+  entity *is* and registers it accordingly, so a ``Method``-scoped attribute applied to a plain function is
+  registered as a function rather than rejected.
 
 
 .. _ATTR/Consumers:
