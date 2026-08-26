@@ -20,8 +20,7 @@
 #                                                                                                                      #
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
-"""
-A Sphinx directive rendering a class' **public interface** as a condensed code block.
+"""A Sphinx directive rendering a class' **public interface** as a condensed code block.
 
 A reader arriving at a page wants to see the shape of a type before reading about it: what it is derived from, what
 can be called on it, and what can be read from it. The API reference answers that in several screens of prose; a
