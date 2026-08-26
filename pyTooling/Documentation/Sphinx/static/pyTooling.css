@@ -1,0 +1,12 @@
+/* Styles for the ReST roles registered by pyTooling.Documentation.Sphinx.                                            */
+/* Previously injected into every document by a 'raw:: html' block in each project's doc/prolog.inc.                  */
+
+span.bolditalic  { font-weight: bold; font-style: italic; }
+span.underline   { text-decoration: underline; }
+span.strike      { text-decoration: line-through; }
+span.xlarge      { font-size: x-large; }
+
+span.colorred    { color: #CC0000; }
+span.colorgreen  { color: #009933; }
+span.colorblue   { color: #0066FF; }
+span.colorpurple { color: #9900CC; }
