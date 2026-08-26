@@ -29,7 +29,7 @@ Step 1 - The Application Class
       ``Write*`` method matching the message's :ref:`severity <TERM/Severity>`.
 
       Running it prints the normal message and the warning; the verbose message is dropped, because the default log
-      level is ``Severity.Normal``. The warning is also *counted*, which
+      level is :pycode:`Severity.Normal`. The warning is also *counted*, which
       :ref:`step 4 <TUTORIAL/TerminalApplication/Step4>` makes use of.
 
       .. hint::
@@ -60,7 +60,7 @@ Step 2 - Verbosity Switches
       Which severities are visible is decided by :meth:`~pyTooling.TerminalUI.TerminalApplication.Configure`, usually
       from the command line switches.
 
-      Now ``--verbose`` shows the verbose line, ``--debug`` additionally shows every ``WriteDebug`` message (debug
+      Now ``--verbose`` shows the verbose line, ``--debug`` additionally shows every :pycode:`WriteDebug` message (debug
       implies verbose), and ``--quiet`` reduces the output to errors and messages written with
       :meth:`~pyTooling.TerminalUI.TerminalApplication.WriteQuiet` - which is how a quiet program still prints its
       result.
@@ -80,7 +80,7 @@ Step 2 - Verbosity Switches
       :columns: 6
 
       Expensive work can be skipped by asking the application whether it would print at all. ``Verbose``, ``Debug`` and
-      ``Quiet`` answer without writing anything, so the statistics are only collected when they end up on screen.
+      :pycode:`Quiet` answer without writing anything, so the statistics are only collected when they end up on screen.
 
    .. grid-item::
       :columns: 6
@@ -211,9 +211,9 @@ Step 6 - Commands and Options
       :meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin._PrintHelp` then prints the parser's help page, or
       the help page of a single command.
 
-      A command that takes a parameter declares it: ``help`` accepts an optional command name, so
+      A command that takes a parameter declares it: :pycode:`help` accepts an optional command name, so
       :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument` adds it to that command's parser and
-      ``args.Command`` exists when the handler runs.
+      :pycode:`args.Command` exists when the handler runs.
 
       That is the full shape of a pyTooling-based command line program. See :ref:`ATTR/ArgParse` for the argument
       parsing part, and :ref:`TERM` for everything the terminal side offers.

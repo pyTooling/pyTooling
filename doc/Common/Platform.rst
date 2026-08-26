@@ -178,7 +178,7 @@ of Windows.
 Runtimes
 ********
 
-Some environments like ``MSYS2`` provide multiple runtimes.
+Some environments like :pycode:`MSYS2` provide multiple runtimes.
 
 .. rubric:: Supported (MSYS2) Runtimes
 

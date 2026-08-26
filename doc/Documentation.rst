@@ -51,7 +51,7 @@ How long a summary may be
       usual 120 columns plus an embedded link or other markup. A longer first paragraph is a body that lost its
       summary, and a :exc:`~pyTooling.Documentation.DocumentationError` says so.
 
-      Pass ``0`` where the limit doesn't apply - which is what
+      Pass :pycode:`0` where the limit doesn't apply - which is what
       :deco:`~pyTooling.Decorators.InheritDocString` does, because a base-class' doc-string belongs to whoever wrote
       it and rejecting it would turn a documentation style issue into an :exc:`ImportError` in a package that merely
       derives from that class.

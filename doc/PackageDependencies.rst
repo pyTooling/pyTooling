@@ -50,7 +50,7 @@ dependency graph is otherwise thousands of HTTP requests wide.
 .. attention::
 
    Querying PyPI needs `aiohttp <https://GitHub.com/aio-libs/aiohttp>`__, which is an optional dependency. Install
-   it with the ``pypi`` extra:
+   it with the :pycode:`pypi` extra:
 
    .. code-block:: shell
 

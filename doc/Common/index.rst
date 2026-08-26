@@ -36,8 +36,8 @@ structures.
 
 In addition to :func:`sys.getsizeof`, the used algorithm accounts also for:
 
-* ``__dict__``
-* ``__slots__``
+* :pycode:`__dict__`
+* :pycode:`__slots__`
 * iterable members made of:
 
   * :class:`tuple`
@@ -48,7 +48,7 @@ In addition to :func:`sys.getsizeof`, the used algorithm accounts also for:
 .. admonition:: Background Information
 
    The function :func:`sys.getsizeof` only returns the raw size of a Python object and doesn't account for the
-   overhead of e.g. ``_dict__`` to store dynamically allocated object members.
+   overhead of e.g. :pycode:`_dict__` to store dynamically allocated object members.
 
 
 .. _COMMON/Helper/isnestedclass:
@@ -201,7 +201,7 @@ mergedicts
 **********
 
 :func:`~pyTooling.Common.mergedicts` merges multiple dictionaries into a new single dictionary. It accepts an
-arbitrary number of dictionaries to merge. Optionally, the named parameter ``func`` accepts a function that can be
+arbitrary number of dictionaries to merge. Optionally, the named parameter :pycode:`func` accepts a function that can be
 applied to every element during the merge operation.
 
 .. rubric:: Example:

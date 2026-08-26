@@ -13,7 +13,7 @@ Terminal
       The package is built on the idea that a command line program emits **one line of text per message**, and that
       every message has a :ref:`severity <TERM/Severity>`: a normal message, a warning, an error, a debug message, ...
       The severity decides three things at once: whether the message is visible at the configured verbosity, how it is
-      formatted and colored, and whether it is written to ``STDOUT`` or ``STDERR``.
+      formatted and colored, and whether it is written to :pycode:`STDOUT` or :pycode:`STDERR`.
 
       An application derives from :ref:`TerminalApplication <TERM/TerminalApplication>` and writes its messages with the
       matching ``Write*`` method. Coloring is provided by
@@ -84,7 +84,7 @@ color support, the terminal's size, writing to the standard streams, and leaving
 
 .. admonition:: Singleton
 
-   The class is created with ``ExtendedType(singleton=True)``, so a class is instantiated **once**: every further
+   The class is created with :pycode:`ExtendedType(singleton=True)`, so a class is instantiated **once**: every further
    ``Application()`` returns the same object. That is what allows helper classes to reach the terminal without it being
    passed around, but it also means state - written lines, message counters - survives. In unit tests, give every
    testcase its own derived class instead of instantiating the same class twice.
@@ -95,7 +95,7 @@ color support, the terminal's size, writing to the standard streams, and leaving
 Colored Output
 ==============
 
-If ``STDOUT`` is a terminal, colorama is initialized in the constructor, otherwise colors are switched off - so a
+If :pycode:`STDOUT` is a terminal, colorama is initialized in the constructor, otherwise colors are switched off - so a
 redirected output doesn't contain escape sequences. The color palette is offered as a dictionary in the class variable
 :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.Foreground`, which is used as the keyword arguments of a
 :meth:`str.format` call:
@@ -104,13 +104,13 @@ redirected output doesn't contain escape sequences. The color palette is offered
 
    self.WriteLineToStdErr("{RED}[ERROR] {message}{NOCOLOR}".format(message="It failed.", **self.Foreground))
 
-Besides plain colors (``RED``, ``DARK_RED``, ``GREEN``, ``YELLOW``, ``MAGENTA``, ``BLUE``, ``CYAN``, ``GRAY``,
+Besides plain colors (``RED``, ``DARK_RED``, ``GREEN``, ``YELLOW``, ``MAGENTA``, ``BLUE``, ``CYAN``, :pycode:`GRAY`,
 ``WHITE``, ``NOCOLOR``, ...), the palette contains the semantic entries ``HEADLINE``, ``WARNING`` and ``ERROR``. If
 colorama isn't installed, every entry is an empty string, so the same code emits uncolored text.
 
 .. hint::
 
-   colorama is an optional dependency: install ``pyTooling[terminal]``, otherwise importing the package raises an
+   colorama is an optional dependency: install :pycode:`pyTooling[terminal]`, otherwise importing the package raises an
    exception naming that extra.
 
 
@@ -124,7 +124,7 @@ Terminal Size
 once in the constructor by :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.GetTerminalSize`. That static method
 supports native Windows (``kernel32.dll:GetConsoleScreenBufferInfo``) as well as Linux, macOS, FreeBSD, MinGW32/64,
 UCRT64, Clang64 and Cygwin (``ioctl(TIOCGWINSZ)``, falling back to the environment variables ``COLUMNS`` and ``LINES``).
-If the size can't be determined, ``(80, 25)`` is assumed; on an unsupported platform, a
+If the size can't be determined, :pycode:`(80, 25)` is assumed; on an unsupported platform, a
 :exc:`~pyTooling.Exceptions.PlatformNotSupportedError` is raised.
 
 
@@ -202,7 +202,7 @@ in which case the invitation is omitted. It is independent of the ``Issue tracke
 :ref:`the version information <TERM/ProgramInformation>`, which is read from the application's dunder module.
 
 An application connects the class variable to its own dunder variable. pyTooling can't find that variable on its own:
-which module carries ``__issue_tracker_url__`` is up to the application - ``<package>/__init__.py`` for a simple
+which module carries :pycode:`__issue_tracker_url__` is up to the application - ``<package>/__init__.py`` for a simple
 package, ``<namespace>/<package>/__init__.py`` for a namespace package.
 
 .. code-block:: Python
@@ -233,29 +233,29 @@ written, or dropped because its severity is below the current log level.
 +-----------------------+---------------------------+----------------------------------------------------------+
 | **Method**            | **Severity**              | **Notes**                                                |
 +=======================+===========================+==========================================================+
-| ``WriteFatal``        | ``Severity.Fatal``        | Exits the application, unless ``immediateExit=False``.   |
+| ``WriteFatal``        | ``Severity.Fatal``        | Exits the application, unless :pycode:`immediateExit=False`.   |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteError``        | ``Severity.Error``        | Increments the error counter.                            |
+| ``WriteError``        | :pycode:`Severity.Error`        | Increments the error counter.                            |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteQuiet``        | ``Severity.Quiet``        | Visible even in quiet mode.                              |
+| ``WriteQuiet``        | :pycode:`Severity.Quiet`        | Visible even in quiet mode.                              |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteCritical``     | ``Severity.Critical``     | Increments the critical warning counter.                 |
+| ``WriteCritical``     | :pycode:`Severity.Critical`     | Increments the critical warning counter.                 |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteCriticalNote`` | ``Severity.CriticalNote`` | Follow-up line of a critical warning, rendered indented. |
+| ``WriteCriticalNote`` | :pycode:`Severity.CriticalNote` | Follow-up line of a critical warning, rendered indented. |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteWarning``      | ``Severity.Warning``      | Increments the warning counter.                          |
+| ``WriteWarning``      | :pycode:`Severity.Warning`      | Increments the warning counter.                          |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteWarningNote``  | ``Severity.WarningNote``  | Follow-up line of a warning, rendered indented.          |
+| ``WriteWarningNote``  | :pycode:`Severity.WarningNote`  | Follow-up line of a warning, rendered indented.          |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteInfo``         | ``Severity.Info``         | Visible at the default log level, like a normal message. |
+| ``WriteInfo``         | :pycode:`Severity.Info`         | Visible at the default log level, like a normal message. |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteNormal``       | ``Severity.Normal``       | The default severity of a message.                       |
+| ``WriteNormal``       | :pycode:`Severity.Normal`       | The default severity of a message.                       |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteDryRun``       | ``Severity.DryRun``       | For actions skipped in a dry-run.                        |
+| ``WriteDryRun``       | :pycode:`Severity.DryRun`       | For actions skipped in a dry-run.                        |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteVerbose``      | ``Severity.Verbose``      | Visible from ``verbose`` upwards.                        |
+| ``WriteVerbose``      | ``Severity.Verbose``      | Visible from :pycode:`verbose` upwards.                        |
 +-----------------------+---------------------------+----------------------------------------------------------+
-| ``WriteDebug``        | ``Severity.Debug``        | Visible only in ``debug`` mode.                          |
+| ``WriteDebug``        | ``Severity.Debug``        | Visible only in :pycode:`debug` mode.                          |
 +-----------------------+---------------------------+----------------------------------------------------------+
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication.TryWriteLine` answers whether a line *would* be written, without
@@ -263,7 +263,7 @@ writing it - useful before assembling an expensive message.
 
 A *note* is a follow-up line belonging to the message above it, rendered with a leading ``>`` at the severity's
 indentation. Only warnings and critical warnings have one, although :class:`~pyTooling.TerminalUI.Severity` also
-defines ``ExceptionNote``:
+defines :pycode:`ExceptionNote`:
 
 .. code-block:: Python
 
@@ -277,7 +277,7 @@ Verbosity: Configure
 ====================
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication.Configure` translates the usual command line switches into a log level.
-It takes keyword arguments only, and ``debug`` implies ``verbose``:
+It takes keyword arguments only, and :pycode:`debug` implies :pycode:`verbose`:
 
 .. code-block:: Python
 
@@ -296,15 +296,15 @@ The resulting log level - readable and writable as
 +-------------------+----------------------+--------------------------------------------------------------------+
 | **Configuration** | **Log level**        | **Lowest severity still visible**                                  |
 +===================+======================+====================================================================+
-| *(default)*       | ``Severity.Normal``  | ``WriteNormal`` and above; verbose, dry-run and debug are dropped. |
+| *(default)*       | ``Severity.Normal``  | :pycode:`WriteNormal` and above; verbose, dry-run and debug are dropped. |
 +-------------------+----------------------+--------------------------------------------------------------------+
-| ``verbose=True``  | ``Severity.Verbose`` | additionally ``WriteDryRun`` and ``WriteVerbose``.                 |
+| ``verbose=True``  | ``Severity.Verbose`` | additionally ``WriteDryRun`` and :pycode:`WriteVerbose`.                 |
 +-------------------+----------------------+--------------------------------------------------------------------+
-| ``debug=True``    | ``Severity.Debug``   | everything, including ``WriteDebug``.                              |
+| ``debug=True``    | ``Severity.Debug``   | everything, including :pycode:`WriteDebug`.                              |
 +-------------------+----------------------+--------------------------------------------------------------------+
-| ``silent=True``   | ``Severity.Silent``  | only warnings, errors and fatal messages.                          |
+| ``silent=True``   | :pycode:`Severity.Silent`  | only warnings, errors and fatal messages.                          |
 +-------------------+----------------------+--------------------------------------------------------------------+
-| ``quiet=True``    | ``Severity.Quiet``   | only ``WriteQuiet``, errors and fatal messages.                    |
+| ``quiet=True``    | ``Severity.Quiet``   | only :pycode:`WriteQuiet`, errors and fatal messages.                    |
 +-------------------+----------------------+--------------------------------------------------------------------+
 
 The chosen mode is also readable as :attr:`~pyTooling.TerminalUI.TerminalApplication.Verbose`,
@@ -357,43 +357,43 @@ when its severity is greater than or equal to the current log level, so the nume
 +--------------------+-----------+----------------------------------------------------------------+
 | **Severity**       | **Value** | **Meaning**                                                    |
 +====================+===========+================================================================+
-| ``Exception``      | 120       | An unhandled exception.                                        |
+| :pycode:`Exception`      | 120       | An unhandled exception.                                        |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``ExceptionCause`` | 115       | The exception that caused it.                                  |
+| :pycode:`ExceptionCause` | 115       | The exception that caused it.                                  |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``ExceptionNote``  | 110       | A note attached to an exception.                               |
+| :pycode:`ExceptionNote`  | 110       | A note attached to an exception.                               |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Fatal``          | 100       | The application cannot continue.                               |
+| :pycode:`Fatal`          | 100       | The application cannot continue.                               |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Error``          | 80        | An error, counted and reported.                                |
+| :pycode:`Error`          | 80        | An error, counted and reported.                                |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Quiet``          | 70        | Always visible, even in quiet mode.                            |
+| :pycode:`Quiet`          | 70        | Always visible, even in quiet mode.                            |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Critical``       | 60        | A critical warning.                                            |
+| :pycode:`Critical`       | 60        | A critical warning.                                            |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``CriticalNote``   | 55        | A follow-up line of a critical warning.                        |
+| :pycode:`CriticalNote`   | 55        | A follow-up line of a critical warning.                        |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Warning``        | 50        | A warning.                                                     |
+| :pycode:`Warning`        | 50        | A warning.                                                     |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``WarningNote``    | 45        | A follow-up line of a warning.                                 |
+| :pycode:`WarningNote`    | 45        | A follow-up line of a warning.                                 |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Silent``         | 40        | The threshold of silent mode - not used as a message severity. |
+| :pycode:`Silent`         | 40        | The threshold of silent mode - not used as a message severity. |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Info``           | 20        | An informative message.                                        |
+| :pycode:`Info`           | 20        | An informative message.                                        |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Normal``         | 10        | The default message severity.                                  |
+| :pycode:`Normal`         | 10        | The default message severity.                                  |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``DryRun``         | 8         | An action that was skipped in a dry-run.                       |
+| :pycode:`DryRun`         | 8         | An action that was skipped in a dry-run.                       |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Verbose``        | 5         | A verbose message.                                             |
+| :pycode:`Verbose`        | 5         | A verbose message.                                             |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``Debug``          | 2         | A debug message.                                               |
+| :pycode:`Debug`          | 2         | A debug message.                                               |
 +--------------------+-----------+----------------------------------------------------------------+
-| ``All``            | 0         | The threshold letting every message pass.                      |
+| :pycode:`All`            | 0         | The threshold letting every message pass.                      |
 +--------------------+-----------+----------------------------------------------------------------+
 
 ``Quiet`` sitting between ``Error`` and ``Critical`` is what makes a "quiet" program still print its actual result:
-in quiet mode the log level is ``Quiet``, so warnings disappear while a ``WriteQuiet`` message survives.
+in quiet mode the log level is :pycode:`Quiet`, so warnings disappear while a :pycode:`WriteQuiet` message survives.
 
 
 .. _TERM/Mode:
@@ -434,11 +434,11 @@ one - the ``Write*`` methods do it - but every recorded message in
 
 :meth:`~pyTooling.TerminalUI.Line.IndentBy` raises the indentation level of an existing line, and ``str(line)`` renders
 the message with the severity's prefix (``ERROR: ...``, ``WARNING: ...``, ``DEBUG: ...``) but without colors - the
-colored format used when printing lives in ``TerminalApplication`` instead.
+colored format used when printing lives in :pycode:`TerminalApplication` instead.
 
 .. note::
 
-   The indentation is recorded (``indent`` per message plus the application's
+   The indentation is recorded (:pycode:`indent` per message plus the application's
    :attr:`~pyTooling.TerminalUI.TerminalApplication.BaseIndent`), but it is not yet applied when a line is printed.
 
 
@@ -450,7 +450,7 @@ ILineTerminal
 Not every class writing messages is the application itself. :class:`~pyTooling.TerminalUI.ILineTerminal` is a
 :ref:`mixin <META/Mixin>` that gives a class the same ``Write*`` methods, forwarding them to an attached terminal - or
 silently doing nothing if none is attached. Every method additionally takes ``condition``, so a message can be made
-dependent on a check without an ``if`` statement:
+dependent on a check without an :pycode:`if` statement:
 
 .. code-block:: Python
 
@@ -474,7 +474,7 @@ Three helper methods print the parts of a program's user interface that look the
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHeadline` prints the class variable
 :attr:`~pyTooling.TerminalUI.TerminalApplication.HeadLine`, centered between two horizontal lines of the given width
-(``0`` meaning the terminal's width):
+(:pycode:`0` meaning the terminal's width):
 
 .. code-block::
 
@@ -492,21 +492,21 @@ variables of the module handed to it:
 +---------------------------+----------------------------------------------------+
 | **Dunder variable**       | **Printed as**                                     |
 +===========================+====================================================+
-| ``__copyright__``         | ``Copyright:``, one line per line of the value.    |
+| :pycode:`__copyright__`         | ``Copyright:``, one line per line of the value.    |
 +---------------------------+----------------------------------------------------+
-| ``__license__``           | ``License:``                                       |
+| :pycode:`__license__`           | ``License:``                                       |
 +---------------------------+----------------------------------------------------+
-| ``__author__``            | ``Authors:``, one line per comma-separated author. |
+| :pycode:`__author__`            | ``Authors:``, one line per comma-separated author. |
 +---------------------------+----------------------------------------------------+
-| ``__email__``             | ``Email:``, if present.                            |
+| :pycode:`__email__`             | ``Email:``, if present.                            |
 +---------------------------+----------------------------------------------------+
-| ``__version__``           | ``Version:``                                       |
+| :pycode:`__version__`           | ``Version:``                                       |
 +---------------------------+----------------------------------------------------+
-| ``__project_url__``       | ``Project:``, if present.                          |
+| :pycode:`__project_url__`       | ``Project:``, if present.                          |
 +---------------------------+----------------------------------------------------+
-| ``__documentation_url__`` | ``Documentation:``, if present.                    |
+| :pycode:`__documentation_url__` | ``Documentation:``, if present.                    |
 +---------------------------+----------------------------------------------------+
-| ``__issue_tracker_url__`` | ``Issue tracker:``, if present.                    |
+| :pycode:`__issue_tracker_url__` | ``Issue tracker:``, if present.                    |
 +---------------------------+----------------------------------------------------+
 
 A missing copyright, license, author or version is printed in red rather than omitted, because those four are expected
@@ -526,7 +526,7 @@ whether an update is available:
 
    Version:       v1.0.0 (Update available: v1.2.0)
 
-The query is given a timeout (1 second by default, ``versionCheckTimeout``) and every failure is absorbed: an
+The query is given a timeout (1 second by default, :pycode:`versionCheckTimeout`) and every failure is absorbed: an
 unreachable index prints ``(PyPI timeout)`` instead of raising. Without a package name, no request is made at all.
 
 

@@ -312,7 +312,7 @@ It's recommended to derive user-defined attributes from :class:`~pyTooling.Attri
 method can be overriden to accept a well defined parameter list including type hints.
 
 The example defines an ``Annotation`` attribute, which accepts a single string parameter. When the attribute is applied,
-the parameter is stored in an  instance. The inner field is then accessible via readonly ``Annotation`` property.
+the parameter is stored in an  instance. The inner field is then accessible via readonly :pycode:`Annotation` property.
 
 .. grid:: 2
 
@@ -364,7 +364,7 @@ Filtering Attributes
 
 Methods :meth:`~pyTooling.Attributes.Attribute.GetClasses`, :meth:`~pyTooling.Attributes.Attribute.GetMethods`
 :meth:`~pyTooling.Attributes.Attribute.GetFunctions`, :meth:`~pyTooling.Attributes.Attribute.GetAttributes` accept an
-optional ``predicate`` parameter, which needs to be a subclass of :class:`~pyTooling.Attributes.Attribute`.
+optional :pycode:`predicate` parameter, which needs to be a subclass of :class:`~pyTooling.Attributes.Attribute`.
 
 
 
@@ -412,8 +412,8 @@ Implementation Details
 
 :data:`~pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME`
 
-The annotated data is stored in an additional ``__dict__`` entry for each
-annotated method. By default the entry is called ``__pyattr__``. Multiple
+The annotated data is stored in an additional :pycode:`__dict__` entry for each
+annotated method. By default the entry is called :pycode:`__pyattr__`. Multiple
 attributes can be applied to the same method.
 
 

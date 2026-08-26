@@ -50,7 +50,7 @@ Two or three objects, wired together. This is where a data model's *relations* a
 * If the model supports it:
 
   * Remove children from a parent.
-  * Set the parent relation to ``None`` and unregister the child from its parent.
+  * Set the parent relation to :pycode:`None` and unregister the child from its parent.
 
 .. rubric:: 3. Algorithms on multiple connected instances
 
@@ -100,14 +100,14 @@ The name does two jobs
       :columns: 6
 
       A test runner has to know which classes and functions are tests. By default it decides from the name:
-      pytest's ``python_classes`` matches ``Test*`` and ``python_functions`` matches ``test_*``, and
-      :mod:`unittest`'s loader takes methods starting with ``test``.
+      pytest's :pycode:`python_classes` matches ``Test*`` and :pycode:`python_functions` matches ``test_*``, and
+      :mod:`unittest`'s loader takes methods starting with :pycode:`test`.
 
       That is a good default - it needs no configuration and no imports. But it makes the identifier carry two
       unrelated jobs: it *enables collection*, and it *describes the check*. The two pull in opposite directions.
 
-      A Python identifier cannot contain spaces, so a description has to be squeezed into ``CamelCase`` or
-      ``snake_case``. And the mandatory ``test_`` prefix says nothing to a reader - it is addressed to the runner,
+      A Python identifier cannot contain spaces, so a description has to be squeezed into :pycode:`CamelCase` or
+      ``snake_case``. And the mandatory :pycode:`test_` prefix says nothing to a reader - it is addressed to the runner,
       not to them - yet it is in every line of the report.
 
    .. grid-item::
@@ -129,7 +129,7 @@ The name does two jobs
 
 Three consequences follow, and none of them is fixed by naming things more carefully:
 
-* **The prefix is noise.** ``test_`` appears in the terminal, in the JUnit XML and in the HTML report. It carries
+* **The prefix is noise.** :pycode:`test_` appears in the terminal, in the JUnit XML and in the HTML report. It carries
   no information for the reader, because *everything* in a test report is a test.
 * **Renaming a testcase is dangerous.** Drop the prefix by accident - while extracting a helper, for instance - and
   the testcase silently stops running. Nothing fails, the suite still passes, and the coverage change is the only
@@ -225,7 +225,7 @@ file. A useful intermediate step is to mark without naming:
        ...
 
 The identifiers are unchanged, the report is unchanged, but collection no longer depends on the spelling - so the
-``test_`` prefixes can now be dropped in a separate commit whose diff is only renames, and a sentence can be added
+:pycode:`test_` prefixes can now be dropped in a separate commit whose diff is only renames, and a sentence can be added
 per testcase whenever someone has a reason to.
 
 .. _TUTORIAL/UnitTesting/Naming/DocString:

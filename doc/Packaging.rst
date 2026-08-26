@@ -72,7 +72,7 @@ This read text can then be used for the package's *long description*.
 loadRequirementsFile
 ********************
 
-The function :func:`~pyTooling.Packaging.loadRequirementsFile` recursively reads a ``requirements.txt`` file and
+The function :func:`~pyTooling.Packaging.loadRequirementsFile` recursively reads a :pycode:`requirements.txt` file and
 extracts all specified dependencies. As a result, a list of requirement strings is returned.
 
 .. topic:: Features
@@ -133,12 +133,12 @@ file (module). Usually these module variables are defined in a ``__init__.py`` f
 
 .. rubric:: Supported fields
 
-* Author name (``__author__``)
-* Author email address (``__email__``)
-* Copyright information (``__copyright_``)
-* License name (``__license__``)
-* Version number (``__version__``)
-* Keywords (``__keywords__``)
+* Author name (:pycode:`__author__`)
+* Author email address (:pycode:`__email__`)
+* Copyright information (:pycode:`__copyright_`)
+* License name (:pycode:`__license__`)
+* Version number (:pycode:`__version__`)
+* Keywords (:pycode:`__keywords__`)
 
 The package's short description has no dunder variable, because a package already describes itself: it is the
 **summary** of the source file's module doc-string, read with :func:`~pyTooling.Documentation.splitDocString`. It is
@@ -209,32 +209,32 @@ DescribePythonPackage
 
 :func:`~pyTooling.Packaging.DescribePythonPackage` is a helper function to describe a Python package. The result is a
 dictionary that can be handed over to :func:`setuptools.setup`. Some information will be gathered implicitly from
-well-known files (e.g. ``README.md``, ``requirements.txt``, ``__init__.py``).
+well-known files (e.g. :pycode:`README.md`, :pycode:`requirements.txt`, ``__init__.py``).
 
 Handling of namespace packages
 ==============================
 
-If parameter ``packageName`` contains a dot, a namespace package is assumed. Then
+If parameter :pycode:`packageName` contains a dot, a namespace package is assumed. Then
 :func:`setuptools.find_namespace_packages` is used to discover package files. |br|
 Otherwise, the package is considered a normal package and :func:`setuptools.find_packages` is used.
 
 In both cases, the following packages (directories) are excluded from search:
 
-* ``build``, ``build.*``
-* ``dist``, ``dist.*``
-* ``doc``, ``doc.*``
-* ``tests``, ``tests.*``
+* :pycode:`build`, ``build.*``
+* :pycode:`dist`, ``dist.*``
+* :pycode:`doc`, ``doc.*``
+* :pycode:`tests`, ``tests.*``
 
 Handling of minimal Python version
 ==================================
 
-The minimal required Python version is selected from parameter ``pythonVersions``.
+The minimal required Python version is selected from parameter :pycode:`pythonVersions`.
 
 Handling of the description
 ===========================
 
-If parameter ``description`` is not specified, the first paragraph of the module doc-string in
-``sourceFileWithVersion`` is used, so a package is described in one place instead of two. An explicitly passed
+If parameter :pycode:`description` is not specified, the first paragraph of the module doc-string in
+:pycode:`sourceFileWithVersion` is used, so a package is described in one place instead of two. An explicitly passed
 description always wins - including an empty one.
 
 If neither is available, a :exc:`~pyTooling.Packaging.PackagingError` is raised, because a package published
@@ -242,44 +242,44 @@ without a description is worse than a failing ``setup.py``.
 
 .. note::
 
-   The doc-string that is read is the one of the file named by ``sourceFileWithVersion``. For a namespace package
+   The doc-string that is read is the one of the file named by :pycode:`sourceFileWithVersion`. For a namespace package
    whose dunder variables live in a sub-package - like ``pyTooling/Common/__init__.py`` - that doc-string describes
-   the sub-package, not the distribution, so such a package passes ``description`` explicitly.
+   the sub-package, not the distribution, so such a package passes :pycode:`description` explicitly.
 
 Handling of dunder variables
 ============================
 
-A Python source file specified by parameter ``sourceFileWithVersion`` will be analyzed with Pythons parser and the
+A Python source file specified by parameter :pycode:`sourceFileWithVersion` will be analyzed with Pythons parser and the
 resulting AST will be searched for the following dunder variables:
 
-* ``__author__``: :class:`str`
-* ``__copyright__``: :class:`str`
-* ``__email__``: :class:`str`
-* ``__keywords__``: :class:`typing.Iterable`[:class:`str`]
-* ``__license__``: :class:`str`
-* ``__version__``: :class:`str`
+* :pycode:`__author__`: :class:`str`
+* :pycode:`__copyright__`: :class:`str`
+* :pycode:`__email__`: :class:`str`
+* :pycode:`__keywords__`: :class:`typing.Iterable`[:class:`str`]
+* :pycode:`__license__`: :class:`str`
+* :pycode:`__version__`: :class:`str`
 
 The gathered information be used to add further mappings in the result dictionary.
 
 Handling of package classifiers
 ===============================
 
-To reduce redundantly provided parameters to this function (e.g. supported ``pythonVersions``), only additional
-classifiers should be provided via parameter ``classifiers``. The supported Python versions will be implicitly
-converted to package classifiers, so no need to specify them in parameter ``classifiers``.
+To reduce redundantly provided parameters to this function (e.g. supported :pycode:`pythonVersions`), only additional
+classifiers should be provided via parameter :pycode:`classifiers`. The supported Python versions will be implicitly
+converted to package classifiers, so no need to specify them in parameter :pycode:`classifiers`.
 
 The following classifiers are implicitly handled:
 
 license
-  The license specified by parameter ``license`` is translated into a classifier. |br|
+  The license specified by parameter :pycode:`license` is translated into a classifier. |br|
   See also :meth:`pyTooling.Licensing.License.PythonClassifier`
 
 Python versions
   Always add ``Programming Language :: Python :: 3 :: Only``. |br|
-  For each value in ``pythonVersions``, one ``Programming Language :: Python :: Major.Minor`` is added.
+  For each value in :pycode:`pythonVersions`, one ``Programming Language :: Python :: Major.Minor`` is added.
 
 Development status
-  The development status specified by parameter ``developmentStatus`` is translated to a classifier and added.
+  The development status specified by parameter :pycode:`developmentStatus` is translated to a classifier and added.
 
 .. seealso::
 
@@ -290,19 +290,19 @@ Handling of extra requirements
 
 If additional requirement files are provided, e.g. requirements to build the documentation, then *extra*
 requirements are defined. These can be installed via ``pip install packageName[extraName]``. If so, an extra called
-``all`` is added, so developers can install all dependencies needed for package development.
+:pycode:`all` is added, so developers can install all dependencies needed for package development.
 
-``doc``
-  If parameter ``documentationRequirementsFile`` is present, an extra requirements called ``doc`` will be defined.
-``test``
-  If parameter ``unittestRequirementsFile`` is present, an extra requirements called ``test`` will be defined.
-``build``
-  If parameter ``packagingRequirementsFile`` is present, an extra requirements called ``build`` will be defined.
+:pycode:`doc`
+  If parameter ``documentationRequirementsFile`` is present, an extra requirements called :pycode:`doc` will be defined.
+:pycode:`test`
+  If parameter ``unittestRequirementsFile`` is present, an extra requirements called :pycode:`test` will be defined.
+:pycode:`build`
+  If parameter ``packagingRequirementsFile`` is present, an extra requirements called :pycode:`build` will be defined.
 User-defined
-  If parameter ``additionalRequirements`` is present, an extra requirements for every mapping entry in the
+  If parameter :pycode:`additionalRequirements` is present, an extra requirements for every mapping entry in the
   dictionary will be added.
-``all``
-  If any of the above was added, an additional extra requirement called ``all`` will be added, summarizing all
+:pycode:`all`
+  If any of the above was added, an additional extra requirement called :pycode:`all` will be added, summarizing all
   extra requirements.
 
 .. _PACKAGING/Descriptions/License:
@@ -310,14 +310,14 @@ User-defined
 Handling of the license
 =======================
 
-A package states its license as an **SPDX expression** in the ``license`` field, taken from the ``license``
+A package states its license as an **SPDX expression** in the :pycode:`license` field, taken from the :pycode:`license`
 parameter's :attr:`~pyTooling.Licensing.License.SPDXIdentifier`:
 
 .. code-block:: Python
 
    license=Apache_2_0_License      # -> license = "Apache-2.0"
 
-A ``License ::`` classifier passed through the ``classifiers`` parameter is **kept** - it is the caller's
+A ``License ::`` classifier passed through the :pycode:`classifiers` parameter is **kept** - it is the caller's
 statement, not this function's, and dropping it silently would hide what they wrote - but it is reported in the
 ``setup.py`` output, where the rest of this function's messages go:
 
@@ -331,7 +331,7 @@ statement, not this function's, and dropping it silently would hide what they wr
    A bare license identifier **is** an SPDX expression - the simplest one the grammar allows. What cannot be
    expressed is a **compound** expression like ``MIT OR Apache-2.0`` or
    ``GPL-2.0-or-later WITH Classpath-exception-2.0``, because a :class:`~pyTooling.Licensing.License` carries one
-   identifier. A package under more than one license passes the expression as a string to ``setuptools.setup()``
+   identifier. A package under more than one license passes the expression as a string to :pycode:`setuptools.setup()`
    itself.
 
 .. seealso::
@@ -340,7 +340,7 @@ statement, not this function's, and dropping it silently would hide what they wr
       |rarr| Improving license clarity with SPDX license expressions - what the ``license`` field means and why the
       classifiers were deprecated.
    `SPDX license expressions <https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/>`__
-      |rarr| The grammar: a simple expression is a license identifier, and ``AND``, ``OR`` and ``WITH`` combine
+      |rarr| The grammar: a simple expression is a license identifier, and ``AND``, ``OR`` and :pycode:`WITH` combine
       them.
    `SPDX license list <https://spdx.org/licenses/>`__
       |rarr| The identifiers themselves. :data:`~pyTooling.Licensing.SPDX_INDEX` holds the ones pyTooling
@@ -352,7 +352,7 @@ something else.
 Handling of keywords
 ====================
 
-If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``
+If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from :pycode:`sourceFileWithVersion`
 will be used. Otherwise, the content of the parameter, if not None or empty.
 
 .. _PACKAGING/Descriptions/EntryPoints:
@@ -369,19 +369,19 @@ provides**, not which group that is declared in:
    guiScripts={"prog-gui":     "myPackage.GUI:main"},   # -> gui_scripts
    pytestPlugins={"myPlugin":  "myPackage.PyTest"},     # -> pytest11
 
-``guiScripts`` is ``consoleScripts`` for a windowed program: on Windows, such an entry point is generated against
-``pythonw`` and starts without a console window.
+``guiScripts`` is :pycode:`consoleScripts` for a windowed program: on Windows, such an entry point is generated against
+:pycode:`pythonw` and starts without a console window.
 
-``pytestPlugins`` also adds the classifier ``Framework :: Pytest``, so a package that ships a plugin says so on
-PyPI without the caller having to repeat itself. It is not added twice if ``classifiers`` already lists it.
+:pycode:`pytestPlugins` also adds the classifier ``Framework :: Pytest``, so a package that ships a plugin says so on
+PyPI without the caller having to repeat itself. It is not added twice if :pycode:`classifiers` already lists it.
 
-Any of them may be given together, and a package that advertises nothing gets no ``entry_points`` at all.
+Any of them may be given together, and a package that advertises nothing gets no :pycode:`entry_points` at all.
 
 .. topic:: Why not a general parameter?
 
-   An earlier draft took a general ``entryPoints={"pytest11": {...}}`` mapping. It was rejected deliberately: the
+   An earlier draft took a general :pycode:`entryPoints={"pytest11": {...}}` mapping. It was rejected deliberately: the
    point of :func:`~pyTooling.Packaging.DescribePythonPackage` is to *abstract* packaging, so knowing that a pytest
-   plugin lives in a group called ``pytest11`` - and that it also wants a classifier - belongs here rather than in
+   plugin lives in a group called :pycode:`pytest11` - and that it also wants a classifier - belongs here rather than in
    every :file:`setup.py`. A named parameter per kind of thing keeps that knowledge in one place.
 
 
@@ -399,11 +399,11 @@ knowing the GitHub namespace and repository name: issue tracker URL, source code
 .. todo::
 
    normal packages
-     ``PackageName``
+     :pycode:`PackageName`
    namespace package root package
      ``NamespacePackage.*``
    namespace package sub package
-     ``NamespacePackage.PackageName``
+     :pycode:`NamespacePackage.PackageName`
 
    deriving URLs
 

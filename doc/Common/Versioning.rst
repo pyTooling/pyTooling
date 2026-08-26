@@ -23,12 +23,12 @@ prefix, a postfix or a build number.
 
 .. hint::
 
-   Given a version number ``MAJOR.MINOR.MICRO``, increment the:
+   Given a version number :pycode:`MAJOR.MINOR.MICRO`, increment the:
 
-   * ``MAJOR`` version when you make incompatible API changes,
-   * ``MINOR`` version when you add functionality in a backwards compatible manner, and
-   * ``MICRO`` version when you make backwards compatible bug fixes.
-   * Additional labels for pre-release and build metadata are available as extensions to the ``MAJOR.MINOR.MICRO``
+   * :pycode:`MAJOR` version when you make incompatible API changes,
+   * :pycode:`MINOR` version when you add functionality in a backwards compatible manner, and
+   * :pycode:`MICRO` version when you make backwards compatible bug fixes.
+   * Additional labels for pre-release and build metadata are available as extensions to the :pycode:`MAJOR.MINOR.MICRO`
      format.
 
    Summary taken from `semver.org <https://semver.org/>`__.
@@ -280,7 +280,7 @@ Variants
 Calendar Versioning
 *******************
 
-The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version number like ``2021.10``.
+The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version number like :pycode:`2021.10`.
 
 .. grid:: 2
 
@@ -432,13 +432,13 @@ Variants
 
    Calendar versions have multiple format variants:
 
-   * ``YY.MINOR.MICRO``
-   * ``YYYY.MINOR.MICRO``
-   * ``YY.MM``
+   * :pycode:`YY.MINOR.MICRO`
+   * :pycode:`YYYY.MINOR.MICRO`
+   * :pycode:`YY.MM`
    * ``YYYY.0M``
-   * ``YYYY.MM.DD``
-   * ``YYYY.MM.DD_MICRO``
-   * ``YYYY-MM-DD``
+   * :pycode:`YYYY.MM.DD`
+   * :pycode:`YYYY.MM.DD_MICRO`
+   * :pycode:`YYYY-MM-DD`
 
    Formats taken from `calver.org <https://calver.org/>`__.
 
@@ -797,10 +797,10 @@ VersionSet
       .. rubric:: Features
 
       Accessing versions in the set
-        The versions within a version set can be accessed via index operation (``__getitem__``) or iterating
-        (``__iter__``) the version set.
+        The versions within a version set can be accessed via index operation (:pycode:`__getitem__`) or iterating
+        (:pycode:`__iter__`) the version set.
 
-        The number of elements is accessible via length operation (``__len__``).
+        The number of elements is accessible via length operation (:pycode:`__len__`).
 
       Comparison of two version sets
         A version set can be compare to another version set using comparison operators: ``<``, ``<=``, ``>``, ``>=``.

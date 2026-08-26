@@ -6,7 +6,7 @@ Decorators
    :depth: 2
 
 Decorators can be applied to classes or functions/methods. A decorator is a callable, so a function or a class
-implementing ``__call__``. Decorator can accept parameters, when a decorator factory returns a specific decorator.
+implementing :pycode:`__call__`. Decorator can accept parameters, when a decorator factory returns a specific decorator.
 
 The decorator syntax of Python is syntactic sugar for a function call.
 
@@ -86,7 +86,7 @@ might be added to the language item. It supports classes, functions and methods.
 .. seealso::
 
    The predefined :func:`~functools.wraps` decorator is a modifying decorator because it copies the ``__name__`` and
-   ``__doc__`` fields from the original callable to the decorated callable.
+   :pycode:`__doc__` fields from the original callable to the decorated callable.
 
 
 Replacing Decorator
@@ -192,7 +192,7 @@ Function-based with Parameters
 Class-based with Parameters
 ===========================
 
-A decorator accepting parameters can also be implemented with a class providing ``__call__``, so it's a callable.
+A decorator accepting parameters can also be implemented with a class providing :pycode:`__call__`, so it's a callable.
 
 .. todo:: TUTORIAL::Class-based - write a tutorial
 

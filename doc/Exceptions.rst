@@ -6,12 +6,12 @@ Overview
 .. #contents:: Table of Contents
    :depth: 2
 
-The :mod:`pyTooling.Exceptions` package provides the base-classes every other exception in ``pyTooling`` derives
+The :mod:`pyTooling.Exceptions` package provides the base-classes every other exception in :pycode:`pyTooling` derives
 from, and a small set of predefined exceptions for situations that occur in almost every application: a missing
 environment variable, an unsupported platform, an unconfigured setting, an invalid configuration, and an optional
 dependency that was not installed.
 
-Packages and frameworks building on ``pyTooling`` are meant to derive from these rather than from
+Packages and frameworks building on :pycode:`pyTooling` are meant to derive from these rather than from
 :exc:`Exception <python:Exception>` directly, so an application can catch everything raised by its stack with a
 single clause.
 
@@ -31,7 +31,7 @@ Exception Base Classes
 ExceptionBase
 *************
 
-The :exc:`ExceptionBase` is the base-class for all exceptions in ``pyTooling`` as well as derived packages and
+The :exc:`ExceptionBase` is the base-class for all exceptions in :pycode:`pyTooling` as well as derived packages and
 frameworks.
 
 It keeps the message in :pycode:`self.message` and renders it through :meth:`~object.__str__`, and it adds two
@@ -58,7 +58,7 @@ read-only properties for the notes attached with :meth:`~BaseException.add_note`
 ToolingException
 ****************
 
-The :exc:`ToolingException` is the base-exception for errors raised by ``pyTooling``'s *own* features — the
+The :exc:`ToolingException` is the base-exception for errors raised by :pycode:`pyTooling`'s *own* features — the
 package-level bases such as :exc:`~pyTooling.Graph.GraphError` and :exc:`~pyTooling.Tree.TreeError` derive from it.
 
 It is the one class that keeps the ``***Exception`` suffix, because it names a package rather than an error.
@@ -71,7 +71,7 @@ of pyTooling itself"*.
 Predefined Exceptions
 #####################
 
-Predefined exceptions of ``pyTooling.Exceptions``.
+Predefined exceptions of :pycode:`pyTooling.Exceptions`.
 
 .. rubric:: Inheritance diagram:
 
@@ -108,7 +108,7 @@ ConfigurationError
 The :exc:`ConfigurationError` is raised when a configuration is invalid: an unknown key, a value of the wrong type,
 a setting that contradicts another one.
 
-It is the base-exception for configuration problems in ``pyTooling`` **and in packages building on it**, so an
+It is the base-exception for configuration problems in :pycode:`pyTooling` **and in packages building on it**, so an
 application reading configuration from several sources can catch them all with one clause instead of one per
 package. :mod:`pyTooling.Configuration` derives :exc:`~pyTooling.Configuration.KeyNotFoundError`,
 :exc:`~pyTooling.Configuration.UnsupportedValueTypeError`, :exc:`~pyTooling.Configuration.InterpolationError` and
@@ -179,7 +179,7 @@ The :exc:`MissingDependencyError` is raised when an *optional* dependency is not
 predefined exceptions it derives from :exc:`ImportError <python:ImportError>`, so an ``except ImportError`` around
 an optional import still catches it.
 
-Some modules need a package ``pyTooling`` does not install by default. Importing such a module without its
+Some modules need a package :pycode:`pyTooling` does not install by default. Importing such a module without its
 dependency raises this exception, and it carries what to install and which extra provides it:
 
 .. code-block:: Python

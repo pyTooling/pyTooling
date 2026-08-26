@@ -47,7 +47,7 @@ PyPI (see :ref:`INSTALL`).
 
 .. rubric:: Dependency List
 
-When installed as ``pyTooling``:
+When installed as :pycode:`pyTooling`:
 
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                     | **Version** | **License**                                                                               | **Dependencies**                                                                                                                                       |
@@ -56,7 +56,7 @@ When installed as ``pyTooling``:
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
-When installed as ``pyTooling[packaging]``:
+When installed as :pycode:`pyTooling[packaging]`:
 
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                     | **Version** | **License**                                                                               | **Dependencies**                                                                                                                                       |
@@ -66,7 +66,7 @@ When installed as ``pyTooling[packaging]``:
 
 .. todo:: investigate dependencies and licenses of setuptools.
 
-When installed as ``pyTooling[terminal]``:
+When installed as :pycode:`pyTooling[terminal]`:
 
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                     | **Version** | **License**                                                                               | **Dependencies**                                                                                                                                       |
@@ -75,7 +75,7 @@ When installed as ``pyTooling[terminal]``:
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
-When installed as ``pyTooling[yaml]``:
+When installed as :pycode:`pyTooling[yaml]`:
 
 +-----------------------------------------------------------------+-------------+-------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Package**                                                     | **Version** | **License**                                                                               | **Dependencies**                                                                                                                                       |
@@ -145,7 +145,7 @@ thus sub-dependencies are not evaluated further.
 
 .. rubric:: Manually Installing Benchmarking Requirements
 
-Use the :file:`tests/benchmark/requirements.txt` file to install all dependencies via ``pip3``. The file will
+Use the :file:`tests/benchmark/requirements.txt` file to install all dependencies via :pycode:`pip3`. The file will
 recursively install the mandatory dependencies too.
 
 .. tab-set::
@@ -180,7 +180,7 @@ or on a CI server, thus sub-dependencies are not evaluated further.
 
 .. rubric:: Manually Installing Benchmarking Requirements
 
-Use the :file:`tests/performance/requirements.txt` file to install all dependencies via ``pip3``. The file will
+Use the :file:`tests/performance/requirements.txt` file to install all dependencies via :pycode:`pip3`. The file will
 recursively install the mandatory dependencies too.
 
 .. tab-set::
@@ -285,7 +285,7 @@ on a CI server, thus sub-dependencies are not evaluated further.
 
 .. rubric:: Manually Installing Packaging Requirements
 
-Use the :file:`build/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
+Use the :file:`build/requirements.txt` file to install all dependencies via :pycode:`pip3`. The file will recursively
 install the mandatory dependencies too.
 
 .. tab-set::
@@ -328,7 +328,7 @@ further.
 
 .. rubric:: Manually Installing Publishing Requirements
 
-Use the :file:`dist/requirements.txt` file to install all dependencies via ``pip3``. The file will recursively
+Use the :file:`dist/requirements.txt` file to install all dependencies via :pycode:`pip3`. The file will recursively
 install the mandatory dependencies too.
 
 .. tab-set::

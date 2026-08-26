@@ -59,7 +59,7 @@ resolves the console script once per test class and offers two ways to start the
 * :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` runs ``python -m <module>``. When this passes while
   the entry point fails, the packaging is at fault rather than the code.
 
-Both capture ``stdout`` and ``stderr`` as text and take a ``timeout``, so a hanging program fails the test instead
+Both capture ``stdout`` and ``stderr`` as text and take a :pycode:`timeout`, so a hanging program fails the test instead
 of the test suite.
 
 .. code-block:: python
@@ -106,8 +106,8 @@ Marker-based Collection
 #######################
 
 A test runner has to decide what a test is, and by default it decides from a **name**: pytest collects classes
-matching ``python_classes`` (``Test*``) and functions matching ``python_functions`` (``test_*``), and
-:mod:`unittest`'s loader collects methods starting with ``test``. The identifier therefore does two jobs at once -
+matching :pycode:`python_classes` (``Test*``) and functions matching :pycode:`python_functions` (``test_*``), and
+:mod:`unittest`'s loader collects methods starting with :pycode:`test`. The identifier therefore does two jobs at once -
 it names the entity *and* it enables collection.
 
 :deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase` separate them.
@@ -140,7 +140,7 @@ report as a **property** - see :ref:`TESTING/Markers/Names`.
 
 .. important::
 
-   ``classname`` and ``name`` keep the **identifiers** and are not replaced by the titles, for two reasons.
+   :pycode:`classname` and :pycode:`name` keep the **identifiers** and are not replaced by the titles, for two reasons.
 
    They are the testcase's **node ID**, which is what *selects* a test: on the command line, from an IDE's *run
    this test*, and from the cache ``--last-failed`` reads. And a post-processing tool may reasonably expect them to
@@ -162,7 +162,7 @@ A test item - a test suite or a testcase - has **four** names, and only the firs
    * - Name
      - Where it comes from
    * - **ID**
-     - the module, class or method name. It is the item's ``classname``/``name``, and what selects the test.
+     - the module, class or method name. It is the item's :pycode:`classname`/:pycode:`name`, and what selects the test.
    * - **title**
      - what the marker was given. Defaults to the ID.
    * - **summary**
@@ -215,9 +215,9 @@ All of them except the ID reach the report as properties:
      </testsuite>
    </testsuites>
 
-``classname`` is the testcase's **package path** - the directories below the root, then the module, then the class
+:pycode:`classname` is the testcase's **package path** - the directories below the root, then the module, then the class
 - so a testcase in :file:`tests/unit/Versioning/Comparison.py` is reported as
-``tests.unit.Versioning.Comparison.VersionComparison``. Its **ID**, in the table above, is the last part of that.
+:pycode:`tests.unit.Versioning.Comparison.VersionComparison`. Its **ID**, in the table above, is the last part of that.
 
 .. hint::
 
@@ -230,7 +230,7 @@ The names of a test suite level
 ===============================
 
 A JUnit document has exactly **one** ``<testsuite>`` element for the whole session, and squeezes the hierarchy into
-a dotted ``classname`` - so a level between the root and the class has no element that could carry a title or a
+a dotted :pycode:`classname` - so a level between the root and the class has no element that could carry a title or a
 description.
 
 The names of every level are therefore written as **keys** in the session's ``<properties>``, where the key is the
@@ -286,7 +286,7 @@ A level contributes only the names it has, and a level with none is skipped.
 Enabling the plugin
 ===================
 
-The collection itself is a pytest plugin, :mod:`pyTooling.Testing.PyTest`. pyTooling declares it as a ``pytest11``
+The collection itself is a pytest plugin, :mod:`pyTooling.Testing.PyTest`. pyTooling declares it as a :pycode:`pytest11`
 entry point, so **an installed pyTooling registers it automatically** and a test suite only has to mark something.
 
 The plugin is inert until something is marked, so its presence changes nothing for a test suite that collects by
@@ -308,10 +308,10 @@ What the plugin does
 ====================
 
 * :func:`~pyTooling.Testing.PyTest.pytest_pycollect_makeitem` turns a marked class into a collector and a marked
-  method into a test item, so neither has to match ``python_classes`` or ``python_functions``.
+  method into a test item, so neither has to match :pycode:`python_classes` or :pycode:`python_functions`.
 * :func:`~pyTooling.Testing.PyTest.pytest_collection_modifyitems` attaches the titles to the item as
   :attr:`~_pytest.nodes.Item.user_properties` - the channel the :func:`record_property` fixture uses. They are part
-  of the test report, so they survive a ``pytest-xdist`` worker and reach the JUnit report as ``<property>``
+  of the test report, so they survive a :pycode:`pytest-xdist` worker and reach the JUnit report as ``<property>``
   elements.
 * **Node IDs are never touched**, so selection, ``pytest-xdist``, ``--last-failed`` and IDE integration work exactly
   as they do without the plugin.
@@ -319,7 +319,7 @@ What the plugin does
   method needs no naming convention to stay out of the report.
 * A marked :class:`unittest.TestCase` is a special case. Such a class is collected by pytest's :mod:`unittest`
   support, which asks :meth:`unittest.TestLoader.getTestCaseNames` for the test methods - and that loader matches
-  :attr:`~unittest.TestLoader.testMethodPrefix`, which is ``"test"``. It is **not** the ``python_functions``
+  :attr:`~unittest.TestLoader.testMethodPrefix`, which is :pycode:`"test"`. It is **not** the :pycode:`python_functions`
   setting: with ``python_functions = check_*``, a plain class collects ``check_*`` methods while a
   :class:`~unittest.TestCase` still collects ``test_*`` ones. The plugin therefore aliases each marked method under
   a name that loader accepts and lets pytest collect the class as usual.
@@ -338,14 +338,14 @@ A Report Format of One's Own
 JUnit XML cannot express two things a marked test suite has.
 
 **Test suites do not nest.** A JUnit document holds one flat list of ``<testcase>`` elements, and the hierarchy is
-squeezed into a dotted ``classname`` - ``tests.unit.Versioning.VersionComparison``. Every level between the root
+squeezed into a dotted ``classname`` - :pycode:`tests.unit.Versioning.VersionComparison`. Every level between the root
 and the class is a substring, so nothing can be said *about* a level: it has no element to carry a title or a
 description.
 
 **An item has one name.** :ref:`TESTING/Markers/Names` gives it four, and JUnit's only place for the other three is
 a flat ``<property name= value=>`` pair, whose value is an attribute and therefore a single line.
 
-:mod:`pyTooling.Testing.ReportWriter` writes a format that has both. It is a ``pytest11`` entry point as well, so
+:mod:`pyTooling.Testing.ReportWriter` writes a format that has both. It is a :pycode:`pytest11` entry point as well, so
 it needs no registration either - only the switch that turns it on:
 
 .. code-block:: bash
@@ -387,7 +387,7 @@ The schema
 ==========
 
 The schema lives in the resource package :mod:`pyTooling.Resources` and is shipped with the distribution.
-Every generated file points at it with ``xsi:noNamespaceSchemaLocation``, so a reader can validate without being
+Every generated file points at it with :pycode:`xsi:noNamespaceSchemaLocation`, so a reader can validate without being
 told where it lives. :func:`~pyTooling.Common.getResourceFile` returns its path, whether pyTooling is installed,
 inside a wheel, or a checkout:
 
@@ -408,14 +408,14 @@ schema is there for whoever reads the file.
 
 **The file name carries the format's version.** :data:`~pyTooling.Testing.ReportWriter.SCHEMA_FILES` maps a version
 to its schema file, so a later version of the format is added beside the current one rather than replacing it, and
-a reader learns from a report's ``xsi:noNamespaceSchemaLocation`` which version it is holding. The format states
+a reader learns from a report's :pycode:`xsi:noNamespaceSchemaLocation` which version it is holding. The format states
 its own version this way; the report does **not** name the tool that wrote it, nor the machine it ran on.
 
-* ``name`` is an **attribute** on every item, because it is an identifier. ``Title``, ``Summary`` and
-  ``Description`` are **elements**, because they are prose - ``Description`` is typed ``preservingstring``, so its
+* :pycode:`name` is an **attribute** on every item, because it is an identifier. :pycode:`Title`, :pycode:`Summary` and
+  ``Description`` are **elements**, because they are prose - ``Description`` is typed :pycode:`preservingstring`, so its
   line breaks survive.
 * ``<Testsuite>`` is recursive, so the hierarchy is as deep as the test suite is.
-* ``<Testcase>`` carries ``status`` from a fixed list, ``duration``, and a ``nodeID`` - the test runner's own
+* ``<Testcase>`` carries ``status`` from a fixed list, ``duration``, and a :pycode:`nodeID` - the test runner's own
   identifier, so a reader of the report can re-run exactly that testcase.
 * An item writes only the names it has, so an unmarked testcase produces a ``<Testcase>`` element with no children.
 
@@ -425,8 +425,8 @@ Where the nesting comes from
 ============================
 
 The levels are the node ID's own parts: the module path, then each class between it and the testcase. So
-``tests/unit/Versioning.py::VersionComparison::test_NewerIsGreater`` becomes ``tests`` → ``unit`` → ``Versioning``
-→ ``VersionComparison``, and a title or description attaches to whichever level declared one.
+``tests/unit/Versioning.py::VersionComparison::test_NewerIsGreater`` becomes ``tests`` → ``unit`` → :pycode:`Versioning`
+→ :pycode:`VersionComparison`, and a title or description attaches to whichever level declared one.
 
 .. seealso::
 

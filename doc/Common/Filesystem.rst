@@ -62,7 +62,7 @@ Root Reference
 Every element of a scanned filesystem - a :class:`~pyTooling.Filesystem.Directory`, a
 :class:`~pyTooling.Filesystem.Filename`, a :class:`~pyTooling.Filesystem.SymbolicLink` - knows the
 :class:`~pyTooling.Filesystem.Root` it belongs to, through :attr:`~pyTooling.Filesystem.Base.Root`. The root knows
-itself, so the reference is never ``None`` within a scan and needs no special case at the top:
+itself, so the reference is never :pycode:`None` within a scan and needs no special case at the top:
 
 .. code-block:: Python
 
@@ -135,7 +135,7 @@ level, and :meth:`~pyTooling.Filesystem.Directory.IterateDirectories` /
    A :class:`~pyTooling.Filesystem.File` is the *storage object* and a :class:`~pyTooling.Filesystem.Filename` is a
    directory entry naming it. That is the distinction hard links are built on: one
    :class:`~pyTooling.Filesystem.File` with several :attr:`~pyTooling.Filesystem.File.Parents`. So an element's
-   parent is its directory, while a file's ``Parents`` are the names it is reachable by.
+   parent is its directory, while a file's :pycode:`Parents` are the names it is reachable by.
 
 
 .. _FILESYS/Size:
@@ -155,8 +155,8 @@ Size
    next(root.Subdirectories).Size
 
 **Hard links make "the size of a directory" ambiguous**, so three properties answer three different questions rather
-than one of them pretending to be the answer. For a tree of ``a.txt`` (100 bytes), ``b.txt`` (200 bytes),
-``c.txt`` (50 bytes), a second directory entry hard-linked to ``a.txt``, and a symbolic link to ``b.txt``:
+than one of them pretending to be the answer. For a tree of :pycode:`a.txt` (100 bytes), :pycode:`b.txt` (200 bytes),
+``c.txt`` (50 bytes), a second directory entry hard-linked to :pycode:`a.txt`, and a symbolic link to :pycode:`b.txt`:
 
 .. list-table::
    :header-rows: 1
@@ -166,19 +166,19 @@ than one of them pretending to be the answer. For a tree of ``a.txt`` (100 bytes
      - Value
      - Question it answers
    * - :attr:`~pyTooling.Filesystem.Base.Size`
-     - ``450``
+     - :pycode:`450`
      - How much do the directory entries add up to? The hard link is counted again - ``100 + 200 + 50 + 100``.
    * - :attr:`~pyTooling.Filesystem.Root.Size2`
-     - ``100``
+     - :pycode:`100`
      - How much of that is hard-linked content, counted **once** per file?
    * - :attr:`~pyTooling.Filesystem.Root.Size3`
-     - ``200``
+     - :pycode:`200`
      - How much would the hard-linked content cost on a filesystem **without** hard links? ``100 × 2 entries``.
 
 So ``Size - Size2`` is what hard-linking saves, and the counts alongside them tell the same story in files:
-:attr:`~pyTooling.Filesystem.Root.TotalFileCount` is ``5``,
-:attr:`~pyTooling.Filesystem.Root.TotalUniqueFileCount` is ``3``, and
-:attr:`~pyTooling.Filesystem.Root.TotalHardLinkCount` is ``2``.
+:attr:`~pyTooling.Filesystem.Root.TotalFileCount` is :pycode:`5`,
+:attr:`~pyTooling.Filesystem.Root.TotalUniqueFileCount` is :pycode:`3`, and
+:attr:`~pyTooling.Filesystem.Root.TotalHardLinkCount` is :pycode:`2`.
 
 .. hint::
 

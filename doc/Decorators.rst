@@ -190,10 +190,10 @@ Documentation
       :columns: 6
 
       The :deco:`~pyTooling.Decorators.export` decorator makes module's entities (classes and functions) publicly
-      visible. Therefore, these entities get registered in the module's variable ``__all__``.
+      visible. Therefore, these entities get registered in the module's variable :pycode:`__all__`.
 
       Besides making these entities accessible via ``from foo import *``, Sphinx extensions like autoapi are reading
-      ``__all__`` to infer what entities from a module should be auto documented.
+      :pycode:`__all__` to infer what entities from a module should be auto documented.
 
    .. grid-item::
       :columns: 6
@@ -240,7 +240,7 @@ Documentation
       method to the method in the derived class.
 
       If the derived class or method has something of its own to say, both doc-strings are combined. Which parts are
-      taken from which doc-string, and in which order, is selected with ``strategy``.
+      taken from which doc-string, and in which order, is selected with :pycode:`strategy`.
 
    .. grid-item::
       :columns: 6
@@ -287,7 +287,7 @@ Merging doc-strings
       The result is assembled as ``prefix + part + interfix + part ... + postfix``. Which parts are used, and in which
       order, is chosen with ``strategy``, using :class:`~pyTooling.Decorators.DocStringMergeStrategy`. A part that is
       empty - a missing doc-string, or a body the strategy asked for that doesn't exist - is omitted together with its
-      ``interfix``; if nothing remains, the doc-string is left unchanged.
+      :pycode:`interfix`; if nothing remains, the doc-string is left unchanged.
 
       A doc-string's **summary** is its first paragraph.
       :attr:`~pyTooling.Decorators.DocStringMergeStrategy.SummaryOnly` inherits just that, so the derived field list
@@ -368,7 +368,7 @@ Performance
 
       .. tab-set::
 
-         .. tab-item:: Syntax using Decorator ``slotted``
+         .. tab-item:: Syntax using Decorator :pycode:`slotted`
 
             .. code-block:: Python
 
@@ -420,7 +420,7 @@ Performance
 
       .. tab-set::
 
-         .. tab-item:: Syntax using Decorator ``mixin``
+         .. tab-item:: Syntax using Decorator :pycode:`mixin`
 
             .. code-block:: Python
 

@@ -17,7 +17,7 @@ abstracted command line program can be launched.
 Simple Example
 **************
 
-The following example implements a portion of the ``git`` program and its ``--version`` argument.
+The following example implements a portion of the :pycode:`git` program and its ``--version`` argument.
 
 .. rubric:: Program Definition
 

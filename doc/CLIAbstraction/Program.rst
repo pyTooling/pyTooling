@@ -16,7 +16,7 @@ define and enable command line arguments.
 Simple Example
 **************
 
-The following example implements a portion of the ``git`` program and its ``--version`` argument.
+The following example implements a portion of the :pycode:`git` program and its ``--version`` argument.
 
 .. rubric:: Program Definition
 
@@ -60,7 +60,7 @@ Defining Arguments on a Program
 
 .. todo::
 
-   * use decorator ``CLIArgument``
+   * use decorator :pycode:`CLIArgument`
    * usage of nested classes
    * parametrize nested classes with class-arguments
 
@@ -77,7 +77,7 @@ Setting Arguments on a Program
 .. todo::
 
    * Using dictionary syntax with nested classes as typed keys.
-   * Using ``Value`` to change the arguments value at runtime.
+   * Using :pycode:`Value` to change the arguments value at runtime.
 
 Derive Program Variants
 ***********************

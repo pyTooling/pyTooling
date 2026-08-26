@@ -388,7 +388,7 @@ Common Classes
         including PIPs ``~=`` operator.
       * :ref:`Measuring execution times <COMMON/Stopwatch>` can be achieved by using a stopwatch implementation
         providing start, pause, resume, split and stop features. Internally, Python's *high resolution clock* is used.
-        The stopwatch also provides a context manager, so it can be used in a ``with``-statement.
+        The stopwatch also provides a context manager, so it can be used in a :pycode:`with`-statement.
 
    .. grid-item::
       :columns: 6
@@ -788,9 +788,9 @@ Decorators
 
       * :ref:`DECO/Performance`
 
-        * :ref:`DECO/slotted`: Classes marked with :pycode:`@slotted` get transformed into classes using ``__slots__``. |br|
+        * :ref:`DECO/slotted`: Classes marked with ``@slotted`` get transformed into classes using ``__slots__``. |br|
           This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
-        * :ref:`DECO/mixin`: Classes marked with :pycode:`@mixin` do not store their fields in ``__slots__``. |br|
+        * :ref:`DECO/mixin`: Classes marked with :pycode:`@mixin` do not store their fields in :pycode:`__slots__`. |br|
           When such a :term:`mixin-class` is inherited by a class using slots, the fields of the mixin become slots.
         * :ref:`DECO/singleton`: Classes marked with :pycode:`@singleton` get transformed into singleton classes. |br|
           This is achieve by exchanging the meta-class to :class:`~pyTooling.MetaClasses.ExtendedType`.
@@ -921,9 +921,9 @@ Packaging
       * Helper Functions:
 
         * :func:`pyTooling.Packaging.loadReadmeFile` |br|
-          Load a ``README.md`` file from disk and provide the content as long description for setuptools.
+          Load a :pycode:`README.md` file from disk and provide the content as long description for setuptools.
         * :func:`pyTooling.Packaging.loadRequirementsFile` |br|
-          Load a ``requirements.txt`` file from disk and provide the content for setuptools.
+          Load a :pycode:`requirements.txt` file from disk and provide the content for setuptools.
         * :func:`pyTooling.Packaging.extractVersionInformation` |br|
           Extract version information from Python source files and provide the data to setuptools.
 

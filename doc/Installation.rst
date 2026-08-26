@@ -135,7 +135,7 @@ See :ref:`DEP/package` for more details.
                py -m pip install pyTooling[yaml]
 
 Developers can install the |PackageName| package itself or the package with further dependencies for documentation
-generation (``doc``), running unit tests (``test``) or just all (``all``) dependencies.
+generation (:pycode:`doc`), running unit tests (:pycode:`test`) or just all (:pycode:`all`) dependencies.
 
 See :ref:`DEP` for more details.
 
@@ -246,9 +246,9 @@ Referencing the package in ``requirements.txt``
 ===============================================
 
 When |PackageName| is used by another Python package, it's recommended to list the dependency to the |PackageName|
-package in a ``requirements.txt`` file.
+package in a :pycode:`requirements.txt` file.
 
-.. admonition:: ``requirements.txt``
+.. admonition:: :pycode:`requirements.txt`
 
    .. code-block:: text
 
@@ -323,7 +323,7 @@ Running unit tests
 This package is provided with unit tests for `pytest <https://docs.pytest.org/>`__. The provided testcases can be
 executed locally for testing or development purposes. In addition, code coverage including branch coverage can be
 collected using `Coverage.py <https://coverage.readthedocs.io/>`__. All steps provide appropriate artifacts as XML or
-HTML reports. The artifact output directories are specified in ``pyproject.toml``.
+HTML reports. The artifact output directories are specified in :pycode:`pyproject.toml`.
 
 Ensure :ref:`unit testing requirements <DEP/testing>` are installed.
 
@@ -424,7 +424,7 @@ Running type checks
 *******************
 
 This package is provided with type checks. These can be executed locally for testing or development purposes using
-`mypy <https://mypy-lang.org/>`__. The artifact output directory is specified in ``pyproject.toml``.
+`mypy <https://mypy-lang.org/>`__. The artifact output directory is specified in :pycode:`pyproject.toml`.
 
 Ensure :ref:`unit testing requirements <DEP/testing>` are installed.
 

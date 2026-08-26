@@ -105,7 +105,7 @@ Features
       Iterating split times
         tbd
 
-      Using in a ``with``-statement
+      Using in a :pycode:`with`-statement
         tbd
 
       State of a stopwatch

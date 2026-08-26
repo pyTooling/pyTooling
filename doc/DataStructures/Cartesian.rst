@@ -11,7 +11,7 @@ The :mod:`pyTooling.Cartesian2D` package ...
 
 .. rubric:: 2D Cartesian Properties:
 
-* Coordinates as ``int`` or ``float``.
+* Coordinates as :pycode:`int` or :pycode:`float`.
 * TBD
 
 .. _STRUCT/Cartesian2D/Features:

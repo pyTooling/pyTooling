@@ -16,7 +16,7 @@ it produces - and the syntax guessed from the name:
      - the **basic** classes, and anything that isn't a named option: a command, a path, a bare value.
    * - ``***Flag``
      - a **named** option - a name the user types, with or without a value attached.
-   * - ``Short``, ``Long``, ``Windows``
+   * - :pycode:`Short`, :pycode:`Long`, :pycode:`Windows`
      - the **prefix character(s)** the name is written with: ``-``, ``--`` and ``/``. Three variants of every flag
        family, differing in nothing else.
 
@@ -258,7 +258,7 @@ Command
 =======
 
 A **command** selects what a program does - ``git commit``, ``docker build``. It carries no value of its own, so it
-is assigned ``None``, and its place in the assembled list follows the order the nested classes are declared in.
+is assigned :pycode:`None`, and its place in the assembled list follows the order the nested classes are declared in.
 
 .. code-block:: Python
 
@@ -340,7 +340,7 @@ name for each state - which is what a program needs when a feature is on by defa
 
 .. attention::
 
-   The predefined variants write **``with-``/``without-``**, not ``flag``/``no-flag``. A program spelling its pair
+   The predefined variants write **``with-``/``without-``**, not ``flag``/:pycode:`no-flag`. A program spelling its pair
    differently - ``--tests``/``--no-tests``, or ``--enable-x``/``--disable-x`` - derives its own class with the two
    patterns it needs:
 
@@ -363,7 +363,7 @@ An **optional valued flag** writes whichever form it was given:
    program[program.OptionalColor] = None         # -> --color
    program[program.OptionalColor] = "always"     # -> --color=always
 
-Assigning ``None`` is what asks for the bare form, so this is the one class where ``None`` does not mean *"nothing
+Assigning ``None`` is what asks for the bare form, so this is the one class where :pycode:`None` does not mean *"nothing
 to write"* - it means *"write the name alone"*.
 
 
@@ -400,8 +400,8 @@ A **tuple flag** writes the name and the value as **two** argv entries, with no 
    git[git.ValueMessage] = "initial commit"       # -> -m, 'initial commit'
 
 The difference from :class:`~pyTooling.CLIAbstraction.ValuedFlag.ShortValuedFlag` is invisible in a printed command
-line and decisive in :class:`subprocess.Popen`, which receives a list: ``['-m', 'initial commit']`` is two
-arguments, ``['-m=initial commit']`` is one. Programs parsing with :func:`getopt` want the former.
+line and decisive in :class:`subprocess.Popen`, which receives a list: :pycode:`['-m', 'initial commit']` is two
+arguments, :pycode:`['-m=initial commit']` is one. Programs parsing with :func:`getopt` want the former.
 
 .. hint::
 

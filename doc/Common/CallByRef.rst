@@ -54,13 +54,13 @@ CallByRefParam
 parameter that can be passed to a function or method.
 
 The parameter can be initialized via the constructor. If no init-value was given,
-the init value will be ``None``. The wrappers internal value can be updated by
+the init value will be :pycode:`None`. The wrappers internal value can be updated by
 using the inplace shift-left operator ``<=``.
 
 In addition, operators ``=`` and ``!=`` are also implemented for any *call-by-reference*
-wrapper. Calls to ``__repr__`` and ``__str__`` are passed to the internal value.
+wrapper. Calls to :pycode:`__repr__` and :pycode:`__str__` are passed to the internal value.
 
-The internal value can be used via ``obj.value``.
+The internal value can be used via :pycode:`obj.value`.
 
 
 Type-Specific *call-by-reference* Classes
@@ -77,7 +77,7 @@ The class :class:`~pyTooling.CallByRef.CallByRefBoolParam` implements call-by-re
 Implemented operators:
 
 * Binary comparison operators: ``==``, ``!=``
-* Type conversions: ``bool()``, ``int()``
+* Type conversions: :pycode:`bool()`, :pycode:`int()`
 
 .. _COMMON/CallByRefIntParam:
 
@@ -95,4 +95,4 @@ Implemented operators:
 * Binary comparison operators: ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``
 * Inplace boolean operators: ``&=``, ``|=``, ``^=``
 * Inplace arithmetic operators: ``+=``, ``-=``, ``*=``, ``/=``, ``//=``, ``%=``, ``**=``
-* Type conversions: ``bool()``, ``int()``
+* Type conversions: :pycode:`bool()`, :pycode:`int()`

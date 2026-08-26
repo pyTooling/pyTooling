@@ -38,9 +38,9 @@ The main design goals are:
 Example
 *******
 
-The following example implements a portion of the ``git`` program and its ``commit`` sub-command.
+The following example implements a portion of the :pycode:`git` program and its :pycode:`commit` sub-command.
 
-1. A new class ``Git`` is derived from :class:`pyTooling.CLIAbstraction.Executable`.
+1. A new class :pycode:`Git` is derived from :class:`pyTooling.CLIAbstraction.Executable`.
 2. A class variable ``_executableNames`` is set, to specify different executable names based on the operating system.
 3. Nested classes are used to describe arguments and flags for the Git program.
 4. These nested classes are annotated with the ``@CLIArgument`` attribute, which is used to register the nested classes
@@ -49,7 +49,7 @@ The following example implements a portion of the ``git`` program and its ``comm
 
 .. grid:: 2
 
-   .. grid-item:: **Usage of** ``Git``
+   .. grid-item:: **Usage of** :pycode:`Git`
       :columns: 6
 
       .. code-block:: Python

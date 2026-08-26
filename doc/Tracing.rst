@@ -4,7 +4,7 @@ Overview
 ########
 
 :mod:`pyTooling.Tracing` records a **software execution trace**: a tree of timespans, each with its own duration,
-attributes and events, built with ``with``-statements as a program runs.
+attributes and events, built with :pycode:`with`-statements as a program runs.
 
 .. code-block:: python
 
@@ -69,7 +69,7 @@ a program that wraps this tracing in its own API reports itself by passing them 
 
 A :class:`~pyTooling.Tracing.Span` and an :class:`~pyTooling.Tracing.Event` convert themselves too, but not
 publicly: a lone span is no OTLP document, because it has no service to be reported under. Each level returns its
-own part - ``Span._ToOTLPJSON()`` returns itself and everything below it, flattened - and the trace wraps the
+own part - :pycode:`Span._ToOTLPJSON()` returns itself and everything below it, flattened - and the trace wraps the
 result in the document envelope.
 
 The document is not an untyped mapping: every level of it is a :class:`~typing.TypedDict` named after the OTLP
@@ -89,25 +89,25 @@ How a trace is mapped
    * - pyTooling
      - OTLP
    * - the trace
-     - one ``resourceSpans`` entry, whose ``service.name`` attribute is ``serviceName`` - or the trace's name
+     - one ``resourceSpans`` entry, whose ``service.name`` attribute is :pycode:`serviceName` - or the trace's name
    * - the tree of spans
-     - a **flat** list, whose ``parentSpanId`` references carry the hierarchy
+     - a **flat** list, whose :pycode:`parentSpanId` references carry the hierarchy
    * - :attr:`~pyTooling.Tracing.Trace.TraceID`, drawn when the trace is constructed
-     - ``traceId`` on every span of the trace
+     - :pycode:`traceId` on every span of the trace
    * - :attr:`~pyTooling.Tracing.Span.SpanID`, drawn when the timespan is constructed
-     - ``spanId``, and the ``parentSpanId`` of everything below it
+     - :pycode:`spanId`, and the :pycode:`parentSpanId` of everything below it
    * - :attr:`~pyTooling.Tracing.Span.StartTime` and :attr:`~pyTooling.Tracing.Span.Duration`
-     - ``startTimeUnixNano`` and ``endTimeUnixNano``
+     - :pycode:`startTimeUnixNano` and :pycode:`endTimeUnixNano`
    * - a span's attributes
-     - ``attributes``, each value wrapped by its type
+     - :pycode:`attributes`, each value wrapped by its type
    * - a span's events
-     - ``events``
+     - :pycode:`events`
 
 Three details of the encoding are easy to get wrong, and each has a testcase:
 
-* **Identifiers are hex, not base64.** OTLP/JSON deviates from proto3's JSON mapping for ``traceId`` (16 bytes)
-  and ``spanId`` (8 bytes), and writes them as lower-case hex.
-* **64-bit integers are strings.** A JSON number cannot carry 64 bits exactly, so timestamps and ``intValue``
+* **Identifiers are hex, not base64.** OTLP/JSON deviates from proto3's JSON mapping for :pycode:`traceId` (16 bytes)
+  and :pycode:`spanId` (8 bytes), and writes them as lower-case hex.
+* **64-bit integers are strings.** A JSON number cannot carry 64 bits exactly, so timestamps and :pycode:`intValue`
   attributes are strings - that part *is* proto3's mapping.
 * **A duration is nanoseconds.** :attr:`~pyTooling.Tracing.Span.Duration` is in seconds, and the end timestamp is
   computed from it rather than from :attr:`~pyTooling.Tracing.Span.StopTime`, because the duration comes from a
@@ -120,11 +120,11 @@ What an attribute may hold
 
 An attribute's value is one of :data:`~pyTooling.Tracing.AttributeValue`: :class:`bool`, :class:`int`,
 :class:`float`, :class:`str`, :class:`bytes`, or a :class:`list`, :class:`tuple` or :class:`dict` of those, nested
-as deeply as needed. Each maps to the matching field of OTLP's ``AnyValue``, with :class:`bytes` encoded as base64
-and a :class:`dict` becoming a ``kvlistValue``.
+as deeply as needed. Each maps to the matching field of OTLP's :pycode:`AnyValue`, with :class:`bytes` encoded as base64
+and a :class:`dict` becoming a :pycode:`kvlistValue`.
 
 A value of any other type raises a :exc:`~pyTooling.Tracing.TracingError` when the trace is exported. Rendering it
-with :func:`str` instead would put a Python ``repr`` into a document that a backend then indexes and offers as a
+with :func:`str` instead would put a Python :pycode:`repr` into a document that a backend then indexes and offers as a
 searchable field, which is worse than a failed export.
 
 .. note::

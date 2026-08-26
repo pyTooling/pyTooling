@@ -36,7 +36,7 @@ Licenses
 ********
 
 The :class:`~pyTooling.Licensing.License` class represents of a license like *Apache License, Version 2.0*
-(SPDX: ``Apache-2.0``). It offers several information about a license as properties. Licenses can be compared for
+(SPDX: :pycode:`Apache-2.0`). It offers several information about a license as properties. Licenses can be compared for
 equality (``==``, ``!=``) based on there SPDX identifier.
 
 **Condensed definition of class** :class:`~pyTooling.Licensing.License`:

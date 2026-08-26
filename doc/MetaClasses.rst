@@ -53,7 +53,7 @@ A class that is only complete once it is combined with another uses members it d
 states that contract, so the class that forgets one fails with an :exc:`AttributeError` on first access - somewhere
 else entirely, and only if that code path ever runs.
 
-``expects`` names those members, and it works in **both directions**:
+:pycode:`expects` names those members, and it works in **both directions**:
 
 .. list-table::
    :header-rows: 1
@@ -62,7 +62,7 @@ else entirely, and only if that code path ever runs.
    * - Declared on
      - Meaning
      - Rejected
-   * - a class (``expects=(...)``)
+   * - a class (:pycode:`expects=(...)`)
      - *"whatever I am mixed into must provide these"* - the mixin-class case
      - instantiating the combined class
    * - a **method** (:deco:`expects`)
@@ -103,13 +103,13 @@ When something is missing, instantiating the class raises an
    Missing 'Write', expected by 'ReportMixin'.
    A mixin-class names what it needs from its host class with the 'expects' class keyword argument.
 
-Which members are missing is computed once, when the class is constructed, and kept in ``__missingMembers__``; the
+Which members are missing is computed once, when the class is constructed, and kept in :pycode:`__missingMembers__`; the
 exception is raised on instantiation. That is the same mechanism an :ref:`abstract class <META/AbstractClass>` uses,
 and it has the same consequence: a class may stay incomplete as long as nothing instantiates it, so an intermediate
 class can pass an expectation on to its own subclasses. A class that fulfills it again is instantiable, without the
 intermediate class having to say anything.
 
-``expects`` is not limited to mixin-classes - any class can state what its subclasses have to provide. A
+:pycode:`expects` is not limited to mixin-classes - any class can state what its subclasses have to provide. A
 mixin-class is the case it exists for, and a mixin-class is never itself incomplete, because it cannot provide what
 it expects from its host.
 
@@ -218,7 +218,7 @@ node) without the need for abstract methods.
 
    Derived()   # fine
 
-The decorator sets ``__abstractClass__`` on the class and recomputes ``__isAbstract__``, which is the same
+The decorator sets :pycode:`__abstractClass__` on the class and recomputes :pycode:`__isAbstract__`, which is the same
 computation :class:`~pyTooling.MetaClasses.ExtendedType` runs for abstract methods.
 
 The marker belongs to the decorated class alone: :class:`~pyTooling.MetaClasses.ExtendedType` clears it on every
@@ -320,7 +320,7 @@ cached instance of that class will be returned.
 Slotted Type
 ************
 
-A class defined with enabled ``slots`` behavior stores instance fields in slots. The meta-class, translates all
+A class defined with enabled :pycode:`slots` behavior stores instance fields in slots. The meta-class, translates all
 type-annotated fields in a class definition into slots. Slots allow a more efficient field storage and access compared
 to dynamically stored and accessed fields hosted by ``__dict__``. This improves the memory footprint as well as the
 field access performance of all class instances. This behavior is automatically inherited to all derived classes.

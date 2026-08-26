@@ -190,7 +190,7 @@ Level
 Each node has a level describing the distance from :term:`root node <root>`. It can be accessed via the read-only
 property :attr:`~pyTooling.Tree.Node.Level`.
 
-The root node has a level of ``0``, children of root have a level of ``1``, and so on.
+The root node has a level of :pycode:`0`, children of root have a level of :pycode:`1`, and so on.
 
 .. code-block:: python
 

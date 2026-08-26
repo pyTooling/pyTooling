@@ -1,4 +1,4 @@
 Static Type Checking Report
 ###########################
 
-*Placeholder for the Static Type Checking report generated with* ``mypy``.
+*Placeholder for the Static Type Checking report generated with* :pycode:`mypy`.

@@ -29,7 +29,7 @@ How a schema is versioned
 
 **The file name carries the version**, so a new version of a format is added beside the old one rather than
 replacing it: :file:`TestReport-v0.1.xsd` and, one day, :file:`TestReport-v0.2.xsd`. A reader of a document learns
-from its ``xsi:noNamespaceSchemaLocation`` attribute which of them it needs.
+from its :pycode:`xsi:noNamespaceSchemaLocation` attribute which of them it needs.
 
 .. _SCHEMAS/Programmatically:
 

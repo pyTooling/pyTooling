@@ -4,8 +4,8 @@ Application Testing
 ###################
 
 The levels in :ref:`TUTORIAL/UnitTesting` all reach the code by *importing* it. That leaves a layer untested, and
-it is the layer a user actually meets: the console script, the argument parser, what is written to ``STDOUT``
-versus ``STDERR``, and the exit code. None of it runs when a test does ``from myPackage import Thing``.
+it is the layer a user actually meets: the console script, the argument parser, what is written to :pycode:`STDOUT`
+versus :pycode:`STDERR`, and the exit code. None of it runs when a test does ``from myPackage import Thing``.
 
 Application testing starts the program the way a user does and looks at what came back.
 
@@ -27,14 +27,14 @@ What only a subprocess can tell you
    .. grid-item::
       :columns: 6
 
-      Calling a program's ``main()`` from a test is not the same as running it. Four things differ, and each has
+      Calling a program's :pycode:`main()` from a test is not the same as running it. Four things differ, and each has
       been a real bug:
 
       * **The console script.** ``pip install`` generates it from an entry point. A typo there ships a package
         whose command does not exist, and every import-based test still passes.
       * **The argument parser.** It is built when the program starts, not when a module is imported.
-      * **The exit code.** ``main()`` returning ``2`` and the process exiting with ``2`` are different claims.
-      * **The streams.** Which messages go to ``STDOUT`` and which to ``STDERR`` is only observable from outside.
+      * **The exit code.** ``main()`` returning ``2`` and the process exiting with :pycode:`2` are different claims.
+      * **The streams.** Which messages go to ``STDOUT`` and which to :pycode:`STDERR` is only observable from outside.
 
    .. grid-item::
       :columns: 6
@@ -65,7 +65,7 @@ Two ways to start the program
 *****************************
 
 :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` runs the **installed console script**, resolved on
-``PATH``. :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` runs ``python -m <module>``, bypassing it.
+:pycode:`PATH`. :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` runs ``python -m <module>``, bypassing it.
 
 Having both is a diagnosis, not a convenience: if ``RunModule`` passes while ``RunEntrypoint`` fails, the packaging
 is at fault and the code is fine. That distinction is invisible from a single test.
@@ -109,11 +109,11 @@ belongs to the levels below, where a failure is cheaper to read.
 * The program starts at all, and ``--version`` and ``--help`` work.
 * Every sub-command is reachable and its arguments parse.
 * Each documented exit code is actually produced.
-* An error message reaches ``STDERR`` rather than ``STDOUT``.
+* An error message reaches :pycode:`STDERR` rather than :pycode:`STDOUT`.
 * A file the program writes exists afterwards and has the expected content.
 
 .. topic:: A test suite of one's own
 
-   ``pyTooling``'s own :file:`tests/app` directory is exactly this: a package of ``ApplicationTestcase`` classes
+   ``pyTooling``'s own :file:`tests/app` directory is exactly this: a package of :pycode:`ApplicationTestcase` classes
    run separately from :file:`tests/unit`, because they need the package installed. Keeping them apart means the
    unit tests stay runnable from a checkout with nothing installed.
