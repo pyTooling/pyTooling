@@ -42,7 +42,7 @@ accepted it since v1.35 - so no translation step stands between a trace and a vi
 
    from pathlib import Path
 
-   trace.WriteJSONFile(Path("trace.json"), serviceName="myProgram")
+   trace.WriteOTLPJSONFile(Path("trace.json"), serviceName="myProgram")
 
 .. code-block:: bash
 
@@ -56,11 +56,11 @@ Three methods, for the three things a caller does with the document:
 
    * - Method
      - Returns
-   * - :meth:`~pyTooling.Tracing.Trace.ToJSON`
+   * - :meth:`~pyTooling.Tracing.Trace.ToOTLPJSON`
      - the document as an :class:`~pyTooling.Tracing.OTLPDocument`, for a caller posting it directly
-   * - :meth:`~pyTooling.Tracing.Trace.ToJSONString`
+   * - :meth:`~pyTooling.Tracing.Trace.ToOTLPJSONString`
      - the document encoded as a :class:`str`
-   * - :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`
+   * - :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`
      - nothing - it writes the document to the given :class:`~pathlib.Path`
 
 All three take ``scopeName`` and ``scopeVersion``, which name the **instrumentation scope** - the library the spans
@@ -149,6 +149,9 @@ OTLP/JSON Import
 A :class:`~pyTooling.Tracing.Trace` reads itself back from an OTLP/JSON document, so a trace written by one process
 - a build step, a worker, an earlier run - can be inspected, formatted or merged by another.
 
+This is the path for a **complete** trace in a document of its own. A document that carries several traces, or only
+part of one, is read by a :class:`~pyTooling.Tracing.TraceCollection` - see :ref:`TRACING/OTLP/Collection`.
+
 .. code-block:: python
 
    from pathlib import Path
@@ -209,7 +212,7 @@ Four things do not come back, and each of them is a property of OTLP rather than
    * - Not read back
      - Why
    * - ``service.name``
-     - a parameter of :meth:`~pyTooling.Tracing.Trace.ToJSON`, not a field of the data model
+     - a parameter of :meth:`~pyTooling.Tracing.Trace.ToOTLPJSON`, not a field of the data model
    * - the instrumentation scope
      - the same - the scope names the library that produced the spans
    * - a span's ``kind``
@@ -249,3 +252,85 @@ references still resolve - an ``intValue`` or ``timeUnixNano`` written as a JSON
 ``doubleValue`` of ``"NaN"`` or ``"Infinity"``, an integer where a double is expected, and an empty
 ``parentSpanId`` instead of an absent one. Each of those is proto3's JSON mapping being read as it is written,
 which is what a document from another producer looks like.
+
+
+.. _TRACING/OTLP/Collection:
+
+Collecting traces
+#################
+
+A document is not a trace. It carries whatever spans a producer had to hand, and two things follow from that:
+
+* it may hold **several traces** at once, and
+* it may hold only **part** of a trace. A distributed execution is exported by each process separately, so the
+  timespan enclosing a span is often in a different document than the span itself.
+
+A :class:`~pyTooling.Tracing.TraceCollection` holds both cases. It keeps the traces whose root span has arrived, and
+the **fragments** - timespans whose ``parentSpanId`` names a span nothing has delivered yet. A fragment is a real
+timespan with its own sub-spans; only its place in the tree is unknown.
+
+.. code-block:: python
+
+   from pathlib import Path
+   from pyTooling.Tracing import TraceCollection
+
+   collection = TraceCollection.ReadOTLPJSONFile(Path("frontend.json"))
+   collection.AddOTLPJSONFile(Path("worker.json"))
+   collection.AddOTLPJSONFile(Path("database.json"))
+
+   for trace in collection:
+     print("\n".join(trace.Format()))
+
+   if collection.HasFragments:
+     print(f"{collection.FragmentCount} timespans are still waiting for their parent.")
+
+The three documents may be added in **any order**. Each one is linked in both directions: a fragment it brings finds
+a parent that arrived earlier, and a span it brings collects the fragments that were waiting for it. When a fragment
+is attached, its parent's sub-spans are re-sorted by start time, so the reassembled trace reads like a local one
+instead of like the order the files happened to be read in.
+
+.. _TRACING/OTLP/Collection/Lookup:
+
+Looking things up
+=================
+
+Both indexes are keyed by identifier, which is what makes the linking possible - and what makes the collection
+useful on its own:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 45 55
+
+   * - Expression
+     - Yields
+   * - ``collection[traceID]``
+     - the :class:`~pyTooling.Tracing.Trace`, for an identifier of 32 hex digits
+   * - ``collection[spanID]``
+     - the :class:`~pyTooling.Tracing.Span`, for an identifier of 16 hex digits - fragments included
+   * - :attr:`~pyTooling.Tracing.TraceCollection.Traces` / :attr:`~pyTooling.Tracing.TraceCollection.Fragments`
+     - the complete traces, and the root timespan of each fragment
+   * - :meth:`~pyTooling.Tracing.TraceCollection.TraceIDOfSpan`
+     - which trace a timespan belongs to - answerable for a fragment, which has no
+       :attr:`~pyTooling.Tracing.Span.Trace` to ask
+   * - ``for trace in collection`` / ``len(collection)``
+     - the **complete** traces; a fragment is not a trace and is neither iterated nor counted as one
+
+A trace identifier is 32 hex digits and a span identifier is 16, so which of the two indexes ``[...]`` searches
+follows from the length. The two can't be confused.
+
+.. _TRACING/OTLP/Collection/Writing:
+
+Writing a collection back
+=========================
+
+:meth:`~pyTooling.Tracing.TraceCollection.ToOTLPJSON` writes every trace as its own ``resourceSpans`` entry, and a
+fragment into the entry of the trace it belongs to - carrying the ``parentSpanId`` it is waiting for, so reading the
+document back produces the same fragment rather than a second root span. A trace whose root span never arrived has
+no name to report, so its ``service.name`` is its trace identifier.
+
+.. topic:: Which entry point?
+
+   Use :meth:`Trace.FromOTLPJSON <pyTooling.Tracing.Trace.FromOTLPJSON>` when the document holds one complete trace
+   and a :class:`~pyTooling.Tracing.Trace` is what the caller wants - it rejects anything else rather than returning
+   half a tree. Use :meth:`TraceCollection.FromOTLPJSON <pyTooling.Tracing.TraceCollection.FromOTLPJSON>` when the
+   document is whatever a collector handed over.

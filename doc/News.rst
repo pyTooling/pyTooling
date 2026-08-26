@@ -60,8 +60,8 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Tracing`
 
-     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
-       :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
+     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.ToOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
        accepted it since v1.35.
      * The document is typed rather than a mapping of :class:`~typing.Any`: eleven :class:`~typing.TypedDict` classes
