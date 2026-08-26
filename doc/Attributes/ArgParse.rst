@@ -95,8 +95,8 @@ Arguments
 *********
 
 An argument attribute is written **above the handler method that receives it**, and each one adds one entry to that
-handler's parser. Every attribute takes ``dest``, which names the field the parsed value appears under in ``args``,
-and ``help``, which is what ``--help`` prints.
+handler's parser. Every attribute takes :pycode:`dest`, which names the field the parsed value appears under in
+:pycode:`args`, and :pycode:`help`, which is what ``--help`` prints.
 
 .. code-block:: Python
 
@@ -115,14 +115,14 @@ Two shapes exist, and the difference is the one :mod:`argparse` itself makes:
    * - Shape
      - Written as
    * - **positional**
-     - a value with no name in front of it - ``UserManager.py create alice``. ``metaName`` is the placeholder
-       ``--help`` shows; ``optional=True`` makes it omissible.
+     - a value with no name in front of it - ``UserManager.py create alice``. :pycode:`metaName` is the placeholder
+       ``--help`` shows; :pycode:`optional=True` makes it omissible.
    * - **flag**
-     - a named option - ``--quota=10G``. The name is the attribute's first parameter, and ``dest`` defaults to it.
+     - a named option - ``--quota=10G``. The name is the attribute's first parameter, and :pycode:`dest` defaults to it.
 
 .. hint::
 
-   ``dest`` is what the handler reads, so keep it a valid identifier and keep it stable. Renaming the command line
+   :pycode:`dest` is what the handler reads, so keep it a valid identifier and keep it stable. Renaming the command line
    spelling later - ``--quota`` to ``--disk-quota`` - then changes one string and leaves the handler alone.
 
 
@@ -149,7 +149,7 @@ itself:
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
      - a :class:`~pathlib.Path`
 
-All four take ``(dest, metaName, optional=False, help="")``.
+All four take :pycode:`(dest, metaName, optional=False, help="")`.
 
 
 .. _ATTR/ArgParse/Flags:
@@ -181,12 +181,12 @@ ValuedFlags
 A valued flag carries a value: ``--quota=10G``.
 :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ShortValuedFlag` and
 :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.LongValuedFlag` take
-``(long, dest=None, metaName=None, optional=False, help=None)``.
+:pycode:`(long, dest=None, metaName=None, optional=False, help=None)`.
 
 :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.LongOptionalValuedFlag` accepts **both** forms -
 ``--color`` and ``--color=always`` - for the option that means one thing bare and another with a value.
 
-:class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.LongKeyValueFlag` collects repeated ``key=value`` pairs into a
+:class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.LongKeyValueFlag` collects repeated :pycode:`key=value` pairs into a
 mapping, which is the shape of ``-D`` in a compiler.
 
 
@@ -205,13 +205,13 @@ Where an argument may be given more than once, the ``***ListArgument`` variants 
    * - Attribute
      - ``args.<dest>`` is
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.StringListArgument`
-     - ``list[str]``
+     - :pycode:`list[str]`
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerListArgument`
-     - ``list[int]``
+     - :pycode:`list[int]`
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.FloatListArgument`
-     - ``list[float]``
+     - :pycode:`list[float]`
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.PathListArgument`
-     - ``list[Path]``
+     - :pycode:`list[Path]`
 
 .. hint::
 
@@ -301,7 +301,7 @@ their own and combined - one file per subject area, and the parser assembled fro
        super().__init__(prog="UserManager.py")
 
 The attributes are found on the assembled class, so a handler moved from one mixin to another needs no change
-anywhere else. See :ref:`META/Mixin` for what ``mixin=True`` does.
+anywhere else. See :ref:`META/Mixin` for what :pycode:`mixin=True` does.
 
 
 Classic ``argparse`` Example
