@@ -293,6 +293,13 @@ Version 10.x (2026)
        arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
        PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
        the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
+     * A trace **reads itself back** from an OTLP/JSON document - :meth:`~pyTooling.Tracing.Trace.FromOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.FromOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.ReadOTLPJSONFile`.
+       OTLP carries no nesting, so the tree is reassembled from the flat list of spans and their ``parentSpanId``
+       references, and a document holding several traces is read one trace at a time.
+     * The document is validated rather than trusted: a missing or mistyped field, a malformed identifier, a
+       duplicate attribute key and a set of spans that isn't a tree each raise a
+       :exc:`~pyTooling.Tracing.TracingError` naming the position in the document it was found at.
 
    * :mod:`pyTooling.Packaging`
 
