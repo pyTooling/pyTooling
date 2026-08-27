@@ -47,7 +47,7 @@ Abstract configuration reader.
 from __future__            import annotations
 
 from pathlib               import Path
-from typing                import Union, ClassVar, Iterator, Optional as Nullable
+from typing                import Union, ClassVar, Generator, Iterator, Optional as Nullable, Tuple
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
@@ -154,13 +154,14 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the node's key.
 
-		:returns: Key of the node.
+		:returns:                    Key of the node.
+		:raises NotImplementedError: If a deriving class doesn't implement this property.
 		"""
-		raise NotImplementedError()
+		raise NotImplementedError(f"Property 'Key' is abstract and not implemented by '{self.__class__.__name__}'.")
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
-		raise NotImplementedError()
+		raise NotImplementedError("Renaming a key isn't supported by a configuration.")
 
 	@abstractmethod
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
@@ -177,23 +178,57 @@ class Node(metaclass=ExtendedType, slots=True):
 class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
 
-	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
-		"""
-		Initializes a dictionary.
+	_keys: list[KeyT]  #: Keys of this dictionary node, in the order the document states them.
 
-		:param root:   Optional, reference to the root node.
-		:param parent: Optional, reference to the parent node.
+	def __init__(self, keys: list[KeyT]) -> None:
 		"""
-		Node.__init__(self, root, parent)
+		Initializes the dictionary's keys.
 
-	def __contains__(self, key: KeyT) -> bool:  # type: ignore[empty-body]
+		A deriving class reads the keys from whatever it parsed and hands them over, so this node is never left
+		without them. Being a mixin's constructor, it initializes only the field this mixin adds.
+
+		:param keys: Keys of this dictionary node, in the order the document states them.
+		"""
+		self._keys = keys
+
+	def __contains__(self, key: KeyT) -> bool:
 		"""
 		Check if a key exists in this dictionary node.
 
 		:param key: The key to check for.
 		:returns:   ``True``, if the key exists in this node.
 		"""
-		raise NotImplementedError()
+		return key in self._keys
+
+	def IterateKeys(self) -> Generator[KeyT, None, None]:
+		"""
+		Iterate the keys of this dictionary node.
+
+		:returns: A generator of this node's keys, in the order the document states them.
+		"""
+		yield from self._keys
+
+	def IterateValues(self) -> Generator[ValueT, None, None]:
+		"""
+		Iterate the values of this dictionary node.
+
+		This is what :meth:`__iter__` yields, so ``for value in node`` and ``for value in node.IterateValues()`` are
+		the same walk. It exists so that the three iterators can be named alike and a reader doesn't have to remember
+		which of keys or values plain iteration gives.
+
+		:returns: A generator of this node's values, in the order the document states them.
+		"""
+		for key in self._keys:
+			yield self[key]
+
+	def IterateItems(self) -> Generator[Tuple[KeyT, ValueT], None, None]:
+		"""
+		Iterate the key-value pairs of this dictionary node.
+
+		:returns: A generator of this node's ``(key, value)`` pairs, in the order the document states them.
+		"""
+		for key in self._keys:
+			yield key, self[key]
 
 
 @export
@@ -210,6 +245,7 @@ class Sequence(Node):
 		"""
 		Node.__init__(self, root, parent)
 
+	@abstractmethod
 	def __getitem__(self, index: int) -> ValueT:  # type: ignore[empty-body]
 		"""
 		Read an element of this sequence node by index.
@@ -217,7 +253,6 @@ class Sequence(Node):
 		:param index: Index of the element to read.
 		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
 	def __setitem__(self, index: int, value: ValueT) -> None:
 		"""
