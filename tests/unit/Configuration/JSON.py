@@ -184,6 +184,48 @@ class Errors(Testcase):
 
 		self.assertIn("resolves to a dictionary, not to a value", str(context.exception))
 
+	def test_PathExpressionAboveRoot(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(PathExpressionError) as context:
+			_ = config["aboveRoot"]
+
+		self.assertIn("Path expression '..:dictionary' navigates beyond the root node.", str(context.exception))
+		self.assertIn("Element '..' was applied to the root node, which has no parent node.", context.exception.__notes__)
+
+	def test_QueryPathAboveRoot(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(PathExpressionError) as context:
+			_ = config.QueryPath("..:dictionary")
+
+		self.assertIn("Path expression '..:dictionary' navigates beyond the root node.", str(context.exception))
+
+
+class RootNode(Testcase):
+	"""The root node is its own root and its own parent, and every node below it points at that same root."""
+
+	_configFile = Path("tests/unit/Configuration/config.json")
+
+	def test_RootIsItsOwnRootAndParent(self) -> None:
+		config = Configuration(self._configFile)
+
+		self.assertIs(config, config._root)
+		self.assertIs(config, config._parent)
+
+	def test_NestedNodesReferenceTheRealRoot(self) -> None:
+		config = Configuration(self._configFile)
+
+		node = config["Install"]["VendorA"]["ToolA"]
+
+		self.assertIs(config, node._root)
+		self.assertIs(config["Install"]["VendorA"], node._parent)
+
+	def test_ConfigFileIsPreserved(self) -> None:
+		config = Configuration(self._configFile)
+
+		self.assertEqual(self._configFile, config.ConfigFile)
+
 
 class IteratingDictionaries(Testcase):
 	"""Iterating a dictionary node by keys, by values and by pairs."""
