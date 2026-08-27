@@ -39,7 +39,7 @@ from __future__              import annotations
 
 from json                    import load
 from pathlib                 import Path
-from typing                  import Any, Union, Iterator as typing_Iterator, Self
+from typing                  import Any, Generator, Tuple, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Common        import getFullyQualifiedName
 from pyTooling.Decorators    import export, InheritDocString
@@ -340,6 +340,32 @@ class Dictionary(Node, Abstract_Dict):
 		:returns:   ``True``, if the key is in the dictionary.
 		"""
 		return key in self._keys
+
+	def IterateKeys(self) -> Generator[KeyT, None, None]:
+		"""
+		Iterate the keys of this dictionary node.
+
+		:returns: A generator of this node's keys, in the order the document states them.
+		"""
+		yield from self._keys
+
+	def IterateValues(self) -> Generator[ValueT, None, None]:
+		"""
+		Iterate the values of this dictionary node.
+
+		:returns: A generator of this node's values, in the order the document states them.
+		"""
+		for key in self._keys:
+			yield self[key]
+
+	def IterateItems(self) -> Generator[Tuple[KeyT, ValueT], None, None]:
+		"""
+		Iterate the key-value pairs of this dictionary node.
+
+		:returns: A generator of this node's ``(key, value)`` pairs, in the order the document states them.
+		"""
+		for key in self._keys:
+			yield key, self[key]
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
