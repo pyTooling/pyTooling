@@ -182,3 +182,50 @@ class Errors(Testcase):
 			_ = config["dictionaryReference"]
 
 		self.assertIn("resolves to a dictionary, not to a value", str(context.exception))
+
+
+class IteratingDictionaries(Testcase):
+	"""Iterating a dictionary node by keys, by values and by pairs."""
+
+	def test_IterateKeys(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(["value_11", "value_12"], list(config["node_1"].IterateKeys()))
+
+	def test_IterateValues(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(["string_11", "string_12"], list(config["node_1"].IterateValues()))
+
+	def test_IterateItems(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(
+			[("value_11", "string_11"), ("value_12", "string_12")],
+			list(config["node_1"].IterateItems())
+		)
+
+	def test_IterateValuesMatchesPlainIteration(self) -> None:
+		"""``for value in node`` was the only walk before, and it still yields the same values."""
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		node = config["node_1"]
+
+		self.assertEqual(list(node), list(node.IterateValues()))
+
+	def test_KeysOfAScalarMapping(self) -> None:
+		"""
+		The keys of a mapping of scalars were unreachable before.
+
+		Plain iteration yields child nodes for mapping values but bare values for scalar ones, so a table keyed by
+		something meaningful - a version specifier, a package name - could not be read back.
+		"""
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(["value_11", "value_12"], [key for key, _ in config["node_1"].IterateItems()])
+
+	def test_NestedNodesAreStillNodes(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		for key, value in config["Install"].IterateItems():
+			self.assertIsInstance(key, str)
+			self.assertEqual(value, config["Install"][key])

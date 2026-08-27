@@ -113,7 +113,7 @@ class Node(Abstract_Node):
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
-		raise NotImplementedError()
+		raise NotImplementedError("Renaming a key isn't supported by this configuration implementation.")
 
 	@InheritDocString(Abstract_Node)
 	def QueryPath(self, query: str) -> ValueT:
@@ -317,7 +317,6 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a YAML data file."""
 
-	_keys: list[KeyT]                   #: List of keys in this dictionary.
 
 	def __init__(
 		self,
@@ -334,18 +333,10 @@ class Dictionary(Node, Abstract_Dict):
 		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
+		keys: list[KeyT] = [str(k) for k in yamlNode.keys()]
+
 		Node.__init__(self, root, parent, key, yamlNode)
-
-		self._keys = [str(k) for k in yamlNode.keys()]
-
-	def __contains__(self, key: KeyT) -> bool:
-		"""
-		Checks if the key is in this dictionary.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is in the dictionary.
-		"""
-		return key in self._keys
+		Abstract_Dict.__init__(self, keys)
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
