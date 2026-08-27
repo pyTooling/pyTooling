@@ -616,8 +616,11 @@ class Stopwatch(SlottedObject):
 		"""
 		Return the measured duration in nanoseconds.
 
-		The duration is kept in nanoseconds so that formatting doesn't inherit the rounding error of a conversion to
-		seconds - a float can't hold nine significant fractional digits next to a large number of seconds.
+		:meth:`__format__` needs whole nanoseconds to split into fields, and :attr:`Duration` offers only seconds as a
+		float, so this reads the counter directly rather than multiplying that back up.
+
+		Precision is not the reason. A float holds a duration in seconds exactly, to the nanosecond, up to
+		:math:`2^{53}` ns - a little over 104 days - which no stopwatch will ever reach.
 
 		:returns: Duration from start to stop in nanoseconds, or from start to now while the stopwatch runs. Zero, if
 		          the stopwatch was never started.
@@ -694,8 +697,10 @@ class Stopwatch(SlottedObject):
 		):
 			result = result.replace(placeholder, value)
 
-		if (position := result.find("%")) != -1 and result[position + 1:position + 2] != "%":
-			raise ValueError(f"Unknown format specifier '%{result[position + 1:position + 2]}' in '{formatSpec}'.")
+		if (position := result.find("%")) != -1:
+			following = result[position + 1] if position + 1 < len(result) else ""
+			if following != "%":
+				raise ValueError(f"Unknown format specifier '%{following}' in '{formatSpec}'.")
 
 		return result.replace("%%", "%")
 

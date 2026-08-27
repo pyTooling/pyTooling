@@ -618,6 +618,13 @@ class DurationFormatting(Testcase):
 			with self.assertRaises(ValueError):
 				format(sw, specification)
 
+	def test_TrailingPercent(self) -> None:
+		"""A specification ending in a lone ``%`` has no character to check, and must not index past the end."""
+		sw = self._stopwatch(1_000_000_000)
+
+		with self.assertRaises(ValueError):
+			format(sw, "%s%")
+
 	def test_NeverStarted(self) -> None:
 		sw = Stopwatch()
 
