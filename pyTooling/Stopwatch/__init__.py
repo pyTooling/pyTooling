@@ -496,10 +496,28 @@ class Stopwatch(SlottedObject):
 		:returns: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
 		          be 0.0.
 		"""
-		if self._startTime is None:
-			return 0.0
+		return self.DurationInNanoseconds / 1e9
 
-		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
+	@readonly
+	def DurationInNanoseconds(self) -> int:
+		"""
+		Read-only property returning the same duration as :attr:`Duration`, but in whole nanoseconds.
+
+		This is the measurement as the underlying :func:`time.perf_counter_ns` took it, so anything that divides a
+		duration into parts - :meth:`__format__` does - works from an integer instead of converting a float back.
+
+		Precision is not the reason to prefer it. A float holds a duration in seconds exactly, to the nanosecond, up
+		to :math:`2^{53}` ns - a little over 104 days - which no stopwatch will reach.
+
+		:returns: Duration since the stopwatch was started in nanoseconds. If the stopwatch was never started, the
+		          return value will be 0.
+		"""
+		if self._startTime is None:
+			return 0
+		elif self._totalTime is not None:    # was stopped, so the total is final
+			return self._totalTime
+
+		return perf_counter_ns() - self._startTime
 
 	@readonly
 	def Exclude(self) -> ExcludeContextManager:
@@ -612,26 +630,6 @@ class Stopwatch(SlottedObject):
 		"""
 		return self._splits.__iter__()
 
-	def _durationInNanoseconds(self) -> int:
-		"""
-		Return the measured duration in nanoseconds.
-
-		:meth:`__format__` needs whole nanoseconds to split into fields, and :attr:`Duration` offers only seconds as a
-		float, so this reads the counter directly rather than multiplying that back up.
-
-		Precision is not the reason. A float holds a duration in seconds exactly, to the nanosecond, up to
-		:math:`2^{53}` ns - a little over 104 days - which no stopwatch will ever reach.
-
-		:returns: Duration from start to stop in nanoseconds, or from start to now while the stopwatch runs. Zero, if
-		          the stopwatch was never started.
-		"""
-		if self._startTime is None:
-			return 0
-		elif self._totalTime is not None:    # was stopped, so the total is final
-			return self._totalTime
-
-		return perf_counter_ns() - self._startTime
-
 	def __format__(self, formatSpec: str) -> str:
 		"""
 		Return the measured duration according to the format specification.
@@ -677,7 +675,7 @@ class Stopwatch(SlottedObject):
 		if formatSpec == "":
 			return self.__str__()
 
-		nanoseconds = self._durationInNanoseconds()
+		nanoseconds = self.DurationInNanoseconds
 		seconds, fraction = divmod(nanoseconds, 1_000_000_000)
 		minutes, secondField = divmod(seconds, 60)
 		hours, minuteField = divmod(minutes, 60)
@@ -714,7 +712,7 @@ class Stopwatch(SlottedObject):
 		:returns: The string equivalent of the stopwatch.
 		"""
 		name = f" {self._name}" if self._name is not None else ""
-		duration = f"{self._durationInNanoseconds() / 1e9:.{self._digits}f}"
+		duration = f"{self.Duration:.{self._digits}f}"
 
 		if self.IsStopped:
 			return f"Stopwatch{name} (stopped): {self._beginTime} -> {self._endTime}: {duration}"
