@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
 # Licenses a package index can't answer for.                                                                           #
 #                                                                                                                      #
-# The 'dependency-table' directive resolves a package's license from what the index publishes, and warns at the end of  #
-# a build about every package it couldn't resolve. That warning is the list this file has to answer - each entry below  #
-# was read from the project's own LICENSE file or source headers, not guessed at.                                      #
+# The 'dependency-table' directive resolves a package's license from what the index publishes, and warns at            #
+# the end of a build about every package it couldn't resolve. That warning is the list this file answers -             #
+# each entry below was read from the project's own LICENSE file or source headers, not guessed at.                     #
 #                                                                                                                      #
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
