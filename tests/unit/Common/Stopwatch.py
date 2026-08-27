@@ -339,3 +339,53 @@ class ContextManagerProtocol(Testcase):
 		self.assertAlmostEqual(sw.Duration, sw.Activity)
 		self.assertEqual(0, sw.Inactivity)
 		self.assertEqual(0, sw.InactiveCount)
+
+
+class Excluding(Testcase):
+	"""Excluding time spans from the measurement with :attr:`~pyTooling.Stopwatch.Stopwatch.Exclude`."""
+
+	DELAY = 0.5
+
+	def test_ExcludedSpanCountsAsInactivity(self) -> None:
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+		with sw.Exclude:
+			sleep(self.DELAY)
+		sleep(self.DELAY)
+		sw.Stop()
+
+		self.assertEqual(3, sw.SplitCount)
+		self.assertEqual(2, sw.ActiveCount)
+		self.assertEqual(1, sw.InactiveCount)
+		self.assertAlmostEqual(2 * self.DELAY, sw.Activity, delta=0.5 * self.DELAY)
+		self.assertAlmostEqual(self.DELAY, sw.Inactivity, delta=0.5 * self.DELAY)
+
+	def test_ExcludeIsReusable(self) -> None:
+		"""
+		The exclude context manager is cached, and using it a second time has to work.
+
+		It used to return an unbound local on every access after the first, so a stopwatch could exclude exactly one
+		span and the loop below raised :exc:`UnboundLocalError` on its second iteration.
+		"""
+		sw = Stopwatch(started=True)
+		for _ in range(3):
+			with sw.Exclude:
+				sleep(0.01)
+
+		sw.Stop()
+
+		self.assertEqual(3, sw.InactiveCount)
+
+	def test_ExcludeReturnsTheSameContextManager(self) -> None:
+		sw = Stopwatch(started=True)
+
+		self.assertIs(sw.Exclude, sw.Exclude)
+
+		sw.Stop()
+
+	def test_ExcludeNeedsARunningStopwatch(self) -> None:
+		sw = Stopwatch()
+
+		with self.assertRaises(StopwatchError):
+			with sw.Exclude:
+				pass
