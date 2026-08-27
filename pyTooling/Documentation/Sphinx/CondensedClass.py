@@ -198,7 +198,8 @@ class CondensedClass(SphinxDirective):
 		if members is None:
 			return MemberKind.All
 
-		byName = {kind.name.lower(): kind for kind in MemberKind}
+		# a Flag's 'name' is typed optional, because a combination of members has none
+		byName = {kind.name.lower(): kind for kind in MemberKind if kind.name is not None}
 
 		kinds = MemberKind(0)
 		unknown = []
@@ -213,7 +214,7 @@ class CondensedClass(SphinxDirective):
 		if len(unknown) > 0:
 			raise ValueError(
 				f"Unknown member kind(s): {', '.join(sorted(unknown))}. "
-				f"Known are: {', '.join(kind.name for kind in MemberKind)}."
+				f"Known are: {', '.join(kind.name for kind in MemberKind if kind.name is not None)}."
 			)
 
 		return kinds
