@@ -637,26 +637,35 @@ class Stopwatch(SlottedObject):
 
 		.. topic:: Format Specifiers
 
-		   An **uppercase** specifier is the duration's *component*, as a clock would show it, zero-padded to its
-		   width. A **lowercase** specifier is the *whole* duration expressed in that unit, unpadded.
+		   An **uppercase** specifier is a field of the duration as it would be displayed. A **lowercase** specifier is
+		   the whole duration expressed in one unit, which is what a report or a comparison wants.
 
-		   +--------------+-----------------------+--------------------------------+
-		   | Unit         | Component             | Total                          |
-		   +==============+=======================+================================+
-		   | days         | ``%D``                | ``%d``                         |
-		   +--------------+-----------------------+--------------------------------+
-		   | hours        | ``%H`` (00-23)        | ``%h``                         |
-		   +--------------+-----------------------+--------------------------------+
-		   | minutes      | ``%M`` (00-59)        | ``%m``                         |
-		   +--------------+-----------------------+--------------------------------+
-		   | seconds      | ``%S`` (00-59)        | ``%s``                         |
-		   +--------------+-----------------------+--------------------------------+
-		   | milliseconds | ``%L`` (000-999)      | ``%l``                         |
-		   +--------------+-----------------------+--------------------------------+
-		   | microseconds | ``%U`` (000-999)      | ``%u``                         |
-		   +--------------+-----------------------+--------------------------------+
-		   | nanoseconds  | ``%N`` (000-999)      | ``%n``                         |
-		   +--------------+-----------------------+--------------------------------+
+		   +-----------+--------------------------------------------------------+
+		   | Specifier | Meaning                                                |
+		   +===========+========================================================+
+		   | ``%H``    | hours, not capped - a 26 hour measurement shows ``26`` |
+		   +-----------+--------------------------------------------------------+
+		   | ``%M``    | minutes, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%S``    | seconds, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%L``    | fractional seconds, 3 digits (milliseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%U``    | fractional seconds, 6 digits (microseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%N``    | fractional seconds, 9 digits (nanoseconds)             |
+		   +-----------+--------------------------------------------------------+
+		   | ``%s``    | the whole duration in seconds                          |
+		   +-----------+--------------------------------------------------------+
+		   | ``%m``    | the whole duration in milliseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%u``    | the whole duration in microseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%n``    | the whole duration in nanoseconds                      |
+		   +-----------+--------------------------------------------------------+
+
+		   The fractional specifiers are truncations of the same fraction, so ``%S.%U`` renders ``04.123456`` without
+		   having to be combined with anything. ``%H`` is not capped, so ``%H:%M:%S`` never silently drops a day.
 
 		   ``%%`` renders a literal percent sign. An empty format specification returns :meth:`__str__`.
 
@@ -668,27 +677,20 @@ class Stopwatch(SlottedObject):
 			return self.__str__()
 
 		nanoseconds = self._durationInNanoseconds()
-		seconds, subSeconds = divmod(nanoseconds, 1_000_000_000)
-		minutes, secondPart = divmod(seconds, 60)
-		hours, minutePart =   divmod(minutes, 60)
-		days, hourPart =      divmod(hours, 24)
-		milliseconds, subMilliseconds = divmod(subSeconds, 1_000_000)
-		microseconds, nanosecondPart =  divmod(subMilliseconds, 1_000)
+		seconds, fraction = divmod(nanoseconds, 1_000_000_000)
+		minutes, secondField = divmod(seconds, 60)
+		hours, minuteField = divmod(minutes, 60)
 
 		result = formatSpec
 		for placeholder, value in (
-			("%D", f"{days}"),
-			("%H", f"{hourPart:02}"),
-			("%M", f"{minutePart:02}"),
-			("%S", f"{secondPart:02}"),
-			("%L", f"{milliseconds:03}"),
-			("%U", f"{microseconds:03}"),
-			("%N", f"{nanosecondPart:03}"),
-			("%d", f"{nanoseconds // 86_400_000_000_000}"),
-			("%h", f"{nanoseconds // 3_600_000_000_000}"),
-			("%m", f"{nanoseconds // 60_000_000_000}"),
+			("%H", f"{hours:02}"),
+			("%M", f"{minuteField:02}"),
+			("%S", f"{secondField:02}"),
+			("%L", f"{fraction // 1_000_000:03}"),
+			("%U", f"{fraction // 1_000:06}"),
+			("%N", f"{fraction:09}"),
 			("%s", f"{nanoseconds // 1_000_000_000}"),
-			("%l", f"{nanoseconds // 1_000_000}"),
+			("%m", f"{nanoseconds // 1_000_000}"),
 			("%u", f"{nanoseconds // 1_000}"),
 			("%n", f"{nanoseconds}"),
 		):
