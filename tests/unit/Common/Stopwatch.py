@@ -504,6 +504,23 @@ class Digits(Testcase):
 			with self.assertRaises(ValueError):
 				Stopwatch(digits=digits)
 
+	def test_WrongType_Assigned(self) -> None:
+		sw = Stopwatch()
+
+		with self.assertRaises(TypeError):
+			sw.Digits = 3.5
+
+		self.assertEqual(3, sw.Digits)
+
+	def test_OutOfRange_Assigned(self) -> None:
+		sw = Stopwatch()
+
+		for digits in (-1, 10):
+			with self.assertRaises(ValueError):
+				sw.Digits = digits
+
+		self.assertEqual(3, sw.Digits)
+
 	def test_SameResolutionWhileRunningAndWhenStopped(self) -> None:
 		"""A running and a stopped stopwatch report the duration in the same unit at the same resolution."""
 		sw = Stopwatch("measure", started=True)

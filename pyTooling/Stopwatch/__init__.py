@@ -155,9 +155,16 @@ class Stopwatch(SlottedObject):
 		:raises TypeError:  If parameter 'digits' is not of type :class:`int`.
 		:raises ValueError: If parameter 'digits' is negative or greater than 9.
 		"""
+		if not isinstance(digits, int):
+			ex = TypeError("Parameter 'digits' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(digits)}'.")
+			raise ex
+		elif not 0 <= digits <= 9:
+			raise ValueError(f"Parameter 'digits' is {digits}, but a duration in seconds has at most 9 digits.")
+
 		self._name =         name
 		self._preferPause =  preferPause
-		self._digits =       self._checkDigits(digits)
+		self._digits =       digits
 
 		self._endTime =      None
 		self._pauseTime =    None
@@ -305,26 +312,6 @@ class Stopwatch(SlottedObject):
 
 		return diff
 
-	@staticmethod
-	def _checkDigits(digits: int) -> int:
-		"""
-		Check that a number of fractional digits can be rendered.
-
-		:param digits:      The number of fractional digits to check.
-		:returns:           The same number, when it is usable.
-		:raises TypeError:  If parameter 'digits' is not of type :class:`int`.
-		:raises ValueError: If parameter 'digits' is negative or greater than 9.
-		"""
-		if not isinstance(digits, int):
-			ex = TypeError("Parameter 'digits' is not of type 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(digits)}'.")
-			raise ex
-
-		if not 0 <= digits <= 9:
-			raise ValueError(f"Parameter 'digits' is {digits}, but a duration in seconds has at most 9 digits.")
-
-		return digits
-
 	@property
 	def Digits(self) -> int:
 		"""
@@ -341,7 +328,14 @@ class Stopwatch(SlottedObject):
 
 	@Digits.setter
 	def Digits(self, digits: int) -> None:
-		self._digits = self._checkDigits(digits)
+		if not isinstance(digits, int):
+			ex = TypeError("Parameter 'digits' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(digits)}'.")
+			raise ex
+		elif not 0 <= digits <= 9:
+			raise ValueError(f"Parameter 'digits' is {digits}, but a duration in seconds has at most 9 digits.")
+
+		self._digits = digits
 
 	@readonly
 	def Name(self) -> Nullable[str]:
