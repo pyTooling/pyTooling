@@ -76,24 +76,26 @@ hand-assembled node trees docutils presents.
    :mod:`pyTooling.Documentation`
       |rarr| The doc-string helpers, which need no Sphinx.
 """
-from hashlib                                       import md5
-from pathlib                                       import Path
-from typing                                        import Any
+from hashlib                                        import md5
+from pathlib                                        import Path
+from typing                                         import Any
 
-from pyTooling.Common                              import __version__, readResourceFile
-from pyTooling.Decorators                          import export
-from pyTooling.Exceptions                          import MissingDependencyError
-from pyTooling.Resources                           import Sphinx as SphinxResources
+from pyTooling.Common                               import __version__, readResourceFile
+from pyTooling.Decorators                           import export
+from pyTooling.Exceptions                           import MissingDependencyError
+from pyTooling.Resources                            import Sphinx as SphinxResources
 
 try:
 	from sphinx.application                          import Sphinx
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="sphinx", extra="sphinx") from ex
 
-from pyTooling.Documentation.Sphinx.CondensedClass import CondensedClass
-from pyTooling.Documentation.Sphinx.Directives     import BaseDirective, SphinxExtensionError, strip, stripAndNormalize
-from pyTooling.Documentation.Sphinx.Roles          import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
-from pyTooling.Documentation.Sphinx.Roles          import breakRole, pythonCodeRole, styleRole
+from pyTooling.Documentation.Sphinx.CondensedClass  import CondensedClass
+from pyTooling.Documentation.Sphinx.DependencyTable import DependencyTable, reportBuildTime
+from pyTooling.Documentation.Sphinx.Directives      import BaseDirective, SphinxExtensionError, strip
+from pyTooling.Documentation.Sphinx.Directives      import stripAndNormalize
+from pyTooling.Documentation.Sphinx.Roles           import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
+from pyTooling.Documentation.Sphinx.Roles           import breakRole, pythonCodeRole, styleRole
 
 
 __all__ = ["STYLESHEET", "SUBSTITUTIONS"]
@@ -161,7 +163,7 @@ def extendProlog(sphinx: Sphinx, config: Any) -> None:
 @export
 def setup(sphinx: Sphinx) -> dict[str, Any]:
 	"""
-	Register the roles, the node and the directive with Sphinx.
+	Register the roles, the node and the directives with Sphinx.
 
 	:param sphinx: The Sphinx application to register with.
 	:returns:      The extension's metadata.
@@ -175,8 +177,10 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	sphinx.add_role(PYTHON_CODE_ROLE, pythonCodeRole)
 
 	sphinx.add_directive("condensed-class", CondensedClass)
+	sphinx.add_directive("dependency-table", DependencyTable)
 
 	sphinx.connect("config-inited", extendProlog)
+	sphinx.connect("build-finished", reportBuildTime)
 	sphinx.connect("builder-inited", installStylesheet)
 
 	# The extension's version is the package's - it ships with pyTooling and is released with it, so a second

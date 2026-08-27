@@ -34,13 +34,15 @@ need network access.
 """
 from datetime                     import date, datetime
 from pathlib                      import Path
+from tempfile                     import TemporaryDirectory
+from textwrap                     import dedent
 from typing                       import Optional as Nullable
 
 from pytest                       import mark
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
-from pyTooling.Dependency.Python  import LicenseOverrides
+from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
 from pyTooling.Dependency         import BrokenRequirementWarning, DependencyError, UnknownLicenseWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
@@ -806,3 +808,101 @@ class ReadingLicenseOverrides(Testcase):
 			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-bad-specifier.yml")
 
 		self.assertIn("not a specifier", str(context.exception))
+
+class RequirementsFiles(Testcase):
+	"""Reading a requirements file and the files it includes."""
+
+	@staticmethod
+	def _write(directory: Path, name: str, content: str) -> Path:
+		path = directory / name
+		path.parent.mkdir(parents=True, exist_ok=True)
+		path.write_text(dedent(content).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_Requirements(self) -> None:
+		"""Comments, blank lines and installer options are not requirements."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", """
+				# a comment
+				pyTooling >= 8.0
+
+				colorama ~= 0.4.6   # trailing comment
+				--index-url https://example.org/simple
+			""")
+
+			requirementsFile = RequirementsFile(path)
+
+		self.assertEqual(["pyTooling", "colorama"], [req.name for req in requirementsFile.Requirements])
+		self.assertEqual([], requirementsFile.Includes)
+		self.assertEqual(2, len(requirementsFile))
+
+	def test_Includes_KeepTheTree(self) -> None:
+		"""``-r`` includes another file, and which file a requirement came from is not flattened away."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			self._write(root, "sub/leaf.txt", "colorama ~= 0.4.6\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				-r sub/leaf.txt
+				pytest ~= 9.1
+			""")
+
+			requirementsFile = RequirementsFile(path)
+
+			self.assertEqual(["pytest"], [req.name for req in requirementsFile.Requirements])
+			self.assertEqual(2, len(requirementsFile.Includes))
+			self.assertEqual(["pyTooling"], [req.name for req in requirementsFile.Includes[0]])
+			self.assertEqual(["colorama"], [req.name for req in requirementsFile.Includes[1]])
+			self.assertEqual({"pytooling", "colorama", "pytest"}, set(requirementsFile.Flatten()))
+
+	def test_Includes_NearerStatementWins(self) -> None:
+		"""A requirement stated by the entrypoint overrides the same package required by a file it includes."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pytest ~= 8.0\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			flattened = RequirementsFile(path).Flatten()
+
+		self.assertEqual("~=9.1", str(flattened["pytest"].specifier))
+
+	def test_Includes_Cycle(self) -> None:
+		"""A file including itself, directly or through a cycle, is read once."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "other.txt", "-r requirements.txt\ncolorama ~= 0.4.6\n")
+			path = self._write(root, "requirements.txt", """
+				-r other.txt
+				pytest ~= 9.1
+			""")
+
+			requirementsFile = RequirementsFile(path)
+
+		self.assertEqual({"colorama", "pytest"}, set(requirementsFile.Flatten()))
+
+	def test_BrokenRequirement(self) -> None:
+		"""A line that isn't a requirement is reported, and the rest of the file is still read."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", """
+				pytest ~= 9.1
+				this is not a requirement
+				colorama ~= 0.4.6
+			""")
+
+			with WarningCollector(handler=lambda warning: False) as collector:
+				requirementsFile = RequirementsFile(path)
+
+		self.assertEqual(["pytest", "colorama"], [req.name for req in requirementsFile.Requirements])
+		self.assertEqual(1, len(collector.Warnings))
+		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
+
+	def test_MissingFile(self) -> None:
+		"""A requirements file that doesn't exist is an error, not an empty list."""
+		with TemporaryDirectory() as directory:
+			with self.assertRaises(FileNotFoundError):
+				RequirementsFile(Path(directory) / "nothing.txt")
