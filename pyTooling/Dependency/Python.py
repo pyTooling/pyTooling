@@ -169,9 +169,9 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 	def __init__(self) -> None:
 		"""Initialize an empty set of overrides."""
-		self._licenses = {}
-		self._versioned = {}
-		self._licenseURLs = {}
+		self._licenses     = {}
+		self._versioned    = {}
+		self._licenseURLs  = {}
 		self._repositories = {}
 
 	@classmethod

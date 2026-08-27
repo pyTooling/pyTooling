@@ -33,10 +33,9 @@ Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk t
 need network access.
 """
 from datetime                    import datetime
+from typing                      import Optional as Nullable
 
 from pytest                      import mark
-
-from typing                     import Optional as Nullable
 
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
 from pyTooling.Dependency.Python import LicenseOverrides

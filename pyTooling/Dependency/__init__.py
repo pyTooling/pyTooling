@@ -49,14 +49,14 @@ from __future__            import annotations
 from datetime              import datetime
 from typing                import Optional as Nullable, Iterable, Self, Iterator
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import getFullyQualifiedName, firstKey
+from pyTooling.Decorators      import export, readonly
+from pyTooling.MetaClasses     import ExtendedType
+from pyTooling.Exceptions      import ToolingException
+from pyTooling.Common          import getFullyQualifiedName, firstKey
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing   import License
-from pyTooling.Versioning  import SemanticVersion
-from pyTooling.Warning     import Warning
+from pyTooling.Licensing       import License
+from pyTooling.Versioning      import SemanticVersion
+from pyTooling.Warning         import Warning
 
 
 @export
@@ -116,15 +116,14 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	:class:`PackageVersion`s.
 	"""
 
-	_package:    Package                                              #: Reference to the corresponding package
-	_version:    SemanticVersion                                      #: :class:`SemanticVersion` of this package version.
-	_releasedAt: Nullable[datetime]                                   #: Time when this package version was released.
-
-	_licenses:          tuple[License, ...]  #: Licenses this version is published under; empty if unresolved.
-	_licenseExpression: str                  #: License expression as published, kept verbatim even when unresolved.
-	_licenseURL:        Nullable[URL]        #: URL of the license's text, where one is known.
-
-	_dependsOn: dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
+	_package:           Package                                               #: Reference to the corresponding package
+	_version:           SemanticVersion                                       #: :class:`SemanticVersion` of this version.
+	_releasedAt:        Nullable[datetime]                                    #: Time this package version was released.
+	_licenses:          tuple[License, ...]                                   #: Licenses this version is published under.
+	# todo: becomes a license expression, not a string, once pyTooling.Licensing models one - see LicenseExpression
+	_licenseExpression: str                                                   #: License expression exactly as published.
+	_licenseURL:        Nullable[URL]                                         #: URL of the license's text, if known.
+	_dependsOn:         dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
 	def __init__(self, version: SemanticVersion, package: Package, releasedAt: Nullable[datetime] = None) -> None:
 		"""
@@ -160,13 +159,11 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(releasedAt)}'.")
 			raise ex
 
-		self._releasedAt = releasedAt
-
-		self._licenses = ()
+		self._releasedAt        = releasedAt
+		self._licenses          = ()
 		self._licenseExpression = ""
-		self._licenseURL = None
-
-		self._dependsOn = {}
+		self._licenseURL        = None
+		self._dependsOn         = {}
 
 	@readonly
 	def Package(self) -> Package:
@@ -214,6 +211,12 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		Read-only property to access the license expression as it was published (:attr:`_licenseExpression`).
 
 		This is kept verbatim, so a license that :attr:`Licenses` couldn't resolve is still reportable.
+
+		.. todo::
+
+		   Return a license *expression* rather than a string, once :mod:`pyTooling.Licensing` models one. An
+		   expression knows that ``Apache-2.0 OR BSD-2-Clause`` is a choice and ``Apache-2.0 AND MIT`` is not, which
+		   is what :attr:`Licenses` currently flattens away.
 
 		:returns: The license expression as published, or an empty string if none was published.
 		"""
@@ -445,12 +448,10 @@ class Package(metaclass=ExtendedType, slots=True):
 	"""
 	The package, which exists in multiple versions (:class:`PackageVersion`).
 	"""
-	_storage:  PackageStorage                         #: Reference to the package's storage.
-	_name:     str                                    #: Name of the package.
-
-	_repositoryURL: Nullable[URL]                     #: URL of the package's source repository, where one is known.
-
-	_versions: dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
+	_storage:       PackageStorage                         #: Reference to the package's storage.
+	_name:          str                                    #: Name of the package.
+	_repositoryURL: Nullable[URL]                          #: URL of the package's source repository.
+	_versions:      dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
 
 	def __init__(self, name: str, *, storage: PackageStorage) -> None:
 		"""
@@ -476,7 +477,7 @@ class Package(metaclass=ExtendedType, slots=True):
 		storage._packages[name] = self
 
 		self._repositoryURL = None
-		self._versions = {}
+		self._versions      = {}
 
 	@readonly
 	def Storage(self) -> PackageStorage:
