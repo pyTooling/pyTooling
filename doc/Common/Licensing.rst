@@ -41,37 +41,7 @@ equality (``==``, ``!=``) based on there SPDX identifier.
 
 **Condensed definition of class** :class:`~pyTooling.Licensing.License`:
 
-.. code-block:: python
-
-   @export
-   class License(metaclass=ExtendedType, slots=True):
-     def __init__(self, spdxIdentifier: str, name: str, osiApproved: bool = False, fsfApproved: bool = False) -> None:
-
-      @property
-      def Name(self) -> str:
-
-      @property
-      def SPDXIdentifier(self) -> str:
-
-      @property
-      def OSIApproved(self) -> bool:
-
-      @property
-      def FSFApproved(self) -> bool:
-
-      @property
-      def PythonLicenseName(self) -> str:
-
-      @property
-      def PythonClassifier(self) -> str:
-
-      def __eq__(self, other: Any) -> bool:
-      def __ne__(self, other: Any) -> bool:
-      # def __le__(self, other: Any) -> bool:
-      # def __ge__(self, other: Any) -> bool:
-
-      def __repr__(self) -> str:
-      def __str__(self) -> str:
+.. condensed-class:: pyTooling.Licensing.License
 
 
 The licenses supported by this package are available as individual package variables.
