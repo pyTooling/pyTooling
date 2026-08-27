@@ -179,14 +179,25 @@ class Dictionary(Node):
 
 	_keys: list[KeyT]  #: Keys of this dictionary node, in the order the document states them.
 
-	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(
+		self,
+		keys: list[KeyT],
+		root: Nullable[Configuration] = None,
+		parent: Nullable[NodeT] = None
+	) -> None:
 		"""
 		Initializes a dictionary.
 
+		A deriving class reads the keys from whatever it parsed and hands them over, so this node is never left
+		without them.
+
+		:param keys:   Keys of this dictionary node, in the order the document states them.
 		:param root:   Optional, reference to the root node.
 		:param parent: Optional, reference to the parent node.
 		"""
 		Node.__init__(self, root, parent)
+
+		self._keys = keys
 
 	def __contains__(self, key: KeyT) -> bool:
 		"""

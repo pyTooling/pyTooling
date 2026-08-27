@@ -39,7 +39,7 @@ from __future__              import annotations
 
 from json                    import load
 from pathlib                 import Path
-from typing                  import Any, Union, Iterator as typing_Iterator, Self
+from typing                  import Any, ClassVar, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Common        import getFullyQualifiedName
 from pyTooling.Decorators    import export, InheritDocString
@@ -58,6 +58,11 @@ class Node(Abstract_Node):
 	"""
 	Node in a JSON configuration data structure.
 	"""
+
+	#: Type reference used when instantiating new dictionaries; this format's, not the abstract one.
+	DICT_TYPE: ClassVar[type["Dictionary"]]
+	#: Type reference used when instantiating new sequences; this format's, not the abstract one.
+	SEQ_TYPE:  ClassVar[type["Sequence"]]
 
 	_jsonNode: Union[dict[str, Any], list[Any]]  #: Reference to the associated JSON node.
 	_cache:    dict[str, ValueT]                 #: Cache of already converted sub-nodes and values, by key.
@@ -327,9 +332,10 @@ class Dictionary(Node, Abstract_Dict):
 		:param key:      Key of the node within its parent.
 		:param jsonNode: Reference to the JSON node.
 		"""
-		Node.__init__(self, root, parent, key, jsonNode)
+		keys: list[KeyT] = [str(k) for k in jsonNode.keys()]
 
-		self._keys = [str(k) for k in jsonNode.keys()]
+		Node.__init__(self, root, parent, key, jsonNode)
+		Abstract_Dict.__init__(self, keys, root, parent)
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
