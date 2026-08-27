@@ -461,10 +461,9 @@ class Stopwatch(SlottedObject):
 		:returns: An excluding context manager.
 		"""
 		if self._excludeContextManager is None:
-			excludeContextManager = ExcludeContextManager(self)
-			self._excludeContextManager = excludeContextManager
+			self._excludeContextManager = ExcludeContextManager(self)
 
-		return excludeContextManager
+		return self._excludeContextManager
 
 	def __enter__(self) -> Self:
 		"""
