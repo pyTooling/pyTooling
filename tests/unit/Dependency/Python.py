@@ -161,6 +161,58 @@ class Requirements(Testcase):
 		self.assertEqual(["colorama"], [req.name for req in release.Requirements["terminal"]])
 		self.assertEqual([], release.Requirements[None])
 
+	def test_Requirement_EnvironmentMarker(self) -> None:
+		"""A marker naming no extra conditions the requirement on the environment, so it lands under ``None``."""
+		release = self._release()
+
+		release.UpdateDetailsFromPyPIJSON(
+			self._json(["terminal"], ['importlib-resources ~= 3.0; python_version < "3.7"'])
+		)
+
+		self.assertEqual(["importlib-resources"], [req.name for req in release.Requirements[None]])
+		self.assertEqual([], release.Requirements["terminal"])
+
+	def test_Requirement_ExtraAndEnvironmentMarker(self) -> None:
+		"""A marker naming an extra *and* an environment lands under that extra."""
+		release = self._release()
+
+		release.UpdateDetailsFromPyPIJSON(
+			self._json(["terminal"], ['colorama >= 0.4; extra == "terminal" and sys_platform == "win32"'])
+		)
+
+		self.assertEqual(["colorama"], [req.name for req in release.Requirements["terminal"]])
+		self.assertEqual([], release.Requirements[None])
+
+	def test_Requirement_NormalizedExtra(self) -> None:
+		"""``code_style`` and ``code-style`` are the same extra, so the declared spelling stays the key."""
+		release = self._release()
+
+		release.UpdateDetailsFromPyPIJSON(self._json(["code_style"], ['pre-commit ~= 2.12; extra == "code_style"']))
+
+		self.assertEqual(["pre-commit"], [req.name for req in release.Requirements["code_style"]])
+
+	def test_Requirement_UndeclaredExtras(self) -> None:
+		"""
+		Metadata without ``provides_extra`` gets its extras from the markers.
+
+		Older releases have no ``provides_extra`` field at all - dropping every requirement that names an extra would
+		empty exactly the releases a version-aware graph exists to look at. There is no declared spelling to keep in
+		that case, so the key is the canonical one: ``theme_furo`` is recovered as ``theme-furo``.
+		"""
+		release = self._release()
+
+		release.UpdateDetailsFromPyPIJSON(self._json(None, [
+			"sphinx <5, >=3",
+			'importlib-resources ~= 3.0; python_version < "3.7"',
+			'pytest ~= 5.4; extra == "testing"',
+			'furo == 2021.7.5; extra == "theme_furo"',
+		]))
+
+		self.assertEqual({None, "testing", "theme-furo"}, set(release.Requirements))
+		self.assertEqual(["sphinx", "importlib-resources"], [req.name for req in release.Requirements[None]])
+		self.assertEqual(["pytest"], [req.name for req in release.Requirements["testing"]])
+		self.assertEqual(["furo"], [req.name for req in release.Requirements["theme-furo"]])
+
 	def test_Requirement_UnknownExtra(self) -> None:
 		"""A requirement naming an extra the release doesn't provide is reported as a warning."""
 		release = self._release()
@@ -172,3 +224,36 @@ class Requirements(Testcase):
 		self.assertEqual(1, len(collector.Warnings))
 		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
 		self.assertEqual([f"Broken requirement: lxml>=6.1; extra == \"xml\""], collector.Warnings[0].__notes__)
+
+
+class ReleaseDetails(Testcase):
+	"""Downloading the details of every release of a project."""
+
+	def test_EachReleaseGetsItsOwnRequirements(self) -> None:
+		"""
+		Every release is filled from its own endpoint, not from the project's.
+
+		The project's endpoint describes the *latest* release, so filling every release from it gave them all the
+		newest release's requirements. ``sphinx_design`` shows the difference: 0.0.1 needs ``importlib-resources``
+		and the current release doesn't.
+		"""
+		print()
+
+		graph = PythonPackageDependencyGraph("sphinx_design")
+		pypi = PythonPackageIndex("PyPI", "https://pypi.org", "https://pypi.org/pypi/", graph=graph)
+
+		project = pypi.DownloadProject("sphinx_design", LazyLoaderState.PartiallyLoaded)
+		project.DownloadReleaseDetails()
+
+		oldest = project.Releases[min(project.Releases)]
+		latest = project.LatestRelease
+
+		oldestRequirements = {requirement.name for requirement in oldest.Requirements[None]}
+		latestRequirements = {requirement.name for requirement in latest.Requirements[None]}
+
+		print(f"{oldest.Version}: {sorted(oldestRequirements)}")
+		print(f"{latest.Version}: {sorted(latestRequirements)}")
+
+		self.assertIn("importlib-resources", oldestRequirements)
+		self.assertNotIn("importlib-resources", latestRequirements)
+		self.assertNotEqual(oldestRequirements, latestRequirements)

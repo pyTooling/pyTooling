@@ -41,6 +41,7 @@ from asyncio              import run as asyncio_run, gather as asyncio_gather
 from datetime             import datetime
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
+from re                   import compile as re_compile
 from threading            import RLock
 from typing               import Optional as Nullable, Union, Iterable, Mapping
 
@@ -53,6 +54,7 @@ except ImportError as ex:  # pragma: no cover
 
 try:
 	from packaging.requirements import Requirement
+	from packaging.utils        import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
 
@@ -70,6 +72,10 @@ from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundErro
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
+
+
+#: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
+_EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
 
 
 @export
@@ -415,28 +421,47 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Fill this release from the JSON document the package index returned.
 
-		The requirements are sorted into the extras they belong to; requirements without a marker are collected under
-		``None``. A requirement naming an unknown extra is reported as a :class:`BrokenRequirementWarning`.
+		The requirements are sorted into the extras they belong to. A requirement lands under ``None`` when it has no
+		marker at all, and also when its marker conditions it on the *environment* rather than on an extra -
+		``importlib-resources; python_version < "3.7"`` is required unconditionally, just not everywhere. A
+		requirement naming an extra the release does not declare is reported as a :class:`BrokenRequirementWarning`.
+
+		Metadata older than core-metadata 2.1 has no ``provides_extra`` field. Its extras are recovered from the
+		markers naming them, because dropping every conditional requirement of an old release would empty exactly the
+		releases a version-aware dependency graph is built to look at. A declared extra keeps the spelling it was
+		declared with; a recovered one has no such spelling, so it keeps the canonical one - ``theme_furo`` written in
+		a marker is recovered as ``theme-furo``.
 
 		:param json: The parsed JSON document describing this release.
 		"""
 		infoNode = json["info"]
-		if (extras := infoNode["provides_extra"]) is not None:
-			self._requirements = {extra: [] for extra in extras}
-			self._requirements[None] = []
+		requirements = [Requirement(requirement) for requirement in (infoNode["requires_dist"] or ())]
 
-		if (requirements := infoNode["requires_dist"]) is not None:
-			brokenRequirements = []
+		# The declared spelling is kept as the key, while the canonical one - 'code_style' and 'code-style' are the
+		# same extra - is what a marker is matched against.
+		if (declaredExtras := infoNode["provides_extra"]) is not None:
+			extras = {canonicalize_name(extra): extra for extra in declaredExtras}
+		else:
+			extras = {}
 			for requirement in requirements:
-				req = Requirement(requirement)
+				if requirement.marker is not None:
+					for name in _EXTRA_MARKER.findall(str(requirement.marker)):
+						extras.setdefault(canonicalize_name(name), name)
 
-				# Handle requirements without an extra marker
-				if req.marker is None:
+		self._requirements = {extra: [] for extra in extras.values()}
+		self._requirements[None] = []
+
+		if len(requirements) > 0:
+			brokenRequirements = []
+			for req in requirements:
+				# A marker naming no extra conditions the requirement on the interpreter or the platform, so the
+				# requirement is unconditional as far as the extras are concerned.
+				if req.marker is None or len(namedExtras := _EXTRA_MARKER.findall(str(req.marker))) == 0:
 					self._requirements[None].append(req)
 					continue
 
-				for extra in self._requirements.keys():
-					if extra is not None and req.marker.evaluate({"extra": extra}):
+				for name in namedExtras:
+					if (extra := extras.get(canonicalize_name(name))) is not None:
 						self._requirements[extra].append(req)
 						break
 				else:
@@ -697,7 +722,7 @@ class Project(Package, LazyLoadableMixin):
 				if Parts.Postfix in release._version._parts:
 					pass
 
-				async with session.get(self._GetPyPIEndpoint()) as response:
+				async with session.get(release._GetPyPIEndpoint()) as response:
 					json = await response.json()
 					response.raise_for_status()
 
