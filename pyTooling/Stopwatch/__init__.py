@@ -49,6 +49,7 @@ from time                  import perf_counter_ns
 from types                 import TracebackType
 from typing                import Optional as Nullable, Iterator, Self
 
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 from pyTooling.Exceptions  import ToolingException
@@ -122,6 +123,7 @@ class Stopwatch(SlottedObject):
 
 	_name:         Nullable[str]  #: Optional name of the stopwatch.
 	_preferPause:  bool           #: If ``True``, the context manager pauses instead of stopping on exit.
+	_digits:       int            #: Number of fractional digits ``__str__`` renders the duration with.
 
 	_beginTime:    Nullable[datetime]        #: Absolute time when the stopwatch was started.
 	_endTime:      Nullable[datetime]        #: Absolute time when the stopwatch was stopped.
@@ -134,7 +136,13 @@ class Stopwatch(SlottedObject):
 
 	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
 
-	def __init__(self, name: Nullable[str] = None, started: bool = False, preferPause: bool = False) -> None:
+	def __init__(
+		self,
+		name: Nullable[str] = None,
+		started: bool = False,
+		preferPause: bool = False,
+		digits: int = 3
+	) -> None:
 		"""
 		Initializes the fields of the stopwatch.
 
@@ -143,9 +151,13 @@ class Stopwatch(SlottedObject):
 		:param name:        Optional, name of the stopwatch.
 		:param started:     Optional, if ``True``, start the stopwatch immediately.
 		:param preferPause: Optional, if ``True``, ``__exit__(...)`` prefers pause over stop behavior.
+		:param digits:      Optional, number of fractional digits :meth:`__str__` renders the duration with.
+		:raises TypeError:  If parameter 'digits' is not of type :class:`int`.
+		:raises ValueError: If parameter 'digits' is negative or greater than 9.
 		"""
 		self._name =         name
 		self._preferPause =  preferPause
+		self._digits =       self._checkDigits(digits)
 
 		self._endTime =      None
 		self._pauseTime =    None
@@ -293,6 +305,44 @@ class Stopwatch(SlottedObject):
 
 		return diff
 
+	@staticmethod
+	def _checkDigits(digits: int) -> int:
+		"""
+		Check that a number of fractional digits can be rendered.
+
+		:param digits:      The number of fractional digits to check.
+		:returns:           The same number, when it is usable.
+		:raises TypeError:  If parameter 'digits' is not of type :class:`int`.
+		:raises ValueError: If parameter 'digits' is negative or greater than 9.
+		"""
+		if not isinstance(digits, int):
+			ex = TypeError("Parameter 'digits' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(digits)}'.")
+			raise ex
+
+		if not 0 <= digits <= 9:
+			raise ValueError(f"Parameter 'digits' is {digits}, but a duration in seconds has at most 9 digits.")
+
+		return digits
+
+	@property
+	def Digits(self) -> int:
+		"""
+		Property to get and set the number of fractional digits (:attr:`_digits`) used by :meth:`__str__`.
+
+		The measurement itself is unaffected - this only decides how many digits of the duration in seconds are
+		rendered. It defaults to ``3``, which is milliseconds.
+
+		:returns:           Number of fractional digits.
+		:raises TypeError:  If the assigned value is not of type :class:`int`.
+		:raises ValueError: If the assigned value is negative or greater than 9.
+		"""
+		return self._digits
+
+	@Digits.setter
+	def Digits(self, digits: int) -> None:
+		self._digits = self._checkDigits(digits)
+
 	@readonly
 	def Name(self) -> Nullable[str]:
 		"""
@@ -361,9 +411,9 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property checking if split times have been taken.
 
-		:returns: True, if split times have been taken.
+		:returns: True, if at least one split time has been taken.
 		"""
-		return len(self._splits) > 1
+		return len(self._splits) > 0
 
 	@readonly
 	def SplitCount(self) -> int:
@@ -379,32 +429,32 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the number of active split times.
 
-		:returns: Number of active split times.
+		A running stopwatch is inside an active span that hasn't been recorded yet, and that span is counted here -
+		the result is what the stopwatch would report if it were stopped right now. This matches
+		:attr:`Activity`, which includes the running span's duration.
 
-		.. warning::
-
-		   This won't include all activities, unless the stopwatch got stopped.
+		:returns: Number of active split times, including the one in progress.
 		"""
 		if self._startTime is None:
 			return 0
 
-		return len(list(t for t, a in self._splits if a is True))
+		return len([t for t, a in self._splits if a is True]) + (1 if self._resumeTime is not None else 0)
 
 	@readonly
 	def InactiveCount(self) -> int:
 		"""
-		Read-only property returning the number of active split times.
+		Read-only property returning the number of inactive split times.
 
-		:returns: Number of active split times.
+		A paused stopwatch is inside an inactive span that hasn't been recorded yet, and that span is counted here -
+		the result is what the stopwatch would report if it were stopped right now. This matches
+		:attr:`Inactivity`, which includes the paused span's duration.
 
-		.. warning::
-
-		   This won't include all inactivities, unless the stopwatch got stopped.
+		:returns: Number of inactive split times, including the one in progress.
 		"""
 		if self._startTime is None:
 			return 0
 
-		return len(list(t for t, a in self._splits if a is False))
+		return len([t for t, a in self._splits if a is False]) + (1 if self._pauseTime is not None else 0)
 
 	@readonly
 	def Activity(self) -> float:
@@ -564,18 +614,108 @@ class Stopwatch(SlottedObject):
 		"""
 		return self._splits.__iter__()
 
+	def _durationInNanoseconds(self) -> int:
+		"""
+		Return the measured duration in nanoseconds.
+
+		The duration is kept in nanoseconds so that formatting doesn't inherit the rounding error of a conversion to
+		seconds - a float can't hold nine significant fractional digits next to a large number of seconds.
+
+		:returns: Duration from start to stop in nanoseconds, or from start to now while the stopwatch runs. Zero, if
+		          the stopwatch was never started.
+		"""
+		if self._startTime is None:
+			return 0
+		elif self._totalTime is not None:    # was stopped, so the total is final
+			return self._totalTime
+
+		return perf_counter_ns() - self._startTime
+
+	def __format__(self, formatSpec: str) -> str:
+		"""
+		Return the measured duration according to the format specification.
+
+		.. topic:: Format Specifiers
+
+		   An **uppercase** specifier is the duration's *component*, as a clock would show it, zero-padded to its
+		   width. A **lowercase** specifier is the *whole* duration expressed in that unit, unpadded.
+
+		   +--------------+-----------------------+--------------------------------+
+		   | Unit         | Component             | Total                          |
+		   +==============+=======================+================================+
+		   | days         | ``%D``                | ``%d``                         |
+		   +--------------+-----------------------+--------------------------------+
+		   | hours        | ``%H`` (00-23)        | ``%h``                         |
+		   +--------------+-----------------------+--------------------------------+
+		   | minutes      | ``%M`` (00-59)        | ``%m``                         |
+		   +--------------+-----------------------+--------------------------------+
+		   | seconds      | ``%S`` (00-59)        | ``%s``                         |
+		   +--------------+-----------------------+--------------------------------+
+		   | milliseconds | ``%L`` (000-999)      | ``%l``                         |
+		   +--------------+-----------------------+--------------------------------+
+		   | microseconds | ``%U`` (000-999)      | ``%u``                         |
+		   +--------------+-----------------------+--------------------------------+
+		   | nanoseconds  | ``%N`` (000-999)      | ``%n``                         |
+		   +--------------+-----------------------+--------------------------------+
+
+		   ``%%`` renders a literal percent sign. An empty format specification returns :meth:`__str__`.
+
+		:param formatSpec:  The format specification, using ``%``-placeholders for the duration's parts.
+		:returns:           The formatted duration.
+		:raises ValueError: If the format specification contains an unknown placeholder.
+		"""
+		if formatSpec == "":
+			return self.__str__()
+
+		nanoseconds = self._durationInNanoseconds()
+		seconds, subSeconds = divmod(nanoseconds, 1_000_000_000)
+		minutes, secondPart = divmod(seconds, 60)
+		hours, minutePart =   divmod(minutes, 60)
+		days, hourPart =      divmod(hours, 24)
+		milliseconds, subMilliseconds = divmod(subSeconds, 1_000_000)
+		microseconds, nanosecondPart =  divmod(subMilliseconds, 1_000)
+
+		result = formatSpec
+		for placeholder, value in (
+			("%D", f"{days}"),
+			("%H", f"{hourPart:02}"),
+			("%M", f"{minutePart:02}"),
+			("%S", f"{secondPart:02}"),
+			("%L", f"{milliseconds:03}"),
+			("%U", f"{microseconds:03}"),
+			("%N", f"{nanosecondPart:03}"),
+			("%d", f"{nanoseconds // 86_400_000_000_000}"),
+			("%h", f"{nanoseconds // 3_600_000_000_000}"),
+			("%m", f"{nanoseconds // 60_000_000_000}"),
+			("%s", f"{nanoseconds // 1_000_000_000}"),
+			("%l", f"{nanoseconds // 1_000_000}"),
+			("%u", f"{nanoseconds // 1_000}"),
+			("%n", f"{nanoseconds}"),
+		):
+			result = result.replace(placeholder, value)
+
+		if (position := result.find("%")) != -1 and result[position + 1:position + 2] != "%":
+			raise ValueError(f"Unknown format specifier '%{result[position + 1:position + 2]}' in '{formatSpec}'.")
+
+		return result.replace("%%", "%")
+
 	def __str__(self) -> str:
 		"""
 		Returns the stopwatch's state and its measured time span.
 
+		The duration is rendered in seconds with :attr:`Digits` fractional digits, in every state - a running and a
+		stopped stopwatch report the same unit at the same resolution.
+
 		:returns: The string equivalent of the stopwatch.
 		"""
 		name = f" {self._name}" if self._name is not None else ""
+		duration = f"{self._durationInNanoseconds() / 1e9:.{self._digits}f}"
+
 		if self.IsStopped:
-			return f"Stopwatch{name} (stopped): {self._beginTime} -> {self._endTime}: {self._totalTime}"
+			return f"Stopwatch{name} (stopped): {self._beginTime} -> {self._endTime}: {duration}"
 		elif self.IsRunning:
-			return f"Stopwatch{name} (running): {self._beginTime} -> now: {self.Duration}"
+			return f"Stopwatch{name} (running): {self._beginTime} -> now: {duration}"
 		elif self.IsPaused:
-			return f"Stopwatch{name} (paused): {self._beginTime} -> now: {self.Duration}"
+			return f"Stopwatch{name} (paused): {self._beginTime} -> now: {duration}"
 		else:
 			return f"Stopwatch{name}: not started"

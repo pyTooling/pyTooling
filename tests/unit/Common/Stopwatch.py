@@ -287,7 +287,8 @@ class ContextManagerProtocol(Testcase):
 
 		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.Duration:0.6f} us")
 		self.assertEqual(1, sw.ActiveCount)
-		self.assertEqual(0, sw.InactiveCount)
+		# the stopwatch is paused, so it is inside an inactive span that would be recorded if it stopped now
+		self.assertEqual(1, sw.InactiveCount)
 		self.assertLessEqual(sw.Activity, self.DELAY * self.INACCURACY)
 		self.assertLessEqual(sw.Duration, self.DELAY * self.INACCURACY)
 
@@ -297,7 +298,7 @@ class ContextManagerProtocol(Testcase):
 		print(f"Duration for '2st sleep({self.DELAY:0.3f})': {sw.Duration:0.6f} us")
 		self.assertEqual(3, len(sw))
 		self.assertEqual(2, sw.ActiveCount)
-		self.assertEqual(1, sw.InactiveCount)
+		self.assertEqual(2, sw.InactiveCount)
 		self.assertLessEqual(sw.Activity, 2 * self.DELAY * self.INACCURACY)
 
 	def test_ReuseContext_Loop(self) -> None:
@@ -389,3 +390,197 @@ class Excluding(Testcase):
 		with self.assertRaises(StopwatchError):
 			with sw.Exclude:
 				pass
+
+
+class Counting(Testcase):
+	"""Counting split times, including the span that hasn't been recorded yet."""
+
+	DELAY = 0.1
+
+	def test_NeverStarted(self) -> None:
+		sw = Stopwatch()
+
+		self.assertEqual(0, sw.SplitCount)
+		self.assertEqual(0, sw.ActiveCount)
+		self.assertEqual(0, sw.InactiveCount)
+		self.assertFalse(sw.HasSplitTimes)
+
+	def test_RunningCountsTheSpanInProgress(self) -> None:
+		"""A running stopwatch is inside an active span, so it is counted as if the stopwatch stopped now."""
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+
+		self.assertEqual(0, sw.SplitCount)
+		self.assertEqual(1, sw.ActiveCount)
+		self.assertEqual(0, sw.InactiveCount)
+
+		sw.Stop()
+
+	def test_PausedCountsTheSpanInProgress(self) -> None:
+		"""A paused stopwatch is inside an inactive span, so it is counted as if the stopwatch stopped now."""
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+		sw.Pause()
+
+		self.assertEqual(1, sw.SplitCount)
+		self.assertEqual(1, sw.ActiveCount)
+		self.assertEqual(1, sw.InactiveCount)
+
+		sw.Stop()
+
+	def test_StoppedCountsOnlyRecordedSpans(self) -> None:
+		"""A stopped stopwatch has no span in progress, so nothing is added."""
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+		sw.Split()
+		sleep(self.DELAY)
+		sw.Stop()
+
+		self.assertEqual(2, sw.SplitCount)
+		self.assertEqual(2, sw.ActiveCount)
+		self.assertEqual(0, sw.InactiveCount)
+
+	def test_CountsMatchTheDurations(self) -> None:
+		"""The counts and the durations describe the same spans, so they agree while the stopwatch runs."""
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+
+		self.assertEqual(1, sw.ActiveCount)
+		self.assertGreater(sw.Activity, 0.0)
+		self.assertEqual(0, sw.InactiveCount)
+		self.assertEqual(0.0, sw.Inactivity)
+
+		sw.Pause()
+		sleep(self.DELAY)
+
+		self.assertEqual(1, sw.InactiveCount)
+		self.assertGreater(sw.Inactivity, 0.0)
+
+		sw.Stop()
+
+	def test_HasSplitTimes(self) -> None:
+		"""One split time is enough for :attr:`HasSplitTimes`."""
+		sw = Stopwatch(started=True)
+
+		self.assertFalse(sw.HasSplitTimes)
+
+		sw.Split()
+
+		self.assertEqual(1, sw.SplitCount)
+		self.assertTrue(sw.HasSplitTimes)
+
+		sw.Stop()
+
+	def test_HasSplitTimes_StartStopRecordsNone(self) -> None:
+		"""A stopwatch that was only started and stopped records no split time at all."""
+		sw = Stopwatch(started=True)
+		sw.Stop()
+
+		self.assertEqual(0, sw.SplitCount)
+		self.assertFalse(sw.HasSplitTimes)
+
+
+class Digits(Testcase):
+	"""The number of fractional digits :meth:`__str__` renders the duration with."""
+
+	def test_Default(self) -> None:
+		self.assertEqual(3, Stopwatch().Digits)
+
+	def test_GivenAtCreationTime(self) -> None:
+		self.assertEqual(6, Stopwatch(digits=6).Digits)
+
+	def test_Changeable(self) -> None:
+		sw = Stopwatch()
+		sw.Digits = 9
+
+		self.assertEqual(9, sw.Digits)
+
+	def test_WrongType(self) -> None:
+		with self.assertRaises(TypeError):
+			Stopwatch(digits=3.5)
+
+	def test_OutOfRange(self) -> None:
+		for digits in (-1, 10):
+			with self.assertRaises(ValueError):
+				Stopwatch(digits=digits)
+
+	def test_SameResolutionWhileRunningAndWhenStopped(self) -> None:
+		"""A running and a stopped stopwatch report the duration in the same unit at the same resolution."""
+		sw = Stopwatch("measure", started=True)
+		sleep(0.5)
+		running = str(sw)
+		sw.Stop()
+		stopped = str(sw)
+
+		self.assertIn("(running)", running)
+		self.assertIn("(stopped)", stopped)
+
+		# both end in a duration in seconds with three fractional digits
+		self.assertRegex(running, r"0\.5\d\d$")
+		self.assertRegex(stopped, r"0\.5\d\d$")
+
+	def test_DigitsAreUsed(self) -> None:
+		sw = Stopwatch("measure", started=True)
+		sleep(0.5)
+		sw.Stop()
+
+		sw.Digits = 6
+		self.assertRegex(str(sw), r"0\.5\d{5}$")
+
+		sw.Digits = 0
+		self.assertRegex(str(sw), r": [01]$")
+
+
+class DurationFormatting(Testcase):
+	"""The ``%``-placeholders of :meth:`__format__`."""
+
+	@staticmethod
+	def _stopwatch(nanoseconds: int) -> Stopwatch:
+		sw = Stopwatch("formatted", started=True)
+		sw.Stop()
+		sw._totalTime = nanoseconds
+
+		return sw
+
+	def test_Components(self) -> None:
+		# 1 day, 2 hours, 3 minutes, 4 seconds, 123 ms, 456 us, 789 ns
+		sw = self._stopwatch(93_784_123_456_789)
+
+		self.assertEqual("1 02:03:04.123456789", f"{sw:%D %H:%M:%S.%L%U%N}")
+
+	def test_ComponentsArePadded(self) -> None:
+		sw = self._stopwatch(3_601_002_003_004)  # 1 h, 0 min, 1 s, 2 ms, 3 us, 4 ns
+
+		self.assertEqual("01:00:01.002003004", f"{sw:%H:%M:%S.%L%U%N}")
+
+	def test_Totals(self) -> None:
+		sw = self._stopwatch(93_784_123_456_789)
+
+		self.assertEqual("1", f"{sw:%d}")
+		self.assertEqual("26", f"{sw:%h}")
+		self.assertEqual("1563", f"{sw:%m}")
+		self.assertEqual("93784", f"{sw:%s}")
+		self.assertEqual("93784123", f"{sw:%l}")
+		self.assertEqual("93784123456", f"{sw:%u}")
+		self.assertEqual("93784123456789", f"{sw:%n}")
+
+	def test_EmptySpecification(self) -> None:
+		sw = self._stopwatch(1_000_000_000)
+
+		self.assertEqual(str(sw), f"{sw}")
+
+	def test_EscapedPercent(self) -> None:
+		sw = self._stopwatch(1_000_000_000)
+
+		self.assertEqual("100% of 1 s", f"{sw:100%% of %s s}")
+
+	def test_UnknownSpecifier(self) -> None:
+		sw = self._stopwatch(1_000_000_000)
+
+		with self.assertRaises(ValueError):
+			format(sw, "%Q")
+
+	def test_NeverStarted(self) -> None:
+		sw = Stopwatch()
+
+		self.assertEqual("00:00:00.000", f"{sw:%H:%M:%S.%L}")
