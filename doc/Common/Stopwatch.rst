@@ -97,6 +97,8 @@ Features
       * The stopwatch is a :ref:`context manager <context-managers>`, and can pause or stop when the block ends.
       * Absolute start and stop times are recorded via :meth:`~datetime.datetime.now`, next to the monotonic
         measurement via :func:`time.perf_counter_ns`.
+      * The rendered resolution is configurable, and a format specification renders the duration in days, hours,
+        minutes, seconds, milliseconds, microseconds or nanoseconds.
 
    .. grid-item::
       :columns: 6
@@ -273,17 +275,28 @@ records four spans:
    sw.Inactivity     # 0.2
    sw.Duration       # 0.5
 
-:attr:`~pyTooling.Stopwatch.Stopwatch.HasSplitTimes` reports whether more than one split time was recorded, so a
-stopwatch that was only started and stopped reports ``False``. Use
-:attr:`~pyTooling.Stopwatch.Stopwatch.SplitCount` when the exact number matters.
+:attr:`~pyTooling.Stopwatch.Stopwatch.HasSplitTimes` reports whether at least one split time was recorded, and
+:attr:`~pyTooling.Stopwatch.Stopwatch.SplitCount` how many.
 
-.. warning::
+.. note::
 
-   :attr:`~pyTooling.Stopwatch.Stopwatch.ActiveCount` and :attr:`~pyTooling.Stopwatch.Stopwatch.InactiveCount` count
-   only the spans that have already ended. While the stopwatch runs, the span in progress isn't one of them yet.
+   The counts and the durations describe the same spans, including the one that hasn't ended yet.
+   :attr:`~pyTooling.Stopwatch.Stopwatch.ActiveCount` and :attr:`~pyTooling.Stopwatch.Stopwatch.InactiveCount`
+   answer *"what would the stopwatch report if it stopped right now"*: a running stopwatch is inside an active span,
+   so that span is counted, and a paused one is inside an inactive span.
 
-   :attr:`~pyTooling.Stopwatch.Stopwatch.Activity`, :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` and
-   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration` do include the span in progress, so they are meaningful at any time.
+   That keeps them consistent with :attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and
+   :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity`, which have always included the span in progress.
+
+   +---------+-----------------------------------------+
+   | State   | The span in progress                    |
+   +=========+=========================================+
+   | running | counts towards ``ActiveCount``          |
+   +---------+-----------------------------------------+
+   | paused  | counts towards ``InactiveCount``        |
+   +---------+-----------------------------------------+
+   | stopped | there is none - every span was recorded |
+   +---------+-----------------------------------------+
 
 
 .. _COMMON/Stopwatch/Iterating:
@@ -476,8 +489,9 @@ otherwise. Testing the state first is how a stopwatch is driven from code that d
 Formatting
 ==========
 
-:meth:`~pyTooling.Stopwatch.Stopwatch.__str__` renders the stopwatch's state and what it measured so far, including the
-name if one was given.
+:meth:`~pyTooling.Stopwatch.Stopwatch.__str__` renders the stopwatch's state and the duration it measured so far,
+including the name if one was given. The duration is always in **seconds**, at the same resolution in every state, so
+a running and a stopped stopwatch can be compared without converting anything.
 
 .. rubric:: Usage
 
@@ -497,11 +511,101 @@ name if one was given.
 .. code-block::
 
    Stopwatch parsing: not started
-   Stopwatch parsing (running): 2026-08-27 15:18:10.856309 -> now: 0.500256567
-   Stopwatch parsing (stopped): 2026-08-27 15:18:10.856309 -> 2026-08-27 15:18:11.356634: 500317531
+   Stopwatch parsing (running): 2026-08-27 15:50:12.150982 -> now: 0.500
+   Stopwatch parsing (stopped): 2026-08-27 15:50:12.150982 -> 2026-08-27 15:50:12.651257: 0.500
 
-.. attention::
 
-   For a stopped stopwatch the last field is the total duration in **nanoseconds**, taken from the monotonic counter,
-   while a running stopwatch shows :attr:`~pyTooling.Stopwatch.Stopwatch.Duration` in **seconds**. Format
-   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration` yourself when the unit has to be stable.
+.. _COMMON/Stopwatch/Digits:
+
+Resolution
+==========
+
+How many fractional digits that duration is rendered with is set by :attr:`~pyTooling.Stopwatch.Stopwatch.Digits`. It
+defaults to ``3`` - milliseconds - and can be given at creation time or changed at any point, because it only decides
+how the measurement is *displayed*.
+
+.. code-block:: python
+
+   # Give it at creation time
+   sw = Stopwatch("parsing", digits=6)
+
+   # ... or change it later
+   sw.Digits = 9
+
+A value outside ``0`` to ``9`` raises a :exc:`ValueError`, since a duration in seconds has no more than nine
+fractional digits to show - that is the resolution of the underlying :func:`time.perf_counter_ns`.
+
+.. code-block:: python
+
+   sw.Digits = 6
+   print(sw)
+
+.. code-block::
+
+   Stopwatch parsing (stopped): 2026-08-27 15:50:12.150982 -> 2026-08-27 15:50:12.651257: 0.500269
+
+
+.. _COMMON/Stopwatch/Format:
+
+Format Specification
+====================
+
+Seconds are the right unit for a benchmark and the wrong one for a test run that lasted an hour. Python has no format
+specification for durations - :class:`~datetime.timedelta` doesn't implement ``__format__`` at all, and
+:func:`time.strftime` formats a point in time rather than a length of one - so the stopwatch brings its own, in the
+same ``%``-placeholder style as :meth:`pyTooling.Versioning.SemanticVersion.__format__`.
+
+An **uppercase** specifier is the duration's *component*, as a clock would show it, zero-padded to its width. A
+**lowercase** specifier is the *whole* duration expressed in that unit, unpadded.
+
++--------------+------------------+----------+
+| Unit         | Component        | Total    |
++==============+==================+==========+
+| days         | ``%D``           | ``%d``   |
++--------------+------------------+----------+
+| hours        | ``%H`` (00-23)   | ``%h``   |
++--------------+------------------+----------+
+| minutes      | ``%M`` (00-59)   | ``%m``   |
++--------------+------------------+----------+
+| seconds      | ``%S`` (00-59)   | ``%s``   |
++--------------+------------------+----------+
+| milliseconds | ``%L`` (000-999) | ``%l``   |
++--------------+------------------+----------+
+| microseconds | ``%U`` (000-999) | ``%u``   |
++--------------+------------------+----------+
+| nanoseconds  | ``%N`` (000-999) | ``%n``   |
++--------------+------------------+----------+
+
+``%%`` renders a literal percent sign, an empty specification falls back to
+:meth:`~pyTooling.Stopwatch.Stopwatch.__str__`, and an unknown placeholder raises a :exc:`ValueError`.
+
+.. rubric:: Usage
+
+For a stopwatch that measured 1 day, 2 hours, 3 minutes, 4.123456789 seconds:
+
+.. code-block:: python
+
+   print(f"{sw:%H:%M:%S.%L}")
+   print(f"{sw:%D days, %H:%M:%S}")
+   print(f"{sw:%s}")
+   print(f"{sw:%l}")
+   print(f"{sw:%n}")
+
+.. rubric:: Result
+
+.. code-block::
+
+   02:03:04.123
+   1 days, 02:03:04
+   93784
+   93784123
+   93784123456789
+
+.. note::
+
+   The components nest, so ``%H:%M:%S.%L%U%N`` spells the whole duration once and exactly - unlike the totals, which
+   each restate all of it in a different unit.
+
+   Formatting works from the measured nanoseconds rather than from
+   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration`, because a float can't hold nine significant fractional digits
+   next to a large number of seconds.
