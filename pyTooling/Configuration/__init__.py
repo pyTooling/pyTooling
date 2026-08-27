@@ -177,6 +177,8 @@ class Node(metaclass=ExtendedType, slots=True):
 class Dictionary(Node):
 	"""Abstract dictionary node in a configuration."""
 
+	_keys: list[KeyT]  #: Keys of this dictionary node, in the order the document states them.
+
 	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a dictionary.
@@ -186,25 +188,24 @@ class Dictionary(Node):
 		"""
 		Node.__init__(self, root, parent)
 
-	@abstractmethod
-	def __contains__(self, key: KeyT) -> bool:  # type: ignore[empty-body]
+	def __contains__(self, key: KeyT) -> bool:
 		"""
 		Check if a key exists in this dictionary node.
 
 		:param key: The key to check for.
 		:returns:   ``True``, if the key exists in this node.
 		"""
+		return key in self._keys
 
-	@abstractmethod
-	def IterateKeys(self) -> Generator[KeyT, None, None]:  # type: ignore[empty-body]
+	def IterateKeys(self) -> Generator[KeyT, None, None]:
 		"""
 		Iterate the keys of this dictionary node.
 
 		:returns: A generator of this node's keys, in the order the document states them.
 		"""
+		yield from self._keys
 
-	@abstractmethod
-	def IterateValues(self) -> Generator[ValueT, None, None]:  # type: ignore[empty-body]
+	def IterateValues(self) -> Generator[ValueT, None, None]:
 		"""
 		Iterate the values of this dictionary node.
 
@@ -214,14 +215,17 @@ class Dictionary(Node):
 
 		:returns: A generator of this node's values, in the order the document states them.
 		"""
+		for key in self._keys:
+			yield self[key]
 
-	@abstractmethod
-	def IterateItems(self) -> Generator[Tuple[KeyT, ValueT], None, None]:  # type: ignore[empty-body]
+	def IterateItems(self) -> Generator[Tuple[KeyT, ValueT], None, None]:
 		"""
 		Iterate the key-value pairs of this dictionary node.
 
 		:returns: A generator of this node's ``(key, value)`` pairs, in the order the document states them.
 		"""
+		for key in self._keys:
+			yield key, self[key]
 
 
 @export
