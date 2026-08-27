@@ -32,6 +32,8 @@
 Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
 """
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
+from pyTooling.Licensing import AndOperator, LicenseException, LicenseExpression, LicenseReference
+from pyTooling.Licensing import MIT_License, OrLaterOperator, OrOperator, SPDXLicense, WithOperator
 from pyTooling.Testing   import Testcase
 
 
@@ -190,3 +192,169 @@ class SPDXIndex(Testcase):
 		self.assertEqual("MIT", MIT_License.PythonLicenseName)
 		self.assertEqual("GPL-2.0-or-later", GPL_2_0_or_later.PythonLicenseName)
 
+
+
+class ParsingExpressions(Testcase):
+	"""Parsing SPDX license expressions into a tree."""
+
+	def test_SingleLicense(self) -> None:
+		expression = LicenseExpression.Parse("MIT")
+
+		self.assertIsInstance(expression, SPDXLicense)
+		self.assertIs(MIT_License, expression.License)
+		self.assertIsNone(expression.Parent)
+
+	def test_And(self) -> None:
+		expression = LicenseExpression.Parse("Apache-2.0 AND MIT")
+
+		self.assertIsInstance(expression, AndOperator)
+		self.assertIs(Apache_2_0_License, expression.Left.License)
+		self.assertIs(MIT_License, expression.Right.License)
+
+	def test_Or(self) -> None:
+		expression = LicenseExpression.Parse("Apache-2.0 OR BSD-2-Clause")
+
+		self.assertIsInstance(expression, OrOperator)
+
+	def test_With(self) -> None:
+		expression = LicenseExpression.Parse("Apache-2.0 WITH LLVM-exception")
+
+		self.assertIsInstance(expression, WithOperator)
+		self.assertIsInstance(expression.Right, LicenseException)
+		self.assertEqual("LLVM-exception", expression.Right.Identifier)
+
+	def test_OrLater(self) -> None:
+		"""``GPL-2.0-only+`` is the deprecated spelling SPDX still accepts."""
+		expression = LicenseExpression.Parse("GPL-2.0-only+")
+
+		self.assertIsInstance(expression, OrLaterOperator)
+		self.assertIsInstance(expression.Operand, SPDXLicense)
+
+	def test_Precedence(self) -> None:
+		"""The spec's own example: AND is applied before OR."""
+		expression = LicenseExpression.Parse("LGPL-2.1-only OR BSD-3-Clause AND MIT")
+
+		self.assertIsInstance(expression, OrOperator)
+		self.assertIsInstance(expression.Right, AndOperator)
+
+	def test_Parentheses(self) -> None:
+		expression = LicenseExpression.Parse("(LGPL-2.1-only OR BSD-3-Clause) AND MIT")
+
+		self.assertIsInstance(expression, AndOperator)
+		self.assertIsInstance(expression.Left, OrOperator)
+
+	def test_KeywordsAreCaseInsensitive(self) -> None:
+		"""Published metadata writes ``and`` as often as ``AND``."""
+		expression = LicenseExpression.Parse("MIT and Apache-2.0")
+
+		self.assertIsInstance(expression, AndOperator)
+
+	def test_LicenseReference(self) -> None:
+		expression = LicenseExpression.Parse("LicenseRef-Proprietary")
+
+		self.assertIsInstance(expression, LicenseReference)
+		self.assertEqual("Proprietary", expression.LicenseIdentifier)
+		self.assertIsNone(expression.DocumentIdentifier)
+		self.assertEqual((), expression.Licenses)
+
+	def test_DocumentReference(self) -> None:
+		expression = LicenseExpression.Parse("DocumentRef-spdx-tool:LicenseRef-MyLicense")
+
+		self.assertIsInstance(expression, LicenseReference)
+		self.assertEqual("MyLicense", expression.LicenseIdentifier)
+		self.assertEqual("spdx-tool", expression.DocumentIdentifier)
+
+
+class ExpressionTree(Testcase):
+	"""What a parsed expression knows about itself."""
+
+	def test_ParentAndRoot(self) -> None:
+		expression = LicenseExpression.Parse("LGPL-2.1-only OR BSD-3-Clause AND MIT")
+		leaf = expression.Right.Right
+
+		self.assertIs(expression.Right, leaf.Parent)
+		self.assertIs(expression, leaf.Root)
+		self.assertIsNone(expression.Parent)
+
+	def test_ASharedLicenseGetsItsOwnLeaf(self) -> None:
+		"""
+		The predefined licenses are shared objects, so they can't carry a parent.
+
+		:class:`SPDXLicense` is the wrapper that gives one a place in a tree, and two expressions naming the same
+		license get two leaves around one license.
+		"""
+		first = LicenseExpression.Parse("MIT AND Apache-2.0")
+		second = LicenseExpression.Parse("MIT OR ISC")
+
+		self.assertIs(first.Left.License, second.Left.License)
+		self.assertIsNot(first.Left, second.Left)
+		self.assertIs(first, first.Left.Parent)
+		self.assertIs(second, second.Left.Parent)
+
+	def test_Licenses(self) -> None:
+		expression = LicenseExpression.Parse("LGPL-2.1-only OR BSD-3-Clause AND MIT")
+
+		self.assertEqual(
+			["LGPL-2.1-only", "BSD-3-Clause", "MIT"],
+			[spdxLicense.SPDXIdentifier for spdxLicense in expression.Licenses]
+		)
+
+	def test_LicensesKeepsDuplicates(self) -> None:
+		"""``MIT AND MIT`` is not the same statement as ``MIT``, so deduplicating isn't this class' decision."""
+		expression = LicenseExpression.Parse("MIT AND MIT")
+
+		self.assertEqual(2, len(expression.Licenses))
+
+
+class FormattingExpressions(Testcase):
+	"""Rendering an expression back to SPDX syntax."""
+
+	def test_RoundTrip(self) -> None:
+		for expression in (
+			"MIT",
+			"Apache-2.0 AND MIT",
+			"Apache-2.0 OR BSD-2-Clause",
+			"LGPL-2.1-only OR BSD-3-Clause AND MIT",
+			"(LGPL-2.1-only OR BSD-3-Clause) AND MIT",
+			"Apache-2.0 WITH LLVM-exception",
+			"GPL-2.0-only+",
+			"LicenseRef-Proprietary",
+			"DocumentRef-spdx-tool:LicenseRef-MyLicense",
+		):
+			self.assertEqual(expression, str(LicenseExpression.Parse(expression)))
+
+	def test_RedundantParenthesesAreDropped(self) -> None:
+		"""Only the parentheses the default precedence needs are written back."""
+		self.assertEqual("Apache-2.0 AND MIT", str(LicenseExpression.Parse("(Apache-2.0 AND MIT)")))
+		self.assertEqual("LGPL-2.1-only OR BSD-3-Clause AND MIT",
+		                 str(LicenseExpression.Parse("LGPL-2.1-only OR (BSD-3-Clause AND MIT)")))
+
+	def test_KeywordsAreNormalized(self) -> None:
+		self.assertEqual("MIT AND Apache-2.0", str(LicenseExpression.Parse("MIT and Apache-2.0")))
+
+
+class MalformedExpressions(Testcase):
+	"""Expressions that can't be parsed."""
+
+	def test_Empty(self) -> None:
+		for expression in ("", "   "):
+			with self.assertRaises(ValueError):
+				LicenseExpression.Parse(expression)
+
+	def test_UnknownLicense(self) -> None:
+		with self.assertRaises(ValueError):
+			LicenseExpression.Parse("Definitely-Not-A-License")
+
+	def test_UnbalancedParentheses(self) -> None:
+		for expression in ("(MIT AND Apache-2.0", "MIT AND Apache-2.0)", ")MIT("):
+			with self.assertRaises(ValueError):
+				LicenseExpression.Parse(expression)
+
+	def test_DanglingOperator(self) -> None:
+		for expression in ("MIT AND", "MIT OR", "Apache-2.0 WITH"):
+			with self.assertRaises(ValueError):
+				LicenseExpression.Parse(expression)
+
+	def test_TrailingInput(self) -> None:
+		with self.assertRaises(ValueError):
+			LicenseExpression.Parse("MIT Apache-2.0")
