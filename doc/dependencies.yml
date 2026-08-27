@@ -1,0 +1,48 @@
+# ==================================================================================================================== #
+# Licenses a package index can't answer for.                                                                           #
+#                                                                                                                      #
+# The 'dependency-table' directive resolves a package's license from what the index publishes, and warns at the end of  #
+# a build about every package it couldn't resolve. That warning is the list this file has to answer - each entry below  #
+# was read from the project's own LICENSE file or source headers, not guessed at.                                      #
+#                                                                                                                      #
+# SPDX-License-Identifier: Apache-2.0                                                                                  #
+# ==================================================================================================================== #
+packages:
+  # 'license: Apache 2' is a name, not an identifier. LICENSE.txt is the Apache License 2.0.
+  aiohttp:
+    license:    Apache-2.0
+    licenseURL: https://GitHub.com/aio-libs/aiohttp/blob/master/LICENSE.txt
+
+  # Publishes no license information at all. LICENSE is the Apache License 2.0.
+  anytree:
+    license:    Apache-2.0
+    licenseURL: https://GitHub.com/c0fec0de/anytree/blob/main/LICENSE
+
+  # 'project_urls' points at the documentation, so the repository has to be stated.
+  autoapi:
+    repository: https://GitHub.com/carlos-jenkins/autoapi
+    licenseURL: https://GitHub.com/carlos-jenkins/autoapi/blob/master/LICENSE
+
+  # Only 'License :: OSI Approved :: BSD License', which means BSD-2-Clause as well. LICENSE.txt is the 3-clause one.
+  colorama:
+    license:    BSD-3-Clause
+    licenseURL: https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt
+
+  # The 'license' field holds the license's full text, and the classifier is the ambiguous BSD one.
+  doubly-py-linked-list:
+    license: BSD-3-Clause
+
+  # 'GNU General Public License (GPL)' names no version. The source headers say "version 2 [...] or (at your option)
+  # any later version".
+  igraph:
+    license:    GPL-2.0-or-later
+    licenseURL: https://GitHub.com/igraph/python-igraph/blob/main/LICENSE
+
+  # 'MIT License' is the license's name; its identifier is 'MIT'.
+  sphinx-copybutton:
+    license:    MIT
+    licenseURL: https://GitHub.com/executablebooks/sphinx-copybutton/blob/master/LICENSE
+
+  # 'Apache-2.0 license' is an identifier with a word after it.
+  types-colorama:
+    license: Apache-2.0
