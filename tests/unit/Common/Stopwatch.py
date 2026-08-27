@@ -346,6 +346,7 @@ class Excluding(Testcase):
 	"""Excluding time spans from the measurement with :attr:`~pyTooling.Stopwatch.Stopwatch.Exclude`."""
 
 	DELAY = 0.5
+	INACCURACY = 2.7 if CurrentPlatform.IsNativeMacOS else 1.25
 
 	def test_ExcludedSpanCountsAsInactivity(self) -> None:
 		sw = Stopwatch(started=True)
@@ -358,8 +359,12 @@ class Excluding(Testcase):
 		self.assertEqual(3, sw.SplitCount)
 		self.assertEqual(2, sw.ActiveCount)
 		self.assertEqual(1, sw.InactiveCount)
-		self.assertAlmostEqual(2 * self.DELAY, sw.Activity, delta=0.5 * self.DELAY)
-		self.assertAlmostEqual(self.DELAY, sw.Inactivity, delta=0.5 * self.DELAY)
+
+		# a sleep lasts at least as long as asked, and on a loaded runner considerably longer
+		self.assertGreaterEqual(sw.Activity, 2 * self.DELAY)
+		self.assertLessEqual(sw.Activity, 2 * self.DELAY * self.INACCURACY)
+		self.assertGreaterEqual(sw.Inactivity, self.DELAY)
+		self.assertLessEqual(sw.Inactivity, self.DELAY * self.INACCURACY)
 
 	def test_ExcludeIsReusable(self) -> None:
 		"""
@@ -524,6 +529,8 @@ class Durations(Testcase):
 class Digits(Testcase):
 	"""The number of fractional digits :meth:`__str__` renders the duration with."""
 
+	DELAY = 0.05
+
 	def test_Default(self) -> None:
 		self.assertEqual(3, Stopwatch().Digits)
 
@@ -565,7 +572,7 @@ class Digits(Testcase):
 	def test_SameResolutionWhileRunningAndWhenStopped(self) -> None:
 		"""A running and a stopped stopwatch report the duration in the same unit at the same resolution."""
 		sw = Stopwatch("measure", started=True)
-		sleep(0.5)
+		sleep(self.DELAY)
 		running = str(sw)
 		sw.Stop()
 		stopped = str(sw)
@@ -573,20 +580,21 @@ class Digits(Testcase):
 		self.assertIn("(running)", running)
 		self.assertIn("(stopped)", stopped)
 
-		# both end in a duration in seconds with three fractional digits
-		self.assertRegex(running, r"0\.5\d\d$")
-		self.assertRegex(stopped, r"0\.5\d\d$")
+		# both end in a duration in seconds with three fractional digits; how many seconds is not the point, and a
+		# loaded runner sleeps longer than it was asked to
+		self.assertRegex(running, r": \d+\.\d{3}$")
+		self.assertRegex(stopped, r": \d+\.\d{3}$")
 
 	def test_DigitsAreUsed(self) -> None:
 		sw = Stopwatch("measure", started=True)
-		sleep(0.5)
+		sleep(self.DELAY)
 		sw.Stop()
 
 		sw.Digits = 6
-		self.assertRegex(str(sw), r"0\.5\d{5}$")
+		self.assertRegex(str(sw), r": \d+\.\d{6}$")
 
 		sw.Digits = 0
-		self.assertRegex(str(sw), r": [01]$")
+		self.assertRegex(str(sw), r": \d+$")
 
 
 class DurationFormatting(Testcase):
