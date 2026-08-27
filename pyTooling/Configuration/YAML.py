@@ -209,9 +209,9 @@ class Node(Abstract_Node):
 			elif isinstance(value, (date, datetime)):
 				value = value.isoformat()
 			elif isinstance(value, CommentedMap):
-				value = self.DICT_TYPE(self, self, key, value)
+				value = self.DICT_TYPE(self._root, self, key, value)
 			elif isinstance(value, CommentedSeq):
-				value = self.SEQ_TYPE(self, self, key, value)
+				value = self.SEQ_TYPE(self._root, self, key, value)
 			else:
 				typeName = getFullyQualifiedName(value)
 				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
@@ -288,13 +288,14 @@ class Node(Abstract_Node):
 		:param path:                 Path elements, where ``..`` selects the parent node.
 		:returns:                    The scalar value at that path.
 		:raises KeyNotFoundError:    If a path element doesn't exist.
-		:raises PathExpressionError: If the path resolves to a node instead of a value. Extend the path expression
-		                             to address a scalar value.
+		:raises PathExpressionError: If the path resolves to a node instead of a value - extend the path expression
+		                             to address a scalar value - or if a ``..`` element is applied to the root node,
+		                             which has no parent.
 		"""
 		node = self
 		for p in path:
 			if p == "..":
-				node = node._parent
+				node = node._GetParentNode(path)
 			else:
 				node = node._GetNodeOrValue(p)
 
@@ -310,14 +311,15 @@ class Node(Abstract_Node):
 		"""
 		Return the node or value the given path refers to.
 
-		:param path:              Path elements, where ``..`` selects the parent node.
-		:returns:                 A node or a scalar value at that path.
-		:raises KeyNotFoundError: If a path element doesn't exist.
+		:param path:                 Path elements, where ``..`` selects the parent node.
+		:returns:                    A node or a scalar value at that path.
+		:raises KeyNotFoundError:    If a path element doesn't exist.
+		:raises PathExpressionError: If a ``..`` element is applied to the root node, which has no parent.
 		"""
 		node = self
 		for p in path:
 			if p == "..":
-				node = node._parent
+				node = node._GetParentNode(path)
 			else:
 				node = node._GetNodeOrValue(p)
 
