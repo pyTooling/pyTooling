@@ -118,7 +118,7 @@ class Node(Abstract_Node):
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
-		raise NotImplementedError()
+		raise NotImplementedError("Renaming a key isn't supported by this configuration implementation.")
 
 	@InheritDocString(Abstract_Node)
 	def QueryPath(self, query: str) -> ValueT:
