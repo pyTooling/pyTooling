@@ -51,24 +51,29 @@ The argument is an **entrypoint** - a requirements file, or a package with an ex
 costs real time, so every table reports what it spent, measured with a :class:`~pyTooling.Stopwatch.Stopwatch`, and
 the build ends with the total - which is the number to look at before deciding what to cache.
 """
+from __future__                    import annotations
+
 from pathlib                       import Path
-from typing                        import Any, Iterator, Optional as Nullable, cast
+from typing                        import TYPE_CHECKING, Any, Iterator, Optional as Nullable, cast
 
 from docutils                      import nodes
 from docutils.parsers.rst          import directives
 from sphinx.application            import Sphinx
 from sphinx.util                   import logging
 
-from packaging.requirements        import Requirement
-from packaging.utils               import canonicalize_name
-
 from pyTooling.Decorators          import export, readonly
 from pyTooling.Dependency          import UnknownLicenseWarning
-from pyTooling.Dependency.Python   import LazyLoaderState, LicenseOverrides, Project, PythonPackageDependencyGraph
-from pyTooling.Dependency.Python   import PythonPackageIndex, Release, RequirementsFile
+from pyTooling.Exceptions          import MissingDependencyError
 from pyTooling.MetaClasses         import ExtendedType
 from pyTooling.Stopwatch           import Stopwatch
 from pyTooling.Warning             import WarningCollector
+
+if TYPE_CHECKING:  # pragma: no cover
+	# Only this directive needs a package index, so the model is imported when a table is built rather than when the
+	# extension is loaded - otherwise every documentation build using any of these roles would need the 'pypi' extra.
+	from packaging.requirements      import Requirement
+	from pyTooling.Dependency.Python import LicenseOverrides, Project, PythonPackageDependencyGraph
+	from pyTooling.Dependency.Python import PythonPackageIndex, Release, RequirementsFile
 
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip
 
@@ -118,6 +123,8 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		:param apiURL:    URL of the package index's JSON API.
 		:param overrides: Licenses stated by hand.
 		"""
+		from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex
+
 		self._graph = PythonPackageDependencyGraph("documentation")
 		self._index = PythonPackageIndex("index", indexURL, apiURL, self._graph, overrides)
 		self._projects = {}
@@ -164,10 +171,13 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		:param packageName: Name of the package to look up.
 		:returns:           The project, or ``None`` if the index doesn't know it.
 		"""
+		from pyTooling.Dependency.Python import LazyLoaderState
+
 		if packageName in self._projects:
 			return self._projects[packageName]
 
 		with Stopwatch() as stopwatch:
+			project: Nullable[Project]
 			try:
 				project = self._index.DownloadProject(packageName, LazyLoaderState.PartiallyLoaded)
 			except Exception:
@@ -283,6 +293,13 @@ class DependencyTable(BaseDirective):
 		if (collector := _COLLECTORS.get(id(self.env.app), None)) is not None:
 			return collector
 
+		try:
+			from pyTooling.Dependency.Python import LicenseOverrides
+		except MissingDependencyError as cause:  # pragma: no cover
+			raise SphinxExtensionError(
+				f"{self.directiveName}: querying a package index needs the 'pypi' extra: pip install pyTooling[pypi]"
+			) from cause
+
 		overrides = LicenseOverrides()
 		if (licenseFile := self.options.get("licenses", None)) is not None:
 			path = Path(self.env.srcdir) / licenseFile
@@ -312,6 +329,9 @@ class DependencyTable(BaseDirective):
 		:returns:                     Every required package, by its canonical name.
 		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the entrypoint can't be read.
 		"""
+		from packaging.utils            import canonicalize_name
+		from pyTooling.Dependency.Python import RequirementsFile
+
 		if entrypoint.endswith(".txt"):
 			path = Path(self.env.srcdir) / entrypoint
 			if not path.exists():
