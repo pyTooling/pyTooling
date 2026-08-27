@@ -542,27 +542,46 @@ class DurationFormatting(Testcase):
 
 		return sw
 
-	def test_Components(self) -> None:
-		# 1 day, 2 hours, 3 minutes, 4 seconds, 123 ms, 456 us, 789 ns
+	def test_Fields(self) -> None:
+		# 26 hours, 3 minutes, 4.123456789 seconds
 		sw = self._stopwatch(93_784_123_456_789)
 
-		self.assertEqual("1 02:03:04.123456789", f"{sw:%D %H:%M:%S.%L%U%N}")
+		self.assertEqual("26:03:04", f"{sw:%H:%M:%S}")
+		self.assertEqual("03:04", f"{sw:%M:%S}")
 
-	def test_ComponentsArePadded(self) -> None:
+	def test_HoursAreNotCapped(self) -> None:
+		"""``%H`` must not wrap, or ``%H:%M:%S`` would silently drop a day."""
+		sw = self._stopwatch(93_784_123_456_789)
+
+		self.assertEqual("26", f"{sw:%H}")
+
+	def test_FieldsArePadded(self) -> None:
 		sw = self._stopwatch(3_601_002_003_004)  # 1 h, 0 min, 1 s, 2 ms, 3 us, 4 ns
 
-		self.assertEqual("01:00:01.002003004", f"{sw:%H:%M:%S.%L%U%N}")
+		self.assertEqual("01:00:01.002", f"{sw:%H:%M:%S.%L}")
+		self.assertEqual("01:00:01.002003004", f"{sw:%H:%M:%S.%N}")
+
+	def test_FractionsAreTruncationsOfEachOther(self) -> None:
+		"""``%L``, ``%U`` and ``%N`` render the same fraction at three precisions, so they don't have to be combined."""
+		sw = self._stopwatch(93_784_123_456_789)
+
+		self.assertEqual("123", f"{sw:%L}")
+		self.assertEqual("123456", f"{sw:%U}")
+		self.assertEqual("123456789", f"{sw:%N}")
 
 	def test_Totals(self) -> None:
 		sw = self._stopwatch(93_784_123_456_789)
 
-		self.assertEqual("1", f"{sw:%d}")
-		self.assertEqual("26", f"{sw:%h}")
-		self.assertEqual("1563", f"{sw:%m}")
 		self.assertEqual("93784", f"{sw:%s}")
-		self.assertEqual("93784123", f"{sw:%l}")
+		self.assertEqual("93784123", f"{sw:%m}")
 		self.assertEqual("93784123456", f"{sw:%u}")
 		self.assertEqual("93784123456789", f"{sw:%n}")
+
+	def test_ShortMeasurement(self) -> None:
+		sw = self._stopwatch(1_500_000_000)
+
+		self.assertEqual("00:00:01.500", f"{sw:%H:%M:%S.%L}")
+		self.assertEqual("1500", f"{sw:%m}")
 
 	def test_EmptySpecification(self) -> None:
 		sw = self._stopwatch(1_000_000_000)
@@ -577,10 +596,13 @@ class DurationFormatting(Testcase):
 	def test_UnknownSpecifier(self) -> None:
 		sw = self._stopwatch(1_000_000_000)
 
-		with self.assertRaises(ValueError):
-			format(sw, "%Q")
+		# a stopwatch measures code execution, so totals for days, hours and minutes were dropped
+		for specification in ("%Q", "%d", "%h", "%D", "%l"):
+			with self.assertRaises(ValueError):
+				format(sw, specification)
 
 	def test_NeverStarted(self) -> None:
 		sw = Stopwatch()
 
 		self.assertEqual("00:00:00.000", f"{sw:%H:%M:%S.%L}")
+		self.assertEqual("0", f"{sw:%n}")

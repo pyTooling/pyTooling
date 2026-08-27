@@ -97,8 +97,8 @@ Features
       * The stopwatch is a :ref:`context manager <context-managers>`, and can pause or stop when the block ends.
       * Absolute start and stop times are recorded via :meth:`~datetime.datetime.now`, next to the monotonic
         measurement via :func:`time.perf_counter_ns`.
-      * The rendered resolution is configurable, and a format specification renders the duration in days, hours,
-        minutes, seconds, milliseconds, microseconds or nanoseconds.
+      * The rendered resolution is configurable, and a format specification renders the duration as hours, minutes and
+        seconds, or wholly in seconds, milliseconds, microseconds or nanoseconds.
 
    .. grid-item::
       :columns: 6
@@ -555,56 +555,66 @@ specification for durations - :class:`~datetime.timedelta` doesn't implement ``_
 :func:`time.strftime` formats a point in time rather than a length of one - so the stopwatch brings its own, in the
 same ``%``-placeholder style as :meth:`pyTooling.Versioning.SemanticVersion.__format__`.
 
-An **uppercase** specifier is the duration's *component*, as a clock would show it, zero-padded to its width. A
-**lowercase** specifier is the *whole* duration expressed in that unit, unpadded.
+An **uppercase** specifier is a field of the duration as it would be displayed. A **lowercase** specifier is the whole
+duration expressed in one unit, which is what a report or a comparison wants.
 
-+--------------+------------------+----------+
-| Unit         | Component        | Total    |
-+==============+==================+==========+
-| days         | ``%D``           | ``%d``   |
-+--------------+------------------+----------+
-| hours        | ``%H`` (00-23)   | ``%h``   |
-+--------------+------------------+----------+
-| minutes      | ``%M`` (00-59)   | ``%m``   |
-+--------------+------------------+----------+
-| seconds      | ``%S`` (00-59)   | ``%s``   |
-+--------------+------------------+----------+
-| milliseconds | ``%L`` (000-999) | ``%l``   |
-+--------------+------------------+----------+
-| microseconds | ``%U`` (000-999) | ``%u``   |
-+--------------+------------------+----------+
-| nanoseconds  | ``%N`` (000-999) | ``%n``   |
-+--------------+------------------+----------+
++-----------+--------------------------------------------------------+
+| Specifier | Meaning                                                |
++===========+========================================================+
+| ``%H``    | hours, not capped - a 26 hour measurement shows ``26`` |
++-----------+--------------------------------------------------------+
+| ``%M``    | minutes, ``00`` to ``59``                              |
++-----------+--------------------------------------------------------+
+| ``%S``    | seconds, ``00`` to ``59``                              |
++-----------+--------------------------------------------------------+
+| ``%L``    | fractional seconds, 3 digits (milliseconds)            |
++-----------+--------------------------------------------------------+
+| ``%U``    | fractional seconds, 6 digits (microseconds)            |
++-----------+--------------------------------------------------------+
+| ``%N``    | fractional seconds, 9 digits (nanoseconds)             |
++-----------+--------------------------------------------------------+
+| ``%s``    | the whole duration in seconds                          |
++-----------+--------------------------------------------------------+
+| ``%m``    | the whole duration in milliseconds                     |
++-----------+--------------------------------------------------------+
+| ``%u``    | the whole duration in microseconds                     |
++-----------+--------------------------------------------------------+
+| ``%n``    | the whole duration in nanoseconds                      |
++-----------+--------------------------------------------------------+
 
 ``%%`` renders a literal percent sign, an empty specification falls back to
 :meth:`~pyTooling.Stopwatch.Stopwatch.__str__`, and an unknown placeholder raises a :exc:`ValueError`.
 
 .. rubric:: Usage
 
-For a stopwatch that measured 1 day, 2 hours, 3 minutes, 4.123456789 seconds:
+For a stopwatch that measured 26 hours, 3 minutes and 4.123456789 seconds:
 
 .. code-block:: python
 
+   print(f"{sw:%H:%M:%S}")
    print(f"{sw:%H:%M:%S.%L}")
-   print(f"{sw:%D days, %H:%M:%S}")
-   print(f"{sw:%s}")
-   print(f"{sw:%l}")
-   print(f"{sw:%n}")
+   print(f"{sw:%H:%M:%S.%U}")
+   print(f"{sw:%M:%S.%L}")
+   print(f"{sw:%s} s / {sw:%m} ms / {sw:%u} us / {sw:%n} ns")
 
 .. rubric:: Result
 
 .. code-block::
 
-   02:03:04.123
-   1 days, 02:03:04
-   93784
-   93784123
-   93784123456789
+   26:03:04
+   26:03:04.123
+   26:03:04.123456
+   03:04.123
+   93784 s / 93784123 ms / 93784123456 us / 93784123456789 ns
 
 .. note::
 
-   The components nest, so ``%H:%M:%S.%L%U%N`` spells the whole duration once and exactly - unlike the totals, which
-   each restate all of it in a different unit.
+   The three fractional specifiers render the **same** fraction at three precisions rather than three consecutive
+   thirds of it, so ``%S.%U`` is complete on its own and nothing has to be chained.
+
+   ``%H`` deliberately isn't capped at 23. There is no day specifier - a stopwatch measures code execution, so
+   ``%H:%M:%S`` is the longest form anyone needs - and capping it would make a 26 hour measurement silently render as
+   ``02:03:04``.
 
    Formatting works from the measured nanoseconds rather than from
    :attr:`~pyTooling.Stopwatch.Stopwatch.Duration`, because a float can't hold nine significant fractional digits
