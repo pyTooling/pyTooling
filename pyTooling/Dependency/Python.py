@@ -41,9 +41,10 @@ from asyncio              import run as asyncio_run, gather as asyncio_gather
 from datetime             import datetime
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
+from pathlib              import Path
 from re                   import compile as re_compile
 from threading            import RLock
-from typing               import Optional as Nullable, Union, Iterable, Mapping
+from typing               import Any, Optional as Nullable, Union, Iterable, Mapping, Self
 
 from pyTooling.Exceptions import MissingDependencyError
 
@@ -54,6 +55,7 @@ except ImportError as ex:  # pragma: no cover
 
 try:
 	from packaging.requirements import Requirement
+	from packaging.specifiers   import InvalidSpecifier, SpecifierSet
 	from packaging.utils        import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
@@ -67,15 +69,228 @@ from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import BrokenRequirementWarning, NoSessionAvailableError, ProjectNotFoundError
-from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError
+from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError, NoSessionAvailableError
+from pyTooling.Dependency      import ProjectNotFoundError
+from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
+from pyTooling.Licensing       import License, LICENSES, SPDX_INDEX
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
 
 
+#: Longest length a ``license`` field may have and still be an identifier rather than the license's full text.
+_LICENSE_IDENTIFIER_LENGTH = 64
+
+#: Pattern splitting a license expression into the identifiers it combines.
+_LICENSE_OPERATOR = re_compile(r"\s+(?:AND|OR)\s+")
+
+def _buildClassifierIndex() -> dict[str, tuple[License, ...]]:
+	"""
+	Index the known licenses by the Python classifier they are written as.
+
+	:returns: Every classifier, mapped to the licenses it could mean.
+	"""
+	index: dict[str, list[License]] = {}
+	for spdxLicense in LICENSES:
+		try:
+			classifier = spdxLicense.PythonClassifier
+		except ValueError:  # pragma: no cover
+			continue
+
+		index.setdefault(classifier, []).append(spdxLicense)
+
+	return {classifier: tuple(licenses) for classifier, licenses in index.items()}
+
+
+#: Python license classifier to the licenses it could mean. ``License :: OSI Approved :: BSD License`` means two.
+_LICENSES_BY_CLASSIFIER: dict[str, tuple[License, ...]] = _buildClassifierIndex()
+
+
+def _resolveLicenseExpression(expression: str) -> tuple[License, ...]:
+	"""
+	Resolve a license expression into the licenses it combines.
+
+	``Apache-2.0 AND MIT`` requires both licenses and ``Apache-2.0 OR BSD-2-Clause`` offers a choice, so both resolve
+	to two licenses - which of the two applies is not a question the metadata answers. An expression is resolved only
+	when *every* identifier in it is known, because a half-resolved license is worse than an unresolved one.
+
+	:param expression: The license expression to resolve.
+	:returns:          The licenses the expression combines, or an empty tuple if any identifier is unknown.
+	"""
+	licenses = []
+	for identifier in _LICENSE_OPERATOR.split(expression.strip()):
+		if (identifier := identifier.strip("() \t")) == "":
+			continue
+
+		if (spdxLicense := SPDX_INDEX.get(identifier, None)) is None:
+			return ()
+
+		licenses.append(spdxLicense)
+
+	return tuple(licenses)
+
+
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
+
+
+@export
+class LicenseOverrides(metaclass=ExtendedType, slots=True):
+	"""
+	Licenses stated by hand, for the packages a package index can't answer for.
+
+	A package index is not a reliable source of license information: roughly half of a typical dependency set
+	publishes a PEP 639 ``license_expression``, some state a license *name* where an identifier is expected, and the
+	classifier ``License :: OSI Approved :: BSD License`` means either ``BSD-2-Clause`` or ``BSD-3-Clause`` with no
+	way to tell which. Those packages are answered here instead of guessed at.
+
+	The file is YAML, and a license may be stated for the package as a whole or per version - a package that
+	relicensed has one license before the switch and another after it:
+
+	.. code-block:: yaml
+
+	   packages:
+	     colorama:
+	       license:    BSD-3-Clause
+	       licenseURL: https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt
+	       repository: https://GitHub.com/tartley/colorama
+	     igraph:
+	       versions:
+	         ">=0.10": GPL-2.0-or-later
+	         "<0.10":  GPL-2.0-only
+
+	Version specifiers are matched in the order they are written, so the first one a version satisfies wins.
+	"""
+
+	_licenses:     dict[str, str]                             #: License expression per package, for every version.
+	_versioned:    dict[str, list[tuple[SpecifierSet, str]]]  #: License expression per package and version range.
+	_licenseURLs:  dict[str, str]                             #: URL of the license's text, per package.
+	_repositories: dict[str, str]                             #: URL of the source repository, per package.
+
+	def __init__(self) -> None:
+		"""Initialize an empty set of overrides."""
+		self._licenses = {}
+		self._versioned = {}
+		self._licenseURLs = {}
+		self._repositories = {}
+
+	@classmethod
+	def FromFile(cls, path: Path) -> Self:
+		"""
+		Read overrides from a YAML file.
+
+		:param path:                    Path of the YAML file to read.
+		:returns:                       The overrides the file states.
+		:raises MissingDependencyError: If ``ruamel.yaml`` isn't installed.
+		:raises FileNotFoundError:      If the file doesn't exist.
+		:raises DependencyError:        If a version specifier in the file can't be parsed.
+		"""
+		try:
+			from ruamel.yaml import YAML
+		except ImportError as ex:  # pragma: no cover
+			raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
+
+		if not path.exists():
+			raise FileNotFoundError(f"License override file '{path}' not found.")
+
+		with path.open("r", encoding="utf-8") as file:
+			document = YAML(typ="safe").load(file) or {}
+
+		return cls.FromDictionary(document.get("packages", None) or {})
+
+	@classmethod
+	def FromDictionary(cls, packages: Mapping[str, Mapping[str, Any]]) -> Self:
+		"""
+		Build overrides from an already parsed mapping.
+
+		Keeping this apart from :meth:`FromFile` is what lets the overrides be assembled in code, and tested, without
+		a file and without YAML.
+
+		:param packages:         Mapping of a package's name to what is stated for it.
+		:returns:                The overrides the mapping states.
+		:raises DependencyError: If a version specifier can't be parsed.
+		"""
+		overrides = cls()
+
+		for packageName, statement in packages.items():
+			name = canonicalize_name(packageName)
+
+			if (expression := statement.get("license", None)) is not None:
+				overrides._licenses[name] = str(expression)
+
+			if (licenseURL := statement.get("licenseURL", None)) is not None:
+				overrides._licenseURLs[name] = str(licenseURL)
+
+			if (repository := statement.get("repository", None)) is not None:
+				overrides._repositories[name] = str(repository)
+
+			if (versions := statement.get("versions", None)) is not None:
+				ranges = []
+				for specifier, expression in versions.items():
+					try:
+						ranges.append((SpecifierSet(str(specifier)), str(expression)))
+					except InvalidSpecifier as ex:
+						raise DependencyError(
+							f"Version specifier '{specifier}' of package '{packageName}' can't be parsed."
+						) from ex
+
+				overrides._versioned[name] = ranges
+
+		return overrides
+
+	def LicenseOf(self, packageName: str, version: Nullable[SemanticVersion] = None) -> Nullable[str]:
+		"""
+		Return the license expression stated for a package, or for one of its versions.
+
+		A version range is consulted first, because it is the more specific statement; the ranges are tried in the
+		order they were written and the first match wins.
+
+		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for.
+		:returns:           The license expression stated, or ``None`` if the package isn't overridden.
+		"""
+		name = canonicalize_name(packageName)
+
+		if version is not None and (ranges := self._versioned.get(name, None)) is not None:
+			for specifier, expression in ranges:
+				if str(version) in specifier:
+					return expression
+
+		return self._licenses.get(name, None)
+
+	def LicenseURLOf(self, packageName: str) -> Nullable[str]:
+		"""
+		Return the URL of a package's license text, where one was stated.
+
+		:param packageName: Name of the package.
+		:returns:           The URL stated, or ``None``.
+		"""
+		return self._licenseURLs.get(canonicalize_name(packageName), None)
+
+	def RepositoryOf(self, packageName: str) -> Nullable[str]:
+		"""
+		Return the URL of a package's source repository, where one was stated.
+
+		:param packageName: Name of the package.
+		:returns:           The URL stated, or ``None``.
+		"""
+		return self._repositories.get(canonicalize_name(packageName), None)
+
+	def __len__(self) -> int:
+		"""
+		Return the number of packages that are overridden.
+
+		:returns: Number of overridden packages.
+		"""
+		return len(set(self._licenses) | set(self._versioned) | set(self._licenseURLs) | set(self._repositories))
+
+	def __str__(self) -> str:
+		"""
+		Return a string representation of these overrides.
+
+		:returns: The number of packages that are overridden.
+		"""
+		return f"LicenseOverrides({len(self)} packages)"
 
 
 @export
@@ -435,6 +650,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:param json: The parsed JSON document describing this release.
 		"""
 		infoNode = json["info"]
+		self._ResolveLicense(infoNode)
+
 		requirements = [Requirement(requirement) for requirement in (infoNode["requires_dist"] or ())]
 
 		# The declared spelling is kept as the key, while the canonical one - 'code_style' and 'code-style' are the
@@ -477,6 +694,65 @@ class Release(PackageVersion, LazyLoadableMixin):
 				# self._requirements[0] = brokenRequirements
 
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
+
+	def _ResolveLicense(self, infoNode: Mapping[str, Any]) -> None:
+		"""
+		Resolve this release's license from what was published, and from what was stated by hand.
+
+		The sources are consulted in order of how much they can be trusted, and the first one that answers wins:
+
+		1. the :class:`LicenseOverrides` of the package index - an explicit statement always wins,
+		2. ``license_expression``, the PEP 639 field, which is an SPDX expression by definition,
+		3. ``license``, the legacy free-text field, but only when it is short enough to be an identifier rather than
+		   the license's full text,
+		4. a license classifier, but only when it means exactly one license - ``License :: OSI Approved :: BSD
+		   License`` means either ``BSD-2-Clause`` or ``BSD-3-Clause`` and is never guessed at.
+
+		Whatever was found is kept verbatim in :attr:`~pyTooling.Dependency.PackageVersion.LicenseExpression`, even
+		when it doesn't resolve. A release whose license stays unresolved is reported as an
+		:class:`~pyTooling.Dependency.UnknownLicenseWarning` naming what was published, because that is the list of
+		packages the override file has to answer for.
+
+		:param infoNode: The ``info`` node of the JSON document describing this release.
+		"""
+		index: PythonPackageIndex = self._package._storage
+		overrides = index._licenseOverrides
+		published = []
+
+		expression = overrides.LicenseOf(self._package._name, self._version)
+		if expression is None:
+			if (licenseExpression := infoNode.get("license_expression", None)) is not None:
+				published.append(f"license_expression: {licenseExpression}")
+				expression = licenseExpression
+			elif (licenseText := (infoNode.get("license", None) or "").strip()) != "":
+				published.append(f"license: {licenseText[:_LICENSE_IDENTIFIER_LENGTH]}")
+				if len(licenseText) <= _LICENSE_IDENTIFIER_LENGTH:
+					expression = licenseText
+
+			if expression is None:
+				for classifier in infoNode.get("classifiers", None) or ():
+					if not classifier.startswith("License ::"):
+						continue
+
+					published.append(f"classifier: {classifier}")
+					if len(candidates := _LICENSES_BY_CLASSIFIER.get(classifier, ())) == 1:
+						expression = candidates[0].SPDXIdentifier
+
+					break
+
+		self._licenseExpression = expression if expression is not None else ""
+		self._licenses = _resolveLicenseExpression(expression) if expression is not None else ()
+
+		if (licenseURL := overrides.LicenseURLOf(self._package._name)) is not None:
+			self._licenseURL = URL.Parse(licenseURL)
+
+		if len(self._licenses) == 0:
+			WarningCollector.Raise(
+				UnknownLicenseWarning(
+					f"License of '{self._package._name}' {self._version} couldn't be resolved."
+				),
+				notes=published if len(published) > 0 else ["The package index published no license information."]
+			)
 
 	def PostProcess(self) -> None:
 		"""
@@ -670,6 +946,7 @@ class Project(Package, LazyLoadableMixin):
 
 		# Update project/package URL
 		self._url = URL.Parse(infoNode["project_url"])
+		self._ResolveRepositoryURL(infoNode)
 
 		# Convert key to Version number, skip empty releases
 		convertedReleasesNode = {}
@@ -700,6 +977,29 @@ class Project(Package, LazyLoadableMixin):
 
 		self.SortVersions()
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
+
+	def _ResolveRepositoryURL(self, infoNode: Mapping[str, Any]) -> None:
+		"""
+		Resolve where this project's sources live.
+
+		A package index has no field for it, so the answer is assembled from what is there: a hand-written statement
+		first, then the entries of ``project_urls`` that name a repository, then ``home_page``, then the project's
+		home page. :attr:`URL` stays the project's page on the index, which is where the package is *published*
+		rather than where it is written.
+
+		:param infoNode: The ``info`` node of the JSON document describing this project.
+		"""
+		index: PythonPackageIndex = self._storage
+		if (repository := index._licenseOverrides.RepositoryOf(self._name)) is None:
+			projectURLs = infoNode.get("project_urls", None) or {}
+			for key in ("Source Code", "Source", "Code", "Repository", "GitHub"):
+				if (repository := projectURLs.get(key, None)) is not None:
+					break
+			else:
+				repository = infoNode.get("home_page", None) or projectURLs.get("Homepage", None)
+
+		if repository is not None:
+			self._repositoryURL = URL.Parse(repository)
 
 	def DownloadReleaseDetails(self) -> None:
 		"""
@@ -774,22 +1074,33 @@ class PythonPackageIndex(PackageStorage):
 	It is the entry point of the dependency graph: projects are looked up here, and every request to the index reuses
 	the same HTTP session.
 	"""
-	_url:     URL      #: URL of the package index's website.
-	_api:     URL      #: URL of the package index's API.
-	_session: Session  #: HTTP session reused for every request to this index.
+	_url:              URL               #: URL of the package index's website.
+	_api:              URL               #: URL of the package index's API.
+	_session:          Session           #: HTTP session reused for every request to this index.
+	_licenseOverrides: LicenseOverrides  #: Licenses stated by hand, for what this index can't answer for.
 
-	def __init__(self, name: str, url: Union[str, URL], api: Union[str, URL], graph: PackageDependencyGraph) -> None:
+	def __init__(
+		self,
+		name: str,
+		url: Union[str, URL],
+		api: Union[str, URL],
+		graph: PackageDependencyGraph,
+		licenseOverrides: Nullable[LicenseOverrides] = None
+	) -> None:
 		"""
 		Initialize a package index and open the HTTP session used for every request to it.
 
-		:param name:       Name of the package index.
-		:param url:        URL of the index's website, as a string or a parsed URL.
-		:param api:        URL of the index's JSON API, as a string or a parsed URL.
-		:param graph:      Dependency graph this index belongs to.
-		:raises TypeError: If parameter 'url' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
-		:raises TypeError: If parameter 'api' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:param name:             Name of the package index.
+		:param url:              URL of the index's website, as a string or a parsed URL.
+		:param api:              URL of the index's JSON API, as a string or a parsed URL.
+		:param graph:            Dependency graph this index belongs to.
+		:param licenseOverrides: Optional, licenses stated by hand; an empty set of overrides if not given.
+		:raises TypeError:       If parameter 'url' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises TypeError:       If parameter 'api' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
 		"""
 		super().__init__(name, graph)
+
+		self._licenseOverrides = licenseOverrides if licenseOverrides is not None else LicenseOverrides()
 
 		if isinstance(url, str):
 			url = URL.Parse(url)
@@ -820,6 +1131,15 @@ class PythonPackageIndex(PackageStorage):
 		:returns: Base URL of the package index.
 		"""
 		return self._url
+
+	@readonly
+	def LicenseOverrides(self) -> LicenseOverrides:
+		"""
+		Read-only property to access the licenses stated by hand for this index (:attr:`_licenseOverrides`).
+
+		:returns: The index's license overrides.
+		"""
+		return self._licenseOverrides
 
 	@readonly
 	def API(self) -> URL:
