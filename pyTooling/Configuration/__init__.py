@@ -186,24 +186,21 @@ class Dictionary(Node):
 
 	_keys: list[KeyT]  #: Keys of this dictionary node, in the order the document states them.
 
-	def __init__(
-		self,
-		keys: list[KeyT],
-		root: Nullable[Configuration] = None,
-		parent: Nullable[NodeT] = None
-	) -> None:
+	def __init__(self, keys: list[KeyT]) -> None:
 		"""
-		Initializes a dictionary.
+		Initializes the dictionary's keys.
 
 		A deriving class reads the keys from whatever it parsed and hands them over, so this node is never left
 		without them.
 
-		:param keys:   Keys of this dictionary node, in the order the document states them.
-		:param root:   Optional, reference to the root node.
-		:param parent: Optional, reference to the parent node.
-		"""
-		Node.__init__(self, root, parent)
+		.. note::
 
+		   This is a mixin's constructor: it initializes the fields this mixin adds and nothing else. In particular it
+		   doesn't call :meth:`Node.__init__` - a deriving class does that itself, and calling it here would assign
+		   :attr:`~Node._root` and :attr:`~Node._parent` a second time.
+
+		:param keys: Keys of this dictionary node, in the order the document states them.
+		"""
 		self._keys = keys
 
 	def __contains__(self, key: KeyT) -> bool:
