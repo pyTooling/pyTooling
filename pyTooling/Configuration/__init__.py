@@ -47,7 +47,7 @@ Abstract configuration reader.
 from __future__            import annotations
 
 from pathlib               import Path
-from typing                import Union, ClassVar, Iterator, Optional as Nullable
+from typing                import Union, ClassVar, Generator, Iterator, Optional as Nullable, Tuple
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
@@ -192,6 +192,34 @@ class Dictionary(Node):
 
 		:param key: The key to check for.
 		:returns:   ``True``, if the key exists in this node.
+		"""
+		raise NotImplementedError()
+
+	def IterateKeys(self) -> Generator[KeyT, None, None]:
+		"""
+		Iterate the keys of this dictionary node.
+
+		:returns: A generator of this node's keys, in the order the document states them.
+		"""
+		raise NotImplementedError()
+
+	def IterateValues(self) -> Generator[ValueT, None, None]:
+		"""
+		Iterate the values of this dictionary node.
+
+		This is what :meth:`__iter__` yields, so ``for value in node`` and ``for value in node.IterateValues()`` are
+		the same walk. It exists so that the three iterators can be named alike and a reader doesn't have to remember
+		which of keys or values plain iteration gives.
+
+		:returns: A generator of this node's values, in the order the document states them.
+		"""
+		raise NotImplementedError()
+
+	def IterateItems(self) -> Generator[Tuple[KeyT, ValueT], None, None]:
+		"""
+		Iterate the key-value pairs of this dictionary node.
+
+		:returns: A generator of this node's ``(key, value)`` pairs, in the order the document states them.
 		"""
 		raise NotImplementedError()
 
