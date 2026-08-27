@@ -154,13 +154,20 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the node's key.
 
-		:returns: Key of the node.
+		.. note::
+
+		   :deco:`~pyTooling.MetaClasses.abstractmethod` can't be used here: it marks the function, and
+		   :class:`property` wraps it, so :class:`~pyTooling.MetaClasses.ExtendedType` never sees the marker. The
+		   exception is what makes a missing implementation noticeable.
+
+		:returns:                    Key of the node.
+		:raises NotImplementedError: If a deriving class doesn't implement this property.
 		"""
-		raise NotImplementedError()
+		raise NotImplementedError(f"Property 'Key' is abstract and not implemented by '{self.__class__.__name__}'.")
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
-		raise NotImplementedError()
+		raise NotImplementedError("Renaming a key isn't supported by a configuration.")
 
 	@abstractmethod
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
@@ -253,6 +260,7 @@ class Sequence(Node):
 		"""
 		Node.__init__(self, root, parent)
 
+	@abstractmethod
 	def __getitem__(self, index: int) -> ValueT:  # type: ignore[empty-body]
 		"""
 		Read an element of this sequence node by index.
@@ -260,7 +268,6 @@ class Sequence(Node):
 		:param index: Index of the element to read.
 		:returns:     A node (sequence or dictionary) or scalar value (int, float, str).
 		"""
-		raise NotImplementedError()
 
 	def __setitem__(self, index: int, value: ValueT) -> None:
 		"""
