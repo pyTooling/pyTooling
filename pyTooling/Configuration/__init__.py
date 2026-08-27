@@ -186,6 +186,7 @@ class Dictionary(Node):
 		"""
 		Node.__init__(self, root, parent)
 
+	@abstractmethod
 	def __contains__(self, key: KeyT) -> bool:  # type: ignore[empty-body]
 		"""
 		Check if a key exists in this dictionary node.
@@ -193,17 +194,17 @@ class Dictionary(Node):
 		:param key: The key to check for.
 		:returns:   ``True``, if the key exists in this node.
 		"""
-		raise NotImplementedError()
 
-	def IterateKeys(self) -> Generator[KeyT, None, None]:
+	@abstractmethod
+	def IterateKeys(self) -> Generator[KeyT, None, None]:  # type: ignore[empty-body]
 		"""
 		Iterate the keys of this dictionary node.
 
 		:returns: A generator of this node's keys, in the order the document states them.
 		"""
-		raise NotImplementedError()
 
-	def IterateValues(self) -> Generator[ValueT, None, None]:
+	@abstractmethod
+	def IterateValues(self) -> Generator[ValueT, None, None]:  # type: ignore[empty-body]
 		"""
 		Iterate the values of this dictionary node.
 
@@ -213,15 +214,14 @@ class Dictionary(Node):
 
 		:returns: A generator of this node's values, in the order the document states them.
 		"""
-		raise NotImplementedError()
 
-	def IterateItems(self) -> Generator[Tuple[KeyT, ValueT], None, None]:
+	@abstractmethod
+	def IterateItems(self) -> Generator[Tuple[KeyT, ValueT], None, None]:  # type: ignore[empty-body]
 		"""
 		Iterate the key-value pairs of this dictionary node.
 
 		:returns: A generator of this node's ``(key, value)`` pairs, in the order the document states them.
 		"""
-		raise NotImplementedError()
 
 
 @export
