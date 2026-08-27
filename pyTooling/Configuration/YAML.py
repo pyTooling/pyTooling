@@ -38,7 +38,7 @@ Configuration reader for YAML files.
 from __future__           import annotations
 
 from pathlib              import Path
-from typing               import Any, Union, Iterator as typing_Iterator, Self
+from typing               import Any, ClassVar, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Exceptions import MissingDependencyError
 
@@ -64,6 +64,11 @@ class Node(Abstract_Node):
 	"""
 	Node in a YAML configuration data structure.
 	"""
+
+	#: Type reference used when instantiating new dictionaries; this format's, not the abstract one.
+	DICT_TYPE: ClassVar[type["Dictionary"]]
+	#: Type reference used when instantiating new sequences; this format's, not the abstract one.
+	SEQ_TYPE:  ClassVar[type["Sequence"]]
 
 	_yamlNode: Union[CommentedMap, CommentedSeq]  #: Reference to the associated YAML node.
 	_cache:    dict[str, ValueT]                  #: Cache of already converted sub-nodes and values, by key.
@@ -333,9 +338,10 @@ class Dictionary(Node, Abstract_Dict):
 		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
-		Node.__init__(self, root, parent, key, yamlNode)
+		keys: list[KeyT] = [str(k) for k in yamlNode.keys()]
 
-		self._keys = [str(k) for k in yamlNode.keys()]
+		Node.__init__(self, root, parent, key, yamlNode)
+		Abstract_Dict.__init__(self, keys, root, parent)
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
