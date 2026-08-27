@@ -335,7 +335,9 @@ class Stopwatch(SlottedObject):
 			ex.add_note(f"Got type '{getFullyQualifiedName(digits)}'.")
 			raise ex
 		elif not 0 <= digits <= 9:
-			raise ValueError(f"Parameter 'digits' is {digits}, but a duration in seconds has at most 9 digits.")
+			ex = ValueError(f"Parameter 'digits' is out of range 0..9. Got {digits}.")
+			ex.add_note("A duration in seconds has at most 9 digits (nanoseconds).")
+			raise ex
 
 		self._digits = digits
 
