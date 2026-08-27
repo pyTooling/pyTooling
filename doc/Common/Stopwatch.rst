@@ -617,5 +617,6 @@ For a stopwatch that measured 26 hours, 3 minutes and 4.123456789 seconds:
    ``02:03:04``.
 
    Formatting works from the measured nanoseconds rather than from
-   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration`, because a float can't hold nine significant fractional digits
-   next to a large number of seconds.
+   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration`, because splitting a duration into fields wants whole nanoseconds
+   and :attr:`~pyTooling.Stopwatch.Stopwatch.Duration` offers seconds as a float. Not for precision: a float holds a
+   duration in seconds exactly, to the nanosecond, for a little over 104 days.
