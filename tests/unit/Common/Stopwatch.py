@@ -480,6 +480,47 @@ class Counting(Testcase):
 		self.assertFalse(sw.HasSplitTimes)
 
 
+class Durations(Testcase):
+	"""The duration in seconds and in whole nanoseconds."""
+
+	DELAY = 0.25
+
+	def test_NeverStarted(self) -> None:
+		sw = Stopwatch()
+
+		self.assertEqual(0, sw.DurationInNanoseconds)
+		self.assertEqual(0.0, sw.Duration)
+
+	def test_Running(self) -> None:
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+
+		self.assertGreater(sw.DurationInNanoseconds, 0)
+		self.assertIsInstance(sw.DurationInNanoseconds, int)
+
+		sw.Stop()
+
+	def test_StoppedIsFinal(self) -> None:
+		"""Once stopped, the duration doesn't move any more."""
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+		sw.Stop()
+
+		first = sw.DurationInNanoseconds
+		sleep(0.05)
+
+		self.assertEqual(first, sw.DurationInNanoseconds)
+
+	def test_SecondsAreTheNanosecondsScaled(self) -> None:
+		"""``Duration`` is the same measurement, so the two can't disagree."""
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+		sw.Stop()
+
+		self.assertEqual(sw.DurationInNanoseconds / 1e9, sw.Duration)
+		self.assertEqual(sw.DurationInNanoseconds, round(sw.Duration * 1e9))
+
+
 class Digits(Testcase):
 	"""The number of fractional digits :meth:`__str__` renders the duration with."""
 

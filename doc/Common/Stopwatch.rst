@@ -91,7 +91,8 @@ Features
       * Split times can be taken while the stopwatch runs.
       * Every split time is preserved, together with whether it measured activity or inactivity.
       * The split times can be iterated, indexed and counted.
-      * Activity, inactivity and total duration are available at any time, also while the stopwatch runs.
+      * Activity, inactivity and total duration are available at any time, also while the stopwatch runs - in seconds
+        or in whole nanoseconds.
       * The stopwatch reports its state via four read-only properties.
       * Individual time spans can be excluded from the measurement.
       * The stopwatch is a :ref:`context manager <context-managers>`, and can pause or stop when the block ends.
@@ -484,6 +485,32 @@ otherwise. Testing the state first is how a stopwatch is driven from code that d
      sw.Resume()
 
 
+.. _COMMON/Stopwatch/Durations:
+
+The Two Durations
+=================
+
+:attr:`~pyTooling.Stopwatch.Stopwatch.Duration` is the measurement in **seconds**, as a :class:`float`.
+:attr:`~pyTooling.Stopwatch.Stopwatch.DurationInNanoseconds` is the same measurement in **whole nanoseconds**, as an
+:class:`int` - which is how :func:`time.perf_counter_ns` took it in the first place.
+
+.. code-block:: python
+
+   sw.Duration               # 0.250294020
+   sw.DurationInNanoseconds  # 250294020
+
+Both answer for the whole measurement: start to stop, or start to now while the stopwatch runs, and ``0`` when it was
+never started. Reach for the nanoseconds when a duration has to be divided into parts or compared exactly - that is
+what :meth:`~pyTooling.Stopwatch.Stopwatch.__format__` does - and for seconds everywhere else.
+
+.. note::
+
+   Precision is not what separates them. A :class:`float` holds a duration in seconds exactly, to the nanosecond, up
+   to :math:`2^{53}` nanoseconds - a little over 104 days - so at any length a stopwatch measures the two are
+   interchangeable, and ``DurationInNanoseconds / 1e9`` equals
+   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration` exactly.
+
+
 .. _COMMON/Stopwatch/Formatting:
 
 Formatting
@@ -616,7 +643,6 @@ For a stopwatch that measured 26 hours, 3 minutes and 4.123456789 seconds:
    ``%H:%M:%S`` is the longest form anyone needs - and capping it would make a 26 hour measurement silently render as
    ``02:03:04``.
 
-   Formatting works from the measured nanoseconds rather than from
-   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration`, because splitting a duration into fields wants whole nanoseconds
-   and :attr:`~pyTooling.Stopwatch.Stopwatch.Duration` offers seconds as a float. Not for precision: a float holds a
-   duration in seconds exactly, to the nanosecond, for a little over 104 days.
+   Formatting works from :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInNanoseconds`, because dividing a duration
+   into fields wants a whole number of them. Not for precision - see
+   :ref:`the two durations <COMMON/Stopwatch/Durations>`.
