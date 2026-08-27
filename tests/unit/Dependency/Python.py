@@ -36,8 +36,11 @@ from datetime                    import datetime
 
 from pytest                      import mark
 
+from typing                     import Optional as Nullable
+
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
-from pyTooling.Dependency        import BrokenRequirementWarning
+from pyTooling.Dependency.Python import LicenseOverrides
+from pyTooling.Dependency        import BrokenRequirementWarning, UnknownLicenseWarning
 from pyTooling.Versioning        import PythonVersion
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Testing           import Testcase
@@ -140,8 +143,8 @@ class Requirements(Testcase):
 		return Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
 
 	@staticmethod
-	def _json(extras, requirements) -> dict:
-		return {"info": {"provides_extra": extras, "requires_dist": requirements}}
+	def _json(extras, requirements, **info) -> dict:
+		return {"info": {"provides_extra": extras, "requires_dist": requirements, **info}}
 
 	def test_Requirement(self) -> None:
 		"""A requirement without a marker is unconditional, so it lands under ``None``."""
@@ -221,9 +224,10 @@ class Requirements(Testcase):
 		with WarningCollector(handler=lambda warning: False) as collector:
 			release.UpdateDetailsFromPyPIJSON(json)
 
-		self.assertEqual(1, len(collector.Warnings))
-		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
-		self.assertEqual([f"Broken requirement: lxml>=6.1; extra == \"xml\""], collector.Warnings[0].__notes__)
+		broken = [warning for warning in collector.Warnings if isinstance(warning, BrokenRequirementWarning)]
+
+		self.assertEqual(1, len(broken))
+		self.assertEqual([f"Broken requirement: lxml>=6.1; extra == \"xml\""], broken[0].__notes__)
 
 
 class ReleaseDetails(Testcase):
@@ -257,3 +261,151 @@ class ReleaseDetails(Testcase):
 		self.assertIn("importlib-resources", oldestRequirements)
 		self.assertNotIn("importlib-resources", latestRequirements)
 		self.assertNotEqual(oldestRequirements, latestRequirements)
+
+
+class Licenses(Testcase):
+	"""How a release's license is resolved from what a package index publishes."""
+
+	@staticmethod
+	def _release(overrides: Nullable[LicenseOverrides] = None, version: str = "v1.0.0") -> Release:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph,
+		                           licenseOverrides=overrides)
+		project = Project("project", "https://index.org/project/", index=index)
+
+		return Release(PythonVersion.Parse(version), datetime.now(), project=project)
+
+	@staticmethod
+	def _json(**info) -> dict:
+		return {"info": {"provides_extra": None, "requires_dist": None, **info}}
+
+	def _resolve(self, release: Release, json: dict) -> list:
+		with WarningCollector(handler=lambda warning: False) as collector:
+			release.UpdateDetailsFromPyPIJSON(json)
+
+		return [warning for warning in collector.Warnings if isinstance(warning, UnknownLicenseWarning)]
+
+	def test_LicenseExpression(self) -> None:
+		"""``license_expression`` is an SPDX expression by definition, so it is trusted first."""
+		release = self._release()
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="BSD-2-Clause")))
+		self.assertEqual(["BSD-2-Clause"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual("BSD-2-Clause", release.LicenseExpression)
+
+	def test_LicenseExpression_Choice(self) -> None:
+		"""``A OR B`` offers a choice, and both licenses are reported - the metadata doesn't say which applies."""
+		release = self._release()
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 OR BSD-2-Clause")))
+		self.assertEqual(["Apache-2.0", "BSD-2-Clause"], [lic.SPDXIdentifier for lic in release.Licenses])
+
+	def test_LicenseExpression_Conjunction(self) -> None:
+		"""``A AND B`` requires both licenses."""
+		release = self._release()
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 AND MIT")))
+		self.assertEqual(["Apache-2.0", "MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
+
+	def test_LicenseExpression_Unknown(self) -> None:
+		"""An expression naming an unknown license stays unresolved, but is still reported verbatim."""
+		release = self._release()
+		warnings = self._resolve(release, self._json(license_expression="Apache-2.0 WITH LLVM-exception"))
+
+		self.assertEqual(1, len(warnings))
+		self.assertEqual((), release.Licenses)
+		self.assertEqual("Apache-2.0 WITH LLVM-exception", release.LicenseExpression)
+
+	def test_LicenseField_Identifier(self) -> None:
+		"""The legacy ``license`` field resolves when it holds an identifier."""
+		release = self._release()
+
+		self.assertEqual([], self._resolve(release, self._json(license="MIT")))
+		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
+
+	def test_LicenseField_Name(self) -> None:
+		"""``'MIT License'`` is a name, not an identifier, so it doesn't resolve and has to be stated by hand."""
+		release = self._release()
+		warnings = self._resolve(release, self._json(license="MIT License"))
+
+		self.assertEqual(1, len(warnings))
+		self.assertEqual((), release.Licenses)
+		self.assertEqual("MIT License", release.LicenseExpression)
+
+	def test_LicenseField_FullText(self) -> None:
+		"""A ``license`` field holding the license's full text is not an identifier and isn't treated as one."""
+		release = self._release()
+		fullText = "Permission is hereby granted, free of charge, to any person obtaining a copy of this software"
+		warnings = self._resolve(
+			release, self._json(license=fullText, classifiers=["License :: OSI Approved :: MIT License"])
+		)
+
+		self.assertEqual([], warnings)
+		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
+
+	def test_Classifier(self) -> None:
+		"""A classifier meaning exactly one license resolves."""
+		release = self._release()
+		warnings = self._resolve(release, self._json(classifiers=["Programming Language :: Python",
+		                                                          "License :: OSI Approved :: Apache Software License"]))
+
+		self.assertEqual([], warnings)
+		self.assertEqual(["Apache-2.0"], [lic.SPDXIdentifier for lic in release.Licenses])
+
+	def test_Classifier_Ambiguous(self) -> None:
+		"""``License :: OSI Approved :: BSD License`` means either BSD-2-Clause or BSD-3-Clause, so it is not guessed."""
+		release = self._release()
+		warnings = self._resolve(release, self._json(classifiers=["License :: OSI Approved :: BSD License"]))
+
+		self.assertEqual(1, len(warnings))
+		self.assertEqual((), release.Licenses)
+		self.assertIn("classifier: License :: OSI Approved :: BSD License", warnings[0].__notes__)
+
+	def test_NoLicenseInformation(self) -> None:
+		"""A release publishing nothing at all is reported, so the override file gets written."""
+		release = self._release()
+		warnings = self._resolve(release, self._json())
+
+		self.assertEqual(1, len(warnings))
+		self.assertEqual("", release.LicenseExpression)
+		self.assertEqual(["The package index published no license information."], warnings[0].__notes__)
+
+	def test_Override_WinsOverEverything(self) -> None:
+		"""An explicit statement beats the published metadata, however well-formed that is."""
+		overrides = LicenseOverrides.FromDictionary({"project": {"license": "BSD-3-Clause"}})
+		release = self._release(overrides)
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="BSD-2-Clause")))
+		self.assertEqual(["BSD-3-Clause"], [lic.SPDXIdentifier for lic in release.Licenses])
+
+	def test_Override_PerVersion(self) -> None:
+		"""A package that relicensed has one license before the switch and another after it."""
+		overrides = LicenseOverrides.FromDictionary({
+			"project": {"versions": {">=2.0": "Apache-2.0", "<2.0": "MIT"}}
+		})
+
+		old = self._release(overrides, "v1.5.0")
+		new = self._release(overrides, "v2.1.0")
+
+		self.assertEqual([], self._resolve(old, self._json()))
+		self.assertEqual([], self._resolve(new, self._json()))
+		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in old.Licenses])
+		self.assertEqual(["Apache-2.0"], [lic.SPDXIdentifier for lic in new.Licenses])
+
+	def test_Override_LicenseURL(self) -> None:
+		"""A package index has no field for the license's text, so its URL only comes from an override."""
+		overrides = LicenseOverrides.FromDictionary({
+			"project": {"license": "MIT", "licenseURL": "https://example.org/LICENSE.txt"}
+		})
+		release = self._release(overrides)
+
+		self._resolve(release, self._json())
+
+		self.assertEqual("https://example.org/LICENSE.txt", str(release.LicenseURL))
+
+	def test_Override_NameIsNormalized(self) -> None:
+		"""``ruamel.yaml`` and ``ruamel-yaml`` are the same package."""
+		overrides = LicenseOverrides.FromDictionary({"Ruamel_YAML": {"license": "MIT"}})
+
+		self.assertEqual("MIT", overrides.LicenseOf("ruamel.yaml"))
+		self.assertEqual("MIT", overrides.LicenseOf("ruamel-yaml"))

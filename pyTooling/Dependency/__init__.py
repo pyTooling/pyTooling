@@ -53,6 +53,8 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName, firstKey
+from pyTooling.GenericPath.URL import URL
+from pyTooling.Licensing   import License
 from pyTooling.Versioning  import SemanticVersion
 from pyTooling.Warning     import Warning
 
@@ -84,9 +86,19 @@ class ReleaseNotFoundError(DependencyError):
 @export
 class BrokenRequirementWarning(Warning):
 	"""
-	A requirement carries an environment marker that matches none of the extras declared by the project.
+	A requirement names an extra the project doesn't declare.
 
 	Such a requirement can't be assigned to an extra, so it's not reachable through :attr:`Requirements`.
+	"""
+
+
+@export
+class UnknownLicenseWarning(Warning):
+	"""
+	A package version's license couldn't be resolved from what its package index publishes.
+
+	The published expression is kept in :attr:`~PackageVersion.LicenseExpression` either way, so the warning names
+	what would have to be stated by hand.
 	"""
 
 
@@ -107,6 +119,10 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	_package:    Package                                              #: Reference to the corresponding package
 	_version:    SemanticVersion                                      #: :class:`SemanticVersion` of this package version.
 	_releasedAt: Nullable[datetime]                                   #: Time when this package version was released.
+
+	_licenses:          tuple[License, ...]  #: Licenses this version is published under; empty if unresolved.
+	_licenseExpression: str                  #: License expression as published, kept verbatim even when unresolved.
+	_licenseURL:        Nullable[URL]        #: URL of the license's text, where one is known.
 
 	_dependsOn: dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
@@ -146,6 +162,10 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 
 		self._releasedAt = releasedAt
 
+		self._licenses = ()
+		self._licenseExpression = ""
+		self._licenseURL = None
+
 		self._dependsOn = {}
 
 	@readonly
@@ -174,6 +194,41 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:returns: Optional release date and time.
 		"""
 		return self._releasedAt
+
+	@readonly
+	def Licenses(self) -> tuple[License, ...]:
+		"""
+		Read-only property to access the licenses this version is published under (:attr:`_licenses`).
+
+		A package version can carry more than one license - ``Apache-2.0 AND MIT`` requires both, ``Apache-2.0 OR
+		BSD-2-Clause`` offers a choice - and the tuple is empty when the published metadata names a license that
+		couldn't be resolved. :attr:`LicenseExpression` says what was published either way.
+
+		:returns: Licenses this version is published under, or an empty tuple if none could be resolved.
+		"""
+		return self._licenses
+
+	@readonly
+	def LicenseExpression(self) -> str:
+		"""
+		Read-only property to access the license expression as it was published (:attr:`_licenseExpression`).
+
+		This is kept verbatim, so a license that :attr:`Licenses` couldn't resolve is still reportable.
+
+		:returns: The license expression as published, or an empty string if none was published.
+		"""
+		return self._licenseExpression
+
+	@readonly
+	def LicenseURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of this version's license text (:attr:`_licenseURL`).
+
+		A package index has no field for it, so this is only known where it was stated by hand.
+
+		:returns: URL of the license's text, or ``None`` if unknown.
+		"""
+		return self._licenseURL
 
 	@readonly
 	def DependsOn(self) -> dict[Package, dict[SemanticVersion, PackageVersion]]:
@@ -393,6 +448,8 @@ class Package(metaclass=ExtendedType, slots=True):
 	_storage:  PackageStorage                         #: Reference to the package's storage.
 	_name:     str                                    #: Name of the package.
 
+	_repositoryURL: Nullable[URL]                     #: URL of the package's source repository, where one is known.
+
 	_versions: dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
 
 	def __init__(self, name: str, *, storage: PackageStorage) -> None:
@@ -418,6 +475,7 @@ class Package(metaclass=ExtendedType, slots=True):
 		self._storage = storage
 		storage._packages[name] = self
 
+		self._repositoryURL = None
 		self._versions = {}
 
 	@readonly
@@ -437,6 +495,18 @@ class Package(metaclass=ExtendedType, slots=True):
 		:returns: Name of the package.
 		"""
 		return self._name
+
+	@readonly
+	def RepositoryURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of the package's source repository (:attr:`_repositoryURL`).
+
+		This is where the sources live, which is not where the package is *published* - a package index has its own
+		page per package.
+
+		:returns: URL of the source repository, or ``None`` if unknown.
+		"""
+		return self._repositoryURL
 
 	@readonly
 	def Versions(self) -> dict[SemanticVersion, PackageVersion]:
