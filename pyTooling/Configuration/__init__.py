@@ -154,12 +154,6 @@ class Node(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the node's key.
 
-		.. note::
-
-		   :deco:`~pyTooling.MetaClasses.abstractmethod` can't be used here: it marks the function, and
-		   :class:`property` wraps it, so :class:`~pyTooling.MetaClasses.ExtendedType` never sees the marker. The
-		   exception is what makes a missing implementation noticeable.
-
 		:returns:                    Key of the node.
 		:raises NotImplementedError: If a deriving class doesn't implement this property.
 		"""
@@ -191,13 +185,7 @@ class Dictionary(Node):
 		Initializes the dictionary's keys.
 
 		A deriving class reads the keys from whatever it parsed and hands them over, so this node is never left
-		without them.
-
-		.. note::
-
-		   This is a mixin's constructor: it initializes the fields this mixin adds and nothing else. In particular it
-		   doesn't call :meth:`Node.__init__` - a deriving class does that itself, and calling it here would assign
-		   :attr:`~Node._root` and :attr:`~Node._parent` a second time.
+		without them. Being a mixin's constructor, it initializes only the field this mixin adds.
 
 		:param keys: Keys of this dictionary node, in the order the document states them.
 		"""
