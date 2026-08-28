@@ -34,7 +34,7 @@ Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX l
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
 from pyTooling.Licensing import LicenseReference, MIT_License, OrLaterOperator, OrOperator, SPDXLicense
-from pyTooling.Licensing import UnaryOperator, WithOperator
+from pyTooling.Licensing import Operator, UnaryOperator, WithOperator
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing   import Testcase
 
@@ -446,7 +446,7 @@ class AbstractExpressions(Testcase):
 	"""The base-classes exist to be derived from."""
 
 	def test_TheBaseClassesCannotBeInstantiated(self) -> None:
-		for cls in (LicenseExpression, UnaryOperator, BinaryOperator):
+		for cls in (LicenseExpression, Operator, UnaryOperator, BinaryOperator):
 			with self.subTest(cls=cls.__name__):
 				with self.assertRaises(AbstractClassError):
 					cls()
@@ -455,27 +455,32 @@ class AbstractExpressions(Testcase):
 class MalformedTrees(Testcase):
 	"""What a node rejects when it is built by hand."""
 
-	def test_ALeafTakesNoOperands(self) -> None:
-		with self.assertRaises(ValueError) as context:
+	def test_ALeafCannotBeAParent(self) -> None:
+		"""Only an :class:`Operator` is applied to operands, so only an operator can be a parent."""
+		with self.assertRaises(TypeError) as context:
 			SPDXLicense(MIT_License, parent=SPDXLicense(Apache_2_0_License))
 
-		self.assertIn("is a leaf and takes no operands", str(context.exception))
+		self.assertIn("is not of type 'Operator'", str(context.exception))
 
 	def test_AFilledOperatorTakesNoMoreOperands(self) -> None:
-		expression = AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License))
+		for expression in (
+			AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License)),
+			OrLaterOperator(SPDXLicense(MIT_License)),
+		):
+			with self.subTest(operator=expression.__class__.__name__):
+				with self.assertRaises(ValueError) as context:
+					SPDXLicense(MIT_License, parent=expression)
 
-		with self.assertRaises(ValueError) as context:
-			SPDXLicense(MIT_License, parent=expression)
+				self.assertIn("has no free operand left", str(context.exception))
 
-		self.assertIn("has both operands already", str(context.exception))
+	def test_HasFreeOperand(self) -> None:
+		expression = AndOperator()
 
-	def test_AFilledUnaryOperatorTakesNoMoreOperands(self) -> None:
-		expression = OrLaterOperator(SPDXLicense(MIT_License))
-
-		with self.assertRaises(ValueError) as context:
-			SPDXLicense(Apache_2_0_License, parent=expression)
-
-		self.assertIn("has an operand already", str(context.exception))
+		self.assertTrue(expression.HasFreeOperand)
+		expression.Left = SPDXLicense(Apache_2_0_License)
+		self.assertTrue(expression.HasFreeOperand)
+		expression.Right = SPDXLicense(MIT_License)
+		self.assertFalse(expression.HasFreeOperand)
 
 	def test_AnIncompleteOperatorCannotBeRendered(self) -> None:
 		for expression, message in (
