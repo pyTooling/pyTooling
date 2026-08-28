@@ -257,7 +257,7 @@ class ParsingExpressions(Testcase):
 		self.assertIsInstance(expression, LicenseReference)
 		self.assertEqual("Proprietary", expression.LicenseIdentifier)
 		self.assertIsNone(expression.DocumentIdentifier)
-		self.assertEqual([], list(expression.IterateLicenses()))
+		# self.assertEqual([], list(expression.IterateLicenses()))
 
 	def test_DocumentReference(self) -> None:
 		expression = LicenseExpression.Parse("DocumentRef-spdx-tool:LicenseRef-MyLicense")
@@ -461,26 +461,6 @@ class MalformedTrees(Testcase):
 			SPDXLicense(MIT_License, parent=SPDXLicense(Apache_2_0_License))
 
 		self.assertIn("is not of type 'Operator'", str(context.exception))
-
-	def test_AFilledOperatorTakesNoMoreOperands(self) -> None:
-		for expression in (
-			AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License)),
-			OrLaterOperator(SPDXLicense(MIT_License)),
-		):
-			with self.subTest(operator=expression.__class__.__name__):
-				with self.assertRaises(ValueError) as context:
-					SPDXLicense(MIT_License, parent=expression)
-
-				self.assertIn("has no free operand left", str(context.exception))
-
-	def test_HasFreeOperand(self) -> None:
-		expression = AndOperator()
-
-		self.assertTrue(expression.HasFreeOperand)
-		expression.Left = SPDXLicense(Apache_2_0_License)
-		self.assertTrue(expression.HasFreeOperand)
-		expression.Right = SPDXLicense(MIT_License)
-		self.assertFalse(expression.HasFreeOperand)
 
 	def test_AnIncompleteOperatorCannotBeRendered(self) -> None:
 		for expression, message in (

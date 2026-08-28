@@ -165,7 +165,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		Returns the license' unique `SPDX identifier <https://spdx.org/licenses/>`__.
 
-		:returns: The the unique SPDX identifier.
+		:returns: The unique SPDX identifier.
 		"""
 		return self._spdxIdentifier
 
@@ -260,13 +260,9 @@ class License(metaclass=ExtendedType, slots=True):
 
 	def __hash__(self) -> int:
 		"""
-		Compute a hash from the license's SPDX identifier, so a license can be a set element or a dictionary key.
+		Compute a hash from the license's SPDX identifier.
 
-		The identifier is what :meth:`__eq__` compares, so two licenses that compare equal hash equally - which is
-		what a :class:`set` and a :class:`dict` rely on.
-
-		A license compares equal to its identifier as a string, so the two hash equally as well - which is what lets
-		``Apache_2_0_License in {"Apache-2.0"}`` answer instead of missing.
+		A license compares equal to its identifier as a string, so the two hashes equal as well.
 
 		:returns: Hash of the SPDX identifier.
 		"""
@@ -294,7 +290,7 @@ class License(metaclass=ExtendedType, slots=True):
 
 	def __repr__(self) -> str:
 		"""
-		Returns the internal unique representation (a.k.a SPDX identifier).
+		Returns the internal unique representation (:attr:`spdxIdentifier`).
 
 		:returns: SPDX identifier of the license.
 		"""
@@ -355,7 +351,7 @@ _LicenseType = License
 @abstractclass
 class LicenseExpression(metaclass=ExtendedType, slots=True):
 	"""
-	Base-class of every node in an `SPDX license expression`_.
+	Base-class of every node in an `SPDX license expression`_ tree.
 
 	.. _SPDX license expression: https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/
 
@@ -380,23 +376,23 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 	:class:`LicenseException`
 	  |rarr| an exception from the SPDX exception list, the right operand of ``WITH``.
 
-	The grammar SPDX defines is:
+	The SPDX grammar defines:
 
 	.. code-block:: text
 
-	   simple-expression   = license-id / license-id "+" / license-ref
+	   simple-expression   = license-id | license-id "+" | license-ref
 	   compound-expression = ( simple-expression
-	                         / simple-expression "WITH" license-exception-id
-	                         / compound-expression "AND" compound-expression
-	                         / compound-expression "OR" compound-expression
-	                         / "(" compound-expression ")" )
+	                         | simple-expression "WITH" license-exception-id
+	                         | compound-expression "AND" compound-expression
+	                         | compound-expression "OR" compound-expression
+	                         | "(" compound-expression ")" )
 
-	so there are three binary operators, one unary one, and parentheses. There is **no negation** - an expression
+	There are three binary operators, one unary one, and parentheses. There is **no negation** - an expression
 	says which licenses apply, never which don't.
 
 	Every node knows its :attr:`Parent` and its :attr:`Root`, which is what a :class:`License` can't carry: the
 	predefined licenses are shared objects, so :data:`MIT_License` appears in many expressions at once and belongs to
-	none of them. :class:`SPDXLicense` is the wrapper that gives a license a place in a tree.
+	none of them. :class:`SPDXLicense` is the wrapper that gives a license object a placeholder in the expression tree.
 
 	A tree is built bottom-up by handing the operands to an operator, or top-down by handing the operator to an
 	operand as its ``parent``:
@@ -422,25 +418,17 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		:param parent:      Optional, the operator this node becomes an operand of.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		:raises ValueError: If parameter 'parent' has no free operand left.
-		"""
-		if parent is not None and not isinstance(parent, Operator):
-			ex = TypeError("Parameter 'parent' is not of type 'Operator'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-			raise ex
-
+		"""  # FIXME: adjust all doc-strings for raised errors.
 		if parent is None:
 			self._parent = None
 			self._root = self
+		elif not isinstance(parent, Operator):
+			ex = TypeError("Parameter 'parent' is not of type 'Operator'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 		else:
-			if not parent.HasFreeOperand:
-				ex = ValueError(f"Operator '{parent.__class__.__name__}' has no free operand left.")
-				ex.add_note("Assign to one of its operand properties to replace an operand it has.")
-				raise ex
-
 			self._parent = parent
 			self._root = parent._root
-
-			parent._AdoptOperand(self)
 
 	@property
 	def Parent(self) -> Nullable["Operator"]:
@@ -460,30 +448,15 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 
 	@Parent.setter
 	def Parent(self, parent: Nullable["Operator"]) -> None:
-		if parent is not None and not isinstance(parent, Operator):
+		if parent is None:
+			raise ValueError("Parameter 'parent' is None.")  # FIXME: adjust all doc-strings for raised errors.
+		elif not isinstance(parent, Operator):
 			ex = TypeError("Parameter 'parent' is not of type 'Operator'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
-
-		if parent is None:
-			if self._parent is not None:
-				self._parent._ReleaseOperand(self)
-
-			self._parent = None
-			self._SetRoot(self)
 		else:
-			if not parent.HasFreeOperand:
-				ex = ValueError(f"Operator '{parent.__class__.__name__}' has no free operand left.")
-				ex.add_note("Assign to one of its operand properties to replace an operand it has.")
-				raise ex
-
-			if self._parent is not None:
-				self._parent._ReleaseOperand(self)
-
 			self._parent = parent
-			self._SetRoot(parent._root)
-
-			parent._AdoptOperand(self)
+			self._root = parent._root
 
 	@readonly
 	def Root(self) -> "LicenseExpression":
@@ -491,42 +464,8 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		Read-only property returning the outermost expression this node belongs to (:attr:`_root`).
 
 		:returns: The root of the expression tree, which is the node itself if it has no parent.
-		"""
+		"""  # FIXME: you wrote `... returning ...` but the workflows defined it differently for readonly properties.
 		return self._root
-
-	def IterateOperands(self) -> Generator["LicenseExpression", None, None]:
-		"""
-		Iterate the expressions this node is applied to, left to right.
-
-		A leaf is applied to nothing, so it yields nothing.
-
-		:returns: A generator of this node's operands.
-		"""
-		yield from ()
-
-	def IterateLicenses(self) -> Generator[_LicenseType, None, None]:
-		"""
-		Iterate the licenses this expression names, in the order they are written.
-
-		A license named twice is yielded twice, because ``MIT AND MIT`` is not the same statement as ``MIT`` -
-		deduplicating is a decision for whoever consumes the result. A :class:`LicenseReference` and a
-		:class:`LicenseException` name no license SPDX knows, so they contribute nothing.
-
-		:returns: A generator of the licenses this expression names.
-		"""
-		for operand in self.IterateOperands():
-			yield from operand.IterateLicenses()
-
-	def _SetRoot(self, root: "LicenseExpression") -> None:
-		"""
-		Assign a new root to this node and to everything below it.
-
-		:param root: The root the subtree starting at this node now belongs to.
-		"""
-		self._root = root
-
-		for operand in self.IterateOperands():
-			operand._SetRoot(root)
 
 	@classmethod
 	def Parse(cls, expression: str) -> "LicenseExpression":
@@ -541,7 +480,8 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		:returns:           The root of the parsed expression tree.
 		:raises ValueError: If the expression is empty, malformed, or names a license that isn't known.
 		"""
-		return _LicenseExpressionParser(expression).Parse()
+		parser = _LicenseExpressionParser(expression)
+		return parser.Parse()
 
 	@abstractmethod
 	def __str__(self) -> str:  # type: ignore[empty-body]
@@ -561,55 +501,21 @@ class Operator(LicenseExpression):
 	"""
 	Base-class of every expression node that is applied to operands.
 
-	* :class:`UnaryOperator` takes one operand, :class:`BinaryOperator` takes two.
-	* Only an operator can be an operand's :attr:`~LicenseExpression.Parent` - a leaf is applied to nothing.
-	* :attr:`OPERAND_COUNT` is how many operands the operator takes, which is what :attr:`HasFreeOperand` compares
-	  the assigned ones against.
+	Operator kinds:
+	* :class:`UnaryOperator` takes one operand
+	* :class:`BinaryOperator` takes two operands.
+
+	Only an operator can be an operand's :attr:`~LicenseExpression.Parent`.
 	"""
-
-	OPERAND_COUNT: ClassVar[int]  #: Number of operands this operator is applied to.
-
-	@readonly
-	def HasFreeOperand(self) -> bool:
-		"""
-		Read-only property returning whether this operator can take another operand.
-
-		:returns: ``True``, if fewer operands are assigned than :attr:`OPERAND_COUNT`.
-		"""
-		return sum(1 for _ in self.IterateOperands()) < self.OPERAND_COUNT
-
-	@abstractmethod
-	def _AdoptOperand(self, operand: LicenseExpression) -> None:
-		"""
-		Take an expression as this operator's next free operand.
-
-		The caller has checked :attr:`HasFreeOperand`, so there is a free one.
-
-		:param operand: The expression to take as an operand.
-		"""
-
-	@abstractmethod
-	def _ReleaseOperand(self, operand: LicenseExpression) -> None:
-		"""
-		Give up an expression that is no longer one of this operator's operands.
-
-		The caller is the operand itself, so it is one of this operator's.
-
-		:param operand: The expression to give up.
-		"""
 
 
 @export
 class SPDXLicense(LicenseExpression):
 	"""
 	A single license in an expression, named by its SPDX identifier.
-
-	This is the *literal* of an expression. It exists rather than putting a :class:`License` into the tree directly,
-	because the predefined licenses are shared objects - :data:`MIT_License` is one instance used everywhere - and a
-	shared object can't belong to one parent.
 	"""
 
-	_license: _LicenseType  #: The license this node stands for.
+	_license: _LicenseType  #: The well-known license this node refers to.
 
 	def __init__(self, spdxLicense: _LicenseType, parent: Nullable[Operator] = None) -> None:
 		"""
@@ -620,14 +526,16 @@ class SPDXLicense(LicenseExpression):
 		:raises TypeError:  If parameter 'spdxLicense' is not of type :class:`License`.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		"""
-		if not isinstance(spdxLicense, _LicenseType):
+		super().__init__(parent)
+
+		if spdxLicense is None:
+			raise ValueError("Parameter 'spdxLicense' is None.")
+		elif not isinstance(spdxLicense, _LicenseType):
 			ex = TypeError("Parameter 'spdxLicense' is not of type 'License'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(spdxLicense)}'.")
 			raise ex
 
 		self._license = spdxLicense
-
-		super().__init__(parent)
 
 	@readonly
 	def License(self) -> _LicenseType:
@@ -638,13 +546,14 @@ class SPDXLicense(LicenseExpression):
 		"""
 		return self._license
 
-	def IterateLicenses(self) -> Generator[_LicenseType, None, None]:
+	@readonly
+	def Identifier(self) -> str:
 		"""
-		Iterate the licenses this expression names, which is the single license this node stands for.
+		Read-only property returning the license' SPDX identifier (:pycode:`_license._spdxIdentifier`).
 
-		:returns: A generator of one license.
+		:returns: The license.
 		"""
-		yield self._license
+		return self._license._spdxIdentifier
 
 	def __str__(self) -> str:
 		"""
@@ -660,8 +569,10 @@ class LicenseReference(LicenseExpression):
 	"""
 	A license that isn't on the SPDX License List, written as ``LicenseRef-<id>``.
 
-	It may name the document it is defined in, as ``DocumentRef-<id>:LicenseRef-<id>``. There is no :class:`License`
-	behind it, because SPDX doesn't know the license - only the document declaring it does.
+	It may name the document it is defined in, as ``DocumentRef-<id>:LicenseRef-<id>``.
+
+	There is no predefined :class:`License` object, because SPDX doesn't know the license - only the document declaring it
+	does.
 	"""
 
 	_licenseIdentifier:  str            #: Identifier following ``LicenseRef-``.
@@ -669,9 +580,9 @@ class LicenseReference(LicenseExpression):
 
 	def __init__(
 		self,
-		licenseIdentifier: str,
-		documentIdentifier: Nullable[str] = None,
-		parent: Nullable[Operator] = None
+		licenseIdentifier:  str,
+		documentIdentifier: Nullable[str] =      None,
+		parent:             Nullable[Operator] = None
 	) -> None:
 		"""
 		Initialize a license reference.
@@ -685,8 +596,12 @@ class LicenseReference(LicenseExpression):
 		:raises ValueError:        If parameter 'documentIdentifier' is empty.
 		:raises TypeError:         If parameter 'parent' is not of type :class:`Operator`.
 		"""
-		if not isinstance(licenseIdentifier, str):
-			ex = TypeError("Parameter 'licenseIdentifier' is not of type 'str'.")
+		super().__init__(parent)
+
+		if licenseIdentifier is None:
+			raise ValueError("Parameter 'licenseIdentifier' is None.")
+		elif not isinstance(licenseIdentifier, str):
+			ex = TypeError("Parameter 'licenseIdentifier' is not a string.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(licenseIdentifier)}'.")
 			raise ex
 		elif len(licenseIdentifier) == 0:
@@ -694,16 +609,14 @@ class LicenseReference(LicenseExpression):
 
 		if documentIdentifier is not None:
 			if not isinstance(documentIdentifier, str):
-				ex = TypeError("Parameter 'documentIdentifier' is not of type 'str'.")
+				ex = TypeError("Parameter 'documentIdentifier' is not a string.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(documentIdentifier)}'.")
 				raise ex
 			elif len(documentIdentifier) == 0:
 				raise ValueError("Parameter 'documentIdentifier' is empty.")
 
-		self._licenseIdentifier = licenseIdentifier
+		self._licenseIdentifier =  licenseIdentifier
 		self._documentIdentifier = documentIdentifier
-
-		super().__init__(parent)
 
 	@readonly
 	def LicenseIdentifier(self) -> str:
@@ -730,7 +643,6 @@ class LicenseReference(LicenseExpression):
 		:returns: The license reference.
 		"""
 		document = "" if self._documentIdentifier is None else f"DocumentRef-{self._documentIdentifier}:"
-
 		return f"{document}LicenseRef-{self._licenseIdentifier}"
 
 
@@ -739,7 +651,8 @@ class LicenseException(LicenseExpression):
 	"""
 	The right operand of a :class:`WithOperator`, naming an exception from the SPDX exception list.
 
-	It is a leaf like a license, but it is not one - an exception modifies a license and can't stand on its own.
+	It is a leaf node in the expression tree like a license, but it is not one. An exception modifies a license and can't
+	stand on its own.
 	"""
 
 	_identifier: str  #: The exception's SPDX identifier.
@@ -754,16 +667,18 @@ class LicenseException(LicenseExpression):
 		:raises ValueError: If parameter 'identifier' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		"""
-		if not isinstance(identifier, str):
-			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+		super().__init__(parent)
+
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not a string.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
 			raise ex
 		elif len(identifier) == 0:
 			raise ValueError("Parameter 'identifier' is empty.")
 
 		self._identifier = identifier
-
-		super().__init__(parent)
 
 	@readonly
 	def Identifier(self) -> str:
@@ -789,19 +704,17 @@ class UnaryOperator(Operator):
 	"""
 	Base-class of the expression operators taking one operand.
 
-	* SPDX defines exactly one: the ``+`` suffix of :class:`OrLaterOperator`.
-	* The operand is reachable as :attr:`Operand` and is assignable, so an operator can be filled after it was
-	  created.
+	SPDX defines exactly one unary operator:
+	* the ``+`` suffix of :class:`OrLaterOperator`.
+
+	The operand is reachable as :attr:`Operand` and is assignable, so an operator can be filled after it was created.
 	"""
-
-	OPERAND_COUNT: ClassVar[int] = 1  #: A unary operator is applied to one operand.
-
 	_operand: Nullable[LicenseExpression]  #: The expression this operator is applied to.
 
 	def __init__(
 		self,
 		operand: Nullable[LicenseExpression] = None,
-		parent: Nullable[Operator] = None
+		parent:  Nullable[Operator] =          None
 	) -> None:
 		"""
 		Initialize a unary operator and adopt its operand.
@@ -812,12 +725,14 @@ class UnaryOperator(Operator):
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		:raises ValueError: If parameter 'parent' has no free operand left.
 		"""
-		self._operand = None
-
 		super().__init__(parent)
 
-		if operand is not None:
-			self.Operand = operand
+		if operand is not None and not isinstance(operand, LicenseExpression):
+			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
+			raise ex
+		else:
+			self._operand = operand
 
 	@property
 	def Operand(self) -> Nullable[LicenseExpression]:
@@ -827,41 +742,22 @@ class UnaryOperator(Operator):
 		Assigning an expression adopts it, so it - and everything below it - gets this operator as its
 		:attr:`~LicenseExpression.Parent` and this tree's :attr:`~LicenseExpression.Root`.
 
-		:returns:          The operand, or ``None`` if the operator wasn't filled yet.
+		:returns:          The operand, or ``None`` if the operator wasn't assigned yet.
 		:raises TypeError: If an object that is not a :class:`LicenseExpression` is assigned.
 		"""
 		return self._operand
 
 	@Operand.setter
 	def Operand(self, operand: LicenseExpression) -> None:
-		if not isinstance(operand, LicenseExpression):
+		if operand is None:
+			raise ValueError("Parameter 'operand' is None.")
+		elif not isinstance(operand, LicenseExpression):
 			ex = TypeError("Parameter 'operand' is not of type 'LicenseExpression'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
 
-		if self._operand is not None:
-			self._operand._parent = None
-			self._operand._SetRoot(self._operand)
-			self._operand = None
-
-		operand.Parent = self
-
-	def IterateOperands(self) -> Generator[LicenseExpression, None, None]:
-		"""
-		Iterate the expressions this operator is applied to, which is the single operand it takes.
-
-		:returns: A generator of one operand, or nothing while the operator isn't filled.
-		"""
-		if self._operand is not None:
-			yield self._operand
-
-	@InheritDocString(Operator)
-	def _AdoptOperand(self, operand: LicenseExpression) -> None:
 		self._operand = operand
-
-	@InheritDocString(Operator)
-	def _ReleaseOperand(self, operand: LicenseExpression) -> None:
-		self._operand = None
+		self._operand._parent = self
 
 
 @export
@@ -869,11 +765,11 @@ class OrLaterOperator(UnaryOperator):
 	"""
 	The ``+`` suffix, as in ``GPL-2.0+``: the named license *or any later version of it*.
 
-	SPDX deprecated this in favour of identifiers like ``GPL-2.0-or-later``, but the grammar still accepts it and
-	published metadata still contains it, so an expression that uses it has to parse.
-	"""
+	.. deprecated::
 
-	PRECEDENCE: ClassVar[int] = 1  #: Binds tightest of all operators.
+	   SPDX deprecated this in favor of identifiers like ``GPL-2.0-or-later``, but the grammar still accepts it and
+	   published metadata still contains it, so an expression that uses it has to parse.
+	"""
 
 	def __str__(self) -> str:
 		"""
@@ -883,7 +779,7 @@ class OrLaterOperator(UnaryOperator):
 		:raises ValueError: If the operator has no operand yet.
 		"""
 		if self._operand is None:
-			raise ValueError("Operator 'OrLaterOperator' has no operand yet.")
+			raise ValueError("Operator 'OrLaterOperator' has no operand yet.")  # FIXME: This needs to raise a LicensingError
 
 		return f"{self._operand}+"
 
@@ -894,26 +790,27 @@ class BinaryOperator(Operator):
 	"""
 	Base-class of the expression operators taking two operands.
 
-	* SPDX defines three: :class:`WithOperator`, :class:`AndOperator` and :class:`OrOperator`.
-	* The operands are reachable as :attr:`Left` and :attr:`Right` and are assignable, so an operator can be filled
-	  after it was created.
-	* :attr:`KEYWORD` is what an operator writes between its operands.
+	SPDX defines three bianry operators:
+	* :class:`WithOperator`,
+	* :class:`AndOperator` and
+	* :class:`OrOperator`.
+
+	The operands are reachable as :attr:`Left` and :attr:`Right`. :attr:`KEYWORD` is the operator keyword between the
+	operands.
 	"""
+	KEYWORD: ClassVar[str]                #: The operator's keyword, as it is written between the operands.
 
-	OPERAND_COUNT: ClassVar[int] = 2  #: A binary operator is applied to two operands.
-	KEYWORD:       ClassVar[str]      #: The operator's keyword, as it is written between the operands.
-
-	_left:  Nullable[LicenseExpression]  #: The operator's left operand.
-	_right: Nullable[LicenseExpression]  #: The operator's right operand.
+	_left:   Nullable[LicenseExpression]  #: The operator's left operand.
+	_right:  Nullable[LicenseExpression]  #: The operator's right operand.
 
 	def __init__(
 		self,
-		left: Nullable[LicenseExpression] = None,
-		right: Nullable[LicenseExpression] = None,
-		parent: Nullable[Operator] = None
+		left:   Nullable[LicenseExpression] = None,
+		right:  Nullable[LicenseExpression] = None,
+		parent: Nullable[Operator] =          None
 	) -> None:
 		"""
-		Initialize a binary operator and adopt both operands.
+		Initialize a binary operator with both operands.
 
 		:param left:        Optional, the operator's left operand.
 		:param right:       Optional, the operator's right operand.
@@ -923,16 +820,20 @@ class BinaryOperator(Operator):
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		:raises ValueError: If parameter 'parent' has no free operand left.
 		"""
-		self._left = None
-		self._right = None
-
 		super().__init__(parent)
 
-		if left is not None:
-			self.Left = left
+		if left is not None and not isinstance(left, LicenseExpression):
+			ex = TypeError("Parameter 'left' is not of type 'LicenseExpression'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(left)}'.")
+			raise ex
 
-		if right is not None:
-			self.Right = right
+		if right is not None and not isinstance(right, LicenseExpression):
+			ex = TypeError("Parameter 'right' is not of type 'LicenseExpression'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(right)}'.")
+			raise ex
+
+		self._left =  left
+		self._right = right
 
 	@property
 	def Left(self) -> Nullable[LicenseExpression]:
@@ -1009,20 +910,6 @@ class BinaryOperator(Operator):
 
 		if self._right is not None:
 			yield self._right
-
-	@InheritDocString(Operator)
-	def _AdoptOperand(self, operand: LicenseExpression) -> None:
-		if self._left is None:
-			self._left = operand
-		else:
-			self._right = operand
-
-	@InheritDocString(Operator)
-	def _ReleaseOperand(self, operand: LicenseExpression) -> None:
-		if self._left is operand:
-			self._left = None
-		else:
-			self._right = None
 
 	def __str__(self) -> str:
 		"""
