@@ -347,8 +347,6 @@ LICENSES: tuple[License, ...] = (
 SPDX_INDEX: dict[str, License] = {spdxLicense.SPDXIdentifier: spdxLicense for spdxLicense in LICENSES}
 
 
-
-
 #: The :class:`License` class under a name no expression node shadows with a property of its own.
 _LicenseType = License
 
