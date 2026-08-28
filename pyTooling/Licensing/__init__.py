@@ -507,6 +507,7 @@ class Operator(LicenseExpression):
 	Base-class of every expression node that is applied to operands.
 
 	Operator kinds:
+
 	* :class:`UnaryOperator` takes one operand
 	* :class:`BinaryOperator` takes two operands.
 
@@ -713,6 +714,7 @@ class UnaryOperator(Operator):
 	Base-class of the expression operators taking one operand.
 
 	SPDX defines exactly one unary operator:
+
 	* the ``+`` suffix of :class:`OrLaterOperator`.
 
 	The operand is reachable as :attr:`Operand` and is assignable, so an operator can be filled after it was created.
@@ -773,10 +775,13 @@ class OrLaterOperator(UnaryOperator):
 	"""
 	The ``+`` suffix, as in ``GPL-2.0+``: the named license *or any later version of it*.
 
-	.. deprecated::
+	.. attention::
 
-	   SPDX deprecated this in favor of identifiers like ``GPL-2.0-or-later``, but the grammar still accepts it and
-	   published metadata still contains it, so an expression that uses it has to parse.
+	   The operator itself is not deprecated - Annex D.3 of the SPDX specification defines it and uses ``CDDL-1.0+``
+	   as its example. Its combination with the GNU licenses is: `SPDX License List 3.0
+	   <https://spdx.org/licenses/>`__ (2017-12-28) introduced ``GPL-2.0-only`` and ``GPL-2.0-or-later`` and
+	   deprecated the ``GPL-2.0``, ``LGPL-2.1`` and ``AGPL-3.0`` identifiers that ``+`` was applied to. Published
+	   metadata still contains ``GPL-2.0+``, so an expression using it has to parse.
 	"""
 
 	def __str__(self) -> str:
@@ -798,7 +803,8 @@ class BinaryOperator(Operator):
 	"""
 	Base-class of the expression operators taking two operands.
 
-	SPDX defines three bianry operators:
+	SPDX defines three binary operators:
+
 	* :class:`WithOperator`,
 	* :class:`AndOperator` and
 	* :class:`OrOperator`.
