@@ -361,10 +361,14 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 
 	An expression is a tree. Its operators are:
 
-	* :class:`OrLaterOperator` |rarr| the ``+`` suffix: the named license or any later version of it.
-	* :class:`WithOperator` |rarr| ``WITH``: a license together with an exception to it.
-	* :class:`AndOperator` |rarr| ``AND``: both licenses apply.
-	* :class:`OrOperator` |rarr| ``OR``: either license applies.
+	:class:`OrLaterOperator`
+	  |rarr| the ``+`` suffix: the named license or any later version of it.
+	:class:`WithOperator`
+	  |rarr| ``WITH``: a license together with an exception to it.
+	:class:`AndOperator`
+	  |rarr| ``AND``: both licenses apply.
+	:class:`OrOperator`
+	  |rarr| ``OR``: either license applies.
 
 	Its leaves are:
 
