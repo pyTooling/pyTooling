@@ -48,7 +48,8 @@ from dataclasses           import dataclass
 from re                    import compile as re_compile
 from typing                import Any, ClassVar, Generator, Optional as Nullable
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Decorators  import export, readonly, InheritDocString
+from pyTooling.Decorators  import export, readonly
+from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
 
 
@@ -81,6 +82,11 @@ __all__ = [
 
 	"SPDX_INDEX"
 ]
+
+
+@export
+class LicensingError(ToolingException):
+	"""Base exception of all exceptions raised by :mod:`pyTooling.Licensing`."""
 
 
 @export
@@ -415,10 +421,9 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize an expression node.
 
-		:param parent:      Optional, the operator this node becomes an operand of.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
-		:raises ValueError: If parameter 'parent' has no free operand left.
-		"""  # FIXME: adjust all doc-strings for raised errors.
+		:param parent:     Optional, the operator this node becomes an operand of.
+		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
+		"""
 		if parent is None:
 			self._parent = None
 			self._root = self
@@ -435,21 +440,21 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the operator this expression is an operand of (:attr:`_parent`).
 
-		Assigning an operator makes this node one of its operands and gives this node - and everything below it - that
-		operator's :attr:`Root`. Assigning ``None`` detaches the node, which makes it the root of the subtree it
-		carries.
+		Assigning an operator records it as this node's parent and adopts that operator's :attr:`Root`. The operator's
+		operands are not changed by the assignment.
 
 		:returns:           The parent operator, or ``None`` if this node is the root.
+		:raises ValueError: If ``None`` is assigned. |br|
+		                    A node that is an operand of an operator can't be detached from it.
 		:raises TypeError:  If an object that is not an :class:`Operator` is assigned. |br|
 		                    A leaf is applied to nothing, so it can never be a parent.
-		:raises ValueError: If the assigned operator has no free operand left.
 		"""
 		return self._parent
 
 	@Parent.setter
 	def Parent(self, parent: Nullable["Operator"]) -> None:
 		if parent is None:
-			raise ValueError("Parameter 'parent' is None.")  # FIXME: adjust all doc-strings for raised errors.
+			raise ValueError("Parameter 'parent' is None.")
 		elif not isinstance(parent, Operator):
 			ex = TypeError("Parameter 'parent' is not of type 'Operator'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
@@ -461,10 +466,10 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Root(self) -> "LicenseExpression":
 		"""
-		Read-only property returning the outermost expression this node belongs to (:attr:`_root`).
+		Read-only property to access the outermost expression this node belongs to (:attr:`_root`).
 
 		:returns: The root of the expression tree, which is the node itself if it has no parent.
-		"""  # FIXME: you wrote `... returning ...` but the workflows defined it differently for readonly properties.
+		"""
 		return self._root
 
 	@classmethod
@@ -523,8 +528,9 @@ class SPDXLicense(LicenseExpression):
 
 		:param spdxLicense: The license this node stands for.
 		:param parent:      Optional, the operator this node becomes an operand of.
-		:raises TypeError:  If parameter 'spdxLicense' is not of type :class:`License`.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
+		:raises ValueError: If parameter 'spdxLicense' is None.
+		:raises TypeError:  If parameter 'spdxLicense' is not of type :class:`License`.
 		"""
 		super().__init__(parent)
 
@@ -540,7 +546,7 @@ class SPDXLicense(LicenseExpression):
 	@readonly
 	def License(self) -> _LicenseType:
 		"""
-		Read-only property returning the license this node stands for (:attr:`_license`).
+		Read-only property to access the license this node stands for (:attr:`_license`).
 
 		:returns: The license.
 		"""
@@ -549,9 +555,9 @@ class SPDXLicense(LicenseExpression):
 	@readonly
 	def Identifier(self) -> str:
 		"""
-		Read-only property returning the license' SPDX identifier (:pycode:`_license._spdxIdentifier`).
+		Read-only property to access the license' SPDX identifier (:pycode:`_license._spdxIdentifier`).
 
-		:returns: The license.
+		:returns: The license's SPDX identifier.
 		"""
 		return self._license._spdxIdentifier
 
@@ -590,11 +596,12 @@ class LicenseReference(LicenseExpression):
 		:param licenseIdentifier:  Identifier following ``LicenseRef-``.
 		:param documentIdentifier: Optional, identifier following ``DocumentRef-``.
 		:param parent:             Optional, the operator this node becomes an operand of.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`Operator`.
+		:raises ValueError:        If parameter 'licenseIdentifier' is None.
 		:raises TypeError:         If parameter 'licenseIdentifier' is not of type :class:`str`.
 		:raises ValueError:        If parameter 'licenseIdentifier' is empty.
 		:raises TypeError:         If parameter 'documentIdentifier' is not of type :class:`str`.
 		:raises ValueError:        If parameter 'documentIdentifier' is empty.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(parent)
 
@@ -621,7 +628,7 @@ class LicenseReference(LicenseExpression):
 	@readonly
 	def LicenseIdentifier(self) -> str:
 		"""
-		Read-only property returning the identifier following ``LicenseRef-`` (:attr:`_licenseIdentifier`).
+		Read-only property to access the identifier following ``LicenseRef-`` (:attr:`_licenseIdentifier`).
 
 		:returns: The license reference's identifier.
 		"""
@@ -630,7 +637,7 @@ class LicenseReference(LicenseExpression):
 	@readonly
 	def DocumentIdentifier(self) -> Nullable[str]:
 		"""
-		Read-only property returning the identifier following ``DocumentRef-`` (:attr:`_documentIdentifier`).
+		Read-only property to access the identifier following ``DocumentRef-`` (:attr:`_documentIdentifier`).
 
 		:returns: The document reference's identifier, or ``None`` if the reference names no document.
 		"""
@@ -663,9 +670,10 @@ class LicenseException(LicenseExpression):
 
 		:param identifier:  The exception's SPDX identifier.
 		:param parent:      Optional, the operator this node becomes an operand of.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
+		:raises ValueError: If parameter 'identifier' is None.
 		:raises TypeError:  If parameter 'identifier' is not of type :class:`str`.
 		:raises ValueError: If parameter 'identifier' is empty.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(parent)
 
@@ -683,7 +691,7 @@ class LicenseException(LicenseExpression):
 	@readonly
 	def Identifier(self) -> str:
 		"""
-		Read-only property returning the exception's SPDX identifier (:attr:`_identifier`).
+		Read-only property to access the exception's SPDX identifier (:attr:`_identifier`).
 
 		:returns: The exception's identifier.
 		"""
@@ -717,13 +725,12 @@ class UnaryOperator(Operator):
 		parent:  Nullable[Operator] =          None
 	) -> None:
 		"""
-		Initialize a unary operator and adopt its operand.
+		Initialize a unary operator with its operand.
 
-		:param operand:     Optional, the expression this operator is applied to.
-		:param parent:      Optional, the operator this node becomes an operand of.
-		:raises TypeError:  If parameter 'operand' is not of type :class:`LicenseExpression`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
-		:raises ValueError: If parameter 'parent' has no free operand left.
+		:param operand:    Optional, the expression this operator is applied to.
+		:param parent:     Optional, the operator this node becomes an operand of.
+		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
+		:raises TypeError: If parameter 'operand' is not of type :class:`LicenseExpression`.
 		"""
 		super().__init__(parent)
 
@@ -742,8 +749,9 @@ class UnaryOperator(Operator):
 		Assigning an expression adopts it, so it - and everything below it - gets this operator as its
 		:attr:`~LicenseExpression.Parent` and this tree's :attr:`~LicenseExpression.Root`.
 
-		:returns:          The operand, or ``None`` if the operator wasn't assigned yet.
-		:raises TypeError: If an object that is not a :class:`LicenseExpression` is assigned.
+		:returns:           The operand, or ``None`` if the operator wasn't assigned yet.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an object that is not a :class:`LicenseExpression` is assigned.
 		"""
 		return self._operand
 
@@ -775,11 +783,11 @@ class OrLaterOperator(UnaryOperator):
 		"""
 		Return the operand followed by ``+``.
 
-		:returns:           The expression in SPDX syntax.
-		:raises ValueError: If the operator has no operand yet.
+		:returns:               The expression in SPDX syntax.
+		:raises LicensingError: If the operator has no operand yet.
 		"""
 		if self._operand is None:
-			raise ValueError("Operator 'OrLaterOperator' has no operand yet.")  # FIXME: This needs to raise a LicensingError
+			raise LicensingError("Operator 'OrLaterOperator' has no operand yet.")
 
 		return f"{self._operand}+"
 
@@ -812,13 +820,12 @@ class BinaryOperator(Operator):
 		"""
 		Initialize a binary operator with both operands.
 
-		:param left:        Optional, the operator's left operand.
-		:param right:       Optional, the operator's right operand.
-		:param parent:      Optional, the operator this node becomes an operand of.
-		:raises TypeError:  If parameter 'left' is not of type :class:`LicenseExpression`.
-		:raises TypeError:  If parameter 'right' is not of type :class:`LicenseExpression`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
-		:raises ValueError: If parameter 'parent' has no free operand left.
+		:param left:       Optional, the operator's left operand.
+		:param right:      Optional, the operator's right operand.
+		:param parent:     Optional, the operator this node becomes an operand of.
+		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
+		:raises TypeError: If parameter 'left' is not of type :class:`LicenseExpression`.
+		:raises TypeError: If parameter 'right' is not of type :class:`LicenseExpression`.
 		"""
 		super().__init__(parent)
 
@@ -915,13 +922,13 @@ class BinaryOperator(Operator):
 		"""
 		Return both operands with the operator's keyword between them.
 
-		:returns:           The expression in SPDX syntax.
-		:raises ValueError: If one of the operator's operands wasn't assigned yet.
+		:returns:               The expression in SPDX syntax.
+		:raises LicensingError: If one of the operator's operands wasn't assigned yet.
 		"""
 		if self._left is None:
-			raise ValueError(f"Operator '{self.__class__.__name__}' has no left operand yet.")
+			raise LicensingError(f"Operator '{self.__class__.__name__}' has no left operand yet.")
 		elif self._right is None:
-			raise ValueError(f"Operator '{self.__class__.__name__}' has no right operand yet.")
+			raise LicensingError(f"Operator '{self.__class__.__name__}' has no right operand yet.")
 
 		left =  f"({self._left})"  if self._left.PRECEDENCE  > self.PRECEDENCE else f"{self._left}"
 		right = f"({self._right})" if self._right.PRECEDENCE > self.PRECEDENCE else f"{self._right}"
