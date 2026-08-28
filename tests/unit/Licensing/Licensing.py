@@ -33,7 +33,8 @@ Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX l
 """
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
-from pyTooling.Licensing import LicenseReference, MIT_License, OrLaterOperator, OrOperator, SPDXLicense
+from pyTooling.Licensing import LicenseReference, LicensingError, MIT_License, OrLaterOperator, OrOperator
+from pyTooling.Licensing import SPDXLicense
 from pyTooling.Licensing import Operator, UnaryOperator, WithOperator
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing   import Testcase
@@ -469,7 +470,7 @@ class MalformedTrees(Testcase):
 			(OrLaterOperator(), "has no operand yet"),
 		):
 			with self.subTest(expression=expression.__class__.__name__, message=message):
-				with self.assertRaises(ValueError) as context:
+				with self.assertRaises(LicensingError) as context:
 					str(expression)
 
 				self.assertIn(message, str(context.exception))
