@@ -372,9 +372,12 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 
 	Its leaves are:
 
-	* :class:`SPDXLicense` |rarr| a license on the SPDX License List, named by its identifier.
-	* :class:`LicenseReference` |rarr| a license that is *not* on that list, written as ``LicenseRef-<id>``.
-	* :class:`LicenseException` |rarr| an exception from the SPDX exception list, the right operand of ``WITH``.
+	:class:`SPDXLicense`
+	  |rarr| a license on the SPDX License List, named by its identifier.
+	:class:`LicenseReference`
+	  |rarr| a license that is *not* on that list, written as ``LicenseRef-<id>``.
+	:class:`LicenseException`
+	  |rarr| an exception from the SPDX exception list, the right operand of ``WITH``.
 
 	The grammar SPDX defines is:
 
