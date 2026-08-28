@@ -565,7 +565,7 @@ class SPDXLicense(LicenseExpression):
 
 	def __init__(self, spdxLicense: _LicenseType, parent: Nullable[LicenseExpression] = None) -> None:
 		"""
-		Initialize a license reference.
+		Initialize a reference to an SPDX license.
 
 		:param spdxLicense: The license this node stands for.
 		:param parent:      Optional, the expression this node becomes an operand of.
