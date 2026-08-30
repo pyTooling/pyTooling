@@ -296,6 +296,59 @@ class ExpressionTree(Testcase):
 		self.assertIs(second, second.Left.Parent)
 
 
+class IteratingExpressions(Testcase):
+	"""The depth-first walk an expression offers over its own nodes."""
+
+	@staticmethod
+	def _label(node) -> str:
+		if isinstance(node, (SPDXLicense, LicenseException)):
+			return node.Identifier
+		elif isinstance(node, OrLaterOperator):
+			return "+"
+
+		return node.KEYWORD
+
+	def test_ALeafIsItsOwnExpression(self) -> None:
+		leaf = SPDXLicense(MIT_License)
+
+		self.assertEqual([leaf], list(leaf.IterateExpression()))
+
+	def test_InfixOrder(self) -> None:
+		"""A binary operator is yielded between its two operands, so the walk reads like the expression."""
+		expression = LicenseExpression.Parse("MIT AND Apache-2.0")
+
+		self.assertEqual(["MIT", "AND", "Apache-2.0"], [self._label(node) for node in expression.IterateExpression()])
+
+	def test_TheSuffixOperatorComesAfterItsOperand(self) -> None:
+		"""``+`` is written after the license it applies to, so it is yielded after it."""
+		expression = LicenseExpression.Parse("MIT+")
+
+		self.assertEqual(["MIT", "+"], [self._label(node) for node in expression.IterateExpression()])
+
+	def test_ANestedExpressionReadsInWritingOrder(self) -> None:
+		expression = LicenseExpression.Parse("(MIT OR ISC) AND Apache-2.0 WITH LLVM-exception")
+
+		self.assertEqual(
+			["MIT", "OR", "ISC", "AND", "Apache-2.0", "WITH", "LLVM-exception"],
+			[self._label(node) for node in expression.IterateExpression()]
+		)
+
+	def test_EveryNodeIsYieldedOnce(self) -> None:
+		"""The walk covers the operators too, not only the leaves - they carry a root as well."""
+		expression = LicenseExpression.Parse("LGPL-2.1-only OR BSD-3-Clause AND MIT")
+		nodes = list(expression.IterateExpression())
+
+		self.assertEqual(5, len(nodes))
+		self.assertEqual(5, len({id(node) for node in nodes}))
+		self.assertIn(expression, nodes)
+		self.assertTrue(all(node.Root is expression for node in nodes))
+
+	def test_AnIncompleteOperatorYieldsWhatItHas(self) -> None:
+		operator = AndOperator(SPDXLicense(MIT_License))
+
+		self.assertEqual(["MIT", "AND"], [self._label(node) for node in operator.IterateExpression()])
+
+
 class FormattingExpressions(Testcase):
 	"""Rendering an expression back to SPDX syntax."""
 
