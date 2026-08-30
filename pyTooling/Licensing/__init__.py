@@ -46,7 +46,7 @@ The Licensing module implements mapping tables for various license names and ide
 """
 from dataclasses           import dataclass
 from re                    import compile as re_compile
-from typing                import Any, ClassVar, Optional as Nullable
+from typing                import Any, ClassVar, Generator, Optional as Nullable
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -450,8 +450,8 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the operator this expression is an operand of (:attr:`_parent`).
 
-		Assigning an operator records it as this node's parent, which is what :attr:`Root` follows. The operator's
-		operands are not changed by the assignment.
+		Assigning an operator records it as this node's parent and re-roots this node and everything below it to that
+		operator's :attr:`Root`. The operator's operands are not changed by the assignment.
 
 		:returns:           The parent operator, or ``None`` if this node is the root.
 		:raises ValueError: If ``None`` is assigned. |br|
@@ -469,26 +469,34 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'parent' is not an Operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
-		else:
-			self._parent = parent
-			self._root =   parent._root
 
-	@property
+		self._parent = parent
+
+		for expression in self.IterateExpression():
+			expression._root = parent._root
+
+	@readonly
 	def Root(self) -> "LicenseExpression":
 		"""
-		Property to access the outermost expression this node belongs to (:attr:`_root`).
+		Read-only property to access the outermost expression this node belongs to (:attr:`_root`).
 
-		Assigning a root assigns it to this node **and to every node below it**, which is how an operator hands its
-		own root to a subtree it adopts. A leaf has nothing below it; the operators override the setter to descend
-		into their operands.
+		The root is maintained by :attr:`Parent`: adopting a node re-roots it and everything below it, so the field
+		can't fall behind the tree it describes.
 
 		:returns: The root of the expression tree, which is the node itself if it has no parent.
 		"""
 		return self._root
 
-	@Root.setter
-	def Root(self, root: "LicenseExpression") -> None:
-		self._root = root
+	def IterateExpression(self) -> Generator["LicenseExpression", None, None]:
+		"""
+		Iterate this expression depth-first, in the order its nodes are written.
+
+		A leaf is the expression itself. The operators override this to yield their operands around themselves, so an
+		infix operator comes between its two operands and the ``+`` suffix comes after the expression it applies to.
+
+		:returns: A generator of every node in this expression, this node included.
+		"""
+		yield self
 
 	@classmethod
 	def Parse(cls, expression: str) -> "LicenseExpression":
@@ -763,17 +771,20 @@ class UnaryOperator(Operator):
 				ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 				raise ex
 
-			operand._parent = self
-			operand.Root =    self._root
+			operand.Parent = self
 		else:
 			self._operand = None
 
-	@LicenseExpression.Root.setter
-	def Root(self, root: LicenseExpression) -> None:
-		self._root = root
+	def IterateExpression(self) -> Generator[LicenseExpression, None, None]:
+		"""
+		Iterate this operator depth-first, its operand first, because ``+`` is written after the expression it suffixes.
 
+		:returns: A generator of every node in this expression, this operator included.
+		"""
 		if self._operand is not None:
-			self._operand.Root = root
+			yield from self._operand.IterateExpression()
+
+		yield self
 
 	@property
 	def Operand(self) -> Nullable[LicenseExpression]:
@@ -805,8 +816,7 @@ class UnaryOperator(Operator):
 			raise LicensingError("Parameter 'operand' is already an operand of another operator.")
 
 		self._operand = operand
-		operand._parent = self
-		operand.Root =    self._root
+		operand.Parent = self
 
 
 @export
@@ -885,8 +895,7 @@ class BinaryOperator(Operator):
 				ex.add_note(f"Got type '{getFullyQualifiedName(left)}'.")
 				raise ex
 
-			left._parent = self
-			left.Root =    self._root
+			left.Parent = self
 		else:
 			self._left = None
 
@@ -898,20 +907,23 @@ class BinaryOperator(Operator):
 				ex.add_note(f"Got type '{getFullyQualifiedName(right)}'.")
 				raise ex
 
-			right._parent = self
-			right.Root =    self._root
+			right.Parent = self
 		else:
 			self._right = None
 
-	@LicenseExpression.Root.setter
-	def Root(self, root: LicenseExpression) -> None:
-		self._root = root
+	def IterateExpression(self) -> Generator[LicenseExpression, None, None]:
+		"""
+		Iterate this operator depth-first in infix order: left operand, this operator, right operand.
 
+		:returns: A generator of every node in this expression, this operator included.
+		"""
 		if self._left is not None:
-			self._left.Root = root
+			yield from self._left.IterateExpression()
+
+		yield self
 
 		if self._right is not None:
-			self._right.Root = root
+			yield from self._right.IterateExpression()
 
 	@property
 	def Left(self) -> Nullable[LicenseExpression]:
@@ -943,8 +955,7 @@ class BinaryOperator(Operator):
 			raise LicensingError("Parameter 'operand' is already an operand of another operator.")
 
 		self._left = operand
-		operand._parent = self
-		operand.Root =    self._root
+		operand.Parent = self
 
 	@property
 	def Right(self) -> Nullable[LicenseExpression]:
@@ -976,8 +987,7 @@ class BinaryOperator(Operator):
 			raise LicensingError("Parameter 'operand' is already an operand of another operator.")
 
 		self._right = operand
-		operand._parent = self
-		operand.Root =    self._root
+		operand.Parent = self
 
 	def __str__(self) -> str:
 		"""
