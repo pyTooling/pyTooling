@@ -280,7 +280,7 @@ class License(metaclass=ExtendedType, slots=True):
 		"""
 		Compute a hash from the license's SPDX identifier.
 
-		A license compares equal to its identifier as a string, so the two hashes equal as well.
+		A license compares equal to its identifier as a string, so the two hash equally as well.
 
 		:returns: Hash of the SPDX identifier.
 		"""
@@ -731,6 +731,7 @@ class UnaryOperator(Operator):
 
 	The operand is reachable as :attr:`Operand` and is assignable, so an operator can be filled after it was created.
 	"""
+
 	_operand: Nullable[LicenseExpression]  #: The expression this operator is applied to.
 
 	def __init__(
@@ -824,6 +825,7 @@ class BinaryOperator(Operator):
 	The operands are reachable as :attr:`Left` and :attr:`Right`. :attr:`KEYWORD` is the operator keyword between the
 	operands.
 	"""
+
 	KEYWORD: ClassVar[str]                #: The operator's keyword, as it is written between the operands.
 
 	_left:   Nullable[LicenseExpression]  #: The operator's left operand.
