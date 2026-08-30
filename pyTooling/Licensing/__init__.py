@@ -46,7 +46,7 @@ The Licensing module implements mapping tables for various license names and ide
 """
 from dataclasses           import dataclass
 from re                    import compile as re_compile
-from typing                import Any, ClassVar, Generator, Optional as Nullable
+from typing                import Any, ClassVar, Optional as Nullable
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -412,16 +412,19 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 	predefined licenses are shared objects, so :data:`MIT_License` appears in many expressions at once and belongs to
 	none of them. :class:`SPDXLicense` is the wrapper that gives a license object a placeholder in the expression tree.
 
-	A tree is built bottom-up by handing the operands to an operator, or top-down by handing the operator to an
-	operand as its ``parent``:
+	A tree is built bottom-up by handing the operands to an operator, or by assigning them to the operator's operand
+	slots afterwards. Both link the operand back to its operator:
 
 	.. code-block:: python
 
 	   bottomUp = AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License))
 
-	   topDown = AndOperator()
-	   SPDXLicense(Apache_2_0_License, parent=topDown)
-	   SPDXLicense(MIT_License, parent=topDown)
+	   assembled = AndOperator()
+	   assembled.Left =  SPDXLicense(Apache_2_0_License)
+	   assembled.Right = SPDXLicense(MIT_License)
+
+	The ``parent`` parameter only *records* a parent - it can't know which slot the operand belongs in, so it never
+	fills one.
 	"""
 
 	PRECEDENCE: ClassVar[int] = 0  #: Precedence of this node's operator; a lower value binds tighter.
@@ -483,6 +486,17 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		:returns: The root of the expression tree, which is the node itself if it has no parent.
 		"""
 		return self._root
+
+	def _SetRoot(self, root: "LicenseExpression") -> None:
+		"""
+		Set the root of this node and of every node below it.
+
+		A leaf has nothing below it, so the base implementation assigns its own field only; the operators override
+		this and descend into their operands.
+
+		:param root: The expression that is now the root of this node's tree.
+		"""
+		self._root = root
 
 	@classmethod
 	def Parse(cls, expression: str) -> "LicenseExpression":
@@ -753,8 +767,23 @@ class UnaryOperator(Operator):
 			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
-		else:
-			self._operand = operand
+
+		self._operand = operand
+
+		if operand is not None:
+			operand._parent = self
+			operand._SetRoot(self._root)
+
+	def _SetRoot(self, root: LicenseExpression) -> None:
+		"""
+		Set the root of this operator and of its operand.
+
+		:param root: The expression that is now the root of this node's tree.
+		"""
+		self._root = root
+
+		if self._operand is not None:
+			self._operand._SetRoot(root)
 
 	@property
 	def Operand(self) -> Nullable[LicenseExpression]:
@@ -764,9 +793,10 @@ class UnaryOperator(Operator):
 		Assigning an expression adopts it, so it - and everything below it - gets this operator as its
 		:attr:`~LicenseExpression.Parent` and this tree's :attr:`~LicenseExpression.Root`.
 
-		:returns:           The operand, or ``None`` if the operator wasn't assigned yet.
-		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If an object that is not a :class:`LicenseExpression` is assigned.
+		:returns:               The operand, or ``None`` if the operator wasn't assigned yet.
+		:raises ValueError:     If ``None`` is assigned.
+		:raises TypeError:      If an object that is not a :class:`LicenseExpression` is assigned.
+		:raises LicensingError: If the assigned expression is already an operand of another operator.
 		"""
 		return self._operand
 
@@ -778,9 +808,16 @@ class UnaryOperator(Operator):
 			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
+		elif operand._parent is not None:
+			raise LicensingError("Parameter 'operand' is already an operand of another operator.")
+
+		if self._operand is not None:
+			self._operand._parent = None
+			self._operand._SetRoot(self._operand)
 
 		self._operand = operand
-		self._operand._parent = self
+		operand._parent = self
+		operand._SetRoot(self._root)
 
 
 @export
@@ -796,6 +833,8 @@ class OrLaterOperator(UnaryOperator):
 	   deprecated the ``GPL-2.0``, ``LGPL-2.1`` and ``AGPL-3.0`` identifiers that ``+`` was applied to. Published
 	   metadata still contains ``GPL-2.0+``, so an expression using it has to parse.
 	"""
+
+	PRECEDENCE: ClassVar[int] = 1  #: Binds tighter than every binary operator, looser than a bare license.
 
 	def __str__(self) -> str:
 		"""
@@ -862,6 +901,28 @@ class BinaryOperator(Operator):
 		self._left =  left
 		self._right = right
 
+		if left is not None:
+			left._parent = self
+			left._SetRoot(self._root)
+
+		if right is not None:
+			right._parent = self
+			right._SetRoot(self._root)
+
+	def _SetRoot(self, root: LicenseExpression) -> None:
+		"""
+		Set the root of this operator and of both its operands.
+
+		:param root: The expression that is now the root of this node's tree.
+		"""
+		self._root = root
+
+		if self._left is not None:
+			self._left._SetRoot(root)
+
+		if self._right is not None:
+			self._right._SetRoot(root)
+
 	@property
 	def Left(self) -> Nullable[LicenseExpression]:
 		"""
@@ -870,25 +931,27 @@ class BinaryOperator(Operator):
 		Assigning an expression adopts it, so it - and everything below it - gets this operator as its
 		:attr:`~LicenseExpression.Parent` and this tree's :attr:`~LicenseExpression.Root`.
 
-		:returns:          The left operand, or ``None`` if it wasn't assigned yet.
-		:raises TypeError: If an object that is not a :class:`LicenseExpression` is assigned.
+		:returns:               The left operand, or ``None`` if it wasn't assigned yet.
+		:raises ValueError:     If ``None`` is assigned.
+		:raises TypeError:      If an object that is not a :class:`LicenseExpression` is assigned.
+		:raises LicensingError: If the assigned expression is already an operand of another operator.
 		"""
 		return self._left
 
 	@Left.setter
 	def Left(self, operand: LicenseExpression) -> None:
-		if not isinstance(operand, LicenseExpression):
+		if operand is None:
+			raise ValueError("Parameter 'operand' is None.")
+		elif not isinstance(operand, LicenseExpression):
 			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
+		elif operand._parent is not None:
+			raise LicensingError("Parameter 'operand' is already an operand of another operator.")
 
 		if self._left is not None:
 			self._left._parent = None
 			self._left._SetRoot(self._left)
-			self._left = None
-
-		if operand._parent is not None:
-			operand._parent._ReleaseOperand(operand)
 
 		self._left = operand
 		operand._parent = self
@@ -902,41 +965,31 @@ class BinaryOperator(Operator):
 		Assigning an expression adopts it, so it - and everything below it - gets this operator as its
 		:attr:`~LicenseExpression.Parent` and this tree's :attr:`~LicenseExpression.Root`.
 
-		:returns:          The right operand, or ``None`` if it wasn't assigned yet.
-		:raises TypeError: If an object that is not a :class:`LicenseExpression` is assigned.
+		:returns:               The right operand, or ``None`` if it wasn't assigned yet.
+		:raises ValueError:     If ``None`` is assigned.
+		:raises TypeError:      If an object that is not a :class:`LicenseExpression` is assigned.
+		:raises LicensingError: If the assigned expression is already an operand of another operator.
 		"""
 		return self._right
 
 	@Right.setter
 	def Right(self, operand: LicenseExpression) -> None:
-		if not isinstance(operand, LicenseExpression):
+		if operand is None:
+			raise ValueError("Parameter 'operand' is None.")
+		elif not isinstance(operand, LicenseExpression):
 			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
+		elif operand._parent is not None:
+			raise LicensingError("Parameter 'operand' is already an operand of another operator.")
 
 		if self._right is not None:
 			self._right._parent = None
 			self._right._SetRoot(self._right)
-			self._right = None
-
-		if operand._parent is not None:
-			operand._parent._ReleaseOperand(operand)
 
 		self._right = operand
 		operand._parent = self
 		operand._SetRoot(self._root)
-
-	def IterateOperands(self) -> Generator[LicenseExpression, None, None]:
-		"""
-		Iterate the expressions this operator is applied to, left operand first.
-
-		:returns: A generator of the operands that were assigned so far.
-		"""
-		if self._left is not None:
-			yield self._left
-
-		if self._right is not None:
-			yield self._right
 
 	def __str__(self) -> str:
 		"""
