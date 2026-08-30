@@ -88,9 +88,12 @@ class WithSlots(Testcase):
 			_ = Base._data0
 
 	def test_NoInitValue_DerivedAssigned_ClassCheck(self) -> None:
-		"""A ``ClassVar`` without an initial value is a forward declaration: derived classes assign the
-		value. If the base turned it into a slot, the derived class' assignment would shadow the slot
-		descriptor and make the field read-only on instances."""
+		"""
+		A ``ClassVar`` without an initial value is a forward declaration: derived classes assign the value.
+
+		If the base turned it into a slot, the derived class' assignment would shadow the slot descriptor and
+		make the field read-only on instances.
+		"""
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int]
 			_data1: ClassVar[int] = 1
