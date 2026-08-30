@@ -90,6 +90,18 @@ class LicensingError(ToolingException):
 
 
 @export
+class LicenseExpressionError(LicensingError):
+	"""
+	The exception is raised when an SPDX license expression is malformed or names a license SPDX doesn't define.
+
+	.. hint::
+
+	   Parameter checks are unaffected and still raise :exc:`TypeError` or :exc:`ValueError`. This exception reports
+	   what the *expression* says, so a caller can tell a bad expression from a bad call.
+	"""
+
+
+@export
 @dataclass
 class PythonLicenseName:
 	"""A *data class* to represent the license's short name and the package classifier for a license."""
@@ -428,7 +440,7 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 			self._parent = None
 			self._root = self
 		elif not isinstance(parent, Operator):
-			ex = TypeError("Parameter 'parent' is not of type 'Operator'.")
+			ex = TypeError("Parameter 'parent' is not an Operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 		else:
@@ -456,7 +468,7 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		if parent is None:
 			raise ValueError("Parameter 'parent' is None.")
 		elif not isinstance(parent, Operator):
-			ex = TypeError("Parameter 'parent' is not of type 'Operator'.")
+			ex = TypeError("Parameter 'parent' is not an Operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 		else:
@@ -481,9 +493,9 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		``AND``, which binds tighter than ``OR`` - and parentheses override it. ``AND`` and ``OR`` associate to the
 		left.
 
-		:param expression:  The SPDX license expression to parse.
-		:returns:           The root of the parsed expression tree.
-		:raises ValueError: If the expression is empty, malformed, or names a license that isn't known.
+		:param expression:              The SPDX license expression to parse.
+		:returns:                       The root of the parsed expression tree.
+		:raises LicenseExpressionError: If the expression is empty, malformed, or names a license that isn't known.
 		"""
 		parser = _LicenseExpressionParser(expression)
 		return parser.Parse()
@@ -538,7 +550,7 @@ class SPDXLicense(LicenseExpression):
 		if spdxLicense is None:
 			raise ValueError("Parameter 'spdxLicense' is None.")
 		elif not isinstance(spdxLicense, _LicenseType):
-			ex = TypeError("Parameter 'spdxLicense' is not of type 'License'.")
+			ex = TypeError("Parameter 'spdxLicense' is not a License.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(spdxLicense)}'.")
 			raise ex
 
@@ -762,7 +774,7 @@ class UnaryOperator(Operator):
 		if operand is None:
 			raise ValueError("Parameter 'operand' is None.")
 		elif not isinstance(operand, LicenseExpression):
-			ex = TypeError("Parameter 'operand' is not of type 'LicenseExpression'.")
+			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
 
@@ -836,12 +848,12 @@ class BinaryOperator(Operator):
 		super().__init__(parent)
 
 		if left is not None and not isinstance(left, LicenseExpression):
-			ex = TypeError("Parameter 'left' is not of type 'LicenseExpression'.")
+			ex = TypeError("Parameter 'left' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(left)}'.")
 			raise ex
 
 		if right is not None and not isinstance(right, LicenseExpression):
-			ex = TypeError("Parameter 'right' is not of type 'LicenseExpression'.")
+			ex = TypeError("Parameter 'right' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(right)}'.")
 			raise ex
 
@@ -864,7 +876,7 @@ class BinaryOperator(Operator):
 	@Left.setter
 	def Left(self, operand: LicenseExpression) -> None:
 		if not isinstance(operand, LicenseExpression):
-			ex = TypeError("Parameter 'operand' is not of type 'LicenseExpression'.")
+			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
 
@@ -896,7 +908,7 @@ class BinaryOperator(Operator):
 	@Right.setter
 	def Right(self, operand: LicenseExpression) -> None:
 		if not isinstance(operand, LicenseExpression):
-			ex = TypeError("Parameter 'operand' is not of type 'LicenseExpression'.")
+			ex = TypeError("Parameter 'operand' is not a LicenseExpression.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(operand)}'.")
 			raise ex
 
@@ -994,12 +1006,12 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		"""
 		Tokenize an expression.
 
-		:param expression:  The SPDX license expression to parse.
-		:raises TypeError:  If parameter 'expression' is not of type :class:`str`.
-		:raises ValueError: If the expression contains no tokens.
+		:param expression:              The SPDX license expression to parse.
+		:raises TypeError:              If parameter 'expression' is not of type :class:`str`.
+		:raises LicenseExpressionError: If the expression contains no tokens.
 		"""
 		if not isinstance(expression, str):
-			ex = TypeError("Parameter 'expression' is not of type 'str'.")
+			ex = TypeError("Parameter 'expression' is not a string.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(expression)}'.")
 			raise ex
 
@@ -1008,19 +1020,19 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		self._position = 0
 
 		if len(self._tokens) == 0:
-			raise ValueError(f"License expression '{expression}' is empty.")
+			raise LicenseExpressionError(f"License expression '{expression}' is empty.")
 
 	def Parse(self) -> LicenseExpression:
 		"""
 		Parse the whole expression.
 
-		:returns:           The root of the expression tree.
-		:raises ValueError: If the expression is malformed or names an unknown license.
+		:returns:                       The root of the expression tree.
+		:raises LicenseExpressionError: If the expression is malformed or names an unknown license.
 		"""
 		result = self._ParseOr()
 
 		if self._position < len(self._tokens):
-			raise ValueError(
+			raise LicenseExpressionError(
 				f"License expression '{self._expression}' has trailing input at '{self._tokens[self._position]}'."
 			)
 
@@ -1054,13 +1066,13 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		"""
 		Parse a ``WITH`` clause, whose right operand is an exception rather than a license.
 
-		:returns:           The parsed expression.
-		:raises ValueError: If ``WITH`` isn't followed by an exception identifier.
+		:returns:                       The parsed expression.
+		:raises LicenseExpressionError: If ``WITH`` isn't followed by an exception identifier.
 		"""
 		left = self._ParseSimple()
 		if self._Accept("WITH"):
 			if (identifier := self._Next()) is None:
-				raise ValueError(f"License expression '{self._expression}' ends after 'WITH'.")
+				raise LicenseExpressionError(f"License expression '{self._expression}' ends after 'WITH'.")
 
 			left = WithOperator(left, LicenseException(identifier))
 
@@ -1070,21 +1082,21 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		"""
 		Parse a parenthesized expression, a license reference, or a license identifier with an optional ``+``.
 
-		:returns:           The parsed expression.
-		:raises ValueError: If the expression ends early, a parenthesis is unbalanced, or a license is unknown.
+		:returns:                       The parsed expression.
+		:raises LicenseExpressionError: If the expression ends early, a parenthesis is unbalanced, or a license is unknown.
 		"""
 		if (token := self._Next()) is None:
-			raise ValueError(f"License expression '{self._expression}' ends unexpectedly.")
+			raise LicenseExpressionError(f"License expression '{self._expression}' ends unexpectedly.")
 
 		if token == "(":
 			inner = self._ParseOr()
 			if not self._Accept(")"):
-				raise ValueError(f"License expression '{self._expression}' is missing a closing parenthesis.")
+				raise LicenseExpressionError(f"License expression '{self._expression}' is missing a closing parenthesis.")
 
 			return inner
 
 		if token == ")":
-			raise ValueError(f"License expression '{self._expression}' has an unmatched closing parenthesis.")
+			raise LicenseExpressionError(f"License expression '{self._expression}' has an unmatched closing parenthesis.")
 
 		# 'GPL-2.0+' is the deprecated spelling of 'GPL-2.0-or-later' and is still legal grammar
 		orLater = token.endswith("+")
@@ -1098,7 +1110,7 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		elif (spdxLicense := SPDX_INDEX.get(identifier, None)) is not None:
 			expression = SPDXLicense(spdxLicense)
 		else:
-			ex = ValueError(f"License expression '{self._expression}' names unknown license '{identifier}'.")
+			ex = LicenseExpressionError(f"License expression '{self._expression}' names unknown license '{identifier}'.")
 			ex.add_note("Known licenses are the SPDX identifiers in 'pyTooling.Licensing.SPDX_INDEX'.")
 			raise ex
 
