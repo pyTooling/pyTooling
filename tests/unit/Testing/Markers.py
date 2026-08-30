@@ -29,7 +29,9 @@
 # ==================================================================================================================== #
 """
 Unit tests for :mod:`pyTooling.Testing`'s markers :deco:`~pyTooling.Testing.testsuite` and
-:deco:`~pyTooling.Testing.testcase`, and for :mod:`pyTooling.Testing.PyTest`, the plugin collecting what they mark.
+:deco:`~pyTooling.Testing.testcase`.
+
+Also for :mod:`pyTooling.Testing.PyTest`, the plugin collecting what they mark.
 """
 from os                    import environ
 from pathlib               import Path

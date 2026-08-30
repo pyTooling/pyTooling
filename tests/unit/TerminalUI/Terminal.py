@@ -30,8 +30,10 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :class:`pyTooling.TerminalUI.TerminalApplication`: the verbosity properties, the counters
-and the exit-on-counter methods, and which messages reach ``STDOUT`` and ``STDERR`` in each mode.
+Unit tests for :class:`pyTooling.TerminalUI.TerminalApplication`.
+
+Covered are the verbosity properties, the counters and the exit-on-counter methods, and which messages
+reach ``STDOUT`` and ``STDERR`` in each mode.
 """
 from io                   import StringIO
 
