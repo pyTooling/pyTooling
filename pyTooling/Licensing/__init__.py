@@ -425,6 +425,7 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 	PRECEDENCE: ClassVar[int] = 0  #: Precedence of this node's operator; a lower value binds tighter.
 
 	_parent: Nullable["Operator"]  #: The operator this expression is an operand of, or ``None`` at the root.
+	_root:   "LicenseExpression"   #: The outermost expression this node belongs to; ``self`` at the root.
 
 	def __init__(self, parent: Nullable["Operator"] = None) -> None:
 		"""
@@ -435,12 +436,14 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		"""
 		if parent is None:
 			self._parent = None
+			self._root =   self
 		elif not isinstance(parent, Operator):
 			ex = TypeError("Parameter 'parent' is not an Operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 		else:
 			self._parent = parent
+			self._root =   parent._root
 
 	@property
 	def Parent(self) -> Nullable["Operator"]:
@@ -468,22 +471,24 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 			raise ex
 		else:
 			self._parent = parent
+			self._root =   parent._root
 
-	@readonly
+	@property
 	def Root(self) -> "LicenseExpression":
 		"""
-		Read-only property to return the outermost expression this node belongs to.
+		Property to access the outermost expression this node belongs to (:attr:`_root`).
 
-		The root is followed through :attr:`Parent` on every read rather than cached, so attaching a subtree to a
-		bigger expression can't leave a stale root behind.
+		Assigning a root assigns it to this node **and to every node below it**, which is how an operator hands its
+		own root to a subtree it adopts. A leaf has nothing below it; the operators override the setter to descend
+		into their operands.
 
 		:returns: The root of the expression tree, which is the node itself if it has no parent.
 		"""
-		node = self
-		while node._parent is not None:
-			node = node._parent
+		return self._root
 
-		return node
+	@Root.setter
+	def Root(self, root: "LicenseExpression") -> None:
+		self._root = root
 
 	@classmethod
 	def Parse(cls, expression: str) -> "LicenseExpression":
@@ -759,8 +764,16 @@ class UnaryOperator(Operator):
 				raise ex
 
 			operand._parent = self
+			operand.Root =    self._root
 		else:
 			self._operand = None
+
+	@LicenseExpression.Root.setter
+	def Root(self, root: LicenseExpression) -> None:
+		self._root = root
+
+		if self._operand is not None:
+			self._operand.Root = root
 
 	@property
 	def Operand(self) -> Nullable[LicenseExpression]:
@@ -793,6 +806,7 @@ class UnaryOperator(Operator):
 
 		self._operand = operand
 		operand._parent = self
+		operand.Root =    self._root
 
 
 @export
@@ -872,6 +886,7 @@ class BinaryOperator(Operator):
 				raise ex
 
 			left._parent = self
+			left.Root =    self._root
 		else:
 			self._left = None
 
@@ -884,8 +899,19 @@ class BinaryOperator(Operator):
 				raise ex
 
 			right._parent = self
+			right.Root =    self._root
 		else:
 			self._right = None
+
+	@LicenseExpression.Root.setter
+	def Root(self, root: LicenseExpression) -> None:
+		self._root = root
+
+		if self._left is not None:
+			self._left.Root = root
+
+		if self._right is not None:
+			self._right.Root = root
 
 	@property
 	def Left(self) -> Nullable[LicenseExpression]:
@@ -918,6 +944,7 @@ class BinaryOperator(Operator):
 
 		self._left = operand
 		operand._parent = self
+		operand.Root =    self._root
 
 	@property
 	def Right(self) -> Nullable[LicenseExpression]:
@@ -950,6 +977,7 @@ class BinaryOperator(Operator):
 
 		self._right = operand
 		operand._parent = self
+		operand.Root =    self._root
 
 	def __str__(self) -> str:
 		"""
