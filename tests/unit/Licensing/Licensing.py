@@ -33,7 +33,8 @@ Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX l
 """
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
-from pyTooling.Licensing import LicenseExpressionError, LicenseReference, LicensingError, MIT_License
+from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseReference, LicensingError
+from pyTooling.Licensing import MIT_License
 from pyTooling.Licensing import OrLaterOperator, OrOperator
 from pyTooling.Licensing import SPDXLicense
 from pyTooling.Licensing import Operator, UnaryOperator, WithOperator
@@ -259,7 +260,6 @@ class ParsingExpressions(Testcase):
 		self.assertIsInstance(expression, LicenseReference)
 		self.assertEqual("Proprietary", expression.LicenseIdentifier)
 		self.assertIsNone(expression.DocumentIdentifier)
-		# self.assertEqual([], list(expression.IterateLicenses()))
 
 	def test_DocumentReference(self) -> None:
 		expression = LicenseExpression.Parse("DocumentRef-spdx-tool:LicenseRef-MyLicense")
@@ -294,35 +294,6 @@ class ExpressionTree(Testcase):
 		self.assertIsNot(first.Left, second.Left)
 		self.assertIs(first, first.Left.Parent)
 		self.assertIs(second, second.Left.Parent)
-
-	def test_IterateLicenses(self) -> None:
-		expression = LicenseExpression.Parse("LGPL-2.1-only OR BSD-3-Clause AND MIT")
-
-		self.assertEqual(
-			["LGPL-2.1-only", "BSD-3-Clause", "MIT"],
-			[spdxLicense.SPDXIdentifier for spdxLicense in expression.IterateLicenses()]
-		)
-
-	def test_IterateLicensesKeepsDuplicates(self) -> None:
-		"""``MIT AND MIT`` is not the same statement as ``MIT``, so deduplicating isn't this class' decision."""
-		expression = LicenseExpression.Parse("MIT AND MIT")
-
-		self.assertEqual(2, len(list(expression.IterateLicenses())))
-
-	def test_IterateLicensesSkipsWhatSPDXDoesNotKnow(self) -> None:
-		"""A license reference and an exception name no license on the SPDX License List."""
-		expression = LicenseExpression.Parse("Apache-2.0 WITH LLVM-exception AND LicenseRef-Proprietary")
-
-		self.assertEqual(
-			["Apache-2.0"],
-			[spdxLicense.SPDXIdentifier for spdxLicense in expression.IterateLicenses()]
-		)
-
-	def test_IterateOperands(self) -> None:
-		expression = LicenseExpression.Parse("MIT AND Apache-2.0")
-
-		self.assertEqual([expression.Left, expression.Right], list(expression.IterateOperands()))
-		self.assertEqual([], list(expression.Left.IterateOperands()))
 
 
 class FormattingExpressions(Testcase):
@@ -395,14 +366,23 @@ class ConstructingExpressions(Testcase):
 		self.assertIs(expression, expression.Right.Root)
 
 	def test_TopDown(self) -> None:
-		"""An operand handed its parent fills that operator's next free operand, the left one first."""
+		"""An empty operator is filled by assigning its operand slots, which links each operand back."""
 		expression = AndOperator()
-		left = SPDXLicense(Apache_2_0_License, parent=expression)
-		right = SPDXLicense(MIT_License, parent=expression)
+		expression.Left =  SPDXLicense(Apache_2_0_License)
+		expression.Right = SPDXLicense(MIT_License)
 
-		self.assertIs(left, expression.Left)
-		self.assertIs(right, expression.Right)
+		self.assertIs(expression, expression.Left.Parent)
+		self.assertIs(expression, expression.Right.Parent)
 		self.assertEqual("Apache-2.0 AND MIT", str(expression))
+
+	def test_ParentRecordsWithoutFillingASlot(self) -> None:
+		"""``parent=`` can't know which slot an operand belongs in, so it records the parent and nothing else."""
+		expression = AndOperator()
+		operand = SPDXLicense(Apache_2_0_License, parent=expression)
+
+		self.assertIs(expression, operand.Parent)
+		self.assertIsNone(expression.Left)
+		self.assertIsNone(expression.Right)
 
 	def test_OperandsAreAssignable(self) -> None:
 		expression = AndOperator()
@@ -419,26 +399,31 @@ class ConstructingExpressions(Testcase):
 		self.assertEqual("MIT+", str(expression))
 		self.assertIs(expression, expression.Operand.Parent)
 
-	def test_ReParentingMovesTheSubtree(self) -> None:
+	def test_AnOperandCannotBeStolenFromItsOperator(self) -> None:
+		"""An expression is an operand of one operator; moving it would leave the first one half-linked."""
 		source = AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License))
 		target = OrOperator()
-		moved = source.Right
 
-		moved.Parent = target
+		with self.assertRaises(LicensingError):
+			target.Left = source.Right
 
-		self.assertIsNone(source.Right)
-		self.assertIs(moved, target.Left)
-		self.assertIs(target, moved.Root)
-
-	def test_DetachingMakesTheNodeItsOwnRoot(self) -> None:
+	def test_ReplacingAnOperandDetachesTheOldOne(self) -> None:
+		"""The expression that leaves the slot becomes a tree of its own again."""
 		expression = AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License))
-		detached = expression.Left
+		replaced = expression.Left
 
-		detached.Parent = None
+		expression.Left = SPDXLicense(ISC_License)
 
-		self.assertIsNone(expression.Left)
-		self.assertIsNone(detached.Parent)
-		self.assertIs(detached, detached.Root)
+		self.assertIsNone(replaced.Parent)
+		self.assertIs(replaced, replaced.Root)
+		self.assertEqual("ISC AND MIT", str(expression))
+
+	def test_DetachingIsNotSupported(self) -> None:
+		"""``Parent`` records a parent; it can't be unset, because the operator would keep pointing at the node."""
+		expression = AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License))
+
+		with self.assertRaises(ValueError):
+			expression.Left.Parent = None
 
 	def test_TheRootOfASubtreeFollowsItsNewParent(self) -> None:
 		subtree = AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License))
