@@ -33,7 +33,8 @@ Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX l
 """
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
-from pyTooling.Licensing import LicenseReference, LicensingError, MIT_License, OrLaterOperator, OrOperator
+from pyTooling.Licensing import LicenseExpressionError, LicenseReference, LicensingError, MIT_License
+from pyTooling.Licensing import OrLaterOperator, OrOperator
 from pyTooling.Licensing import SPDXLicense
 from pyTooling.Licensing import Operator, UnaryOperator, WithOperator
 from pyTooling.MetaClasses import AbstractClassError
@@ -356,26 +357,31 @@ class MalformedExpressions(Testcase):
 
 	def test_Empty(self) -> None:
 		for expression in ("", "   "):
-			with self.assertRaises(ValueError):
+			with self.assertRaises(LicenseExpressionError):
 				LicenseExpression.Parse(expression)
 
 	def test_UnknownLicense(self) -> None:
-		with self.assertRaises(ValueError):
+		with self.assertRaises(LicenseExpressionError):
 			LicenseExpression.Parse("Definitely-Not-A-License")
 
 	def test_UnbalancedParentheses(self) -> None:
 		for expression in ("(MIT AND Apache-2.0", "MIT AND Apache-2.0)", ")MIT("):
-			with self.assertRaises(ValueError):
+			with self.assertRaises(LicenseExpressionError):
 				LicenseExpression.Parse(expression)
 
 	def test_DanglingOperator(self) -> None:
 		for expression in ("MIT AND", "MIT OR", "Apache-2.0 WITH"):
-			with self.assertRaises(ValueError):
+			with self.assertRaises(LicenseExpressionError):
 				LicenseExpression.Parse(expression)
 
 	def test_TrailingInput(self) -> None:
-		with self.assertRaises(ValueError):
+		with self.assertRaises(LicenseExpressionError):
 			LicenseExpression.Parse("MIT Apache-2.0")
+
+	def test_AMalformedExpressionIsALicensingError(self) -> None:
+		"""The dedicated exception stays catchable through the module's base exception."""
+		with self.assertRaises(LicensingError):
+			LicenseExpression.Parse("MIT AND")
 
 
 class ConstructingExpressions(Testcase):
@@ -461,7 +467,7 @@ class MalformedTrees(Testcase):
 		with self.assertRaises(TypeError) as context:
 			SPDXLicense(MIT_License, parent=SPDXLicense(Apache_2_0_License))
 
-		self.assertIn("is not of type 'Operator'", str(context.exception))
+		self.assertIn("is not an Operator", str(context.exception))
 
 	def test_AnIncompleteOperatorCannotBeRendered(self) -> None:
 		for expression, message in (
@@ -489,7 +495,7 @@ class MalformedTrees(Testcase):
 		with self.assertRaises(TypeError) as context:
 			SPDXLicense("MIT")
 
-		self.assertIn("is not of type 'License'", str(context.exception))
+		self.assertIn("is not a License", str(context.exception))
 
 	def test_AnIdentifierIsANonEmptyString(self) -> None:
 		for call, exception in (
