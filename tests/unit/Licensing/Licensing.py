@@ -327,9 +327,14 @@ class MalformedExpressions(Testcase):
 	"""Expressions that can't be parsed."""
 
 	def test_Empty(self) -> None:
-		for expression in ("", "   "):
-			with self.assertRaises(LicenseExpressionError):
-				LicenseExpression.Parse(expression)
+		"""An empty string is a bad argument, like every other empty identifier in this module."""
+		with self.assertRaises(ValueError):
+			LicenseExpression.Parse("")
+
+	def test_WhitespaceOnly(self) -> None:
+		"""A non-empty string that tokenizes to nothing is a bad expression, not a bad argument."""
+		with self.assertRaises(LicenseExpressionError):
+			LicenseExpression.Parse("   ")
 
 	def test_UnknownLicense(self) -> None:
 		with self.assertRaises(LicenseExpressionError):
@@ -407,16 +412,15 @@ class ConstructingExpressions(Testcase):
 		with self.assertRaises(LicensingError):
 			target.Left = source.Right
 
-	def test_ReplacingAnOperandDetachesTheOldOne(self) -> None:
-		"""The expression that leaves the slot becomes a tree of its own again."""
+	def test_AFilledSlotIsNotOverwritten(self) -> None:
+		"""An operand slot is filled once; replacing it would silently orphan what it held."""
 		expression = AndOperator(SPDXLicense(Apache_2_0_License), SPDXLicense(MIT_License))
-		replaced = expression.Left
 
-		expression.Left = SPDXLicense(ISC_License)
+		with self.assertRaises(LicensingError):
+			expression.Left = SPDXLicense(ISC_License)
 
-		self.assertIsNone(replaced.Parent)
-		self.assertIs(replaced, replaced.Root)
-		self.assertEqual("ISC AND MIT", str(expression))
+		with self.assertRaises(LicensingError):
+			OrLaterOperator(SPDXLicense(MIT_License)).Operand = SPDXLicense(ISC_License)
 
 	def test_DetachingIsNotSupported(self) -> None:
 		"""``Parent`` records a parent; it can't be unset, because the operator would keep pointing at the node."""
