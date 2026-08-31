@@ -97,11 +97,20 @@ class Parsing(Testcase):
 		with self.assertRaises(ValueError):
 			PythonVersion.Parse("2:1.2.3")
 
-	def test_AnEpochCombinesWithAPrefix(self) -> None:
-		version = SemanticVersion.Parse("2:v1.2.3")
+	def test_ThePrefixComesBeforeTheEpoch(self) -> None:
+		""":pep:`440` accepts ``v1!1.0`` and rejects ``1!v1.0`` - checked against ``packaging``."""
+		version = SemanticVersion.Parse("v2:1.2.3")
 
 		self.assertEqual(2, version.Epoch)
-		self.assertEqual("2:v1.2.3", str(version))
+		self.assertEqual("v2:1.2.3", str(version))
+
+		self.assertEqual(1, PythonVersion.Parse("v1!1.0").Epoch)
+
+		with self.assertRaises(ValueError):
+			SemanticVersion.Parse("2:v1.2.3")
+
+		with self.assertRaises(ValueError):
+			PythonVersion.Parse("1!v1.0")
 
 	def test_AMalformedEpochIsRejected(self) -> None:
 		for source in ("x:1.2.3", ":1.2.3", "1.2:1.2.3", "-1:1.2.3"):
@@ -127,7 +136,7 @@ class Rendering(Testcase):
 
 	def test_NormalizedFormKeepsTheEpochButNotThePrefix(self) -> None:
 		"""A prefix doesn't contribute to the value; an epoch does."""
-		self.assertEqual("2:1.2.3", repr(SemanticVersion.Parse("2:v1.2.3")))
+		self.assertEqual("2:1.2.3", repr(SemanticVersion.Parse("v2:1.2.3")))
 
 	def test_AVersionWithoutAnEpochRendersUnchanged(self) -> None:
 		self.assertEqual("1.2.3", str(SemanticVersion.Parse("1.2.3")))
@@ -181,3 +190,30 @@ class CalendarVersionsAreUnaffected(Testcase):
 
 	def test_ComparisonIsUnchanged(self) -> None:
 		self.assertLess(CalendarVersion.Parse("2024.10"), CalendarVersion.Parse("2025.01"))
+
+
+class PatternRebuilding(Testcase):
+	"""How a derived class gets a pattern matching its own epoch separator."""
+
+	def test_TheDerivedPatternUsesItsOwnSeparator(self) -> None:
+		""":meth:`SemanticVersion.__init_subclass__` rebuilds it from the base class' expression."""
+		self.assertIn(r"(?P<epoch>\d+)!", PythonVersion._PATTERN.pattern)
+		self.assertIn(r"(?P<epoch>\d+):", SemanticVersion._PATTERN.pattern)
+		self.assertNotEqual(SemanticVersion._PATTERN.pattern, PythonVersion._PATTERN.pattern)
+
+	def test_TheSeparatorMustNotBeAnnotatedInADerivedClass(self) -> None:
+		"""
+		'ExtendedType' applies an annotated class attribute *after* '__init_subclass__' has run, so an annotation
+		would hide the separator from the rebuild and leave the class parsing ':'. This pins that it didn't happen.
+		"""
+		self.assertEqual("!", PythonVersion._EPOCH_SEPARATOR)
+		self.assertEqual(1, PythonVersion.Parse("1!1.0").Epoch)
+
+		with self.assertRaises(ValueError):
+			PythonVersion.Parse("1:1.0")
+
+	def test_ADerivedClassKeepingTheSeparatorKeepsThePattern(self) -> None:
+		class Inherited(SemanticVersion):
+			pass
+
+		self.assertIs(SemanticVersion._PATTERN, Inherited._PATTERN)
