@@ -72,62 +72,14 @@ from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, P
 from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ProjectNotFoundError
 from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
-from pyTooling.Licensing       import License, LICENSES, SPDX_INDEX
+from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
 
 
-#: Longest length a ``license`` field may have and still be an identifier rather than the license's full text.
-_LICENSE_IDENTIFIER_LENGTH = 64
-
-#: Pattern splitting a license expression into the identifiers it combines.
-_LICENSE_OPERATOR = re_compile(r"\s+(?:AND|OR)\s+")
-
-def _buildClassifierIndex() -> dict[str, tuple[License, ...]]:
-	"""
-	Index the known licenses by the Python classifier they are written as.
-
-	:returns: Every classifier, mapped to the licenses it could mean.
-	"""
-	index: dict[str, list[License]] = {}
-	for spdxLicense in LICENSES:
-		try:
-			classifier = spdxLicense.PythonClassifier
-		except ValueError:  # pragma: no cover
-			continue
-
-		index.setdefault(classifier, []).append(spdxLicense)
-
-	return {classifier: tuple(licenses) for classifier, licenses in index.items()}
-
-
-#: Python license classifier to the licenses it could mean. ``License :: OSI Approved :: BSD License`` means two.
-_LICENSES_BY_CLASSIFIER: dict[str, tuple[License, ...]] = _buildClassifierIndex()
-
-
-def _resolveLicenseExpression(expression: str) -> tuple[License, ...]:
-	"""
-	Resolve a license expression into the licenses it combines.
-
-	``Apache-2.0 AND MIT`` requires both licenses and ``Apache-2.0 OR BSD-2-Clause`` offers a choice, so both resolve
-	to two licenses - which of the two applies is not a question the metadata answers. An expression is resolved only
-	when *every* identifier in it is known, because a half-resolved license is worse than an unresolved one.
-
-	:param expression: The license expression to resolve.
-	:returns:          The licenses the expression combines, or an empty tuple if any identifier is unknown.
-	"""
-	licenses = []
-	for identifier in _LICENSE_OPERATOR.split(expression.strip()):
-		if (identifier := identifier.strip("() \t")) == "":
-			continue
-
-		if (spdxLicense := SPDX_INDEX.get(identifier, None)) is None:
-			return ()
-
-		licenses.append(spdxLicense)
-
-	return tuple(licenses)
+#: Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it.
+_LICENSE_NOTE_LENGTH = 64
 
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
@@ -703,13 +655,14 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 		1. the :class:`LicenseOverrides` of the package index - an explicit statement always wins,
 		2. ``license_expression``, the PEP 639 field, which is an SPDX expression by definition,
-		3. ``license``, the legacy free-text field, but only when it is short enough to be an identifier rather than
-		   the license's full text,
+		3. ``license``, the legacy free-text field - it is handed to the parser like any other candidate, and a field
+		   holding the license's full text simply doesn't parse,
 		4. a license classifier, but only when it means exactly one license - ``License :: OSI Approved :: BSD
 		   License`` means either ``BSD-2-Clause`` or ``BSD-3-Clause`` and is never guessed at.
 
-		Whatever was found is kept verbatim in :attr:`~pyTooling.Dependency.PackageVersion.LicenseExpression`, even
-		when it doesn't resolve. A release whose license stays unresolved is reported as an
+		Whatever was found is parsed into a :class:`~pyTooling.Licensing.LicenseExpression` and kept verbatim in
+		:attr:`~pyTooling.Dependency.PackageVersion.PublishedLicense`, even when it doesn't parse. A release whose
+		license stays unresolved is reported as an
 		:class:`~pyTooling.Dependency.UnknownLicenseWarning` naming what was published, because that is the list of
 		packages the override file has to answer for.
 
@@ -718,35 +671,43 @@ class Release(PackageVersion, LazyLoadableMixin):
 		index: PythonPackageIndex = self._package._storage
 		overrides = index._licenseOverrides
 		published = []
+		candidates = []
 
-		expression = overrides.LicenseOf(self._package._name, self._version)
-		if expression is None:
+		if (override := overrides.LicenseOf(self._package._name, self._version)) is not None:
+			candidates.append(override)
+		else:
 			if (licenseExpression := infoNode.get("license_expression", None)) is not None:
 				published.append(f"license_expression: {licenseExpression}")
-				expression = licenseExpression
+				candidates.append(licenseExpression)
 			elif (licenseText := (infoNode.get("license", None) or "").strip()) != "":
-				published.append(f"license: {licenseText[:_LICENSE_IDENTIFIER_LENGTH]}")
-				if len(licenseText) <= _LICENSE_IDENTIFIER_LENGTH:
-					expression = licenseText
+				published.append(f"license: {licenseText[:_LICENSE_NOTE_LENGTH]}")
+				candidates.append(licenseText)
 
-			if expression is None:
-				for classifier in infoNode.get("classifiers", None) or ():
-					if not classifier.startswith("License ::"):
-						continue
+			for classifier in infoNode.get("classifiers", None) or ():
+				if not classifier.startswith("License ::"):
+					continue
 
-					published.append(f"classifier: {classifier}")
-					if len(candidates := _LICENSES_BY_CLASSIFIER.get(classifier, ())) == 1:
-						expression = candidates[0].SPDXIdentifier
+				published.append(f"classifier: {classifier}")
+				if len(matches := LICENSES_BY_CLASSIFIER.get(classifier, ())) == 1:
+					candidates.append(matches[0].SPDXIdentifier)
 
-					break
+				break
 
-		self._licenseExpression = expression if expression is not None else ""
-		self._licenses = _resolveLicenseExpression(expression) if expression is not None else ()
+		for candidate in candidates:
+			try:
+				self._licenseExpression = LicenseExpression.Parse(candidate)
+			except (LicenseExpressionError, ValueError):
+				continue
+
+			self._publishedLicense = candidate
+			break
+		else:
+			self._publishedLicense = candidates[0] if len(candidates) > 0 else ""
 
 		if (licenseURL := overrides.LicenseURLOf(self._package._name)) is not None:
 			self._licenseURL = URL.Parse(licenseURL)
 
-		if len(self._licenses) == 0:
+		if self._licenseExpression is None:
 			WarningCollector.Raise(
 				UnknownLicenseWarning(
 					f"License of '{self._package._name}' {self._version} couldn't be resolved."

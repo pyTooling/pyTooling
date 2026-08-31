@@ -40,6 +40,7 @@ from pytest                      import mark
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
 from pyTooling.Dependency.Python import LicenseOverrides
 from pyTooling.Dependency        import BrokenRequirementWarning, UnknownLicenseWarning
+from pyTooling.Licensing         import SPDXLicense, WithOperator
 from pyTooling.Versioning        import PythonVersion
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Testing           import Testcase
@@ -290,7 +291,9 @@ class Licenses(Testcase):
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="BSD-2-Clause")))
 		self.assertEqual(["BSD-2-Clause"], [lic.SPDXIdentifier for lic in release.Licenses])
-		self.assertEqual("BSD-2-Clause", release.LicenseExpression)
+		self.assertEqual("BSD-2-Clause", release.PublishedLicense)
+		self.assertIsInstance(release.LicenseExpression, SPDXLicense)
+		self.assertEqual("BSD-2-Clause", str(release.LicenseExpression))
 
 	def test_LicenseExpression_Choice(self) -> None:
 		"""``A OR B`` offers a choice, and both licenses are reported - the metadata doesn't say which applies."""
@@ -306,14 +309,24 @@ class Licenses(Testcase):
 		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 AND MIT")))
 		self.assertEqual(["Apache-2.0", "MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
 
-	def test_LicenseExpression_Unknown(self) -> None:
-		"""An expression naming an unknown license stays unresolved, but is still reported verbatim."""
+	def test_LicenseExpression_WithException(self) -> None:
+		"""``WITH`` names a license exception, which the expression keeps and :attr:`Licenses` does not report."""
 		release = self._release()
-		warnings = self._resolve(release, self._json(license_expression="Apache-2.0 WITH LLVM-exception"))
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 WITH LLVM-exception")))
+		self.assertEqual(["Apache-2.0"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertIsInstance(release.LicenseExpression, WithOperator)
+		self.assertEqual("Apache-2.0 WITH LLVM-exception", str(release.LicenseExpression))
+
+	def test_LicenseExpression_Unknown(self) -> None:
+		"""An expression naming a license SPDX doesn't define stays unresolved, but is still reported verbatim."""
+		release = self._release()
+		warnings = self._resolve(release, self._json(license_expression="Definitely-Not-A-License"))
 
 		self.assertEqual(1, len(warnings))
 		self.assertEqual((), release.Licenses)
-		self.assertEqual("Apache-2.0 WITH LLVM-exception", release.LicenseExpression)
+		self.assertIsNone(release.LicenseExpression)
+		self.assertEqual("Definitely-Not-A-License", release.PublishedLicense)
 
 	def test_LicenseField_Identifier(self) -> None:
 		"""The legacy ``license`` field resolves when it holds an identifier."""
@@ -329,7 +342,8 @@ class Licenses(Testcase):
 
 		self.assertEqual(1, len(warnings))
 		self.assertEqual((), release.Licenses)
-		self.assertEqual("MIT License", release.LicenseExpression)
+		self.assertIsNone(release.LicenseExpression)
+		self.assertEqual("MIT License", release.PublishedLicense)
 
 	def test_LicenseField_FullText(self) -> None:
 		"""A ``license`` field holding the license's full text is not an identifier and isn't treated as one."""
@@ -366,7 +380,8 @@ class Licenses(Testcase):
 		warnings = self._resolve(release, self._json())
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual("", release.LicenseExpression)
+		self.assertIsNone(release.LicenseExpression)
+		self.assertEqual("", release.PublishedLicense)
 		self.assertEqual(["The package index published no license information."], warnings[0].__notes__)
 
 	def test_Override_WinsOverEverything(self) -> None:

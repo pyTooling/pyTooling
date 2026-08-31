@@ -80,7 +80,8 @@ __all__ = [
 	"AGPL_3_0_only",
 	"AGPL_3_0_or_later",
 
-	"SPDX_INDEX"
+	"SPDX_INDEX",
+	"LICENSES_BY_CLASSIFIER"
 ]
 
 
@@ -354,6 +355,34 @@ LICENSES: tuple[License, ...] = (
 
 #: Mapping of predefined licenses, indexed by their SPDX identifier.
 SPDX_INDEX: dict[str, License] = {spdxLicense.SPDXIdentifier: spdxLicense for spdxLicense in LICENSES}
+
+
+def _buildClassifierIndex() -> dict[str, tuple[License, ...]]:
+	"""
+	Index the predefined licenses by the Python classifier they are published as.
+
+	A license without a classifier is skipped rather than reported: :attr:`License.PythonClassifier` raises for it,
+	and a license the Python ecosystem has no classifier for simply can't be found that way.
+
+	:returns: Every classifier, mapped to the licenses it can mean.
+	"""
+	index: dict[str, list[License]] = {}
+	for spdxLicense in LICENSES:
+		try:
+			classifier = spdxLicense.PythonClassifier
+		except ValueError:  # pragma: no cover
+			continue
+
+		index.setdefault(classifier, []).append(spdxLicense)
+
+	return {classifier: tuple(licenses) for classifier, licenses in index.items()}
+
+
+#: Mapping of a Python license classifier to the licenses it can mean.
+#:
+#: The mapping is one-to-one except for ``License :: OSI Approved :: BSD License``, which means either
+#: :data:`BSD_2_Clause_License` or :data:`BSD_3_Clause_License` with nothing in the classifier to tell them apart.
+LICENSES_BY_CLASSIFIER: dict[str, tuple[License, ...]] = _buildClassifierIndex()
 
 
 #: The :class:`License` class under a name no expression node shadows with a property of its own.
