@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2025-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -36,7 +36,7 @@ Covered are parsing a constraint list, matching a version against it, and the em
 *any version*.
 """
 from pyTooling.Versioning import SemanticVersion, PythonVersion, VersionComparison, VersionConstraint
-from pyTooling.Versioning import VersionExpression
+from pyTooling.Versioning import CompatibleVersionConstraint, PythonVersionExpression, VersionExpression
 from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -112,8 +112,25 @@ class Parsing(Testcase):
 				self.assertTrue(expression.MatchesAnyVersion)
 				self.assertEqual("", str(expression))
 
-	def test_AnEmptyConstraintIsRejected(self) -> None:
-		for source in (">=1.2.0,", ",<2.0.0", ">=1.2.0,,<2.0.0"):
+	def test_RedundantSeparatorsAreIgnored(self) -> None:
+		"""``packaging`` and npm's ``semver`` both accept these, so rejecting them would be stricter than either."""
+		for source in (">=1.2.0,", ",>=1.2.0", ">=1.2.0,,<2.0.0", ">=1.2.0 , , <2.0.0"):
+			with self.subTest(source=source):
+				self.assertIn(SemanticVersion.Parse("1.5.0"), VersionExpression.Parse(source))
+
+	def test_WhitespaceSeparatesConstraintsToo(self) -> None:
+		"""npm separates by whitespace, and allows it after the operator as well - both have to work."""
+		for source in (">=1.2.0 <2.0.0", ">= 1.2.0 < 2.0.0", ">=1.2.0, <2.0.0"):
+			with self.subTest(source=source):
+				expression = VersionExpression.Parse(source)
+
+				self.assertEqual(">=1.2.0,<2.0.0", str(expression))
+				self.assertIn(SemanticVersion.Parse("1.5.0"), expression)
+				self.assertNotIn(SemanticVersion.Parse("2.0.0"), expression)
+
+	def test_ForeignSyntaxIsRejected(self) -> None:
+		"""Another ecosystem's shorthand is not silently read as a version."""
+		for source in ("~=1.2.3", "^1.2.3", "[1.0.0,2.0.0)", ">=1.0.0 && <2.0.0"):
 			with self.subTest(source=source):
 				with self.assertRaises(ValueError):
 					VersionExpression.Parse(source)
@@ -161,3 +178,65 @@ class Matching(Testcase):
 	def test_ARejectedVersion(self) -> None:
 		with self.assertRaises(TypeError):
 			"1.2.0" in VersionExpression.Parse(">=1.0.0")
+
+
+class PythonDialect(Testcase):
+	"""The PEP 440 dialect, which adds the compatible release operator."""
+
+	def test_TheBaseDialectHasNoCompatibleRelease(self) -> None:
+		""":class:`VersionExpression` is ecosystem-neutral; ``~=`` is PEP 440's."""
+		with self.assertRaises(ValueError):
+			VersionExpression.Parse("~=1.2.3")
+
+	def test_CompatibleReleaseIsParsed(self) -> None:
+		expression = PythonVersionExpression.Parse("~=1.2.3")
+
+		self.assertEqual(1, len(expression))
+		self.assertIsInstance(expression.Constraints[0], CompatibleVersionConstraint)
+		self.assertEqual("~=1.2.3", str(expression))
+
+	def test_CompatibleReleaseMatchesPEP440(self) -> None:
+		"""The upper bound is the part left of the last one written, incremented - checked against ``packaging``."""
+		for source, upperBound, matching, notMatching in (
+			("~=1.2",     "2",     ("1.2.0", "1.9.9"), ("1.1.9", "2.0.0")),
+			("~=1.2.3",   "1.3",   ("1.2.3", "1.2.9"), ("1.2.2", "1.3.0")),
+			("~=1.2.3.4", "1.2.4", ("1.2.3.4", "1.2.3.9"), ("1.2.3.3", "1.2.4.0")),
+		):
+			with self.subTest(source=source):
+				expression = PythonVersionExpression.Parse(source)
+				constraint = expression.Constraints[0]
+
+				self.assertEqual(upperBound, str(constraint.UpperBound))
+				for version in matching:
+					self.assertIn(PythonVersion.Parse(version), expression)
+				for version in notMatching:
+					self.assertNotIn(PythonVersion.Parse(version), expression)
+
+	def test_CompatibleReleaseNeedsTwoParts(self) -> None:
+		"""``~=1`` would say what ``>=1`` says, so PEP 440 rejects it and so do we."""
+		with self.assertRaises(ValueError):
+			PythonVersionExpression.Parse("~=1")
+
+	def test_CompatibleReleaseKeepsTheVersionType(self) -> None:
+		expression = PythonVersionExpression.Parse("~=3.9")
+
+		self.assertIsInstance(expression.Constraints[0].Version, PythonVersion)
+		self.assertIsInstance(expression.Constraints[0].UpperBound, PythonVersion)
+		self.assertIn(PythonVersion.Parse("3.14"), expression)
+		self.assertNotIn(PythonVersion.Parse("4.0"), expression)
+
+	def test_TheOrderingComparisonsStillWork(self) -> None:
+		expression = PythonVersionExpression.Parse(">=1.0,!=1.3,<2.0")
+
+		self.assertIn(PythonVersion.Parse("1.2"), expression)
+		self.assertNotIn(PythonVersion.Parse("1.3"), expression)
+		self.assertNotIn(PythonVersion.Parse("2.0"), expression)
+
+	def test_APlainConstraintRejectsCompatibleRelease(self) -> None:
+		"""``VersionConstraint`` cannot express it; the dedicated class derives the upper bound."""
+		with self.assertRaises(ValueError):
+			VersionConstraint(VersionComparison.CompatibleRelease, SemanticVersion.Parse("1.2.3"))
+
+	def test_ACompatibleReleaseNeedsASemanticVersion(self) -> None:
+		with self.assertRaises(TypeError):
+			CompatibleVersionConstraint("1.2.3")
