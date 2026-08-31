@@ -641,13 +641,14 @@ class LicenseReference(LicenseExpression):
 		elif len(licenseIdentifier) == 0:
 			raise ValueError("Parameter 'licenseIdentifier' is empty.")
 
-		if documentIdentifier is not None:
-			if not isinstance(documentIdentifier, str):
-				ex = TypeError("Parameter 'documentIdentifier' is not a string.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(documentIdentifier)}'.")
-				raise ex
-			elif len(documentIdentifier) == 0:
-				raise ValueError("Parameter 'documentIdentifier' is empty.")
+		if documentIdentifier is None:
+			pass
+		elif not isinstance(documentIdentifier, str):
+			ex = TypeError("Parameter 'documentIdentifier' is not a string.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(documentIdentifier)}'.")
+			raise ex
+		elif len(documentIdentifier) == 0:
+			raise ValueError("Parameter 'documentIdentifier' is empty.")
 
 		self._licenseIdentifier =  licenseIdentifier
 		self._documentIdentifier = documentIdentifier
