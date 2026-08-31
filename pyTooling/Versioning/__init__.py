@@ -3132,6 +3132,19 @@ class RangeVersionConstraint(VersionConstraint[V]):
 		:raises ValueError: If the version has too few parts for this shorthand.
 		"""
 
+	@staticmethod
+	def _BoundEpoch(version: SemanticVersion) -> Nullable[int]:
+		"""
+		Return the epoch a derived bound has to carry, if the written version states one.
+
+		An upper bound is built from the written version's parts, so it has to be in the same epoch - otherwise it
+		lands in epoch 0, which outranks nothing and leaves the constraint matching no version at all.
+
+		:param version: The version the shorthand is written with.
+		:returns:       The version's epoch, or ``None`` if it states none.
+		"""
+		return version.Epoch if Parts.Epoch in version._parts else None
+
 	@readonly
 	def UpperBound(self) -> SemanticVersion:
 		"""
@@ -3205,12 +3218,13 @@ class CompatibleVersionConstraint(RangeVersionConstraint[V]):
 		:raises ValueError: If the version has fewer than two parts.
 		"""
 		versionType = version.__class__
+		epoch =       self._BoundEpoch(version)
 		if Parts.Build in version._parts:
-			return versionType(version.Major, version.Minor, version.Patch + 1)
+			return versionType(version.Major, version.Minor, version.Patch + 1, epoch=epoch)
 		elif Parts.Micro in version._parts:
-			return versionType(version.Major, version.Minor + 1)
+			return versionType(version.Major, version.Minor + 1, epoch=epoch)
 		elif Parts.Minor in version._parts:
-			return versionType(version.Major + 1)
+			return versionType(version.Major + 1, epoch=epoch)
 
 		error = ValueError(f"Version '{version}' has too few parts for a compatible release.")
 		error.add_note("'~=1' would mean the same as '>=1'; write at least a major and a minor part.")
@@ -3248,12 +3262,13 @@ class CaretVersionConstraint(RangeVersionConstraint[V]):
 		:returns:       The exclusive upper bound.
 		"""
 		versionType = version.__class__
+		epoch =       self._BoundEpoch(version)
 		if version.Major != 0 or Parts.Minor not in version._parts:
-			return versionType(version.Major + 1)
+			return versionType(version.Major + 1, epoch=epoch)
 		elif version.Minor != 0 or Parts.Micro not in version._parts:
-			return versionType(0, version.Minor + 1)
+			return versionType(0, version.Minor + 1, epoch=epoch)
 
-		return versionType(0, 0, version.Patch + 1)
+		return versionType(0, 0, version.Patch + 1, epoch=epoch)
 
 
 @export
@@ -3284,10 +3299,11 @@ class TildeVersionConstraint(RangeVersionConstraint[V]):
 		:returns:       The exclusive upper bound.
 		"""
 		versionType = version.__class__
+		epoch =       self._BoundEpoch(version)
 		if Parts.Minor in version._parts:
-			return versionType(version.Major, version.Minor + 1)
+			return versionType(version.Major, version.Minor + 1, epoch=epoch)
 
-		return versionType(version.Major + 1)
+		return versionType(version.Major + 1, epoch=epoch)
 
 
 
@@ -3388,12 +3404,17 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 		so those are excluded from it. Without that the optional operator group would let ``>=1.2.0 <2.0.0`` read its
 		second constraint as the *version* ``<2.0.0``.
 
+		The **epoch separator is the exception** and stays allowed: :pep:`440` writes an epoch ``1!1.0``, and ``!``
+		is also the first character of ``!=``. Excluding it would cut ``>=1!1.0`` short at the epoch. The operator
+		alternation is tried before the version at every position, so ``!=`` is still read as an operator wherever a
+		constraint can begin.
+
 		:returns: The pattern, with the operator as group 1 and the version as group 2.
 		"""
 		operators = "|".join(re_escape(operator) for operator in sorted(cls._OPERATORS, key=len, reverse=True))
-		excluded =  re_escape("".join(sorted(set("".join(cls._OPERATORS)) | set(cls._SEPARATORS))))
+		excluded =  (set("".join(cls._OPERATORS)) | set(cls._SEPARATORS)) - set(cls._VERSION_TYPE._EPOCH_SEPARATOR)
 
-		return re_compile(rf"({operators})?\s*([^\s{excluded}]+)")
+		return re_compile(rf"({operators})?\s*([^\s{re_escape("".join(sorted(excluded)))}]+)")
 
 	@classmethod
 	def Parse(cls, expression: Nullable[str], versionType: Nullable[type[Version]] = None) -> Self:

@@ -400,3 +400,61 @@ class ReviewFollowUps(Testcase):
 
 		with self.assertRaises(TypeError):
 			VersionExpression(42)
+
+
+class EpochsInExpressions(Testcase):
+	"""How an epoch - :pep:`440`'s ``1!1.0`` and Debian's ``2:1.0`` - travels through an expression."""
+
+	def test_TheEpochSeparatorIsNotAnOperator(self) -> None:
+		"""``!`` starts ``!=`` *and* separates a :pep:`440` epoch, so it may not be excluded from a version."""
+		expression = PythonVersionExpression.Parse(">=1!1.0")
+
+		self.assertEqual(">=1!1.0", str(expression))
+		self.assertEqual(1, expression.Constraints[0].Version.Epoch)
+
+	def test_NotEqualIsStillAnOperator(self) -> None:
+		"""Allowing ``!`` inside a version must not stop ``!=`` being read where a constraint begins."""
+		expression = PythonVersionExpression.Parse(">=1.0,!=1.3")
+
+		self.assertEqual(">=1.0,!=1.3", str(expression))
+		self.assertEqual(VersionComparison.Unequal, expression.Constraints[1].Comparison)
+
+	def test_AnEpochOutranksTheReleaseInAComparison(self) -> None:
+		expression = PythonVersionExpression.Parse(">=1!1.0")
+
+		self.assertIn(PythonVersion.Parse("1!2.0"), expression)
+		self.assertIn(PythonVersion.Parse("2!0.1"), expression)
+		self.assertNotIn(PythonVersion.Parse("99.0"), expression)
+
+	def test_TheBaseDialectTakesDebianEpochs(self) -> None:
+		expression = VersionExpression.Parse(">=2:1.0.0")
+
+		self.assertIn(SemanticVersion.Parse("2:9.9.9"), expression)
+		self.assertNotIn(SemanticVersion.Parse("99.0.0"), expression)
+
+	def test_AShorthandBoundStaysInTheSameEpoch(self) -> None:
+		"""A bound built in epoch 0 outranks nothing, so the constraint would match no version at all."""
+		constraint = PythonVersionExpression.Parse("~=2!1.2.3").Constraints[0]
+
+		self.assertEqual(2, constraint.UpperBound.Epoch)
+		self.assertEqual("2!1.3", str(constraint.UpperBound))
+
+		self.assertIn(PythonVersion.Parse("2!1.2.9"), constraint)
+		self.assertNotIn(PythonVersion.Parse("2!1.3.0"), constraint)
+		self.assertNotIn(PythonVersion.Parse("1!9.9.9"), constraint)
+
+	def test_AShorthandWithoutAnEpochGainsNone(self) -> None:
+		constraint = PythonVersionExpression.Parse("~=1.2.3").Constraints[0]
+
+		self.assertEqual(0, constraint.UpperBound.Epoch)
+		self.assertEqual("1.3", str(constraint.UpperBound))
+
+	def test_EveryShorthandCarriesTheEpoch(self) -> None:
+		"""All three derive a bound from the written version's parts, so all three have to keep its epoch."""
+		for source, dialect, bound in (
+			("~=2!1.2.3", PythonVersionExpression, "2!1.3"),
+			("^2:1.2.3",  NPMVersionExpression,    "2:2"),
+			("~2:1.2.3",  NPMVersionExpression,    "2:1.3"),
+		):
+			with self.subTest(source=source):
+				self.assertEqual(bound, str(dialect.Parse(source).Constraints[0].UpperBound))
