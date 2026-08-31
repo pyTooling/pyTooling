@@ -36,7 +36,9 @@ Covered are parsing a constraint list, matching a version against it, and the em
 *any version*.
 """
 from pyTooling.Versioning import SemanticVersion, PythonVersion, VersionComparison, VersionConstraint
-from pyTooling.Versioning import CompatibleVersionConstraint, PythonVersionExpression, VersionExpression
+from pyTooling.Versioning import CaretVersionConstraint, CompatibleVersionConstraint, DebianVersionExpression
+from pyTooling.Versioning import NPMVersionExpression, PythonVersionExpression, TildeVersionConstraint
+from pyTooling.Versioning import VersionExpression
 from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -240,3 +242,110 @@ class PythonDialect(Testcase):
 	def test_ACompatibleReleaseNeedsASemanticVersion(self) -> None:
 		with self.assertRaises(TypeError):
 			CompatibleVersionConstraint("1.2.3")
+
+
+class NPMDialect(Testcase):
+	"""npm's dialect: whitespace separated, ``=`` for equality, no ``!=``, plus ``^`` and ``~``."""
+
+	def test_WhitespaceSeparates(self) -> None:
+		expression = NPMVersionExpression.Parse(">=1.2.0 <2.0.0")
+
+		self.assertEqual(">=1.2.0 <2.0.0", str(expression))
+		self.assertIn(SemanticVersion.Parse("1.5.0"), expression)
+		self.assertNotIn(SemanticVersion.Parse("2.0.0"), expression)
+
+	def test_WhatNPMRejectsIsRejected(self) -> None:
+		"""A comma, ``==`` and ``!=`` are all syntax errors in npm - checked against npm's own ``semver``."""
+		for source in (">=1.2.0,<2.0.0", "==1.2.3", "!=1.2.3"):
+			with self.subTest(source=source):
+				with self.assertRaises(ValueError):
+					NPMVersionExpression.Parse(source)
+
+	def test_EqualityIsASingleEquals(self) -> None:
+		expression = NPMVersionExpression.Parse("=1.2.3")
+
+		self.assertEqual("=1.2.3", str(expression))
+		self.assertIn(SemanticVersion.Parse("1.2.3"), expression)
+		self.assertNotIn(SemanticVersion.Parse("1.2.4"), expression)
+
+	def test_CaretPivotsOnTheLeftmostNonZeroPart(self) -> None:
+		"""Bounds checked against npm's ``semver.validRange``."""
+		for source, upperBound in (
+			("^1.2.3", "2"), ("^1.2", "2"), ("^1", "2"),
+			("^0.2.3", "0.3"), ("^0.2", "0.3"),
+			("^0.0.3", "0.0.4"), ("^0.0.0", "0.0.1"),
+			("^0.0", "0.1"), ("^0", "1"),
+		):
+			with self.subTest(source=source):
+				expression = NPMVersionExpression.Parse(source)
+
+				self.assertIsInstance(expression.Constraints[0], CaretVersionConstraint)
+				self.assertEqual(upperBound, str(expression.Constraints[0].UpperBound))
+
+	def test_TildePivotsOnTheMinorPart(self) -> None:
+		for source, upperBound in (("~1.2.3", "1.3"), ("~1.2", "1.3"), ("~1", "2"), ("~0.2.3", "0.3"), ("~0", "1")):
+			with self.subTest(source=source):
+				expression = NPMVersionExpression.Parse(source)
+
+				self.assertIsInstance(expression.Constraints[0], TildeVersionConstraint)
+				self.assertEqual(upperBound, str(expression.Constraints[0].UpperBound))
+
+	def test_TildeIsNotPEP440sCompatibleRelease(self) -> None:
+		"""They agree on three parts and disagree on two, which is why they are separate classes."""
+		self.assertEqual("1.3", str(NPMVersionExpression.Parse("~1.2.3").Constraints[0].UpperBound))
+		self.assertEqual("1.3", str(PythonVersionExpression.Parse("~=1.2.3").Constraints[0].UpperBound))
+
+		self.assertEqual("1.3", str(NPMVersionExpression.Parse("~1.2").Constraints[0].UpperBound))
+		self.assertEqual("2",   str(PythonVersionExpression.Parse("~=1.2").Constraints[0].UpperBound))
+
+
+class DebianDialect(Testcase):
+	"""Debian's dialect: ``<<`` and ``>>`` are strict, ``=`` is equality, and there is no ``!=``."""
+
+	def test_TheStrictOperators(self) -> None:
+		expression = DebianVersionExpression.Parse(">> 1.2.3")
+
+		self.assertEqual(">>1.2.3", str(expression))
+		self.assertIn(SemanticVersion.Parse("1.3.0"), expression)
+		self.assertNotIn(SemanticVersion.Parse("1.2.3"), expression)
+
+	def test_EqualityIsASingleEquals(self) -> None:
+		expression = DebianVersionExpression.Parse("= 1.2.3")
+
+		self.assertEqual("=1.2.3", str(expression))
+		self.assertIn(SemanticVersion.Parse("1.2.3"), expression)
+
+	def test_TheObsoleteSpellingsAreRejected(self) -> None:
+		"""``dpkg`` still takes ``<`` and ``>`` but warns; they meant ``<=`` and ``>=``, so reading them
+		as strict would invert their meaning."""
+		for source in ("< 1.0", "> 1.0"):
+			with self.subTest(source=source):
+				with self.assertRaises(ValueError):
+					DebianVersionExpression.Parse(source)
+
+	def test_ThereIsNoNotEqual(self) -> None:
+		with self.assertRaises(ValueError):
+			DebianVersionExpression.Parse("!= 1.0")
+
+	def test_NoShorthandIsAccepted(self) -> None:
+		for source in ("~= 1.2", "^1.2.3", "~1.2.3"):
+			with self.subTest(source=source):
+				with self.assertRaises(ValueError):
+					DebianVersionExpression.Parse(source)
+
+
+class DialectsAreIndependent(Testcase):
+	"""Each dialect accepts its own syntax and refuses the others'."""
+
+	def test_EachDialectRefusesTheOthersShorthand(self) -> None:
+		for dialect, accepted, refused in (
+			(PythonVersionExpression, "~=1.2.3", ("^1.2.3", "~1.2.3")),
+			(NPMVersionExpression,    "^1.2.3", ("~=1.2.3",)),
+			(DebianVersionExpression, ">> 1.2", ("~=1.2.3", "^1.2.3")),
+			(VersionExpression,       ">=1.2.3", ("~=1.2.3", "^1.2.3", "~1.2.3")),
+		):
+			with self.subTest(dialect=dialect.__name__):
+				self.assertEqual(1, len(dialect.Parse(accepted)))
+				for source in refused:
+					with self.assertRaises(ValueError):
+						dialect.Parse(source)
