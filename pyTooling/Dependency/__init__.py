@@ -47,7 +47,7 @@ Implementation of package dependencies.
 from __future__            import annotations
 
 from datetime              import datetime
-from typing                import Optional as Nullable, Union, Iterable, Self, Iterator
+from typing                import Optional as Nullable, Iterable, Self, Iterator
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
