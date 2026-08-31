@@ -459,3 +459,59 @@ class BoundInvariant(Testcase):
 		versionRange.UpperBound = None
 
 		self.assertIn(self._v("9.9.9"), versionRange)
+
+
+class TypeCompatibility(Testcase):
+	"""One rule decides which versions relate to a range: the one ``__init__`` applies between its bounds."""
+
+	@staticmethod
+	def _range() -> VersionRange:
+		return VersionRange(SemanticVersion.Parse("1.0.0"), SemanticVersion.Parse("2.0.0"))
+
+	def test_TheConstructorAcceptsASubclassAsTheOtherBound(self) -> None:
+		""":class:`PythonVersion` derives from :class:`SemanticVersion`, so the two relate."""
+		VersionRange(SemanticVersion.Parse("1.0.0"), PythonVersion.Parse("2.0"))
+		VersionRange(PythonVersion.Parse("1.0"), SemanticVersion.Parse("2.0.0"))
+
+	def test_TheConstructorRefusesASibling(self) -> None:
+		""":class:`CalendarVersion` and :class:`SemanticVersion` both derive from :class:`Version`, not each other."""
+		with self.assertRaises(TypeError):
+			VersionRange(SemanticVersion.Parse("1.0.0"), CalendarVersion.Parse("2024.10"))
+
+	def test_EveryPathAcceptsASubclass(self) -> None:
+		"""Membership and the comparison operators apply the same rule the constructor does."""
+		versionRange = self._range()
+		version = PythonVersion.Parse("1.5")
+
+		self.assertIn(version, versionRange)
+		self.assertFalse(versionRange < version)
+		self.assertFalse(versionRange > version)
+
+	def test_EveryPathRefusesASibling(self) -> None:
+		versionRange = self._range()
+		version = CalendarVersion.Parse("2024.10")
+
+		with self.assertRaises(TypeError):
+			version in versionRange
+
+		with self.assertRaises(TypeError):
+			versionRange < version
+
+		with self.assertRaises(TypeError):
+			versionRange >= version
+
+	def test_AnUnboundRangeRelatesToAnything(self) -> None:
+		"""With both ends unbound there is no bound type to be compatible with."""
+		versionRange = VersionRange(None, None)
+
+		self.assertIn(CalendarVersion.Parse("2024.10"), versionRange)
+		self.assertIn(SemanticVersion.Parse("1.0.0"), versionRange)
+
+	def test_TheErrorNamesBothTypes(self) -> None:
+		versionRange = self._range()
+
+		with self.assertRaises(TypeError) as capture:
+			CalendarVersion.Parse("2024.10") in versionRange
+
+		self.assertIn("CalendarVersion", capture.exception.__notes__[0])
+		self.assertIn("SemanticVersion", capture.exception.__notes__[1])

@@ -2416,6 +2416,30 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._boundHandling = value
 
+	def _CheckCompatibility(self, other: Version) -> None:
+		"""
+		Check that a version can be related to this range's bounds.
+
+		The rule is the one :meth:`__init__` applies *between* the two bounds: the same class, or one deriving from
+		the other. So a range bounded by :class:`SemanticVersion` accepts a :class:`PythonVersion`, because that
+		derives from it, and refuses a :class:`CalendarVersion`, which is a sibling. A range whose bounds are both
+		unbound carries no type to check against, so it accepts any version.
+
+		:param other:      The version to check against this range's bounds.
+		:raises TypeError: If the version's type is unrelated to this range's bounds.
+		"""
+		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
+		if reference is None:
+			return
+
+		otherType = other.__class__
+		referenceType = reference.__class__
+		if not (otherType is referenceType or issubclass(otherType, referenceType) or issubclass(referenceType, otherType)):
+			ex = TypeError("Parameter 'other' is not compatible with version range.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"This range is bounded by type '{getFullyQualifiedName(reference)}'.")
+			raise ex
+
 	def __and__(self, other: Any) -> VersionRange[T]:
 		"""
 		Compute the intersection of two version ranges.
@@ -2478,20 +2502,12 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		version: Version = other
-
-		# The type check needs a bound to compare against; an unbound one carries no type, so whichever exists is used.
-		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
-		if reference is not None:
-			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
-				ex = TypeError("Parameter 'other' is not compatible with version range.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-				raise ex
+		self._CheckCompatibility(other)
 
 		if self._upperBound is None:
 			return False
 
-		return self._upperBound < version
+		return self._upperBound < other
 
 	def __le__(self, other: Any) -> bool:
 		"""
@@ -2508,23 +2524,15 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		version: Version = other
-
-		# The type check needs a bound to compare against; an unbound one carries no type, so whichever exists is used.
-		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
-		if reference is not None:
-			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
-				ex = TypeError("Parameter 'other' is not compatible with version range.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-				raise ex
+		self._CheckCompatibility(other)
 
 		if self._upperBound is None:
 			return False
 
 		if RangeBoundHandling.UpperBoundExclusive in self._boundHandling:
-			return self._upperBound < version
+			return self._upperBound < other
 
-		return self._upperBound <= version
+		return self._upperBound <= other
 
 	def __gt__(self, other: Any) -> bool:
 		"""
@@ -2541,20 +2549,12 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		version: Version = other
-
-		# The type check needs a bound to compare against; an unbound one carries no type, so whichever exists is used.
-		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
-		if reference is not None:
-			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
-				ex = TypeError("Parameter 'other' is not compatible with version range.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-				raise ex
+		self._CheckCompatibility(other)
 
 		if self._lowerBound is None:
 			return False
 
-		return self._lowerBound > version
+		return self._lowerBound > other
 
 	def __ge__(self, other: Any) -> bool:
 		"""
@@ -2571,23 +2571,15 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		version: Version = other
-
-		# The type check needs a bound to compare against; an unbound one carries no type, so whichever exists is used.
-		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
-		if reference is not None:
-			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
-				ex = TypeError("Parameter 'other' is not compatible with version range.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-				raise ex
+		self._CheckCompatibility(other)
 
 		if self._lowerBound is None:
 			return False
 
 		if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
-			return self._lowerBound > version
+			return self._lowerBound > other
 
-		return self._lowerBound >= version
+		return self._lowerBound >= other
 
 	def __contains__(self, version: Version) -> bool:
 		"""
@@ -2596,13 +2588,17 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		:param version:    Optional, version to check.
 		:returns:          ``True``, if version is in range.
 		:raises TypeError: If parameter ``version`` is not of type :class:`Version`.
+		:raises TypeError: If parameter ``version``'s type is unrelated to this range's bounds. |br|
+		                   The rule is the one :meth:`__init__` applies between the bounds.
 		"""
 		if not isinstance(version, Version):
 			ex = TypeError("Parameter 'item' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
 			raise ex
 
-		# An open bound excludes nothing, so its half of the comparison is simply not made.
+		self._CheckCompatibility(version)
+
+		# An unbound end excludes nothing, so its half of the comparison is simply not made.
 		if self._lowerBound is not None:
 			if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
 				if not (self._lowerBound < version):
