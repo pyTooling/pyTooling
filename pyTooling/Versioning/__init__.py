@@ -2925,3 +2925,256 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]
+
+
+@export
+class VersionComparison(Enum):
+	"""
+	The comparison one constraint of a :class:`VersionExpression` applies to a version.
+
+	The operators are the ones a requirement or an override file writes, so the enumeration's values double as the
+	rendering of a constraint.
+	"""
+
+	Equal              = "=="  #: The version has to be equal to the constraint's version.
+	Unequal            = "!="  #: The version must not be the constraint's version.
+	LessThan           = "<"   #: The version has to be lower than the constraint's version.
+	LessThanOrEqual    = "<="  #: The version must not be higher than the constraint's version.
+	GreaterThan        = ">"   #: The version has to be higher than the constraint's version.
+	GreaterThanOrEqual = ">="  #: The version must not be lower than the constraint's version.
+
+	def __str__(self) -> str:
+		"""
+		Return the operator as it is written in an expression.
+
+		:returns: The comparison's operator.
+		"""
+		return self.value
+
+
+@export
+class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
+	"""
+	One comparison of a :class:`VersionExpression`, such as ``>=1.2.0``.
+
+	A constraint is a container of the versions satisfying it, so membership is asked with ``in``:
+
+	.. code-block:: python
+
+	   constraint = VersionConstraint(VersionComparison.GreaterThanOrEqual, SemanticVersion.Parse("1.2.0"))
+	   SemanticVersion.Parse("1.5.0") in constraint   # True
+	"""
+
+	_comparison: VersionComparison  #: The comparison this constraint applies.
+	_version:    V                  #: The version the compared version is held against.
+
+	def __init__(self, comparison: VersionComparison, version: V) -> None:
+		"""
+		Initialize a constraint from a comparison and the version it compares against.
+
+		:param comparison: The comparison to apply.
+		:param version:    The version to compare against.
+		:raises TypeError: If parameter 'comparison' is not of type :class:`VersionComparison`.
+		:raises TypeError: If parameter 'version' is not of type :class:`Version`.
+		"""
+		if not isinstance(comparison, VersionComparison):
+			ex = TypeError("Parameter 'comparison' is not of type 'VersionComparison'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(comparison)}'.")
+			raise ex
+
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		self._comparison = comparison
+		self._version =    version
+
+	@readonly
+	def Comparison(self) -> VersionComparison:
+		"""
+		Read-only property to access the comparison this constraint applies (:attr:`_comparison`).
+
+		:returns: The comparison.
+		"""
+		return self._comparison
+
+	@readonly
+	def Version(self) -> V:
+		"""
+		Read-only property to access the version this constraint compares against (:attr:`_version`).
+
+		:returns: The version.
+		"""
+		return self._version
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version satisfies this constraint.
+
+		:param version:    The version to check.
+		:returns:          ``True``, if the version satisfies the constraint.
+		:raises TypeError: If parameter 'version' is not of type :class:`Version`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		if self._comparison is VersionComparison.Equal:
+			return version == self._version
+		elif self._comparison is VersionComparison.Unequal:
+			return version != self._version
+		elif self._comparison is VersionComparison.LessThan:
+			return version < self._version
+		elif self._comparison is VersionComparison.LessThanOrEqual:
+			return version <= self._version
+		elif self._comparison is VersionComparison.GreaterThan:
+			return version > self._version
+
+		return version >= self._version
+
+	def __str__(self) -> str:
+		"""
+		Return the constraint as it is written in an expression.
+
+		:returns: The operator followed by the version.
+		"""
+		return f"{self._comparison}{self._version}"
+
+
+@export
+class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
+	"""
+	A conjunction of :class:`VersionConstraint`\\ s, such as ``>=1.2.0,<2.0.0``.
+
+	Every constraint has to be satisfied, which is what a comma means in a requirement and in a dependency override
+	file. An expression with **no** constraints matches every version, so a missing expression can be represented
+	rather than special-cased by its callers.
+
+	.. code-block:: python
+
+	   expression = VersionExpression.Parse(">=1.2.0,<2.0.0")
+	   SemanticVersion.Parse("1.5.0") in expression   # True
+	   SemanticVersion.Parse("2.0.0") in expression   # False
+
+	   SemanticVersion.Parse("4.2.0") in VersionExpression.Parse("")   # True - an empty expression matches anything
+	"""
+
+	#: Splits a single constraint into its operator and its version. A missing operator means ``==``.
+	_CONSTRAINT: ClassVar[Pattern[str]] = re_compile(r"^\s*(==|!=|>=|<=|>|<)?\s*(\S.*?)\s*$")
+
+	_constraints: tuple[VersionConstraint[V], ...]  #: The constraints a version has to satisfy, all of them.
+
+	def __init__(self, constraints: Iterable[VersionConstraint[V]] = ()) -> None:
+		"""
+		Initialize an expression from its constraints.
+
+		:param constraints: Optional, the constraints a version has to satisfy. None of them means *any version*.
+		:raises TypeError:  If parameter 'constraints' contains an item that is not a :class:`VersionConstraint`.
+		"""
+		items = tuple(constraints)
+		for constraint in items:
+			if not isinstance(constraint, VersionConstraint):
+				ex = TypeError("Parameter 'constraints' contains an item that is not of type 'VersionConstraint'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(constraint)}'.")
+				raise ex
+
+		self._constraints = items
+
+	@classmethod
+	def Parse(cls, expression: Nullable[str], versionType: type[Version] = SemanticVersion) -> VersionExpression[Version]:
+		"""
+		Parse an expression such as ``>=1.2.0,<2.0.0`` into its constraints.
+
+		A constraint without an operator is an equality, so ``1.2.0`` and ``==1.2.0`` are the same expression. An
+		empty expression yields an expression with no constraints, which every version satisfies - that is how *no
+		version restriction* is written.
+
+		:param expression:  The expression to parse, or ``None`` for *any version*.
+		:param versionType: Optional, the :class:`Version` class the versions are parsed as.
+		:returns:           The parsed expression.
+		:raises TypeError:  If parameter 'expression' is not a string.
+		:raises ValueError: If a constraint is empty or its version can't be parsed.
+		"""
+		# Constructed explicitly rather than through 'cls', because 'V' cannot be inferred from a string and 'cls()'
+		# would bind it to the unresolved type variable.
+		if expression is None:
+			return VersionExpression(())
+		elif not isinstance(expression, str):
+			ex = TypeError("Parameter 'expression' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(expression)}'.")
+			raise ex
+
+		if (expression := expression.strip()) == "":
+			return VersionExpression(())
+
+		constraints: list[VersionConstraint[Version]] = []
+		for clause in expression.split(","):
+			if (match := cls._CONSTRAINT.match(clause)) is None:
+				ex = ValueError(f"Constraint '{clause.strip()}' in expression '{expression}' is empty.")
+				ex.add_note("A constraint is an optional operator followed by a version, e.g. '>=1.2.0'.")
+				raise ex
+
+			comparison = VersionComparison(match.group(1)) if match.group(1) is not None else VersionComparison.Equal
+			constraints.append(VersionConstraint(comparison, versionType.Parse(match.group(2))))
+
+		return VersionExpression(constraints)
+
+	@readonly
+	def Constraints(self) -> tuple[VersionConstraint[V], ...]:
+		"""
+		Read-only property to access the constraints a version has to satisfy (:attr:`_constraints`).
+
+		:returns: The constraints, empty if the expression matches every version.
+		"""
+		return self._constraints
+
+	@readonly
+	def MatchesAnyVersion(self) -> bool:
+		"""
+		Read-only property to return whether this expression constrains nothing.
+
+		:returns: ``True``, if the expression has no constraints and every version satisfies it.
+		"""
+		return len(self._constraints) == 0
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version satisfies every constraint of this expression.
+
+		:param version:    The version to check.
+		:returns:          ``True``, if the version satisfies all constraints. An expression without constraints is
+		                   satisfied by every version.
+		:raises TypeError: If parameter 'version' is not of type :class:`Version`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		return all(version in constraint for constraint in self._constraints)
+
+	def __len__(self) -> int:
+		"""
+		Return the number of constraints in this expression.
+
+		:returns: Number of constraints.
+		"""
+		return len(self._constraints)
+
+	def __iter__(self) -> Iterator[VersionConstraint[V]]:
+		"""
+		Iterate the constraints of this expression, in the order they were written.
+
+		:returns: An iterator over the constraints.
+		"""
+		return iter(self._constraints)
+
+	def __str__(self) -> str:
+		"""
+		Return the expression as it is written.
+
+		:returns: The constraints, separated by commas, or an empty string if the expression constrains nothing.
+		"""
+		return ",".join(str(constraint) for constraint in self._constraints)
