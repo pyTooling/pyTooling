@@ -106,6 +106,7 @@ class Parts(Flag):
 	Prefix = 128    #: Prefix is present.
 	Postfix = 256   #: Postfix is present.
 	Hash = 512      #: Hash is present.
+	Epoch = 1024    #: Epoch is present. (e.g. E in ``E:1.2.3`` or ``E!1.2.3``)
 #		AHead   = 256
 
 
@@ -385,8 +386,13 @@ class Version(metaclass=ExtendedType, slots=True):
 
 	__hash:         Nullable[int]  #: once computed hash of the object
 
+	#: Separator between an epoch and the rest of the version number. Debian writes ``2:1.2.3``; PEP 440 writes
+	#: ``2!1.2.3``, so :class:`PythonVersion` overrides this.
+	_EPOCH_SEPARATOR: ClassVar[str] = ":"
+
 	_parts:         Parts          #: Integer flag enumeration of present parts in a version number.
 	_prefix:        str            #: Prefix string
+	_epoch:         int            #: Epoch, which outranks every other part of the version number.
 	_major:         int            #: Major number part of the version number.
 	_minor:         int            #: Minor number part of the version number.
 	_micro:         int            #: Micro number part of the version number.
@@ -409,6 +415,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		post:    Nullable[int] = None,
 		dev:     Nullable[int] = None,
 		*,
+		epoch:   Nullable[int] = None,
 		build:   Nullable[int] = None,
 		postfix: Nullable[str] = None,
 		prefix:  Nullable[str] = None,
@@ -425,6 +432,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param number:      Optional, release number part (in combination with release level) of the version number.
 		:param post:        Optional, post number part of the version number.
 		:param dev:         Optional, development number part of the version number.
+		:param epoch:       Optional, the version number's epoch, which outranks every other part.
 		:param build:       Optional, build number part of the version number.
 		:param postfix:     Optional, the version number's postfix.
 		:param prefix:      Optional, the version number's prefix.
@@ -438,6 +446,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'micro' is a negative number.
 		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
+		:raises TypeError:  If parameter 'epoch' is not of type integer.
+		:raises ValueError: If parameter 'epoch' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
@@ -448,7 +458,18 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif major < 0:
 			raise ValueError("Parameter 'major' is negative.")
 
-		self._parts = Parts.Major
+		if epoch is not None:
+			if not isinstance(epoch, int):
+				raise TypeError("Parameter 'epoch' is not of type 'int'.")
+			elif epoch < 0:
+				raise ValueError("Parameter 'epoch' is negative.")
+
+			self._parts = Parts.Epoch | Parts.Major
+			self._epoch = epoch
+		else:
+			self._parts = Parts.Major
+			self._epoch = 0
+
 		self._major = major
 
 		if minor is not None:
@@ -595,6 +616,20 @@ class Version(metaclass=ExtendedType, slots=True):
 		return self._prefix
 
 	@readonly
+	def Epoch(self) -> int:
+		"""
+		Read-only property to access the epoch (:attr:`_epoch`).
+
+		An epoch outranks every other part, so a version carrying one is newer than any version with a lower epoch
+		however high the rest of its numbers are. It exists so a project can *lower* its version number - change
+		scheme, or recover from a bad release - without every later version comparing as older. A version without one
+		has epoch ``0``, which is what keeps it comparable with a version that has one.
+
+		:returns: The epoch, or ``0`` if the version carries none.
+		"""
+		return self._epoch
+
+	@readonly
 	def Major(self) -> int:
 		"""
 		Read-only property to access the major number.
@@ -702,6 +737,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
 		return (
+			(left._epoch == right._epoch) and
 			(left._major == right._major) and
 			(left._minor == right._minor) and
 			(left._micro == right._micro) and
@@ -723,6 +759,11 @@ class Version(metaclass=ExtendedType, slots=True):
 		              False if ``left`` is greater than ``right``. |br|
 		              Otherwise it's None (both operands are equal).
 		"""
+		if left._epoch < right._epoch:
+			return True
+		elif left._epoch > right._epoch:
+			return False
+
 		if left._major < right._major:
 			return True
 		elif left._major > right._major:
@@ -1091,6 +1132,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		if self.__hash is None:
 			self.__hash = hash((
 				self._prefix,
+				self._epoch,
 				self._major,
 				self._minor,
 				self._micro,
@@ -1141,6 +1183,7 @@ class SemanticVersion(Version):
 		post:    Nullable[int] = None,
 		dev:     Nullable[int] = None,
 		*,
+		epoch:   Nullable[int] = None,
 		build:   Nullable[int] = None,
 		postfix: Nullable[str] = None,
 		prefix:  Nullable[str] = None,
@@ -1157,6 +1200,7 @@ class SemanticVersion(Version):
 		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
 		:param post:        Optional, post number part of the version number.
 		:param dev:         Optional, development number part of the version number.
+		:param epoch:       Optional, the version number's epoch, which outranks every other part.
 		:param build:       Optional, build number part of the version number.
 		:param postfix:     Optional, the version number's postfix.
 		:param prefix:      Optional, the version number's prefix.
@@ -1174,10 +1218,13 @@ class SemanticVersion(Version):
 		:raises ValueError: If parameter 'post' is a negative number.
 		:raises TypeError:  If parameter 'dev' is not of type integer.
 		:raises ValueError: If parameter 'dev' is a negative number.
+		:raises TypeError:  If parameter 'epoch' is not of type integer.
+		:raises ValueError: If parameter 'epoch' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
-		super().__init__(major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags)
+		super().__init__(major, minor, micro, level, number, post, dev, epoch=epoch, build=build, postfix=postfix,
+		                 prefix=prefix, hash=hash, flags=flags)
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> SemanticVersion:
@@ -1198,6 +1245,8 @@ class SemanticVersion(Version):
 		:raises ValueError:            When parameter ``versionString`` is None or empty.
 		:raises ValueError:            When parameter ``versionString`` isn't a semantic version number. |br|
 		                               It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
+		:raises ValueError:            When the epoch preceding the epoch separator isn't a number. |br|
+		                               An epoch is a number followed by the separator, e.g. ``2:1.2.3``.
 		:raises VersionValidatorError: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
@@ -1208,6 +1257,20 @@ class SemanticVersion(Version):
 			raise ex
 		elif (versionString := versionString.strip()) == "":
 			raise ValueError("Parameter 'versionString' is empty.")
+
+		# The epoch is taken off before the pattern runs, so a derived class changes only '_EPOCH_SEPARATOR' rather
+		# than restating the whole expression.
+		epoch = None
+		if (position := versionString.find(cls._EPOCH_SEPARATOR)) != -1:
+			epochString = versionString[:position]
+			if not epochString.isdigit():
+				ex = ValueError(f"Syntax error in the epoch of parameter 'versionString': '{versionString}'")
+				ex.add_note(f"An epoch is a number followed by '{cls._EPOCH_SEPARATOR}', e.g. "
+				            f"'2{cls._EPOCH_SEPARATOR}1.2.3'.")
+				raise ex
+
+			epoch = int(epochString)
+			versionString = versionString[position + len(cls._EPOCH_SEPARATOR):]
 
 		if (match := cls._PATTERN.match(versionString)) is None:
 			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
@@ -1265,6 +1328,7 @@ class SemanticVersion(Version):
 			number=toInt(match["number"]),
 			post=toInt(match["post"]),
 			dev=toInt(match["dev"]),
+			epoch=epoch,
 			build=toInt(match["build"]),
 			postfix=match["postfix"],
 			prefix=prefix if prefix != "" else None,
@@ -1466,7 +1530,9 @@ class SemanticVersion(Version):
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		return f"{self._major}.{self._minor}.{self._micro}"
+		epoch = f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
+
+		return f"{epoch}{self._major}.{self._minor}.{self._micro}"
 
 	def __str__(self) -> str:
 		"""
@@ -1474,7 +1540,8 @@ class SemanticVersion(Version):
 
 		:returns: Version number representation.
 		"""
-		result = self._prefix if Parts.Prefix in self._parts else ""
+		result = f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
+		result += self._prefix if Parts.Prefix in self._parts else ""
 		result += f"{self._major}"  # major is always present
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 		result += f".{self._micro}" if Parts.Micro in self._parts else ""
@@ -1501,6 +1568,9 @@ class PythonVersion(SemanticVersion):
 	"""
 	Represents a Python version.
 	"""
+
+	#: PEP 440 writes an epoch ``2!1.2.3``, where Debian and the default write ``2:1.2.3``.
+	_EPOCH_SEPARATOR: ClassVar[str] = "!"
 
 	@classmethod
 	def FromSysVersionInfo(cls) -> PythonVersion:
@@ -1546,7 +1616,8 @@ class PythonVersion(SemanticVersion):
 
 		:returns: Version number representation.
 		"""
-		result = self._prefix if Parts.Prefix in self._parts else ""
+		result = f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
+		result += self._prefix if Parts.Prefix in self._parts else ""
 		result += f"{self._major}"  # major is always present
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 		result += f".{self._micro}" if Parts.Micro in self._parts else ""
