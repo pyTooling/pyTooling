@@ -507,6 +507,26 @@ class TypeCompatibility(Testcase):
 		self.assertIn(CalendarVersion.Parse("2024.10"), versionRange)
 		self.assertIn(SemanticVersion.Parse("1.0.0"), versionRange)
 
+	def test_ASetterAppliesTheSameRule(self) -> None:
+		"""Assigning a bound relates it to the *other* bound, with a deliberate error rather than one from ``<=``."""
+		versionRange = self._range()
+		versionRange.LowerBound = PythonVersion.Parse("1.5")
+
+		self.assertEqual("1.5", str(versionRange.LowerBound))
+
+		with self.assertRaises(TypeError):
+			self._range().LowerBound = CalendarVersion.Parse("2024.10")
+
+		with self.assertRaises(TypeError):
+			self._range().UpperBound = CalendarVersion.Parse("2024.10")
+
+	def test_ASetterOnAnUnboundEndHasNothingToRelateTo(self) -> None:
+		"""With the other end unbound there is no type to be compatible with, so any version is admissible."""
+		versionRange = VersionRange(None, None)
+		versionRange.LowerBound = CalendarVersion.Parse("2024.10")
+
+		self.assertEqual("2024.10", str(versionRange.LowerBound))
+
 	def test_TheErrorNamesBothTypes(self) -> None:
 		versionRange = self._range()
 
