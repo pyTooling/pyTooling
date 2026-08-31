@@ -263,6 +263,131 @@ class ReleaseDetails(Testcase):
 		self.assertNotEqual(oldestRequirements, latestRequirements)
 
 
+class ProjectURLs(Testcase):
+	"""How a release's project URLs are resolved from the free-text ``project_urls`` mapping."""
+
+	@staticmethod
+	def _project(overrides: Nullable[LicenseOverrides] = None) -> Project:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph,
+		                           licenseOverrides=overrides)
+
+		return Project("project", "https://index.org/project/", index=index)
+
+	def _release(self, project: Nullable[Project] = None, version: str = "v1.0.0") -> Release:
+		# 'Package.__len__' is its version count, so a project without versions is falsy - test 'is None' instead.
+		return Release(PythonVersion.Parse(version), datetime.now(),
+		               project=project if project is not None else self._project())
+
+	@staticmethod
+	def _resolve(release: Release, **info) -> None:
+		with WarningCollector(handler=lambda warning: False):
+			release.UpdateDetailsFromPyPIJSON(
+				{"info": {"provides_extra": None, "requires_dist": None, **info}}
+			)
+
+	def test_EveryURLIsResolved(self) -> None:
+		release = self._release()
+		self._resolve(release, project_urls={
+			"Source Code":   "https://github.com/org/project",
+			"Documentation": "https://project.readthedocs.io",
+			"Bug Tracker":   "https://github.com/org/project/issues",
+			"Changelog":     "https://github.com/org/project/blob/main/CHANGELOG.md",
+			"Homepage":      "https://project.org",
+		})
+
+		self.assertEqual("https://github.com/org/project", str(release.RepositoryURL))
+		self.assertEqual("https://project.readthedocs.io", str(release.DocumentationURL))
+		self.assertEqual("https://github.com/org/project/issues", str(release.IssueTrackerURL))
+		self.assertEqual("https://github.com/org/project/blob/main/CHANGELOG.md", str(release.ChangelogURL))
+		self.assertEqual("https://project.org", str(release.HomepageURL))
+
+	def test_KeysAreMatchedCaseInsensitively(self) -> None:
+		"""``project_urls`` keys are free text, so the spelling of the key can't be relied on."""
+		release = self._release()
+		self._resolve(release, project_urls={"  SOURCE  ": "https://github.com/org/project"})
+
+		self.assertEqual("https://github.com/org/project", str(release.RepositoryURL))
+
+	def test_TheMostSpecificAliasWins(self) -> None:
+		"""A project naming both, ``Source Code`` is the more specific statement."""
+		release = self._release()
+		self._resolve(release, project_urls={
+			"GitHub":      "https://github.com/org/mirror",
+			"Source Code": "https://github.com/org/project",
+		})
+
+		self.assertEqual("https://github.com/org/project", str(release.RepositoryURL))
+
+	def test_HomePageIsTheFallbackForTheHomepage(self) -> None:
+		"""The legacy ``home_page`` field answers when ``project_urls`` names no homepage."""
+		release = self._release()
+		self._resolve(release, home_page="https://project.org")
+
+		self.assertEqual("https://project.org", str(release.HomepageURL))
+
+	def test_TheHomepageIsTheLastResortForTheRepository(self) -> None:
+		"""A package index has no repository field, so an unnamed repository falls back to the homepage."""
+		release = self._release()
+		self._resolve(release, home_page="https://project.org")
+
+		self.assertEqual("https://project.org", str(release.RepositoryURL))
+
+	def test_NothingPublishedLeavesThemUnknown(self) -> None:
+		release = self._release()
+		self._resolve(release)
+
+		self.assertIsNone(release.RepositoryURL)
+		self.assertIsNone(release.DocumentationURL)
+		self.assertIsNone(release.IssueTrackerURL)
+		self.assertIsNone(release.ChangelogURL)
+		self.assertIsNone(release.HomepageURL)
+
+	def test_AnOverriddenRepositoryWins(self) -> None:
+		overrides = LicenseOverrides.FromDictionary({"project": {"repository": "https://forge.org/org/project"}})
+		release = self._release(self._project(overrides))
+		self._resolve(release, project_urls={"Source": "https://github.com/org/project"})
+
+		self.assertEqual("https://forge.org/org/project", str(release.RepositoryURL))
+
+	def test_AURLCanMoveBetweenReleases(self) -> None:
+		"""The reason these live on the release: a project that migrates forge has two different answers."""
+		project = self._project()
+		old = self._release(project, "v1.0.0")
+		new = self._release(project, "v2.0.0")
+
+		self._resolve(old, project_urls={"Source": "https://sourceforge.net/p/project"})
+		self._resolve(new, project_urls={"Source": "https://github.com/org/project"})
+
+		self.assertEqual("https://sourceforge.net/p/project", str(old.RepositoryURL))
+		self.assertEqual("https://github.com/org/project", str(new.RepositoryURL))
+
+	def test_ThePackageMirrorsItsLatestVersion(self) -> None:
+		"""A package answers for the current state of the project, which is what its newest release says."""
+		project = self._project()
+		# Versions are held newest-first; 'SortVersions' would establish that, but on a Project it walks the lazy
+		# loader and downloads, so the order is set up by inserting the newest release first.
+		new = self._release(project, "v2.0.0")
+		old = self._release(project, "v1.0.0")
+
+		self._resolve(old, project_urls={"Source": "https://sourceforge.net/p/project"})
+		self._resolve(new, project_urls={
+			"Source":        "https://github.com/org/project",
+			"Documentation": "https://project.readthedocs.io",
+		})
+
+		self.assertIs(new, project.LatestVersion)
+		self.assertEqual("https://github.com/org/project", str(project.RepositoryURL))
+		self.assertEqual("https://project.readthedocs.io", str(project.DocumentationURL))
+
+	def test_APackageWithoutVersionsHasNoURLs(self) -> None:
+		project = self._project()
+
+		self.assertIsNone(project.LatestVersion)
+		self.assertIsNone(project.RepositoryURL)
+		self.assertIsNone(project.DocumentationURL)
+
+
 class Licenses(Testcase):
 	"""How a release's license is resolved from what a package index publishes."""
 

@@ -82,6 +82,13 @@ from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
 _LICENSE_NOTE_LENGTH = 64
 
 
+#: Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first.
+_REPOSITORY_URL_ALIASES    = ("source code", "source", "code", "repository", "github", "gitlab")
+_DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
+_ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
+_HOMEPAGE_URL_ALIASES      = ("homepage", "home page", "home")
+_CHANGELOG_URL_ALIASES     = ("changelog", "changes", "release notes", "whatsnew", "what's new")
+
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
 
@@ -603,6 +610,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		infoNode = json["info"]
 		self._ResolveLicense(infoNode)
+		self._ResolveURLs(infoNode)
 
 		requirements = [Requirement(requirement) for requirement in (infoNode["requires_dist"] or ())]
 
@@ -714,6 +722,57 @@ class Release(PackageVersion, LazyLoadableMixin):
 				),
 				notes=published if len(published) > 0 else ["The package index published no license information."]
 			)
+
+	def _ResolveURLs(self, infoNode: Mapping[str, Any]) -> None:
+		"""
+		Resolve this release's project URLs from what the package index published.
+
+		``project_urls`` is a free-text mapping - one project writes ``Source``, another ``Source Code``,
+		``Repository`` or ``GitHub`` for the same thing - so its keys are matched case-insensitively against a list of
+		aliases per URL and the first alias present wins. ``home_page`` is the fallback for the homepage, and the
+		homepage is the last resort for the repository, which is what the project-level resolver used to do.
+
+		These are resolved per release rather than per package because they move: a project migrating from Google
+		Code or SourceForge to GitHub has one repository URL before the migration and another after it.
+		:attr:`~pyTooling.Dependency.Package.RepositoryURL` and its siblings mirror the latest release, so the
+		package still answers for the current state.
+
+		:param infoNode: The ``info`` node of the JSON document describing this release.
+		"""
+		projectURLs = {
+			str(key).strip().lower(): value
+			for key, value in (infoNode.get("project_urls", None) or {}).items()
+			if value is not None
+		}
+
+		def urlFor(aliases: tuple[str, ...]) -> Nullable[URL]:
+			"""
+			Return the first of the given aliases the package index published a URL for.
+
+			:param aliases: The keys to look for, most specific first.
+			:returns:       The URL of the first alias that is present, or ``None`` if none of them is.
+			"""
+			for alias in aliases:
+				if (url := projectURLs.get(alias, None)) is not None:
+					return URL.Parse(url)
+
+			return None
+
+		self._documentationURL = urlFor(_DOCUMENTATION_URL_ALIASES)
+		self._issueTrackerURL  = urlFor(_ISSUE_TRACKER_URL_ALIASES)
+		self._changelogURL     = urlFor(_CHANGELOG_URL_ALIASES)
+		self._homepageURL      = urlFor(_HOMEPAGE_URL_ALIASES)
+
+		if self._homepageURL is None and (homePage := infoNode.get("home_page", None)) is not None:
+			self._homepageURL = URL.Parse(homePage)
+
+		index: PythonPackageIndex = self._package._storage
+		if (repository := index._licenseOverrides.RepositoryOf(self._package._name)) is not None:
+			self._repositoryURL = URL.Parse(repository)
+		elif (repositoryURL := urlFor(_REPOSITORY_URL_ALIASES)) is not None:
+			self._repositoryURL = repositoryURL
+		else:
+			self._repositoryURL = self._homepageURL
 
 	def PostProcess(self) -> None:
 		"""
@@ -907,7 +966,6 @@ class Project(Package, LazyLoadableMixin):
 
 		# Update project/package URL
 		self._url = URL.Parse(infoNode["project_url"])
-		self._ResolveRepositoryURL(infoNode)
 
 		# Convert key to Version number, skip empty releases
 		convertedReleasesNode = {}
@@ -938,29 +996,6 @@ class Project(Package, LazyLoadableMixin):
 
 		self.SortVersions()
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
-
-	def _ResolveRepositoryURL(self, infoNode: Mapping[str, Any]) -> None:
-		"""
-		Resolve where this project's sources live.
-
-		A package index has no field for it, so the answer is assembled from what is there: a hand-written statement
-		first, then the entries of ``project_urls`` that name a repository, then ``home_page``, then the project's
-		home page. :attr:`URL` stays the project's page on the index, which is where the package is *published*
-		rather than where it is written.
-
-		:param infoNode: The ``info`` node of the JSON document describing this project.
-		"""
-		index: PythonPackageIndex = self._storage
-		if (repository := index._licenseOverrides.RepositoryOf(self._name)) is None:
-			projectURLs = infoNode.get("project_urls", None) or {}
-			for key in ("Source Code", "Source", "Code", "Repository", "GitHub"):
-				if (repository := projectURLs.get(key, None)) is not None:
-					break
-			else:
-				repository = infoNode.get("home_page", None) or projectURLs.get("Homepage", None)
-
-		if repository is not None:
-			self._repositoryURL = URL.Parse(repository)
 
 	def DownloadReleaseDetails(self) -> None:
 		"""
