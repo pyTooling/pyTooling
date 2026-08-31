@@ -37,6 +37,7 @@ Covered are parsing a constraint list, matching a version against it, and the em
 """
 from pyTooling.Versioning import SemanticVersion, PythonVersion, VersionComparison, VersionConstraint
 from pyTooling.Versioning import CaretVersionConstraint, CompatibleVersionConstraint, DebianVersionExpression
+from pyTooling.Versioning import RangeVersionConstraint, VersionRange
 from pyTooling.Versioning import NPMVersionExpression, PythonVersionExpression, TildeVersionConstraint
 from pyTooling.Versioning import VersionExpression
 from pyTooling.Testing    import Testcase
@@ -349,3 +350,53 @@ class DialectsAreIndependent(Testcase):
 				for source in refused:
 					with self.assertRaises(ValueError):
 						dialect.Parse(source)
+
+
+class ReviewFollowUps(Testcase):
+	"""What the review of #369 asked for."""
+
+	def test_AShorthandConvertsToAVersionRange(self) -> None:
+		"""A shorthand knows both bounds, so the conversion is exact."""
+		for source, dialect, lower, upper in (
+			("~=1.2.3", PythonVersionExpression, "1.2.3", "1.3"),
+			("^1.2.3",  NPMVersionExpression,    "1.2.3", "2"),
+			("~1.2.3",  NPMVersionExpression,    "1.2.3", "1.3"),
+		):
+			with self.subTest(source=source):
+				versionRange = dialect.Parse(source).Constraints[0].ToVersionRange()
+
+				self.assertIsInstance(versionRange, VersionRange)
+				self.assertEqual(lower, str(versionRange.LowerBound))
+				self.assertEqual(upper, str(versionRange.UpperBound))
+
+	def test_TheConvertedRangeAgreesWithTheConstraint(self) -> None:
+		constraint = PythonVersionExpression.Parse("~=1.2.3").Constraints[0]
+		versionRange = constraint.ToVersionRange()
+
+		for version in ("1.2.2", "1.2.3", "1.2.9", "1.3.0"):
+			with self.subTest(version=version):
+				parsed = PythonVersion.Parse(version)
+
+				self.assertEqual(parsed in constraint, parsed in versionRange)
+
+	def test_TheShorthandBaseClassIsAbstract(self) -> None:
+		"""``@classmethod`` around ``@abstractmethod`` hid this from ``ExtendedType``; it is an instance method now."""
+		from pyTooling.MetaClasses import AbstractClassError
+
+		with self.assertRaises(AbstractClassError):
+			RangeVersionConstraint(VersionComparison.CompatibleRelease, SemanticVersion.Parse("1.2.3"))
+
+	def test_AnUnknownComparisonIsRejectedRatherThanGuessed(self) -> None:
+		"""A shorthand comparison in a plain constraint used to fall through to ``>=``."""
+		constraint = VersionConstraint(VersionComparison.Equal, SemanticVersion.Parse("1.2.3"))
+		constraint._comparison = VersionComparison.Caret
+
+		with self.assertRaises(ValueError):
+			SemanticVersion.Parse("1.2.3") in constraint
+
+	def test_TheConstraintsParameterIsChecked(self) -> None:
+		with self.assertRaises(ValueError):
+			VersionExpression(None)
+
+		with self.assertRaises(TypeError):
+			VersionExpression(42)
