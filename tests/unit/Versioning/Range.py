@@ -288,6 +288,19 @@ class Intersection(Testcase):
 		self.assertIn("3.0.0", exceptionCapture.exception.__notes__[0])
 		self.assertIn("2.0.0", exceptionCapture.exception.__notes__[1])
 
+	def test_DisjointIsCommutative(self) -> None:
+		"""An intersection doesn't depend on operand order, so neither does the exception describing it."""
+		vrA = VersionRange(SemanticVersion(1, 0, 0), SemanticVersion(2, 0, 0))
+		vrB = VersionRange(SemanticVersion(3, 0, 0), SemanticVersion(4, 0, 0))
+
+		with self.assertRaises(ValueError) as forwards:
+			vrA & vrB
+
+		with self.assertRaises(ValueError) as backwards:
+			vrB & vrA
+
+		self.assertEqual(forwards.exception.__notes__, backwards.exception.__notes__)
+
 	def test_Disjoint_Reversed(self) -> None:
 		vrA = VersionRange(SemanticVersion(3, 0, 0), SemanticVersion(4, 0, 0))
 		vrB = VersionRange(SemanticVersion(1, 0, 0), SemanticVersion(2, 0, 0))
@@ -296,5 +309,105 @@ class Intersection(Testcase):
 			vrA & vrB
 
 		self.assertEqual("The intersection of both version ranges is empty.", str(exceptionCapture.exception))
-		self.assertIn("2.0.0", exceptionCapture.exception.__notes__[0])
-		self.assertIn("3.0.0", exceptionCapture.exception.__notes__[1])
+		# The notes name the highest lower bound and the lowest upper bound, whichever operand each came from, so
+		# they read the same for 'vrA & vrB' and 'vrB & vrA'.
+		self.assertIn("3.0.0", exceptionCapture.exception.__notes__[0])
+		self.assertIn("2.0.0", exceptionCapture.exception.__notes__[1])
+
+
+class OpenBounds(Testcase):
+	"""A bound may be ``None``, which leaves the range unbounded in that direction."""
+
+	@staticmethod
+	def _v(version: str) -> SemanticVersion:
+		return SemanticVersion.Parse(version)
+
+	def test_ARangeCanBeOpenInEitherDirection(self) -> None:
+		lower, upper = self._v("1.0.0"), self._v("2.0.0")
+
+		self.assertIsNone(VersionRange(lower, None).UpperBound)
+		self.assertIsNone(VersionRange(None, upper).LowerBound)
+		self.assertIsNone(VersionRange(None, None).LowerBound)
+		self.assertIsNone(VersionRange(None, None).UpperBound)
+
+	def test_MembershipSkipsAnOpenBound(self) -> None:
+		lower, upper = self._v("1.0.0"), self._v("2.0.0")
+
+		for name, versionRange, expected in (
+			("closed", VersionRange(lower, upper), (False, True, True, True, False)),
+			("openUp", VersionRange(lower, None),  (False, True, True, True, True)),
+			("openDown", VersionRange(None, upper), (True, True, True, True, False)),
+			("unbounded", VersionRange(None, None), (True, True, True, True, True)),
+		):
+			with self.subTest(range=name):
+				actual = tuple(self._v(v) in versionRange for v in ("0.9.0", "1.0.0", "1.5.0", "2.0.0", "9.9.9"))
+
+				self.assertEqual(expected, actual)
+
+	def test_BoundHandlingStillAppliesToThePresentBound(self) -> None:
+		lower = self._v("1.0.0")
+		versionRange = VersionRange(lower, None, RangeBoundHandling.LowerBoundExclusive)
+
+		self.assertNotIn(lower, versionRange)
+		self.assertIn(self._v("1.0.1"), versionRange)
+
+	def test_AnUnboundedRangeContainsEveryVersion(self) -> None:
+		versionRange = VersionRange(None, None)
+
+		for version in ("0.0.1", "1.2.3", "999.0.0"):
+			with self.subTest(version=version):
+				self.assertIn(self._v(version), versionRange)
+
+	def test_ARangeOpenInADirectionIsNeverBeyondAVersionThatWay(self) -> None:
+		"""``[1.0.0,)`` reaches past every version, so it is never entirely below one."""
+		openUp = VersionRange(self._v("1.0.0"), None)
+		openDown = VersionRange(None, self._v("2.0.0"))
+
+		self.assertFalse(openUp < self._v("9.9.9"))
+		self.assertFalse(openUp <= self._v("9.9.9"))
+		self.assertTrue(openUp > self._v("0.5.0"))
+
+		self.assertFalse(openDown > self._v("0.0.1"))
+		self.assertFalse(openDown >= self._v("0.0.1"))
+		self.assertTrue(openDown < self._v("9.9.9"))
+
+	def test_AnOpenBoundIsIgnoredWhenIntersecting(self) -> None:
+		"""An open lower bound is the lowest of all, an open upper bound the highest."""
+		for name, left, right, lower, upper in (
+			("openUp & openDown", VersionRange(self._v("1.0.0"), None), VersionRange(None, self._v("3.0.0")),
+			 "1.0.0", "3.0.0"),
+			("openUp & openUp",   VersionRange(self._v("1.0.0"), None), VersionRange(self._v("2.0.0"), None),
+			 "2.0.0", None),
+			("unbounded & closed", VersionRange(None, None), VersionRange(self._v("1.0.0"), self._v("2.0.0")),
+			 "1.0.0", "2.0.0"),
+		):
+			with self.subTest(case=name):
+				intersection = left & right
+
+				self.assertEqual(lower, None if intersection.LowerBound is None else str(intersection.LowerBound))
+				self.assertEqual(upper, None if intersection.UpperBound is None else str(intersection.UpperBound))
+
+	def test_TwoUnboundedRangesIntersectToAnUnboundedRange(self) -> None:
+		intersection = VersionRange(None, None) & VersionRange(None, None)
+
+		self.assertIsNone(intersection.LowerBound)
+		self.assertIsNone(intersection.UpperBound)
+
+	def test_ABoundCanBeOpenedAfterwards(self) -> None:
+		versionRange = VersionRange(self._v("1.0.0"), self._v("2.0.0"))
+		versionRange.UpperBound = None
+
+		self.assertIsNone(versionRange.UpperBound)
+		self.assertIn(self._v("9.9.9"), versionRange)
+
+	def test_ANonVersionBoundIsStillRejected(self) -> None:
+		with self.assertRaises(TypeError):
+			VersionRange("1.0.0", None)
+
+		with self.assertRaises(TypeError):
+			VersionRange(None, "2.0.0")
+
+	def test_ClosedRangeChecksStillApply(self) -> None:
+		"""Relating the two bounds is only skipped when one of them is open."""
+		with self.assertRaises(ValueError):
+			VersionRange(self._v("2.0.0"), self._v("1.0.0"))

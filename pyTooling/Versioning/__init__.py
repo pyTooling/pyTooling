@@ -2274,60 +2274,84 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 	Representation of a version range described by a lower bound and upper bound version.
 
 	This version range works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
+
+	A bound may be **open**, written as ``None``, meaning the range is unbounded in that direction. That is how a
+	dependency range like Maven's ``[1.0,)`` - *1.0 and everything after it* - is expressed, and it is what makes a
+	single comparison such as ``>=1.0`` a range at all. A range open at both ends contains every version.
+
+	.. code-block:: python
+
+	   VersionRange(SemanticVersion.Parse("1.0.0"), None)   # 1.0.0 and everything above it
+	   VersionRange(None, SemanticVersion.Parse("2.0.0"))   # everything up to 2.0.0
+	   VersionRange(None, None)                             # every version
 	"""
-	_lowerBound:    V                   #: Lower bound of the version range.
-	_upperBound:    V                   #: Upper bound of the version range.
+	_lowerBound:    Nullable[V]         #: Lower bound of the version range, or ``None`` if it is open.
+	_upperBound:    Nullable[V]         #: Upper bound of the version range, or ``None`` if it is open.
 	_boundHandling: RangeBoundHandling  #: Strategy deciding whether the bounds are part of the range.
 
-	def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
+	def __init__(
+		self,
+		lowerBound: Nullable[V],
+		upperBound: Nullable[V],
+		boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive
+	) -> None:
 		"""
 		Initializes a version range described by a lower and upper bound.
 
-		:param lowerBound:    lowest version (inclusive).
-		:param upperBound:    hightest version (inclusive).
+		Either bound may be ``None``, which leaves the range open in that direction. The checks that relate the two
+		bounds - that they are compatible types, and that the lower one isn't above the upper one - can only be made
+		when both are present, so they are skipped for an open bound rather than failing on it.
+
+		:param lowerBound:    Lowest version (inclusive), or ``None`` to leave the range open downwards.
+		:param upperBound:    Highest version (inclusive), or ``None`` to leave the range open upwards.
 		:param boundHandling: Optional, strategy deciding whether the bounds are part of the range.
-		:raises TypeError:    If parameter ``lowerBound`` is not of type :class:`Version`.
-		:raises TypeError:    If parameter ``upperBound`` is not of type :class:`Version`.
+		:raises TypeError:    If parameter ``lowerBound`` is neither ``None`` nor of type :class:`Version`.
+		:raises TypeError:    If parameter ``upperBound`` is neither ``None`` nor of type :class:`Version`.
 		:raises TypeError:    If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
 		:raises ValueError:   If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
 		"""
-		if not isinstance(lowerBound, Version):
+		if lowerBound is not None and not isinstance(lowerBound, Version):
 			ex = TypeError("Parameter 'lowerBound' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}'.")
 			raise ex
 
-		if not isinstance(upperBound, Version):
+		if upperBound is not None and not isinstance(upperBound, Version):
 			ex = TypeError("Parameter 'upperBound' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(upperBound)}'.")
 			raise ex
 
-		if not ((lBC := lowerBound.__class__) is (uBC := upperBound.__class__) or issubclass(lBC, uBC) or issubclass(uBC, lBC)):
-			ex = TypeError("Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and type '{getFullyQualifiedName(upperBound)}' for upperBound.")
-			raise ex
+		if lowerBound is not None and upperBound is not None:
+			lBC, uBC = lowerBound.__class__, upperBound.__class__
+			if not (lBC is uBC or issubclass(lBC, uBC) or issubclass(uBC, lBC)):
+				ex = TypeError("Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and "
+				            f"type '{getFullyQualifiedName(upperBound)}' for upperBound.")
+				raise ex
 
-		if not (lowerBound <= upperBound):
-			ex = ValueError("Parameter 'lowerBound' isn't less than parameter 'upperBound'.")
-			ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
-			raise ex
+			if not (lowerBound <= upperBound):
+				ex = ValueError("Parameter 'lowerBound' isn't less than parameter 'upperBound'.")
+				ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
+				raise ex
 
 		self._lowerBound = lowerBound
 		self._upperBound = upperBound
 		self._boundHandling = boundHandling
 
 	@property
-	def LowerBound(self) -> V:
+	def LowerBound(self) -> Nullable[V]:
 		"""
 		Property to access the range's lower bound.
 
-		:returns:          Lower bound of the version range.
-		:raises TypeError: If an assigned value is not of type :class:`Version`.
+		Assigning ``None`` opens the range in that direction.
+
+		:returns:          Lower bound of the version range, or ``None`` if it is open.
+		:raises TypeError: If an assigned value is neither ``None`` nor of type :class:`Version`.
 		"""
 		return self._lowerBound
 
 	@LowerBound.setter
-	def LowerBound(self, value: V) -> None:
-		if not isinstance(value, Version):
+	def LowerBound(self, value: Nullable[V]) -> None:
+		if value is not None and not isinstance(value, Version):
 			ex = TypeError("Parameter 'value' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
@@ -2335,18 +2359,20 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		self._lowerBound = value
 
 	@property
-	def UpperBound(self) -> V:
+	def UpperBound(self) -> Nullable[V]:
 		"""
 		Property to access the range's upper bound.
 
-		:returns:          Upper bound of the version range.
-		:raises TypeError: If an assigned value is not of type :class:`Version`.
+		Assigning ``None`` opens the range in that direction.
+
+		:returns:          Upper bound of the version range, or ``None`` if it is open.
+		:raises TypeError: If an assigned value is neither ``None`` nor of type :class:`Version`.
 		"""
 		return self._upperBound
 
 	@UpperBound.setter
-	def UpperBound(self, value: V) -> None:
-		if not isinstance(value, Version):
+	def UpperBound(self, value: Nullable[V]) -> None:
+		if value is not None and not isinstance(value, Version):
 			ex = TypeError("Parameter 'value' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
@@ -2386,30 +2412,34 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other._lowerBound, self._lowerBound.__class__) and isinstance(self._lowerBound, other._lowerBound.__class__)):
-			ex = TypeError("Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible with each other.")
-			ex.add_note(
-					f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
-			raise ex
+		if self._lowerBound is not None and other._lowerBound is not None:
+			ownClass, otherClass = self._lowerBound.__class__, other._lowerBound.__class__
+			if not (isinstance(other._lowerBound, ownClass) and isinstance(self._lowerBound, otherClass)):
+				ex = TypeError("Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible "
+				               "with each other.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and "
+				            f"type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
+				raise ex
 
-		if other._lowerBound < self._lowerBound:
-			lBound = self._lowerBound
-		elif other._lowerBound in self:
+		# An open lower bound is the lowest of all, so the other range's bound wins; likewise the highest upper one.
+		if self._lowerBound is None:
 			lBound = other._lowerBound
+		elif other._lowerBound is None:
+			lBound = self._lowerBound
 		else:
-			ex = ValueError("The intersection of both version ranges is empty.")
-			ex.add_note(f"Got value '{other._lowerBound}' for other's lower bound.")
-			ex.add_note(f"This range's upper bound is '{self._upperBound}'.")
-			raise ex
+			lBound = self._lowerBound if self._lowerBound > other._lowerBound else other._lowerBound
 
-		if other._upperBound > self._upperBound:
-			uBound = self._upperBound
-		elif other._upperBound in self:
+		if self._upperBound is None:
 			uBound = other._upperBound
+		elif other._upperBound is None:
+			uBound = self._upperBound
 		else:
+			uBound = self._upperBound if self._upperBound < other._upperBound else other._upperBound
+
+		if lBound is not None and uBound is not None and not (lBound <= uBound):
 			ex = ValueError("The intersection of both version ranges is empty.")
-			ex.add_note(f"Got value '{other._upperBound}' for other's upper bound.")
-			ex.add_note(f"This range's lower bound is '{self._lowerBound}'.")
+			ex.add_note(f"Got value '{lBound}' for the highest lower bound.")
+			ex.add_note(f"The lowest upper bound is '{uBound}'.")
 			raise ex
 
 		return self.__class__(lBound, uBound)
@@ -2429,12 +2459,19 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
-			ex = TypeError("Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		# The type check needs a bound to compare against; an open one carries no type, so whichever exists is used.
+		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
+		if reference is not None:
+			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
+				ex = TypeError("Parameter 'other' is not compatible with version range.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+				raise ex
 
-		return self._upperBound < other
+		if self._upperBound is None:
+			return False
+
+		# 'bool(...)' because the type check above compares against a dynamic class, which widens 'other' to 'Any'.
+		return bool(self._upperBound < other)
 
 	def __le__(self, other: Any) -> bool:
 		"""
@@ -2451,15 +2488,21 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
-			ex = TypeError("Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		# The type check needs a bound to compare against; an open one carries no type, so whichever exists is used.
+		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
+		if reference is not None:
+			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
+				ex = TypeError("Parameter 'other' is not compatible with version range.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+				raise ex
+
+		if self._upperBound is None:
+			return False
 
 		if RangeBoundHandling.UpperBoundExclusive in self._boundHandling:
-			return self._upperBound < other
-		else:
-			return self._upperBound <= other
+			return bool(self._upperBound < other)
+
+		return bool(self._upperBound <= other)
 
 	def __gt__(self, other: Any) -> bool:
 		"""
@@ -2476,12 +2519,18 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
-			ex = TypeError("Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		# The type check needs a bound to compare against; an open one carries no type, so whichever exists is used.
+		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
+		if reference is not None:
+			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
+				ex = TypeError("Parameter 'other' is not compatible with version range.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+				raise ex
 
-		return self._lowerBound > other
+		if self._lowerBound is None:
+			return False
+
+		return bool(self._lowerBound > other)
 
 	def __ge__(self, other: Any) -> bool:
 		"""
@@ -2498,15 +2547,21 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
-			ex = TypeError("Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		# The type check needs a bound to compare against; an open one carries no type, so whichever exists is used.
+		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
+		if reference is not None:
+			if not (isinstance(other, reference.__class__) and isinstance(reference, other.__class__)):
+				ex = TypeError("Parameter 'other' is not compatible with version range.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+				raise ex
+
+		if self._lowerBound is None:
+			return False
 
 		if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
-			return self._lowerBound > other
-		else:
-			return self._lowerBound >= other
+			return bool(self._lowerBound > other)
+
+		return bool(self._lowerBound >= other)
 
 	def __contains__(self, version: Version) -> bool:
 		"""
@@ -2521,14 +2576,22 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
 			raise ex
 
-		if self._boundHandling is RangeBoundHandling.BothBoundsInclusive:
-			return self._lowerBound <= version <= self._upperBound
-		elif self._boundHandling is (RangeBoundHandling.LowerBoundInclusive | RangeBoundHandling.UpperBoundExclusive):
-			return self._lowerBound <= version < self._upperBound
-		elif self._boundHandling is (RangeBoundHandling.LowerBoundExclusive | RangeBoundHandling.UpperBoundInclusive):
-			return self._lowerBound < version <= self._upperBound
-		else:
-			return self._lowerBound < version < self._upperBound
+		# An open bound excludes nothing, so its half of the comparison is simply not made.
+		if self._lowerBound is not None:
+			if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
+				if not (self._lowerBound < version):
+					return False
+			elif not (self._lowerBound <= version):
+				return False
+
+		if self._upperBound is not None:
+			if RangeBoundHandling.UpperBoundExclusive in self._boundHandling:
+				if not (version < self._upperBound):
+					return False
+			elif not (version <= self._upperBound):
+				return False
+
+		return True
 
 
 @export
