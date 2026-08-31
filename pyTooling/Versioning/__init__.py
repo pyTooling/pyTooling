@@ -2324,9 +2324,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if lowerBound is not None and upperBound is not None:
-			lBC = lowerBound.__class__
-			uBC = upperBound.__class__
-			if not (lBC is uBC or issubclass(lBC, uBC) or issubclass(uBC, lBC)):
+			if not self._AreCompatible(lowerBound, upperBound):
 				ex = TypeError("Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and "
 				            f"type '{getFullyQualifiedName(upperBound)}' for upperBound.")
@@ -2350,6 +2348,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		:returns:           Lower bound of the version range, or ``None`` if it is unbound.
 		:raises TypeError:  If an assigned value is neither ``None`` nor of type :class:`Version`.
+		:raises TypeError:  If an assigned value's type is unrelated to the range's upper bound.
 		:raises ValueError: If an assigned value is above the range's upper bound. |br|
 		                    The bounds are only related when both are present.
 		"""
@@ -2362,10 +2361,17 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
-		if value is not None and self._upperBound is not None and not (value <= self._upperBound):
-			ex = ValueError("Parameter 'value' isn't less than or equal to the range's upper bound.")
-			ex.add_note(f"Got '{value}' for the lower bound; the upper bound is '{self._upperBound}'.")
-			raise ex
+		if value is not None and self._upperBound is not None:
+			if not self._AreCompatible(value, self._upperBound):
+				ex = TypeError("Parameter 'value' is not compatible with the range's upper bound.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"The upper bound is of type '{getFullyQualifiedName(self._upperBound)}'.")
+				raise ex
+
+			if not (value <= self._upperBound):
+				error = ValueError("Parameter 'value' isn't less than or equal to the range's upper bound.")
+				error.add_note(f"Got '{value}' for the lower bound; the upper bound is '{self._upperBound}'.")
+				raise error
 
 		self._lowerBound = value
 
@@ -2378,6 +2384,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		:returns:           Upper bound of the version range, or ``None`` if it is unbound.
 		:raises TypeError:  If an assigned value is neither ``None`` nor of type :class:`Version`.
+		:raises TypeError:  If an assigned value's type is unrelated to the range's lower bound.
 		:raises ValueError: If an assigned value is below the range's lower bound. |br|
 		                    The bounds are only related when both are present.
 		"""
@@ -2390,10 +2397,17 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
-		if value is not None and self._lowerBound is not None and not (self._lowerBound <= value):
-			ex = ValueError("Parameter 'value' isn't greater than or equal to the range's lower bound.")
-			ex.add_note(f"Got '{value}' for the upper bound; the lower bound is '{self._lowerBound}'.")
-			raise ex
+		if value is not None and self._lowerBound is not None:
+			if not self._AreCompatible(value, self._lowerBound):
+				ex = TypeError("Parameter 'value' is not compatible with the range's lower bound.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"The lower bound is of type '{getFullyQualifiedName(self._lowerBound)}'.")
+				raise ex
+
+			if not (self._lowerBound <= value):
+				error = ValueError("Parameter 'value' isn't greater than or equal to the range's lower bound.")
+				error.add_note(f"Got '{value}' for the upper bound; the lower bound is '{self._lowerBound}'.")
+				raise error
 
 		self._upperBound = value
 
@@ -2416,6 +2430,27 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._boundHandling = value
 
+	@staticmethod
+	def _AreCompatible(left: Version, right: Version) -> bool:
+		"""
+		Check whether two versions' types can be related to each other.
+
+		Two versions relate when they are of the same class, or when one's class derives from the other's. So a
+		:class:`SemanticVersion` relates to a :class:`PythonVersion`, which derives from it, and not to a
+		:class:`CalendarVersion`, which is a sibling under :class:`Version`.
+
+		This is the single rule every part of a range applies: to its two bounds against each other, to a version
+		held against them, and to a bound assigned after construction.
+
+		:param left:  The first version.
+		:param right: The second version.
+		:returns:     ``True``, if the two versions' types are related.
+		"""
+		leftType = left.__class__
+		rightType = right.__class__
+
+		return leftType is rightType or issubclass(leftType, rightType) or issubclass(rightType, leftType)
+
 	def _CheckCompatibility(self, other: Version) -> None:
 		"""
 		Check that a version can be related to this range's bounds.
@@ -2432,9 +2467,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		if reference is None:
 			return
 
-		otherType = other.__class__
-		referenceType = reference.__class__
-		if not (otherType is referenceType or issubclass(otherType, referenceType) or issubclass(referenceType, otherType)):
+		if not self._AreCompatible(other, reference):
 			ex = TypeError("Parameter 'other' is not compatible with version range.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"This range is bounded by type '{getFullyQualifiedName(reference)}'.")
