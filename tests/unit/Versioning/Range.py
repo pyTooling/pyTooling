@@ -411,3 +411,51 @@ class OpenBounds(Testcase):
 		"""Relating the two bounds is only skipped when one of them is open."""
 		with self.assertRaises(ValueError):
 			VersionRange(self._v("2.0.0"), self._v("1.0.0"))
+
+
+class BoundInvariant(Testcase):
+	"""Reassigning a bound keeps the invariant the constructor establishes."""
+
+	@staticmethod
+	def _v(version: str) -> SemanticVersion:
+		return SemanticVersion.Parse(version)
+
+	def test_ALowerBoundAboveTheUpperOneIsRejected(self) -> None:
+		"""``__init__`` rejects it, so the setter has to as well - otherwise the range silently contains nothing."""
+		versionRange = VersionRange(self._v("1.0.0"), self._v("2.0.0"))
+
+		with self.assertRaises(ValueError):
+			versionRange.LowerBound = self._v("5.0.0")
+
+		self.assertEqual("1.0.0", str(versionRange.LowerBound))
+
+	def test_AnUpperBoundBelowTheLowerOneIsRejected(self) -> None:
+		versionRange = VersionRange(self._v("1.0.0"), self._v("2.0.0"))
+
+		with self.assertRaises(ValueError):
+			versionRange.UpperBound = self._v("0.5.0")
+
+		self.assertEqual("2.0.0", str(versionRange.UpperBound))
+
+	def test_EqualBoundsAreAllowed(self) -> None:
+		"""``[1.0.0, 1.0.0]`` is a range of one version, which the constructor accepts too."""
+		versionRange = VersionRange(self._v("1.0.0"), self._v("2.0.0"))
+		versionRange.UpperBound = self._v("1.0.0")
+
+		self.assertIn(self._v("1.0.0"), versionRange)
+
+	def test_AnUnboundBoundRelatesToNothing(self) -> None:
+		"""With one bound unbound there is no ordering to violate, so any value is admissible."""
+		versionRange = VersionRange(self._v("1.0.0"), self._v("2.0.0"))
+		versionRange.UpperBound = None
+		versionRange.LowerBound = self._v("5.0.0")
+
+		self.assertEqual("5.0.0", str(versionRange.LowerBound))
+		self.assertIsNone(versionRange.UpperBound)
+
+	def test_UnboundingEitherEndIsAlwaysAllowed(self) -> None:
+		versionRange = VersionRange(self._v("1.0.0"), self._v("2.0.0"))
+		versionRange.LowerBound = None
+		versionRange.UpperBound = None
+
+		self.assertIn(self._v("9.9.9"), versionRange)
