@@ -3357,7 +3357,7 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 	This class is the **ecosystem-neutral** dialect: the six ordering comparisons in their canonical spelling,
 	separated by commas or whitespace. An ecosystem that spells its operators differently, or adds a shorthand,
 	derives from it and overrides :attr:`_OPERATORS`, :attr:`_SEPARATORS`, :attr:`_VERSION_TYPE` or
-	:meth:`_CreateConstraint`.
+	:attr:`_SHORTHANDS`. A dialect is data, not behaviour.
 
 	.. seealso::
 
@@ -3380,6 +3380,10 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 
 	#: The :class:`Version` class this dialect parses its versions as, unless a caller names another.
 	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion
+
+	#: The class each shorthand comparison is built as. A comparison absent here is a plain
+	#: :class:`VersionConstraint`; the neutral dialect has no shorthand at all.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {}
 
 	_constraints: tuple[VersionConstraint[V], ...]  #: The constraints a version has to satisfy, all of them.
 
@@ -3407,19 +3411,6 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 				raise ex
 
 		self._constraints = items
-
-	@classmethod
-	def _CreateConstraint(cls, comparison: VersionComparison, version: Version) -> VersionConstraint[Version]:
-		"""
-		Create the constraint one parsed operator and version stand for.
-
-		A dialect adding a shorthand operator overrides this to answer with the class implementing it.
-
-		:param comparison: The comparison the parsed operator means.
-		:param version:    The parsed version.
-		:returns:          The constraint.
-		"""
-		return VersionConstraint(comparison, version)
 
 	@classmethod
 	def _ConstraintPattern(cls) -> Pattern[str]:
@@ -3501,7 +3492,10 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 				error.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
 				raise error from versionError
 
-			constraints.append(cls._CreateConstraint(comparison, version))
+			if (shorthand := cls._SHORTHANDS.get(comparison, None)) is not None:
+				constraints.append(shorthand(version))
+			else:
+				constraints.append(VersionConstraint(comparison, version))
 			position = match.end()
 
 		if (skipped := expression[position:].strip(skippable)) != "":
@@ -3644,19 +3638,10 @@ class PythonVersionExpression(VersionExpression[V]):
 	#: :pep:`440` versions, so an epoch, a release candidate or a post-release parses.
 	_VERSION_TYPE: ClassVar[type[Version]] = PythonVersion
 
-	@classmethod
-	def _CreateConstraint(cls, comparison: VersionComparison, version: Version) -> VersionConstraint[Version]:
-		"""
-		Create the constraint one parsed operator and version stand for, answering ``~=`` with its own class.
-
-		:param comparison: The comparison the parsed operator means.
-		:param version:    The parsed version.
-		:returns:          The constraint.
-		"""
-		if comparison is VersionComparison.CompatibleRelease:
-			return CompatibleVersionConstraint(version)
-
-		return super()._CreateConstraint(comparison, version)
+	#: ``~=`` derives an upper bound, so it is not a plain comparison.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {
+		VersionComparison.CompatibleRelease: CompatibleVersionConstraint,
+	}
 
 
 @export
@@ -3707,21 +3692,11 @@ class NPMVersionExpression(VersionExpression[V]):
 	#: npm is strict semantic versioning.
 	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion
 
-	@classmethod
-	def _CreateConstraint(cls, comparison: VersionComparison, version: Version) -> VersionConstraint[Version]:
-		"""
-		Create the constraint one parsed operator and version stand for, answering ``^`` and ``~`` with their classes.
-
-		:param comparison: The comparison the parsed operator means.
-		:param version:    The parsed version.
-		:returns:          The constraint.
-		"""
-		if comparison is VersionComparison.Caret:
-			return CaretVersionConstraint(version)
-		elif comparison is VersionComparison.Tilde:
-			return TildeVersionConstraint(version)
-
-		return super()._CreateConstraint(comparison, version)
+	#: ``^`` and ``~`` each derive an upper bound, by different rules.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {
+		VersionComparison.Caret: CaretVersionConstraint,
+		VersionComparison.Tilde: TildeVersionConstraint,
+	}
 
 
 @export
