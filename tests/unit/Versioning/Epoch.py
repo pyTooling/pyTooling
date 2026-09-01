@@ -34,6 +34,8 @@ Unit tests for the epoch part of :class:`pyTooling.Versioning.SemanticVersion`.
 An epoch outranks every other part of a version number. Debian writes it ``2:1.2.3``, PEP 440 writes it ``2!1.2.3``,
 so the separator is a class variable that :class:`~pyTooling.Versioning.PythonVersion` overrides.
 """
+from typing              import ClassVar
+
 from pyTooling.Versioning import SemanticVersion, PythonVersion, CalendarVersion, Parts
 from pyTooling.Testing    import Testcase
 
@@ -201,16 +203,25 @@ class PatternRebuilding(Testcase):
 		self.assertIn(r"(?P<epoch>\d+):", SemanticVersion._PATTERN.pattern)
 		self.assertNotEqual(SemanticVersion._PATTERN.pattern, PythonVersion._PATTERN.pattern)
 
-	def test_TheSeparatorMustNotBeAnnotatedInADerivedClass(self) -> None:
-		"""
-		'ExtendedType' applies an annotated class attribute *after* '__init_subclass__' has run, so an annotation
-		would hide the separator from the rebuild and leave the class parsing ':'. This pins that it didn't happen.
-		"""
+	def test_AnAnnotatedSeparatorReachesTheRebuild(self) -> None:
+		"""The separator is a ``ClassVar[str]``, and it is that value the rebuild reads - not the inherited ``:``."""
+		self.assertIn("_EPOCH_SEPARATOR", PythonVersion.__annotations__)
 		self.assertEqual("!", PythonVersion._EPOCH_SEPARATOR)
 		self.assertEqual(1, PythonVersion.Parse("1!1.0").Epoch)
 
 		with self.assertRaises(ValueError):
 			PythonVersion.Parse("1:1.0")
+
+	def test_ADerivedClassAnnotatingItsSeparatorGetsItsOwnPattern(self) -> None:
+		"""A class declared outside this module does the same, annotation and all."""
+		class AtVersion(SemanticVersion):
+			_EPOCH_SEPARATOR: ClassVar[str] = "@"
+
+		self.assertIn(r"(?P<epoch>\d+)@", AtVersion._PATTERN.pattern)
+		self.assertEqual(2, AtVersion.Parse("2@1.0").Epoch)
+
+		with self.assertRaises(ValueError):
+			AtVersion.Parse("2:1.0")
 
 	def test_ADerivedClassKeepingTheSeparatorKeepsThePattern(self) -> None:
 		class Inherited(SemanticVersion):
