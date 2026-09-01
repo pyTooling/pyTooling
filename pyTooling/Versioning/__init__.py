@@ -3385,8 +3385,9 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 	#: :class:`VersionConstraint`; the neutral dialect has no shorthand at all.
 	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {}
 
-	#: This dialect's compiled constraint pattern, built on first use. See :meth:`_ConstraintPattern`.
-	_CONSTRAINT_PATTERN: ClassVar[Nullable[Pattern[str]]] = None
+	#: This dialect's compiled constraint pattern, built when the dialect is defined.
+	#: See :meth:`_BuildConstraintPattern`.
+	_CONSTRAINT_PATTERN: ClassVar[Pattern[str]]
 
 	_constraints: tuple[VersionConstraint[V], ...]  #: The constraints a version has to satisfy, all of them.
 
@@ -3415,8 +3416,21 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 
 		self._constraints = items
 
+	def __init_subclass__(cls, **kwargs: Any) -> None:
+		"""
+		Compile the constraint pattern of a newly defined dialect.
+
+		A dialect is data: its operators, its separators and its version type are class variables, so its pattern is
+		settled once the class body has been read and is built here instead of on every :meth:`Parse`.
+
+		:param kwargs: Keyword arguments passed on to the base implementation.
+		"""
+		super().__init_subclass__(**kwargs)
+
+		cls._CONSTRAINT_PATTERN = cls._BuildConstraintPattern()
+
 	@classmethod
-	def _ConstraintPattern(cls) -> Pattern[str]:
+	def _BuildConstraintPattern(cls) -> Pattern[str]:
 		"""
 		Build the pattern matching one constraint in this dialect.
 
@@ -3433,29 +3447,12 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 		alternation is tried before the version at every position, so ``!=`` is still read as an operator wherever a
 		constraint can begin.
 
-		The pattern depends only on this dialect's operators, separators and version type, so it is compiled **once
-		per dialect** and kept on the class rather than rebuilt for every :meth:`Parse`.
-
-		``__init_subclass__`` would be the eager alternative, and is what :class:`SemanticVersion` uses for its epoch
-		separator - but it cannot be used here. :class:`~pyTooling.MetaClasses.ExtendedType` applies an *annotated*
-		class attribute **after** that hook has run, and a dialect declares its tables as annotated class variables,
-		so the hook would read the base class' operators and compile the wrong pattern for every dialect. Building
-		on first use always observes the final values.
-
 		:returns: The pattern, with the operator as group 1 and the version as group 2.
 		"""
-		# '__dict__' rather than 'getattr', so a derived dialect compiles its own instead of inheriting the base's.
-		cached: Nullable[Pattern[str]] = cls.__dict__.get("_CONSTRAINT_PATTERN", None)
-		if cached is not None:
-			return cached
-
 		operators = "|".join(re_escape(operator) for operator in sorted(cls._OPERATORS, key=len, reverse=True))
 		excluded =  (set("".join(cls._OPERATORS)) | set(cls._SEPARATORS)) - set(cls._VERSION_TYPE._EPOCH_SEPARATOR)
-		pattern =   re_compile(rf"({operators})?\s*([^\s{re_escape("".join(sorted(excluded)))}]+)")
 
-		cls._CONSTRAINT_PATTERN = pattern
-
-		return pattern
+		return re_compile(rf"({operators})?\s*([^\s{re_escape("".join(sorted(excluded)))}]+)")
 
 	@classmethod
 	def Parse(cls, expression: Nullable[str], versionType: Nullable[type[Version]] = None) -> Self:
@@ -3496,7 +3493,7 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 		constraints: list[VersionConstraint[Any]] = []
 		position =    0
 
-		for match in cls._ConstraintPattern().finditer(expression):
+		for match in cls._CONSTRAINT_PATTERN.finditer(expression):
 			if (skipped := expression[position:match.start()].strip(skippable)) != "":
 				error = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
 				error.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
@@ -3627,6 +3624,11 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 		separator = self._SEPARATORS[0] if len(self._SEPARATORS) > 0 else " "
 
 		return separator.join(self._Spell(constraint) for constraint in self._constraints)
+
+
+# '__init_subclass__' is called for a class' subclasses, not for the class declaring it, so the neutral dialect
+# compiles its own pattern here. Every dialect derived from it is served by the hook.
+VersionExpression._CONSTRAINT_PATTERN = VersionExpression._BuildConstraintPattern()
 
 
 @export
