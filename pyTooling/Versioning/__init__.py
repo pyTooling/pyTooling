@@ -2370,9 +2370,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				raise ex
 
 			if not (value <= self._upperBound):
-				error = ValueError("Parameter 'value' isn't less than or equal to the range's upper bound.")
-				error.add_note(f"Got '{value}' for the lower bound; the upper bound is '{self._upperBound}'.")
-				raise error
+				ex = ValueError("Parameter 'value' isn't less than or equal to the range's upper bound.")
+				ex.add_note(f"Got '{value}' for the lower bound; the upper bound is '{self._upperBound}'.")
+				raise ex
 
 		self._lowerBound = value
 
@@ -2406,9 +2406,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				raise ex
 
 			if not (self._lowerBound <= value):
-				error = ValueError("Parameter 'value' isn't greater than or equal to the range's lower bound.")
-				error.add_note(f"Got '{value}' for the upper bound; the lower bound is '{self._lowerBound}'.")
-				raise error
+				ex = ValueError("Parameter 'value' isn't greater than or equal to the range's lower bound.")
+				ex.add_note(f"Got '{value}' for the upper bound; the lower bound is '{self._lowerBound}'.")
+				raise ex
 
 		self._upperBound = value
 
@@ -3060,9 +3060,9 @@ class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
 		elif self._comparison is VersionComparison.GreaterThanOrEqual:
 			return version >= self._version
 
-		error = ValueError(f"Comparison '{self._comparison.name}' cannot be applied by a plain constraint.")
-		error.add_note("A shorthand is implemented by a 'RangeVersionConstraint'.")
-		raise error
+		ex = ValueError(f"Comparison '{self._comparison.name}' cannot be applied by a plain constraint.")
+		ex.add_note("A shorthand is implemented by a 'RangeVersionConstraint'.")
+		raise ex
 
 	def ToVersionRange(self) -> VersionRange[_VersionType]:
 		"""
@@ -3096,9 +3096,9 @@ class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
 		elif self._comparison is VersionComparison.LessThan:
 			return VersionRange(None, self._version, RangeBoundHandling.UpperBoundExclusive)
 
-		error = ValueError(f"Comparison '{self._comparison.name}' describes no single version range.")
-		error.add_note("The complement of a version is a union of two intervals, which a 'VersionRange' cannot hold.")
-		raise error
+		ex = ValueError(f"Comparison '{self._comparison.name}' describes no single version range.")
+		ex.add_note("The complement of a version is a union of two intervals, which a 'VersionRange' cannot hold.")
+		raise ex
 
 	def __str__(self) -> str:
 		"""
@@ -3256,9 +3256,9 @@ class CompatibleVersionConstraint(RangeVersionConstraint[V]):
 		elif Parts.Minor in version._parts:
 			return versionType(version.Major + 1, epoch=epoch)
 
-		error = ValueError(f"Version '{version}' has too few parts for a compatible release.")
-		error.add_note("'~=1' would mean the same as '>=1'; write at least a major and a minor part.")
-		raise error
+		ex = ValueError(f"Version '{version}' has too few parts for a compatible release.")
+		ex.add_note("'~=1' would mean the same as '>=1'; write at least a major and a minor part.")
+		raise ex
 
 
 @export
@@ -3337,6 +3337,41 @@ class TildeVersionConstraint(RangeVersionConstraint[V]):
 
 
 
+def _BuildConstraintPattern(
+	operators:   dict[str, VersionComparison],
+	separators:  str,
+	versionType: type[Version]
+) -> Pattern[str]:
+	"""
+	Build the pattern matching one constraint of a :class:`VersionExpression` dialect.
+
+	The operators are alternated longest-first, so ``>=`` wins over ``>`` and ``~=`` over any single character. The
+	operator and its version are matched *together*, with whitespace allowed between them, which is what lets
+	whitespace separate constraints without splitting ``>= 1.2.0`` in half.
+
+	A version may hold none of the characters the dialect's operators are built from, and none of its separators, so
+	those are excluded from it. Without that the optional operator group would let ``>=1.2.0 <2.0.0`` read its second
+	constraint as the *version* ``<2.0.0``.
+
+	The **epoch separator is the exception** and stays allowed: :pep:`440` writes an epoch ``1!1.0``, and ``!`` is
+	also the first character of ``!=``. Excluding it would cut ``>=1!1.0`` short at the epoch. The operator
+	alternation is tried before the version at every position, so ``!=`` is still read as an operator wherever a
+	constraint can begin.
+
+	This is a function rather than a method, so :class:`VersionExpression` can call it in its own class body. A
+	dialect derived from it is served by :meth:`VersionExpression.__init_subclass__`.
+
+	:param operators:   The dialect's operator spellings.
+	:param separators:  The dialect's constraint separators.
+	:param versionType: The dialect's version class, which names the epoch separator to keep.
+	:returns:           The pattern, with the operator as group 1 and the version as group 2.
+	"""
+	alternation = "|".join(re_escape(operator) for operator in sorted(operators, key=len, reverse=True))
+	excluded =    (set("".join(operators)) | set(separators)) - set(versionType._EPOCH_SEPARATOR)
+
+	return re_compile(rf"({alternation})?\s*([^\s{re_escape("".join(sorted(excluded)))}]+)")
+
+
 @export
 class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 	"""
@@ -3385,9 +3420,9 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 	#: :class:`VersionConstraint`; the neutral dialect has no shorthand at all.
 	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {}
 
-	#: This dialect's compiled constraint pattern, built when the dialect is defined.
-	#: See :meth:`_BuildConstraintPattern`.
-	_CONSTRAINT_PATTERN: ClassVar[Pattern[str]]
+	#: This dialect's compiled constraint pattern, built from the three tables above. A derived dialect gets its own
+	#: in :meth:`__init_subclass__`.
+	_CONSTRAINT_PATTERN: ClassVar[Pattern[str]] = _BuildConstraintPattern(_OPERATORS, _SEPARATORS, _VERSION_TYPE)
 
 	_constraints: tuple[VersionConstraint[V], ...]  #: The constraints a version has to satisfy, all of them.
 
@@ -3427,32 +3462,7 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		super().__init_subclass__(**kwargs)
 
-		cls._CONSTRAINT_PATTERN = cls._BuildConstraintPattern()
-
-	@classmethod
-	def _BuildConstraintPattern(cls) -> Pattern[str]:
-		"""
-		Build the pattern matching one constraint in this dialect.
-
-		The operators are alternated longest-first, so ``>=`` wins over ``>`` and ``~=`` over any single character.
-		The operator and its version are matched *together*, with whitespace allowed between them, which is what lets
-		whitespace separate constraints without splitting ``>= 1.2.0`` in half.
-
-		A version may hold none of the characters the dialect's operators are built from, and none of its separators,
-		so those are excluded from it. Without that the optional operator group would let ``>=1.2.0 <2.0.0`` read its
-		second constraint as the *version* ``<2.0.0``.
-
-		The **epoch separator is the exception** and stays allowed: :pep:`440` writes an epoch ``1!1.0``, and ``!``
-		is also the first character of ``!=``. Excluding it would cut ``>=1!1.0`` short at the epoch. The operator
-		alternation is tried before the version at every position, so ``!=`` is still read as an operator wherever a
-		constraint can begin.
-
-		:returns: The pattern, with the operator as group 1 and the version as group 2.
-		"""
-		operators = "|".join(re_escape(operator) for operator in sorted(cls._OPERATORS, key=len, reverse=True))
-		excluded =  (set("".join(cls._OPERATORS)) | set(cls._SEPARATORS)) - set(cls._VERSION_TYPE._EPOCH_SEPARATOR)
-
-		return re_compile(rf"({operators})?\s*([^\s{re_escape("".join(sorted(excluded)))}]+)")
+		cls._CONSTRAINT_PATTERN = _BuildConstraintPattern(cls._OPERATORS, cls._SEPARATORS, cls._VERSION_TYPE)
 
 	@classmethod
 	def Parse(cls, expression: Nullable[str], versionType: Nullable[type[Version]] = None) -> Self:
@@ -3483,8 +3493,7 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'expression' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(expression)}'.")
 			raise ex
-
-		if (expression := expression.strip()) == "":
+		elif (expression := expression.strip()) == "":
 			return cls()
 
 		versionType = cls._VERSION_TYPE if versionType is None else versionType
@@ -3495,19 +3504,19 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 
 		for match in cls._CONSTRAINT_PATTERN.finditer(expression):
 			if (skipped := expression[position:match.start()].strip(skippable)) != "":
-				error = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
-				error.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
-				raise error
+				ex = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
+				ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+				raise ex
 
 			operator = match.group(1)
 			comparison = VersionComparison.Equal if operator is None else cls._OPERATORS[operator]
 			try:
 				version = versionType.Parse(match.group(2))
-			except ValueError as versionError:
+			except ValueError as cause:
 				# An operator this dialect doesn't know is not recognised as one, so it lands in the version instead.
-				error = ValueError(f"Expression '{expression}' has unexpected input at '{match.group(0).strip()}'.")
-				error.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
-				raise error from versionError
+				ex = ValueError(f"Expression '{expression}' has unexpected input at '{match.group(0).strip()}'.")
+				ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+				raise ex from cause
 
 			if (shorthand := cls._SHORTHANDS.get(comparison, None)) is not None:
 				constraints.append(shorthand(version))
@@ -3516,9 +3525,9 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 			position = match.end()
 
 		if (skipped := expression[position:].strip(skippable)) != "":
-			error = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
-			error.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
-			raise error
+			ex = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
+			ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+			raise ex
 
 		return cls(constraints)
 
@@ -3596,39 +3605,29 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		return iter(self._constraints)
 
-	@classmethod
-	def _Spell(cls, constraint: VersionConstraint[Any]) -> str:
+	def __str__(self) -> str:
 		"""
-		Render one constraint in this dialect's spelling.
+		Return the expression in this dialect's spelling.
 
 		A :class:`VersionConstraint` renders itself canonically, which is not what every dialect writes - Debian
 		spells :attr:`~VersionComparison.Equal` ``=`` and :attr:`~VersionComparison.LessThan` ``<<``. The dialect's
 		own operator table answers what it writes; where a dialect has several spellings for one comparison, the
 		first one wins.
 
-		:param constraint: The constraint to render.
-		:returns:          The constraint, spelled the way this dialect writes it.
-		"""
-		for spelling, comparison in cls._OPERATORS.items():
-			if comparison is constraint.Comparison:
-				return f"{spelling}{constraint.Version}"
-
-		return str(constraint)
-
-	def __str__(self) -> str:
-		"""
-		Return the expression in this dialect's spelling.
-
 		:returns: The constraints, joined by this dialect's separator, or an empty string if it constrains nothing.
 		"""
-		separator = self._SEPARATORS[0] if len(self._SEPARATORS) > 0 else " "
+		separator =         self._SEPARATORS[0] if len(self._SEPARATORS) > 0 else " "
+		spelled: list[str] = []
 
-		return separator.join(self._Spell(constraint) for constraint in self._constraints)
+		for constraint in self._constraints:
+			for spelling, comparison in self._OPERATORS.items():
+				if comparison is constraint.Comparison:
+					spelled.append(f"{spelling}{constraint.Version}")
+					break
+			else:
+				spelled.append(str(constraint))
 
-
-# '__init_subclass__' is called for a class' subclasses, not for the class declaring it, so the neutral dialect
-# compiles its own pattern here. Every dialect derived from it is served by the hook.
-VersionExpression._CONSTRAINT_PATTERN = VersionExpression._BuildConstraintPattern()
+		return separator.join(spelled)
 
 
 @export
