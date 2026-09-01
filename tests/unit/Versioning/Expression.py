@@ -538,3 +538,45 @@ class ConvertingToVersionRanges(Testcase):
 		self.assertIsInstance(constraint, RangeVersionConstraint)
 		self.assertEqual("1.2.3", str(constraint.ToVersionRange().LowerBound))
 		self.assertEqual("1.3", str(constraint.ToVersionRange().UpperBound))
+
+
+class PatternCaching(Testcase):
+	"""The constraint pattern is compiled once per dialect, not once per parse."""
+
+	def test_EachDialectCompilesItsOwn(self) -> None:
+		"""``cls.__dict__`` rather than ``getattr``, so a dialect never inherits the base's pattern."""
+		for dialect in (VersionExpression, PythonVersionExpression, NPMVersionExpression, DebianVersionExpression):
+			with self.subTest(dialect=dialect.__name__):
+				dialect.Parse(">=1.0.0")
+
+				self.assertIn("_CONSTRAINT_PATTERN", dialect.__dict__)
+
+	def test_ThePatternIsReused(self) -> None:
+		PythonVersionExpression.Parse(">=1.0.0")
+		first = PythonVersionExpression._ConstraintPattern()
+		PythonVersionExpression.Parse(">=2.0.0")
+
+		self.assertIs(first, PythonVersionExpression._ConstraintPattern())
+
+	def test_ADialectsPatternDiffersFromTheBases(self) -> None:
+		"""Sharing one would silently give every dialect the neutral operators."""
+		VersionExpression.Parse(">=1.0.0")
+		NPMVersionExpression.Parse(">=1.0.0")
+
+		self.assertIsNot(VersionExpression._ConstraintPattern(), NPMVersionExpression._ConstraintPattern())
+		self.assertNotEqual(VersionExpression._ConstraintPattern().pattern,
+		                    NPMVersionExpression._ConstraintPattern().pattern)
+
+	def test_CachingDoesNotChangeWhatADialectAccepts(self) -> None:
+		"""Parsing twice must behave identically - a stale or shared pattern would show up here."""
+		for dialect, accepted, constraints, refused in (
+			(NPMVersionExpression,    ">=1.2.0 <2.0.0", 2, ">=1.2.0,<2.0.0"),
+			(PythonVersionExpression, "~=1.2.3",        1, "^1.2.3"),
+			(VersionExpression,       ">=1.2.0,<2.0.0", 2, "~=1.2.3"),
+		):
+			with self.subTest(dialect=dialect.__name__):
+				for _ in range(2):
+					self.assertEqual(constraints, len(dialect.Parse(accepted)))
+
+					with self.assertRaises(ValueError):
+						dialect.Parse(refused)
