@@ -740,12 +740,10 @@ class ExtendedType(type):
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
 
-		# Create a new class - the remaining keyword arguments belong to '__init_subclass__', which 'type' calls
+		# Create a new class - the remaining keyword arguments belong to '__init_subclass__', which 'type' calls.
+		# Class variables with an initial value are part of 'members', so they are bound before that hook runs and
+		# are not re-assigned afterwards - doing so would overwrite whatever '__init_subclass__' computed from them.
 		newClass = type.__new__(self, className, baseClasses, members, **kwargs)
-
-		# Apply class fields
-		for fieldName, typeAnnotation in classFields.items():
-			setattr(newClass, fieldName, typeAnnotation)
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
@@ -1136,6 +1134,12 @@ class ExtendedType(type):
 		:raises BaseClassWithoutSlotsError: If a base-class doesn't use slots. |br|
 		                                    All base-classes of a class using ``__slots__`` must use ``__slots__``
 		                                    themselves.
+		:raises DuplicateFieldInSlotsError: If a class member shadows a slot a base-class or mixin-class declares.
+		                                    |br|
+		                                    Without an annotation, annotate it as ``ClassVar[...]`` or remove the
+		                                    assignment. Annotating it does **not** resolve the clash - the slot
+		                                    exists either way - so a class variable of that name has to be renamed,
+		                                    or the slot dropped.
 		"""
 		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 		slottedFields = []
@@ -1174,14 +1178,15 @@ class ExtendedType(type):
 					raise AttributeError(f"Slot '{fieldName}' declared in class '{className}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
 
 				# A ClassVar is never a slot, with or without an initial value.
-				# * If it has an initial value, copy field and initial value to classFields dictionary and remove field from members.
+				# * If it has an initial value, note the field in classFields and **leave it in members**, so that
+				#   'type.__new__' binds it before calling '__init_subclass__'. Removing it and assigning it
+				#   afterwards made a derived class' value invisible to that hook, which then read the base class'.
 				# * Otherwise it's a forward declaration and derived classes assign the actual value.
 				isClassVariable = self._isClassVariable(typeAnnotation)
 				hasInitialValue = fieldName in members
 				if isClassVariable:
 					if hasInitialValue:
 						classFields[fieldName] = members[fieldName]
-						del members[fieldName]
 
 				# If an annotated field has an initial value
 				# * copy field and initial value to objectFields dictionary
@@ -1208,7 +1213,13 @@ class ExtendedType(type):
 				else:
 					ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class and materialized in this class' '__slots__'.")
 					ex.add_note("Python doesn't allow a name to be listed in '__slots__' and assigned in the class body.")
-				ex.add_note("Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
+
+				if fieldName in classFields:
+					ex.add_note("Annotating it as 'ClassVar[...]' doesn't resolve this - the slot exists either way.")
+					ex.add_note("Rename the class variable, or drop the slot the base-class or mixin-class declares.")
+				else:
+					ex.add_note("Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
+
 				raise ex
 		else:
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
@@ -1218,7 +1229,6 @@ class ExtendedType(type):
 				# * remove field from members
 				if self._isClassVariable(typeAnnotation) and fieldName in members:
 					classFields[fieldName] = members[fieldName]
-					del members[fieldName]
 
 		self._checkForUnannotatedFields(className, members, annotations)
 
