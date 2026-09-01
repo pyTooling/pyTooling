@@ -2928,6 +2928,10 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		return self._items[index]
 
 
+#: The :class:`Version` class under a name no constraint shadows with a property of its own.
+_VersionType = Version
+
+
 @export
 class VersionComparison(Enum):
 	"""
@@ -3060,6 +3064,42 @@ class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
 		error.add_note("A shorthand is implemented by a 'RangeVersionConstraint'.")
 		raise error
 
+	def ToVersionRange(self) -> VersionRange[_VersionType]:
+		"""
+		Convert this constraint into the :class:`VersionRange` it describes.
+
+		Five of the six comparisons are intervals once a bound may be unbound:
+
+		* ``>=1.2.0`` is ``[1.2.0, )``,
+		* ``>1.2.0`` is ``(1.2.0, )``,
+		* ``<=2.0.0`` is ``( , 2.0.0]``,
+		* ``<2.0.0`` is ``( , 2.0.0)``,
+		* ``==1.2.0`` is ``[1.2.0, 1.2.0]``, a range of exactly one version.
+
+		:attr:`~VersionComparison.Unequal` is the exception and has no range: the complement of a single version is
+		not an interval but a *union* of two, one below it and one above. That is why an expression keeps both
+		representations rather than being replaced by a range.
+
+		:returns:           The range of versions satisfying this constraint.
+		:raises ValueError: If this constraint is an :attr:`~VersionComparison.Unequal`, which no single range
+		                    describes. |br|
+		                    The complement of a version is a union of two intervals.
+		"""
+		if self._comparison is VersionComparison.Equal:
+			return VersionRange(self._version, self._version)
+		elif self._comparison is VersionComparison.GreaterThanOrEqual:
+			return VersionRange(self._version, None)
+		elif self._comparison is VersionComparison.GreaterThan:
+			return VersionRange(self._version, None, RangeBoundHandling.LowerBoundExclusive)
+		elif self._comparison is VersionComparison.LessThanOrEqual:
+			return VersionRange(None, self._version)
+		elif self._comparison is VersionComparison.LessThan:
+			return VersionRange(None, self._version, RangeBoundHandling.UpperBoundExclusive)
+
+		error = ValueError(f"Comparison '{self._comparison.name}' describes no single version range.")
+		error.add_note("The complement of a version is a union of two intervals, which a 'VersionRange' cannot hold.")
+		raise error
+
 	def __str__(self) -> str:
 		"""
 		Return the constraint in its canonical spelling.
@@ -3169,7 +3209,7 @@ class RangeVersionConstraint(VersionConstraint[V]):
 
 		return self._version <= version < self._upperBound
 
-	def ToVersionRange(self) -> VersionRange[Version]:
+	def ToVersionRange(self) -> VersionRange[_VersionType]:
 		"""
 		Convert this constraint into the :class:`VersionRange` it describes.
 
@@ -3514,6 +3554,30 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		return all(version in constraint for constraint in self._constraints)
+
+	def ToVersionRange(self) -> VersionRange[Version]:
+		"""
+		Convert this expression into the single :class:`VersionRange` it describes.
+
+		An expression is a conjunction, so its range is the **intersection** of its constraints' ranges, which
+		:meth:`VersionRange.__and__` computes. An expression with no constraints is the range unbound at both ends,
+		since both match every version.
+
+		Not every expression has a range. One containing an :attr:`~VersionComparison.Unequal` does not, because the
+		complement of a version is a union of two intervals - ``>=1.0,!=1.3,<2.0`` is an ordinary requirement with
+		no single range. That is why :class:`VersionExpression` is not replaced by :class:`VersionRange`: a range is
+		one interval, an expression is any conjunction, and the second is strictly more expressive.
+
+		:returns:           The range of versions satisfying every constraint.
+		:raises ValueError: If a constraint describes no range, which an :attr:`~VersionComparison.Unequal` never
+		                    does.
+		:raises ValueError: If the constraints have no version in common.
+		"""
+		versionRange: VersionRange[_VersionType] = VersionRange(None, None)
+		for constraint in self._constraints:
+			versionRange = versionRange & constraint.ToVersionRange()
+
+		return versionRange
 
 	def __len__(self) -> int:
 		"""

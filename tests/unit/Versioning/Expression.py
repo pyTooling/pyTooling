@@ -37,7 +37,7 @@ Covered are parsing a constraint list, matching a version against it, and the em
 """
 from pyTooling.Versioning import SemanticVersion, PythonVersion, VersionComparison, VersionConstraint
 from pyTooling.Versioning import CaretVersionConstraint, CompatibleVersionConstraint, DebianVersionExpression
-from pyTooling.Versioning import RangeVersionConstraint, VersionRange
+from pyTooling.Versioning import RangeBoundHandling, RangeVersionConstraint, VersionRange
 from pyTooling.Versioning import NPMVersionExpression, PythonVersionExpression, TildeVersionConstraint
 from pyTooling.Versioning import VersionExpression
 from pyTooling.Testing    import Testcase
@@ -458,3 +458,83 @@ class EpochsInExpressions(Testcase):
 		):
 			with self.subTest(source=source):
 				self.assertEqual(bound, str(dialect.Parse(source).Constraints[0].UpperBound))
+
+
+class ConvertingToVersionRanges(Testcase):
+	"""Every constraint but ``!=`` is an interval, and a conjunction of them is their intersection."""
+
+	def test_EachComparisonBecomesItsInterval(self) -> None:
+		for source, lower, upper, exclusive in (
+			(">=1.2.0", "1.2.0", None,    None),
+			(">1.2.0",  "1.2.0", None,    RangeBoundHandling.LowerBoundExclusive),
+			("<=2.0.0", None,    "2.0.0", None),
+			("<2.0.0",  None,    "2.0.0", RangeBoundHandling.UpperBoundExclusive),
+			("==1.2.0", "1.2.0", "1.2.0", None),
+		):
+			with self.subTest(source=source):
+				versionRange = VersionExpression.Parse(source).ToVersionRange()
+
+				self.assertEqual(lower, None if versionRange.LowerBound is None else str(versionRange.LowerBound))
+				self.assertEqual(upper, None if versionRange.UpperBound is None else str(versionRange.UpperBound))
+				if exclusive is not None:
+					self.assertIn(exclusive, versionRange.BoundHandling)
+
+	def test_AConjunctionIsTheIntersection(self) -> None:
+		"""``>=1.2.0,<2.0.0`` is ``[1.2.0, 2.0.0)`` - the upper bound stays exclusive through the intersection."""
+		versionRange = VersionExpression.Parse(">=1.2.0,<2.0.0").ToVersionRange()
+
+		self.assertEqual("1.2.0", str(versionRange.LowerBound))
+		self.assertEqual("2.0.0", str(versionRange.UpperBound))
+		self.assertIn(RangeBoundHandling.UpperBoundExclusive, versionRange.BoundHandling)
+		self.assertNotIn(SemanticVersion.Parse("2.0.0"), versionRange)
+
+	def test_TheRangeAgreesWithTheExpression(self) -> None:
+		"""The conversion is only worth anything if both answer ``in`` identically."""
+		probes = ("0.9.0", "1.0.0", "1.2.0", "1.2.3", "1.5.0", "1.9.9", "2.0.0", "2.0.1", "9.9.9")
+
+		for source, dialect, versionType in (
+			(">=1.2.0",       VersionExpression,       SemanticVersion),
+			(">1.2.0,<=2.0.0", VersionExpression,      SemanticVersion),
+			("==1.2.0",       VersionExpression,       SemanticVersion),
+			("~=1.2.3",       PythonVersionExpression, PythonVersion),
+			("^1.2.3",        NPMVersionExpression,    SemanticVersion),
+			("~1.2.3",        NPMVersionExpression,    SemanticVersion),
+		):
+			with self.subTest(source=source):
+				expression = dialect.Parse(source)
+				versionRange = expression.ToVersionRange()
+
+				for probe in probes:
+					version = versionType.Parse(probe)
+
+					self.assertEqual(version in expression, version in versionRange, probe)
+
+	def test_AnEmptyExpressionIsTheUnboundedRange(self) -> None:
+		versionRange = VersionExpression.Parse("").ToVersionRange()
+
+		self.assertIsNone(versionRange.LowerBound)
+		self.assertIsNone(versionRange.UpperBound)
+
+	def test_UnequalHasNoRange(self) -> None:
+		"""The complement of a version is a union of two intervals, which a range cannot hold."""
+		constraint = VersionConstraint(VersionComparison.Unequal, SemanticVersion.Parse("1.3.0"))
+
+		with self.assertRaises(ValueError):
+			constraint.ToVersionRange()
+
+	def test_AnExpressionContainingUnequalHasNoRange(self) -> None:
+		"""``>=1.0,!=1.3,<2.0`` is an ordinary requirement, and it has no single range."""
+		with self.assertRaises(ValueError):
+			VersionExpression.Parse(">=1.0.0,!=1.3.0,<2.0.0").ToVersionRange()
+
+	def test_ContradictoryConstraintsHaveNoRange(self) -> None:
+		with self.assertRaises(ValueError):
+			VersionExpression.Parse(">=3.0.0,<2.0.0").ToVersionRange()
+
+	def test_AShorthandKeepsItsOwnConversion(self) -> None:
+		""":class:`RangeVersionConstraint` overrides it, since it already holds both bounds."""
+		constraint = PythonVersionExpression.Parse("~=1.2.3").Constraints[0]
+
+		self.assertIsInstance(constraint, RangeVersionConstraint)
+		self.assertEqual("1.2.3", str(constraint.ToVersionRange().LowerBound))
+		self.assertEqual("1.3", str(constraint.ToVersionRange().UpperBound))
