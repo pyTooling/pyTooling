@@ -35,6 +35,8 @@ Unit tests for :class:`pyTooling.Versioning.VersionExpression`.
 Covered are parsing a constraint list, matching a version against it, and the empty expression that stands for
 *any version*.
 """
+from typing              import ClassVar
+
 from pyTooling.Versioning import SemanticVersion, PythonVersion, VersionComparison, VersionConstraint
 from pyTooling.Versioning import CaretVersionConstraint, CompatibleVersionConstraint, DebianVersionExpression
 from pyTooling.Versioning import RangeBoundHandling, RangeVersionConstraint, VersionRange
@@ -540,34 +542,40 @@ class ConvertingToVersionRanges(Testcase):
 		self.assertEqual("1.3", str(constraint.ToVersionRange().UpperBound))
 
 
-class PatternCaching(Testcase):
-	"""The constraint pattern is compiled once per dialect, not once per parse."""
+class PatternPerDialect(Testcase):
+	"""The constraint pattern is compiled when a dialect is defined, not once per parse."""
 
-	def test_EachDialectCompilesItsOwn(self) -> None:
-		"""``cls.__dict__`` rather than ``getattr``, so a dialect never inherits the base's pattern."""
+	def test_EachDialectHasItsOwn(self) -> None:
+		"""Nothing is parsed first - the pattern is there the moment the class exists."""
 		for dialect in (VersionExpression, PythonVersionExpression, NPMVersionExpression, DebianVersionExpression):
 			with self.subTest(dialect=dialect.__name__):
-				dialect.Parse(">=1.0.0")
-
 				self.assertIn("_CONSTRAINT_PATTERN", dialect.__dict__)
 
 	def test_ThePatternIsReused(self) -> None:
+		first = PythonVersionExpression._CONSTRAINT_PATTERN
 		PythonVersionExpression.Parse(">=1.0.0")
-		first = PythonVersionExpression._ConstraintPattern()
 		PythonVersionExpression.Parse(">=2.0.0")
 
-		self.assertIs(first, PythonVersionExpression._ConstraintPattern())
+		self.assertIs(first, PythonVersionExpression._CONSTRAINT_PATTERN)
 
 	def test_ADialectsPatternDiffersFromTheBases(self) -> None:
 		"""Sharing one would silently give every dialect the neutral operators."""
-		VersionExpression.Parse(">=1.0.0")
-		NPMVersionExpression.Parse(">=1.0.0")
+		self.assertIsNot(VersionExpression._CONSTRAINT_PATTERN, NPMVersionExpression._CONSTRAINT_PATTERN)
+		self.assertNotEqual(VersionExpression._CONSTRAINT_PATTERN.pattern,
+		                    NPMVersionExpression._CONSTRAINT_PATTERN.pattern)
 
-		self.assertIsNot(VersionExpression._ConstraintPattern(), NPMVersionExpression._ConstraintPattern())
-		self.assertNotEqual(VersionExpression._ConstraintPattern().pattern,
-		                    NPMVersionExpression._ConstraintPattern().pattern)
+	def test_TheHookSeesTheDialectsOwnOperators(self) -> None:
+		"""An annotated class variable is bound before ``__init_subclass__`` runs, so a dialect declared here works."""
+		class ArrowDialect(VersionExpression):
+			_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+				"->": VersionComparison.GreaterThanOrEqual,
+			}
 
-	def test_CachingDoesNotChangeWhatADialectAccepts(self) -> None:
+		self.assertIn("->", ArrowDialect._CONSTRAINT_PATTERN.pattern)
+		self.assertNotIn("!=", ArrowDialect._CONSTRAINT_PATTERN.pattern)
+		self.assertEqual(1, len(ArrowDialect.Parse("->1.2.0")))
+
+	def test_OnePatternDoesNotChangeWhatADialectAccepts(self) -> None:
 		"""Parsing twice must behave identically - a stale or shared pattern would show up here."""
 		for dialect, accepted, constraints, refused in (
 			(NPMVersionExpression,    ">=1.2.0 <2.0.0", 2, ">=1.2.0,<2.0.0"),
