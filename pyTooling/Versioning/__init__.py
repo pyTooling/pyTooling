@@ -2477,9 +2477,14 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compute the intersection of two version ranges.
 
+		Each bound of the result comes from whichever range constrains it more tightly, and is inclusive only if it
+		is inclusive in *that* range. Where both ranges name the same bound value, it is inclusive only when **both**
+		include it - the intersection cannot admit a version one of its operands excludes.
+
 		:param other:       Second version range to intersect with.
 		:returns:           Intersected version range.
 		:raises TypeError:  If parameter 'other' is not of type :class:`VersionRange`.
+		:raises TypeError:  If the two ranges' bounds are of unrelated types.
 		:raises ValueError: If intersection is empty.
 		"""
 		if not isinstance(other, VersionRange):
@@ -2488,29 +2493,51 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if self._lowerBound is not None and other._lowerBound is not None:
-			ownClass = self._lowerBound.__class__
-			otherClass = other._lowerBound.__class__
-			if not (isinstance(other._lowerBound, ownClass) and isinstance(self._lowerBound, otherClass)):
+			if not self._AreCompatible(self._lowerBound, other._lowerBound):
 				ex = TypeError("Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible "
 				               "with each other.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and "
 				            f"type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
 				raise ex
 
-		# An open lower bound is the lowest of all, so the other range's bound wins; likewise the highest upper one.
+		ownLowerExclusive =     RangeBoundHandling.LowerBoundExclusive in self._boundHandling
+		otherLowerExclusive =   RangeBoundHandling.LowerBoundExclusive in other._boundHandling
+		ownUpperExclusive =     RangeBoundHandling.UpperBoundExclusive in self._boundHandling
+		otherUpperExclusive =   RangeBoundHandling.UpperBoundExclusive in other._boundHandling
+
+		# An unbound lower end is the lowest of all, so the other range's bound wins; likewise the highest upper one.
+		# Each bound keeps the handling of the range it came from; a shared value keeps the stricter of the two.
 		if self._lowerBound is None:
 			lBound = other._lowerBound
+			lowerExclusive = otherLowerExclusive
 		elif other._lowerBound is None:
 			lBound = self._lowerBound
+			lowerExclusive = ownLowerExclusive
+		elif self._lowerBound > other._lowerBound:
+			lBound = self._lowerBound
+			lowerExclusive = ownLowerExclusive
+		elif other._lowerBound > self._lowerBound:
+			lBound = other._lowerBound
+			lowerExclusive = otherLowerExclusive
 		else:
-			lBound = self._lowerBound if self._lowerBound > other._lowerBound else other._lowerBound
+			lBound = self._lowerBound
+			lowerExclusive = ownLowerExclusive or otherLowerExclusive
 
 		if self._upperBound is None:
 			uBound = other._upperBound
+			upperExclusive = otherUpperExclusive
 		elif other._upperBound is None:
 			uBound = self._upperBound
+			upperExclusive = ownUpperExclusive
+		elif self._upperBound < other._upperBound:
+			uBound = self._upperBound
+			upperExclusive = ownUpperExclusive
+		elif other._upperBound < self._upperBound:
+			uBound = other._upperBound
+			upperExclusive = otherUpperExclusive
 		else:
-			uBound = self._upperBound if self._upperBound < other._upperBound else other._upperBound
+			uBound = self._upperBound
+			upperExclusive = ownUpperExclusive or otherUpperExclusive
 
 		if lBound is not None and uBound is not None and not (lBound <= uBound):
 			ex = ValueError("The intersection of both version ranges is empty.")
@@ -2518,7 +2545,13 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"The lowest upper bound is '{uBound}'.")
 			raise ex
 
-		return self.__class__(lBound, uBound)
+		boundHandling = RangeBoundHandling.BothBoundsInclusive
+		if lowerExclusive:
+			boundHandling |= RangeBoundHandling.LowerBoundExclusive
+		if upperExclusive:
+			boundHandling |= RangeBoundHandling.UpperBoundExclusive
+
+		return self.__class__(lBound, uBound, boundHandling)
 
 	def __lt__(self, other: Any) -> bool:
 		"""
