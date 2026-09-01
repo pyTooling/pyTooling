@@ -2474,7 +2474,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"This range is bounded by type '{getFullyQualifiedName(reference)}'.")
 			raise ex
 
-	def __and__(self, other: Any) -> VersionRange[T]:
+	def __and__(self, other: Any) -> VersionRange[V]:
 		"""
 		Compute the intersection of two version ranges.
 
@@ -2727,7 +2727,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		else:
 			raise TypeError("Parameter 'versions' is not an Iterable.")
 
-	def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
+	def __and__(self, other: VersionSet[V]) -> VersionSet[V]:
 		"""
 		Compute intersection of two version sets.
 
@@ -2757,7 +2757,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 		return VersionSet(result)
 
-	def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
+	def __or__(self, other: VersionSet[V]) -> VersionSet[V]:
 		"""
 		Compute union of two version sets.
 
@@ -3336,7 +3336,7 @@ class TildeVersionConstraint(RangeVersionConstraint[V]):
 		return versionType(version.Major + 1, epoch=epoch)
 
 
-
+@export
 def _BuildConstraintPattern(
 	operators:   dict[str, VersionComparison],
 	separators:  str,
@@ -3392,7 +3392,7 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 	This class is the **ecosystem-neutral** dialect: the six ordering comparisons in their canonical spelling,
 	separated by commas or whitespace. An ecosystem that spells its operators differently, or adds a shorthand,
 	derives from it and overrides :attr:`_OPERATORS`, :attr:`_SEPARATORS`, :attr:`_VERSION_TYPE` or
-	:attr:`_SHORTHANDS`. A dialect is data, not behaviour.
+	:attr:`_SHORTHANDS`. A dialect is data, not behavior.
 
 	.. seealso::
 
@@ -3513,7 +3513,7 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 			try:
 				version = versionType.Parse(match.group(2))
 			except ValueError as cause:
-				# An operator this dialect doesn't know is not recognised as one, so it lands in the version instead.
+				# An operator this dialect doesn't know is not recognized as one, so it lands in the version instead.
 				ex = ValueError(f"Expression '{expression}' has unexpected input at '{match.group(0).strip()}'.")
 				ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
 				raise ex from cause
@@ -3616,8 +3616,8 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 
 		:returns: The constraints, joined by this dialect's separator, or an empty string if it constrains nothing.
 		"""
-		separator =         self._SEPARATORS[0] if len(self._SEPARATORS) > 0 else " "
-		spelled: list[str] = []
+		separator: str =       self._SEPARATORS[0] if len(self._SEPARATORS) > 0 else " "
+		spelled:   list[str] = []
 
 		for constraint in self._constraints:
 			for spelling, comparison in self._OPERATORS.items():
