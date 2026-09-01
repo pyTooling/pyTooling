@@ -229,3 +229,102 @@ class IteratingDictionaries(Testcase):
 		for key, value in config["Install"].IterateItems():
 			self.assertIsInstance(key, str)
 			self.assertEqual(value, config["Install"][key])
+
+
+class MappingProtocol(Testcase):
+	"""A dictionary node answers the methods :class:`dict` answers."""
+
+	def test_Keys(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(("value_11", "value_12"), config["node_1"].keys())
+
+	def test_Values(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(("string_11", "string_12"), config["node_1"].values())
+
+	def test_Items(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual(
+			(("value_11", "string_11"), ("value_12", "string_12")),
+			config["node_1"].items()
+		)
+
+	def test_TheyMatchTheIterators(self) -> None:
+		""":meth:`keys`, :meth:`values` and :meth:`items` are their ``Iterate***`` counterparts, materialized."""
+		node = Configuration(Path("tests/unit/Configuration/config.yml"))["node_1"]
+
+		self.assertEqual(tuple(node.IterateKeys()), node.keys())
+		self.assertEqual(tuple(node.IterateValues()), node.values())
+		self.assertEqual(tuple(node.IterateItems()), node.items())
+
+	def test_Get(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual("string_11", config["node_1"].get("value_11"))
+
+	def test_GetReturnsTheDefaultForAnAbsentKey(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertIsNone(config["node_1"].get("value_13"))
+		self.assertEqual("fallback", config["node_1"].get("value_13", "fallback"))
+
+	def test_GetDoesNotRaiseWhereGetitemDoes(self) -> None:
+		"""``node[absent]`` raises; ``node.get(absent)`` is the way to ask without handling it."""
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		with self.assertRaises(KeyError):
+			config["node_1"]["value_13"]
+
+		self.assertIsNone(config["node_1"].get("value_13"))
+
+	def test_ANodeConvertsToADict(self) -> None:
+		"""``dict()`` looks for a ``keys`` method to decide something is a mapping, which is why this works."""
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual({"value_11": "string_11", "value_12": "string_12"}, dict(config["node_1"]))
+
+	def test_ANodeUnpacksIntoADict(self) -> None:
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertEqual({"value_11": "string_11", "value_12": "string_12"}, {**config["node_1"]})
+
+	def test_TheRootNodeIsAMappingToo(self) -> None:
+		"""The root derives from the dictionary node, so a whole document reads like one."""
+		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+
+		self.assertIn("node_1", config.keys())
+		self.assertEqual("string_1", config.get("value_1"))
+		self.assertEqual("fallback", config.get("absent", "fallback"))
+
+
+class SequenceProtocol(Testcase):
+	"""A sequence node answers the methods :class:`list` answers."""
+
+	def test_Index(self) -> None:
+		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+
+		self.assertEqual(0, sequence.index(sequence[0]))
+		self.assertEqual(1, sequence.index(sequence[1]))
+
+	def test_IndexHonoursStartAndStop(self) -> None:
+		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+
+		self.assertEqual(1, sequence.index(sequence[1], 1))
+
+		with self.assertRaises(ValueError):
+			sequence.index(sequence[1], 0, 1)
+
+	def test_IndexRaisesForAnAbsentValue(self) -> None:
+		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+
+		with self.assertRaises(ValueError):
+			sequence.index("not in this sequence")
+
+	def test_Count(self) -> None:
+		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+
+		self.assertEqual(1, sequence.count(sequence[0]))
+		self.assertEqual(0, sequence.count("not in this sequence"))

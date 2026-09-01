@@ -63,12 +63,15 @@ ValueT = Union[NodeT, str, int, float]    #: Type variable for values.
 
 
 @export
-class KeyNotFoundError(ConfigurationError):
+class KeyNotFoundError(ConfigurationError, KeyError):
 	"""
 	The requested key or index doesn't exist in the configuration node.
 
 	The key was neither found as a string, nor converted to an integer or float. A note lists the keys or the index
 	range offered by the node.
+
+	It is a :exc:`KeyError` as well, because a dictionary node answers the mapping protocol and the code reading it
+	writes ``except KeyError``. Catching :exc:`~pyTooling.Exceptions.ConfigurationError` still catches it.
 	"""
 
 
@@ -230,6 +233,48 @@ class Dictionary(Node):
 		for key in self._keys:
 			yield key, self[key]
 
+	def keys(self) -> Tuple[KeyT, ...]:
+		"""
+		Return this node's keys, so a dictionary node can be handed to code expecting a mapping.
+
+		This is :meth:`IterateKeys` materialized. The name is :class:`dict`'s, deliberately: :class:`dict` itself
+		looks for a ``keys`` method to decide whether an object is a mapping, so ``dict(node)`` and ``{**node}``
+		work because this exists.
+
+		:returns: This node's keys, in the order the document states them.
+		"""
+		return tuple(self._keys)
+
+	def values(self) -> Tuple[ValueT, ...]:
+		"""
+		Return this node's values, so a dictionary node can be handed to code expecting a mapping.
+
+		This is :meth:`IterateValues` materialized.
+
+		:returns: This node's values, in the order the document states them.
+		"""
+		return tuple(self.IterateValues())
+
+	def items(self) -> Tuple[Tuple[KeyT, ValueT], ...]:
+		"""
+		Return this node's key-value pairs, so a dictionary node can be handed to code expecting a mapping.
+
+		This is :meth:`IterateItems` materialized.
+
+		:returns: This node's ``(key, value)`` pairs, in the order the document states them.
+		"""
+		return tuple(self.IterateItems())
+
+	def get(self, key: KeyT, default: Nullable[ValueT] = None) -> Nullable[ValueT]:
+		"""
+		Return the value a key names, or a default when this node doesn't state that key.
+
+		:param key:     The key to read.
+		:param default: Optional, what to return when the key isn't stated. Defaults to ``None``.
+		:returns:       The value the key names, or ``default``.
+		"""
+		return self[key] if key in self else default
+
 
 @export
 @mixin
@@ -267,6 +312,35 @@ class Sequence(Node):
 		:raises NotImplementedError: Always - a configuration is read-only.
 		"""
 		raise NotImplementedError("Currently, the configuration is read-only. Writing isn't implemented.")
+
+	def index(self, value: ValueT, start: int = 0, stop: Nullable[int] = None) -> int:
+		"""
+		Return the index of the first element equal to a value, so a sequence node reads like a :class:`list`.
+
+		:param value:       The value to search for.
+		:param start:       Optional, index to start searching at. Defaults to ``0``.
+		:param stop:        Optional, index to stop searching before. Defaults to the end of this node.
+		:returns:           Index of the first matching element.
+		:raises ValueError: If no element in the searched range equals the value.
+		"""
+		length = len(self)
+		start =  max(0, length + start if start < 0 else start)
+		stop =   length if stop is None else min(length, length + stop if stop < 0 else stop)
+
+		for index in range(start, stop):
+			if self[index] == value:
+				return index
+
+		raise ValueError(f"'{value}' is not in this sequence node.")
+
+	def count(self, value: ValueT) -> int:
+		"""
+		Return how many elements of this node equal a value, so a sequence node reads like a :class:`list`.
+
+		:param value: The value to count.
+		:returns:     Number of matching elements.
+		"""
+		return sum(1 for element in self if element == value)
 
 
 setattr(Node, "DICT_TYPE", Dictionary)
