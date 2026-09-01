@@ -54,7 +54,7 @@ from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.Exceptions      import ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing       import License, LicenseExpression, SPDXLicense
+from pyTooling.Licensing       import License, LicenseExpression, LicenseReference, SPDXLicense
 from pyTooling.Versioning      import SemanticVersion
 from pyTooling.Warning         import Warning
 
@@ -119,13 +119,13 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	_package:           Package                                               #: Reference to the corresponding package
 	_version:           SemanticVersion                                       #: :class:`SemanticVersion` of this version.
 	_releasedAt:        Nullable[datetime]                                    #: Time this package version was released.
-	_publishedLicense:  str                                                   #: License expression exactly as published.
+	_publishedLicense:  str                                                   #: What was published, when it didn't parse.
 	_licenseExpression: Nullable[LicenseExpression]                           #: The published expression, parsed.
 	_licenseURL:        Nullable[URL]                                         #: URL of the license's text, if known.
 	_repositoryURL:     Nullable[URL]                                         #: URL of the source repository, if known.
 	_documentationURL:  Nullable[URL]                                         #: URL of the documentation, if known.
 	_issueTrackerURL:   Nullable[URL]                                         #: URL of the issue tracker, if known.
-	_homepageURL:       Nullable[URL]                                         #: URL of the project's homepage.
+	_projectURL:        Nullable[URL]                                         #: URL of the project's homepage.
 	_changelogURL:      Nullable[URL]                                         #: URL of the changelog, if known.
 	_dependsOn:         dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
@@ -170,7 +170,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		self._repositoryURL     = None
 		self._documentationURL  = None
 		self._issueTrackerURL   = None
-		self._homepageURL       = None
+		self._projectURL       = None
 		self._changelogURL      = None
 		self._dependsOn         = {}
 
@@ -210,6 +210,9 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		licenses, although one requires both and the other offers a choice. Ask :attr:`LicenseExpression` when that
 		difference matters. A license exception is not a license and is not returned.
 
+		**A ``LicenseRef-<id>`` is not returned either**, and not because it isn't a license: SPDX doesn't know it, so
+		no :class:`~pyTooling.Licensing.License` object exists for it. :attr:`LicenseReferences` returns those.
+
 		:returns: Licenses this version is published under, or an empty tuple if the expression didn't resolve.
 		"""
 		if self._licenseExpression is None:
@@ -219,6 +222,26 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			node.License
 			for node in self._licenseExpression.IterateExpression()
 			if isinstance(node, SPDXLicense)
+		)
+
+	@readonly
+	def LicenseReferences(self) -> tuple[LicenseReference, ...]:
+		"""
+		Read-only property to return the license references named by :attr:`LicenseExpression`.
+
+		A ``LicenseRef-<id>`` is a license this version is published under, but SPDX doesn't know it, so there is no
+		:class:`~pyTooling.Licensing.License` object for it and :attr:`Licenses` - which returns those - cannot carry
+		it. It is returned here instead, as the node, which is the only thing that holds its identifier.
+
+		:returns: License references this version is published under, or an empty tuple if there are none.
+		"""
+		if self._licenseExpression is None:
+			return ()
+
+		return tuple(
+			node
+			for node in self._licenseExpression.IterateExpression()
+			if isinstance(node, LicenseReference)
 		)
 
 	@readonly
@@ -237,13 +260,19 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	@readonly
 	def PublishedLicense(self) -> str:
 		"""
-		Read-only property to access the license expression as it was published (:attr:`_publishedLicense`).
+		Read-only property to access the license expression as it was published.
 
-		This is kept verbatim, so a license that didn't parse is still reportable.
+		The published text is held in **one** place: a parsed expression keeps it as
+		:attr:`~pyTooling.Licensing.LicenseExpression.ParsedFrom`, and :attr:`_publishedLicense` holds it only when
+		there is no expression to hold it. :meth:`~pyTooling.Licensing.LicenseExpression.__str__` is not a substitute
+		- it re-renders canonically, so ``Apache-2.0 or MIT`` comes back as ``Apache-2.0 OR MIT``.
 
 		:returns: The license expression as published, or an empty string if none was published.
 		"""
-		return self._publishedLicense
+		if self._licenseExpression is None:
+			return self._publishedLicense
+
+		return self._licenseExpression.ParsedFrom
 
 	@readonly
 	def LicenseURL(self) -> Nullable[URL]:
@@ -296,16 +325,16 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		return self._issueTrackerURL
 
 	@readonly
-	def HomepageURL(self) -> Nullable[URL]:
+	def ProjectURL(self) -> Nullable[URL]:
 		"""
-		Read-only property to access the URL of the project's homepage (:attr:`_homepageURL`).
+		Read-only property to access the URL of the project's homepage (:attr:`_projectURL`).
 
 		A package index publishes these per release, and they move - a project migrating to another forge has one
 		URL before the migration and another after it.
 
 		:returns: URL of the project's homepage, or ``None`` if this release didn't name one.
 		"""
-		return self._homepageURL
+		return self._projectURL
 
 	@readonly
 	def ChangelogURL(self) -> Nullable[URL]:
@@ -558,10 +587,10 @@ class Package(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(storage)}'.")
 			raise ex
 
-		self._storage = storage
+		self._storage =           storage
 		storage._packages[name] = self
 
-		self._versions      = {}
+		self._versions =          {}
 
 	@readonly
 	def Storage(self) -> PackageStorage:
@@ -642,7 +671,7 @@ class Package(metaclass=ExtendedType, slots=True):
 		return latest.IssueTrackerURL
 
 	@readonly
-	def HomepageURL(self) -> Nullable[URL]:
+	def ProjectURL(self) -> Nullable[URL]:
 		"""
 		Read-only property to return the URL of the project's homepage, as the latest version states it.
 
@@ -655,7 +684,7 @@ class Package(metaclass=ExtendedType, slots=True):
 		if (latest := self.LatestVersion) is None:
 			return None
 
-		return latest.HomepageURL
+		return latest.ProjectURL
 
 	@readonly
 	def ChangelogURL(self) -> Nullable[URL]:
