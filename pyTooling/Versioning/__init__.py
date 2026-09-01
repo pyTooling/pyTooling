@@ -1604,12 +1604,7 @@ class PythonVersion(SemanticVersion):
 	"""
 
 	#: :pep:`440` writes an epoch ``v2!1.2.3``, where Debian and the default write ``2:1.2.3``.
-	#:
-	#: Deliberately **not** annotated: :class:`~pyTooling.MetaClasses.ExtendedType` applies an annotated class
-	#: attribute *after* ``__init_subclass__`` has run, so an annotation here would hide the separator from
-	#: :meth:`SemanticVersion.__init_subclass__` and leave this class parsing ``:``. A testcase pins that the
-	#: pattern really was rebuilt.
-	_EPOCH_SEPARATOR = "!"
+	_EPOCH_SEPARATOR: ClassVar[str] = "!"
 
 	@classmethod
 	def FromSysVersionInfo(cls) -> PythonVersion:
