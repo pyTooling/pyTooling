@@ -47,7 +47,8 @@ from __future__            import annotations
 from collections.abc       import Iterable as abc_Iterable
 from enum                  import Flag, Enum
 from re                    import compile as re_compile, escape as re_escape, Pattern
-from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
+from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable
+from typing                import Iterator, Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
@@ -2364,9 +2365,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				raise ex
 
 			if not (value <= self._upperBound):
-				error = ValueError("Parameter 'value' isn't less than or equal to the range's upper bound.")
-				error.add_note(f"Got '{value}' for the lower bound; the upper bound is '{self._upperBound}'.")
-				raise error
+				ex = ValueError("Parameter 'value' isn't less than or equal to the range's upper bound.")
+				ex.add_note(f"Got '{value}' for the lower bound; the upper bound is '{self._upperBound}'.")
+				raise ex
 
 		self._lowerBound = value
 
@@ -2400,9 +2401,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 				raise ex
 
 			if not (self._lowerBound <= value):
-				error = ValueError("Parameter 'value' isn't greater than or equal to the range's lower bound.")
-				error.add_note(f"Got '{value}' for the upper bound; the lower bound is '{self._lowerBound}'.")
-				raise error
+				ex = ValueError("Parameter 'value' isn't greater than or equal to the range's lower bound.")
+				ex.add_note(f"Got '{value}' for the upper bound; the lower bound is '{self._lowerBound}'.")
+				raise ex
 
 		self._upperBound = value
 
@@ -2468,7 +2469,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"This range is bounded by type '{getFullyQualifiedName(reference)}'.")
 			raise ex
 
-	def __and__(self, other: Any) -> VersionRange[T]:
+	def __and__(self, other: Any) -> VersionRange[V]:
 		"""
 		Compute the intersection of two version ranges.
 
@@ -2721,7 +2722,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		else:
 			raise TypeError("Parameter 'versions' is not an Iterable.")
 
-	def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
+	def __and__(self, other: VersionSet[V]) -> VersionSet[V]:
 		"""
 		Compute intersection of two version sets.
 
@@ -2751,7 +2752,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 		return VersionSet(result)
 
-	def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
+	def __or__(self, other: VersionSet[V]) -> VersionSet[V]:
 		"""
 		Compute union of two version sets.
 
@@ -2920,3 +2921,838 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]
+
+
+#: The :class:`Version` class under a name no constraint shadows with a property of its own.
+_VersionType = Version
+
+
+@export
+class VersionComparison(Enum):
+	"""
+	The comparison one constraint of a :class:`VersionExpression` applies to a version.
+
+	The six ordering comparisons mean the same thing in every packaging ecosystem, even where the spelling differs -
+	Debian writes ``<<`` for :attr:`LessThan` and npm writes ``=`` for :attr:`Equal`. Each member's value is its
+	*canonical* spelling, which is what a constraint renders as; a dialect maps its own spellings onto these members
+	while parsing.
+	"""
+
+	Equal              = "=="  #: The version has to be equal to the constraint's version.
+	Unequal            = "!="  #: The version must not be the constraint's version.
+	LessThan           = "<"   #: The version has to be lower than the constraint's version.
+	LessThanOrEqual    = "<="  #: The version must not be higher than the constraint's version.
+	GreaterThan        = ">"   #: The version has to be higher than the constraint's version.
+	GreaterThanOrEqual = ">="  #: The version must not be lower than the constraint's version.
+	CompatibleRelease  = "~="  #: The version has to be compatible with the constraint's version (:pep:`440`).
+	Caret              = "^"   #: The version must not change the constraint's leftmost non-zero part (npm).
+	Tilde              = "~"   #: The version must not change the constraint's minor part (npm).
+
+	def __str__(self) -> str:
+		"""
+		Return the operator in its canonical spelling.
+
+		:returns: The comparison's operator.
+		"""
+		return self.value
+
+
+@export
+class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
+	"""
+	One comparison of a :class:`VersionExpression`, such as ``>=1.2.0``.
+
+	A constraint is a container of the versions satisfying it, so membership is asked with ``in``:
+
+	.. code-block:: python
+
+	   constraint = VersionConstraint(VersionComparison.GreaterThanOrEqual, SemanticVersion.Parse("1.2.0"))  # >=1.2.0
+	   SemanticVersion.Parse("1.5.0") in constraint   # True
+
+	.. seealso::
+
+	   :class:`CompatibleVersionConstraint`
+	      |rarr| The constraint implementing :attr:`~VersionComparison.CompatibleRelease`.
+	"""
+
+	_comparison: VersionComparison  #: The comparison this constraint applies.
+	_version:    V                  #: The version the compared version is held against.
+
+	def __init__(self, comparison: VersionComparison, version: V) -> None:
+		"""
+		Initialize a constraint from a comparison and the version it compares against.
+
+		:param comparison:  The comparison to apply.
+		:param version:     The version to compare against.
+		:raises TypeError:  If parameter 'comparison' is not of type :class:`VersionComparison`.
+		:raises TypeError:  If parameter 'version' is not of type :class:`Version`.
+		:raises ValueError: If parameter 'comparison' is a shorthand like
+		                    :attr:`~VersionComparison.CompatibleRelease`. |br|
+		                    Use the matching :class:`RangeVersionConstraint`, which derives an upper bound from the
+		                    version.
+		"""
+		if not isinstance(comparison, VersionComparison):
+			ex = TypeError("Parameter 'comparison' is not of type 'VersionComparison'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(comparison)}'.")
+			raise ex
+
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		if comparison in _SHORTHAND_COMPARISONS and not isinstance(self, RangeVersionConstraint):
+			ex = ValueError(f"Comparison '{comparison.name}' is not a plain comparison.")
+			ex.add_note("Use the matching 'RangeVersionConstraint', which derives an upper bound from the version.")
+			raise ex
+
+		self._comparison = comparison
+		self._version =    version
+
+	@readonly
+	def Comparison(self) -> VersionComparison:
+		"""
+		Read-only property to access the comparison this constraint applies (:attr:`_comparison`).
+
+		:returns: The comparison.
+		"""
+		return self._comparison
+
+	@readonly
+	def Version(self) -> V:
+		"""
+		Read-only property to access the version this constraint compares against (:attr:`_version`).
+
+		:returns: The version.
+		"""
+		return self._version
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version satisfies this constraint.
+
+		:param version:     The version to check.
+		:returns:           ``True``, if the version satisfies the constraint.
+		:raises TypeError:  If parameter 'version' is not of type :class:`Version`.
+		:raises ValueError: If this constraint carries a comparison a plain constraint cannot apply. |br|
+		                    A shorthand is implemented by a :class:`RangeVersionConstraint`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		if self._comparison is VersionComparison.Equal:
+			return version == self._version
+		elif self._comparison is VersionComparison.Unequal:
+			return version != self._version
+		elif self._comparison is VersionComparison.LessThan:
+			return version < self._version
+		elif self._comparison is VersionComparison.LessThanOrEqual:
+			return version <= self._version
+		elif self._comparison is VersionComparison.GreaterThan:
+			return version > self._version
+		elif self._comparison is VersionComparison.GreaterThanOrEqual:
+			return version >= self._version
+
+		ex = ValueError(f"Comparison '{self._comparison.name}' cannot be applied by a plain constraint.")
+		ex.add_note("A shorthand is implemented by a 'RangeVersionConstraint'.")
+		raise ex
+
+	def ToVersionRange(self) -> VersionRange[_VersionType]:
+		"""
+		Convert this constraint into the :class:`VersionRange` it describes.
+
+		Five of the six comparisons are intervals once a bound may be unbound:
+
+		* ``>=1.2.0`` is ``[1.2.0, )``,
+		* ``>1.2.0`` is ``(1.2.0, )``,
+		* ``<=2.0.0`` is ``( , 2.0.0]``,
+		* ``<2.0.0`` is ``( , 2.0.0)``,
+		* ``==1.2.0`` is ``[1.2.0, 1.2.0]``, a range of exactly one version.
+
+		:attr:`~VersionComparison.Unequal` is the exception and has no range: the complement of a single version is
+		not an interval but a *union* of two, one below it and one above. That is why an expression keeps both
+		representations rather than being replaced by a range.
+
+		:returns:           The range of versions satisfying this constraint.
+		:raises ValueError: If this constraint is an :attr:`~VersionComparison.Unequal`, which no single range
+		                    describes. |br|
+		                    The complement of a version is a union of two intervals.
+		"""
+		if self._comparison is VersionComparison.Equal:
+			return VersionRange(self._version, self._version)
+		elif self._comparison is VersionComparison.GreaterThanOrEqual:
+			return VersionRange(self._version, None)
+		elif self._comparison is VersionComparison.GreaterThan:
+			return VersionRange(self._version, None, RangeBoundHandling.LowerBoundExclusive)
+		elif self._comparison is VersionComparison.LessThanOrEqual:
+			return VersionRange(None, self._version)
+		elif self._comparison is VersionComparison.LessThan:
+			return VersionRange(None, self._version, RangeBoundHandling.UpperBoundExclusive)
+
+		ex = ValueError(f"Comparison '{self._comparison.name}' describes no single version range.")
+		ex.add_note("The complement of a version is a union of two intervals, which a 'VersionRange' cannot hold.")
+		raise ex
+
+	def __str__(self) -> str:
+		"""
+		Return the constraint in its canonical spelling.
+
+		:returns: The operator followed by the version.
+		"""
+		return f"{self._comparison}{self._version}"
+
+
+#: The comparisons a plain :class:`VersionConstraint` cannot express, because each derives an upper bound.
+_SHORTHAND_COMPARISONS = (
+	VersionComparison.CompatibleRelease,
+	VersionComparison.Caret,
+	VersionComparison.Tilde,
+)
+
+
+@export
+class RangeVersionConstraint(VersionConstraint[V]):
+	"""
+	Base-class of the shorthand constraints meaning *at least this version, and below a derived bound*.
+
+	Every packaging ecosystem has one of these, spells it differently, and derives its upper bound by a **different**
+	rule:
+
+	* :pep:`440` writes ``~=``,
+	* npm writes ``^`` and ``~``,
+	* RubyGems writes ``~>``.
+
+	The rule is the only thing that differs, so it is what a derived class supplies in :meth:`_DeriveUpperBound`.
+
+	.. seealso::
+
+	   :class:`CompatibleVersionConstraint`
+	      |rarr| :pep:`440`'s ``~=``.
+	   :class:`CaretVersionConstraint`
+	      |rarr| npm's ``^``.
+	   :class:`TildeVersionConstraint`
+	      |rarr| npm's ``~``.
+	"""
+
+	_upperBound: SemanticVersion  #: The first version outside the constraint, derived from the written version.
+
+	def __init__(self, comparison: VersionComparison, version: V) -> None:
+		"""
+		Initialize a shorthand constraint and derive its upper bound.
+
+		:param comparison:  The shorthand comparison this constraint applies.
+		:param version:     The version the shorthand is written with.
+		:raises TypeError:  If parameter 'version' is not of type :class:`SemanticVersion`. |br|
+		                    An upper bound is derived from the version's parts, which only a semantic version has.
+		:raises ValueError: If the version has too few parts for this shorthand.
+		"""
+		if not isinstance(version, SemanticVersion):
+			ex = TypeError("Parameter 'version' is not of type 'SemanticVersion'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		super().__init__(comparison, version)
+
+		self._upperBound = self._DeriveUpperBound(version)
+
+	@abstractmethod
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:  # type: ignore[empty-body]
+		"""
+		Derive the first version outside this constraint from the version it is written with.
+
+		The bound has to be built in the written version's **epoch**. A bound left in epoch 0 outranks nothing, so
+		the constraint would match no version at all - not even the one it was written with.
+
+		:param version:     The version the shorthand is written with, always a semantic version.
+		:returns:           The exclusive upper bound, in the same epoch as ``version``.
+		:raises ValueError: If the version has too few parts for this shorthand.
+		"""
+
+	@readonly
+	def UpperBound(self) -> SemanticVersion:
+		"""
+		Read-only property to access the first version outside this constraint (:attr:`_upperBound`).
+
+		:returns: The exclusive upper bound derived from the written version.
+		"""
+		return self._upperBound
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version is within this constraint.
+
+		:param version:    The version to check.
+		:returns:          ``True``, if the version is at least the written one and below the derived upper bound.
+		:raises TypeError: If parameter 'version' is not of type :class:`Version`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		return self._version <= version < self._upperBound
+
+	def ToVersionRange(self) -> VersionRange[_VersionType]:
+		"""
+		Convert this constraint into the :class:`VersionRange` it describes.
+
+		A shorthand constraint knows both of its bounds - the written version is the inclusive lower one, the derived
+		bound the exclusive upper one - so the conversion is exact and loses nothing.
+
+		:returns: The range of versions satisfying this constraint.
+		"""
+		return VersionRange(
+			self._version,
+			self._upperBound,
+			RangeBoundHandling.LowerBoundInclusive | RangeBoundHandling.UpperBoundExclusive
+		)
+
+
+@export
+class CompatibleVersionConstraint(RangeVersionConstraint[V]):
+	"""
+	The *compatible release* constraint, written ``~=`` by :pep:`440`.
+
+	The last part written may move, the one to its left may not: ``~=1.2.3`` is ``<1.3``, ``~=1.2`` is ``<2`` and
+	``~=1.2.3.4`` is ``<1.2.4``. The written version therefore needs at least two parts - ``~=1`` would say nothing
+	that ``>=1`` doesn't, and :pep:`440` rejects it for that reason.
+
+	.. code-block:: python
+
+	   constraint = CompatibleVersionConstraint(PythonVersion.Parse("1.2.3"))
+	   PythonVersion.Parse("1.2.9") in constraint   # True
+	   PythonVersion.Parse("1.3.0") in constraint   # False
+	"""
+
+	def __init__(self, version: V) -> None:
+		"""
+		Initialize a compatible-release constraint from the version it is written with.
+
+		:param version: The version to be compatible with, with at least two parts.
+		"""
+		super().__init__(VersionComparison.CompatibleRelease, version)
+
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:
+		"""
+		Drop the last part written and increment the one that becomes the last.
+
+		:param version:     The version the shorthand is written with.
+		:returns:           The exclusive upper bound.
+		:raises ValueError: If the version has fewer than two parts.
+		"""
+		versionType = version.__class__
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
+		if Parts.Build in version._parts:
+			return versionType(version.Major, version.Minor, version.Patch + 1, epoch=epoch)
+		elif Parts.Micro in version._parts:
+			return versionType(version.Major, version.Minor + 1, epoch=epoch)
+		elif Parts.Minor in version._parts:
+			return versionType(version.Major + 1, epoch=epoch)
+
+		ex = ValueError(f"Version '{version}' has too few parts for a compatible release.")
+		ex.add_note("'~=1' would mean the same as '>=1'; write at least a major and a minor part.")
+		raise ex
+
+
+@export
+class CaretVersionConstraint(RangeVersionConstraint[V]):
+	"""
+	npm's ``^``: the version must not change the **leftmost non-zero** part of the one written.
+
+	``^1.2.3`` is ``<2.0.0``, but ``^0.2.3`` is ``<0.3.0`` and ``^0.0.3`` is ``<0.0.4`` - below 1.0.0 npm treats
+	each part as breaking, which is what makes this different from :class:`TildeVersionConstraint`. A part that was
+	not written cannot be the pivot, so ``^0`` is ``<1.0.0`` while ``^0.0`` is ``<0.1.0``.
+
+	.. note::
+
+	   npm excludes pre-releases of the upper bound by writing it ``<2.0.0-0``. That distinction is not modelled
+	   here; a pre-release of the bound is compared by :class:`SemanticVersion`'s own ordering.
+	"""
+
+	def __init__(self, version: V) -> None:
+		"""
+		Initialize a caret constraint from the version it is written with.
+
+		:param version: The version to be compatible with.
+		"""
+		super().__init__(VersionComparison.Caret, version)
+
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:
+		"""
+		Increment the leftmost non-zero part that was actually written.
+
+		:param version: The version the shorthand is written with.
+		:returns:       The exclusive upper bound.
+		"""
+		versionType = version.__class__
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
+		if version.Major != 0 or Parts.Minor not in version._parts:
+			return versionType(version.Major + 1, epoch=epoch)
+		elif version.Minor != 0 or Parts.Micro not in version._parts:
+			return versionType(0, version.Minor + 1, epoch=epoch)
+
+		return versionType(0, 0, version.Patch + 1, epoch=epoch)
+
+
+@export
+class TildeVersionConstraint(RangeVersionConstraint[V]):
+	"""
+	npm's ``~``: the version must not change the minor part of the one written.
+
+	``~1.2.3`` and ``~1.2`` are both ``<1.3.0``. Only when no minor part was written does the major one become the
+	pivot, so ``~1`` is ``<2.0.0``.
+
+	This is **not** :pep:`440`'s ``~=``: the two agree on ``~1.2.3`` and disagree on ``~1.2``, which npm reads as
+	``<1.3.0`` and :pep:`440` as ``<2``.
+	"""
+
+	def __init__(self, version: V) -> None:
+		"""
+		Initialize a tilde constraint from the version it is written with.
+
+		:param version: The version to be compatible with.
+		"""
+		super().__init__(VersionComparison.Tilde, version)
+
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:
+		"""
+		Increment the minor part, or the major one when no minor part was written.
+
+		:param version: The version the shorthand is written with.
+		:returns:       The exclusive upper bound.
+		"""
+		versionType = version.__class__
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
+		if Parts.Minor in version._parts:
+			return versionType(version.Major, version.Minor + 1, epoch=epoch)
+
+		return versionType(version.Major + 1, epoch=epoch)
+
+
+@export
+def _BuildConstraintPattern(
+	operators:   dict[str, VersionComparison],
+	separators:  str,
+	versionType: type[Version]
+) -> Pattern[str]:
+	"""
+	Build the pattern matching one constraint of a :class:`VersionExpression` dialect.
+
+	The operators are alternated longest-first, so ``>=`` wins over ``>`` and ``~=`` over any single character. The
+	operator and its version are matched *together*, with whitespace allowed between them, which is what lets
+	whitespace separate constraints without splitting ``>= 1.2.0`` in half.
+
+	A version may hold none of the characters the dialect's operators are built from, and none of its separators, so
+	those are excluded from it. Without that the optional operator group would let ``>=1.2.0 <2.0.0`` read its second
+	constraint as the *version* ``<2.0.0``.
+
+	The **epoch separator is the exception** and stays allowed: :pep:`440` writes an epoch ``1!1.0``, and ``!`` is
+	also the first character of ``!=``. Excluding it would cut ``>=1!1.0`` short at the epoch. The operator
+	alternation is tried before the version at every position, so ``!=`` is still read as an operator wherever a
+	constraint can begin.
+
+	This is a function rather than a method, so :class:`VersionExpression` can call it in its own class body. A
+	dialect derived from it is served by :meth:`VersionExpression.__init_subclass__`.
+
+	:param operators:   The dialect's operator spellings.
+	:param separators:  The dialect's constraint separators.
+	:param versionType: The dialect's version class, which names the epoch separator to keep.
+	:returns:           The pattern, with the operator as group 1 and the version as group 2.
+	"""
+	alternation = "|".join(re_escape(operator) for operator in sorted(operators, key=len, reverse=True))
+	excluded =    (set("".join(operators)) | set(separators)) - set(versionType._EPOCH_SEPARATOR)
+
+	return re_compile(rf"({alternation})?\s*([^\s{re_escape("".join(sorted(excluded)))}]+)")
+
+
+@export
+class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
+	"""
+	A conjunction of :class:`VersionConstraint`\\ s, such as ``>=1.2.0,<2.0.0``.
+
+	Every constraint has to be satisfied, which is what separating them means in every packaging ecosystem that has
+	the notion. An expression with **no** constraints matches every version, so *no version restriction* can be
+	represented rather than special-cased by its callers.
+
+	.. code-block:: python
+
+	   expression = VersionExpression.Parse(">=1.2.0,<2.0.0")
+	   SemanticVersion.Parse("1.5.0") in expression   # True
+	   SemanticVersion.Parse("2.0.0") in expression   # False
+
+	   SemanticVersion.Parse("4.2.0") in VersionExpression.Parse("")   # True - no constraints matches anything
+
+	This class is the **ecosystem-neutral** dialect: the six ordering comparisons in their canonical spelling,
+	separated by commas or whitespace. An ecosystem that spells its operators differently, or adds a shorthand,
+	derives from it and overrides :attr:`_OPERATORS`, :attr:`_SEPARATORS`, :attr:`_VERSION_TYPE` or
+	:attr:`_SHORTHANDS`. A dialect is data, not behavior.
+
+	.. seealso::
+
+	   :class:`PythonVersionExpression`
+	      |rarr| The dialect :pep:`440` defines, which a Python requirement file writes.
+	"""
+
+	#: Operator spellings this dialect accepts, mapped onto the comparison they mean.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		"==": VersionComparison.Equal,
+		"!=": VersionComparison.Unequal,
+		"<=": VersionComparison.LessThanOrEqual,
+		">=": VersionComparison.GreaterThanOrEqual,
+		"<":  VersionComparison.LessThan,
+		">":  VersionComparison.GreaterThan,
+	}
+
+	#: Characters separating one constraint from the next. Whitespace always separates as well.
+	_SEPARATORS: ClassVar[str] = ","
+
+	#: The :class:`Version` class this dialect parses its versions as, unless a caller names another.
+	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion
+
+	#: The class each shorthand comparison is built as. A comparison absent here is a plain
+	#: :class:`VersionConstraint`; the neutral dialect has no shorthand at all.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {}
+
+	#: This dialect's compiled constraint pattern, built from the three tables above. A derived dialect gets its own
+	#: in :meth:`__init_subclass__`.
+	_CONSTRAINT_PATTERN: ClassVar[Pattern[str]] = _BuildConstraintPattern(_OPERATORS, _SEPARATORS, _VERSION_TYPE)
+
+	_constraints: tuple[VersionConstraint[V], ...]  #: The constraints a version has to satisfy, all of them.
+
+	def __init__(self, constraints: Iterable[VersionConstraint[V]] = ()) -> None:
+		"""
+		Initialize an expression from its constraints.
+
+		:param constraints: Optional, the constraints a version has to satisfy. None of them means *any version*.
+		:raises ValueError: If parameter 'constraints' is None.
+		:raises TypeError:  If parameter 'constraints' is not iterable.
+		:raises TypeError:  If parameter 'constraints' contains an item that is not a :class:`VersionConstraint`.
+		"""
+		if constraints is None:
+			raise ValueError("Parameter 'constraints' is None.")
+		elif not isinstance(constraints, abc_Iterable):
+			ex = TypeError("Parameter 'constraints' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(constraints)}'.")
+			raise ex
+
+		items = tuple(constraints)
+		for constraint in items:
+			if not isinstance(constraint, VersionConstraint):
+				ex = TypeError("Parameter 'constraints' contains an item that is not of type 'VersionConstraint'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(constraint)}'.")
+				raise ex
+
+		self._constraints = items
+
+	def __init_subclass__(cls, **kwargs: Any) -> None:
+		"""
+		Compile the constraint pattern of a newly defined dialect.
+
+		A dialect is data: its operators, its separators and its version type are class variables, so its pattern is
+		settled once the class body has been read and is built here instead of on every :meth:`Parse`.
+
+		:param kwargs: Keyword arguments passed on to the base implementation.
+		"""
+		super().__init_subclass__(**kwargs)
+
+		cls._CONSTRAINT_PATTERN = _BuildConstraintPattern(cls._OPERATORS, cls._SEPARATORS, cls._VERSION_TYPE)
+
+	@classmethod
+	def Parse(cls, expression: Nullable[str], versionType: Nullable[type[Version]] = None) -> Self:
+		"""
+		Parse an expression such as ``>=1.2.0,<2.0.0`` into its constraints.
+
+		A constraint without an operator is an equality, so ``1.2.0`` and ``==1.2.0`` are the same statement. An
+		empty expression yields an expression with no constraints, which every version satisfies - that is how *no
+		version restriction* is written.
+
+		The expression is *scanned* rather than split, so a dialect separating constraints by whitespace does not
+		break a constraint that has whitespace after its operator.
+
+		:param expression:  The expression to parse, or ``None`` for *any version*.
+		:param versionType: Optional, the :class:`Version` class the versions are parsed as. Defaults to the
+		                    dialect's :attr:`_VERSION_TYPE`.
+		:returns:           The parsed expression.
+		:raises TypeError:  If parameter 'expression' is not a string.
+		:raises ValueError: If the expression holds input this dialect doesn't accept. |br|
+		                    The note names the operators this dialect accepts.
+		:raises ValueError: If a version in the expression can't be parsed. |br|
+		                    The note names the operators this dialect accepts, because an operator another
+		                    ecosystem spells differently is read as part of the version.
+		"""
+		if expression is None:
+			return cls()
+		elif not isinstance(expression, str):
+			ex = TypeError("Parameter 'expression' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(expression)}'.")
+			raise ex
+		elif (expression := expression.strip()) == "":
+			return cls()
+
+		versionType = cls._VERSION_TYPE if versionType is None else versionType
+		skippable =   cls._SEPARATORS + " \t"
+		# 'V' is unbound here - the version class comes from the dialect or the parameter, not from the type variable.
+		constraints: list[VersionConstraint[Any]] = []
+		position =    0
+
+		for match in cls._CONSTRAINT_PATTERN.finditer(expression):
+			if (skipped := expression[position:match.start()].strip(skippable)) != "":
+				ex = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
+				ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+				raise ex
+
+			operator = match.group(1)
+			comparison = VersionComparison.Equal if operator is None else cls._OPERATORS[operator]
+			try:
+				version = versionType.Parse(match.group(2))
+			except ValueError as cause:
+				# An operator this dialect doesn't know is not recognized as one, so it lands in the version instead.
+				ex = ValueError(f"Expression '{expression}' has unexpected input at '{match.group(0).strip()}'.")
+				ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+				raise ex from cause
+
+			if (shorthand := cls._SHORTHANDS.get(comparison, None)) is not None:
+				constraints.append(shorthand(version))
+			else:
+				constraints.append(VersionConstraint(comparison, version))
+			position = match.end()
+
+		if (skipped := expression[position:].strip(skippable)) != "":
+			ex = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
+			ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+			raise ex
+
+		return cls(constraints)
+
+	@readonly
+	def Constraints(self) -> tuple[VersionConstraint[V], ...]:
+		"""
+		Read-only property to access the constraints a version has to satisfy (:attr:`_constraints`).
+
+		:returns: The constraints, empty if the expression matches every version.
+		"""
+		return self._constraints
+
+	@readonly
+	def MatchesAnyVersion(self) -> bool:
+		"""
+		Read-only property to return whether this expression constrains nothing.
+
+		:returns: ``True``, if the expression has no constraints and every version satisfies it.
+		"""
+		return len(self._constraints) == 0
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version satisfies every constraint of this expression.
+
+		:param version:    The version to check.
+		:returns:          ``True``, if the version satisfies all constraints. An expression without constraints is
+		                   satisfied by every version.
+		:raises TypeError: If parameter 'version' is not of type :class:`Version`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		return all(version in constraint for constraint in self._constraints)
+
+	def ToVersionRange(self) -> VersionRange[Version]:
+		"""
+		Convert this expression into the single :class:`VersionRange` it describes.
+
+		An expression is a conjunction, so its range is the **intersection** of its constraints' ranges, which
+		:meth:`VersionRange.__and__` computes. An expression with no constraints is the range unbound at both ends,
+		since both match every version.
+
+		Not every expression has a range. One containing an :attr:`~VersionComparison.Unequal` does not, because the
+		complement of a version is a union of two intervals - ``>=1.0,!=1.3,<2.0`` is an ordinary requirement with
+		no single range. That is why :class:`VersionExpression` is not replaced by :class:`VersionRange`: a range is
+		one interval, an expression is any conjunction, and the second is strictly more expressive.
+
+		:returns:           The range of versions satisfying every constraint.
+		:raises ValueError: If a constraint describes no range, which an :attr:`~VersionComparison.Unequal` never
+		                    does.
+		:raises ValueError: If the constraints have no version in common.
+		"""
+		versionRange: VersionRange[_VersionType] = VersionRange(None, None)
+		for constraint in self._constraints:
+			versionRange = versionRange & constraint.ToVersionRange()
+
+		return versionRange
+
+	def __len__(self) -> int:
+		"""
+		Return the number of constraints in this expression.
+
+		:returns: Number of constraints.
+		"""
+		return len(self._constraints)
+
+	def __iter__(self) -> Iterator[VersionConstraint[V]]:
+		"""
+		Iterate the constraints of this expression, in the order they were written.
+
+		:returns: An iterator over the constraints.
+		"""
+		return iter(self._constraints)
+
+	def __str__(self) -> str:
+		"""
+		Return the expression in this dialect's spelling.
+
+		A :class:`VersionConstraint` renders itself canonically, which is not what every dialect writes - Debian
+		spells :attr:`~VersionComparison.Equal` ``=`` and :attr:`~VersionComparison.LessThan` ``<<``. The dialect's
+		own operator table answers what it writes; where a dialect has several spellings for one comparison, the
+		first one wins.
+
+		:returns: The constraints, joined by this dialect's separator, or an empty string if it constrains nothing.
+		"""
+		separator: str =       self._SEPARATORS[0] if len(self._SEPARATORS) > 0 else " "
+		spelled:   list[str] = []
+
+		for constraint in self._constraints:
+			for spelling, comparison in self._OPERATORS.items():
+				if comparison is constraint.Comparison:
+					spelled.append(f"{spelling}{constraint.Version}")
+					break
+			else:
+				spelled.append(str(constraint))
+
+		return separator.join(spelled)
+
+
+@export
+class PythonVersionExpression(VersionExpression[V]):
+	"""
+	A version expression in the dialect :pep:`440` defines, which is what a Python requirement file writes.
+
+	It adds the compatible release operator ``~=`` to the six ordering comparisons and parses its versions as
+	:class:`PythonVersion`:
+
+	.. code-block:: python
+
+	   expression = PythonVersionExpression.Parse("~=1.2.3")
+	   PythonVersion.Parse("1.2.9") in expression   # True
+	   PythonVersion.Parse("1.3.0") in expression   # False
+
+	.. seealso::
+
+	   :class:`CompatibleVersionConstraint`
+	      |rarr| What ``~=`` is parsed into, and how its upper bound is derived.
+	"""
+
+	#: The neutral dialect's operators, plus the compatible release operator :pep:`440` defines.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		**VersionExpression._OPERATORS,
+		"~=": VersionComparison.CompatibleRelease,
+	}
+
+	#: :pep:`440` versions, so an epoch, a release candidate or a post-release parses.
+	_VERSION_TYPE: ClassVar[type[Version]] = PythonVersion
+
+	#: ``~=`` derives an upper bound, so it is not a plain comparison.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {
+		VersionComparison.CompatibleRelease: CompatibleVersionConstraint,
+	}
+
+
+@export
+class NPMVersionExpression(VersionExpression[V]):
+	"""
+	A version expression in npm's dialect, which is what a ``package.json`` dependency writes.
+
+	npm differs from :pep:`440` in three ways that matter to a parser:
+
+	* constraints are separated by **whitespace**, and a comma is a syntax error;
+	* equality is written ``=``, never ``==``;
+	* there is **no** ``!=`` - npm cannot exclude a single version this way.
+
+	It adds ``^`` and ``~``, which are not :pep:`440`'s ``~=``:
+
+	.. code-block:: python
+
+	   expression = NPMVersionExpression.Parse("^1.2.3")
+	   SemanticVersion.Parse("1.9.0") in expression   # True
+	   SemanticVersion.Parse("2.0.0") in expression   # False
+
+	.. note::
+
+	   The shorthands ``1.2.x``, ``*``, the hyphen range ``1.2.3 - 2.3.4`` and the alternative ``||`` are **not**
+	   parsed. The first three are further rewriting rules; ``||`` is a disjunction, which this class cannot hold
+	   because every constraint of an expression has to be satisfied.
+
+	.. seealso::
+
+	   :class:`CaretVersionConstraint` |br|
+	   :class:`TildeVersionConstraint`
+	"""
+
+	#: npm's operators. No ``==`` and no ``!=``; ``^`` and ``~`` are npm's own shorthands.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		"<=": VersionComparison.LessThanOrEqual,
+		">=": VersionComparison.GreaterThanOrEqual,
+		"<":  VersionComparison.LessThan,
+		">":  VersionComparison.GreaterThan,
+		"=":  VersionComparison.Equal,
+		"^":  VersionComparison.Caret,
+		"~":  VersionComparison.Tilde,
+	}
+
+	#: npm separates constraints by whitespace alone; a comma is a syntax error there.
+	_SEPARATORS: ClassVar[str] = ""
+
+	#: npm is strict semantic versioning.
+	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion
+
+	#: ``^`` and ``~`` each derive an upper bound, by different rules.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {
+		VersionComparison.Caret: CaretVersionConstraint,
+		VersionComparison.Tilde: TildeVersionConstraint,
+	}
+
+
+@export
+class DebianVersionExpression(VersionExpression[V]):
+	"""
+	A version expression in Debian's dialect, as a ``debian/control`` dependency writes it inside its parentheses.
+
+	Debian spells the strict comparisons ``<<`` and ``>>``, equality ``=``, and has **no** ``!=``. The obsolete
+	spellings ``<`` and ``>`` are deliberately **not** accepted: ``dpkg`` still takes them but warns, because they
+	historically meant ``<=`` and ``>=`` - reading them silently as the strict operators would invert their meaning.
+
+	.. code-block:: python
+
+	   expression = DebianVersionExpression.Parse(">> 1.2.3")
+	   SemanticVersion.Parse("1.3.0") in expression   # True
+
+	.. note::
+
+	   A Debian dependency states **one** constraint per package mention - ``pkg (>= 1.0), pkg (<< 2.0)`` - so an
+	   expression here usually holds a single constraint. The comma is Debian's *dependency* separator, not a
+	   constraint separator.
+
+	.. attention::
+
+	   Debian version strings are ``epoch:upstream-revision``. :class:`SemanticVersion` reads the revision as a
+	   postfix, but an **epoch** (``2:1.2.3-1``) does not parse, and ``1.2.3-1`` renders back as ``1.2.3+1``.
+	   Matching Debian versions faithfully needs a ``DebianVersion`` class, which pyTooling does not have.
+	"""
+
+	#: Debian's operators. ``<<`` and ``>>`` are the strict ones; there is no ``!=``.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		"<<": VersionComparison.LessThan,
+		">>": VersionComparison.GreaterThan,
+		"<=": VersionComparison.LessThanOrEqual,
+		">=": VersionComparison.GreaterThanOrEqual,
+		"=":  VersionComparison.Equal,
+	}
+
+	#: Debian's comma separates dependencies rather than constraints, but accepting it costs nothing.
+	_SEPARATORS: ClassVar[str] = ","
+
+	#: The closest pyTooling has to a Debian version - see the class doc-string's caveat.
+	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion
