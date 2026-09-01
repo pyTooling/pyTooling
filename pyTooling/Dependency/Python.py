@@ -86,7 +86,7 @@ _LICENSE_NOTE_LENGTH = 64
 _REPOSITORY_URL_ALIASES    = ("source code", "source", "code", "repository", "github", "gitlab")
 _DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
 _ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
-_HOMEPAGE_URL_ALIASES      = ("homepage", "home page", "home")
+_PROJECT_URL_ALIASES      = ("homepage", "home page", "home")
 _CHANGELOG_URL_ALIASES     = ("changelog", "changes", "release notes", "whatsnew", "what's new")
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
@@ -707,7 +707,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 			except (LicenseExpressionError, ValueError):
 				continue
 
-			self._publishedLicense = candidate
+			# The expression keeps the candidate as its 'ParsedFrom', so '_publishedLicense' stays empty.
 			break
 		else:
 			self._publishedLicense = candidates[0] if len(candidates) > 0 else ""
@@ -761,10 +761,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 		self._documentationURL = urlFor(_DOCUMENTATION_URL_ALIASES)
 		self._issueTrackerURL  = urlFor(_ISSUE_TRACKER_URL_ALIASES)
 		self._changelogURL     = urlFor(_CHANGELOG_URL_ALIASES)
-		self._homepageURL      = urlFor(_HOMEPAGE_URL_ALIASES)
+		self._projectURL      = urlFor(_PROJECT_URL_ALIASES)
 
-		if self._homepageURL is None and (homePage := infoNode.get("home_page", None)) is not None:
-			self._homepageURL = URL.Parse(homePage)
+		if self._projectURL is None and (homePage := infoNode.get("home_page", None)) is not None:
+			self._projectURL = URL.Parse(homePage)
 
 		index: PythonPackageIndex = self._package._storage
 		if (repository := index._licenseOverrides.RepositoryOf(self._package._name)) is not None:
@@ -772,7 +772,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		elif (repositoryURL := urlFor(_REPOSITORY_URL_ALIASES)) is not None:
 			self._repositoryURL = repositoryURL
 		else:
-			self._repositoryURL = self._homepageURL
+			self._repositoryURL = self._projectURL
 
 	def PostProcess(self) -> None:
 		"""

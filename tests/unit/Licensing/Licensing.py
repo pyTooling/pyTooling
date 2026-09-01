@@ -551,3 +551,28 @@ class MalformedTrees(Testcase):
 		):
 			with self.assertRaises(exception):
 				call()
+
+
+class ParsedFrom(Testcase):
+	"""An expression keeps the text it was parsed from, because rendering it back is not the same string."""
+
+	def test_TheRootKeepsWhatWasParsed(self) -> None:
+		self.assertEqual("Apache-2.0 OR MIT", LicenseExpression.Parse("Apache-2.0 OR MIT").ParsedFrom)
+
+	def test_RenderingIsNotTheSameAsWhatWasWritten(self) -> None:
+		"""``or`` parses; ``__str__`` renders the canonical ``OR``. This is why the text has to be kept."""
+		expression = LicenseExpression.Parse("Apache-2.0 or MIT")
+
+		self.assertEqual("Apache-2.0 OR MIT", str(expression))
+		self.assertEqual("Apache-2.0 or MIT", expression.ParsedFrom)
+
+	def test_EveryNodeAnswersWithTheRoots(self) -> None:
+		"""A tree comes from one string, so a leaf reports the whole expression rather than its own fragment."""
+		expression = LicenseExpression.Parse("Apache-2.0 OR MIT")
+
+		for node in expression.IterateExpression():
+			with self.subTest(node=str(node)):
+				self.assertEqual("Apache-2.0 OR MIT", node.ParsedFrom)
+
+	def test_ATreeBuiltInCodeWasParsedFromNothing(self) -> None:
+		self.assertEqual("", SPDXLicense(Apache_2_0_License).ParsedFrom)

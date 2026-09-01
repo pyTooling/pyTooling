@@ -300,7 +300,7 @@ class ProjectURLs(Testcase):
 		self.assertEqual("https://project.readthedocs.io", str(release.DocumentationURL))
 		self.assertEqual("https://github.com/org/project/issues", str(release.IssueTrackerURL))
 		self.assertEqual("https://github.com/org/project/blob/main/CHANGELOG.md", str(release.ChangelogURL))
-		self.assertEqual("https://project.org", str(release.HomepageURL))
+		self.assertEqual("https://project.org", str(release.ProjectURL))
 
 	def test_KeysAreMatchedCaseInsensitively(self) -> None:
 		"""``project_urls`` keys are free text, so the spelling of the key can't be relied on."""
@@ -324,7 +324,7 @@ class ProjectURLs(Testcase):
 		release = self._release()
 		self._resolve(release, home_page="https://project.org")
 
-		self.assertEqual("https://project.org", str(release.HomepageURL))
+		self.assertEqual("https://project.org", str(release.ProjectURL))
 
 	def test_TheHomepageIsTheLastResortForTheRepository(self) -> None:
 		"""A package index has no repository field, so an unnamed repository falls back to the homepage."""
@@ -341,7 +341,7 @@ class ProjectURLs(Testcase):
 		self.assertIsNone(release.DocumentationURL)
 		self.assertIsNone(release.IssueTrackerURL)
 		self.assertIsNone(release.ChangelogURL)
-		self.assertIsNone(release.HomepageURL)
+		self.assertIsNone(release.ProjectURL)
 
 	def test_AnOverriddenRepositoryWins(self) -> None:
 		overrides = LicenseOverrides.FromDictionary({"project": {"repository": "https://forge.org/org/project"}})
@@ -452,6 +452,48 @@ class Licenses(Testcase):
 		self.assertEqual((), release.Licenses)
 		self.assertIsNone(release.LicenseExpression)
 		self.assertEqual("Definitely-Not-A-License", release.PublishedLicense)
+
+	def test_ThePublishedTextIsStoredOnce(self) -> None:
+		"""A parsed expression keeps it as ``ParsedFrom``; the node's own field stays empty."""
+		release = self._release()
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 OR MIT")))
+		self.assertEqual("", release._publishedLicense)
+		self.assertEqual("Apache-2.0 OR MIT", release.LicenseExpression.ParsedFrom)
+		self.assertEqual("Apache-2.0 OR MIT", release.PublishedLicense)
+
+	def test_ThePublishedTextIsNotTheRenderedOne(self) -> None:
+		"""``str()`` renders canonically, so the tree can't stand in for what was published."""
+		release = self._release()
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 or MIT")))
+		self.assertEqual("Apache-2.0 or MIT", release.PublishedLicense)
+		self.assertEqual("Apache-2.0 OR MIT", str(release.LicenseExpression))
+
+	def test_AnUnparsedPublicationIsHeldOnTheNode(self) -> None:
+		"""There is no expression to hold it, so the node's field is where it lives - the other half of the union."""
+		release = self._release()
+
+		self._resolve(release, self._json(license="MIT License"))
+
+		self.assertIsNone(release.LicenseExpression)
+		self.assertEqual("MIT License", release._publishedLicense)
+		self.assertEqual("MIT License", release.PublishedLicense)
+
+	def test_LicenseReferences(self) -> None:
+		"""``LicenseRef-`` names a license SPDX doesn't know, so no 'License' object exists and 'Licenses' omits it."""
+		release = self._release()
+
+		self.assertEqual([], self._resolve(release, self._json(license_expression="MIT AND LicenseRef-Proprietary")))
+		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["Proprietary"], [ref.LicenseIdentifier for ref in release.LicenseReferences])
+
+	def test_LicenseReferencesIsEmptyWithoutAnExpression(self) -> None:
+		release = self._release()
+
+		self._resolve(release, self._json(license="MIT License"))
+
+		self.assertEqual((), release.LicenseReferences)
 
 	def test_LicenseField_Identifier(self) -> None:
 		"""The legacy ``license`` field resolves when it holds an identifier."""

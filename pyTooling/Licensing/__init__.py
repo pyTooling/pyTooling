@@ -357,6 +357,7 @@ LICENSES: tuple[License, ...] = (
 SPDX_INDEX: dict[str, License] = {spdxLicense.SPDXIdentifier: spdxLicense for spdxLicense in LICENSES}
 
 
+@export
 def _buildClassifierIndex() -> dict[str, tuple[License, ...]]:
 	"""
 	Index the predefined licenses by the Python classifier they are published as.
@@ -453,8 +454,9 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 
 	PRECEDENCE: ClassVar[int] = 0  #: Precedence of this node's operator; a lower value binds tighter.
 
-	_parent: Nullable["Operator"]  #: The operator this expression is an operand of, or ``None`` at the root.
-	_root:   "LicenseExpression"   #: The outermost expression this node belongs to; ``self`` at the root.
+	_parent:     Nullable["Operator"]  #: The operator this expression is an operand of, or ``None`` at the root.
+	_root:       "LicenseExpression"   #: The outermost expression this node belongs to; ``self`` at the root.
+	_parsedFrom: str                   #: The text :meth:`Parse` read, on the root; empty for a tree built in code.
 
 	def __init__(self, parent: Nullable["Operator"] = None) -> None:
 		"""
@@ -463,6 +465,8 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		:param parent:     Optional, the operator this node becomes an operand of.
 		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
 		"""
+		self._parsedFrom = ""
+
 		if parent is None:
 			self._parent = None
 			self._root =   self
@@ -505,6 +509,20 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 			expression._root = parent._root
 
 	@readonly
+	def ParsedFrom(self) -> str:
+		"""
+		Read-only property to access the text this expression was parsed from (:attr:`_parsedFrom`).
+
+		A tree is parsed from one string, so **every node answers with the root's** - reading it from a leaf gives the
+		whole expression, not that leaf's fragment. :meth:`__str__` re-renders the tree canonically, which is not
+		always what was written: ``Apache-2.0 or MIT`` parses and renders as ``Apache-2.0 OR MIT``. This is what was
+		written.
+
+		:returns: The text :meth:`Parse` read, or an empty string if this tree was built in code.
+		"""
+		return self._root._parsedFrom
+
+	@readonly
 	def Root(self) -> "LicenseExpression":
 		"""
 		Read-only property to access the outermost expression this node belongs to (:attr:`_root`).
@@ -541,7 +559,10 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		:raises LicenseExpressionError: If the expression is empty, malformed, or names a license that isn't known.
 		"""
 		parser = _LicenseExpressionParser(expression)
-		return parser.Parse()
+		root =   parser.Parse()
+		root._parsedFrom = expression
+
+		return root
 
 	@abstractmethod
 	def __str__(self) -> str:  # type: ignore[empty-body]
