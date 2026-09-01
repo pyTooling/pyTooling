@@ -3167,23 +3167,13 @@ class RangeVersionConstraint(VersionConstraint[V]):
 		"""
 		Derive the first version outside this constraint from the version it is written with.
 
+		The bound has to be built in the written version's **epoch**. A bound left in epoch 0 outranks nothing, so
+		the constraint would match no version at all - not even the one it was written with.
+
 		:param version:     The version the shorthand is written with, always a semantic version.
-		:returns:           The exclusive upper bound.
+		:returns:           The exclusive upper bound, in the same epoch as ``version``.
 		:raises ValueError: If the version has too few parts for this shorthand.
 		"""
-
-	@staticmethod
-	def _BoundEpoch(version: SemanticVersion) -> Nullable[int]:
-		"""
-		Return the epoch a derived bound has to carry, if the written version states one.
-
-		An upper bound is built from the written version's parts, so it has to be in the same epoch - otherwise it
-		lands in epoch 0, which outranks nothing and leaves the constraint matching no version at all.
-
-		:param version: The version the shorthand is written with.
-		:returns:       The version's epoch, or ``None`` if it states none.
-		"""
-		return version.Epoch if Parts.Epoch in version._parts else None
 
 	@readonly
 	def UpperBound(self) -> SemanticVersion:
@@ -3258,7 +3248,7 @@ class CompatibleVersionConstraint(RangeVersionConstraint[V]):
 		:raises ValueError: If the version has fewer than two parts.
 		"""
 		versionType = version.__class__
-		epoch =       self._BoundEpoch(version)
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
 		if Parts.Build in version._parts:
 			return versionType(version.Major, version.Minor, version.Patch + 1, epoch=epoch)
 		elif Parts.Micro in version._parts:
@@ -3302,7 +3292,7 @@ class CaretVersionConstraint(RangeVersionConstraint[V]):
 		:returns:       The exclusive upper bound.
 		"""
 		versionType = version.__class__
-		epoch =       self._BoundEpoch(version)
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
 		if version.Major != 0 or Parts.Minor not in version._parts:
 			return versionType(version.Major + 1, epoch=epoch)
 		elif version.Minor != 0 or Parts.Micro not in version._parts:
@@ -3339,7 +3329,7 @@ class TildeVersionConstraint(RangeVersionConstraint[V]):
 		:returns:       The exclusive upper bound.
 		"""
 		versionType = version.__class__
-		epoch =       self._BoundEpoch(version)
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
 		if Parts.Minor in version._parts:
 			return versionType(version.Major, version.Minor + 1, epoch=epoch)
 
