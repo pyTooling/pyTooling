@@ -535,3 +535,70 @@ class TypeCompatibility(Testcase):
 
 		self.assertIn("CalendarVersion", capture.exception.__notes__[0])
 		self.assertIn("SemanticVersion", capture.exception.__notes__[1])
+
+
+class IntersectionBoundHandling(Testcase):
+	"""An intersection keeps each bound's handling, rather than defaulting to inclusive."""
+
+	@staticmethod
+	def _v(version: str) -> SemanticVersion:
+		return SemanticVersion.Parse(version)
+
+	def test_AnExclusiveBoundStaysExclusive(self) -> None:
+		"""``>=1.2.0 & <2.0.0`` must not admit 2.0.0, which the right operand excludes."""
+		intersection = VersionRange(self._v("1.2.0"), None) & \
+		               VersionRange(None, self._v("2.0.0"), RangeBoundHandling.UpperBoundExclusive)
+
+		self.assertIn(RangeBoundHandling.UpperBoundExclusive, intersection.BoundHandling)
+		self.assertIn(self._v("1.9.9"), intersection)
+		self.assertNotIn(self._v("2.0.0"), intersection)
+
+	def test_TwoExclusiveRangesIntersectExclusively(self) -> None:
+		intersection = VersionRange(self._v("1.0.0"), self._v("3.0.0"), RangeBoundHandling.BothBoundsExclusive) & \
+		               VersionRange(self._v("2.0.0"), self._v("4.0.0"), RangeBoundHandling.BothBoundsExclusive)
+
+		self.assertNotIn(self._v("2.0.0"), intersection)
+		self.assertNotIn(self._v("3.0.0"), intersection)
+		self.assertIn(self._v("2.5.0"), intersection)
+
+	def test_TwoInclusiveRangesStayInclusive(self) -> None:
+		"""The existing behaviour for the default handling is unchanged."""
+		intersection = VersionRange(self._v("1.0.0"), self._v("3.0.0")) & \
+		               VersionRange(self._v("2.0.0"), self._v("4.0.0"))
+
+		self.assertEqual(RangeBoundHandling.BothBoundsInclusive, intersection.BoundHandling)
+		self.assertIn(self._v("2.0.0"), intersection)
+		self.assertIn(self._v("3.0.0"), intersection)
+
+	def test_ABoundTakesTheHandlingOfTheRangeItCameFrom(self) -> None:
+		"""The winning bound brings its own handling, not the other range's."""
+		exclusiveLower = VersionRange(self._v("2.0.0"), self._v("9.0.0"), RangeBoundHandling.LowerBoundExclusive)
+		inclusiveWider = VersionRange(self._v("1.0.0"), self._v("3.0.0"))
+
+		intersection = exclusiveLower & inclusiveWider
+
+		self.assertNotIn(self._v("2.0.0"), intersection)
+		self.assertIn(self._v("3.0.0"), intersection)
+
+	def test_ASharedBoundTakesTheStricterHandling(self) -> None:
+		"""Where both name the same bound, the intersection may not admit what either one excludes."""
+		intersection = VersionRange(self._v("1.0.0"), self._v("2.0.0")) & \
+		               VersionRange(self._v("0.5.0"), self._v("2.0.0"), RangeBoundHandling.UpperBoundExclusive)
+
+		self.assertNotIn(self._v("2.0.0"), intersection)
+		self.assertIn(self._v("1.9.9"), intersection)
+
+	def test_ASharedLowerBoundTakesTheStricterHandling(self) -> None:
+		intersection = VersionRange(self._v("1.0.0"), self._v("3.0.0")) & \
+		               VersionRange(self._v("1.0.0"), self._v("4.0.0"), RangeBoundHandling.LowerBoundExclusive)
+
+		self.assertNotIn(self._v("1.0.0"), intersection)
+		self.assertIn(self._v("1.0.1"), intersection)
+
+	def test_AnUnboundEndCarriesTheOthersHandling(self) -> None:
+		intersection = VersionRange(None, None) & \
+		               VersionRange(self._v("1.0.0"), self._v("2.0.0"), RangeBoundHandling.BothBoundsExclusive)
+
+		self.assertNotIn(self._v("1.0.0"), intersection)
+		self.assertNotIn(self._v("2.0.0"), intersection)
+		self.assertIn(self._v("1.5.0"), intersection)
