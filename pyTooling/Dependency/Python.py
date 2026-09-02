@@ -46,6 +46,7 @@ from re                   import compile as re_compile
 from threading            import RLock
 from typing               import Any, Optional as Nullable, Union, Iterable, Mapping, Self
 
+from pyTooling.Configuration import Dictionary
 from pyTooling.Exceptions import MissingDependencyError
 
 try:
@@ -143,32 +144,47 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		"""
 		Read overrides from a YAML file.
 
+		The file is read through :class:`pyTooling.Configuration.YAML.Configuration`, and the ``packages`` node is
+		handed to :meth:`FromDictionary` **as it is** - a configuration node answers ``items()`` and ``get()``, so
+		there is nothing to convert and no second constructor for the node tree.
+
 		:param path:                    Path of the YAML file to read.
 		:returns:                       The overrides the file states.
 		:raises MissingDependencyError: If ``ruamel.yaml`` isn't installed.
 		:raises FileNotFoundError:      If the file doesn't exist.
+		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
+		                                A file stating nothing at all is fine and gives no overrides.
 		:raises DependencyError:        If a version specifier in the file can't be parsed.
 		"""
-		try:
-			from ruamel.yaml import YAML
-		except ImportError as ex:  # pragma: no cover
-			raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
+		# Imported here rather than at module level, so a missing 'ruamel.yaml' is reported when the overrides are
+		# read instead of when 'pyTooling.Dependency.Python' is imported.
+		from pyTooling.Configuration.YAML import Configuration
 
 		if not path.exists():
 			raise FileNotFoundError(f"License override file '{path}' not found.")
 
-		with path.open("r", encoding="utf-8") as file:
-			document = YAML(typ="safe").load(file) or {}
+		packages = Configuration(path).get("packages", None)
+		if packages is None:
+			return cls()
+		elif not isinstance(packages, Dictionary):
+			ex = DependencyError(f"License override file '{path}' states a 'packages' node that isn't a mapping.")
+			ex.add_note(f"Got '{packages}'.")
+			raise ex
 
-		return cls.FromDictionary(document.get("packages", None) or {})
+		return cls.FromDictionary(packages)
 
 	@classmethod
-	def FromDictionary(cls, packages: Mapping[str, Mapping[str, Any]]) -> Self:
+	def FromDictionary(cls, packages: Union[Mapping[str, Any], Dictionary]) -> Self:
 		"""
 		Build overrides from an already parsed mapping.
 
 		Keeping this apart from :meth:`FromFile` is what lets the overrides be assembled in code, and tested, without
 		a file and without YAML.
+
+		A :class:`~pyTooling.Configuration.Dictionary` is accepted beside a plain :class:`dict`, which is what lets
+		:meth:`FromFile` hand over a configuration node without flattening it first. Only ``items()`` and ``get()``
+		are read, so a configuration node of either backend fits - it is **not** a :class:`~typing.Mapping`, because
+		its bare iteration yields values rather than keys.
 
 		:param packages:         Mapping of a package's name to what is stated for it.
 		:returns:                The overrides the mapping states.
@@ -176,8 +192,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		"""
 		overrides = cls()
 
+		# A configuration node types its values as the whole 'ValueT' union, which every '.get' below would then
+		# have to be narrowed against. What is read here is a document either way, so it is read as one.
+		statement: Any
 		for packageName, statement in packages.items():
-			name = canonicalize_name(packageName)
+			name = canonicalize_name(str(packageName))
 
 			if (expression := statement.get("license", None)) is not None:
 				overrides._licenses[name] = str(expression)

@@ -1,0 +1,4 @@
+packages:
+  igraph:
+    versions:
+      "not a specifier": MIT

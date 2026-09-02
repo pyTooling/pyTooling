@@ -1,0 +1,11 @@
+packages:
+  igraph:
+    license:    GPL-2.0-or-later
+    licenseURL: https://github.com/igraph/igraph/blob/master/COPYING
+    repository: https://github.com/igraph/igraph
+    versions:
+      ">=0.10": GPL-2.0-or-later
+      "<0.10":  GPL-2.0-only
+
+  ruamel.yaml:
+    license: MIT
