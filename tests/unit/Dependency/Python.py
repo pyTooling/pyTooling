@@ -33,16 +33,19 @@ Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk t
 need network access.
 """
 from datetime                    import datetime
+from pathlib                     import Path
 from typing                      import Optional as Nullable
 
 from pytest                      import mark
 
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
 from pyTooling.Dependency.Python import LicenseOverrides
-from pyTooling.Dependency        import BrokenRequirementWarning, UnknownLicenseWarning
+from pyTooling.Dependency        import BrokenRequirementWarning, DependencyError, UnknownLicenseWarning
+from pyTooling.Configuration     import Dictionary
+from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 from pyTooling.Licensing         import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
 from pyTooling.Licensing         import SPDXLicense, UnknownLicense, WithOperator
-from pyTooling.Versioning        import PythonVersion
+from pyTooling.Versioning        import PythonVersion, SemanticVersion
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Testing           import Testcase
 
@@ -652,3 +655,59 @@ class Licenses(Testcase):
 
 		self.assertEqual("MIT", overrides.LicenseOf("ruamel.yaml"))
 		self.assertEqual("MIT", overrides.LicenseOf("ruamel-yaml"))
+
+
+class ReadingLicenseOverrides(Testcase):
+	"""Reading the override file, which goes through :mod:`pyTooling.Configuration.YAML`."""
+
+	_DIRECTORY = Path("tests/unit/Dependency")
+
+	def test_ItReadsWhatTheFileStates(self) -> None:
+		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
+
+		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph"))
+		self.assertEqual("MIT", overrides.LicenseOf("ruamel-yaml"))
+		self.assertEqual("https://github.com/igraph/igraph/blob/master/COPYING", overrides.LicenseURLOf("igraph"))
+		self.assertEqual("https://github.com/igraph/igraph", overrides.RepositoryOf("igraph"))
+
+	def test_AVersionRangeFromTheFile(self) -> None:
+		"""A table keyed by version specifier is the shape that needed the node to iterate by **key**."""
+		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
+
+		self.assertEqual("GPL-2.0-only", overrides.LicenseOf("igraph", SemanticVersion.Parse("0.9.0")))
+		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph", SemanticVersion.Parse("0.10.5")))
+
+	def test_TheNodeIsHandedOverUnconverted(self) -> None:
+		""":meth:`FromDictionary` takes the configuration node itself - there is no flattening step."""
+		node = YAMLConfiguration(self._DIRECTORY / "licenses.yml")["packages"]
+		overrides = LicenseOverrides.FromDictionary(node)
+
+		self.assertIsInstance(node, Dictionary)
+		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph"))
+
+	def test_AnEmptyFileStatesNothing(self) -> None:
+		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses-empty.yml")
+
+		self.assertIsNone(overrides.LicenseOf("igraph"))
+
+	def test_AFileWithoutPackagesStatesNothing(self) -> None:
+		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses-no-packages.yml")
+
+		self.assertIsNone(overrides.LicenseOf("igraph"))
+
+	def test_AMissingFileRaises(self) -> None:
+		with self.assertRaises(FileNotFoundError):
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-does-not-exist.yml")
+
+	def test_APackagesNodeThatIsNotAMappingRaises(self) -> None:
+		"""It used to reach ``.items()`` on a string and die there."""
+		with self.assertRaises(DependencyError) as context:
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-malformed.yml")
+
+		self.assertIn("isn't a mapping", str(context.exception))
+
+	def test_AnUnparsableSpecifierRaises(self) -> None:
+		with self.assertRaises(DependencyError) as context:
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-bad-specifier.yml")
+
+		self.assertIn("not a specifier", str(context.exception))
