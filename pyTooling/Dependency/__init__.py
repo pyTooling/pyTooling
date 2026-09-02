@@ -54,7 +54,7 @@ from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.Exceptions      import ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing       import LicenseExpression, BaseLicense
+from pyTooling.Licensing       import LicenseExpression, BaseLicense, UnknownLicense
 from pyTooling.Versioning      import SemanticVersion
 from pyTooling.Warning         import Warning
 
@@ -119,8 +119,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	_package:           Package                                               #: Reference to the corresponding package
 	_version:           SemanticVersion                                       #: :class:`SemanticVersion` of this version.
 	_releasedAt:        Nullable[datetime]                                    #: Time this package version was released.
-	_publishedLicense:  str                                                   #: What was published, when it didn't parse.
-	_licenseExpression: Nullable[LicenseExpression]                           #: The published expression, parsed.
+	_licenseExpression: LicenseExpression                                     #: What was published about the license.
 	_licenseURL:        Nullable[URL]                                         #: URL of the license's text, if known.
 	_repositoryURL:     Nullable[URL]                                         #: URL of the source repository, if known.
 	_documentationURL:  Nullable[URL]                                         #: URL of the documentation, if known.
@@ -164,8 +163,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._releasedAt        = releasedAt
-		self._publishedLicense  = ""
-		self._licenseExpression = None
+		self._licenseExpression = UnknownLicense()
 		self._licenseURL        = None
 		self._repositoryURL     = None
 		self._documentationURL  = None
@@ -228,11 +226,8 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		licenses, although one requires both and the other offers a choice. Ask :attr:`LicenseExpression` when that
 		difference matters. A license exception is not a license and is not returned.
 
-		:returns: Licenses this version is published under, or an empty tuple if the expression didn't resolve.
+		:returns: Licenses this version is published under, or an empty tuple if nothing resolved.
 		"""
-		if self._licenseExpression is None:
-			return ()
-
 		return tuple(
 			node
 			for node in self._licenseExpression.IterateExpression()
@@ -240,36 +235,35 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		)
 
 	@readonly
-	def LicenseExpression(self) -> Nullable[LicenseExpression]:
+	def LicenseExpression(self) -> LicenseExpression:
 		"""
-		Read-only property to access the parsed license expression (:attr:`_licenseExpression`).
+		Read-only property to access the license expression (:attr:`_licenseExpression`).
 
 		The expression keeps what :attr:`Licenses` flattens away - which licenses are required together and which are
-		a choice. It is ``None`` when the published metadata named no license, or named one that isn't an SPDX
-		expression; :attr:`PublishedLicense` says what was published either way.
+		a choice.
 
-		:returns: The license expression, or ``None`` if nothing resolvable was published.
+		**It is never** ``None``. A version whose license didn't resolve carries an
+		:class:`~pyTooling.Licensing.UnknownLicense`, which is SPDX's own way of saying so, and that node keeps what
+		was published. Test for that class rather than for ``None``.
+
+		:returns: The license expression.
 		"""
 		return self._licenseExpression
 
 	@readonly
 	def PublishedLicense(self) -> str:
 		"""
-		Read-only property to return the license expression as it was published.
+		Read-only property to access the license as it was published.
 
-		The published text is held in **one** place: a *parsed* expression keeps it as
-		:attr:`~pyTooling.Licensing.LicenseExpression.ParsedFrom`, and :attr:`_publishedLicense` holds it whenever
-		nothing was parsed - because the text didn't parse, or because the expression was **built** rather than
-		parsed, which is what a ``License :: Other/Proprietary License`` classifier produces.
-		:meth:`~pyTooling.Licensing.LicenseExpression.__str__` is not a substitute - it re-renders canonically, so
-		``Apache-2.0 or MIT`` comes back as ``Apache-2.0 OR MIT``.
+		This is the expression's :attr:`~pyTooling.Licensing.LicenseExpression.OriginalText`, which is the **only**
+		place the published text is kept - a parsed expression records what
+		:meth:`~pyTooling.Licensing.LicenseExpression.Parse` read, and a node built because nothing parsed records
+		what was stated anyway. :meth:`~pyTooling.Licensing.LicenseExpression.__str__` is not a substitute - it
+		re-renders canonically, so ``Apache-2.0 or MIT`` comes back as ``Apache-2.0 OR MIT``.
 
-		:returns: The license expression as published, or an empty string if none was published.
+		:returns: The license as published, or an empty string if nothing was published.
 		"""
-		if self._licenseExpression is not None and (parsedFrom := self._licenseExpression.ParsedFrom) != "":
-			return parsedFrom
-
-		return self._publishedLicense
+		return self._licenseExpression.OriginalText
 
 	@readonly
 	def LicenseURL(self) -> Nullable[URL]:

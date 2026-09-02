@@ -546,18 +546,20 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 
 	PRECEDENCE: ClassVar[int] = 0  #: Precedence of this node's operator; a lower value binds tighter.
 
-	_parent:     Nullable["Operator"]  #: The operator this expression is an operand of, or ``None`` at the root.
-	_root:       "LicenseExpression"   #: The outermost expression this node belongs to; ``self`` at the root.
-	_parsedFrom: str                   #: The text :meth:`Parse` read, on the root; empty for a tree built in code.
+	_parent:       Nullable["Operator"]  #: The operator this expression is an operand of, or ``None`` at the root.
+	_root:         "LicenseExpression"   #: The outermost expression this node belongs to; ``self`` at the root.
+	_originalText: str                   #: The text this expression stands for, on the root; empty if there is none.
 
-	def __init__(self, parent: Nullable["Operator"] = None) -> None:
+	def __init__(self, parent: Nullable["Operator"] = None, originalText: str = "") -> None:
 		"""
 		Initialize an expression node.
 
-		:param parent:     Optional, the operator this node becomes an operand of.
-		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
+		:param parent:       Optional, the operator this node becomes an operand of.
+		:param originalText: Optional, the text this expression stands for. :meth:`Parse` fills it in; a node built
+		                     in code carries it when the caller knows what was written.
+		:raises TypeError:   If parameter 'parent' is not of type :class:`Operator`.
 		"""
-		self._parsedFrom = ""
+		self._originalText = originalText
 
 		if parent is None:
 			self._parent = None
@@ -601,18 +603,22 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 			expression._root = parent._root
 
 	@readonly
-	def ParsedFrom(self) -> str:
+	def OriginalText(self) -> str:
 		"""
-		Read-only property to access the text this expression was parsed from (:attr:`_parsedFrom`).
+		Read-only property to access the text this expression stands for (:attr:`_originalText`).
 
 		A tree is parsed from one string, so **every node answers with the root's** - reading it from a leaf gives the
 		whole expression, not that leaf's fragment. :meth:`__str__` re-renders the tree canonically, which is not
 		always what was written: ``Apache-2.0 or MIT`` parses and renders as ``Apache-2.0 OR MIT``. This is what was
 		written.
 
-		:returns: The text :meth:`Parse` read, or an empty string if this tree was built in code.
+		:meth:`Parse` fills it in. A node **built** in code carries it when the caller knows what was stated and the
+		expression can't be parsed from it - an :class:`UnknownLicense` standing for a license that didn't resolve
+		keeps the text that didn't, and a :class:`ProprietaryLicense` keeps the classifier it was built from.
+
+		:returns: The text this expression stands for, or an empty string if there is none.
 		"""
-		return self._root._parsedFrom
+		return self._root._originalText
 
 	@readonly
 	def Root(self) -> "LicenseExpression":
@@ -652,7 +658,7 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		"""
 		parser = _LicenseExpressionParser(expression)
 		root =   parser.Parse()
-		root._parsedFrom = expression
+		root._originalText = expression
 
 		return root
 
@@ -904,14 +910,17 @@ class ProprietaryLicense(LicenseReference):
 	#: The identifier a proprietary license is written with, following ``LicenseRef-``.
 	IDENTIFIER: ClassVar[str] = "Proprietary"
 
-	def __init__(self, parent: Nullable[Operator] = None) -> None:
+	def __init__(self, parent: Nullable[Operator] = None, originalText: str = "") -> None:
 		"""
 		Initialize a proprietary license.
 
-		:param parent:     Optional, the operator this node becomes an operand of.
-		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
+		:param parent:       Optional, the operator this node becomes an operand of.
+		:param originalText: Optional, what stated this - a classifier, say - since it can't have been parsed.
+		:raises TypeError:   If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(self.IDENTIFIER, None, parent)
+
+		self._originalText = originalText
 
 
 @export
@@ -940,16 +949,18 @@ class UnknownLicense(BaseLicense):
 
 	_absence: LicenseAbsence  #: Which of SPDX's two absences this node states.
 
-	def __init__(self, absence: LicenseAbsence = LicenseAbsence.NoAssertion) -> None:
+	def __init__(self, absence: LicenseAbsence = LicenseAbsence.NoAssertion, originalText: str = "") -> None:
 		"""
 		Initialize an absent license.
 
 		No ``parent`` parameter, because neither value may be an operand.
 
-		:param absence:    Optional, which absence is stated. Defaults to :attr:`LicenseAbsence.NoAssertion`.
-		:raises TypeError: If parameter 'absence' is not of type :class:`LicenseAbsence`.
+		:param absence:      Optional, which absence is stated. Defaults to :attr:`LicenseAbsence.NoAssertion`.
+		:param originalText: Optional, what was stated. A license nothing could be made of keeps the text here, which
+		                     is the only place left holding it.
+		:raises TypeError:   If parameter 'absence' is not of type :class:`LicenseAbsence`.
 		"""
-		super().__init__(None)
+		super().__init__(None, originalText)
 
 		if not isinstance(absence, LicenseAbsence):
 			ex = TypeError("Parameter 'absence' is not a LicenseAbsence.")

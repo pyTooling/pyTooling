@@ -450,17 +450,17 @@ class Licenses(Testcase):
 		warnings = self._resolve(release, self._json(license_expression="Definitely-Not-A-License"))
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual((), release.Licenses)
-		self.assertIsNone(release.LicenseExpression)
+		self.assertEqual(["NOASSERTION"], [lic.Identifier for lic in release.Licenses])
+		self.assertIsInstance(release.LicenseExpression, UnknownLicense)
 		self.assertEqual("Definitely-Not-A-License", release.PublishedLicense)
 
 	def test_ThePublishedTextIsStoredOnce(self) -> None:
-		"""A parsed expression keeps it as ``ParsedFrom``; the node's own field stays empty."""
+		"""There is one home for it: the expression's ``OriginalText``. ``PackageVersion`` keeps no copy."""
 		release = self._release()
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 OR MIT")))
-		self.assertEqual("", release._publishedLicense)
-		self.assertEqual("Apache-2.0 OR MIT", release.LicenseExpression.ParsedFrom)
+		self.assertFalse(hasattr(release, "_publishedLicense"))
+		self.assertEqual("Apache-2.0 OR MIT", release.LicenseExpression.OriginalText)
 		self.assertEqual("Apache-2.0 OR MIT", release.PublishedLicense)
 
 	def test_ThePublishedTextIsNotTheRenderedOne(self) -> None:
@@ -471,14 +471,15 @@ class Licenses(Testcase):
 		self.assertEqual("Apache-2.0 or MIT", release.PublishedLicense)
 		self.assertEqual("Apache-2.0 OR MIT", str(release.LicenseExpression))
 
-	def test_AnUnparsedPublicationIsHeldOnTheNode(self) -> None:
-		"""There is no expression to hold it, so the node's field is where it lives - the other half of the union."""
+	def test_AnUnparsedPublicationIsHeldOnTheExpression(self) -> None:
+		"""Nothing parsed, so an 'UnknownLicense' is built - and it carries the text that didn't parse."""
 		release = self._release()
 
 		self._resolve(release, self._json(license="MIT License"))
 
-		self.assertIsNone(release.LicenseExpression)
-		self.assertEqual("MIT License", release._publishedLicense)
+		self.assertIsInstance(release.LicenseExpression, UnknownLicense)
+		self.assertIs(LicenseAbsence.NoAssertion, release.LicenseExpression.Absence)
+		self.assertEqual("MIT License", release.LicenseExpression.OriginalText)
 		self.assertEqual("MIT License", release.PublishedLicense)
 
 	def test_ALicenseReferenceIsReportedWithTheRest(self) -> None:
@@ -524,7 +525,7 @@ class Licenses(Testcase):
 
 		self._resolve(release, self._json(classifiers=["License :: Other/Proprietary License"]))
 
-		self.assertEqual("", release.LicenseExpression.ParsedFrom)
+		self.assertEqual("License :: Other/Proprietary License", release.LicenseExpression.OriginalText)
 		self.assertEqual("License :: Other/Proprietary License", release.PublishedLicense)
 
 	def test_NoAssertionResolvesButStillWarns(self) -> None:
@@ -538,15 +539,16 @@ class Licenses(Testcase):
 		self.assertEqual("NOASSERTION", release.PublishedLicense)
 
 	def test_AnAbsentLicenseIsReportedAsOne(self) -> None:
-		"""It is a 'BaseLicense', so 'Licenses' carries it - which keeps it apart from nothing having resolved."""
+		"""It is a 'BaseLicense', so 'Licenses' carries it. Both routes give the same node; the text tells them apart."""
 		stated, unresolved = self._release(), self._release()
 
 		self._resolve(stated, self._json(license_expression="NOASSERTION"))
 		self._resolve(unresolved, self._json(license="MIT License"))
 
 		self.assertEqual(["NOASSERTION"], [lic.Identifier for lic in stated.Licenses])
-		self.assertEqual((), unresolved.Licenses)
-		self.assertIsNone(unresolved.LicenseExpression)
+		self.assertEqual(["NOASSERTION"], [lic.Identifier for lic in unresolved.Licenses])
+		self.assertEqual("NOASSERTION", stated.PublishedLicense)
+		self.assertEqual("MIT License", unresolved.PublishedLicense)
 
 	def test_NoneResolvesButStillWarns(self) -> None:
 		release = self._release()
@@ -568,8 +570,8 @@ class Licenses(Testcase):
 		warnings = self._resolve(release, self._json(license="MIT License"))
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual((), release.Licenses)
-		self.assertIsNone(release.LicenseExpression)
+		self.assertEqual(["NOASSERTION"], [lic.Identifier for lic in release.Licenses])
+		self.assertIsInstance(release.LicenseExpression, UnknownLicense)
 		self.assertEqual("MIT License", release.PublishedLicense)
 
 	def test_LicenseField_FullText(self) -> None:
@@ -598,7 +600,7 @@ class Licenses(Testcase):
 		warnings = self._resolve(release, self._json(classifiers=["License :: OSI Approved :: BSD License"]))
 
 		self.assertEqual(1, len(warnings))
-		self.assertEqual((), release.Licenses)
+		self.assertEqual(["NOASSERTION"], [lic.Identifier for lic in release.Licenses])
 		self.assertIn("classifier: License :: OSI Approved :: BSD License", warnings[0].__notes__)
 
 	def test_NoLicenseInformation(self) -> None:
@@ -607,7 +609,7 @@ class Licenses(Testcase):
 		warnings = self._resolve(release, self._json())
 
 		self.assertEqual(1, len(warnings))
-		self.assertIsNone(release.LicenseExpression)
+		self.assertIsInstance(release.LicenseExpression, UnknownLicense)
 		self.assertEqual("", release.PublishedLicense)
 		self.assertEqual(["The package index published no license information."], warnings[0].__notes__)
 

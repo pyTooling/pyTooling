@@ -73,7 +73,7 @@ from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError,
 from pyTooling.Dependency      import ProjectNotFoundError
 from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
-from pyTooling.Licensing       import ProprietaryLicense, UnknownLicense
+from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
@@ -721,23 +721,26 @@ class Release(PackageVersion, LazyLoadableMixin):
 			except (LicenseExpressionError, ValueError):
 				continue
 
-			# The expression keeps the candidate as its 'ParsedFrom', so '_publishedLicense' stays empty.
+			# The expression keeps the candidate as its 'OriginalText', which is the only place it is held.
 			break
 		else:
 			if proprietaryClassifier is not None:
-				# SPDX has no identifier for a proprietary license, so there is nothing to parse - it is built.
-				# Nothing was parsed, so the classifier is what 'PublishedLicense' has to report.
-				self._licenseExpression = ProprietaryLicense()
-				self._publishedLicense = proprietaryClassifier
+				# SPDX has no identifier for a proprietary license, so there is nothing to parse - the node is built,
+				# and it carries the classifier it was built from.
+				self._licenseExpression = ProprietaryLicense(originalText=proprietaryClassifier)
 			else:
-				self._publishedLicense = candidates[0] if len(candidates) > 0 else ""
+				# Nothing resolved. 'NOASSERTION' is what SPDX says for that, and the node keeps what was published.
+				self._licenseExpression = UnknownLicense(
+					LicenseAbsence.NoAssertion,
+					candidates[0] if len(candidates) > 0 else ""
+				)
 
 		if (licenseURL := overrides.LicenseURLOf(self._package._name)) is not None:
 			self._licenseURL = URL.Parse(licenseURL)
 
-		# An 'UnknownLicense' resolved the *statement* - 'NOASSERTION' is what the index said - but the license is
-		# still unknown, which is what this list is for.
-		if self._licenseExpression is None or isinstance(self._licenseExpression, UnknownLicense):
+		# 'UnknownLicense' covers both: the index said 'NOASSERTION' itself, and nothing resolved at all. Either way
+		# the license is unknown, which is what this list is for.
+		if isinstance(self._licenseExpression, UnknownLicense):
 			WarningCollector.Raise(
 				UnknownLicenseWarning(
 					f"License of '{self._package._name}' {self._version} couldn't be resolved."
