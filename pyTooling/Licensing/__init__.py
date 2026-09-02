@@ -661,7 +661,7 @@ class Operator(LicenseExpression):
 
 @export
 @abstractclass
-class LicenseTerm(LicenseExpression):
+class BaseLicense(LicenseExpression):
 	"""
 	Base-class of every expression node that names a license the work is under.
 
@@ -672,7 +672,7 @@ class LicenseTerm(LicenseExpression):
 
 	.. code-block:: python
 
-	   [term.Identifier for term in expression.IterateExpression() if isinstance(term, LicenseTerm)]
+	   [term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
 	   # ['MIT', 'LicenseRef-Proprietary']   for 'MIT AND LicenseRef-Proprietary'
 
 	:class:`LicenseException` is **not** one of these. The right operand of ``WITH`` is an exception granted from a
@@ -690,7 +690,7 @@ class LicenseTerm(LicenseExpression):
 
 
 @export
-class SPDXLicense(LicenseTerm):
+class SPDXLicense(BaseLicense):
 	"""
 	A single license in an expression, named by its SPDX identifier.
 
@@ -751,7 +751,7 @@ class SPDXLicense(LicenseTerm):
 
 
 @export
-class LicenseReference(LicenseTerm):
+class LicenseReference(BaseLicense):
 	"""
 	A license that isn't on the SPDX License List, written as ``LicenseRef-<id>``.
 

@@ -54,7 +54,7 @@ from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.Exceptions      import ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing       import LicenseExpression, LicenseTerm
+from pyTooling.Licensing       import LicenseExpression, BaseLicense
 from pyTooling.Versioning      import SemanticVersion
 from pyTooling.Warning         import Warning
 
@@ -202,15 +202,15 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		return self._releasedAt
 
 	@readonly
-	def Licenses(self) -> tuple[LicenseTerm, ...]:
+	def Licenses(self) -> tuple[BaseLicense, ...]:
 		"""
 		Read-only property to return the licenses named by :attr:`LicenseExpression`.
 
 		**Every** license the version is published under, whether or not SPDX knows it: an
 		:class:`~pyTooling.Licensing.SPDXLicense` for one on the SPDX License List, a
 		:class:`~pyTooling.Licensing.LicenseReference` for a ``LicenseRef-<id>`` that isn't. Both are a
-		:class:`~pyTooling.Licensing.LicenseTerm` and both answer
-		:attr:`~pyTooling.Licensing.LicenseTerm.Identifier`, so a report doesn't have to branch:
+		:class:`~pyTooling.Licensing.BaseLicense` and both answer
+		:attr:`~pyTooling.Licensing.BaseLicense.Identifier`, so a report doesn't have to branch:
 
 		.. code-block:: python
 
@@ -231,7 +231,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		return tuple(
 			node
 			for node in self._licenseExpression.IterateExpression()
-			if isinstance(node, LicenseTerm)
+			if isinstance(node, BaseLicense)
 		)
 
 	@readonly
