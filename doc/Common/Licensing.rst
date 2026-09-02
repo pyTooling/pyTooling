@@ -136,6 +136,42 @@ In addition a dictionary (:data:`~pyTooling.Licensing.SPDX_INDEX`) maps from SPD
    # SPDX:              MIT
 
 
+.. _LICENSING/URLs:
+
+Where a license is published
+****************************
+
+Every license carries two links to its text, so a report can point at the wording rather than only naming it.
+
+:attr:`~pyTooling.Licensing.License.SPDXURL` is **derived** from the SPDX identifier, because SPDX publishes one page
+per identifier at a fixed address. :attr:`~pyTooling.Licensing.License.OSIURL` is **looked up** in
+:data:`~pyTooling.Licensing.OSI_LICENSE_URLS`, because OSI's addresses don't follow the identifier.
+
+.. code-block:: python
+
+   from pyTooling.Licensing import MIT_License, GPL_2_0_only, CC0_1_0
+
+   print(MIT_License.SPDXURL)     # https://spdx.org/licenses/MIT.html
+   print(MIT_License.OSIURL)      # https://opensource.org/license/mit
+   print(GPL_2_0_only.OSIURL)     # https://opensource.org/license/gpl-2.0
+   print(CC0_1_0.OSIURL)          # None - not OSI-approved
+
+.. note::
+
+   Two identifiers can share one OSI page. ``GPL-2.0-only`` and ``GPL-2.0-or-later`` both point at
+   ``gpl-2.0``, because *only* versus *or later* is SPDX's distinction and not OSI's. ``PSF-2.0`` is published by OSI
+   as ``Python-2.0``, which is why the addresses are a table and not a rule.
+
+   :attr:`~pyTooling.Licensing.License.OSIURL` is ``None`` exactly when
+   :attr:`~pyTooling.Licensing.License.OSIApproved` is ``False``.
+
+.. seealso::
+
+   `SPDX License List <https://spdx.org/licenses/>`__
+      |rarr| Every SPDX identifier, with its full name and license text.
+   `OSI License List <https://opensource.org/licenses>`__
+      |rarr| Every license the Open Source Initiative has approved.
+
 .. _LICENSING/Mappings:
 
 Mappings
@@ -145,12 +181,11 @@ Mappings
 names used by Python (setuptools). Each dictionary item contains a :class:`~pyTooling.Licensing.PythonLicenseNames`
 instance which contains the license name and package classifier used by setuptools.
 
-Currently the following licenses are listed in the Python specific name mapping:
-
-* Apache-2.0
-* BSD-3-Clause
-* MIT
-* GPL-2.0-or-later
+Every predefined license is listed in that mapping - the same 23 SPDX identifiers
+:data:`~pyTooling.Licensing.LICENSES` holds. :data:`~pyTooling.Licensing.LICENSES_BY_CLASSIFIER` is the inverse, from
+a Python classifier back to the licenses it can mean; it is one-to-one except for
+``License :: OSI Approved :: BSD License``, which names either
+:data:`~pyTooling.Licensing.BSD_2_Clause_License` or :data:`~pyTooling.Licensing.BSD_3_Clause_License`.
 
 .. _LICENSING/Usage:
 
