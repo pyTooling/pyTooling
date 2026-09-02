@@ -358,12 +358,15 @@ SPDX_INDEX: dict[str, License] = {spdxLicense.SPDXIdentifier: spdxLicense for sp
 
 
 @export
-def _buildClassifierIndex() -> dict[str, tuple[License, ...]]:
+def buildClassifierIndex() -> dict[str, tuple[License, ...]]:
 	"""
 	Index the predefined licenses by the Python classifier they are published as.
 
 	A license without a classifier is skipped rather than reported: :attr:`License.PythonClassifier` raises for it,
 	and a license the Python ecosystem has no classifier for simply can't be found that way.
+
+	The licenses indexed are :data:`LICENSES`, and :data:`LICENSES_BY_CLASSIFIER` holds what this returns, built
+	once when the module is imported. Reading that constant is the usual way to ask; calling this rebuilds it.
 
 	:returns: Every classifier, mapped to the licenses it can mean.
 	"""
@@ -383,7 +386,7 @@ def _buildClassifierIndex() -> dict[str, tuple[License, ...]]:
 #:
 #: The mapping is one-to-one except for ``License :: OSI Approved :: BSD License``, which means either
 #: :data:`BSD_2_Clause_License` or :data:`BSD_3_Clause_License` with nothing in the classifier to tell them apart.
-LICENSES_BY_CLASSIFIER: dict[str, tuple[License, ...]] = _buildClassifierIndex()
+LICENSES_BY_CLASSIFIER: dict[str, tuple[License, ...]] = buildClassifierIndex()
 
 
 #: The :class:`License` class under a name no expression node shadows with a property of its own.
