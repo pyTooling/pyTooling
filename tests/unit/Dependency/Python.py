@@ -40,7 +40,7 @@ from pytest                      import mark
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
 from pyTooling.Dependency.Python import LicenseOverrides
 from pyTooling.Dependency        import BrokenRequirementWarning, UnknownLicenseWarning
-from pyTooling.Licensing         import LicenseReference, LicenseTerm, SPDXLicense, WithOperator
+from pyTooling.Licensing         import LicenseReference, BaseLicense, SPDXLicense, WithOperator
 from pyTooling.Versioning        import PythonVersion
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Testing           import Testcase
@@ -488,7 +488,7 @@ class Licenses(Testcase):
 		self.assertEqual(["MIT", "LicenseRef-Proprietary"], [lic.Identifier for lic in release.Licenses])
 
 	def test_ALicenseReferenceCarriesNoLicenseObject(self) -> None:
-		"""Which is why both kinds are a 'LicenseTerm' - only the SPDX one reaches a 'License'."""
+		"""Which is why both kinds are a 'BaseLicense' - only the SPDX one reaches a 'License'."""
 		release = self._release()
 
 		self._resolve(release, self._json(license_expression="MIT AND LicenseRef-Proprietary"))
@@ -501,7 +501,7 @@ class Licenses(Testcase):
 		self.assertFalse(hasattr(reference, "License"))
 
 	def test_ALicenseExceptionIsNotALicense(self) -> None:
-		"""The right operand of ``WITH`` is not a 'LicenseTerm', so it is not reported as one."""
+		"""The right operand of ``WITH`` is not a 'BaseLicense', so it is not reported as one."""
 		release = self._release()
 
 		self._resolve(release, self._json(license_expression="Apache-2.0 WITH LLVM-exception"))

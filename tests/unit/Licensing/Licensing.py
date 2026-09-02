@@ -38,7 +38,7 @@ from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseRefe
 from pyTooling.Licensing import MIT_License
 from pyTooling.Licensing import OrLaterOperator, OrOperator
 from pyTooling.Licensing import SPDXLicense
-from pyTooling.Licensing import LicenseTerm, Operator, UnaryOperator, WithOperator
+from pyTooling.Licensing import BaseLicense, Operator, UnaryOperator, WithOperator
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing   import Testcase
 
@@ -579,25 +579,25 @@ class ParsedFrom(Testcase):
 		self.assertEqual("", SPDXLicense(Apache_2_0_License).ParsedFrom)
 
 
-class LicenseTerms(Testcase):
+class BaseLicenses(Testcase):
 	"""The intermediate base-class collecting the nodes that name a license."""
 
 	def test_BothLeafKindsAreOne(self) -> None:
-		self.assertTrue(issubclass(SPDXLicense, LicenseTerm))
-		self.assertTrue(issubclass(LicenseReference, LicenseTerm))
+		self.assertTrue(issubclass(SPDXLicense, BaseLicense))
+		self.assertTrue(issubclass(LicenseReference, BaseLicense))
 
 	def test_AnExceptionIsNotOne(self) -> None:
 		"""The right operand of ``WITH`` is granted *from* a license; it isn't one."""
-		self.assertFalse(issubclass(LicenseException, LicenseTerm))
+		self.assertFalse(issubclass(LicenseException, BaseLicense))
 
 	def test_AnOperatorIsNotOne(self) -> None:
 		for operatorType in (AndOperator, OrOperator, WithOperator, OrLaterOperator):
 			with self.subTest(operator=operatorType.__name__):
-				self.assertFalse(issubclass(operatorType, LicenseTerm))
+				self.assertFalse(issubclass(operatorType, BaseLicense))
 
 	def test_ItIsAbstract(self) -> None:
 		with self.assertRaises(AbstractClassError):
-			LicenseTerm()
+			BaseLicense()
 
 	def test_BothAnswerIdentifier(self) -> None:
 		"""Which is the point: a report collects them without branching on which kind it got."""
@@ -605,7 +605,7 @@ class LicenseTerms(Testcase):
 
 		self.assertEqual(
 			["MIT", "LicenseRef-Proprietary"],
-			[term.Identifier for term in expression.IterateExpression() if isinstance(term, LicenseTerm)]
+			[term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
 		)
 
 	def test_AReferenceIdentifierCarriesItsDocument(self) -> None:
@@ -621,7 +621,7 @@ class LicenseTerms(Testcase):
 
 		self.assertEqual(
 			["Apache-2.0"],
-			[term.Identifier for term in expression.IterateExpression() if isinstance(term, LicenseTerm)]
+			[term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
 		)
 
 
