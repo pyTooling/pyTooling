@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
 """
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
+from pyTooling.Licensing import CC0_1_0, GPL_2_0_only, GPL_2_0_or_later, OSI_LICENSE_URLS, PSF_2_0_License
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
 from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseReference, LicensingError
 from pyTooling.Licensing import MIT_License
@@ -622,3 +623,44 @@ class LicenseTerms(Testcase):
 			["Apache-2.0"],
 			[term.Identifier for term in expression.IterateExpression() if isinstance(term, LicenseTerm)]
 		)
+
+
+class LicenseURLs(Testcase):
+	"""Where a license's text is published: derived at SPDX, looked up at OSI."""
+
+	def test_TheSPDXURLIsDerived(self) -> None:
+		self.assertEqual("https://spdx.org/licenses/MIT.html", MIT_License.SPDXURL)
+		self.assertEqual("https://spdx.org/licenses/GPL-2.0-or-later.html", GPL_2_0_or_later.SPDXURL)
+
+	def test_EveryPredefinedLicenseHasOne(self) -> None:
+		for spdxLicense in LICENSES:
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertEqual(f"https://spdx.org/licenses/{spdxLicense.SPDXIdentifier}.html", spdxLicense.SPDXURL)
+
+	def test_TheOSIURLIsLookedUp(self) -> None:
+		"""OSI's addresses don't follow the SPDX identifier, which is why they are a table."""
+		self.assertEqual("https://opensource.org/license/mit", MIT_License.OSIURL)
+		self.assertEqual("https://opensource.org/license/Python-2.0", PSF_2_0_License.OSIURL)
+
+	def test_TwoIdentifiersCanShareOneOSIPage(self) -> None:
+		"""*only* versus *or later* is SPDX's distinction, not OSI's."""
+		self.assertEqual(GPL_2_0_only.OSIURL, GPL_2_0_or_later.OSIURL)
+		self.assertEqual("https://opensource.org/license/gpl-2.0", GPL_2_0_only.OSIURL)
+
+	def test_ALicenseOSIDidNotApproveHasNone(self) -> None:
+		self.assertFalse(CC0_1_0.OSIApproved)
+		self.assertIsNone(CC0_1_0.OSIURL)
+
+	def test_AnOSIURLExistsExactlyWhenOSIApproved(self) -> None:
+		for spdxLicense in LICENSES:
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertEqual(spdxLicense.OSIApproved, spdxLicense.OSIURL is not None)
+
+	def test_TheTableNamesOnlyPredefinedLicenses(self) -> None:
+		"""An entry for an identifier no license carries would never be reached."""
+		identifiers = {spdxLicense.SPDXIdentifier for spdxLicense in LICENSES}
+
+		self.assertEqual(set(), set(OSI_LICENSE_URLS) - identifiers)
+
+	def test_AnUnlistedLicenseHasNoOSIURL(self) -> None:
+		self.assertIsNone(License("Not-A-Real-Identifier", "Not a real license").OSIURL)

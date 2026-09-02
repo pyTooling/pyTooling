@@ -142,6 +142,40 @@ PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 }
 
 
+#: Mapping of SPDX identifiers to the license's page at the
+#: `Open Source Initiative <https://opensource.org/licenses>`__.
+#:
+#: OSI's slugs don't follow the SPDX identifier and can't be derived from it: ``PSF-2.0`` is published as
+#: ``Python-2.0``, and OSI has **one** page per license where SPDX has two identifiers - ``GPL-2.0-only`` and
+#: ``GPL-2.0-or-later`` both point at it, because *only* versus *or later* is SPDX's distinction, not OSI's.
+#:
+#: A license OSI hasn't approved has no entry, which is why ``CC0-1.0`` is absent.
+OSI_LICENSE_URLS: dict[str, str] = {
+	"Apache-2.0":        "https://opensource.org/license/apache-2.0",
+	"BSD-2-Clause":      "https://opensource.org/license/bsd-2-clause",
+	"BSD-3-Clause":      "https://opensource.org/license/bsd-3-clause",
+	"MIT":               "https://opensource.org/license/mit",
+	"ISC":               "https://opensource.org/license/isc",
+	"MPL-2.0":           "https://opensource.org/license/mpl-2.0",
+	"BSL-1.0":           "https://opensource.org/license/bsl-1.0",
+	"Zlib":              "https://opensource.org/license/zlib",
+	"PSF-2.0":           "https://opensource.org/license/Python-2.0",
+	"Unlicense":         "https://opensource.org/license/unlicense",
+	"EPL-1.0":           "https://opensource.org/license/epl-1.0",
+	"EPL-2.0":           "https://opensource.org/license/epl-2.0",
+	"LGPL-2.1-only":     "https://opensource.org/license/lgpl-2-1",
+	"LGPL-2.1-or-later": "https://opensource.org/license/lgpl-2-1",
+	"LGPL-3.0-only":     "https://opensource.org/license/lgpl-3-0",
+	"LGPL-3.0-or-later": "https://opensource.org/license/lgpl-3-0",
+	"GPL-2.0-only":      "https://opensource.org/license/gpl-2.0",
+	"GPL-2.0-or-later":  "https://opensource.org/license/gpl-2.0",
+	"GPL-3.0-only":      "https://opensource.org/license/gpl-3.0",
+	"GPL-3.0-or-later":  "https://opensource.org/license/gpl-3.0",
+	"AGPL-3.0-only":     "https://opensource.org/license/agpl-3-0",
+	"AGPL-3.0-or-later": "https://opensource.org/license/agpl-3-0",
+}
+
+
 @export
 class License(metaclass=ExtendedType, slots=True):
 	"""Representation of a license."""
@@ -182,6 +216,37 @@ class License(metaclass=ExtendedType, slots=True):
 		:returns: The unique SPDX identifier.
 		"""
 		return self._spdxIdentifier
+
+	@readonly
+	def SPDXURL(self) -> str:
+		"""
+		Returns the URL of this license's page in the `SPDX License List <https://spdx.org/licenses/>`__.
+
+		SPDX publishes one page per identifier at a fixed address, so this is derived from
+		:attr:`SPDXIdentifier` rather than stored. A license whose identifier isn't on that list has no page there,
+		and the derived URL won't resolve.
+
+		:returns: URL of the license's page at SPDX.
+		"""
+		return f"https://spdx.org/licenses/{self._spdxIdentifier}.html"
+
+	@readonly
+	def OSIURL(self) -> Nullable[str]:
+		"""
+		Returns the URL of this license's page at the `Open Source Initiative <https://opensource.org/licenses>`__.
+
+		This is looked up in :data:`OSI_LICENSE_URLS` rather than derived: OSI's slugs don't follow the SPDX
+		identifier, and OSI has one page where SPDX has two identifiers - ``GPL-2.0-only`` and ``GPL-2.0-or-later``
+		share it.
+
+		:returns: URL of the license's page at OSI, or ``None`` if OSI doesn't publish it.
+
+		.. seealso::
+
+		   :attr:`OSIApproved`
+		      |rarr| Whether OSI approved this license at all.
+		"""
+		return OSI_LICENSE_URLS.get(self._spdxIdentifier, None)
 
 	@readonly
 	def OSIApproved(self) -> bool:
@@ -628,6 +693,11 @@ class LicenseTerm(LicenseExpression):
 class SPDXLicense(LicenseTerm):
 	"""
 	A single license in an expression, named by its SPDX identifier.
+
+	The identifiers an expression may name are the `SPDX License List <https://spdx.org/licenses/>`__; the ones this
+	package predefines are :data:`LICENSES`, and :attr:`License` reaches the :class:`License` object holding a
+	license's name, approval flags and the URLs of its text. A license the list defines but this package doesn't
+	predefine is a :class:`LicenseReference` when written as ``LicenseRef-``, and otherwise doesn't parse.
 	"""
 
 	_license: _LicenseType  #: The well-known license this node refers to.
