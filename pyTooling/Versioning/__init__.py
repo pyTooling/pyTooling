@@ -3364,7 +3364,7 @@ def _BuildConstraintPattern(
 	alternation = "|".join(re_escape(operator) for operator in sorted(operators, key=len, reverse=True))
 	excluded =    (set("".join(operators)) | set(separators)) - set(versionType._EPOCH_SEPARATOR)
 
-	# WORKAROUND: Python 3.11
+	# WORKAROUND: Python <3.12
 	#   Reusing the f-string's own quote character inside its expression needs PEP 701, so the escaped character
 	#   class is built into a variable first. On 3.11 the inlined form is a 'SyntaxError: f-string: unmatched (',
 	#   raised at import, which takes the whole package with it.
