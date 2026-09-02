@@ -465,14 +465,33 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the YAML file are accessible via Python's dictionary syntax.
 
+		A configuration's root **is** a mapping - this class derives from :class:`Dictionary` - so a document
+		describing anything else is rejected here rather than failing on the first access. A document with **no
+		content** carries no settings and reads as an empty configuration; :mod:`pyTooling.Configuration.JSON` does
+		the same, so both formats answer alike.
+
 		:param configFile:          Configuration file to read and parse.
-		:raises ConfigurationError: If the YAML file doesn't exist or can't be parsed.
+		:raises ConfigurationError: If the YAML file doesn't exist.
+		:raises ConfigurationError: If the YAML file's root isn't a mapping. |br|
+		                            An empty file and an explicit ``null`` are the exception: both are *no settings*
+		                            and read as an empty configuration.
 		"""
 		if not configFile.exists():
-			raise ConfigurationError(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
+			raise ConfigurationError(f"YAML configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
 		with configFile.open("r", encoding="utf-8") as file:
-			self._yamlConfig = YAML().load(file)
+			document = YAML().load(file)
+
+		# 'load' returns None for an empty file and for an explicit 'null' - a *null document*, which is valid YAML.
+		if document is None:
+			document = CommentedMap()
+		elif not isinstance(document, CommentedMap):
+			ex = ConfigurationError(f"YAML configuration file '{configFile}' doesn't describe a mapping.")
+			ex.add_note(f"Got '{document.__class__.__name__}' at the document's root.")
+			ex.add_note("A configuration's root is a mapping of keys to values.")
+			raise ex
+
+		self._yamlConfig = document
 
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
 		Abstract_Configuration.__init__(self, configFile)

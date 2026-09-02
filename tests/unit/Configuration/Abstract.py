@@ -61,7 +61,7 @@ class Abstract(Testcase):
 		"""Writing is not supported by any backend, and saying so is the method's only job - finding T68."""
 		from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 
-		configuration = YAMLConfiguration(Path("tests/unit/Configuration/config.yml"))
+		configuration = YAMLConfiguration(Path("tests/data/Configuration/config.yml"))
 		message = "Currently, the configuration is read-only. Writing isn't implemented."
 
 		# the root, a dictionary node and a sequence node all answer the same way
