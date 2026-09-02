@@ -83,7 +83,9 @@ __all__ = [
 
 	"SPDX_INDEX",
 	"LICENSES_BY_CLASSIFIER",
-	"OSI_LICENSE_URLS"
+	"OSI_LICENSE_URLS",
+	"LICENSE_URLS",
+	"LICENSE_TEXT_URLS"
 ]
 
 
@@ -165,6 +167,68 @@ PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 	"AGPL-3.0-or-later": PythonLicenseName("AGPL-3.0-or-later", "GNU Affero General Public License v3 or later (AGPLv3+)"),
 }
 
+
+#: Mapping of SPDX identifiers to the page where the licensor publishes the license.
+#:
+#: Sourced from the SPDX License List's own ``seeAlso`` field, or from the licensor's domain where SPDX names none.
+#: A license whose only published home is its OSI page has **no entry** - that URL is
+#: :attr:`License.OSIURL` and isn't repeated here. ``MIT``, ``BSD-2-Clause`` and ``BSD-3-Clause`` are the three.
+LICENSE_URLS: dict[str, str] = {
+	"Apache-2.0":        "https://www.apache.org/licenses/LICENSE-2.0",
+	"ISC":               "https://www.isc.org/licenses/",
+	"MPL-2.0":           "https://www.mozilla.org/MPL/2.0/",
+	"BSL-1.0":           "https://www.boost.org/doc/user-guide/bsl.html",
+	"Zlib":              "https://zlib.net/zlib_license.html",
+	"PSF-2.0":           "https://docs.python.org/3/license.html",
+	"Unlicense":         "https://unlicense.org/",
+	"CC0-1.0":           "https://creativecommons.org/publicdomain/zero/1.0/",
+	"EPL-1.0":           "https://www.eclipse.org/legal/epl/epl-v10.html",
+	"EPL-2.0":           "https://www.eclipse.org/legal/epl-2.0/",
+	"GPL-2.0-only":      "https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
+	"GPL-2.0-or-later":  "https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
+	"LGPL-2.1-only":     "https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html",
+	"LGPL-2.1-or-later": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html",
+	"GPL-3.0-only":      "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
+	"GPL-3.0-or-later":  "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
+	"LGPL-3.0-only":     "https://www.gnu.org/licenses/lgpl-3.0-standalone.html",
+	"LGPL-3.0-or-later": "https://www.gnu.org/licenses/lgpl-3.0-standalone.html",
+}
+
+
+#: Mapping of SPDX identifiers to the license text, by the file extension it is published as.
+#:
+#: Keys are the extension without its dot - ``txt``, ``md``, ``rst``, ``tex``. What a license offers is entirely up
+#: to its licensor: the GNU licenses publish four formats, most publish one, and several publish none at all beyond
+#: an HTML page, which is :data:`LICENSE_URLS`.
+#:
+#: Every URL here answered an HTTP request with the license, so the table is what is **known** rather than a claim
+#: of completeness - a license absent from it may still publish a text nobody has looked up yet.
+LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
+	"Apache-2.0":        {"txt": "https://www.apache.org/licenses/LICENSE-2.0.txt"},
+	"MPL-2.0":           {"txt": "https://www.mozilla.org/media/MPL/2.0/index.txt"},
+	"BSL-1.0":           {"txt": "https://www.boost.org/LICENSE_1_0.txt"},
+	"Unlicense":         {"txt": "https://unlicense.org/UNLICENSE"},
+	"CC0-1.0":           {"txt": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt"},
+	"EPL-2.0":           {"txt": "https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.txt"},
+	"GPL-2.0-only":      {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
+	"GPL-2.0-or-later":  {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
+	"LGPL-2.1-only":     {"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex"},
+	"LGPL-2.1-or-later": {"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex"},
+	"GPL-3.0-only":      {
+		"txt": "https://www.gnu.org/licenses/gpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/gpl-3.0.md",
+		"rst": "https://www.gnu.org/licenses/gpl-3.0.rst",
+		"tex": "https://www.gnu.org/licenses/gpl-3.0.tex",
+	},
+	"GPL-3.0-or-later":  {
+		"txt": "https://www.gnu.org/licenses/gpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/gpl-3.0.md",
+		"rst": "https://www.gnu.org/licenses/gpl-3.0.rst",
+		"tex": "https://www.gnu.org/licenses/gpl-3.0.tex",
+	},
+	"AGPL-3.0-only":     {"txt": "https://www.gnu.org/licenses/agpl-3.0.txt"},
+	"AGPL-3.0-or-later": {"txt": "https://www.gnu.org/licenses/agpl-3.0.txt"},
+}
 
 #: Mapping of SPDX identifiers to the license's page at the
 #: `Open Source Initiative <https://opensource.org/licenses>`__.
@@ -253,6 +317,49 @@ class License(metaclass=ExtendedType, slots=True):
 		:returns: URL of the license's page at SPDX.
 		"""
 		return f"https://spdx.org/licenses/{self._spdxIdentifier}.html"
+
+	@readonly
+	def URL(self) -> Nullable[str]:
+		"""
+		Returns the page where the licensor publishes this license.
+
+		This is looked up in :data:`LICENSE_URLS`. It is the licensor's own page - ``https://www.apache.org/licenses/
+		LICENSE-2.0`` for the Apache License 2.0 - which is not the same thing as :attr:`SPDXURL` or :attr:`OSIURL`,
+		the two catalogue entries describing it.
+
+		A license whose only published home *is* its OSI page has no entry here rather than a duplicate of
+		:attr:`OSIURL`; ``MIT``, ``BSD-2-Clause`` and ``BSD-3-Clause`` are those.
+
+		:returns: URL of the license's own page, or ``None`` if the licensor publishes none.
+
+		.. seealso::
+
+		   :attr:`TextURLs`
+		      |rarr| The same license as text, by format.
+		"""
+		return LICENSE_URLS.get(self._spdxIdentifier, None)
+
+	@readonly
+	def TextURLs(self) -> dict[str, str]:
+		"""
+		Returns the URLs of this license's text, keyed by the format it is published as.
+
+		Keys are the file extension without its dot: ``txt``, ``md``, ``rst``, ``tex``. Which formats exist is the
+		licensor's choice - the GNU licenses publish four, most publish one, and several publish none.
+
+		The table is what is **known**, not a claim of completeness: an empty mapping means no URL is recorded, not
+		that the licensor publishes no text. Every URL in it answered an HTTP request with the license.
+
+		.. code-block:: python
+
+		   Apache_2_0_License.TextURLs["txt"]   # https://www.apache.org/licenses/LICENSE-2.0.txt
+		   GPL_3_0_only.TextURLs["rst"]         # https://www.gnu.org/licenses/gpl-3.0.rst
+
+		A **copy** is returned, so a caller can't edit :data:`LICENSE_TEXT_URLS` through it.
+
+		:returns: The license text's URLs by format, or an empty dictionary if none is published.
+		"""
+		return dict(LICENSE_TEXT_URLS.get(self._spdxIdentifier, {}))
 
 	@readonly
 	def OSIURL(self) -> Nullable[str]:

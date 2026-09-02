@@ -34,6 +34,8 @@ Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX l
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Licensing import CC0_1_0, GPL_2_0_only, GPL_2_0_or_later, OSI_LICENSE_URLS, PSF_2_0_License
 from pyTooling.Licensing import LicenseAbsence, ProprietaryLicense, UnknownLicense
+from pyTooling.Licensing import BSD_3_Clause_License, GPL_3_0_only, GPL_3_0_or_later
+from pyTooling.Licensing import LICENSE_TEXT_URLS, LICENSE_URLS
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
 from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseReference, LicensingError
 from pyTooling.Licensing import MIT_License
@@ -624,6 +626,84 @@ class BaseLicenses(Testcase):
 			["Apache-2.0"],
 			[term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
 		)
+
+
+class LicenseHomepages(Testcase):
+	"""Where the licensor itself publishes the license, and its text by format."""
+
+	def test_TheLicensorsOwnPage(self) -> None:
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0", Apache_2_0_License.URL)
+		self.assertEqual("https://creativecommons.org/publicdomain/zero/1.0/", CC0_1_0.URL)
+
+	def test_ALicenseWithNoHomeOfItsOwn(self) -> None:
+		"""``MIT`` and the BSD licenses are published by OSI and nobody else, and that URL is :attr:`OSIURL`."""
+		for spdxLicense in (MIT_License, BSD_3_Clause_License):
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertIsNone(spdxLicense.URL)
+				self.assertIsNotNone(spdxLicense.OSIURL)
+
+	def test_TheTextByFormat(self) -> None:
+		self.assertEqual(
+			"https://www.apache.org/licenses/LICENSE-2.0.txt",
+			Apache_2_0_License.TextURLs["txt"]
+		)
+		self.assertEqual(
+			"https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt",
+			CC0_1_0.TextURLs["txt"]
+		)
+
+	def test_ALicenseThatPublishesNoText(self) -> None:
+		self.assertEqual({}, MIT_License.TextURLs)
+
+	def test_TheReturnedMappingIsACopy(self) -> None:
+		"""Editing it must not reach :data:`LICENSE_TEXT_URLS`."""
+		urls = Apache_2_0_License.TextURLs
+		urls["txt"] = "https://example.org/not-the-license"
+
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0.txt", Apache_2_0_License.TextURLs["txt"])
+
+	def test_BothTablesNameOnlyPredefinedLicenses(self) -> None:
+		identifiers = {spdxLicense.SPDXIdentifier for spdxLicense in LICENSES}
+
+		self.assertEqual(set(), set(LICENSE_URLS) - identifiers)
+		self.assertEqual(set(), set(LICENSE_TEXT_URLS) - identifiers)
+
+	def test_EveryFormatIsAnExtension(self) -> None:
+		"""The key is a file extension without its dot, so a caller can build a filename from it."""
+		for spdxIdentifier, urls in LICENSE_TEXT_URLS.items():
+			for extension, url in urls.items():
+				with self.subTest(license=spdxIdentifier, format=extension):
+					self.assertIn(extension, ("txt", "md", "rst", "tex"))
+					self.assertTrue(url.startswith("https://"))
+
+	def test_ATextURLEndsInItsFormat(self) -> None:
+		"""Except where the licensor doesn't name the file after it - which is worth seeing rather than assuming."""
+		exceptions = {"https://unlicense.org/UNLICENSE", "https://www.mozilla.org/media/MPL/2.0/index.txt"}
+
+		for spdxIdentifier, urls in LICENSE_TEXT_URLS.items():
+			for extension, url in urls.items():
+				with self.subTest(license=spdxIdentifier, format=extension):
+					self.assertTrue(url.endswith(f".{extension}") or url in exceptions)
+
+	def test_ALicensePublishedInSeveralFormats(self) -> None:
+		"""The GNU licenses are the reason this is a mapping rather than one more URL property."""
+		self.assertEqual(
+			{"txt", "md", "rst", "tex"},
+			set(GPL_3_0_only.TextURLs)
+		)
+		self.assertEqual("https://www.gnu.org/licenses/gpl-3.0.rst", GPL_3_0_only.TextURLs["rst"])
+
+	def test_APairSharesItsPublisherURLs(self) -> None:
+		"""``-only`` and ``-or-later`` are one document at GNU, as they are at OSI."""
+		self.assertEqual(GPL_3_0_only.URL, GPL_3_0_or_later.URL)
+		self.assertEqual(GPL_3_0_only.TextURLs, GPL_3_0_or_later.TextURLs)
+
+	def test_TheFourURLsAreDifferentQuestions(self) -> None:
+		"""Catalogue entry, OSI's entry, the licensor's page, the text - four properties, four answers."""
+		self.assertEqual("https://spdx.org/licenses/Apache-2.0.html", Apache_2_0_License.SPDXURL)
+		self.assertEqual("https://opensource.org/license/apache-2.0", Apache_2_0_License.OSIURL)
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0", Apache_2_0_License.URL)
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0.txt", Apache_2_0_License.TextURLs["txt"])
 
 
 class LicenseURLs(Testcase):
