@@ -249,9 +249,7 @@ class Dictionary(Node):
 		"""
 		Return this node's values, so a dictionary node can be handed to code expecting a mapping.
 
-		This is :meth:`IterateValues` materialized. Its loop is inlined as a **list** comprehension rather than
-		consumed as a generator: the result is built in full anyway, and a generator - whether this method's own
-		expression or the one :meth:`IterateValues` returns - only adds a frame to step through it.
+		This is :meth:`IterateValues` materialized.
 
 		:returns: This node's values, in the order the document states them.
 		"""
@@ -261,8 +259,7 @@ class Dictionary(Node):
 		"""
 		Return this node's key-value pairs, so a dictionary node can be handed to code expecting a mapping.
 
-		This is :meth:`IterateItems` materialized, with its loop inlined the same way and for the same reason as
-		:meth:`values`.
+		This is :meth:`IterateItems` materialized.
 
 		:returns: This node's ``(key, value)`` pairs, in the order the document states them.
 		"""
