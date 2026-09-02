@@ -219,6 +219,11 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		A :class:`~pyTooling.Licensing.License` object exists only for the first kind, and
 		:attr:`~pyTooling.Licensing.SPDXLicense.License` is where it is reached.
 
+		``NOASSERTION`` and ``NONE`` are reported here too, as an
+		:class:`~pyTooling.Licensing.UnknownLicense` - the index *stated* something, and dropping it would leave this
+		indistinguishable from a version whose license didn't resolve at all. Test for that class where the
+		difference matters; :attr:`LicenseExpression` is ``None`` only when nothing resolved.
+
 		This flattens the expression: ``Apache-2.0 AND MIT`` and ``Apache-2.0 OR BSD-2-Clause`` both give two
 		licenses, although one requires both and the other offers a choice. Ask :attr:`LicenseExpression` when that
 		difference matters. A license exception is not a license and is not returned.
@@ -250,19 +255,21 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	@readonly
 	def PublishedLicense(self) -> str:
 		"""
-		Read-only property to access the license expression as it was published.
+		Read-only property to return the license expression as it was published.
 
-		The published text is held in **one** place: a parsed expression keeps it as
-		:attr:`~pyTooling.Licensing.LicenseExpression.ParsedFrom`, and :attr:`_publishedLicense` holds it only when
-		there is no expression to hold it. :meth:`~pyTooling.Licensing.LicenseExpression.__str__` is not a substitute
-		- it re-renders canonically, so ``Apache-2.0 or MIT`` comes back as ``Apache-2.0 OR MIT``.
+		The published text is held in **one** place: a *parsed* expression keeps it as
+		:attr:`~pyTooling.Licensing.LicenseExpression.ParsedFrom`, and :attr:`_publishedLicense` holds it whenever
+		nothing was parsed - because the text didn't parse, or because the expression was **built** rather than
+		parsed, which is what a ``License :: Other/Proprietary License`` classifier produces.
+		:meth:`~pyTooling.Licensing.LicenseExpression.__str__` is not a substitute - it re-renders canonically, so
+		``Apache-2.0 or MIT`` comes back as ``Apache-2.0 OR MIT``.
 
 		:returns: The license expression as published, or an empty string if none was published.
 		"""
-		if self._licenseExpression is None:
-			return self._publishedLicense
+		if self._licenseExpression is not None and (parsedFrom := self._licenseExpression.ParsedFrom) != "":
+			return parsedFrom
 
-		return self._licenseExpression.ParsedFrom
+		return self._publishedLicense
 
 	@readonly
 	def LicenseURL(self) -> Nullable[URL]:

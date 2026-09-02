@@ -45,6 +45,7 @@ The Licensing module implements mapping tables for various license names and ide
    See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses           import dataclass
+from enum                  import Enum, unique
 from re                    import compile as re_compile
 from typing                import Any, ClassVar, Generator, Optional as Nullable
 from pyTooling.Common      import getFullyQualifiedName
@@ -81,7 +82,8 @@ __all__ = [
 	"AGPL_3_0_or_later",
 
 	"SPDX_INDEX",
-	"LICENSES_BY_CLASSIFIER"
+	"LICENSES_BY_CLASSIFIER",
+	"OSI_LICENSE_URLS"
 ]
 
 
@@ -95,6 +97,28 @@ class LicenseExpressionError(LicensingError):
 	"""
 	The exception is raised when an SPDX license expression is malformed or names a license SPDX doesn't define.
 	"""
+
+
+@export
+@unique
+class LicenseAbsence(Enum):
+	"""
+	SPDX's two ways of stating that no license is named, which mean different things.
+
+	Both are values a license field may hold **on their own**; neither is part of the expression grammar, so neither
+	can be an operand of ``AND``, ``OR`` or ``WITH``.
+	"""
+
+	NoLicense =   "NONE"         #: The work states that no license applies to it.
+	NoAssertion = "NOASSERTION"  #: Someone looked and declined to state a license; nothing is claimed either way.
+
+	def __str__(self) -> str:
+		"""
+		Return the value in SPDX's spelling.
+
+		:returns: ``NONE`` or ``NOASSERTION``.
+		"""
+		return self.value
 
 
 @export
@@ -665,10 +689,19 @@ class BaseLicense(LicenseExpression):
 	"""
 	Base-class of every expression node that names a license the work is under.
 
-	Two nodes are one: :class:`SPDXLicense`, a license on the SPDX License List, and :class:`LicenseReference`, a
-	``LicenseRef-<id>`` that is not on it. They have no common representation - SPDX knows the first as a
-	:class:`License` object and the second not at all - so this class is what lets both be collected and reported
-	together:
+	Four nodes are one:
+
+	:class:`SPDXLicense`
+	  |rarr| a license on the SPDX License List, named by its identifier.
+	:class:`LicenseReference`
+	  |rarr| a license that is not on that list, written as ``LicenseRef-<id>``.
+	:class:`ProprietaryLicense`
+	  |rarr| a license that isn't published at all; a :class:`LicenseReference` with a fixed identifier.
+	:class:`UnknownLicense`
+	  |rarr| SPDX's ``NONE`` or ``NOASSERTION`` - no license is named.
+
+	They have no common representation - SPDX knows the first as a :class:`License` object and the rest not at all -
+	so this class is what lets them be collected and reported together:
 
 	.. code-block:: python
 
@@ -844,6 +877,133 @@ class LicenseReference(BaseLicense):
 		"""
 		document = "" if self._documentIdentifier is None else f"DocumentRef-{self._documentIdentifier}:"
 		return f"{document}LicenseRef-{self._licenseIdentifier}"
+
+
+@export
+class ProprietaryLicense(LicenseReference):
+	"""
+	A license that is not open source and is not published under any identifier - an EULA, or a company's own terms.
+
+	SPDX has no way to say this. Its list is a list of *published* licenses, and a proprietary one is by definition
+	not on it, so the only thing SPDX offers is the generic escape hatch: this renders as ``LicenseRef-Proprietary``
+	and **is** a :class:`LicenseReference`, because that is what it writes.
+
+	.. code-block:: python
+
+	   str(ProprietaryLicense())   # 'LicenseRef-Proprietary'
+
+	The round-trip is deliberately one-way: parsing ``LicenseRef-Proprietary`` back gives a plain
+	:class:`LicenseReference`, because SPDX defines no convention that makes that identifier mean *proprietary*
+	rather than being one project's choice of words. This class is constructed where something else already knows -
+	:mod:`pyTooling.Dependency` builds one from PyPI's ``License :: Other/Proprietary License`` classifier.
+
+	A proprietary license that *does* have a name of its own is a :class:`LicenseReference` with that name, not this
+	class - ``LicenseReference("AcmeEULA-1.0")`` renders as ``LicenseRef-AcmeEULA-1.0``.
+	"""
+
+	#: The identifier a proprietary license is written with, following ``LicenseRef-``.
+	IDENTIFIER: ClassVar[str] = "Proprietary"
+
+	def __init__(self, parent: Nullable[Operator] = None) -> None:
+		"""
+		Initialize a proprietary license.
+
+		:param parent:     Optional, the operator this node becomes an operand of.
+		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
+		"""
+		super().__init__(self.IDENTIFIER, None, parent)
+
+
+@export
+class UnknownLicense(BaseLicense):
+	"""
+	SPDX's statement that no license is named: ``NONE`` or ``NOASSERTION``.
+
+	The two are different claims - :attr:`LicenseAbsence.NoLicense` says the work states that no license applies,
+	:attr:`LicenseAbsence.NoAssertion` says someone looked and declined to say - so which one is asked with
+	:attr:`Absence`.
+
+	.. code-block:: python
+
+	   LicenseExpression.Parse("NOASSERTION")   # UnknownLicense(LicenseAbsence.NoAssertion)
+	   LicenseExpression.Parse("NONE")          # UnknownLicense(LicenseAbsence.NoLicense)
+
+	**Neither can be an operand.** SPDX's grammar is ``simple-expression | compound-expression``; ``NONE`` and
+	``NOASSERTION`` are values a license *field* may hold instead of an expression, not terms inside one. So
+	``MIT AND NOASSERTION`` doesn't parse, and this node refuses a :attr:`~LicenseExpression.Parent`.
+
+	.. seealso::
+
+	   :class:`ProprietaryLicense`
+	      |rarr| For a license that exists but isn't published - which is a different statement from this one.
+	"""
+
+	_absence: LicenseAbsence  #: Which of SPDX's two absences this node states.
+
+	def __init__(self, absence: LicenseAbsence = LicenseAbsence.NoAssertion) -> None:
+		"""
+		Initialize an absent license.
+
+		No ``parent`` parameter, because neither value may be an operand.
+
+		:param absence:    Optional, which absence is stated. Defaults to :attr:`LicenseAbsence.NoAssertion`.
+		:raises TypeError: If parameter 'absence' is not of type :class:`LicenseAbsence`.
+		"""
+		super().__init__(None)
+
+		if not isinstance(absence, LicenseAbsence):
+			ex = TypeError("Parameter 'absence' is not a LicenseAbsence.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(absence)}'.")
+			raise ex
+
+		self._absence = absence
+
+	@readonly
+	def Absence(self) -> LicenseAbsence:
+		"""
+		Read-only property to access which absence this node states (:attr:`_absence`).
+
+		:returns: The absence stated.
+		"""
+		return self._absence
+
+	@readonly
+	def Identifier(self) -> str:
+		"""
+		Read-only property to access the absence in SPDX's spelling (:pycode:`_absence.value`).
+
+		:returns: ``NONE`` or ``NOASSERTION``.
+		"""
+		return self._absence.value
+
+	@property
+	def Parent(self) -> Nullable[Operator]:
+		"""
+		Property to access the operator this expression is an operand of (:attr:`_parent`).
+
+		Always ``None`` here, and assigning one raises: SPDX's grammar has no place for ``NONE`` or ``NOASSERTION``
+		inside an expression, so this node is always the whole of it.
+
+		:returns:           ``None``, always.
+		:raises ValueError: If any operator is assigned. |br|
+		                    An absent license can't be an operand.
+		"""
+		return self._parent
+
+	@Parent.setter
+	def Parent(self, parent: Nullable[Operator]) -> None:
+		ex = ValueError("An unknown license can't be an operand.")
+		ex.add_note(f"'{self._absence.value}' is a value a license field may hold instead of an expression.")
+		ex.add_note("SPDX's grammar has no place for it inside one, so it can't be given a parent.")
+		raise ex
+
+	def __str__(self) -> str:
+		"""
+		Return the absence in SPDX's spelling.
+
+		:returns: ``NONE`` or ``NOASSERTION``.
+		"""
+		return self._absence.value
 
 
 @export
@@ -1248,9 +1408,19 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		"""
 		Parse the whole expression.
 
+		``NONE`` and ``NOASSERTION`` are read here rather than in the descent, because SPDX allows them **only** as
+		the entire expression - they are values a license field may hold instead of one, not terms inside one. Seeing
+		either anywhere else leaves it to the descent, where it is an unknown license identifier.
+
 		:returns:                       The root of the expression tree.
 		:raises LicenseExpressionError: If the expression is malformed or names an unknown license.
 		"""
+		if len(self._tokens) == 1:
+			for absence in LicenseAbsence:
+				if self._tokens[0] == absence.value:
+					self._position = 1
+					return UnknownLicense(absence)
+
 		result = self._ParseOr()
 
 		if self._position < len(self._tokens):
@@ -1333,7 +1503,14 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 			expression = SPDXLicense(spdxLicense)
 		else:
 			ex = LicenseExpressionError(f"License expression '{self._expression}' names unknown license '{identifier}'.")
-			ex.add_note("Known licenses are the SPDX identifiers in 'pyTooling.Licensing.SPDX_INDEX'.")
+
+			if any(identifier == absence.value for absence in LicenseAbsence):
+				ex.add_note(f"'{identifier}' is a value a license field may hold instead of an expression.")
+				ex.add_note("SPDX's grammar has no place for it inside one, so it may only stand alone.")
+			else:
+				ex.add_note("Known licenses are the SPDX identifiers in 'pyTooling.Licensing.SPDX_INDEX'.")
+				ex.add_note("A license that isn't on that list is written 'LicenseRef-<id>'.")
+
 			raise ex
 
 		return OrLaterOperator(expression) if orLater else expression

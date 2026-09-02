@@ -33,6 +33,7 @@ Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX l
 """
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Licensing import CC0_1_0, GPL_2_0_only, GPL_2_0_or_later, OSI_LICENSE_URLS, PSF_2_0_License
+from pyTooling.Licensing import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
 from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseReference, LicensingError
 from pyTooling.Licensing import MIT_License
@@ -664,3 +665,77 @@ class LicenseURLs(Testcase):
 
 	def test_AnUnlistedLicenseHasNoOSIURL(self) -> None:
 		self.assertIsNone(License("Not-A-Real-Identifier", "Not a real license").OSIURL)
+
+
+class AbsentLicenses(Testcase):
+	"""SPDX's ``NONE`` and ``NOASSERTION``, which are values a field holds instead of an expression."""
+
+	def test_BothParse(self) -> None:
+		for text, absence in (("NONE", LicenseAbsence.NoLicense), ("NOASSERTION", LicenseAbsence.NoAssertion)):
+			with self.subTest(expression=text):
+				expression = LicenseExpression.Parse(text)
+
+				self.assertIsInstance(expression, UnknownLicense)
+				self.assertIs(absence, expression.Absence)
+				self.assertEqual(text, str(expression))
+				self.assertEqual(text, expression.Identifier)
+
+	def test_TheyAreTwoDifferentStatements(self) -> None:
+		"""``NONE`` says no license applies; ``NOASSERTION`` says nobody claimed either way."""
+		self.assertNotEqual(
+			LicenseExpression.Parse("NONE").Absence,
+			LicenseExpression.Parse("NOASSERTION").Absence
+		)
+
+	def test_NeitherCanBeAnOperand(self) -> None:
+		"""SPDX's grammar is ``simple-expression | compound-expression``; neither value is a term inside one."""
+		for text in ("MIT AND NOASSERTION", "NONE OR MIT", "NOASSERTION WITH LLVM-exception", "MIT AND (NONE)"):
+			with self.subTest(expression=text):
+				with self.assertRaises(LicenseExpressionError):
+					LicenseExpression.Parse(text)
+
+	def test_ANodeRefusesAParent(self) -> None:
+		"""Built in code rather than parsed, the same rule has to hold."""
+		with self.assertRaises(ValueError):
+			AndOperator(SPDXLicense(MIT_License), UnknownLicense())
+
+	def test_TheDefaultIsNoAssertion(self) -> None:
+		"""Saying nothing about a license is a stronger claim than saying there is none, so it isn't the default."""
+		self.assertIs(LicenseAbsence.NoAssertion, UnknownLicense().Absence)
+
+	def test_ItIsALicenseNode(self) -> None:
+		self.assertIsInstance(UnknownLicense(), BaseLicense)
+
+	def test_TheAbsenceMustBeOne(self) -> None:
+		with self.assertRaises(TypeError):
+			UnknownLicense("NOASSERTION")
+
+
+class ProprietaryLicenses(Testcase):
+	"""A license that isn't published, which SPDX has no way to name."""
+
+	def test_ItRendersAsALicenseRef(self) -> None:
+		self.assertEqual("LicenseRef-Proprietary", str(ProprietaryLicense()))
+		self.assertEqual("LicenseRef-Proprietary", ProprietaryLicense().Identifier)
+
+	def test_ItIsALicenseReference(self) -> None:
+		"""Which is what it writes, so it is what it is."""
+		proprietary = ProprietaryLicense()
+
+		self.assertIsInstance(proprietary, LicenseReference)
+		self.assertIsInstance(proprietary, BaseLicense)
+		self.assertEqual("Proprietary", proprietary.LicenseIdentifier)
+		self.assertIsNone(proprietary.DocumentIdentifier)
+
+	def test_ParsingItBackGivesAPlainReference(self) -> None:
+		"""Deliberate: SPDX defines no convention making that identifier mean *proprietary*."""
+		parsed = LicenseExpression.Parse("LicenseRef-Proprietary")
+
+		self.assertIsInstance(parsed, LicenseReference)
+		self.assertNotIsInstance(parsed, ProprietaryLicense)
+
+	def test_ItCanBeAnOperand(self) -> None:
+		"""Unlike an absent license - a proprietary license exists, it just isn't published."""
+		expression = AndOperator(SPDXLicense(MIT_License), ProprietaryLicense())
+
+		self.assertEqual("MIT AND LicenseRef-Proprietary", str(expression))

@@ -73,6 +73,7 @@ from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError,
 from pyTooling.Dependency      import ProjectNotFoundError
 from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
+from pyTooling.Licensing       import ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
@@ -80,6 +81,10 @@ from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
 
 #: Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it.
 _LICENSE_NOTE_LENGTH = 64
+
+#: PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
+#: :class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
+_PROPRIETARY_CLASSIFIER = "License :: Other/Proprietary License"
 
 
 #: Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first.
@@ -668,11 +673,17 @@ class Release(PackageVersion, LazyLoadableMixin):
 		4. a license classifier, but only when it means exactly one license - ``License :: OSI Approved :: BSD
 		   License`` means either ``BSD-2-Clause`` or ``BSD-3-Clause`` and is never guessed at.
 
+		``License :: Other/Proprietary License`` is the classifier that resolves without parsing anything: SPDX has
+		no identifier for a license that isn't published, so it becomes a
+		:class:`~pyTooling.Licensing.ProprietaryLicense` and the classifier itself is what
+		:attr:`~pyTooling.Dependency.PackageVersion.PublishedLicense` reports.
+
 		Whatever was found is parsed into a :class:`~pyTooling.Licensing.LicenseExpression` and kept verbatim in
 		:attr:`~pyTooling.Dependency.PackageVersion.PublishedLicense`, even when it doesn't parse. A release whose
 		license stays unresolved is reported as an
 		:class:`~pyTooling.Dependency.UnknownLicenseWarning` naming what was published, because that is the list of
-		packages the override file has to answer for.
+		packages the override file has to answer for. A release publishing ``NOASSERTION`` or ``NONE`` is on that
+		list too - the *statement* resolved, the license is still unknown.
 
 		:param infoNode: The ``info`` node of the JSON document describing this release.
 		"""
@@ -680,6 +691,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		overrides = index._licenseOverrides
 		published = []
 		candidates = []
+		proprietaryClassifier = None
 
 		if (override := overrides.LicenseOf(self._package._name, self._version)) is not None:
 			candidates.append(override)
@@ -696,7 +708,9 @@ class Release(PackageVersion, LazyLoadableMixin):
 					continue
 
 				published.append(f"classifier: {classifier}")
-				if len(matches := LICENSES_BY_CLASSIFIER.get(classifier, ())) == 1:
+				if classifier == _PROPRIETARY_CLASSIFIER:
+					proprietaryClassifier = classifier
+				elif len(matches := LICENSES_BY_CLASSIFIER.get(classifier, ())) == 1:
 					candidates.append(matches[0].SPDXIdentifier)
 
 				break
@@ -710,12 +724,20 @@ class Release(PackageVersion, LazyLoadableMixin):
 			# The expression keeps the candidate as its 'ParsedFrom', so '_publishedLicense' stays empty.
 			break
 		else:
-			self._publishedLicense = candidates[0] if len(candidates) > 0 else ""
+			if proprietaryClassifier is not None:
+				# SPDX has no identifier for a proprietary license, so there is nothing to parse - it is built.
+				# Nothing was parsed, so the classifier is what 'PublishedLicense' has to report.
+				self._licenseExpression = ProprietaryLicense()
+				self._publishedLicense = proprietaryClassifier
+			else:
+				self._publishedLicense = candidates[0] if len(candidates) > 0 else ""
 
 		if (licenseURL := overrides.LicenseURLOf(self._package._name)) is not None:
 			self._licenseURL = URL.Parse(licenseURL)
 
-		if self._licenseExpression is None:
+		# An 'UnknownLicense' resolved the *statement* - 'NOASSERTION' is what the index said - but the license is
+		# still unknown, which is what this list is for.
+		if self._licenseExpression is None or isinstance(self._licenseExpression, UnknownLicense):
 			WarningCollector.Raise(
 				UnknownLicenseWarning(
 					f"License of '{self._package._name}' {self._version} couldn't be resolved."

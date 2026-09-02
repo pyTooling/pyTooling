@@ -40,7 +40,8 @@ from pytest                      import mark
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
 from pyTooling.Dependency.Python import LicenseOverrides
 from pyTooling.Dependency        import BrokenRequirementWarning, UnknownLicenseWarning
-from pyTooling.Licensing         import LicenseReference, BaseLicense, SPDXLicense, WithOperator
+from pyTooling.Licensing         import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
+from pyTooling.Licensing         import SPDXLicense, UnknownLicense, WithOperator
 from pyTooling.Versioning        import PythonVersion
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Testing           import Testcase
@@ -507,6 +508,52 @@ class Licenses(Testcase):
 		self._resolve(release, self._json(license_expression="Apache-2.0 WITH LLVM-exception"))
 
 		self.assertEqual(["Apache-2.0"], [lic.Identifier for lic in release.Licenses])
+
+	def test_ProprietaryClassifier(self) -> None:
+		"""SPDX can't name a license that isn't published, so the classifier builds a node instead of parsing one."""
+		release = self._release()
+		warnings = self._resolve(release, self._json(classifiers=["License :: Other/Proprietary License"]))
+
+		self.assertEqual([], warnings)
+		self.assertIsInstance(release.LicenseExpression, ProprietaryLicense)
+		self.assertEqual(["LicenseRef-Proprietary"], [lic.Identifier for lic in release.Licenses])
+
+	def test_ProprietaryClassifierIsWhatIsReportedAsPublished(self) -> None:
+		"""Nothing was parsed, so the expression holds no source text and the classifier is what was published."""
+		release = self._release()
+
+		self._resolve(release, self._json(classifiers=["License :: Other/Proprietary License"]))
+
+		self.assertEqual("", release.LicenseExpression.ParsedFrom)
+		self.assertEqual("License :: Other/Proprietary License", release.PublishedLicense)
+
+	def test_NoAssertionResolvesButStillWarns(self) -> None:
+		"""The *statement* resolved; the license is still unknown, which is what the warning lists."""
+		release = self._release()
+		warnings = self._resolve(release, self._json(license_expression="NOASSERTION"))
+
+		self.assertEqual(1, len(warnings))
+		self.assertIsInstance(release.LicenseExpression, UnknownLicense)
+		self.assertIs(LicenseAbsence.NoAssertion, release.LicenseExpression.Absence)
+		self.assertEqual("NOASSERTION", release.PublishedLicense)
+
+	def test_AnAbsentLicenseIsReportedAsOne(self) -> None:
+		"""It is a 'BaseLicense', so 'Licenses' carries it - which keeps it apart from nothing having resolved."""
+		stated, unresolved = self._release(), self._release()
+
+		self._resolve(stated, self._json(license_expression="NOASSERTION"))
+		self._resolve(unresolved, self._json(license="MIT License"))
+
+		self.assertEqual(["NOASSERTION"], [lic.Identifier for lic in stated.Licenses])
+		self.assertEqual((), unresolved.Licenses)
+		self.assertIsNone(unresolved.LicenseExpression)
+
+	def test_NoneResolvesButStillWarns(self) -> None:
+		release = self._release()
+		warnings = self._resolve(release, self._json(license_expression="NONE"))
+
+		self.assertEqual(1, len(warnings))
+		self.assertIs(LicenseAbsence.NoLicense, release.LicenseExpression.Absence)
 
 	def test_LicenseField_Identifier(self) -> None:
 		"""The legacy ``license`` field resolves when it holds an identifier."""
