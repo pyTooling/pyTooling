@@ -210,6 +210,46 @@ per identifier at a fixed address. :attr:`~pyTooling.Licensing.License.OSIURL` i
    :attr:`~pyTooling.Licensing.License.OSIURL` is ``None`` exactly when
    :attr:`~pyTooling.Licensing.License.OSIApproved` is ``False``.
 
+A license has **four** URLs, and they answer four different questions:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 78
+
+   * - Property
+     - What it points at
+   * - :attr:`~pyTooling.Licensing.License.SPDXURL`
+     - SPDX's catalogue entry. Derived from the identifier.
+   * - :attr:`~pyTooling.Licensing.License.OSIURL`
+     - OSI's catalogue entry, if OSI approved it. Looked up in
+       :data:`~pyTooling.Licensing.OSI_LICENSE_URLS`.
+   * - :attr:`~pyTooling.Licensing.License.URL`
+     - The page where the **licensor** publishes it. Looked up in
+       :data:`~pyTooling.Licensing.LICENSE_URLS`.
+   * - :attr:`~pyTooling.Licensing.License.TextURLs`
+     - The license **text**, by the format it is published as. Looked up in
+       :data:`~pyTooling.Licensing.LICENSE_TEXT_URLS`.
+
+.. code-block:: python
+
+   from pyTooling.Licensing import Apache_2_0_License
+
+   Apache_2_0_License.SPDXURL           # https://spdx.org/licenses/Apache-2.0.html
+   Apache_2_0_License.OSIURL            # https://opensource.org/license/apache-2.0
+   Apache_2_0_License.URL               # https://www.apache.org/licenses/LICENSE-2.0
+   Apache_2_0_License.TextURLs["txt"]   # https://www.apache.org/licenses/LICENSE-2.0.txt
+
+:attr:`~pyTooling.Licensing.License.TextURLs` is keyed by the file extension without its dot - ``txt``, ``md``,
+``rst``, ``tex``. **Which formats exist is entirely the licensor's choice**: the GNU licenses publish four, most
+publish one, and several publish none beyond an HTML page. It returns a copy, so editing it can't reach the table.
+
+.. note::
+
+   ``MIT``, ``BSD-2-Clause`` and ``BSD-3-Clause`` have **no**
+   :attr:`~pyTooling.Licensing.License.URL`. Nobody but OSI publishes them, and that URL is already
+   :attr:`~pyTooling.Licensing.License.OSIURL` - repeating it as a second answer would suggest a second source
+   that doesn't exist.
+
 .. seealso::
 
    `SPDX License List <https://spdx.org/licenses/>`__
