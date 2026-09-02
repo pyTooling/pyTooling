@@ -595,7 +595,37 @@ class Operator(LicenseExpression):
 
 
 @export
-class SPDXLicense(LicenseExpression):
+@abstractclass
+class LicenseTerm(LicenseExpression):
+	"""
+	Base-class of every expression node that names a license the work is under.
+
+	Two nodes are one: :class:`SPDXLicense`, a license on the SPDX License List, and :class:`LicenseReference`, a
+	``LicenseRef-<id>`` that is not on it. They have no common representation - SPDX knows the first as a
+	:class:`License` object and the second not at all - so this class is what lets both be collected and reported
+	together:
+
+	.. code-block:: python
+
+	   [term.Identifier for term in expression.IterateExpression() if isinstance(term, LicenseTerm)]
+	   # ['MIT', 'LicenseRef-Proprietary']   for 'MIT AND LicenseRef-Proprietary'
+
+	:class:`LicenseException` is **not** one of these. The right operand of ``WITH`` is an exception granted from a
+	license, not a license the work is under.
+	"""
+
+	@readonly
+	@abstractmethod
+	def Identifier(self) -> str:  # type: ignore[empty-body]
+		"""
+		Read-only property to return the identifier naming this license.
+
+		:returns: The SPDX identifier, or the ``LicenseRef-`` reference, in the spelling an expression writes it.
+		"""
+
+
+@export
+class SPDXLicense(LicenseTerm):
 	"""
 	A single license in an expression, named by its SPDX identifier.
 	"""
@@ -651,7 +681,7 @@ class SPDXLicense(LicenseExpression):
 
 
 @export
-class LicenseReference(LicenseExpression):
+class LicenseReference(LicenseTerm):
 	"""
 	A license that isn't on the SPDX License List, written as ``LicenseRef-<id>``.
 
@@ -723,6 +753,18 @@ class LicenseReference(LicenseExpression):
 		:returns: The document reference's identifier, or ``None`` if the reference names no document.
 		"""
 		return self._documentIdentifier
+
+	@readonly
+	def Identifier(self) -> str:
+		"""
+		Read-only property to return the reference in the spelling an expression writes it.
+
+		This is the whole reference, ``DocumentRef-`` and all - :attr:`LicenseIdentifier` is the part following
+		``LicenseRef-`` on its own.
+
+		:returns: The license reference.
+		"""
+		return str(self)
 
 	def __str__(self) -> str:
 		"""

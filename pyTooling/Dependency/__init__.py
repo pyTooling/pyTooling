@@ -54,7 +54,7 @@ from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.Exceptions      import ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing       import License, LicenseExpression, LicenseReference, SPDXLicense
+from pyTooling.Licensing       import LicenseExpression, LicenseTerm
 from pyTooling.Versioning      import SemanticVersion
 from pyTooling.Warning         import Warning
 
@@ -202,16 +202,26 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		return self._releasedAt
 
 	@readonly
-	def Licenses(self) -> tuple[License, ...]:
+	def Licenses(self) -> tuple[LicenseTerm, ...]:
 		"""
 		Read-only property to return the licenses named by :attr:`LicenseExpression`.
+
+		**Every** license the version is published under, whether or not SPDX knows it: an
+		:class:`~pyTooling.Licensing.SPDXLicense` for one on the SPDX License List, a
+		:class:`~pyTooling.Licensing.LicenseReference` for a ``LicenseRef-<id>`` that isn't. Both are a
+		:class:`~pyTooling.Licensing.LicenseTerm` and both answer
+		:attr:`~pyTooling.Licensing.LicenseTerm.Identifier`, so a report doesn't have to branch:
+
+		.. code-block:: python
+
+		   [term.Identifier for term in version.Licenses]   # ['MIT', 'LicenseRef-Proprietary']
+
+		A :class:`~pyTooling.Licensing.License` object exists only for the first kind, and
+		:attr:`~pyTooling.Licensing.SPDXLicense.License` is where it is reached.
 
 		This flattens the expression: ``Apache-2.0 AND MIT`` and ``Apache-2.0 OR BSD-2-Clause`` both give two
 		licenses, although one requires both and the other offers a choice. Ask :attr:`LicenseExpression` when that
 		difference matters. A license exception is not a license and is not returned.
-
-		**A ``LicenseRef-<id>`` is not returned either**, and not because it isn't a license: SPDX doesn't know it, so
-		no :class:`~pyTooling.Licensing.License` object exists for it. :attr:`LicenseReferences` returns those.
 
 		:returns: Licenses this version is published under, or an empty tuple if the expression didn't resolve.
 		"""
@@ -219,29 +229,9 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			return ()
 
 		return tuple(
-			node.License
-			for node in self._licenseExpression.IterateExpression()
-			if isinstance(node, SPDXLicense)
-		)
-
-	@readonly
-	def LicenseReferences(self) -> tuple[LicenseReference, ...]:
-		"""
-		Read-only property to return the license references named by :attr:`LicenseExpression`.
-
-		A ``LicenseRef-<id>`` is a license this version is published under, but SPDX doesn't know it, so there is no
-		:class:`~pyTooling.Licensing.License` object for it and :attr:`Licenses` - which returns those - cannot carry
-		it. It is returned here instead, as the node, which is the only thing that holds its identifier.
-
-		:returns: License references this version is published under, or an empty tuple if there are none.
-		"""
-		if self._licenseExpression is None:
-			return ()
-
-		return tuple(
 			node
 			for node in self._licenseExpression.IterateExpression()
-			if isinstance(node, LicenseReference)
+			if isinstance(node, LicenseTerm)
 		)
 
 	@readonly
