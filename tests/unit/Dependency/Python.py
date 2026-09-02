@@ -40,7 +40,7 @@ from pytest                      import mark
 from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
 from pyTooling.Dependency.Python import LicenseOverrides
 from pyTooling.Dependency        import BrokenRequirementWarning, UnknownLicenseWarning
-from pyTooling.Licensing         import SPDXLicense, WithOperator
+from pyTooling.Licensing         import LicenseReference, LicenseTerm, SPDXLicense, WithOperator
 from pyTooling.Versioning        import PythonVersion
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Testing           import Testcase
@@ -415,7 +415,7 @@ class Licenses(Testcase):
 		release = self._release()
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="BSD-2-Clause")))
-		self.assertEqual(["BSD-2-Clause"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["BSD-2-Clause"], [lic.Identifier for lic in release.Licenses])
 		self.assertEqual("BSD-2-Clause", release.PublishedLicense)
 		self.assertIsInstance(release.LicenseExpression, SPDXLicense)
 		self.assertEqual("BSD-2-Clause", str(release.LicenseExpression))
@@ -425,21 +425,21 @@ class Licenses(Testcase):
 		release = self._release()
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 OR BSD-2-Clause")))
-		self.assertEqual(["Apache-2.0", "BSD-2-Clause"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["Apache-2.0", "BSD-2-Clause"], [lic.Identifier for lic in release.Licenses])
 
 	def test_LicenseExpression_Conjunction(self) -> None:
 		"""``A AND B`` requires both licenses."""
 		release = self._release()
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 AND MIT")))
-		self.assertEqual(["Apache-2.0", "MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["Apache-2.0", "MIT"], [lic.Identifier for lic in release.Licenses])
 
 	def test_LicenseExpression_WithException(self) -> None:
 		"""``WITH`` names a license exception, which the expression keeps and :attr:`Licenses` does not report."""
 		release = self._release()
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="Apache-2.0 WITH LLVM-exception")))
-		self.assertEqual(["Apache-2.0"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["Apache-2.0"], [lic.Identifier for lic in release.Licenses])
 		self.assertIsInstance(release.LicenseExpression, WithOperator)
 		self.assertEqual("Apache-2.0 WITH LLVM-exception", str(release.LicenseExpression))
 
@@ -480,27 +480,40 @@ class Licenses(Testcase):
 		self.assertEqual("MIT License", release._publishedLicense)
 		self.assertEqual("MIT License", release.PublishedLicense)
 
-	def test_LicenseReferences(self) -> None:
-		"""``LicenseRef-`` names a license SPDX doesn't know, so no 'License' object exists and 'Licenses' omits it."""
+	def test_ALicenseReferenceIsReportedWithTheRest(self) -> None:
+		"""``LicenseRef-`` names a license SPDX doesn't know; it is still a license the version is published under."""
 		release = self._release()
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="MIT AND LicenseRef-Proprietary")))
-		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
-		self.assertEqual(["Proprietary"], [ref.LicenseIdentifier for ref in release.LicenseReferences])
+		self.assertEqual(["MIT", "LicenseRef-Proprietary"], [lic.Identifier for lic in release.Licenses])
 
-	def test_LicenseReferencesIsEmptyWithoutAnExpression(self) -> None:
+	def test_ALicenseReferenceCarriesNoLicenseObject(self) -> None:
+		"""Which is why both kinds are a 'LicenseTerm' - only the SPDX one reaches a 'License'."""
 		release = self._release()
 
-		self._resolve(release, self._json(license="MIT License"))
+		self._resolve(release, self._json(license_expression="MIT AND LicenseRef-Proprietary"))
+		spdxLicense, reference = release.Licenses
 
-		self.assertEqual((), release.LicenseReferences)
+		self.assertIsInstance(spdxLicense, SPDXLicense)
+		self.assertIsInstance(reference, LicenseReference)
+		self.assertEqual("MIT", spdxLicense.License.SPDXIdentifier)
+		self.assertEqual("Proprietary", reference.LicenseIdentifier)
+		self.assertFalse(hasattr(reference, "License"))
+
+	def test_ALicenseExceptionIsNotALicense(self) -> None:
+		"""The right operand of ``WITH`` is not a 'LicenseTerm', so it is not reported as one."""
+		release = self._release()
+
+		self._resolve(release, self._json(license_expression="Apache-2.0 WITH LLVM-exception"))
+
+		self.assertEqual(["Apache-2.0"], [lic.Identifier for lic in release.Licenses])
 
 	def test_LicenseField_Identifier(self) -> None:
 		"""The legacy ``license`` field resolves when it holds an identifier."""
 		release = self._release()
 
 		self.assertEqual([], self._resolve(release, self._json(license="MIT")))
-		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["MIT"], [lic.Identifier for lic in release.Licenses])
 
 	def test_LicenseField_Name(self) -> None:
 		"""``'MIT License'`` is a name, not an identifier, so it doesn't resolve and has to be stated by hand."""
@@ -521,7 +534,7 @@ class Licenses(Testcase):
 		)
 
 		self.assertEqual([], warnings)
-		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["MIT"], [lic.Identifier for lic in release.Licenses])
 
 	def test_Classifier(self) -> None:
 		"""A classifier meaning exactly one license resolves."""
@@ -530,7 +543,7 @@ class Licenses(Testcase):
 		                                                          "License :: OSI Approved :: Apache Software License"]))
 
 		self.assertEqual([], warnings)
-		self.assertEqual(["Apache-2.0"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["Apache-2.0"], [lic.Identifier for lic in release.Licenses])
 
 	def test_Classifier_Ambiguous(self) -> None:
 		"""``License :: OSI Approved :: BSD License`` means either BSD-2-Clause or BSD-3-Clause, so it is not guessed."""
@@ -557,7 +570,7 @@ class Licenses(Testcase):
 		release = self._release(overrides)
 
 		self.assertEqual([], self._resolve(release, self._json(license_expression="BSD-2-Clause")))
-		self.assertEqual(["BSD-3-Clause"], [lic.SPDXIdentifier for lic in release.Licenses])
+		self.assertEqual(["BSD-3-Clause"], [lic.Identifier for lic in release.Licenses])
 
 	def test_Override_PerVersion(self) -> None:
 		"""A package that relicensed has one license before the switch and another after it."""
@@ -570,8 +583,8 @@ class Licenses(Testcase):
 
 		self.assertEqual([], self._resolve(old, self._json()))
 		self.assertEqual([], self._resolve(new, self._json()))
-		self.assertEqual(["MIT"], [lic.SPDXIdentifier for lic in old.Licenses])
-		self.assertEqual(["Apache-2.0"], [lic.SPDXIdentifier for lic in new.Licenses])
+		self.assertEqual(["MIT"], [lic.Identifier for lic in old.Licenses])
+		self.assertEqual(["Apache-2.0"], [lic.Identifier for lic in new.Licenses])
 
 	def test_Override_LicenseURL(self) -> None:
 		"""A package index has no field for the license's text, so its URL only comes from an override."""
