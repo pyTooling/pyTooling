@@ -136,6 +136,51 @@ In addition a dictionary (:data:`~pyTooling.Licensing.SPDX_INDEX`) maps from SPD
    # SPDX:              MIT
 
 
+.. _LICENSING/Unnamed:
+
+When no license is named
+************************
+
+Two situations SPDX's list can't answer, which have different nodes because they are different statements.
+
+**Nothing is named.** SPDX defines two values a license field may hold *instead of* an expression:
+
+.. code-block:: python
+
+   LicenseExpression.Parse("NONE")          # UnknownLicense, Absence == LicenseAbsence.NoLicense
+   LicenseExpression.Parse("NOASSERTION")   # UnknownLicense, Absence == LicenseAbsence.NoAssertion
+
+``NONE`` says the work states that no license applies. ``NOASSERTION`` says someone looked and declined to say -
+which is not the same claim, so :attr:`~pyTooling.Licensing.UnknownLicense.Absence` keeps them apart.
+
+.. attention::
+
+   Neither may be an **operand**. SPDX's grammar is ``simple-expression | compound-expression``, and these are
+   field values rather than terms inside one. ``MIT AND NOASSERTION`` raises
+   :exc:`~pyTooling.Licensing.LicenseExpressionError`, and assigning a
+   :attr:`~pyTooling.Licensing.LicenseExpression.Parent` to an :class:`~pyTooling.Licensing.UnknownLicense` raises
+   :exc:`ValueError`.
+
+**A license that exists but isn't published** - an EULA, or a company's own terms - has no SPDX identifier either,
+because the list is a list of published licenses. The only thing SPDX offers is its generic escape hatch:
+
+.. code-block:: python
+
+   str(ProprietaryLicense())   # 'LicenseRef-Proprietary'
+
+So :class:`~pyTooling.Licensing.ProprietaryLicense` **is** a :class:`~pyTooling.Licensing.LicenseReference`, and it
+can be an operand like any other license. It is constructed where something already knows -
+:mod:`pyTooling.Dependency` builds one from PyPI's ``License :: Other/Proprietary License`` classifier.
+
+.. note::
+
+   Parsing ``LicenseRef-Proprietary`` back gives a plain :class:`~pyTooling.Licensing.LicenseReference`, not a
+   :class:`~pyTooling.Licensing.ProprietaryLicense`. SPDX defines no convention that makes that identifier *mean*
+   proprietary rather than being one project's choice of words, so reading it as such would be a guess.
+
+   A proprietary license that has a name of its own is a reference with that name -
+   ``LicenseReference("AcmeEULA-1.0")`` renders as ``LicenseRef-AcmeEULA-1.0``.
+
 .. _LICENSING/URLs:
 
 Where a license is published
