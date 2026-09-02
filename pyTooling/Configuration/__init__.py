@@ -249,21 +249,24 @@ class Dictionary(Node):
 		"""
 		Return this node's values, so a dictionary node can be handed to code expecting a mapping.
 
-		This is :meth:`IterateValues` materialized.
+		This is :meth:`IterateValues` materialized. Its loop is inlined as a **list** comprehension rather than
+		consumed as a generator: the result is built in full anyway, and a generator - whether this method's own
+		expression or the one :meth:`IterateValues` returns - only adds a frame to step through it.
 
 		:returns: This node's values, in the order the document states them.
 		"""
-		return tuple(self.IterateValues())
+		return tuple([self[key] for key in self._keys])
 
 	def items(self) -> Tuple[Tuple[KeyT, ValueT], ...]:
 		"""
 		Return this node's key-value pairs, so a dictionary node can be handed to code expecting a mapping.
 
-		This is :meth:`IterateItems` materialized.
+		This is :meth:`IterateItems` materialized, with its loop inlined the same way and for the same reason as
+		:meth:`values`.
 
 		:returns: This node's ``(key, value)`` pairs, in the order the document states them.
 		"""
-		return tuple(self.IterateItems())
+		return tuple([(key, self[key]) for key in self._keys])
 
 	def get(self, key: KeyT, default: Nullable[ValueT] = None) -> Nullable[ValueT]:
 		"""
