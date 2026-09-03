@@ -45,6 +45,7 @@ The Licensing module implements mapping tables for various license names and ide
    See :ref:`high-level help <LICENSING>` for explanations and usage examples.
 """
 from dataclasses           import dataclass
+from enum                  import Enum, unique
 from re                    import compile as re_compile
 from typing                import Any, ClassVar, Generator, Optional as Nullable
 from pyTooling.Common      import getFullyQualifiedName
@@ -80,7 +81,11 @@ __all__ = [
 	"AGPL_3_0_only",
 	"AGPL_3_0_or_later",
 
-	"SPDX_INDEX"
+	"SPDX_INDEX",
+	"LICENSES_BY_CLASSIFIER",
+	"OSI_LICENSE_URLS",
+	"LICENSE_URLS",
+	"LICENSE_TEXT_URLS"
 ]
 
 
@@ -94,6 +99,28 @@ class LicenseExpressionError(LicensingError):
 	"""
 	The exception is raised when an SPDX license expression is malformed or names a license SPDX doesn't define.
 	"""
+
+
+@export
+@unique
+class LicenseAbsence(Enum):
+	"""
+	SPDX's two ways of stating that no license is named, which mean different things.
+
+	Both are values a license field may hold **on their own**; neither is part of the expression grammar, so neither
+	can be an operand of ``AND``, ``OR`` or ``WITH``.
+	"""
+
+	NoLicense =   "NONE"         #: The work states that no license applies to it.
+	NoAssertion = "NOASSERTION"  #: Someone looked and declined to state a license; nothing is claimed either way.
+
+	def __str__(self) -> str:
+		"""
+		Return the value in SPDX's spelling.
+
+		:returns: ``NONE`` or ``NOASSERTION``.
+		"""
+		return self.value
 
 
 @export
@@ -141,6 +168,102 @@ PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 }
 
 
+#: Mapping of SPDX identifiers to the page where the licensor publishes the license.
+#:
+#: Sourced from the SPDX License List's own ``seeAlso`` field, or from the licensor's domain where SPDX names none.
+#: A license whose only published home is its OSI page has **no entry** - that URL is
+#: :attr:`License.OSIURL` and isn't repeated here. ``MIT``, ``BSD-2-Clause`` and ``BSD-3-Clause`` are the three.
+LICENSE_URLS: dict[str, str] = {
+	"Apache-2.0":        "https://www.apache.org/licenses/LICENSE-2.0",
+	"ISC":               "https://www.isc.org/licenses/",
+	"MPL-2.0":           "https://www.mozilla.org/MPL/2.0/",
+	"BSL-1.0":           "https://www.boost.org/doc/user-guide/bsl.html",
+	"Zlib":              "https://zlib.net/zlib_license.html",
+	"PSF-2.0":           "https://docs.python.org/3/license.html",
+	"Unlicense":         "https://unlicense.org/",
+	"CC0-1.0":           "https://creativecommons.org/publicdomain/zero/1.0/",
+	"EPL-1.0":           "https://www.eclipse.org/legal/epl/epl-v10.html",
+	"EPL-2.0":           "https://www.eclipse.org/legal/epl-2.0/",
+	"GPL-2.0-only":      "https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
+	"GPL-2.0-or-later":  "https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
+	"LGPL-2.1-only":     "https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html",
+	"LGPL-2.1-or-later": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html",
+	"GPL-3.0-only":      "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
+	"GPL-3.0-or-later":  "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
+	"LGPL-3.0-only":     "https://www.gnu.org/licenses/lgpl-3.0-standalone.html",
+	"LGPL-3.0-or-later": "https://www.gnu.org/licenses/lgpl-3.0-standalone.html",
+}
+
+
+#: Mapping of SPDX identifiers to the license text, by the file extension it is published as.
+#:
+#: Keys are the extension without its dot - ``txt``, ``md``, ``rst``, ``tex``. What a license offers is entirely up
+#: to its licensor: the GNU licenses publish four formats, most publish one, and several publish none at all beyond
+#: an HTML page, which is :data:`LICENSE_URLS`.
+#:
+#: Every URL here answered an HTTP request with the license, so the table is what is **known** rather than a claim
+#: of completeness - a license absent from it may still publish a text nobody has looked up yet.
+LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
+	"Apache-2.0":        {"txt": "https://www.apache.org/licenses/LICENSE-2.0.txt"},
+	"MPL-2.0":           {"txt": "https://www.mozilla.org/media/MPL/2.0/index.txt"},
+	"BSL-1.0":           {"txt": "https://www.boost.org/LICENSE_1_0.txt"},
+	"Unlicense":         {"txt": "https://unlicense.org/UNLICENSE"},
+	"CC0-1.0":           {"txt": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt"},
+	"EPL-2.0":           {"txt": "https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.txt"},
+	"GPL-2.0-only":      {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
+	"GPL-2.0-or-later":  {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
+	"LGPL-2.1-only":     {"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex"},
+	"LGPL-2.1-or-later": {"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex"},
+	"GPL-3.0-only":      {
+		"txt": "https://www.gnu.org/licenses/gpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/gpl-3.0.md",
+		"rst": "https://www.gnu.org/licenses/gpl-3.0.rst",
+		"tex": "https://www.gnu.org/licenses/gpl-3.0.tex",
+	},
+	"GPL-3.0-or-later":  {
+		"txt": "https://www.gnu.org/licenses/gpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/gpl-3.0.md",
+		"rst": "https://www.gnu.org/licenses/gpl-3.0.rst",
+		"tex": "https://www.gnu.org/licenses/gpl-3.0.tex",
+	},
+	"AGPL-3.0-only":     {"txt": "https://www.gnu.org/licenses/agpl-3.0.txt"},
+	"AGPL-3.0-or-later": {"txt": "https://www.gnu.org/licenses/agpl-3.0.txt"},
+}
+
+#: Mapping of SPDX identifiers to the license's page at the
+#: `Open Source Initiative <https://opensource.org/licenses>`__.
+#:
+#: OSI's slugs don't follow the SPDX identifier and can't be derived from it: ``PSF-2.0`` is published as
+#: ``Python-2.0``, and OSI has **one** page per license where SPDX has two identifiers - ``GPL-2.0-only`` and
+#: ``GPL-2.0-or-later`` both point at it, because *only* versus *or later* is SPDX's distinction, not OSI's.
+#:
+#: A license OSI hasn't approved has no entry, which is why ``CC0-1.0`` is absent.
+OSI_LICENSE_URLS: dict[str, str] = {
+	"Apache-2.0":        "https://opensource.org/license/apache-2.0",
+	"BSD-2-Clause":      "https://opensource.org/license/bsd-2-clause",
+	"BSD-3-Clause":      "https://opensource.org/license/bsd-3-clause",
+	"MIT":               "https://opensource.org/license/mit",
+	"ISC":               "https://opensource.org/license/isc",
+	"MPL-2.0":           "https://opensource.org/license/mpl-2.0",
+	"BSL-1.0":           "https://opensource.org/license/bsl-1.0",
+	"Zlib":              "https://opensource.org/license/zlib",
+	"PSF-2.0":           "https://opensource.org/license/Python-2.0",
+	"Unlicense":         "https://opensource.org/license/unlicense",
+	"EPL-1.0":           "https://opensource.org/license/epl-1.0",
+	"EPL-2.0":           "https://opensource.org/license/epl-2.0",
+	"LGPL-2.1-only":     "https://opensource.org/license/lgpl-2-1",
+	"LGPL-2.1-or-later": "https://opensource.org/license/lgpl-2-1",
+	"LGPL-3.0-only":     "https://opensource.org/license/lgpl-3-0",
+	"LGPL-3.0-or-later": "https://opensource.org/license/lgpl-3-0",
+	"GPL-2.0-only":      "https://opensource.org/license/gpl-2.0",
+	"GPL-2.0-or-later":  "https://opensource.org/license/gpl-2.0",
+	"GPL-3.0-only":      "https://opensource.org/license/gpl-3.0",
+	"GPL-3.0-or-later":  "https://opensource.org/license/gpl-3.0",
+	"AGPL-3.0-only":     "https://opensource.org/license/agpl-3-0",
+	"AGPL-3.0-or-later": "https://opensource.org/license/agpl-3-0",
+}
+
+
 @export
 class License(metaclass=ExtendedType, slots=True):
 	"""Representation of a license."""
@@ -181,6 +304,80 @@ class License(metaclass=ExtendedType, slots=True):
 		:returns: The unique SPDX identifier.
 		"""
 		return self._spdxIdentifier
+
+	@readonly
+	def SPDXURL(self) -> str:
+		"""
+		Returns the URL of this license's page in the `SPDX License List <https://spdx.org/licenses/>`__.
+
+		SPDX publishes one page per identifier at a fixed address, so this is derived from
+		:attr:`SPDXIdentifier` rather than stored. A license whose identifier isn't on that list has no page there,
+		and the derived URL won't resolve.
+
+		:returns: URL of the license's page at SPDX.
+		"""
+		return f"https://spdx.org/licenses/{self._spdxIdentifier}.html"
+
+	@readonly
+	def URL(self) -> Nullable[str]:
+		"""
+		Returns the page where the licensor publishes this license.
+
+		This is looked up in :data:`LICENSE_URLS`. It is the licensor's own page - ``https://www.apache.org/licenses/
+		LICENSE-2.0`` for the Apache License 2.0 - which is not the same thing as :attr:`SPDXURL` or :attr:`OSIURL`,
+		the two catalogue entries describing it.
+
+		A license whose only published home *is* its OSI page has no entry here rather than a duplicate of
+		:attr:`OSIURL`; ``MIT``, ``BSD-2-Clause`` and ``BSD-3-Clause`` are those.
+
+		:returns: URL of the license's own page, or ``None`` if the licensor publishes none.
+
+		.. seealso::
+
+		   :attr:`TextURLs`
+		      |rarr| The same license as text, by format.
+		"""
+		return LICENSE_URLS.get(self._spdxIdentifier, None)
+
+	@readonly
+	def TextURLs(self) -> dict[str, str]:
+		"""
+		Returns the URLs of this license's text, keyed by the format it is published as.
+
+		Keys are the file extension without its dot: ``txt``, ``md``, ``rst``, ``tex``. Which formats exist is the
+		licensor's choice - the GNU licenses publish four, most publish one, and several publish none.
+
+		The table is what is **known**, not a claim of completeness: an empty mapping means no URL is recorded, not
+		that the licensor publishes no text. Every URL in it answered an HTTP request with the license.
+
+		.. code-block:: python
+
+		   Apache_2_0_License.TextURLs["txt"]   # https://www.apache.org/licenses/LICENSE-2.0.txt
+		   GPL_3_0_only.TextURLs["rst"]         # https://www.gnu.org/licenses/gpl-3.0.rst
+
+		A **copy** is returned, so a caller can't edit :data:`LICENSE_TEXT_URLS` through it.
+
+		:returns: The license text's URLs by format, or an empty dictionary if none is published.
+		"""
+		return dict(LICENSE_TEXT_URLS.get(self._spdxIdentifier, {}))
+
+	@readonly
+	def OSIURL(self) -> Nullable[str]:
+		"""
+		Returns the URL of this license's page at the `Open Source Initiative <https://opensource.org/licenses>`__.
+
+		This is looked up in :data:`OSI_LICENSE_URLS` rather than derived: OSI's slugs don't follow the SPDX
+		identifier, and OSI has one page where SPDX has two identifiers - ``GPL-2.0-only`` and ``GPL-2.0-or-later``
+		share it.
+
+		:returns: URL of the license's page at OSI, or ``None`` if OSI doesn't publish it.
+
+		.. seealso::
+
+		   :attr:`OSIApproved`
+		      |rarr| Whether OSI approved this license at all.
+		"""
+		return OSI_LICENSE_URLS.get(self._spdxIdentifier, None)
 
 	@readonly
 	def OSIApproved(self) -> bool:
@@ -356,6 +553,38 @@ LICENSES: tuple[License, ...] = (
 SPDX_INDEX: dict[str, License] = {spdxLicense.SPDXIdentifier: spdxLicense for spdxLicense in LICENSES}
 
 
+@export
+def buildClassifierIndex() -> dict[str, tuple[License, ...]]:
+	"""
+	Index the predefined licenses by the Python classifier they are published as.
+
+	A license without a classifier is skipped rather than reported: :attr:`License.PythonClassifier` raises for it,
+	and a license the Python ecosystem has no classifier for simply can't be found that way.
+
+	The licenses indexed are :data:`LICENSES`, and :data:`LICENSES_BY_CLASSIFIER` holds what this returns, built
+	once when the module is imported. Reading that constant is the usual way to ask; calling this rebuilds it.
+
+	:returns: Every classifier, mapped to the licenses it can mean.
+	"""
+	index: dict[str, list[License]] = {}
+	for spdxLicense in LICENSES:
+		try:
+			classifier = spdxLicense.PythonClassifier
+		except ValueError:  # pragma: no cover
+			continue
+
+		index.setdefault(classifier, []).append(spdxLicense)
+
+	return {classifier: tuple(licenses) for classifier, licenses in index.items()}
+
+
+#: Mapping of a Python license classifier to the licenses it can mean.
+#:
+#: The mapping is one-to-one except for ``License :: OSI Approved :: BSD License``, which means either
+#: :data:`BSD_2_Clause_License` or :data:`BSD_3_Clause_License` with nothing in the classifier to tell them apart.
+LICENSES_BY_CLASSIFIER: dict[str, tuple[License, ...]] = buildClassifierIndex()
+
+
 #: The :class:`License` class under a name no expression node shadows with a property of its own.
 _LicenseType = License
 
@@ -424,16 +653,21 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 
 	PRECEDENCE: ClassVar[int] = 0  #: Precedence of this node's operator; a lower value binds tighter.
 
-	_parent: Nullable["Operator"]  #: The operator this expression is an operand of, or ``None`` at the root.
-	_root:   "LicenseExpression"   #: The outermost expression this node belongs to; ``self`` at the root.
+	_parent:       Nullable["Operator"]  #: The operator this expression is an operand of, or ``None`` at the root.
+	_root:         "LicenseExpression"   #: The outermost expression this node belongs to; ``self`` at the root.
+	_originalText: str                   #: The text this expression stands for, on the root; empty if there is none.
 
-	def __init__(self, parent: Nullable["Operator"] = None) -> None:
+	def __init__(self, parent: Nullable["Operator"] = None, originalText: str = "") -> None:
 		"""
 		Initialize an expression node.
 
-		:param parent:     Optional, the operator this node becomes an operand of.
-		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
+		:param parent:       Optional, the operator this node becomes an operand of.
+		:param originalText: Optional, the text this expression stands for. :meth:`Parse` fills it in; a node built
+		                     in code carries it when the caller knows what was written.
+		:raises TypeError:   If parameter 'parent' is not of type :class:`Operator`.
 		"""
+		self._originalText = originalText
+
 		if parent is None:
 			self._parent = None
 			self._root =   self
@@ -476,6 +710,24 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 			expression._root = parent._root
 
 	@readonly
+	def OriginalText(self) -> str:
+		"""
+		Read-only property to access the text this expression stands for (:attr:`_originalText`).
+
+		A tree is parsed from one string, so **every node answers with the root's** - reading it from a leaf gives the
+		whole expression, not that leaf's fragment. :meth:`__str__` re-renders the tree canonically, which is not
+		always what was written: ``Apache-2.0 or MIT`` parses and renders as ``Apache-2.0 OR MIT``. This is what was
+		written.
+
+		:meth:`Parse` fills it in. A node **built** in code carries it when the caller knows what was stated and the
+		expression can't be parsed from it - an :class:`UnknownLicense` standing for a license that didn't resolve
+		keeps the text that didn't, and a :class:`ProprietaryLicense` keeps the classifier it was built from.
+
+		:returns: The text this expression stands for, or an empty string if there is none.
+		"""
+		return self._root._originalText
+
+	@readonly
 	def Root(self) -> "LicenseExpression":
 		"""
 		Read-only property to access the outermost expression this node belongs to (:attr:`_root`).
@@ -512,7 +764,10 @@ class LicenseExpression(metaclass=ExtendedType, slots=True):
 		:raises LicenseExpressionError: If the expression is empty, malformed, or names a license that isn't known.
 		"""
 		parser = _LicenseExpressionParser(expression)
-		return parser.Parse()
+		root =   parser.Parse()
+		root._originalText = expression
+
+		return root
 
 	@abstractmethod
 	def __str__(self) -> str:  # type: ignore[empty-body]
@@ -542,9 +797,53 @@ class Operator(LicenseExpression):
 
 
 @export
-class SPDXLicense(LicenseExpression):
+@abstractclass
+class BaseLicense(LicenseExpression):
+	"""
+	Base-class of every expression node that names a license the work is under.
+
+	Four nodes are one:
+
+	:class:`SPDXLicense`
+	  |rarr| a license on the SPDX License List, named by its identifier.
+	:class:`LicenseReference`
+	  |rarr| a license that is not on that list, written as ``LicenseRef-<id>``.
+	:class:`ProprietaryLicense`
+	  |rarr| a license that isn't published at all; a :class:`LicenseReference` with a fixed identifier.
+	:class:`UnknownLicense`
+	  |rarr| SPDX's ``NONE`` or ``NOASSERTION`` - no license is named.
+
+	They have no common representation - SPDX knows the first as a :class:`License` object and the rest not at all -
+	so this class is what lets them be collected and reported together:
+
+	.. code-block:: python
+
+	   [term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
+	   # ['MIT', 'LicenseRef-Proprietary']   for 'MIT AND LicenseRef-Proprietary'
+
+	:class:`LicenseException` is **not** one of these. The right operand of ``WITH`` is an exception granted from a
+	license, not a license the work is under.
+	"""
+
+	@readonly
+	@abstractmethod
+	def Identifier(self) -> str:  # type: ignore[empty-body]
+		"""
+		Read-only property to return the identifier naming this license.
+
+		:returns: The SPDX identifier, or the ``LicenseRef-`` reference, in the spelling an expression writes it.
+		"""
+
+
+@export
+class SPDXLicense(BaseLicense):
 	"""
 	A single license in an expression, named by its SPDX identifier.
+
+	The identifiers an expression may name are the `SPDX License List <https://spdx.org/licenses/>`__; the ones this
+	package predefines are :data:`LICENSES`, and :attr:`License` reaches the :class:`License` object holding a
+	license's name, approval flags and the URLs of its text. A license the list defines but this package doesn't
+	predefine is a :class:`LicenseReference` when written as ``LicenseRef-``, and otherwise doesn't parse.
 	"""
 
 	_license: _LicenseType  #: The well-known license this node refers to.
@@ -598,7 +897,7 @@ class SPDXLicense(LicenseExpression):
 
 
 @export
-class LicenseReference(LicenseExpression):
+class LicenseReference(BaseLicense):
 	"""
 	A license that isn't on the SPDX License List, written as ``LicenseRef-<id>``.
 
@@ -671,6 +970,18 @@ class LicenseReference(LicenseExpression):
 		"""
 		return self._documentIdentifier
 
+	@readonly
+	def Identifier(self) -> str:
+		"""
+		Read-only property to return the reference in the spelling an expression writes it.
+
+		This is the whole reference, ``DocumentRef-`` and all - :attr:`LicenseIdentifier` is the part following
+		``LicenseRef-`` on its own.
+
+		:returns: The license reference.
+		"""
+		return str(self)
+
 	def __str__(self) -> str:
 		"""
 		Return the reference in SPDX syntax.
@@ -679,6 +990,131 @@ class LicenseReference(LicenseExpression):
 		"""
 		document = "" if self._documentIdentifier is None else f"DocumentRef-{self._documentIdentifier}:"
 		return f"{document}LicenseRef-{self._licenseIdentifier}"
+
+
+@export
+class ProprietaryLicense(LicenseReference):
+	"""
+	A license that is not open source and is not published under any identifier - an EULA, or a company's own terms.
+
+	SPDX has no way to say this. Its list is a list of *published* licenses, and a proprietary one is by definition
+	not on it, so the only thing SPDX offers is the generic escape hatch: this renders as ``LicenseRef-Proprietary``
+	and **is** a :class:`LicenseReference`, because that is what it writes.
+
+	.. code-block:: python
+
+	   str(ProprietaryLicense())   # 'LicenseRef-Proprietary'
+
+	The round-trip is deliberately one-way: parsing ``LicenseRef-Proprietary`` back gives a plain
+	:class:`LicenseReference`, because SPDX defines no convention that makes that identifier mean *proprietary*
+	rather than being one project's choice of words. This class is constructed where something else already knows -
+	:mod:`pyTooling.Dependency` builds one from PyPI's ``License :: Other/Proprietary License`` classifier.
+
+	A proprietary license that *does* have a name of its own is a :class:`LicenseReference` with that name, not this
+	class - ``LicenseReference("AcmeEULA-1.0")`` renders as ``LicenseRef-AcmeEULA-1.0``.
+	"""
+
+	#: The identifier a proprietary license is written with, following ``LicenseRef-``.
+	IDENTIFIER: ClassVar[str] = "Proprietary"
+
+	def __init__(self, parent: Nullable[Operator] = None, originalText: str = "") -> None:
+		"""
+		Initialize a proprietary license.
+
+		:param parent:       Optional, the operator this node becomes an operand of.
+		:param originalText: Optional, what stated this - a classifier, say - since it can't have been parsed.
+		:raises TypeError:   If parameter 'parent' is not of type :class:`Operator`.
+		"""
+		super().__init__(self.IDENTIFIER, None, parent)
+
+		self._originalText = originalText
+
+
+@export
+class UnknownLicense(BaseLicense):
+	"""
+	SPDX's statement that no license is named: ``NONE`` or ``NOASSERTION``.
+
+	The two are different claims - :attr:`LicenseAbsence.NoLicense` says the work states that no license applies,
+	:attr:`LicenseAbsence.NoAssertion` says someone looked and declined to say - so which one is asked with
+	:attr:`Absence`.
+
+	.. code-block:: python
+
+	   LicenseExpression.Parse("NOASSERTION")   # UnknownLicense(LicenseAbsence.NoAssertion)
+	   LicenseExpression.Parse("NONE")          # UnknownLicense(LicenseAbsence.NoLicense)
+
+	**Neither can be an operand.** SPDX's grammar is ``simple-expression | compound-expression``; ``NONE`` and
+	``NOASSERTION`` are values a license *field* may hold instead of an expression, not terms inside one. So
+	``MIT AND NOASSERTION`` doesn't parse, and this node refuses a :attr:`~LicenseExpression.Parent`.
+
+	.. seealso::
+
+	   :class:`ProprietaryLicense`
+	      |rarr| For a license that exists but isn't published - which is a different statement from this one.
+	"""
+
+	_absence: LicenseAbsence  #: Which of SPDX's two absences this node states.
+
+	def __init__(self, absence: LicenseAbsence = LicenseAbsence.NoAssertion, originalText: str = "") -> None:
+		"""
+		Initialize an absent license.
+
+		No ``parent`` parameter, because neither value may be an operand.
+
+		:param absence:      Optional, which absence is stated. Defaults to :attr:`LicenseAbsence.NoAssertion`.
+		:param originalText: Optional, what was stated. A license nothing could be made of keeps the text here, which
+		                     is the only place left holding it.
+		:raises TypeError:   If parameter 'absence' is not of type :class:`LicenseAbsence`.
+		"""
+		super().__init__(None, originalText)
+
+		if not isinstance(absence, LicenseAbsence):
+			ex = TypeError("Parameter 'absence' is not a LicenseAbsence.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(absence)}'.")
+			raise ex
+
+		self._absence = absence
+
+	@readonly
+	def Absence(self) -> LicenseAbsence:
+		"""
+		Read-only property to access which absence this node states (:attr:`_absence`).
+
+		:returns: The absence stated.
+		"""
+		return self._absence
+
+	@readonly
+	def Identifier(self) -> str:
+		"""
+		Read-only property to access the absence in SPDX's spelling (:pycode:`_absence.value`).
+
+		:returns: ``NONE`` or ``NOASSERTION``.
+		"""
+		return self._absence.value
+
+	@readonly
+	def Parent(self) -> Nullable[Operator]:
+		"""
+		Read-only property to access the operator this expression is an operand of (:attr:`_parent`).
+
+		Always ``None``, and **read-only** where every other node's is assignable: ``NONE`` and ``NOASSERTION`` are
+		values a license field may hold *instead of* an expression, and SPDX's grammar has no place for either
+		inside one. So this node is always the whole expression, and assigning a parent raises
+		:exc:`AttributeError`.
+
+		:returns: ``None``, always.
+		"""
+		return self._parent
+
+	def __str__(self) -> str:
+		"""
+		Return the absence in SPDX's spelling.
+
+		:returns: ``NONE`` or ``NOASSERTION``.
+		"""
+		return self._absence.value
 
 
 @export
@@ -1083,9 +1519,19 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		"""
 		Parse the whole expression.
 
+		``NONE`` and ``NOASSERTION`` are read here rather than in the descent, because SPDX allows them **only** as
+		the entire expression - they are values a license field may hold instead of one, not terms inside one. Seeing
+		either anywhere else leaves it to the descent, where it is an unknown license identifier.
+
 		:returns:                       The root of the expression tree.
 		:raises LicenseExpressionError: If the expression is malformed or names an unknown license.
 		"""
+		if len(self._tokens) == 1:
+			for absence in LicenseAbsence:
+				if self._tokens[0] == absence.value:
+					self._position = 1
+					return UnknownLicense(absence)
+
 		result = self._ParseOr()
 
 		if self._position < len(self._tokens):
@@ -1168,7 +1614,14 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 			expression = SPDXLicense(spdxLicense)
 		else:
 			ex = LicenseExpressionError(f"License expression '{self._expression}' names unknown license '{identifier}'.")
-			ex.add_note("Known licenses are the SPDX identifiers in 'pyTooling.Licensing.SPDX_INDEX'.")
+
+			if any(identifier == absence.value for absence in LicenseAbsence):
+				ex.add_note(f"'{identifier}' is a value a license field may hold instead of an expression.")
+				ex.add_note("SPDX's grammar has no place for it inside one, so it may only stand alone.")
+			else:
+				ex.add_note("Known licenses are the SPDX identifiers in 'pyTooling.Licensing.SPDX_INDEX'.")
+				ex.add_note("A license that isn't on that list is written 'LicenseRef-<id>'.")
+
 			raise ex
 
 		return OrLaterOperator(expression) if orLater else expression

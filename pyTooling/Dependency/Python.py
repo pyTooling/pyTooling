@@ -38,13 +38,15 @@ Implementation of package dependencies.
 from __future__           import annotations
 
 from asyncio              import run as asyncio_run, gather as asyncio_gather
-from datetime             import datetime
+from datetime             import date, datetime
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
-from re                   import compile as re_compile
+from pathlib              import Path
+from re                   import compile as re_compile, Pattern
 from threading            import RLock
-from typing               import Optional as Nullable, Union, Iterable, Mapping
+from typing               import Any, ClassVar, Optional as Nullable, Union, Iterable, Mapping, Self
 
+from pyTooling.Configuration import Dictionary
 from pyTooling.Exceptions import MissingDependencyError
 
 try:
@@ -67,15 +69,347 @@ from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import BrokenRequirementWarning, NoSessionAvailableError, ProjectNotFoundError
-from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError
+from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError, NoSessionAvailableError
+from pyTooling.Dependency      import ProjectNotFoundError
+from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
+from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
+from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
+from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
 
+
+#: Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it.
+_LICENSE_NOTE_LENGTH = 64
+
+#: PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
+#: :class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
+_PROPRIETARY_CLASSIFIER = "License :: Other/Proprietary License"
+
+
+#: Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first.
+_REPOSITORY_URL_ALIASES    = ("source code", "source", "code", "repository", "github", "gitlab")
+_DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
+_ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
+_PROJECT_URL_ALIASES       = ("homepage", "home page", "home")
+_CHANGELOG_URL_ALIASES     = ("changelog", "changes", "release notes", "whatsnew", "what's new")
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
+
+
+@export
+class LicenseOverrides(metaclass=ExtendedType, slots=True):
+	"""
+	Licenses stated by hand, for the packages a package index can't answer for.
+
+	A package index is not a reliable source of license information: roughly half of a typical dependency set
+	publishes a PEP 639 ``license_expression``, some state a license *name* where an identifier is expected, and the
+	classifier ``License :: OSI Approved :: BSD License`` means either ``BSD-2-Clause`` or ``BSD-3-Clause`` with no
+	way to tell which. Those packages are answered here instead of guessed at.
+
+	The file is YAML, and a license may be stated for the package as a whole or per version - a package that
+	relicensed has one license before the switch and another after it:
+
+	.. code-block:: yaml
+
+	   version:    "0.1"
+	   analysedAt: 2026-09-02
+
+	   packages:
+	     colorama:
+	       license:    BSD-3-Clause
+	       licenseURL: https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt
+	       repository: https://GitHub.com/tartley/colorama
+	     "igraph >=0.10":
+	       license: GPL-2.0-or-later
+	     "igraph <0.10":
+	       license: GPL-2.0-only
+	     "igraph 0.9.10":
+	       license: GPL-2.0-only
+
+	``version`` states the structure this file is written for and is checked against
+	:attr:`SCHEMA_VERSION`; ``analysedAt`` is the day a human last checked the statements - see :attr:`AnalysedAt`.
+
+	**A key is a package name, optionally followed by a version expression** - the shape a requirement line has.
+	The expression is read by :class:`~pyTooling.Versioning.PythonVersionExpression`, so it is the same language a
+	requirement file writes, and two of its rules are what make one key form enough:
+
+	* **a bare version is an equality**, so ``igraph 0.9.10`` and ``igraph ==0.9.10`` state the same thing, and
+	* **an expression with no constraints matches every version**, so ``igraph`` on its own is the statement for
+	  every version rather than a special case.
+
+	Keys are matched in the order the file writes them and the first one a version satisfies wins, so a narrower
+	statement goes above the bare name it refines. Asking without a version answers from the bare-name key only.
+
+	A key states a whole entry, so ``licenseURL`` and ``repository`` can differ per version too - a project that
+	moved forge between releases has two ``repository`` statements and no special case for it.
+	"""
+
+	#: Structure this parser reads. A file states the one it was written for as its ``version`` field, and a file
+	#: stating a different one is rejected rather than read on the chance that it still fits.
+	SCHEMA_VERSION: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
+
+	#: Splits a key into the package name and whatever follows it. A name stops at the first character an operator
+	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
+	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
+
+	_analysedAt:   Nullable[date]                             #: Day the statements were last checked by a human.
+	#: License expression per package, by the version expression its key states, in the file's order.
+	_licenses:     dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
+	#: URL of the license's text per package, by the version expression its key states, in the file's order.
+	_licenseURLs:  dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
+	#: URL of the source repository per package, by the version expression its key states, in the file's order.
+	_repositories: dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
+
+	def __init__(self, analysedAt: Nullable[date] = None) -> None:
+		"""
+		Initialize an empty set of overrides.
+
+		:param analysedAt: Optional, the day these statements were last checked by a human.
+		"""
+		self._analysedAt   = analysedAt
+		self._licenses     = {}
+		self._licenseURLs  = {}
+		self._repositories = {}
+
+	@readonly
+	def AnalysedAt(self) -> Nullable[date]:
+		"""
+		Read-only property to access the day these statements were last checked (:attr:`_analysedAt`).
+
+		A package index answers for itself every time it is asked, so what it says is as old as the request. These
+		statements are written by hand and are as old as whoever last looked, which nothing else records - so a
+		report can mark an entry *overridden*, and *stale* once this date is far enough back.
+
+		:meth:`FromFile` requires it; :meth:`FromDictionary` doesn't, because overrides assembled in code are as old
+		as the code.
+
+		:returns: The day of the last analysis, or ``None`` if the overrides were built without one.
+		"""
+		return self._analysedAt
+
+	@classmethod
+	def FromFile(cls, path: Path) -> Self:
+		"""
+		Read overrides from a YAML file.
+
+		The file is read through :class:`pyTooling.Configuration.YAML.Configuration`, and the ``packages`` node is
+		handed to :meth:`FromDictionary` **as it is** - a configuration node answers ``items()`` and ``get()``, so
+		there is nothing to convert and no second constructor for the node tree.
+
+		``version`` is **required** and is the first thing checked: it states which structure the file was written
+		for, and is compared against :attr:`SCHEMA_VERSION`. **Quote it** - unquoted, YAML reads ``0.1`` as a float,
+		and a float loses a trailing zero, so ``1.10`` would arrive as ``1.1``.
+
+		``analysedAt`` is **required** too, and is the day a human last checked these statements. It is an ISO-8601
+		date, written either way round - ``analysedAt: 2026-09-02`` reads as YAML's own date type, and
+		``analysedAt: "2026-09-02"`` as a string. A configuration hands both over in the same ISO-8601 spelling.
+
+		:param path:                    Path of the YAML file to read.
+		:returns:                       The overrides the file states.
+		:raises MissingDependencyError: If ``ruamel.yaml`` isn't installed.
+		:raises FileNotFoundError:      If the file doesn't exist.
+		:raises ConfigurationError:     If the file isn't a YAML document describing a mapping. |br|
+		                                An empty file is one, and states no overrides - but it states no
+		                                ``version`` either, so it is rejected by the next check.
+		:raises DependencyError:        If ``version`` is missing, isn't a version, or isn't
+		                                :attr:`SCHEMA_VERSION`.
+		:raises DependencyError:        If ``analysedAt`` is missing or isn't an ISO-8601 date.
+		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
+		                                A file stating no packages is fine and gives no overrides.
+		:raises DependencyError:        If a version expression in the file can't be parsed.
+		"""
+		# Imported here rather than at module level, so a missing 'ruamel.yaml' is reported when the overrides are
+		# read instead of when 'pyTooling.Dependency.Python' is imported.
+		from pyTooling.Configuration.YAML import Configuration
+
+		# 'Configuration' reports a missing file too, as a 'ConfigurationError' naming the *format*. This says which
+		# file of ours is missing, and is what the signature promises, so it stays.
+		if not path.exists():
+			raise FileNotFoundError(f"License override file '{path}' not found.")
+
+		configuration = Configuration(path)
+
+		if (schemaVersion := configuration.get("version", None)) is None:
+			ex = DependencyError(f"License override file '{path}' states no 'version'.")
+			ex.add_note("It says which structure the file is written for, so a later one can be told apart.")
+			ex.add_note(f'Add it as the first field: version: "{cls.SCHEMA_VERSION}"')
+			raise ex
+
+		try:
+			fileVersion = SemanticVersion.Parse(str(schemaVersion))
+		except ValueError as cause:
+			ex = DependencyError(f"License override file '{path}' states a 'version' that isn't a version number.")
+			ex.add_note(f"Got '{schemaVersion}'.")
+			raise ex from cause
+
+		if fileVersion != cls.SCHEMA_VERSION:
+			ex = DependencyError(f"License override file '{path}' is written for structure '{fileVersion}'.")
+			ex.add_note(f"This reads '{cls.SCHEMA_VERSION}'.")
+			raise ex
+
+		if (analysedDay := configuration.get("analysedAt", None)) is None:
+			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' date.")
+			ex.add_note("These statements are written by hand, so nothing else records how old they are.")
+			ex.add_note("Add an ISO-8601 date, for example: analysedAt: 2026-09-02")
+			raise ex
+
+		try:
+			analysedAt = date.fromisoformat(str(analysedDay))
+		except ValueError as cause:
+			ex = DependencyError(f"License override file '{path}' states an 'analysedAt' that isn't an ISO-8601 date.")
+			ex.add_note(f"Got '{analysedDay}'.")
+			ex.add_note("Write it as an ISO-8601 date: analysedAt: 2026-09-02")
+			raise ex from cause
+
+		packages = configuration.get("packages", None)
+		if packages is None:
+			return cls(analysedAt)
+		elif not isinstance(packages, Dictionary):
+			ex = DependencyError(f"License override file '{path}' states a 'packages' node that isn't a mapping.")
+			ex.add_note(f"Got '{packages}'.")
+			raise ex
+
+		return cls.FromDictionary(packages, analysedAt)
+
+	@classmethod
+	def FromDictionary(cls, packages: Union[Mapping[str, Any], Dictionary], analysedAt: Nullable[date] = None) -> Self:
+		"""
+		Build overrides from an already parsed mapping.
+
+		Keeping this apart from :meth:`FromFile` is what lets the overrides be assembled in code, and tested, without
+		a file and without YAML.
+
+		A :class:`~pyTooling.Configuration.Dictionary` is accepted beside a plain :class:`dict`, which is what lets
+		:meth:`FromFile` hand over a configuration node without flattening it first. Only ``items()`` and ``get()``
+		are read, so a configuration node of either backend fits - it is **not** a :class:`~typing.Mapping`, because
+		its bare iteration yields values rather than keys.
+
+		:param packages:         Mapping of a package's name to what is stated for it.
+		:param analysedAt:       Optional, the day these statements were last checked. :meth:`FromFile` requires one;
+		                         overrides assembled in code are as old as the code and need none.
+		:returns:                The overrides the mapping states.
+		:raises DependencyError: If a version specifier can't be parsed.
+		"""
+		overrides = cls(analysedAt)
+
+		# A configuration node types its values as the whole 'ValueT' union, which every '.get' below would then
+		# have to be narrowed against. What is read here is a document either way, so it is read as one.
+		statement: Any
+		for packageKey, statement in packages.items():
+			name, versionExpression = cls._SplitKey(str(packageKey))
+
+			for field, table in (
+				("license",    overrides._licenses),
+				("licenseURL", overrides._licenseURLs),
+				("repository", overrides._repositories),
+			):
+				if (value := statement.get(field, None)) is not None:
+					table.setdefault(name, []).append((versionExpression, str(value)))
+
+		return overrides
+
+	@classmethod
+	def _SplitKey(cls, packageKey: str) -> tuple[str, PythonVersionExpression[SemanticVersion]]:
+		"""
+		Split a key into the package it names and the version expression it restricts that package to.
+
+		A key is the shape a requirement line has - a name, then optionally a version expression, with or without a
+		space between them. A key naming only a package gives an expression with no constraints, which matches every
+		version.
+
+		:param packageKey:       The key as the file writes it.
+		:returns:                The canonical package name, and the version expression.
+		:raises DependencyError: If what follows the name isn't a version expression.
+		"""
+		match = cls._PACKAGE_KEY.match(packageKey)
+		if match is None:                                              # pragma: no cover
+			ex = DependencyError(f"Key '{packageKey}' doesn't name a package.")
+			raise ex
+
+		try:
+			versionExpression: PythonVersionExpression[SemanticVersion] = PythonVersionExpression.Parse(match["expression"])
+		except (LicenseExpressionError, ValueError) as cause:
+			ex = DependencyError(f"Key '{packageKey}' states a version expression that can't be parsed.")
+			ex.add_note(f"Got '{match['expression']}'.")
+			ex.add_note("A bare version is an equality, so 'igraph 0.10' and 'igraph ==0.10' state the same thing.")
+			raise ex from cause
+
+		return canonicalize_name(match["name"]), versionExpression
+
+	def LicenseOf(self, packageName: str, version: Nullable[SemanticVersion] = None) -> Nullable[str]:
+		"""
+		Return the license expression stated for a package, or for one of its versions.
+
+		Keys are tried in the order the file writes them and the first one this version satisfies wins, so a
+		narrower statement answers before the bare name it refines.
+
+		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for. Without one, only a key naming no version answers.
+		:returns:           The license expression stated, or ``None`` if the package isn't overridden.
+		"""
+		return self._Lookup(self._licenses, packageName, version)
+
+	def LicenseURLOf(self, packageName: str, version: Nullable[SemanticVersion] = None) -> Nullable[str]:
+		"""
+		Return the URL of a package's license text, where one was stated.
+
+		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for. Without one, only a key naming no version answers.
+		:returns:           The URL stated, or ``None``.
+		"""
+		return self._Lookup(self._licenseURLs, packageName, version)
+
+	@staticmethod
+	def _Lookup(
+		table:       dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]],
+		packageName: str,
+		version:     Nullable[SemanticVersion]
+	) -> Nullable[str]:
+		"""
+		Return the first statement in one table whose key applies to a version.
+
+		:param table:       One of the per-package tables.
+		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for. Without one, only an unrestricted key answers.
+		:returns:           What that key states, or ``None`` if none applies.
+		"""
+		if (entries := table.get(canonicalize_name(packageName), None)) is None:
+			return None
+
+		for versionExpression, value in entries:
+			# Without a version, only a key that restricts nothing can be said to apply.
+			if version in versionExpression if version is not None else len(versionExpression) == 0:
+				return value
+
+		return None
+
+	def RepositoryOf(self, packageName: str, version: Nullable[SemanticVersion] = None) -> Nullable[str]:
+		"""
+		Return the URL of a package's source repository, where one was stated.
+
+		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for. Without one, only a key naming no version answers.
+		:returns:           The URL stated, or ``None``.
+		"""
+		return self._Lookup(self._repositories, packageName, version)
+
+	def __len__(self) -> int:
+		"""
+		Return the number of packages that are overridden.
+
+		:returns: Number of overridden packages.
+		"""
+		return len(set(self._licenses) | set(self._licenseURLs) | set(self._repositories))
+
+	def __str__(self) -> str:
+		"""
+		Return a string representation of these overrides.
+
+		:returns: The number of packages that are overridden.
+		"""
+		return f"LicenseOverrides({len(self)} packages)"
 
 
 @export
@@ -435,6 +769,9 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:param json: The parsed JSON document describing this release.
 		"""
 		infoNode = json["info"]
+		self._ResolveLicense(infoNode)
+		self._ResolveURLs(infoNode)
+
 		requirements = [Requirement(requirement) for requirement in (infoNode["requires_dist"] or ())]
 
 		# The declared spelling is kept as the key, while the canonical one - 'code_style' and 'code-style' are the
@@ -477,6 +814,145 @@ class Release(PackageVersion, LazyLoadableMixin):
 				# self._requirements[0] = brokenRequirements
 
 		self.__lazy_state__ = LazyLoaderState.FullyLoaded
+
+	def _ResolveLicense(self, infoNode: Mapping[str, Any]) -> None:
+		"""
+		Resolve this release's license from what was published, and from what was stated by hand.
+
+		The sources are consulted in order of how much they can be trusted, and the first one that answers wins:
+
+		1. the :class:`LicenseOverrides` of the package index - an explicit statement always wins,
+		2. ``license_expression``, the PEP 639 field, which is an SPDX expression by definition,
+		3. ``license``, the legacy free-text field - it is handed to the parser like any other candidate, and a field
+		   holding the license's full text simply doesn't parse,
+		4. a license classifier, but only when it means exactly one license - ``License :: OSI Approved :: BSD
+		   License`` means either ``BSD-2-Clause`` or ``BSD-3-Clause`` and is never guessed at.
+
+		``License :: Other/Proprietary License`` is the classifier that resolves without parsing anything: SPDX has
+		no identifier for a license that isn't published, so it becomes a
+		:class:`~pyTooling.Licensing.ProprietaryLicense` and the classifier itself is what
+		:attr:`~pyTooling.Dependency.PackageVersion.PublishedLicense` reports.
+
+		Whatever was found is parsed into a :class:`~pyTooling.Licensing.LicenseExpression` and kept verbatim in
+		:attr:`~pyTooling.Dependency.PackageVersion.PublishedLicense`, even when it doesn't parse. A release whose
+		license stays unresolved is reported as an
+		:class:`~pyTooling.Dependency.UnknownLicenseWarning` naming what was published, because that is the list of
+		packages the override file has to answer for. A release publishing ``NOASSERTION`` or ``NONE`` is on that
+		list too - the *statement* resolved, the license is still unknown.
+
+		:param infoNode: The ``info`` node of the JSON document describing this release.
+		"""
+		index: PythonPackageIndex = self._package._storage
+		overrides = index._licenseOverrides
+		published = []
+		candidates = []
+		proprietaryClassifier = None
+
+		if (override := overrides.LicenseOf(self._package._name, self._version)) is not None:
+			candidates.append(override)
+		else:
+			if (licenseExpression := infoNode.get("license_expression", None)) is not None:
+				published.append(f"license_expression: {licenseExpression}")
+				candidates.append(licenseExpression)
+			elif (licenseText := (infoNode.get("license", None) or "").strip()) != "":
+				published.append(f"license: {licenseText[:_LICENSE_NOTE_LENGTH]}")
+				candidates.append(licenseText)
+
+			for classifier in infoNode.get("classifiers", None) or ():
+				if not classifier.startswith("License ::"):
+					continue
+
+				published.append(f"classifier: {classifier}")
+				if classifier == _PROPRIETARY_CLASSIFIER:
+					proprietaryClassifier = classifier
+				elif len(matches := LICENSES_BY_CLASSIFIER.get(classifier, ())) == 1:
+					candidates.append(matches[0].SPDXIdentifier)
+
+				break
+
+		for candidate in candidates:
+			try:
+				self._licenseExpression = LicenseExpression.Parse(candidate)
+			except (LicenseExpressionError, ValueError):
+				continue
+
+			# The expression keeps the candidate as its 'OriginalText', which is the only place it is held.
+			break
+		else:
+			if proprietaryClassifier is not None:
+				# SPDX has no identifier for a proprietary license, so there is nothing to parse - the node is built,
+				# and it carries the classifier it was built from.
+				self._licenseExpression = ProprietaryLicense(originalText=proprietaryClassifier)
+			else:
+				# Nothing resolved. 'NOASSERTION' is what SPDX says for that, and the node keeps what was published.
+				self._licenseExpression = UnknownLicense(
+					LicenseAbsence.NoAssertion,
+					candidates[0] if len(candidates) > 0 else ""
+				)
+
+		if (licenseURL := overrides.LicenseURLOf(self._package._name)) is not None:
+			self._licenseURL = URL.Parse(licenseURL)
+
+		# 'UnknownLicense' covers both: the index said 'NOASSERTION' itself, and nothing resolved at all. Either way
+		# the license is unknown, which is what this list is for.
+		if isinstance(self._licenseExpression, UnknownLicense):
+			WarningCollector.Raise(
+				UnknownLicenseWarning(
+					f"License of '{self._package._name}' {self._version} couldn't be resolved."
+				),
+				notes=published if len(published) > 0 else ["The package index published no license information."]
+			)
+
+	def _ResolveURLs(self, infoNode: Mapping[str, Any]) -> None:
+		"""
+		Resolve this release's project URLs from what the package index published.
+
+		``project_urls`` is a free-text mapping - one project writes ``Source``, another ``Source Code``,
+		``Repository`` or ``GitHub`` for the same thing - so its keys are matched case-insensitively against a list of
+		aliases per URL and the first alias present wins. ``home_page`` is the fallback for the homepage, and the
+		homepage is the last resort for the repository, which is what the project-level resolver used to do.
+
+		These are resolved per release rather than per package because they move: a project migrating from Google
+		Code or SourceForge to GitHub has one repository URL before the migration and another after it.
+		:attr:`~pyTooling.Dependency.Package.RepositoryURL` and its siblings mirror the latest release, so the
+		package still answers for the current state.
+
+		:param infoNode: The ``info`` node of the JSON document describing this release.
+		"""
+		projectURLs = {
+			str(key).strip().lower(): value
+			for key, value in (infoNode.get("project_urls", None) or {}).items()
+			if value is not None
+		}
+
+		def urlFor(aliases: tuple[str, ...]) -> Nullable[URL]:
+			"""
+			Return the first of the given aliases the package index published a URL for.
+
+			:param aliases: The keys to look for, most specific first.
+			:returns:       The URL of the first alias that is present, or ``None`` if none of them is.
+			"""
+			for alias in aliases:
+				if (url := projectURLs.get(alias, None)) is not None:
+					return URL.Parse(url)
+
+			return None
+
+		self._documentationURL = urlFor(_DOCUMENTATION_URL_ALIASES)
+		self._issueTrackerURL  = urlFor(_ISSUE_TRACKER_URL_ALIASES)
+		self._changelogURL     = urlFor(_CHANGELOG_URL_ALIASES)
+		self._projectURL      = urlFor(_PROJECT_URL_ALIASES)
+
+		if self._projectURL is None and (homePage := infoNode.get("home_page", None)) is not None:
+			self._projectURL = URL.Parse(homePage)
+
+		index: PythonPackageIndex = self._package._storage
+		if (repository := index._licenseOverrides.RepositoryOf(self._package._name)) is not None:
+			self._repositoryURL = URL.Parse(repository)
+		elif (repositoryURL := urlFor(_REPOSITORY_URL_ALIASES)) is not None:
+			self._repositoryURL = repositoryURL
+		else:
+			self._repositoryURL = self._projectURL
 
 	def PostProcess(self) -> None:
 		"""
@@ -774,22 +1250,33 @@ class PythonPackageIndex(PackageStorage):
 	It is the entry point of the dependency graph: projects are looked up here, and every request to the index reuses
 	the same HTTP session.
 	"""
-	_url:     URL      #: URL of the package index's website.
-	_api:     URL      #: URL of the package index's API.
-	_session: Session  #: HTTP session reused for every request to this index.
+	_url:              URL               #: URL of the package index's website.
+	_api:              URL               #: URL of the package index's API.
+	_session:          Session           #: HTTP session reused for every request to this index.
+	_licenseOverrides: LicenseOverrides  #: Licenses stated by hand, for what this index can't answer for.
 
-	def __init__(self, name: str, url: Union[str, URL], api: Union[str, URL], graph: PackageDependencyGraph) -> None:
+	def __init__(
+		self,
+		name: str,
+		url: Union[str, URL],
+		api: Union[str, URL],
+		graph: PackageDependencyGraph,
+		licenseOverrides: Nullable[LicenseOverrides] = None
+	) -> None:
 		"""
 		Initialize a package index and open the HTTP session used for every request to it.
 
-		:param name:       Name of the package index.
-		:param url:        URL of the index's website, as a string or a parsed URL.
-		:param api:        URL of the index's JSON API, as a string or a parsed URL.
-		:param graph:      Dependency graph this index belongs to.
-		:raises TypeError: If parameter 'url' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
-		:raises TypeError: If parameter 'api' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:param name:             Name of the package index.
+		:param url:              URL of the index's website, as a string or a parsed URL.
+		:param api:              URL of the index's JSON API, as a string or a parsed URL.
+		:param graph:            Dependency graph this index belongs to.
+		:param licenseOverrides: Optional, licenses stated by hand; an empty set of overrides if not given.
+		:raises TypeError:       If parameter 'url' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises TypeError:       If parameter 'api' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
 		"""
 		super().__init__(name, graph)
+
+		self._licenseOverrides = licenseOverrides if licenseOverrides is not None else LicenseOverrides()
 
 		if isinstance(url, str):
 			url = URL.Parse(url)
@@ -820,6 +1307,15 @@ class PythonPackageIndex(PackageStorage):
 		:returns: Base URL of the package index.
 		"""
 		return self._url
+
+	@readonly
+	def LicenseOverrides(self) -> LicenseOverrides:
+		"""
+		Read-only property to access the licenses stated by hand for this index (:attr:`_licenseOverrides`).
+
+		:returns: The index's license overrides.
+		"""
+		return self._licenseOverrides
 
 	@readonly
 	def API(self) -> URL:
