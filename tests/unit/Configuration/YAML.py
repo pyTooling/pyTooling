@@ -32,17 +32,19 @@
 Unit tests for :mod:`pyTooling.Configuration.YAML`: reading values through the node API and the errors
 raised for a missing key or a wrong type.
 """
+from datetime import date, datetime
 from pathlib  import Path
 
 from pyTooling.Configuration      import InterpolationError, KeyNotFoundError, PathExpressionError
 from pyTooling.Configuration      import UnsupportedValueTypeError
+from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration
 from pyTooling.Testing            import Testcase
 
 
 class ReadingValues(Testcase):
 	def test_SimpleString(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual("string_1", config["value_1"])
 
@@ -51,13 +53,13 @@ class ReadingValues(Testcase):
 		self.assertEqual("string_12", config["node_1"]["value_12"])
 
 	def test_Root(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(4, len(config))
 		self.assertTrue("Install" in config)
 
 	def test_Dictionary(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		node_1 = config["node_1"]
 		self.assertEqual(2, len(node_1))
@@ -70,7 +72,7 @@ class ReadingValues(Testcase):
 		self.assertEqual("string_12", second)
 
 	def test_Sequence(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		node_2 = config["node_2"]
 		self.assertEqual(2, len(node_2))
@@ -88,19 +90,19 @@ class ReadingValues(Testcase):
 			_ = next(iterator)
 
 	def test_PathExpressionToNode(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		node = config.QueryPath("Install:VendorA:ToolA:2020")
 		self.assertEqual(r"C:\VendorA\ToolA\2020", node["InstallDir"])
 
 	def test_PathExpressionToValue(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		value = config.QueryPath("Install:VendorA:ToolA:2020:InstallDir")
 		self.assertEqual(r"C:\VendorA\ToolA\2020", value)
 
 	def test_Variables(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"]["2020"]["InstallDir"])
 		self.assertEqual(r"C:\VendorA\Tool_A\2021.10", config["Install"]["VendorA"]["ToolA"]["2021.10"]["InstallDir"])
@@ -108,14 +110,14 @@ class ReadingValues(Testcase):
 		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"]["2020"]["BinaryDir"])
 
 	def test_NestedVariables(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(r"C:\VendorA\ToolA\2020", config["Install"]["VendorA"]["ToolA"]["Defaults"]["InstallDir"])
 		self.assertEqual(r"C:\VendorA\ToolA\2020\bin", config["Install"]["VendorA"]["ToolA"]["Defaults"]["BinaryDir"])
 
 
 class Errors(Testcase):
-	_configFile = Path("tests/unit/Configuration/errors.yml")
+	_configFile = Path("tests/data/Configuration/errors.yml")
 
 	def test_UnknownKeyInDictionary(self) -> None:
 		config = Configuration(self._configFile)
@@ -188,17 +190,17 @@ class IteratingDictionaries(Testcase):
 	"""Iterating a dictionary node by keys, by values and by pairs."""
 
 	def test_IterateKeys(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(["value_11", "value_12"], list(config["node_1"].IterateKeys()))
 
 	def test_IterateValues(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(["string_11", "string_12"], list(config["node_1"].IterateValues()))
 
 	def test_IterateItems(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(
 			[("value_11", "string_11"), ("value_12", "string_12")],
@@ -207,7 +209,7 @@ class IteratingDictionaries(Testcase):
 
 	def test_IterateValuesMatchesPlainIteration(self) -> None:
 		"""``for value in node`` was the only walk before, and it still yields the same values."""
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 		node = config["node_1"]
 
 		self.assertEqual(list(node), list(node.IterateValues()))
@@ -219,12 +221,12 @@ class IteratingDictionaries(Testcase):
 		Plain iteration yields child nodes for mapping values but bare values for scalar ones, so a table keyed by
 		something meaningful - a version specifier, a package name - could not be read back.
 		"""
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(["value_11", "value_12"], [key for key, _ in config["node_1"].IterateItems()])
 
 	def test_NestedNodesAreStillNodes(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		for key, value in config["Install"].IterateItems():
 			self.assertIsInstance(key, str)
@@ -235,17 +237,17 @@ class MappingProtocol(Testcase):
 	"""A dictionary node answers the methods :class:`dict` answers."""
 
 	def test_Keys(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(("value_11", "value_12"), config["node_1"].keys())
 
 	def test_Values(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(("string_11", "string_12"), config["node_1"].values())
 
 	def test_Items(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual(
 			(("value_11", "string_11"), ("value_12", "string_12")),
@@ -254,26 +256,26 @@ class MappingProtocol(Testcase):
 
 	def test_TheyMatchTheIterators(self) -> None:
 		""":meth:`keys`, :meth:`values` and :meth:`items` are their ``Iterate***`` counterparts, materialized."""
-		node = Configuration(Path("tests/unit/Configuration/config.yml"))["node_1"]
+		node = Configuration(Path("tests/data/Configuration/config.yml"))["node_1"]
 
 		self.assertEqual(tuple(node.IterateKeys()), node.keys())
 		self.assertEqual(tuple(node.IterateValues()), node.values())
 		self.assertEqual(tuple(node.IterateItems()), node.items())
 
 	def test_Get(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual("string_11", config["node_1"].get("value_11"))
 
 	def test_GetReturnsTheDefaultForAnAbsentKey(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertIsNone(config["node_1"].get("value_13"))
 		self.assertEqual("fallback", config["node_1"].get("value_13", "fallback"))
 
 	def test_GetDoesNotRaiseWhereGetitemDoes(self) -> None:
 		"""``node[absent]`` raises; ``node.get(absent)`` is the way to ask without handling it."""
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		with self.assertRaises(KeyError):
 			config["node_1"]["value_13"]
@@ -282,18 +284,18 @@ class MappingProtocol(Testcase):
 
 	def test_ANodeConvertsToADict(self) -> None:
 		"""``dict()`` looks for a ``keys`` method to decide something is a mapping, which is why this works."""
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual({"value_11": "string_11", "value_12": "string_12"}, dict(config["node_1"]))
 
 	def test_ANodeUnpacksIntoADict(self) -> None:
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertEqual({"value_11": "string_11", "value_12": "string_12"}, {**config["node_1"]})
 
 	def test_TheRootNodeIsAMappingToo(self) -> None:
 		"""The root derives from the dictionary node, so a whole document reads like one."""
-		config = Configuration(Path("tests/unit/Configuration/config.yml"))
+		config = Configuration(Path("tests/data/Configuration/config.yml"))
 
 		self.assertIn("node_1", config.keys())
 		self.assertEqual("string_1", config.get("value_1"))
@@ -304,13 +306,13 @@ class SequenceProtocol(Testcase):
 	"""A sequence node answers the methods :class:`list` answers."""
 
 	def test_Index(self) -> None:
-		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+		sequence = Configuration(Path("tests/data/Configuration/config.yml"))["node_2"]
 
 		self.assertEqual(0, sequence.index(sequence[0]))
 		self.assertEqual(1, sequence.index(sequence[1]))
 
 	def test_IndexHonoursStartAndStop(self) -> None:
-		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+		sequence = Configuration(Path("tests/data/Configuration/config.yml"))["node_2"]
 
 		self.assertEqual(1, sequence.index(sequence[1], 1))
 
@@ -318,13 +320,89 @@ class SequenceProtocol(Testcase):
 			sequence.index(sequence[1], 0, 1)
 
 	def test_IndexRaisesForAnAbsentValue(self) -> None:
-		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+		sequence = Configuration(Path("tests/data/Configuration/config.yml"))["node_2"]
 
 		with self.assertRaises(ValueError):
 			sequence.index("not in this sequence")
 
 	def test_Count(self) -> None:
-		sequence = Configuration(Path("tests/unit/Configuration/config.yml"))["node_2"]
+		sequence = Configuration(Path("tests/data/Configuration/config.yml"))["node_2"]
 
 		self.assertEqual(1, sequence.count(sequence[0]))
 		self.assertEqual(0, sequence.count("not in this sequence"))
+
+class DocumentRoot(Testcase):
+	"""What a configuration accepts as a document, which both backends answer alike."""
+
+	def test_AnEmptyFileIsAnEmptyConfiguration(self) -> None:
+		"""A file with no content states no settings. It is valid YAML; in JSON it is not, and it answers the same."""
+		config = Configuration(Path("tests/data/Configuration/empty.yml"))
+
+		self.assertEqual(0, len(config))
+		self.assertEqual((), config.keys())
+		self.assertEqual({}, dict(config))
+
+	def test_ANullDocumentIsAnEmptyConfiguration(self) -> None:
+		config = Configuration(Path("tests/data/Configuration/null.yml"))
+
+		self.assertEqual(0, len(config))
+
+	def test_AnAbsentKeyReadsAsAbsentOnAnEmptyConfiguration(self) -> None:
+		"""Which is the point - every node used to fail on 'NoneType has no attribute keys'."""
+		config = Configuration(Path("tests/data/Configuration/empty.yml"))
+
+		self.assertIsNone(config.get("packages", None))
+		self.assertEqual("fallback", config.get("packages", "fallback"))
+		self.assertNotIn("packages", config)
+
+	def test_AScalarRootIsRejected(self) -> None:
+		"""A configuration's root is a mapping. This used to leak an 'AttributeError' from inside a node."""
+		with self.assertRaises(ConfigurationError) as context:
+			Configuration(Path("tests/data/Configuration/scalar.yml"))
+
+		self.assertIn("doesn't describe a mapping", str(context.exception))
+
+	def test_ASequenceRootIsRejected(self) -> None:
+		with self.assertRaises(ConfigurationError):
+			Configuration(Path("tests/data/Configuration/sequence.yml"))
+
+	def test_AMissingFileNamesTheRightFormat(self) -> None:
+		with self.assertRaises(ConfigurationError) as context:
+			Configuration(Path("tests/data/Configuration/does-not-exist.yml"))
+
+		self.assertIn("YAML", str(context.exception))
+		self.assertNotIn("JSON", str(context.exception))
+
+
+class Dates(Testcase):
+	"""YAML reads an unquoted date as one, which no other scalar type covers."""
+
+	_FILE = Path("tests/data/Configuration/dates.yml")
+
+	def test_ADateIsAScalar(self) -> None:
+		"""It used to raise ``UnsupportedValueTypeError`` - the parser returned a ``datetime.date``."""
+		self.assertEqual("2026-09-02", Configuration(self._FILE)["aDate"])
+
+	def test_ADateTimeIsAScalarToo(self) -> None:
+		"""In ISO-8601 spelling: ``str`` on a datetime writes a space where ISO-8601 writes a ``T``."""
+		self.assertEqual("2026-09-02T10:30:00", Configuration(self._FILE)["aDateTime"])
+
+	def test_ATimeZoneIsKept(self) -> None:
+		self.assertEqual("2026-09-02T10:30:00+00:00", Configuration(self._FILE)["aZonedDateTime"])
+
+	def test_TheyReadBackAsDates(self) -> None:
+		"""Which is what a caller does with them, since every scalar comes back as a string."""
+		config = Configuration(self._FILE)
+
+		self.assertEqual(date(2026, 9, 2), date.fromisoformat(config["aDate"]))
+		self.assertEqual(datetime(2026, 9, 2, 10, 30), datetime.fromisoformat(config["aDateTime"]))
+
+	def test_ATimeOfDayIsAString(self) -> None:
+		"""YAML has no time-of-day type, so ``10:30:00`` was always a string and still is."""
+		self.assertEqual("10:30:00", Configuration(self._FILE)["aTimeOfDay"])
+
+	def test_AQuotedDateIsUnchanged(self) -> None:
+		"""Quoting it keeps it a string, and the string is the same either way."""
+		config = Configuration(self._FILE)
+
+		self.assertEqual(config["aDate"], config["aQuotedDate"])

@@ -38,6 +38,7 @@ Configuration reader for YAML files.
 from __future__           import annotations
 
 from pathlib              import Path
+from datetime             import date, datetime
 from typing               import Any, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Exceptions import MissingDependencyError
@@ -182,6 +183,10 @@ class Node(Abstract_Node):
 
 		The converted object is cached, so a second access returns the same node object rather than a new one.
 
+		A date or a datetime is a scalar too - YAML reads ``2026-09-02`` and ``2026-09-02T10:30:00`` as those - and is
+		returned in ISO-8601 spelling. Like every other scalar it comes back as a :class:`str`, so
+		:meth:`datetime.date.fromisoformat` turns it back into a date where a caller wants one.
+
 		:param key:                        Key or index to look up.
 		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
 		                                   resolved.
@@ -198,6 +203,11 @@ class Node(Abstract_Node):
 				value = self._ResolveVariables(value)
 			elif isinstance(value, (int, float)):
 				value = str(value)
+			# YAML reads an unquoted '2026-09-02' as a date and '2026-09-02T10:30:00' as a datetime, which no other
+			# scalar type covers. 'isoformat' rather than 'str', because 'str' writes a datetime with a space where
+			# ISO-8601 writes a 'T'. JSON has no date type, so its backend needs no such branch.
+			elif isinstance(value, (date, datetime)):
+				value = value.isoformat()
 			elif isinstance(value, CommentedMap):
 				value = self.DICT_TYPE(self, self, key, value)
 			elif isinstance(value, CommentedSeq):
@@ -205,7 +215,8 @@ class Node(Abstract_Node):
 			else:
 				typeName = getFullyQualifiedName(value)
 				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
-				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float), nor a map or sequence.")
+				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float, date, "
+				            "datetime), nor a map or sequence.")
 				raise ex
 
 			self._cache[key] = value
@@ -465,14 +476,33 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the YAML file are accessible via Python's dictionary syntax.
 
+		A configuration's root **is** a mapping - this class derives from :class:`Dictionary` - so a document
+		describing anything else is rejected here rather than failing on the first access. A document with **no
+		content** carries no settings and reads as an empty configuration; :mod:`pyTooling.Configuration.JSON` does
+		the same, so both formats answer alike.
+
 		:param configFile:          Configuration file to read and parse.
-		:raises ConfigurationError: If the YAML file doesn't exist or can't be parsed.
+		:raises ConfigurationError: If the YAML file doesn't exist.
+		:raises ConfigurationError: If the YAML file's root isn't a mapping. |br|
+		                            An empty file and an explicit ``null`` are the exception: both are *no settings*
+		                            and read as an empty configuration.
 		"""
 		if not configFile.exists():
-			raise ConfigurationError(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
+			raise ConfigurationError(f"YAML configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
 		with configFile.open("r", encoding="utf-8") as file:
-			self._yamlConfig = YAML().load(file)
+			document = YAML().load(file)
+
+		# 'load' returns None for an empty file and for an explicit 'null' - a *null document*, which is valid YAML.
+		if document is None:
+			document = CommentedMap()
+		elif not isinstance(document, CommentedMap):
+			ex = ConfigurationError(f"YAML configuration file '{configFile}' doesn't describe a mapping.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}' at the document's root.")
+			ex.add_note("A configuration needs a mapping of keys to values at its root.")
+			raise ex
+
+		self._yamlConfig = document
 
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
 		Abstract_Configuration.__init__(self, configFile)
