@@ -32,24 +32,24 @@
 Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
 need network access.
 """
-from datetime                    import datetime
-from datetime                    import date
-from pathlib                     import Path
-from typing                      import Optional as Nullable
+from datetime                     import date, datetime
+from pathlib                      import Path
+from typing                       import Optional as Nullable
 
-from pytest                      import mark
+from pytest                       import mark
 
-from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex, Project, Release, LazyLoaderState
-from pyTooling.Dependency.Python import LicenseOverrides
-from pyTooling.Dependency        import BrokenRequirementWarning, DependencyError, UnknownLicenseWarning
-from pyTooling.Configuration     import Dictionary
-from pyTooling.Exceptions        import ConfigurationError
+from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
+from pyTooling.Dependency.Python  import PythonPackageIndex, Release
+from pyTooling.Dependency.Python  import LicenseOverrides
+from pyTooling.Dependency         import BrokenRequirementWarning, DependencyError, UnknownLicenseWarning
+from pyTooling.Configuration      import Dictionary
+from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
-from pyTooling.Licensing         import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
-from pyTooling.Licensing         import SPDXLicense, UnknownLicense, WithOperator
-from pyTooling.Versioning        import PythonVersion, SemanticVersion
-from pyTooling.Warning           import WarningCollector
-from pyTooling.Testing           import Testcase
+from pyTooling.Licensing          import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
+from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperator
+from pyTooling.Versioning         import PythonVersion, SemanticVersion
+from pyTooling.Warning            import WarningCollector
+from pyTooling.Testing            import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover

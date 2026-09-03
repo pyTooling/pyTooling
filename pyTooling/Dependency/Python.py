@@ -152,7 +152,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 	#: Splits a key into the package name and whatever follows it. A name stops at the first character an operator
 	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
-	_PACKAGE_KEY: ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
+	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
 
 	_analysedAt:   Nullable[date]                             #: Day the statements were last checked by a human.
 	#: License expression per package, by the version expression its key states, in the file's order.

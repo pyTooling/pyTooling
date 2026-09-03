@@ -774,9 +774,14 @@ class AbsentLicenses(Testcase):
 				with self.assertRaises(LicenseExpressionError):
 					LicenseExpression.Parse(text)
 
-	def test_ANodeRefusesAParent(self) -> None:
-		"""Built in code rather than parsed, the same rule has to hold."""
-		with self.assertRaises(ValueError):
+	def test_ItsParentIsReadOnly(self) -> None:
+		"""Every other node's ``Parent`` is assignable; this one's can't be, so it is a read-only property."""
+		with self.assertRaises(AttributeError):
+			UnknownLicense().Parent = AndOperator(SPDXLicense(MIT_License), SPDXLicense(ISC_License))
+
+	def test_ItRefusesToBecomeAnOperand(self) -> None:
+		"""Built in code rather than parsed, the same rule has to hold - an operator assigns its operands' parent."""
+		with self.assertRaises(AttributeError):
 			AndOperator(SPDXLicense(MIT_License), UnknownLicense())
 
 	def test_TheDefaultIsNoAssertion(self) -> None:
