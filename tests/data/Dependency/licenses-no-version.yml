@@ -1,5 +1,4 @@
-version: "0.1"
-analysedAt: yesterday
+analysedAt: 2026-09-02
 packages:
   igraph:
     license: MIT

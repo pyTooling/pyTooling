@@ -168,7 +168,7 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		self._repositoryURL     = None
 		self._documentationURL  = None
 		self._issueTrackerURL   = None
-		self._projectURL       = None
+		self._projectURL        = None
 		self._changelogURL      = None
 		self._dependsOn         = {}
 

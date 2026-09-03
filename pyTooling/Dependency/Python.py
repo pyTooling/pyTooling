@@ -44,7 +44,7 @@ from functools            import wraps, update_wrapper
 from pathlib              import Path
 from re                   import compile as re_compile
 from threading            import RLock
-from typing               import Any, Optional as Nullable, Union, Iterable, Mapping, Self
+from typing               import Any, ClassVar, Optional as Nullable, Union, Iterable, Mapping, Self
 
 from pyTooling.Configuration import Dictionary
 from pyTooling.Exceptions import MissingDependencyError
@@ -56,7 +56,6 @@ except ImportError as ex:  # pragma: no cover
 
 try:
 	from packaging.requirements import Requirement
-	from packaging.specifiers   import InvalidSpecifier, SpecifierSet
 	from packaging.utils        import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
@@ -77,7 +76,7 @@ from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError,
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Versioning      import SemanticVersion, PythonVersion, Parts
+from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
 
 
 #: Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it.
@@ -92,7 +91,7 @@ _PROPRIETARY_CLASSIFIER = "License :: Other/Proprietary License"
 _REPOSITORY_URL_ALIASES    = ("source code", "source", "code", "repository", "github", "gitlab")
 _DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
 _ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
-_PROJECT_URL_ALIASES      = ("homepage", "home page", "home")
+_PROJECT_URL_ALIASES       = ("homepage", "home page", "home")
 _CHANGELOG_URL_ALIASES     = ("changelog", "changes", "release notes", "whatsnew", "what's new")
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
@@ -114,6 +113,9 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 	.. code-block:: yaml
 
+	   version:    "0.1"
+	   analysedAt: 2026-09-02
+
 	   packages:
 	     colorama:
 	       license:    BSD-3-Clause
@@ -123,13 +125,31 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	       versions:
 	         ">=0.10": GPL-2.0-or-later
 	         "<0.10":  GPL-2.0-only
+	         "0.9.10": GPL-2.0-only
 
-	Version specifiers are matched in the order they are written, so the first one a version satisfies wins.
+	``version`` states the structure this file is written for and is checked against
+	:attr:`SCHEMA_VERSION`; ``analysedAt`` is the day a human last checked the statements - see :attr:`AnalysedAt`.
+
+	**The keys under** ``versions`` **are version expressions**, read by
+	:class:`~pyTooling.Versioning.PythonVersionExpression`, so they are the same language a requirement file
+	writes. Two of its rules matter here:
+
+	* **a bare version is an equality**, so ``0.9.10`` and ``==0.9.10`` state the same thing, and
+	* **an expression with no constraints matches every version**, which is what a package-level ``license`` says
+	  in one word.
+
+	They are matched in the order they are written, so the first one a version satisfies wins, and a package-level
+	``license`` answers when none of them does.
 	"""
+
+	#: Structure this parser reads. A file states the one it was written for as its ``version`` field, and a file
+	#: stating a different one is rejected rather than read on the chance that it still fits.
+	SCHEMA_VERSION: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
 
 	_analysedAt:   Nullable[date]                             #: Day the statements were last checked by a human.
 	_licenses:     dict[str, str]                             #: License expression per package, for every version.
-	_versioned:    dict[str, list[tuple[SpecifierSet, str]]]  #: License expression per package and version range.
+	#: License expression per package and version expression, in the order the file writes them.
+	_versioned:    dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 	_licenseURLs:  dict[str, str]                             #: URL of the license's text, per package.
 	_repositories: dict[str, str]                             #: URL of the source repository, per package.
 
@@ -170,8 +190,12 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		handed to :meth:`FromDictionary` **as it is** - a configuration node answers ``items()`` and ``get()``, so
 		there is nothing to convert and no second constructor for the node tree.
 
-		``analysedAt`` is **required**, and is the day a human last checked these statements. It is an ISO-8601 date,
-		written either way round - ``analysedAt: 2026-09-02`` reads as YAML's own date type, and
+		``version`` is **required** and is the first thing checked: it states which structure the file was written
+		for, and is compared against :attr:`SCHEMA_VERSION`. **Quote it** - unquoted, YAML reads ``0.1`` as a float,
+		and a float loses a trailing zero, so ``1.10`` would arrive as ``1.1``.
+
+		``analysedAt`` is **required** too, and is the day a human last checked these statements. It is an ISO-8601
+		date, written either way round - ``analysedAt: 2026-09-02`` reads as YAML's own date type, and
 		``analysedAt: "2026-09-02"`` as a string. A configuration hands both over in the same ISO-8601 spelling.
 
 		:param path:                    Path of the YAML file to read.
@@ -180,11 +204,13 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		:raises FileNotFoundError:      If the file doesn't exist.
 		:raises ConfigurationError:     If the file isn't a YAML document describing a mapping. |br|
 		                                An empty file is one, and states no overrides - but it states no
-		                                ``analysedAt`` either, so it is rejected by the next check.
+		                                ``version`` either, so it is rejected by the next check.
+		:raises DependencyError:        If ``version`` is missing, isn't a version, or isn't
+		                                :attr:`SCHEMA_VERSION`.
 		:raises DependencyError:        If ``analysedAt`` is missing or isn't an ISO-8601 date.
 		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
 		                                A file stating no packages is fine and gives no overrides.
-		:raises DependencyError:        If a version specifier in the file can't be parsed.
+		:raises DependencyError:        If a version expression in the file can't be parsed.
 		"""
 		# Imported here rather than at module level, so a missing 'ruamel.yaml' is reported when the overrides are
 		# read instead of when 'pyTooling.Dependency.Python' is imported.
@@ -196,6 +222,24 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			raise FileNotFoundError(f"License override file '{path}' not found.")
 
 		configuration = Configuration(path)
+
+		if (schemaVersion := configuration.get("version", None)) is None:
+			ex = DependencyError(f"License override file '{path}' states no 'version'.")
+			ex.add_note("It says which structure the file is written for, so a later one can be told apart.")
+			ex.add_note(f'Add it as the first field: version: "{cls.SCHEMA_VERSION}"')
+			raise ex
+
+		try:
+			fileVersion = SemanticVersion.Parse(str(schemaVersion))
+		except ValueError as cause:
+			ex = DependencyError(f"License override file '{path}' states a 'version' that isn't a version number.")
+			ex.add_note(f"Got '{schemaVersion}'.")
+			raise ex from cause
+
+		if fileVersion != cls.SCHEMA_VERSION:
+			ex = DependencyError(f"License override file '{path}' is written for structure '{fileVersion}'.")
+			ex.add_note(f"This reads '{cls.SCHEMA_VERSION}'.")
+			raise ex
 
 		if (analysedDay := configuration.get("analysedAt", None)) is None:
 			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' date.")
@@ -258,14 +302,16 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 				overrides._repositories[name] = str(repository)
 
 			if (versions := statement.get("versions", None)) is not None:
-				ranges = []
+				ranges: list[tuple[PythonVersionExpression[SemanticVersion], str]] = []
 				for specifier, expression in versions.items():
 					try:
-						ranges.append((SpecifierSet(str(specifier)), str(expression)))
-					except InvalidSpecifier as ex:
-						raise DependencyError(
-							f"Version specifier '{specifier}' of package '{packageName}' can't be parsed."
-						) from ex
+						ranges.append((PythonVersionExpression.Parse(str(specifier)), str(expression)))
+					except (LicenseExpressionError, ValueError) as cause:
+						ex = DependencyError(
+							f"Version expression '{specifier}' of package '{packageName}' can't be parsed."
+						)
+						ex.add_note("A bare version is an equality, so '0.10' and '==0.10' state the same thing.")
+						raise ex from cause
 
 				overrides._versioned[name] = ranges
 
@@ -275,7 +321,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		"""
 		Return the license expression stated for a package, or for one of its versions.
 
-		A version range is consulted first, because it is the more specific statement; the ranges are tried in the
+		A version expression is consulted first, because it is the more specific statement; they are tried in the
 		order they were written and the first match wins.
 
 		:param packageName: Name of the package.
@@ -285,8 +331,8 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		name = canonicalize_name(packageName)
 
 		if version is not None and (ranges := self._versioned.get(name, None)) is not None:
-			for specifier, expression in ranges:
-				if str(version) in specifier:
+			for versionExpression, expression in ranges:
+				if version in versionExpression:
 					return expression
 
 		return self._licenses.get(name, None)
