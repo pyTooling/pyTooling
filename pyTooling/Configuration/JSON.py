@@ -492,8 +492,8 @@ class Configuration(Dictionary, Abstract_Configuration):
 			document = {}
 		elif not isinstance(document, dict):
 			ex = ConfigurationError(f"JSON configuration file '{configFile}' doesn't describe a mapping.")
-			ex.add_note(f"Got '{document.__class__.__name__}' at the document's root.")
-			ex.add_note("A configuration's root is a mapping of keys to values.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}' at the document's root.")
+			ex.add_note("A configuration needs a mapping of keys to values at its root.")
 			raise ex
 
 		self._jsonConfig = document

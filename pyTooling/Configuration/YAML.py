@@ -183,14 +183,14 @@ class Node(Abstract_Node):
 
 		The converted object is cached, so a second access returns the same node object rather than a new one.
 
-		:param key:                        Key or index to look up.
-		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
-		                                   resolved.
-		:raises KeyNotFoundError:          If the key doesn't exist in this node.
 		A date or a datetime is a scalar too - YAML reads ``2026-09-02`` and ``2026-09-02T10:30:00`` as those - and is
 		returned in ISO-8601 spelling. Like every other scalar it comes back as a :class:`str`, so
 		:meth:`datetime.date.fromisoformat` turns it back into a date where a caller wants one.
 
+		:param key:                        Key or index to look up.
+		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
+		                                   resolved.
+		:raises KeyNotFoundError:          If the key doesn't exist in this node.
 		:raises UnsupportedValueTypeError: If the YAML parser returned a value that is neither a scalar, nor a
 		                                   node.
 		"""
@@ -215,8 +215,8 @@ class Node(Abstract_Node):
 			else:
 				typeName = getFullyQualifiedName(value)
 				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
-				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float, date, datetime),")
-				ex.add_note("nor a map or sequence.")
+				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float, date, "
+				            "datetime), nor a map or sequence.")
 				raise ex
 
 			self._cache[key] = value
@@ -498,8 +498,8 @@ class Configuration(Dictionary, Abstract_Configuration):
 			document = CommentedMap()
 		elif not isinstance(document, CommentedMap):
 			ex = ConfigurationError(f"YAML configuration file '{configFile}' doesn't describe a mapping.")
-			ex.add_note(f"Got '{document.__class__.__name__}' at the document's root.")
-			ex.add_note("A configuration's root is a mapping of keys to values.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}' at the document's root.")
+			ex.add_note("A configuration needs a mapping of keys to values at its root.")
 			raise ex
 
 		self._yamlConfig = document
