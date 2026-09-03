@@ -42,7 +42,7 @@ from datetime             import date, datetime
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from pathlib              import Path
-from re                   import compile as re_compile
+from re                   import compile as re_compile, Pattern
 from threading            import RLock
 from typing               import Any, ClassVar, Optional as Nullable, Union, Iterable, Mapping, Self
 
@@ -121,37 +121,46 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	       license:    BSD-3-Clause
 	       licenseURL: https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt
 	       repository: https://GitHub.com/tartley/colorama
-	     igraph:
-	       versions:
-	         ">=0.10": GPL-2.0-or-later
-	         "<0.10":  GPL-2.0-only
-	         "0.9.10": GPL-2.0-only
+	     "igraph >=0.10":
+	       license: GPL-2.0-or-later
+	     "igraph <0.10":
+	       license: GPL-2.0-only
+	     "igraph 0.9.10":
+	       license: GPL-2.0-only
 
 	``version`` states the structure this file is written for and is checked against
 	:attr:`SCHEMA_VERSION`; ``analysedAt`` is the day a human last checked the statements - see :attr:`AnalysedAt`.
 
-	**The keys under** ``versions`` **are version expressions**, read by
-	:class:`~pyTooling.Versioning.PythonVersionExpression`, so they are the same language a requirement file
-	writes. Two of its rules matter here:
+	**A key is a package name, optionally followed by a version expression** - the shape a requirement line has.
+	The expression is read by :class:`~pyTooling.Versioning.PythonVersionExpression`, so it is the same language a
+	requirement file writes, and two of its rules are what make one key form enough:
 
-	* **a bare version is an equality**, so ``0.9.10`` and ``==0.9.10`` state the same thing, and
-	* **an expression with no constraints matches every version**, which is what a package-level ``license`` says
-	  in one word.
+	* **a bare version is an equality**, so ``igraph 0.9.10`` and ``igraph ==0.9.10`` state the same thing, and
+	* **an expression with no constraints matches every version**, so ``igraph`` on its own is the statement for
+	  every version rather than a special case.
 
-	They are matched in the order they are written, so the first one a version satisfies wins, and a package-level
-	``license`` answers when none of them does.
+	Keys are matched in the order the file writes them and the first one a version satisfies wins, so a narrower
+	statement goes above the bare name it refines. Asking without a version answers from the bare-name key only.
+
+	A key states a whole entry, so ``licenseURL`` and ``repository`` can differ per version too - a project that
+	moved forge between releases has two ``repository`` statements and no special case for it.
 	"""
 
 	#: Structure this parser reads. A file states the one it was written for as its ``version`` field, and a file
 	#: stating a different one is rejected rather than read on the chance that it still fits.
 	SCHEMA_VERSION: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
 
+	#: Splits a key into the package name and whatever follows it. A name stops at the first character an operator
+	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
+	_PACKAGE_KEY: ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
+
 	_analysedAt:   Nullable[date]                             #: Day the statements were last checked by a human.
-	_licenses:     dict[str, str]                             #: License expression per package, for every version.
-	#: License expression per package and version expression, in the order the file writes them.
-	_versioned:    dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
-	_licenseURLs:  dict[str, str]                             #: URL of the license's text, per package.
-	_repositories: dict[str, str]                             #: URL of the source repository, per package.
+	#: License expression per package, by the version expression its key states, in the file's order.
+	_licenses:     dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
+	#: URL of the license's text per package, by the version expression its key states, in the file's order.
+	_licenseURLs:  dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
+	#: URL of the source repository per package, by the version expression its key states, in the file's order.
+	_repositories: dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 
 	def __init__(self, analysedAt: Nullable[date] = None) -> None:
 		"""
@@ -161,7 +170,6 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		"""
 		self._analysedAt   = analysedAt
 		self._licenses     = {}
-		self._versioned    = {}
 		self._licenseURLs  = {}
 		self._repositories = {}
 
@@ -289,71 +297,103 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		# A configuration node types its values as the whole 'ValueT' union, which every '.get' below would then
 		# have to be narrowed against. What is read here is a document either way, so it is read as one.
 		statement: Any
-		for packageName, statement in packages.items():
-			name = canonicalize_name(str(packageName))
+		for packageKey, statement in packages.items():
+			name, versionExpression = cls._SplitKey(str(packageKey))
 
-			if (expression := statement.get("license", None)) is not None:
-				overrides._licenses[name] = str(expression)
-
-			if (licenseURL := statement.get("licenseURL", None)) is not None:
-				overrides._licenseURLs[name] = str(licenseURL)
-
-			if (repository := statement.get("repository", None)) is not None:
-				overrides._repositories[name] = str(repository)
-
-			if (versions := statement.get("versions", None)) is not None:
-				ranges: list[tuple[PythonVersionExpression[SemanticVersion], str]] = []
-				for specifier, expression in versions.items():
-					try:
-						ranges.append((PythonVersionExpression.Parse(str(specifier)), str(expression)))
-					except (LicenseExpressionError, ValueError) as cause:
-						ex = DependencyError(
-							f"Version expression '{specifier}' of package '{packageName}' can't be parsed."
-						)
-						ex.add_note("A bare version is an equality, so '0.10' and '==0.10' state the same thing.")
-						raise ex from cause
-
-				overrides._versioned[name] = ranges
+			for field, table in (
+				("license",    overrides._licenses),
+				("licenseURL", overrides._licenseURLs),
+				("repository", overrides._repositories),
+			):
+				if (value := statement.get(field, None)) is not None:
+					table.setdefault(name, []).append((versionExpression, str(value)))
 
 		return overrides
+
+	@classmethod
+	def _SplitKey(cls, packageKey: str) -> tuple[str, PythonVersionExpression[SemanticVersion]]:
+		"""
+		Split a key into the package it names and the version expression it restricts that package to.
+
+		A key is the shape a requirement line has - a name, then optionally a version expression, with or without a
+		space between them. A key naming only a package gives an expression with no constraints, which matches every
+		version.
+
+		:param packageKey:       The key as the file writes it.
+		:returns:                The canonical package name, and the version expression.
+		:raises DependencyError: If what follows the name isn't a version expression.
+		"""
+		match = cls._PACKAGE_KEY.match(packageKey)
+		if match is None:                                              # pragma: no cover
+			ex = DependencyError(f"Key '{packageKey}' doesn't name a package.")
+			raise ex
+
+		try:
+			versionExpression: PythonVersionExpression[SemanticVersion] = PythonVersionExpression.Parse(match["expression"])
+		except (LicenseExpressionError, ValueError) as cause:
+			ex = DependencyError(f"Key '{packageKey}' states a version expression that can't be parsed.")
+			ex.add_note(f"Got '{match['expression']}'.")
+			ex.add_note("A bare version is an equality, so 'igraph 0.10' and 'igraph ==0.10' state the same thing.")
+			raise ex from cause
+
+		return canonicalize_name(match["name"]), versionExpression
 
 	def LicenseOf(self, packageName: str, version: Nullable[SemanticVersion] = None) -> Nullable[str]:
 		"""
 		Return the license expression stated for a package, or for one of its versions.
 
-		A version expression is consulted first, because it is the more specific statement; they are tried in the
-		order they were written and the first match wins.
+		Keys are tried in the order the file writes them and the first one this version satisfies wins, so a
+		narrower statement answers before the bare name it refines.
 
 		:param packageName: Name of the package.
-		:param version:     Optional, the version to answer for.
+		:param version:     Optional, the version to answer for. Without one, only a key naming no version answers.
 		:returns:           The license expression stated, or ``None`` if the package isn't overridden.
 		"""
-		name = canonicalize_name(packageName)
+		return self._Lookup(self._licenses, packageName, version)
 
-		if version is not None and (ranges := self._versioned.get(name, None)) is not None:
-			for versionExpression, expression in ranges:
-				if version in versionExpression:
-					return expression
-
-		return self._licenses.get(name, None)
-
-	def LicenseURLOf(self, packageName: str) -> Nullable[str]:
+	def LicenseURLOf(self, packageName: str, version: Nullable[SemanticVersion] = None) -> Nullable[str]:
 		"""
 		Return the URL of a package's license text, where one was stated.
 
 		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for. Without one, only a key naming no version answers.
 		:returns:           The URL stated, or ``None``.
 		"""
-		return self._licenseURLs.get(canonicalize_name(packageName), None)
+		return self._Lookup(self._licenseURLs, packageName, version)
 
-	def RepositoryOf(self, packageName: str) -> Nullable[str]:
+	@staticmethod
+	def _Lookup(
+		table:       dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]],
+		packageName: str,
+		version:     Nullable[SemanticVersion]
+	) -> Nullable[str]:
+		"""
+		Return the first statement in one table whose key applies to a version.
+
+		:param table:       One of the per-package tables.
+		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for. Without one, only an unrestricted key answers.
+		:returns:           What that key states, or ``None`` if none applies.
+		"""
+		if (entries := table.get(canonicalize_name(packageName), None)) is None:
+			return None
+
+		for versionExpression, value in entries:
+			# Without a version, only a key that restricts nothing can be said to apply.
+			if version in versionExpression if version is not None else len(versionExpression) == 0:
+				return value
+
+		return None
+
+	def RepositoryOf(self, packageName: str, version: Nullable[SemanticVersion] = None) -> Nullable[str]:
 		"""
 		Return the URL of a package's source repository, where one was stated.
 
 		:param packageName: Name of the package.
+		:param version:     Optional, the version to answer for. Without one, only a key naming no version answers.
 		:returns:           The URL stated, or ``None``.
 		"""
-		return self._repositories.get(canonicalize_name(packageName), None)
+		return self._Lookup(self._repositories, packageName, version)
 
 	def __len__(self) -> int:
 		"""
@@ -361,7 +401,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 		:returns: Number of overridden packages.
 		"""
-		return len(set(self._licenses) | set(self._versioned) | set(self._licenseURLs) | set(self._repositories))
+		return len(set(self._licenses) | set(self._licenseURLs) | set(self._repositories))
 
 	def __str__(self) -> str:
 		"""
