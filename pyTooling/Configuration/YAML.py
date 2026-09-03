@@ -38,6 +38,7 @@ Configuration reader for YAML files.
 from __future__           import annotations
 
 from pathlib              import Path
+from datetime             import date, datetime
 from typing               import Any, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Exceptions import MissingDependencyError
@@ -186,6 +187,10 @@ class Node(Abstract_Node):
 		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
 		                                   resolved.
 		:raises KeyNotFoundError:          If the key doesn't exist in this node.
+		A date or a datetime is a scalar too - YAML reads ``2026-09-02`` and ``2026-09-02T10:30:00`` as those - and is
+		returned in ISO-8601 spelling. Like every other scalar it comes back as a :class:`str`, so
+		:meth:`datetime.date.fromisoformat` turns it back into a date where a caller wants one.
+
 		:raises UnsupportedValueTypeError: If the YAML parser returned a value that is neither a scalar, nor a
 		                                   node.
 		"""
@@ -198,6 +203,11 @@ class Node(Abstract_Node):
 				value = self._ResolveVariables(value)
 			elif isinstance(value, (int, float)):
 				value = str(value)
+			# YAML reads an unquoted '2026-09-02' as a date and '2026-09-02T10:30:00' as a datetime, which no other
+			# scalar type covers. 'isoformat' rather than 'str', because 'str' writes a datetime with a space where
+			# ISO-8601 writes a 'T'. JSON has no date type, so its backend needs no such branch.
+			elif isinstance(value, (date, datetime)):
+				value = value.isoformat()
 			elif isinstance(value, CommentedMap):
 				value = self.DICT_TYPE(self, self, key, value)
 			elif isinstance(value, CommentedSeq):
@@ -205,7 +215,8 @@ class Node(Abstract_Node):
 			else:
 				typeName = getFullyQualifiedName(value)
 				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
-				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float), nor a map or sequence.")
+				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float, date, datetime),")
+				ex.add_note("nor a map or sequence.")
 				raise ex
 
 			self._cache[key] = value
