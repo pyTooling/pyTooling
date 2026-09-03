@@ -45,11 +45,21 @@ document of every project. This extension declares them once:
 
 .. rubric:: What it registers
 
-* the **style roles** ``:bolditalic:``, ``:underline:``, ``:strike:``, ``:xlarge:``, ``:red:``, ``:green:``,
-  ``:blue:``, ``:purple:``, ``:deletion:`` and ``:addition:``, together with the stylesheet they need - so the
-  styling is a CSS file instead of a ``raw:: html`` block smuggled into every page;
-* the **code role** ``:pycode:``, which highlights inline Python;
-* the **directive** :rst:dir:`condensed-class`, which renders a class' public interface from its source.
+* the **style roles**, together with the stylesheet they need - so the styling is a CSS file instead of a
+  ``raw:: html`` block smuggled into every page:
+
+  * ``:bolditalic:``, ``:underline:``, ``:strike:`` and ``:xlarge:`` - weight, decoration and size;
+  * ``:red:``, ``:green:``, ``:blue:`` and ``:purple:`` - colour, each from a CSS custom property a project can
+    redefine;
+  * ``:deletion:`` and ``:addition:`` - the two a diff needs.
+
+* the **code role**:
+
+  * ``:pycode:`` - highlights inline Python.
+
+* the **directive**:
+
+  * :rst:dir:`condensed-class` - renders a class' public interface from its source.
 
 :class:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective` isn't registered - it is a base-class for a
 project's own directives, offering typed option access and table construction over the untyped mapping and the
@@ -66,42 +76,42 @@ hand-assembled node trees docutils presents.
    :mod:`pyTooling.Documentation`
       |rarr| The doc-string helpers, which need no Sphinx.
 """
-from hashlib                                     import md5
-from pathlib                                     import Path
-from typing                                      import Any
+from hashlib                                       import md5
+from pathlib                                       import Path
+from typing                                        import Any
 
-from sphinx.application                          import Sphinx
+from pyTooling.Common                              import __version__, readResourceFile
+from pyTooling.Decorators                          import export
+from pyTooling.Exceptions                          import MissingDependencyError
+from pyTooling.Resources                           import Sphinx as SphinxResources
 
-from pyTooling.Common                            import readResourceFile
-from pyTooling.Decorators                        import export
-from pyTooling.Documentation.Sphinx              import static as StaticResources
+try:
+	from sphinx.application                          import Sphinx
+except ImportError as ex:  # pragma: no cover
+	raise MissingDependencyError(dependency="sphinx", extra="sphinx") from ex
+
 from pyTooling.Documentation.Sphinx.CondensedClass import CondensedClass
-from pyTooling.Documentation.Sphinx.Directives   import BaseDirective, SphinxExtensionError, strip, stripAndNormalize
-from pyTooling.Documentation.Sphinx.Roles        import PYTHON_CODE_ROLE, STYLE_ROLES, pythonCodeRole, styleRole
+from pyTooling.Documentation.Sphinx.Directives     import BaseDirective, SphinxExtensionError, strip, stripAndNormalize
+from pyTooling.Documentation.Sphinx.Roles          import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
+from pyTooling.Documentation.Sphinx.Roles          import breakRole, pythonCodeRole, styleRole
 
 
-__all__ = [
-	"STYLESHEET", "SUBSTITUTIONS",
-	# re-exported so a consumer imports them from the package rather than from its modules
-	"BaseDirective", "SphinxExtensionError", "CondensedClass", "strip", "stripAndNormalize",
-	"PYTHON_CODE_ROLE", "STYLE_ROLES", "pythonCodeRole", "styleRole",
-]
+__all__ = ["STYLESHEET", "SUBSTITUTIONS"]
 
-#: Name of the stylesheet shipped beside this module.
+#: Name of the stylesheet, in :mod:`pyTooling.Resources.Sphinx`.
 STYLESHEET = "pyTooling.css"
 
 #: Substitutions that have to stay substitutions, because ``|br|`` is written as one in every project.
+#:
+#: ``|br|`` and ``|hr|`` delegate to the ``:br:`` and ``:hr:`` roles rather than writing HTML themselves, so they
+#: reach every output format instead of only HTML - see :func:`~pyTooling.Documentation.Sphinx.Roles.breakRole`.
 SUBSTITUTIONS = """
 .. |degree| unicode:: U+00B0
    :trim:
 
-.. |br| raw:: html
+.. |br| replace:: :br:`.`
 
-   <br />
-
-.. |hr| raw:: html
-
-   <hr />
+.. |hr| replace:: :hr:`.`
 """
 
 
@@ -119,13 +129,15 @@ def installStylesheet(sphinx: Sphinx) -> None:
 	staticDirectory.mkdir(exist_ok=True)
 	sphinx.config.html_static_path.append(str(staticDirectory))
 
-	content = readResourceFile(StaticResources, STYLESHEET)
+	content = readResourceFile(SphinxResources, STYLESHEET)
 	digest = md5(content.encode("utf-8")).hexdigest()          # nosec B324 - a cache-busting name, not a signature
 	stylesheet = staticDirectory / f"pyTooling.{digest}.css"
 	sphinx.add_css_file(stylesheet.name)
 
 	if not stylesheet.exists():
-		for outdated in staticDirectory.glob("*.css"):
+		# Only this package's own copies - the directory is on 'html_static_path', so another extension may
+		# have written its stylesheet beside ours.
+		for outdated in staticDirectory.glob("pyTooling.*.css"):
 			outdated.unlink()
 
 		stylesheet.write_text(content, encoding="utf-8")
@@ -157,6 +169,9 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	for roleName in STYLE_ROLES:
 		sphinx.add_role(roleName, styleRole)
 
+	for roleName in BREAK_ROLES:
+		sphinx.add_role(roleName, breakRole)
+
 	sphinx.add_role(PYTHON_CODE_ROLE, pythonCodeRole)
 
 	sphinx.add_directive("condensed-class", CondensedClass)
@@ -164,4 +179,6 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	sphinx.connect("config-inited", extendProlog)
 	sphinx.connect("builder-inited", installStylesheet)
 
-	return {"version": "0.1.0", "parallel_read_safe": True, "parallel_write_safe": True}
+	# The extension's version is the package's - it ships with pyTooling and is released with it, so a second
+	# number to keep in step would only ever disagree.
+	return {"version": __version__, "parallel_read_safe": True, "parallel_write_safe": True}

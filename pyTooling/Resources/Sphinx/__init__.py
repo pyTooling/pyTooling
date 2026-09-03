@@ -28,4 +28,13 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Static resources shipped with :mod:`pyTooling.Documentation.Sphinx` - currently one stylesheet."""
+"""
+Resources shipped for :mod:`pyTooling.Documentation.Sphinx`.
+
+They live here rather than beside the extension because :mod:`pyTooling.Resources` is *"one package for the whole
+library rather than one per sub-package"* - a consumer looking for a data file has one place to look.
+
+Stylesheets:
+
+* :file:`pyTooling.css` - the styles the roles in :mod:`~pyTooling.Documentation.Sphinx.Roles` need.
+"""

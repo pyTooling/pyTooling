@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2023-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -41,20 +41,18 @@ can't, and a table header is *described* by its columns rather than built node b
    :mod:`pyTooling.Documentation.Sphinx`
       |rarr| The extension this belongs to, and what else it brings.
 """
-from enum                 import Enum
-from re                   import match as re_match
-from typing               import Optional as Nullable, TypeVar
+from enum                    import Enum
+from re                      import match as re_match
+from typing                  import Optional as Nullable, TypeVar
 
-from docutils             import nodes
-from sphinx.directives    import ObjectDescription
-from sphinx.errors        import ExtensionError
-from sphinx.util.logging  import getLogger
+from docutils                import nodes
+from sphinx.directives       import ObjectDescription
+from sphinx.errors           import ExtensionError
+from sphinx.util.logging     import getLogger
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators    import export
 from pyTooling.Documentation import DocumentationError
 
-
-__all__ = ["strip", "stripAndNormalize"]
 
 _EnumType = TypeVar("_EnumType", bound=Enum)
 """Type of an enumeration read from a directive's options."""
@@ -212,7 +210,7 @@ class BaseDirective(ObjectDescription[str]):
 				f"member of '{enumType.__name__}'."
 			) from cause
 
-	def _CreateSingleTableHeader(
+	def _CreateSingleRowTableHeader(
 		self,
 		columns: list[tuple[str, Nullable[int]]],
 		identifier: str,
