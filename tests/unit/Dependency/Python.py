@@ -33,6 +33,7 @@ Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk t
 need network access.
 """
 from datetime                    import datetime
+from datetime                    import date
 from pathlib                     import Path
 from typing                      import Optional as Nullable
 
@@ -660,7 +661,7 @@ class Licenses(Testcase):
 class ReadingLicenseOverrides(Testcase):
 	"""Reading the override file, which goes through :mod:`pyTooling.Configuration.YAML`."""
 
-	_DIRECTORY = Path("tests/unit/Dependency")
+	_DIRECTORY = Path("tests/data/Dependency")
 
 	def test_ItReadsWhatTheFileStates(self) -> None:
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
@@ -685,15 +686,44 @@ class ReadingLicenseOverrides(Testcase):
 		self.assertIsInstance(node, Dictionary)
 		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph"))
 
-	def test_AnEmptyFileStatesNothing(self) -> None:
-		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses-empty.yml")
+	def test_TheAnalysisDateIsRead(self) -> None:
+		"""What a package index says is as old as the request; what a human wrote is as old as the human."""
+		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 
-		self.assertIsNone(overrides.LicenseOf("igraph"))
+		self.assertEqual(date(2026, 9, 2), overrides.AnalysedAt)
+
+	def test_AFileWithoutAnAnalysisDateRaises(self) -> None:
+		"""It is required, because nothing else records how old a hand-written statement is."""
+		with self.assertRaises(DependencyError) as context:
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-no-date.yml")
+
+		self.assertIn("no 'analysedAt'", str(context.exception))
+
+	def test_AnAnalysisDateThatIsNotADateRaises(self) -> None:
+		with self.assertRaises(DependencyError) as context:
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-bad-date.yml")
+
+		self.assertIn("isn't an ISO-8601 date", str(context.exception))
+
+	def test_AnEmptyFileRaises(self) -> None:
+		"""It states no analysis date either. Before #376 it crashed in the YAML backend instead."""
+		with self.assertRaises(DependencyError):
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-empty.yml")
 
 	def test_AFileWithoutPackagesStatesNothing(self) -> None:
+		"""A date and no packages is a complete statement: *checked, nothing to override*."""
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses-no-packages.yml")
 
+		self.assertEqual(date(2026, 9, 2), overrides.AnalysedAt)
 		self.assertIsNone(overrides.LicenseOf("igraph"))
+
+	def test_OverridesBuiltInCodeNeedNoDate(self) -> None:
+		"""They are as old as the code, so the date is optional there and ``None`` when nobody passed one."""
+		self.assertIsNone(LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}).AnalysedAt)
+		self.assertEqual(
+			date(2026, 9, 2),
+			LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}, date(2026, 9, 2)).AnalysedAt
+		)
 
 	def test_AMissingFileRaises(self) -> None:
 		with self.assertRaises(FileNotFoundError):

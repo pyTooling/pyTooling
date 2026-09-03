@@ -38,7 +38,7 @@ Implementation of package dependencies.
 from __future__           import annotations
 
 from asyncio              import run as asyncio_run, gather as asyncio_gather
-from datetime             import datetime
+from datetime             import date, datetime
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from pathlib              import Path
@@ -127,17 +127,39 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	Version specifiers are matched in the order they are written, so the first one a version satisfies wins.
 	"""
 
+	_analysedAt:   Nullable[date]                             #: Day the statements were last checked by a human.
 	_licenses:     dict[str, str]                             #: License expression per package, for every version.
 	_versioned:    dict[str, list[tuple[SpecifierSet, str]]]  #: License expression per package and version range.
 	_licenseURLs:  dict[str, str]                             #: URL of the license's text, per package.
 	_repositories: dict[str, str]                             #: URL of the source repository, per package.
 
-	def __init__(self) -> None:
-		"""Initialize an empty set of overrides."""
+	def __init__(self, analysedAt: Nullable[date] = None) -> None:
+		"""
+		Initialize an empty set of overrides.
+
+		:param analysedAt: Optional, the day these statements were last checked by a human.
+		"""
+		self._analysedAt   = analysedAt
 		self._licenses     = {}
 		self._versioned    = {}
 		self._licenseURLs  = {}
 		self._repositories = {}
+
+	@readonly
+	def AnalysedAt(self) -> Nullable[date]:
+		"""
+		Read-only property to access the day these statements were last checked (:attr:`_analysedAt`).
+
+		A package index answers for itself every time it is asked, so what it says is as old as the request. These
+		statements are written by hand and are as old as whoever last looked, which nothing else records - so a
+		report can mark an entry *overridden*, and *stale* once this date is far enough back.
+
+		:meth:`FromFile` requires it; :meth:`FromDictionary` doesn't, because overrides assembled in code are as old
+		as the code.
+
+		:returns: The day of the last analysis, or ``None`` if the overrides were built without one.
+		"""
+		return self._analysedAt
 
 	@classmethod
 	def FromFile(cls, path: Path) -> Self:
@@ -150,10 +172,15 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 		:param path:                    Path of the YAML file to read.
 		:returns:                       The overrides the file states.
+		``analysedAt`` is **required**, and is the day a human last checked these statements. It is written as a
+		**quoted** ISO-8601 date - ``analysedAt: "2026-09-02"`` - because a configuration carries scalars rather
+		than dates, and JSON has no date type at all, so a string is what both formats can state.
+
 		:raises MissingDependencyError: If ``ruamel.yaml`` isn't installed.
 		:raises FileNotFoundError:      If the file doesn't exist.
+		:raises DependencyError:        If ``analysedAt`` is missing or isn't an ISO-8601 date.
 		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
-		                                A file stating nothing at all is fine and gives no overrides.
+		                                A file stating no packages is fine and gives no overrides.
 		:raises DependencyError:        If a version specifier in the file can't be parsed.
 		"""
 		# Imported here rather than at module level, so a missing 'ruamel.yaml' is reported when the overrides are
@@ -163,18 +190,34 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		if not path.exists():
 			raise FileNotFoundError(f"License override file '{path}' not found.")
 
-		packages = Configuration(path).get("packages", None)
+		configuration = Configuration(path)
+
+		if (analysedDay := configuration.get("analysedAt", None)) is None:
+			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' date.")
+			ex.add_note("These statements are written by hand, so nothing else records how old they are.")
+			ex.add_note('Add a quoted ISO-8601 date, for example: analysedAt: "2026-09-02"')
+			raise ex
+
+		try:
+			analysedAt = date.fromisoformat(str(analysedDay))
+		except ValueError as cause:
+			ex = DependencyError(f"License override file '{path}' states an 'analysedAt' that isn't an ISO-8601 date.")
+			ex.add_note(f"Got '{analysedDay}'.")
+			ex.add_note("Quote it, so it stays a string: analysedAt: \"2026-09-02\"")
+			raise ex from cause
+
+		packages = configuration.get("packages", None)
 		if packages is None:
-			return cls()
+			return cls(analysedAt)
 		elif not isinstance(packages, Dictionary):
 			ex = DependencyError(f"License override file '{path}' states a 'packages' node that isn't a mapping.")
 			ex.add_note(f"Got '{packages}'.")
 			raise ex
 
-		return cls.FromDictionary(packages)
+		return cls.FromDictionary(packages, analysedAt)
 
 	@classmethod
-	def FromDictionary(cls, packages: Union[Mapping[str, Any], Dictionary]) -> Self:
+	def FromDictionary(cls, packages: Union[Mapping[str, Any], Dictionary], analysedAt: Nullable[date] = None) -> Self:
 		"""
 		Build overrides from an already parsed mapping.
 
@@ -187,10 +230,12 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		its bare iteration yields values rather than keys.
 
 		:param packages:         Mapping of a package's name to what is stated for it.
+		:param analysedAt:       Optional, the day these statements were last checked. :meth:`FromFile` requires one;
+		                         overrides assembled in code are as old as the code and need none.
 		:returns:                The overrides the mapping states.
 		:raises DependencyError: If a version specifier can't be parsed.
 		"""
-		overrides = cls()
+		overrides = cls(analysedAt)
 
 		# A configuration node types its values as the whole 'ValueT' union, which every '.get' below would then
 		# have to be narrowed against. What is read here is a document either way, so it is read as one.
