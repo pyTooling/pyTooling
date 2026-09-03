@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Configuration.YAML`: reading values through the node API and the errors
 raised for a missing key or a wrong type.
 """
+from datetime import date, datetime
 from pathlib  import Path
 
 from pyTooling.Configuration      import InterpolationError, KeyNotFoundError, PathExpressionError
@@ -371,3 +372,37 @@ class DocumentRoot(Testcase):
 
 		self.assertIn("YAML", str(context.exception))
 		self.assertNotIn("JSON", str(context.exception))
+
+
+class Dates(Testcase):
+	"""YAML reads an unquoted date as one, which no other scalar type covers."""
+
+	_FILE = Path("tests/data/Configuration/dates.yml")
+
+	def test_ADateIsAScalar(self) -> None:
+		"""It used to raise ``UnsupportedValueTypeError`` - the parser returned a ``datetime.date``."""
+		self.assertEqual("2026-09-02", Configuration(self._FILE)["aDate"])
+
+	def test_ADateTimeIsAScalarToo(self) -> None:
+		"""In ISO-8601 spelling: ``str`` on a datetime writes a space where ISO-8601 writes a ``T``."""
+		self.assertEqual("2026-09-02T10:30:00", Configuration(self._FILE)["aDateTime"])
+
+	def test_ATimeZoneIsKept(self) -> None:
+		self.assertEqual("2026-09-02T10:30:00+00:00", Configuration(self._FILE)["aZonedDateTime"])
+
+	def test_TheyReadBackAsDates(self) -> None:
+		"""Which is what a caller does with them, since every scalar comes back as a string."""
+		config = Configuration(self._FILE)
+
+		self.assertEqual(date(2026, 9, 2), date.fromisoformat(config["aDate"]))
+		self.assertEqual(datetime(2026, 9, 2, 10, 30), datetime.fromisoformat(config["aDateTime"]))
+
+	def test_ATimeOfDayIsAString(self) -> None:
+		"""YAML has no time-of-day type, so ``10:30:00`` was always a string and still is."""
+		self.assertEqual("10:30:00", Configuration(self._FILE)["aTimeOfDay"])
+
+	def test_AQuotedDateIsUnchanged(self) -> None:
+		"""Quoting it keeps it a string, and the string is the same either way."""
+		config = Configuration(self._FILE)
+
+		self.assertEqual(config["aDate"], config["aQuotedDate"])
