@@ -37,7 +37,7 @@ Configuration reader for JSON files.
 """
 from __future__              import annotations
 
-from json                    import load
+from json                    import JSONDecodeError, loads
 from pathlib                 import Path
 from typing                  import Any, Union, Iterator as typing_Iterator, Self
 
@@ -460,14 +460,43 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the JSON file are accessible via Python's dictionary syntax.
 
+		A configuration's root **is** a mapping - this class derives from :class:`Dictionary` - so a document
+		describing anything else is rejected here rather than failing on the first access. A file with **no
+		content** carries no settings and reads as an empty configuration; :mod:`pyTooling.Configuration.YAML` does
+		the same, so both formats answer alike. An empty file is not valid JSON, but *the file is empty* is the same
+		situation in either format and answering differently would be the surprise.
+
 		:param configFile:          Configuration file to read and parse.
-		:raises ConfigurationError: If the JSON file doesn't exist or can't be parsed.
+		:raises ConfigurationError: If the JSON file doesn't exist.
+		:raises ConfigurationError: If the JSON file can't be parsed.
+		:raises ConfigurationError: If the JSON file's root isn't a mapping. |br|
+		                            An empty file and an explicit ``null`` are the exception: both are *no settings*
+		                            and read as an empty configuration.
 		"""
 		if not configFile.exists():
 			raise ConfigurationError(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
 		with configFile.open("r", encoding="utf-8") as file:
-			self._jsonConfig = load(file)
+			content = file.read()
+
+		if content.strip() == "":
+			document = {}
+		else:
+			try:
+				document = loads(content)
+			except JSONDecodeError as ex:
+				raise ConfigurationError(f"JSON configuration file '{configFile}' can't be parsed.") from ex
+
+		# 'null' is JSON's way of describing nothing, which is the same statement an empty file makes.
+		if document is None:
+			document = {}
+		elif not isinstance(document, dict):
+			ex = ConfigurationError(f"JSON configuration file '{configFile}' doesn't describe a mapping.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}' at the document's root.")
+			ex.add_note("A configuration needs a mapping of keys to values at its root.")
+			raise ex
+
+		self._jsonConfig = document
 
 		Dictionary.__init__(self, self, self, None, self._jsonConfig)
 		Abstract_Configuration.__init__(self, configFile)
