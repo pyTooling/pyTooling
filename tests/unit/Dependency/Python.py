@@ -692,6 +692,13 @@ class ReadingLicenseOverrides(Testcase):
 
 		self.assertEqual(date(2026, 9, 2), overrides.AnalysedAt)
 
+	def test_TheDateReadsEitherWayRound(self) -> None:
+		"""Unquoted it is YAML's own date type, quoted it is a string. A configuration spells both ISO-8601."""
+		unquoted = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
+		quoted =   LicenseOverrides.FromFile(self._DIRECTORY / "licenses-quoted-date.yml")
+
+		self.assertEqual(unquoted.AnalysedAt, quoted.AnalysedAt)
+
 	def test_AFileWithoutAnAnalysisDateRaises(self) -> None:
 		"""It is required, because nothing else records how old a hand-written statement is."""
 		with self.assertRaises(DependencyError) as context:

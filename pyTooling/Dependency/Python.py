@@ -172,9 +172,9 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 		:param path:                    Path of the YAML file to read.
 		:returns:                       The overrides the file states.
-		``analysedAt`` is **required**, and is the day a human last checked these statements. It is written as a
-		**quoted** ISO-8601 date - ``analysedAt: "2026-09-02"`` - because a configuration carries scalars rather
-		than dates, and JSON has no date type at all, so a string is what both formats can state.
+		``analysedAt`` is **required**, and is the day a human last checked these statements. It is an ISO-8601 date,
+		written either way round - ``analysedAt: 2026-09-02`` reads as YAML's own date type, and
+		``analysedAt: "2026-09-02"`` as a string. A configuration hands both over in the same ISO-8601 spelling.
 
 		:raises MissingDependencyError: If ``ruamel.yaml`` isn't installed.
 		:raises FileNotFoundError:      If the file doesn't exist.
@@ -195,7 +195,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		if (analysedDay := configuration.get("analysedAt", None)) is None:
 			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' date.")
 			ex.add_note("These statements are written by hand, so nothing else records how old they are.")
-			ex.add_note('Add a quoted ISO-8601 date, for example: analysedAt: "2026-09-02"')
+			ex.add_note("Add an ISO-8601 date, for example: analysedAt: 2026-09-02")
 			raise ex
 
 		try:
@@ -203,7 +203,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		except ValueError as cause:
 			ex = DependencyError(f"License override file '{path}' states an 'analysedAt' that isn't an ISO-8601 date.")
 			ex.add_note(f"Got '{analysedDay}'.")
-			ex.add_note("Quote it, so it stays a string: analysedAt: \"2026-09-02\"")
+			ex.add_note("Write it as an ISO-8601 date: analysedAt: 2026-09-02")
 			raise ex from cause
 
 		packages = configuration.get("packages", None)
