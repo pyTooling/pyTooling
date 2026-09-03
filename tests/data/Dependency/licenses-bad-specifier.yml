@@ -1,7 +1,6 @@
-version: "0.1"
-analysedAt: "2026-09-02"
+version:    "0.1"
+analysedAt: 2026-09-02
 
 packages:
-  igraph:
-    versions:
-      "not a specifier": MIT
+  "igraph not a specifier":
+    license: MIT

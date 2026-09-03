@@ -1,14 +1,21 @@
-version: "0.1"
+version:    "0.1"
 analysedAt: 2026-09-02
 
 packages:
+  colorama:
+    license:    BSD-3-Clause
+    licenseURL: https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt
+    repository: https://GitHub.com/tartley/colorama
+
+  "igraph >=0.10":
+    license: GPL-2.0-or-later
+
+  "igraph <0.10":
+    license: GPL-2.0-only
+
   igraph:
-    license:    GPL-2.0-or-later
     licenseURL: https://github.com/igraph/igraph/blob/master/COPYING
     repository: https://github.com/igraph/igraph
-    versions:
-      ">=0.10": GPL-2.0-or-later
-      "<0.10":  GPL-2.0-only
 
   ruamel.yaml:
     license: MIT

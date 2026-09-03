@@ -629,7 +629,8 @@ class Licenses(Testcase):
 	def test_Override_PerVersion(self) -> None:
 		"""A package that relicensed has one license before the switch and another after it."""
 		overrides = LicenseOverrides.FromDictionary({
-			"project": {"versions": {">=2.0": "Apache-2.0", "<2.0": "MIT"}}
+			"project >=2.0": {"license": "Apache-2.0"},
+			"project <2.0":  {"license": "MIT"},
 		})
 
 		old = self._release(overrides, "v1.5.0")
@@ -667,17 +668,46 @@ class ReadingLicenseOverrides(Testcase):
 	def test_ItReadsWhatTheFileStates(self) -> None:
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 
-		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph"))
+		self.assertEqual("BSD-3-Clause", overrides.LicenseOf("colorama"))
 		self.assertEqual("MIT", overrides.LicenseOf("ruamel-yaml"))
 		self.assertEqual("https://github.com/igraph/igraph/blob/master/COPYING", overrides.LicenseURLOf("igraph"))
 		self.assertEqual("https://github.com/igraph/igraph", overrides.RepositoryOf("igraph"))
 
-	def test_AVersionRangeFromTheFile(self) -> None:
-		"""A table keyed by version specifier is the shape that needed the node to iterate by **key**."""
+	def test_AKeyNamingNoVersionAnswersWithoutOne(self) -> None:
+		"""``igraph`` states the URLs for every version; the licenses are stated by the two narrower keys."""
+		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
+
+		self.assertIsNotNone(overrides.LicenseURLOf("igraph"))
+		self.assertIsNone(overrides.LicenseOf("igraph"))
+
+	def test_AKeyCarriesItsVersionExpression(self) -> None:
+		"""The shape a requirement line has - a name, then optionally an expression."""
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 
 		self.assertEqual("GPL-2.0-only", overrides.LicenseOf("igraph", SemanticVersion.Parse("0.9.0")))
 		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph", SemanticVersion.Parse("0.10.5")))
+
+	def test_ABareVersionIsAnEquality(self) -> None:
+		overrides = LicenseOverrides.FromDictionary({"igraph 0.9.10": {"license": "GPL-2.0-only"}})
+
+		self.assertEqual("GPL-2.0-only", overrides.LicenseOf("igraph", SemanticVersion.Parse("0.9.10")))
+		self.assertIsNone(overrides.LicenseOf("igraph", SemanticVersion.Parse("0.9.11")))
+
+	def test_AKeyWithoutASpaceSplitsTheSameWay(self) -> None:
+		"""``igraph>=0.10`` is how a requirement line writes it, so it reads the same."""
+		overrides = LicenseOverrides.FromDictionary({"igraph>=0.10": {"license": "GPL-2.0-or-later"}})
+
+		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph", SemanticVersion.Parse("0.10.5")))
+
+	def test_EveryFieldCanBeStatedPerVersion(self) -> None:
+		"""A project that moved forge between releases has two ``repository`` statements and no special case."""
+		overrides = LicenseOverrides.FromDictionary({
+			"project <2.0":  {"repository": "https://old.forge/project"},
+			"project >=2.0": {"repository": "https://new.forge/project"},
+		})
+
+		self.assertEqual("https://old.forge/project", overrides.RepositoryOf("project", SemanticVersion.Parse("1.9")))
+		self.assertEqual("https://new.forge/project", overrides.RepositoryOf("project", SemanticVersion.Parse("2.0")))
 
 	def test_TheNodeIsHandedOverUnconverted(self) -> None:
 		""":meth:`FromDictionary` takes the configuration node itself - there is no flattening step."""
@@ -685,7 +715,7 @@ class ReadingLicenseOverrides(Testcase):
 		overrides = LicenseOverrides.FromDictionary(node)
 
 		self.assertIsInstance(node, Dictionary)
-		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph"))
+		self.assertEqual("BSD-3-Clause", overrides.LicenseOf("colorama"))
 
 	def test_TheAnalysisDateIsRead(self) -> None:
 		"""What a package index says is as old as the request; what a human wrote is as old as the human."""
@@ -705,7 +735,7 @@ class ReadingLicenseOverrides(Testcase):
 		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION)
 
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
-		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph"))
+		self.assertEqual("BSD-3-Clause", overrides.LicenseOf("colorama"))
 
 	def test_AFileWithoutAVersionRaises(self) -> None:
 		with self.assertRaises(DependencyError) as context:
