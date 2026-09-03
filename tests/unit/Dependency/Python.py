@@ -785,6 +785,13 @@ class ReadingLicenseOverrides(Testcase):
 			LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}, date(2026, 9, 2)).AnalysedAt
 		)
 
+	def test_TheRepositorysOwnOverrideFileLoads(self) -> None:
+		"""'doc/dependencies.yml' is read by the 'dependency-table' directive, so a format change must reach it."""
+		overrides = LicenseOverrides.FromFile(Path("doc/dependencies.yml"))
+
+		self.assertIsNotNone(overrides.AnalysedAt)
+		self.assertEqual("Apache-2.0", overrides.LicenseOf("aiohttp"))
+
 	def test_AMissingFileRaises(self) -> None:
 		with self.assertRaises(FileNotFoundError):
 			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-does-not-exist.yml")

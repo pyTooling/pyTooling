@@ -7,6 +7,14 @@
 #                                                                                                                      #
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
+# Structure of this file, checked against 'LicenseOverrides.SCHEMA_VERSION'. Quoted, so YAML keeps it a string:
+# unquoted it is a float, and a float loses a trailing zero.
+version: "0.1"
+
+# The day these statements were last checked against the projects themselves. A package index answers for itself
+# every time it is asked; this file is as old as whoever last looked.
+analysedAt: 2026-08-27
+
 packages:
   # 'license: Apache 2' is a name, not an identifier. LICENSE.txt is the Apache License 2.0.
   aiohttp:
