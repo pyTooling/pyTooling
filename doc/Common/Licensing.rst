@@ -218,14 +218,14 @@ A license has **four** URLs, and they answer four different questions:
 
    * - Property
      - What it points at
+   * - :attr:`~pyTooling.Licensing.License.URL`
+     - The page where the **licensor** publishes it. Looked up in
+       :data:`~pyTooling.Licensing.LICENSE_URLS`.
    * - :attr:`~pyTooling.Licensing.License.SPDXURL`
      - SPDX's catalogue entry. Derived from the identifier.
    * - :attr:`~pyTooling.Licensing.License.OSIURL`
      - OSI's catalogue entry, if OSI approved it. Looked up in
        :data:`~pyTooling.Licensing.OSI_LICENSE_URLS`.
-   * - :attr:`~pyTooling.Licensing.License.URL`
-     - The page where the **licensor** publishes it. Looked up in
-       :data:`~pyTooling.Licensing.LICENSE_URLS`.
    * - :attr:`~pyTooling.Licensing.License.TextURLs`
      - The license **text**, by the format it is published as. Looked up in
        :data:`~pyTooling.Licensing.LICENSE_TEXT_URLS`.
@@ -234,9 +234,9 @@ A license has **four** URLs, and they answer four different questions:
 
    from pyTooling.Licensing import Apache_2_0_License
 
+   Apache_2_0_License.URL               # https://www.apache.org/licenses/LICENSE-2.0
    Apache_2_0_License.SPDXURL           # https://spdx.org/licenses/Apache-2.0.html
    Apache_2_0_License.OSIURL            # https://opensource.org/license/apache-2.0
-   Apache_2_0_License.URL               # https://www.apache.org/licenses/LICENSE-2.0
    Apache_2_0_License.TextURLs["txt"]   # https://www.apache.org/licenses/LICENSE-2.0.txt
 
 :attr:`~pyTooling.Licensing.License.TextURLs` is keyed by the file extension without its dot - ``txt``, ``md``,

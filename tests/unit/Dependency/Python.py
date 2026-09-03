@@ -700,6 +700,26 @@ class ReadingLicenseOverrides(Testcase):
 
 		self.assertEqual(unquoted.AnalysedAt, quoted.AnalysedAt)
 
+	def test_TheSchemaVersionIsChecked(self) -> None:
+		"""It says which structure the file is written for, so a later one can be told apart rather than misread."""
+		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION)
+
+		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
+		self.assertEqual("GPL-2.0-or-later", overrides.LicenseOf("igraph"))
+
+	def test_AFileWithoutAVersionRaises(self) -> None:
+		with self.assertRaises(DependencyError) as context:
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-no-version.yml")
+
+		self.assertIn("states no 'version'", str(context.exception))
+
+	def test_AFileWrittenForAnotherStructureRaises(self) -> None:
+		"""Reading it anyway on the chance that it still fits is the failure mode a version field exists to stop."""
+		with self.assertRaises(DependencyError) as context:
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-wrong-version.yml")
+
+		self.assertIn("written for structure '9.9'", str(context.exception))
+
 	def test_AFileWithoutAnAnalysisDateRaises(self) -> None:
 		"""It is required, because nothing else records how old a hand-written statement is."""
 		with self.assertRaises(DependencyError) as context:
