@@ -170,14 +170,17 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		handed to :meth:`FromDictionary` **as it is** - a configuration node answers ``items()`` and ``get()``, so
 		there is nothing to convert and no second constructor for the node tree.
 
-		:param path:                    Path of the YAML file to read.
-		:returns:                       The overrides the file states.
 		``analysedAt`` is **required**, and is the day a human last checked these statements. It is an ISO-8601 date,
 		written either way round - ``analysedAt: 2026-09-02`` reads as YAML's own date type, and
 		``analysedAt: "2026-09-02"`` as a string. A configuration hands both over in the same ISO-8601 spelling.
 
+		:param path:                    Path of the YAML file to read.
+		:returns:                       The overrides the file states.
 		:raises MissingDependencyError: If ``ruamel.yaml`` isn't installed.
 		:raises FileNotFoundError:      If the file doesn't exist.
+		:raises ConfigurationError:     If the file isn't a YAML document describing a mapping. |br|
+		                                An empty file is one, and states no overrides - but it states no
+		                                ``analysedAt`` either, so it is rejected by the next check.
 		:raises DependencyError:        If ``analysedAt`` is missing or isn't an ISO-8601 date.
 		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
 		                                A file stating no packages is fine and gives no overrides.
@@ -187,6 +190,8 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		# read instead of when 'pyTooling.Dependency.Python' is imported.
 		from pyTooling.Configuration.YAML import Configuration
 
+		# 'Configuration' reports a missing file too, as a 'ConfigurationError' naming the *format*. This says which
+		# file of ours is missing, and is what the signature promises, so it stays.
 		if not path.exists():
 			raise FileNotFoundError(f"License override file '{path}' not found.")
 
