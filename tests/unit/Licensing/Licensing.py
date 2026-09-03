@@ -32,12 +32,16 @@
 Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
 """
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
+from pyTooling.Licensing import CC0_1_0, GPL_2_0_only, GPL_2_0_or_later, OSI_LICENSE_URLS, PSF_2_0_License
+from pyTooling.Licensing import LicenseAbsence, ProprietaryLicense, UnknownLicense
+from pyTooling.Licensing import BSD_3_Clause_License, GPL_3_0_only, GPL_3_0_or_later
+from pyTooling.Licensing import LICENSE_TEXT_URLS, LICENSE_URLS
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
 from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseReference, LicensingError
 from pyTooling.Licensing import MIT_License
 from pyTooling.Licensing import OrLaterOperator, OrOperator
 from pyTooling.Licensing import SPDXLicense
-from pyTooling.Licensing import Operator, UnaryOperator, WithOperator
+from pyTooling.Licensing import BaseLicense, Operator, UnaryOperator, WithOperator
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing   import Testcase
 
@@ -551,3 +555,272 @@ class MalformedTrees(Testcase):
 		):
 			with self.assertRaises(exception):
 				call()
+
+
+class OriginalText(Testcase):
+	"""An expression keeps the text it was parsed from, because rendering it back is not the same string."""
+
+	def test_TheRootKeepsWhatWasParsed(self) -> None:
+		self.assertEqual("Apache-2.0 OR MIT", LicenseExpression.Parse("Apache-2.0 OR MIT").OriginalText)
+
+	def test_RenderingIsNotTheSameAsWhatWasWritten(self) -> None:
+		"""``or`` parses; ``__str__`` renders the canonical ``OR``. This is why the text has to be kept."""
+		expression = LicenseExpression.Parse("Apache-2.0 or MIT")
+
+		self.assertEqual("Apache-2.0 OR MIT", str(expression))
+		self.assertEqual("Apache-2.0 or MIT", expression.OriginalText)
+
+	def test_EveryNodeAnswersWithTheRoots(self) -> None:
+		"""A tree comes from one string, so a leaf reports the whole expression rather than its own fragment."""
+		expression = LicenseExpression.Parse("Apache-2.0 OR MIT")
+
+		for node in expression.IterateExpression():
+			with self.subTest(node=str(node)):
+				self.assertEqual("Apache-2.0 OR MIT", node.OriginalText)
+
+	def test_ATreeBuiltInCodeWasOriginalTextNothing(self) -> None:
+		self.assertEqual("", SPDXLicense(Apache_2_0_License).OriginalText)
+
+
+class BaseLicenses(Testcase):
+	"""The intermediate base-class collecting the nodes that name a license."""
+
+	def test_BothLeafKindsAreOne(self) -> None:
+		self.assertTrue(issubclass(SPDXLicense, BaseLicense))
+		self.assertTrue(issubclass(LicenseReference, BaseLicense))
+
+	def test_AnExceptionIsNotOne(self) -> None:
+		"""The right operand of ``WITH`` is granted *from* a license; it isn't one."""
+		self.assertFalse(issubclass(LicenseException, BaseLicense))
+
+	def test_AnOperatorIsNotOne(self) -> None:
+		for operatorType in (AndOperator, OrOperator, WithOperator, OrLaterOperator):
+			with self.subTest(operator=operatorType.__name__):
+				self.assertFalse(issubclass(operatorType, BaseLicense))
+
+	def test_ItIsAbstract(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			BaseLicense()
+
+	def test_BothAnswerIdentifier(self) -> None:
+		"""Which is the point: a report collects them without branching on which kind it got."""
+		expression = LicenseExpression.Parse("MIT AND LicenseRef-Proprietary")
+
+		self.assertEqual(
+			["MIT", "LicenseRef-Proprietary"],
+			[term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
+		)
+
+	def test_AReferenceIdentifierCarriesItsDocument(self) -> None:
+		"""``Identifier`` is the whole reference; ``LicenseIdentifier`` is the part after ``LicenseRef-``."""
+		reference = LicenseExpression.Parse("DocumentRef-spdx:LicenseRef-Custom")
+
+		self.assertEqual("DocumentRef-spdx:LicenseRef-Custom", reference.Identifier)
+		self.assertEqual("Custom", reference.LicenseIdentifier)
+		self.assertEqual("spdx", reference.DocumentIdentifier)
+
+	def test_AnExceptionIsNotCollected(self) -> None:
+		expression = LicenseExpression.Parse("Apache-2.0 WITH LLVM-exception")
+
+		self.assertEqual(
+			["Apache-2.0"],
+			[term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
+		)
+
+
+class LicenseHomepages(Testcase):
+	"""Where the licensor itself publishes the license, and its text by format."""
+
+	def test_TheLicensorsOwnPage(self) -> None:
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0", Apache_2_0_License.URL)
+		self.assertEqual("https://creativecommons.org/publicdomain/zero/1.0/", CC0_1_0.URL)
+
+	def test_ALicenseWithNoHomeOfItsOwn(self) -> None:
+		"""``MIT`` and the BSD licenses are published by OSI and nobody else, and that URL is :attr:`OSIURL`."""
+		for spdxLicense in (MIT_License, BSD_3_Clause_License):
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertIsNone(spdxLicense.URL)
+				self.assertIsNotNone(spdxLicense.OSIURL)
+
+	def test_TheTextByFormat(self) -> None:
+		self.assertEqual(
+			"https://www.apache.org/licenses/LICENSE-2.0.txt",
+			Apache_2_0_License.TextURLs["txt"]
+		)
+		self.assertEqual(
+			"https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt",
+			CC0_1_0.TextURLs["txt"]
+		)
+
+	def test_ALicenseThatPublishesNoText(self) -> None:
+		self.assertEqual({}, MIT_License.TextURLs)
+
+	def test_TheReturnedMappingIsACopy(self) -> None:
+		"""Editing it must not reach :data:`LICENSE_TEXT_URLS`."""
+		urls = Apache_2_0_License.TextURLs
+		urls["txt"] = "https://example.org/not-the-license"
+
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0.txt", Apache_2_0_License.TextURLs["txt"])
+
+	def test_BothTablesNameOnlyPredefinedLicenses(self) -> None:
+		identifiers = {spdxLicense.SPDXIdentifier for spdxLicense in LICENSES}
+
+		self.assertEqual(set(), set(LICENSE_URLS) - identifiers)
+		self.assertEqual(set(), set(LICENSE_TEXT_URLS) - identifiers)
+
+	def test_EveryFormatIsAnExtension(self) -> None:
+		"""The key is a file extension without its dot, so a caller can build a filename from it."""
+		for spdxIdentifier, urls in LICENSE_TEXT_URLS.items():
+			for extension, url in urls.items():
+				with self.subTest(license=spdxIdentifier, format=extension):
+					self.assertIn(extension, ("txt", "md", "rst", "tex"))
+					self.assertTrue(url.startswith("https://"))
+
+	def test_ATextURLEndsInItsFormat(self) -> None:
+		"""Except where the licensor doesn't name the file after it - which is worth seeing rather than assuming."""
+		exceptions = {"https://unlicense.org/UNLICENSE", "https://www.mozilla.org/media/MPL/2.0/index.txt"}
+
+		for spdxIdentifier, urls in LICENSE_TEXT_URLS.items():
+			for extension, url in urls.items():
+				with self.subTest(license=spdxIdentifier, format=extension):
+					self.assertTrue(url.endswith(f".{extension}") or url in exceptions)
+
+	def test_ALicensePublishedInSeveralFormats(self) -> None:
+		"""The GNU licenses are the reason this is a mapping rather than one more URL property."""
+		self.assertEqual(
+			{"txt", "md", "rst", "tex"},
+			set(GPL_3_0_only.TextURLs)
+		)
+		self.assertEqual("https://www.gnu.org/licenses/gpl-3.0.rst", GPL_3_0_only.TextURLs["rst"])
+
+	def test_APairSharesItsPublisherURLs(self) -> None:
+		"""``-only`` and ``-or-later`` are one document at GNU, as they are at OSI."""
+		self.assertEqual(GPL_3_0_only.URL, GPL_3_0_or_later.URL)
+		self.assertEqual(GPL_3_0_only.TextURLs, GPL_3_0_or_later.TextURLs)
+
+	def test_TheFourURLsAreDifferentQuestions(self) -> None:
+		"""Catalogue entry, OSI's entry, the licensor's page, the text - four properties, four answers."""
+		self.assertEqual("https://spdx.org/licenses/Apache-2.0.html", Apache_2_0_License.SPDXURL)
+		self.assertEqual("https://opensource.org/license/apache-2.0", Apache_2_0_License.OSIURL)
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0", Apache_2_0_License.URL)
+		self.assertEqual("https://www.apache.org/licenses/LICENSE-2.0.txt", Apache_2_0_License.TextURLs["txt"])
+
+
+class LicenseURLs(Testcase):
+	"""Where a license's text is published: derived at SPDX, looked up at OSI."""
+
+	def test_TheSPDXURLIsDerived(self) -> None:
+		self.assertEqual("https://spdx.org/licenses/MIT.html", MIT_License.SPDXURL)
+		self.assertEqual("https://spdx.org/licenses/GPL-2.0-or-later.html", GPL_2_0_or_later.SPDXURL)
+
+	def test_EveryPredefinedLicenseHasOne(self) -> None:
+		for spdxLicense in LICENSES:
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertEqual(f"https://spdx.org/licenses/{spdxLicense.SPDXIdentifier}.html", spdxLicense.SPDXURL)
+
+	def test_TheOSIURLIsLookedUp(self) -> None:
+		"""OSI's addresses don't follow the SPDX identifier, which is why they are a table."""
+		self.assertEqual("https://opensource.org/license/mit", MIT_License.OSIURL)
+		self.assertEqual("https://opensource.org/license/Python-2.0", PSF_2_0_License.OSIURL)
+
+	def test_TwoIdentifiersCanShareOneOSIPage(self) -> None:
+		"""*only* versus *or later* is SPDX's distinction, not OSI's."""
+		self.assertEqual(GPL_2_0_only.OSIURL, GPL_2_0_or_later.OSIURL)
+		self.assertEqual("https://opensource.org/license/gpl-2.0", GPL_2_0_only.OSIURL)
+
+	def test_ALicenseOSIDidNotApproveHasNone(self) -> None:
+		self.assertFalse(CC0_1_0.OSIApproved)
+		self.assertIsNone(CC0_1_0.OSIURL)
+
+	def test_AnOSIURLExistsExactlyWhenOSIApproved(self) -> None:
+		for spdxLicense in LICENSES:
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertEqual(spdxLicense.OSIApproved, spdxLicense.OSIURL is not None)
+
+	def test_TheTableNamesOnlyPredefinedLicenses(self) -> None:
+		"""An entry for an identifier no license carries would never be reached."""
+		identifiers = {spdxLicense.SPDXIdentifier for spdxLicense in LICENSES}
+
+		self.assertEqual(set(), set(OSI_LICENSE_URLS) - identifiers)
+
+	def test_AnUnlistedLicenseHasNoOSIURL(self) -> None:
+		self.assertIsNone(License("Not-A-Real-Identifier", "Not a real license").OSIURL)
+
+
+class AbsentLicenses(Testcase):
+	"""SPDX's ``NONE`` and ``NOASSERTION``, which are values a field holds instead of an expression."""
+
+	def test_BothParse(self) -> None:
+		for text, absence in (("NONE", LicenseAbsence.NoLicense), ("NOASSERTION", LicenseAbsence.NoAssertion)):
+			with self.subTest(expression=text):
+				expression = LicenseExpression.Parse(text)
+
+				self.assertIsInstance(expression, UnknownLicense)
+				self.assertIs(absence, expression.Absence)
+				self.assertEqual(text, str(expression))
+				self.assertEqual(text, expression.Identifier)
+
+	def test_TheyAreTwoDifferentStatements(self) -> None:
+		"""``NONE`` says no license applies; ``NOASSERTION`` says nobody claimed either way."""
+		self.assertNotEqual(
+			LicenseExpression.Parse("NONE").Absence,
+			LicenseExpression.Parse("NOASSERTION").Absence
+		)
+
+	def test_NeitherCanBeAnOperand(self) -> None:
+		"""SPDX's grammar is ``simple-expression | compound-expression``; neither value is a term inside one."""
+		for text in ("MIT AND NOASSERTION", "NONE OR MIT", "NOASSERTION WITH LLVM-exception", "MIT AND (NONE)"):
+			with self.subTest(expression=text):
+				with self.assertRaises(LicenseExpressionError):
+					LicenseExpression.Parse(text)
+
+	def test_ItsParentIsReadOnly(self) -> None:
+		"""Every other node's ``Parent`` is assignable; this one's can't be, so it is a read-only property."""
+		with self.assertRaises(AttributeError):
+			UnknownLicense().Parent = AndOperator(SPDXLicense(MIT_License), SPDXLicense(ISC_License))
+
+	def test_ItRefusesToBecomeAnOperand(self) -> None:
+		"""Built in code rather than parsed, the same rule has to hold - an operator assigns its operands' parent."""
+		with self.assertRaises(AttributeError):
+			AndOperator(SPDXLicense(MIT_License), UnknownLicense())
+
+	def test_TheDefaultIsNoAssertion(self) -> None:
+		"""Saying nothing about a license is a stronger claim than saying there is none, so it isn't the default."""
+		self.assertIs(LicenseAbsence.NoAssertion, UnknownLicense().Absence)
+
+	def test_ItIsALicenseNode(self) -> None:
+		self.assertIsInstance(UnknownLicense(), BaseLicense)
+
+	def test_TheAbsenceMustBeOne(self) -> None:
+		with self.assertRaises(TypeError):
+			UnknownLicense("NOASSERTION")
+
+
+class ProprietaryLicenses(Testcase):
+	"""A license that isn't published, which SPDX has no way to name."""
+
+	def test_ItRendersAsALicenseRef(self) -> None:
+		self.assertEqual("LicenseRef-Proprietary", str(ProprietaryLicense()))
+		self.assertEqual("LicenseRef-Proprietary", ProprietaryLicense().Identifier)
+
+	def test_ItIsALicenseReference(self) -> None:
+		"""Which is what it writes, so it is what it is."""
+		proprietary = ProprietaryLicense()
+
+		self.assertIsInstance(proprietary, LicenseReference)
+		self.assertIsInstance(proprietary, BaseLicense)
+		self.assertEqual("Proprietary", proprietary.LicenseIdentifier)
+		self.assertIsNone(proprietary.DocumentIdentifier)
+
+	def test_ParsingItBackGivesAPlainReference(self) -> None:
+		"""Deliberate: SPDX defines no convention making that identifier mean *proprietary*."""
+		parsed = LicenseExpression.Parse("LicenseRef-Proprietary")
+
+		self.assertIsInstance(parsed, LicenseReference)
+		self.assertNotIsInstance(parsed, ProprietaryLicense)
+
+	def test_ItCanBeAnOperand(self) -> None:
+		"""Unlike an absent license - a proprietary license exists, it just isn't published."""
+		expression = AndOperator(SPDXLicense(MIT_License), ProprietaryLicense())
+
+		self.assertEqual("MIT AND LicenseRef-Proprietary", str(expression))

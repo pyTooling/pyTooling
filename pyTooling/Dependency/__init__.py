@@ -49,12 +49,14 @@ from __future__            import annotations
 from datetime              import datetime
 from typing                import Optional as Nullable, Iterable, Self, Iterator
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import getFullyQualifiedName, firstKey
-from pyTooling.Versioning  import SemanticVersion
-from pyTooling.Warning     import Warning
+from pyTooling.Decorators      import export, readonly
+from pyTooling.MetaClasses     import ExtendedType
+from pyTooling.Exceptions      import ToolingException
+from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
+from pyTooling.GenericPath.URL import URL
+from pyTooling.Licensing       import LicenseExpression, BaseLicense, UnknownLicense
+from pyTooling.Versioning      import SemanticVersion
+from pyTooling.Warning         import Warning
 
 
 @export
@@ -84,9 +86,19 @@ class ReleaseNotFoundError(DependencyError):
 @export
 class BrokenRequirementWarning(Warning):
 	"""
-	A requirement carries an environment marker that matches none of the extras declared by the project.
+	A requirement names an extra the project doesn't declare.
 
 	Such a requirement can't be assigned to an extra, so it's not reachable through :attr:`Requirements`.
+	"""
+
+
+@export
+class UnknownLicenseWarning(Warning):
+	"""
+	A package version's license couldn't be resolved from what its package index publishes.
+
+	The published expression is kept in :attr:`~PackageVersion.LicenseExpression` either way, so the warning names
+	what would have to be stated by hand.
 	"""
 
 
@@ -104,11 +116,17 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	:class:`PackageVersion`s.
 	"""
 
-	_package:    Package                                              #: Reference to the corresponding package
-	_version:    SemanticVersion                                      #: :class:`SemanticVersion` of this package version.
-	_releasedAt: Nullable[datetime]                                   #: Time when this package version was released.
-
-	_dependsOn: dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
+	_package:           Package                                               #: Reference to the corresponding package
+	_version:           SemanticVersion                                       #: :class:`SemanticVersion` of this version.
+	_releasedAt:        Nullable[datetime]                                    #: Time this package version was released.
+	_licenseExpression: LicenseExpression                                     #: What was published about the license.
+	_licenseURL:        Nullable[URL]                                         #: URL of the license's text, if known.
+	_repositoryURL:     Nullable[URL]                                         #: URL of the source repository, if known.
+	_documentationURL:  Nullable[URL]                                         #: URL of the documentation, if known.
+	_issueTrackerURL:   Nullable[URL]                                         #: URL of the issue tracker, if known.
+	_projectURL:        Nullable[URL]                                         #: URL of the project's homepage.
+	_changelogURL:      Nullable[URL]                                         #: URL of the changelog, if known.
+	_dependsOn:         dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
 	def __init__(self, version: SemanticVersion, package: Package, releasedAt: Nullable[datetime] = None) -> None:
 		"""
@@ -144,9 +162,15 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(releasedAt)}'.")
 			raise ex
 
-		self._releasedAt = releasedAt
-
-		self._dependsOn = {}
+		self._releasedAt        = releasedAt
+		self._licenseExpression = UnknownLicense()
+		self._licenseURL        = None
+		self._repositoryURL     = None
+		self._documentationURL  = None
+		self._issueTrackerURL   = None
+		self._projectURL        = None
+		self._changelogURL      = None
+		self._dependsOn         = {}
 
 	@readonly
 	def Package(self) -> Package:
@@ -174,6 +198,146 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 		:returns: Optional release date and time.
 		"""
 		return self._releasedAt
+
+	@readonly
+	def Licenses(self) -> tuple[BaseLicense, ...]:
+		"""
+		Read-only property to return the licenses named by :attr:`LicenseExpression`.
+
+		**Every** license the version is published under, whether or not SPDX knows it: an
+		:class:`~pyTooling.Licensing.SPDXLicense` for one on the SPDX License List, a
+		:class:`~pyTooling.Licensing.LicenseReference` for a ``LicenseRef-<id>`` that isn't. Both are a
+		:class:`~pyTooling.Licensing.BaseLicense` and both answer
+		:attr:`~pyTooling.Licensing.BaseLicense.Identifier`, so a report doesn't have to branch:
+
+		.. code-block:: python
+
+		   [term.Identifier for term in version.Licenses]   # ['MIT', 'LicenseRef-Proprietary']
+
+		A :class:`~pyTooling.Licensing.License` object exists only for the first kind, and
+		:attr:`~pyTooling.Licensing.SPDXLicense.License` is where it is reached.
+
+		``NOASSERTION`` and ``NONE`` are reported here too, as an
+		:class:`~pyTooling.Licensing.UnknownLicense` - the index *stated* something, and dropping it would leave this
+		indistinguishable from a version whose license didn't resolve at all. Test for that class where the
+		difference matters; :attr:`LicenseExpression` is ``None`` only when nothing resolved.
+
+		This flattens the expression: ``Apache-2.0 AND MIT`` and ``Apache-2.0 OR BSD-2-Clause`` both give two
+		licenses, although one requires both and the other offers a choice. Ask :attr:`LicenseExpression` when that
+		difference matters. A license exception is not a license and is not returned.
+
+		:returns: Licenses this version is published under, or an empty tuple if nothing resolved.
+		"""
+		return tuple(
+			node
+			for node in self._licenseExpression.IterateExpression()
+			if isinstance(node, BaseLicense)
+		)
+
+	@readonly
+	def LicenseExpression(self) -> LicenseExpression:
+		"""
+		Read-only property to access the license expression (:attr:`_licenseExpression`).
+
+		The expression keeps what :attr:`Licenses` flattens away - which licenses are required together and which are
+		a choice.
+
+		**It is never** ``None``. A version whose license didn't resolve carries an
+		:class:`~pyTooling.Licensing.UnknownLicense`, which is SPDX's own way of saying so, and that node keeps what
+		was published. Test for that class rather than for ``None``.
+
+		:returns: The license expression.
+		"""
+		return self._licenseExpression
+
+	@readonly
+	def PublishedLicense(self) -> str:
+		"""
+		Read-only property to access the license as it was published.
+
+		This is the expression's :attr:`~pyTooling.Licensing.LicenseExpression.OriginalText`, which is the **only**
+		place the published text is kept - a parsed expression records what
+		:meth:`~pyTooling.Licensing.LicenseExpression.Parse` read, and a node built because nothing parsed records
+		what was stated anyway. :meth:`~pyTooling.Licensing.LicenseExpression.__str__` is not a substitute - it
+		re-renders canonically, so ``Apache-2.0 or MIT`` comes back as ``Apache-2.0 OR MIT``.
+
+		:returns: The license as published, or an empty string if nothing was published.
+		"""
+		return self._licenseExpression.OriginalText
+
+	@readonly
+	def LicenseURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of this version's license text (:attr:`_licenseURL`).
+
+		A package index has no field for it, so this is only known where it was stated by hand.
+
+		:returns: URL of the license's text, or ``None`` if unknown.
+		"""
+		return self._licenseURL
+
+	@readonly
+	def RepositoryURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of the source repository (:attr:`_repositoryURL`).
+
+		This is where the sources live, which is not where the package is *published* - a package index has its own
+		page per package.
+
+		A package index publishes these per release, and they move - a project migrating to another forge has one
+		URL before the migration and another after it.
+
+		:returns: URL of the source repository, or ``None`` if this release didn't name one.
+		"""
+		return self._repositoryURL
+
+	@readonly
+	def DocumentationURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of the documentation (:attr:`_documentationURL`).
+
+		A package index publishes these per release, and they move - a project migrating to another forge has one
+		URL before the migration and another after it.
+
+		:returns: URL of the documentation, or ``None`` if this release didn't name one.
+		"""
+		return self._documentationURL
+
+	@readonly
+	def IssueTrackerURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of the issue tracker (:attr:`_issueTrackerURL`).
+
+		A package index publishes these per release, and they move - a project migrating to another forge has one
+		URL before the migration and another after it.
+
+		:returns: URL of the issue tracker, or ``None`` if this release didn't name one.
+		"""
+		return self._issueTrackerURL
+
+	@readonly
+	def ProjectURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of the project's homepage (:attr:`_projectURL`).
+
+		A package index publishes these per release, and they move - a project migrating to another forge has one
+		URL before the migration and another after it.
+
+		:returns: URL of the project's homepage, or ``None`` if this release didn't name one.
+		"""
+		return self._projectURL
+
+	@readonly
+	def ChangelogURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the URL of the changelog (:attr:`_changelogURL`).
+
+		A package index publishes these per release, and they move - a project migrating to another forge has one
+		URL before the migration and another after it.
+
+		:returns: URL of the changelog, or ``None`` if this release didn't name one.
+		"""
+		return self._changelogURL
 
 	@readonly
 	def DependsOn(self) -> dict[Package, dict[SemanticVersion, PackageVersion]]:
@@ -390,10 +554,9 @@ class Package(metaclass=ExtendedType, slots=True):
 	"""
 	The package, which exists in multiple versions (:class:`PackageVersion`).
 	"""
-	_storage:  PackageStorage                         #: Reference to the package's storage.
-	_name:     str                                    #: Name of the package.
-
-	_versions: dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
+	_storage:       PackageStorage                         #: Reference to the package's storage.
+	_name:          str                                    #: Name of the package.
+	_versions:      dict[SemanticVersion, PackageVersion]  #: A dictionary of available versions for this package.
 
 	def __init__(self, name: str, *, storage: PackageStorage) -> None:
 		"""
@@ -415,10 +578,10 @@ class Package(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(storage)}'.")
 			raise ex
 
-		self._storage = storage
+		self._storage =           storage
 		storage._packages[name] = self
 
-		self._versions = {}
+		self._versions =          {}
 
 	@readonly
 	def Storage(self) -> PackageStorage:
@@ -437,6 +600,97 @@ class Package(metaclass=ExtendedType, slots=True):
 		:returns: Name of the package.
 		"""
 		return self._name
+
+	@readonly
+	def LatestVersion(self) -> Nullable[PackageVersion]:
+		"""
+		Read-only property to return the most recent version of this package.
+
+		Versions are held newest-first once :meth:`SortVersions` has run, so this is the first of them.
+
+		:returns: The latest version, or ``None`` if the package has no version yet.
+		"""
+		if len(self._versions) == 0:
+			return None
+
+		return firstValue(self._versions)
+
+	@readonly
+	def RepositoryURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to return the URL of the source repository, as the latest version states it.
+
+		The URL belongs to a :class:`PackageVersion` because it moves over a project's life; this mirror answers what
+		is true *now*, which is what a reader of the package usually wants.
+
+		:returns: URL of the source repository of :attr:`LatestVersion`, or ``None`` if unknown or if
+		          the package has no version.
+		"""
+		if (latest := self.LatestVersion) is None:
+			return None
+
+		return latest.RepositoryURL
+
+	@readonly
+	def DocumentationURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to return the URL of the documentation, as the latest version states it.
+
+		The URL belongs to a :class:`PackageVersion` because it moves over a project's life; this mirror answers what
+		is true *now*, which is what a reader of the package usually wants.
+
+		:returns: URL of the documentation of :attr:`LatestVersion`, or ``None`` if unknown or the package has no version.
+		"""
+		if (latest := self.LatestVersion) is None:
+			return None
+
+		return latest.DocumentationURL
+
+	@readonly
+	def IssueTrackerURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to return the URL of the issue tracker, as the latest version states it.
+
+		The URL belongs to a :class:`PackageVersion` because it moves over a project's life; this mirror answers what
+		is true *now*, which is what a reader of the package usually wants.
+
+		:returns: URL of the issue tracker of :attr:`LatestVersion`, or ``None`` if unknown or the package has no version.
+		"""
+		if (latest := self.LatestVersion) is None:
+			return None
+
+		return latest.IssueTrackerURL
+
+	@readonly
+	def ProjectURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to return the URL of the project's homepage, as the latest version states it.
+
+		The URL belongs to a :class:`PackageVersion` because it moves over a project's life; this mirror answers what
+		is true *now*, which is what a reader of the package usually wants.
+
+		:returns: URL of the project's homepage of :attr:`LatestVersion`, or ``None`` if unknown or if
+		          the package has no version.
+		"""
+		if (latest := self.LatestVersion) is None:
+			return None
+
+		return latest.ProjectURL
+
+	@readonly
+	def ChangelogURL(self) -> Nullable[URL]:
+		"""
+		Read-only property to return the URL of the changelog, as the latest version states it.
+
+		The URL belongs to a :class:`PackageVersion` because it moves over a project's life; this mirror answers what
+		is true *now*, which is what a reader of the package usually wants.
+
+		:returns: URL of the changelog of :attr:`LatestVersion`, or ``None`` if unknown or the package has no version.
+		"""
+		if (latest := self.LatestVersion) is None:
+			return None
+
+		return latest.ChangelogURL
 
 	@readonly
 	def Versions(self) -> dict[SemanticVersion, PackageVersion]:
