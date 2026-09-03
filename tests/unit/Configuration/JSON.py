@@ -205,7 +205,7 @@ class Errors(Testcase):
 class RootNode(Testcase):
 	"""The root node is its own root and its own parent, and every node below it points at that same root."""
 
-	_configFile = Path("tests/unit/Configuration/config.json")
+	_configFile = Path("tests/data/Configuration/config.json")
 
 	def test_RootIsItsOwnRootAndParent(self) -> None:
 		config = Configuration(self._configFile)
