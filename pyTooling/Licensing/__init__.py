@@ -1094,26 +1094,19 @@ class UnknownLicense(BaseLicense):
 		"""
 		return self._absence.value
 
-	@property
+	@readonly
 	def Parent(self) -> Nullable[Operator]:
 		"""
-		Property to access the operator this expression is an operand of (:attr:`_parent`).
+		Read-only property to access the operator this expression is an operand of (:attr:`_parent`).
 
-		Always ``None`` here, and assigning one raises: SPDX's grammar has no place for ``NONE`` or ``NOASSERTION``
-		inside an expression, so this node is always the whole of it.
+		Always ``None``, and **read-only** where every other node's is assignable: ``NONE`` and ``NOASSERTION`` are
+		values a license field may hold *instead of* an expression, and SPDX's grammar has no place for either
+		inside one. So this node is always the whole expression, and assigning a parent raises
+		:exc:`AttributeError`.
 
-		:returns:           ``None``, always.
-		:raises ValueError: If any operator is assigned. |br|
-		                    An absent license can't be an operand.
+		:returns: ``None``, always.
 		"""
 		return self._parent
-
-	@Parent.setter
-	def Parent(self, parent: Nullable[Operator]) -> None:
-		ex = ValueError("An unknown license can't be an operand.")
-		ex.add_note(f"'{self._absence.value}' is a value a license field may hold instead of an expression.")
-		ex.add_note("SPDX's grammar has no place for it inside one, so it can't be given a parent.")
-		raise ex
 
 	def __str__(self) -> str:
 		"""
