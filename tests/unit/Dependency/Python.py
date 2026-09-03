@@ -43,6 +43,7 @@ from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPack
 from pyTooling.Dependency.Python import LicenseOverrides
 from pyTooling.Dependency        import BrokenRequirementWarning, DependencyError, UnknownLicenseWarning
 from pyTooling.Configuration     import Dictionary
+from pyTooling.Exceptions        import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 from pyTooling.Licensing         import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
 from pyTooling.Licensing         import SPDXLicense, UnknownLicense, WithOperator
@@ -735,6 +736,13 @@ class ReadingLicenseOverrides(Testcase):
 	def test_AMissingFileRaises(self) -> None:
 		with self.assertRaises(FileNotFoundError):
 			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-does-not-exist.yml")
+
+	def test_AFileThatIsNotAMappingRaises(self) -> None:
+		"""#376 made this a 'ConfigurationError' naming the document; it used to be an 'AttributeError' from a node."""
+		with self.assertRaises(ConfigurationError) as context:
+			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-not-a-document.yml")
+
+		self.assertIn("doesn't describe a mapping", str(context.exception))
 
 	def test_APackagesNodeThatIsNotAMappingRaises(self) -> None:
 		"""It used to reach ``.items()`` on a string and die there."""
