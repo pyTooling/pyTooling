@@ -56,6 +56,7 @@ setup(
 		additionalRequirements={
 			"pypi":      ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
 			"packaging": ["setuptools >= 83.0"],
+			"sphinx":    ["sphinx >= 9.1"],
 			"terminal":  ["colorama ~= 0.4.6"],
 			"testing":   ["pytest ~= 9.1"],
 			"yaml":      ["ruamel.yaml ~= 0.19"],
@@ -64,7 +65,8 @@ setup(
 		pythonVersions=("3.11", "3.12", "3.13", "3.14"),
 		dataFiles={
 			packageName[:-1] + "Common": ["../py.typed"],
-			packageName[:-1] + "Resources": ["*.xsd"]
+			packageName[:-1] + "Resources": ["*.xsd"],
+			packageName[:-1] + "Resources.Sphinx": ["*.css"]
 		},
 		pytestPlugins={
 			# The entry point's name is the module's name on purpose, so '-p <module>' finds the plugin already
