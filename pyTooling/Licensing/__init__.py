@@ -834,6 +834,19 @@ class BaseLicense(LicenseExpression):
 		:returns: The SPDX identifier, or the ``LicenseRef-`` reference, in the spelling an expression writes it.
 		"""
 
+	@readonly
+	@abstractmethod
+	def Name(self) -> str:  # type: ignore[empty-body]
+		"""
+		Read-only property to return the license' name, as it is written for a reader.
+
+		:attr:`Identifier` is what an expression writes; this is what a document prints. For a license on the SPDX
+		List the two differ - ``Apache-2.0`` against ``Apache License 2.0`` - and for the rest they are close or
+		equal, because nothing else has a name SPDX publishes.
+
+		:returns: The license' name.
+		"""
+
 
 @export
 class SPDXLicense(BaseLicense):
@@ -886,6 +899,15 @@ class SPDXLicense(BaseLicense):
 		:returns: The license's SPDX identifier.
 		"""
 		return self._license._spdxIdentifier
+
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to access the license' name (:pycode:`_license._name`).
+
+		:returns: The name SPDX publishes for this license, like ``Apache License 2.0``.
+		"""
+		return self._license._name
 
 	def __str__(self) -> str:
 		"""
@@ -991,6 +1013,18 @@ class LicenseReference(BaseLicense):
 		document = "" if self._documentIdentifier is None else f"DocumentRef-{self._documentIdentifier}:"
 		return f"{document}LicenseRef-{self._licenseIdentifier}"
 
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to access the identifier following ``LicenseRef-`` (:attr:`_licenseIdentifier`).
+
+		SPDX publishes no name for a license that isn't on its list, so the identifier the document chose is the
+		only name there is.
+
+		:returns: The license reference's identifier.
+		"""
+		return self._licenseIdentifier
+
 
 @export
 class ProprietaryLicense(LicenseReference):
@@ -1028,6 +1062,15 @@ class ProprietaryLicense(LicenseReference):
 		super().__init__(self.IDENTIFIER, None, parent)
 
 		self._originalText = originalText
+
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to return a readable name for a license that publishes none.
+
+		:returns: ``Proprietary License``.
+		"""
+		return "Proprietary License"
 
 
 @export
@@ -1093,6 +1136,15 @@ class UnknownLicense(BaseLicense):
 		:returns: ``NONE`` or ``NOASSERTION``.
 		"""
 		return self._absence.value
+
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to return which absence this states, in words.
+
+		:returns: ``No license`` for :attr:`~LicenseAbsence.NoLicense`, ``No assertion`` otherwise.
+		"""
+		return "No license" if self._absence is LicenseAbsence.NoLicense else "No assertion"
 
 	@readonly
 	def Parent(self) -> Nullable[Operator]:

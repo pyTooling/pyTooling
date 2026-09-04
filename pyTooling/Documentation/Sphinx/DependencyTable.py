@@ -85,10 +85,12 @@ if TYPE_CHECKING:  # pragma: no cover
 	# roles would need the 'pypi' extra.
 	from sphinx.config               import Config
 	from packaging.requirements      import Requirement
+	from packaging.specifiers        import SpecifierSet
 	from pyTooling.Dependency.Python import LicenseOverrides, Project, PythonPackageDependencyGraph
 	from pyTooling.Dependency.Python import PythonPackageIndex, Release, RequirementsFile
 
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip
+from pyTooling.Documentation.Sphinx.Directives import stripAndNormalize
 
 
 #: URL of the package index the tables are built from, unless :file:`conf.py` names another.
@@ -100,6 +102,18 @@ DEFAULT_API_URL = "https://pypi.org/pypi/"
 #: Levels of sub-dependencies rendered when the document doesn't say.
 DEFAULT_DEPTH = 1
 
+#: Whether a version constraint is reduced to its lower bound when the document doesn't say.
+DEFAULT_SIMPLIFIED_VERSIONS = True
+
+#: Comparison operators as a reader writes them. Order matters - the two-character forms have to be tried first.
+OPERATOR_SYMBOLS = (("<=", "≤"), (">=", "≥"), ("!=", "≠"), ("==", "="))
+
+#: Operators a simplified constraint drops: an upper bound and an exclusion say what is *not* required.
+_DROPPED_OPERATORS = ("<", "<=", "!=")
+
+#: The table's columns, as ``(title, relative width)``.
+TABLE_COLUMNS = (("Package", 3), ("Version", 1), ("License", 2), ("Dependencies", 4))
+
 #: Prefix every configuration value of this extension carries in :file:`conf.py`.
 CONFIG_PREFIX = "pyTooling_dependency"
 
@@ -109,13 +123,15 @@ _ConfigRebuild = Literal["env"]
 #: The configuration values this directive adds to :file:`conf.py`, as ``name: (default, rebuild, types)``.
 #:
 #: ``requirements`` maps an identifier to what it names - ``{"file": <path>}`` or ``{"package": <name>[extra]}``;
-#: the other three are build-wide, because one package index is queried per build and one override file answers for
-#: it. All four are ``"env"``-rebuilt: changing any of them changes every table.
+#: the other four are build-wide, because one package index is queried per build, one override file answers for it,
+#: and a project that wants sub-dependencies expanded wants them expanded everywhere. ``depth`` is the only one a
+#: table may override, with ``:depth:``. All five are ``"env"``-rebuilt: changing any of them changes every table.
 CONFIG_VALUES: dict[str, tuple[Any, _ConfigRebuild, Any]] = {
 	f"{CONFIG_PREFIX}_requirements": ({},                 "env", dict),
 	f"{CONFIG_PREFIX}_licenses":     (None,               "env", (str, Path)),
 	f"{CONFIG_PREFIX}_index_url":    (DEFAULT_INDEX_URL,  "env", str),
 	f"{CONFIG_PREFIX}_api_url":      (DEFAULT_API_URL,    "env", str),
+	f"{CONFIG_PREFIX}_depth":        (DEFAULT_DEPTH,      "env", int),
 }
 
 _logger = logging.getLogger(__name__)
@@ -250,6 +266,7 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 	"""
 
 	_entrypoints: dict[str, Entrypoint]             #: The entrypoints declared in :file:`conf.py`, by identifier.
+	_depth:       int                               #: Levels of sub-dependencies a table expands unless it says.
 	_indexURL:    str                               #: URL of the package index's website.
 	_apiURL:      str                               #: URL of the package index's JSON API.
 	_overrides:   LicenseOverrides                  #: Licenses stated by hand, for packages the index can't answer for.
@@ -267,7 +284,8 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		entrypoints: dict[str, Entrypoint],
 		indexURL: str,
 		apiURL: str,
-		overrides: LicenseOverrides
+		overrides: LicenseOverrides,
+		depth: int = DEFAULT_DEPTH
 	) -> None:
 		"""
 		Collect what a build declared, without opening the package index yet.
@@ -276,8 +294,10 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		:param indexURL:    URL of the package index's website.
 		:param apiURL:      URL of the package index's JSON API.
 		:param overrides:   Licenses stated by hand.
+		:param depth:       Optional, levels of sub-dependencies a table expands unless it says otherwise.
 		"""
 		self._entrypoints = entrypoints
+		self._depth = depth
 		self._indexURL = indexURL
 		self._apiURL = apiURL
 		self._overrides = overrides
@@ -298,6 +318,15 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		:returns: Every entrypoint by its identifier.
 		"""
 		return self._entrypoints
+
+	@readonly
+	def Depth(self) -> int:
+		"""
+		Levels of sub-dependencies a table expands unless it says otherwise.
+
+		:returns: The configured depth.
+		"""
+		return self._depth
 
 	@readonly
 	def Index(self) -> PythonPackageIndex:
@@ -506,7 +535,8 @@ def prepareEntrypoints(sphinx: Sphinx, config: Config) -> None:
 		readEntrypoints(declarations, confDirectory),
 		getattr(config, f"{CONFIG_PREFIX}_index_url", DEFAULT_INDEX_URL),
 		getattr(config, f"{CONFIG_PREFIX}_api_url", DEFAULT_API_URL),
-		overrides
+		overrides,
+		getattr(config, f"{CONFIG_PREFIX}_depth", DEFAULT_DEPTH)
 	)
 
 
@@ -528,11 +558,14 @@ class DependencyTable(BaseDirective):
 	The ``dependency-table`` directive: an entrypoint's dependencies, rendered from the requirements.
 
 	One argument, the identifier of an entrypoint declared in ``pyTooling_dependency_requirements``. ``:depth:``
-	says how many levels of sub-dependencies to expand and ``:caption:`` puts a caption under the table; which
-	package index is queried and which licenses are stated by hand are build-wide and configured in :file:`conf.py`.
+	says how many levels of sub-dependencies to expand, ``:simplified-versions:`` whether a constraint is reduced to
+	its lower bound, and ``:caption:`` puts a caption under the table; which package index is queried and which
+	licenses are stated by hand are build-wide and configured in :file:`conf.py`.
 	"""
 
 	directiveName: str = "dependency-table"  #: Name the directive is invoked by.
+
+	_simplify: bool  #: Whether this table's version constraints are reduced to their lower bound.
 
 	has_content =               False  #: A boolean; ``True`` if content is allowed.
 	required_arguments =        1      #: Number of required directive arguments: the entrypoint's identifier.
@@ -542,8 +575,9 @@ class DependencyTable(BaseDirective):
 	# spelling of this override a conflict with one of them
 	#: Mapping of option names to validator functions.
 	option_spec: dict[str, Any] = {  # type: ignore[misc]
-		"caption": strip,
-		"depth":   directives.nonnegative_int,
+		"caption":             strip,
+		"depth":               directives.nonnegative_int,
+		"simplified-versions": stripAndNormalize,
 	}
 
 	def run(self) -> list[nodes.Node]:
@@ -553,6 +587,7 @@ class DependencyTable(BaseDirective):
 		:returns: A ``table`` node, or an error node when the entrypoint couldn't be resolved.
 		"""
 		identifier = self.arguments[0].strip()
+		self._simplify = self._ParseBooleanOption("simplified-versions", DEFAULT_SIMPLIFIED_VERSIONS)
 
 		with Stopwatch() as stopwatch:
 			try:
@@ -652,21 +687,46 @@ class DependencyTable(BaseDirective):
 		:returns:            The finished table.
 		"""
 		tableGroup = self._CreateSingleRowTableHeader(
-			columns=[("Package", 3), ("Version", 1), ("License", 2), ("Dependencies", 4)],
+			columns=list(TABLE_COLUMNS),
 			identifier=identifier,
 			classes=["dependency-table"]
 		)
 		tableGroup += (tableBody := nodes.tbody())
 
-		depth = self.options.get("depth", DEFAULT_DEPTH)
-		for name in sorted(requirements, key=str.lower):
-			tableBody += self._CreateRow(requirements[name], collector, depth)
+		depth = self.options.get("depth", collector.Depth)
+		if len(requirements) == 0:
+			tableBody += self._CreateEmptyRow(len(TABLE_COLUMNS))
+		else:
+			for name in sorted(requirements, key=str.lower):
+				tableBody += self._CreateRow(requirements[name], collector, depth)
 
 		table = cast(nodes.table, tableGroup.parent)
 		if (caption := self.options.get("caption", None)) is not None:
-			table.insert(0, nodes.title(caption, caption))
+			# the caption is ReST, not text: it is written with markup - ``packaging`` in pyTooling's own captions -
+			# and a 'title' built from a string would print the backticks
+			captionNodes, messages = self.state.inline_text(caption, self.lineno)
+			table.insert(0, nodes.title(caption, "", *captionNodes, *messages))
 
 		return table
+
+	@staticmethod
+	def _CreateEmptyRow(columnCount: int) -> nodes.row:
+		"""
+		Render the one row a table with no requirements gets: a single cell spanning every column.
+
+		A table showing nothing but its header reads as a defect. pyTooling's own :file:`requirements.txt` is empty
+		- the package has no mandatory dependencies - and that is a statement worth printing.
+
+		:param columnCount: Number of columns the cell has to span.
+		:returns:           The table row.
+		"""
+		tableRow = nodes.row("", classes=["dependency-table-row"])
+
+		entry = nodes.entry("", morecols=columnCount - 1)
+		entry += nodes.paragraph("", "", nodes.emphasis(text="No dependencies"))
+		tableRow += entry
+
+		return tableRow
 
 	def _CreateRow(self, requirement: Requirement, collector: DependencyCollector, depth: int) -> nodes.row:
 		"""
@@ -686,7 +746,7 @@ class DependencyTable(BaseDirective):
 		release = self._SelectRelease(project, requirement, collector)
 
 		tableRow += self._PackageEntry(requirement, project)
-		tableRow += nodes.entry("", nodes.literal(text=str(requirement.specifier) or "any"))
+		tableRow += nodes.entry("", nodes.paragraph(text=self._FormatSpecifier(requirement.specifier, self._simplify)))
 		tableRow += self._LicenseEntry(release)
 		tableRow += self._DependenciesEntry(release, collector, depth, {requirement.name.lower()})
 
@@ -722,6 +782,41 @@ class DependencyTable(BaseDirective):
 		return collector.Details(max(matching, key=lambda release: release.Version))
 
 	@staticmethod
+	def _FormatSpecifier(specifier: SpecifierSet, simplify: bool) -> str:
+		"""
+		Render a version constraint the way a reader writes one.
+
+		The comparison operators become their mathematical symbols. A simplified constraint keeps only what a
+		package *has to be at least*: an upper bound and an exclusion say what a release must not be, which is the
+		packaging problem rather than the reader's, and ``~=`` is written as the lower bound it implies. Simplifying
+		everything away leaves the constraint as it was written - ``<4.0`` alone is still the whole statement.
+
+		:param specifier: The constraint to render.
+		:param simplify:  Whether to reduce the constraint to its lower bound.
+		:returns:         The constraint, or ``any`` when nothing is constrained.
+		"""
+		def render(operator: str, version: str) -> str:
+			for written, symbol in OPERATOR_SYMBOLS:
+				if operator == written:
+					return f"{symbol}{version}"
+
+			return f"{operator}{version}"
+
+		if len(specifier) == 0:
+			return "any"
+
+		specifiers = sorted(specifier, key=lambda item: (item.version, item.operator))
+		if simplify:
+			kept = [
+				render(">=" if item.operator == "~=" else item.operator, item.version)
+				for item in specifiers if item.operator not in _DROPPED_OPERATORS
+			]
+			if len(kept) > 0:
+				return ", ".join(kept)
+
+		return ", ".join(render(item.operator, item.version) for item in specifiers)
+
+	@staticmethod
 	def _PackageEntry(requirement: Requirement, project: Nullable[Project]) -> nodes.entry:
 		"""
 		Render the package's name, linked to where its sources live.
@@ -746,28 +841,39 @@ class DependencyTable(BaseDirective):
 		"""
 		Render a release's license, linked to its text where one is known.
 
-		A license that couldn't be resolved is shown as it was published, in italics, rather than left blank - the
-		reader should see that the package index said *something*.
+		The license' **name** is shown rather than its SPDX identifier - ``Apache License 2.0``, not ``Apache-2.0`` -
+		because the table is read by a person and the identifier is what an expression writes.
+
+		A license that didn't resolve is an :class:`~pyTooling.Licensing.UnknownLicense`, never a blank cell, and it
+		is shown **as the index published it** - in italics, so it reads as a quotation rather than as an identifier.
+		The reader should see that the index said *something*, and what it was.
 
 		:param release: The release to render the license of, or ``None``.
 		:returns:       The table entry.
 		"""
+		from pyTooling.Licensing import UnknownLicense
+
 		entry = nodes.entry()
 
 		if release is None:
 			entry += nodes.paragraph("", "", nodes.emphasis(text="unknown"))
 			return entry
 
-		if len(release.Licenses) > 0:
-			text = ", ".join(license.Identifier for license in release.Licenses)
-			if release.LicenseURL is not None:
-				entry += nodes.paragraph("", "", nodes.reference("", text, refuri=str(release.LicenseURL)))
-			else:
-				entry += nodes.paragraph(text=text)
-		elif release.LicenseExpression != "":
-			entry += nodes.paragraph("", "", nodes.emphasis(text=release.LicenseExpression))
+		# 'Licenses' never comes back empty: what didn't resolve is an 'UnknownLicense', which is SPDX's own way of
+		# saying so and keeps the published text
+		licenses = release.Licenses
+		if all(isinstance(license, UnknownLicense) for license in licenses):
+			published = release.LicenseExpression.OriginalText.strip()
+			text = published if published != "" else ", ".join(license.Name for license in licenses)
+			entry += nodes.paragraph("", "", nodes.emphasis(text=text or "unknown"))
+
+			return entry
+
+		text = ", ".join(license.Name for license in licenses)
+		if release.LicenseURL is not None:
+			entry += nodes.paragraph("", "", nodes.reference("", text, refuri=str(release.LicenseURL)))
 		else:
-			entry += nodes.paragraph("", "", nodes.emphasis(text="unknown"))
+			entry += nodes.paragraph(text=text)
 
 		return entry
 
@@ -828,8 +934,8 @@ class DependencyTable(BaseDirective):
 
 		for requirement in sorted(requirements, key=lambda item: item.name.lower()):
 			item = nodes.list_item()
-			specifier = str(requirement.specifier)
-			item += nodes.paragraph(text=f"{requirement.name} {specifier}" if specifier != "" else requirement.name)
+			specifier = self._FormatSpecifier(requirement.specifier, self._simplify)
+			item += nodes.paragraph(text=requirement.name if specifier == "any" else f"{requirement.name} {specifier}")
 
 			if depth > 0:
 				project = collector.Project(requirement.name)

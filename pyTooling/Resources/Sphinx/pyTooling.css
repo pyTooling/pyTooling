@@ -18,6 +18,9 @@
   --pyTooling-color-purple: #90c;
 
   --pyTooling-xlarge-size:  x-large;
+
+  --pyTooling-table-cell-vertical-align: top;
+  --pyTooling-table-list-margin:         0;
 }
 
 span.bolditalic {
@@ -51,4 +54,27 @@ span.colorblue {
 
 span.colorpurple {
   color: var(--pyTooling-color-purple);
+}
+
+
+/* Styles for the tables built by pyTooling.Documentation.Sphinx.
+
+   The class is put on the table by the directive, so these rules reach only a table this package generated and
+   never a table a document wrote by hand. */
+
+/* A row is as tall as its tallest cell, and in a dependency table that is the cell holding a dependency tree.
+   Centring the other three vertically pushes a package's name into the middle of an otherwise empty column, far
+   away from the row it belongs to. */
+table.dependency-table td,
+table.dependency-table th {
+  vertical-align: var(--pyTooling-table-cell-vertical-align);
+}
+
+/* A list inside a cell is the cell's whole content, so the margin a theme puts below it for running text is a gap
+   between the last bullet and the cell's border with nothing in it. */
+table.dependency-table td > ul,
+table.dependency-table td > ul ul,
+table.dependency-table td > ul > li > p,
+table.dependency-table td > p {
+  margin-bottom: var(--pyTooling-table-list-margin);
 }

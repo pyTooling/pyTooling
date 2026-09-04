@@ -41,7 +41,9 @@ from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, 
 from pyTooling.Testing       import Testcase
 
 try:
-	from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
+	from packaging.specifiers                          import SpecifierSet
+
+	from pyTooling.Documentation.Sphinx.DependencyTable import DependencyTable, readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
 
 	sphinxIsInstalled = True
@@ -250,3 +252,40 @@ class Entrypoints(Testcase):
 	def test_AConfigurationThatIsNoDictionaryIsRejected(self) -> None:
 		with self.assertRaises(SphinxExtensionError):
 			readEntrypoints(["requirements.txt"], Path("."))
+
+
+@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class VersionConstraints(Testcase):
+	"""A dependency table prints a constraint for a reader, not for an installer."""
+
+	@staticmethod
+	def _format(specifier: str, simplify: bool = True) -> str:
+		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), simplify)
+
+	def test_NoConstraintIsAny(self) -> None:
+		self.assertEqual("any", self._format(""))
+
+	def test_OperatorsBecomeTheirSymbols(self) -> None:
+		"""'>=' is typography, not syntax, once it is printed in a table."""
+		self.assertEqual("≥3.12", self._format(">=3.12"))
+		self.assertEqual("≤2.0", self._format("<=2.0", simplify=False))
+		self.assertEqual("≠2.0", self._format("!=2.0", simplify=False))
+		self.assertEqual("=1.2.3", self._format("==1.2.3"))
+
+	def test_ACompatibleReleaseBecomesItsLowerBound(self) -> None:
+		"""'~=0.4.6' says at least 0.4.6; the upper half is the installer's business."""
+		self.assertEqual("≥0.4.6", self._format("~=0.4.6"))
+
+	def test_AnUpperBoundIsDropped(self) -> None:
+		self.assertEqual("≥3.0", self._format("<4.0,>=3.0"))
+
+	def test_AnExclusionIsDropped(self) -> None:
+		self.assertEqual("≥1.0", self._format("!=2.0,>=1.0"))
+
+	def test_AnUpperBoundAloneSurvives(self) -> None:
+		"""Simplifying everything away would print nothing, so the constraint stays as it was written."""
+		self.assertEqual("<4.0", self._format("<4.0"))
+
+	def test_TheFullFormKeepsEveryPart(self) -> None:
+		self.assertEqual("≥3.0, <4.0", self._format("<4.0,>=3.0", simplify=False))
+		self.assertEqual("~=0.4.6", self._format("~=0.4.6", simplify=False))
