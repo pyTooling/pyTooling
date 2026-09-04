@@ -212,15 +212,48 @@ class Entrypoints(Testcase):
 		"""A package can only be resolved by asking the index, so it carries its name and extra until a table asks."""
 		entrypoints = readEntrypoints({"yaml": {"package": "pyTooling[yaml]"}}, Path("."))
 
-		self.assertEqual("pyTooling", entrypoints["yaml"].PackageName)
-		self.assertEqual("yaml", entrypoints["yaml"].Extra)
+		self.assertEqual((("pyTooling", "yaml"),), entrypoints["yaml"].Packages)
 		self.assertIsNone(entrypoints["yaml"].Requirements)
 
 	def test_APackageWithoutAnExtraHasNone(self) -> None:
 		entrypoints = readEntrypoints({"package": {"package": "pyTooling"}}, Path("."))
 
-		self.assertEqual("pyTooling", entrypoints["package"].PackageName)
-		self.assertIsNone(entrypoints["package"].Extra)
+		self.assertEqual((("pyTooling", None),), entrypoints["package"].Packages)
+
+	def test_SeveralPackagesAreDeclaredWithThePluralForm(self) -> None:
+		"""``packages`` takes an iterable; ``package`` takes one string. Both are the same statement."""
+		entrypoints = readEntrypoints({
+			"tuple": {"packages": ("pyTooling[yaml]", "pyTooling[terminal]")},
+			"list":  {"packages": ["pyTooling", ]}
+		}, Path("."))
+
+		self.assertEqual((("pyTooling", "yaml"), ("pyTooling", "terminal")), entrypoints["tuple"].Packages)
+		self.assertEqual((("pyTooling", None),), entrypoints["list"].Packages)
+
+	def test_SeveralFilesFlattenInTheOrderDeclared(self) -> None:
+		"""``files`` reads several trees; a later file's statement wins, as a later ``-r`` reference does."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory).resolve()
+			self._write(root, "first.txt", "pytest ~= 8.0\ncolorama ~= 0.4.6\n")
+			self._write(root, "second.txt", "pytest ~= 9.1\n")
+
+			entrypoints = readEntrypoints({"both": {"files": ["first.txt", "second.txt"]}}, root)
+
+		requirements = entrypoints["both"].Requirements
+		self.assertEqual({"colorama", "pytest"}, set(requirements))
+		self.assertEqual("~=9.1", str(requirements["pytest"].specifier))
+		self.assertEqual([root / "first.txt", root / "second.txt"], list(entrypoints["both"].Files))
+
+	def test_APluralFieldRejectsABareString(self) -> None:
+		"""A string is an iterable of strings, so 'files': 'requirements.txt' would silently become 16 paths."""
+		with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+			readEntrypoints({"unittest": {"files": "requirements.txt"}}, Path("."))
+
+		self.assertIn("Use 'file'", str(exceptionCapture.exception))
+
+	def test_ASingularFieldRejectsAnIterable(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {"file": ["requirements.txt"]}}, Path("."))
 
 	def test_AMissingFileNamesTheIdentifier(self) -> None:
 		"""The message has to say which entry is wrong - the path alone doesn't."""
@@ -237,6 +270,11 @@ class Entrypoints(Testcase):
 	def test_BothFileAndPackageIsRejected(self) -> None:
 		with self.assertRaises(SphinxExtensionError):
 			readEntrypoints({"unittest": {"file": "requirements.txt", "package": "pyTooling"}}, Path("."))
+
+	def test_ASingularAndItsPluralTogetherIsRejected(self) -> None:
+		"""Exactly one field, so which of the two would win is never a question."""
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {"file": "a.txt", "files": ["b.txt"]}}, Path("."))
 
 	def test_AnUnknownFieldIsRejected(self) -> None:
 		"""A typo is an error rather than a silently ignored key."""

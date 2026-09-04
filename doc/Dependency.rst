@@ -51,23 +51,27 @@ When installed as ``pyTooling``:
 
 .. dependency-table:: package
    :caption: Mandatory dependencies of the pyTooling package.
+   :depth: 4
 
 
 When installed as ``pyTooling[packaging]``:
 
 .. dependency-table:: packaging
    :caption: Dependencies added by the ``packaging`` extra.
+   :depth: 4
 
 When installed as ``pyTooling[terminal]``:
 
 .. dependency-table:: terminal
    :caption: Dependencies added by the ``terminal`` extra.
+   :depth: 4
 
 
 When installed as ``pyTooling[yaml]``:
 
 .. dependency-table:: yaml
    :caption: Dependencies added by the ``yaml`` extra.
+   :depth: 4
 
 
 .. _DEP/testing:
@@ -107,6 +111,7 @@ the mandatory dependencies too.
 
 .. dependency-table:: unittest
    :caption: Dependencies for unit testing, coverage and type checking.
+   :depth: 4
 
 Unit Testing with Benchmarking (Optional)
 =========================================
@@ -139,6 +144,7 @@ recursively install the mandatory dependencies too.
 
 .. dependency-table:: benchmark
    :caption: Dependencies for benchmark testing.
+   :depth: 4
 
 Unit Testing with Performance Testing (Optional)
 ================================================
@@ -171,6 +177,7 @@ recursively install the mandatory dependencies too.
 
 .. dependency-table:: performance
    :caption: Dependencies for performance testing.
+   :depth: 4
 
 
 
@@ -209,6 +216,7 @@ the mandatory dependencies too.
 
 .. dependency-table:: documentation
    :caption: Dependencies for building this documentation.
+   :depth: 4
 
 .. _DEP/packaging:
 
@@ -244,6 +252,7 @@ Install the ``packaging`` extra with ``pip3``, which installs the mandatory depe
 
 .. dependency-table:: packaging
    :caption: Dependencies for generating an installation package.
+   :depth: 4
 
 
 .. _DEP/publishing:
@@ -281,3 +290,4 @@ install the mandatory dependencies too.
 
 .. dependency-table:: publishing
    :caption: Dependencies for publishing the package.
+   :depth: 4
