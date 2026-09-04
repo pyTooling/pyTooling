@@ -1,9 +1,15 @@
 # ==================================================================================================================== #
-# Licenses a package index can't answer for.                                                                           #
+# Licenses a package index can't answer for, and the projects' own LICENSE files.                                      #
 #                                                                                                                      #
 # The 'dependency-table' directive resolves a package's license from what the index publishes, and warns at            #
-# the end of a build about every package it couldn't resolve. That warning is the list this file answers -             #
-# each entry below was read from the project's own LICENSE file or source headers, not guessed at.                     #
+# the end of a build about every package it couldn't resolve. That warning is the list the 'license:' entries          #
+# below answer - each was read from the project's own LICENSE file or source headers, not guessed at.                  #
+#                                                                                                                      #
+# 'licenseURL:' answers a different question. Without one, a license links to where the license itself is              #
+# published - apache.org, opensource.org, spdx.org - which says what the license is but not that this project          #
+# adopted it. The project's own LICENSE file says both, so it wins where it is known. Most of these come from          #
+# the hand-written table this directive replaced; every one was re-checked and answers 200, and the one that           #
+# had rotted (sphinxcontrib-mermaid, moved from LICENSE.rst to LICENSE) is corrected here.                             #
 #                                                                                                                      #
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
@@ -13,7 +19,7 @@ version: "0.1"
 
 # The day these statements were last checked against the projects themselves. A package index answers for itself
 # every time it is asked; this file is as old as whoever last looked.
-analysedAt: 2026-08-27
+analysedAt: 2026-09-04
 
 packages:
   # 'license: Apache 2' is a name, not an identifier. LICENSE.txt is the Apache License 2.0.
@@ -54,3 +60,70 @@ packages:
   # 'Apache-2.0 license' is an identifier with a word after it.
   types-colorama:
     license: Apache-2.0
+
+  # -------------------------------------------------------------------------------------------------------------- #
+  # Licenses the index resolves on its own. Only the link to the project's own LICENSE file is stated here.          #
+  # -------------------------------------------------------------------------------------------------------------- #
+  coverage:
+    licenseURL: https://GitHub.com/nedbat/coveragepy/blob/master/LICENSE.txt
+
+  itertree:
+    licenseURL: https://GitHub.com/BR1py/itertree/blob/main/LICENSE
+
+  lxml:
+    licenseURL: https://GitHub.com/lxml/lxml/blob/master/LICENSE.txt
+
+  mypy:
+    licenseURL: https://GitHub.com/python/mypy/blob/master/LICENSE
+
+  networkx:
+    licenseURL: https://GitHub.com/networkx/networkx/blob/main/LICENSE.txt
+
+  pytest:
+    licenseURL: https://GitHub.com/pytest-dev/pytest/blob/main/LICENSE
+
+  pytest-benchmark:
+    licenseURL: https://GitHub.com/ionelmc/pytest-benchmark/blob/master/LICENSE
+
+  pytest-cov:
+    licenseURL: https://GitHub.com/pytest-dev/pytest-cov/blob/master/LICENSE
+
+  pyTooling:
+    licenseURL: https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md
+
+  ruamel.yaml:
+    licenseURL: https://sourceforge.net/p/ruamel-yaml/code/ci/default/tree/LICENSE
+
+  setuptools:
+    licenseURL: https://GitHub.com/pypa/setuptools/blob/main/LICENSE
+
+  sphinx:
+    licenseURL: https://GitHub.com/sphinx-doc/sphinx/blob/master/LICENSE.rst
+
+  sphinx-autodoc-typehints:
+    licenseURL: https://GitHub.com/agronholm/sphinx-autodoc-typehints/blob/master/LICENSE
+
+  sphinx-design:
+    licenseURL: https://GitHub.com/executablebooks/sphinx-design/blob/main/LICENSE
+
+  sphinx-reports:
+    licenseURL: https://GitHub.com/pyTooling/sphinx-reports/blob/main/LICENSE.md
+
+  sphinx-rtd-theme:
+    licenseURL: https://GitHub.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE
+
+  # The hand-written table linked LICENSE.rst, which is a 404 now - the file is LICENSE.
+  sphinxcontrib-mermaid:
+    licenseURL: https://GitHub.com/mgaitan/sphinxcontrib-mermaid/blob/master/LICENSE
+
+  treelib:
+    licenseURL: https://GitHub.com/caesar0301/treelib/blob/master/LICENSE
+
+  twine:
+    licenseURL: https://GitHub.com/pypa/twine/blob/main/LICENSE
+
+  typing-extensions:
+    licenseURL: https://GitHub.com/python/typing_extensions/blob/main/LICENSE
+
+  wheel:
+    licenseURL: https://GitHub.com/pypa/wheel/blob/main/LICENSE.txt
