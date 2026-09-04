@@ -1,8 +1,16 @@
 -r ../requirements.txt
 
-colorama >= 0.4.6
-ruamel.yaml ~= 0.19.1
-setuptools >= 83.0
+# The contents of pyTooling's optional extras, spelled out. 'pyTooling[pypi]' can't be written here: pyTooling is the
+# package being documented, so requiring it would install a released copy over the checkout. Every extra a module
+# guards its imports with has to appear, because autodoc imports every module it documents.
+colorama >= 0.4.6      # 'terminal'
+ruamel.yaml ~= 0.19.1  # 'yaml'
+setuptools >= 83.0     # 'packaging'
+
+# 'pypi' - read by the 'dependency-table' directive, which resolves the tables in 'Dependency.rst' against PyPI
+aiohttp >= 3.12        # aiohttp limited on MSYS2 to 3.12.x
+packaging >= 25.0
+requests >= 2.32
 
 # Enforce latest version on ReadTheDocs
 sphinx ~= 9.1
