@@ -265,6 +265,11 @@ todo_link_only = True
 # Licenses the package index can't answer for, stated by hand.
 pyTooling_dependency_licenses = "dependencies.yml"
 
+# Levels of sub-dependencies each table expands. The recursion saturates - a package already on the path isn't
+# expanded again - so four is 'everything' for this project: the deepest tree here is four levels and a fifth
+# adds nothing. A table overrides this with ':depth:'.
+pyTooling_dependency_depth = 4
+
 # The entrypoints 'dependency-table' renders, by the identifier the documents name them with. A requirements file is
 # read relative to this file; a package is read from the package index. The tables share one view of that index, so a
 # package required by more than one entrypoint - and most of these overlap - is downloaded once per build.
