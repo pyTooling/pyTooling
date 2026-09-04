@@ -131,12 +131,15 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		if not path.exists():
 			raise FileNotFoundError(f"Requirements file '{path}' not found.")
 
-		self._path = path
+		# resolved, so the whole tree spells one file one way: an include is resolved to be compared against
+		# 'visited', and on Windows and macOS the path handed in is spelled differently from its resolution
+		# ('C:/Users/RUNNER~1/...' vs. 'C:/Users/runneradmin/...', '/var/...' vs. '/private/var/...')
+		self._path = path.resolve()
 		self._requirements = []
 		self._includes = []
 
 		visited = _visited if _visited is not None else set()
-		visited.add(path.resolve())
+		visited.add(self._path)
 
 		for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
 			if (line := line.split("#")[0].strip()) == "":
@@ -164,7 +167,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access this file's path (:attr:`_path`).
 
-		:returns: Path of the requirements file.
+		:returns: Resolved path of the requirements file.
 		"""
 		return self._path
 
