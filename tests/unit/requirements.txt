@@ -11,6 +11,9 @@ pytest-cov ~= 7.1
 aiohttp >= 3.12    # aiohttp limited on MSYS2 to 3.12.x
 requests >= 2.32
 
+# For pyTooling.Documentation.Sphinx testing
+sphinx >= 9.1
+
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml ~= 0.19.1
 

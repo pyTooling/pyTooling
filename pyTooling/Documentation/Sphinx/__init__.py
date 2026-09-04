@@ -57,9 +57,11 @@ document of every project. This extension declares them once:
 
   * ``:pycode:`` - highlights inline Python.
 
-* the **directive**:
+* the **directives**:
 
-  * :rst:dir:`condensed-class` - renders a class' public interface from its source.
+  * :rst:dir:`condensed-class` - renders a class' public interface from its source;
+  * :rst:dir:`dependency-table` - renders a project's dependencies from its requirements files, which
+    :file:`conf.py` declares under ``pyTooling_dependency_requirements``.
 
 :class:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective` isn't registered - it is a base-class for a
 project's own directives, offering typed option access and table construction over the untyped mapping and the
@@ -91,7 +93,8 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="sphinx", extra="sphinx") from ex
 
 from pyTooling.Documentation.Sphinx.CondensedClass  import CondensedClass
-from pyTooling.Documentation.Sphinx.DependencyTable import DependencyTable, reportBuildTime
+from pyTooling.Documentation.Sphinx.DependencyTable import CONFIG_VALUES, DependencyTable
+from pyTooling.Documentation.Sphinx.DependencyTable import prepareEntrypoints, reportBuildTime
 from pyTooling.Documentation.Sphinx.Directives      import BaseDirective, SphinxExtensionError, strip
 from pyTooling.Documentation.Sphinx.Directives      import stripAndNormalize
 from pyTooling.Documentation.Sphinx.Roles           import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
@@ -179,7 +182,13 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	sphinx.add_directive("condensed-class", CondensedClass)
 	sphinx.add_directive("dependency-table", DependencyTable)
 
+	for configName, (default, rebuild, types) in CONFIG_VALUES.items():
+		sphinx.add_config_value(configName, default, rebuild, types)
+
 	sphinx.connect("config-inited", extendProlog)
+	# after the configuration values above are registered, and before any document is read - a requirements file
+	# that doesn't exist should end the build here rather than in the middle of a page
+	sphinx.connect("config-inited", prepareEntrypoints)
 	sphinx.connect("build-finished", reportBuildTime)
 	sphinx.connect("builder-inited", installStylesheet)
 

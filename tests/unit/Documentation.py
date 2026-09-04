@@ -28,8 +28,14 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers."""
+"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers and the Sphinx extension."""
+from pathlib                 import Path
+from tempfile                import TemporaryDirectory
+from textwrap                import dedent
+
 from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
+from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
+from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
 from pyTooling.Testing       import Testcase
 
 
@@ -124,3 +130,87 @@ class SummaryLength(Testcase):
 			"The doc-string's summary is longer than 30 characters.",
 			str(exceptionCapture.exception)
 		)
+
+
+class Entrypoints(Testcase):
+	"""``pyTooling_dependency_requirements`` is read while :file:`conf.py` is processed, so its errors end the build."""
+
+	@staticmethod
+	def _write(directory: Path, name: str, content: str) -> Path:
+		path = directory / name
+		path.write_text(dedent(content).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_AFileEntrypointIsReadRightAway(self) -> None:
+		"""A requirements file is read here, not when a table is built."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "requirements.txt", """
+				pytest ~= 9.1
+				colorama ~= 0.4.6
+			""")
+
+			entrypoints = readEntrypoints({"unittest": {"file": "requirements.txt"}}, root)
+
+		self.assertEqual({"colorama", "pytest"}, set(entrypoints["unittest"].Requirements))
+		self.assertEqual((root / "requirements.txt",), entrypoints["unittest"].Files)
+
+	def test_AnIncludedFileIsListedToo(self) -> None:
+		"""Every file read is remembered, so a change to an include rebuilds the document naming the entrypoint."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "colorama ~= 0.4.6\n")
+			self._write(root, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			entrypoints = readEntrypoints({"unittest": {"file": "requirements.txt"}}, root)
+
+		self.assertEqual([root / "requirements.txt", root / "base.txt"], list(entrypoints["unittest"].Files))
+
+	def test_APackageEntrypointIsNotResolvedYet(self) -> None:
+		"""A package can only be resolved by asking the index, so it carries its name and extra until a table asks."""
+		entrypoints = readEntrypoints({"yaml": {"package": "pyTooling[yaml]"}}, Path("."))
+
+		self.assertEqual("pyTooling", entrypoints["yaml"].PackageName)
+		self.assertEqual("yaml", entrypoints["yaml"].Extra)
+		self.assertIsNone(entrypoints["yaml"].Requirements)
+
+	def test_APackageWithoutAnExtraHasNone(self) -> None:
+		entrypoints = readEntrypoints({"package": {"package": "pyTooling"}}, Path("."))
+
+		self.assertEqual("pyTooling", entrypoints["package"].PackageName)
+		self.assertIsNone(entrypoints["package"].Extra)
+
+	def test_AMissingFileNamesTheIdentifier(self) -> None:
+		"""The message has to say which entry is wrong - the path alone doesn't."""
+		with TemporaryDirectory() as directory:
+			with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+				readEntrypoints({"unittest": {"file": "nothing.txt"}}, Path(directory))
+
+		self.assertIn("[unittest]", str(exceptionCapture.exception))
+
+	def test_NeitherFileNorPackageIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {}}, Path("."))
+
+	def test_BothFileAndPackageIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {"file": "requirements.txt", "package": "pyTooling"}}, Path("."))
+
+	def test_AnUnknownFieldIsRejected(self) -> None:
+		"""A typo is an error rather than a silently ignored key."""
+		with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+			readEntrypoints({"unittest": {"files": "requirements.txt"}}, Path("."))
+
+		self.assertIn("files", str(exceptionCapture.exception))
+
+	def test_ADeclarationThatIsNoDictionaryIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": "requirements.txt"}, Path("."))
+
+	def test_AConfigurationThatIsNoDictionaryIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints(["requirements.txt"], Path("."))

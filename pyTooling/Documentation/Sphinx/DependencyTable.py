@@ -33,28 +33,39 @@ A Sphinx directive rendering a project's dependencies as a table, from the requi
 
 A dependency table states, per package, which version is required, what it is licensed under, and what it drags in.
 Written by hand it is wrong within a release or two: pyTooling's own documentation table was missing four of the
-packages ``doc/requirements.txt`` requires, listed one that isn't required at all, and called Sphinx BSD-3-Clause
+packages :file:`doc/requirements.txt` requires, listed one that isn't required at all, and called Sphinx BSD-3-Clause
 when it is BSD-2-Clause.
 
+**The entrypoints are declared in** :file:`conf.py` **and named by the documents**, the way
+:mod:`sphinx_reports` declares its reports:
+
+.. code-block:: Python
+
+   # doc/conf.py
+   pyTooling_dependency_licenses = "dependencies.yml"
+   pyTooling_dependency_requirements = {
+     "package":       {"file":    "../requirements.txt"},
+     "documentation": {"file":    "requirements.txt"},
+     "yaml":          {"package": "pyTooling[yaml]"}
+   }
+
 .. code-block:: rest
 
-   .. dependency-table:: doc/requirements.txt
+   .. dependency-table:: documentation
       :caption: Documentation dependencies
 
-The argument is an **entrypoint** - a requirements file, or a package with an extra:
+A requirements file is read - with its ``-r`` includes followed - while :file:`conf.py` is being processed, so a
+path that doesn't exist ends the build with one clear message instead of an error box in the middle of a page.
 
-.. code-block:: rest
-
-   .. dependency-table:: pyTooling[yaml]
-
-**The data is fetched live** from the package index, once per build and shared between the tables of a build. That
-costs real time, so every table reports what it spent, measured with a :class:`~pyTooling.Stopwatch.Stopwatch`, and
-the build ends with the total - which is the number to look at before deciding what to cache.
+**The data is fetched live** from the package index, once per build and shared between every table of that build:
+:file:`requirements.txt`, :file:`tests/requirements.txt` and :file:`doc/requirements.txt` overlap heavily, and a
+package they share is downloaded once. That still costs real time, so every table reports what it spent, measured
+with a :class:`~pyTooling.Stopwatch.Stopwatch`, and the build ends with the total.
 """
 from __future__                    import annotations
 
 from pathlib                       import Path
-from typing                        import TYPE_CHECKING, Any, Iterator, Optional as Nullable, cast
+from typing                        import TYPE_CHECKING, Any, Iterator, Literal, Optional as Nullable, cast
 
 from docutils                      import nodes
 from docutils.parsers.rst          import directives
@@ -69,8 +80,10 @@ from pyTooling.Stopwatch           import Stopwatch
 from pyTooling.Warning             import WarningCollector
 
 if TYPE_CHECKING:  # pragma: no cover
-	# Only this directive needs a package index, so the model is imported when a table is built rather than when the
-	# extension is loaded - otherwise every documentation build using any of these roles would need the 'pypi' extra.
+	# Only this directive needs a package index, so the model is imported when the configuration declares an
+	# entrypoint rather than when the extension is loaded - otherwise every documentation build using any of these
+	# roles would need the 'pypi' extra.
+	from sphinx.config               import Config
 	from packaging.requirements      import Requirement
 	from pyTooling.Dependency.Python import LicenseOverrides, Project, PythonPackageDependencyGraph
 	from pyTooling.Dependency.Python import PythonPackageIndex, Release, RequirementsFile
@@ -78,7 +91,7 @@ if TYPE_CHECKING:  # pragma: no cover
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip
 
 
-#: URL of the package index a table is built from, unless the document names another.
+#: URL of the package index the tables are built from, unless :file:`conf.py` names another.
 DEFAULT_INDEX_URL = "https://pypi.org"
 
 #: URL of that index's JSON API.
@@ -86,6 +99,24 @@ DEFAULT_API_URL = "https://pypi.org/pypi/"
 
 #: Levels of sub-dependencies rendered when the document doesn't say.
 DEFAULT_DEPTH = 1
+
+#: Prefix every configuration value of this extension carries in :file:`conf.py`.
+CONFIG_PREFIX = "pyTooling_dependency"
+
+#: What Sphinx accepts as the rebuild condition of a configuration value - the one this extension uses.
+_ConfigRebuild = Literal["env"]
+
+#: The configuration values this directive adds to :file:`conf.py`, as ``name: (default, rebuild, types)``.
+#:
+#: ``requirements`` maps an identifier to what it names - ``{"file": <path>}`` or ``{"package": <name>[extra]}``;
+#: the other three are build-wide, because one package index is queried per build and one override file answers for
+#: it. All four are ``"env"``-rebuilt: changing any of them changes every table.
+CONFIG_VALUES: dict[str, tuple[Any, _ConfigRebuild, Any]] = {
+	f"{CONFIG_PREFIX}_requirements": ({},                 "env", dict),
+	f"{CONFIG_PREFIX}_licenses":     (None,               "env", (str, Path)),
+	f"{CONFIG_PREFIX}_index_url":    (DEFAULT_INDEX_URL,  "env", str),
+	f"{CONFIG_PREFIX}_api_url":      (DEFAULT_API_URL,    "env", str),
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -97,42 +128,191 @@ _COLLECTORS: dict[int, "DependencyCollector"] = {}
 
 
 @export
+class Entrypoint(metaclass=ExtendedType, slots=True):
+	"""
+	One entry of ``pyTooling_dependency_requirements``: an identifier and the requirements it stands for.
+
+	A file entrypoint is read while :file:`conf.py` is being processed and carries its requirements from then on.
+	A package entrypoint can only be resolved by asking the package index, so it carries the package's name and
+	extra and is resolved the first time a table names it.
+	"""
+
+	_identifier:   str                               #: Name the documents refer to this entrypoint by.
+	_files:        tuple[Path, ...]                  #: The requirements file and every file it includes, if any.
+	_packageName:  Nullable[str]                     #: Name of the package to read the requirements of, if any.
+	_extra:        Nullable[str]                     #: Extra of that package whose requirements are wanted.
+	_requirements: Nullable[dict[str, Requirement]]  #: The resolved requirements, by canonical package name.
+
+	def __init__(
+		self,
+		identifier: str,
+		files: tuple[Path, ...] = (),
+		packageName: Nullable[str] = None,
+		extra: Nullable[str] = None,
+		requirements: Nullable[dict[str, Requirement]] = None
+	) -> None:
+		"""
+		Describe one entrypoint.
+
+		:param identifier:   Name the documents refer to this entrypoint by.
+		:param files:        The requirements file and every file it includes, for a file entrypoint.
+		:param packageName:  Name of the package, for a package entrypoint.
+		:param extra:        Extra of that package whose requirements are wanted.
+		:param requirements: The requirements, if they are known already.
+		"""
+		self._identifier = identifier
+		self._files = files
+		self._packageName = packageName
+		self._extra = extra
+		self._requirements = requirements
+
+	@readonly
+	def Identifier(self) -> str:
+		"""
+		Name the documents refer to this entrypoint by.
+
+		:returns: The identifier.
+		"""
+		return self._identifier
+
+	@readonly
+	def Files(self) -> tuple[Path, ...]:
+		"""
+		The requirements file and every file it includes.
+
+		:returns: The files this entrypoint was read from; empty for a package entrypoint.
+		"""
+		return self._files
+
+	@readonly
+	def PackageName(self) -> Nullable[str]:
+		"""
+		Name of the package this entrypoint reads the requirements of.
+
+		:returns: The package's name, or ``None`` for a file entrypoint.
+		"""
+		return self._packageName
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Extra of the package whose requirements are wanted.
+
+		:returns: The extra's name, or ``None`` if the package's own requirements are wanted.
+		"""
+		return self._extra
+
+	@readonly
+	def Requirements(self) -> Nullable[dict[str, Requirement]]:
+		"""
+		The requirements this entrypoint stands for.
+
+		:returns: Every required package by its canonical name, or ``None`` if they weren't resolved yet.
+		"""
+		return self._requirements
+
+	def CacheRequirements(self, requirements: dict[str, Requirement]) -> None:
+		"""
+		Remember the requirements the package index answered with.
+
+		A package entrypoint can only be resolved by asking the index; remembering the answer is what keeps a second
+		table naming the same entrypoint from asking again.
+
+		:param requirements: Every required package, by its canonical name.
+		"""
+		self._requirements = requirements
+
+	def __repr__(self) -> str:
+		"""
+		Return a representation naming what this entrypoint reads.
+
+		:returns: The identifier and its source.
+		"""
+		source = str(self._files[0]) if len(self._files) > 0 else f"{self._packageName}[{self._extra}]"
+
+		return f"<Entrypoint {self._identifier}: {source}>"
+
+
+@export
 class DependencyCollector(metaclass=ExtendedType, slots=True):
 	"""
-	The package index a build queries, and what querying it cost.
+	The entrypoints a build declared, the package index it queries, and what querying it cost.
 
 	One collector is shared by every table of a build: a package required by two entrypoints is downloaded once, and
 	the time is accumulated so the build can report a total. It exists because the alternative - a table that queries
-	the index for itself - multiplies a documentation build's runtime by however many tables it has.
+	the index for itself - multiplies a documentation build's runtime by however many tables it has, and
+	:file:`requirements.txt`, :file:`tests/requirements.txt` and :file:`doc/requirements.txt` share most of what they
+	require.
+
+	The index is opened the first time a table asks for a package, not when the collector is created: a project may
+	declare its entrypoints and then build a document that shows none of them, and that build should not open an
+	HTTP session.
 	"""
 
-	_graph:      PythonPackageDependencyGraph      #: Graph the downloaded packages are collected in.
-	_index:      PythonPackageIndex                #: The package index this build queries.
-	_projects:   dict[str, Nullable[Project]]      #: Projects downloaded so far; ``None`` for an unknown package.
-	_detailed:   set[str]                          #: Releases whose details were downloaded, as ``name==version``.
-	_undescribed: set[str]                         #: Releases the index lists but can't describe.
-	_downloads:  int                               #: Number of requests sent to the package index.
-	_seconds:    float                             #: Time spent waiting for the package index, in seconds.
-	_unresolved: set[str]                          #: Packages whose license the index couldn't answer for.
+	_entrypoints: dict[str, Entrypoint]             #: The entrypoints declared in :file:`conf.py`, by identifier.
+	_indexURL:    str                               #: URL of the package index's website.
+	_apiURL:      str                               #: URL of the package index's JSON API.
+	_overrides:   LicenseOverrides                  #: Licenses stated by hand, for packages the index can't answer for.
+	_graph:       Nullable[PythonPackageDependencyGraph]  #: Graph the downloaded packages are collected in.
+	_index:       Nullable[PythonPackageIndex]      #: The package index this build queries, once it was opened.
+	_projects:    dict[str, Nullable[Project]]      #: Projects downloaded so far; ``None`` for an unknown package.
+	_detailed:    set[str]                          #: Releases whose details were downloaded, as ``name==version``.
+	_undescribed: set[str]                          #: Releases the index lists but can't describe.
+	_downloads:   int                               #: Number of requests sent to the package index.
+	_seconds:     float                             #: Time spent waiting for the package index, in seconds.
+	_unresolved:  set[str]                          #: Packages whose license the index couldn't answer for.
 
-	def __init__(self, indexURL: str, apiURL: str, overrides: LicenseOverrides) -> None:
+	def __init__(
+		self,
+		entrypoints: dict[str, Entrypoint],
+		indexURL: str,
+		apiURL: str,
+		overrides: LicenseOverrides
+	) -> None:
 		"""
-		Open a package index for this build.
+		Collect what a build declared, without opening the package index yet.
 
-		:param indexURL:  URL of the package index's website.
-		:param apiURL:    URL of the package index's JSON API.
-		:param overrides: Licenses stated by hand.
+		:param entrypoints: The entrypoints declared in :file:`conf.py`, by identifier.
+		:param indexURL:    URL of the package index's website.
+		:param apiURL:      URL of the package index's JSON API.
+		:param overrides:   Licenses stated by hand.
 		"""
-		from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex
-
-		self._graph = PythonPackageDependencyGraph("documentation")
-		self._index = PythonPackageIndex("index", indexURL, apiURL, self._graph, overrides)
+		self._entrypoints = entrypoints
+		self._indexURL = indexURL
+		self._apiURL = apiURL
+		self._overrides = overrides
+		self._graph = None
+		self._index = None
 		self._projects = {}
 		self._detailed = set()
 		self._undescribed = set()
 		self._downloads = 0
 		self._seconds = 0.0
 		self._unresolved = set()
+
+	@readonly
+	def Entrypoints(self) -> dict[str, Entrypoint]:
+		"""
+		The entrypoints declared in :file:`conf.py`.
+
+		:returns: Every entrypoint by its identifier.
+		"""
+		return self._entrypoints
+
+	@readonly
+	def Index(self) -> PythonPackageIndex:
+		"""
+		The package index this build queries, opened the first time it is asked for.
+
+		:returns: The package index.
+		"""
+		from pyTooling.Dependency.Python import PythonPackageDependencyGraph, PythonPackageIndex
+
+		if self._index is None:
+			self._graph = PythonPackageDependencyGraph("documentation")
+			self._index = PythonPackageIndex("index", self._indexURL, self._apiURL, self._graph, self._overrides)
+
+		return self._index
 
 	@readonly
 	def Downloads(self) -> int:
@@ -179,7 +359,7 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		with Stopwatch() as stopwatch:
 			project: Nullable[Project]
 			try:
-				project = self._index.DownloadProject(packageName, LazyLoaderState.PartiallyLoaded)
+				project = self.Index.DownloadProject(packageName, LazyLoaderState.PartiallyLoaded)
 			except Exception:
 				project = None
 
@@ -224,46 +404,162 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 
 
 @export
+def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entrypoint]:
+	"""
+	Turn ``pyTooling_dependency_requirements`` into entrypoints, reading every requirements file it names.
+
+	A requirements file is read here rather than when a table is built, so a path that doesn't exist ends the build
+	with one message naming the identifier instead of an error box in the middle of a page - and so two tables
+	naming the same file read it once.
+
+	:param configuration:  Value of ``pyTooling_dependency_requirements``.
+	:param confDirectory:  Directory :file:`conf.py` lives in; relative paths are resolved against it.
+	:returns:              Every declared entrypoint, by its identifier.
+	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the configuration is malformed, or a
+	  requirements file can't be read.
+	"""
+	from pyTooling.Dependency.Python import RequirementsFile
+
+	if not isinstance(configuration, dict):
+		raise SphinxExtensionError(
+			f"conf.py: {CONFIG_PREFIX}_requirements: Expected a dictionary, got {type(configuration).__name__}."
+		)
+
+	entrypoints: dict[str, Entrypoint] = {}
+	for identifier, declaration in configuration.items():
+		location = f"conf.py: {CONFIG_PREFIX}_requirements:[{identifier}]"
+
+		if not isinstance(declaration, dict):
+			raise SphinxExtensionError(f"{location}: Expected a dictionary, got {type(declaration).__name__}.")
+
+		if (unknown := set(declaration) - {"file", "package"}) != set():
+			raise SphinxExtensionError(
+				f"{location}: Unknown field(s): {', '.join(sorted(unknown))}. Known are: file, package."
+			)
+
+		if ("file" in declaration) == ("package" in declaration):
+			raise SphinxExtensionError(f"{location}: Exactly one of 'file' and 'package' has to be configured.")
+
+		if (file := declaration.get("file", None)) is not None:
+			path = Path(file)
+			if not path.is_absolute():
+				path = confDirectory / path
+
+			try:
+				requirementsFile = RequirementsFile(path)
+			except Exception as cause:
+				raise SphinxExtensionError(f"{location}.file: Requirements file '{path}' can't be read: {cause}") from cause
+
+			files = tuple(included.Path for included in _Walk(requirementsFile))
+			entrypoints[identifier] = Entrypoint(identifier, files=files, requirements=requirementsFile.Flatten())
+		else:
+			name, _, bracket = str(declaration["package"]).partition("[")
+			entrypoints[identifier] = Entrypoint(
+				identifier,
+				packageName=name.strip(),
+				extra=bracket.rstrip("]").strip() or None
+			)
+
+	return entrypoints
+
+
+@export
+def prepareEntrypoints(sphinx: Sphinx, config: Config) -> None:
+	"""
+	Call-back for Sphinx' ``config-inited`` event, reading the entrypoints and the license overrides.
+
+	A build declaring no entrypoint does nothing here - not even import :mod:`pyTooling.Dependency.Python`, so a
+	project using only this extension's roles doesn't need the ``pypi`` extra.
+
+	:param sphinx: The Sphinx application.
+	:param config: The configuration, after :file:`conf.py` was read.
+	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the configuration is malformed, or a
+	  requirements or license override file can't be read.
+	"""
+	if len(declarations := getattr(config, f"{CONFIG_PREFIX}_requirements", {})) == 0:
+		return
+
+	confDirectory = Path(sphinx.confdir)
+
+	try:
+		from pyTooling.Dependency.Python import LicenseOverrides
+	except MissingDependencyError as cause:  # pragma: no cover
+		raise SphinxExtensionError(
+			f"conf.py: {CONFIG_PREFIX}_requirements: Querying a package index needs the 'pypi' extra: "
+			f"pip install pyTooling[pypi]"
+		) from cause
+
+	overrides = LicenseOverrides()
+	if (licenseFile := getattr(config, f"{CONFIG_PREFIX}_licenses", None)) is not None:
+		path = Path(licenseFile)
+		if not path.is_absolute():
+			path = confDirectory / path
+
+		try:
+			overrides = LicenseOverrides.FromFile(path)
+		except Exception as cause:
+			raise SphinxExtensionError(
+				f"conf.py: {CONFIG_PREFIX}_licenses: License override file '{path}' can't be read: {cause}"
+			) from cause
+
+	_COLLECTORS[id(sphinx)] = DependencyCollector(
+		readEntrypoints(declarations, confDirectory),
+		getattr(config, f"{CONFIG_PREFIX}_index_url", DEFAULT_INDEX_URL),
+		getattr(config, f"{CONFIG_PREFIX}_api_url", DEFAULT_API_URL),
+		overrides
+	)
+
+
+def _Walk(requirementsFile: RequirementsFile) -> Iterator[RequirementsFile]:
+	"""
+	Yield a requirements file and every file it includes, depth first.
+
+	:param requirementsFile: The file to start at.
+	:returns:                A generator of requirements files.
+	"""
+	yield requirementsFile
+	for include in requirementsFile.Includes:
+		yield from _Walk(include)
+
+
+@export
 class DependencyTable(BaseDirective):
 	"""
 	The ``dependency-table`` directive: an entrypoint's dependencies, rendered from the requirements.
 
-	One argument, the entrypoint - a path to a requirements file, relative to the documentation's source directory,
-	or a package name with an optional extra. ``:depth:`` says how many levels of sub-dependencies to expand,
-	``:licenses:`` names the override file, and ``:caption:`` puts a caption under the table.
+	One argument, the identifier of an entrypoint declared in ``pyTooling_dependency_requirements``. ``:depth:``
+	says how many levels of sub-dependencies to expand and ``:caption:`` puts a caption under the table; which
+	package index is queried and which licenses are stated by hand are build-wide and configured in :file:`conf.py`.
 	"""
 
 	directiveName: str = "dependency-table"  #: Name the directive is invoked by.
 
 	has_content =               False  #: A boolean; ``True`` if content is allowed.
-	required_arguments =        1      #: Number of required directive arguments: the entrypoint.
+	required_arguments =        1      #: Number of required directive arguments: the entrypoint's identifier.
 	optional_arguments =        0      #: Number of optional arguments after the required ones.
 	final_argument_whitespace = False  #: A boolean; ``True`` if the last argument may contain spaces.
 	# docutils declares 'option_spec' on 'Directive' and 'BaseDirective' assigns it, so mypy calls every
 	# spelling of this override a conflict with one of them
 	#: Mapping of option names to validator functions.
 	option_spec: dict[str, Any] = {  # type: ignore[misc]
-		"caption":   strip,
-		"depth":     directives.nonnegative_int,
-		"licenses":  strip,
-		"index-url": strip,
-		"api-url":   strip,
+		"caption": strip,
+		"depth":   directives.nonnegative_int,
 	}
 
 	def run(self) -> list[nodes.Node]:
 		"""
-		Resolve the entrypoint's requirements against the package index and return them as a table.
+		Resolve the named entrypoint against the package index and return its requirements as a table.
 
-		:returns: A ``table`` node, or an error node when the entrypoint couldn't be read.
+		:returns: A ``table`` node, or an error node when the entrypoint couldn't be resolved.
 		"""
-		entrypoint = self.arguments[0].strip()
+		identifier = self.arguments[0].strip()
 
 		with Stopwatch() as stopwatch:
 			try:
 				collector = self._Collector()
 				downloadsBefore = collector.Downloads
-				requirements = self._ReadEntrypoint(entrypoint, collector)
-				table = self._CreateTable(entrypoint, requirements, collector)
+				requirements = self._Resolve(identifier, collector)
+				table = self._CreateTable(identifier, requirements, collector)
 			except SphinxExtensionError as cause:
 				return [self.state.document.reporter.error(
 					f"{self.directiveName}: {cause}", line=self.lineno
@@ -272,7 +568,7 @@ class DependencyTable(BaseDirective):
 		# what this table cost, not what the build has spent so far - a package another table already downloaded is
 		# free here, and that is the point of sharing the collector
 		_logger.info(
-			f"[{self.directiveName}] {entrypoint}: {len(requirements)} package(s), "
+			f"[{self.directiveName}] {identifier}: {len(requirements)} package(s), "
 			f"{collector.Downloads - downloadsBefore} request(s), {stopwatch.Duration:.2f} s"
 		)
 
@@ -280,7 +576,7 @@ class DependencyTable(BaseDirective):
 
 	def _Collector(self) -> DependencyCollector:
 		"""
-		Return the build's collector, opening the package index the first time a table asks for it.
+		Return the build's collector, which :func:`prepareEntrypoints` created when :file:`conf.py` was read.
 
 		The collector belongs to the running application rather than to the directive, because a document with three
 		tables would otherwise open three indexes and download the same packages three times. It deliberately does
@@ -288,111 +584,76 @@ class DependencyTable(BaseDirective):
 		cached view of a package index survives being pickled - or should.
 
 		:returns:                     The collector shared by every table of this build.
-		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the override file can't be read.
+		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If no entrypoint was configured.
 		"""
-		if (collector := _COLLECTORS.get(id(self.env.app), None)) is not None:
-			return collector
-
-		try:
-			from pyTooling.Dependency.Python import LicenseOverrides
-		except MissingDependencyError as cause:  # pragma: no cover
+		if (collector := _COLLECTORS.get(id(self.env.app), None)) is None:
 			raise SphinxExtensionError(
-				f"{self.directiveName}: querying a package index needs the 'pypi' extra: pip install pyTooling[pypi]"
-			) from cause
-
-		overrides = LicenseOverrides()
-		if (licenseFile := self.options.get("licenses", None)) is not None:
-			path = Path(self.env.srcdir) / licenseFile
-			try:
-				overrides = LicenseOverrides.FromFile(path)
-			except Exception as cause:
-				raise SphinxExtensionError(f"License override file '{path}' can't be read: {cause}") from cause
-
-		collector = DependencyCollector(
-			self.options.get("index-url", DEFAULT_INDEX_URL),
-			self.options.get("api-url", DEFAULT_API_URL),
-			overrides
-		)
-		_COLLECTORS[id(self.env.app)] = collector
+				f"No entrypoint is configured. Declare one in conf.py: {CONFIG_PREFIX}_requirements."
+			)
 
 		return collector
 
-	def _ReadEntrypoint(self, entrypoint: str, collector: DependencyCollector) -> dict[str, Requirement]:
+	def _Resolve(self, identifier: str, collector: DependencyCollector) -> dict[str, Requirement]:
 		"""
-		Read what an entrypoint requires.
+		Return what the named entrypoint requires.
 
-		An entrypoint is either a requirements file - read with its ``-r`` includes followed - or a package with an
-		optional extra, whose requirements are read from the index.
+		A file entrypoint was read when :file:`conf.py` was processed and answers immediately; a package entrypoint
+		is resolved against the package index the first time a table names it, and remembers the answer.
 
-		:param entrypoint:            The entrypoint, as written in the document.
+		:param identifier:            Identifier the document names.
 		:param collector:             The build's collector.
 		:returns:                     Every required package, by its canonical name.
-		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the entrypoint can't be read.
+		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the identifier is unknown, or the
+		  package index can't answer for the entrypoint's package.
 		"""
-		from packaging.utils            import canonicalize_name
-		from pyTooling.Dependency.Python import RequirementsFile
+		from packaging.utils import canonicalize_name
 
-		if entrypoint.endswith(".txt"):
-			path = Path(self.env.srcdir) / entrypoint
-			if not path.exists():
-				path = Path(self.env.srcdir).parent / entrypoint
+		if (entrypoint := collector.Entrypoints.get(identifier, None)) is None:
+			known = ", ".join(sorted(collector.Entrypoints)) or "none"
+			raise SphinxExtensionError(
+				f"Entrypoint '{identifier}' is not configured in conf.py: {CONFIG_PREFIX}_requirements. "
+				f"Known are: {known}."
+			)
 
-			try:
-				requirementsFile = RequirementsFile(path)
-			except FileNotFoundError as cause:
-				raise SphinxExtensionError(f"Requirements file '{entrypoint}' not found.") from cause
+		for file in entrypoint.Files:
+			self.env.note_dependency(str(file))
 
-			self.env.note_dependency(str(path))
-			for include in self._Walk(requirementsFile):
-				self.env.note_dependency(str(include.Path))
+		if (requirements := entrypoint.Requirements) is not None:
+			return requirements
 
-			return requirementsFile.Flatten()
-
-		name, _, bracket = entrypoint.partition("[")
-		packageName = name.strip()
-		extra: Nullable[str] = bracket.rstrip("]") or None
-
+		packageName = cast(str, entrypoint.PackageName)
 		if (project := collector.Project(packageName)) is None:
 			raise SphinxExtensionError(f"Package '{packageName}' is unknown to the package index.")
 
 		if (release := collector.Details(project.LatestRelease)) is None:
 			raise SphinxExtensionError(f"The package index can't describe the latest release of '{packageName}'.")
 
-		if (requirements := release.Requirements.get(extra, None)) is None:
+		if (published := release.Requirements.get(entrypoint.Extra, None)) is None:
 			known = ", ".join(sorted(str(key) for key in release.Requirements if key is not None))
-			raise SphinxExtensionError(f"Package '{packageName}' has no extra '{extra}'. Known are: {known}.")
+			raise SphinxExtensionError(f"Package '{packageName}' has no extra '{entrypoint.Extra}'. Known are: {known}.")
 
-		return {canonicalize_name(requirement.name): requirement for requirement in requirements}
+		requirements = {canonicalize_name(requirement.name): requirement for requirement in published}
+		entrypoint.CacheRequirements(requirements)
 
-	@staticmethod
-	def _Walk(requirementsFile: RequirementsFile) -> Iterator[RequirementsFile]:
-		"""
-		Yield a requirements file and every file it includes, depth first.
-
-		:param requirementsFile: The file to start at.
-		:returns:                A generator of requirements files.
-		"""
-		yield requirementsFile
-		for include in requirementsFile.Includes:
-			yield from DependencyTable._Walk(include)
+		return requirements
 
 	def _CreateTable(
 		self,
-		entrypoint: str,
+		identifier: str,
 		requirements: dict[str, Requirement],
 		collector: DependencyCollector
 	) -> nodes.table:
 		"""
 		Render the requirements as a four-column table.
 
-		:param entrypoint:   The entrypoint, used as the table's identifier.
+		:param identifier:   Identifier of the entrypoint, used as the table's identifier.
 		:param requirements: Every required package, by its canonical name.
 		:param collector:    The build's collector.
 		:returns:            The finished table.
 		"""
-		tableGroup = self._CreateSingleTableHeader(
+		tableGroup = self._CreateSingleRowTableHeader(
 			columns=[("Package", 3), ("Version", 1), ("License", 2), ("Dependencies", 4)],
-			identifier=entrypoint,
+			identifier=identifier,
 			classes=["dependency-table"]
 		)
 		tableGroup += (tableBody := nodes.tbody())
@@ -498,7 +759,7 @@ class DependencyTable(BaseDirective):
 			return entry
 
 		if len(release.Licenses) > 0:
-			text = ", ".join(spdxLicense.SPDXIdentifier for spdxLicense in release.Licenses)
+			text = ", ".join(license.Identifier for license in release.Licenses)
 			if release.LicenseURL is not None:
 				entry += nodes.paragraph("", "", nodes.reference("", text, refuri=str(release.LicenseURL)))
 			else:
@@ -599,7 +860,7 @@ def reportBuildTime(app: Sphinx, exception: Nullable[Exception]) -> None:
 	:param app:       The Sphinx application that finished building.
 	:param exception: The exception that ended the build, or ``None`` if it succeeded.
 	"""
-	if (collector := _COLLECTORS.pop(id(app), None)) is None:
+	if (collector := _COLLECTORS.pop(id(app), None)) is None or collector.Downloads == 0:
 		return
 
 	_logger.info(
