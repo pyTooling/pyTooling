@@ -72,6 +72,7 @@ from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, P
 from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ProjectNotFoundError
 from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
+from pyTooling.Dependency      import CircularRequirementsFileError, RequirementsFileNotFoundError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
@@ -101,27 +102,36 @@ _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
 @export
 class RequirementsFile(metaclass=ExtendedType, slots=True):
 	"""
-	A ``requirements.txt`` file, together with the files it includes.
+	A ``requirements.txt`` file, together with the files it references.
 
-	A ``-r other.txt`` line includes another file, and the tree of those includes is kept rather than flattened:
+	A ``-r other.txt`` line references another file, and the tree of those references is kept rather than flattened:
 	``tests/requirements.txt`` is nothing but four ``-r`` lines, so a flattened list would say nothing about which of
 	them a package came from - which is exactly what a table per entrypoint has to show.
 
-	A file including itself, directly or through a cycle, is read once.
+	It is a **tree**, so every file knows where it sits in one: :attr:`Parent` is the file that referenced it and
+	:attr:`Root` the entrypoint the whole tree was read from. The root alone keeps
+	:attr:`AnalyzedRequirementFiles`, every file of the tree by its resolved path, which is both the answer to
+	*where did this package come from* and what makes a cycle detectable.
+
+	**A cycle raises.** A file referencing itself, directly or through a chain, is a statement nobody wrote on
+	purpose; reading it once and continuing would hide it.
 	"""
 
-	_path:         Path                 #: Path of this requirements file.
-	_requirements: list[Requirement]    #: Requirements stated in this file, in the order they are written.
-	_includes:     list[RequirementsFile]  #: Files included with ``-r``, in the order they are included.
+	_path:         Path                              #: Path of this requirements file.
+	_root:         RequirementsFile                  #: The entrypoint this tree was read from; itself, for a root.
+	_parent:       Nullable[RequirementsFile]        #: File referencing this one; ``None`` for a root.
+	_entries:      list[Union[Requirement, RequirementsFile]]  #: What this file states, in the order it states it.
+	_analyzedRequirementFiles: dict[Path, RequirementsFile]    #: Every file of this tree; the root's alone is filled.
 
-	def __init__(self, path: Path, _visited: Nullable[set[Path]] = None) -> None:
+	def __init__(self, path: Path, _parent: Nullable[RequirementsFile] = None) -> None:
 		"""
-		Read a requirements file and the files it includes.
+		Read a requirements file and the files it references.
 
-		:param path:               Path of the requirements file to read.
-		:param _visited:           Internal, the files already read, so a cycle of includes terminates.
-		:raises TypeError:         If parameter 'path' is not of type :class:`~pathlib.Path`.
-		:raises FileNotFoundError: If the requirements file doesn't exist.
+		:param path:                             Path of the requirements file to read.
+		:param _parent:                          Internal, the file whose ``-r`` line referenced this one.
+		:raises TypeError:                       If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises RequirementsFileNotFoundError:   If the requirements file doesn't exist.
+		:raises CircularRequirementsFileError:   If a ``-r`` line references a file already being read.
 		"""
 		if not isinstance(path, Path):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
@@ -129,26 +139,29 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if not path.exists():
-			raise FileNotFoundError(f"Requirements file '{path}' not found.")
+			raise RequirementsFileNotFoundError(
+				f"Requirements file '{path}' not found."
+			) from FileNotFoundError(path)
 
-		# resolved, so the whole tree spells one file one way: an include is resolved to be compared against
-		# 'visited', and on Windows and macOS the path handed in is spelled differently from its resolution
+		# resolved, so the whole tree spells one file one way: a reference is resolved to be looked up in the root's
+		# mapping, and on Windows and macOS the path handed in is spelled differently from its resolution
 		# ('C:/Users/RUNNER~1/...' vs. 'C:/Users/runneradmin/...', '/var/...' vs. '/private/var/...')
 		self._path = path.resolve()
-		self._requirements = []
-		self._includes = []
+		self._parent = _parent
+		self._root = self if _parent is None else _parent._root
+		self._entries = []
+		# only the root's mapping is filled; a referenced file carries an empty one it never reads, because the
+		# alternative is a 'Nullable' every lookup has to test for a case that can't happen
+		self._analyzedRequirementFiles = {}
 
-		visited = _visited if _visited is not None else set()
-		visited.add(self._path)
+		self._root._analyzedRequirementFiles[self._path] = self
 
 		for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
 			if (line := line.split("#")[0].strip()) == "":
 				continue
 
 			if line.startswith("-r"):
-				included = (path.parent / line[2:].strip()).resolve()
-				if included not in visited:
-					self._includes.append(RequirementsFile(included, visited))
+				self._entries.append(self._ReadReferencedFile(path, line, number))
 				continue
 
 			# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
@@ -156,74 +169,164 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 				continue
 
 			try:
-				self._requirements.append(Requirement(line))
-			except InvalidRequirement:
+				self._entries.append(Requirement(line))
+			except InvalidRequirement as ex:
 				WarningCollector.Raise(
-					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {number} can't be parsed.")
+					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {number} can't be parsed."),
+					ex
 				)
+
+	def _ReadReferencedFile(self, path: Path, line: str, number: int) -> RequirementsFile:
+		"""
+		Read the file a ``-r`` line references.
+
+		:param path:                           Path of the file stating the ``-r`` line, references are relative to it.
+		:param line:                           The ``-r`` line, comment already stripped.
+		:param number:                         Number of that line, for the error message.
+		:returns:                              The referenced file.
+		:raises CircularRequirementsFileError: If that file is already in this tree.
+		:raises RequirementsFileNotFoundError: If that file doesn't exist.
+		"""
+		referenced = (path.parent / line[2:].strip()).resolve()
+
+		if referenced in self._root._analyzedRequirementFiles:
+			chain = " -> ".join(str(file.Path) for file in reversed(tuple(self.IterateToRoot())))
+			ex = CircularRequirementsFileError(
+				f"Requirements file '{referenced}' referenced in '{path}' line {number} is already being read."
+			)
+			ex.add_note(f"Chain: {chain} -> {referenced}")
+			raise ex
+
+		return RequirementsFile(referenced, self)
 
 	@readonly
 	def Path(self) -> Path:
 		"""
-		Read-only property to access this file's path (:attr:`_path`).
+		Read-only property to access this requirement file's path (:attr:`_path`).
 
 		:returns: Resolved path of the requirements file.
 		"""
 		return self._path
 
 	@readonly
-	def Requirements(self) -> list[Requirement]:
+	def Root(self) -> RequirementsFile:
 		"""
-		Read-only property to access the requirements stated in this file (:attr:`_requirements`).
+		Read-only property to access the entrypoint this tree was read from (:attr:`_root`).
 
-		This is what *this* file states; what the files it includes state is reachable through :attr:`Includes`.
-
-		:returns: Requirements stated in this file, in the order they are written.
+		:returns: The tree's root, which is this file itself when it is one.
 		"""
-		return self._requirements
+		return self._root
 
 	@readonly
-	def Includes(self) -> list[RequirementsFile]:
+	def Parent(self) -> Nullable[RequirementsFile]:
 		"""
-		Read-only property to access the files included with ``-r`` (:attr:`_includes`).
+		Read-only property to access the file whose ``-r`` line referenced this one (:attr:`_parent`).
 
-		:returns: Included files, in the order they are included.
+		:returns: The referencing file, or ``None`` for a root.
 		"""
-		return self._includes
+		return self._parent
+
+	@readonly
+	def AnalyzedRequirementFiles(self) -> dict[Path, RequirementsFile]:
+		"""
+		Read-only property to access every file of this tree, by its resolved path.
+
+		**Only the root's is filled**; ask :attr:`Root` for it. It is what detects a cycle while reading, and what
+		answers which files a tree was read from afterwards - the list a documentation build registers so a change
+		to any of them rebuilds the page.
+
+		:returns: Every file of the tree, by resolved path.
+		"""
+		return self._analyzedRequirementFiles
+
+	@readonly
+	def Entries(self) -> list[Union[Requirement, RequirementsFile]]:
+		"""
+		Read-only property to access what this file states, in the order it states it (:attr:`_entries`).
+
+		Requirements and referenced files are kept in **one** list, because a file states them interleaved and
+		splitting them into two would lose that order. :attr:`Requirements` and :attr:`ReferencedFiles` are the two
+		filtered views of it.
+
+		:returns: This file's requirements and referenced files, in file order.
+		"""
+		return self._entries
+
+	@readonly
+	def Requirements(self) -> Iterator[Requirement]:
+		"""
+		Read-only property to iterate the requirements stated in this file.
+
+		This is what *this* file states; what the files it references state is reachable through
+		:attr:`ReferencedFiles`.
+
+		:returns: An iterator of this file's requirements, in the order they are written.
+		"""
+		return (entry for entry in self._entries if isinstance(entry, Requirement))
+
+	@readonly
+	def ReferencedFiles(self) -> Iterator[RequirementsFile]:
+		"""
+		Read-only property to iterate the files referenced with ``-r``.
+
+		:returns: An iterator of the referenced files, in the order they are referenced.
+		"""
+		return (entry for entry in self._entries if isinstance(entry, RequirementsFile))
+
+	def IterateToRoot(self) -> Iterator[RequirementsFile]:
+		"""
+		Iterate this file and every file referencing it, up to the root.
+
+		:returns: A generator of requirements files, this one first and the root last.
+		"""
+		requirementsFile: Nullable[RequirementsFile] = self
+		while requirementsFile is not None:
+			yield requirementsFile
+			requirementsFile = requirementsFile._parent
+
+	def IterateTree(self) -> Iterator[RequirementsFile]:
+		"""
+		Iterate this file and every file it references, depth first.
+
+		:returns: A generator of requirements files, this one first.
+		"""
+		yield self
+		for referenced in self.ReferencedFiles:
+			yield from referenced.IterateTree()
 
 	def Flatten(self) -> dict[str, Requirement]:
 		"""
-		Collect the requirements of this file and of every file it includes.
+		Collect the requirements of this file and of every file it references.
 
-		The nearer statement wins: a requirement stated in this file overrides the same package required by an
-		included file, because that is the constraint the entrypoint was written for.
+		The nearer statement wins: a requirement stated in this file overrides the same package required by a
+		referenced file, because that is the constraint the entrypoint was written for.
 
 		:returns: Every required package, by its canonical name.
 		"""
 		requirements: dict[str, Requirement] = {}
-		for include in self._includes:
-			requirements.update(include.Flatten())
+		for referenced in self.ReferencedFiles:
+			requirements.update(referenced.Flatten())
 
-		for requirement in self._requirements:
+		for requirement in self.Requirements:
 			requirements[canonicalize_name(requirement.name)] = requirement
 
 		return requirements
 
 	def __len__(self) -> int:
 		"""
-		Return the number of requirements this file states, not counting the files it includes.
+		Return the number of requirements this file states, not counting the files it references.
 
 		:returns: Number of requirements stated in this file.
 		"""
-		return len(self._requirements)
+		return sum(1 for _ in self.Requirements)
 
 	def __iter__(self) -> Iterator[Requirement]:
 		"""
-		Iterate the requirements this file states, not the ones it includes.
+		Iterate the requirements this file states, not the ones it references.
 
 		:returns: An iterator of this file's requirements.
 		"""
-		return iter(self._requirements)
+		return self.Requirements
 
 	def __str__(self) -> str:
 		"""
@@ -231,7 +334,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 		:returns: A string representation of this requirements file.
 		"""
-		return f"{self._path}: {len(self._requirements)} requirement(s), {len(self._includes)} include(s)"
+		referenced = sum(1 for _ in self.ReferencedFiles)
+
+		return f"{self._path}: {len(self)} requirement(s), {referenced} referenced file(s)"
 
 
 @export
@@ -880,7 +985,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 			if ex.response is not None and ex.response.status_code == 404:
 				raise ReleaseNotFoundError(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
 
-			raise
+			raise ex
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
