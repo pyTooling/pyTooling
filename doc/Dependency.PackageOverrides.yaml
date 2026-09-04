@@ -17,9 +17,9 @@
 # unquoted it is a float, and a float loses a trailing zero.
 version: "0.1"
 
-# The day these statements were last checked against the projects themselves. A package index answers for itself
+# When these statements were last checked against the projects themselves. A package index answers for itself
 # every time it is asked; this file is as old as whoever last looked.
-analysedAt: 2026-09-04
+analysedAt: 2026-09-04T21:45:00+00:00
 
 packages:
   # 'license: Apache 2' is a name, not an identifier. LICENSE.txt is the Apache License 2.0.
@@ -111,6 +111,7 @@ packages:
 
   sphinx-rtd-theme:
     licenseURL: https://GitHub.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE
+
 
   # The hand-written table linked LICENSE.rst, which is a 404 now - the file is LICENSE.
   sphinxcontrib-mermaid:

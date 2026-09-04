@@ -262,27 +262,24 @@ todo_link_only = True
 # ==============================================================================
 # pyTooling.Documentation.Sphinx
 # ==============================================================================
-# Licenses the package index can't answer for, stated by hand.
-pyTooling_dependency_licenses = "dependencies.yml"
-
-# Levels of sub-dependencies each table expands. The recursion saturates - a package already on the path isn't
-# expanded again - so four is 'everything' for this project: the deepest tree here is four levels and a fifth
-# adds nothing. A table overrides this with ':depth:'.
-pyTooling_dependency_depth = 4
+# Package meta-information a package index can't answer for: licenses, the URL of a project's own LICENSE file,
+# and repositories. Stated by hand, checked by hand.
+pyTooling_Dependency_PackageOverrides = "Dependency.PackageOverrides.yaml"
 
 # The entrypoints 'dependency-table' renders, by the identifier the documents name them with. A requirements file is
-# read relative to this file; a package is read from the package index. The tables share one view of that index, so a
-# package required by more than one entrypoint - and most of these overlap - is downloaded once per build.
-pyTooling_dependency_requirements = {
-	"package":       {"file":    "../requirements.txt"},
-	"packaging":     {"package": "pyTooling[packaging]"},
-	"terminal":      {"package": "pyTooling[terminal]"},
-	"yaml":          {"package": "pyTooling[yaml]"},
-	"unittest":      {"file":    "../tests/unit/requirements.txt"},
-	"benchmark":     {"file":    "../tests/benchmark/requirements.txt"},
-	"performance":   {"file":    "../tests/performance/requirements.txt"},
-	"documentation": {"file":    "requirements.txt"},
-	"publishing":    {"file":    "../dist/requirements.txt"}
+# read relative to this file; a package is read from the package index. Both come in a singular form taking one
+# value and a plural form taking an iterable. The tables share one view of that index, so a package required by more
+# than one entrypoint - and most of these overlap - is downloaded once per build.
+pyTooling_Dependency_Requirements = {
+	"package":       {"file":     "../requirements.txt"},
+	"packaging":     {"package":  "pyTooling[packaging]"},
+	"terminal":      {"packages": ("pyTooling[terminal]", )},
+	"yaml":          {"packages": ["pyTooling[yaml]", ]},
+	"unittest":      {"file":     "../tests/unit/requirements.txt"},
+	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
+	"performance":   {"files":    ["../tests/performance/requirements.txt", ]},
+	"documentation": {"file":     "requirements.txt"},
+	"publishing":    {"file":     "../dist/requirements.txt"}
 }
 
 

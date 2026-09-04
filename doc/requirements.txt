@@ -8,7 +8,7 @@ ruamel.yaml ~= 0.19.1  # 'yaml'
 setuptools >= 83.0     # 'packaging'
 
 # 'pypi' - read by the 'dependency-table' directive, which resolves the tables in 'Dependency.rst' against PyPI
-aiohttp >= 3.12        # aiohttp limited on MSYS2 to 3.12.x
+aiohttp >= 3.14        # MSYS2 UCRT64 and MINGW64 ship 3.14.3
 packaging >= 25.0
 requests >= 2.32
 
