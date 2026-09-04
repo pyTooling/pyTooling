@@ -11,8 +11,9 @@ pytest-cov ~= 7.1
 aiohttp >= 3.12    # aiohttp limited on MSYS2 to 3.12.x
 requests >= 2.32
 
-# For pyTooling.Documentation.Sphinx testing
-sphinx >= 9.1
+# For pyTooling.Documentation.Sphinx testing - Sphinx 9.1 requires Python 3.12, so these testcases are skipped
+# on Python 3.11, where 'pyTooling[sphinx]' can't be installed either.
+sphinx >= 9.1 ; python_version >= "3.12"
 
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml ~= 0.19.1

@@ -73,6 +73,9 @@ hand-assembled node trees docutils presents.
    ``pyTooling[sphinx]``, or rely on Sphinx already being present - which it is, wherever a :file:`conf.py` is
    being executed.
 
+   ``pyTooling[sphinx]`` requires **Python 3.12 or newer**, because it requires Sphinx 9.1 and Sphinx 9.1 does.
+   The rest of :mod:`pyTooling` still supports Python 3.11.
+
 .. seealso::
 
    :mod:`pyTooling.Documentation`

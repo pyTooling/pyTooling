@@ -33,10 +33,22 @@ from pathlib                 import Path
 from tempfile                import TemporaryDirectory
 from textwrap                import dedent
 
+from sys                     import platform as sys_platform
+
+from pytest                  import mark
+
 from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
-from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
-from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
 from pyTooling.Testing       import Testcase
+
+try:
+	from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
+	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
+
+	sphinxIsInstalled = True
+except ImportError:  # pragma: no cover
+	# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
+	# installed and its testcases can't run.
+	sphinxIsInstalled = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -132,6 +144,7 @@ class SummaryLength(Testcase):
 		)
 
 
+@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class Entrypoints(Testcase):
 	"""``pyTooling_dependency_requirements`` is read while :file:`conf.py` is processed, so its errors end the build."""
 
@@ -145,7 +158,7 @@ class Entrypoints(Testcase):
 	def test_AFileEntrypointIsReadRightAway(self) -> None:
 		"""A requirements file is read here, not when a table is built."""
 		with TemporaryDirectory() as directory:
-			root = Path(directory)
+			root = Path(directory).resolve()
 			self._write(root, "requirements.txt", """
 				pytest ~= 9.1
 				colorama ~= 0.4.6
@@ -159,7 +172,7 @@ class Entrypoints(Testcase):
 	def test_AnIncludedFileIsListedToo(self) -> None:
 		"""Every file read is remembered, so a change to an include rebuilds the document naming the entrypoint."""
 		with TemporaryDirectory() as directory:
-			root = Path(directory)
+			root = Path(directory).resolve()
 			self._write(root, "base.txt", "colorama ~= 0.4.6\n")
 			self._write(root, "requirements.txt", """
 				-r base.txt
@@ -169,6 +182,29 @@ class Entrypoints(Testcase):
 			entrypoints = readEntrypoints({"unittest": {"file": "requirements.txt"}}, root)
 
 		self.assertEqual([root / "requirements.txt", root / "base.txt"], list(entrypoints["unittest"].Files))
+
+	@mark.skipif(sys_platform == "win32", reason="Creating a symbolic link needs a privilege Windows doesn't grant.")
+	def test_TheWholeTreeIsSpelledOneWay(self) -> None:
+		"""A directory reachable under two names must not put both spellings into the tree.
+
+		This is what macOS (:file:`/var` is :file:`/private/var`) and Windows (:file:`RUNNER~1` is
+		:file:`runneradmin`) hand a build, and it made the file and its includes disagree about their own parent.
+		"""
+		with TemporaryDirectory() as directory:
+			real = Path(directory).resolve() / "real"
+			real.mkdir()
+			self._write(real, "base.txt", "colorama ~= 0.4.6\n")
+			self._write(real, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			link = Path(directory).resolve() / "link"
+			link.symlink_to(real)
+
+			files = readEntrypoints({"unittest": {"file": "requirements.txt"}}, link)["unittest"].Files
+
+		self.assertEqual([real / "requirements.txt", real / "base.txt"], list(files))
 
 	def test_APackageEntrypointIsNotResolvedYet(self) -> None:
 		"""A package can only be resolved by asking the index, so it carries its name and extra until a table asks."""
