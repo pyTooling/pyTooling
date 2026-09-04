@@ -479,7 +479,8 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 			except Exception as cause:
 				raise SphinxExtensionError(f"{location}.file: Requirements file '{path}' can't be read: {cause}") from cause
 
-			files = tuple(included.Path for included in _Walk(requirementsFile))
+			# the tree knows every file it was read from; walking it here would be a second answer to one question
+			files = tuple(requirementsFile.AnalyzedRequirementFiles)
 			entrypoints[identifier] = Entrypoint(identifier, files=files, requirements=requirementsFile.Flatten())
 		else:
 			name, _, bracket = str(declaration["package"]).partition("[")
@@ -538,18 +539,6 @@ def prepareEntrypoints(sphinx: Sphinx, config: Config) -> None:
 		overrides,
 		getattr(config, f"{CONFIG_PREFIX}_depth", DEFAULT_DEPTH)
 	)
-
-
-def _Walk(requirementsFile: RequirementsFile) -> Iterator[RequirementsFile]:
-	"""
-	Yield a requirements file and every file it includes, depth first.
-
-	:param requirementsFile: The file to start at.
-	:returns:                A generator of requirements files.
-	"""
-	yield requirementsFile
-	for include in requirementsFile.Includes:
-		yield from _Walk(include)
 
 
 @export

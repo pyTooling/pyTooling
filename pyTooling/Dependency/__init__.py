@@ -74,6 +74,21 @@ class NoSessionAvailableError(DependencyError):
 
 
 @export
+class RequirementsFileNotFoundError(DependencyError):
+	"""A requirements file doesn't exist, or a ``-r`` line references one that doesn't."""
+
+
+@export
+class CircularRequirementsFileError(DependencyError):
+	"""
+	A ``-r`` line references a requirements file that is already being read further up the include chain.
+
+	A cycle isn't read once and ignored: a file including itself is a statement nobody wrote on purpose, and reading
+	it silently would hide it. The exception names the chain, so the ``-r`` line to delete is in the message.
+	"""
+
+
+@export
 class ProjectNotFoundError(DependencyError):
 	"""The package index doesn't know a project of that name."""
 

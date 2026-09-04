@@ -43,7 +43,8 @@ from pytest                       import mark
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
 from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
-from pyTooling.Dependency         import BrokenRequirementWarning, DependencyError, UnknownLicenseWarning
+from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
+from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -841,11 +842,11 @@ class RequirementsFiles(Testcase):
 			requirementsFile = RequirementsFile(path)
 
 		self.assertEqual(["pyTooling", "colorama"], [req.name for req in requirementsFile.Requirements])
-		self.assertEqual([], requirementsFile.Includes)
+		self.assertEqual([], list(requirementsFile.ReferencedFiles))
 		self.assertEqual(2, len(requirementsFile))
 
 	def test_Includes_KeepTheTree(self) -> None:
-		"""``-r`` includes another file, and which file a requirement came from is not flattened away."""
+		"""``-r`` references another file, and which file a requirement came from is not flattened away."""
 		with TemporaryDirectory() as directory:
 			root = Path(directory)
 			self._write(root, "base.txt", "pyTooling >= 8.0\n")
@@ -857,12 +858,71 @@ class RequirementsFiles(Testcase):
 			""")
 
 			requirementsFile = RequirementsFile(path)
+			referenced = tuple(requirementsFile.ReferencedFiles)
 
 			self.assertEqual(["pytest"], [req.name for req in requirementsFile.Requirements])
-			self.assertEqual(2, len(requirementsFile.Includes))
-			self.assertEqual(["pyTooling"], [req.name for req in requirementsFile.Includes[0]])
-			self.assertEqual(["colorama"], [req.name for req in requirementsFile.Includes[1]])
+			self.assertEqual(2, len(referenced))
+			self.assertEqual(["pyTooling"], [req.name for req in referenced[0]])
+			self.assertEqual(["colorama"], [req.name for req in referenced[1]])
 			self.assertEqual({"pytooling", "colorama", "pytest"}, set(requirementsFile.Flatten()))
+
+	def test_EntriesKeepTheFileOrder(self) -> None:
+		"""Requirements and references are interleaved in a file, so one list keeps them in the order written."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			path = self._write(root, "requirements.txt", """
+				pytest ~= 9.1
+				-r base.txt
+				colorama ~= 0.4.6
+			""")
+
+			entries = RequirementsFile(path).Entries
+
+		self.assertEqual(
+			["pytest", "base.txt", "colorama"],
+			[entry.Path.name if isinstance(entry, RequirementsFile) else entry.name for entry in entries]
+		)
+
+	def test_EveryFileKnowsItsParentAndRoot(self) -> None:
+		"""A tree is walkable upwards, so a requirement can name the entrypoint that pulled it in."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "leaf.txt", "colorama ~= 0.4.6\n")
+			self._write(root, "base.txt", "-r leaf.txt\n")
+			path = self._write(root, "requirements.txt", "-r base.txt\n")
+
+			requirementsFile = RequirementsFile(path)
+			base = next(iter(requirementsFile.ReferencedFiles))
+			leaf = next(iter(base.ReferencedFiles))
+
+		self.assertIsNone(requirementsFile.Parent)
+		self.assertIs(requirementsFile, requirementsFile.Root)
+		self.assertIs(base, leaf.Parent)
+		self.assertIs(requirementsFile, leaf.Root)
+		self.assertEqual(
+			[leaf.Path, base.Path, requirementsFile.Path],
+			[file.Path for file in leaf.IterateToRoot()]
+		)
+
+	def test_TheRootKnowsEveryFileOfItsTree(self) -> None:
+		"""What a documentation build registers for rebuild-on-change, and what detects a cycle while reading."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			self._write(root, "sub/leaf.txt", "colorama ~= 0.4.6\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				-r sub/leaf.txt
+			""")
+
+			requirementsFile = RequirementsFile(path)
+
+		self.assertEqual(
+			{path.resolve(), (root / "base.txt").resolve(), (root / "sub/leaf.txt").resolve()},
+			set(requirementsFile.AnalyzedRequirementFiles)
+		)
+		self.assertEqual(3, len(list(requirementsFile.IterateTree())))
 
 	def test_Includes_NearerStatementWins(self) -> None:
 		"""A requirement stated by the entrypoint overrides the same package required by a file it includes."""
@@ -879,7 +939,7 @@ class RequirementsFiles(Testcase):
 		self.assertEqual("~=9.1", str(flattened["pytest"].specifier))
 
 	def test_Includes_Cycle(self) -> None:
-		"""A file including itself, directly or through a cycle, is read once."""
+		"""A cycle of ``-r`` lines is raised, not read once and hidden - nobody writes one on purpose."""
 		with TemporaryDirectory() as directory:
 			root = Path(directory)
 			self._write(root, "other.txt", "-r requirements.txt\ncolorama ~= 0.4.6\n")
@@ -888,9 +948,18 @@ class RequirementsFiles(Testcase):
 				pytest ~= 9.1
 			""")
 
-			requirementsFile = RequirementsFile(path)
+			with self.assertRaises(CircularRequirementsFileError) as exceptionCapture:
+				RequirementsFile(path)
 
-		self.assertEqual({"colorama", "pytest"}, set(requirementsFile.Flatten()))
+		self.assertIn("other.txt", str(exceptionCapture.exception))
+
+	def test_Includes_SelfReference(self) -> None:
+		"""The shortest cycle there is."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", "-r requirements.txt\n")
+
+			with self.assertRaises(CircularRequirementsFileError):
+				RequirementsFile(path)
 
 	def test_BrokenRequirement(self) -> None:
 		"""A line that isn't a requirement is reported, and the rest of the file is still read."""
@@ -911,5 +980,7 @@ class RequirementsFiles(Testcase):
 	def test_MissingFile(self) -> None:
 		"""A requirements file that doesn't exist is an error, not an empty list."""
 		with TemporaryDirectory() as directory:
-			with self.assertRaises(FileNotFoundError):
+			with self.assertRaises(RequirementsFileNotFoundError) as exceptionCapture:
 				RequirementsFile(Path(directory) / "nothing.txt")
+
+		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)
