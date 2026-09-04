@@ -28,9 +28,29 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers."""
+"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers and the Sphinx extension."""
+from pathlib                 import Path
+from tempfile                import TemporaryDirectory
+from textwrap                import dedent
+
+from sys                     import platform as sys_platform
+
+from pytest                  import mark
+
 from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
 from pyTooling.Testing       import Testcase
+
+try:
+	from packaging.specifiers                          import SpecifierSet
+
+	from pyTooling.Documentation.Sphinx.DependencyTable import DependencyTable, readEntrypoints
+	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
+
+	sphinxIsInstalled = True
+except ImportError:  # pragma: no cover
+	# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
+	# installed and its testcases can't run.
+	sphinxIsInstalled = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -124,3 +144,148 @@ class SummaryLength(Testcase):
 			"The doc-string's summary is longer than 30 characters.",
 			str(exceptionCapture.exception)
 		)
+
+
+@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class Entrypoints(Testcase):
+	"""``pyTooling_dependency_requirements`` is read while :file:`conf.py` is processed, so its errors end the build."""
+
+	@staticmethod
+	def _write(directory: Path, name: str, content: str) -> Path:
+		path = directory / name
+		path.write_text(dedent(content).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_AFileEntrypointIsReadRightAway(self) -> None:
+		"""A requirements file is read here, not when a table is built."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory).resolve()
+			self._write(root, "requirements.txt", """
+				pytest ~= 9.1
+				colorama ~= 0.4.6
+			""")
+
+			entrypoints = readEntrypoints({"unittest": {"file": "requirements.txt"}}, root)
+
+		self.assertEqual({"colorama", "pytest"}, set(entrypoints["unittest"].Requirements))
+		self.assertEqual((root / "requirements.txt",), entrypoints["unittest"].Files)
+
+	def test_AnIncludedFileIsListedToo(self) -> None:
+		"""Every file read is remembered, so a change to an include rebuilds the document naming the entrypoint."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory).resolve()
+			self._write(root, "base.txt", "colorama ~= 0.4.6\n")
+			self._write(root, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			entrypoints = readEntrypoints({"unittest": {"file": "requirements.txt"}}, root)
+
+		self.assertEqual([root / "requirements.txt", root / "base.txt"], list(entrypoints["unittest"].Files))
+
+	@mark.skipif(sys_platform == "win32", reason="Creating a symbolic link needs a privilege Windows doesn't grant.")
+	def test_TheWholeTreeIsSpelledOneWay(self) -> None:
+		"""A directory reachable under two names must not put both spellings into the tree.
+
+		This is what macOS (:file:`/var` is :file:`/private/var`) and Windows (:file:`RUNNER~1` is
+		:file:`runneradmin`) hand a build, and it made the file and its includes disagree about their own parent.
+		"""
+		with TemporaryDirectory() as directory:
+			real = Path(directory).resolve() / "real"
+			real.mkdir()
+			self._write(real, "base.txt", "colorama ~= 0.4.6\n")
+			self._write(real, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			link = Path(directory).resolve() / "link"
+			link.symlink_to(real)
+
+			files = readEntrypoints({"unittest": {"file": "requirements.txt"}}, link)["unittest"].Files
+
+		self.assertEqual([real / "requirements.txt", real / "base.txt"], list(files))
+
+	def test_APackageEntrypointIsNotResolvedYet(self) -> None:
+		"""A package can only be resolved by asking the index, so it carries its name and extra until a table asks."""
+		entrypoints = readEntrypoints({"yaml": {"package": "pyTooling[yaml]"}}, Path("."))
+
+		self.assertEqual("pyTooling", entrypoints["yaml"].PackageName)
+		self.assertEqual("yaml", entrypoints["yaml"].Extra)
+		self.assertIsNone(entrypoints["yaml"].Requirements)
+
+	def test_APackageWithoutAnExtraHasNone(self) -> None:
+		entrypoints = readEntrypoints({"package": {"package": "pyTooling"}}, Path("."))
+
+		self.assertEqual("pyTooling", entrypoints["package"].PackageName)
+		self.assertIsNone(entrypoints["package"].Extra)
+
+	def test_AMissingFileNamesTheIdentifier(self) -> None:
+		"""The message has to say which entry is wrong - the path alone doesn't."""
+		with TemporaryDirectory() as directory:
+			with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+				readEntrypoints({"unittest": {"file": "nothing.txt"}}, Path(directory))
+
+		self.assertIn("[unittest]", str(exceptionCapture.exception))
+
+	def test_NeitherFileNorPackageIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {}}, Path("."))
+
+	def test_BothFileAndPackageIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {"file": "requirements.txt", "package": "pyTooling"}}, Path("."))
+
+	def test_AnUnknownFieldIsRejected(self) -> None:
+		"""A typo is an error rather than a silently ignored key."""
+		with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+			readEntrypoints({"unittest": {"files": "requirements.txt"}}, Path("."))
+
+		self.assertIn("files", str(exceptionCapture.exception))
+
+	def test_ADeclarationThatIsNoDictionaryIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": "requirements.txt"}, Path("."))
+
+	def test_AConfigurationThatIsNoDictionaryIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints(["requirements.txt"], Path("."))
+
+
+@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class VersionConstraints(Testcase):
+	"""A dependency table prints a constraint for a reader, not for an installer."""
+
+	@staticmethod
+	def _format(specifier: str, simplify: bool = True) -> str:
+		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), simplify)
+
+	def test_NoConstraintIsAny(self) -> None:
+		self.assertEqual("any", self._format(""))
+
+	def test_OperatorsBecomeTheirSymbols(self) -> None:
+		"""'>=' is typography, not syntax, once it is printed in a table."""
+		self.assertEqual("≥3.12", self._format(">=3.12"))
+		self.assertEqual("≤2.0", self._format("<=2.0", simplify=False))
+		self.assertEqual("≠2.0", self._format("!=2.0", simplify=False))
+		self.assertEqual("=1.2.3", self._format("==1.2.3"))
+
+	def test_ACompatibleReleaseBecomesItsLowerBound(self) -> None:
+		"""'~=0.4.6' says at least 0.4.6; the upper half is the installer's business."""
+		self.assertEqual("≥0.4.6", self._format("~=0.4.6"))
+
+	def test_AnUpperBoundIsDropped(self) -> None:
+		self.assertEqual("≥3.0", self._format("<4.0,>=3.0"))
+
+	def test_AnExclusionIsDropped(self) -> None:
+		self.assertEqual("≥1.0", self._format("!=2.0,>=1.0"))
+
+	def test_AnUpperBoundAloneSurvives(self) -> None:
+		"""Simplifying everything away would print nothing, so the constraint stays as it was written."""
+		self.assertEqual("<4.0", self._format("<4.0"))
+
+	def test_TheFullFormKeepsEveryPart(self) -> None:
+		self.assertEqual("≥3.0, <4.0", self._format("<4.0,>=3.0", simplify=False))
+		self.assertEqual("~=0.4.6", self._format("~=0.4.6", simplify=False))

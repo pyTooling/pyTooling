@@ -260,6 +260,33 @@ todo_link_only = True
 
 
 # ==============================================================================
+# pyTooling.Documentation.Sphinx
+# ==============================================================================
+# Licenses the package index can't answer for, stated by hand.
+pyTooling_dependency_licenses = "dependencies.yml"
+
+# Levels of sub-dependencies each table expands. The recursion saturates - a package already on the path isn't
+# expanded again - so four is 'everything' for this project: the deepest tree here is four levels and a fifth
+# adds nothing. A table overrides this with ':depth:'.
+pyTooling_dependency_depth = 4
+
+# The entrypoints 'dependency-table' renders, by the identifier the documents name them with. A requirements file is
+# read relative to this file; a package is read from the package index. The tables share one view of that index, so a
+# package required by more than one entrypoint - and most of these overlap - is downloaded once per build.
+pyTooling_dependency_requirements = {
+	"package":       {"file":    "../requirements.txt"},
+	"packaging":     {"package": "pyTooling[packaging]"},
+	"terminal":      {"package": "pyTooling[terminal]"},
+	"yaml":          {"package": "pyTooling[yaml]"},
+	"unittest":      {"file":    "../tests/unit/requirements.txt"},
+	"benchmark":     {"file":    "../tests/benchmark/requirements.txt"},
+	"performance":   {"file":    "../tests/performance/requirements.txt"},
+	"documentation": {"file":    "requirements.txt"},
+	"publishing":    {"file":    "../dist/requirements.txt"}
+}
+
+
+# ==============================================================================
 # sphinx-reports
 # ==============================================================================
 report_unittest_testsuites = {

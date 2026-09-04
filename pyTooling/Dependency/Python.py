@@ -44,7 +44,7 @@ from functools            import wraps, update_wrapper
 from pathlib              import Path
 from re                   import compile as re_compile, Pattern
 from threading            import RLock
-from typing               import Any, ClassVar, Optional as Nullable, Union, Iterable, Mapping, Self
+from typing               import Any, ClassVar, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
 
 from pyTooling.Configuration import Dictionary
 from pyTooling.Exceptions import MissingDependencyError
@@ -55,7 +55,7 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
 
 try:
-	from packaging.requirements import Requirement
+	from packaging.requirements import InvalidRequirement, Requirement
 	from packaging.utils        import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
@@ -96,6 +96,142 @@ _CHANGELOG_URL_ALIASES     = ("changelog", "changes", "release notes", "whatsnew
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
+
+
+@export
+class RequirementsFile(metaclass=ExtendedType, slots=True):
+	"""
+	A ``requirements.txt`` file, together with the files it includes.
+
+	A ``-r other.txt`` line includes another file, and the tree of those includes is kept rather than flattened:
+	``tests/requirements.txt`` is nothing but four ``-r`` lines, so a flattened list would say nothing about which of
+	them a package came from - which is exactly what a table per entrypoint has to show.
+
+	A file including itself, directly or through a cycle, is read once.
+	"""
+
+	_path:         Path                 #: Path of this requirements file.
+	_requirements: list[Requirement]    #: Requirements stated in this file, in the order they are written.
+	_includes:     list[RequirementsFile]  #: Files included with ``-r``, in the order they are included.
+
+	def __init__(self, path: Path, _visited: Nullable[set[Path]] = None) -> None:
+		"""
+		Read a requirements file and the files it includes.
+
+		:param path:               Path of the requirements file to read.
+		:param _visited:           Internal, the files already read, so a cycle of includes terminates.
+		:raises TypeError:         If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises FileNotFoundError: If the requirements file doesn't exist.
+		"""
+		if not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		if not path.exists():
+			raise FileNotFoundError(f"Requirements file '{path}' not found.")
+
+		# resolved, so the whole tree spells one file one way: an include is resolved to be compared against
+		# 'visited', and on Windows and macOS the path handed in is spelled differently from its resolution
+		# ('C:/Users/RUNNER~1/...' vs. 'C:/Users/runneradmin/...', '/var/...' vs. '/private/var/...')
+		self._path = path.resolve()
+		self._requirements = []
+		self._includes = []
+
+		visited = _visited if _visited is not None else set()
+		visited.add(self._path)
+
+		for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+			if (line := line.split("#")[0].strip()) == "":
+				continue
+
+			if line.startswith("-r"):
+				included = (path.parent / line[2:].strip()).resolve()
+				if included not in visited:
+					self._includes.append(RequirementsFile(included, visited))
+				continue
+
+			# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
+			if line.startswith("-") or line.startswith("http"):
+				continue
+
+			try:
+				self._requirements.append(Requirement(line))
+			except InvalidRequirement:
+				WarningCollector.Raise(
+					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {number} can't be parsed.")
+				)
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access this file's path (:attr:`_path`).
+
+		:returns: Resolved path of the requirements file.
+		"""
+		return self._path
+
+	@readonly
+	def Requirements(self) -> list[Requirement]:
+		"""
+		Read-only property to access the requirements stated in this file (:attr:`_requirements`).
+
+		This is what *this* file states; what the files it includes state is reachable through :attr:`Includes`.
+
+		:returns: Requirements stated in this file, in the order they are written.
+		"""
+		return self._requirements
+
+	@readonly
+	def Includes(self) -> list[RequirementsFile]:
+		"""
+		Read-only property to access the files included with ``-r`` (:attr:`_includes`).
+
+		:returns: Included files, in the order they are included.
+		"""
+		return self._includes
+
+	def Flatten(self) -> dict[str, Requirement]:
+		"""
+		Collect the requirements of this file and of every file it includes.
+
+		The nearer statement wins: a requirement stated in this file overrides the same package required by an
+		included file, because that is the constraint the entrypoint was written for.
+
+		:returns: Every required package, by its canonical name.
+		"""
+		requirements: dict[str, Requirement] = {}
+		for include in self._includes:
+			requirements.update(include.Flatten())
+
+		for requirement in self._requirements:
+			requirements[canonicalize_name(requirement.name)] = requirement
+
+		return requirements
+
+	def __len__(self) -> int:
+		"""
+		Return the number of requirements this file states, not counting the files it includes.
+
+		:returns: Number of requirements stated in this file.
+		"""
+		return len(self._requirements)
+
+	def __iter__(self) -> Iterator[Requirement]:
+		"""
+		Iterate the requirements this file states, not the ones it includes.
+
+		:returns: An iterator of this file's requirements.
+		"""
+		return iter(self._requirements)
+
+	def __str__(self) -> str:
+		"""
+		Return this file's path and how much it states.
+
+		:returns: A string representation of this requirements file.
+		"""
+		return f"{self._path}: {len(self._requirements)} requirement(s), {len(self._includes)} include(s)"
 
 
 @export
@@ -743,6 +879,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 		except HTTPError as ex:
 			if ex.response is not None and ex.response.status_code == 404:
 				raise ReleaseNotFoundError(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
+
+			raise
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
