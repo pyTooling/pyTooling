@@ -64,8 +64,9 @@ with a :class:`~pyTooling.Stopwatch.Stopwatch`, and the build ends with the tota
 """
 from __future__                    import annotations
 
+from enum                          import Enum, auto
 from pathlib                       import Path
-from typing                        import TYPE_CHECKING, Any, Literal, Optional as Nullable, cast
+from typing                        import TYPE_CHECKING, Any, Literal, Optional as Nullable, TypeVar, cast
 
 from docutils                      import nodes
 from docutils.parsers.rst          import directives
@@ -106,6 +107,67 @@ DEFAULT_DEPTH = 0
 #: Whether a version constraint is reduced to its lower bound when the document doesn't say.
 DEFAULT_SIMPLIFIED_VERSIONS = True
 
+
+@export
+class VersionFormat(Enum):
+	"""How many parts of a version number a table prints."""
+
+	Major =           auto()  #: The major part alone, ``≥9``.
+	MajorMinor =      auto()  #: Major and minor, ``≥9.1`` - the default.
+	MajorMinorPatch = auto()  #: Major, minor and patch, ``≥9.1.2``.
+	All =             auto()  #: Every part the constraint states, ``≥9.1.2.dev3``.
+
+	def __str__(self) -> str:
+		"""
+		Return this format's name, as a document writes it.
+
+		:returns: The enum member's name.
+		"""
+		return self.name
+
+
+@export
+class DependencyFormat(Enum):
+	"""What a line of a dependency tree states about a package."""
+
+	Package =              auto()  #: The name alone.
+	PackageVersion =       auto()  #: Name and version constraint.
+	PackageLicense =       auto()  #: Name and license.
+	PackageVersionLicense = auto()  #: Name, version constraint and license - the default.
+
+	@readonly
+	def ShowsVersion(self) -> bool:
+		"""
+		Whether this format states a version constraint.
+
+		:returns: ``True`` if the version is printed.
+		"""
+		return self in (DependencyFormat.PackageVersion, DependencyFormat.PackageVersionLicense)
+
+	@readonly
+	def ShowsLicense(self) -> bool:
+		"""
+		Whether this format states a license.
+
+		:returns: ``True`` if the license is printed.
+		"""
+		return self in (DependencyFormat.PackageLicense, DependencyFormat.PackageVersionLicense)
+
+	def __str__(self) -> str:
+		"""
+		Return this format's name, as a document writes it.
+
+		:returns: The enum member's name.
+		"""
+		return self.name
+
+
+#: How many parts of a version number a table prints when the document doesn't say.
+DEFAULT_VERSION_FORMAT = VersionFormat.MajorMinor
+
+#: What a line of a dependency tree states when the document doesn't say.
+DEFAULT_DEPENDENCY_FORMAT = DependencyFormat.PackageVersionLicense
+
 #: Comparison operators as a reader writes them. Order matters - the two-character forms have to be tried first.
 OPERATOR_SYMBOLS = (("<=", "≤"), (">=", "≥"), ("!=", "≠"), ("==", "="))
 
@@ -141,10 +203,14 @@ CONFIG_VALUES: dict[str, tuple[Any, _ConfigRebuild, Any]] = {
 
 __all__ = [
 	"DEFAULT_INDEX_URL", "DEFAULT_API_URL", "DEFAULT_DEPTH", "DEFAULT_SIMPLIFIED_VERSIONS", "OPERATOR_SYMBOLS",
-	"TABLE_COLUMNS", "ENTRYPOINT_FIELDS", "CONFIG_PREFIX", "CONFIG_VALUES"
+	"TABLE_COLUMNS", "ENTRYPOINT_FIELDS", "CONFIG_PREFIX", "CONFIG_VALUES",
+	"DEFAULT_VERSION_FORMAT", "DEFAULT_DEPENDENCY_FORMAT"
 ]
 
 _logger = logging.getLogger(__name__)
+
+#: The two option enumerations, so one parser serves both.
+_FormatType = TypeVar("_FormatType", VersionFormat, DependencyFormat)
 
 
 def _OneLevelDown(depth: Nullable[int]) -> Nullable[int]:
@@ -653,7 +719,9 @@ class DependencyTable(BaseDirective):
 
 	directiveName: str = "dependency-table"  #: Name the directive is invoked by.
 
-	_simplify: bool  #: Whether this table's version constraints are reduced to their lower bound.
+	_simplify:         bool               #: Whether this table's version constraints are reduced to their lower bound.
+	_versionFormat:    VersionFormat      #: How many parts of a version number this table prints.
+	_dependencyFormat: DependencyFormat   #: What a line of this table's dependency trees states.
 
 	has_content =               False  #: A boolean; ``True`` if content is allowed.
 	required_arguments =        1      #: Number of required directive arguments: the entrypoint's identifier.
@@ -666,6 +734,8 @@ class DependencyTable(BaseDirective):
 		"caption":             strip,
 		"depth":               directives.nonnegative_int,
 		"simplified-versions": stripAndNormalize,
+		"version-format":      stripAndNormalize,
+		"dependency-format":   stripAndNormalize,
 	}
 
 	def run(self) -> list[nodes.Node]:
@@ -676,6 +746,10 @@ class DependencyTable(BaseDirective):
 		"""
 		identifier = self.arguments[0].strip()
 		self._simplify = self._ParseBooleanOption("simplified-versions", DEFAULT_SIMPLIFIED_VERSIONS)
+		self._versionFormat = self._ParseFormatOption("version-format", VersionFormat, DEFAULT_VERSION_FORMAT)
+		self._dependencyFormat = self._ParseFormatOption(
+			"dependency-format", DependencyFormat, DEFAULT_DEPENDENCY_FORMAT
+		)
 
 		with Stopwatch() as stopwatch:
 			try:
@@ -696,6 +770,32 @@ class DependencyTable(BaseDirective):
 		)
 
 		return [table]
+
+	def _ParseFormatOption(self, optionName: str, enumType: type[_FormatType], default: _FormatType) -> _FormatType:
+		"""
+		Read an option naming a member of an enumeration, or fall back to its default.
+
+		:attr:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective._ParseEnumOption` requires the option and
+		lower-cases what it reads; these two have a default and are written the way the members are spelled, so a
+		document says ``:version-format: MajorMinor`` rather than ``major_minor``.
+
+		:param optionName:            Name of the option to read.
+		:param enumType:              The enumeration its value names a member of.
+		:param default:               The member to use when the option isn't given.
+		:returns:                     The named member.
+		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the value names no member.
+		"""
+		if (option := self.options.get(optionName, None)) is None:
+			return default
+
+		for member in enumType:
+			if option.lower() == member.name.lower():
+				return member
+
+		known = ", ".join(member.name for member in enumType)
+		raise SphinxExtensionError(
+			f"{self.directiveName}::{optionName}: '{option}' is not one of: {known}."
+		)
 
 	def _Collector(self) -> DependencyCollector:
 		"""
@@ -866,7 +966,9 @@ class DependencyTable(BaseDirective):
 		release = self._SelectRelease(project, requirement, collector)
 
 		tableRow += self._PackageEntry(requirement, project)
-		tableRow += nodes.entry("", nodes.paragraph(text=self._FormatSpecifier(requirement.specifier, self._simplify)))
+		specifier = self._FormatSpecifier(requirement.specifier, self._simplify, self._versionFormat)
+
+		tableRow += nodes.entry("", nodes.paragraph(text=specifier))
 		tableRow += self._LicenseEntry(release)
 		tableRow += self._DependenciesEntry(release, collector, depth, {requirement.name.lower()})
 
@@ -902,25 +1004,48 @@ class DependencyTable(BaseDirective):
 		return collector.Details(max(matching, key=lambda release: release.Version))
 
 	@staticmethod
-	def _FormatSpecifier(specifier: SpecifierSet, simplify: bool) -> str:
+	def _FormatVersion(version: str, versionFormat: VersionFormat) -> str:
+		"""
+		Shorten a version number to the parts a table prints.
+
+		``≥0.4.6`` says more than a reader of a dependency table needs; the parts that matter are the ones a
+		constraint is usually written against. A version with fewer parts than asked for is left as it is - ``≥9``
+		does not become ``≥9.0`` - because padding would state a precision the requirement didn't.
+
+		:param version:       The version, as the constraint writes it.
+		:param versionFormat: How many parts to keep.
+		:returns:             The shortened version.
+		"""
+		if versionFormat is VersionFormat.All:
+			return version
+
+		parts = {VersionFormat.Major: 1, VersionFormat.MajorMinor: 2, VersionFormat.MajorMinorPatch: 3}[versionFormat]
+
+		return ".".join(version.split(".")[:parts])
+
+	@staticmethod
+	def _FormatSpecifier(specifier: SpecifierSet, simplify: bool, versionFormat: VersionFormat) -> str:
 		"""
 		Render a version constraint the way a reader writes one.
 
-		The comparison operators become their mathematical symbols. A simplified constraint keeps only what a
-		package *has to be at least*: an upper bound and an exclusion say what a release must not be, which is the
-		packaging problem rather than the reader's, and ``~=`` is written as the lower bound it implies. Simplifying
-		everything away leaves the constraint as it was written - ``<4.0`` alone is still the whole statement.
+		The comparison operators become their mathematical symbols and the versions are shortened to
+		``versionFormat``. A simplified constraint keeps only what a package *has to be at least*: an upper bound
+		and an exclusion say what a release must not be, which is the packaging problem rather than the reader's,
+		and ``~=`` is written as the lower bound it implies. Simplifying everything away leaves the constraint as it
+		was written - ``<4.0`` alone is still the whole statement.
 
-		:param specifier: The constraint to render.
-		:param simplify:  Whether to reduce the constraint to its lower bound.
-		:returns:         The constraint, or ``any`` when nothing is constrained.
+		:param specifier:     The constraint to render.
+		:param simplify:      Whether to reduce the constraint to its lower bound.
+		:param versionFormat: How many parts of each version to keep.
+		:returns:             The constraint, or ``any`` when nothing is constrained.
 		"""
 		def render(operator: str, version: str) -> str:
+			shortened = DependencyTable._FormatVersion(version, versionFormat)
 			for written, symbol in OPERATOR_SYMBOLS:
 				if operator == written:
-					return f"{symbol}{version}"
+					return f"{symbol}{shortened}"
 
-			return f"{operator}{version}"
+			return f"{operator}{shortened}"
 
 		if len(specifier) == 0:
 			return "any"
@@ -932,9 +1057,13 @@ class DependencyTable(BaseDirective):
 				for item in specifiers if item.operator not in _DROPPED_OPERATORS
 			]
 			if len(kept) > 0:
-				return ", ".join(kept)
+				# shortening can make two constraints identical - '>=1.2.3, >1.2.9' is '≥1.2, >1.2' at MajorMinor -
+				# and printing one statement twice reads as a defect
+				return ", ".join(dict.fromkeys(kept))
 
-		return ", ".join(render(item.operator, item.version) for item in specifiers)
+		rendered = [render(item.operator, item.version) for item in specifiers]
+
+		return ", ".join(dict.fromkeys(rendered))
 
 	@staticmethod
 	def _PackageURL(project: Nullable[Project]) -> Nullable[str]:
@@ -1129,9 +1258,14 @@ class DependencyTable(BaseDirective):
 		for requirement in sorted(requirements, key=lambda item: item.name.lower()):
 			item = nodes.list_item()
 
-			# resolved whatever the depth: a leaf still states a license, and that is the whole point of the column
+			# a leaf is resolved too when the line states a license - that is the whole point of stating it - but a
+			# ':dependency-format:' that prints no license has no reason to send the requests
 			project = collector.Project(requirement.name)
-			release = self._SelectRelease(project, requirement, collector)
+			release = (
+				self._SelectRelease(project, requirement, collector)
+				if depth is None or depth > 0 or self._dependencyFormat.ShowsLicense
+				else None
+			)
 
 			item += self._RequirementParagraph(requirement, project, release)
 
@@ -1169,26 +1303,28 @@ class DependencyTable(BaseDirective):
 		"""
 		paragraph = nodes.paragraph()
 
-		specifier = self._FormatSpecifier(requirement.specifier, self._simplify)
 		name = project.Name if project is not None else requirement.name
 		if (url := self._PackageURL(project)) is not None:
 			paragraph += nodes.reference("", name, refuri=url)
 		else:
 			paragraph += nodes.Text(name)
 
-		if specifier != "any":
-			paragraph += nodes.Text(f" {specifier}")
+		if self._dependencyFormat.ShowsVersion:
+			specifier = self._FormatSpecifier(requirement.specifier, self._simplify, self._versionFormat)
+			if specifier != "any":
+				paragraph += nodes.Text(f" {specifier}")
 
-		paragraph += nodes.Text(" (")
-		if (license := self._LicenseName(release)) is None:
-			# the same statement the License column makes: what the index published, in italics, so it reads as a
-			# quotation rather than as an identifier
-			paragraph += nodes.emphasis(text=self._PublishedLicense(release))
-		elif (licenseURL := self._LicenseURL(release)) is not None:
-			paragraph += nodes.reference("", license, refuri=licenseURL)
-		else:
-			paragraph += nodes.Text(license)
-		paragraph += nodes.Text(")")
+		if self._dependencyFormat.ShowsLicense:
+			paragraph += nodes.Text(" (")
+			if (license := self._LicenseName(release)) is None:
+				# the same statement the License column makes: what the index published, in italics, so it reads as
+				# a quotation rather than as an identifier
+				paragraph += nodes.emphasis(text=self._PublishedLicense(release))
+			elif (licenseURL := self._LicenseURL(release)) is not None:
+				paragraph += nodes.reference("", license, refuri=licenseURL)
+			else:
+				paragraph += nodes.Text(license)
+			paragraph += nodes.Text(")")
 
 		return paragraph
 
