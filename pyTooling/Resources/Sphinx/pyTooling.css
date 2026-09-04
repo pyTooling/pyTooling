@@ -21,6 +21,7 @@
 
   --pyTooling-table-cell-vertical-align: top;
   --pyTooling-table-list-margin:         0;
+  --pyTooling-table-min-width:           50%;
 }
 
 span.bolditalic {
@@ -60,21 +61,34 @@ span.colorpurple {
 /* Styles for the tables built by pyTooling.Documentation.Sphinx.
 
    The class is put on the table by the directive, so these rules reach only a table this package generated and
-   never a table a document wrote by hand. */
+   never a table a document wrote by hand.
+
+   Every declaration here is '!important', which is not laziness: it has to outrank a theme's own table rules, and
+   a theme is chosen by the project rather than by this package, so its selectors can't be predicted. sphinx_rtd_
+   theme's '.rst-content table.docutils td' is two classes and two elements, which beats anything this file can
+   write without naming that theme. The values stay overridable regardless, because a project redefines the
+   custom property rather than the declaration - and a custom property has no specificity to lose. */
 
 /* A row is as tall as its tallest cell, and in a dependency table that is the cell holding a dependency tree.
    Centring the other three vertically pushes a package's name into the middle of an otherwise empty column, far
    away from the row it belongs to. */
 table.dependency-table td,
 table.dependency-table th {
-  vertical-align: var(--pyTooling-table-cell-vertical-align);
+  vertical-align: var(--pyTooling-table-cell-vertical-align) !important;
 }
 
 /* A list inside a cell is the cell's whole content, so the margin a theme puts below it for running text is a gap
    between the last bullet and the cell's border with nothing in it. */
 table.dependency-table td > ul,
-table.dependency-table td > ul ul,
-table.dependency-table td > ul > li > p,
+table.dependency-table td ul,
+table.dependency-table td li > p,
+table.dependency-table td li > ul,
 table.dependency-table td > p {
-  margin-bottom: var(--pyTooling-table-list-margin);
+  margin-bottom: var(--pyTooling-table-list-margin) !important;
+}
+
+/* Without a floor, every table is as wide as its widest row, so a table of one short dependency and a table of a
+   four-level tree sit beside each other at wildly different widths and the page reads as ragged. */
+table.dependency-table {
+  min-width: var(--pyTooling-table-min-width);
 }

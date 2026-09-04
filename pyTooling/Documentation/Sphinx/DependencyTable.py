@@ -817,9 +817,30 @@ class DependencyTable(BaseDirective):
 		return ", ".join(render(item.operator, item.version) for item in specifiers)
 
 	@staticmethod
-	def _PackageEntry(requirement: Requirement, project: Nullable[Project]) -> nodes.entry:
+	def _PackageURL(project: Nullable[Project]) -> Nullable[str]:
 		"""
-		Render the package's name, linked to where its sources live.
+		Return the page a package's name should link to, most useful first.
+
+		A project states none of these reliably, so there are three chances at one: its **documentation** answers
+		*what is this*, its **repository** answers *where does it come from*, and its page on the **package index**
+		is what the index itself can always answer. Only a package the index doesn't know at all goes unlinked.
+
+		:param project: The project, or ``None`` if the index doesn't know it.
+		:returns:       The URL to link the name to, or ``None`` if there is nothing to link to.
+		"""
+		if project is None:
+			return None
+
+		for url in (project.DocumentationURL, project.RepositoryURL, project.URL):
+			if url is not None:
+				return str(url)
+
+		return None
+
+	@classmethod
+	def _PackageEntry(cls, requirement: Requirement, project: Nullable[Project]) -> nodes.entry:
+		"""
+		Render the package's name, linked to where a reader can find out about it.
 
 		:param requirement: The requirement naming the package.
 		:param project:     The project, or ``None`` if the index doesn't know it.
@@ -828,9 +849,8 @@ class DependencyTable(BaseDirective):
 		entry = nodes.entry()
 		name = project.Name if project is not None else requirement.name
 
-		if project is not None and project.RepositoryURL is not None:
-			reference = nodes.reference("", name, refuri=str(project.RepositoryURL))
-			entry += nodes.paragraph("", "", reference)
+		if (url := cls._PackageURL(project)) is not None:
+			entry += nodes.paragraph("", "", nodes.reference("", name, refuri=url))
 		else:
 			entry += nodes.paragraph(text=name)
 
@@ -851,31 +871,85 @@ class DependencyTable(BaseDirective):
 		:param release: The release to render the license of, or ``None``.
 		:returns:       The table entry.
 		"""
-		from pyTooling.Licensing import UnknownLicense
-
 		entry = nodes.entry()
 
-		if release is None:
-			entry += nodes.paragraph("", "", nodes.emphasis(text="unknown"))
+		if (text := DependencyTable._LicenseName(release)) is None:
+			entry += nodes.paragraph("", "", nodes.emphasis(text=DependencyTable._PublishedLicense(release)))
+
 			return entry
+
+		if (url := DependencyTable._LicenseURL(release)) is not None:
+			entry += nodes.paragraph("", "", nodes.reference("", text, refuri=url))
+		else:
+			entry += nodes.paragraph(text=text)
+
+		return entry
+
+	@staticmethod
+	def _LicenseName(release: Nullable[Release]) -> Nullable[str]:
+		"""
+		Return the name(s) of the licenses a release is published under.
+
+		:param release: The release to name the license of, or ``None``.
+		:returns:       The license' name, or ``None`` if nothing resolved.
+		"""
+		from pyTooling.Licensing import UnknownLicense
+
+		if release is None:
+			return None
 
 		# 'Licenses' never comes back empty: what didn't resolve is an 'UnknownLicense', which is SPDX's own way of
 		# saying so and keeps the published text
 		licenses = release.Licenses
 		if all(isinstance(license, UnknownLicense) for license in licenses):
-			published = release.LicenseExpression.OriginalText.strip()
-			text = published if published != "" else ", ".join(license.Name for license in licenses)
-			entry += nodes.paragraph("", "", nodes.emphasis(text=text or "unknown"))
+			return None
 
-			return entry
+		return ", ".join(license.Name for license in licenses)
 
-		text = ", ".join(license.Name for license in licenses)
+	@staticmethod
+	def _PublishedLicense(release: Nullable[Release]) -> str:
+		"""
+		Return what the package index published, for a license that didn't resolve.
+
+		:param release: The release, or ``None`` if the index couldn't describe it.
+		:returns:       What was published, or ``unknown`` when that was nothing either.
+		"""
+		if release is None:
+			return "unknown"
+
+		published = release.LicenseExpression.OriginalText.strip()
+
+		return published if published != "" else ", ".join(license.Name for license in release.Licenses) or "unknown"
+
+	@staticmethod
+	def _LicenseURL(release: Nullable[Release]) -> Nullable[str]:
+		"""
+		Return the page a license should link to, most specific first.
+
+		**The project's own** :file:`LICENSE` **file wins**: it is the license as this project publishes it, which
+		is the document a reader auditing a dependency actually wants. Most projects don't state one, though - it
+		comes from ``project_urls`` or from the override file - so a license on the SPDX List falls back to its own
+		published pages, in the order of who is speaking: the licensor's own page, then OSI's entry, then SPDX's.
+		A ``LicenseRef-`` has none of those and stays unlinked, because nothing published it.
+
+		:param release: The release to link the license of, or ``None``.
+		:returns:       The URL to link to, or ``None`` if nothing published this license.
+		"""
+		from pyTooling.Licensing import SPDXLicense
+
+		if release is None:
+			return None
+
 		if release.LicenseURL is not None:
-			entry += nodes.paragraph("", "", nodes.reference("", text, refuri=str(release.LicenseURL)))
-		else:
-			entry += nodes.paragraph(text=text)
+			return str(release.LicenseURL)
 
-		return entry
+		for license in release.Licenses:
+			if isinstance(license, SPDXLicense):
+				for url in (license.License.URL, license.License.OSIURL, license.License.SPDXURL):
+					if url is not None:
+						return url
+
+		return None
 
 	def _DependenciesEntry(
 		self,
@@ -934,25 +1008,69 @@ class DependencyTable(BaseDirective):
 
 		for requirement in sorted(requirements, key=lambda item: item.name.lower()):
 			item = nodes.list_item()
-			specifier = self._FormatSpecifier(requirement.specifier, self._simplify)
-			item += nodes.paragraph(text=requirement.name if specifier == "any" else f"{requirement.name} {specifier}")
 
-			if depth > 0:
-				project = collector.Project(requirement.name)
-				release = self._SelectRelease(project, requirement, collector)
-				if release is not None:
-					nested = [
-						nestedRequirement for nestedRequirement in release.Requirements.get(None, [])
-						if nestedRequirement.name.lower() not in visited
-					]
-					if len(nested) > 0:
-						item += self._CreateBulletList(
-							nested, collector, depth - 1, visited | {requirement.name.lower()}
-						)
+			# resolved whatever the depth: a leaf still states a license, and that is the whole point of the column
+			project = collector.Project(requirement.name)
+			release = self._SelectRelease(project, requirement, collector)
+
+			item += self._RequirementParagraph(requirement, project, release)
+
+			if depth > 0 and release is not None:
+				nested = [
+					nestedRequirement for nestedRequirement in release.Requirements.get(None, [])
+					if nestedRequirement.name.lower() not in visited
+				]
+				if len(nested) > 0:
+					item += self._CreateBulletList(
+						nested, collector, depth - 1, visited | {requirement.name.lower()}
+					)
 
 			bulletList += item
 
 		return bulletList
+
+	def _RequirementParagraph(
+		self,
+		requirement: Requirement,
+		project: Nullable[Project],
+		release: Nullable[Release]
+	) -> nodes.paragraph:
+		"""
+		Render one line of a dependency tree: the package, what is required of it, and what it is licensed under.
+
+		The license is the reason a dependency tree is in this table at all - a package pulls in what its own
+		dependencies are licensed under, and reading that off the tree is the point. It is linked and parenthesised
+		so the line still reads as one requirement.
+
+		:param requirement: The requirement to render.
+		:param project:     The project, or ``None`` if the index doesn't know it.
+		:param release:     The release satisfying the requirement, or ``None`` if none was found.
+		:returns:           The paragraph.
+		"""
+		paragraph = nodes.paragraph()
+
+		specifier = self._FormatSpecifier(requirement.specifier, self._simplify)
+		name = project.Name if project is not None else requirement.name
+		if (url := self._PackageURL(project)) is not None:
+			paragraph += nodes.reference("", name, refuri=url)
+		else:
+			paragraph += nodes.Text(name)
+
+		if specifier != "any":
+			paragraph += nodes.Text(f" {specifier}")
+
+		paragraph += nodes.Text(" (")
+		if (license := self._LicenseName(release)) is None:
+			# the same statement the License column makes: what the index published, in italics, so it reads as a
+			# quotation rather than as an identifier
+			paragraph += nodes.emphasis(text=self._PublishedLicense(release))
+		elif (licenseURL := self._LicenseURL(release)) is not None:
+			paragraph += nodes.reference("", license, refuri=licenseURL)
+		else:
+			paragraph += nodes.Text(license)
+		paragraph += nodes.Text(")")
+
+		return paragraph
 
 
 def reportBuildTime(app: Sphinx, exception: Nullable[Exception]) -> None:
