@@ -44,15 +44,16 @@ Tools for software execution tracing.
 """
 from __future__            import annotations
 
-from base64                import b64encode
-from datetime              import datetime
-from json                  import dumps as json_dumps
+from base64                import b64encode, b64decode
+from binascii              import Error as BinAsciiError
+from datetime              import datetime, timedelta
+from json                  import dumps as json_dumps, loads as json_loads, JSONDecodeError
 from pathlib               import Path
 from secrets               import randbits
 from time                  import perf_counter_ns
 from threading             import local
 from types                 import TracebackType
-from typing                import Optional as Nullable, Iterator, Self, Iterable, TypedDict, Union
+from typing                import Optional as Nullable, Iterator, Self, Iterable, TypedDict, TypeVar, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -81,6 +82,18 @@ than stringified, because a silent ``str(value)`` puts a Python ``repr`` into a 
 
 _MAXIMUM_IDENTIFIER_ATTEMPTS = 4
 """Number of attempts to draw a non-zero random identifier before giving up."""
+
+_HEXADECIMAL_DIGITS = frozenset("0123456789abcdefABCDEF")
+"""The characters a trace or span identifier is made of."""
+
+_Type = TypeVar("_Type")
+"""Type of a value read from an OTLP/JSON document."""
+
+_Number = TypeVar("_Number", int, float)
+"""Type of a number read from an OTLP/JSON document."""
+
+_TraceType = TypeVar("_TraceType", bound="Trace")
+"""Type of the trace an OTLP/JSON document is read into."""
 
 
 @export
@@ -257,6 +270,346 @@ def _newIdentifier(bits: int) -> str:
 		raise ex
 
 
+def _expectType(value: object, expectedType: type[_Type], path: str) -> _Type:
+	"""
+	Check the type of a value read from an **OTLP/JSON** document.
+
+	:param value:         The value to check.
+	:param expectedType:  The type the value is expected to have.
+	:param path:          Position of the value within the document, for the exception's message.
+	:returns:             The value, narrowed to the expected type.
+	:raises TracingError: If the value is not of the expected type.
+	"""
+	# a bool is an int in Python, but a JSON 'true' is not a number
+	if isinstance(value, expectedType) and not (expectedType is int and isinstance(value, bool)):
+		return value
+
+	ex = TracingError(f"Field '{path}' is not of type '{expectedType.__name__}'.")
+	ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+	raise ex
+
+
+def _readField(mapping: dict[str, object], key: str, expectedType: type[_Type], path: str) -> _Type:
+	"""
+	Read a mandatory field of a mapping in an **OTLP/JSON** document.
+
+	:param mapping:       The mapping to read from.
+	:param key:           Name of the field to read.
+	:param expectedType:  The type the field is expected to have.
+	:param path:          Position of the mapping within the document, for the exception's message.
+	:returns:             The field's value, narrowed to the expected type.
+	:raises TracingError: If the field doesn't exist.
+	:raises TracingError: If the field is not of the expected type.
+	"""
+	if key not in mapping:
+		ex = TracingError(f"Field '{path}.{key}' is missing.")
+		ex.add_note(f"Got fields: {', '.join(mapping)}." if len(mapping) > 0 else "The mapping is empty.")
+		raise ex
+
+	return _expectType(mapping[key], expectedType, f"{path}.{key}")
+
+
+def _readNumber(value: object, numberType: type[_Number], path: str) -> _Number:
+	"""
+	Read a number that proto3's JSON mapping may have written as a string.
+
+	A 64-bit integer travels as a decimal string, because a JSON number can't carry 64 bits exactly, and a double's
+	``NaN``, ``Infinity`` and ``-Infinity`` have no JSON number at all. A plain JSON number is accepted for both,
+	because proto3 accepts more than it writes.
+
+	:param value:         The value to read.
+	:param numberType:    :class:`int` or :class:`float`, the kind of number expected.
+	:param path:          Position of the value within the document, for the exception's message.
+	:returns:             The number.
+	:raises TracingError: If the value is neither a number nor a string holding one.
+	"""
+	if isinstance(value, str):
+		try:
+			return numberType(value)
+		except ValueError as cause:
+			ex = TracingError(f"Field '{path}' is not a number of type '{numberType.__name__}'.")
+			ex.add_note(f"Got '{value}'.")
+			raise ex from cause
+
+	# a bool is an int in Python, but a JSON 'true' is not a number
+	if not isinstance(value, bool):
+		# a JSON number without a fraction is an int, and that is a valid double as well
+		if numberType is float and isinstance(value, int):
+			return numberType(value)
+		elif isinstance(value, numberType):
+			return value
+
+	ex = TracingError(f"Field '{path}' is not a number of type '{numberType.__name__}'.")
+	ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+	raise ex
+
+
+def _readNumberField(mapping: dict[str, object], key: str, numberType: type[_Number], path: str) -> _Number:
+	"""
+	Read a mandatory numeric field of a mapping in an **OTLP/JSON** document.
+
+	:param mapping:       The mapping to read from.
+	:param key:           Name of the field to read.
+	:param numberType:    :class:`int` or :class:`float`, the kind of number expected.
+	:param path:          Position of the mapping within the document, for the exception's message.
+	:returns:             The field's value as a number.
+	:raises TracingError: If the field doesn't exist.
+	:raises TracingError: If the field is neither a number nor a string holding one.
+	"""
+	if key not in mapping:
+		ex = TracingError(f"Field '{path}.{key}' is missing.")
+		ex.add_note(f"Got fields: {', '.join(mapping)}." if len(mapping) > 0 else "The mapping is empty.")
+		raise ex
+
+	return _readNumber(mapping[key], numberType, f"{path}.{key}")
+
+
+def _readIdentifier(mapping: dict[str, object], key: str, digits: int, path: str) -> str:
+	"""
+	Read a trace or span identifier from a mapping in an **OTLP/JSON** document.
+
+	The identifier is normalized to lower case, so a document written with upper-case hex digits is accepted and its
+	``parentSpanId`` references still resolve. An all-zero identifier is invalid in OTLP and is rejected, which is the
+	same rule :func:`_newIdentifier` draws by.
+
+	:param mapping:       The mapping to read from.
+	:param key:           Name of the field to read: ``traceId`` or ``spanId``.
+	:param digits:        Expected number of hex digits: 32 for a trace, 16 for a timespan.
+	:param path:          Position of the mapping within the document, for the exception's message.
+	:returns:             The identifier as a lower-case hex string.
+	:raises TracingError: If the field doesn't exist or is not a string.
+	:raises TracingError: If the identifier isn't the expected number of hex digits.
+	:raises TracingError: If the identifier is all zeros.
+	"""
+	identifier = _readField(mapping, key, str, path)
+
+	if len(identifier) != digits or not _HEXADECIMAL_DIGITS.issuperset(identifier):
+		ex = TracingError(f"Field '{path}.{key}' is not {digits} hexadecimal digits.")
+		ex.add_note(f"Got '{identifier}'.")
+		raise ex
+
+	if set(identifier) == {"0"}:
+		ex = TracingError(f"Field '{path}.{key}' is all zeros.")
+		ex.add_note("OTLP defines an all-zero identifier as invalid.")
+		raise ex
+
+	return identifier.lower()
+
+
+def _fromUnixNano(nanoseconds: int, path: str) -> datetime:
+	"""
+	Convert nanoseconds since the Unix epoch to a timestamp.
+
+	A :class:`~datetime.datetime` holds microseconds, so the value is rounded to the nearest microsecond rather than
+	truncated. That is what makes a round-trip exact: the export scales a :meth:`~datetime.datetime.timestamp` float
+	by 1e9, and a float's precision at today's epoch is about 256 ns - less than half a microsecond, so rounding lands
+	back on the microsecond the timestamp came from.
+
+	:param nanoseconds:   Nanoseconds since the Unix epoch.
+	:param path:          Position of the value within the document, for the exception's message.
+	:returns:             The timestamp, in local time - the time zone :func:`~datetime.datetime.now` stamps in.
+	:raises TracingError: If the value is outside the range :class:`~datetime.datetime` can represent.
+	"""
+	microseconds = (nanoseconds + 500) // 1_000
+	seconds, remainder = divmod(microseconds, 1_000_000)
+
+	try:
+		return datetime.fromtimestamp(seconds) + timedelta(microseconds=remainder)
+	except (OSError, OverflowError, ValueError) as cause:
+		ex = TracingError(f"Field '{path}' is not a timestamp a 'datetime' can represent.")
+		ex.add_note(f"Got {nanoseconds} ns since the Unix epoch.")
+		raise ex from cause
+
+
+def _fromAttributeValue(anyValue: object, path: str) -> AttributeValue:
+	"""
+	Unwrap a value from OTLP's ``AnyValue`` representation.
+
+	This is the inverse of :func:`_toAttributeValue`, with one asymmetry: OTLP has a single ``arrayValue``, so a
+	:class:`tuple` returns as a :class:`list`.
+
+	:param anyValue:      The one-key mapping to unwrap.
+	:param path:          Position of the value within the document, for the exception's message.
+	:returns:             The Python value the mapping carries.
+	:raises TracingError: If the mapping doesn't name exactly one type.
+	:raises TracingError: If the mapping names a type OTLP's ``AnyValue`` doesn't have - supported are ``boolValue``,
+	                      ``intValue``, ``doubleValue``, ``stringValue``, ``bytesValue``, ``arrayValue`` and
+	                      ``kvlistValue``.
+	:raises TracingError: If the value doesn't match the type it is filed under.
+	"""
+	mapping = _expectType(anyValue, dict, path)
+	if len(mapping) != 1:
+		ex = TracingError(f"Field '{path}' doesn't name exactly one type.")
+		ex.add_note(f"Got fields: {', '.join(mapping)}." if len(mapping) > 0 else "The mapping is empty.")
+		ex.add_note("An OTLP 'AnyValue' is a mapping of exactly one key, which names the type of the value.")
+		raise ex
+
+	kind = next(iter(mapping))
+	value = mapping[kind]
+	if kind == "boolValue":
+		return _expectType(value, bool, f"{path}.boolValue")
+	elif kind == "intValue":
+		return _readNumber(value, int, f"{path}.intValue")
+	elif kind == "doubleValue":
+		return _readNumber(value, float, f"{path}.doubleValue")
+	elif kind == "stringValue":
+		return _expectType(value, str, f"{path}.stringValue")
+	elif kind == "bytesValue":
+		encoded = _expectType(value, str, f"{path}.bytesValue")
+		try:
+			return b64decode(encoded, validate=True)
+		except BinAsciiError as cause:
+			ex = TracingError(f"Field '{path}.bytesValue' is not base64-encoded.")
+			ex.add_note(f"Got '{encoded}'.")
+			raise ex from cause
+	elif kind == "arrayValue":
+		arrayPath = f"{path}.arrayValue"
+		values = _readField(_expectType(value, dict, arrayPath), "values", list, arrayPath)
+
+		return [_fromAttributeValue(element, f"{arrayPath}.values[{position}]") for position, element in enumerate(values)]
+	elif kind == "kvlistValue":
+		listPath = f"{path}.kvlistValue"
+		values = _readField(_expectType(value, dict, listPath), "values", list, listPath)
+
+		return _fromAttributes(values, f"{listPath}.values")
+
+	ex = TracingError(f"Field '{path}' names an unknown type '{kind}'.")
+	ex.add_note("Supported are: boolValue, intValue, doubleValue, stringValue, bytesValue, arrayValue, kvlistValue.")
+	raise ex
+
+
+def _fromAttributes(attributes: list[object], path: str) -> dict[str, AttributeValue]:
+	"""
+	Convert OTLP's list of attributes to key-value pairs.
+
+	:param attributes:    The list of ``{"key": ..., "value": ...}`` mappings to convert.
+	:param path:          Position of the list within the document, for the exception's message.
+	:returns:             One key-value pair per entry.
+	:raises TracingError: If an entry is not a mapping of a key and a value.
+	:raises TracingError: If two entries carry the same key - OTLP requires the keys of an attribute list to be
+	                      unique, and a key-value pair holds only one of them anyway.
+	:raises TracingError: If a value is of a type OTLP's ``AnyValue`` doesn't have.
+	"""
+	result: dict[str, AttributeValue] = {}
+	for position, attribute in enumerate(attributes):
+		attributePath = f"{path}[{position}]"
+		mapping = _expectType(attribute, dict, attributePath)
+		key = _readField(mapping, "key", str, attributePath)
+
+		if key in result:
+			ex = TracingError(f"Field '{path}' has more than one attribute named '{key}'.")
+			ex.add_note("OTLP requires the keys of an attribute list to be unique.")
+			raise ex
+
+		if "value" not in mapping:
+			ex = TracingError(f"Field '{attributePath}.value' is missing.")
+			ex.add_note(f"Got fields: {', '.join(mapping)}.")
+			raise ex
+
+		result[key] = _fromAttributeValue(mapping["value"], f"{attributePath}.value")
+
+	return result
+
+def _byStartTime(span: Span) -> tuple[bool, datetime]:
+	"""
+	Sort key ordering timespans by the time they started.
+
+	A timespan that was never entered has no start time and sorts last, because it never ran at all.
+
+	:param span: The timespan to derive a sort key from.
+	:returns:    Tuple of whether the timespan has no start time, and the start time itself.
+	"""
+	return (span._beginTime is None, datetime.min if span._beginTime is None else span._beginTime)
+
+
+def _formatDuration(totalTime: Nullable[int]) -> str:
+	"""
+	Render a timespan's duration for :meth:`Span.Format`.
+
+	A timespan that was never entered - or one read from a document that carries no timestamps - has no duration,
+	and is rendered as ``--`` rather than dividing :data:`None`.
+
+	:param totalTime: Duration in nanoseconds, or ``None`` if the timespan never ran.
+	:returns:         The duration in milliseconds, in a fixed-width column.
+	"""
+	return f"{'--':>8} ms" if totalTime is None else f"{totalTime / 1e6:8.3f} ms"
+
+def _decodeOTLPJSON(jsonString: str) -> OTLPDocument:
+	"""
+	Decode an **OTLP/JSON** document from a string.
+
+	:param jsonString:    The encoded OTLP/JSON document.
+	:returns:             The document, as :func:`json.loads` returns it.
+	:raises TypeError:    If parameter 'jsonString' is not of type :class:`str`.
+	:raises TracingError: If the string isn't valid JSON.
+	"""
+	if not isinstance(jsonString, str):
+		ex = TypeError("Parameter 'jsonString' is not of type 'str'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(jsonString)}'.")
+		raise ex
+
+	try:
+		document: OTLPDocument = json_loads(jsonString)
+	except JSONDecodeError as cause:
+		ex = TracingError("The OTLP/JSON document isn't valid JSON.")
+		ex.add_note(f"{cause}")
+		raise ex from cause
+
+	return document
+
+
+def _readOTLPJSONFile(jsonFile: Path) -> str:
+	"""
+	Read the contents of an **OTLP/JSON** file.
+
+	:param jsonFile:      Path of the file to read.
+	:returns:             The file's contents.
+	:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+	:raises TracingError: If the file couldn't be read.
+	"""
+	if not isinstance(jsonFile, Path):
+		ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
+		raise ex
+
+	try:
+		with jsonFile.open("r", encoding="utf-8") as file:
+			return file.read()
+	except OSError as cause:
+		raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be read.") from cause
+
+
+def _writeOTLPJSONFile(jsonFile: Path, content: str) -> None:
+	"""
+	Write an **OTLP/JSON** document to a file.
+
+	Missing parent directories are created, because the directory a pipeline collects its artifacts from - usually
+	``report/`` - rarely exists yet when a trace is written.
+
+	:param jsonFile:      Path of the file to write.
+	:param content:       The encoded OTLP/JSON document.
+	:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+	:raises TracingError: If the parent directories couldn't be created.
+	:raises TracingError: If the file couldn't be written.
+	"""
+	if not isinstance(jsonFile, Path):
+		ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
+		raise ex
+
+	try:
+		jsonFile.parent.mkdir(parents=True, exist_ok=True)
+	except OSError as cause:
+		raise TracingError(f"Directory '{jsonFile.parent}' couldn't be created.") from cause
+
+	try:
+		with jsonFile.open("w", encoding="utf-8") as file:
+			file.write(content)
+	except OSError as cause:
+		raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be written.") from cause
+
+
+
 @export
 class Event(metaclass=ExtendedType, slots=True):
 	"""
@@ -407,6 +760,38 @@ class Event(metaclass=ExtendedType, slots=True):
 			converted["attributes"] = attributes
 
 		return converted
+
+	@classmethod
+	def _FromOTLPJSON(cls, event: object, parent: Span, path: str) -> Self:
+		"""
+		Construct an event from its **OTLP/JSON** representation and attach it to a timespan.
+
+		``timeUnixNano`` is mandatory here although OTLP allows it to be absent: a missing timestamp reads as the Unix
+		epoch, so accepting one would place the event in 1970 without saying so.
+
+		:param event:         The event as an OTLP mapping.
+		:param parent:        The timespan the event happened in.
+		:param path:          Position of the mapping within the document, for the exception's message.
+		:returns:             The event, already appended to the timespan's events.
+		:raises TracingError: If a mandatory field is missing or is of the wrong type.
+		:raises TracingError: If the event's name is empty.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` doesn't have.
+		"""
+		mapping = _expectType(event, dict, path)
+		name =    _readField(mapping, "name", str, path)
+		time =    _fromUnixNano(_readNumberField(mapping, "timeUnixNano", int, path), f"{path}.timeUnixNano")
+
+		try:
+			self = cls(name, time, parent)
+		except ValueError as cause:
+			ex = TracingError(f"Field '{path}.name' is empty.")
+			raise ex from cause
+
+		if (attributes := mapping.get("attributes", None)) is not None:
+			attributePath = f"{path}.attributes"
+			self._dict = _fromAttributes(_expectType(attributes, list, attributePath), attributePath)
+
+		return self
 
 	def __str__(self) -> str:
 		"""
@@ -618,10 +1003,16 @@ class Span(metaclass=ExtendedType, slots=True):
 		:returns:             Duration since span was started in seconds.
 		:raises TracingError: When span was never started.
 		"""
+		# A timespan read from an OTLP/JSON document has a duration but no performance counter, because the counter
+		# that measured it ran in another process. A running timespan has no duration yet, so this is the finished
+		# case for both of them.
+		if self._totalTime is not None:
+			return self._totalTime / 1e9
+
 		if self._startTime is None:
 			raise TracingError(f"{self.__class__.__name__} was never started.")
 
-		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
+		return (perf_counter_ns() - self._startTime) / 1e9
 
 	@classmethod
 	def CurrentSpan(cls) -> Span:
@@ -746,7 +1137,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return len(self._dict)
 
-	def _ToOTLPJSON(self) -> list[OTLPSpan]:
+	def _ToOTLPJSON(self, traceID: Nullable[str] = None, parentSpanID: Nullable[str] = None) -> list[OTLPSpan]:
 		"""
 		Convert this timespan and its sub-spans to their **OTLP/JSON** representation.
 
@@ -757,17 +1148,27 @@ class Span(metaclass=ExtendedType, slots=True):
 		trace it is part of, and ``parentSpanId`` is read off the parent relation. A timespan joins a trace through
 		a ``with``-statement, or through the ``parent`` parameter of its constructor.
 
+		A **fragment** knows neither: it is a timespan whose parent hasn't arrived, so it has no trace to ask and no
+		parent to read an identifier off. Its :class:`TraceCollection` knows both and passes them, which is the only
+		reason these two parameters exist - a timespan that sits in a trace needs neither.
+
+		:param traceID:       Optional, the trace identifier to report. Default: the one of this timespan's trace.
+		:param parentSpanID:  Optional, the span identifier to report as ``parentSpanId`` when this timespan has no
+		                      parent object. Default: none, which writes no ``parentSpanId`` at all.
 		:returns:             This timespan and every timespan below it, flattened.
-		:raises TracingError: If this timespan is not part of a trace.
+		:raises TracingError: If this timespan is not part of a trace and no ``traceID`` was given.
 		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
 		"""
-		if self._trace is None:
-			ex = TracingError(f"Timespan '{self._name}' is not part of a trace.")
-			ex.add_note("A span is added to a trace by a 'with'-statement, or by the 'parent' parameter.")
-			raise ex
+		if traceID is None:
+			if self._trace is None:
+				ex = TracingError(f"Timespan '{self._name}' is not part of a trace.")
+				ex.add_note("A span is added to a trace by a 'with'-statement, or by the 'parent' parameter.")
+				raise ex
+
+			traceID = self._trace._traceID
 
 		converted: OTLPSpan = {
-			"traceId": self._trace._traceID,
+			"traceId": traceID,
 			"spanId":  self._spanID,
 			"name":    self._name,
 			"kind":    1,                # SPAN_KIND_INTERNAL
@@ -775,6 +1176,8 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		if self._parent is not None:
 			converted["parentSpanId"] = self._parent._spanID
+		elif parentSpanID is not None:
+			converted["parentSpanId"] = parentSpanID
 
 		if self.StartTime is not None:
 			startTimeUnixNano = int(self.StartTime.timestamp() * 1_000_000_000)
@@ -782,8 +1185,11 @@ class Span(metaclass=ExtendedType, slots=True):
 
 			# The wall clock has microsecond resolution while the duration comes from a nanosecond performance
 			# counter, so the end is computed from the duration rather than read from a second wall-clock sample.
-			# 'Duration' is in seconds; OTLP wants nanoseconds.
-			converted["endTimeUnixNano"] = str(startTimeUnixNano + int(self.Duration * 1_000_000_000))
+			# A finished timespan reports the counter's difference in nanoseconds, which is what OTLP wants, so it
+			# is written as it is - 'Duration' is that number divided by 1e9, and multiplying it back loses up to a
+			# nanosecond to the float. A running timespan has no such number yet and is measured against the counter.
+			duration = self._totalTime if self._totalTime is not None else int(self.Duration * 1_000_000_000)
+			converted["endTimeUnixNano"] = str(startTimeUnixNano + duration)
 
 		if len(attributes := _toAttributes(self._dict.items())) != 0:
 			converted["attributes"] = attributes
@@ -791,7 +1197,89 @@ class Span(metaclass=ExtendedType, slots=True):
 		if len(events := [event._ToOTLPJSON() for event in self._events]) != 0:
 			converted["events"] = events
 
-		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON())]
+		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON(traceID))]
+
+	def _ReadOTLPJSON(self, span: dict[str, object], path: str) -> None:
+		"""
+		Fill this timespan's identifier, timestamps, attributes and events from an **OTLP/JSON** span mapping.
+
+		The name and the parent are not read here, because they are constructor parameters - a timespan is named and
+		placed where it belongs when it is created. ``kind`` is not read either: every timespan of this data model is
+		``SPAN_KIND_INTERNAL``, so a document naming another kind is accepted and the kind is dropped.
+
+		:attr:`~pyTooling.Tracing.Span.Duration` is the difference of the two timestamps rather than a performance
+		counter reading, because the counter that measured it ran in another process. A timespan that was never
+		entered has no timestamps, and neither has its exported mapping, so both are accepted as absent - but not one
+		without the other, which would be a duration of unknown length.
+
+		:param span:          The timespan as an OTLP mapping.
+		:param path:          Position of the mapping within the document, for the exception's message.
+		:raises TracingError: If a mandatory field is missing or is of the wrong type.
+		:raises TracingError: If the timespan has one timestamp instead of both or neither.
+		:raises TracingError: If the timespan ends before it starts.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` doesn't have.
+		"""
+		self._spanID = _readIdentifier(span, "spanId", 16, path)
+
+		hasStartTime = "startTimeUnixNano" in span
+		if hasStartTime != ("endTimeUnixNano" in span):
+			present, missing = ("start", "end") if hasStartTime else ("end", "start")
+			ex = TracingError(f"Field '{path}.{missing}TimeUnixNano' is missing.")
+			ex.add_note(f"A timespan has both timestamps or neither, and this one has '{present}TimeUnixNano'.")
+			raise ex
+
+		if hasStartTime:
+			startTimeUnixNano = _readNumberField(span, "startTimeUnixNano", int, path)
+			endTimeUnixNano =   _readNumberField(span, "endTimeUnixNano", int, path)
+
+			if endTimeUnixNano < startTimeUnixNano:
+				ex = TracingError(f"Field '{path}.endTimeUnixNano' precedes '{path}.startTimeUnixNano'.")
+				ex.add_note(f"Got {startTimeUnixNano} ns to {endTimeUnixNano} ns.")
+				raise ex
+
+			self._beginTime = _fromUnixNano(startTimeUnixNano, f"{path}.startTimeUnixNano")
+			self._endTime =   _fromUnixNano(endTimeUnixNano, f"{path}.endTimeUnixNano")
+			# both timestamps are integers, so the duration is exact even though each of them is rounded to the
+			# microsecond a 'datetime' can hold.
+			self._totalTime = endTimeUnixNano - startTimeUnixNano
+
+		if (attributes := span.get("attributes", None)) is not None:
+			attributePath = f"{path}.attributes"
+			self._dict = _fromAttributes(_expectType(attributes, list, attributePath), attributePath)
+
+		if (events := span.get("events", None)) is not None:
+			for position, event in enumerate(_expectType(events, list, f"{path}.events")):
+				Event._FromOTLPJSON(event, self, f"{path}.events[{position}]")
+
+	@classmethod
+	def _FromOTLPJSON(cls, span: object, parent: Nullable[Span], path: str) -> Self:
+		"""
+		Construct a timespan from its **OTLP/JSON** representation and attach it to its parent timespan.
+
+		Only this timespan is constructed. OTLP has no nesting - the hierarchy is carried by ``parentSpanId`` - so
+		the sub-spans are not reachable from here; :meth:`Trace.FromOTLPJSON` resolves those references and creates
+		each timespan with the one it names as its parent.
+
+		:param span:          The timespan as an OTLP mapping.
+		:param parent:        The enclosing timespan, which is also how the timespan joins its trace - or ``None``
+		                      for the root of a fragment, whose enclosing timespan hasn't been delivered.
+		:param path:          Position of the mapping within the document, for the exception's message.
+		:returns:             The timespan, already appended to its parent's sub-spans.
+		:raises TracingError: If a mandatory field is missing or is of the wrong type.
+		:raises TracingError: If the timespan's name is empty.
+		"""
+		mapping = _expectType(span, dict, path)
+		name =    _readField(mapping, "name", str, path)
+
+		try:
+			timespan = cls(name, parent)
+		except ValueError as cause:
+			ex = TracingError(f"Field '{path}.name' is empty.")
+			raise ex from cause
+
+		timespan._ReadOTLPJSON(mapping, path)
+
+		return timespan
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
 		"""
@@ -802,7 +1290,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		:returns:          One line per timespan, deepest last.
 		"""
 		result = []
-		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self._totalTime/1e6:8.3f} ms")
+		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {_formatDuration(self._totalTime)}")
 		for span in self._spans:
 			result.extend(span.Format(indent + 1, columnSize))
 
@@ -923,7 +1411,7 @@ class Trace(Span):
 
 		return currentTrace
 
-	def ToJSON(
+	def ToOTLPJSON(
 		self,
 		serviceName: Nullable[str] = None,
 		scopeName: str = OTLP_SCOPE_NAME,
@@ -960,7 +1448,7 @@ class Trace(Span):
 			}]
 		}
 
-	def ToJSONString(
+	def ToOTLPJSONString(
 		self,
 		serviceName: Nullable[str] = None,
 		indent: Nullable[int] = None,
@@ -979,9 +1467,9 @@ class Trace(Span):
 		:returns:             The OTLP/JSON document, encoded.
 		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
 		"""
-		return json_dumps(self.ToJSON(serviceName, scopeName, scopeVersion), indent=indent)
+		return json_dumps(self.ToOTLPJSON(serviceName, scopeName, scopeVersion), indent=indent)
 
-	def WriteJSONFile(
+	def WriteOTLPJSONFile(
 		self,
 		jsonFile: Path,
 		serviceName: Nullable[str] = None,
@@ -1006,21 +1494,113 @@ class Trace(Span):
 		:raises TracingError: If the parent directories couldn't be created.
 		:raises TracingError: If the file couldn't be written.
 		"""
-		if not isinstance(jsonFile, Path):
-			ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
+		_writeOTLPJSONFile(jsonFile, self.ToOTLPJSONString(serviceName, indent, scopeName, scopeVersion))
+
+	@classmethod
+	def FromOTLPJSON(cls, document: OTLPDocument, traceID: Nullable[str] = None) -> Self:
+		"""
+		Construct a trace from an **OTLP/JSON** document.
+
+		This is the inverse of :meth:`ToOTLPJSON`. OTLP carries no nesting: the trace is a flat list of spans whose
+		``parentSpanId`` references point at the enclosing span. The tree is reassembled from those references - the
+		span without a ``parentSpanId`` becomes the trace itself, and every other span is created as a sub-span of
+		the one it names. Sub-spans keep the order they have in the document.
+
+		Every ``resourceSpans`` and ``scopeSpans`` entry is read, because nothing requires a producer to put one
+		trace into one entry, and the spans are grouped by their ``traceId``. A document holding more than one trace
+		therefore needs ``traceID`` to say which one to read.
+
+		**The trace has to be complete here.** A span whose ``parentSpanId`` names a span the document doesn't carry
+		is a fragment, and a fragment has no place in a tree - :meth:`TraceCollection.FromOTLPJSON` keeps one until
+		the document that carries its parent arrives, and reads every trace of a document rather than one.
+
+		**What a round-trip doesn't carry back:** ``service.name`` and the instrumentation scope are parameters of
+		:meth:`ToOTLPJSON` rather than fields of the data model, so they are not read back; a span's ``kind`` is dropped;
+		and a :class:`tuple` attribute returns as a :class:`list`, because OTLP has a single ``arrayValue``.
+
+		:param document:      The OTLP/JSON document, as :func:`json.load` returns it.
+		:param traceID:       Optional, identifier of the trace to read. Default: the only trace in the document.
+		:returns:             The trace, with every timespan and event below it.
+		:raises TypeError:    If parameter 'traceID' is not of type :class:`str`.
+		:raises TracingError: If the document holds no spans, or holds several traces and ``traceID`` names none.
+		:raises TracingError: If the spans of the trace don't form a tree below exactly one root span: a
+		                      ``parentSpanId`` names a span the document doesn't carry, the root span itself is
+		                      absent, or the spans form a cycle. Use :class:`TraceCollection` for a trace that
+		                      isn't complete yet.
+		:raises TracingError: If a mandatory field is missing or is of the wrong type.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` doesn't have.
+		"""
+		if traceID is not None and not isinstance(traceID, str):
+			ex = TypeError("Parameter 'traceID' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(traceID)}'.")
 			raise ex
 
-		try:
-			jsonFile.parent.mkdir(parents=True, exist_ok=True)
-		except OSError as ex:
-			raise TracingError(f"Directory '{jsonFile.parent}' couldn't be created.") from ex
+		spans = _readOTLPDocument(document)
 
-		try:
-			with jsonFile.open("w", encoding="utf-8") as file:
-				file.write(self.ToJSONString(serviceName, indent, scopeName, scopeVersion))
-		except OSError as ex:
-			raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be written.") from ex
+		if traceID is None:
+			if len(spans) == 0:
+				raise TracingError("The OTLP/JSON document contains no spans.")
+
+			if len(spans) > 1:
+				ex = TracingError(f"The OTLP/JSON document contains {len(spans)} traces.")
+				ex.add_note(f"Found: {', '.join(spans)}.")
+				ex.add_note("Name the trace to read in parameter 'traceID', or read all of them with")
+				ex.add_note("'TraceCollection.FromOTLPJSON()'.")
+				raise ex
+
+			traceID = next(iter(spans))
+		else:
+			traceID = traceID.lower()
+			if traceID not in spans:
+				ex = TracingError(f"The OTLP/JSON document contains no trace '{traceID}'.")
+				ex.add_note(f"Found: {', '.join(spans)}." if len(spans) > 0 else "The document contains no spans.")
+				raise ex
+
+		trace, _, fragments = _buildSpanTree(traceID, spans[traceID], cls, Span)
+
+		if trace is None:
+			ex = TracingError(f"Trace '{traceID}' has no span without a 'parentSpanId'.")
+			ex.add_note("The span without a 'parentSpanId' is the trace itself, and this document doesn't carry it.")
+			ex.add_note("Use 'TraceCollection.FromOTLPJSON()' to read a trace that isn't complete yet.")
+			raise ex
+
+		if len(fragments) > 0:
+			ex = TracingError(f"{len(fragments)} span(s) of trace '{traceID}' are not part of its tree.")
+			ex.add_note("A 'parentSpanId' names a span this document doesn't carry.")
+			ex.add_note(f"Found: {', '.join(fragment._spanID for fragment, _ in fragments)}.")
+			ex.add_note("Use 'TraceCollection.FromOTLPJSON()' to keep such a fragment until its parent arrives.")
+			raise ex
+
+		return trace
+
+	@classmethod
+	def FromOTLPJSONString(cls, jsonString: str, traceID: Nullable[str] = None) -> Self:
+		"""
+		Construct a trace from an **OTLP/JSON** document encoded as a string.
+
+		:param jsonString:    The encoded OTLP/JSON document.
+		:param traceID:       Optional, identifier of the trace to read. Default: the only trace in the document.
+		:returns:             The trace, with every timespan and event below it.
+		:raises TypeError:    If parameter 'jsonString' is not of type :class:`str`.
+		:raises TracingError: If the string isn't valid JSON.
+		:raises TracingError: If the document isn't a trace this data model can represent.
+		"""
+		return cls.FromOTLPJSON(_decodeOTLPJSON(jsonString), traceID)
+
+	@classmethod
+	def ReadOTLPJSONFile(cls, jsonFile: Path, traceID: Nullable[str] = None) -> Self:
+		"""
+		Construct a trace from an **OTLP/JSON** document read from a file.
+
+		:param jsonFile:      Path of the file to read.
+		:param traceID:       Optional, identifier of the trace to read. Default: the only trace in the file.
+		:returns:             The trace, with every timespan and event below it.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the file couldn't be read.
+		:raises TracingError: If the file isn't valid JSON.
+		:raises TracingError: If the document isn't a trace this data model can represent.
+		"""
+		return cls.FromOTLPJSONString(_readOTLPJSONFile(jsonFile), traceID)
 
 	def Format(self, indent: int = 0, columnSize: int = 25) -> Iterable[str]:
 		"""
@@ -1031,9 +1611,665 @@ class Trace(Span):
 		:returns:          A headline, followed by one line per timespan.
 		"""
 		result = []
-		result.append(f"{'  ' * indent}Software Execution Trace: {self._totalTime/1e6:8.3f} ms")
-		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self._totalTime/1e6:8.3f} ms")
+		result.append(f"{'  ' * indent}Software Execution Trace: {_formatDuration(self._totalTime)}")
+		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {_formatDuration(self._totalTime)}")
 		for span in self._spans:
 			result.extend(span.Format(indent + 1, columnSize - 2))
 
 		return result
+
+
+def _readOTLPDocument(document: OTLPDocument) -> dict[str, list[tuple[str, dict[str, object]]]]:
+	"""
+	Collect every timespan of an **OTLP/JSON** document, grouped by the trace it belongs to.
+
+	Every ``resourceSpans`` and ``scopeSpans`` entry is read, because nothing requires a producer to put one trace
+	into one entry - the grouping is done by ``traceId`` rather than by the document's structure.
+
+	:param document:      The OTLP/JSON document, as :func:`json.load` returns it.
+	:returns:             Dictionary of a trace identifier to the ``(path, mapping)`` pairs of its timespans, where
+	                      the path is the position of the mapping within the document.
+	:raises TracingError: If a mandatory field is missing or is of the wrong type.
+	:raises TracingError: If a ``traceId`` isn't 32 hexadecimal digits, or is all zeros.
+	"""
+	spans: dict[str, list[tuple[str, dict[str, object]]]] = {}
+	resourceSpans = _readField(_expectType(document, dict, "document"), "resourceSpans", list, "document")
+
+	for resourceIndex, resourceSpan in enumerate(resourceSpans):
+		resourcePath = f"document.resourceSpans[{resourceIndex}]"
+		scopeSpans =   _readField(_expectType(resourceSpan, dict, resourcePath), "scopeSpans", list, resourcePath)
+
+		for scopeIndex, scopeSpan in enumerate(scopeSpans):
+			scopePath =   f"{resourcePath}.scopeSpans[{scopeIndex}]"
+			scopedSpans = _readField(_expectType(scopeSpan, dict, scopePath), "spans", list, scopePath)
+
+			for spanIndex, span in enumerate(scopedSpans):
+				spanPath = f"{scopePath}.spans[{spanIndex}]"
+				mapping =  _expectType(span, dict, spanPath)
+				spans.setdefault(_readIdentifier(mapping, "traceId", 32, spanPath), []).append((spanPath, mapping))
+
+	return spans
+
+
+def _indexSpansOfTrace(
+	traceID: str,
+	spans: list[tuple[str, dict[str, object]]]
+) -> tuple[dict[str, tuple[str, dict[str, object]]], dict[str, str], dict[str, list[str]], list[str]]:
+	"""
+	Index the timespans of one trace by their identifier, and group them by the parent they name.
+
+	:param traceID:       Identifier of the trace, for the exception's message.
+	:param spans:         The ``(path, mapping)`` pairs of the trace's timespans, in document order.
+	:returns:             Tuple of every timespan by span identifier, the parent each of them names, the identifiers
+	                      of the timespans below each parent, and the identifiers of the timespans naming no parent.
+	:raises TracingError: If two timespans carry the same ``spanId``.
+	:raises TracingError: If a ``spanId`` or ``parentSpanId`` isn't 16 hexadecimal digits, or is all zeros.
+	"""
+	entries:  dict[str, tuple[str, dict[str, object]]] = {}
+	parents:  dict[str, str] = {}
+	children: dict[str, list[str]] = {}
+	roots:    list[str] = []
+
+	for path, span in spans:
+		spanID = _readIdentifier(span, "spanId", 16, path)
+		if spanID in entries:
+			ex = TracingError(f"Trace '{traceID}' has more than one span with identifier '{spanID}'.")
+			ex.add_note(f"Found at '{entries[spanID][0]}' and at '{path}'.")
+			raise ex
+
+		entries[spanID] = (path, span)
+		if span.get("parentSpanId", "") == "":
+			roots.append(spanID)
+		else:
+			parentSpanID =    _readIdentifier(span, "parentSpanId", 16, path)
+			parents[spanID] = parentSpanID
+			children.setdefault(parentSpanID, []).append(spanID)
+
+	return entries, parents, children, roots
+
+
+def _buildTraceRoot(
+	traceID: str,
+	entry: tuple[str, dict[str, object]],
+	traceType: type[_TraceType]
+) -> _TraceType:
+	"""
+	Construct the trace from the timespan that names no parent.
+
+	:param traceID:       Identifier the trace is to carry.
+	:param entry:         The ``(path, mapping)`` pair of the trace's own timespan.
+	:param traceType:     Class to construct the trace with.
+	:returns:             The trace, with its attributes and events but without its sub-spans.
+	:raises TracingError: If the timespan's name is missing or empty.
+	"""
+	path, span = entry
+	name = _readField(span, "name", str, path)
+
+	try:
+		trace = traceType(name)
+	except ValueError as cause:
+		ex = TracingError(f"Field '{path}.name' is empty.")
+		raise ex from cause
+
+	trace._traceID = traceID
+	trace._ReadOTLPJSON(span, path)
+
+	return trace
+
+
+def _collectFragments(
+	entries: dict[str, tuple[str, dict[str, object]]],
+	parents: dict[str, str],
+	pending: list[Span],
+	built: dict[str, Span],
+	spanType: type[Span]
+) -> list[tuple[Span, str]]:
+	"""
+	Construct the timespans whose parent this document doesn't carry.
+
+	A distributed execution is exported per process, so the timespan enclosing a span often travels in a different
+	document than the span itself. Such a span is the root of a **fragment**: the rest of its subtree may well be
+	here, so it is built and kept for a later document to attach it to.
+
+	:param entries:       Every timespan of the trace by span identifier, as ``(path, mapping)``.
+	:param parents:       The parent each timespan names, by span identifier.
+	:param pending:       The timespans whose sub-spans are still to be constructed; extended by this function.
+	:param built:         The timespans constructed so far, extended by this function.
+	:param spanType:      Class to construct a timespan with.
+	:returns:             The ``(fragment, parentSpanID)`` pairs of the fragments' roots, in document order.
+	:raises TracingError: If a mandatory field is missing or is of the wrong type.
+	"""
+	fragments: list[tuple[Span, str]] = []
+	for spanID, parentSpanID in parents.items():
+		if parentSpanID not in entries:
+			path, span = entries[spanID]
+			fragment =   spanType._FromOTLPJSON(span, None, path)
+			built[spanID] = fragment
+			fragments.append((fragment, parentSpanID))
+			pending.append(fragment)
+
+	return fragments
+
+
+def _attachSubSpans(
+	entries: dict[str, tuple[str, dict[str, object]]],
+	children: dict[str, list[str]],
+	pending: list[Span],
+	built: dict[str, Span],
+	spanType: type[Span]
+) -> None:
+	"""
+	Construct every timespan reachable from the ones already built, and attach each to its parent.
+
+	:param entries:       Every timespan of the trace by span identifier, as ``(path, mapping)``.
+	:param children:      The identifiers of the timespans below each parent.
+	:param pending:       The timespans whose sub-spans are still to be constructed; emptied by this function.
+	:param built:         The timespans constructed so far, extended by this function.
+	:param spanType:      Class to construct a timespan with.
+	:raises TracingError: If a mandatory field is missing or is of the wrong type.
+	"""
+	while len(pending) > 0:
+		parent = pending.pop()
+		for spanID in children.get(parent._spanID, []):
+			path, span = entries[spanID]
+			timespan =   spanType._FromOTLPJSON(span, parent, path)
+			built[spanID] = timespan
+			pending.append(timespan)
+
+
+def _buildSpanTree(
+	traceID: str,
+	spans: list[tuple[str, dict[str, object]]],
+	traceType: type[_TraceType],
+	spanType: type[Span]
+) -> tuple[Nullable[_TraceType], dict[str, Span], list[tuple[Span, str]]]:
+	"""
+	Build the timespans of one trace from their **OTLP/JSON** mappings.
+
+	OTLP carries no nesting, so the tree is reassembled from the ``parentSpanId`` references. Three outcomes are
+	possible for a span, and all three are ordinary:
+
+	* it has no ``parentSpanId`` - it is the trace itself, and there is at most one such span;
+	* its ``parentSpanId`` names a span in this document - it becomes a sub-span of it;
+	* its ``parentSpanId`` names a span *nothing* delivered - it is the root of a **fragment**, whose own sub-spans
+	  may well be present. A distributed execution is exported per process, so the enclosing timespan of a span
+	  often travels in a different document than the span itself.
+
+	A span reachable from none of those - part of a cycle - is an error, because it can be placed nowhere.
+
+	:param traceID:       Identifier of the trace, for the exception's message.
+	:param spans:         The ``(path, mapping)`` pairs of the trace's timespans, in document order.
+	:param traceType:     Class to construct the trace with.
+	:param spanType:      Class to construct every other timespan with.
+	:returns:             Tuple of the trace (or ``None``, if its root span is absent), every timespan built by
+	                      span identifier, and the ``(fragment, parentSpanID)`` pairs of the fragments' roots.
+	:raises TracingError: If two timespans carry the same ``spanId``.
+	:raises TracingError: If more than one timespan has no ``parentSpanId``.
+	:raises TracingError: If timespans reference each other in a cycle.
+	:raises TracingError: If a mandatory field is missing or is of the wrong type.
+	"""
+	entries, parents, children, roots = _indexSpansOfTrace(traceID, spans)
+
+	if len(roots) > 1:
+		ex = TracingError(f"Trace '{traceID}' has {len(roots)} spans without a 'parentSpanId'.")
+		ex.add_note("The span without a 'parentSpanId' is the trace itself, so there is at most one of them.")
+		ex.add_note(f"Found: {', '.join(entries[spanID][0] for spanID in roots)}.")
+		raise ex
+
+	trace:   Nullable[_TraceType] = None
+	built:   dict[str, Span] = {}
+	pending: list[Span] = []
+
+	if len(roots) == 1:
+		trace = _buildTraceRoot(traceID, entries[roots[0]], traceType)
+		built[trace._spanID] = trace
+		pending.append(trace)
+
+	fragments = _collectFragments(entries, parents, pending, built, spanType)
+	_attachSubSpans(entries, children, pending, built, spanType)
+
+	if len(built) != len(entries):
+		unreachable = [path for spanID, (path, _) in entries.items() if spanID not in built]
+		ex = TracingError(f"{len(unreachable)} span(s) of trace '{traceID}' reference each other in a cycle.")
+		ex.add_note("Every other span is reachable from the trace's root span or from a fragment's root span.")
+		ex.add_note(f"Found: {', '.join(unreachable)}.")
+		raise ex
+
+	return trace, built, fragments
+
+@export
+class TraceCollection(metaclass=ExtendedType, slots=True):
+	"""
+	A set of software execution traces, together with the timespans that haven't found their trace yet.
+
+	An **OTLP/JSON** document is not one trace. It carries whatever spans a producer had to hand, which may be
+	several traces at once - and it may carry only *part* of a trace, because a distributed execution is exported
+	by each process separately, so the enclosing timespan of a span often travels in a different document than the
+	span itself.
+
+	A collection therefore holds two things:
+
+	* the **traces** whose root span has arrived, and
+	* the **fragments** - timespans whose ``parentSpanId`` names a span nothing has delivered yet. A fragment is a
+	  real timespan with its own sub-spans; only its place in the tree is unknown.
+
+	Both are indexed by identifier, so a fragment is attached the moment a document carrying its parent is added -
+	:meth:`AddOTLPJSON` links what it can, in either direction, without the caller ordering the documents.
+	"""
+	_traces:    dict[str, Trace]  #: Traces whose root span has arrived, by trace identifier.
+	_spans:     dict[str, Span]   #: Every timespan of the collection, by span identifier.
+	_traceIDs:  dict[str, str]    #: The trace a timespan belongs to, by span identifier.
+	_fragments: dict[str, str]    #: The span identifier a fragment is waiting for, by the fragment's own.
+
+	def __init__(self) -> None:
+		"""Initializes an empty collection of software execution traces."""
+		self._traces =    {}
+		self._spans =     {}
+		self._traceIDs =  {}
+		self._fragments = {}
+
+	@readonly
+	def Traces(self) -> tuple[Trace, ...]:
+		"""
+		Read-only property to return the complete traces of this collection.
+
+		:returns: The traces whose root span has arrived, in the order they were added.
+		"""
+		return tuple(self._traces.values())
+
+	@readonly
+	def Fragments(self) -> tuple[Span, ...]:
+		"""
+		Read-only property to return the timespans that are waiting for a parent.
+
+		Only a fragment's **root** is listed; the sub-spans below it are part of the fragment, not fragments
+		themselves.
+
+		:returns: The root timespan of every fragment, in the order they were added.
+		"""
+		return tuple(self._spans[spanID] for spanID in self._fragments)
+
+	@readonly
+	def TraceCount(self) -> int:
+		"""
+		Return the number of complete traces in this collection.
+
+		:returns: Number of traces.
+		"""
+		return len(self._traces)
+
+	@readonly
+	def SpanCount(self) -> int:
+		"""
+		Return the number of timespans in this collection, whether they belong to a trace or to a fragment.
+
+		:returns: Number of timespans.
+		"""
+		return len(self._spans)
+
+	@readonly
+	def FragmentCount(self) -> int:
+		"""
+		Return the number of timespans waiting for a parent.
+
+		:returns: Number of fragments.
+		"""
+		return len(self._fragments)
+
+	@readonly
+	def HasFragments(self) -> bool:
+		"""
+		Check if any timespan of this collection is still waiting for its parent.
+
+		:returns: ``True``, if the collection holds at least one fragment.
+		"""
+		return len(self._fragments) > 0
+
+	def TraceIDOfSpan(self, spanID: str) -> str:
+		"""
+		Return the identifier of the trace a timespan belongs to.
+
+		A fragment has no :attr:`~pyTooling.Tracing.Span.Trace` to ask - its trace's root span hasn't arrived - but
+		its ``traceId`` was in the document all the same, so the collection can answer for it.
+
+		:param spanID:    Identifier of the timespan.
+		:returns:         Identifier of the trace the timespan belongs to.
+		:raises KeyError: If the collection contains no timespan with that identifier.
+		"""
+		return self._traceIDs[spanID.lower()]
+
+	def IterateFragmentsOf(self, traceID: str) -> Iterator[Span]:
+		"""
+		Returns an iterator to iterate the fragments belonging to one trace.
+
+		:param traceID: Identifier of the trace.
+		:returns:       Iterator to iterate the root timespan of every fragment of that trace.
+		"""
+		wanted = traceID.lower()
+
+		return (self._spans[spanID] for spanID in self._fragments if self._traceIDs[spanID] == wanted)
+
+	def __getitem__(self, identifier: str) -> Union[Trace, Span]:
+		"""
+		Look a trace or a timespan up by its identifier.
+
+		A trace identifier is 32 hex digits and a span identifier is 16, so which of the two indexes is searched
+		follows from the length - the two can't be confused.
+
+		:param identifier: A trace identifier of 32, or a span identifier of 16 hex digits.
+		:returns:          The trace or the timespan registered under that identifier.
+		:raises KeyError:  If the identifier has neither length, or nothing is registered under it.
+		"""
+		key = identifier.lower()
+		if len(key) == 32:
+			return self._traces[key]
+		elif len(key) == 16:
+			return self._spans[key]
+
+		raise KeyError(f"'{identifier}' is neither a 32 digit trace nor a 16 digit span identifier.")
+
+	def __contains__(self, identifier: str) -> bool:
+		"""
+		Checks if a trace or a timespan with that identifier is in this collection.
+
+		:param identifier: A trace identifier of 32, or a span identifier of 16 hex digits.
+		:returns:          ``True``, if the collection holds it.
+		"""
+		key = identifier.lower()
+
+		return key in self._traces if len(key) == 32 else key in self._spans
+
+	def __iter__(self) -> Iterator[Trace]:
+		"""
+		Returns an iterator to iterate the complete traces of this collection.
+
+		:returns: Iterator to iterate all traces.
+		"""
+		return iter(self._traces.values())
+
+	def __len__(self) -> int:
+		"""
+		Returns the number of complete traces in this collection.
+
+		:returns: Number of traces.
+		"""
+		return len(self._traces)
+
+	def AddOTLPJSON(self, document: OTLPDocument) -> Self:
+		"""
+		Add the traces and fragments of an **OTLP/JSON** document to this collection.
+
+		The document is read as a whole and checked against the collection **before** anything is registered, so a
+		document that collides with what is already here leaves the collection as it was.
+
+		Afterwards every fragment whose parent is now present is attached, in both directions: a fragment of this
+		document finds a parent that arrived earlier, and a span of this document collects the fragments that were
+		waiting for it.
+
+		:param document:      The OTLP/JSON document, as :func:`json.load` returns it.
+		:returns:             The collection itself, so calls can be chained.
+		:raises TracingError: If the collection already holds a timespan of the same identifier, or already holds
+		                      that trace and this document carries a second root span for it - a distributed trace
+		                      is assembled from spans that were each exported once.
+		:raises TracingError: If the spans of a trace don't form a tree: two root spans, or a cycle.
+		:raises TracingError: If a mandatory field is missing or is of the wrong type.
+		"""
+		results = [
+			(traceID, *_buildSpanTree(traceID, spans, Trace, Span))
+			for traceID, spans in _readOTLPDocument(document).items()
+		]
+
+		for traceID, trace, built, _ in results:
+			if trace is not None and traceID in self._traces:
+				ex = TracingError(f"The collection already contains trace '{traceID}'.")
+				ex.add_note("A trace has one root span, and this document carries a second one.")
+				raise ex
+
+			for spanID in built:
+				if spanID in self._spans:
+					ex = TracingError(f"The collection already contains a timespan '{spanID}'.")
+					ex.add_note(f"It belongs to trace '{self._traceIDs[spanID]}'.")
+					raise ex
+
+		for traceID, trace, built, fragments in results:
+			if trace is not None:
+				self._traces[traceID] = trace
+
+			for spanID, span in built.items():
+				self._spans[spanID] =    span
+				self._traceIDs[spanID] = traceID
+
+			for fragment, parentSpanID in fragments:
+				self._fragments[fragment._spanID] = parentSpanID
+
+		self._LinkFragments()
+
+		return self
+
+	def AddOTLPJSONString(self, jsonString: str) -> Self:
+		"""
+		Add the traces and fragments of an **OTLP/JSON** document encoded as a string to this collection.
+
+		:param jsonString:    The encoded OTLP/JSON document.
+		:returns:             The collection itself, so calls can be chained.
+		:raises TypeError:    If parameter 'jsonString' is not of type :class:`str`.
+		:raises TracingError: If the string isn't valid JSON.
+		:raises TracingError: If the document doesn't fit into this collection.
+		"""
+		return self.AddOTLPJSON(_decodeOTLPJSON(jsonString))
+
+	def AddOTLPJSONFile(self, jsonFile: Path) -> Self:
+		"""
+		Add the traces and fragments of an **OTLP/JSON** document read from a file to this collection.
+
+		:param jsonFile:      Path of the file to read.
+		:returns:             The collection itself, so calls can be chained.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the file couldn't be read, or isn't valid JSON.
+		:raises TracingError: If the document doesn't fit into this collection.
+		"""
+		return self.AddOTLPJSON(_decodeOTLPJSON(_readOTLPJSONFile(jsonFile)))
+
+	def _LinkFragments(self) -> None:
+		"""
+		Attach every fragment whose parent timespan is now part of this collection.
+
+		One pass is enough: a fragment's own sub-spans were registered together with it, so a fragment waiting for
+		one of them was already attachable before this call.
+
+		The sub-spans of a timespan that received a fragment are re-sorted by start time, so a trace reassembled
+		from several documents doesn't depend on the order they were added in.
+		"""
+		for spanID, parentSpanID in [pair for pair in self._fragments.items() if pair[1] in self._spans]:
+			fragment = self._spans[spanID]
+			parent =   self._spans[parentSpanID]
+			parent._AddSpan(fragment)
+			del self._fragments[spanID]
+
+			# A fragment is attached when its parent arrives, which is not the order the timespans ran in. Sorting
+			# the siblings by start time makes a reassembled trace read like a local one, and makes the result
+			# independent of the order the documents were added in.
+			parent._spans.sort(key=_byStartTime)
+
+			# '_AddSpan' sets the fragment's trace; everything below it still carries the trace it had while it was
+			# a fragment - which is 'None', because a fragment isn't part of a trace.
+			pending = [fragment]
+			while len(pending) > 0:
+				current = pending.pop()
+				for subSpan in current._spans:
+					subSpan._trace = current._trace
+					pending.append(subSpan)
+
+	@classmethod
+	def FromOTLPJSON(cls, document: OTLPDocument) -> Self:
+		"""
+		Construct a collection from an **OTLP/JSON** document.
+
+		Unlike :meth:`Trace.FromOTLPJSON`, this reads *everything* the document carries: several traces, and
+		timespans whose parent is missing. Nothing has to be complete.
+
+		:param document:      The OTLP/JSON document, as :func:`json.load` returns it.
+		:returns:             A collection of the document's traces and fragments.
+		:raises TracingError: If the spans of a trace don't form a tree: two root spans, or a cycle.
+		:raises TracingError: If a mandatory field is missing or is of the wrong type.
+		"""
+		return cls().AddOTLPJSON(document)
+
+	@classmethod
+	def FromOTLPJSONString(cls, jsonString: str) -> Self:
+		"""
+		Construct a collection from an **OTLP/JSON** document encoded as a string.
+
+		:param jsonString:    The encoded OTLP/JSON document.
+		:returns:             A collection of the document's traces and fragments.
+		:raises TypeError:    If parameter 'jsonString' is not of type :class:`str`.
+		:raises TracingError: If the string isn't valid JSON.
+		:raises TracingError: If the document isn't a set of traces this data model can represent.
+		"""
+		return cls().AddOTLPJSONString(jsonString)
+
+	@classmethod
+	def ReadOTLPJSONFile(cls, jsonFile: Path) -> Self:
+		"""
+		Construct a collection from an **OTLP/JSON** document read from a file.
+
+		:param jsonFile:      Path of the file to read.
+		:returns:             A collection of the document's traces and fragments.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the file couldn't be read, or isn't valid JSON.
+		:raises TracingError: If the document isn't a set of traces this data model can represent.
+		"""
+		return cls().AddOTLPJSONFile(jsonFile)
+
+	def _RootsByTrace(self) -> dict[str, list[Span]]:
+		"""
+		Group the timespans that start a subtree by the trace they belong to.
+
+		:returns: Dictionary of a trace identifier to its root span - if it has arrived - followed by the root of
+		          every fragment of that trace.
+		"""
+		roots: dict[str, list[Span]] = {traceID: [trace] for traceID, trace in self._traces.items()}
+		for spanID in self._fragments:
+			roots.setdefault(self._traceIDs[spanID], []).append(self._spans[spanID])
+
+		return roots
+
+	def ToOTLPJSON(self, scopeName: str = OTLP_SCOPE_NAME, scopeVersion: str = __version__) -> OTLPDocument:
+		"""
+		Convert this collection to an **OTLP/JSON** document.
+
+		Every trace becomes one ``resourceSpans`` entry, and a fragment is written into the entry of the trace it
+		belongs to - with the ``parentSpanId`` it is waiting for, so reading the document back produces the same
+		fragment rather than a second root span.
+
+		A trace whose root span never arrived has no name to report, so its ``service.name`` is its trace identifier.
+
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under.
+		                      Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:returns:             The collection as an OTLP/JSON document, ready for :func:`json.dump`.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		resourceSpans: list[OTLPResourceSpans] = []
+		for traceID, roots in self._RootsByTrace().items():
+			trace =       self._traces.get(traceID, None)
+			serviceName = traceID if trace is None else trace._name
+			spans =       [
+				span
+				for root in roots
+				for span in root._ToOTLPJSON(traceID, self._AwaitedParentOf(root))
+			]
+
+			resourceSpans.append({
+				"resource":   {"attributes": _toAttributes({"service.name": serviceName}.items())},
+				"scopeSpans": [{"scope": {"name": scopeName, "version": scopeVersion}, "spans": spans}],
+			})
+
+		return {"resourceSpans": resourceSpans}
+
+	def _AwaitedParentOf(self, span: Span) -> Nullable[str]:
+		"""
+		Return the span identifier a fragment is waiting for.
+
+		:param span: The timespan to look up.
+		:returns:    The identifier of the timespan's absent parent, or ``None`` if it isn't a fragment.
+		"""
+		return self._fragments.get(span._spanID, None)
+
+	def ToOTLPJSONString(
+		self,
+		indent: Nullable[int] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> str:
+		"""
+		Convert this collection to an **OTLP/JSON** document and encode it as a string.
+
+		:param indent:        Optional, indentation for a human-readable document. Default: ``None``, the compact
+		                      form a collector expects.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under.
+		                      Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:returns:             The OTLP/JSON document, encoded.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		return json_dumps(self.ToOTLPJSON(scopeName, scopeVersion), indent=indent)
+
+	def WriteOTLPJSONFile(
+		self,
+		jsonFile: Path,
+		indent: Nullable[int] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> None:
+		"""
+		Write this collection to a file as an **OTLP/JSON** document.
+
+		:param jsonFile:      Path of the file to write.
+		:param indent:        Optional, indentation for a human-readable file. Default: ``None``, the compact form
+		                      a collector expects.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under.
+		                      Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the parent directories couldn't be created.
+		:raises TracingError: If the file couldn't be written.
+		"""
+		_writeOTLPJSONFile(jsonFile, self.ToOTLPJSONString(indent, scopeName, scopeVersion))
+
+	def Format(self, columnSize: int = 25) -> Iterable[str]:
+		"""
+		Render every trace and every fragment of this collection as indented lines.
+
+		:param columnSize: Optional, column the durations are aligned at.
+		:returns:          One block of lines per trace, followed by the fragments that are still waiting.
+		"""
+		result: list[str] = []
+		for trace in self._traces.values():
+			result.extend(trace.Format(0, columnSize))
+
+		if len(self._fragments) > 0:
+			result.append(f"Fragments: {self.FragmentCount}")
+			for spanID, parentSpanID in self._fragments.items():
+				result.append(f"  ⌛ waiting for span {parentSpanID}")
+				result.extend(self._spans[spanID].Format(2, columnSize))
+
+		return result
+
+	def __repr__(self) -> str:
+		"""
+		Return a detailed string representation of this collection.
+
+		:returns: The number of traces, timespans and fragments.
+		"""
+		return f"TraceCollection: {len(self._traces)} traces, {len(self._spans)} spans, {len(self._fragments)} fragments"
+
+	def __str__(self) -> str:
+		"""
+		Return a string representation of the collection.
+
+		:returns: The number of traces, and of fragments if it has any.
+		"""
+		traces = f"{len(self._traces)} traces"
+
+		return traces if len(self._fragments) == 0 else f"{traces} + {len(self._fragments)} fragments"
