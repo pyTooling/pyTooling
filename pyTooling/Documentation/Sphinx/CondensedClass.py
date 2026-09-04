@@ -1,4 +1,11 @@
 # ==================================================================================================================== #
+#             _____           _ _               ____                                        _        _   _             #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \  ___   ___ _   _ _ __ ___   ___ _ __ | |_ __ _| |_(_) ___  _ __  #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | | | |/ _ \ / __| | | | '_ ` _ \ / _ \ '_ \| __/ _` | __| |/ _ \| '_ \ #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |_| | (_) | (__| |_| | | | | | |  __/ | | | || (_| | |_| | (_) | | | |#
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \___/ \___|\__,_|_| |_| |_|\___|_| |_|\__\__,_|\__|_|\___/|_| |_|#
+# |_|    |___/                          |___/                                                                          #
+# ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
 #                                                                                                                      #
@@ -20,6 +27,7 @@
 #                                                                                                                      #
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
+#
 """
 A Sphinx directive rendering a class' **public interface** as a condensed code block.
 
@@ -64,11 +72,11 @@ from enum                 import Flag, auto
 from re                   import sub as re_sub
 from importlib.util       import find_spec
 from pathlib              import Path
+from collections.abc      import Sequence
 from typing               import Any, ClassVar, Optional as Nullable, Union
 
 from docutils             import nodes
 from docutils.parsers.rst import directives
-from sphinx.application   import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
 
@@ -104,11 +112,11 @@ class CondensedClass(SphinxDirective):
 	#: Decorators marking a function as a property getter.
 	PROPERTY_DECORATORS: ClassVar[tuple[str, ...]] = ("property", "readonly", "cached_property")
 
-	has_content:               ClassVar[bool] = False
-	required_arguments:        ClassVar[int] =  1
-	optional_arguments:        ClassVar[int] =  0
-	final_argument_whitespace: ClassVar[bool] = False
-	option_spec:               ClassVar[dict] = {
+	has_content =               False  #: A boolean; ``True`` if content is allowed.
+	required_arguments =        1      #: Number of required directive arguments: the dotted name.
+	optional_arguments =        0      #: Number of optional arguments after the required ones.
+	final_argument_whitespace = False  #: A boolean; ``True`` if the last argument may contain spaces.
+	option_spec:                dict[str, Any] = {  #: Mapping of option names to validator functions.
 		"members":         directives.unchanged,
 		"exclude-members": directives.unchanged,
 		"indent":          directives.positive_int,
@@ -190,7 +198,8 @@ class CondensedClass(SphinxDirective):
 		if members is None:
 			return MemberKind.All
 
-		byName = {kind.name.lower(): kind for kind in MemberKind}
+		# a Flag's 'name' is typed optional, because a combination of members has none
+		byName = {kind.name.lower(): kind for kind in MemberKind if kind.name is not None}
 
 		kinds = MemberKind(0)
 		unknown = []
@@ -205,7 +214,7 @@ class CondensedClass(SphinxDirective):
 		if len(unknown) > 0:
 			raise ValueError(
 				f"Unknown member kind(s): {', '.join(sorted(unknown))}. "
-				f"Known are: {', '.join(kind.name for kind in MemberKind)}."
+				f"Known are: {', '.join(kind.name for kind in MemberKind if kind.name is not None)}."
 			)
 
 		return kinds
@@ -220,7 +229,7 @@ class CondensedClass(SphinxDirective):
 		:returns:           The class definition.
 		:raises ValueError: If a name of the path is not a class of its parent.
 		"""
-		body: list[AST] = tree.body
+		body: Sequence[AST] = tree.body
 		definition: Nullable[ClassDef] = None
 
 		for name in classPath:
@@ -268,7 +277,8 @@ class CondensedClass(SphinxDirective):
 		members: list[list[str]] = []
 		variables: list[str] = []
 		for statement in definition.body:
-			if MemberKind.ClassVariables in kinds and self._IsClassVariable(statement):
+			if (MemberKind.ClassVariables in kinds and isinstance(statement, (AnnAssign, Assign))
+					and self._IsClassVariable(statement)):
 				variables.append(self._FormatClassVariable(statement, indent, source))
 			elif isinstance(statement, (FunctionDef, AsyncFunctionDef)):
 				if statement.name in excluded or not self._IsSelected(statement, kinds):
@@ -328,7 +338,7 @@ class CondensedClass(SphinxDirective):
 		if isinstance(statement, AnnAssign):
 			target, hasValue = statement.target, statement.value is not None
 		elif isinstance(statement, Assign) and len(statement.targets) == 1:
-			target, hasValue = statement.targets[0], True
+			target, hasValue = statement.targets[0], True   # type: ignore[assignment]
 		else:
 			return False
 
@@ -459,15 +469,3 @@ class CondensedClass(SphinxDirective):
 		segment = get_source_segment(source, node)
 
 		return unparse(node) if segment is None else re_sub(r"\s*\n\s*", " ", segment).strip()
-
-
-def setup(sphinx: Sphinx) -> dict[str, Any]:
-	"""
-	Register the directive with Sphinx.
-
-	:param sphinx: The Sphinx application to register with.
-	:returns:      The extension's metadata.
-	"""
-	sphinx.add_directive("condensed-class", CondensedClass)
-
-	return {"version": "0.1.0", "parallel_read_safe": True, "parallel_write_safe": True}
