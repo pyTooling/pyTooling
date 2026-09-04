@@ -38,21 +38,22 @@ Configuration reader for YAML files.
 from __future__           import annotations
 
 from pathlib              import Path
+from datetime             import date, datetime
 from typing               import Any, Union, Iterator as typing_Iterator, Self
 
-from pyTooling.Exceptions import MissingDependencyException
+from pyTooling.Exceptions import MissingDependencyError
 
 try:
 	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyException(dependency="ruamel.yaml", extra="yaml") from ex
+	raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, InheritDocString
 from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Configuration   import ConfigurationException, KeyT, NodeT, ValueT
-from pyTooling.Configuration   import InterpolationException, KeyNotFoundException, PathExpressionException
-from pyTooling.Configuration   import UnsupportedValueTypeException
+from pyTooling.Configuration   import ConfigurationError, KeyT, NodeT, ValueT
+from pyTooling.Configuration   import InterpolationError, KeyNotFoundError, PathExpressionError
+from pyTooling.Configuration   import UnsupportedValueTypeError
 from pyTooling.Configuration   import Node as Abstract_Node
 from pyTooling.Configuration   import Dictionary as Abstract_Dict
 from pyTooling.Configuration   import Sequence as Abstract_Seq
@@ -113,7 +114,7 @@ class Node(Abstract_Node):
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
-		raise NotImplementedError()
+		raise NotImplementedError("Renaming a key isn't supported by this configuration implementation.")
 
 	@InheritDocString(Abstract_Node)
 	def QueryPath(self, query: str) -> ValueT:
@@ -134,9 +135,9 @@ class Node(Abstract_Node):
 		"""
 		Look up a key in the YAML node, trying it as string, integer and float.
 
-		:param key:                   Key or index to look up.
-		:returns:                     The raw value as returned by the YAML parser.
-		:raises KeyNotFoundException: If the key exists neither as string, nor as integer or float.
+		:param key:               Key or index to look up.
+		:returns:                 The raw value as returned by the YAML parser.
+		:raises KeyNotFoundError: If the key exists neither as string, nor as integer or float.
 		"""
 		try:
 			return self._yamlNode[key]
@@ -154,7 +155,7 @@ class Node(Abstract_Node):
 			except (KeyError, IndexError, TypeError):
 				pass
 
-		ex = KeyNotFoundException(f"Key '{key}' not found in node '{self._key}'.")
+		ex = KeyNotFoundError(f"Key '{key}' not found in node '{self._key}'.")
 		ex.add_note(self._DescribeKeys())
 		raise ex
 
@@ -182,12 +183,16 @@ class Node(Abstract_Node):
 
 		The converted object is cached, so a second access returns the same node object rather than a new one.
 
-		:param key:                            Key or index to look up.
-		:returns:                              A dictionary node, a sequence node, or a scalar value with its variables
-		                                       resolved.
-		:raises KeyNotFoundException:          If the key doesn't exist in this node.
-		:raises UnsupportedValueTypeException: If the YAML parser returned a value that is neither a scalar, nor a
-		                                       node.
+		A date or a datetime is a scalar too - YAML reads ``2026-09-02`` and ``2026-09-02T10:30:00`` as those - and is
+		returned in ISO-8601 spelling. Like every other scalar it comes back as a :class:`str`, so
+		:meth:`datetime.date.fromisoformat` turns it back into a date where a caller wants one.
+
+		:param key:                        Key or index to look up.
+		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
+		                                   resolved.
+		:raises KeyNotFoundError:          If the key doesn't exist in this node.
+		:raises UnsupportedValueTypeError: If the YAML parser returned a value that is neither a scalar, nor a
+		                                   node.
 		"""
 		try:
 			value = self._cache[key]
@@ -198,14 +203,20 @@ class Node(Abstract_Node):
 				value = self._ResolveVariables(value)
 			elif isinstance(value, (int, float)):
 				value = str(value)
+			# YAML reads an unquoted '2026-09-02' as a date and '2026-09-02T10:30:00' as a datetime, which no other
+			# scalar type covers. 'isoformat' rather than 'str', because 'str' writes a datetime with a space where
+			# ISO-8601 writes a 'T'. JSON has no date type, so its backend needs no such branch.
+			elif isinstance(value, (date, datetime)):
+				value = value.isoformat()
 			elif isinstance(value, CommentedMap):
 				value = self.DICT_TYPE(self, self, key, value)
 			elif isinstance(value, CommentedSeq):
 				value = self.SEQ_TYPE(self, self, key, value)
 			else:
 				typeName = getFullyQualifiedName(value)
-				ex = UnsupportedValueTypeException(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
-				ex.add_note(f"The YAML parser returned a value that is neither a scalar (str, int, float), nor a map or sequence.")
+				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
+				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float, date, "
+				            "datetime), nor a map or sequence.")
 				raise ex
 
 			self._cache[key] = value
@@ -219,12 +230,12 @@ class Node(Abstract_Node):
 		A variable references another node by a path expression, so a value can be composed from other values of the
 		same configuration.
 
-		:param value:                   The raw value, possibly containing variables.
-		:returns:                       The value with every variable replaced by what it references.
-		:raises InterpolationException: If a variable is malformed - a dangling ``$`` at the end of the value, or a
-		                                missing closing ``}`` for a ``${`` at some position. |br|
-		                                Use ``$$`` to escape a literal dollar sign.
-		:raises KeyNotFoundException:   If a referenced key doesn't exist.
+		:param value:               The raw value, possibly containing variables.
+		:returns:                   The value with every variable replaced by what it references.
+		:raises InterpolationError: If a variable is malformed - a dangling ``$`` at the end of the value, or a
+		                            missing closing ``}`` for a ``${`` at some position. |br|
+		                            Use ``$$`` to escape a literal dollar sign.
+		:raises KeyNotFoundError:   If a referenced key doesn't exist.
 		"""
 		if value == "":
 			return ""
@@ -243,8 +254,8 @@ class Node(Abstract_Node):
 			else:
 				result += rawValue[:beginPos]
 				if beginPos + 1 >= len(rawValue):
-					ex = InterpolationException(f"Dangling '$' at the end of value '{value}'.")
-					ex.add_note(f"Use '$$' to escape a literal dollar sign.")
+					ex = InterpolationError(f"Dangling '$' at the end of value '{value}'.")
+					ex.add_note("Use '$$' to escape a literal dollar sign.")
 					raise ex
 				elif rawValue[beginPos + 1] == "$":
 					result  += "$"
@@ -253,7 +264,7 @@ class Node(Abstract_Node):
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
 					if endPos < 0:
-						ex = InterpolationException(f"Unclosed variable reference in value '{value}'.")
+						ex = InterpolationError(f"Unclosed variable reference in value '{value}'.")
 						ex.add_note(f"Missing closing '}}' for the '${{' at position {beginPos}.")
 						raise ex
 					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
@@ -274,11 +285,11 @@ class Node(Abstract_Node):
 		"""
 		Return the value the given path refers to.
 
-		:param path:                     Path elements, where ``..`` selects the parent node.
-		:returns:                        The scalar value at that path.
-		:raises KeyNotFoundException:    If a path element doesn't exist.
-		:raises PathExpressionException: If the path resolves to a node instead of a value. Extend the path expression
-		                                 to address a scalar value.
+		:param path:                 Path elements, where ``..`` selects the parent node.
+		:returns:                    The scalar value at that path.
+		:raises KeyNotFoundError:    If a path element doesn't exist.
+		:raises PathExpressionError: If the path resolves to a node instead of a value. Extend the path expression
+		                             to address a scalar value.
 		"""
 		node = self
 		for p in path:
@@ -289,7 +300,7 @@ class Node(Abstract_Node):
 
 		if isinstance(node, Dictionary):
 			pathExpression = ":".join(str(element) for element in path)
-			ex = PathExpressionException(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
+			ex = PathExpressionError(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
 			ex.add_note(f"Element '{p}' is a dictionary. Extend the path expression to address a scalar value.")
 			raise ex
 
@@ -299,9 +310,9 @@ class Node(Abstract_Node):
 		"""
 		Return the node or value the given path refers to.
 
-		:param path:                  Path elements, where ``..`` selects the parent node.
-		:returns:                     A node or a scalar value at that path.
-		:raises KeyNotFoundException: If a path element doesn't exist.
+		:param path:              Path elements, where ``..`` selects the parent node.
+		:returns:                 A node or a scalar value at that path.
+		:raises KeyNotFoundError: If a path element doesn't exist.
 		"""
 		node = self
 		for p in path:
@@ -317,7 +328,6 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a YAML data file."""
 
-	_keys: list[KeyT]                   #: List of keys in this dictionary.
 
 	def __init__(
 		self,
@@ -334,18 +344,10 @@ class Dictionary(Node, Abstract_Dict):
 		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
+		keys: list[KeyT] = [str(k) for k in yamlNode.keys()]
+
 		Node.__init__(self, root, parent, key, yamlNode)
-
-		self._keys = [str(k) for k in yamlNode.keys()]
-
-	def __contains__(self, key: KeyT) -> bool:
-		"""
-		Checks if the key is in this dictionary.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is in the dictionary.
-		"""
-		return key in self._keys
+		Abstract_Dict.__init__(self, keys)
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
@@ -474,14 +476,33 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the YAML file are accessible via Python's dictionary syntax.
 
-		:param configFile:              Configuration file to read and parse.
-		:raises ConfigurationException: If the YAML file doesn't exist or can't be parsed.
+		A configuration's root **is** a mapping - this class derives from :class:`Dictionary` - so a document
+		describing anything else is rejected here rather than failing on the first access. A document with **no
+		content** carries no settings and reads as an empty configuration; :mod:`pyTooling.Configuration.JSON` does
+		the same, so both formats answer alike.
+
+		:param configFile:          Configuration file to read and parse.
+		:raises ConfigurationError: If the YAML file doesn't exist.
+		:raises ConfigurationError: If the YAML file's root isn't a mapping. |br|
+		                            An empty file and an explicit ``null`` are the exception: both are *no settings*
+		                            and read as an empty configuration.
 		"""
 		if not configFile.exists():
-			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
+			raise ConfigurationError(f"YAML configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
 		with configFile.open("r", encoding="utf-8") as file:
-			self._yamlConfig = YAML().load(file)
+			document = YAML().load(file)
+
+		# 'load' returns None for an empty file and for an explicit 'null' - a *null document*, which is valid YAML.
+		if document is None:
+			document = CommentedMap()
+		elif not isinstance(document, CommentedMap):
+			ex = ConfigurationError(f"YAML configuration file '{configFile}' doesn't describe a mapping.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}' at the document's root.")
+			ex.add_note("A configuration needs a mapping of keys to values at its root.")
+			raise ex
+
+		self._yamlConfig = document
 
 		Dictionary.__init__(self, self, self, None, self._yamlConfig)
 		Abstract_Configuration.__init__(self, configFile)

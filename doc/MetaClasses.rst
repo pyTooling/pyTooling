@@ -44,6 +44,153 @@ Mixin
 *****
 
 
+.. _META/ExpectedMembers:
+
+Expected Members
+****************
+
+A class that is only complete once it is combined with another uses members it doesn't define itself. Nothing
+states that contract, so the class that forgets one fails with an :exc:`AttributeError` on first access - somewhere
+else entirely, and only if that code path ever runs.
+
+``expects`` names those members, and it works in **both directions**:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 46 32
+
+   * - Declared on
+     - Meaning
+     - Rejected
+   * - a class (``expects=(...)``)
+     - *"whatever I am mixed into must provide these"* - the mixin-class case
+     - instantiating the combined class
+   * - a **method** (:deco:`expects`)
+     - *"my class must provide these"* - including a method on the **primary inheritance line** waiting for a
+       mixin-class to contribute them
+     - calling that method
+
+The second is the one a :term:`mixin-class` does *not* cover: a class on the primary inheritance line cannot
+declare the members class-wide, because it has to stay usable without the mixin. See
+:ref:`META/ExpectedMembers/Method`.
+
+The class keyword argument names the members a class needs from whichever class it is mixed into.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from pyTooling.MetaClasses import ExtendedType
+
+   class ReportMixin(metaclass=ExtendedType, mixin=True, expects=("_counter", "Write")):
+     def Report(self) -> bool:
+       return self.Write(f"{self._counter}")
+
+   class Application(TerminalApplication, ReportMixin):
+     pass
+
+   Application()   # fine, if 'TerminalApplication' provides '_counter' and 'Write'
+
+A member is provided when it is reachable on the class: a method, a property, a class variable, or a field, for
+which :class:`~pyTooling.MetaClasses.ExtendedType` created a slot descriptor when the mixin joined the primary
+inheritance line. So a field declared as an annotation counts, and both kinds of member are covered by one list.
+
+When something is missing, instantiating the class raises an
+:exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError` naming every missing member and the class expecting it:
+
+.. code-block:: text
+
+   pyTooling.MetaClasses.UnfulfilledExpectationError: Class 'Application' doesn't provide every expected member.
+   Missing 'Write', expected by 'ReportMixin'.
+   A mixin-class names what it needs from its host class with the 'expects' class keyword argument.
+
+Which members are missing is computed once, when the class is constructed, and kept in ``__missingMembers__``; the
+exception is raised on instantiation. That is the same mechanism an :ref:`abstract class <META/AbstractClass>` uses,
+and it has the same consequence: a class may stay incomplete as long as nothing instantiates it, so an intermediate
+class can pass an expectation on to its own subclasses. A class that fulfills it again is instantiable, without the
+intermediate class having to say anything.
+
+``expects`` is not limited to mixin-classes - any class can state what its subclasses have to provide. A
+mixin-class is the case it exists for, and a mixin-class is never itself incomplete, because it cannot provide what
+it expects from its host.
+
+
+.. _META/ExpectedMembers/Method:
+
+A method expecting what a mixin-class contributes
+=================================================
+
+Sometimes only *one* method needs what a mixin-class contributes, while the class itself is perfectly usable
+without it. **The marked method sits on the class in the primary inheritance line**, and it waits for a
+mixin-class further along the bases to supply what it reads.
+
+The class keyword argument would be too strict here: it would reject a class that never calls the method.
+
+The decorator works from a mixin-class too, and pyTooling uses it that way:
+:meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin._PrintHelp` has the parsers - they are the mixin's own
+fields - but it *writes* through the ``Write***`` methods of
+:class:`~pyTooling.TerminalUI.TerminalApplication`, so it expects those. Everything else the mixin does works
+without a terminal. Which side declares the expectation is decided by which side owns the method, not by which
+side is the mixin.
+
+The :deco:`~pyTooling.MetaClasses.expects` decorator moves the expectation to where it belongs.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from pyTooling.MetaClasses import ExtendedType, expects
+
+   class Terminal(metaclass=ExtendedType, slots=True):
+     @expects("MainParser", "SubParsers")
+     def PrintHelp(self) -> None:
+       self.MainParser.print_help()
+
+   Terminal().PrintHelp()                  # UnfulfilledExpectationError
+
+   class Application(Terminal, ArgParseHelperMixin):
+     pass
+
+   Application().PrintHelp()               # fine
+
+The class stays usable - constructing it, instantiating it and calling every other method is unaffected. Only the
+method that cannot work is replaced, by one raising an
+:exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError` that names the missing members:
+
+.. code-block:: text
+
+   UnfulfilledExpectationError: Method 'Terminal.PrintHelp()' expects members this class doesn't provide.
+   Missing 'MainParser'.
+   Missing 'SubParsers'.
+   A method names what it needs from its class with the 'expects' decorator.
+
+The check runs per class, so **a fulfilled expectation costs nothing**: the replacement is not installed at all and
+the class holds the original function, with no per-call test. A replacement inherited from a base-class is removed
+again as soon as a class provides the members, and a subclass that provides only some of them reports exactly the
+ones still missing.
+
+Because it is evaluated per class rather than once at the declaring class, **the mixin-class may arrive any number
+of levels further down** - and a sibling that does not mix it in still reports the missing members:
+
+.. code-block:: Python
+
+   class Middle(Terminal):                       # still incomplete, still fine
+     pass
+
+   class Application(Middle, ArgParseHelperMixin):
+     pass
+
+   Application().PrintHelp()                     # fine
+   Terminal().PrintHelp()                        # UnfulfilledExpectationError
+
+A member counts whether it is a method, a property, a class variable, or a field the mixin-class declared as an
+annotation - :class:`~pyTooling.MetaClasses.ExtendedType` materialises those as slots when the mixin joins the
+primary inheritance line, which is what makes them visible to the check.
+
+.. seealso::
+
+   :ref:`@abstractmethod <META/AbstractMethod>`
+      |rarr| Mark a *method* as abstract, when the class itself declares what has to be overridden.
+
+
 .. _META/AbstractClass:
 
 Abstract Class

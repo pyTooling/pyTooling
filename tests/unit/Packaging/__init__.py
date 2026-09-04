@@ -32,11 +32,11 @@
 Unit tests for :mod:`pyTooling.Packaging`: the helper functions, the version information read from a
 package, and the description assembled for setuptools.
 """
-from pathlib  import Path
-from pytest   import mark
+from contextlib import redirect_stdout
+from io         import StringIO
+from pathlib    import Path
 
-from pyTooling.Platform import CurrentPlatform
-from pyTooling.Testing  import Testcase
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -46,7 +46,6 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class HelperFunctions(Testcase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
@@ -54,7 +53,12 @@ class HelperFunctions(Testcase):
 		self.assertIsInstance(versionInformation.Keywords, list)
 		self.assertEqual(43, len(versionInformation.Keywords))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_DescriptionFromModuleDocString(self) -> None:
+		from pyTooling.Packaging import extractVersionInformation
+
+		versionInformation = extractVersionInformation(Path("pyTooling/Common/__init__.py"))
+		self.assertEqual("Common types, helper functions and classes.", versionInformation.Description)
+
 	def test_loadReadmeTXT(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -62,7 +66,6 @@ class HelperFunctions(Testcase):
 		self.assertIn("1. pyPackage", readme.Content)
 		self.assertEqual("text/plain", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeMD(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -70,7 +73,6 @@ class HelperFunctions(Testcase):
 		self.assertIn("# pyPackage", readme.Content)
 		self.assertEqual("text/markdown", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeReST(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
@@ -79,35 +81,30 @@ class HelperFunctions(Testcase):
 		self.assertIn("#########", readme.Content)
 		self.assertEqual("text/x-rst", readme.MimeType)
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadReadmeOther(self) -> None:
 		from pyTooling.Packaging import loadReadmeFile
 
 		with self.assertRaises(ValueError):
 			_ = loadReadmeFile(Path("tests/pyPackage/README.ascii"))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirements(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
-		self.assertEqual(12, len(requirements))
+		self.assertEqual(13, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsGit(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.Git.txt"))
 		self.assertEqual(2, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsRemoteZIP(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.HTTPS-ZIP.txt"))
 		self.assertEqual(1, len(requirements))
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_loadRequirementsRecursive(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
 
@@ -116,7 +113,6 @@ class HelperFunctions(Testcase):
 
 
 class VersionInformation(Testcase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import VersionInformation
 
@@ -139,8 +135,121 @@ class VersionInformation(Testcase):
 		self.assertListEqual(["keyword1", "keyword2"], versionInfo.Keywords)
 
 
+class Description(Testcase):
+	"""The short description is the first paragraph of the package's module doc-string."""
+
+	_dataDirectory = Path("tests/data/Packaging")
+
+	def _Description(self, fileName: str) -> str:
+		from pyTooling.Packaging import extractVersionInformation
+
+		return extractVersionInformation(self._dataDirectory / fileName).Description
+
+	def test_SingleParagraph(self) -> None:
+		self.assertEqual("A package whose doc-string is a single line.", self._Description("SingleParagraph.py"))
+
+	def test_WrappedParagraphIsFolded(self) -> None:
+		"""A short description is one line, while a doc-string is wrapped to the source file's line length."""
+		description = self._Description("WrappedParagraph.py")
+
+		self.assertNotIn("\n", description)
+		self.assertTrue(description.startswith("A package whose first paragraph is wrapped over several lines,"))
+		self.assertTrue(description.endswith("a sentence describing a package is longer than a line."))
+
+	def test_SecondParagraphIsNotPartOfIt(self) -> None:
+		self.assertNotIn("second paragraph", self._Description("WrappedParagraph.py"))
+
+	def test_EmphasisAroundTheWholeParagraphIsRemoved(self) -> None:
+		"""Nothing renders ReST markup where a short description is displayed."""
+		self.assertEqual("A package whose summary is emphasized as a whole.", self._Description("EmphasizedParagraph.py"))
+
+	def test_EmphasisOfOneWordIsKept(self) -> None:
+		"""Only emphasis wrapping the entire paragraph is markup around the description rather than inside it."""
+		self.assertEqual("A package emphasizing **one word** of its summary.", self._Description("PartlyEmphasized.py"))
+
+	def test_NoDocString(self) -> None:
+		self.assertEqual("", self._Description("NoDocString.py"))
+
+
+class SourceFileErrors(Testcase):
+	"""What 'extractVersionInformation' does with a file it can't read."""
+
+	def test_APathIsAPath(self) -> None:
+		from pyTooling.Packaging import extractVersionInformation
+
+		with self.assertRaises(TypeError) as exceptionCapture:
+			extractVersionInformation("pyTooling/Common/__init__.py")
+
+		self.assertEqual("Parameter 'sourceFile' is not of type 'Path'.", str(exceptionCapture.exception))
+		self.assertEqual(["Got type 'str'."], exceptionCapture.exception.__notes__)
+
+	def test_AMissingFileIsReportedWithItsCause(self) -> None:
+		"""It used to 'raise FileNotFoundError' - the class - which discarded both the path and the cause."""
+		from pyTooling.Packaging import extractVersionInformation, PackagingError
+
+		missing = Path("tests/data/Packaging/ThereIsNoSuchFile.py")
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			extractVersionInformation(missing)
+
+		self.assertEqual(f"Source file '{missing}' couldn't be read.", str(exceptionCapture.exception))
+		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)
+
+	def test_ADirectoryIsReportedToo(self) -> None:
+		"""The 'except' is 'OSError', not 'FileNotFoundError' - every way a file can't be read means the same."""
+		from pyTooling.Packaging import extractVersionInformation, PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			extractVersionInformation(Path("tests/data/Packaging"))
+
+		self.assertIsInstance(exceptionCapture.exception.__cause__, OSError)
+
+
+class MalformedKeywords(Testcase):
+	"""A '__keywords__' that isn't a list of strings names the file, and keeps the reason as the cause."""
+
+	_dataDirectory = Path("tests/data/Packaging")
+
+	def _Extract(self, fileName: str) -> None:
+		from pyTooling.Packaging import extractVersionInformation
+
+		extractVersionInformation(self._dataDirectory / fileName)
+
+	def test_AStringInsteadOfAList(self) -> None:
+		from pyTooling.Packaging import PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			self._Extract("KeywordsAsString.py")
+
+		self.assertIn("KeywordsAsString.py", str(exceptionCapture.exception))
+		self.assertEqual(
+			"Variable '__keywords__' should be a list of strings.",
+			str(exceptionCapture.exception.__cause__)
+		)
+
+	def test_AListWithANonStringElement(self) -> None:
+		from pyTooling.Packaging import PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			self._Extract("KeywordsWithNonString.py")
+
+		self.assertEqual(
+			"List elements in '__keywords__' should be strings.",
+			str(exceptionCapture.exception.__cause__)
+		)
+
+	def test_AnythingElseNamesTheTypeItFound(self) -> None:
+		from pyTooling.Packaging import PackagingError
+
+		with self.assertRaises(PackagingError) as exceptionCapture:
+			self._Extract("KeywordsAsDict.py")
+
+		self.assertEqual(
+			"Used unsupported type 'ast.Dict' for variable '__keywords__'.",
+			str(exceptionCapture.exception.__cause__)
+		)
+
+
 class DescribePackage(Testcase):
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
 	def test_PythonPackage(self) -> None:
 		print()
 
@@ -164,7 +273,48 @@ class DescribePackage(Testcase):
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
 
-	@mark.xfail(CurrentPlatform.IsMSYS2Environment, reason="Can fail on MSYS2 environment with Python 3.10+.")
+	def test_PythonPackageWithoutDescription(self) -> None:
+		"""Without the parameter, the package describes itself in its module doc-string."""
+		print()
+
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py"
+		)
+
+		self.assertEqual(
+			"An example package with a console script, used to test the packaging helpers for an installed tool.",
+			packageInformation["description"]
+		)
+
+	def test_PythonPackageWithoutDescriptionAndWithoutDocString(self) -> None:
+		"""Neither source of a description is a reason to publish a package without one."""
+		print()
+
+		from pyTooling.Exceptions import ToolingException
+		from pyTooling.Packaging  import DescribePythonPackage
+
+		with self.assertRaises(ToolingException) as context:
+			_ = DescribePythonPackage(
+				packageName="pyPackage.Tool",
+				projectURL="https://",
+				sourceCodeURL="https://",
+				documentationURL="https://",
+				issueTrackerCodeURL="https://",
+				sourceFileWithVersion=Path("tests/data/Packaging/NoDocString.py")
+			)
+
+		self.assertIn("has no description", str(context.exception))
+
 	def test_PythonPackageFromGitHub(self) -> None:
 		print()
 
@@ -191,3 +341,170 @@ class DescribePackage(Testcase):
 		self.assertEqual(16, len(packageInformation))
 		self.assertEqual(packageName, packageInformation["name"])
 		# TODO: more checks
+
+
+class EntryPoints(Testcase):
+	"""A package advertises what it offers; the describe-functions know which group it is declared in."""
+
+	def test_APackageMayAdvertiseNothing(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertIsNone(_collectEntryPoints(None, None, None))
+		self.assertIsNone(_collectEntryPoints({}, {}, {}), "An empty mapping declares nothing.")
+
+	def test_ConsoleScripts(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{"console_scripts": ["prog = myPackage.CLI:main"]},
+			_collectEntryPoints({"prog": "myPackage.CLI:main"}, None, None)
+		)
+
+	def test_GuiScripts(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{"gui_scripts": ["prog = myPackage.GUI:main"]},
+			_collectEntryPoints(None, {"prog": "myPackage.GUI:main"}, None)
+		)
+
+	def test_PytestPlugins(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{"pytest11": ["myPlugin = myPackage.PyTest"]},
+			_collectEntryPoints(None, None, {"myPlugin": "myPackage.PyTest"})
+		)
+
+	def test_AllThreeAtOnce(self) -> None:
+		from pyTooling.Packaging import _collectEntryPoints
+
+		self.assertEqual(
+			{
+				"console_scripts": ["prog = myPackage.CLI:main"],
+				"gui_scripts":     ["prog-gui = myPackage.GUI:main"],
+				"pytest11":        ["myPlugin = myPackage.PyTest"],
+			},
+			_collectEntryPoints(
+				{"prog": "myPackage.CLI:main"},
+				{"prog-gui": "myPackage.GUI:main"},
+				{"myPlugin": "myPackage.PyTest"}
+			)
+		)
+
+	def test_APytestPluginIsClassified(self) -> None:
+		"""Declaring a pytest plugin says so on PyPI too, without the caller repeating it."""
+
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife"),
+			pytestPlugins={"myPlugin": "myPackage.PyTest"}
+		)
+
+		self.assertEqual({"pytest11": ["myPlugin = myPackage.PyTest"]}, packageInformation["entry_points"])
+		self.assertIn("Framework :: Pytest", packageInformation["classifiers"])
+
+	def test_WithoutAPluginThereIsNoClassifier(self) -> None:
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		packageInformation = DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife")
+		)
+
+		self.assertNotIn("Framework :: Pytest", packageInformation["classifiers"])
+		self.assertNotIn("entry_points", packageInformation)
+
+
+class LicenseExpression(Testcase):
+	"""A package states its license as an SPDX expression, not as a deprecated classifier."""
+
+	@staticmethod
+	def _Describe(**kwargs):
+		"""
+		Describe a minimal package, so a testcase can look at one field of the result.
+
+		:param kwargs: Additional parameters forwarded to :func:`DescribePythonPackage`.
+		:returns:      The package description.
+		"""
+		from pyTooling.Packaging import DescribePythonPackage
+
+		packageName = "pyPackage.Tool"
+		packagePath = Path("tests") / Path(packageName)
+
+		return DescribePythonPackage(
+			packageName=packageName,
+			description="Swiss army knife.",
+			projectURL="https://",
+			sourceCodeURL="https://",
+			documentationURL="https://",
+			issueTrackerCodeURL="https://",
+			sourceFileWithVersion=packagePath / "__init__.py",
+			keywords=("Swiss", "Knife"),
+			**kwargs
+		)
+
+	def test_TheLicenseIsAnSPDXExpression(self) -> None:
+		self.assertEqual("Apache-2.0", self._Describe()["license"])
+
+	def test_NoLicenseClassifierIsAdded(self) -> None:
+		classifiers = self._Describe()["classifiers"]
+
+		self.assertEqual([], [classifier for classifier in classifiers if classifier.startswith("License ::")])
+
+	def test_ACallersLicenseClassifierIsReported(self) -> None:
+		"""It goes to the setup.py output, where the rest of this function's messages go."""
+
+		output = StringIO()
+		with redirect_stdout(output):
+			self._Describe(classifiers=("License :: OSI Approved :: MIT License", ))
+
+		printed = output.getvalue()
+
+		self.assertIn("License classifiers are deprecated", printed)
+		self.assertIn("License :: OSI Approved :: MIT License", printed)
+		self.assertIn("[pyTooling.Packaging]", printed, "It carries the prefix every other message here carries.")
+
+	def test_WithoutOneNothingIsReported(self) -> None:
+		output = StringIO()
+		with redirect_stdout(output):
+			self._Describe()
+
+		self.assertNotIn("deprecated", output.getvalue())
+
+	def test_TheLicenseMustBeALicense(self) -> None:
+		"""The note names the parameter that was wrong - it used to report the README file instead."""
+
+		with self.assertRaises(TypeError) as context:
+			self._Describe(license="Apache-2.0")
+
+		self.assertEqual("Parameter 'license' is not of type 'License'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_TheLicenseStillOffersItsClassifier(self) -> None:
+		"""'License.PythonClassifier' stays - it is public API, and a caller may still need it elsewhere."""
+
+		from pyTooling.Licensing import Apache_2_0_License
+
+		self.assertEqual("License :: OSI Approved :: Apache Software License", Apache_2_0_License.PythonClassifier)
+

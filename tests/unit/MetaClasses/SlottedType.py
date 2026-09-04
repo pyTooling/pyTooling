@@ -1128,9 +1128,11 @@ class NonEmptySlotsOnSecondaryBaseClass(Testcase):
 
 class SlotShadowedByClassMember(Testcase):
 	"""
-	A class member assigned without a type annotation stays a class attribute. If it carries the name of a slot, it
-	shadows the slot's descriptor and the field becomes read-only on instances - which used to surface much later as a
-	bare ``AttributeError: ... is read-only`` on the first assignment.
+	A class member assigned without a type annotation stays a class attribute.
+
+	If it carries the name of a slot, it shadows the slot's descriptor and the field becomes read-only on
+	instances - which used to surface much later as a bare ``AttributeError: ... is read-only`` on the first
+	assignment.
 	"""
 
 	def test_ShadowedInheritedSlot(self) -> None:
@@ -1189,8 +1191,10 @@ class SlotShadowedByClassMember(Testcase):
 
 class UnannotatedFields(Testcase):
 	"""
-	Every field should carry type information. A field assigned in the class body without a type annotation is reported
-	as a warning - it needs a :class:`WarningCollector` to be observed, so importing such a module doesn't fail.
+	Every field should carry type information.
+
+	A field assigned in the class body without a type annotation is reported as a warning - it needs a
+	:class:`WarningCollector` to be observed, so importing such a module doesn't fail.
 	"""
 
 	def _collect(self, construct) -> list:

@@ -37,16 +37,16 @@ Configuration reader for JSON files.
 """
 from __future__              import annotations
 
-from json                    import load
+from json                    import JSONDecodeError, loads
 from pathlib                 import Path
 from typing                  import Any, Union, Iterator as typing_Iterator, Self
 
 from pyTooling.Common        import getFullyQualifiedName
 from pyTooling.Decorators    import export, InheritDocString
 from pyTooling.MetaClasses   import ExtendedType
-from pyTooling.Configuration import ConfigurationException, KeyT, NodeT, ValueT
-from pyTooling.Configuration import InterpolationException, KeyNotFoundException, PathExpressionException
-from pyTooling.Configuration import UnsupportedValueTypeException
+from pyTooling.Configuration import ConfigurationError, KeyT, NodeT, ValueT
+from pyTooling.Configuration import InterpolationError, KeyNotFoundError, PathExpressionError
+from pyTooling.Configuration import UnsupportedValueTypeError
 from pyTooling.Configuration import Node as Abstract_Node
 from pyTooling.Configuration import Dictionary as Abstract_Dict
 from pyTooling.Configuration import Sequence as Abstract_Seq
@@ -107,7 +107,7 @@ class Node(Abstract_Node):
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
-		raise NotImplementedError()
+		raise NotImplementedError("Renaming a key isn't supported by this configuration implementation.")
 
 	@InheritDocString(Abstract_Node)
 	def QueryPath(self, query: str) -> ValueT:
@@ -128,9 +128,9 @@ class Node(Abstract_Node):
 		"""
 		Look up a key in the JSON node, trying it as string, integer and float.
 
-		:param key:                   Key or index to look up.
-		:returns:                     The raw value as returned by the JSON parser.
-		:raises KeyNotFoundException: If the key exists neither as string, nor as integer or float.
+		:param key:               Key or index to look up.
+		:returns:                 The raw value as returned by the JSON parser.
+		:raises KeyNotFoundError: If the key exists neither as string, nor as integer or float.
 		"""
 		try:
 			return self._jsonNode[key]
@@ -148,7 +148,7 @@ class Node(Abstract_Node):
 			except (KeyError, IndexError, TypeError):
 				pass
 
-		ex = KeyNotFoundException(f"Key '{key}' not found in node '{self._key}'.")
+		ex = KeyNotFoundError(f"Key '{key}' not found in node '{self._key}'.")
 		ex.add_note(self._DescribeKeys())
 		raise ex
 
@@ -176,12 +176,12 @@ class Node(Abstract_Node):
 
 		The converted object is cached, so a second access returns the same node object rather than a new one.
 
-		:param key:                            Key or index to look up.
-		:returns:                              A dictionary node, a sequence node, or a scalar value with its variables
-		                                       resolved.
-		:raises KeyNotFoundException:          If the key doesn't exist in this node.
-		:raises UnsupportedValueTypeException: If the JSON parser returned a value that is neither a scalar, nor a
-		                                       node.
+		:param key:                        Key or index to look up.
+		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
+		                                   resolved.
+		:raises KeyNotFoundError:          If the key doesn't exist in this node.
+		:raises UnsupportedValueTypeError: If the JSON parser returned a value that is neither a scalar, nor a
+		                                   node.
 		"""
 		try:
 			value = self._cache[key]
@@ -198,8 +198,8 @@ class Node(Abstract_Node):
 				value = self.SEQ_TYPE(self, self, key, value)
 			else:
 				typeName = getFullyQualifiedName(value)
-				ex = UnsupportedValueTypeException(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
-				ex.add_note(f"The JSON parser returned a value that is neither a scalar (str, int, float), nor a dict or list.")
+				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
+				ex.add_note("The JSON parser returned a value that is neither a scalar (str, int, float), nor a dict or list.")
 				raise ex
 
 			self._cache[key] = value
@@ -213,12 +213,12 @@ class Node(Abstract_Node):
 		A variable references another node by a path expression, so a value can be composed from other values of the
 		same configuration.
 
-		:param value:                   The raw value, possibly containing variables.
-		:returns:                       The value with every variable replaced by what it references.
-		:raises InterpolationException: If a variable is malformed - a dangling ``$`` at the end of the value, or a
-		                                missing closing ``}`` for a ``${`` at some position. |br|
-		                                Use ``$$`` to escape a literal dollar sign.
-		:raises KeyNotFoundException:   If a referenced key doesn't exist.
+		:param value:               The raw value, possibly containing variables.
+		:returns:                   The value with every variable replaced by what it references.
+		:raises InterpolationError: If a variable is malformed - a dangling ``$`` at the end of the value, or a
+		                            missing closing ``}`` for a ``${`` at some position. |br|
+		                            Use ``$$`` to escape a literal dollar sign.
+		:raises KeyNotFoundError:   If a referenced key doesn't exist.
 		"""
 		if value == "":
 			return ""
@@ -237,8 +237,8 @@ class Node(Abstract_Node):
 			else:
 				result += rawValue[:beginPos]
 				if beginPos + 1 >= len(rawValue):
-					ex = InterpolationException(f"Dangling '$' at the end of value '{value}'.")
-					ex.add_note(f"Use '$$' to escape a literal dollar sign.")
+					ex = InterpolationError(f"Dangling '$' at the end of value '{value}'.")
+					ex.add_note("Use '$$' to escape a literal dollar sign.")
 					raise ex
 				elif rawValue[beginPos + 1] == "$":
 					result  += "$"
@@ -247,7 +247,7 @@ class Node(Abstract_Node):
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
 					if endPos < 0:
-						ex = InterpolationException(f"Unclosed variable reference in value '{value}'.")
+						ex = InterpolationError(f"Unclosed variable reference in value '{value}'.")
 						ex.add_note(f"Missing closing '}}' for the '${{' at position {beginPos}.")
 						raise ex
 					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
@@ -268,11 +268,11 @@ class Node(Abstract_Node):
 		"""
 		Return the value the given path refers to.
 
-		:param path:                     Path elements, where ``..`` selects the parent node.
-		:returns:                        The scalar value at that path.
-		:raises KeyNotFoundException:    If a path element doesn't exist.
-		:raises PathExpressionException: If the path resolves to a node instead of a value. Extend the path expression
-		                                 to address a scalar value.
+		:param path:                 Path elements, where ``..`` selects the parent node.
+		:returns:                    The scalar value at that path.
+		:raises KeyNotFoundError:    If a path element doesn't exist.
+		:raises PathExpressionError: If the path resolves to a node instead of a value. Extend the path expression
+		                             to address a scalar value.
 		"""
 		node = self
 		for p in path:
@@ -283,7 +283,7 @@ class Node(Abstract_Node):
 
 		if isinstance(node, Dictionary):
 			pathExpression = ":".join(str(element) for element in path)
-			ex = PathExpressionException(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
+			ex = PathExpressionError(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
 			ex.add_note(f"Element '{p}' is a dictionary. Extend the path expression to address a scalar value.")
 			raise ex
 
@@ -293,9 +293,9 @@ class Node(Abstract_Node):
 		"""
 		Return the node or value the given path refers to.
 
-		:param path:                  Path elements, where ``..`` selects the parent node.
-		:returns:                     A node or a scalar value at that path.
-		:raises KeyNotFoundException: If a path element doesn't exist.
+		:param path:              Path elements, where ``..`` selects the parent node.
+		:returns:                 A node or a scalar value at that path.
+		:raises KeyNotFoundError: If a path element doesn't exist.
 		"""
 		node = self
 		for p in path:
@@ -311,7 +311,6 @@ class Node(Abstract_Node):
 class Dictionary(Node, Abstract_Dict):
 	"""A dictionary node in a JSON data file."""
 
-	_keys: list[KeyT]           #: List of keys in this dictionary.
 
 	def __init__(
 		self,
@@ -328,18 +327,10 @@ class Dictionary(Node, Abstract_Dict):
 		:param key:      Key of the node within its parent.
 		:param jsonNode: Reference to the JSON node.
 		"""
+		keys: list[KeyT] = [str(k) for k in jsonNode.keys()]
+
 		Node.__init__(self, root, parent, key, jsonNode)
-
-		self._keys = [str(k) for k in jsonNode.keys()]
-
-	def __contains__(self, key: KeyT) -> bool:
-		"""
-		Checks if the key is in this dictionary.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is in the dictionary.
-		"""
-		return key in self._keys
+		Abstract_Dict.__init__(self, keys)
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
@@ -469,14 +460,43 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		All sequence items or dictionaries key-value-pairs in the JSON file are accessible via Python's dictionary syntax.
 
-		:param configFile:              Configuration file to read and parse.
-		:raises ConfigurationException: If the JSON file doesn't exist or can't be parsed.
+		A configuration's root **is** a mapping - this class derives from :class:`Dictionary` - so a document
+		describing anything else is rejected here rather than failing on the first access. A file with **no
+		content** carries no settings and reads as an empty configuration; :mod:`pyTooling.Configuration.YAML` does
+		the same, so both formats answer alike. An empty file is not valid JSON, but *the file is empty* is the same
+		situation in either format and answering differently would be the surprise.
+
+		:param configFile:          Configuration file to read and parse.
+		:raises ConfigurationError: If the JSON file doesn't exist.
+		:raises ConfigurationError: If the JSON file can't be parsed.
+		:raises ConfigurationError: If the JSON file's root isn't a mapping. |br|
+		                            An empty file and an explicit ``null`` are the exception: both are *no settings*
+		                            and read as an empty configuration.
 		"""
 		if not configFile.exists():
-			raise ConfigurationException(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
+			raise ConfigurationError(f"JSON configuration file '{configFile}' not found.") from FileNotFoundError(configFile)
 
 		with configFile.open("r", encoding="utf-8") as file:
-			self._jsonConfig = load(file)
+			content = file.read()
+
+		if content.strip() == "":
+			document = {}
+		else:
+			try:
+				document = loads(content)
+			except JSONDecodeError as ex:
+				raise ConfigurationError(f"JSON configuration file '{configFile}' can't be parsed.") from ex
+
+		# 'null' is JSON's way of describing nothing, which is the same statement an empty file makes.
+		if document is None:
+			document = {}
+		elif not isinstance(document, dict):
+			ex = ConfigurationError(f"JSON configuration file '{configFile}' doesn't describe a mapping.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}' at the document's root.")
+			ex.add_note("A configuration needs a mapping of keys to values at its root.")
+			raise ex
+
+		self._jsonConfig = document
 
 		Dictionary.__init__(self, self, self, None, self._jsonConfig)
 		Abstract_Configuration.__init__(self, configFile)

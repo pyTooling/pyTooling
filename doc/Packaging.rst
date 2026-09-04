@@ -140,6 +140,15 @@ file (module). Usually these module variables are defined in a ``__init__.py`` f
 * Version number (``__version__``)
 * Keywords (``__keywords__``)
 
+The package's short description has no dunder variable, because a package already describes itself: it is the
+**summary** of the source file's module doc-string, read with :func:`~pyTooling.Documentation.splitDocString`. It is
+folded into a single line, and emphasis around the whole paragraph is removed - ``**An abstract VHDL language
+model.**`` is markup for the rendered documentation, and nothing renders it where a short description is displayed.
+
+A description longer than :data:`~pyTooling.Documentation.MAXIMUM_SUMMARY_LENGTH` characters is rejected with
+a :exc:`~pyTooling.Documentation.DocumentationError`: a first paragraph that long is a body that lost its summary,
+and it is not a *short* description. See :ref:`DOC/SummaryLength`.
+
 The function returns an instance of :class:`~pyTooling.Packaging.VersionInformation`, which offers the gathered
 information as properties.
 
@@ -163,6 +172,7 @@ information as properties.
               version=versionInformation.Version,
               author=versionInformation.Author,
               author_email=versionInformation.Email,
+              description=versionInformation.Description,
               keywords=versionInformation.Keywords,
               # ...
             )
@@ -174,6 +184,11 @@ information as properties.
 
          .. code-block:: python
 
+            """
+            Common types, helper functions and classes.
+
+            This second paragraph is not part of the short description.
+            """
             __author__ =    "Patrick Lehmann"
             __email__ =     "Paebbels@gmail.com"
             __copyright__ = "2017-2026, Patrick Lehmann"
@@ -214,6 +229,22 @@ Handling of minimal Python version
 ==================================
 
 The minimal required Python version is selected from parameter ``pythonVersions``.
+
+Handling of the description
+===========================
+
+If parameter ``description`` is not specified, the first paragraph of the module doc-string in
+``sourceFileWithVersion`` is used, so a package is described in one place instead of two. An explicitly passed
+description always wins - including an empty one.
+
+If neither is available, a :exc:`~pyTooling.Packaging.PackagingError` is raised, because a package published
+without a description is worse than a failing ``setup.py``.
+
+.. note::
+
+   The doc-string that is read is the one of the file named by ``sourceFileWithVersion``. For a namespace package
+   whose dunder variables live in a sub-package - like ``pyTooling/Common/__init__.py`` - that doc-string describes
+   the sub-package, not the distribution, so such a package passes ``description`` explicitly.
 
 Handling of dunder variables
 ============================
@@ -274,11 +305,84 @@ User-defined
   If any of the above was added, an additional extra requirement called ``all`` will be added, summarizing all
   extra requirements.
 
+.. _PACKAGING/Descriptions/License:
+
+Handling of the license
+=======================
+
+A package states its license as an **SPDX expression** in the ``license`` field, taken from the ``license``
+parameter's :attr:`~pyTooling.Licensing.License.SPDXIdentifier`:
+
+.. code-block:: Python
+
+   license=Apache_2_0_License      # -> license = "Apache-2.0"
+
+A ``License ::`` classifier passed through the ``classifiers`` parameter is **kept** - it is the caller's
+statement, not this function's, and dropping it silently would hide what they wrote - but it is reported in the
+``setup.py`` output, where the rest of this function's messages go:
+
+.. code-block:: text
+
+   [pyTooling.Packaging] License classifiers are deprecated: 'License :: OSI Approved :: MIT License'.
+   [pyTooling.Packaging]   Remove them; the 'license' parameter becomes the SPDX expression setuptools wants.
+
+.. note::
+
+   A bare license identifier **is** an SPDX expression - the simplest one the grammar allows. What cannot be
+   expressed is a **compound** expression like ``MIT OR Apache-2.0`` or
+   ``GPL-2.0-or-later WITH Classpath-exception-2.0``, because a :class:`~pyTooling.Licensing.License` carries one
+   identifier. A package under more than one license passes the expression as a string to ``setuptools.setup()``
+   itself.
+
+.. seealso::
+
+   :pep:`639`
+      |rarr| Improving license clarity with SPDX license expressions - what the ``license`` field means and why the
+      classifiers were deprecated.
+   `SPDX license expressions <https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/>`__
+      |rarr| The grammar: a simple expression is a license identifier, and ``AND``, ``OR`` and ``WITH`` combine
+      them.
+   `SPDX license list <https://spdx.org/licenses/>`__
+      |rarr| The identifiers themselves. :data:`~pyTooling.Licensing.SPDX_INDEX` holds the ones pyTooling
+      predefines.
+
+:attr:`~pyTooling.Licensing.License.PythonClassifier` remains available for a caller that needs the classifier for
+something else.
+
 Handling of keywords
 ====================
 
 If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``
 will be used. Otherwise, the content of the parameter, if not None or empty.
+
+.. _PACKAGING/Descriptions/EntryPoints:
+
+Handling of entry points
+========================
+
+A package advertises what it offers through *entry point groups*, but a caller of these functions says **what it
+provides**, not which group that is declared in:
+
+.. code-block:: Python
+
+   consoleScripts={"prog":     "myPackage.CLI:main"},   # -> console_scripts
+   guiScripts={"prog-gui":     "myPackage.GUI:main"},   # -> gui_scripts
+   pytestPlugins={"myPlugin":  "myPackage.PyTest"},     # -> pytest11
+
+``guiScripts`` is ``consoleScripts`` for a windowed program: on Windows, such an entry point is generated against
+``pythonw`` and starts without a console window.
+
+``pytestPlugins`` also adds the classifier ``Framework :: Pytest``, so a package that ships a plugin says so on
+PyPI without the caller having to repeat itself. It is not added twice if ``classifiers`` already lists it.
+
+Any of them may be given together, and a package that advertises nothing gets no ``entry_points`` at all.
+
+.. topic:: Why not a general parameter?
+
+   An earlier draft took a general ``entryPoints={"pytest11": {...}}`` mapping. It was rejected deliberately: the
+   point of :func:`~pyTooling.Packaging.DescribePythonPackage` is to *abstract* packaging, so knowing that a pytest
+   plugin lives in a group called ``pytest11`` - and that it also wants a classifier - belongs here rather than in
+   every :file:`setup.py`. A named parameter per kind of thing keeps that knowledge in one place.
 
 
 .. _PACKAGING/Descriptions/GitHub:
@@ -317,7 +421,6 @@ knowing the GitHub namespace and repository name: issue tracker URL, source code
       setup(
         **DescribePythonPackageHostedOnGitHub(
           packageName=packageName,
-          description="A set of helper functions to describe a Python package for setuptools.",
           gitHubNamespace="pyTooling",
           keywords="Python3 setuptools package wheel installation",
           sourceFileWithVersion=Path(f"{packageName.replace('.', '/')}/__init__.py"),

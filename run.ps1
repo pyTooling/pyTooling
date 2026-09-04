@@ -38,7 +38,7 @@ Param(
 
 $ProjectName =    "pyTooling"
 $PackageName =    $ProjectName
-$PackageVersion = "9.0.0"
+$PackageVersion = "9.1.0"
 $PythonVersion =  "3.14"
 $LaTeXDocument =  "${ProjectName}.tex"
 

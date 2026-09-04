@@ -236,24 +236,7 @@ distinguished if they are applied to a class, method or function.
 
 .. rubric:: Condensed definition of class :class:`~pyTooling.Attributes.Attribute`
 
-.. code-block:: Python
-
-   class Attribute:
-      @classmethod
-      def GetFunctions(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
-        ...
-
-      @classmethod
-      def GetClasses(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
-        ...
-
-      @classmethod
-      def GetMethods(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
-        ...
-
-      @classmethod
-      def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> Tuple['Attribute', ...]:
-        ...
+.. condensed-class:: pyTooling.Attributes.Attribute
 
 .. rubric:: Planned Features
 
@@ -319,15 +302,7 @@ the parameter is stored in an  instance. The inner field is then accessible via 
    .. grid-item:: **Find attribute usages of class attributes**
       :columns: 6
 
-      .. code-block:: Python
-
-         class Application(metaclass=ExtendedType):
-           @Annotation("Some annotation data")
-           def AnnotatedMethod(self):
-             pass
-
-         for method in Annotation.GetMethods():
-           pass
+      .. condensed-class:: pyTooling.Attributes.SimpleAttribute
 
    .. grid-item:: **Find attribute usages of class attributes**
       :columns: 6

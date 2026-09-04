@@ -1,0 +1,54 @@
+/* Styles for the ReST roles registered by pyTooling.Documentation.Sphinx. */
+
+/* Previously injected into every document by a 'raw:: html' block in each project's doc/prolog.inc. */
+
+/* Every value a project might want to change is a custom property, so it can be overridden without replacing
+   this file. Put a stylesheet of your own after this one - 'html_css_files' in conf.py is appended in order -
+   and redefine what you need:
+
+     :root {
+       --pyTooling-color-red: #b00020;
+     }
+
+   A property is only read where it is used below, so redefining one changes exactly the role that uses it. */
+:root {
+  --pyTooling-color-red:    #c00;
+  --pyTooling-color-green:  #093;
+  --pyTooling-color-blue:   #06f;
+  --pyTooling-color-purple: #90c;
+
+  --pyTooling-xlarge-size:  x-large;
+}
+
+span.bolditalic {
+  font-weight: bold;
+  font-style: italic;
+}
+
+span.underline {
+  text-decoration: underline;
+}
+
+span.strike {
+  text-decoration: line-through;
+}
+
+span.xlarge {
+  font-size: var(--pyTooling-xlarge-size);
+}
+
+span.colorred {
+  color: var(--pyTooling-color-red);
+}
+
+span.colorgreen {
+  color: var(--pyTooling-color-green);
+}
+
+span.colorblue {
+  color: var(--pyTooling-color-blue);
+}
+
+span.colorpurple {
+  color: var(--pyTooling-color-purple);
+}
