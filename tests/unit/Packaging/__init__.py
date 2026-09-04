@@ -91,7 +91,7 @@ class HelperFunctions(Testcase):
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
-		self.assertEqual(13, len(requirements))
+		self.assertEqual(16, len(requirements))
 
 	def test_loadRequirementsGit(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
