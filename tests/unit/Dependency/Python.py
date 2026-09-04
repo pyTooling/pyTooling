@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
 need network access.
 """
-from datetime                     import date, datetime
+from datetime                     import date, datetime, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
@@ -724,7 +724,7 @@ class ReadingLicenseOverrides(Testcase):
 		"""What a package index says is as old as the request; what a human wrote is as old as the human."""
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 
-		self.assertEqual(date(2026, 9, 2), overrides.AnalysedAt)
+		self.assertEqual(datetime(2026, 9, 2), overrides.AnalysedAt)
 
 	def test_TheDateReadsEitherWayRound(self) -> None:
 		"""Unquoted it is YAML's own date type, quoted it is a string. A configuration spells both ISO-8601."""
@@ -732,6 +732,19 @@ class ReadingLicenseOverrides(Testcase):
 		quoted =   LicenseOverrides.FromFile(self._DIRECTORY / "licenses-quoted-date.yml")
 
 		self.assertEqual(unquoted.AnalysedAt, quoted.AnalysedAt)
+
+	def test_AFullTimestampIsRead(self) -> None:
+		"""A bare date says which day; a timestamp says which build of that day, which is what a re-check needs."""
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "overrides.yml"
+			path.write_text(
+				'version: "0.1"\nanalysedAt: 2026-09-04T21:45:00+00:00\npackages:\n  igraph:\n    license: MIT\n',
+				encoding="utf-8"
+			)
+
+			overrides = LicenseOverrides.FromFile(path)
+
+		self.assertEqual(datetime(2026, 9, 4, 21, 45, tzinfo=timezone.utc), overrides.AnalysedAt)
 
 	def test_TheSchemaVersionIsChecked(self) -> None:
 		"""It says which structure the file is written for, so a later one can be told apart rather than misread."""
@@ -764,7 +777,7 @@ class ReadingLicenseOverrides(Testcase):
 		with self.assertRaises(DependencyError) as context:
 			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-bad-date.yml")
 
-		self.assertIn("isn't an ISO-8601 date", str(context.exception))
+		self.assertIn("isn't an ISO-8601 timestamp", str(context.exception))
 
 	def test_AnEmptyFileRaises(self) -> None:
 		"""It states no analysis date either. Before #376 it crashed in the YAML backend instead."""
@@ -775,20 +788,20 @@ class ReadingLicenseOverrides(Testcase):
 		"""A date and no packages is a complete statement: *checked, nothing to override*."""
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses-no-packages.yml")
 
-		self.assertEqual(date(2026, 9, 2), overrides.AnalysedAt)
+		self.assertEqual(datetime(2026, 9, 2), overrides.AnalysedAt)
 		self.assertIsNone(overrides.LicenseOf("igraph"))
 
 	def test_OverridesBuiltInCodeNeedNoDate(self) -> None:
 		"""They are as old as the code, so the date is optional there and ``None`` when nobody passed one."""
 		self.assertIsNone(LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}).AnalysedAt)
 		self.assertEqual(
-			date(2026, 9, 2),
-			LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}, date(2026, 9, 2)).AnalysedAt
+			datetime(2026, 9, 2),
+			LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}, datetime(2026, 9, 2)).AnalysedAt
 		)
 
 	def test_TheRepositorysOwnOverrideFileLoads(self) -> None:
-		"""'doc/dependencies.yml' is read by the 'dependency-table' directive, so a format change must reach it."""
-		overrides = LicenseOverrides.FromFile(Path("doc/dependencies.yml"))
+		"""The repository's own override file is read by the directive, so a format change must reach it."""
+		overrides = LicenseOverrides.FromFile(Path("doc/Dependency.PackageOverrides.yaml"))
 
 		self.assertIsNotNone(overrides.AnalysedAt)
 		self.assertEqual("Apache-2.0", overrides.LicenseOf("aiohttp"))
