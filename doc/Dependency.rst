@@ -49,29 +49,25 @@ PyPI (see :ref:`INSTALL`).
 
 When installed as ``pyTooling``:
 
-.. dependency-table:: ../requirements.txt
+.. dependency-table:: package
    :caption: Mandatory dependencies of the pyTooling package.
-   :licenses: dependencies.yml
 
 
 When installed as ``pyTooling[packaging]``:
 
-.. dependency-table:: pyTooling[packaging]
+.. dependency-table:: packaging
    :caption: Dependencies added by the ``packaging`` extra.
-   :licenses: dependencies.yml
 
 When installed as ``pyTooling[terminal]``:
 
-.. dependency-table:: pyTooling[terminal]
+.. dependency-table:: terminal
    :caption: Dependencies added by the ``terminal`` extra.
-   :licenses: dependencies.yml
 
 
 When installed as ``pyTooling[yaml]``:
 
-.. dependency-table:: pyTooling[yaml]
+.. dependency-table:: yaml
    :caption: Dependencies added by the ``yaml`` extra.
-   :licenses: dependencies.yml
 
 
 .. _DEP/testing:
@@ -109,9 +105,8 @@ the mandatory dependencies too.
 
 .. rubric:: Dependency List - Unit Testing
 
-.. dependency-table:: ../tests/unit/requirements.txt
+.. dependency-table:: unittest
    :caption: Dependencies for unit testing, coverage and type checking.
-   :licenses: dependencies.yml
 
 Unit Testing with Benchmarking (Optional)
 =========================================
@@ -142,9 +137,8 @@ recursively install the mandatory dependencies too.
 
 .. rubric:: Dependency List - With Benchmark Testing
 
-.. dependency-table:: ../tests/benchmark/requirements.txt
+.. dependency-table:: benchmark
    :caption: Dependencies for benchmark testing.
-   :licenses: dependencies.yml
 
 Unit Testing with Performance Testing (Optional)
 ================================================
@@ -175,9 +169,8 @@ recursively install the mandatory dependencies too.
 
 .. rubric:: Dependency List - With Performance Testing
 
-.. dependency-table:: ../tests/performance/requirements.txt
+.. dependency-table:: performance
    :caption: Dependencies for performance testing.
-   :licenses: dependencies.yml
 
 
 
@@ -214,9 +207,8 @@ the mandatory dependencies too.
 
 .. rubric:: Dependency List
 
-.. dependency-table:: requirements.txt
+.. dependency-table:: documentation
    :caption: Dependencies for building this documentation.
-   :licenses: dependencies.yml
 
 .. _DEP/packaging:
 
@@ -250,9 +242,8 @@ Install the ``packaging`` extra with ``pip3``, which installs the mandatory depe
 
 .. rubric:: Dependency List
 
-.. dependency-table:: pyTooling[packaging]
+.. dependency-table:: packaging
    :caption: Dependencies for generating an installation package.
-   :licenses: dependencies.yml
 
 
 .. _DEP/publishing:
@@ -288,6 +279,5 @@ install the mandatory dependencies too.
 
 .. rubric:: Dependency List
 
-.. dependency-table:: ../dist/requirements.txt
+.. dependency-table:: publishing
    :caption: Dependencies for publishing the package.
-   :licenses: dependencies.yml
