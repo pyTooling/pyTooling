@@ -118,9 +118,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	purpose; reading it once and continuing would hide it.
 	"""
 
-	_path:                     Path                                        #: Path of this requirements file.
 	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
 	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
+	_path:                     Path                                        #: Path of this requirements file.
 	#: What this file states, in the order it states it.
 	_entries:                  list[Union[Requirement, RequirementsFile]]
 	#: Every file of this tree, by resolved path; only the root's is filled.
