@@ -445,9 +445,15 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 	:param configuration:  Value of ``pyTooling_dependency_requirements``.
 	:param confDirectory:  Directory :file:`conf.py` lives in; relative paths are resolved against it.
 	:returns:              Every declared entrypoint, by its identifier.
+	:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
 	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the configuration is malformed, or a
 	  requirements file can't be read.
 	"""
+	try:
+		from packaging.utils import canonicalize_name
+	except ImportError as ex:  # pragma: no cover
+		raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
+
 	from pyTooling.Dependency.Python import RequirementsFile
 
 	if not isinstance(configuration, dict):
@@ -480,8 +486,12 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 			except Exception as cause:
 				raise SphinxExtensionError(f"{location}.file: Requirements file '{path}' can't be read: {cause}") from cause
 
-			files = tuple(included.Path for included in _Walk(requirementsFile))
-			entrypoints[identifier] = Entrypoint(identifier, files=files, requirements=requirementsFile.Flatten())
+			# the tree knows every file it was read from; walking it here would be a second answer to one question
+			files = tuple(requirementsFile.AnalyzedRequirementFiles)
+			requirements: dict[str, Requirement] = {
+				canonicalize_name(req.name): req for req in requirementsFile.AllRequirements
+			}
+			entrypoints[identifier] = Entrypoint(identifier, files=files, requirements=requirements)
 		else:
 			name, _, bracket = str(declaration["package"]).partition("[")
 			entrypoints[identifier] = Entrypoint(
@@ -539,18 +549,6 @@ def prepareEntrypoints(sphinx: Sphinx, config: Config) -> None:
 		overrides,
 		getattr(config, f"{CONFIG_PREFIX}_depth", DEFAULT_DEPTH)
 	)
-
-
-def _Walk(requirementsFile: RequirementsFile) -> Iterator[RequirementsFile]:
-	"""
-	Yield a requirements file and every file it includes, depth first.
-
-	:param requirementsFile: The file to start at.
-	:returns:                A generator of requirements files.
-	"""
-	yield requirementsFile
-	for include in requirementsFile.Includes:
-		yield from _Walk(include)
 
 
 @export
@@ -639,10 +637,14 @@ class DependencyTable(BaseDirective):
 		:param identifier:            Identifier the document names.
 		:param collector:             The build's collector.
 		:returns:                     Every required package, by its canonical name.
+		:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
 		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the identifier is unknown, or the
 		  package index can't answer for the entrypoint's package.
 		"""
-		from packaging.utils import canonicalize_name
+		try:
+			from packaging.utils import canonicalize_name
+		except ImportError as ex:  # pragma: no cover
+			raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
 
 		if (entrypoint := collector.Entrypoints.get(identifier, None)) is None:
 			known = ", ".join(sorted(collector.Entrypoints)) or "none"
