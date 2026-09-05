@@ -112,7 +112,6 @@ packages:
   sphinx-rtd-theme:
     licenseURL: https://GitHub.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE
 
-
   # The hand-written table linked LICENSE.rst, which is a 404 now - the file is LICENSE.
   sphinxcontrib-mermaid:
     licenseURL: https://GitHub.com/mgaitan/sphinxcontrib-mermaid/blob/master/LICENSE

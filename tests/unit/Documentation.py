@@ -230,6 +230,16 @@ class Entrypoints(Testcase):
 		self.assertEqual((("pyTooling", "yaml"), ("pyTooling", "terminal")), entrypoints["tuple"].Packages)
 		self.assertEqual((("pyTooling", None),), entrypoints["list"].Packages)
 
+	def test_APluralFieldTakesAnyIterable(self) -> None:
+		"""The field is documented as an iterable, so a generator or a set is as good as a tuple or a list."""
+		entrypoints = readEntrypoints({
+			"generator": {"packages": (name for name in ("pyTooling[yaml]", "pyTooling[terminal]"))},
+			"set":       {"packages": {"pyTooling"}}
+		}, Path("."))
+
+		self.assertEqual((("pyTooling", "yaml"), ("pyTooling", "terminal")), entrypoints["generator"].Packages)
+		self.assertEqual((("pyTooling", None),), entrypoints["set"].Packages)
+
 	def test_SeveralFilesFlattenInTheOrderDeclared(self) -> None:
 		"""``files`` reads several trees; a later file's statement wins, as a later ``-r`` reference does."""
 		with TemporaryDirectory() as directory:

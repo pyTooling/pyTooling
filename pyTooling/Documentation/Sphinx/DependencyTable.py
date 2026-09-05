@@ -65,12 +65,7 @@ with a :class:`~pyTooling.Stopwatch.Stopwatch`, and the build ends with the tota
 from __future__                    import annotations
 
 from pathlib                       import Path
-from typing                        import TYPE_CHECKING, Any, Literal, Optional as Nullable, cast
-
-from docutils                      import nodes
-from docutils.parsers.rst          import directives
-from sphinx.application            import Sphinx
-from sphinx.util                   import logging
+from typing                        import TYPE_CHECKING, Any, Iterable, Literal, Optional as Nullable, cast
 
 from pyTooling.Common              import getFullyQualifiedName
 from pyTooling.Decorators          import export, readonly
@@ -79,6 +74,14 @@ from pyTooling.Exceptions          import ConfigurationError, MissingDependencyE
 from pyTooling.MetaClasses         import ExtendedType
 from pyTooling.Stopwatch           import Stopwatch
 from pyTooling.Warning             import WarningCollector
+
+try:
+	from docutils                    import nodes
+	from docutils.parsers.rst        import directives
+	from sphinx.application          import Sphinx
+	from sphinx.util                 import logging
+except ImportError as ex:  # pragma: no cover
+	raise MissingDependencyError(dependency="sphinx", extra="sphinx") from ex
 
 if TYPE_CHECKING:  # pragma: no cover
 	# Only this directive needs a package index, so the model is imported when the configuration declares an
@@ -174,10 +177,10 @@ class Entrypoint(metaclass=ExtendedType, slots=True):
 	extra and is resolved the first time a table names it.
 	"""
 
-	_identifier:   str                                  #: Name the documents refer to this entrypoint by.
-	_files:        tuple[Path, ...]                     #: Every requirements file read, references included.
-	_packages:     tuple[tuple[str, Nullable[str]], ...]  #: Packages to read the requirements of, as name and extra.
-	_requirements: Nullable[dict[str, Requirement]]     #: The resolved requirements, by canonical package name.
+	_identifier:   str                                    #: Name the documents refer to this entrypoint by.
+	_files:        tuple[Path, ...]                       #: Every requirements file read, references included.
+	_packages:     tuple[tuple[str, Nullable[str]], ...]  #: The packages to read, as name and extra.
+	_requirements: Nullable[dict[str, Requirement]]       #: The resolved requirements, by canonical package name.
 
 	def __init__(
 		self,
@@ -194,9 +197,9 @@ class Entrypoint(metaclass=ExtendedType, slots=True):
 		:param packages:     Optional, the packages and their extras, for a package entrypoint. Default: ``()``.
 		:param requirements: Optional, the requirements, if they are known already. Default: ``None``.
 		"""
-		self._identifier = identifier
-		self._files = files
-		self._packages = packages
+		self._identifier =   identifier
+		self._files =        files
+		self._packages =     packages
 		self._requirements = requirements
 
 	@readonly
@@ -276,18 +279,17 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 	HTTP session.
 	"""
 
-	_entrypoints: dict[str, Entrypoint]             #: The entrypoints declared in :file:`conf.py`, by identifier.
-	_indexURL:    str                               #: URL of the package index's website.
-	_apiURL:      str                               #: URL of the package index's JSON API.
-	_overrides:   LicenseOverrides                  #: Licenses stated by hand, for packages the index can't answer for.
-	_graph:       Nullable[PythonPackageDependencyGraph]  #: Graph the downloaded packages are collected in.
-	_index:       Nullable[PythonPackageIndex]      #: The package index this build queries, once it was opened.
-	_projects:    dict[str, Nullable[Project]]      #: Projects downloaded so far; ``None`` for an unknown package.
-	_detailed:    set[str]                          #: Releases whose details were downloaded, as ``name==version``.
-	_undescribed: set[str]                          #: Releases the index lists but can't describe.
-	_requestCount: int                              #: Number of requests sent to the package index.
-	_stopwatch:   Stopwatch                         #: Runs only while a request to the package index is in flight.
-	_unresolved:  set[str]                          #: Packages whose license the index couldn't answer for.
+	_entrypoints: dict[str, Entrypoint]                    #: The entrypoints declared in :file:`conf.py`.
+	_indexURL:    str                                      #: URL of the package index's website.
+	_apiURL:      str                                      #: URL of the package index's JSON API.
+	_overrides:   LicenseOverrides                         #: Licenses stated by hand, where the index can't.
+	_graph:       Nullable[PythonPackageDependencyGraph]   #: Graph the downloaded packages are collected in.
+	_index:       Nullable[PythonPackageIndex]             #: The package index this build queries, once opened.
+	_projects:    dict[str, Nullable[Project]]             #: Projects downloaded so far; ``None`` if unknown.
+	_detailed:    set[str]                                 #: Releases whose details were downloaded.
+	_undescribed: set[str]                                 #: Releases the index lists but can't describe.
+	_stopwatch:   Stopwatch                                #: Runs only while a request to the index is in flight.
+	_unresolved:  set[str]                                 #: Packages whose license the index couldn't answer for.
 
 	def __init__(
 		self,
@@ -305,22 +307,19 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		:param overrides:   Licenses stated by hand.
 		"""
 		self._entrypoints = entrypoints
-		self._indexURL = indexURL
-		self._apiURL = apiURL
-		self._overrides = overrides
-		self._graph = None
-		self._index = None
-		self._projects = {}
-		self._detailed = set()
+		self._indexURL =    indexURL
+		self._apiURL =      apiURL
+		self._overrides =   overrides
+		self._graph =       None
+		self._index =       None
+		self._projects =    {}
+		self._detailed =    set()
 		self._undescribed = set()
-		self._requestCount = 0
-		self._unresolved = set()
+		self._unresolved =  set()
 
-		# started and immediately paused: it is resumed around a request and paused after, so its 'Activity' is time
-		# spent waiting for the index rather than the age of the collector
-		self._stopwatch = Stopwatch()
-		self._stopwatch.Start()
-		self._stopwatch.Pause()
+		# 'preferPause', so each 'with' around a request is one active span: 'Activity' is the time spent waiting for
+		# the index rather than the age of the collector, and 'ActiveCount' is the number of requests
+		self._stopwatch =   Stopwatch(preferPause=True)
 
 	@readonly
 	def Entrypoints(self) -> dict[str, Entrypoint]:
@@ -351,9 +350,13 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		"""
 		Number of requests sent to the package index.
 
+		The stopwatch runs for exactly one span per request, so this is its
+		:attr:`~pyTooling.Stopwatch.Stopwatch.ActiveCount` - counting them a second time in a field of our own
+		would be a second answer to one question.
+
 		:returns: Number of requests sent.
 		"""
-		return self._requestCount
+		return self._stopwatch.ActiveCount
 
 	@readonly
 	def Seconds(self) -> float:
@@ -386,8 +389,13 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 
 		:param packageName: Name of the package to look up.
 		:returns:           The project, or ``None`` if the index doesn't know it.
+		:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
 		"""
-		from requests                    import RequestException
+		try:
+			from requests import RequestException
+		except ImportError as ex:  # pragma: no cover
+			raise MissingDependencyError(dependency="requests", extra="pypi") from ex
+
 		from pyTooling.Dependency        import DependencyError
 		from pyTooling.Dependency.Python import LazyLoaderState
 
@@ -395,15 +403,12 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 			return self._projects[packageName]
 
 		project: Nullable[Project]
-		self._stopwatch.Resume()
-		try:
-			project = self.Index.DownloadProject(packageName, LazyLoaderState.PartiallyLoaded)
-		except (DependencyError, RequestException, ValueError, KeyError):
-			project = None
-		finally:
-			self._stopwatch.Pause()
+		with self._stopwatch:
+			try:
+				project = self.Index.DownloadProject(packageName, LazyLoaderState.PartiallyLoaded)
+			except (DependencyError, RequestException, ValueError, KeyError):
+				project = None
 
-		self._requestCount += 1
 		self._projects[packageName] = project
 
 		return project
@@ -418,8 +423,13 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 
 		:param release: The release to fill in.
 		:returns:       The release with its details downloaded, or ``None`` if the index couldn't describe it.
+		:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
 		"""
-		from requests             import RequestException
+		try:
+			from requests import RequestException
+		except ImportError as ex:  # pragma: no cover
+			raise MissingDependencyError(dependency="requests", extra="pypi") from ex
+
 		from pyTooling.Dependency import DependencyError
 
 		key = f"{release.Package.Name}=={release.Version}"
@@ -427,17 +437,12 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 			return release if key not in self._undescribed else None
 
 		warnings: list[BaseException] = []
-		self._stopwatch.Resume()
-		try:
-			with WarningCollector(warnings):
-				try:
-					release.DownloadDetails()
-				except (DependencyError, RequestException, ValueError, KeyError):
-					self._undescribed.add(key)
-		finally:
-			self._stopwatch.Pause()
+		with self._stopwatch, WarningCollector(warnings):
+			try:
+				release.DownloadDetails()
+			except (DependencyError, RequestException, ValueError, KeyError):
+				self._undescribed.add(key)
 
-		self._requestCount += 1
 		self._detailed.add(key)
 
 		for warning in warnings:
@@ -492,47 +497,40 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 			)
 
 		field = stated[0]
-		values = _EntrypointValues(f"{location}.{field}", field, declaration[field])
+		fieldLocation = f"{location}.{field}"
+		value = declaration[field]
+		values: tuple[str, ...]
+
+		if field in ("file", "package"):
+			if not isinstance(value, str):
+				raise SphinxExtensionError(
+					f"{fieldLocation}: Expected a string, got '{getFullyQualifiedName(value)}'."
+				)
+
+			values = (value,)
+		else:
+			# a string is an iterable of strings itself, so the plural form has to reject one explicitly - otherwise
+			# {"files": "requirements.txt"} would silently become sixteen one-character paths
+			if isinstance(value, str) or not isinstance(value, Iterable):
+				raise SphinxExtensionError(
+					f"{fieldLocation}: Expected an iterable of strings, got '{getFullyQualifiedName(value)}'. "
+					f"Use '{field[:-1]}' for a single value."
+				)
+
+			# materialized before the items are checked, because an iterable may be a generator this would consume
+			values = tuple(value)
+			for item in values:
+				if not isinstance(item, str):
+					raise SphinxExtensionError(
+						f"{fieldLocation}: Expected strings, got '{getFullyQualifiedName(item)}'."
+					)
 
 		if field in ("file", "files"):
-			entrypoints[identifier] = _FileEntrypoint(identifier, f"{location}.{field}", values, confDirectory)
+			entrypoints[identifier] = _FileEntrypoint(identifier, fieldLocation, values, confDirectory)
 		else:
 			entrypoints[identifier] = _PackageEntrypoint(identifier, values)
 
 	return entrypoints
-
-
-def _EntrypointValues(location: str, field: str, value: Any) -> tuple[str, ...]:
-	"""
-	Return an entrypoint field's value as a tuple, whichever of the two spellings was used.
-
-	``file`` and ``package`` take one string, ``files`` and ``packages`` an iterable of them. A single string is
-	*also* an iterable of strings, so the plural form has to reject one explicitly - otherwise
-	``{"files": "requirements.txt"}`` would silently become sixteen one-character paths.
-
-	:param location:                                                        Where in :file:`conf.py` this came from.
-	:param field:                                                           Name of the field being read.
-	:param value:                                                           Its value.
-	:returns:                                                               The value(s), as a tuple.
-	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the value has the wrong shape.
-	"""
-	if field in ("file", "package"):
-		if not isinstance(value, str):
-			raise SphinxExtensionError(f"{location}: Expected a string, got '{getFullyQualifiedName(value)}'.")
-
-		return (value,)
-
-	if isinstance(value, str) or not isinstance(value, (tuple, list)):
-		raise SphinxExtensionError(
-			f"{location}: Expected a tuple or list of strings, got '{getFullyQualifiedName(value)}'. "
-			f"Use '{field[:-1]}' for a single value."
-		)
-
-	for item in value:
-		if not isinstance(item, str):
-			raise SphinxExtensionError(f"{location}: Expected strings, got '{getFullyQualifiedName(item)}'.")
-
-	return tuple(value)
 
 
 def _FileEntrypoint(
