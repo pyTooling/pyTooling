@@ -267,17 +267,16 @@ todo_link_only = True
 pyTooling_Dependency_PackageOverrides = "Dependency.PackageOverrides.yaml"
 
 # The entrypoints 'dependency-table' renders, by the identifier the documents name them with. A requirements file is
-# read relative to this file; a package is read from the package index. Both come in a singular form taking one
-# value and a plural form taking an iterable. The tables share one view of that index, so a package required by more
-# than one entrypoint - and most of these overlap - is downloaded once per build.
+# read relative to this file; a package is read from the package index. The tables share one view of that index, so
+# a package required by more than one entrypoint - and most of these overlap - is downloaded once per build.
 pyTooling_Dependency_Requirements = {
 	"package":       {"file":     "../requirements.txt"},
 	"packaging":     {"package":  "pyTooling[packaging]"},
-	"terminal":      {"packages": ("pyTooling[terminal]", )},
-	"yaml":          {"packages": ["pyTooling[yaml]", ]},
+	"terminal":      {"package":  "pyTooling[terminal]"},
+	"yaml":          {"package":  "pyTooling[yaml]"},
 	"unittest":      {"file":     "../tests/unit/requirements.txt"},
 	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
-	"performance":   {"files":    ["../tests/performance/requirements.txt", ]},
+	"performance":   {"file":     "../tests/performance/requirements.txt"},
 	"documentation": {"file":     "requirements.txt"},
 	"publishing":    {"file":     "../dist/requirements.txt"}
 }
