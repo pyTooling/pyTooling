@@ -119,8 +119,8 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
 	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
 	_path:                     Path                                        #: Path of this requirements file.
-	_entries:                  list[Union[Requirement, RequirementsFile]]  #: What this file states, in the order it states it.
-	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of this tree, by resolved path; only the root's is filled.
+	_entries:                  list[Union[Requirement, RequirementsFile]]  #: What this file states, in file order.
+	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of the tree, by resolved path.
 
 	def __init__(self, path: Path, parent: Nullable[RequirementsFile] = None) -> None:
 		"""
@@ -137,7 +137,10 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
-		elif not path.exists():
+		# resolved here, so the whole tree spells one file one way: a '-r' reference is resolved before it is looked up
+		# in the root's mapping, and macOS ('/var' is '/private/var') and Windows ('RUNNER~1' is 'runneradmin') hand a
+		# build an entrypoint spelled differently from its resolution
+		elif not (path := path.resolve()).exists():
 			raise RequirementsFileNotFoundError(f"Requirements file '{path}' does not exist.") from FileNotFoundError(path)
 
 		if parent is not None and not isinstance(parent, RequirementsFile):
@@ -230,7 +233,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		return tuple(hierarchy)
 
 	@readonly
-	def AnalyzedRequirementFiles(self) -> dict[Path, RequirementsFile]:
+	def AnalyzedRequirementFiles(self) -> Nullable[dict[Path, RequirementsFile]]:
 		"""
 		Read-only property to access every file of this tree, by its resolved path.
 
@@ -238,7 +241,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		answers which files a tree was read from afterward - the list a documentation build registers so a change
 		to any of them rebuilds the page.
 
-		:returns: Every file of the tree, by resolved path.
+		:returns: Every file of the tree by resolved path, or ``None`` for a referenced file.
 		"""
 		return self._analyzedRequirementFiles
 
