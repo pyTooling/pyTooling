@@ -38,13 +38,14 @@ Implementation of package dependencies.
 from __future__           import annotations
 
 from asyncio              import run as asyncio_run, gather as asyncio_gather
+from collections          import deque
 from datetime             import date, datetime
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from pathlib              import Path
 from re                   import compile as re_compile, Pattern
 from threading            import RLock
-from typing               import Any, ClassVar, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
+from typing               import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
 
 from pyTooling.Configuration import Dictionary
 from pyTooling.Exceptions import MissingDependencyError
@@ -117,11 +118,13 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	purpose; reading it once and continuing would hide it.
 	"""
 
-	_path:         Path                              #: Path of this requirements file.
-	_root:         RequirementsFile                  #: The entrypoint this tree was read from; itself, for a root.
-	_parent:       Nullable[RequirementsFile]        #: File referencing this one; ``None`` for a root.
-	_entries:      list[Union[Requirement, RequirementsFile]]  #: What this file states, in the order it states it.
-	_analyzedRequirementFiles: dict[Path, RequirementsFile]    #: Every file of this tree; the root's alone is filled.
+	_path:                     Path                                        #: Path of this requirements file.
+	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
+	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
+	#: What this file states, in the order it states it.
+	_entries:                  list[Union[Requirement, RequirementsFile]]
+	#: Every file of this tree, by resolved path; only the root's is filled.
+	_analyzedRequirementFiles: dict[Path, RequirementsFile]
 
 	def __init__(self, path: Path, _parent: Nullable[RequirementsFile] = None) -> None:
 		"""
@@ -140,16 +143,16 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 		if not path.exists():
 			raise RequirementsFileNotFoundError(
-				f"Requirements file '{path}' not found."
+				f"Requirements file '{path}' does not exist."
 			) from FileNotFoundError(path)
 
 		# resolved, so the whole tree spells one file one way: a reference is resolved to be looked up in the root's
 		# mapping, and on Windows and macOS the path handed in is spelled differently from its resolution
 		# ('C:/Users/RUNNER~1/...' vs. 'C:/Users/runneradmin/...', '/var/...' vs. '/private/var/...')
-		self._path = path.resolve()
-		self._parent = _parent
-		self._root = self if _parent is None else _parent._root
-		self._entries = []
+		self._path =                     path.resolve()
+		self._parent =                   _parent
+		self._root =                     self if _parent is None else _parent._root
+		self._entries =                  []
 		# only the root's mapping is filled; a referenced file carries an empty one it never reads, because the
 		# alternative is a 'Nullable' every lookup has to test for a case that can't happen
 		self._analyzedRequirementFiles = {}
@@ -190,7 +193,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		referenced = (path.parent / line[2:].strip()).resolve()
 
 		if referenced in self._root._analyzedRequirementFiles:
-			chain = " -> ".join(str(file.Path) for file in reversed(tuple(self.IterateToRoot())))
+			chain = " -> ".join(str(file.Path) for file in self.Hierarchy)
 			ex = CircularRequirementsFileError(
 				f"Requirements file '{referenced}' referenced in '{path}' line {number} is already being read."
 			)
@@ -225,6 +228,23 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		:returns: The referencing file, or ``None`` for a root.
 		"""
 		return self._parent
+
+	@readonly
+	def Hierarchy(self) -> tuple[RequirementsFile, ...]:
+		"""
+		Read-only property to return the path from the root down to this file as a tuple.
+
+		:class:`~pyTooling.Tree.Node` calls this ``Path``; here that name is the file's own path on disk, so the
+		chain of files leading to it is ``Hierarchy``. It is the top-down reading of :meth:`IterateToRoot`, which
+		walks the other way.
+
+		:returns: A tuple of requirements files, the root first and this file last.
+		"""
+		hierarchy: Deque[RequirementsFile] = deque()
+		for requirementsFile in self.IterateToRoot():
+			hierarchy.appendleft(requirementsFile)
+
+		return tuple(hierarchy)
 
 	@readonly
 	def AnalyzedRequirementFiles(self) -> dict[Path, RequirementsFile]:
@@ -294,23 +314,36 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		for referenced in self.ReferencedFiles:
 			yield from referenced.IterateTree()
 
-	def Flatten(self) -> dict[str, Requirement]:
+	@readonly
+	def AllRequirements(self) -> Iterator[Requirement]:
 		"""
-		Collect the requirements of this file and of every file it references.
+		Read-only property to iterate the requirements of this file and of every file it references.
 
-		The nearer statement wins: a requirement stated in this file overrides the same package required by a
-		referenced file, because that is the constraint the entrypoint was written for.
+		**The file's order is kept.** A ``-r`` line contributes its file's requirements where that line stands, so a
+		file stating ``pytest``, then ``-r base.txt``, then ``colorama`` yields ``pytest``, what ``base.txt`` states,
+		and ``colorama`` - in that order.
 
-		:returns: Every required package, by its canonical name.
+		**The nearer statement wins.** A requirement stated in this file overrides the same package required by a
+		referenced file, wherever the two stand, because that is the constraint the entrypoint was written for. The
+		overriding statement keeps the position of the one it overrides, so every package is yielded exactly once.
+
+		:returns: A generator of requirements, deduplicated by canonical package name, in the order stated.
 		"""
 		requirements: dict[str, Requirement] = {}
-		for referenced in self.ReferencedFiles:
-			requirements.update(referenced.Flatten())
+		stated:       dict[str, Requirement] = {}
 
-		for requirement in self.Requirements:
-			requirements[canonicalize_name(requirement.name)] = requirement
+		for entry in self._entries:
+			if isinstance(entry, RequirementsFile):
+				for requirement in entry.AllRequirements:
+					requirements[canonicalize_name(requirement.name)] = requirement
+			else:
+				name = canonicalize_name(entry.name)
+				requirements[name] = stated[name] = entry
 
-		return requirements
+		# a key keeps the position of its first insertion, so this overrides the value without moving the package
+		requirements.update(stated)
+
+		yield from requirements.values()
 
 	def __len__(self) -> int:
 		"""

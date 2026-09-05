@@ -447,6 +447,7 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the configuration is malformed, or a
 	  requirements file can't be read.
 	"""
+	from packaging.utils             import canonicalize_name
 	from pyTooling.Dependency.Python import RequirementsFile
 
 	if not isinstance(configuration, dict):
@@ -481,7 +482,10 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 
 			# the tree knows every file it was read from; walking it here would be a second answer to one question
 			files = tuple(requirementsFile.AnalyzedRequirementFiles)
-			entrypoints[identifier] = Entrypoint(identifier, files=files, requirements=requirementsFile.Flatten())
+			requirements: dict[str, Requirement] = {
+				canonicalize_name(req.name): req for req in requirementsFile.AllRequirements
+			}
+			entrypoints[identifier] = Entrypoint(identifier, files=files, requirements=requirements)
 		else:
 			name, _, bracket = str(declaration["package"]).partition("[")
 			entrypoints[identifier] = Entrypoint(
