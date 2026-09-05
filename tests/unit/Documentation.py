@@ -34,6 +34,7 @@ from tempfile                import TemporaryDirectory
 from textwrap                import dedent
 
 from sys                     import platform as sys_platform
+from typing                  import Optional as Nullable
 
 from pytest                  import mark
 
@@ -51,6 +52,10 @@ try:
 except ImportError:  # pragma: no cover
 	# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
 	# installed and its testcases can't run.
+	#
+	# 'skipif' skips the testcases, but the class bodies below still run when this module is imported, and a
+	# signature is evaluated then: its annotations on Python 3.11-3.13, its default values on every version. So no
+	# signature may name one of the imports above - they are quoted, and a default is a sentinel resolved in the body.
 	sphinxIsInstalled = False
 
 
@@ -308,7 +313,10 @@ class VersionConstraints(Testcase):
 	"""A dependency table prints a constraint for a reader, not for an installer."""
 
 	@staticmethod
-	def _format(specifier: str, simplify: bool = True, versionFormat: VersionFormat = VersionFormat.All) -> str:
+	def _format(specifier: str, simplify: bool = True, versionFormat: Nullable["VersionFormat"] = None) -> str:
+		if versionFormat is None:
+			versionFormat = VersionFormat.All
+
 		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), simplify, versionFormat)
 
 	def test_NoConstraintIsAny(self) -> None:
@@ -345,7 +353,7 @@ class VersionFormats(Testcase):
 	"""A dependency table prints as much of a version as a reader needs, which is rarely all of it."""
 
 	@staticmethod
-	def _format(specifier: str, versionFormat: VersionFormat) -> str:
+	def _format(specifier: str, versionFormat: "VersionFormat") -> str:
 		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), True, versionFormat)
 
 	def test_TheDefaultIsMajorMinor(self) -> None:
