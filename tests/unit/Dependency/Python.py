@@ -908,9 +908,10 @@ class RequirementsFiles(Testcase):
 			[file.Path for file in leaf.IterateToRoot()]
 		)
 		self.assertEqual(
-			(requirementsFile, base, leaf),
-			leaf.Hierarchy
+			[requirementsFile.Path, base.Path, leaf.Path],
+			[file.Path for file in leaf.IterateFromRoot()]
 		)
+		self.assertEqual((requirementsFile, base, leaf), leaf.Hierarchy)
 		self.assertEqual((requirementsFile,), requirementsFile.Hierarchy)
 
 	def test_TheRootKnowsEveryFileOfItsTree(self) -> None:
@@ -1015,6 +1016,16 @@ class RequirementsFiles(Testcase):
 		self.assertEqual(["pytest", "colorama"], [req.name for req in requirementsFile.Requirements])
 		self.assertEqual(1, len(collector.Warnings))
 		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
+
+	def test_WrongParentType(self) -> None:
+		"""'parent' is a real parameter, so it is type-checked like 'path'."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", "pytest ~= 9.1\n")
+
+			with self.assertRaises(TypeError) as exceptionCapture:
+				RequirementsFile(path, "not a requirements file")
+
+		self.assertIn("'parent'", str(exceptionCapture.exception))
 
 	def test_MissingFile(self) -> None:
 		"""A requirements file that doesn't exist is an error, not an empty list."""
