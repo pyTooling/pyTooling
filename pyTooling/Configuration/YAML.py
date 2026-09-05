@@ -31,6 +31,9 @@
 """
 Configuration reader for YAML files.
 
+:raises MissingDependencyError: If the ``yaml`` extra isn't installed, because :mod:`ruamel.yaml` is imported
+                                at module level - see :exc:`~pyTooling.Exceptions.MissingDependencyError`.
+
 .. hint::
 
    See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
