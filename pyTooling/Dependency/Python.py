@@ -48,7 +48,7 @@ from threading            import RLock
 from typing               import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
 
 from pyTooling.Configuration import Dictionary
-from pyTooling.Exceptions import MissingDependencyError
+from pyTooling.Exceptions    import MissingDependencyError
 
 try:
 	from aiohttp import ClientSession
@@ -70,10 +70,9 @@ from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError, NoSessionAvailableError
-from pyTooling.Dependency      import ProjectNotFoundError
-from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
-from pyTooling.Dependency      import CircularRequirementsFileError, RequirementsFileNotFoundError
+from pyTooling.Dependency      import BrokenRequirementWarning, ReleaseDetailsWarning, UnknownLicenseWarning
+from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
+from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
@@ -86,15 +85,14 @@ _LICENSE_NOTE_LENGTH = 64
 
 #: PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
 #: :class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
-_PROPRIETARY_CLASSIFIER = "License :: Other/Proprietary License"
-
+_PROPRIETARY_CLASSIFIER =    "License :: Other/Proprietary License"
 
 #: Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first.
-_REPOSITORY_URL_ALIASES    = ("source code", "source", "code", "repository", "github", "gitlab")
+_REPOSITORY_URL_ALIASES =    ("source code", "source", "code", "repository", "github", "gitlab")
 _DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
 _ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
-_PROJECT_URL_ALIASES       = ("homepage", "home page", "home")
-_CHANGELOG_URL_ALIASES     = ("changelog", "changes", "release notes", "whatsnew", "what's new")
+_PROJECT_URL_ALIASES =       ("homepage", "home page", "home")
+_CHANGELOG_URL_ALIASES =     ("changelog", "changes", "release notes", "whatsnew", "what's new")
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
@@ -121,10 +119,8 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
 	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
 	_path:                     Path                                        #: Path of this requirements file.
-	#: What this file states, in the order it states it.
-	_entries:                  list[Union[Requirement, RequirementsFile]]
-	#: Every file of this tree, by resolved path; only the root's is filled.
-	_analyzedRequirementFiles: dict[Path, RequirementsFile]
+	_entries:                  list[Union[Requirement, RequirementsFile]]  #: What this file states, in the order it states it.
+	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of this tree, by resolved path; only the root's is filled.
 
 	def __init__(self, path: Path, parent: Nullable[RequirementsFile] = None) -> None:
 		"""
@@ -141,36 +137,43 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
+		elif not path.exists():
+			raise RequirementsFileNotFoundError(f"Requirements file '{path}' does not exist.") from FileNotFoundError(path)
 
 		if parent is not None and not isinstance(parent, RequirementsFile):
 			ex = TypeError("Parameter 'parent' is not of type 'RequirementsFile'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
-		if not path.exists():
-			raise RequirementsFileNotFoundError(
-				f"Requirements file '{path}' does not exist."
-			) from FileNotFoundError(path)
-
-		# resolved, so the whole tree spells one file one way: a reference is resolved to be looked up in the root's
-		# mapping, and on Windows and macOS the path handed in is spelled differently from its resolution
-		# ('C:/Users/RUNNER~1/...' vs. 'C:/Users/runneradmin/...', '/var/...' vs. '/private/var/...')
-		self._path =                     path.resolve()
+		self._path =                     path
 		self._parent =                   parent
 		self._root =                     self if parent is None else parent._root
 		self._entries =                  []
-		# only the root's mapping is filled; a referenced file carries an empty one it never reads, because the
-		# alternative is a 'Nullable' every lookup has to test for a case that can't happen
-		self._analyzedRequirementFiles = {}
+		if parent is None:
+			self._analyzedRequirementFiles = {
+				path: self
+			}
+		else:
+			self._analyzedRequirementFiles = None
+			self._root._analyzedRequirementFiles[path] = self
 
-		self._root._analyzedRequirementFiles[self._path] = self
-
-		for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+		lines = path.read_text(encoding="utf-8").splitlines()
+		for lineNumber, line in enumerate(lines, start=1):
 			if (line := line.split("#")[0].strip()) == "":
 				continue
 
 			if line.startswith("-r"):
-				self._entries.append(self._ReadReferencedFile(path, line, number))
+				referenced = (path.parent / line[2:].strip()).resolve()
+
+				if referenced in self._root._analyzedRequirementFiles:
+					chain = " → ".join(str(file.Path) for file in self.Hierarchy)
+					ex = CircularRequirementsFileError(
+						f"Requirements file '{referenced}' referenced in '{path}' line {lineNumber} is already being read."
+					)
+					ex.add_note(f"Chain: {chain} → {referenced}")
+					raise ex
+
+				self._entries.append(RequirementsFile(referenced, self))
 				continue
 
 			# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
@@ -181,32 +184,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 				self._entries.append(Requirement(line))
 			except InvalidRequirement as ex:
 				WarningCollector.Raise(
-					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {number} can't be parsed."),
+					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {lineNumber} can't be parsed."),
 					ex
 				)
-
-	def _ReadReferencedFile(self, path: Path, line: str, number: int) -> RequirementsFile:
-		"""
-		Read the file a ``-r`` line references.
-
-		:param path:                           Path of the file stating the ``-r`` line, references are relative to it.
-		:param line:                           The ``-r`` line, comment already stripped.
-		:param number:                         Number of that line, for the error message.
-		:returns:                              The referenced file.
-		:raises CircularRequirementsFileError: If that file is already in this tree.
-		:raises RequirementsFileNotFoundError: If that file doesn't exist.
-		"""
-		referenced = (path.parent / line[2:].strip()).resolve()
-
-		if referenced in self._root._analyzedRequirementFiles:
-			chain = " → ".join(str(file.Path) for file in self.Hierarchy)
-			ex = CircularRequirementsFileError(
-				f"Requirements file '{referenced}' referenced in '{path}' line {number} is already being read."
-			)
-			ex.add_note(f"Chain: {chain} → {referenced}")
-			raise ex
-
-		return RequirementsFile(referenced, self)
 
 	@readonly
 	def Path(self) -> Path:
@@ -240,12 +220,14 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to return the path from the root down to this file as a tuple.
 
-		:class:`~pyTooling.Tree.Node` calls this ``Path``; here that name is the file's own path on disk, so the
-		chain of files leading to it is ``Hierarchy``. It is :meth:`IterateFromRoot` as a tuple.
-
-		:returns: A tuple of requirements files, the root first and this file last.
+		:returns: A tuple of requirements files.
 		"""
-		return tuple(self.IterateFromRoot())
+		hierarchy: Deque[RequirementsFile] = deque([self])
+		parentRequirementsFile: Nullable[RequirementsFile] = self
+		while (parentRequirementsFile := parentRequirementsFile._parent) is not None:
+			hierarchy.appendleft(parentRequirementsFile)
+
+		return tuple(hierarchy)
 
 	@readonly
 	def AnalyzedRequirementFiles(self) -> dict[Path, RequirementsFile]:
@@ -253,7 +235,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		Read-only property to access every file of this tree, by its resolved path.
 
 		**Only the root's is filled**; ask :attr:`Root` for it. It is what detects a cycle while reading, and what
-		answers which files a tree was read from afterwards - the list a documentation build registers so a change
+		answers which files a tree was read from afterward - the list a documentation build registers so a change
 		to any of them rebuilds the page.
 
 		:returns: Every file of the tree, by resolved path.
@@ -265,11 +247,10 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access what this file states, in the order it states it (:attr:`_entries`).
 
-		Requirements and referenced files are kept in **one** list, because a file states them interleaved and
-		splitting them into two would lose that order. :attr:`Requirements` and :attr:`ReferencedFiles` are the two
-		filtered views of it.
+		Requirements and referenced files are kept in one list, because a file states them interleaved.
+		:attr:`Requirements` and :attr:`ReferencedFiles` are the two filtered views of it.
 
-		:returns: This file's requirements and referenced files, in file order.
+		:returns: This file's requirements and referenced files.
 		"""
 		return self._entries
 
@@ -293,29 +274,6 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		:returns: An iterator of the referenced files, in the order they are referenced.
 		"""
 		return (entry for entry in self._entries if isinstance(entry, RequirementsFile))
-
-	def IterateToRoot(self) -> Iterator[RequirementsFile]:
-		"""
-		Iterate this file and every file referencing it, up to the root.
-
-		:returns: A generator of requirements files, this one first and the root last.
-		"""
-		requirementsFile: Nullable[RequirementsFile] = self
-		while requirementsFile is not None:
-			yield requirementsFile
-			requirementsFile = requirementsFile._parent
-
-	def IterateFromRoot(self) -> Iterator[RequirementsFile]:
-		"""
-		Iterate the root and every file down to this one.
-
-		:returns: A generator of requirements files, the root first and this one last.
-		"""
-		hierarchy: Deque[RequirementsFile] = deque()
-		for requirementsFile in self.IterateToRoot():
-			hierarchy.appendleft(requirementsFile)
-
-		yield from hierarchy
 
 	def IterateTree(self) -> Iterator[RequirementsFile]:
 		"""

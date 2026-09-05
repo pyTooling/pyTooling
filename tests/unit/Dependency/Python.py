@@ -888,7 +888,7 @@ class RequirementsFiles(Testcase):
 		)
 
 	def test_EveryFileKnowsItsParentAndRoot(self) -> None:
-		"""A tree is walkable upwards, so a requirement can name the entrypoint that pulled it in."""
+		"""A file knows what referenced it and what the tree was read from, so a requirement can name its entrypoint."""
 		with TemporaryDirectory() as directory:
 			root = Path(directory)
 			self._write(root, "leaf.txt", "colorama ~= 0.4.6\n")
@@ -903,21 +903,27 @@ class RequirementsFiles(Testcase):
 		self.assertIs(requirementsFile, requirementsFile.Root)
 		self.assertIs(base, leaf.Parent)
 		self.assertIs(requirementsFile, leaf.Root)
-		self.assertEqual(
-			[leaf.Path, base.Path, requirementsFile.Path],
-			[file.Path for file in leaf.IterateToRoot()]
-		)
-		self.assertEqual(
-			[requirementsFile.Path, base.Path, leaf.Path],
-			[file.Path for file in leaf.IterateFromRoot()]
-		)
-		self.assertEqual((requirementsFile, base, leaf), leaf.Hierarchy)
-		self.assertEqual((requirementsFile,), requirementsFile.Hierarchy)
+
+	def test_Hierarchy(self) -> None:
+		"""The chain from the root down to a file, at every depth of a three-level tree."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "leaf.txt", "colorama ~= 0.4.6\n")
+			self._write(root, "base.txt", "-r leaf.txt\n")
+			path = self._write(root, "requirements.txt", "-r base.txt\n")
+
+			requirementsFile = RequirementsFile(path)
+			base = next(iter(requirementsFile.ReferencedFiles))
+			leaf = next(iter(base.ReferencedFiles))
+
+		self.assertEqual((requirementsFile,),             requirementsFile.Hierarchy)
+		self.assertEqual((requirementsFile, base),        base.Hierarchy)
+		self.assertEqual((requirementsFile, base, leaf),  leaf.Hierarchy)
 
 	def test_TheRootKnowsEveryFileOfItsTree(self) -> None:
 		"""What a documentation build registers for rebuild-on-change, and what detects a cycle while reading."""
 		with TemporaryDirectory() as directory:
-			root = Path(directory)
+			root = Path(directory).resolve()
 			self._write(root, "base.txt", "pyTooling >= 8.0\n")
 			self._write(root, "sub/leaf.txt", "colorama ~= 0.4.6\n")
 			path = self._write(root, "requirements.txt", """
@@ -981,7 +987,7 @@ class RequirementsFiles(Testcase):
 	def test_Includes_Cycle(self) -> None:
 		"""A cycle of ``-r`` lines is raised, not read once and hidden - nobody writes one on purpose."""
 		with TemporaryDirectory() as directory:
-			root = Path(directory)
+			root = Path(directory).resolve()
 			self._write(root, "other.txt", "-r requirements.txt\ncolorama ~= 0.4.6\n")
 			path = self._write(root, "requirements.txt", """
 				-r other.txt
@@ -996,7 +1002,7 @@ class RequirementsFiles(Testcase):
 	def test_Includes_SelfReference(self) -> None:
 		"""The shortest cycle there is."""
 		with TemporaryDirectory() as directory:
-			path = self._write(Path(directory), "requirements.txt", "-r requirements.txt\n")
+			path = self._write(Path(directory).resolve(), "requirements.txt", "-r requirements.txt\n")
 
 			with self.assertRaises(CircularRequirementsFileError):
 				RequirementsFile(path)
