@@ -131,7 +131,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		Read a requirements file and the files it references.
 
 		:param path:                             Path of the requirements file to read.
-		:param parent:                           The file whose ``-r`` line referenced this one; ``None`` for a root.
+		:param parent:                           Optional, the file referencing this one. Default: ``None``, a root.
 		:raises TypeError:                       If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:                       If parameter 'parent' is not of type :class:`RequirementsFile`.
 		:raises RequirementsFileNotFoundError:   If the requirements file doesn't exist.
