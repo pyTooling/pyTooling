@@ -126,19 +126,25 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	#: Every file of this tree, by resolved path; only the root's is filled.
 	_analyzedRequirementFiles: dict[Path, RequirementsFile]
 
-	def __init__(self, path: Path, _parent: Nullable[RequirementsFile] = None) -> None:
+	def __init__(self, path: Path, parent: Nullable[RequirementsFile] = None) -> None:
 		"""
 		Read a requirements file and the files it references.
 
 		:param path:                             Path of the requirements file to read.
-		:param _parent:                          Internal, the file whose ``-r`` line referenced this one.
+		:param parent:                           The file whose ``-r`` line referenced this one; ``None`` for a root.
 		:raises TypeError:                       If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises TypeError:                       If parameter 'parent' is not of type :class:`RequirementsFile`.
 		:raises RequirementsFileNotFoundError:   If the requirements file doesn't exist.
 		:raises CircularRequirementsFileError:   If a ``-r`` line references a file already being read.
 		"""
 		if not isinstance(path, Path):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		if parent is not None and not isinstance(parent, RequirementsFile):
+			ex = TypeError("Parameter 'parent' is not of type 'RequirementsFile'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
 		if not path.exists():
@@ -150,8 +156,8 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		# mapping, and on Windows and macOS the path handed in is spelled differently from its resolution
 		# ('C:/Users/RUNNER~1/...' vs. 'C:/Users/runneradmin/...', '/var/...' vs. '/private/var/...')
 		self._path =                     path.resolve()
-		self._parent =                   _parent
-		self._root =                     self if _parent is None else _parent._root
+		self._parent =                   parent
+		self._root =                     self if parent is None else parent._root
 		self._entries =                  []
 		# only the root's mapping is filled; a referenced file carries an empty one it never reads, because the
 		# alternative is a 'Nullable' every lookup has to test for a case that can't happen
@@ -193,11 +199,11 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		referenced = (path.parent / line[2:].strip()).resolve()
 
 		if referenced in self._root._analyzedRequirementFiles:
-			chain = " -> ".join(str(file.Path) for file in self.Hierarchy)
+			chain = " → ".join(str(file.Path) for file in self.Hierarchy)
 			ex = CircularRequirementsFileError(
 				f"Requirements file '{referenced}' referenced in '{path}' line {number} is already being read."
 			)
-			ex.add_note(f"Chain: {chain} -> {referenced}")
+			ex.add_note(f"Chain: {chain} → {referenced}")
 			raise ex
 
 		return RequirementsFile(referenced, self)
@@ -235,16 +241,11 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		Read-only property to return the path from the root down to this file as a tuple.
 
 		:class:`~pyTooling.Tree.Node` calls this ``Path``; here that name is the file's own path on disk, so the
-		chain of files leading to it is ``Hierarchy``. It is the top-down reading of :meth:`IterateToRoot`, which
-		walks the other way.
+		chain of files leading to it is ``Hierarchy``. It is :meth:`IterateFromRoot` as a tuple.
 
 		:returns: A tuple of requirements files, the root first and this file last.
 		"""
-		hierarchy: Deque[RequirementsFile] = deque()
-		for requirementsFile in self.IterateToRoot():
-			hierarchy.appendleft(requirementsFile)
-
-		return tuple(hierarchy)
+		return tuple(self.IterateFromRoot())
 
 	@readonly
 	def AnalyzedRequirementFiles(self) -> dict[Path, RequirementsFile]:
@@ -304,6 +305,18 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			yield requirementsFile
 			requirementsFile = requirementsFile._parent
 
+	def IterateFromRoot(self) -> Iterator[RequirementsFile]:
+		"""
+		Iterate the root and every file down to this one.
+
+		:returns: A generator of requirements files, the root first and this one last.
+		"""
+		hierarchy: Deque[RequirementsFile] = deque()
+		for requirementsFile in self.IterateToRoot():
+			hierarchy.appendleft(requirementsFile)
+
+		yield from hierarchy
+
 	def IterateTree(self) -> Iterator[RequirementsFile]:
 		"""
 		Iterate this file and every file it references, depth first.
@@ -319,13 +332,16 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to iterate the requirements of this file and of every file it references.
 
-		**The file's order is kept.** A ``-r`` line contributes its file's requirements where that line stands, so a
-		file stating ``pytest``, then ``-r base.txt``, then ``colorama`` yields ``pytest``, what ``base.txt`` states,
-		and ``colorama`` - in that order.
+		**The file's order is kept**, and **the nearer statement wins**: a requirement stated in this file overrides
+		the same package required by a referenced file, wherever the two stand, because that is the constraint the
+		entrypoint was written for. Overriding keeps the position, so every package is yielded exactly once.
 
-		**The nearer statement wins.** A requirement stated in this file overrides the same package required by a
-		referenced file, wherever the two stand, because that is the constraint the entrypoint was written for. The
-		overriding statement keeps the position of the one it overrides, so every package is yielded exactly once.
+		.. code-block:: text
+
+		   # base.txt          # requirements.txt        AllRequirements
+		   pytest ~= 8.0       pytest ~= 9.1             pytest ~= 9.1
+		   sphinx ~= 9.1       -r base.txt               sphinx ~= 9.1
+		                       colorama ~= 0.4.6         colorama ~= 0.4.6
 
 		:returns: A generator of requirements, deduplicated by canonical package name, in the order stated.
 		"""

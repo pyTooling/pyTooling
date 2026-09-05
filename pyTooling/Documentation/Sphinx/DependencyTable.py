@@ -444,10 +444,15 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 	:param configuration:  Value of ``pyTooling_dependency_requirements``.
 	:param confDirectory:  Directory :file:`conf.py` lives in; relative paths are resolved against it.
 	:returns:              Every declared entrypoint, by its identifier.
+	:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
 	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the configuration is malformed, or a
 	  requirements file can't be read.
 	"""
-	from packaging.utils             import canonicalize_name
+	try:
+		from packaging.utils import canonicalize_name
+	except ImportError as ex:  # pragma: no cover
+		raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
+
 	from pyTooling.Dependency.Python import RequirementsFile
 
 	if not isinstance(configuration, dict):
@@ -631,10 +636,14 @@ class DependencyTable(BaseDirective):
 		:param identifier:            Identifier the document names.
 		:param collector:             The build's collector.
 		:returns:                     Every required package, by its canonical name.
+		:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
 		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the identifier is unknown, or the
 		  package index can't answer for the entrypoint's package.
 		"""
-		from packaging.utils import canonicalize_name
+		try:
+			from packaging.utils import canonicalize_name
+		except ImportError as ex:  # pragma: no cover
+			raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
 
 		if (entrypoint := collector.Entrypoints.get(identifier, None)) is None:
 			known = ", ".join(sorted(collector.Entrypoints)) or "none"
