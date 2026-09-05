@@ -76,6 +76,9 @@ hand-assembled node trees docutils presents.
    ``pyTooling[sphinx]`` requires **Python 3.12 or newer**, because it requires Sphinx 9.1 and Sphinx 9.1 does.
    The rest of :mod:`pyTooling` still supports Python 3.11.
 
+:raises MissingDependencyError: If the ``sphinx`` extra isn't installed, because :mod:`sphinx` is imported at
+                                module level - see :exc:`~pyTooling.Exceptions.MissingDependencyError`.
+
 .. seealso::
 
    :mod:`pyTooling.Documentation`

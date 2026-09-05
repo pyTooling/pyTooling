@@ -61,6 +61,12 @@ path that doesn't exist ends the build with one clear message instead of an erro
 :file:`requirements.txt`, :file:`tests/requirements.txt` and :file:`doc/requirements.txt` overlap heavily, and a
 package they share is downloaded once. That still costs real time, so every table reports what it spent, measured
 with a :class:`~pyTooling.Stopwatch.Stopwatch`, and the build ends with the total.
+
+:raises MissingDependencyError: If the ``sphinx`` extra isn't installed, because :mod:`docutils` and
+                                :mod:`sphinx` are imported at module level - see
+                                :exc:`~pyTooling.Exceptions.MissingDependencyError`. The ``pypi`` extra is
+                                needed too, but only by the methods that reach the package index, so it is
+                                raised from there rather than here.
 """
 from __future__                    import annotations
 
