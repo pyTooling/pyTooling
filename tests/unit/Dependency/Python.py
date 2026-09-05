@@ -864,7 +864,10 @@ class RequirementsFiles(Testcase):
 			self.assertEqual(2, len(referenced))
 			self.assertEqual(["pyTooling"], [req.name for req in referenced[0]])
 			self.assertEqual(["colorama"], [req.name for req in referenced[1]])
-			self.assertEqual({"pytooling", "colorama", "pytest"}, set(requirementsFile.Flatten()))
+			self.assertEqual(
+				["pyTooling", "colorama", "pytest"],
+				[req.name for req in requirementsFile.AllRequirements]
+			)
 
 	def test_EntriesKeepTheFileOrder(self) -> None:
 		"""Requirements and references are interleaved in a file, so one list keeps them in the order written."""
@@ -904,6 +907,11 @@ class RequirementsFiles(Testcase):
 			[leaf.Path, base.Path, requirementsFile.Path],
 			[file.Path for file in leaf.IterateToRoot()]
 		)
+		self.assertEqual(
+			(requirementsFile, base, leaf),
+			leaf.Hierarchy
+		)
+		self.assertEqual((requirementsFile,), requirementsFile.Hierarchy)
 
 	def test_TheRootKnowsEveryFileOfItsTree(self) -> None:
 		"""What a documentation build registers for rebuild-on-change, and what detects a cycle while reading."""
@@ -934,9 +942,40 @@ class RequirementsFiles(Testcase):
 				pytest ~= 9.1
 			""")
 
-			flattened = RequirementsFile(path).Flatten()
+			requirements = {req.name: req for req in RequirementsFile(path).AllRequirements}
 
-		self.assertEqual("~=9.1", str(flattened["pytest"].specifier))
+		self.assertEqual("~=9.1", str(requirements["pytest"].specifier))
+
+	def test_AllRequirements_KeepTheFileOrder(self) -> None:
+		"""A ``-r`` line contributes where it stands, so a reference in the middle doesn't reorder the file."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\nsphinx ~= 9.1\n")
+			path = self._write(root, "requirements.txt", """
+				pytest ~= 9.1
+				-r base.txt
+				colorama ~= 0.4.6
+			""")
+
+			allRequirements = [req.name for req in RequirementsFile(path).AllRequirements]
+
+		self.assertEqual(["pytest", "pyTooling", "sphinx", "colorama"], allRequirements)
+
+	def test_AllRequirements_TheOverridingStatementKeepsThePosition(self) -> None:
+		"""A nearer statement wins on version, but the package stays where the reference first placed it."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pytest ~= 8.0\nsphinx ~= 9.1\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				colorama ~= 0.4.6
+				pytest ~= 9.1
+			""")
+
+			allRequirements = list(RequirementsFile(path).AllRequirements)
+
+		self.assertEqual(["pytest", "sphinx", "colorama"], [req.name for req in allRequirements])
+		self.assertEqual("~=9.1", str(allRequirements[0].specifier))
 
 	def test_Includes_Cycle(self) -> None:
 		"""A cycle of ``-r`` lines is raised, not read once and hidden - nobody writes one on purpose."""
