@@ -923,7 +923,9 @@ class RequirementsFiles(Testcase):
 	def test_TheRootKnowsEveryFileOfItsTree(self) -> None:
 		"""What a documentation build registers for rebuild-on-change, and what detects a cycle while reading."""
 		with TemporaryDirectory() as directory:
-			root = Path(directory).resolve()
+			# deliberately not resolved: this is the spelling macOS and Windows hand a build, and the mapping has to
+			# key it the same way it keys a '-r' reference
+			root = Path(directory)
 			self._write(root, "base.txt", "pyTooling >= 8.0\n")
 			self._write(root, "sub/leaf.txt", "colorama ~= 0.4.6\n")
 			path = self._write(root, "requirements.txt", """
@@ -987,7 +989,7 @@ class RequirementsFiles(Testcase):
 	def test_Includes_Cycle(self) -> None:
 		"""A cycle of ``-r`` lines is raised, not read once and hidden - nobody writes one on purpose."""
 		with TemporaryDirectory() as directory:
-			root = Path(directory).resolve()
+			root = Path(directory)
 			self._write(root, "other.txt", "-r requirements.txt\ncolorama ~= 0.4.6\n")
 			path = self._write(root, "requirements.txt", """
 				-r other.txt
@@ -1002,7 +1004,7 @@ class RequirementsFiles(Testcase):
 	def test_Includes_SelfReference(self) -> None:
 		"""The shortest cycle there is."""
 		with TemporaryDirectory() as directory:
-			path = self._write(Path(directory).resolve(), "requirements.txt", "-r requirements.txt\n")
+			path = self._write(Path(directory), "requirements.txt", "-r requirements.txt\n")
 
 			with self.assertRaises(CircularRequirementsFileError):
 				RequirementsFile(path)
