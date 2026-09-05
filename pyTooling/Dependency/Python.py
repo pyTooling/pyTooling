@@ -137,10 +137,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
-		# resolved here, so the whole tree spells one file one way: a '-r' reference is resolved before it is looked up
-		# in the root's mapping, and macOS ('/var' is '/private/var') and Windows ('RUNNER~1' is 'runneradmin') hand a
-		# build an entrypoint spelled differently from its resolution
-		elif not (path := path.resolve()).exists():
+		elif not path.exists():
 			raise RequirementsFileNotFoundError(f"Requirements file '{path}' does not exist.") from FileNotFoundError(path)
 
 		if parent is not None and not isinstance(parent, RequirementsFile):
@@ -152,13 +149,16 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		self._parent =                   parent
 		self._root =                     self if parent is None else parent._root
 		self._entries =                  []
+
+		# resolved as the mapping's key only, not as '_path': the key is compared against a '-r' reference, which is
+		# resolved below, so a file reachable under two spellings has to arrive here as one
 		if parent is None:
 			self._analyzedRequirementFiles = {
-				path: self
+				path.resolve(): self
 			}
 		else:
 			self._analyzedRequirementFiles = None
-			self._root._analyzedRequirementFiles[path] = self
+			self._root._analyzedRequirementFiles[path.resolve()] = self
 
 		lines = path.read_text(encoding="utf-8").splitlines()
 		for lineNumber, line in enumerate(lines, start=1):
@@ -196,7 +196,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access this requirement file's path (:attr:`_path`).
 
-		:returns: Resolved path of the requirements file.
+		:returns: Path of the requirements file, spelled the way it was handed in.
 		"""
 		return self._path
 
