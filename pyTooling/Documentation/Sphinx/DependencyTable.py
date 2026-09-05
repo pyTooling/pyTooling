@@ -171,10 +171,11 @@ class Entrypoint(metaclass=ExtendedType, slots=True):
 		Describe one entrypoint.
 
 		:param identifier:   Name the documents refer to this entrypoint by.
-		:param files:        The requirements file and every file it includes, for a file entrypoint.
-		:param packageName:  Name of the package, for a package entrypoint.
-		:param extra:        Extra of that package whose requirements are wanted.
-		:param requirements: The requirements, if they are known already.
+		:param files:        Optional, the requirements file and every file it includes, for a file entrypoint.
+		                     Default: ``()``.
+		:param packageName:  Optional, name of the package, for a package entrypoint. Default: ``None``.
+		:param extra:        Optional, extra of that package whose requirements are wanted. Default: ``None``.
+		:param requirements: Optional, the requirements, if they are known already. Default: ``None``.
 		"""
 		self._identifier = identifier
 		self._files = files
