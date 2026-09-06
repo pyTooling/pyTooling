@@ -143,9 +143,11 @@ class PythonLicenseName:
 #: Mapping of SPDX identifiers to Python license names
 PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 	"Apache-2.0":        PythonLicenseName("Apache 2.0",        "Apache Software License"),
+	"0BSD":              PythonLicenseName("0BSD",              "Zero-Clause BSD (0BSD)"),
 	"BSD-2-Clause":      PythonLicenseName("BSD-2-Clause",      "BSD License"),
 	"BSD-3-Clause":      PythonLicenseName("BSD",               "BSD License"),
 	"MIT":               PythonLicenseName("MIT",               "MIT License"),
+	"MIT-0":             PythonLicenseName("MIT-0",             "MIT No Attribution License (MIT-0)"),
 	"ISC":               PythonLicenseName("ISC",               "ISC License (ISCL)"),
 	"MPL-2.0":           PythonLicenseName("MPL-2.0",           "Mozilla Public License 2.0 (MPL 2.0)"),
 	"BSL-1.0":           PythonLicenseName("BSL-1.0",           "Boost Software License 1.0 (BSL-1.0)"),
@@ -239,9 +241,11 @@ LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
 #:
 #: A license OSI hasn't approved has no entry, which is why ``CC0-1.0`` is absent.
 OSI_LICENSE_URLS: dict[str, str] = {
+	"0BSD":              "https://opensource.org/license/0bsd",
 	"Apache-2.0":        "https://opensource.org/license/apache-2.0",
 	"BSD-2-Clause":      "https://opensource.org/license/bsd-2-clause",
 	"BSD-3-Clause":      "https://opensource.org/license/bsd-3-clause",
+	"MIT-0":             "https://opensource.org/license/mit-0",
 	"MIT":               "https://opensource.org/license/mit",
 	"ISC":               "https://opensource.org/license/isc",
 	"MPL-2.0":           "https://opensource.org/license/mpl-2.0",
@@ -515,10 +519,12 @@ class License(metaclass=ExtendedType, slots=True):
 		return self._name
 
 
+Zero_Clause_BSD =        License("0BSD",              "BSD Zero Clause License",                         True, False)
 Apache_2_0_License =     License("Apache-2.0",        "Apache License 2.0",                              True, True)
 BSD_2_Clause_License =   License("BSD-2-Clause",      "BSD 2-Clause Simplified License",                 True, True)
 BSD_3_Clause_License =   License("BSD-3-Clause",      "BSD 3-Clause Revised License",                    True, True)
 MIT_License =            License("MIT",               "MIT License",                                     True, True)
+MIT_0_License =          License("MIT-0",             "MIT No Attribution",                              True, False)
 ISC_License =            License("ISC",               "ISC License",                                     True, True)
 MPL_2_0_License =        License("MPL-2.0",           "Mozilla Public License 2.0",                      True, True)
 BSL_1_0_License =        License("BSL-1.0",           "Boost Software License 1.0",                      True, True)
@@ -542,7 +548,8 @@ AGPL_3_0_or_later =      License("AGPL-3.0-or-later", "GNU Affero General Public
 
 #: All predefined licenses, in the order they are defined above.
 LICENSES: tuple[License, ...] = (
-	Apache_2_0_License, BSD_2_Clause_License, BSD_3_Clause_License, MIT_License, ISC_License, MPL_2_0_License,
+	Zero_Clause_BSD, Apache_2_0_License, BSD_2_Clause_License, BSD_3_Clause_License, MIT_License, MIT_0_License,
+	ISC_License, MPL_2_0_License,
 	BSL_1_0_License, Zlib_License, PSF_2_0_License, Unlicense, CC0_1_0, EPL_1_0_License, EPL_2_0_License,
 	LGPL_2_1_only, LGPL_2_1_or_later, LGPL_3_0_only, LGPL_3_0_or_later,
 	GPL_2_0_only, GPL_2_0_or_later, GPL_3_0_only, GPL_3_0_or_later,
