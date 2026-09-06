@@ -3,32 +3,40 @@
 CLI Abstraction
 ###############
 
+.. grid:: 2
 
-Calling another program from Python usually starts as a list of strings and ends as a bug: a path that needed
-quoting, a flag whose spelling differs on Windows, a value concatenated with ``+`` in the wrong place. The list is
-assembled far from where the arguments are decided, and nothing checks it.
+   .. grid-item::
+      :columns: 6
 
-:mod:`pyTooling.CLIAbstraction` turns the program into a **class** and each of its arguments into a **typed member**.
-Assembling, escaping and platform-dependent spelling happen once, in the argument class, instead of at every call
-site.
+      Calling another program from Python usually starts as a list of strings and ends as a bug: a path that needed
+      quoting, a flag whose spelling differs on Windows, a value concatenated with ``+`` in the wrong place. The list is
+      assembled far from where the arguments are decided, and nothing checks it.
 
-.. code-block:: Python
+      :mod:`pyTooling.CLIAbstraction` turns the program into a **class** and each of its arguments into a
+      **typed member**. Assembling, escaping and platform-dependent spelling happen once, in the argument class, instead
+      of at every call site.
 
-   git = Git()
-   git[git.CommandCommit] = True
-   git[git.FlagAll]       = True
-   git[git.ValueMessage]  = "initial commit"
+      This tutorial builds that class.
 
-   git.ToArgumentList()   # -> ['git', 'commit', '-m', 'initial commit', '-a']
+      .. seealso::
 
-This tutorial builds that class.
+         :ref:`CLIABS`
+            |rarr| The reference for :mod:`pyTooling.CLIAbstraction`.
+         :ref:`ATTR`
+            |rarr| ``@CLIArgument`` is an attribute; this is the mechanism behind it.
 
-.. seealso::
+   .. grid-item::
+      :columns: 6
 
-   :ref:`CLIABS`
-      |rarr| The reference for :mod:`pyTooling.CLIAbstraction`.
-   :ref:`ATTR`
-      |rarr| ``@CLIArgument`` is an attribute; this is the mechanism behind it.
+      .. code-block:: Python
+
+         git = Git()
+         git[git.CommandCommit] = True
+         git[git.FlagAll]       = True
+         git[git.ValueMessage]  = "initial commit"
+
+         git.ToArgumentList()   # -> ['git', 'commit', '-m', 'initial commit', '-a']
+
 
 
 .. _TUTORIAL/CLIAbstraction/Choose:
