@@ -522,7 +522,7 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		for warning in warnings:
 			if isinstance(warning, UnknownLicenseWarning):
 				# the warning's notes are what the index published, which is the reason an override is needed
-				self._unresolved[release.Package.Name] = tuple(getattr(warning, "__notes__", None) or ())
+				self._unresolved[release.Package.Name] = warning.Notes
 
 		return None if key in self._undescribed else release
 
