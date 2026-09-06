@@ -32,11 +32,16 @@
 Implementation of package dependencies.
 
 Importing this module needs the ``pypi`` extra, because it reads a package index over HTTP and parses PEP 440
-requirements: :mod:`aiohttp`, :mod:`packaging` and :mod:`requests` are imported at module level and each is
-guarded, so a missing one names itself rather than failing as a bare :exc:`ImportError`.
+requirements:
 
-:raises MissingDependencyError: If the ``pypi`` extra isn't installed - see
-                                :exc:`~pyTooling.Exceptions.MissingDependencyError`.
+* :mod:`aiohttp`,
+* :mod:`packaging` and
+* :mod:`requests`
+
+are imported at module level and each is guarded, so a missing one names itself rather than failing as a bare
+:exc:`ImportError`.
+
+:raises MissingDependencyError: If the 'pypi' extra isn't installed.
 
 .. hint::
 
@@ -514,8 +519,6 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		try:
-			# a bare date is accepted and read as that day's midnight: it is a valid ISO-8601 timestamp, and
-			# refusing it would make the file harder to write for no gain in what it states
 			analysedAt = datetime.fromisoformat(str(analysedMoment))
 		except ValueError as cause:
 			ex = DependencyError(

@@ -62,11 +62,7 @@ path that doesn't exist ends the build with one clear message instead of an erro
 package they share is downloaded once. That still costs real time, so every table reports what it spent, measured
 with a :class:`~pyTooling.Stopwatch.Stopwatch`, and the build ends with the total.
 
-:raises MissingDependencyError: If the ``sphinx`` extra isn't installed, because :mod:`docutils` and
-                                :mod:`sphinx` are imported at module level - see
-                                :exc:`~pyTooling.Exceptions.MissingDependencyError`. The ``pypi`` extra is
-                                needed too, but only by the methods that reach the package index, so it is
-                                raised from there rather than here.
+:raises MissingDependencyError: If the 'sphinx' extra isn't installed.
 """
 from __future__                    import annotations
 
@@ -393,9 +389,9 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		A package the index doesn't know is remembered as unknown, so a table naming it doesn't ask again for every
 		row that mentions it.
 
-		:param packageName: Name of the package to look up.
-		:returns:           The project, or ``None`` if the index doesn't know it.
-		:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
+		:param packageName:             Name of the package to look up.
+		:returns:                       The project, or ``None`` if the index doesn't know it.
+		:raises MissingDependencyError: If the 'pypi' extra isn't installed.
 		"""
 		try:
 			from requests import RequestException
@@ -427,9 +423,9 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		differently - is remembered as unusable and answered with ``None``. Handing back the release itself would
 		be worse than useless: its lazily loaded properties would each retry the download and raise.
 
-		:param release: The release to fill in.
-		:returns:       The release with its details downloaded, or ``None`` if the index couldn't describe it.
-		:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
+		:param release:                 The release to fill in.
+		:returns:                       The release with its details, or ``None`` if the index can't describe it.
+		:raises MissingDependencyError: If the 'pypi' extra isn't installed.
 		"""
 		try:
 			from requests import RequestException
@@ -467,12 +463,11 @@ def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entryp
 	with one message naming the identifier instead of an error box in the middle of a page - and so two tables
 	naming the same file read it once.
 
-	:param configuration:  Value of ``pyTooling_Dependency_Requirements``.
-	:param confDirectory:  Directory :file:`conf.py` lives in; relative paths are resolved against it.
-	:returns:              Every declared entrypoint, by its identifier.
-	:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
-	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the configuration is malformed, or a
-	  requirements file can't be read.
+	:param configuration:           Value of ``pyTooling_Dependency_Requirements``.
+	:param confDirectory:           Directory :file:`conf.py` lives in; relative paths are resolved against it.
+	:returns:                       Every declared entrypoint, by its identifier.
+	:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+	:raises SphinxExtensionError:   If the configuration is malformed, or a requirements file can't be read.
 	"""
 	if not isinstance(configuration, dict):
 		raise SphinxExtensionError(
@@ -551,13 +546,13 @@ def _FileEntrypoint(
 	Several files are read as several trees and flattened in the order they are declared, so a later file's
 	statement wins - the rule a single file's ``-r`` references already follow.
 
-	:param identifier:                                                      Identifier of the entrypoint.
-	:param location:                                                        Where in :file:`conf.py` this came from.
-	:param files:                                                           The declared paths.
-	:param confDirectory:                                                   Directory relative paths resolve against.
-	:returns:                                                               The entrypoint, with its requirements read.
-	:raises ~pyTooling.Exceptions.MissingDependencyError:                   If the 'pypi' extra isn't installed.
-	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If a file can't be read.
+	:param identifier:              Identifier of the entrypoint.
+	:param location:                Where in :file:`conf.py` this came from.
+	:param files:                   The declared paths.
+	:param confDirectory:           Directory relative paths resolve against.
+	:returns:                       The entrypoint, with its requirements read.
+	:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+	:raises SphinxExtensionError:   If a file can't be read.
 	"""
 	try:
 		from packaging.utils import canonicalize_name
@@ -611,9 +606,9 @@ def prepareEntrypoints(sphinx: Sphinx, config: Config) -> None:
 	A build declaring no entrypoint does nothing here - not even import :mod:`pyTooling.Dependency.Python`, so a
 	project using only this extension's roles doesn't need the ``pypi`` extra.
 
-	:param sphinx: The Sphinx application.
-	:param config: The configuration, after :file:`conf.py` was read.
-	:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the configuration is malformed, or a
+	:param sphinx:                The Sphinx application.
+	:param config:                The configuration, after :file:`conf.py` was read.
+	:raises SphinxExtensionError: If the configuration is malformed, or a
 	  requirements or license override file can't be read.
 	"""
 	if len(declarations := getattr(config, f"{CONFIG_PREFIX}_Requirements", {})) == 0:
@@ -718,7 +713,7 @@ class DependencyTable(BaseDirective):
 		cached view of a package index survives being pickled - or should.
 
 		:returns:                     The collector shared by every table of this build.
-		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If no entrypoint was configured.
+		:raises SphinxExtensionError: If no entrypoint was configured.
 		"""
 		if (collector := _COLLECTORS.get(id(self.env.app), None)) is None:
 			raise SphinxExtensionError(
@@ -734,11 +729,11 @@ class DependencyTable(BaseDirective):
 		A file entrypoint was read when :file:`conf.py` was processed and answers immediately; a package entrypoint
 		is resolved against the package index the first time a table names it, and remembers the answer.
 
-		:param identifier:            Identifier the document names.
-		:param collector:             The build's collector.
-		:returns:                     Every required package, by its canonical name.
-		:raises ~pyTooling.Exceptions.MissingDependencyError: If the 'pypi' extra isn't installed.
-		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the identifier is unknown, or the
+		:param identifier:              Identifier the document names.
+		:param collector:               The build's collector.
+		:returns:                       Every required package, by its canonical name.
+		:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+		:raises SphinxExtensionError:   If the identifier is unknown, or the
 		  package index can't answer for the entrypoint's package.
 		"""
 		try:
@@ -782,7 +777,7 @@ class DependencyTable(BaseDirective):
 		:param extra:                 Extra whose requirements are wanted, or ``None`` for the package's own.
 		:param collector:             The build's collector.
 		:returns:                     What that release requires.
-		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the index doesn't know the
+		:raises SphinxExtensionError: If the index doesn't know the
 		  package, can't describe its latest release, or the package has no such extra.
 		"""
 		if (project := collector.Project(packageName)) is None:
