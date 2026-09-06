@@ -3,24 +3,31 @@
 Attributes
 ##########
 
+.. grid:: 2
 
-A framework usually needs to know things about a user's code that the code itself doesn't say: which classes are
-plugins, which function or methods handle a callback. An **attribute** is a decorator that carries that data and
-remembers where it was applied - the same idea as
-`.NET attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__,
-which is where :mod:`pyTooling.Attributes` takes it from.
+   .. grid-item::
+      :columns: 6
 
-.. code-block:: Python
+      A framework usually needs to know things about a user's code that the code itself doesn't say: which classes are
+      plugins, which function or methods handle a callback. An **attribute** is a decorator that carries that data and
+      remembers where it was applied - the same idea as
+      `.NET attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__,
+      which is where :mod:`pyTooling.Attributes` takes it from.
 
-   @Plugin(name="MyPlugin", version="1.0.0")
-   class MyPlugin:
-     ...
+      This tutorial builds one from scratch: a plug-in system where a plug-in is a class, its metadata travels with it,
+      and the framework finds every plug-in without the plug-in ever calling the framework.
 
-   for plugin in Plugin.GetClasses():
-     ...   # every class annotated with @Plugin, without a registry anywhere
+   .. grid-item::
+      :columns: 6
 
-This tutorial builds one from scratch: a plug-in system where a plug-in is a class, its metadata travels with it, and
-the framework finds every plug-in without the plug-in ever calling the framework.
+      .. code-block:: Python
+
+         @Plugin(name="MyPlugin", version="1.0.0")
+         class MyPlugin:
+           ...
+
+         for plugin in Plugin.GetClasses():
+           ...   # every class annotated with @Plugin, without a registry anywhere
 
 
 .. _TUTORIAL/Attributes/Three:
