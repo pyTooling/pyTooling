@@ -32,9 +32,7 @@
 """
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
-:raises MissingDependencyError: If the ``terminal`` extra isn't installed, because :mod:`colorama` is
-                                imported at module level - see
-                                :exc:`~pyTooling.Exceptions.MissingDependencyError`.
+:raises MissingDependencyError: If the 'terminal' extra isn't installed.
 
 .. seealso::
 
