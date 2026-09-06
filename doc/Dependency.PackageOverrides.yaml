@@ -19,13 +19,19 @@ version: "0.1"
 
 # When these statements were last checked against the projects themselves. A package index answers for itself
 # every time it is asked; this file is as old as whoever last looked.
-analysedAt: 2026-09-04T21:45:00+00:00
+analysedAt: 2026-09-06T21:30:00+00:00
 
 packages:
   # 'license: Apache 2' is a name, not an identifier. LICENSE.txt is the Apache License 2.0.
   aiohttp:
     license:    Apache-2.0
     licenseURL: https://GitHub.com/aio-libs/aiohttp/blob/master/LICENSE.txt
+
+  # Only 'License :: OSI Approved :: BSD License', which names BSD-2-Clause, -3-Clause and -4-Clause at once.
+  # LICENSE.rst carries the two-condition text.
+  alabaster:
+    license:    BSD-2-Clause
+    licenseURL: https://GitHub.com/sphinx-doc/alabaster/blob/master/LICENSE.rst
 
   # Publishes no license information at all. LICENSE is the Apache License 2.0.
   anytree:
@@ -37,10 +43,24 @@ packages:
     repository: https://GitHub.com/carlos-jenkins/autoapi
     licenseURL: https://GitHub.com/carlos-jenkins/autoapi/blob/master/LICENSE
 
+  # 'LGPL' names no version, and chardet relicensed twice: LGPL-2.1-or-later through 6.0.0, MIT in 7.0.0 and 0BSD
+  # after that. Only the first needs stating - the later two publish a PEP 639 expression and answer for themselves.
+  "chardet <7.0.0":
+    license:    LGPL-2.1-or-later
+    licenseURL: https://GitHub.com/chardet/chardet/blob/5.2.0/LICENSE
+
   # Only 'License :: OSI Approved :: BSD License', which means BSD-2-Clause as well. LICENSE.txt is the 3-clause one.
   colorama:
     license:    BSD-3-Clause
     licenseURL: https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt
+
+  # Three License classifiers at once (BSD, GPL, Public Domain) and no 'license' field. COPYING.txt says the
+  # majority of files are public domain, several are BSD-2-Clause, and the eLyXer-derived 'math2html.py' plus
+  # 'math.css' are GPL-3.0-or-later. Those ship in the wheel, so the distribution carries both; the public-domain
+  # majority imposes nothing and needs no identifier.
+  docutils:
+    license:    BSD-2-Clause AND GPL-3.0-or-later
+    licenseURL: https://docutils.sourceforge.io/COPYING.html
 
   # The 'license' field holds the license's full text, and the classifier is the ambiguous BSD one.
   doubly-py-linked-list:
@@ -52,10 +72,47 @@ packages:
     license:    GPL-2.0-or-later
     licenseURL: https://GitHub.com/igraph/python-igraph/blob/main/LICENSE
 
+  # Only the ambiguous BSD classifier. LICENSE.txt carries the third "Neither the name" clause.
+  jinja2:
+    license:    BSD-3-Clause
+    licenseURL: https://GitHub.com/pallets/jinja/blob/main/LICENSE.txt
+
+  # 'Apache License 2.0' is the license's title, not its SPDX identifier.
+  multidict:
+    license:    Apache-2.0
+    licenseURL: https://GitHub.com/aio-libs/multidict/blob/master/LICENSE
+
   # 'MIT License' is the license's name; its identifier is 'MIT'.
   sphinx-copybutton:
     license:    MIT
     licenseURL: https://GitHub.com/executablebooks/sphinx-copybutton/blob/master/LICENSE
+
+  # The Sphinx team's helper packages publish only the ambiguous BSD classifier - 'sphinxcontrib-jsmath' adds a
+  # free-text 'license: BSD', which is no less ambiguous. Every LICENCE.rst carries the same two-condition text as
+  # Sphinx itself, which declares BSD-2-Clause.
+  sphinxcontrib-applehelp:
+    license:    BSD-2-Clause
+    licenseURL: https://GitHub.com/sphinx-doc/sphinxcontrib-applehelp/blob/master/LICENCE.rst
+
+  sphinxcontrib-devhelp:
+    license:    BSD-2-Clause
+    licenseURL: https://GitHub.com/sphinx-doc/sphinxcontrib-devhelp/blob/master/LICENCE.rst
+
+  sphinxcontrib-htmlhelp:
+    license:    BSD-2-Clause
+    licenseURL: https://GitHub.com/sphinx-doc/sphinxcontrib-htmlhelp/blob/master/LICENCE.rst
+
+  sphinxcontrib-jsmath:
+    license:    BSD-2-Clause
+    licenseURL: https://GitHub.com/sphinx-doc/sphinxcontrib-jsmath/blob/master/LICENCE.rst
+
+  sphinxcontrib-qthelp:
+    license:    BSD-2-Clause
+    licenseURL: https://GitHub.com/sphinx-doc/sphinxcontrib-qthelp/blob/master/LICENCE.rst
+
+  sphinxcontrib-serializinghtml:
+    license:    BSD-2-Clause
+    licenseURL: https://GitHub.com/sphinx-doc/sphinxcontrib-serializinghtml/blob/master/LICENCE.rst
 
   # 'Apache-2.0 license' is an identifier with a word after it.
   types-colorama:
