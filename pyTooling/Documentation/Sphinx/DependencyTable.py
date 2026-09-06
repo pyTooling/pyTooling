@@ -115,7 +115,7 @@ DEFAULT_SIMPLIFIED_VERSIONS = True
 
 @export
 class VersionFormat(Enum):
-	"""How many parts of a version number a table prints."""
+	"""How many parts of a version number a dependency table prints."""
 
 	Major =           auto()  #: The major part alone, ``≥9``.
 	MajorMinor =      auto()  #: Major and minor, ``≥9.1`` - the default.
@@ -135,9 +135,9 @@ class VersionFormat(Enum):
 class DependencyFormat(Enum):
 	"""What a line of a dependency tree states about a package."""
 
-	Package =              auto()  #: The name alone.
-	PackageVersion =       auto()  #: Name and version constraint.
-	PackageLicense =       auto()  #: Name and license.
+	Package =               auto()  #: The name alone.
+	PackageVersion =        auto()  #: Name and version constraint.
+	PackageLicense =        auto()  #: Name and license.
 	PackageVersionLicense = auto()  #: Name, version constraint and license - the default.
 
 	@readonly
@@ -750,9 +750,9 @@ class DependencyTable(BaseDirective):
 
 		:returns: A ``table`` node, or an error node when the entrypoint couldn't be resolved.
 		"""
-		identifier = self.arguments[0].strip()
-		self._simplify = self._ParseBooleanOption("simplified-versions", DEFAULT_SIMPLIFIED_VERSIONS)
-		self._versionFormat = self._ParseFormatOption("version-format", VersionFormat, DEFAULT_VERSION_FORMAT)
+		identifier =             self.arguments[0].strip()
+		self._simplify =         self._ParseBooleanOption("simplified-versions", DEFAULT_SIMPLIFIED_VERSIONS)
+		self._versionFormat =    self._ParseFormatOption("version-format", VersionFormat, DEFAULT_VERSION_FORMAT)
 		self._dependencyFormat = self._ParseFormatOption(
 			"dependency-format", DependencyFormat, DEFAULT_DEPENDENCY_FORMAT
 		)

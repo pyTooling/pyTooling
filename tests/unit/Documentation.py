@@ -33,7 +33,7 @@ from pathlib                 import Path
 from tempfile                import TemporaryDirectory
 from textwrap                import dedent
 
-from sys                     import platform as sys_platform
+from sys                     import platform as sys_platform, version_info
 from typing                  import Optional as Nullable
 
 from pytest                  import mark
@@ -41,22 +41,21 @@ from pytest                  import mark
 from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
 from pyTooling.Testing       import Testcase
 
-try:
+# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
+# installed and its testcases can't run. Keyed on the interpreter rather than on an ImportError: from 3.12 on, a
+# failed import is a broken test environment and has to fail loudly instead of quietly skipping the testcases -
+# and when 3.11 is dropped, this condition is constant and visibly removable.
+sphinxIsSupported = version_info >= (3, 12)
+
+if sphinxIsSupported:
+	# 'skipif' skips the testcases, but the class bodies below still run when this module is imported, and a
+	# signature is evaluated then: its annotations on Python 3.11-3.13, its default values on every version. So no
+	# signature may name one of these imports - they are quoted, and a default is a sentinel resolved in the body.
 	from packaging.specifiers                          import SpecifierSet
 
 	from pyTooling.Documentation.Sphinx.DependencyTable import DependencyFormat, DependencyTable
 	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
-
-	sphinxIsInstalled = True
-except ImportError:  # pragma: no cover
-	# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
-	# installed and its testcases can't run.
-	#
-	# 'skipif' skips the testcases, but the class bodies below still run when this module is imported, and a
-	# signature is evaluated then: its annotations on Python 3.11-3.13, its default values on every version. So no
-	# signature may name one of the imports above - they are quoted, and a default is a sentinel resolved in the body.
-	sphinxIsInstalled = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -152,7 +151,7 @@ class SummaryLength(Testcase):
 		)
 
 
-@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class Entrypoints(Testcase):
 	"""``pyTooling_dependency_requirements`` is read while :file:`conf.py` is processed, so its errors end the build."""
 
@@ -308,7 +307,7 @@ class Entrypoints(Testcase):
 			readEntrypoints(["requirements.txt"], Path("."))
 
 
-@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class VersionConstraints(Testcase):
 	"""A dependency table prints a constraint for a reader, not for an installer."""
 
@@ -348,7 +347,7 @@ class VersionConstraints(Testcase):
 		self.assertEqual("~=0.4.6", self._format("~=0.4.6", simplify=False))
 
 
-@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class VersionFormats(Testcase):
 	"""A dependency table prints as much of a version as a reader needs, which is rarely all of it."""
 
@@ -380,7 +379,7 @@ class VersionFormats(Testcase):
 		self.assertEqual("≥1.2", self._format(">=1.2.3,>=1.2.9", VersionFormat.MajorMinor))
 
 
-@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class DependencyFormats(Testcase):
 	"""What a line of a dependency tree states is the document's choice."""
 
