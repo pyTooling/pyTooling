@@ -43,6 +43,7 @@ from pytest                       import mark
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
 from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
+from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
 from pyTooling.Configuration      import Dictionary
@@ -1055,3 +1056,35 @@ class RequirementsFiles(Testcase):
 				RequirementsFile(Path(directory) / "nothing.txt")
 
 		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)
+
+
+class IndexSessionRetries(Testcase):
+	"""A package index is a third party over the network, so a transient failure is retried rather than reported."""
+
+	@staticmethod
+	def _Index() -> PythonPackageIndex:
+		graph = PythonPackageDependencyGraph("retries")
+
+		return PythonPackageIndex("index", "https://pypi.org", "https://pypi.org/pypi/", graph, LicenseOverrides())
+
+	def test_TheSessionRetries(self) -> None:
+		retries = self._Index()._session.get_adapter("https://pypi.org/pypi/colorama/json").max_retries
+
+		self.assertEqual(RETRY_ATTEMPTS, retries.total)
+		self.assertEqual(RETRY_BACKOFF, retries.backoff_factor)
+		self.assertEqual(RETRY_STATUS_CODES, tuple(retries.status_forcelist))
+
+	def test_TheAPIMayBeOnAnotherHost(self) -> None:
+		"""Mounted per scheme, not per host, so an index serving its API elsewhere retries too."""
+		session = self._Index()._session
+
+		for url in ("https://pypi.org/pypi/x/json", "https://files.pythonhosted.org/x", "http://localhost/simple"):
+			with self.subTest(url=url):
+				self.assertEqual(RETRY_ATTEMPTS, session.get_adapter(url).max_retries.total)
+
+	def test_OnlyIdempotentMethodsAreRetried(self) -> None:
+		"""Retrying is safe because every request this index makes is a GET."""
+		retries = self._Index()._session.get_adapter("https://pypi.org/").max_retries
+
+		self.assertIn("GET", retries.allowed_methods)
+		self.assertNotIn("POST", retries.allowed_methods)

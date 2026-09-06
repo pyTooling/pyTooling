@@ -74,7 +74,9 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
 
 try:
-	from requests import Session, HTTPError
+	from requests           import Session, HTTPError
+	from requests.adapters  import HTTPAdapter
+	from urllib3.util.retry import Retry
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="requests", extra="pypi") from ex
 
@@ -108,6 +110,15 @@ _CHANGELOG_URL_ALIASES =     ("changelog", "changes", "release notes", "whatsnew
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
+
+#: How often a request to a package index is retried before it is reported as an error.
+RETRY_ATTEMPTS = 4
+
+#: Seconds the delay between two retries grows by, doubling per attempt: 0.5 s, 1 s, 2 s, 4 s.
+RETRY_BACKOFF = 0.5
+
+#: Status codes worth retrying: a rate-limit and the transient server-side failures.
+RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
 
 
 @export
@@ -1569,6 +1580,16 @@ class PythonPackageIndex(PackageStorage):
 
 		self._session = Session()
 		self._session.headers["accept"] = "application/json"
+
+		# A package index is a third party reached over the Internet, and a documentation build that resolves a
+		# hundred packages will meet a reset connection or a rate-limit eventually.
+		adapter = HTTPAdapter(max_retries=Retry(
+			total=RETRY_ATTEMPTS,
+			backoff_factor=RETRY_BACKOFF,
+			status_forcelist=RETRY_STATUS_CODES,
+		))
+		self._session.mount("https://", adapter)
+		self._session.mount("http://", adapter)
 
 	@readonly
 	def URL(self) -> URL:
