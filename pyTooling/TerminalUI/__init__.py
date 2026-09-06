@@ -32,6 +32,8 @@
 """
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
+:raises MissingDependencyError: If the 'terminal' extra isn't installed.
+
 .. seealso::
 
    :mod:`pyTooling.Attributes.ArgParse`
