@@ -33,24 +33,29 @@ from pathlib                 import Path
 from tempfile                import TemporaryDirectory
 from textwrap                import dedent
 
-from sys                     import platform as sys_platform
+from sys                     import platform as sys_platform, version_info
+from typing                  import Optional as Nullable
 
 from pytest                  import mark
 
 from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
 from pyTooling.Testing       import Testcase
 
-try:
+# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
+# installed and its testcases can't run. Keyed on the interpreter rather than on an ImportError: from 3.12 on, a
+# failed import is a broken test environment and has to fail loudly instead of quietly skipping the testcases -
+# and when 3.11 is dropped, this condition is constant and visibly removable.
+sphinxIsSupported = version_info >= (3, 12)
+
+if sphinxIsSupported:
+	# 'skipif' skips the testcases, but the class bodies below still run when this module is imported, and a
+	# signature is evaluated then: its annotations on Python 3.11-3.13, its default values on every version. So no
+	# signature may name one of these imports - they are quoted, and a default is a sentinel resolved in the body.
 	from packaging.specifiers                          import SpecifierSet
 
-	from pyTooling.Documentation.Sphinx.DependencyTable import DependencyTable, readEntrypoints
+	from pyTooling.Documentation.Sphinx.DependencyTable import DependencyFormat, DependencyTable
+	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
-
-	sphinxIsInstalled = True
-except ImportError:  # pragma: no cover
-	# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
-	# installed and its testcases can't run.
-	sphinxIsInstalled = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -146,7 +151,7 @@ class SummaryLength(Testcase):
 		)
 
 
-@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class Entrypoints(Testcase):
 	"""``pyTooling_dependency_requirements`` is read while :file:`conf.py` is processed, so its errors end the build."""
 
@@ -302,13 +307,16 @@ class Entrypoints(Testcase):
 			readEntrypoints(["requirements.txt"], Path("."))
 
 
-@mark.skipif(not sphinxIsInstalled, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class VersionConstraints(Testcase):
 	"""A dependency table prints a constraint for a reader, not for an installer."""
 
 	@staticmethod
-	def _format(specifier: str, simplify: bool = True) -> str:
-		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), simplify)
+	def _format(specifier: str, simplify: bool = True, versionFormat: Nullable["VersionFormat"] = None) -> str:
+		if versionFormat is None:
+			versionFormat = VersionFormat.All
+
+		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), simplify, versionFormat)
 
 	def test_NoConstraintIsAny(self) -> None:
 		self.assertEqual("any", self._format(""))
@@ -337,3 +345,56 @@ class VersionConstraints(Testcase):
 	def test_TheFullFormKeepsEveryPart(self) -> None:
 		self.assertEqual("≥3.0, <4.0", self._format("<4.0,>=3.0", simplify=False))
 		self.assertEqual("~=0.4.6", self._format("~=0.4.6", simplify=False))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class VersionFormats(Testcase):
+	"""A dependency table prints as much of a version as a reader needs, which is rarely all of it."""
+
+	@staticmethod
+	def _format(specifier: str, versionFormat: "VersionFormat") -> str:
+		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), True, versionFormat)
+
+	def test_TheDefaultIsMajorMinor(self) -> None:
+		from pyTooling.Documentation.Sphinx.DependencyTable import DEFAULT_VERSION_FORMAT
+
+		self.assertIs(VersionFormat.MajorMinor, DEFAULT_VERSION_FORMAT)
+
+	def test_EachFormatKeepsItsParts(self) -> None:
+		self.assertEqual("≥0", self._format("~=0.4.6", VersionFormat.Major))
+		self.assertEqual("≥0.4", self._format("~=0.4.6", VersionFormat.MajorMinor))
+		self.assertEqual("≥0.4.6", self._format("~=0.4.6", VersionFormat.MajorMinorPatch))
+		self.assertEqual("≥0.4.6", self._format("~=0.4.6", VersionFormat.All))
+
+	def test_AllKeepsWhatTheOthersDrop(self) -> None:
+		self.assertEqual("=9.1.2.dev3", self._format("==9.1.2.dev3", VersionFormat.All))
+		self.assertEqual("=9.1.2", self._format("==9.1.2.dev3", VersionFormat.MajorMinorPatch))
+
+	def test_AShortVersionIsNotPaddedOut(self) -> None:
+		"""'≥9' must not become '≥9.0' - that states a precision the requirement didn't."""
+		self.assertEqual("≥9", self._format(">=9", VersionFormat.MajorMinorPatch))
+
+	def test_ShorteningNeverPrintsOneStatementTwice(self) -> None:
+		"""'>=1.2.3, >=1.2.9' is one statement at MajorMinor, and a table saying it twice reads as a defect."""
+		self.assertEqual("≥1.2", self._format(">=1.2.3,>=1.2.9", VersionFormat.MajorMinor))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class DependencyFormats(Testcase):
+	"""What a line of a dependency tree states is the document's choice."""
+
+	def test_TheDefaultStatesEverything(self) -> None:
+		from pyTooling.Documentation.Sphinx.DependencyTable import DEFAULT_DEPENDENCY_FORMAT
+
+		self.assertIs(DependencyFormat.PackageVersionLicense, DEFAULT_DEPENDENCY_FORMAT)
+
+	def test_EachFormatSaysWhatItShows(self) -> None:
+		self.assertEqual(
+			[(False, False), (True, False), (False, True), (True, True)],
+			[(member.ShowsVersion, member.ShowsLicense) for member in DependencyFormat]
+		)
+
+	def test_TheMembersAreWrittenAsTheyAreSpelled(self) -> None:
+		"""A document writes ':dependency-format: PackageVersionLicense', not 'package_version_license'."""
+		self.assertEqual("PackageVersionLicense", str(DependencyFormat.PackageVersionLicense))
+		self.assertEqual("MajorMinor", str(VersionFormat.MajorMinor))
