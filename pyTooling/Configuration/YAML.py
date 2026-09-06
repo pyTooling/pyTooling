@@ -31,8 +31,7 @@
 """
 Configuration reader for YAML files.
 
-:raises MissingDependencyError: If the ``yaml`` extra isn't installed, because :mod:`ruamel.yaml` is imported
-                                at module level - see :exc:`~pyTooling.Exceptions.MissingDependencyError`.
+:raises MissingDependencyError: If the 'yaml' extra isn't installed.
 
 .. hint::
 
