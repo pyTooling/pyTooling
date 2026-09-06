@@ -32,16 +32,19 @@
 Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
 need network access.
 """
-from datetime                     import date, datetime
+from datetime                     import date, datetime, timezone
 from pathlib                      import Path
+from tempfile                     import TemporaryDirectory
+from textwrap                     import dedent
 from typing                       import Optional as Nullable
 
 from pytest                       import mark
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
-from pyTooling.Dependency.Python  import LicenseOverrides
-from pyTooling.Dependency         import BrokenRequirementWarning, DependencyError, UnknownLicenseWarning
+from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
+from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
+from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -721,7 +724,7 @@ class ReadingLicenseOverrides(Testcase):
 		"""What a package index says is as old as the request; what a human wrote is as old as the human."""
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 
-		self.assertEqual(date(2026, 9, 2), overrides.AnalysedAt)
+		self.assertEqual(datetime(2026, 9, 2), overrides.AnalysedAt)
 
 	def test_TheDateReadsEitherWayRound(self) -> None:
 		"""Unquoted it is YAML's own date type, quoted it is a string. A configuration spells both ISO-8601."""
@@ -729,6 +732,19 @@ class ReadingLicenseOverrides(Testcase):
 		quoted =   LicenseOverrides.FromFile(self._DIRECTORY / "licenses-quoted-date.yml")
 
 		self.assertEqual(unquoted.AnalysedAt, quoted.AnalysedAt)
+
+	def test_AFullTimestampIsRead(self) -> None:
+		"""A bare date says which day; a timestamp says which build of that day, which is what a re-check needs."""
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "overrides.yml"
+			path.write_text(
+				'version: "0.1"\nanalysedAt: 2026-09-04T21:45:00+00:00\npackages:\n  igraph:\n    license: MIT\n',
+				encoding="utf-8"
+			)
+
+			overrides = LicenseOverrides.FromFile(path)
+
+		self.assertEqual(datetime(2026, 9, 4, 21, 45, tzinfo=timezone.utc), overrides.AnalysedAt)
 
 	def test_TheSchemaVersionIsChecked(self) -> None:
 		"""It says which structure the file is written for, so a later one can be told apart rather than misread."""
@@ -761,7 +777,7 @@ class ReadingLicenseOverrides(Testcase):
 		with self.assertRaises(DependencyError) as context:
 			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-bad-date.yml")
 
-		self.assertIn("isn't an ISO-8601 date", str(context.exception))
+		self.assertIn("isn't an ISO-8601 timestamp", str(context.exception))
 
 	def test_AnEmptyFileRaises(self) -> None:
 		"""It states no analysis date either. Before #376 it crashed in the YAML backend instead."""
@@ -772,16 +788,23 @@ class ReadingLicenseOverrides(Testcase):
 		"""A date and no packages is a complete statement: *checked, nothing to override*."""
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses-no-packages.yml")
 
-		self.assertEqual(date(2026, 9, 2), overrides.AnalysedAt)
+		self.assertEqual(datetime(2026, 9, 2), overrides.AnalysedAt)
 		self.assertIsNone(overrides.LicenseOf("igraph"))
 
 	def test_OverridesBuiltInCodeNeedNoDate(self) -> None:
 		"""They are as old as the code, so the date is optional there and ``None`` when nobody passed one."""
 		self.assertIsNone(LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}).AnalysedAt)
 		self.assertEqual(
-			date(2026, 9, 2),
-			LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}, date(2026, 9, 2)).AnalysedAt
+			datetime(2026, 9, 2),
+			LicenseOverrides.FromDictionary({"igraph": {"license": "MIT"}}, datetime(2026, 9, 2)).AnalysedAt
 		)
+
+	def test_TheRepositorysOwnOverrideFileLoads(self) -> None:
+		"""The repository's own override file is read by the directive, so a format change must reach it."""
+		overrides = LicenseOverrides.FromFile(Path("doc/Dependency.PackageOverrides.yaml"))
+
+		self.assertIsNotNone(overrides.AnalysedAt)
+		self.assertEqual("Apache-2.0", overrides.LicenseOf("aiohttp"))
 
 	def test_AMissingFileRaises(self) -> None:
 		with self.assertRaises(FileNotFoundError):
@@ -806,3 +829,229 @@ class ReadingLicenseOverrides(Testcase):
 			LicenseOverrides.FromFile(self._DIRECTORY / "licenses-bad-specifier.yml")
 
 		self.assertIn("not a specifier", str(context.exception))
+
+class RequirementsFiles(Testcase):
+	"""Reading a requirements file and the files it includes."""
+
+	@staticmethod
+	def _write(directory: Path, name: str, content: str) -> Path:
+		path = directory / name
+		path.parent.mkdir(parents=True, exist_ok=True)
+		path.write_text(dedent(content).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_Requirements(self) -> None:
+		"""Comments, blank lines and installer options are not requirements."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", """
+				# a comment
+				pyTooling >= 8.0
+
+				colorama ~= 0.4.6   # trailing comment
+				--index-url https://example.org/simple
+			""")
+
+			requirementsFile = RequirementsFile(path)
+
+		self.assertEqual(["pyTooling", "colorama"], [req.name for req in requirementsFile.Requirements])
+		self.assertEqual([], list(requirementsFile.ReferencedFiles))
+		self.assertEqual(2, len(requirementsFile))
+
+	def test_Includes_KeepTheTree(self) -> None:
+		"""``-r`` references another file, and which file a requirement came from is not flattened away."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			self._write(root, "sub/leaf.txt", "colorama ~= 0.4.6\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				-r sub/leaf.txt
+				pytest ~= 9.1
+			""")
+
+			requirementsFile = RequirementsFile(path)
+			referenced = tuple(requirementsFile.ReferencedFiles)
+
+			self.assertEqual(["pytest"], [req.name for req in requirementsFile.Requirements])
+			self.assertEqual(2, len(referenced))
+			self.assertEqual(["pyTooling"], [req.name for req in referenced[0]])
+			self.assertEqual(["colorama"], [req.name for req in referenced[1]])
+			self.assertEqual(
+				["pyTooling", "colorama", "pytest"],
+				[req.name for req in requirementsFile.AllRequirements]
+			)
+
+	def test_EntriesKeepTheFileOrder(self) -> None:
+		"""Requirements and references are interleaved in a file, so one list keeps them in the order written."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			path = self._write(root, "requirements.txt", """
+				pytest ~= 9.1
+				-r base.txt
+				colorama ~= 0.4.6
+			""")
+
+			entries = RequirementsFile(path).Entries
+
+		self.assertEqual(
+			["pytest", "base.txt", "colorama"],
+			[entry.Path.name if isinstance(entry, RequirementsFile) else entry.name for entry in entries]
+		)
+
+	def test_EveryFileKnowsItsParentAndRoot(self) -> None:
+		"""A file knows what referenced it and what the tree was read from, so a requirement can name its entrypoint."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "leaf.txt", "colorama ~= 0.4.6\n")
+			self._write(root, "base.txt", "-r leaf.txt\n")
+			path = self._write(root, "requirements.txt", "-r base.txt\n")
+
+			requirementsFile = RequirementsFile(path)
+			base = next(iter(requirementsFile.ReferencedFiles))
+			leaf = next(iter(base.ReferencedFiles))
+
+		self.assertIsNone(requirementsFile.Parent)
+		self.assertIs(requirementsFile, requirementsFile.Root)
+		self.assertIs(base, leaf.Parent)
+		self.assertIs(requirementsFile, leaf.Root)
+
+	def test_Hierarchy(self) -> None:
+		"""The chain from the root down to a file, at every depth of a three-level tree."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "leaf.txt", "colorama ~= 0.4.6\n")
+			self._write(root, "base.txt", "-r leaf.txt\n")
+			path = self._write(root, "requirements.txt", "-r base.txt\n")
+
+			requirementsFile = RequirementsFile(path)
+			base = next(iter(requirementsFile.ReferencedFiles))
+			leaf = next(iter(base.ReferencedFiles))
+
+		self.assertEqual((requirementsFile,),             requirementsFile.Hierarchy)
+		self.assertEqual((requirementsFile, base),        base.Hierarchy)
+		self.assertEqual((requirementsFile, base, leaf),  leaf.Hierarchy)
+
+	def test_TheRootKnowsEveryFileOfItsTree(self) -> None:
+		"""What a documentation build registers for rebuild-on-change, and what detects a cycle while reading."""
+		with TemporaryDirectory() as directory:
+			# deliberately not resolved: this is the spelling macOS and Windows hand a build, and the mapping has to
+			# key it the same way it keys a '-r' reference
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			self._write(root, "sub/leaf.txt", "colorama ~= 0.4.6\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				-r sub/leaf.txt
+			""")
+
+			requirementsFile = RequirementsFile(path)
+
+		self.assertEqual(
+			{path.resolve(), (root / "base.txt").resolve(), (root / "sub/leaf.txt").resolve()},
+			set(requirementsFile.AnalyzedRequirementFiles)
+		)
+		self.assertEqual(3, len(list(requirementsFile.IterateTree())))
+
+	def test_Includes_NearerStatementWins(self) -> None:
+		"""A requirement stated by the entrypoint overrides the same package required by a file it includes."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pytest ~= 8.0\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			requirements = {req.name: req for req in RequirementsFile(path).AllRequirements}
+
+		self.assertEqual("~=9.1", str(requirements["pytest"].specifier))
+
+	def test_AllRequirements_KeepTheFileOrder(self) -> None:
+		"""A ``-r`` line contributes where it stands, so a reference in the middle doesn't reorder the file."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\nsphinx ~= 9.1\n")
+			path = self._write(root, "requirements.txt", """
+				pytest ~= 9.1
+				-r base.txt
+				colorama ~= 0.4.6
+			""")
+
+			allRequirements = [req.name for req in RequirementsFile(path).AllRequirements]
+
+		self.assertEqual(["pytest", "pyTooling", "sphinx", "colorama"], allRequirements)
+
+	def test_AllRequirements_TheOverridingStatementKeepsThePosition(self) -> None:
+		"""A nearer statement wins on version, but the package stays where the reference first placed it."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pytest ~= 8.0\nsphinx ~= 9.1\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				colorama ~= 0.4.6
+				pytest ~= 9.1
+			""")
+
+			allRequirements = list(RequirementsFile(path).AllRequirements)
+
+		self.assertEqual(["pytest", "sphinx", "colorama"], [req.name for req in allRequirements])
+		self.assertEqual("~=9.1", str(allRequirements[0].specifier))
+
+	def test_Includes_Cycle(self) -> None:
+		"""A cycle of ``-r`` lines is raised, not read once and hidden - nobody writes one on purpose."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "other.txt", "-r requirements.txt\ncolorama ~= 0.4.6\n")
+			path = self._write(root, "requirements.txt", """
+				-r other.txt
+				pytest ~= 9.1
+			""")
+
+			with self.assertRaises(CircularRequirementsFileError) as exceptionCapture:
+				RequirementsFile(path)
+
+		self.assertIn("other.txt", str(exceptionCapture.exception))
+
+	def test_Includes_SelfReference(self) -> None:
+		"""The shortest cycle there is."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", "-r requirements.txt\n")
+
+			with self.assertRaises(CircularRequirementsFileError):
+				RequirementsFile(path)
+
+	def test_BrokenRequirement(self) -> None:
+		"""A line that isn't a requirement is reported, and the rest of the file is still read."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", """
+				pytest ~= 9.1
+				this is not a requirement
+				colorama ~= 0.4.6
+			""")
+
+			with WarningCollector(handler=lambda warning: False) as collector:
+				requirementsFile = RequirementsFile(path)
+
+		self.assertEqual(["pytest", "colorama"], [req.name for req in requirementsFile.Requirements])
+		self.assertEqual(1, len(collector.Warnings))
+		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
+
+	def test_WrongParentType(self) -> None:
+		"""'parent' is a real parameter, so it is type-checked like 'path'."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", "pytest ~= 9.1\n")
+
+			with self.assertRaises(TypeError) as exceptionCapture:
+				RequirementsFile(path, "not a requirements file")
+
+		self.assertIn("'parent'", str(exceptionCapture.exception))
+
+	def test_MissingFile(self) -> None:
+		"""A requirements file that doesn't exist is an error, not an empty list."""
+		with TemporaryDirectory() as directory:
+			with self.assertRaises(RequirementsFileNotFoundError) as exceptionCapture:
+				RequirementsFile(Path(directory) / "nothing.txt")
+
+		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)

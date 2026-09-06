@@ -260,6 +260,29 @@ todo_link_only = True
 
 
 # ==============================================================================
+# pyTooling.Documentation.Sphinx
+# ==============================================================================
+# Package meta-information a package index can't answer for: licenses, the URL of a project's own LICENSE file,
+# and repositories. Stated by hand, checked by hand.
+pyTooling_Dependency_PackageOverrides = "Dependency.PackageOverrides.yaml"
+
+# The entrypoints 'dependency-table' renders, by the identifier the documents name them with. A requirements file is
+# read relative to this file; a package is read from the package index. The tables share one view of that index, so
+# a package required by more than one entrypoint - and most of these overlap - is downloaded once per build.
+pyTooling_Dependency_Requirements = {
+	"package":       {"file":     "../requirements.txt"},
+	"packaging":     {"package":  "pyTooling[packaging]"},
+	"terminal":      {"package":  "pyTooling[terminal]"},
+	"yaml":          {"package":  "pyTooling[yaml]"},
+	"unittest":      {"file":     "../tests/unit/requirements.txt"},
+	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
+	"performance":   {"file":     "../tests/performance/requirements.txt"},
+	"documentation": {"file":     "requirements.txt"},
+	"publishing":    {"file":     "../dist/requirements.txt"}
+}
+
+
+# ==============================================================================
 # sphinx-reports
 # ==============================================================================
 report_unittest_testsuites = {

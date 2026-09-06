@@ -28,9 +28,34 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers."""
+"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers and the Sphinx extension."""
+from pathlib                 import Path
+from tempfile                import TemporaryDirectory
+from textwrap                import dedent
+
+from sys                     import platform as sys_platform, version_info
+from typing                  import Optional as Nullable
+
+from pytest                  import mark
+
 from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
 from pyTooling.Testing       import Testcase
+
+# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - so on Python 3.11 the extension can't be
+# installed and its testcases can't run. Keyed on the interpreter rather than on an ImportError: from 3.12 on, a
+# failed import is a broken test environment and has to fail loudly instead of quietly skipping the testcases -
+# and when 3.11 is dropped, this condition is constant and visibly removable.
+sphinxIsSupported = version_info >= (3, 12)
+
+if sphinxIsSupported:
+	# 'skipif' skips the testcases, but the class bodies below still run when this module is imported, and a
+	# signature is evaluated then: its annotations on Python 3.11-3.13, its default values on every version. So no
+	# signature may name one of these imports - they are quoted, and a default is a sentinel resolved in the body.
+	from packaging.specifiers                          import SpecifierSet
+
+	from pyTooling.Documentation.Sphinx.DependencyTable import DependencyFormat, DependencyTable
+	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, readEntrypoints
+	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -124,3 +149,252 @@ class SummaryLength(Testcase):
 			"The doc-string's summary is longer than 30 characters.",
 			str(exceptionCapture.exception)
 		)
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class Entrypoints(Testcase):
+	"""``pyTooling_dependency_requirements`` is read while :file:`conf.py` is processed, so its errors end the build."""
+
+	@staticmethod
+	def _write(directory: Path, name: str, content: str) -> Path:
+		path = directory / name
+		path.write_text(dedent(content).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_AFileEntrypointIsReadRightAway(self) -> None:
+		"""A requirements file is read here, not when a table is built."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory).resolve()
+			self._write(root, "requirements.txt", """
+				pytest ~= 9.1
+				colorama ~= 0.4.6
+			""")
+
+			entrypoints = readEntrypoints({"unittest": {"file": "requirements.txt"}}, root)
+
+		self.assertEqual({"colorama", "pytest"}, set(entrypoints["unittest"].Requirements))
+		self.assertEqual((root / "requirements.txt",), entrypoints["unittest"].Files)
+
+	def test_AnIncludedFileIsListedToo(self) -> None:
+		"""Every file read is remembered, so a change to an include rebuilds the document naming the entrypoint."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory).resolve()
+			self._write(root, "base.txt", "colorama ~= 0.4.6\n")
+			self._write(root, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			entrypoints = readEntrypoints({"unittest": {"file": "requirements.txt"}}, root)
+
+		self.assertEqual([root / "requirements.txt", root / "base.txt"], list(entrypoints["unittest"].Files))
+
+	@mark.skipif(sys_platform == "win32", reason="Creating a symbolic link needs a privilege Windows doesn't grant.")
+	def test_TheWholeTreeIsSpelledOneWay(self) -> None:
+		"""A directory reachable under two names must not put both spellings into the tree.
+
+		This is what macOS (:file:`/var` is :file:`/private/var`) and Windows (:file:`RUNNER~1` is
+		:file:`runneradmin`) hand a build, and it made the file and its includes disagree about their own parent.
+		"""
+		with TemporaryDirectory() as directory:
+			real = Path(directory).resolve() / "real"
+			real.mkdir()
+			self._write(real, "base.txt", "colorama ~= 0.4.6\n")
+			self._write(real, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			link = Path(directory).resolve() / "link"
+			link.symlink_to(real)
+
+			files = readEntrypoints({"unittest": {"file": "requirements.txt"}}, link)["unittest"].Files
+
+		self.assertEqual([real / "requirements.txt", real / "base.txt"], list(files))
+
+	def test_APackageEntrypointIsNotResolvedYet(self) -> None:
+		"""A package can only be resolved by asking the index, so it carries its name and extra until a table asks."""
+		entrypoints = readEntrypoints({"yaml": {"package": "pyTooling[yaml]"}}, Path("."))
+
+		self.assertEqual((("pyTooling", "yaml"),), entrypoints["yaml"].Packages)
+		self.assertIsNone(entrypoints["yaml"].Requirements)
+
+	def test_APackageWithoutAnExtraHasNone(self) -> None:
+		entrypoints = readEntrypoints({"package": {"package": "pyTooling"}}, Path("."))
+
+		self.assertEqual((("pyTooling", None),), entrypoints["package"].Packages)
+
+	def test_SeveralPackagesAreDeclaredWithThePluralForm(self) -> None:
+		"""``packages`` takes an iterable; ``package`` takes one string. Both are the same statement."""
+		entrypoints = readEntrypoints({
+			"tuple": {"packages": ("pyTooling[yaml]", "pyTooling[terminal]")},
+			"list":  {"packages": ["pyTooling", ]}
+		}, Path("."))
+
+		self.assertEqual((("pyTooling", "yaml"), ("pyTooling", "terminal")), entrypoints["tuple"].Packages)
+		self.assertEqual((("pyTooling", None),), entrypoints["list"].Packages)
+
+	def test_APluralFieldTakesAnyIterable(self) -> None:
+		"""The field is documented as an iterable, so a generator or a set is as good as a tuple or a list."""
+		entrypoints = readEntrypoints({
+			"generator": {"packages": (name for name in ("pyTooling[yaml]", "pyTooling[terminal]"))},
+			"set":       {"packages": {"pyTooling"}}
+		}, Path("."))
+
+		self.assertEqual((("pyTooling", "yaml"), ("pyTooling", "terminal")), entrypoints["generator"].Packages)
+		self.assertEqual((("pyTooling", None),), entrypoints["set"].Packages)
+
+	def test_SeveralFilesFlattenInTheOrderDeclared(self) -> None:
+		"""``files`` reads several trees; a later file's statement wins, as a later ``-r`` reference does."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory).resolve()
+			self._write(root, "first.txt", "pytest ~= 8.0\ncolorama ~= 0.4.6\n")
+			self._write(root, "second.txt", "pytest ~= 9.1\n")
+
+			entrypoints = readEntrypoints({"both": {"files": ["first.txt", "second.txt"]}}, root)
+
+		requirements = entrypoints["both"].Requirements
+		self.assertEqual({"colorama", "pytest"}, set(requirements))
+		self.assertEqual("~=9.1", str(requirements["pytest"].specifier))
+		self.assertEqual([root / "first.txt", root / "second.txt"], list(entrypoints["both"].Files))
+
+	def test_APluralFieldRejectsABareString(self) -> None:
+		"""A string is an iterable of strings, so 'files': 'requirements.txt' would silently become 16 paths."""
+		with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+			readEntrypoints({"unittest": {"files": "requirements.txt"}}, Path("."))
+
+		self.assertIn("Use 'file'", str(exceptionCapture.exception))
+
+	def test_ASingularFieldRejectsAnIterable(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {"file": ["requirements.txt"]}}, Path("."))
+
+	def test_AMissingFileNamesTheIdentifier(self) -> None:
+		"""The message has to say which entry is wrong - the path alone doesn't."""
+		with TemporaryDirectory() as directory:
+			with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+				readEntrypoints({"unittest": {"file": "nothing.txt"}}, Path(directory))
+
+		self.assertIn("[unittest]", str(exceptionCapture.exception))
+
+	def test_NeitherFileNorPackageIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {}}, Path("."))
+
+	def test_BothFileAndPackageIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {"file": "requirements.txt", "package": "pyTooling"}}, Path("."))
+
+	def test_ASingularAndItsPluralTogetherIsRejected(self) -> None:
+		"""Exactly one field, so which of the two would win is never a question."""
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": {"file": "a.txt", "files": ["b.txt"]}}, Path("."))
+
+	def test_AnUnknownFieldIsRejected(self) -> None:
+		"""A typo is an error rather than a silently ignored key."""
+		with self.assertRaises(SphinxExtensionError) as exceptionCapture:
+			readEntrypoints({"unittest": {"files": "requirements.txt"}}, Path("."))
+
+		self.assertIn("files", str(exceptionCapture.exception))
+
+	def test_ADeclarationThatIsNoDictionaryIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints({"unittest": "requirements.txt"}, Path("."))
+
+	def test_AConfigurationThatIsNoDictionaryIsRejected(self) -> None:
+		with self.assertRaises(SphinxExtensionError):
+			readEntrypoints(["requirements.txt"], Path("."))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class VersionConstraints(Testcase):
+	"""A dependency table prints a constraint for a reader, not for an installer."""
+
+	@staticmethod
+	def _format(specifier: str, simplify: bool = True, versionFormat: Nullable["VersionFormat"] = None) -> str:
+		if versionFormat is None:
+			versionFormat = VersionFormat.All
+
+		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), simplify, versionFormat)
+
+	def test_NoConstraintIsAny(self) -> None:
+		self.assertEqual("any", self._format(""))
+
+	def test_OperatorsBecomeTheirSymbols(self) -> None:
+		"""'>=' is typography, not syntax, once it is printed in a table."""
+		self.assertEqual("≥3.12", self._format(">=3.12"))
+		self.assertEqual("≤2.0", self._format("<=2.0", simplify=False))
+		self.assertEqual("≠2.0", self._format("!=2.0", simplify=False))
+		self.assertEqual("=1.2.3", self._format("==1.2.3"))
+
+	def test_ACompatibleReleaseBecomesItsLowerBound(self) -> None:
+		"""'~=0.4.6' says at least 0.4.6; the upper half is the installer's business."""
+		self.assertEqual("≥0.4.6", self._format("~=0.4.6"))
+
+	def test_AnUpperBoundIsDropped(self) -> None:
+		self.assertEqual("≥3.0", self._format("<4.0,>=3.0"))
+
+	def test_AnExclusionIsDropped(self) -> None:
+		self.assertEqual("≥1.0", self._format("!=2.0,>=1.0"))
+
+	def test_AnUpperBoundAloneSurvives(self) -> None:
+		"""Simplifying everything away would print nothing, so the constraint stays as it was written."""
+		self.assertEqual("<4.0", self._format("<4.0"))
+
+	def test_TheFullFormKeepsEveryPart(self) -> None:
+		self.assertEqual("≥3.0, <4.0", self._format("<4.0,>=3.0", simplify=False))
+		self.assertEqual("~=0.4.6", self._format("~=0.4.6", simplify=False))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class VersionFormats(Testcase):
+	"""A dependency table prints as much of a version as a reader needs, which is rarely all of it."""
+
+	@staticmethod
+	def _format(specifier: str, versionFormat: "VersionFormat") -> str:
+		return DependencyTable._FormatSpecifier(SpecifierSet(specifier), True, versionFormat)
+
+	def test_TheDefaultIsMajorMinor(self) -> None:
+		from pyTooling.Documentation.Sphinx.DependencyTable import DEFAULT_VERSION_FORMAT
+
+		self.assertIs(VersionFormat.MajorMinor, DEFAULT_VERSION_FORMAT)
+
+	def test_EachFormatKeepsItsParts(self) -> None:
+		self.assertEqual("≥0", self._format("~=0.4.6", VersionFormat.Major))
+		self.assertEqual("≥0.4", self._format("~=0.4.6", VersionFormat.MajorMinor))
+		self.assertEqual("≥0.4.6", self._format("~=0.4.6", VersionFormat.MajorMinorPatch))
+		self.assertEqual("≥0.4.6", self._format("~=0.4.6", VersionFormat.All))
+
+	def test_AllKeepsWhatTheOthersDrop(self) -> None:
+		self.assertEqual("=9.1.2.dev3", self._format("==9.1.2.dev3", VersionFormat.All))
+		self.assertEqual("=9.1.2", self._format("==9.1.2.dev3", VersionFormat.MajorMinorPatch))
+
+	def test_AShortVersionIsNotPaddedOut(self) -> None:
+		"""'≥9' must not become '≥9.0' - that states a precision the requirement didn't."""
+		self.assertEqual("≥9", self._format(">=9", VersionFormat.MajorMinorPatch))
+
+	def test_ShorteningNeverPrintsOneStatementTwice(self) -> None:
+		"""'>=1.2.3, >=1.2.9' is one statement at MajorMinor, and a table saying it twice reads as a defect."""
+		self.assertEqual("≥1.2", self._format(">=1.2.3,>=1.2.9", VersionFormat.MajorMinor))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class DependencyFormats(Testcase):
+	"""What a line of a dependency tree states is the document's choice."""
+
+	def test_TheDefaultStatesEverything(self) -> None:
+		from pyTooling.Documentation.Sphinx.DependencyTable import DEFAULT_DEPENDENCY_FORMAT
+
+		self.assertIs(DependencyFormat.PackageVersionLicense, DEFAULT_DEPENDENCY_FORMAT)
+
+	def test_EachFormatSaysWhatItShows(self) -> None:
+		self.assertEqual(
+			[(False, False), (True, False), (False, True), (True, True)],
+			[(member.ShowsVersion, member.ShowsLicense) for member in DependencyFormat]
+		)
+
+	def test_TheMembersAreWrittenAsTheyAreSpelled(self) -> None:
+		"""A document writes ':dependency-format: PackageVersionLicense', not 'package_version_license'."""
+		self.assertEqual("PackageVersionLicense", str(DependencyFormat.PackageVersionLicense))
+		self.assertEqual("MajorMinor", str(VersionFormat.MajorMinor))
