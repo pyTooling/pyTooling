@@ -177,7 +177,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		return cls._scope
 
 	@classmethod
-	def GetFunctions(cls, scope: Nullable[type] = None) -> Generator[TAttr, None, None]:
+	def GetFunctions(cls, scope: Nullable[type | ModuleType] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all functions, where this attribute is attached to.
 
@@ -201,7 +201,6 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 	@classmethod
 	def GetClasses(cls, scope: Nullable[type | ModuleType] = None, subclassOf: Nullable[type] = None) -> Generator[TAttr, None, None]:
-	# def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all classes, where this attribute is attached to.
 
