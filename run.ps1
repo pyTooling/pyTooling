@@ -228,6 +228,11 @@ $runTypingFunc = {
 $compileHTMLDocFunc = {
   param($PyVersion, $live, $copyUnit, $copyCov, $copyType, [scriptblock]$runUnitCopyFunc, [scriptblock]$runCovCopyFunc, [scriptblock]$runTypingCopyFunc)
 
+  # Sphinx extensions write generated ReST with open() and no encoding, so Python uses the locale's - cp1252 on a
+  # German Windows - and a non-ASCII character in the generated page ends the build with a UnicodeEncodeError.
+  # UTF-8 mode makes open() default to UTF-8 regardless of the locale.
+  $env:PYTHONUTF8 = 1
+
   Push-Location "doc"
   py -$PyVersion -m sphinx.cmd.build --builder html --write-all --doctree-dir _build/doctrees-html --jobs 8 --warning-file _build/sphinx-html-warnings.log --verbose . _build/html
   Pop-Location
@@ -244,6 +249,8 @@ $compileHTMLDocFunc = {
 }
 $compileLaTeXDocFunc = {
   param($PyVersion, $LaTeXDocument)
+
+  $env:PYTHONUTF8 = 1
 
   Push-Location "doc"
   py -$PyVersion -m sphinx.cmd.build --builder latex --write-all --doctree-dir _build/doctrees-latex --jobs 8 --warning-file _build/sphinx-latex-warnings.log --verbose . _build/latex
