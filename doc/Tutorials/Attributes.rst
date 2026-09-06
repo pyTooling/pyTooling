@@ -3,20 +3,20 @@
 Attributes
 ##########
 
-A framework usually needs to know things about a user's code that the code itself doesn't say: which methods are
-commands, which classes are plugins, which function handles ``--version``. An **attribute** is a decorator that
-carries that data and remembers where it was applied - the same idea as
+A framework usually needs to know things about a user's code that the code itself doesn't say: which classes are
+plugins, which function or methods handle a callback. An **attribute** is a decorator that carries that data and
+remembers where it was applied - the same idea as
 `.NET attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__,
 which is where :mod:`pyTooling.Attributes` takes it from.
 
 .. code-block:: Python
 
-   @Command(name="version", help="Print version information.")
-   def versionHandler(args):
+   @Plugin(name="MyPlugin")
+   class MyPlugin:
      ...
 
-   for handler in Command.GetFunctions():
-     ...   # every function annotated with @Command, without a registry anywhere
+   for plugin in Plugin.GetClasses():
+     ...   # every class annotated with @Plugin, without a registry anywhere
 
 This tutorial builds one from scratch.
 
