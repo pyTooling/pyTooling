@@ -31,6 +31,18 @@
 """
 Implementation of package dependencies.
 
+Importing this module needs the ``pypi`` extra, because it reads a package index over HTTP and parses PEP 440
+requirements:
+
+* :mod:`aiohttp`,
+* :mod:`packaging` and
+* :mod:`requests`
+
+are imported at module level and each is guarded, so a missing one names itself rather than failing as a bare
+:exc:`ImportError`.
+
+:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+
 .. hint::
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
@@ -405,7 +417,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
 	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
 
-	_analysedAt:   Nullable[date]                             #: Day the statements were last checked by a human.
+	_analysedAt:   Nullable[datetime]                         #: When the statements were last checked by a human.
 	#: License expression per package, by the version expression its key states, in the file's order.
 	_licenses:     dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 	#: URL of the license's text per package, by the version expression its key states, in the file's order.
@@ -413,7 +425,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	#: URL of the source repository per package, by the version expression its key states, in the file's order.
 	_repositories: dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 
-	def __init__(self, analysedAt: Nullable[date] = None) -> None:
+	def __init__(self, analysedAt: Nullable[datetime] = None) -> None:
 		"""
 		Initialize an empty set of overrides.
 
@@ -425,9 +437,9 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		self._repositories = {}
 
 	@readonly
-	def AnalysedAt(self) -> Nullable[date]:
+	def AnalysedAt(self) -> Nullable[datetime]:
 		"""
-		Read-only property to access the day these statements were last checked (:attr:`_analysedAt`).
+		Read-only property to access when these statements were last checked (:attr:`_analysedAt`).
 
 		A package index answers for itself every time it is asked, so what it says is as old as the request. These
 		statements are written by hand and are as old as whoever last looked, which nothing else records - so a
@@ -500,18 +512,20 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"This reads '{cls.SCHEMA_VERSION}'.")
 			raise ex
 
-		if (analysedDay := configuration.get("analysedAt", None)) is None:
-			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' date.")
+		if (analysedMoment := configuration.get("analysedAt", None)) is None:
+			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' timestamp.")
 			ex.add_note("These statements are written by hand, so nothing else records how old they are.")
-			ex.add_note("Add an ISO-8601 date, for example: analysedAt: 2026-09-02")
+			ex.add_note("Add an ISO-8601 timestamp, for example: analysedAt: 2026-09-04T21:45:00+00:00")
 			raise ex
 
 		try:
-			analysedAt = date.fromisoformat(str(analysedDay))
+			analysedAt = datetime.fromisoformat(str(analysedMoment))
 		except ValueError as cause:
-			ex = DependencyError(f"License override file '{path}' states an 'analysedAt' that isn't an ISO-8601 date.")
-			ex.add_note(f"Got '{analysedDay}'.")
-			ex.add_note("Write it as an ISO-8601 date: analysedAt: 2026-09-02")
+			ex = DependencyError(
+				f"License override file '{path}' states an 'analysedAt' that isn't an ISO-8601 timestamp."
+			)
+			ex.add_note(f"Got '{analysedMoment}'.")
+			ex.add_note("Write it as an ISO-8601 timestamp: analysedAt: 2026-09-04T21:45:00+00:00")
 			raise ex from cause
 
 		packages = configuration.get("packages", None)
@@ -525,7 +539,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		return cls.FromDictionary(packages, analysedAt)
 
 	@classmethod
-	def FromDictionary(cls, packages: Union[Mapping[str, Any], Dictionary], analysedAt: Nullable[date] = None) -> Self:
+	def FromDictionary(
+		cls,
+		packages: Union[Mapping[str, Any], Dictionary],
+		analysedAt: Nullable[datetime] = None
+	) -> Self:
 		"""
 		Build overrides from an already parsed mapping.
 
