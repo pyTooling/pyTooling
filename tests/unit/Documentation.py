@@ -54,7 +54,8 @@ if sphinxIsSupported:
 	from packaging.specifiers                          import SpecifierSet
 
 	from pyTooling.Documentation.Sphinx.DependencyTable import DependencyFormat, DependencyTable
-	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, readEntrypoints
+	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, formatUnresolvedLicenses
+	from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
 
 
@@ -398,3 +399,52 @@ class DependencyFormats(Testcase):
 		"""A document writes ':dependency-format: PackageVersionLicense', not 'package_version_license'."""
 		self.assertEqual("PackageVersionLicense", str(DependencyFormat.PackageVersionLicense))
 		self.assertEqual("MajorMinor", str(VersionFormat.MajorMinor))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class UnresolvedLicenseReport(Testcase):
+	"""A package needing a license override is reported with what the index published, because that is the reason."""
+
+	def test_OnePackageNamesWhatWasPublished(self) -> None:
+		"""The published field is the answer to 'why does this need an override', so it is in the message."""
+		message = formatUnresolvedLicenses({"multidict": ("license: Apache License 2.0",)})
+
+		self.assertIn("1 package(s) need a license override", message)
+		self.assertIn("license: Apache License 2.0", message)
+		self.assertIn("multidict", message)
+
+	def test_PackagesSharingAReasonAreOneGroup(self) -> None:
+		"""An ambiguous classifier usually accounts for most of the list, so it is stated once, not per package."""
+		classifier = "classifier: License :: OSI Approved :: BSD License"
+		message = formatUnresolvedLicenses({"Jinja2": (classifier,), "alabaster": (classifier,), "colorama": (classifier,)})
+
+		self.assertEqual(1, message.count(classifier))
+		self.assertIn("Jinja2, alabaster, colorama", message)
+
+	def test_TheBiggestGroupComesFirst(self) -> None:
+		"""The statement worth fixing first is the one accounting for the most packages."""
+		classifier = "classifier: License :: OSI Approved :: BSD License"
+		message = formatUnresolvedLicenses({
+			"multidict": ("license: Apache License 2.0",),
+			"Jinja2":    (classifier,),
+			"alabaster": (classifier,),
+		})
+		lines = message.splitlines()
+
+		self.assertEqual(f"  {classifier}", lines[1])
+		self.assertEqual("    Jinja2, alabaster", lines[2])
+		self.assertEqual("  license: Apache License 2.0", lines[3])
+
+	def test_APackageWithoutAnyLicenseInformationSaysSo(self) -> None:
+		"""An index publishing nothing at all must not render as an empty reason."""
+		message = formatUnresolvedLicenses({"mystery": ()})
+
+		self.assertIn("the index published no license information", message)
+
+	def test_SeveralPublishedFieldsAreJoined(self) -> None:
+		"""A release can publish both a 'license' field and a classifier, and neither of them resolved."""
+		message = formatUnresolvedLicenses({
+			"sphinxcontrib-jsmath": ("license: BSD", "classifier: License :: OSI Approved :: BSD License")
+		})
+
+		self.assertIn("license: BSD; classifier: License :: OSI Approved :: BSD License", message)
