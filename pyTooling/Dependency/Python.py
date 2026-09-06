@@ -31,6 +31,18 @@
 """
 Implementation of package dependencies.
 
+Importing this module needs the ``pypi`` extra, because it reads a package index over HTTP and parses PEP 440
+requirements:
+
+* :mod:`aiohttp`,
+* :mod:`packaging` and
+* :mod:`requests`
+
+are imported at module level and each is guarded, so a missing one names itself rather than failing as a bare
+:exc:`ImportError`.
+
+:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+
 .. hint::
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
@@ -38,16 +50,17 @@ Implementation of package dependencies.
 from __future__           import annotations
 
 from asyncio              import run as asyncio_run, gather as asyncio_gather
+from collections          import deque
 from datetime             import date, datetime
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from pathlib              import Path
 from re                   import compile as re_compile, Pattern
 from threading            import RLock
-from typing               import Any, ClassVar, Optional as Nullable, Union, Iterable, Mapping, Self
+from typing               import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
 
 from pyTooling.Configuration import Dictionary
-from pyTooling.Exceptions import MissingDependencyError
+from pyTooling.Exceptions    import MissingDependencyError
 
 try:
 	from aiohttp import ClientSession
@@ -55,7 +68,7 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
 
 try:
-	from packaging.requirements import Requirement
+	from packaging.requirements import InvalidRequirement, Requirement
 	from packaging.utils        import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
@@ -69,9 +82,9 @@ from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import BrokenRequirementWarning, DependencyError, NoSessionAvailableError
-from pyTooling.Dependency      import ProjectNotFoundError
-from pyTooling.Dependency      import ReleaseDetailsWarning, ReleaseNotFoundError, UnknownLicenseWarning
+from pyTooling.Dependency      import BrokenRequirementWarning, ReleaseDetailsWarning, UnknownLicenseWarning
+from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
+from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
@@ -84,18 +97,268 @@ _LICENSE_NOTE_LENGTH = 64
 
 #: PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
 #: :class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
-_PROPRIETARY_CLASSIFIER = "License :: Other/Proprietary License"
-
+_PROPRIETARY_CLASSIFIER =    "License :: Other/Proprietary License"
 
 #: Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first.
-_REPOSITORY_URL_ALIASES    = ("source code", "source", "code", "repository", "github", "gitlab")
+_REPOSITORY_URL_ALIASES =    ("source code", "source", "code", "repository", "github", "gitlab")
 _DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
 _ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
-_PROJECT_URL_ALIASES       = ("homepage", "home page", "home")
-_CHANGELOG_URL_ALIASES     = ("changelog", "changes", "release notes", "whatsnew", "what's new")
+_PROJECT_URL_ALIASES =       ("homepage", "home page", "home")
+_CHANGELOG_URL_ALIASES =     ("changelog", "changes", "release notes", "whatsnew", "what's new")
 
 #: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
+
+
+@export
+class RequirementsFile(metaclass=ExtendedType, slots=True):
+	"""
+	A ``requirements.txt`` file, together with the files it references.
+
+	A ``-r other.txt`` line references another file, and the tree of those references is kept rather than flattened:
+	``tests/requirements.txt`` is nothing but four ``-r`` lines, so a flattened list would say nothing about which of
+	them a package came from - which is exactly what a table per entrypoint has to show.
+
+	It is a **tree**, so every file knows where it sits in one: :attr:`Parent` is the file that referenced it and
+	:attr:`Root` the entrypoint the whole tree was read from. The root alone keeps
+	:attr:`AnalyzedRequirementFiles`, every file of the tree by its resolved path, which is both the answer to
+	*where did this package come from* and what makes a cycle detectable.
+
+	**A cycle raises.** A file referencing itself, directly or through a chain, is a statement nobody wrote on
+	purpose; reading it once and continuing would hide it.
+	"""
+
+	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
+	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
+	_path:                     Path                                        #: Path of this requirements file.
+	_entries:                  list[Union[Requirement, RequirementsFile]]  #: What this file states, in file order.
+	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of the tree, by resolved path.
+
+	def __init__(self, path: Path, parent: Nullable[RequirementsFile] = None) -> None:
+		"""
+		Read a requirements file and the files it references.
+
+		:param path:                             Path of the requirements file to read.
+		:param parent:                           Optional, the file referencing this one. Default: ``None``, a root.
+		:raises TypeError:                       If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises TypeError:                       If parameter 'parent' is not of type :class:`RequirementsFile`.
+		:raises RequirementsFileNotFoundError:   If the requirements file doesn't exist.
+		:raises CircularRequirementsFileError:   If a ``-r`` line references a file already being read.
+		"""
+		if not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+		elif not path.exists():
+			raise RequirementsFileNotFoundError(f"Requirements file '{path}' does not exist.") from FileNotFoundError(path)
+
+		if parent is not None and not isinstance(parent, RequirementsFile):
+			ex = TypeError("Parameter 'parent' is not of type 'RequirementsFile'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		self._path =                     path
+		self._parent =                   parent
+		self._root =                     self if parent is None else parent._root
+		self._entries =                  []
+
+		# resolved as the mapping's key only, not as '_path': the key is compared against a '-r' reference, which is
+		# resolved below, so a file reachable under two spellings has to arrive here as one
+		if parent is None:
+			self._analyzedRequirementFiles = {
+				path.resolve(): self
+			}
+		else:
+			self._analyzedRequirementFiles = None
+			self._root._analyzedRequirementFiles[path.resolve()] = self
+
+		lines = path.read_text(encoding="utf-8").splitlines()
+		for lineNumber, line in enumerate(lines, start=1):
+			if (line := line.split("#")[0].strip()) == "":
+				continue
+
+			if line.startswith("-r"):
+				referenced = (path.parent / line[2:].strip()).resolve()
+
+				if referenced in self._root._analyzedRequirementFiles:
+					chain = " → ".join(str(file.Path) for file in self.Hierarchy)
+					ex = CircularRequirementsFileError(
+						f"Requirements file '{referenced}' referenced in '{path}' line {lineNumber} is already being read."
+					)
+					ex.add_note(f"Chain: {chain} → {referenced}")
+					raise ex
+
+				self._entries.append(RequirementsFile(referenced, self))
+				continue
+
+			# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
+			if line.startswith("-") or line.startswith("http"):
+				continue
+
+			try:
+				self._entries.append(Requirement(line))
+			except InvalidRequirement as ex:
+				WarningCollector.Raise(
+					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {lineNumber} can't be parsed."),
+					ex
+				)
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access this requirement file's path (:attr:`_path`).
+
+		:returns: Path of the requirements file, spelled the way it was handed in.
+		"""
+		return self._path
+
+	@readonly
+	def Root(self) -> RequirementsFile:
+		"""
+		Read-only property to access the entrypoint this tree was read from (:attr:`_root`).
+
+		:returns: The tree's root, which is this file itself when it is one.
+		"""
+		return self._root
+
+	@readonly
+	def Parent(self) -> Nullable[RequirementsFile]:
+		"""
+		Read-only property to access the file whose ``-r`` line referenced this one (:attr:`_parent`).
+
+		:returns: The referencing file, or ``None`` for a root.
+		"""
+		return self._parent
+
+	@readonly
+	def Hierarchy(self) -> tuple[RequirementsFile, ...]:
+		"""
+		Read-only property to return the path from the root down to this file as a tuple.
+
+		:returns: A tuple of requirements files.
+		"""
+		hierarchy: Deque[RequirementsFile] = deque([self])
+		parentRequirementsFile: Nullable[RequirementsFile] = self
+		while (parentRequirementsFile := parentRequirementsFile._parent) is not None:
+			hierarchy.appendleft(parentRequirementsFile)
+
+		return tuple(hierarchy)
+
+	@readonly
+	def AnalyzedRequirementFiles(self) -> Nullable[dict[Path, RequirementsFile]]:
+		"""
+		Read-only property to access every file of this tree, by its resolved path.
+
+		**Only the root's is filled**; ask :attr:`Root` for it. It is what detects a cycle while reading, and what
+		answers which files a tree was read from afterward - the list a documentation build registers so a change
+		to any of them rebuilds the page.
+
+		:returns: Every file of the tree by resolved path, or ``None`` for a referenced file.
+		"""
+		return self._analyzedRequirementFiles
+
+	@readonly
+	def Entries(self) -> list[Union[Requirement, RequirementsFile]]:
+		"""
+		Read-only property to access what this file states, in the order it states it (:attr:`_entries`).
+
+		Requirements and referenced files are kept in one list, because a file states them interleaved.
+		:attr:`Requirements` and :attr:`ReferencedFiles` are the two filtered views of it.
+
+		:returns: This file's requirements and referenced files.
+		"""
+		return self._entries
+
+	@readonly
+	def Requirements(self) -> Iterator[Requirement]:
+		"""
+		Read-only property to iterate the requirements stated in this file.
+
+		This is what *this* file states; what the files it references state is reachable through
+		:attr:`ReferencedFiles`.
+
+		:returns: An iterator of this file's requirements, in the order they are written.
+		"""
+		return (entry for entry in self._entries if isinstance(entry, Requirement))
+
+	@readonly
+	def ReferencedFiles(self) -> Iterator[RequirementsFile]:
+		"""
+		Read-only property to iterate the files referenced with ``-r``.
+
+		:returns: An iterator of the referenced files, in the order they are referenced.
+		"""
+		return (entry for entry in self._entries if isinstance(entry, RequirementsFile))
+
+	def IterateTree(self) -> Iterator[RequirementsFile]:
+		"""
+		Iterate this file and every file it references, depth first.
+
+		:returns: A generator of requirements files, this one first.
+		"""
+		yield self
+		for referenced in self.ReferencedFiles:
+			yield from referenced.IterateTree()
+
+	@readonly
+	def AllRequirements(self) -> Iterator[Requirement]:
+		"""
+		Read-only property to iterate the requirements of this file and of every file it references.
+
+		**The file's order is kept**, and **the nearer statement wins**: a requirement stated in this file overrides
+		the same package required by a referenced file, wherever the two stand, because that is the constraint the
+		entrypoint was written for. Overriding keeps the position, so every package is yielded exactly once.
+
+		.. code-block:: text
+
+		   # base.txt          # requirements.txt        AllRequirements
+		   pytest ~= 8.0       pytest ~= 9.1             pytest ~= 9.1
+		   sphinx ~= 9.1       -r base.txt               sphinx ~= 9.1
+		                       colorama ~= 0.4.6         colorama ~= 0.4.6
+
+		:returns: A generator of requirements, deduplicated by canonical package name, in the order stated.
+		"""
+		requirements: dict[str, Requirement] = {}
+		stated:       dict[str, Requirement] = {}
+
+		for entry in self._entries:
+			if isinstance(entry, RequirementsFile):
+				for requirement in entry.AllRequirements:
+					requirements[canonicalize_name(requirement.name)] = requirement
+			else:
+				name = canonicalize_name(entry.name)
+				requirements[name] = stated[name] = entry
+
+		# a key keeps the position of its first insertion, so this overrides the value without moving the package
+		requirements.update(stated)
+
+		yield from requirements.values()
+
+	def __len__(self) -> int:
+		"""
+		Return the number of requirements this file states, not counting the files it references.
+
+		:returns: Number of requirements stated in this file.
+		"""
+		return sum(1 for _ in self.Requirements)
+
+	def __iter__(self) -> Iterator[Requirement]:
+		"""
+		Iterate the requirements this file states, not the ones it references.
+
+		:returns: An iterator of this file's requirements.
+		"""
+		return self.Requirements
+
+	def __str__(self) -> str:
+		"""
+		Return this file's path and how much it states.
+
+		:returns: A string representation of this requirements file.
+		"""
+		referenced = sum(1 for _ in self.ReferencedFiles)
+
+		return f"{self._path}: {len(self)} requirement(s), {referenced} referenced file(s)"
 
 
 @export
@@ -154,7 +417,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
 	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
 
-	_analysedAt:   Nullable[date]                             #: Day the statements were last checked by a human.
+	_analysedAt:   Nullable[datetime]                         #: When the statements were last checked by a human.
 	#: License expression per package, by the version expression its key states, in the file's order.
 	_licenses:     dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 	#: URL of the license's text per package, by the version expression its key states, in the file's order.
@@ -162,7 +425,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	#: URL of the source repository per package, by the version expression its key states, in the file's order.
 	_repositories: dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 
-	def __init__(self, analysedAt: Nullable[date] = None) -> None:
+	def __init__(self, analysedAt: Nullable[datetime] = None) -> None:
 		"""
 		Initialize an empty set of overrides.
 
@@ -174,9 +437,9 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		self._repositories = {}
 
 	@readonly
-	def AnalysedAt(self) -> Nullable[date]:
+	def AnalysedAt(self) -> Nullable[datetime]:
 		"""
-		Read-only property to access the day these statements were last checked (:attr:`_analysedAt`).
+		Read-only property to access when these statements were last checked (:attr:`_analysedAt`).
 
 		A package index answers for itself every time it is asked, so what it says is as old as the request. These
 		statements are written by hand and are as old as whoever last looked, which nothing else records - so a
@@ -249,18 +512,20 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"This reads '{cls.SCHEMA_VERSION}'.")
 			raise ex
 
-		if (analysedDay := configuration.get("analysedAt", None)) is None:
-			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' date.")
+		if (analysedMoment := configuration.get("analysedAt", None)) is None:
+			ex = DependencyError(f"License override file '{path}' states no 'analysedAt' timestamp.")
 			ex.add_note("These statements are written by hand, so nothing else records how old they are.")
-			ex.add_note("Add an ISO-8601 date, for example: analysedAt: 2026-09-02")
+			ex.add_note("Add an ISO-8601 timestamp, for example: analysedAt: 2026-09-04T21:45:00+00:00")
 			raise ex
 
 		try:
-			analysedAt = date.fromisoformat(str(analysedDay))
+			analysedAt = datetime.fromisoformat(str(analysedMoment))
 		except ValueError as cause:
-			ex = DependencyError(f"License override file '{path}' states an 'analysedAt' that isn't an ISO-8601 date.")
-			ex.add_note(f"Got '{analysedDay}'.")
-			ex.add_note("Write it as an ISO-8601 date: analysedAt: 2026-09-02")
+			ex = DependencyError(
+				f"License override file '{path}' states an 'analysedAt' that isn't an ISO-8601 timestamp."
+			)
+			ex.add_note(f"Got '{analysedMoment}'.")
+			ex.add_note("Write it as an ISO-8601 timestamp: analysedAt: 2026-09-04T21:45:00+00:00")
 			raise ex from cause
 
 		packages = configuration.get("packages", None)
@@ -274,7 +539,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		return cls.FromDictionary(packages, analysedAt)
 
 	@classmethod
-	def FromDictionary(cls, packages: Union[Mapping[str, Any], Dictionary], analysedAt: Nullable[date] = None) -> Self:
+	def FromDictionary(
+		cls,
+		packages: Union[Mapping[str, Any], Dictionary],
+		analysedAt: Nullable[datetime] = None
+	) -> Self:
 		"""
 		Build overrides from an already parsed mapping.
 
@@ -743,6 +1012,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 		except HTTPError as ex:
 			if ex.response is not None and ex.response.status_code == 404:
 				raise ReleaseNotFoundError(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
+
+			raise ex
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
