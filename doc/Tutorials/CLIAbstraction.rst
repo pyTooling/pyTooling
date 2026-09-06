@@ -3,6 +3,7 @@
 CLI Abstraction
 ###############
 
+
 Calling another program from Python usually starts as a list of strings and ends as a bug: a path that needed
 quoting, a flag whose spelling differs on Windows, a value concatenated with ``+`` in the wrong place. The list is
 assembled far from where the arguments are decided, and nothing checks it.
@@ -35,7 +36,8 @@ This tutorial builds that class.
 Step 1: ``Program`` or ``Executable``?
 **************************************
 
-Two base-classes, one question: **does your class need to run the program, or only to describe the call?**
+
+Two base-classes, one question: does your class need to run the program, or only to describe the call?
 
 .. list-table::
    :header-rows: 1
@@ -68,105 +70,120 @@ choice is not final: describe first, and change the base-class when the class ne
 Step 2: the class and its first argument
 ****************************************
 
-An argument is a **nested class** derived from one of the predefined argument classes, marked with
-:ref:`@CLIArgument() <CLIABS/CLIArgument>`. The nested class contributes nothing but its name and its base - the
-base decides the pattern, and ``name=`` fills it in.
+.. grid:: 2
 
-.. code-block:: Python
+   .. grid-item::
+      :columns: 6
 
-   from pyTooling.CLIAbstraction         import CLIArgument, Program
-   from pyTooling.CLIAbstraction.Command import CommandArgument
-   from pyTooling.CLIAbstraction.Flag    import ShortFlag, LongFlag
+      An argument is a **nested class** derived from one of the predefined argument classes, marked with
+      :ref:`@CLIArgument() <CLIABS/CLIArgument>`. The nested class contributes nothing but its name and its base - the
+      base decides the pattern, and ``name=`` fills it in.
 
-   class Git(Program):
-     _executableNames = {
-       "Darwin":  "git",
-       "FreeBSD": "git",
-       "Linux":   "git",
-       "Windows": "git.exe",
-     }
+      Three things are worth naming:
 
-     @CLIArgument()
-     class FlagVersion(LongFlag, name="version"): ...
+      .. rubric:: ``_executableNames`` maps :attr:`platform.system` to the file name
 
-     @CLIArgument()
-     class CommandCommit(CommandArgument, name="commit"): ...
+      The executable is looked up on ``PATH`` when the object is constructed, and a missing one raises
+      :exc:`~pyTooling.CLIAbstraction.CLIAbstractionError` right there rather than at the first call. Pass
+      ``executablePath=`` to bypass the lookup and name a file directly.
 
-     @CLIArgument()
-     class FlagAll(ShortFlag, name="a"): ...
+      .. rubric:: The nested class' own name is how you address the argument
 
-Three things are worth naming:
+      ``git[git.CommandCommit]`` - the member name, not the command line spelling. Renaming ``--version`` to ``-V``
+      later is a change to ``name=`` alone; every call site keeps working.
 
-.. rubric:: ``_executableNames`` maps :attr:`platform.system` to the file name
+      .. rubric:: ``...`` is the whole body
 
-The executable is looked up on ``PATH`` when the object is constructed, and a missing one raises
-:exc:`~pyTooling.CLIAbstraction.CLIAbstractionError` right there rather than at the first call. Pass
-``executablePath=`` to bypass the lookup and name a file directly.
+      The nested class exists to be *named* and to *inherit*. Anything else in its body is a sign the wrong base-class
+      was chosen.
 
-.. rubric:: The nested class' own name is how you address the argument
+      .. note::
 
-``git[git.CommandCommit]`` - the member name, not the command line spelling. Renaming ``--version`` to ``-V`` later
-is a change to ``name=`` alone; every call site keeps working.
+         :ref:`@CLIArgument() <CLIABS/CLIArgument>` needs its parentheses even though it takes no arguments,
+         because it is an :ref:`attribute <ATTR>` and an attribute is instantiated before it is applied.
 
-.. rubric:: ``...`` is the whole body
+   .. grid-item::
+      :columns: 6
 
-The nested class exists to be *named* and to *inherit*. Anything else in its body is a sign the wrong base-class
-was chosen.
+      .. code-block:: Python
 
-.. note::
+         from pyTooling.CLIAbstraction         import CLIArgument, Program
+         from pyTooling.CLIAbstraction.Command import CommandArgument
+         from pyTooling.CLIAbstraction.Flag    import ShortFlag, LongFlag
 
-   :ref:`@CLIArgument() <CLIABS/CLIArgument>` needs its parentheses even though it takes no arguments, because it is
-   an :ref:`attribute <ATTR>` and an attribute is instantiated before it is applied.
+         class Git(Program):
+           _executableNames = {
+             "Darwin":  "git",
+             "FreeBSD": "git",
+             "Linux":   "git",
+             "Windows": "git.exe",
+           }
 
+           @CLIArgument()
+           class FlagVersion(LongFlag, name="version"): ...
+
+           @CLIArgument()
+           class CommandCommit(CommandArgument, name="commit"): ...
+
+           @CLIArgument()
+           class FlagAll(ShortFlag, name="a"): ...
 
 .. _TUTORIAL/CLIAbstraction/Setting:
 
 Step 3: set the arguments and assemble
 **************************************
 
-Arguments are set through the indexer, with the value the argument carries - or ``None`` for one that carries
-nothing:
+.. grid:: 2
 
-.. code-block:: Python
+   .. grid-item::
+      :columns: 6
 
-   git = Git()
-   git[git.CommandCommit] = True             # a command: selects what the program does
-   git[git.FlagAll]       = True             # a flag: present
-   git[git.ValueMessage]  = "initial commit"  # a valued flag: name and value
+      Arguments are set through the indexer, with the value the argument carries - or ``None`` for one that carries
+      nothing:
 
-   git.ToArgumentList()                       # -> ['git', 'commit', '-m', 'initial commit', '-a']
+      .. attention::
 
-.. attention::
+         **The order of the result is the order the arguments were declared in, not the order they were set.** ``-m``
+         precedes ``-a`` above because ``ValueMessage`` is declared before ``FlagAll``. Declare the nested classes in
+         the order the program expects them - commands before their flags - and the assembled list is right regardless
+         of how the caller fills it in.
 
-   **The order of the result is the order the arguments were declared in, not the order they were set.** ``-m``
-   precedes ``-a`` above because ``ValueMessage`` is declared before ``FlagAll``. Declare the nested classes in the
-   order the program expects them - commands before their flags - and the assembled list is right regardless of how
-   the caller fills it in.
+      .. caution::
 
-.. caution::
+         **A command and a flag carry no value, and the value assigned is not read.**
+         :pycode:`program[program.FlagAll] = True` and :pycode:`program[program.FlagAll] = None` do the same thing:
+         assigning *registers* the argument. ``True`` is the better spelling because it says what is meant.
 
-   **A command and a flag carry no value, and the value assigned is not read.**
-   :pycode:`program[program.FlagAll] = True` and :pycode:`program[program.FlagAll] = None` do the same thing:
-   assigning *registers* the argument. ``True`` is the better spelling because it says what is meant.
+         **``False`` does not turn it off** - it registers the flag like any other assignment, and ``-a`` is emitted
+         anyway. An argument also can't be unset afterwards: there is no ``__delitem__``, and assigning a second time
+         raises :exc:`KeyError`. So an argument that depends on a condition is set inside an ``if``, not by assigning a
+         boolean:
 
-   **``False`` does not turn it off** - it registers the flag like any other assignment, and ``-a`` is emitted
-   anyway. An argument also can't be unset afterwards: there is no ``__delitem__``, and assigning a second time
-   raises :exc:`KeyError`. So an argument that depends on a condition is set inside an ``if``, not by assigning a
-   boolean:
+         .. code-block:: Python
 
-   .. code-block:: Python
+            if verbose:
+              program[program.FlagVerbose] = True
 
-      if verbose:
-        program[program.FlagVerbose] = True
+      :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` returns the list for :class:`subprocess.Popen`;
+      :pycode:`str(program)` returns the same thing quoted, for a log line or an error message.
 
-:meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` returns the list for :class:`subprocess.Popen`;
-:pycode:`str(program)` returns the same thing quoted, for a log line or an error message.
+   .. grid-item::
+      :columns: 6
 
+      .. code-block:: Python
+
+         git = Git()
+         git[git.CommandCommit] = True             # a command: selects what the program does
+         git[git.FlagAll]       = True             # a flag: present
+         git[git.ValueMessage]  = "initial commit"  # a valued flag: name and value
+
+         git.ToArgumentList()                       # -> ['git', 'commit', '-m', 'initial commit', '-a']
 
 .. _TUTORIAL/CLIAbstraction/Choosing:
 
 Step 4: choosing the right argument class
 *****************************************
+
 
 Each predefined class knows one pattern. Pick by **what the program's syntax looks like**, then by prefix style -
 every family has a ``Short``, a ``Long`` and a ``Windows`` variant, differing only in ``-``, ``--`` and ``/``.
@@ -238,63 +255,79 @@ flag; ``--lib LIB (may be given more than once)`` is a flag list.
 Step 5: sharing arguments between program variants
 **************************************************
 
-A tool that exists in several variants - a native and a cross compiler, two versions of the same simulator - shares
-most of its arguments. Put them in a **mixin** and derive each variant from it, so the argument classes are declared
-once:
+.. grid:: 2
 
-.. code-block:: Python
+   .. grid-item::
+      :columns: 6
 
-   from pyTooling.MetaClasses import ExtendedType
+      A tool that exists in several variants - a native and a cross compiler, two versions of the same simulator -
+      shares most of its arguments. Put them in a **mixin** and derive each variant from it, so the argument classes are
+      declared once:
 
-   class GitArgumentsMixin(metaclass=ExtendedType, mixin=True):
-     _executableNames = {"Linux": "git", "Windows": "git.exe", "Darwin": "git"}
+      See :ref:`META/Mixin` for what :pycode:`mixin=True` does and why the second base-class needs it.
 
-     @CLIArgument()
-     class FlagVersion(LongFlag, name="version"): ...
+   .. grid-item::
+      :columns: 6
 
-     @CLIArgument()
-     class CommandCommit(CommandArgument, name="commit"): ...
+      .. code-block:: Python
 
-   class Git(Program, GitArgumentsMixin): ...
+         from pyTooling.MetaClasses import ExtendedType
 
-   class GitWithLFS(Git):
-     @CLIArgument()
-     class CommandLFS(CommandArgument, name="lfs"): ...
+         class GitArgumentsMixin(metaclass=ExtendedType, mixin=True):
+           _executableNames = {"Linux": "git", "Windows": "git.exe", "Darwin": "git"}
 
-See :ref:`META/Mixin` for what :pycode:`mixin=True` does and why the second base-class needs it.
+           @CLIArgument()
+           class FlagVersion(LongFlag, name="version"): ...
 
+           @CLIArgument()
+           class CommandCommit(CommandArgument, name="commit"): ...
+
+         class Git(Program, GitArgumentsMixin): ...
+
+         class GitWithLFS(Git):
+           @CLIArgument()
+           class CommandLFS(CommandArgument, name="lfs"): ...
 
 .. _TUTORIAL/CLIAbstraction/Running:
 
 Step 6: running it
 ******************
 
-Change the base-class to :class:`~pyTooling.CLIAbstraction.Executable` and the same class can start the process and
-read its output line by line:
+.. grid:: 2
 
-.. code-block:: Python
+   .. grid-item::
+      :columns: 6
 
-   class Git(Executable, GitArgumentsMixin): ...
+      Change the base-class to :class:`~pyTooling.CLIAbstraction.Executable` and the same class can start the process
+      and read its output line by line:
 
-   git = Git()
-   git[git.CommandCommit] = None
-   git[git.ValueMessage]  = "initial commit"
+      .. caution::
 
-   git.StartProcess()
-   for line in git.GetLineReader():
-     print(line)
+         :pycode:`dryRun=True` on the constructor is meant to make the program describe what it *would* run
+         instead of running it, so a ``--dry-run`` mode in your own tool needs one constructor argument rather than
+         a branch around every call. **It is not usable as it stands**: the dry-run paths call
+         :pycode:`self.LogDryRun(...)`, which no class in pyTooling defines, so
+         :meth:`~pyTooling.CLIAbstraction.Executable.StartProcess` raises
+         :exc:`AttributeError` instead. Provide a ``LogDryRun`` method on your class until that is resolved.
 
-   git.Wait()
-   if git.ExitCode != 0:
-     raise BuildError(f"'{git}' failed with exit code {git.ExitCode}.")
+         :meth:`~pyTooling.CLIAbstraction.Executable.GetLineReader` does behave as documented and raises
+         :exc:`~pyTooling.CLIAbstraction.DryRunError` when the process was never started.
 
-.. caution::
+   .. grid-item::
+      :columns: 6
 
-   :pycode:`dryRun=True` on the constructor is meant to make the program describe what it *would* run instead of running
-   it, so a ``--dry-run`` mode in your own tool needs one constructor argument rather than a branch around every
-   call. **It is not usable as it stands**: the dry-run paths call :pycode:`self.LogDryRun(...)`, which no class in
-   pyTooling defines, so :meth:`~pyTooling.CLIAbstraction.Executable.StartProcess` raises
-   :exc:`AttributeError` instead. Provide a ``LogDryRun`` method on your class until that is resolved.
+      .. code-block:: Python
 
-   :meth:`~pyTooling.CLIAbstraction.Executable.GetLineReader` does behave as documented and raises
-   :exc:`~pyTooling.CLIAbstraction.DryRunError` when the process was never started.
+         class Git(Executable, GitArgumentsMixin): ...
+
+         git = Git()
+         git[git.CommandCommit] = None
+         git[git.ValueMessage]  = "initial commit"
+
+         git.StartProcess()
+         for line in git.GetLineReader():
+           print(line)
+
+         git.Wait()
+         if git.ExitCode != 0:
+           raise BuildError(f"'{git}' failed with exit code {git.ExitCode}.")
