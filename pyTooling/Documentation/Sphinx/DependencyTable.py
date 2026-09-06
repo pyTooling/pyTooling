@@ -68,7 +68,8 @@ from __future__                    import annotations
 
 from enum                          import Enum, auto
 from pathlib                       import Path
-from typing                        import TYPE_CHECKING, Any, Iterable, Literal, Optional as Nullable, TypeVar, cast
+from typing                        import TYPE_CHECKING, Any, Iterable, Literal, Mapping, Optional as Nullable
+from typing                        import TypeVar, cast
 
 from pyTooling.Common              import getFullyQualifiedName
 from pyTooling.Decorators          import export, readonly
@@ -357,7 +358,8 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 	_detailed:    set[str]                                 #: Releases whose details were downloaded.
 	_undescribed: set[str]                                 #: Releases the index lists but can't describe.
 	_stopwatch:   Stopwatch                                #: Runs only while a request to the index is in flight.
-	_unresolved:  set[str]                                 #: Packages whose license the index couldn't answer for.
+	_unresolved:  dict[str, tuple[str, ...]]               #: Packages whose license the index couldn't answer for,
+	                                                       #: mapped to what it published instead.
 
 	def __init__(
 		self,
@@ -383,7 +385,7 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		self._projects =    {}
 		self._detailed =    set()
 		self._undescribed = set()
-		self._unresolved =  set()
+		self._unresolved =  {}
 
 		# 'preferPause', so each 'with' around a request is one active span: 'Activity' is the time spent waiting for
 		# the index rather than the age of the collector, and 'ActiveCount' is the number of requests
@@ -440,11 +442,15 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 		return self._stopwatch.Activity
 
 	@readonly
-	def UnresolvedLicenses(self) -> set[str]:
+	def UnresolvedLicenses(self) -> dict[str, tuple[str, ...]]:
 		"""
-		Packages whose license the index couldn't answer for.
+		Packages whose license the index couldn't answer for, and what it published instead.
 
-		:returns: Names of the packages needing a license override.
+		The published fields are what the override file has to answer for, so they are kept rather than only the
+		package's name: ``License :: OSI Approved :: BSD License`` names three licenses and is never guessed at, and
+		a ``license`` field holding a license's title instead of its SPDX identifier doesn't parse.
+
+		:returns: Names of the packages needing a license override, mapped to what the index published for them.
 		"""
 		return self._unresolved
 
@@ -515,7 +521,8 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 
 		for warning in warnings:
 			if isinstance(warning, UnknownLicenseWarning):
-				self._unresolved.add(release.Package.Name)
+				# the warning's notes are what the index published, which is the reason an override is needed
+				self._unresolved[release.Package.Name] = warning.Notes
 
 		return None if key in self._undescribed else release
 
@@ -1339,6 +1346,33 @@ class DependencyTable(BaseDirective):
 		return paragraph
 
 
+@export
+def formatUnresolvedLicenses(unresolved: Mapping[str, tuple[str, ...]]) -> str:
+	"""
+	Describe the packages needing a license override, grouped by what the package index published for them.
+
+	Grouped rather than listed one per line, because one ambiguous statement usually accounts for most of the list:
+	``License :: OSI Approved :: BSD License`` names three licenses, so every package whose only license information
+	is that classifier lands here for the same reason and is worth reading as one group.
+
+	:param unresolved: Names of the packages needing an override, mapped to what the index published for them.
+	:returns:          The message, as one line naming the count and two lines per reason.
+	"""
+	byReason: dict[tuple[str, ...], list[str]] = {}
+	for packageName, published in sorted(unresolved.items()):
+		byReason.setdefault(published, []).append(packageName)
+
+	lines = [f"[dependency-table] {len(unresolved)} package(s) need a license override:"]
+
+	# the biggest group first, so the statement to fix first is the one at the top
+	for published, packageNames in sorted(byReason.items(), key=lambda item: (-len(item[1]), item[0])):
+		reason = "; ".join(published) if len(published) > 0 else "the index published no license information"
+		lines.append(f"  {reason}")
+		lines.append(f"    {', '.join(packageNames)}")
+
+	return "\n".join(lines)
+
+
 def reportBuildTime(app: Sphinx, exception: Nullable[Exception]) -> None:
 	"""
 	Report what querying the package index cost this build.
@@ -1359,7 +1393,4 @@ def reportBuildTime(app: Sphinx, exception: Nullable[Exception]) -> None:
 	)
 
 	if len(unresolved := collector.UnresolvedLicenses) > 0:
-		_logger.warning(
-			f"[dependency-table] {len(unresolved)} package(s) need a license override: "
-			f"{', '.join(sorted(unresolved))}."
-		)
+		_logger.warning(formatUnresolvedLicenses(unresolved))
