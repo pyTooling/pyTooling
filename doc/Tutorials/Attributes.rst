@@ -11,7 +11,7 @@ which is where :mod:`pyTooling.Attributes` takes it from.
 
 .. code-block:: Python
 
-   @Plugin(name="MyPlugin")
+   @Plugin(name="MyPlugin", version="1.0.0")
    class MyPlugin:
      ...
 
@@ -92,10 +92,19 @@ A plug-in system needs both halves at once, which is why it is the example this 
 belong to the plug-in class, and the host application has to enumerate every plug-in it can find.
 
 
+.. _TUTORIAL/Attributes/Plugins:
+
+Example 1: a class-based plug-in mechanism
+******************************************
+
+A plug-in is a class, its metadata travels with it, and the host finds every plug-in without the plug-in ever
+calling the host. Four steps: define the attribute, apply it, load the modules, find what was annotated.
+
+
 .. _TUTORIAL/Attributes/Define:
 
 Step 1: define an attribute class
-*********************************
+=================================
 
 Derive from :class:`~pyTooling.Attributes.Attribute` and give the initializer the parameters the annotation should
 carry. Expose them as read-only properties, because whoever finds the annotation later has to read them.
@@ -104,40 +113,55 @@ carry. Expose them as read-only properties, because whoever finds the annotation
 
    from pyTooling.Attributes import Attribute
    from pyTooling.Decorators import export, readonly
+   from pyTooling.Versioning import SemanticVersion
 
    @export
    class Plugin(Attribute):
      """Marks a class as a plug-in of this application."""
 
-     _name:    str  #: Name the plug-in is selected by.
-     _version: str  #: Version of the plug-in, as its author declares it.
+     _name:    str             #: Name the plug-in is selected by.
+     _version: SemanticVersion  #: Version of the plug-in, as its author declares it.
 
      def __init__(self, name: str, version: str = "0.0.0") -> None:
        self._name = name
-       self._version = version
+       self._version = SemanticVersion.Parse(version)
 
      @readonly
      def Name(self) -> str:
        return self._name
 
      @readonly
-     def Version(self) -> str:
+     def Version(self) -> SemanticVersion:
        return self._version
 
-That is the whole definition. :class:`~pyTooling.Attributes.Attribute` supplies ``__call__`` - which is what makes
-the class usable as a decorator - and the registry the ``Get***`` methods read.
+The parameter is accepted as a string and stored as a :class:`~pyTooling.Versioning.SemanticVersion`, so two
+plug-in versions can be compared instead of only printed.
+
+That is the whole definition. Two things come from the base-class: ``__call__``, which is what lets the class be
+used as a decorator, and the registry that the ``Get***`` methods read.
 
 .. hint::
 
-   For a throw-away annotation that carries positional or keyword data and nothing else,
-   :class:`~pyTooling.Attributes.SimpleAttribute` skips the class definition:
-   ``@SimpleAttribute(kind="reader", order=3)``, read back as ``attribute.Args`` and ``attribute.KwArgs``.
+   For a quick and simple annotation that carries positional or keyword data and nothing else,
+   :class:`~pyTooling.Attributes.SimpleAttribute` skips the class definition entirely:
+
+   .. code-block:: Python
+
+      from pyTooling.Attributes import SimpleAttribute
+
+      @SimpleAttribute(kind="reader", order=3)
+      class MarkdownReader:
+        ...
+
+      attribute = SimpleAttribute.GetAttributes(MarkdownReader)[0]
+      attribute.Args     # -> ()
+      attribute.KwArgs   # -> {'kind': 'reader', 'order': 3}
 
 
 .. _TUTORIAL/Attributes/Apply:
 
 Step 2: apply it
-****************
+================
 
 An attribute goes on a class, a method or a function. Several attributes stack, and an entity may carry the same
 attribute class more than once.
@@ -148,27 +172,41 @@ application defines. The two are independent, and that separation is the point: 
 
 .. code-block:: Python
 
-   # the application's own interface - no pyTooling involved
-   class Reader:
-     def Read(self, path): ...
+   from pathlib import Path
+
+   from pyTooling.MetaClasses import ExtendedType, abstractmethod
+
+   # the application's own interface
+   class Reader(metaclass=ExtendedType):
+     @abstractmethod
+     def Read(self, path: Path) -> str:
+       """Read the document at 'path' and return its text."""
 
    # plugins/markdown.py
    @Plugin(name="markdown", version="1.2.0")
    class MarkdownReader(Reader):
-     def Read(self, path): ...
+     def Read(self, path: Path) -> str:
+       return path.read_text(encoding="utf-8")
 
 An attribute carrying no data at all is written without parentheses - :pycode:`@Plugin` rather than
 :pycode:`@Plugin()` - but a plug-in almost always has a name, so the parenthesised form is the usual one here.
+
+.. important::
+
+   **The interface is built with** :class:`~pyTooling.MetaClasses.ExtendedType`, and that is not decoration. It
+   makes :meth:`~pyTooling.MetaClasses.abstractmethod` reject a plug-in that forgot to implement :pycode:`Read`,
+   and - as :ref:`the second example <TUTORIAL/Attributes/Hooks>` shows - it is what makes annotated **methods**
+   findable at all. A plug-in class alone does not need it; a plug-in class whose *methods* carry attributes does.
 
 
 .. _TUTORIAL/Attributes/Load:
 
 Step 3: load the plug-in modules
-********************************
+================================
 
 .. attention::
 
-   **An entity is registered when its module is imported**, because that is when the decorator runs. A plug-in in a
+   An entity is registered when its module is imported, because that is when the decorator runs. A plug-in in a
    module nothing imports is invisible to :pycode:`GetClasses()`.
 
 This is the single thing that catches people out, and for a plug-in system it is not an edge case - it *is* the
@@ -202,7 +240,7 @@ Nothing else changed - the registry was simply empty because no decorator had ru
 .. _TUTORIAL/Attributes/Find:
 
 Step 4: find what was annotated
-*******************************
+===============================
 
 Three class-methods answer the three kinds of entity, and each yields what was annotated - not the attribute
 instances:
@@ -254,13 +292,24 @@ declare a class of the same name.
    entity should be processed once.
 
 
+.. _TUTORIAL/Attributes/Hooks:
+
+Example 2: hooks on a plug-in's methods
+***************************************
+
+The first example annotated *classes*. The same mechanism works one level down, on the **methods inside** a
+plug-in: a plug-in that reacts to events declares which method handles which event, instead of the host calling
+methods by a magic name.
+
+This example builds on the first - ``Plugin`` still marks the class; ``Hook`` marks the methods within it.
+
+
 .. _TUTORIAL/Attributes/Methods:
 
-Step 5: annotate the plug-in's methods
-**************************************
+Step 1: define a second attribute
+=================================
 
-The same mechanism works one level down. A plug-in that reacts to events declares which method handles which event,
-instead of the host calling methods by a magic name:
+An attribute class per *kind* of annotation. ``Hook`` carries the event name:
 
 .. code-block:: Python
 
@@ -275,6 +324,11 @@ instead of the host calling methods by a magic name:
      @readonly
      def Event(self) -> str:
        return self._event
+
+.. _TUTORIAL/Attributes/AskOneObject:
+
+Step 2: ask one object what it offers
+=====================================
 
 :meth:`~pyTooling.Attributes.Attribute.GetMethods` returns annotated methods of **every** class, which is rarely what
 a host wants - it holds one plug-in instance and asks *what does this one offer?* A class built with
@@ -294,7 +348,7 @@ a host wants - it holds one plug-in instance and asks *what does this one offer?
      def OnClose(self, path):
        ...
 
-     def _helper(self):   # not annotated, so not found
+     def OnError(self, error):   # not annotated, so not found
        ...
 
    plugin = MarkdownReader()
@@ -313,14 +367,39 @@ a host wants - it holds one plug-in instance and asks *what does this one offer?
    attributes, so iterating it yields methods. ``.items()`` is what gives the pairs; iterating the result directly
    and unpacking raises ``TypeError: cannot unpack non-iterable function object``.
 
+``OnError`` is a perfectly ordinary public method; it is absent from the result because it carries no ``@Hook``,
+not because of how it is named. That is the whole difference from a naming convention.
+
+The same answer can be had from the attribute instead of from the object, which is the right way round when the
+host wants *every* plug-in's handlers rather than one plug-in's:
+
+.. code-block:: Python
+
+   for method in Hook.GetMethods():
+     for attribute in Hook.GetAttributes(method):
+       print(f"{attribute.Event:<6} -> {method.__qualname__}")
+
+.. code-block:: text
+
+   open   -> MarkdownReader.OnOpen
+   close  -> MarkdownReader.OnClose
+
+.. important::
+
+   :meth:`~pyTooling.Attributes.Attribute.GetMethods` only ever finds methods of classes built with
+   :class:`~pyTooling.MetaClasses.ExtendedType`. When the decorator runs, a method in a class body is still a plain
+   function - it becomes a method only once the class object exists - so the annotation is filed under *functions*.
+   ``ExtendedType`` re-files it while creating the class. Without the meta-class, the same method turns up in
+   :pycode:`GetFunctions()` and :pycode:`GetMethods()` stays empty.
+
 ``predicate=`` accepts an attribute class or an iterable of them, and it matches **sub-classes** too - which is the
 point of the next step.
 
 
 .. _TUTORIAL/Attributes/Hierarchy:
 
-Step 6: build a hierarchy and filter by it
-******************************************
+Step 3: build a hierarchy and filter by it
+==========================================
 
 Attribute classes inherit, and each derived class gets its **own** registry - so a specialised attribute is found by
 its own name, and only by its own name:
@@ -369,22 +448,40 @@ An attribute class may declare where it is meant to be used:
 
 .. caution::
 
-   :class:`~pyTooling.Attributes.AttributeScope` currently documents **intent, not enforcement**. Applying a
-   ``Method``-scoped attribute to a plain function raises nothing; the function is simply registered as a function
-   and turns up in :pycode:`GetFunctions()` rather than being rejected. Treat ``_scope`` as documentation for now, and
-   check the entity kind yourself if a misapplication has to fail.
+   ``_scope`` currently documents **intent, and nothing enforces it** - see
+   `#384 <https://github.com/pyTooling/pyTooling/issues/384>`__. Applying a ``Class``-scoped attribute to a
+   function is accepted silently, and the function is then registered in a list that attribute's own scope says it
+   can never hold.
+
+   Two cases have to be told apart, because only one of them is fixable where the attribute is applied:
+
+   * **class versus function/method** *is* decidable at that moment, so this mismatch should raise and today does
+     not;
+   * **method versus function** is *not* decidable there - as :ref:`the previous example <TUTORIAL/Attributes/Hooks>`
+     explains, a method is still a plain function while the decorator runs.
+
+   So until #384 is resolved: check the entity kind yourself if a misapplication has to fail.
 
    Note also that ``_scope`` reads back from an attribute **instance** - :pycode:`Hook("open").Scope` - and not
    from the class.
 
 
+.. _TUTORIAL/Attributes/UseCases:
+
+Attribute use cases
+*******************
+
+Plug-ins are one application of the pattern. It recurs wherever a framework has to find code by what it *means*
+rather than by what it is called - and three of those are inside pyTooling itself.
+
+
 .. _TUTORIAL/Attributes/Testcases:
 
-The same shape elsewhere: marking testcases
-*******************************************
+Finding testcases and testsuites
+================================
 
-Plug-ins are one use; the shape recurs wherever a framework has to find code by what it *means* rather than by what
-it is called. pyTooling's own :ref:`test markers <TESTING/Markers>` are the same idea:
+A test runner finds tests by a magic name - ``test_*`` - which forces the identifier to be both the selector and
+the description, and leaves nowhere to put a title with spaces in it. An attribute separates the two:
 
 .. code-block:: Python
 
@@ -403,21 +500,37 @@ it is called. pyTooling's own :ref:`test markers <TESTING/Markers>` are the same
      def CheckAddition(self) -> None:
        ...
 
-A test runner finds tests by a magic name - ``test_*`` - which forces the identifier to be both the selector and
-the description, and gives it nowhere to put a title with spaces in it. An attribute separates the two: the method
-keeps a name a developer can type on a command line, and the annotation carries the sentence a report should print.
+The method keeps a name a developer can type on a command line, and the annotation carries the sentence a report
+should print. It is the same trade the plug-in example makes: ``MarkdownReader`` keeps a class name Python can
+import, and ``@Plugin(name="markdown")`` carries the name a user types.
 
-It is the same trade the plug-in example makes. ``MarkdownReader`` keeps a class name Python can import, and
-``@Plugin(name="markdown")`` carries the name a user types.
+pyTooling ships this as :ref:`finding testcases and testsuites <TESTING/Markers>`.
 
 
-.. _TUTORIAL/Attributes/Example:
+.. _TUTORIAL/Attributes/ArgParse:
 
-Where pyTooling uses this itself
-********************************
+Declarative argparse
+====================
 
-* :ref:`ATTR/ArgParse` describes a whole :mod:`argparse` command line parser declaratively - the commands, their
-  flags and their handlers are attributes on the handler methods.
-* :ref:`CLIABS/CLIArgument` marks the nested argument classes of a
-  :class:`~pyTooling.CLIAbstraction.Program`, so the outer class collects them when it is created.
-* :ref:`TESTING/Markers` marks test cases and test suites by *title* instead of by a magic ``test_*`` name.
+A command line parser is usually built imperatively - one ``add_argument()`` call per flag, far away from the
+function that handles it. :ref:`ATTR/ArgParse` inverts that: the commands, their flags and their handlers are
+attributes on the handler methods, and the :class:`~argparse.ArgumentParser` is assembled from them.
+
+.. code-block:: Python
+
+   @CommandHandler("build", help="Build the project.")
+   @LongValuedFlag("--target", dest="target", help="Build target.")
+   def HandleBuild(self, args) -> None:
+     ...
+
+The flag and the code that receives it cannot drift apart, because they are the same declaration.
+
+
+.. _TUTORIAL/Attributes/CLIArguments:
+
+Collecting a program's CLI arguments
+====================================
+
+:ref:`CLIABS/CLIArgument` marks the nested argument classes of a
+:class:`~pyTooling.CLIAbstraction.Program`, so the outer class collects them when it is created - the same
+find-by-annotation step as :pycode:`Plugin.GetClasses()`, scoped to one class instead of a whole module.
