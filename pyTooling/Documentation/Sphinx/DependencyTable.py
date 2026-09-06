@@ -789,7 +789,7 @@ class DependencyTable(BaseDirective):
 		:param enumType:              The enumeration its value names a member of.
 		:param default:               The member to use when the option isn't given.
 		:returns:                     The named member.
-		:raises ~pyTooling.Documentation.Sphinx.Directives.SphinxExtensionError: If the value names no member.
+		:raises SphinxExtensionError: If the value names no member.
 		"""
 		if (option := self.options.get(optionName, None)) is None:
 			return default
