@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../pyTooling/Resources/PackageOverrides-v0.1.json
 # ==================================================================================================================== #
 # Licenses a package index can't answer for, and the projects' own LICENSE files.                                      #
 #                                                                                                                      #

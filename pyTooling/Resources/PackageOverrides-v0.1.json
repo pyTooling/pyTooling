@@ -1,0 +1,59 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://pyTooling.GitHub.io/pyTooling/schema/PackageOverrides-v0.1.json",
+	"title": "pyTooling package overrides",
+	"description": "Package meta-information a package index can't answer for: licenses, the URL of a project's own LICENSE file, and repositories. Read by pyTooling.Dependency.Python.LicenseOverrides and rendered by the 'dependency-table' directive.",
+	"type": "object",
+	"required": ["version", "analysedAt"],
+	"additionalProperties": false,
+	"properties": {
+		"version": {
+			"description": "Structure this file is written for, checked against LicenseOverrides.SCHEMA_VERSION. A file stating a different one is rejected rather than read on the chance that it still fits.",
+			"$comment": "Typed as a string, and quoted in the YAML, because an unquoted 0.10 is a float and a float loses its trailing zero - so '1.10' would arrive as '1.1'.",
+			"type": "string",
+			"pattern": "^[0-9]+\\.[0-9]+$"
+		},
+		"analysedAt": {
+			"description": "When a human last checked these statements against the projects themselves. A package index answers for itself every time it is asked; this file is as old as whoever last looked at it.",
+			"$comment": "The pattern is what makes this normative. 'format' is an annotation in JSON Schema and most validators - jsonschema included, unless 'rfc3339-validator' is installed - skip it, so with 'format' alone a bare date such as '2026-09-06' still validated here and then loaded as a datetime.date where the reader expects a datetime.",
+			"type": "string",
+			"format": "date-time",
+			"pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]+)?([Zz]|[+-][0-9]{2}:?[0-9]{2})?$"
+		},
+		"packages": {
+			"description": "A package name, optionally followed by a version expression - the shape a requirement line has. Keys are matched in the order they are written and the first one a version satisfies wins, so a narrower statement goes above the bare name it refines.",
+			"$comment": "May be absent, an empty mapping, or null. A file stating no packages is legal and gives no overrides, and commenting out every entry under the key leaves it with a null value - which is the shape a half-disabled file has while someone is editing it.",
+			"type": ["object", "null"],
+			"propertyNames": {
+				"$comment": "'<name>' or '<name> <expression>', where the name stops at the first character an operator can start with - so 'igraph>=0.10' splits the same way 'igraph >=0.10' does.",
+				"pattern": "^[^\\s<>=!~]+(\\s*[<>=!~][^\\s].*)?$"
+			},
+			"additionalProperties": {
+				"type": "object",
+				"minProperties": 1,
+				"additionalProperties": false,
+				"properties": {
+					"license": {
+						"description": "An SPDX license expression, such as 'BSD-3-Clause' or 'BSD-2-Clause AND GPL-3.0-or-later'.",
+						"$comment": "Parsed by pyTooling.Licensing, so every identifier it names has to be in SPDX_INDEX - an identifier the index doesn't know is rejected here as well as in the metadata this file exists to correct.",
+						"type": "string",
+						"minLength": 1
+					},
+					"licenseURL": {
+						"description": "The project's own LICENSE file. Without one, a license links to where the license itself is published - apache.org, opensource.org, spdx.org - which says what the license is but not that this project adopted it.",
+						"$comment": "Absolute, because a rendered table links it.",
+						"type": "string",
+						"format": "uri",
+						"pattern": "^https?://"
+					},
+					"repository": {
+						"description": "The project's repository, for a package whose 'project_urls' doesn't name one - a package pointing only at its documentation, for instance.",
+						"type": "string",
+						"format": "uri",
+						"pattern": "^https?://"
+					}
+				}
+			}
+		}
+	}
+}
