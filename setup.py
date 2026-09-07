@@ -72,7 +72,7 @@ setup(
 		},
 		dataFiles={
 			packageName[:-1] + "Common": ["../py.typed"],
-			packageName[:-1] + "Resources": ["*.xsd"],
+			packageName[:-1] + "Resources": ["*.xsd", "*.json"],
 			packageName[:-1] + "Resources.Sphinx": ["*.css"]
 		},
 		pytestPlugins={

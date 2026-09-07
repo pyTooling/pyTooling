@@ -59,7 +59,7 @@ from re                   import compile as re_compile, Pattern
 from threading            import RLock
 from typing               import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
 
-from pyTooling.Configuration import Dictionary
+from pyTooling.Configuration import Dictionary, UnsupportedValueTypeError
 from pyTooling.Exceptions    import MissingDependencyError
 
 try:
@@ -424,6 +424,12 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	#: stating a different one is rejected rather than read on the chance that it still fits.
 	SCHEMA_VERSION: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
 
+	#: JSON schema file per structure version, in :mod:`pyTooling.Resources`. A later version is added beside the one
+	#: in use, not instead of it, so a file written for an older structure keeps a schema to be checked against.
+	SCHEMA_FILES: ClassVar[dict[str, str]] = {
+		"0.1": "PackageOverrides-v0.1.json",
+	}
+
 	#: Splits a key into the package name and whatever follows it. A name stops at the first character an operator
 	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
 	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
@@ -491,7 +497,8 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		                                :attr:`SCHEMA_VERSION`.
 		:raises DependencyError:        If ``analysedAt`` is missing or isn't an ISO-8601 date.
 		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
-		                                A file stating no packages is fine and gives no overrides.
+		                                A file stating no packages is fine and gives no overrides - whether the key
+		                                is absent, an empty mapping, or present with every entry commented out.
 		:raises DependencyError:        If a version expression in the file can't be parsed.
 		"""
 		# Imported here rather than at module level, so a missing 'ruamel.yaml' is reported when the overrides are
@@ -539,7 +546,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			ex.add_note("Write it as an ISO-8601 timestamp: analysedAt: 2026-09-04T21:45:00+00:00")
 			raise ex from cause
 
-		packages = configuration.get("packages", None)
+		try:
+			packages = configuration.get("packages", None)
+		except UnsupportedValueTypeError:
+			packages = None
+
 		if packages is None:
 			return cls(analysedAt)
 		elif not isinstance(packages, Dictionary):
