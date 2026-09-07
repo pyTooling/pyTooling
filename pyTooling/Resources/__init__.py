@@ -39,6 +39,32 @@ single place to look and a file can be shared by more than one module.
   which :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at. The file name carries
   the format's version, so a later version is added beside it rather than replacing it.
 
+.. rubric:: JSON Schema Files
+
+* :file:`PackageOverrides-v0.1.json` - the schema of the package-override file the
+  :ref:`dependency-table <DEP>` directive reads, which
+  :class:`~pyTooling.Dependency.Python.LicenseOverrides` parses. Like the XSD above, the file name carries the
+  structure's version, and :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES` maps a version to
+  its file.
+
+  An editor validates the file while it is being written when the YAML names the schema on its first line. In a
+  checkout, a relative path needs nothing published:
+
+  .. code-block:: YAML
+
+     # yaml-language-server: $schema=../pyTooling/Resources/PackageOverrides-v0.1.json
+
+  For a consumer *outside* a checkout, the schema is served at its ``$id`` under the published documentation:
+
+  .. code-block:: YAML
+
+     # yaml-language-server: $schema=https://pyTooling.GitHub.io/pyTooling/schema/PackageOverrides-v0.1.json
+
+  :file:`doc/conf.py` publishes it through Sphinx' ``html_extra_path``, which copies a file to the output root
+  untouched - so the URL is fixed by the schema's own name and does not move when the documentation's page
+  structure does. The copy is taken from this package rather than kept beside :file:`conf.py`, so the published
+  file is always the one the wheel ships.
+
 .. rubric:: Usage
 
 Two functions reach a resource file, and both work whether pyTooling is installed, inside a wheel, or a checkout:
