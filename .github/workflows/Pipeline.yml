@@ -56,9 +56,7 @@ jobs:
       - UnitTestingParams
     with:
       jobs:                     ${{ needs.UnitTestingParams.outputs.python_jobs }}
-      # 'jsonschema' needs 'rpds-py', a Rust extension with no PyPI wheel for MSYS2, so pip would build it
-      # from source and maturin refuses the target. MSYS2 ships it prebuilt.
-      pacboy:                   'msys/git python-jsonschema:p'
+      pacboy:                   'msys/git'
       unittest_report_xml:      ${{ needs.ConfigParams.outputs.unittest_report_xml }}
       coverage_report_xml:      ${{ needs.ConfigParams.outputs.coverage_report_xml }}
       coverage_report_json:     ${{ needs.ConfigParams.outputs.coverage_report_json }}
@@ -73,7 +71,6 @@ jobs:
       - PlatformTestingParams
     with:
       jobs:                     ${{ needs.PlatformTestingParams.outputs.python_jobs }}
-      pacboy:                   'python-jsonschema:p'
       unittest_directory:       'unit/Platform'
       requirements:             '-r tests/unit/requirements.txt'
       unittest_report_xml:      ${{ needs.ConfigParams.outputs.unittest_report_xml }}
