@@ -436,7 +436,7 @@ class ReportFormat(ApplicationTestcase):
 			result, report = self._RunPyTest(Path(directory))
 
 			self.assertExitCode(result)
-			XMLSchema(getResourceFile(Resources, SCHEMA_FILES[SCHEMA_VERSION_LATEST])).validate(report)
+			XMLSchema(getResourceFile(Resources, SCHEMA_FILES[str(SCHEMA_VERSION_LATEST)])).validate(report)
 
 	def test_TestsuitesAreNested(self) -> None:
 		"""What a dotted 'classname' cannot express: one element per level."""
