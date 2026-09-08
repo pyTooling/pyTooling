@@ -8,7 +8,7 @@
 	"additionalProperties": false,
 	"properties": {
 		"version": {
-			"description": "Structure this file is written for, checked against LicenseOverrides.SCHEMA_VERSION. A file stating a different one is rejected rather than read on the chance that it still fits.",
+			"description": "Structure this file is written for, checked against LicenseOverrides.SCHEMA_VERSION_LATEST. A file stating a different one is rejected rather than read on the chance that it still fits.",
 			"$comment": "Typed as a string, and quoted in the YAML, because an unquoted 0.10 is a float and a float loses its trailing zero - so '1.10' would arrive as '1.1'.",
 			"type": "string",
 			"pattern": "^[0-9]+\\.[0-9]+$"
