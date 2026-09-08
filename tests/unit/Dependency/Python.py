@@ -749,7 +749,7 @@ class ReadingLicenseOverrides(Testcase):
 
 	def test_TheSchemaVersionIsChecked(self) -> None:
 		"""It says which structure the file is written for, so a later one can be told apart rather than misread."""
-		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION)
+		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION_LATEST)
 
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 		self.assertEqual("BSD-3-Clause", overrides.LicenseOf("colorama"))
@@ -1072,7 +1072,7 @@ class PackageOverridesSchema(Testcase):
 		from pyTooling.Common            import readResourceFile
 		from pyTooling.Dependency.Python import LicenseOverrides
 
-		schemaFile = LicenseOverrides.SCHEMA_FILES[str(LicenseOverrides.SCHEMA_VERSION)]
+		schemaFile = LicenseOverrides.SCHEMA_FILES[str(LicenseOverrides.SCHEMA_VERSION_LATEST)]
 
 		return Draft202012Validator(loads(readResourceFile(Resources, schemaFile)), format_checker=FormatChecker())
 
@@ -1104,7 +1104,7 @@ class PackageOverridesSchema(Testcase):
 		from pyTooling.Common            import getResourceFile
 		from pyTooling.Dependency.Python import LicenseOverrides
 
-		self.assertIn(str(LicenseOverrides.SCHEMA_VERSION), LicenseOverrides.SCHEMA_FILES)
+		self.assertIn(str(LicenseOverrides.SCHEMA_VERSION_LATEST), LicenseOverrides.SCHEMA_FILES)
 		for schemaFile in LicenseOverrides.SCHEMA_FILES.values():
 			self.assertTrue(getResourceFile(Resources, schemaFile).exists())
 
