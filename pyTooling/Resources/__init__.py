@@ -33,37 +33,29 @@ A resource package holding the data files shipped with pyTooling.
 It is one package for the whole library rather than one per sub-package, so a consumer looking for a schema has a
 single place to look and a file can be shared by more than one module.
 
+**Every schema file name carries the version of the structure it describes**, so a later version is added beside it
+rather than replacing it, and a module naming its schemas maps a version to its file in a ``SCHEMA_FILES``
+dictionary with ``SCHEMA_VERSION_LATEST`` naming the newest.
+
 .. rubric:: XML Schema Files
 
 * :file:`TestReport-v0.1.xsd` - the schema of :ref:`pyTooling's own test report format <TESTING/ReportFormat>`,
-  which :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at. The file name carries
-  the format's version, so a later version is added beside it rather than replacing it.
+  which :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at through
+  ``xsi:noNamespaceSchemaLocation``. Named by :data:`~pyTooling.Testing.ReportWriter.SCHEMA_FILES` and
+  :data:`~pyTooling.Testing.ReportWriter.SCHEMA_VERSION_LATEST`.
 
 .. rubric:: JSON Schema Files
 
-* :file:`PackageOverrides-v0.1.json` - the schema of the package-override file the
-  :ref:`dependency-table <DEP>` directive reads, which
-  :class:`~pyTooling.Dependency.Python.LicenseOverrides` parses. Like the XSD above, the file name carries the
-  structure's version, and :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES` maps a version to
-  its file.
+* :file:`PackageOverrides-v0.1.json` - the schema of the package-override file the :ref:`dependency-table <DEP>`
+  directive reads, which :class:`~pyTooling.Dependency.Python.LicenseOverrides` parses and whose ``version`` field
+  states the structure it was written for. Named by
+  :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES` and
+  :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_VERSION_LATEST`.
 
-  An editor validates the file while it is being written when the YAML names the schema on its first line. In a
-  checkout, a relative path needs nothing published:
+.. seealso::
 
-  .. code-block:: YAML
-
-     # yaml-language-server: $schema=../pyTooling/Resources/PackageOverrides-v0.1.json
-
-  For a consumer *outside* a checkout, the schema is served at its ``$id`` under the published documentation:
-
-  .. code-block:: YAML
-
-     # yaml-language-server: $schema=https://pyTooling.GitHub.io/pyTooling/schema/PackageOverrides-v0.1.json
-
-  :file:`doc/conf.py` publishes it through Sphinx' ``html_extra_path``, which copies a file to the output root
-  untouched - so the URL is fixed by the schema's own name and does not move when the documentation's page
-  structure does. The copy is taken from this package rather than kept beside :file:`conf.py`, so the published
-  file is always the one the wheel ships.
+   :ref:`SCHEMAS`
+      |rarr| Every schema with its source, a download and how to validate against it.
 
 .. rubric:: Usage
 
