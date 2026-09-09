@@ -143,9 +143,12 @@ Version 10.x (2026)
    * :ref:`SCHEMAS` is a new section, last in *References and Reports*: a page per schema showing its full source
      with a copy button, and offering the file itself for download. The page includes the schema from the package,
      so there is no second copy to drift.
-   * A schema is also **drawn**. The ``.. xsd-graph::`` directive in :file:`doc/_extensions/XSDGraphviz.py` reads a
-     schema with ``xmlschema`` and renders it with ``sphinx.ext.graphviz`` - complex types as records, containment
-     as labelled edges carrying the cardinality, and a node for an enumeration.
+   * A schema is also **drawn**. The :rst:dir:`xsd-graph` directive reads a schema with ``xmlschema`` and renders it
+     with ``sphinx.ext.graphviz`` - complex types as records, containment as labelled edges carrying the
+     cardinality, and a node for an enumeration. It ships in
+     :mod:`pyTooling.Documentation.Sphinx.SchemaGraph` rather than in this project's :file:`doc/_extensions/`, so
+     every project drawing a schema has it from the extension it already enables. ``xmlschema`` is imported when
+     the directive runs, so it is needed only where a schema is actually drawn.
    * This release history was written, covering every release back to v0.5.0.
 
    .. rubric:: Unit Tests
