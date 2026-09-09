@@ -189,6 +189,7 @@ extensions = [
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
 	"sphinx_reports",
+	"sphinx_toctree_level_up",
 # pyTooling extensions
 	"pyTooling.Documentation.Sphinx",
 ]

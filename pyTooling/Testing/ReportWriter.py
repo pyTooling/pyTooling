@@ -92,8 +92,8 @@ __all__ = ["SCHEMA_VERSION_LATEST", "SCHEMA_FILES", "REPORT_WRITER_KEY"]
 SCHEMA_VERSION_LATEST: SemanticVersion = SemanticVersion(0, 1)
 
 #: Schema file per format version, so a later version is added beside the one in use, not instead of it.
-SCHEMA_FILES: dict[str, Path] = {
-	"0.1": Path("TestReport-v0.1.xsd"),
+SCHEMA_FILES: dict[SemanticVersion, Path] = {
+	SemanticVersion(0, 1): Path("TestReport-v0.1.xsd"),
 }
 
 REPORT_WRITER_KEY: StashKey["TestReportWriter"] = StashKey()   #: Where the writer is stashed on the configuration.
@@ -195,7 +195,7 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 		statuses = [entry.get("status", "errored") for entry in self._results.values()]
 		root = Element("TestReport", {
 			"xmlns:xsi":                     "http://www.w3.org/2001/XMLSchema-instance",
-			"xsi:noNamespaceSchemaLocation": SCHEMA_FILES[str(SCHEMA_VERSION_LATEST)].name,
+			"xsi:noNamespaceSchemaLocation": SCHEMA_FILES[SCHEMA_VERSION_LATEST].name,
 			"timestamp":                     datetime.now(timezone.utc).isoformat(),
 			"duration":                      f"{sum(entry['duration'] for entry in self._results.values()):.6f}",
 			"tests":                         str(len(statuses)),

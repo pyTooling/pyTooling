@@ -1072,7 +1072,7 @@ class PackageOverridesSchema(Testcase):
 		from pyTooling.Common            import readResourceFile
 		from pyTooling.Dependency.Python import LicenseOverrides
 
-		schemaFile = LicenseOverrides.SCHEMA_FILES[str(LicenseOverrides.SCHEMA_VERSION_LATEST)]
+		schemaFile = LicenseOverrides.SCHEMA_FILES[LicenseOverrides.SCHEMA_VERSION_LATEST]
 
 		return Draft202012Validator(loads(readResourceFile(Resources, schemaFile)), format_checker=FormatChecker())
 
@@ -1104,7 +1104,7 @@ class PackageOverridesSchema(Testcase):
 		from pyTooling.Common            import getResourceFile
 		from pyTooling.Dependency.Python import LicenseOverrides
 
-		self.assertIn(str(LicenseOverrides.SCHEMA_VERSION_LATEST), LicenseOverrides.SCHEMA_FILES)
+		self.assertIn(LicenseOverrides.SCHEMA_VERSION_LATEST, LicenseOverrides.SCHEMA_FILES)
 		for schemaFile in LicenseOverrides.SCHEMA_FILES.values():
 			self.assertTrue(getResourceFile(Resources, schemaFile).exists())
 
