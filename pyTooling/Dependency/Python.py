@@ -426,8 +426,8 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 	#: JSON schema file per structure version, in :mod:`pyTooling.Resources`. A later version is added beside the one
 	#: in use, not instead of it, so a file written for an older structure keeps a schema to be checked against.
-	SCHEMA_FILES: ClassVar[dict[str, Path]] = {
-		"0.1": Path("PackageOverrides-v0.1.json"),
+	SCHEMA_FILES: ClassVar[dict[SemanticVersion, Path]] = {
+		SemanticVersion(0, 1): Path("PackageOverrides-v0.1.json"),
 	}
 
 	#: Splits a key into the package name and whatever follows it. A name stops at the first character an operator

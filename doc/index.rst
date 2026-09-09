@@ -1181,12 +1181,12 @@ License
    :hidden:
 
    Python Class Reference <pyTooling/pyTooling>
+   Schemas/index
    unittests/index
    coverage/index
    CodeCoverage
    Doc. Coverage Report <DocCoverage>
    Static Type Check Report ➚ <typing/index>
-   Schemas/index
 
 .. raw:: latex
 

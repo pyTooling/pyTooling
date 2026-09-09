@@ -60,6 +60,7 @@ Source
 ******
 
 .. literalinclude:: ../../pyTooling/Resources/PackageOverrides-v0.1.json
+   :caption: PackageOverrides-v0.1.json
    :language: json
    :linenos:
-   :caption: PackageOverrides-v0.1.json
+   :tab-width: 2
