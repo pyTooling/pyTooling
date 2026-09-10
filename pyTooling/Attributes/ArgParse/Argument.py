@@ -73,12 +73,14 @@ class ValuedArgument(CommandLineArgument):
 	"""
 
 
+@export
 class NamedAndValuedArgument(NamedArgument, ValuedArgument):
 	"""
 	Base-class for all command line arguments with a name and a value.
 	"""
 
 
+@export
 class NamedTupledArgument(NamedArgument, ValuedArgument):
 	"""
 	Class and base-class for all TupleFlag classes, which represents an argument with separate value.
@@ -86,9 +88,9 @@ class NamedTupledArgument(NamedArgument, ValuedArgument):
 	A tuple argument is a command line argument followed by a separate value. Name and value are passed as two arguments
 	to the executable.
 
-	**Example: **
+	**Example:**
 
-	* `width 100``
+	* ``width 100``
 	"""
 
 
