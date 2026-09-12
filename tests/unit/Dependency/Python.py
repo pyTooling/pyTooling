@@ -749,7 +749,7 @@ class ReadingLicenseOverrides(Testcase):
 
 	def test_TheSchemaVersionIsChecked(self) -> None:
 		"""It says which structure the file is written for, so a later one can be told apart rather than misread."""
-		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION)
+		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION_LATEST)
 
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 		self.assertEqual("BSD-3-Clause", overrides.LicenseOf("colorama"))
@@ -1056,6 +1056,164 @@ class RequirementsFiles(Testcase):
 				RequirementsFile(Path(directory) / "nothing.txt")
 
 		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)
+
+
+class PackageOverridesSchema(Testcase):
+	"""The package-override file's structure is stated as a JSON schema, so an editor and CI check the same thing."""
+
+	@staticmethod
+	def _Validator():
+		"""The shipped schema, as a validator that reports every violation rather than only the first."""
+		from json                        import loads
+
+		from jsonschema                  import Draft202012Validator, FormatChecker
+
+		from pyTooling                   import Resources
+		from pyTooling.Common            import readResourceFile
+		from pyTooling.Dependency.Python import LicenseOverrides
+
+		schemaFile = LicenseOverrides.SCHEMA_FILES[LicenseOverrides.SCHEMA_VERSION_LATEST]
+
+		return Draft202012Validator(loads(readResourceFile(Resources, schemaFile)), format_checker=FormatChecker())
+
+	def _Violations(self, document) -> list:
+		"""Return every violation the schema reports for 'document', each as 'path: message'."""
+		return [f"{'/'.join(str(part) for part in error.path)}: {error.message}"
+		        for error in self._Validator().iter_errors(document)]
+
+	@staticmethod
+	def _Document(**overrides):
+		document = {
+			"version":    "0.1",
+			"analysedAt": "2026-09-06T21:30:00+00:00",
+			"packages":   {"colorama": {"license": "BSD-3-Clause"}},
+		}
+		document.update(overrides)
+
+		return document
+
+	def test_TheSchemaIsItselfValid(self) -> None:
+		"""Compiling it is the check: an unusable schema can't be compiled."""
+		from jsonschema import Draft202012Validator
+
+		Draft202012Validator.check_schema(self._Validator().schema)
+
+	def test_EverySchemaVersionHasAFile(self) -> None:
+		"""A structure version the parser accepts must have a schema to check a file of that version against."""
+		from pyTooling                   import Resources
+		from pyTooling.Common            import getResourceFile
+		from pyTooling.Dependency.Python import LicenseOverrides
+
+		self.assertIn(LicenseOverrides.SCHEMA_VERSION_LATEST, LicenseOverrides.SCHEMA_FILES)
+		for schemaFile in LicenseOverrides.SCHEMA_FILES.values():
+			self.assertTrue(getResourceFile(Resources, schemaFile).exists())
+
+	def test_AMinimalDocumentIsAccepted(self) -> None:
+		self.assertEqual([], self._Violations(self._Document()))
+
+	def test_AnAnalysedAtIsRequired(self) -> None:
+		"""'FromFile' rejects a file without one, so the schema has to as well."""
+		self.assertNotEqual([], self._Violations({"version": "0.1", "packages": {}}))
+
+	def test_NoPackagesIsAccepted(self) -> None:
+		"""A file may state no packages: absent, empty, or every entry commented out (a null node)."""
+		base = {"version": "0.1", "analysedAt": "2026-09-06T21:30:00+00:00"}
+
+		self.assertEqual([], self._Violations(base))
+		self.assertEqual([], self._Violations({**base, "packages": {}}))
+		self.assertEqual([], self._Violations({**base, "packages": None}))
+
+	def test_AVersionExpressionKeyIsAccepted(self) -> None:
+		"""'chardet <7.0.0' is a package name followed by a version expression, which is a legal key."""
+		document = self._Document(packages={"chardet <7.0.0": {"license": "LGPL-2.1-or-later"}})
+
+		self.assertEqual([], self._Violations(document))
+
+	def test_AnAnalysedAtDateIsRejected(self) -> None:
+		"""'analysedAt' is a date-time; a bare date loads as a 'date' and the reader expects a 'datetime'."""
+		self.assertNotEqual([], self._Violations(self._Document(analysedAt="2026-09-06")))
+		self.assertEqual([], self._Violations(self._Document(analysedAt="2026-09-06T21:30:00+00:00")))
+
+	def test_AnUnquotedVersionIsRejected(self) -> None:
+		"""Unquoted, YAML reads '0.1' as a float, and a float loses a trailing zero."""
+		self.assertNotEqual([], self._Violations(self._Document(version=0.1)))
+
+	def test_AMisspelledFieldIsRejected(self) -> None:
+		"""'licenseUrl' instead of 'licenseURL' would otherwise be read as no statement at all."""
+		document = self._Document(packages={"colorama": {"licenseUrl": "https://example.org/LICENSE"}})
+
+		self.assertNotEqual([], self._Violations(document))
+
+	def test_AnEmptyEntryIsRejected(self) -> None:
+		self.assertNotEqual([], self._Violations(self._Document(packages={"colorama": {}})))
+
+	def test_ARelativeLicenseURLIsRejected(self) -> None:
+		"""A licenseURL is linked from a rendered table, so it has to be absolute."""
+		document = self._Document(packages={"colorama": {"licenseURL": "LICENSE.txt"}})
+
+		self.assertNotEqual([], self._Violations(document))
+
+	def test_TheProjectsOwnOverrideFileValidates(self) -> None:
+		"""The file this repository ships is the one the schema exists for."""
+		from ruamel.yaml import YAML
+
+		path = Path(__file__).parent.parent.parent.parent / "doc" / "Dependency.PackageOverrides.yaml"
+		self.assertTrue(path.exists(), f"'{path}' not found.")
+
+		document = YAML(typ="safe").load(path)
+		if "analysedAt" in document:
+			# YAML parses a date-time into a 'datetime'; JSON Schema's 'date-time' is a string
+			document["analysedAt"] = document["analysedAt"].isoformat()
+
+		self.assertEqual([], self._Violations(document))
+
+class EmptyLicenseOverrideFiles(Testcase):
+	"""A file may legitimately state no packages, including by having every entry commented out."""
+
+	@staticmethod
+	def _Write(directory: str, text: str) -> Path:
+		path = Path(directory) / "overrides.yaml"
+		path.write_text(dedent(text).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_EveryEntryCommentedOut(self) -> None:
+		"""'packages:' with nothing under it is a null node, which a configuration has no type for."""
+		with TemporaryDirectory() as directory:
+			path = self._Write(directory, """
+				version: "0.1"
+				analysedAt: 2026-09-06T21:30:00+00:00
+				packages:
+				  # colorama:
+				  #   license: BSD-3-Clause
+			""")
+			overrides = LicenseOverrides.FromFile(path)
+
+		self.assertEqual(0, len(overrides))
+
+	def test_AnEmptyMapping(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = self._Write(directory, """
+				version: "0.1"
+				analysedAt: 2026-09-06T21:30:00+00:00
+				packages: {}
+			""")
+			overrides = LicenseOverrides.FromFile(path)
+
+		self.assertEqual(0, len(overrides))
+
+	def test_APackagesScalarIsStillRejected(self) -> None:
+		"""Tolerating a null node must not tolerate a 'packages' that is a scalar."""
+		with TemporaryDirectory() as directory:
+			path = self._Write(directory, """
+				version: "0.1"
+				analysedAt: 2026-09-06T21:30:00+00:00
+				packages: 42
+			""")
+			with self.assertRaises(DependencyError) as exceptionCapture:
+				LicenseOverrides.FromFile(path)
+
+		self.assertIn("isn't a mapping", str(exceptionCapture.exception))
 
 
 class IndexSessionRetries(Testcase):

@@ -96,12 +96,12 @@ def getFullyQualifiedName(obj: Any) -> str:
 
 
 @export
-def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
+def getResourceFile(module: Union[str, ModuleType], filename: Union[str, Path]) -> Path:
 	"""
 	Compute the path to a file within a resource package.
 
 	:param module:            The resource package.
-	:param filename:          The filename.
+	:param filename:          The filename, as a string or a :class:`~pathlib.Path`.
 	:returns:                 Path to the resource's file.
 	:raises ToolingException: If resource file doesn't exist.
 	"""
@@ -117,12 +117,12 @@ def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
 
 
 @export
-def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
+def readResourceFile(module: Union[str, ModuleType], filename: Union[str, Path]) -> str:
 	"""
 	Read a text file resource from resource package.
 
 	:param module:   The resource package.
-	:param filename: The filename.
+	:param filename: The filename, as a string or a :class:`~pathlib.Path`.
 	:returns:        File content.
 	"""
 	# TODO: check if resource exists.

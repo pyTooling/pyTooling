@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../pyTooling/Resources/PackageOverrides-v0.1.json
 # ==================================================================================================================== #
 # Licenses a package index can't answer for, and the projects' own LICENSE files.                                      #
 #                                                                                                                      #
@@ -13,7 +14,7 @@
 #                                                                                                                      #
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
-# Structure of this file, checked against 'LicenseOverrides.SCHEMA_VERSION'. Quoted, so YAML keeps it a string:
+# Structure of this file, checked against 'LicenseOverrides.SCHEMA_VERSION_LATEST'. Quoted, so YAML keeps it a string:
 # unquoted it is a float, and a float loses a trailing zero.
 version: "0.1"
 

@@ -33,11 +33,29 @@ A resource package holding the data files shipped with pyTooling.
 It is one package for the whole library rather than one per sub-package, so a consumer looking for a schema has a
 single place to look and a file can be shared by more than one module.
 
+**Every schema file name carries the version of the structure it describes**, so a later version is added beside it
+rather than replacing it, and a module naming its schemas maps a version to its file in a ``SCHEMA_FILES``
+dictionary with ``SCHEMA_VERSION_LATEST`` naming the newest.
+
 .. rubric:: XML Schema Files
 
 * :file:`TestReport-v0.1.xsd` - the schema of :ref:`pyTooling's own test report format <TESTING/ReportFormat>`,
-  which :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at. The file name carries
-  the format's version, so a later version is added beside it rather than replacing it.
+  which :mod:`pyTooling.Testing.ReportWriter` writes and every generated report points at through
+  ``xsi:noNamespaceSchemaLocation``. Named by :data:`~pyTooling.Testing.ReportWriter.SCHEMA_FILES` and
+  :data:`~pyTooling.Testing.ReportWriter.SCHEMA_VERSION_LATEST`.
+
+.. rubric:: JSON Schema Files
+
+* :file:`PackageOverrides-v0.1.json` - the schema of the package-override file the :ref:`dependency-table <DEP>`
+  directive reads, which :class:`~pyTooling.Dependency.Python.LicenseOverrides` parses and whose ``version`` field
+  states the structure it was written for. Named by
+  :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES` and
+  :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_VERSION_LATEST`.
+
+.. seealso::
+
+   :ref:`SCHEMAS`
+      |rarr| Every schema with its source, a download and how to validate against it.
 
 .. rubric:: Usage
 

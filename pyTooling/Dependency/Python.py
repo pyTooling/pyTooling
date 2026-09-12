@@ -59,7 +59,7 @@ from re                   import compile as re_compile, Pattern
 from threading            import RLock
 from typing               import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
 
-from pyTooling.Configuration import Dictionary
+from pyTooling.Configuration import Dictionary, UnsupportedValueTypeError
 from pyTooling.Exceptions    import MissingDependencyError
 
 try:
@@ -403,7 +403,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	       license: GPL-2.0-only
 
 	``version`` states the structure this file is written for and is checked against
-	:attr:`SCHEMA_VERSION`; ``analysedAt`` is the day a human last checked the statements - see :attr:`AnalysedAt`.
+	:attr:`SCHEMA_VERSION_LATEST`; ``analysedAt`` is the day a human last checked the statements - see :attr:`AnalysedAt`.
 
 	**A key is a package name, optionally followed by a version expression** - the shape a requirement line has.
 	The expression is read by :class:`~pyTooling.Versioning.PythonVersionExpression`, so it is the same language a
@@ -422,7 +422,13 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 	#: Structure this parser reads. A file states the one it was written for as its ``version`` field, and a file
 	#: stating a different one is rejected rather than read on the chance that it still fits.
-	SCHEMA_VERSION: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
+	SCHEMA_VERSION_LATEST: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
+
+	#: JSON schema file per structure version, in :mod:`pyTooling.Resources`. A later version is added beside the one
+	#: in use, not instead of it, so a file written for an older structure keeps a schema to be checked against.
+	SCHEMA_FILES: ClassVar[dict[SemanticVersion, Path]] = {
+		SemanticVersion(0, 1): Path("PackageOverrides-v0.1.json"),
+	}
 
 	#: Splits a key into the package name and whatever follows it. A name stops at the first character an operator
 	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
@@ -473,7 +479,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		there is nothing to convert and no second constructor for the node tree.
 
 		``version`` is **required** and is the first thing checked: it states which structure the file was written
-		for, and is compared against :attr:`SCHEMA_VERSION`. **Quote it** - unquoted, YAML reads ``0.1`` as a float,
+		for, and is compared against :attr:`SCHEMA_VERSION_LATEST`. **Quote it** - unquoted, YAML reads ``0.1`` as a float,
 		and a float loses a trailing zero, so ``1.10`` would arrive as ``1.1``.
 
 		``analysedAt`` is **required** too, and is the day a human last checked these statements. It is an ISO-8601
@@ -488,10 +494,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		                                An empty file is one, and states no overrides - but it states no
 		                                ``version`` either, so it is rejected by the next check.
 		:raises DependencyError:        If ``version`` is missing, isn't a version, or isn't
-		                                :attr:`SCHEMA_VERSION`.
+		                                :attr:`SCHEMA_VERSION_LATEST`.
 		:raises DependencyError:        If ``analysedAt`` is missing or isn't an ISO-8601 date.
 		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
-		                                A file stating no packages is fine and gives no overrides.
+		                                A file stating no packages is fine and gives no overrides - whether the key
+		                                is absent, an empty mapping, or present with every entry commented out.
 		:raises DependencyError:        If a version expression in the file can't be parsed.
 		"""
 		# Imported here rather than at module level, so a missing 'ruamel.yaml' is reported when the overrides are
@@ -508,7 +515,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		if (schemaVersion := configuration.get("version", None)) is None:
 			ex = DependencyError(f"License override file '{path}' states no 'version'.")
 			ex.add_note("It says which structure the file is written for, so a later one can be told apart.")
-			ex.add_note(f'Add it as the first field: version: "{cls.SCHEMA_VERSION}"')
+			ex.add_note(f'Add it as the first field: version: "{cls.SCHEMA_VERSION_LATEST}"')
 			raise ex
 
 		try:
@@ -518,9 +525,9 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got '{schemaVersion}'.")
 			raise ex from cause
 
-		if fileVersion != cls.SCHEMA_VERSION:
+		if fileVersion != cls.SCHEMA_VERSION_LATEST:
 			ex = DependencyError(f"License override file '{path}' is written for structure '{fileVersion}'.")
-			ex.add_note(f"This reads '{cls.SCHEMA_VERSION}'.")
+			ex.add_note(f"This reads '{cls.SCHEMA_VERSION_LATEST}'.")
 			raise ex
 
 		if (analysedMoment := configuration.get("analysedAt", None)) is None:
@@ -539,7 +546,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			ex.add_note("Write it as an ISO-8601 timestamp: analysedAt: 2026-09-04T21:45:00+00:00")
 			raise ex from cause
 
-		packages = configuration.get("packages", None)
+		try:
+			packages = configuration.get("packages", None)
+		except UnsupportedValueTypeError:
+			packages = None
+
 		if packages is None:
 			return cls(analysedAt)
 		elif not isinstance(packages, Dictionary):

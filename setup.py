@@ -65,7 +65,7 @@ setup(
 		pythonVersions=("3.11", "3.12", "3.13", "3.14"),
 		dataFiles={
 			packageName[:-1] + "Common": ["../py.typed"],
-			packageName[:-1] + "Resources": ["*.xsd"],
+			packageName[:-1] + "Resources": ["*.xsd", "*.json"],
 			packageName[:-1] + "Resources.Sphinx": ["*.css"]
 		},
 		pytestPlugins={

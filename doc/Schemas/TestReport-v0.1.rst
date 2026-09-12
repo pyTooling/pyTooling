@@ -56,6 +56,7 @@ Source
 ******
 
 .. literalinclude:: ../../pyTooling/Resources/TestReport-v0.1.xsd
+   :caption: TestReport-v0.1.xsd
    :language: xml
    :linenos:
-   :caption: TestReport-v0.1.xsd
+   :tab-width: 2
