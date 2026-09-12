@@ -61,11 +61,15 @@ document of every project. This extension declares them once:
 
   * :rst:dir:`condensed-class` - renders a class' public interface from its source;
   * :rst:dir:`dependency-table` - renders a project's dependencies from its requirements files, which
-    :file:`conf.py` declares under ``pyTooling_dependency_requirements``.
+    :file:`conf.py` declares under ``pyTooling_dependency_requirements``;
+  * :rst:dir:`xsd-graph` - draws an XML schema as a Graphviz graph. It sets up :mod:`sphinx.ext.graphviz`
+    itself, and needs :mod:`xmlschema` only in a project that uses it.
 
-:class:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective` isn't registered - it is a base-class for a
-project's own directives, offering typed option access and table construction over the untyped mapping and the
-hand-assembled node trees docutils presents.
+Two classes aren't registered, because they are base-classes for a project's own directives:
+:class:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective` offers typed option access and table construction
+over the untyped mapping and the hand-assembled node trees docutils presents, and
+:class:`~pyTooling.Documentation.Sphinx.SchemaGraph.SchemaGraph` draws a schema file named as a directive's
+argument, leaving only the reading of that schema to a derived class.
 
 .. attention::
 
@@ -102,6 +106,7 @@ from pyTooling.Documentation.Sphinx.DependencyTable import CONFIG_VALUES, Depend
 from pyTooling.Documentation.Sphinx.DependencyTable import prepareEntrypoints, reportBuildTime
 from pyTooling.Documentation.Sphinx.Directives      import BaseDirective, SphinxExtensionError, strip
 from pyTooling.Documentation.Sphinx.Directives      import stripAndNormalize
+from pyTooling.Documentation.Sphinx.SchemaGraph     import SchemaGraph, XSDGraph
 from pyTooling.Documentation.Sphinx.Roles           import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
 from pyTooling.Documentation.Sphinx.Roles           import breakRole, pythonCodeRole, styleRole
 
@@ -186,6 +191,11 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 
 	sphinx.add_directive("condensed-class", CondensedClass)
 	sphinx.add_directive("dependency-table", DependencyTable)
+	sphinx.add_directive("xsd-graph", XSDGraph)
+
+	# 'xsd-graph' renders through 'sphinx.ext.graphviz', which a project would otherwise have to remember to list
+	# beside this extension - and the directive's node is meaningless without it.
+	sphinx.setup_extension("sphinx.ext.graphviz")
 
 	for configName, (default, rebuild, types) in CONFIG_VALUES.items():
 		sphinx.add_config_value(configName, default, rebuild, types)

@@ -57,6 +57,8 @@ if sphinxIsSupported:
 	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, formatUnresolvedLicenses
 	from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
+	from pyTooling.Documentation.Sphinx.SchemaGraph     import DotGraph, cardinality, compartment
+	from pyTooling.Documentation.Sphinx.SchemaGraph     import escapeLabel, renderXMLSchema, typeName
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -448,3 +450,242 @@ class UnresolvedLicenseReport(Testcase):
 		})
 
 		self.assertIn("license: BSD; classifier: License :: OSI Approved :: BSD License", message)
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class RecordLabels(Testcase):
+	"""A Graphviz record label is assembled as text, so escaping and grouping are what keep it legal."""
+
+	def test_EveryMetacharacterIsEscaped(self) -> None:
+		"""A name containing record syntax must not be read as record syntax."""
+		self.assertEqual("\\{a\\|b\\}", escapeLabel("{a|b}"))
+
+	def test_TheBackslashIsEscapedFirst(self) -> None:
+		"""Escaping the backslash last would escape the backslashes the other characters just gained."""
+		self.assertEqual("\\\\", escapeLabel("\\"))
+
+	def test_TextWithoutMetacharactersIsUnchanged(self) -> None:
+		"""A type name is text, and the common case must not be rewritten."""
+		self.assertEqual("xsd:string", escapeLabel("xsd:string"))
+
+	def test_EveryRowEndsLeftAligned(self) -> None:
+		"""Rows centre themselves without the '\\l', which makes a record's compartments ragged."""
+		self.assertEqual("a\\lb\\l", compartment(("a", "b")))
+
+	def test_AnEmptyCompartmentIsASpace(self) -> None:
+		"""An empty compartment collapses, which makes the records of a graph differently shaped."""
+		self.assertEqual(" ", compartment(()))
+
+	def test_ACompartmentEscapesItsRows(self) -> None:
+		"""The rows arrive unescaped, so the compartment is where they are made safe."""
+		self.assertEqual("a\\|b\\l", compartment(("a|b",)))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class Graphs(Testcase):
+	"""The DOT a renderer states node by node."""
+
+	def test_AnEmptyGraphCarriesTheSharedAttributes(self) -> None:
+		"""Where the graph flows and how a record is shaped belongs to every schema graph alike."""
+		dot = str(DotGraph())
+
+		self.assertTrue(dot.startswith("digraph schema {"))
+		self.assertIn("rankdir=LR;", dot)
+		self.assertIn("node [shape=record", dot)
+		self.assertTrue(dot.endswith("}"))
+
+	def test_ANodeQuotesItsIdentifierAndEveryAttributeValue(self) -> None:
+		"""Quoting without exception is always legal in DOT and saves a caller from deciding per value."""
+		graph = DotGraph()
+		graph.AddNode("a", "A", shape="doublecircle")
+
+		self.assertIn('\t"a" [label="A", shape="doublecircle"];', str(graph))
+
+	def test_AnEdgeWithoutAttributesHasNoBrackets(self) -> None:
+		"""An empty attribute list is not written at all, rather than written empty."""
+		graph = DotGraph()
+		graph.AddEdge("a", "b")
+
+		self.assertIn('\t"a" -> "b";', str(graph))
+
+	def test_AnEdgeStatesItsAttributes(self) -> None:
+		"""An edge's label is what carries the cardinality."""
+		graph = DotGraph()
+		graph.AddEdge("a", "b", label="x [0..*]")
+
+		self.assertIn('\t"a" -> "b" [label="x [0..*]"];', str(graph))
+
+	def test_ARecordIsATitleAndItsCompartments(self) -> None:
+		"""The title is written in guillemets, and every compartment follows it behind a bar."""
+		graph = DotGraph()
+		graph.AddRecord("t", "t", (("a", "b"), ()))
+
+		self.assertIn('\t"t" [label="{«t»|a\\lb\\l| }"];', str(graph))
+
+	def test_AGraphIsNamed(self) -> None:
+		"""Graphviz uses the name as the drawing's identifier."""
+		self.assertTrue(str(DotGraph("other")).startswith("digraph other {"))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class XMLSchemaGraphs(Testcase):
+	"""The XML schema pyTooling ships, drawn as the 'xsd-graph' directive draws it."""
+
+	@staticmethod
+	def _Schema() -> Path:
+		"""
+		Locate the shipped test-report schema.
+
+		It is read from the resource package rather than from a relative path, so the testcases don't depend on the
+		directory pytest was started in.
+
+		:returns: Path of :file:`TestReport-v0.1.xsd` in :mod:`pyTooling.Resources`.
+		"""
+		from pyTooling        import Resources
+		from pyTooling.Common import getResourceFile
+
+		return getResourceFile(Resources, "TestReport-v0.1.xsd")
+
+	def test_EveryComplexTypeIsARecord(self) -> None:
+		"""A complex type is a box; its attributes and simple-typed children are its compartments."""
+		dot = renderXMLSchema(self._Schema())
+
+		for typeIdentifier in ("testreport", "testsuite", "testcase"):
+			self.assertIn(f'"{typeIdentifier}" [label="{{«{typeIdentifier}»|', dot)
+
+	def test_AnAttributeIsNamedWithItsType(self) -> None:
+		"""A builtin type keeps the 'xsd:' prefix its namespace stands for."""
+		self.assertIn("duration : xsd:float", renderXMLSchema(self._Schema()))
+
+	def test_ContainmentIsAnEdgeCarryingTheCardinality(self) -> None:
+		"""A complex-typed child is an edge, so containment is structure rather than a repeated type name."""
+		self.assertIn('"testreport" -> "testsuite" [label="Testsuite [0..*]"];', renderXMLSchema(self._Schema()))
+
+	def test_ATestSuiteNestsInItself(self) -> None:
+		"""The edge to itself is what the format has over JUnit XML, and what the diagram exists to show."""
+		self.assertIn('"testsuite" -> "testsuite" [label="Testsuite [0..*]"];', renderXMLSchema(self._Schema()))
+
+	def test_TheRootElementIsADoubleCircle(self) -> None:
+		"""A document starts somewhere, and the picture has to say where."""
+		dot = renderXMLSchema(self._Schema())
+
+		self.assertIn('"<TestReport>" [label="TestReport", shape="doublecircle"', dot)
+		self.assertIn('"<TestReport>" -> "testreport" [label="root"];', dot)
+
+	def test_AnEnumerationBecomesItsOwnNode(self) -> None:
+		"""A simple type earns a node only when it has values a type name cannot say."""
+		dot = renderXMLSchema(self._Schema())
+
+		self.assertIn('"status" [label="{«status»|passed\\lfailed\\l', dot)
+		self.assertIn('"testcase" -> "status" [style="dashed"', dot)
+
+	def test_ASimpleTypeThatIsNoEnumerationGetsNoNode(self) -> None:
+		"""'preservingstring' is named in the compartments and drawn nowhere - it has nothing to show."""
+		dot = renderXMLSchema(self._Schema())
+
+		self.assertIn("Description : preservingstring", dot)
+		self.assertNotIn('"preservingstring" [', dot)
+
+	def test_TheSameSchemaAlwaysDrawsTheSameGraph(self) -> None:
+		"""A rebuilt page is only comparable to the one before it when the drawing doesn't reshuffle."""
+		self.assertEqual(renderXMLSchema(self._Schema()), renderXMLSchema(self._Schema()))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class SchemaGraphDetails(Testcase):
+	"""The parts of an XML schema graph that the shipped schema doesn't exercise."""
+
+	_SCHEMA = dedent("""\
+		<?xml version="1.0" encoding="UTF-8"?>
+		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+			<xs:simpleType name="charlie">
+				<xs:restriction base="xs:string"><xs:enumeration value="c"/></xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType name="alpha">
+				<xs:restriction base="xs:string"><xs:enumeration value="a"/></xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType name="bravo">
+				<xs:restriction base="xs:string"><xs:enumeration value="b"/></xs:restriction>
+			</xs:simpleType>
+			<xs:complexType name="root">
+				<xs:sequence>
+					<xs:element name="One" type="alpha"/>
+					<xs:element name="Two" type="bravo" maxOccurs="unbounded"/>
+					<xs:element name="Three" type="charlie"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:element name="Root" type="root"/>
+		</xs:schema>
+		""")
+
+	def _Render(self, directory: str) -> str:
+		"""
+		Write the schema above into a directory and render it.
+
+		:param directory: Directory to write the schema into.
+		:returns:         The graph in the DOT language.
+		"""
+		schema = Path(directory) / "Ordering.xsd"
+		schema.write_text(self._SCHEMA, encoding="utf-8")
+
+		return renderXMLSchema(schema)
+
+	def test_EnumerationsAreDrawnInAStableOrder(self) -> None:
+		"""They are collected in a set, whose iteration order varies between interpreter runs unless it is sorted."""
+		with TemporaryDirectory() as directory:
+			dot = self._Render(directory)
+
+		positions = [dot.index(f'"{name}" [label="{{«{name}»') for name in ("alpha", "bravo", "charlie")]
+
+		self.assertEqual(sorted(positions), positions)
+
+	def test_AnUnboundedUpperLimitIsAStar(self) -> None:
+		"""'maxOccurs="unbounded"' has no number to print."""
+		with TemporaryDirectory() as directory:
+			dot = self._Render(directory)
+
+		self.assertIn("Two : bravo [1..*]", dot)
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class TypeNames(Testcase):
+	"""What a type is called in a record, which is not always what it is called in the schema."""
+
+	class _Type:
+		"""A stand-in for an 'xmlschema' type, which only has to answer for its name."""
+
+		def __init__(self, name: Nullable[str]) -> None:
+			self.name = name
+
+	def test_ABuiltinTypeKeepsTheShortPrefix(self) -> None:
+		"""The namespace it is spelled with is 40 characters that say nothing in a diagram."""
+		builtin = self._Type("{http://www.w3.org/2001/XMLSchema}string")
+
+		self.assertEqual("xsd:string", typeName(builtin))
+
+	def test_ANamedTypeIsItsName(self) -> None:
+		"""A type declared by the schema is already short."""
+		self.assertEqual("status", typeName(self._Type("status")))
+
+	def test_AnAnonymousTypeSaysSo(self) -> None:
+		"""An inline type has no name, and an empty label would be read as a missing one."""
+		self.assertEqual("(anonymous)", typeName(self._Type(None)))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class Cardinalities(Testcase):
+	"""How often an element may occur, as a record row states it."""
+
+	class _Element:
+		"""A stand-in for an 'xmlschema' element, which only has to answer for its occurrence."""
+
+		def __init__(self, lower: int, upper: Nullable[int]) -> None:
+			self.occurs = (lower, upper)
+
+	def test_ABoundedOccurrenceIsTwoNumbers(self) -> None:
+		"""The common case, and the one an optional element is spelled with."""
+		self.assertEqual("0..1", cardinality(self._Element(0, 1)))
+
+	def test_AnUnboundedOccurrenceIsAStar(self) -> None:
+		"""'None' is what 'unbounded' arrives as, and it has no number to print."""
+		self.assertEqual("1..*", cardinality(self._Element(1, None)))
