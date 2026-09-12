@@ -102,7 +102,7 @@ class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		pattern = self._pattern if self._value is True else self._falsePattern
 		return pattern.format(self._name)

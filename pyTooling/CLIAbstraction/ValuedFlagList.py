@@ -104,7 +104,7 @@ class ValuedFlagList(NamedAndValuedArgument[str], pattern="{0}={1}"):
 		innerList.clear()
 		for value in values:
 			if not isinstance(value, str):
-				ex = TypeError(f"Value contains elements which are not of type 'str'.")
+				ex = TypeError("Value contains elements which are not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 			innerList.append(value)

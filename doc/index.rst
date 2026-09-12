@@ -812,11 +812,11 @@ Decorators
 Exceptions
 ==========
 
-* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+* :exc:`~pyTooling.Exceptions.EnvironmentVariableError` |br|
   ... is raised when an expected environment variable is missing.
-* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+* :exc:`~pyTooling.Exceptions.PlatformNotSupportedError` |br|
   ... is raise if the platform is not supported.
-* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+* :exc:`~pyTooling.Exceptions.NotConfiguredError` |br|
   ... is raise if the requested setting is not configured.
 
 
@@ -1124,6 +1124,12 @@ License
    Decorators
 
 .. toctree::
+   :caption: Documentation
+   :hidden:
+
+   Documentation
+
+.. toctree::
    :caption: Exceptions and Warnings
    :hidden:
 
@@ -1160,6 +1166,12 @@ License
 
    Testing
 
+.. toctree::
+   :caption: Tracing
+   :hidden:
+
+   Tracing
+
 .. raw:: latex
 
    \part{References and Reports}
@@ -1174,6 +1186,7 @@ License
    CodeCoverage
    Doc. Coverage Report <DocCoverage>
    Static Type Check Report ➚ <typing/index>
+   Schemas/index
 
 .. raw:: latex
 

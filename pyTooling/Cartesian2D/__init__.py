@@ -67,11 +67,11 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:raises TypeError: If x/y-coordinate is not of type integer or float.
 		"""
 		if not isinstance(x, (int, float)):
-			ex = TypeError(f"Parameter 'x' is not of type integer or float.")
+			ex = TypeError("Parameter 'x' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
 		if not isinstance(y, (int, float)):
-			ex = TypeError(f"Parameter 'y' is not of type integer or float.")
+			ex = TypeError("Parameter 'y' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
@@ -120,7 +120,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.y + other[1]
 			)
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -139,7 +139,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.x += other[0]
 			self.y += other[1]
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -159,7 +159,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.y - other.y
 			)
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Point2D.")
+			ex = TypeError("Parameter 'other' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -178,7 +178,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.x -= other[0]
 			self.y -= other[1]
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -217,7 +217,7 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 
 		:raises RuntimeError: Because an origin can't be copied.
 		"""
-		raise RuntimeError(f"An origin can't be copied.")
+		raise RuntimeError("An origin can't be copied.")
 
 	def __repr__(self) -> str:
 		"""
@@ -244,11 +244,11 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:raises TypeError: If x/y-offset is not of type integer or float.
 		"""
 		if not isinstance(xOffset, (int, float)):
-			ex = TypeError(f"Parameter 'xOffset' is not of type integer or float.")
+			ex = TypeError("Parameter 'xOffset' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(xOffset)}'.")
 			raise ex
 		if not isinstance(yOffset, (int, float)):
-			ex = TypeError(f"Parameter 'yOffset' is not of type integer or float.")
+			ex = TypeError("Parameter 'yOffset' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(yOffset)}'.")
 			raise ex
 
@@ -291,7 +291,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		elif isinstance(other, tuple):
 			return self.xOffset == other[0] and self.yOffset == other[1]
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -335,7 +335,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.yOffset + other[1]
 			)
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -354,7 +354,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.xOffset += other[0]
 			self.yOffset += other[1]
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -379,7 +379,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.yOffset - other[1]
 			)
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -398,7 +398,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.xOffset -= other[0]
 			self.yOffset -= other[1]
 		else:
-			ex = TypeError(f"Parameter 'other' is not of type Offset2D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type Offset2D or tuple.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -437,11 +437,11 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:raises TypeError: If width/height is not of type integer or float.
 		"""
 		if not isinstance(width, (int, float)):
-			ex = TypeError(f"Parameter 'width' is not of type integer or float.")
+			ex = TypeError("Parameter 'width' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
 			raise ex
 		if not isinstance(height, (int, float)):
-			ex = TypeError(f"Parameter 'height' is not of type integer or float.")
+			ex = TypeError("Parameter 'height' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
 			raise ex
 
@@ -498,11 +498,11 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:raises TypeError: If start/end is not of type :class:`Point2D`.
 		"""
 		if not isinstance(start, Point2D):
-			ex = TypeError(f"Parameter 'start' is not of type Point2D.")
+			ex = TypeError("Parameter 'start' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
 		if not isinstance(end, Point2D):
-			ex = TypeError(f"Parameter 'end' is not of type Point2D.")
+			ex = TypeError("Parameter 'end' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
 

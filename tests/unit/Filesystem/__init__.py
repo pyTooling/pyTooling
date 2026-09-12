@@ -35,7 +35,7 @@ from pathlib import Path
 
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Common     import count
-from pyTooling.Filesystem import Root, Directory, Filename, File, FilesystemException
+from pyTooling.Filesystem import Root, Directory, Filename, File, FilesystemError
 from pyTooling.Testing    import Testcase
 
 
@@ -273,7 +273,7 @@ class Scanning(Testcase):
 		"""A directory that is not attached to a root has no inode table to fill."""
 		directory = Directory("detached")
 
-		with self.assertRaises(FilesystemException) as context:
+		with self.assertRaises(FilesystemError) as context:
 			directory.ScanSubdirectories()
 
 		self.assertIn("not attached to a filesystem root", str(context.exception))

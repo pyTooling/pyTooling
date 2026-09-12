@@ -52,16 +52,27 @@ class FlagArgument(NamedArgument):
 
 	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
 		"""
-		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
-		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
+		Initializes a flag argument.
 
-		To implement a switch argument, the following named parameters are predefined:
+		.. admonition:: ArgParse parameterization
 
-		* ``action="store_const"``
-		* ``const=True``
-		* ``default=False``
+		   :meth:`~argparse.ArgumentParser.add_argument` is called with the option strings from ``short`` and ``long``
+		   as positional parameters, and with these named parameters:
 
-		This implements a boolean parameter passed to the handler method.
+		   * ``dest=dest``
+		   * ``action="store_const"``
+		   * ``const=True``
+		   * ``default=False``
+		   * ``help=help``
+
+		   ``action="store_const"`` with ``const=True`` and ``default=False`` is what makes the handler method receive a
+		   boolean.
+
+		:param short: Optional, short option name including the dash, e.g. ``"-v"``. Default: ``None``.
+		:param long:  Optional, long option name including the dashes, e.g. ``"--verbose"``. Default: ``None``.
+		:param dest:  Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the handler
+		              method reads it by.
+		:param help:  Optional, help text shown for this argument in the help page. Default: ``None``.
 		"""
 		args = []
 		if short is not None:

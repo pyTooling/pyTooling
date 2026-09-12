@@ -12,3 +12,7 @@ ruamel.yaml ~= 0.19.1
 
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6
+
+# For pyTooling.Documentation.Sphinx type checking - the subpackage imports Sphinx and docutils, which pyTooling
+# itself doesn't depend on. Without it, mypy reports a missing stub for every 'from sphinx import ...'.
+sphinx ~= 9.1

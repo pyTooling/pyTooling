@@ -6,8 +6,6 @@ from os.path  import abspath
 from pathlib  import Path
 from textwrap import dedent
 
-from pyTooling.Packaging import extractVersionInformation
-
 # ==============================================================================
 # Project configuration
 # ==============================================================================
@@ -24,6 +22,11 @@ ROOT = Path(__file__).resolve().parent
 sys_path.insert(0, abspath("."))
 sys_path.insert(0, abspath(".."))
 sys_path.insert(0, abspath(f"../{directoryName}"))
+sys_path.insert(0, abspath("_extensions"))   # Sphinx extensions written for this documentation.
+
+# pyTooling is a namespace package, so its '__path__' is fixed the first time it is imported. Importing it before the
+# lines above would fix it to an installed copy and document that copy instead of this checkout.
+from pyTooling.Packaging import extractVersionInformation
 
 
 # ==============================================================================
@@ -175,7 +178,10 @@ extensions = [
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
 	"sphinx_reports",
+# pyTooling extensions
+	"pyTooling.Documentation.Sphinx",
 # User defined extensions
+	"XSDGraphviz",
 ]
 
 
@@ -251,6 +257,29 @@ inheritance_node_attrs = {
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 todo_link_only = True
+
+
+# ==============================================================================
+# pyTooling.Documentation.Sphinx
+# ==============================================================================
+# Package meta-information a package index can't answer for: licenses, the URL of a project's own LICENSE file,
+# and repositories. Stated by hand, checked by hand.
+pyTooling_Dependency_PackageOverrides = "Dependency.PackageOverrides.yaml"
+
+# The entrypoints 'dependency-table' renders, by the identifier the documents name them with. A requirements file is
+# read relative to this file; a package is read from the package index. The tables share one view of that index, so
+# a package required by more than one entrypoint - and most of these overlap - is downloaded once per build.
+pyTooling_Dependency_Requirements = {
+	"package":       {"file":     "../requirements.txt"},
+	"packaging":     {"package":  "pyTooling[packaging]"},
+	"terminal":      {"package":  "pyTooling[terminal]"},
+	"yaml":          {"package":  "pyTooling[yaml]"},
+	"unittest":      {"file":     "../tests/unit/requirements.txt"},
+	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
+	"performance":   {"file":     "../tests/performance/requirements.txt"},
+	"documentation": {"file":     "requirements.txt"},
+	"publishing":    {"file":     "../dist/requirements.txt"}
+}
 
 
 # ==============================================================================

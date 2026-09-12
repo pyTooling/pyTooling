@@ -36,7 +36,8 @@ rejected at class-creation time instead of raising :exc:`NotImplementedError` at
 """
 from pathlib import Path
 
-from pyTooling.Configuration import Node, Dictionary, Sequence
+from pyTooling.Configuration import KeyNotFoundError, Node, Dictionary, Sequence
+from pyTooling.Exceptions    import ConfigurationError
 from pyTooling.MetaClasses   import AbstractClassError
 from pyTooling.Testing       import Testcase
 
@@ -60,7 +61,7 @@ class Abstract(Testcase):
 		"""Writing is not supported by any backend, and saying so is the method's only job - finding T68."""
 		from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 
-		configuration = YAMLConfiguration(Path("tests/unit/Configuration/config.yml"))
+		configuration = YAMLConfiguration(Path("tests/data/Configuration/config.yml"))
 		message = "Currently, the configuration is read-only. Writing isn't implemented."
 
 		# the root, a dictionary node and a sequence node all answer the same way
@@ -81,3 +82,35 @@ class Abstract(Testcase):
 		for configuration in (YAMLConfiguration, JSONConfiguration):
 			for method in ("__len__", "__getitem__", "__iter__", "QueryPath"):
 				self.assertTrue(hasattr(configuration, method))
+
+
+class MappingAndSequenceProtocols(Testcase):
+	"""The protocol methods live on the abstract mixins, so every backend answers them."""
+
+	def test_EveryBackendAnswersThem(self) -> None:
+		from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
+		from pyTooling.Configuration.JSON import Configuration as JSONConfiguration
+
+		for configuration in (YAMLConfiguration, JSONConfiguration):
+			for method in ("keys", "values", "items", "get"):
+				with self.subTest(configuration=configuration.__name__, method=method):
+					self.assertTrue(hasattr(configuration, method))
+
+		for method in ("index", "count"):
+			with self.subTest(method=method):
+				self.assertTrue(hasattr(Sequence, method))
+
+	def test_TheyAreDeclaredOnce(self) -> None:
+		"""Both backends inherit one implementation - a format doesn't get to answer differently."""
+		from pyTooling.Configuration.YAML import Dictionary as YAMLDictionary
+		from pyTooling.Configuration.JSON import Dictionary as JSONDictionary
+
+		for method in ("keys", "values", "items", "get"):
+			with self.subTest(method=method):
+				self.assertIs(getattr(Dictionary, method), getattr(YAMLDictionary, method))
+				self.assertIs(getattr(Dictionary, method), getattr(JSONDictionary, method))
+
+	def test_AMissingKeyRaisesBothWays(self) -> None:
+		"""A reader of a mapping writes ``except KeyError``; a reader of a configuration writes its own base."""
+		self.assertTrue(issubclass(KeyNotFoundError, KeyError))
+		self.assertTrue(issubclass(KeyNotFoundError, ConfigurationError))

@@ -123,7 +123,7 @@ class ExceptionBase(Exception):
 		"""
 		ExceptionBase initializer.
 
-		:param message:   Optional, the exception message.
+		:param message: Optional, the exception message.
 		"""
 		super().__init__()
 		self.message = message
@@ -160,25 +160,43 @@ class ExceptionBase(Exception):
 
 
 @export
-class EnvironmentException(ExceptionBase):
+class EnvironmentVariableError(ExceptionBase):
 	"""The exception is raised when an expected environment variable is missing."""
 
 
-# ConfigurationException
-#
+@export
+class ConfigurationError(ExceptionBase):
+	"""
+	The exception is raised when a configuration is invalid.
+
+	It is the base-exception for configuration problems in pyTooling **and in packages building on it**, so an
+	application reading configuration files from several sources can catch them all with one clause instead of one
+	per package. :mod:`pyTooling.Configuration` derives its own exceptions from it.
+
+	Attach the details as notes rather than folding them into the message - the value that was rejected, the file it
+	came from, the values that would have been accepted:
+
+	.. code-block:: Python
+
+	   ex = ConfigurationError(f"Unknown log level '{value}'.")
+	   ex.add_note(f"Configuration file: {path}")
+	   ex.add_note(f"Allowed values: {', '.join(levels)}")
+	   raise ex
+	"""
+
 
 @export
-class PlatformNotSupportedException(ExceptionBase):
+class PlatformNotSupportedError(ExceptionBase):
 	"""The exception is raise if the platform is not supported."""
 
 
 @export
-class NotConfiguredException(ExceptionBase):
+class NotConfiguredError(ExceptionBase):
 	"""The exception is raise if the requested setting is not configured."""
 
 
 @export
-class MissingDependencyException(ImportError):
+class MissingDependencyError(ImportError):
 	"""
 	The exception is raised when an optional dependency of pyTooling is not installed.
 
@@ -195,7 +213,7 @@ class MissingDependencyException(ImportError):
 	      try:
 	        from ruamel.yaml import YAML
 	      except ImportError as ex:
-	        raise MissingDependencyException(dependency="ruamel.yaml", extra="yaml") from ex
+	        raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 	"""
 
 	EXIT_CODE:   ClassVar[int] = 242  #: Exit code an application should use when an optional dependency is missing.
@@ -250,7 +268,7 @@ class MissingDependencyException(ImportError):
 		The extra comes first, because it installs the package *and* records why it is needed. Both commands are
 		plain text and need no terminal support: an application that cannot even import :mod:`pyTooling.TerminalUI` -
 		because *colorama* is the missing package - can print them itself, and
-		:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyException` formats them when it can.
+		:meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` formats them when it can.
 
 		:returns: One command line per installation option, most specific first.
 		"""

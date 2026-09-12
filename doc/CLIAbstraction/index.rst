@@ -113,38 +113,7 @@ Programm API
 
 **Condensed definition of class** :class:`~pyTooling.CLIAbstraction.Program`:
 
-.. code-block:: Python
-
-   class Program(metaclass=ExtendedType, slots=True):
-      # Register @CLIArgument marked nested classes in `__cliOptions__
-      def __init_subclass__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
-        ...
-
-      def __init__(self, executablePath: Path = None, binaryDirectoryPath: Path = None, dryRun: bool = False) -> None:
-        ...
-
-      @staticmethod
-      def _NeedsParameterInitialization(key):
-         ...
-
-      # Implement indexed access operators: prog[...]
-      def __getitem__(self, key):
-         ...
-      def __setitem__(self, key, value):
-         ...
-
-      @readonly
-      def Path(self) -> Path:
-         ...
-
-      def ToArgumentList(self) -> List[str]:
-         ...
-
-      def __repr__(self):
-         ...
-
-      def __str__(self):
-         ...
+.. condensed-class:: pyTooling.CLIAbstraction.Program
 
 
 .. _CLIABS/ExecutableAPI:
@@ -154,24 +123,7 @@ Executable API
 
 **Condensed definition of class** :class:`~pyTooling.CLIAbstraction.Executable`:
 
-.. code-block:: Python
-
-   class Executable(Program):
-      def __init__( self, executablePath: Path = None, binaryDirectoryPath: Path = None, workingDirectory: Path = None, # environment: Environment = None, dryRun: bool = False):
-         ...
-
-      def StartProcess(self):
-         ...
-
-      def Send(self, line: str, end: str="\n") -> None:
-         ...
-
-      def GetLineReader(self) -> Generator[str, None, None]:
-         ...
-
-      @readonly
-      def ExitCode(self) -> int:
-         ...
+.. condensed-class:: pyTooling.CLIAbstraction.Executable
 
 
 .. _CLIABS/Consumers:
