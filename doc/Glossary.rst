@@ -109,13 +109,23 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    CLIOption
-     undocumented
+     A *CLI option* is an argument a program **accepts**: it is declared once, as a nested class of a
+     :term:`program`, and describes how that argument is spelled on the command line.
+
+     See :ref:`CLIABS/Program` for how options are declared, and :term:`CLIParameter` for the value one is given.
 
    CLIParameter
-     undocumented
+     A *CLI parameter* is a :term:`CLIOption` that has been **set**, together with its value. The options a program
+     accepts are fixed when its class is written; the parameters are chosen per program instance, and are what
+     :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` renders.
 
    CopyLeft
-     undocumented
+     :wiki:`Copyleft <Copyleft>` is a licensing principle requiring that derived works are distributed under the same
+     license as the original. The GPL family is the best known example.
+
+     It is the reason a dependency's license matters beyond attribution, and why
+     :mod:`pyTooling.Licensing` resolves a license to an :wiki:`SPDX <Software_Package_Data_Exchange>` expression
+     rather than to a display name.
 
      Wikipedia: :wiki:`Copyleft <Copyleft>`
 
@@ -164,7 +174,13 @@ Glossary
           classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    Decorator
-     undocumented
+     A :wiki:`decorator <Python_syntax_and_semantics#Decorators>` is a callable applied to a function, method or class
+     with the ``@`` syntax, returning a replacement for what it was applied to - or the original, when it only records
+     something about it.
+
+     pyTooling uses both forms: :func:`~pyTooling.Decorators.export` records a name in its module's ``__all__`` and
+     returns the class unchanged, while :func:`~pyTooling.Decorators.readonly` replaces a method with a property.
+     :ref:`Attributes <ATTR>` are decorators too.
 
    Descendant
      *Descendants* are all direct and indirect successors of a :term:`node` (:term:`child nodes <child>` and child
@@ -207,10 +223,16 @@ Glossary
      An *edge* is a relation from :term:`vertex` to vertex in a :term:`graph`.
 
    Executable
-     undocumented
+     An *executable* is a :term:`program` that this API can also **run**: :class:`~pyTooling.CLIAbstraction.Executable`
+     adds process handling - starting it, sending it lines, reading its output and waiting for its exit code - to the
+     command line abstraction a program provides.
 
    Exception
-     undocumented
+     An :wiki:`exception <Exception_handling>` is the object a program raises to signal that it cannot continue
+     normally, and the mechanism that transfers control to whatever handles it.
+
+     Every exception pyTooling raises derives from :exc:`~pyTooling.Exceptions.ToolingException`, and carries the
+     offending value in a :meth:`note <BaseException.add_note>` rather than only in its message.
 
    Graph
      A *graph* is a data structure made of :term:`vertices <vertex>` (nodes) and vertex-vertex relations called
@@ -305,7 +327,11 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Hardlink
-     undocumented
+     A :wiki:`hard link <Hard_link>` is a second directory entry for the **same** file content. Both entries are equal -
+     neither is the original - and the content exists as long as at least one of them does.
+
+     Unlike a :term:`softlink`, a hard link cannot point at a directory, cannot cross a filesystem boundary, and cannot
+     dangle.
 
    Meta-Class
      A *meta-class* is a class helping to construct classes. Thus, it's the type of a type.
@@ -337,10 +363,20 @@ Glossary
      Wikipedia: :wiki:`MinGW <Mingw-w64>`
 
    Mixin-Class
-     A *mixin classes* are classes used as secondary base-classes in multiple inheritance.
+   Mixin
+     A *mixin class* is a class used as a secondary base-class in multiple inheritance. It contributes fields and
+     methods to the class mixing it in, and is not meant to be instantiated on its own.
+
+     pyTooling marks one with :deco:`~pyTooling.MetaClasses.mixin`, so a class that is only ever a secondary
+     base-class says so.
 
    MSYS2
-     undocumented
+     :wiki:`MSYS2 <MSYS2>` is a software distribution and building platform for Windows, providing a Unix-like shell,
+     a package manager (``pacman``) and several toolchains - among them :term:`MinGW` and :term:`UCRT` - each of which
+     is a separate environment with its own Python.
+
+     Which environment a program runs in is what :class:`pyTooling.Platform.Platform` reports, because a path or an
+     executable's name differs between them.
 
      Wikipedia: :wiki:`MSYS2 <Mingw-w64#MSYS2>`
 
@@ -356,10 +392,18 @@ Glossary
      MSYS2.
 
    Node
-     undocumented
+     A *node* is one element of a :term:`tree` or a :term:`graph`, holding a value and its relations to other nodes.
+
+     In a tree a node has at most one :term:`parent`; in a graph it is called a :term:`vertex` and is connected by
+     :term:`edges <edge>`.
 
    Overloading
-     undocumented
+     :wiki:`Overloading <Function_overloading>` is providing several implementations of one name, chosen by the
+     arguments they are called with.
+
+     Python has no overloading: a second ``def`` of a name replaces the first. What it has is
+     :func:`~typing.overload`, which declares the accepted signatures **for a type checker** while a single
+     implementation dispatches on them itself.
 
    Parent
      A *parent* is direct predecessor of a :term:`node`.
@@ -393,21 +437,41 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Post-Order
-     undocumented
+     *Post-order* is a depth-first traversal of a :term:`tree` visiting a :term:`node` **after** its children.
+
+     It is the order to use when a node's result depends on its children's - computing a size, or deleting a subtree.
+
+     See :term:`Pre-Order` for the opposite.
 
    Pre-Order
-     undocumented
+     *Pre-order* is a depth-first traversal of a :term:`tree` visiting a :term:`node` **before** its children.
+
+     It is the order to use when a child's handling depends on its parent's - rendering an indented outline, or
+     resolving a path from the :term:`root` down.
+
+     See :term:`Post-Order` for the opposite.
 
    Program
-     undocumented
+     A *program* is an executable command line application, abstracted as a Python class by
+     :class:`~pyTooling.CLIAbstraction.Program`: its name per operating system, and the arguments it accepts as
+     :term:`CLI options <CLIOption>`.
+
+     A program only assembles a command line. An :term:`executable` also runs it.
 
    PyPI
-     undocumented
+     The :wiki:`Python Package Index <Python_Package_Index>` is the public repository :program:`pip` installs from by
+     default.
+
+     It is also what the :rst:dir:`dependency-table` directive queries to resolve a dependency's version and license.
 
      Wikipedia: :wiki:`Python Package Index <Python_Package_Index>`
 
    PyPy
-     undocumented
+     :wiki:`PyPy <PyPy>` is an alternative Python implementation with a just-in-time compiler, generally faster than
+     CPython for long-running pure-Python code and slower for anything dominated by C extensions.
+
+     pyTooling's pipelines test against it, which is why the code avoids assuming CPython's reference-counting
+     behaviour - an object is not necessarily collected the moment its last name goes away.
 
      Wikipedia: :wiki:`PyPy <PyPy>`
 
@@ -516,10 +580,17 @@ Glossary
      another instance is going to be created, a previously cached instance of that class will be returned.
 
    Slots
-     undocumented
+     ``__slots__`` fixes the set of instance attributes a class allows, so instances need no ``__dict__``.
+     That saves memory per instance and turns a **typo into an error** instead of a new attribute.
+
+     pyTooling's :ref:`META/ExtendedType` meta-class derives the slots from the class' annotated fields, so a class
+     gets them by declaring its fields rather than by repeating their names.
 
    Softlink
-     undocumented
+     A :wiki:`symbolic link <Symbolic_link>` is a file whose content is a **path** to another file or directory.
+
+     Unlike a :term:`hardlink` it may point at a directory, may cross filesystems, and may *dangle* - the target can be
+     removed or never have existed, which is why following one is an operation that can fail.
 
    Tree
      A *tree* is a data structure made of :term:`nodes <node>` and parent-child relations. All nodes in a tree share one
