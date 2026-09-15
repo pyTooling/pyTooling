@@ -293,7 +293,8 @@ independently of the filter.
 
 :func:`~pyTooling.Tracing.Render.Matplotlib.WriteGantt` writes the chart with :term:`matplotlib` as SVG, PNG or PDF,
 chosen by the file's suffix, and :func:`~pyTooling.Tracing.Render.Matplotlib.RenderGantt` returns it as a figure for
-further changes. matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]``.
+further changes. matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]`` together with
+:term:`plotly`, which draws the same chart as an interactive HTML page - see :ref:`TRACING/Render/Plotly`.
 
 In an SVG file, every bar or line is a group with the identifier ``span-<SpanID>``, a waiting bar
 ``span-<SpanID>-queued``, the end marks of a line ``span-<SpanID>-ends`` and a row's label ``label-<SpanID>``.
@@ -320,3 +321,27 @@ The rows of the kinds in ``collapsedKinds`` start collapsed - jobs by default, s
 as one without them. The script runs where an SVG file is a document: opened in a browser, or embedded by
 ``<object>`` or inline. An SVG file shown as an image - by ``<img>``, in Markdown or in a pipeline's job summary - is
 static and shows every row expanded.
+
+.. _TRACING/Render/Plotly:
+
+Interactive HTML
+================
+
+:func:`~pyTooling.Tracing.Render.Plotly.WriteGantt` writes the chart with :term:`plotly` as an HTML page, or as the
+plotly figure's JSON, chosen by the file's suffix. :func:`~pyTooling.Tracing.Render.Plotly.RenderGantt` returns it as a
+plotly figure for further changes. Both take the same layout as the matplotlib renderer, so the rows, colors and
+legend are the same.
+
+.. code-block:: python
+
+   from pyTooling.Tracing.Render.Plotly import WriteGantt
+
+   WriteGantt(trace, Path("report/Pipeline.html"), spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Skipped))
+
+The page can be zoomed and panned. Hovering a bar or line shows the timespan's name, its absolute begin and end, and its
+duration, and a click on a legend entry hides or shows a category's bars. The page embeds plotly's JavaScript library -
+about 4 MiB - so it works offline, e.g. downloaded from a pipeline's artifacts; ``includePlotlyJS="cdn"`` loads the
+library from plotly's CDN instead.
+
+The time axis is a date axis showing the time since the trace began as ``hh:mm:ss``, so its ticks adapt when zooming.
+For a trace longer than a day, the ticks start again at ``00:00:00``.

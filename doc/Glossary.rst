@@ -307,6 +307,11 @@ Glossary
    Hardlink
      undocumented
 
+   matplotlib
+     A Python library drawing static charts, e.g. as SVG, PNG or PDF files.
+
+     Website: https://matplotlib.org/
+
    Meta-Class
      A *meta-class* is a class helping to construct classes. Thus, it's the type of a type.
 
@@ -391,6 +396,12 @@ Glossary
           classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
+
+   plotly
+     A Python library drawing interactive charts, which are shown by plotly's JavaScript library, e.g. in an HTML
+     page.
+
+     Website: https://plotly.com/python/
 
    Post-Order
      undocumented

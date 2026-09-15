@@ -59,6 +59,7 @@ from pyTooling.Exceptions        import MissingDependencyError
 from pyTooling.Tracing           import Trace, TracingError
 from pyTooling.Tracing.CI        import SpanKind
 from pyTooling.Tracing.Render    import GanttLayout, SpanCategory, SpanFilter, runnerCategory
+from pyTooling.Tracing.Render    import LINE_LEGEND, QUEUED_LEGEND, formatDuration, legendLabel, legendTitle
 
 try:
 	from matplotlib              import rc_context
@@ -172,32 +173,6 @@ _COLLAPSE_SCRIPT = """
 """Script of a collapsible SVG file. ``/*DATA*/`` is replaced by the rows and the distance between two rows."""
 
 
-def _formatSeconds(seconds: float, position: int = 0) -> str:
-	"""
-	Format seconds as minutes and seconds, or as hours, minutes and seconds from one hour on.
-
-	:param seconds:  The seconds.
-	:param position: The tick's position, which matplotlib passes to every tick formatter. It isn't used.
-	:returns:        The time as ``m:ss`` or ``h:mm:ss``.
-	"""
-	minutes, rest = divmod(int(round(seconds)), 60)
-	if minutes < 60:
-		return f"{minutes}:{rest:02d}"
-
-	hours, minutes = divmod(minutes, 60)
-	return f"{hours}:{minutes:02d}:{rest:02d}"
-
-
-def _formatTime(time: datetime) -> str:
-	"""
-	Format an absolute time with its time zone.
-
-	:param time: The time.
-	:returns:    The time as ``YYYY-MM-DD hh:mm:ss <zone>``.
-	"""
-	return f"{time:%Y-%m-%d %H:%M:%S} {time.tzname() or 'local time'}"
-
-
 def _fonts(fontFamilies: Iterable[str]) -> tuple[list[str], list[FT2Font]]:
 	"""
 	Load the fonts of the font families, which are installed.
@@ -238,52 +213,6 @@ def _renderable(text: str, fonts: list[FT2Font]) -> str:
 
 	characters = (char for char in text if char.isspace() or any(font.get_char_index(ord(char)) != 0 for font in fonts))
 	return " ".join("".join(characters).split())
-
-
-def _legendTitle(layout: GanttLayout, categoryWidth: int) -> str:
-	"""
-	Compose the legend's title: the trace's times and totals, and the header of the statistics' columns.
-
-	:param layout:        The layout of the trace.
-	:param categoryWidth: Width of the category column in characters.
-	:returns:             The title's lines.
-	"""
-	lines = [
-		f"started     {_formatTime(layout.BeginTime)}",
-		f"{'running at' if layout.IsRunning else 'finished':<11} {_formatTime(layout.EndTime)}",
-		f"wall time   {_formatSeconds(layout.WallTime)}   runner time {_formatSeconds(layout.RunnerTime)}   "
-		f"{layout.JobCount} jobs",
-	]
-	if layout.JobCount > 0:
-		lines.append("")
-		lines.append(f"{'':<{categoryWidth}}  jobs    wait min /  avg /  max       run min /  avg /  max")
-
-	return "\n".join(lines)
-
-
-def _legendLabel(layout: GanttLayout, category: str, categoryWidth: int) -> str:
-	"""
-	Compose the legend's label of a category: the category and the statistics of its jobs.
-
-	:param layout:        The layout of the trace.
-	:param category:      The category.
-	:param categoryWidth: Width of the category column in characters.
-	:returns:             The label.
-	"""
-	label = f"{category:<{categoryWidth}}"
-	for entry in layout.IterateStatistics():
-		if entry.Category != category:
-			continue
-
-		label += (
-			f"  {entry.JobCount:>4}   "
-			f"{_formatSeconds(entry.MinimumWaitTime):>9} /{_formatSeconds(entry.AverageWaitTime):>5} /"
-			f"{_formatSeconds(entry.MaximumWaitTime):>5}   "
-			f"{_formatSeconds(entry.MinimumRunTime):>11} /{_formatSeconds(entry.AverageRunTime):>5} /"
-			f"{_formatSeconds(entry.MaximumRunTime):>5}"
-		)
-
-	return label
 
 
 @export
@@ -376,26 +305,25 @@ def RenderGantt(
 			label.set_gid(f"label-{row.SpanID}")
 		axes.set_ylim(len(rows) - 0.5, -0.5)
 		axes.set_xlim(0, duration)
-		axes.xaxis.set_major_formatter(FuncFormatter(_formatSeconds))
+		axes.xaxis.set_major_formatter(FuncFormatter(lambda seconds, _: formatDuration(seconds)))
 		axes.set_xlabel("time since the trace began")
 		axes.grid(axis="x", linewidth=0.3, alpha=0.5)
 
-		categoryWidth = max([len(category) for category in layout.Categories] + [len("pipeline, called workflow")])
 		handles: list[Union[Patch, Line2D]] = [
-			Patch(facecolor=colors[category], label=_legendLabel(layout, category, categoryWidth))
+			Patch(facecolor=colors[category], label=legendLabel(layout, category))
 			for category in layout.Categories
 		]
 		if hasQueued:
-			handles.append(Patch(facecolor=_QUEUED, label="waiting for a runner"))
+			handles.append(Patch(facecolor=_QUEUED, label=QUEUED_LEGEND))
 		if hasLines:
 			handles.append(
-				Line2D([], [], color=_LINE, linewidth=1.0, marker="|", markersize=6, label="pipeline, called workflow")
+				Line2D([], [], color=_LINE, linewidth=1.0, marker="|", markersize=6, label=LINE_LEGEND)
 			)
 
 		monospace = {"family": MONOSPACE_FONT_FAMILY, "size": fontSize}
 		axes.legend(
 			handles=handles,
-			title=_legendTitle(layout, categoryWidth),
+			title=legendTitle(layout),
 			loc=legendLocation,
 			prop=monospace,
 			title_fontproperties=monospace,
@@ -404,7 +332,7 @@ def RenderGantt(
 		)
 
 		if title is None:
-			title = f"{layout.Trace.Name} ({_formatSeconds(layout.WallTime)})"
+			title = f"{layout.Trace.Name} ({formatDuration(layout.WallTime)})"
 		figure.suptitle(_renderable(title, fonts), fontsize=fontSize + 2)
 
 	return figure
