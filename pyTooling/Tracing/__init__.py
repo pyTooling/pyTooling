@@ -442,9 +442,9 @@ class Span(metaclass=ExtendedType, slots=True):
 	def __init__(
 		self,
 		name:      str,
-		parent:    Nullable[Span] = None,
 		beginTime: Nullable[datetime] = None,
-		endTime:   Nullable[datetime] = None
+		endTime:   Nullable[datetime] = None,
+		parent:    Nullable[Span] = None
 	) -> None:
 		"""
 		Initializes a timespan as part of a software execution trace.
@@ -453,10 +453,10 @@ class Span(metaclass=ExtendedType, slots=True):
 		- read from a CI service or a log file - is constructed with its recorded times instead.
 
 		:param name:        Name of the timespan.
-		:param parent:      Optional, reference to a parent span or trace.
 		:param beginTime:   Optional, recorded time when the timespan began. Default: the time the timespan is entered.
 		:param endTime:     Optional, recorded time when the timespan ended. Requires ``beginTime``. Default: the time
 		                    the timespan is left, or ``None`` for a recorded timespan, which is still running.
+		:param parent:      Optional, reference to a parent span or trace.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
@@ -927,7 +927,7 @@ class Trace(Span):
 		:raises ValueError: If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
 		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		"""
-		super().__init__(name, None, beginTime, endTime)
+		super().__init__(name, beginTime, endTime)
 
 		self._traceID = _newIdentifier(128)
 		self._trace =   self
