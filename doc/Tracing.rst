@@ -261,30 +261,40 @@ second before its begin is moved to the begin.
 Rendering
 #########
 
-A trace renders as a **Gantt chart**: one row per timespan, in the tree's order and indented by depth, with a bar from
-its begin to its end.
+A trace renders as a **Gantt chart**: one row per timespan, in the tree's order and indented by depth.
 
 .. code-block:: python
 
    from pathlib import Path
-   from pyTooling.Tracing.Render import excludeSteps
+   from pyTooling.Tracing.Render import StepExclusion, ciSpanFilter
    from pyTooling.Tracing.Render.Matplotlib import WriteGantt
 
-   WriteGantt(trace, Path("report/Pipeline.svg"), spanFilter=excludeSteps)
+   WriteGantt(trace, Path("report/Pipeline.svg"), spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Skipped))
 
 The chart is laid out by :class:`~pyTooling.Tracing.Render.GanttLayout`, independently of the library drawing it:
 
-* Times are seconds after the trace began. A running timespan's bar ends at the layout's current time, and is hatched.
-* A job's waiting timespan (``queued``) is a light gray bar on the job's own row, in front of the job's bar. A job that
-  didn't start yet has only its waiting bar, on a row of its own.
-* A ``spanFilter`` hides timespans, and a hidden timespan hides its sub-spans.
-  :func:`~pyTooling.Tracing.Render.excludeSteps` hides the steps of CI jobs, which outnumber the jobs by far - a
-  pipeline of 74 jobs has more than 1600 steps.
-* Bars are colored by category. :func:`~pyTooling.Tracing.Render.runnerCategory` names the runner a timespan ran on,
-  taken from the timespan or its nearest ancestor, so a chart shows which runner images waited and ran how long.
+* Times are seconds after the trace began. A running timespan ends at the layout's current time.
+* The pipeline and a called workflow are a line from their begin to their end, a job is a bar. A job's waiting
+  timespan (``queued``) is a light gray bar in front of the job's bar. A job that didn't start yet has only its waiting
+  bar, on a row of its own.
+* A ``spanFilter`` hides timespans, and a hidden timespan hides its sub-spans. A filter created by
+  :func:`~pyTooling.Tracing.Render.ciSpanFilter` hides the steps of CI jobs - all of them, the skipped ones, or none, as
+  :class:`~pyTooling.Tracing.Render.StepExclusion` selects - and the jobs that were skipped. Steps outnumber jobs by
+  far: a pipeline of 74 jobs has 1653 steps, 635 of them skipped.
+* Bars are colored by category. :func:`~pyTooling.Tracing.Render.runnerCategory` names the runner image a job ran on,
+  and the MSYS2 environment of a job using one, e.g. ``windows-2025 + UCRT64``, because such a job takes significantly
+  longer than a native job on the same runner. The environment is taken from a successful step matching
+  :data:`~pyTooling.Tracing.Render.MSYS2_SETUP_STEP`, like ``Setup MSYS2 for UCRT64``.
+
+The legend summarizes the pipeline: when it started and finished, with the time zone; its wall time; its **runner
+time** - the time all jobs ran, added up, which runners were occupied for; and per category the number of jobs and
+their minimum, average and maximum waiting and running times. These statistics count every job that wasn't skipped,
+independently of the filter.
 
 :func:`~pyTooling.Tracing.Render.Matplotlib.WriteGantt` writes the chart with :term:`matplotlib` as SVG, PNG or PDF,
 chosen by the file's suffix, and :func:`~pyTooling.Tracing.Render.Matplotlib.RenderGantt` returns it as a figure for
 further changes. matplotlib is an optional dependency, installed by the extra ``pyTooling[matplotlib]``.
 
-In an SVG file, every bar is a group with the identifier ``span-<SpanID>``, and a waiting bar ``span-<SpanID>-queued``.
+In an SVG file, every bar or line is a group with the identifier ``span-<SpanID>``, a waiting bar
+``span-<SpanID>-queued`` and the end marks of a line ``span-<SpanID>-ends``. Together with
+:attr:`~pyTooling.Tracing.Render.GanttRow.ParentSpanID`, a script can find all elements below a called workflow.
