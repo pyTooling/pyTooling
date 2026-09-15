@@ -293,7 +293,7 @@ independently of the filter.
 
 :func:`~pyTooling.Tracing.Render.Matplotlib.WriteGantt` writes the chart with :term:`matplotlib` as SVG, PNG or PDF,
 chosen by the file's suffix, and :func:`~pyTooling.Tracing.Render.Matplotlib.RenderGantt` returns it as a figure for
-further changes. matplotlib is an optional dependency, installed by the extra ``pyTooling[matplotlib]``.
+further changes. matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]``.
 
 In an SVG file, every bar or line is a group with the identifier ``span-<SpanID>``, a waiting bar
 ``span-<SpanID>-queued`` and the end marks of a line ``span-<SpanID>-ends``. Together with
