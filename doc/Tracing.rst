@@ -29,6 +29,33 @@ by hand. An :class:`~pyTooling.Tracing.Event` is a point in time rather than a s
 :meth:`~pyTooling.Tracing.Span.Format` renders the tree as indented lines for a terminal. For anything else, the
 trace is exported.
 
+.. _TRACING/Recorded:
+
+Recorded Timespans
+==================
+
+A timespan that was measured elsewhere - by a CI service, or read from a log file - already has its times. It is
+constructed with them, and attached to its parent by the ``parent`` parameter instead of a ``with``-statement:
+
+.. code-block:: python
+
+   from datetime import datetime, timezone
+   from pyTooling.Tracing import Trace, Span
+
+   trace = Trace("Pipeline", beginTime=datetime(2026, 9, 15, 6, 35, 21, tzinfo=timezone.utc),
+                             endTime=datetime(2026, 9, 15, 6, 44, 30, tzinfo=timezone.utc))
+   job =   Span("UnitTesting", parent=trace, beginTime=datetime(2026, 9, 15, 6, 35, 32, tzinfo=timezone.utc),
+                                             endTime=datetime(2026, 9, 15, 6, 37, 10, tzinfo=timezone.utc))
+   job["runner"] = "ubuntu-26.04"
+
+   print(job.Duration)   # 98.0
+
+* ``endTime`` requires ``beginTime``, can't precede it, and both are either time zone aware or naive.
+* A timespan with a ``beginTime`` but no ``endTime`` is still running: its
+  :attr:`~pyTooling.Tracing.Span.Duration` is the time since its recorded begin.
+* Without ``beginTime``, a timespan is timed by its ``with``-statement as before. A timespan constructed with recorded
+  times can't be entered - that raises a :exc:`~pyTooling.Tracing.TracingError`.
+
 .. _TRACING/OTLP:
 
 OTLP/JSON Export
