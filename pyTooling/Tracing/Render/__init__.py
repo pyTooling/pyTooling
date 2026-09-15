@@ -31,31 +31,39 @@
 """
 Backend independent layout of a software execution trace as a Gantt chart.
 
-:class:`GanttLayout` arranges the timespans of a trace in rows, with times in seconds after the trace began. A renderer
-like :mod:`pyTooling.Tracing.Render.Matplotlib` only draws these rows, so every renderer shows the same chart.
+:class:`GanttLayout` arranges the timespans of a trace in rows, with times in seconds after the trace began, and
+summarizes the jobs of a CI pipeline per runner category. A renderer like :mod:`pyTooling.Tracing.Render.Matplotlib`
+only draws these rows and statistics, so every renderer shows the same chart.
 
 .. hint::
 
    See :ref:`high-level help <TRACING/Render>` for explanations and usage examples.
 """
 from datetime                    import datetime
-from typing                      import Callable, Iterator, Optional as Nullable
+from enum                        import Enum
+from re                          import IGNORECASE, compile as re_compile
+from statistics                  import fmean
+from typing                      import Callable, Iterator, Optional as Nullable, Union
 
 from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import getFullyQualifiedName
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import SPAN_KIND, SPAN_KIND_QUEUED, SPAN_KIND_JOB, SPAN_KIND_STEP, TASK_NAME
+from pyTooling.Tracing.CI        import TASK_RUN_RESULT, RESULT_SKIP, RESULT_SUCCESS
 from pyTooling.Tracing.CI.GitHub import RUNNER_LABELS
 
 
-__all__ = ["SpanFilter", "SpanCategory"]
+__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP"]
 
 SpanFilter = Callable[[Span], bool]
 """A function deciding whether a timespan - and with it, its sub-spans - is shown."""
 
 SpanCategory = Callable[[Span], str]
 """A function returning the category of a timespan, e.g. the runner it ran on. The empty string means no category."""
+
+MSYS2_SETUP_STEP = re_compile(r"Setup MSYS2 for (\w+)", IGNORECASE)
+"""Pattern of the step name setting up MSYS2 in a CI job, capturing the MSYS2 environment, e.g. ``UCRT64``."""
 
 
 def _kind(span: Span) -> Nullable[str]:
@@ -68,32 +76,117 @@ def _kind(span: Span) -> Nullable[str]:
 	return span[SPAN_KIND] if SPAN_KIND in span else None
 
 
-@export
-def excludeSteps(span: Span) -> bool:
+def _result(span: Span) -> Nullable[str]:
 	"""
-	Span filter hiding the steps of CI jobs, which outnumber the jobs by far.
+	Return the CI result of a timespan.
 
 	:param span: The timespan.
-	:returns:    ``False`` for a step, otherwise ``True``.
+	:returns:    The value of :data:`~pyTooling.Tracing.CI.TASK_RUN_RESULT`, or ``None`` if the timespan has none.
 	"""
-	return _kind(span) != SPAN_KIND_STEP
+	return span[TASK_RUN_RESULT] if TASK_RUN_RESULT in span else None
+
+
+@export
+class StepExclusion(Enum):
+	"""
+	Which steps of CI jobs a filter created by :func:`ciSpanFilter` hides.
+	"""
+	Nothing = 0  #: Show every step.
+	Skipped = 1  #: Hide the steps that were skipped.
+	All =     2  #: Hide every step.
+
+
+@export
+def ciSpanFilter(
+	excludeSteps:       Union[bool, StepExclusion] = StepExclusion.All,
+	excludeSkippedJobs: bool = True
+) -> SpanFilter:
+	"""
+	Create a span filter for the trace of a CI pipeline.
+
+	Steps outnumber jobs by far - a pipeline of 74 jobs has more than 1600 steps, of which a third were skipped - and a
+	skipped job has neither waited nor run.
+
+	:param excludeSteps:       Optional, which steps to hide: ``True`` or :attr:`StepExclusion.All` hides every step,
+	                           ``False`` or :attr:`StepExclusion.Nothing` none, and :attr:`StepExclusion.Skipped` the
+	                           skipped ones. Default: :attr:`StepExclusion.All`.
+	:param excludeSkippedJobs: Optional, hide the jobs that were skipped. Default: ``True``.
+	:returns:                  The span filter.
+	:raises TypeError:         If parameter 'excludeSteps' is neither of type :class:`bool` nor :class:`StepExclusion`.
+	"""
+	if isinstance(excludeSteps, bool):
+		excludeSteps = StepExclusion.All if excludeSteps else StepExclusion.Nothing
+	elif not isinstance(excludeSteps, StepExclusion):
+		ex = TypeError("Parameter 'excludeSteps' is neither of type 'bool' nor 'StepExclusion'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(excludeSteps)}'.")
+		raise ex
+
+	def spanFilter(span: Span) -> bool:
+		"""
+		Nested function hiding steps and skipped jobs as configured.
+
+		:param span: The timespan.
+		:returns:    ``False``, if the timespan is hidden.
+		"""
+		kind = _kind(span)
+		if kind == SPAN_KIND_STEP:
+			if excludeSteps is StepExclusion.All:
+				return False
+			return excludeSteps is StepExclusion.Nothing or _result(span) != RESULT_SKIP
+		elif kind == SPAN_KIND_JOB and excludeSkippedJobs:
+			return _result(span) != RESULT_SKIP
+
+		return True
+
+	return spanFilter
+
+
+@export
+def msys2Environment(job: Span) -> Nullable[str]:
+	"""
+	Return the MSYS2 environment a CI job used.
+
+	The environment is taken from a step of the job, which matches :data:`MSYS2_SETUP_STEP` and succeeded. A job running
+	natively on Windows skips that step or sets up the environment ``native``.
+
+	:param job: The job's timespan.
+	:returns:   The environment in upper case, e.g. ``UCRT64``, or ``None`` if the job didn't use an MSYS2 environment.
+	"""
+	for step in job.IterateSubSpans():
+		if (match := MSYS2_SETUP_STEP.search(step.Name)) is None or _result(step) != RESULT_SUCCESS:
+			continue
+		elif (environment := match.group(1).upper()) != "NATIVE":
+			return environment
+
+	return None
 
 
 @export
 def runnerCategory(span: Span) -> str:
 	"""
-	Span category naming the runner a timespan ran on: the first runner label of the timespan or its nearest ancestor.
+	Span category naming the runner a timespan ran on, and the MSYS2 environment of a job using MSYS2.
+
+	The runner is the first runner label of the timespan or its nearest ancestor. A job using an MSYS2 environment
+	(see :func:`msys2Environment`) is a category of its own, e.g. ``windows-2025 + UCRT64``, because it takes
+	significantly longer than a native job on the same runner.
 
 	:param span: The timespan.
-	:returns:    The runner label, or the empty string if neither the timespan nor an ancestor has one.
+	:returns:    The category, or the empty string if neither the timespan nor an ancestor has a runner label.
 	"""
+	label = ""
+	job: Nullable[Span] = None
 	current: Nullable[Span] = span
 	while current is not None:
-		if RUNNER_LABELS in current and len(labels := current[RUNNER_LABELS]) > 0:
-			return str(labels[0])
+		if job is None and _kind(current) == SPAN_KIND_JOB:
+			job = current
+		if label == "" and RUNNER_LABELS in current and len(labels := current[RUNNER_LABELS]) > 0:
+			label = str(labels[0])
 		current = current.Parent
 
-	return ""
+	if label != "" and job is not None and (environment := msys2Environment(job)) is not None:
+		return f"{label} + {environment}"
+
+	return label
 
 
 @export
@@ -218,6 +311,24 @@ class GanttRow(metaclass=ExtendedType, slots=True):
 		return self._span.SpanID
 
 	@readonly
+	def ParentSpanID(self) -> Nullable[str]:
+		"""
+		Read-only property to return the identifier of the row's parent timespan.
+
+		:returns: The parent's identifier, as 16 hex digits, or ``None`` for the trace.
+		"""
+		return None if self._span.Parent is None else self._span.Parent.SpanID
+
+	@readonly
+	def Kind(self) -> Nullable[str]:
+		"""
+		Read-only property to return the CI span kind of the row's timespan.
+
+		:returns: The value of :data:`~pyTooling.Tracing.CI.SPAN_KIND`, or ``None`` if the timespan has none.
+		"""
+		return _kind(self._span)
+
+	@readonly
 	def Depth(self) -> int:
 		"""
 		Read-only property to access the nesting depth of the row's timespan (:attr:`_depth`).
@@ -246,20 +357,154 @@ class GanttRow(metaclass=ExtendedType, slots=True):
 
 
 @export
+class CategoryStatistics(metaclass=ExtendedType, slots=True):
+	"""
+	The waiting and running times of the jobs of one category, e.g. of one runner image.
+	"""
+	_category:  str          #: The category.
+	_waitTimes: list[float]  #: Seconds each job waited for a runner.
+	_runTimes:  list[float]  #: Seconds each job ran.
+
+	def __init__(self, category: str) -> None:
+		"""
+		Initializes the statistics of a category without jobs.
+
+		:param category: The category.
+		"""
+		self._category =  category
+		self._waitTimes = []
+		self._runTimes =  []
+
+	def _AddJob(self, waitTime: float, runTime: float) -> None:
+		"""
+		Add a job's times to the statistics.
+
+		:param waitTime: Seconds the job waited for a runner.
+		:param runTime:  Seconds the job ran.
+		"""
+		self._waitTimes.append(waitTime)
+		self._runTimes.append(runTime)
+
+	@readonly
+	def Category(self) -> str:
+		"""
+		Read-only property to access the category (:attr:`_category`).
+
+		:returns: The category.
+		"""
+		return self._category
+
+	@readonly
+	def JobCount(self) -> int:
+		"""
+		Read-only property to return the number of jobs.
+
+		:returns: Number of jobs.
+		"""
+		return len(self._runTimes)
+
+	@readonly
+	def WaitTimes(self) -> tuple[float, ...]:
+		"""
+		Read-only property to return the waiting times of all jobs (:attr:`_waitTimes`).
+
+		:returns: Seconds each job waited for a runner.
+		"""
+		return tuple(self._waitTimes)
+
+	@readonly
+	def RunTimes(self) -> tuple[float, ...]:
+		"""
+		Read-only property to return the running times of all jobs (:attr:`_runTimes`).
+
+		:returns: Seconds each job ran.
+		"""
+		return tuple(self._runTimes)
+
+	@readonly
+	def MinimumWaitTime(self) -> float:
+		"""
+		Read-only property to return the shortest time a job waited for a runner.
+
+		:returns: Seconds.
+		"""
+		return min(self._waitTimes)
+
+	@readonly
+	def AverageWaitTime(self) -> float:
+		"""
+		Read-only property to return the average time a job waited for a runner.
+
+		:returns: Seconds.
+		"""
+		return fmean(self._waitTimes)
+
+	@readonly
+	def MaximumWaitTime(self) -> float:
+		"""
+		Read-only property to return the longest time a job waited for a runner.
+
+		:returns: Seconds.
+		"""
+		return max(self._waitTimes)
+
+	@readonly
+	def MinimumRunTime(self) -> float:
+		"""
+		Read-only property to return the shortest time a job ran.
+
+		:returns: Seconds.
+		"""
+		return min(self._runTimes)
+
+	@readonly
+	def AverageRunTime(self) -> float:
+		"""
+		Read-only property to return the average time a job ran.
+
+		:returns: Seconds.
+		"""
+		return fmean(self._runTimes)
+
+	@readonly
+	def MaximumRunTime(self) -> float:
+		"""
+		Read-only property to return the longest time a job ran.
+
+		:returns: Seconds.
+		"""
+		return max(self._runTimes)
+
+	@readonly
+	def TotalRunTime(self) -> float:
+		"""
+		Read-only property to return the time all jobs ran, added up.
+
+		:returns: Seconds.
+		"""
+		return sum(self._runTimes)
+
+
+@export
 class GanttLayout(metaclass=ExtendedType, slots=True):
 	"""
-	The layout of a trace as a Gantt chart: one row per shown timespan, in the trace's tree order.
+	The layout of a trace as a Gantt chart: one row per shown timespan, in the trace's tree order, and the statistics of
+	the trace's jobs per category.
 
 	A timespan of kind ``queued`` is drawn on the row of the job directly following it, if that job has the same task
 	name - otherwise the job is still waiting, and the waiting timespan gets a row of its own.
+
+	The statistics count every job of the trace, which wasn't skipped and has a category - independently of the filter
+	deciding which rows are shown.
 	"""
-	_trace:      Trace                  #: The trace laid out.
-	_now:        datetime               #: The time a running timespan's bar ends at.
-	_spanFilter: Nullable[SpanFilter]   #: The function deciding which timespans are shown, or ``None`` for all.
-	_categorize: SpanCategory           #: The function returning a timespan's category.
-	_rows:       list[GanttRow]         #: The rows in tree order.
-	_categories: dict[str, None]        #: The categories of all rows, in the order they appear, as an ordered set.
-	_duration:   float                  #: The end of the last bar in seconds after the trace began.
+	_trace:      Trace                          #: The trace laid out.
+	_now:        datetime                       #: The time a running timespan's bar ends at.
+	_spanFilter: Nullable[SpanFilter]           #: The function deciding which timespans are shown, or ``None`` for all.
+	_categorize: SpanCategory                   #: The function returning a timespan's category.
+	_rows:       list[GanttRow]                 #: The rows in tree order.
+	_categories: dict[str, None]                #: The categories of rows and statistics, as an ordered set.
+	_statistics: dict[str, CategoryStatistics]  #: The statistics of the jobs per category.
+	_duration:   float                          #: The end of the last bar in seconds after the trace began.
 
 	def __init__(
 		self,
@@ -303,10 +548,21 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		self._categorize = categorize
 		self._rows =       []
 		self._categories = {}
+		self._statistics = {}
 		self._duration =   0.0
 
 		self._AddRow(trace, 0, None)
 		self._AddSubSpans(trace, 1)
+		self._CollectStatistics(trace)
+
+	def _Offset(self, time: datetime) -> float:
+		"""
+		Convert a time into seconds after the trace began.
+
+		:param time: The time.
+		:returns:    Seconds after the trace began.
+		"""
+		return (time - self._trace.StartTime).total_seconds()
 
 	def _Bar(self, span: Span, queued: bool) -> Nullable[GanttBar]:
 		"""
@@ -320,8 +576,8 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 			return None
 
 		running = span.StopTime is None
-		beginOffset = (begin - self._trace.StartTime).total_seconds()
-		endOffset = ((self._now if running else span.StopTime) - self._trace.StartTime).total_seconds()
+		beginOffset = self._Offset(begin)
+		endOffset = self._Offset(self._now if running else span.StopTime)
 
 		return GanttBar(beginOffset, max(endOffset, beginOffset), queued, running)
 
@@ -365,7 +621,8 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 
 			queued = None
 			if pending is not None:
-				if _kind(span) == SPAN_KIND_JOB and TASK_NAME in span and TASK_NAME in pending and span[TASK_NAME] == pending[TASK_NAME]:
+				sameTask = TASK_NAME in span and TASK_NAME in pending and span[TASK_NAME] == pending[TASK_NAME]
+				if _kind(span) == SPAN_KIND_JOB and sameTask:
 					queued = pending
 				else:
 					self._AddRow(pending, depth, None)
@@ -376,6 +633,32 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 
 		if pending is not None:
 			self._AddRow(pending, depth, None)
+
+	def _CollectStatistics(self, parent: Span) -> None:
+		"""
+		Add the waiting and running times of the jobs below a timespan to the statistics of their categories.
+
+		:param parent: The timespan.
+		"""
+		queued: dict[str, Span] = {}
+		for span in parent.IterateSubSpans():
+			kind = _kind(span)
+			if kind == SPAN_KIND_QUEUED and TASK_NAME in span:
+				queued[span[TASK_NAME]] = span
+			elif kind == SPAN_KIND_JOB and _result(span) != RESULT_SKIP and span.StartTime is not None:
+				if (category := self._categorize(span)) != "":
+					waiting = queued.get(span[TASK_NAME], None) if TASK_NAME in span else None
+					waitTime = 0.0
+					if waiting is not None and waiting.StartTime is not None:
+						waitTime = self._Offset(span.StartTime) - self._Offset(waiting.StartTime)
+					runTime = self._Offset(self._now if span.StopTime is None else span.StopTime) - self._Offset(span.StartTime)
+
+					if category not in self._statistics:
+						self._statistics[category] = CategoryStatistics(category)
+						self._categories[category] = None
+					self._statistics[category]._AddJob(max(waitTime, 0.0), max(runTime, 0.0))
+
+			self._CollectStatistics(span)
 
 	@readonly
 	def Trace(self) -> Trace:
@@ -394,6 +677,60 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:returns: The current time of the layout.
 		"""
 		return self._now
+
+	@readonly
+	def BeginTime(self) -> datetime:
+		"""
+		Read-only property to access the time the trace began.
+
+		:returns: The begin time, with the trace's time zone.
+		"""
+		return self._trace.StartTime
+
+	@readonly
+	def EndTime(self) -> datetime:
+		"""
+		Read-only property to return the time the trace ended, or the layout's current time while it is running.
+
+		:returns: The end time, with the trace's time zone.
+		"""
+		return self._now if self._trace.StopTime is None else self._trace.StopTime
+
+	@readonly
+	def IsRunning(self) -> bool:
+		"""
+		Read-only property to return whether the trace is still running.
+
+		:returns: ``True``, if the trace has no end time.
+		"""
+		return self._trace.StopTime is None
+
+	@readonly
+	def WallTime(self) -> float:
+		"""
+		Read-only property to return the time from the trace's begin to its end.
+
+		:returns: Seconds.
+		"""
+		return self._Offset(self.EndTime)
+
+	@readonly
+	def RunnerTime(self) -> float:
+		"""
+		Read-only property to return the time all counted jobs ran, added up - the time runners were occupied.
+
+		:returns: Seconds.
+		"""
+		return sum(statistics.TotalRunTime for statistics in self._statistics.values())
+
+	@readonly
+	def JobCount(self) -> int:
+		"""
+		Read-only property to return the number of counted jobs.
+
+		:returns: Number of jobs, which weren't skipped and have a category.
+		"""
+		return sum(statistics.JobCount for statistics in self._statistics.values())
 
 	@readonly
 	def Duration(self) -> float:
@@ -421,10 +758,19 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		"""
 		return iter(self._rows)
 
+	def IterateStatistics(self) -> Iterator[CategoryStatistics]:
+		"""
+		Returns an iterator to iterate the statistics of all categories with counted jobs, in the order of
+		:attr:`Categories`.
+
+		:returns: Iterator to iterate the statistics.
+		"""
+		return (self._statistics[category] for category in self._categories if category in self._statistics)
+
 	@readonly
 	def Categories(self) -> tuple[str, ...]:
 		"""
-		Read-only property to return the categories of all rows (:attr:`_categories`).
+		Read-only property to return the categories of all rows and statistics (:attr:`_categories`).
 
 		:returns: The categories in the order they first appear, without the empty string.
 		"""

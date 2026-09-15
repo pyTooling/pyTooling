@@ -27,5 +27,8 @@ trove-classifiers >= 2025.1
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6
 
+# For pyTooling.Tracing.Render.Matplotlib testing
+matplotlib >= 3.10
+
 # For pyTooling.Testing.ReportWriter testing - validates the report against its schema
 xmlschema ~= 4.3
