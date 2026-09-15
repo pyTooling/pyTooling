@@ -269,7 +269,7 @@ class Event(metaclass=ExtendedType, slots=True):
 	_time:      datetime            #: Timestamp of the event.
 	_dict:      dict[str, AttributeValue]  #: Dictionary of associated attributes.
 
-	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable[Span] = None) -> None:
+	def __init__(self, name: str, time: Nullable[datetime] = None, *, parent: Nullable[Span] = None) -> None:
 		"""
 		Initializes a named event.
 
@@ -444,6 +444,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		name:      str,
 		beginTime: Nullable[datetime] = None,
 		endTime:   Nullable[datetime] = None,
+		*,
 		parent:    Nullable[Span] = None
 	) -> None:
 		"""
