@@ -179,3 +179,60 @@ searchable field, which is worse than a failed export.
    An :class:`~pyTooling.Tracing.Event` always carries a timestamp: the constructor stamps the current system time
    when none is given. OTLP has no way to say *unknown* - a missing ``timeUnixNano`` reads as the Unix epoch - so an
    event without a time would be exported as having happened in 1970.
+
+
+.. _TRACING/CI:
+
+CI Pipelines
+############
+
+:mod:`pyTooling.Tracing.CI` reads the timing of a CI pipeline into a trace, built from
+:ref:`recorded timespans <TRACING/Recorded>`. A trace read this way renders and exports like any other, so the time
+a pipeline spends waiting for runners and running jobs and steps can be inspected in the same viewers.
+
+.. _TRACING/CI/GitHub:
+
+GitHub Actions
+==============
+
+:class:`~pyTooling.Tracing.CI.GitHub.WorkflowRunReader` reads a workflow run through the GitHub REST API, using the
+standard library only:
+
+.. code-block:: python
+
+   from os import getenv
+   from pathlib import Path
+   from pyTooling.Tracing.CI.GitHub import WorkflowRunReader
+
+   reader = WorkflowRunReader("pyTooling/Actions", token=getenv("GITHUB_TOKEN"))
+   trace = reader.ReadRun(34937615362)      # optionally: attempt=2
+   trace.WriteJSONFile(Path("report/Pipeline.otlp.json"))
+
+Inside a workflow, ``GITHUB_TOKEN`` with the ``actions: read`` permission suffices. A job can't see itself: it is
+still running when it reads the run, so a timing job depends on every other job and runs last.
+
+:func:`~pyTooling.Tracing.CI.GitHub.ConvertWorkflowRun` does the conversion alone, for a run and jobs that were
+fetched another way. The run becomes the trace, and every timespan below it is marked by the attribute
+:data:`~pyTooling.Tracing.CI.SPAN_KIND`:
+
++--------------+------------------------------------------------------------------------------------------------------+
+| Kind         | Timespan                                                                                             |
++==============+======================================================================================================+
+| ``pipeline`` | The workflow run, from its start to its last update once it completed.                               |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``workflow`` | A called workflow: the jobs named ``Caller / Job`` are grouped below a timespan ``Caller``.          |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``queued``   | ``<job> (queued)``, the time a job waited for a runner, in front of the job.                         |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``job``      | A job, from its start to its completion.                                                             |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``step``     | A step that started, below its job.                                                                  |
++--------------+------------------------------------------------------------------------------------------------------+
+
+Every timespan also carries the attributes of OpenTelemetry's semantic conventions for CI/CD - ``cicd.pipeline.name``,
+``cicd.pipeline.task.name``, ``cicd.pipeline.task.run.result`` and more - with GitHub's conclusions mapped to their
+results, and GitHub's own conclusion as ``github.conclusion``. A job's timespan names its runner and the labels it was
+requested by, so a renderer can group waiting times per operating system.
+
+GitHub reports timestamps in whole seconds. A step shorter than a second lasts zero seconds, and an end reported a
+second before its begin is moved to the begin.
