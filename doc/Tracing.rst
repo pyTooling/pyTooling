@@ -254,3 +254,37 @@ the part the model holds, so a timespan reads in the context its parents already
 
 GitHub reports timestamps in whole seconds. A step shorter than a second lasts zero seconds, and an end reported a
 second before its begin is moved to the begin.
+
+
+.. _TRACING/Render:
+
+Rendering
+#########
+
+A trace renders as a **Gantt chart**: one row per timespan, in the tree's order and indented by depth, with a bar from
+its begin to its end.
+
+.. code-block:: python
+
+   from pathlib import Path
+   from pyTooling.Tracing.Render import excludeSteps
+   from pyTooling.Tracing.Render.Matplotlib import WriteGantt
+
+   WriteGantt(trace, Path("report/Pipeline.svg"), spanFilter=excludeSteps)
+
+The chart is laid out by :class:`~pyTooling.Tracing.Render.GanttLayout`, independently of the library drawing it:
+
+* Times are seconds after the trace began. A running timespan's bar ends at the layout's current time, and is hatched.
+* A job's waiting timespan (``queued``) is a light gray bar on the job's own row, in front of the job's bar. A job that
+  didn't start yet has only its waiting bar, on a row of its own.
+* A ``spanFilter`` hides timespans, and a hidden timespan hides its sub-spans.
+  :func:`~pyTooling.Tracing.Render.excludeSteps` hides the steps of CI jobs, which outnumber the jobs by far - a
+  pipeline of 74 jobs has more than 1600 steps.
+* Bars are colored by category. :func:`~pyTooling.Tracing.Render.runnerCategory` names the runner a timespan ran on,
+  taken from the timespan or its nearest ancestor, so a chart shows which runner images waited and ran how long.
+
+:func:`~pyTooling.Tracing.Render.Matplotlib.WriteGantt` writes the chart with :term:`matplotlib` as SVG, PNG or PDF,
+chosen by the file's suffix, and :func:`~pyTooling.Tracing.Render.Matplotlib.RenderGantt` returns it as a figure for
+further changes. matplotlib is an optional dependency, installed by the extra ``pyTooling[matplotlib]``.
+
+In an SVG file, every bar is a group with the identifier ``span-<SpanID>``, and a waiting bar ``span-<SpanID>-queued``.

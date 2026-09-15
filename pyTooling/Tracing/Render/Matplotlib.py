@@ -1,0 +1,288 @@
+# ==================================================================================================================== #
+#             _____           _ _             _____               _                                                    #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _|_   _| __ __ _  ___(_)_ __   __ _                                        #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | || '__/ _` |/ __| | '_ \ / _` |                                       #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| || | | (_| | (__| | | | | (_| |                                       #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_||_|  \__,_|\___|_|_| |_|\__, |                                       #
+# |_|    |___/                          |___/                             |___/                                        #
+# ==================================================================================================================== #
+# Authors:                                                                                                             #
+#   Patrick Lehmann                                                                                                    #
+#                                                                                                                      #
+# License:                                                                                                             #
+# ==================================================================================================================== #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+#                                                                                                                      #
+# Licensed under the Apache License, Version 2.0 (the "License");                                                      #
+# you may not use this file except in compliance with the License.                                                     #
+# You may obtain a copy of the License at                                                                              #
+#                                                                                                                      #
+#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
+#                                                                                                                      #
+# Unless required by applicable law or agreed to in writing, software                                                  #
+# distributed under the License is distributed on an "AS IS" BASIS,                                                    #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #
+# See the License for the specific language governing permissions and                                                  #
+# limitations under the License.                                                                                       #
+#                                                                                                                      #
+# SPDX-License-Identifier: Apache-2.0                                                                                  #
+# ==================================================================================================================== #
+#
+"""
+Render a software execution trace as a Gantt chart with :term:`matplotlib`.
+
+.. code-block:: python
+
+   from pathlib import Path
+   from pyTooling.Tracing.Render import excludeSteps
+   from pyTooling.Tracing.Render.Matplotlib import WriteGantt
+
+   WriteGantt(trace, Path("report/Pipeline.svg"), spanFilter=excludeSteps)
+
+Every bar in an SVG file is a group with the identifier ``span-<SpanID>``, and a waiting bar ``span-<SpanID>-queued``,
+so a script can find the bars of a timespan.
+
+.. hint::
+
+   See :ref:`high-level help <TRACING/Render>` for explanations and usage examples.
+"""
+from datetime                 import datetime
+from pathlib                  import Path
+from typing                   import Iterable, Optional as Nullable
+
+from pyTooling.Decorators     import export
+from pyTooling.Common         import getFullyQualifiedName
+from pyTooling.Exceptions     import MissingDependencyError
+from pyTooling.Tracing        import Trace, TracingError
+from pyTooling.Tracing.Render import GanttLayout, SpanCategory, SpanFilter, runnerCategory
+
+try:
+	from matplotlib           import rc_context
+	from matplotlib.figure    import Figure
+	from matplotlib.font_manager import FontProperties, findfont, fontManager
+	from matplotlib.ft2font   import FT2Font
+	from matplotlib.patches   import Patch
+	from matplotlib.ticker    import FuncFormatter
+except ImportError as ex:  # pragma: no cover
+	raise MissingDependencyError(dependency="matplotlib", extra="matplotlib") from ex
+
+
+__all__ = ["FORMATS", "FONT_FAMILIES"]
+
+FORMATS = ("svg", "png", "pdf")
+"""The file formats :func:`WriteGantt` writes, by file suffix."""
+
+FONT_FAMILIES = ("DejaVu Sans", "Noto Emoji", "Symbola")
+"""The font families tried in order for a character - an emoji font later in the list supplies the emoji of job names."""
+
+_PALETTE = ("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf")
+"""Colors of the categories, in the order the categories appear."""
+
+_NEUTRAL = "#7f7f7f"
+"""Color of a bar without a category, like the trace's or a called workflow's."""
+
+_QUEUED = "#d3d3d3"
+"""Color of a bar showing the time a job waited for a runner."""
+
+
+def _formatSeconds(seconds: float, position: int = 0) -> str:
+	"""
+	Format seconds as minutes and seconds, for the time axis.
+
+	:param seconds:  The seconds.
+	:param position: The tick's position, which matplotlib passes to every tick formatter. It isn't used.
+	:returns:        The time as ``m:ss``.
+	"""
+	minutes, rest = divmod(int(round(seconds)), 60)
+	return f"{minutes}:{rest:02d}"
+
+
+def _fonts(fontFamilies: Iterable[str]) -> tuple[list[str], list[FT2Font]]:
+	"""
+	Load the fonts of the font families, which are installed.
+
+	Installation is checked against matplotlib's font list first, because looking up a missing family logs a warning.
+
+	:param fontFamilies: The font families.
+	:returns:            The installed families and their fonts, in the order of the families.
+	"""
+	installed = {font.name for font in fontManager.ttflist}
+	families: list[str] = []
+	fonts: list[FT2Font] = []
+	for family in fontFamilies:
+		if family not in installed:
+			continue
+
+		try:
+			fonts.append(FT2Font(findfont(FontProperties(family=family), fallback_to_default=False)))
+			families.append(family)
+		except (ValueError, OSError):
+			pass
+
+	return families, fonts
+
+
+def _renderable(text: str, fonts: list[FT2Font]) -> str:
+	"""
+	Remove the characters none of the fonts has a glyph for, like emoji without an emoji font.
+
+	matplotlib would draw an empty box for each of them and warn about every one.
+
+	:param text:  The text.
+	:param fonts: The fonts tried for a character.
+	:returns:     The text without characters that can't be drawn, and without the whitespace left behind.
+	"""
+	if len(fonts) == 0:
+		return text
+
+	characters = (char for char in text if char.isspace() or any(font.get_char_index(ord(char)) != 0 for font in fonts))
+	return " ".join("".join(characters).split())
+
+
+@export
+def RenderGantt(
+	layout:       GanttLayout,
+	*,
+	title:        Nullable[str] = None,
+	width:        float = 16.0,
+	rowHeight:    float = 0.22,
+	fontSize:     float = 7.0,
+	fontFamilies: Iterable[str] = FONT_FAMILIES
+) -> Figure:
+	"""
+	Render the layout of a trace as a Gantt chart.
+
+	Every row shows its timespan's name, indented by its depth. A bar is colored by its row's category, a waiting bar is
+	light gray, and a running bar is hatched. A bar too short to see is widened to a visible minimum. A character none of
+	the installed fonts of ``fontFamilies`` can draw - usually an emoji in a job's name - is left out of a label.
+
+	:param layout:       The layout of the trace.
+	:param title:        Optional, the chart's title. Default: the trace's name and duration.
+	:param width:        Optional, width of the figure in inches. Default: ``16.0``.
+	:param rowHeight:    Optional, height of a row in inches. Default: ``0.22``.
+	:param fontSize:     Optional, font size of labels in points. Default: ``7.0``.
+	:param fontFamilies: Optional, font families tried in order for every character. Families that aren't installed
+	                     are skipped. Default: :data:`FONT_FAMILIES`.
+	:returns:            The chart as a matplotlib figure, which isn't registered with :mod:`matplotlib.pyplot`.
+	:raises TypeError:   If parameter 'layout' is not of type :class:`~pyTooling.Tracing.Render.GanttLayout`.
+	:raises ValueError:  If parameter 'width', 'rowHeight' or 'fontSize' isn't positive.
+	"""
+	if not isinstance(layout, GanttLayout):
+		ex = TypeError("Parameter 'layout' is not of type 'GanttLayout'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(layout)}'.")
+		raise ex
+
+	for parameter, value in (("width", width), ("rowHeight", rowHeight), ("fontSize", fontSize)):
+		if not value > 0:
+			ex = ValueError(f"Parameter '{parameter}' isn't positive.")
+			ex.add_note(f"Got value '{value}'.")
+			raise ex
+
+	colors = {category: _PALETTE[position % len(_PALETTE)] for position, category in enumerate(layout.Categories)}
+	rows = list(layout.IterateRows())
+	duration = max(layout.Duration, 1.0)
+	minimumWidth = duration / 1000
+	families, fonts = _fonts(fontFamilies)
+	rcParameters = {"font.size": fontSize} if len(families) == 0 else {"font.family": families, "font.size": fontSize}
+
+	with rc_context(rcParameters):
+		figure = Figure(figsize=(width, 1.6 + rowHeight * max(len(rows), 4)), layout="constrained")
+		axes = figure.add_subplot()
+
+		hasQueued = False
+		for position, row in enumerate(rows):
+			color = colors.get(row.Category, _NEUTRAL)
+			for bar in row.Bars:
+				hasQueued |= bar.IsQueued
+				collection = axes.broken_barh(
+					[(bar.Begin, max(bar.Duration, minimumWidth))],
+					(position - 0.4, 0.8),
+					facecolors=_QUEUED if bar.IsQueued else color,
+					hatch="///" if bar.IsRunning else None,
+					linewidth=0
+				)
+				collection.set_gid(f"span-{row.SpanID}-queued" if bar.IsQueued else f"span-{row.SpanID}")
+
+		labels = [f"{'  ' * row.Depth}{_renderable(row.Name, fonts)}" for row in rows]
+		axes.set_yticks(range(len(rows)), labels=labels)
+		axes.set_ylim(len(rows) - 0.5, -0.5)
+		axes.set_xlim(0, duration)
+		axes.xaxis.set_major_formatter(FuncFormatter(_formatSeconds))
+		axes.set_xlabel("time since the trace began [m:ss]")
+		axes.grid(axis="x", linewidth=0.3, alpha=0.5)
+
+		handles = [Patch(facecolor=colors[category], label=category) for category in layout.Categories]
+		if hasQueued:
+			handles.append(Patch(facecolor=_QUEUED, label="waiting for a runner"))
+		if len(handles) > 0:
+			figure.legend(handles=handles, loc="outside lower center", ncols=min(len(handles), 8), frameon=False)
+
+		if title is None:
+			title = f"{layout.Trace.Name} ({_formatSeconds(layout.Duration)})"
+		figure.suptitle(_renderable(title, fonts), fontsize=fontSize + 2)
+
+	return figure
+
+
+@export
+def WriteGantt(
+	trace:        Trace,
+	file:         Path,
+	*,
+	spanFilter:   Nullable[SpanFilter] = None,
+	categorize:   SpanCategory = runnerCategory,
+	now:          Nullable[datetime] = None,
+	title:        Nullable[str] = None,
+	width:        float = 16.0,
+	rowHeight:    float = 0.22,
+	fontSize:     float = 7.0,
+	fontFamilies: Iterable[str] = FONT_FAMILIES,
+	dpi:          int = 150
+) -> None:
+	"""
+	Lay out a trace, render it as a Gantt chart, and write the chart to a file.
+
+	The file format is chosen by the file's suffix, one of :data:`FORMATS`. Missing parent directories are created.
+
+	:param trace:         The trace to render.
+	:param file:          Path of the file to write.
+	:param spanFilter:    Optional, function deciding which timespans are shown (see :class:`GanttLayout`).
+	                      Default: all timespans.
+	:param categorize:    Optional, function returning a timespan's category. Default: :func:`runnerCategory`.
+	:param now:           Optional, the time a running timespan's bar ends at. Default: the current system time.
+	:param title:         Optional, the chart's title. Default: the trace's name and duration.
+	:param width:         Optional, width of the figure in inches. Default: ``16.0``.
+	:param rowHeight:     Optional, height of a row in inches. Default: ``0.22``.
+	:param fontSize:      Optional, font size of labels in points. Default: ``7.0``.
+	:param fontFamilies:  Optional, font families tried in order for every character. Default: :data:`FONT_FAMILIES`.
+	:param dpi:           Optional, resolution of a PNG file in dots per inch. Default: ``150``.
+	:raises TypeError:    If parameter 'file' is not of type :class:`~pathlib.Path`.
+	:raises ValueError:   If the file's suffix isn't one of :data:`FORMATS`.
+	:raises TracingError: If the parent directories couldn't be created.
+	:raises TracingError: If the file couldn't be written.
+	"""
+	if not isinstance(file, Path):
+		ex = TypeError("Parameter 'file' is not of type 'Path'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+		raise ex
+	elif (fileFormat := file.suffix.lower().lstrip(".")) not in FORMATS:
+		ex = ValueError(f"File '{file}' has an unsupported format.")
+		ex.add_note(f"Supported file suffixes: {', '.join(f'.{suffix}' for suffix in FORMATS)}")
+		raise ex
+
+	layout = GanttLayout(trace, spanFilter=spanFilter, categorize=categorize, now=now)
+	figure = RenderGantt(
+		layout, title=title, width=width, rowHeight=rowHeight, fontSize=fontSize, fontFamilies=fontFamilies
+	)
+
+	try:
+		file.parent.mkdir(parents=True, exist_ok=True)
+	except OSError as ex:
+		raise TracingError(f"Directory '{file.parent}' couldn't be created.") from ex
+
+	families, _ = _fonts(fontFamilies)
+	try:
+		with rc_context({} if len(families) == 0 else {"font.family": families}):
+			figure.savefig(file, format=fileFormat, dpi=dpi)
+	except OSError as ex:
+		raise TracingError(f"File '{file}' couldn't be written.") from ex
