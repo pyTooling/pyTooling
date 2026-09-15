@@ -194,7 +194,8 @@ Version 10.x (2026)
        ``with``-statement as before.
      * :mod:`pyTooling.Tracing.CI.GitHub` reads a **GitHub Actions workflow run** into a trace: jobs, their steps,
        the time each job waited for a runner, and called workflows as groups. The timespans carry OpenTelemetry's
-       CI/CD attributes, so a rendering or a query doesn't depend on the CI service.
+       CI/CD attributes, so a rendering or a query doesn't depend on the CI service. A transiently failing request
+       is tried again.
 
    * :mod:`pyTooling.Packaging`
 
