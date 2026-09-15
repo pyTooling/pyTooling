@@ -51,6 +51,7 @@ sub-span per step. The time a job waited for a runner is a separate timespan in 
 from datetime              import datetime
 from json                  import loads as json_loads
 from re                    import compile as re_compile
+from time                  import sleep
 from typing                import Any, Iterable, Optional as Nullable
 from urllib.error          import HTTPError
 from urllib.request        import Request, urlopen
@@ -94,6 +95,12 @@ _CONCLUSION_TO_RESULT: dict[str, str] = {
 
 _NEXT_LINK = re_compile(r'<([^>]+)>;\s*rel="next"')
 """Pattern extracting the URL of the next page from a ``Link`` header."""
+
+_TRANSIENT_HTTP_STATUS = (429, 500, 502, 503, 504)
+"""HTTP status codes of a transient failure, after which a request is tried again."""
+
+_MAXIMUM_RETRY_AFTER = 60.0
+"""The longest pause in seconds a ``Retry-After`` header can demand before a request is tried again."""
 
 
 def _result(conclusion: Nullable[str]) -> Nullable[str]:
@@ -341,11 +348,17 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 
 	The requests use only the standard library. A token is needed for a private repository, and raises the rate limit
 	for a public one - inside a workflow, ``GITHUB_TOKEN`` with the ``actions: read`` permission suffices.
+
+	A request failing transiently - HTTP 429, 500, 502, 503 or 504, a timeout, or an unreachable API - is tried again
+	after a pause, which doubles with every attempt, or lasts as long as a ``Retry-After`` header demands. A request
+	failing with any other HTTP status, like 401, 403 or 404, isn't tried again, because another attempt can't succeed.
 	"""
 	_repository: str            #: Repository as ``owner/name``.
 	_token:      Nullable[str]  #: Token authorizing the requests, or ``None`` for anonymous requests.
 	_apiURL:     str            #: Base URL of the GitHub REST API, without a trailing slash.
 	_timeout:    float          #: Timeout of a single request in seconds.
+	_retries:    int            #: How often a transiently failing request is tried again.
+	_retryDelay: float          #: Pause in seconds before a request is tried again the first time.
 
 	def __init__(
 		self,
@@ -353,7 +366,9 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 		token:      Nullable[str] = None,
 		*,
 		apiURL:     str = GITHUB_API_URL,
-		timeout:    float = 30.0
+		timeout:    float = 30.0,
+		retries:    int = 3,
+		retryDelay: float = 2.0
 	) -> None:
 		"""
 		Initializes a reader for the workflow runs of a repository.
@@ -363,12 +378,20 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 		:param apiURL:      Optional, base URL of the GitHub REST API, e.g. of a GitHub Enterprise Server.
 		                    Default: :data:`GITHUB_API_URL`.
 		:param timeout:     Optional, timeout of a single request in seconds. Default: ``30.0``.
+		:param retries:     Optional, how often a transiently failing request is tried again. ``0`` tries once.
+		                    Default: ``3``.
+		:param retryDelay:  Optional, pause in seconds before a request is tried again the first time. The pause doubles
+		                    with every further attempt. Default: ``2.0``.
 		:raises TypeError:  If parameter 'repository' is not of type :class:`str`.
 		:raises ValueError: If parameter 'repository' isn't of the form ``owner/name``.
 		:raises TypeError:  If parameter 'token' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'apiURL' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'timeout' is not a number.
 		:raises ValueError: If parameter 'timeout' isn't positive.
+		:raises TypeError:  If parameter 'retries' is not of type :class:`int`.
+		:raises ValueError: If parameter 'retries' is negative.
+		:raises TypeError:  If parameter 'retryDelay' is not a number.
+		:raises ValueError: If parameter 'retryDelay' is negative.
 		"""
 		if not isinstance(repository, str):
 			ex = TypeError("Parameter 'repository' is not of type 'str'.")
@@ -398,10 +421,30 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{timeout}'.")
 			raise ex
 
+		if isinstance(retries, bool) or not isinstance(retries, int):
+			ex = TypeError("Parameter 'retries' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(retries)}'.")
+			raise ex
+		elif retries < 0:
+			ex = ValueError("Parameter 'retries' is negative.")
+			ex.add_note(f"Got value '{retries}'.")
+			raise ex
+
+		if isinstance(retryDelay, bool) or not isinstance(retryDelay, (int, float)):
+			ex = TypeError("Parameter 'retryDelay' is not a number.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(retryDelay)}'.")
+			raise ex
+		elif retryDelay < 0:
+			ex = ValueError("Parameter 'retryDelay' is negative.")
+			ex.add_note(f"Got value '{retryDelay}'.")
+			raise ex
+
 		self._repository = repository
 		self._token =      token
 		self._apiURL =     apiURL.rstrip("/")
 		self._timeout =    float(timeout)
+		self._retries =    retries
+		self._retryDelay = float(retryDelay)
 
 	@readonly
 	def Repository(self) -> str:
@@ -420,6 +463,24 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 		:returns: The base URL, without a trailing slash.
 		"""
 		return self._apiURL
+
+	@readonly
+	def Retries(self) -> int:
+		"""
+		Read-only property to access how often a transiently failing request is tried again (:attr:`_retries`).
+
+		:returns: The number of further attempts.
+		"""
+		return self._retries
+
+	@readonly
+	def RetryDelay(self) -> float:
+		"""
+		Read-only property to access the pause before a request is tried again the first time (:attr:`_retryDelay`).
+
+		:returns: The pause in seconds.
+		"""
+		return self._retryDelay
 
 	def ReadRun(self, runID: int, attempt: Nullable[int] = None) -> Trace:
 		"""
@@ -465,9 +526,26 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 
 		return ConvertWorkflowRun(run, jobs)
 
+	def _RetryDelay(self, attempt: int, retryAfter: Nullable[str]) -> float:
+		"""
+		Return the pause before a request is tried again.
+
+		:param attempt:    The attempt that failed, starting at 1.
+		:param retryAfter: The value of the failed answer's ``Retry-After`` header, or ``None``.
+		:returns:          The pause in seconds: the retry delay doubled for every earlier attempt, or the pause the
+		                   ``Retry-After`` header demands, if that is longer - but not longer than 60 seconds.
+		"""
+		delay = self._retryDelay * 2 ** (attempt - 1)
+		try:
+			return max(delay, min(float(retryAfter), _MAXIMUM_RETRY_AFTER))
+		except (TypeError, ValueError):
+			return delay
+
 	def _Request(self, url: str) -> tuple[JSONObject, Nullable[str]]:
 		"""
 		Request a JSON object from the GitHub REST API.
+
+		A transient failure - see :class:`WorkflowRunReader` - is tried again up to :attr:`Retries` times.
 
 		:param url:           The URL to request.
 		:returns:             The JSON object, and the URL of the next page or ``None`` on the last page.
@@ -479,23 +557,39 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 		if self._token is not None:
 			headers["Authorization"] = f"Bearer {self._token}"
 
-		try:
-			with urlopen(Request(url, headers=headers), timeout=self._timeout) as response:
-				body = response.read()
-				link = response.headers.get("Link", None)
-		except HTTPError as ex:
-			error = TracingError(f"GitHub API request failed with HTTP {ex.code}: {url}")
+		attempt = 0
+		while True:
+			attempt += 1
 			try:
-				error.add_note(f"GitHub: {json_loads(ex.read())['message']}")
-			except Exception:
-				pass
-			if ex.code in (401, 403, 404):
-				error.add_note("Check the repository's name, and that the token may read the repository's actions.")
-			raise error from ex
-		except OSError as ex:
-			error = TracingError(f"GitHub API couldn't be reached: {url}")
-			error.add_note(f"Reason: {getattr(ex, 'reason', ex)}")
-			raise error from ex
+				with urlopen(Request(url, headers=headers), timeout=self._timeout) as response:
+					body = response.read()
+					link = response.headers.get("Link", None)
+				break
+			except HTTPError as ex:
+				if ex.code in _TRANSIENT_HTTP_STATUS and attempt <= self._retries:
+					sleep(self._RetryDelay(attempt, None if ex.headers is None else ex.headers.get("Retry-After", None)))
+					continue
+
+				error = TracingError(f"GitHub API request failed with HTTP {ex.code}: {url}")
+				try:
+					error.add_note(f"GitHub: {json_loads(ex.read())['message']}")
+				except Exception:
+					pass
+				if ex.code in (401, 403, 404):
+					error.add_note("Check the repository's name, and that the token may read the repository's actions.")
+				if attempt > 1:
+					error.add_note(f"Tried {attempt} times.")
+				raise error from ex
+			except OSError as ex:
+				if attempt <= self._retries:
+					sleep(self._RetryDelay(attempt, None))
+					continue
+
+				error = TracingError(f"GitHub API couldn't be reached: {url}")
+				error.add_note(f"Reason: {getattr(ex, 'reason', ex)}")
+				if attempt > 1:
+					error.add_note(f"Tried {attempt} times.")
+				raise error from ex
 
 		try:
 			document = json_loads(body)

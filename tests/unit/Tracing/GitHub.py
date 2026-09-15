@@ -405,11 +405,124 @@ class Reader(Testcase):
 
 	def test_Unreachable(self) -> None:
 		with mock.patch("pyTooling.Tracing.CI.GitHub.urlopen", side_effect=URLError("no route to host")):
-			with self.assertRaises(TracingError) as context:
-				_ = WorkflowRunReader("owner/repo").ReadRun(4711)
+			with mock.patch("pyTooling.Tracing.CI.GitHub.sleep") as sleep:
+				with self.assertRaises(TracingError) as context:
+					_ = WorkflowRunReader("owner/repo").ReadRun(4711)
 
 		self.assertEqual(f"GitHub API couldn't be reached: {self._api}", str(context.exception))
 		self.assertIn("Reason: no route to host", context.exception.__notes__)
+		self.assertIn("Tried 4 times.", context.exception.__notes__)
+		self.assertEqual(3, sleep.call_count)
+
+	def _Failing(self, statuses: list, answers: dict[str, "_Response"], headers: Nullable[dict] = None):
+		"""
+		Patch :func:`urlopen` to fail with the given HTTP statuses first, then to answer from a dictionary of URLs.
+
+		:param statuses: HTTP status codes, or exceptions, to fail the first requests with, in order.
+		:param answers:  Dictionary of a URL to its response, for the requests after the failures.
+		:param headers:  Optional, the headers of a failing answer.
+		:returns:        The patcher, and the list collecting the requests.
+		"""
+		requests = []
+		failures = list(statuses)
+
+		def urlopen(request, timeout):
+			"""
+			Nested function failing or answering a request.
+
+			:param request: The request.
+			:param timeout: The request's timeout.
+			:returns:       The response for the request's URL.
+			"""
+			requests.append(request)
+			if len(failures) > 0:
+				failure = failures.pop(0)
+				if isinstance(failure, int):
+					raise HTTPError(request.full_url, failure, "failure", headers or {}, _Response({"message": "failure"}))
+				raise failure
+			return answers[request.full_url]
+
+		return mock.patch("pyTooling.Tracing.CI.GitHub.urlopen", side_effect=urlopen), requests
+
+	def _Answers(self) -> dict[str, "_Response"]:
+		"""
+		Return the answers for a run without jobs.
+
+		:returns: Dictionary of a URL to its response.
+		"""
+		return {self._api: _Response(_run()), f"{self._api}/jobs?filter=latest&per_page=100": _Response({"jobs": []})}
+
+	def test_RetryTransient(self) -> None:
+		patcher, requests = self._Failing([504], self._Answers())
+		with patcher, mock.patch("pyTooling.Tracing.CI.GitHub.sleep") as sleep:
+			trace = WorkflowRunReader("owner/repo").ReadRun(4711)
+
+		self.assertEqual("Pipeline", trace.Name)
+		self.assertEqual(3, len(requests), "The run was requested twice, then its jobs.")
+		sleep.assert_called_once_with(2.0)
+
+	def test_RetriesExhausted(self) -> None:
+		patcher, requests = self._Failing([503, 503, 503, 503], self._Answers())
+		with patcher, mock.patch("pyTooling.Tracing.CI.GitHub.sleep") as sleep:
+			with self.assertRaises(TracingError) as context:
+				_ = WorkflowRunReader("owner/repo", token="secret").ReadRun(4711)
+
+		self.assertEqual(f"GitHub API request failed with HTTP 503: {self._api}", str(context.exception))
+		self.assertIn("Tried 4 times.", context.exception.__notes__)
+		self.assertEqual([mock.call(2.0), mock.call(4.0), mock.call(8.0)], sleep.call_args_list)
+		self.assertEqual(4, len(requests))
+
+	def test_NoRetryForNotFound(self) -> None:
+		patcher, requests = self._Failing([404], self._Answers())
+		with patcher, mock.patch("pyTooling.Tracing.CI.GitHub.sleep") as sleep:
+			with self.assertRaises(TracingError) as context:
+				_ = WorkflowRunReader("owner/repo").ReadRun(4711)
+
+		self.assertEqual(f"GitHub API request failed with HTTP 404: {self._api}", str(context.exception))
+		self.assertNotIn("Tried 1 times.", context.exception.__notes__)
+		self.assertEqual(1, len(requests))
+		sleep.assert_not_called()
+
+	def test_NoRetries(self) -> None:
+		patcher, requests = self._Failing([504], self._Answers())
+		with patcher, mock.patch("pyTooling.Tracing.CI.GitHub.sleep") as sleep:
+			with self.assertRaises(TracingError):
+				_ = WorkflowRunReader("owner/repo", retries=0).ReadRun(4711)
+
+		self.assertEqual(1, len(requests))
+		sleep.assert_not_called()
+
+	def test_RetryAfter(self) -> None:
+		"""A 'Retry-After' header demanding a longer pause is respected, but not beyond a minute."""
+		for retryAfter, expected in (("10", 10.0), ("1", 2.0), ("3600", 60.0), ("Wed, 21 Oct 2026 07:28:00 GMT", 2.0)):
+			with self.subTest(retryAfter=retryAfter):
+				patcher, _ = self._Failing([429], self._Answers(), headers={"Retry-After": retryAfter})
+				with patcher, mock.patch("pyTooling.Tracing.CI.GitHub.sleep") as sleep:
+					_ = WorkflowRunReader("owner/repo").ReadRun(4711)
+
+				sleep.assert_called_once_with(expected)
+
+	def test_RetryUnreachable(self) -> None:
+		patcher, requests = self._Failing([URLError("timed out"), TimeoutError("timed out")], self._Answers())
+		with patcher, mock.patch("pyTooling.Tracing.CI.GitHub.sleep") as sleep:
+			trace = WorkflowRunReader("owner/repo", retryDelay=0.5).ReadRun(4711)
+
+		self.assertEqual("Pipeline", trace.Name)
+		self.assertEqual([mock.call(0.5), mock.call(1.0)], sleep.call_args_list)
+
+	def test_RetryParameters(self) -> None:
+		reader = WorkflowRunReader("owner/repo", retries=5, retryDelay=1)
+
+		self.assertEqual((5, 1.0), (reader.Retries, reader.RetryDelay))
+		self.assertEqual((3, 2.0), (WorkflowRunReader("owner/repo").Retries, WorkflowRunReader("owner/repo").RetryDelay))
+		with self.assertRaises(TypeError):
+			_ = WorkflowRunReader("owner/repo", retries="3")
+		with self.assertRaises(ValueError):
+			_ = WorkflowRunReader("owner/repo", retries=-1)
+		with self.assertRaises(TypeError):
+			_ = WorkflowRunReader("owner/repo", retryDelay=True)
+		with self.assertRaises(ValueError):
+			_ = WorkflowRunReader("owner/repo", retryDelay=-0.1)
 
 	def test_ForeignNextPage(self) -> None:
 		"""A token is only sent to the API, so a next page elsewhere is refused."""
