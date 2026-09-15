@@ -60,11 +60,11 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Tracing`
 
-     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
-       :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
+     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.ToOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
        accepted it since v1.35.
-     * The document is typed rather than a mapping of :class:`~typing.Any`: ten :class:`~typing.TypedDict` classes
+     * The document is typed rather than a mapping of :class:`~typing.Any`: eleven :class:`~typing.TypedDict` classes
        name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
        :class:`~pyTooling.Tracing.OTLPAnyValue`.
      * A trace and each of its timespans draw their identifiers when they are **constructed**, so exporting one
@@ -72,6 +72,13 @@ Version 10.x (2026)
        another process.
      * An attribute's value is a :data:`~pyTooling.Tracing.AttributeValue` - the types OTLP's ``AnyValue`` carries,
        nested as deeply as needed. A value of any other type is rejected rather than stringified.
+     * A trace **reads itself back** from an OTLP/JSON document - :meth:`~pyTooling.Tracing.Trace.FromOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.FromOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.ReadOTLPJSONFile`.
+       OTLP carries no nesting, so the tree is reassembled from the flat list of spans and their ``parentSpanId``
+       references, and a document holding several traces is read one trace at a time.
+     * The document is validated rather than trusted: a missing or mistyped field, a malformed identifier, a
+       duplicate attribute key and a set of spans that isn't a tree each raise a
+       :exc:`~pyTooling.Tracing.TracingError` naming the position in the document it was found at.
 
    * :mod:`pyTooling.Packaging`
 
