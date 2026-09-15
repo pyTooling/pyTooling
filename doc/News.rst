@@ -72,6 +72,9 @@ Version 10.x (2026)
        another process.
      * An attribute's value is a :data:`~pyTooling.Tracing.AttributeValue` - the types OTLP's ``AnyValue`` carries,
        nested as deeply as needed. A value of any other type is rejected rather than stringified.
+     * A trace and its timespans can be constructed with **recorded times** - ``beginTime`` and ``endTime`` - for
+       timespans measured elsewhere, e.g. by a CI service. Without them, a timespan is timed by its
+       ``with``-statement as before.
 
    * :mod:`pyTooling.Packaging`
 

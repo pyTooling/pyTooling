@@ -31,6 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attached to them.
 """
+from datetime          import datetime, timedelta, timezone
 from time              import sleep
 
 from pyTooling.Tracing import TracingError, Trace, Span, Event
@@ -103,6 +104,149 @@ class Instantiation(Testcase):
 		self.assertEqual("event", str(e))
 		self.assertEqual(0, len(e))
 		self.assertEqual(0, len([a for a in e]))
+
+
+class RecordedTimes(Testcase):
+	"""Timespans measured elsewhere - by a CI service, or read from a log - are constructed with their times."""
+
+	_begin = datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc)
+
+	def test_Span(self) -> None:
+		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(seconds=1, microseconds=500_000))
+
+		self.assertEqual(self._begin, s.StartTime)
+		self.assertEqual(self._begin + timedelta(seconds=1.5), s.StopTime)
+		self.assertEqual(1.5, s.Duration)
+
+	def test_Span_Microsecond(self) -> None:
+		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(microseconds=1))
+
+		self.assertEqual(1e-6, s.Duration)
+
+	def test_Span_Days(self) -> None:
+		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(days=2, seconds=3))
+
+		self.assertEqual(2 * 86_400 + 3, s.Duration)
+
+	def test_Span_Running(self) -> None:
+		"""A recorded timespan without an end is still running, so its duration grows until now."""
+		begin = datetime.now(timezone.utc) - timedelta(seconds=2)
+		s = Span("span", beginTime=begin)
+
+		self.assertIsNone(s.StopTime)
+		self.assertGreaterEqual(s.Duration, 2.0)
+
+	def test_Span_Naive(self) -> None:
+		begin = datetime(2026, 9, 15, 8, 35, 24)
+		s = Span("span", beginTime=begin, endTime=begin + timedelta(seconds=3))
+
+		self.assertEqual(3.0, s.Duration)
+
+	def test_Trace(self) -> None:
+		begin = self._begin
+
+		t =    Trace("pipeline", beginTime=begin, endTime=begin + timedelta(minutes=9))
+		job =  Span("job", parent=t, beginTime=begin + timedelta(seconds=11), endTime=begin + timedelta(minutes=2))
+		step = Span("step", parent=job, beginTime=begin + timedelta(seconds=12), endTime=begin + timedelta(seconds=20))
+
+		self.assertEqual(540.0, t.Duration)
+		self.assertIs(t, job.Trace)
+		self.assertIs(t, step.Trace)
+		self.assertListEqual([job], [s for s in t.IterateSubSpans()])
+		self.assertListEqual([step], [s for s in job.IterateSubSpans()])
+		self.assertEqual(8.0, step.Duration)
+
+	def test_Trace_Format(self) -> None:
+		t = Trace("pipeline", beginTime=self._begin, endTime=self._begin + timedelta(seconds=2))
+		Span("job", parent=t, beginTime=self._begin, endTime=self._begin + timedelta(milliseconds=250))
+
+		lines = t.Format()
+
+		self.assertEqual(3, len(lines), "A headline, the trace and its timespan.")
+		self.assertIn("2000.000 ms", lines[0])
+		self.assertIn("2000.000 ms", lines[1])
+		self.assertIn("250.000 ms", lines[2])
+
+	def test_Trace_OTLPDuration(self) -> None:
+		"""The exported end is the start plus the exact recorded duration, not a duration rounded through seconds."""
+		t = Trace("pipeline", beginTime=self._begin, endTime=self._begin + timedelta(seconds=7, microseconds=1))
+		Span("job", parent=t, beginTime=self._begin, endTime=self._begin + timedelta(microseconds=123_457))
+
+		spans = {s["name"]: s for s in t.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]}
+
+		for name, expected in (("pipeline", 7_000_001_000), ("job", 123_457_000)):
+			with self.subTest(span=name):
+				span = spans[name]
+				self.assertEqual(expected, int(span["endTimeUnixNano"]) - int(span["startTimeUnixNano"]))
+				self.assertAlmostEqual(
+					int(self._begin.timestamp()) * 1_000_000_000, int(span["startTimeUnixNano"]), delta=1_000
+				)
+
+	def test_EndTimeWithoutBeginTime(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Span("span", endTime=self._begin)
+
+		self.assertEqual("Parameter 'endTime' is given without parameter 'beginTime'.", str(context.exception))
+
+	def test_EndTimeBeforeBeginTime(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Span("span", beginTime=self._begin, endTime=self._begin - timedelta(microseconds=1))
+
+		self.assertEqual("Parameter 'endTime' is before parameter 'beginTime'.", str(context.exception))
+
+	def test_BeginTimeType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Span("span", beginTime="2026-09-15T06:35:24Z")
+
+		self.assertEqual("Parameter 'beginTime' is not of type 'datetime'.", str(context.exception))
+
+	def test_EndTimeType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Trace("trace", beginTime=self._begin, endTime=1789454124)
+
+		self.assertEqual("Parameter 'endTime' is not of type 'datetime'.", str(context.exception))
+
+	def test_MixedTimeZones(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Span("span", beginTime=self._begin, endTime=datetime(2026, 9, 15, 8, 36, 0))
+
+		self.assertEqual(
+			"Parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.",
+			str(context.exception)
+		)
+
+	def test_NameType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Span(42)
+
+		self.assertIn("Got type 'int'.", context.exception.__notes__)
+
+	def test_EnterRecordedSpan(self) -> None:
+		with Trace("trace"):
+			s = Span("span", beginTime=self._begin)
+			with self.assertRaises(TracingError) as context:
+				with s:
+					pass
+
+		self.assertEqual("Timespan 'span' has recorded times and can't be entered.", str(context.exception))
+
+	def test_EnterRecordedTrace(self) -> None:
+		with self.assertRaises(TracingError) as context:
+			with Trace("trace", beginTime=self._begin, endTime=self._begin):
+				pass
+
+		self.assertEqual("Trace 'trace' has recorded times and can't be entered.", str(context.exception))
+
+	def test_EnterSpanTwice(self) -> None:
+		"""A span timed by a 'with'-statement can be entered again, as before."""
+		with Trace("trace"):
+			s = Span("span")
+			with s:
+				pass
+			with s:
+				pass
+
+		self.assertIsNotNone(s.StopTime)
 
 
 class Context(Testcase):
