@@ -67,7 +67,7 @@ try:
 	from matplotlib.patches      import Patch
 	from matplotlib.ticker       import FuncFormatter
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="matplotlib", extra="matplotlib") from ex
+	raise MissingDependencyError(dependency="matplotlib", extra="diagram") from ex
 
 
 __all__ = ["FORMATS", "FONT_FAMILIES", "MONOSPACE_FONT_FAMILY"]
