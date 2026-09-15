@@ -211,6 +211,10 @@ standard library only:
 Inside a workflow, ``GITHUB_TOKEN`` with the ``actions: read`` permission suffices. A job can't see itself: it is
 still running when it reads the run, so a timing job depends on every other job and runs last.
 
+A request failing transiently - HTTP 429, 500, 502, 503 or 504, a timeout, or an unreachable API - is tried again,
+``retries`` times (default: 3), after a pause of ``retryDelay`` seconds (default: 2), which doubles with every attempt
+or lasts as long as a ``Retry-After`` header demands, up to a minute. HTTP 401, 403 and 404 fail at once.
+
 :func:`~pyTooling.Tracing.CI.GitHub.ConvertWorkflowRun` does the conversion alone, for a run and jobs that were
 fetched another way. The run becomes the trace, and every timespan below it is marked by the attribute
 :data:`~pyTooling.Tracing.CI.SPAN_KIND`:
