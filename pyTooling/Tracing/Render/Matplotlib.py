@@ -48,6 +48,8 @@ timespan.
    See :ref:`high-level help <TRACING/Render>` for explanations and usage examples.
 """
 from datetime                    import datetime
+from io                          import StringIO
+from json                        import dumps as json_dumps
 from pathlib                     import Path
 from typing                      import Iterable, Optional as Nullable, Union
 
@@ -92,6 +94,82 @@ _LINE = "#404040"
 
 _QUEUED = "#d3d3d3"
 """Color of a bar showing the time a job waited for a runner."""
+
+_COLLAPSE_STYLE = """
+.gantt-marker { fill: #404040; font-family: sans-serif; cursor: pointer; user-select: none; }
+"""
+"""Style of the markers a collapsible SVG file shows in front of the labels of expandable rows."""
+
+_COLLAPSE_SCRIPT = """
+(function () {
+  "use strict";
+  const data = /*DATA*/;
+  const rows = data.rows;
+  const byID = new Map();
+  for (const row of rows) { row.children = []; byID.set(row.id, row); }
+  for (const row of rows) {
+    if (row.parent !== null && byID.has(row.parent)) { byID.get(row.parent).children.push(row); }
+  }
+  const collapsed = new Set(rows.filter(row => row.collapsed && row.children.length > 0).map(row => row.id));
+  const markers = new Map();
+
+  function elementsOf(row) {
+    return ["span-" + row.id, "span-" + row.id + "-queued", "span-" + row.id + "-ends", "label-" + row.id]
+      .map(id => document.getElementById(id))
+      .filter(element => element !== null);
+  }
+
+  function isHidden(row) {
+    for (let parent = byID.get(row.parent); parent !== undefined; parent = byID.get(parent.parent)) {
+      if (collapsed.has(parent.id)) { return true; }
+    }
+    return false;
+  }
+
+  function update() {
+    let shift = 0;
+    for (const row of rows) {
+      const hidden = isHidden(row);
+      const marker = markers.get(row.id);
+      const shown = marker === undefined ? elementsOf(row) : elementsOf(row).concat([marker]);
+      for (const element of shown) {
+        element.style.display = hidden ? "none" : "";
+        element.setAttribute("transform", "translate(0," + (-shift) + ")");
+      }
+      if (marker !== undefined) { marker.textContent = collapsed.has(row.id) ? "\\u25B8" : "\\u25BE"; }
+      if (hidden) { shift += data.pitch; }
+    }
+  }
+
+  function toggle(row) {
+    if (collapsed.has(row.id)) { collapsed.delete(row.id); } else { collapsed.add(row.id); }
+    update();
+  }
+
+  for (const row of rows) {
+    if (row.children.length === 0) { continue; }
+    for (const element of elementsOf(row)) {
+      element.style.cursor = "pointer";
+      element.addEventListener("click", () => toggle(row));
+    }
+    const label = document.getElementById("label-" + row.id);
+    if (label !== null && typeof label.getBBox === "function") {
+      const box = label.getBBox();
+      const marker = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      marker.setAttribute("class", "gantt-marker");
+      marker.setAttribute("x", box.x - 2);
+      marker.setAttribute("y", box.y + box.height * 0.85);
+      marker.setAttribute("text-anchor", "end");
+      marker.setAttribute("font-size", box.height);
+      marker.addEventListener("click", () => toggle(row));
+      label.parentNode.insertBefore(marker, label.nextSibling);
+      markers.set(row.id, marker);
+    }
+  }
+  update();
+})();
+"""
+"""Script of a collapsible SVG file. ``/*DATA*/`` is replaced by the rows and the distance between two rows."""
 
 
 def _formatSeconds(seconds: float, position: int = 0) -> str:
@@ -293,6 +371,9 @@ def RenderGantt(
 
 		labels = [f"{'  ' * row.Depth}{_renderable(row.Name, fonts)}" for row in rows]
 		axes.set_yticks(range(len(rows)), labels=labels)
+		axes.tick_params(axis="y", length=0)
+		for label, row in zip(axes.get_yticklabels(), rows):
+			label.set_gid(f"label-{row.SpanID}")
 		axes.set_ylim(len(rows) - 0.5, -0.5)
 		axes.set_xlim(0, duration)
 		axes.xaxis.set_major_formatter(FuncFormatter(_formatSeconds))
@@ -329,6 +410,46 @@ def RenderGantt(
 	return figure
 
 
+def _collapsibleSVG(svg: str, layout: GanttLayout, figure: Figure, collapsedKinds: Iterable[str]) -> str:
+	"""
+	Add the script collapsing and expanding rows to an SVG file.
+
+	The script knows every row's identifier, its parent among the shown rows, and whether it starts collapsed. The
+	distance between two rows is converted from matplotlib's display coordinates into the SVG file's coordinates, which
+	have 72 units per inch.
+
+	:param svg:            The SVG file written by matplotlib.
+	:param layout:         The layout of the rendered trace.
+	:param figure:         The rendered figure, after it was written.
+	:param collapsedKinds: The CI span kinds of rows, which start collapsed.
+	:returns:              The SVG file with the style and script.
+	"""
+	axes = figure.get_axes()[0]
+	pitch = abs(axes.transData.transform((0, 1))[1] - axes.transData.transform((0, 0))[1]) * 72 / figure.dpi
+
+	rows = list(layout.IterateRows())
+	shown = {row.SpanID for row in rows}
+	kinds = set(collapsedKinds)
+	data = {
+		"pitch": round(pitch, 6),
+		"rows": [
+			{
+				"id":        row.SpanID,
+				"parent":    row.ParentSpanID if row.ParentSpanID in shown else None,
+				"collapsed": row.Kind in kinds
+			} for row in rows
+		]
+	}
+
+	script = _COLLAPSE_SCRIPT.replace("/*DATA*/", json_dumps(data))
+	addition = (
+		f'<style type="text/css">{_COLLAPSE_STYLE}</style>\n'
+		f'<script type="text/ecmascript"><![CDATA[{script}]]></script>\n'
+	)
+	position = svg.rindex("</svg>")
+	return svg[:position] + addition + svg[position:]
+
+
 @export
 def WriteGantt(
 	trace:          Trace,
@@ -343,12 +464,19 @@ def WriteGantt(
 	fontSize:       float = 7.0,
 	fontFamilies:   Iterable[str] = FONT_FAMILIES,
 	legendLocation: str = "upper right",
+	collapsible:    bool = False,
+	collapsedKinds: Iterable[str] = (SpanKind.Job,),
 	dpi:            int = 150
 ) -> None:
 	"""
 	Lay out a trace, render it as a Gantt chart, and write the chart to a file.
 
 	The file format is chosen by the file's suffix, one of :data:`FORMATS`. Missing parent directories are created.
+
+	A **collapsible** SVG file carries a script: a click on the label, bar or line of a row with sub-rows hides the rows
+	below it and moves the following rows up, and a second click shows them again. A marker in front of the label shows
+	the state. The script runs when the file is opened in a browser, or embedded with ``<object>`` or inline - not when
+	it is shown as an image, e.g. by ``<img>`` or in Markdown.
 
 	:param trace:          The trace to render.
 	:param file:           Path of the file to write.
@@ -362,9 +490,13 @@ def WriteGantt(
 	:param fontSize:       Optional, font size of labels in points. Default: ``7.0``.
 	:param fontFamilies:   Optional, font families tried in order for every character. Default: :data:`FONT_FAMILIES`.
 	:param legendLocation: Optional, the legend's location, as matplotlib's ``loc`` names it. Default: ``'upper right'``.
+	:param collapsible:    Optional, add the script collapsing and expanding rows to an SVG file. Default: ``False``.
+	:param collapsedKinds: Optional, the CI span kinds of rows, which start collapsed in a collapsible SVG file.
+	                       Default: jobs, so their steps are hidden until a job is expanded.
 	:param dpi:            Optional, resolution of a PNG file in dots per inch. Default: ``150``.
 	:raises TypeError:     If parameter 'file' is not of type :class:`~pathlib.Path`.
 	:raises ValueError:    If the file's suffix isn't one of :data:`FORMATS`.
+	:raises ValueError:    If parameter 'collapsible' is ``True``, but the file isn't an SVG file.
 	:raises TracingError:  If the parent directories couldn't be created.
 	:raises TracingError:  If the file couldn't be written.
 	"""
@@ -375,6 +507,10 @@ def WriteGantt(
 	elif (fileFormat := file.suffix.lower().lstrip(".")) not in FORMATS:
 		ex = ValueError(f"File '{file}' has an unsupported format.")
 		ex.add_note(f"Supported file suffixes: {', '.join(f'.{suffix}' for suffix in FORMATS)}")
+		raise ex
+	elif collapsible and fileFormat != "svg":
+		ex = ValueError(f"File '{file}' can't be collapsible.")
+		ex.add_note("Only an SVG file can carry the script collapsing rows.")
 		raise ex
 
 	layout = GanttLayout(trace, spanFilter=spanFilter, categorize=categorize, now=now)
@@ -391,6 +527,11 @@ def WriteGantt(
 	families, _ = _fonts(fontFamilies)
 	try:
 		with rc_context({} if len(families) == 0 else {"font.family": families}):
-			figure.savefig(file, format=fileFormat, dpi=dpi)
+			if not collapsible:
+				figure.savefig(file, format=fileFormat, dpi=dpi)
+			else:
+				buffer = StringIO()
+				figure.savefig(buffer, format="svg")
+				file.write_text(_collapsibleSVG(buffer.getvalue(), layout, figure, collapsedKinds), encoding="utf-8")
 	except OSError as ex:
 		raise TracingError(f"File '{file}' couldn't be written.") from ex
