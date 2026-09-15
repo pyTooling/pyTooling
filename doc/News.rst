@@ -250,7 +250,7 @@ Version 10.x (2026)
        :class:`~pyTooling.Tracing.CI.SpanKind` and :class:`~pyTooling.Tracing.CI.Result`.
      * A trace **renders as a Gantt chart**: :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans
        in rows independently of a drawing library, and :mod:`pyTooling.Tracing.Render.Matplotlib` writes the chart as
-       SVG, PNG or PDF. matplotlib is installed by the new extra ``pyTooling[matplotlib]``.
+       SVG, PNG or PDF. matplotlib is installed by the new extra ``pyTooling[diagram]``.
 
    * :mod:`pyTooling.Packaging`
 

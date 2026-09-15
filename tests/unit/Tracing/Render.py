@@ -338,7 +338,7 @@ class Statistics(Testcase):
 		self.assertEqual(60.0, entry.TotalRunTime)
 
 
-@skipUnless(HAS_MATPLOTLIB, "Needs matplotlib, installed by the extra 'pyTooling[matplotlib]'.")
+@skipUnless(HAS_MATPLOTLIB, "Needs matplotlib, installed by the extra 'pyTooling[diagram]'.")
 class Matplotlib(Testcase):
 	def test_Figure(self) -> None:
 		figure = RenderGantt(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50)))

@@ -74,7 +74,7 @@ When installed as ``pyTooling[yaml]``:
    :depth: 4
 
 
-When installed as ``pyTooling[matplotlib]``:
+When installed as ``pyTooling[diagram]``:
 
 .. The extra isn't on PyPI yet, which 'dependency-table' reads extras from. Replace this table by
    '.. dependency-table:: matplotlib' and an entry in 'conf.py' once a release contains the extra.
