@@ -38,7 +38,7 @@ from unittest                    import mock
 from urllib.error                import HTTPError, URLError
 
 from pyTooling.Tracing           import Span, Trace, TracingError
-from pyTooling.Tracing.CI        import SPAN_KIND, parseTimestamp
+from pyTooling.Tracing.CI        import SPAN_KIND, parseISO8601Timestamp
 from pyTooling.Tracing.CI.GitHub import ConvertWorkflowRun, WorkflowRunReader
 from pyTooling.Testing           import Testcase
 
@@ -110,24 +110,27 @@ def _children(span: Span) -> dict[str, Span]:
 
 class Timestamps(Testcase):
 	def test_UTC(self) -> None:
-		self.assertEqual(datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc), parseTimestamp("2026-09-15T06:35:24Z"))
+		self.assertEqual(
+			datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc),
+			parseISO8601Timestamp("2026-09-15T06:35:24Z")
+		)
 
 	def test_Offset(self) -> None:
-		timestamp = parseTimestamp("2026-09-15T08:35:24+02:00")
+		timestamp = parseISO8601Timestamp("2026-09-15T08:35:24+02:00")
 
 		self.assertEqual(datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc), timestamp)
 		self.assertEqual(timedelta(hours=2), timestamp.utcoffset())
 
 	def test_Naive(self) -> None:
-		self.assertEqual(timezone.utc, parseTimestamp("2026-09-15T06:35:24").tzinfo)
+		self.assertEqual(timezone.utc, parseISO8601Timestamp("2026-09-15T06:35:24").tzinfo)
 
 	def test_None(self) -> None:
-		self.assertIsNone(parseTimestamp(None))
-		self.assertIsNone(parseTimestamp(""))
+		self.assertIsNone(parseISO8601Timestamp(None))
+		self.assertIsNone(parseISO8601Timestamp(""))
 
 	def test_Invalid(self) -> None:
 		with self.assertRaises(TracingError) as context:
-			_ = parseTimestamp("yesterday")
+			_ = parseISO8601Timestamp("yesterday")
 
 		self.assertEqual("'yesterday' isn't an ISO 8601 timestamp.", str(context.exception))
 
@@ -243,7 +246,7 @@ class Conversion(Testcase):
 
 		group = children["UnitTesting"]
 		self.assertEqual("workflow", group[SPAN_KIND])
-		self.assertEqual(parseTimestamp(_time(10)), group.StartTime)
+		self.assertEqual(parseISO8601Timestamp(_time(10)), group.StartTime)
 		self.assertEqual(80.0, group.Duration)
 		self.assertListEqual(
 			["Linux (queued)", "Linux", "Windows (queued)", "Windows"], [span.Name for span in group.IterateSubSpans()]
@@ -607,14 +610,14 @@ class Containment(Testcase):
 			created_at="2026-09-17T10:00:00Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:04:00Z"
 		)])
 
-		self.assertEqual(parseTimestamp("2026-09-17T10:00:00Z"), trace.StartTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:00Z"), trace.StartTime)
 
 	def test_JobCompletedAfterTheRunsLastUpdate(self) -> None:
 		trace = ConvertWorkflowRun(self._RUN, [self._Job(
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:09:00Z"
 		)])
 
-		self.assertEqual(parseTimestamp("2026-09-17T10:09:00Z"), trace.StopTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:09:00Z"), trace.StopTime)
 
 	def test_StepStartedBeforeItsJob(self) -> None:
 		trace = ConvertWorkflowRun(self._RUN, [self._Job(
@@ -623,8 +626,8 @@ class Containment(Testcase):
 		)])
 
 		job = self._SubSpan(trace, "Build")
-		self.assertLessEqual(job.StartTime, parseTimestamp("2026-09-17T10:00:25Z"))
-		self.assertEqual(parseTimestamp("2026-09-17T10:00:25Z"), self._SubSpan(job, "Compile").StartTime)
+		self.assertLessEqual(job.StartTime, parseISO8601Timestamp("2026-09-17T10:00:25Z"))
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:25Z"), self._SubSpan(job, "Compile").StartTime)
 
 	def test_StepCompletedAfterItsJob(self) -> None:
 		trace = ConvertWorkflowRun(self._RUN, [self._Job(
@@ -633,8 +636,8 @@ class Containment(Testcase):
 		)])
 
 		job = self._SubSpan(trace, "Build")
-		self.assertGreaterEqual(job.StopTime, parseTimestamp("2026-09-17T10:02:00Z"))
-		self.assertEqual(parseTimestamp("2026-09-17T10:02:00Z"), self._SubSpan(job, "Compile").StopTime)
+		self.assertGreaterEqual(job.StopTime, parseISO8601Timestamp("2026-09-17T10:02:00Z"))
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:02:00Z"), self._SubSpan(job, "Compile").StopTime)
 
 	def test_GroupedJobOutsideTheRun(self) -> None:
 		trace = ConvertWorkflowRun(self._RUN, [self._Job(
@@ -643,8 +646,8 @@ class Containment(Testcase):
 			steps=[self._Step(started_at="2026-09-17T10:00:31Z", completed_at="2026-09-17T10:08:00Z")]
 		)])
 
-		self.assertEqual(parseTimestamp("2026-09-17T09:59:00Z"), trace.StartTime)
-		self.assertEqual(parseTimestamp("2026-09-17T10:09:00Z"), trace.StopTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T09:59:00Z"), trace.StartTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:09:00Z"), trace.StopTime)
 
 	def test_ConsistentTimestampsAreUnchanged(self) -> None:
 		trace = ConvertWorkflowRun(self._RUN, [self._Job(
@@ -652,5 +655,5 @@ class Containment(Testcase):
 			steps=[self._Step(started_at="2026-09-17T10:00:35Z", completed_at="2026-09-17T10:01:50Z")]
 		)])
 
-		self.assertEqual(parseTimestamp("2026-09-17T10:00:10Z"), trace.StartTime)
-		self.assertEqual(parseTimestamp("2026-09-17T10:05:00Z"), trace.StopTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:10Z"), trace.StartTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:05:00Z"), trace.StopTime)

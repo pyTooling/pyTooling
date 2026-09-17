@@ -122,7 +122,7 @@ RESULT_ERROR = "error"
 
 
 @export
-def parseTimestamp(value: Nullable[str]) -> Nullable[datetime]:
+def parseISO8601Timestamp(value: Nullable[str]) -> Nullable[datetime]:
 	"""
 	Parse an ISO 8601 timestamp, as CI services report them.
 
