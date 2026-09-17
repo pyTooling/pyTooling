@@ -48,6 +48,7 @@ from base64                import b64encode
 from datetime              import datetime, timedelta
 from enum                  import Enum
 from json                  import dumps as json_dumps
+from math                  import isfinite
 from pathlib               import Path
 from secrets               import randbits
 from time                  import perf_counter_ns
@@ -80,8 +81,31 @@ These are the types OTLP's ``AnyValue`` can carry, and nothing else - a value of
 than stringified, because a silent ``str(value)`` puts a Python ``repr`` into a document a backend then indexes.
 """
 
+DurationValue = Union[timedelta, int, float]
+"""
+A recorded duration, given as a :class:`~datetime.timedelta` or as a number of seconds.
+
+An :class:`int` is whole seconds and a :class:`float` is fractional seconds, matching the unit
+:attr:`Span.Duration` reports, so a source stating ``"duration": 98.0`` needs no conversion at the call site.
+"""
+
 _MAXIMUM_IDENTIFIER_ATTEMPTS = 4
 """Number of attempts to draw a non-zero random identifier before giving up."""
+
+
+def _asTimedelta(duration: DurationValue) -> timedelta:
+	if isinstance(duration, timedelta):
+		return duration
+	elif isinstance(duration, bool) or not isinstance(duration, (int, float)):
+		ex = TypeError("Parameter 'duration' is not of type 'timedelta', 'int' or 'float'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(duration)}'.")
+		raise ex
+	elif not isfinite(duration):
+		ex = ValueError("Parameter 'duration' is not a finite number of seconds.")
+		ex.add_note(f"Got duration '{duration}'.")
+		raise ex
+
+	return timedelta(seconds=duration)
 
 
 def _nanoseconds(beginTime: datetime, endTime: datetime) -> int:
@@ -462,7 +486,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		name:      str,
 		beginTime: Nullable[datetime] = None,
 		endTime:   Nullable[datetime] = None,
-		duration:  Nullable[timedelta] = None,
+		duration:  Nullable[DurationValue] = None,
 		*,
 		parent:    Nullable[Span] = None
 	) -> None:
@@ -480,12 +504,15 @@ class Span(metaclass=ExtendedType, slots=True):
 		:param endTime:     Optional, recorded time when the timespan ended. Requires ``beginTime``. Default: the time
 		                    the timespan is left, or ``None`` for a recorded timespan, which is still running.
 		:param duration:    Optional, recorded duration of the timespan, as an alternative to ``endTime``. Requires
-		                    ``beginTime``.
+		                    ``beginTime``. A :class:`~datetime.timedelta`, or a number of seconds as :class:`int`
+		                    (whole) or :class:`float` (fractional).
 		:param parent:      Optional, reference to a parent span or trace.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
-		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`.
+		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
+		                    :class:`float`.
+		:raises ValueError: If parameter 'duration' is not a finite number of seconds.
 		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
 		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
 		:raises ValueError: If parameter 'duration' is negative.
@@ -507,11 +534,9 @@ class Span(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if duration is not None:
-			if not isinstance(duration, timedelta):
-				ex = TypeError("Parameter 'duration' is not of type 'timedelta'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(duration)}'.")
-				raise ex
-			elif beginTime is None:
+			duration = _asTimedelta(duration)
+
+			if beginTime is None:
 				ex = ValueError("Parameter 'duration' is given without parameter 'beginTime'.")
 				ex.add_note(f"Got duration '{duration}'.")
 				raise ex
@@ -1067,7 +1092,7 @@ class Trace(Span):
 		name:      str,
 		beginTime: Nullable[datetime] = None,
 		endTime:   Nullable[datetime] = None,
-		duration:  Nullable[timedelta] = None
+		duration:  Nullable[DurationValue] = None
 	) -> None:
 		"""
 		Initializes a software execution trace.
@@ -1080,10 +1105,13 @@ class Trace(Span):
 		:param endTime:     Optional, recorded time when the trace ended. Requires ``beginTime``. Default: the time the
 		                    trace is left, or ``None`` for a recorded trace, which is still running.
 		:param duration:    Optional, recorded duration of the trace, as an alternative to ``endTime``. Requires
-		                    ``beginTime``.
+		                    ``beginTime``. A :class:`~datetime.timedelta`, or a number of seconds as :class:`int`
+		                    (whole) or :class:`float` (fractional).
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
-		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`.
+		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
+		                    :class:`float`.
+		:raises ValueError: If parameter 'duration' is not a finite number of seconds.
 		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
 		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
 		:raises ValueError: If parameter 'duration' is negative.
