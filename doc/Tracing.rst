@@ -54,13 +54,14 @@ constructed with them, and attached to its parent by the ``parent`` parameter in
 * A source reporting a length instead of an end gives ``duration`` in place of ``endTime``, as a
   :class:`~datetime.timedelta` or as a number of seconds - :class:`int` for whole, :class:`float` for
   fractional seconds, the unit :attr:`~pyTooling.Tracing.Span.Duration` reports. It is converted to
-  ``endTime``, so every form is stored alike. Giving both ``endTime`` and ``duration`` raises.
+  ``endTime``, so every form is stored alike. Giving both ``endTime`` and ``duration`` raises an exception.
 * A sub-timespan attached with ``parent`` has to lie within its parent's range. Only the direct parent is checked,
   because containment is transitive.
 * A timespan with a ``beginTime`` but no ``endTime`` is still running: its
-  :attr:`~pyTooling.Tracing.Span.Duration` is the time since its recorded begin. Its end is reported later by
-  assigning :attr:`~pyTooling.Tracing.Span.StopTime` or by calling :meth:`~pyTooling.Tracing.Span.Stop`, either of
-  which accepts the end exactly once.
+  :attr:`~pyTooling.Tracing.Span.Duration` is the time since its recorded begin. Assigning
+  :attr:`~pyTooling.Tracing.Span.StopTime` reports an end that is already known, and
+  :meth:`~pyTooling.Tracing.Span.Stop` ends a timespan that is still running now. Either accepts the end exactly
+  once.
 * :attr:`~pyTooling.Tracing.Span.State` tells which times are filled in -
   :attr:`~pyTooling.Tracing.SpanState.Empty`, :attr:`~pyTooling.Tracing.SpanState.Running` or
   :attr:`~pyTooling.Tracing.SpanState.Complete` - regardless of whether they were measured or recorded. Only an

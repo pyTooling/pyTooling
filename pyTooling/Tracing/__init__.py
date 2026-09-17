@@ -94,7 +94,26 @@ _MAXIMUM_IDENTIFIER_ATTEMPTS = 4
 
 
 def _asTimedelta(duration: DurationValue) -> timedelta:
+	"""
+	Convert a recorded duration to a :class:`~datetime.timedelta`.
+
+	A :class:`bool` is rejected although it is an :class:`int` in Python, because ``True`` would otherwise mean one
+	second. A non-finite :class:`float` is rejected here, because :class:`~datetime.timedelta` answers ``nan`` with its
+	own :exc:`ValueError` and infinity with an :exc:`OverflowError`, neither of which names the parameter.
+
+	:param duration:    Duration as a :class:`~datetime.timedelta`, or as a number of seconds.
+	:returns:           The duration as a :class:`~datetime.timedelta`.
+	:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
+	                    :class:`float`.
+	:raises ValueError: If parameter 'duration' is not a finite number of seconds.
+	:raises ValueError: If parameter 'duration' is negative.
+	"""
 	if isinstance(duration, timedelta):
+		if duration < timedelta(0):
+			ex = ValueError("Parameter 'duration' is negative.")
+			ex.add_note(f"Got duration '{duration}'.")
+			raise ex
+
 		return duration
 	elif isinstance(duration, bool) or not isinstance(duration, (int, float)):
 		ex = TypeError("Parameter 'duration' is not of type 'timedelta', 'int' or 'float'.")
@@ -104,12 +123,25 @@ def _asTimedelta(duration: DurationValue) -> timedelta:
 		ex = ValueError("Parameter 'duration' is not a finite number of seconds.")
 		ex.add_note(f"Got duration '{duration}'.")
 		raise ex
+	elif duration < 0:
+		ex = ValueError("Parameter 'duration' is negative.")
+		ex.add_note(f"Got duration '{duration}'.")
+		raise ex
 
 	return timedelta(seconds=duration)
 
 
 def _nanoseconds(beginTime: datetime, endTime: datetime) -> int:
-	# integer arithmetic on the difference, so the duration is exact to the microsecond both timestamps hold
+	"""
+	Compute the length of a timespan in nanoseconds.
+
+	The difference is reduced with integer arithmetic, so the result is exact to the microsecond both timestamps hold -
+	a conversion through :class:`float` seconds would not be.
+
+	:param beginTime: Time when the timespan began.
+	:param endTime:   Time when the timespan ended.
+	:returns:         Length of the timespan in nanoseconds.
+	"""
 	difference = endTime - beginTime
 	seconds =    difference.days * 86_400 + difference.seconds
 
@@ -545,11 +577,6 @@ class Span(metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got endTime '{endTime}' and duration '{duration}'.")
 				ex.add_note("Give the end of a recorded timespan either as 'endTime' or as 'duration'.")
 				raise ex
-			elif duration < timedelta(0):
-				ex = ValueError("Parameter 'duration' is negative.")
-				ex.add_note(f"Got duration '{duration}'.")
-				raise ex
-
 		if beginTime is None:
 			if endTime is not None:
 				ex = ValueError("Parameter 'endTime' is given without parameter 'beginTime'.")
@@ -771,20 +798,24 @@ class Span(metaclass=ExtendedType, slots=True):
 		self._endTime =   value
 		self._totalTime = _nanoseconds(self._beginTime, value)
 
-	def Stop(self, endTime: Nullable[datetime] = None) -> Self:
+	def Stop(self) -> Self:
 		"""
-		Stop a recorded timespan that is still running.
+		Stop a running timespan now.
 
-		:param endTime:       Optional, recorded time when the timespan ended. Default: now.
-		:returns:             The timespan itself, so a reader can chain the call.
-		:raises TracingError: When the timespan has no begin time yet.
+		A timespan that ended at a time already known is stopped by assigning that time to :attr:`StopTime` instead.
+
+		:returns:             The timespan itself, so the call can be chained.
+		:raises TracingError: When the timespan has no begin time yet. |br|
+		                      Construct it with a 'beginTime' to record a timespan that is stopped later.
 		:raises TracingError: When the timespan already has an end time.
 		:raises TracingError: When the timespan is timed by a ``with``-statement.
 		"""
-		if endTime is None and self._beginTime is not None:
-			endTime = datetime.now(self._beginTime.tzinfo)
+		if self._beginTime is None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' has no begin time and can't be stopped.")
+			ex.add_note("Construct it with a 'beginTime' to record a timespan that is stopped later.")
+			raise ex
 
-		self.StopTime = endTime
+		self.StopTime = datetime.now(self._beginTime.tzinfo)
 
 		return self
 
@@ -882,9 +913,8 @@ class Span(metaclass=ExtendedType, slots=True):
 		A span will be started.
 
 		:returns:             The span itself.
-		:raises TracingError: If the span is not :attr:`~SpanState.Empty`, because it has recorded times or was already
-		                      timed once. |br|
-		                      Attach a recorded span to its parent with the ``parent`` parameter instead.
+		:raises TracingError: If the span is not :attr:`~SpanState.Empty`. |br|
+		                      A timespan that was already timed can't be entered a second time.
 		:raises TracingError: If no trace is active, so the span has nothing to attach to. |br|
 		                      Use a with-statement on :class:`Trace` to set up software execution tracing.
 		"""
@@ -893,7 +923,6 @@ class Span(metaclass=ExtendedType, slots=True):
 		if self.State is not SpanState.Empty:
 			ex = TracingError(f"Timespan '{self._name}' is not empty and can't be entered.")
 			ex.add_note(f"Its state is '{self.State.name}'.")
-			ex.add_note("Attach a recorded timespan to its parent with the 'parent' parameter.")
 			ex.add_note("A timespan that was already timed can't be entered a second time.")
 			raise ex
 
@@ -1142,16 +1171,14 @@ class Trace(Span):
 		Start the trace and register it as the current trace and current span of this thread.
 
 		:returns:             The trace itself, so it can be named in an ``as`` clause.
-		:raises TracingError: If the trace is not :attr:`~SpanState.Empty`, because it has recorded times or was already
-		                      timed once. |br|
-		                      Attach the timespans of a recorded trace with their ``parent`` parameter instead.
+		:raises TracingError: If the trace is not :attr:`~SpanState.Empty`. |br|
+		                      A trace that was already timed can't be entered a second time.
 		"""
 		global _threadLocalData
 
 		if self.State is not SpanState.Empty:
 			ex = TracingError(f"Trace '{self._name}' is not empty and can't be entered.")
 			ex.add_note(f"Its state is '{self.State.name}'.")
-			ex.add_note("Attach the timespans of a recorded trace with their 'parent' parameter.")
 			ex.add_note("A trace that was already timed can't be entered a second time.")
 			raise ex
 
