@@ -64,7 +64,7 @@ from pyTooling.Tracing.CI  import SPAN_KIND, SPAN_KIND_PIPELINE, SPAN_KIND_WORKF
 from pyTooling.Tracing.CI  import SPAN_KIND_STEP, PIPELINE_NAME, PIPELINE_RUN_ID, PIPELINE_RUN_URL, PIPELINE_RESULT
 from pyTooling.Tracing.CI  import TASK_NAME, TASK_RUN_ID, TASK_RUN_URL, TASK_RUN_RESULT, WORKER_NAME
 from pyTooling.Tracing.CI  import RESULT_SUCCESS, RESULT_FAILURE, RESULT_TIMEOUT, RESULT_SKIP, RESULT_CANCELLATION
-from pyTooling.Tracing.CI  import RESULT_ERROR, parseTimestamp
+from pyTooling.Tracing.CI  import RESULT_ERROR, parseISO8601Timestamp
 
 
 __all__ = ["GITHUB_API_URL", "RUNNER_LABELS", "RUNNER_GROUP", "CONCLUSION", "JSONObject"]
@@ -166,7 +166,7 @@ def _endTime(mapping: JSONObject, key: str) -> Nullable[datetime]:
 	:param key:     The field holding the end time.
 	:returns:       The end time, or ``None`` while not completed.
 	"""
-	return parseTimestamp(mapping.get(key, None)) if mapping.get("status", None) == "completed" else None
+	return parseISO8601Timestamp(mapping.get(key, None)) if mapping.get("status", None) == "completed" else None
 
 
 def _jobTimes(job: JSONObject) -> tuple[Nullable[datetime], Nullable[datetime]]:
@@ -176,7 +176,7 @@ def _jobTimes(job: JSONObject) -> tuple[Nullable[datetime], Nullable[datetime]]:
 	:param job: The job.
 	:returns:   The time the job was created (or started), and the time it completed or ``None`` while not completed.
 	"""
-	begin = parseTimestamp(job.get("created_at", None)) or parseTimestamp(job.get("started_at", None))
+	begin = parseISO8601Timestamp(job.get("created_at", None)) or parseISO8601Timestamp(job.get("started_at", None))
 	return begin, _endTime(job, "completed_at")
 
 
@@ -208,15 +208,15 @@ def _addJob(job: JSONObject, parent: Span) -> None:
 	"""
 	fullName =   job["name"]
 	name =       fullName.rsplit(" / ", 1)[-1]
-	created =    parseTimestamp(job.get("created_at", None))
-	started =    parseTimestamp(job.get("started_at", None))
+	created =    parseISO8601Timestamp(job.get("created_at", None))
+	started =    parseISO8601Timestamp(job.get("started_at", None))
 	completed =  _endTime(job, "completed_at")
 	conclusion = job.get("conclusion", None)
 	labels =     list(job.get("labels", None) or [])
 	steps =      list(job.get("steps", None) or [])
 
 	# a step may be reported as starting before, or completing after, the job that contains it
-	stepBegins = [begin for step in steps if (begin := parseTimestamp(step.get("started_at", None))) is not None]
+	stepBegins = [begin for step in steps if (begin := parseISO8601Timestamp(step.get("started_at", None))) is not None]
 	if len(stepBegins) > 0:
 		started = min(stepBegins) if started is None else min(started, min(stepBegins))
 		if created is not None:
@@ -253,7 +253,7 @@ def _addJob(job: JSONObject, parent: Span) -> None:
 	_setAttribute(jobSpan, RUNNER_LABELS, labels)
 
 	for position, step in enumerate(steps):
-		if (stepBegin := parseTimestamp(step.get("started_at", None))) is None:
+		if (stepBegin := parseISO8601Timestamp(step.get("started_at", None))) is None:
 			continue
 
 		stepName = _field(step, "name", f"{fullName}.steps[{position}]")
@@ -322,7 +322,8 @@ def ConvertWorkflowRun(run: JSONObject, jobs: Iterable[JSONObject]) -> Trace:
 		raise ex
 
 	name =      _field(run, "name", "run")
-	beginTime = parseTimestamp(run.get("run_started_at", None)) or parseTimestamp(_field(run, "created_at", "run"))
+	beginTime = parseISO8601Timestamp(run.get("run_started_at", None)) \
+	            or parseISO8601Timestamp(_field(run, "created_at", "run"))
 	endTime =   _notBefore(_endTime(run, "updated_at"), beginTime)
 
 	root: JSONObject = {"groups": {}, "jobs": []}
@@ -578,9 +579,7 @@ class WorkflowRunReader(metaclass=ExtendedType, slots=True):
 		if self._token is not None:
 			headers["Authorization"] = f"Bearer {self._token}"
 
-		attempt = 0
-		while True:
-			attempt += 1
+		for attempt in range(1, self._retries + 2):
 			try:
 				with urlopen(Request(url, headers=headers), timeout=self._timeout) as response:
 					body = response.read()
