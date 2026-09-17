@@ -29,6 +29,46 @@ by hand. An :class:`~pyTooling.Tracing.Event` is a point in time rather than a s
 :meth:`~pyTooling.Tracing.Span.Format` renders the tree as indented lines for a terminal. For anything else, the
 trace is exported.
 
+.. _TRACING/Recorded:
+
+Recorded Timespans
+==================
+
+A timespan that was measured elsewhere - by a CI service, or read from a log file - already has its times. It is
+constructed with them, and attached to its parent by the ``parent`` parameter instead of a ``with``-statement:
+
+.. code-block:: python
+
+   from datetime import datetime, timezone
+   from pyTooling.Tracing import Trace, Span
+
+   trace = Trace("Pipeline", beginTime=datetime(2026, 9, 15, 6, 35, 21, tzinfo=timezone.utc),
+                             endTime=datetime(2026, 9, 15, 6, 44, 30, tzinfo=timezone.utc))
+   job =   Span("UnitTesting", parent=trace, beginTime=datetime(2026, 9, 15, 6, 35, 32, tzinfo=timezone.utc),
+                                             endTime=datetime(2026, 9, 15, 6, 37, 10, tzinfo=timezone.utc))
+   job["runner"] = "ubuntu-26.04"
+
+   print(job.Duration)   # 98.0
+
+* ``endTime`` requires ``beginTime``, can't precede it, and both are either time zone aware or naive.
+* A source reporting a length instead of an end gives ``duration`` in place of ``endTime``, as a
+  :class:`~datetime.timedelta` or as a number of seconds - :class:`int` for whole, :class:`float` for
+  fractional seconds, the unit :attr:`~pyTooling.Tracing.Span.Duration` reports. It is converted to
+  ``endTime``, so every form is stored alike. Giving both ``endTime`` and ``duration`` raises an exception.
+* A sub-timespan attached with ``parent`` has to lie within its parent's range. Only the direct parent is checked,
+  because containment is transitive.
+* A timespan with a ``beginTime`` but no ``endTime`` is still running: its
+  :attr:`~pyTooling.Tracing.Span.Duration` is the time since its recorded begin. Assigning
+  :attr:`~pyTooling.Tracing.Span.StopTime` reports an end that is already known, and
+  :meth:`~pyTooling.Tracing.Span.Stop` ends a timespan that is still running now. Either accepts the end exactly
+  once.
+* :attr:`~pyTooling.Tracing.Span.State` tells which times are filled in -
+  :attr:`~pyTooling.Tracing.SpanState.Empty`, :attr:`~pyTooling.Tracing.SpanState.Running` or
+  :attr:`~pyTooling.Tracing.SpanState.Complete` - regardless of whether they were measured or recorded. Only an
+  empty timespan can be entered, so a timespan can't be timed twice.
+* Without ``beginTime``, a timespan is timed by its ``with``-statement. A timespan constructed with recorded
+  times can't be entered - that raises a :exc:`~pyTooling.Tracing.TracingError`.
+
 .. _TRACING/OTLP:
 
 OTLP/JSON Export
