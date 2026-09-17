@@ -230,6 +230,7 @@ class RecordedTimes(Testcase):
 
 		self.assertEqual("Timespan 'span' is not empty and can't be entered.", str(context.exception))
 		self.assertIn("Its state is 'Running'.", context.exception.__notes__)
+		self.assertEqual(2, len(context.exception.__notes__))
 
 	def test_EnterRecordedTrace(self) -> None:
 		with self.assertRaises(TracingError) as context:
@@ -358,18 +359,18 @@ class RecordedTimes(Testcase):
 		self.assertEqual("Parameter 'duration' is negative.", str(context.exception))
 
 	def test_Stop(self) -> None:
-		span = Span("span", beginTime=self._begin)
+		span = Span("span", beginTime=datetime.now())
 		self.assertIs(SpanState.Running, span.State)
 
-		span.Stop(self._begin + timedelta(seconds=7))
+		span.Stop()
 
 		self.assertIs(SpanState.Complete, span.State)
-		self.assertEqual(7.0, span.Duration)
+		self.assertGreaterEqual(span.Duration, 0.0)
 
 	def test_StopReturnsSelf(self) -> None:
-		span = Span("span", beginTime=self._begin)
+		span = Span("span", beginTime=datetime.now())
 
-		self.assertIs(span, span.Stop(self._begin))
+		self.assertIs(span, span.Stop())
 
 	def test_StopTimeAssignment(self) -> None:
 		span = Span("span", beginTime=self._begin)
@@ -378,11 +379,11 @@ class RecordedTimes(Testcase):
 		self.assertEqual(3.0, span.Duration)
 
 	def test_StopTwice(self) -> None:
-		span = Span("span", beginTime=self._begin)
-		span.Stop(self._begin + timedelta(seconds=1))
+		span = Span("span", beginTime=datetime.now())
+		span.Stop()
 
 		with self.assertRaises(TracingError) as context:
-			span.Stop(self._begin + timedelta(seconds=2))
+			span.Stop()
 
 		self.assertEqual("Span 'span' already has an end time.", str(context.exception))
 
@@ -400,13 +401,22 @@ class RecordedTimes(Testcase):
 
 		self.assertEqual("Span 'span' is timed by a with-statement.", str(context.exception))
 
-	def test_StopBeforeBeginTime(self) -> None:
+	def test_StopTimeBeforeBeginTime(self) -> None:
 		span = Span("span", beginTime=self._begin)
 
 		with self.assertRaises(ValueError) as context:
-			span.Stop(self._begin - timedelta(microseconds=1))
+			span.StopTime = self._begin - timedelta(microseconds=1)
 
 		self.assertEqual("Parameter 'value' is before the begin time.", str(context.exception))
+
+	def test_StopTimeAssignedTwice(self) -> None:
+		span = Span("span", beginTime=self._begin)
+		span.StopTime = self._begin + timedelta(seconds=1)
+
+		with self.assertRaises(TracingError) as context:
+			span.StopTime = self._begin + timedelta(seconds=2)
+
+		self.assertEqual("Span 'span' already has an end time.", str(context.exception))
 
 	def test_ChildWithinParent(self) -> None:
 		parent = Span("parent", beginTime=self._begin, duration=timedelta(seconds=100))
