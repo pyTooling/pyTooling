@@ -566,8 +566,6 @@ class Span(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if duration is not None:
-			duration = _asTimedelta(duration)
-
 			if beginTime is None:
 				ex = ValueError("Parameter 'duration' is given without parameter 'beginTime'.")
 				ex.add_note(f"Got duration '{duration}'.")
@@ -577,6 +575,8 @@ class Span(metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got endTime '{endTime}' and duration '{duration}'.")
 				ex.add_note("Give the end of a recorded timespan either as 'endTime' or as 'duration'.")
 				raise ex
+
+			duration = _asTimedelta(duration)
 		if beginTime is None:
 			if endTime is not None:
 				ex = ValueError("Parameter 'endTime' is given without parameter 'beginTime'.")

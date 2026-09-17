@@ -302,6 +302,14 @@ class RecordedTimes(Testcase):
 
 		self.assertEqual("Parameter 'duration' is given without parameter 'beginTime'.", str(context.exception))
 
+	def test_DurationWithoutBeginTimeOutranksTheValue(self) -> None:
+		for value in (-5, "5", float("nan")):
+			with self.subTest(duration=value):
+				with self.assertRaises(ValueError) as context:
+					_ = Span("span", duration=value)
+
+				self.assertEqual("Parameter 'duration' is given without parameter 'beginTime'.", str(context.exception))
+
 	def test_DurationAndEndTime(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Span("span", beginTime=self._begin, endTime=self._begin, duration=timedelta(seconds=5))
