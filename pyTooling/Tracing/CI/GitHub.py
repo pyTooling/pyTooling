@@ -213,6 +213,18 @@ def _addJob(job: JSONObject, parent: Span) -> None:
 	completed =  _endTime(job, "completed_at")
 	conclusion = job.get("conclusion", None)
 	labels =     list(job.get("labels", None) or [])
+	steps =      list(job.get("steps", None) or [])
+
+	# a step may be reported as starting before, or completing after, the job that contains it
+	stepBegins = [begin for step in steps if (begin := parseTimestamp(step.get("started_at", None))) is not None]
+	if len(stepBegins) > 0:
+		started = min(stepBegins) if started is None else min(started, min(stepBegins))
+		if created is not None:
+			created = min(created, started)
+
+		stepEnds = [end for step in steps if (end := _endTime(step, "completed_at")) is not None]
+		if completed is not None and len(stepEnds) > 0:
+			completed = max(completed, max(stepEnds))
 
 	if conclusion == "skipped":
 		# A skipped job neither waited for a runner nor ran on one.
@@ -240,7 +252,7 @@ def _addJob(job: JSONObject, parent: Span) -> None:
 	_setAttribute(jobSpan, RUNNER_GROUP, job.get("runner_group_name", None))
 	_setAttribute(jobSpan, RUNNER_LABELS, labels)
 
-	for position, step in enumerate(job.get("steps", None) or []):
+	for position, step in enumerate(steps):
 		if (stepBegin := parseTimestamp(step.get("started_at", None))) is None:
 			continue
 
@@ -286,7 +298,8 @@ def ConvertWorkflowRun(run: JSONObject, jobs: Iterable[JSONObject]) -> Trace:
 	"""
 	Convert a GitHub Actions workflow run and its jobs, as the GitHub REST API returns them, into a trace.
 
-	* The run becomes the trace. It begins when the run started, and ends at its last update once it is completed.
+	* The run becomes the trace. It begins when the run started and ends at its last update once it is completed,
+	  widened where a job was queued earlier or completed later than the run reports.
 	* A job becomes a timespan from its start to its completion, preceded by a timespan named ``<job> (queued)`` from
 	  its creation to its start, if it waited. A skipped job has no waiting timespan, and a job that didn't start yet
 	  only a running waiting timespan.
@@ -310,19 +323,7 @@ def ConvertWorkflowRun(run: JSONObject, jobs: Iterable[JSONObject]) -> Trace:
 
 	name =      _field(run, "name", "run")
 	beginTime = parseTimestamp(run.get("run_started_at", None)) or parseTimestamp(_field(run, "created_at", "run"))
-
-	trace = Trace(name, beginTime, _notBefore(_endTime(run, "updated_at"), beginTime))
-	trace[SPAN_KIND] =       SPAN_KIND_PIPELINE
-	trace[PIPELINE_NAME] =   name
-	trace[PIPELINE_RUN_ID] = str(_field(run, "id", "run"))
-	_setAttribute(trace, PIPELINE_RUN_URL, run.get("html_url", None))
-	_setAttribute(trace, PIPELINE_RESULT, _result(run.get("conclusion", None)))
-	_setAttribute(trace, CONCLUSION, run.get("conclusion", None))
-	_setAttribute(trace, "github.run.attempt", run.get("run_attempt", None))
-	_setAttribute(trace, "github.run.number", run.get("run_number", None))
-	_setAttribute(trace, "github.event", run.get("event", None))
-	_setAttribute(trace, "vcs.ref.head.name", run.get("head_branch", None))
-	_setAttribute(trace, "vcs.ref.head.revision", run.get("head_sha", None))
+	endTime =   _notBefore(_endTime(run, "updated_at"), beginTime)
 
 	root: JSONObject = {"groups": {}, "jobs": []}
 	for position, job in enumerate(jobs):
@@ -335,6 +336,26 @@ def ConvertWorkflowRun(run: JSONObject, jobs: Iterable[JSONObject]) -> Trace:
 		for caller in _field(job, "name", f"jobs[{position}]").split(" / ")[:-1]:
 			group = group["groups"].setdefault(caller, {"groups": {}, "jobs": []})
 		group["jobs"].append(job)
+
+	# a job may be queued before the run reports itself started, and may complete after the run's last update
+	jobsBegin, jobsEnd = _groupTimes(root)
+	if jobsBegin is not None:
+		beginTime = jobsBegin if beginTime is None else min(beginTime, jobsBegin)
+	if endTime is not None:
+		endTime = endTime if jobsEnd is None else max(endTime, jobsEnd)
+
+	trace = Trace(name, beginTime, endTime)
+	trace[SPAN_KIND] =       SPAN_KIND_PIPELINE
+	trace[PIPELINE_NAME] =   name
+	trace[PIPELINE_RUN_ID] = str(_field(run, "id", "run"))
+	_setAttribute(trace, PIPELINE_RUN_URL, run.get("html_url", None))
+	_setAttribute(trace, PIPELINE_RESULT, _result(run.get("conclusion", None)))
+	_setAttribute(trace, CONCLUSION, run.get("conclusion", None))
+	_setAttribute(trace, "github.run.attempt", run.get("run_attempt", None))
+	_setAttribute(trace, "github.run.number", run.get("run_number", None))
+	_setAttribute(trace, "github.event", run.get("event", None))
+	_setAttribute(trace, "vcs.ref.head.name", run.get("head_branch", None))
+	_setAttribute(trace, "vcs.ref.head.revision", run.get("head_sha", None))
 
 	_addGroup(root, trace)
 

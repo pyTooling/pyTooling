@@ -565,3 +565,92 @@ class Reader(Testcase):
 			_ = reader.ReadRun(0)
 		with self.assertRaises(ValueError):
 			_ = reader.ReadRun(4711, attempt=0)
+
+
+class Containment(Testcase):
+	"""A timespan has to lie within its parent, which GitHub's timestamps don't guarantee."""
+
+	_RUN = {
+		"id":             1,
+		"name":           "Pipeline",
+		"status":         "completed",
+		"run_started_at": "2026-09-17T10:00:10Z",
+		"created_at":     "2026-09-17T10:00:05Z",
+		"updated_at":     "2026-09-17T10:05:00Z",
+		"conclusion":     "success",
+	}
+
+	@staticmethod
+	def _Job(**fields: Any) -> dict[str, Any]:
+		job = {"id": 11, "name": "Build", "status": "completed", "conclusion": "success", "steps": []}
+		job.update(fields)
+
+		return job
+
+	@staticmethod
+	def _SubSpan(parent: Span, name: str) -> Span:
+		for span in parent.IterateSubSpans():
+			if span.Name == name:
+				return span
+
+		raise AssertionError(f"No sub-span '{name}' in '{parent.Name}'.")
+
+	@staticmethod
+	def _Step(**fields: Any) -> dict[str, Any]:
+		step = {"name": "Compile", "number": 1, "status": "completed", "conclusion": "success"}
+		step.update(fields)
+
+		return step
+
+	def test_JobQueuedBeforeTheRunStarted(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			created_at="2026-09-17T10:00:00Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:04:00Z"
+		)])
+
+		self.assertEqual(parseTimestamp("2026-09-17T10:00:00Z"), trace.StartTime)
+
+	def test_JobCompletedAfterTheRunsLastUpdate(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:09:00Z"
+		)])
+
+		self.assertEqual(parseTimestamp("2026-09-17T10:09:00Z"), trace.StopTime)
+
+	def test_StepStartedBeforeItsJob(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:02:00Z",
+			steps=[self._Step(started_at="2026-09-17T10:00:25Z", completed_at="2026-09-17T10:00:50Z")]
+		)])
+
+		job = self._SubSpan(trace, "Build")
+		self.assertLessEqual(job.StartTime, parseTimestamp("2026-09-17T10:00:25Z"))
+		self.assertEqual(parseTimestamp("2026-09-17T10:00:25Z"), self._SubSpan(job, "Compile").StartTime)
+
+	def test_StepCompletedAfterItsJob(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z",
+			steps=[self._Step(started_at="2026-09-17T10:00:40Z", completed_at="2026-09-17T10:02:00Z")]
+		)])
+
+		job = self._SubSpan(trace, "Build")
+		self.assertGreaterEqual(job.StopTime, parseTimestamp("2026-09-17T10:02:00Z"))
+		self.assertEqual(parseTimestamp("2026-09-17T10:02:00Z"), self._SubSpan(job, "Compile").StopTime)
+
+	def test_GroupedJobOutsideTheRun(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			name="Caller / Build",
+			created_at="2026-09-17T09:59:00Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:09:00Z",
+			steps=[self._Step(started_at="2026-09-17T10:00:31Z", completed_at="2026-09-17T10:08:00Z")]
+		)])
+
+		self.assertEqual(parseTimestamp("2026-09-17T09:59:00Z"), trace.StartTime)
+		self.assertEqual(parseTimestamp("2026-09-17T10:09:00Z"), trace.StopTime)
+
+	def test_ConsistentTimestampsAreUnchanged(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:02:00Z",
+			steps=[self._Step(started_at="2026-09-17T10:00:35Z", completed_at="2026-09-17T10:01:50Z")]
+		)])
+
+		self.assertEqual(parseTimestamp("2026-09-17T10:00:10Z"), trace.StartTime)
+		self.assertEqual(parseTimestamp("2026-09-17T10:05:00Z"), trace.StopTime)
