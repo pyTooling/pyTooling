@@ -45,7 +45,8 @@ Tools for software execution tracing.
 from __future__            import annotations
 
 from base64                import b64encode
-from datetime              import datetime
+from datetime              import datetime, timedelta
+from enum                  import Enum
 from json                  import dumps as json_dumps
 from pathlib               import Path
 from secrets               import randbits
@@ -83,9 +84,26 @@ _MAXIMUM_IDENTIFIER_ATTEMPTS = 4
 """Number of attempts to draw a non-zero random identifier before giving up."""
 
 
+def _nanoseconds(beginTime: datetime, endTime: datetime) -> int:
+	# integer arithmetic on the difference, so the duration is exact to the microsecond both timestamps hold
+	difference = endTime - beginTime
+	seconds =    difference.days * 86_400 + difference.seconds
+
+	return seconds * 1_000_000_000 + difference.microseconds * 1_000
+
+
 @export
 class TracingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
+
+
+@export
+class SpanState(Enum):
+	"""An enumeration describing which of a timespan's times are filled in."""
+
+	Empty =    0  #: Neither begin nor end time is set, so the timespan can be timed by a ``with``-statement.
+	Running =  1  #: The begin time is set, but the end time isn't, so the timespan is still running.
+	Complete = 2  #: Begin and end time are both set.
 
 
 @export
@@ -444,6 +462,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		name:      str,
 		beginTime: Nullable[datetime] = None,
 		endTime:   Nullable[datetime] = None,
+		duration:  Nullable[timedelta] = None,
 		*,
 		parent:    Nullable[Span] = None
 	) -> None:
@@ -451,21 +470,31 @@ class Span(metaclass=ExtendedType, slots=True):
 		Initializes a timespan as part of a software execution trace.
 
 		A timespan is timed when it is entered and left by a ``with``-statement. A timespan that was measured elsewhere
-		- read from a CI service or a log file - is constructed with its recorded times instead.
+		is constructed with its recorded times instead.
+
+		The end of a recorded timespan is given either as ``endTime`` or as ``duration``, whichever the source reports;
+		a ``duration`` is converted to ``endTime``, so both forms are stored alike.
 
 		:param name:        Name of the timespan.
 		:param beginTime:   Optional, recorded time when the timespan began. Default: the time the timespan is entered.
 		:param endTime:     Optional, recorded time when the timespan ended. Requires ``beginTime``. Default: the time
 		                    the timespan is left, or ``None`` for a recorded timespan, which is still running.
+		:param duration:    Optional, recorded duration of the timespan, as an alternative to ``endTime``. Requires
+		                    ``beginTime``.
 		:param parent:      Optional, reference to a parent span or trace.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
+		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`.
+		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
+		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
+		:raises ValueError: If parameter 'duration' is negative.
 		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
 		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
 		:raises ValueError: If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
 		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
+		:raises ValueError: If the timespan begins before or ends after its parent.
 		"""
 		if isinstance(name, str):
 			if name == "":
@@ -476,6 +505,25 @@ class Span(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 			raise ex
+
+		if duration is not None:
+			if not isinstance(duration, timedelta):
+				ex = TypeError("Parameter 'duration' is not of type 'timedelta'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(duration)}'.")
+				raise ex
+			elif beginTime is None:
+				ex = ValueError("Parameter 'duration' is given without parameter 'beginTime'.")
+				ex.add_note(f"Got duration '{duration}'.")
+				raise ex
+			elif endTime is not None:
+				ex = ValueError("Parameters 'endTime' and 'duration' are both given.")
+				ex.add_note(f"Got endTime '{endTime}' and duration '{duration}'.")
+				ex.add_note("Give the end of a recorded timespan either as 'endTime' or as 'duration'.")
+				raise ex
+			elif duration < timedelta(0):
+				ex = ValueError("Parameter 'duration' is negative.")
+				ex.add_note(f"Got duration '{duration}'.")
+				raise ex
 
 		if beginTime is None:
 			if endTime is not None:
@@ -500,10 +548,15 @@ class Span(metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got '{beginTime}' to '{endTime}'.")
 				raise ex
 
+		if duration is not None:
+			endTime = beginTime + duration
+
 		if parent is None:
 			self._parent = None
 			self._trace =  None
 		elif isinstance(parent, Span):
+			self._CheckParentRange(parent, beginTime, endTime)
+
 			self._parent = parent
 			self._trace =  parent._trace
 			parent._spans.append(self)
@@ -521,10 +574,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		if beginTime is None or endTime is None:
 			self._totalTime = None
 		else:
-			# integer arithmetic on the difference, so the duration is exact to the microsecond both timestamps hold
-			difference =      endTime - beginTime
-			seconds =         difference.days * 86_400 + difference.seconds
-			self._totalTime = seconds * 1_000_000_000 + difference.microseconds * 1_000
+			self._totalTime = _nanoseconds(beginTime, endTime)
 
 		self._spans =     []
 		self._events =    []
@@ -647,14 +697,104 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		return self._beginTime
 
-	@readonly
+	@property
 	def StopTime(self) -> Nullable[datetime]:
 		"""
-		Read-only property accessing the absolute time when the span was stopped.
+		Property accessing the absolute time when the span was stopped.
 
-		:returns: The time when the span was exited, or its recorded end time, otherwise None.
+		The end time of a recorded timespan can be assigned once, for a source that reports the end of a timespan later
+		than its begin. A timespan timed by a ``with``-statement is stopped by leaving that block, so assigning to it
+		raises.
+
+		:returns:             The time when the span was exited, or its recorded end time, otherwise None.
+		:raises TracingError: When the timespan has no begin time yet.
+		:raises TracingError: When the timespan already has an end time.
+		:raises TracingError: When the timespan is timed by a ``with``-statement.
+		:raises TypeError:    When the assigned value is not of type :class:`~datetime.datetime`.
+		:raises ValueError:   When the assigned value and the begin time mix a time zone aware and a naive timestamp.
+		:raises ValueError:   When the assigned value is before the begin time.
 		"""
 		return self._endTime
+
+	@StopTime.setter
+	def StopTime(self, value: datetime) -> None:
+		if self._beginTime is None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' has no begin time and can't be stopped.")
+			ex.add_note("Construct it with a 'beginTime' to record a timespan whose end is reported later.")
+			raise ex
+		elif self._startTime is not None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' is timed by a with-statement.")
+			ex.add_note("It is stopped by leaving that block.")
+			raise ex
+		elif self._endTime is not None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' already has an end time.")
+			ex.add_note(f"Got '{self._endTime}'.")
+			raise ex
+		elif not isinstance(value, datetime):
+			ex = TypeError("Parameter 'value' is not of type 'datetime'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+		elif (self._beginTime.utcoffset() is None) != (value.utcoffset() is None):
+			ex = ValueError("Parameter 'value' and the begin time mix a time zone aware and a naive timestamp.")
+			ex.add_note(f"Got '{self._beginTime}' and '{value}'.")
+			raise ex
+		elif value < self._beginTime:
+			ex = ValueError("Parameter 'value' is before the begin time.")
+			ex.add_note(f"Got '{self._beginTime}' to '{value}'.")
+			raise ex
+
+		self._endTime =   value
+		self._totalTime = _nanoseconds(self._beginTime, value)
+
+	def Stop(self, endTime: Nullable[datetime] = None) -> Self:
+		"""
+		Stop a recorded timespan that is still running.
+
+		:param endTime:       Optional, recorded time when the timespan ended. Default: now.
+		:returns:             The timespan itself, so a reader can chain the call.
+		:raises TracingError: When the timespan has no begin time yet.
+		:raises TracingError: When the timespan already has an end time.
+		:raises TracingError: When the timespan is timed by a ``with``-statement.
+		"""
+		if endTime is None and self._beginTime is not None:
+			endTime = datetime.now(self._beginTime.tzinfo)
+
+		self.StopTime = endTime
+
+		return self
+
+	def _CheckParentRange(self, parent: Span, beginTime: Nullable[datetime], endTime: Nullable[datetime]) -> None:
+		"""
+		Check that a recorded timespan lies within the range of its direct parent.
+
+		Grandparents need no check: containment is transitive, so every ancestor's range holds once each direct
+		parent-child pair is checked.
+
+		:param parent:      The parent span or trace this timespan is attached to.
+		:param beginTime:   The timespan's begin time, or ``None``.
+		:param endTime:     The timespan's end time, or ``None``.
+		:raises ValueError: If the timespan begins before its parent.
+		:raises ValueError: If the timespan ends after its parent.
+		:raises ValueError: If a timespan and its parent mix a time zone aware and a naive timestamp.
+		"""
+		if beginTime is None or parent._beginTime is None:
+			return
+
+		if (beginTime.utcoffset() is None) != (parent._beginTime.utcoffset() is None):
+			ex = ValueError(
+				f"Timespan '{self._name}' and its parent '{parent._name}' mix a time zone aware and a naive timestamp."
+			)
+			ex.add_note(f"Got '{beginTime}' and '{parent._beginTime}'.")
+			raise ex
+		elif beginTime < parent._beginTime:
+			ex = ValueError(f"Timespan '{self._name}' begins before its parent '{parent._name}'.")
+			ex.add_note(f"Got '{beginTime}', while the parent begins at '{parent._beginTime}'.")
+			raise ex
+
+		if endTime is not None and parent._endTime is not None and endTime > parent._endTime:
+			ex = ValueError(f"Timespan '{self._name}' ends after its parent '{parent._name}'.")
+			ex.add_note(f"Got '{endTime}', while the parent ends at '{parent._endTime}'.")
+			raise ex
 
 	@readonly
 	def Duration(self) -> float:
@@ -676,13 +816,23 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		raise TracingError(f"{self.__class__.__name__} was never started.")
 
-	def _IsRecorded(self) -> bool:
+	@readonly
+	def State(self) -> SpanState:
 		"""
-		Check if this timespan was constructed with recorded times, so it isn't timed by a ``with``-statement.
+		Read-only property accessing which of the timespan's times are filled in.
 
-		:returns: ``True``, if the timespan has a begin time, but was never entered.
+		The state does not say where the times came from: a timespan timed by a ``with``-statement is
+		:attr:`~SpanState.Running` inside the block and :attr:`~SpanState.Complete` after it, exactly as a recorded one
+		is. Only an :attr:`~SpanState.Empty` timespan can be entered.
+
+		:returns: :attr:`~SpanState.Empty`, :attr:`~SpanState.Running` or :attr:`~SpanState.Complete`.
 		"""
-		return self._beginTime is not None and self._startTime is None
+		if self._beginTime is None:
+			return SpanState.Empty
+		elif self._endTime is None:
+			return SpanState.Running
+		else:
+			return SpanState.Complete
 
 	@classmethod
 	def CurrentSpan(cls) -> Span:
@@ -707,16 +857,19 @@ class Span(metaclass=ExtendedType, slots=True):
 		A span will be started.
 
 		:returns:             The span itself.
-		:raises TracingError: If the span was constructed with recorded times. |br|
-		                      Attach it to its parent with the ``parent`` parameter instead.
+		:raises TracingError: If the span is not :attr:`~SpanState.Empty`, because it has recorded times or was already
+		                      timed once. |br|
+		                      Attach a recorded span to its parent with the ``parent`` parameter instead.
 		:raises TracingError: If no trace is active, so the span has nothing to attach to. |br|
 		                      Use a with-statement on :class:`Trace` to set up software execution tracing.
 		"""
 		global _threadLocalData
 
-		if self._IsRecorded():
-			ex = TracingError(f"Timespan '{self._name}' has recorded times and can't be entered.")
+		if self.State is not SpanState.Empty:
+			ex = TracingError(f"Timespan '{self._name}' is not empty and can't be entered.")
+			ex.add_note(f"Its state is '{self.State.name}'.")
 			ex.add_note("Attach a recorded timespan to its parent with the 'parent' parameter.")
+			ex.add_note("A timespan that was already timed can't be entered a second time.")
 			raise ex
 
 		try:
@@ -909,7 +1062,13 @@ class Trace(Span):
 	"""
 	_traceID: str  #: Identifier shared by every timespan of this trace, as 32 hex digits.
 
-	def __init__(self, name: str, beginTime: Nullable[datetime] = None, endTime: Nullable[datetime] = None) -> None:
+	def __init__(
+		self,
+		name:      str,
+		beginTime: Nullable[datetime] = None,
+		endTime:   Nullable[datetime] = None,
+		duration:  Nullable[timedelta] = None
+	) -> None:
 		"""
 		Initializes a software execution trace.
 
@@ -920,15 +1079,21 @@ class Trace(Span):
 		:param beginTime:   Optional, recorded time when the trace began. Default: the time the trace is entered.
 		:param endTime:     Optional, recorded time when the trace ended. Requires ``beginTime``. Default: the time the
 		                    trace is left, or ``None`` for a recorded trace, which is still running.
+		:param duration:    Optional, recorded duration of the trace, as an alternative to ``endTime``. Requires
+		                    ``beginTime``.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`.
+		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
+		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
+		:raises ValueError: If parameter 'duration' is negative.
 		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
 		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
 		:raises ValueError: If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
 		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		"""
-		super().__init__(name, beginTime, endTime)
+		super().__init__(name, beginTime, endTime, duration)
 
 		self._traceID = _newIdentifier(128)
 		self._trace =   self
@@ -949,14 +1114,17 @@ class Trace(Span):
 		Start the trace and register it as the current trace and current span of this thread.
 
 		:returns:             The trace itself, so it can be named in an ``as`` clause.
-		:raises TracingError: If the trace was constructed with recorded times. |br|
-		                      Attach its timespans with their ``parent`` parameter instead.
+		:raises TracingError: If the trace is not :attr:`~SpanState.Empty`, because it has recorded times or was already
+		                      timed once. |br|
+		                      Attach the timespans of a recorded trace with their ``parent`` parameter instead.
 		"""
 		global _threadLocalData
 
-		if self._IsRecorded():
-			ex = TracingError(f"Trace '{self._name}' has recorded times and can't be entered.")
+		if self.State is not SpanState.Empty:
+			ex = TracingError(f"Trace '{self._name}' is not empty and can't be entered.")
+			ex.add_note(f"Its state is '{self.State.name}'.")
 			ex.add_note("Attach the timespans of a recorded trace with their 'parent' parameter.")
+			ex.add_note("A trace that was already timed can't be entered a second time.")
 			raise ex
 
 		# TODO: check if a trace is already setup

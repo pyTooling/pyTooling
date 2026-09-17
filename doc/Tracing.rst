@@ -51,9 +51,19 @@ constructed with them, and attached to its parent by the ``parent`` parameter in
    print(job.Duration)   # 98.0
 
 * ``endTime`` requires ``beginTime``, can't precede it, and both are either time zone aware or naive.
+* A source reporting a length instead of an end gives ``duration`` (a :class:`~datetime.timedelta`) in place of
+  ``endTime``. It is converted to ``endTime``, so both forms are stored alike. Giving both raises.
+* A sub-timespan attached with ``parent`` has to lie within its parent's range. Only the direct parent is checked,
+  because containment is transitive.
 * A timespan with a ``beginTime`` but no ``endTime`` is still running: its
-  :attr:`~pyTooling.Tracing.Span.Duration` is the time since its recorded begin.
-* Without ``beginTime``, a timespan is timed by its ``with``-statement as before. A timespan constructed with recorded
+  :attr:`~pyTooling.Tracing.Span.Duration` is the time since its recorded begin. Its end is reported later by
+  assigning :attr:`~pyTooling.Tracing.Span.StopTime` or by calling :meth:`~pyTooling.Tracing.Span.Stop`, either of
+  which accepts the end exactly once.
+* :attr:`~pyTooling.Tracing.Span.State` tells which times are filled in -
+  :attr:`~pyTooling.Tracing.SpanState.Empty`, :attr:`~pyTooling.Tracing.SpanState.Running` or
+  :attr:`~pyTooling.Tracing.SpanState.Complete` - regardless of whether they were measured or recorded. Only an
+  empty timespan can be entered, so a timespan can't be timed twice.
+* Without ``beginTime``, a timespan is timed by its ``with``-statement. A timespan constructed with recorded
   times can't be entered - that raises a :exc:`~pyTooling.Tracing.TracingError`.
 
 .. _TRACING/OTLP:
