@@ -51,8 +51,10 @@ constructed with them, and attached to its parent by the ``parent`` parameter in
    print(job.Duration)   # 98.0
 
 * ``endTime`` requires ``beginTime``, can't precede it, and both are either time zone aware or naive.
-* A source reporting a length instead of an end gives ``duration`` (a :class:`~datetime.timedelta`) in place of
-  ``endTime``. It is converted to ``endTime``, so both forms are stored alike. Giving both raises.
+* A source reporting a length instead of an end gives ``duration`` in place of ``endTime``, as a
+  :class:`~datetime.timedelta` or as a number of seconds - :class:`int` for whole, :class:`float` for
+  fractional seconds, the unit :attr:`~pyTooling.Tracing.Span.Duration` reports. It is converted to
+  ``endTime``, so every form is stored alike. Giving both ``endTime`` and ``duration`` raises.
 * A sub-timespan attached with ``parent`` has to lie within its parent's range. Only the direct parent is checked,
   because containment is transitive.
 * A timespan with a ``beginTime`` but no ``endTime`` is still running: its

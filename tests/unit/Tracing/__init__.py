@@ -313,11 +313,49 @@ class RecordedTimes(Testcase):
 
 		self.assertEqual("Parameter 'duration' is negative.", str(context.exception))
 
+	def test_DurationAsSeconds(self) -> None:
+		span = Span("span", beginTime=self._begin, duration=98)
+
+		self.assertEqual(self._begin + timedelta(seconds=98), span.StopTime)
+		self.assertEqual(98.0, span.Duration)
+
+	def test_DurationAsFractionalSeconds(self) -> None:
+		span = Span("span", beginTime=self._begin, duration=98.5)
+
+		self.assertEqual(self._begin + timedelta(seconds=98.5), span.StopTime)
+		self.assertEqual(98.5, span.Duration)
+
+	def test_DurationAsSecondsOnTrace(self) -> None:
+		trace = Trace("trace", beginTime=self._begin, duration=120)
+
+		self.assertEqual(120.0, trace.Duration)
+
 	def test_DurationType(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Span("span", beginTime=self._begin, duration=5.0)
+			_ = Span("span", beginTime=self._begin, duration="98")
 
-		self.assertEqual("Parameter 'duration' is not of type 'timedelta'.", str(context.exception))
+		self.assertEqual("Parameter 'duration' is not of type 'timedelta', 'int' or 'float'.", str(context.exception))
+
+	def test_DurationAsBool(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Span("span", beginTime=self._begin, duration=True)
+
+		self.assertEqual("Parameter 'duration' is not of type 'timedelta', 'int' or 'float'.", str(context.exception))
+		self.assertIn("Got type 'bool'.", context.exception.__notes__)
+
+	def test_DurationNotFinite(self) -> None:
+		for value in (float("nan"), float("inf"), float("-inf")):
+			with self.subTest(duration=value):
+				with self.assertRaises(ValueError) as context:
+					_ = Span("span", beginTime=self._begin, duration=value)
+
+				self.assertEqual("Parameter 'duration' is not a finite number of seconds.", str(context.exception))
+
+	def test_NegativeDurationAsSeconds(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Span("span", beginTime=self._begin, duration=-0.5)
+
+		self.assertEqual("Parameter 'duration' is negative.", str(context.exception))
 
 	def test_Stop(self) -> None:
 		span = Span("span", beginTime=self._begin)
