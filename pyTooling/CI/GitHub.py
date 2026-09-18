@@ -475,6 +475,42 @@ class Base(metaclass=ExtendedType, slots=True):
 
 
 @export
+class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
+	"""
+	Mixin-class for elements GitHub names by the workflows containing them.
+
+	:meth:`Pipeline.FromJSON` takes such a name apart - ``Caller / Build (ubuntu-26.04)`` becomes a job ``Build``
+	below a :class:`Workflow` ``Caller``, with the dimension values on a :class:`MatrixJob` - and this mixin puts it
+	back together, so a report can name an element the way the service does.
+
+	It is mixed into elements of the tree :class:`Base` builds and walks it upwards, so the ``expects`` contract
+	requires :attr:`Base._parent` from whichever class it ends up in. The element itself is named by :func:`str`,
+	which every class has; a containing workflow is read as a :class:`Workflow`, which this module declares.
+	"""
+
+	@readonly
+	def QualifiedName(self) -> str:
+		"""
+		Read-only property to return the element's name, prefixed by the names of the workflows containing it.
+
+		The element itself is named by :func:`str`, so a :class:`MatrixJob` carries the dimension values it was
+		produced for. The walk ends at the :class:`Pipeline`, which is a run rather than a called workflow, and passes
+		through a :class:`Matrix` without naming it - a matrix shares its name with the jobs it produced.
+
+		:returns: The name, with every calling workflow in front of it, separated by ``' / '``.
+		"""
+		names =   [str(self)]
+		element = self._parent
+		while element is not None and not isinstance(element, Pipeline):
+			if isinstance(element, Workflow):
+				names.append(element._name)
+
+			element = element._parent
+
+		return " / ".join(reversed(names))
+
+
+@export
 class PipelineGroup(Base):
 	"""
 	Every workflow run GitHub started for one commit, and the top of the tree.
@@ -506,11 +542,11 @@ class PipelineGroup(Base):
 		"""
 		Initializes a group of pipelines started for one commit.
 
-		:param sha:        Commit every pipeline of the group was started on.
-		:param pipelines:  Optional, the pipelines. Default: ``None``.
-		:raises TypeError: If parameter 'sha' is not of type :class:`str`.
+		:param sha:         Commit every pipeline of the group was started on.
+		:param pipelines:   Optional, the pipelines. Default: ``None``.
+		:raises TypeError:  If parameter 'sha' is not of type :class:`str`.
 		:raises ValueError: If parameter 'sha' is empty.
-		:raises TypeError: If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
+		:raises TypeError:  If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
 		"""
 		super().__init__(sha)
 
@@ -821,7 +857,7 @@ class JobGroup(Base):
 
 
 @export
-class Workflow(JobGroup):
+class Workflow(JobGroup, QualifiedNameMixin):
 	"""
 	A called (reusable) workflow, grouping the jobs it contains.
 
@@ -851,7 +887,7 @@ class Workflow(JobGroup):
 		"""
 		Initializes a called workflow.
 
-		:param name:       Name of the workflow, as it prefixes its jobs' names.
+		:param name:   Name of the workflow, as it prefixes its jobs' names.
 		:param parent: Optional, reference to the workflow calling this one. Default: ``None``.
 		"""
 		super().__init__(name, parent=parent)
@@ -959,6 +995,44 @@ class Workflow(JobGroup):
 
 		for workflow in self._workflows.values():
 			yield from workflow.IterateJobs()
+
+	def __len__(self) -> int:
+		"""
+		Return the number of elements this workflow contains: its jobs, its matrices and the workflows it calls.
+
+		Unlike :meth:`IterateJobs`, this counts the elements one level below the workflow, not the jobs below all of
+		them.
+
+		:returns: Number of contained elements.
+		"""
+		return len(self._jobs) + len(self._matrices) + len(self._workflows)
+
+	def __contains__(self, element: Base) -> bool:
+		"""
+		Check whether an element is contained in this workflow.
+
+		:param element: The job, matrix or called workflow to check for.
+		:returns:       ``True``, if the element is contained in this workflow.
+		"""
+		if isinstance(element, Matrix):
+			return self._matrices.get(element._name, None) is element
+		elif isinstance(element, Workflow):
+			return self._workflows.get(element._name, None) is element
+
+		return element in self._jobs
+
+	def __iter__(self) -> Iterator[Base]:
+		"""
+		Iterate the elements this workflow contains: its jobs, then its matrices, then the workflows it calls.
+
+		A :class:`JobGroup` iterates its jobs, but a workflow contains further groups, so it iterates everything one
+		level below it. Use :meth:`IterateJobs` to reach the jobs below those groups as well.
+
+		:returns: An iterator over the contained elements.
+		"""
+		yield from self._jobs
+		yield from self._matrices.values()
+		yield from self._workflows.values()
 
 
 @export
@@ -1304,7 +1378,7 @@ class Matrix(JobGroup):
 
 
 @export
-class Job(Base):
+class Job(Base, QualifiedNameMixin):
 	"""A job of a workflow run, which ran on a runner and contains steps."""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = JobGroup  #: A job is contained in a job group.
