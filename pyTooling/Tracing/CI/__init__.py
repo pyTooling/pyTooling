@@ -69,6 +69,9 @@ SPAN_KIND_WORKFLOW = "workflow"
 SPAN_KIND_QUEUED = "queued"
 """The timespan is the time a job waited for a runner, in front of the job's own timespan."""
 
+SPAN_KIND_MATRIX = "matrix"
+"""The timespan is a matrix, holding the job instances it produced."""
+
 SPAN_KIND_JOB = "job"
 """The timespan is a job running on a runner."""
 
