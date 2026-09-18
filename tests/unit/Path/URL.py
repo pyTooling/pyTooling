@@ -358,7 +358,12 @@ class ParseErrors(Testcase):
 		with self.assertRaises(URLError) as context:
 			_ = URL.Parse("ftpx://example.org")
 
-		self.assertIn("Known schemes: tls, file, http, ftp, https, ftps.", context.exception.__notes__)
+		note = context.exception.__notes__[0]
+
+		self.assertTrue(note.startswith("Known schemes: "))
+		for scheme in Protocols.__members__:
+			with self.subTest(scheme=scheme):
+				self.assertIn(scheme.lower(), note)
 
 	def test_CompositeSchemesAreKnown(self) -> None:
 		for scheme, protocol in (("https", Protocols.HTTPS), ("ftps", Protocols.FTPS)):
@@ -399,3 +404,168 @@ class ParseErrors(Testcase):
 			_ = URL.Parse("?#")
 
 		self.assertEqual("Syntax error when parsing URL '?#'.", str(context.exception))
+
+
+class AddedSchemes(Testcase):
+	"""Schemes written as ``scheme://``, added because an unlisted one can't be parsed."""
+
+	def test_Parsed(self) -> None:
+		for text, protocol in (
+			("ws://host/socket",                 Protocols.WS),
+			("wss://host/socket",                Protocols.WSS),
+			("ssh://git@github.com/owner/r.git", Protocols.SSH),
+			("sftp://host/file.txt",             Protocols.SFTP),
+			("git://host/repository.git",        Protocols.GIT),
+			("ldap://directory/o=example",       Protocols.LDAP),
+			("ldaps://directory/o=example",      Protocols.LDAPS),
+			("tcp://0.0.0.0:2375",               Protocols.TCP),
+			("udp://collector:514",              Protocols.UDP),
+			("unix:///var/run/docker.sock",      Protocols.UNIX),
+			("mqtt://broker:1883",               Protocols.MQTT),
+			("mqtts://broker:8883",              Protocols.MQTTS),
+			("amqp://rabbit:5672",               Protocols.AMQP),
+			("amqps://rabbit:5671",              Protocols.AMQPS),
+			("redis://cache:6379",               Protocols.REDIS),
+			("rediss://cache:6380",              Protocols.REDISS),
+			("mongodb://db:27017",               Protocols.MONGODB),
+			("postgres://db:5432/app",           Protocols.POSTGRES),
+			("postgresql://db:5432/app",         Protocols.POSTGRES),
+		):
+			with self.subTest(url=text):
+				self.assertEqual(protocol, URL.Parse(text).Scheme)
+
+	def test_SecuredVariantsContainTLS(self) -> None:
+		for text in ("wss://host/socket", "ldaps://directory/o=example"):
+			with self.subTest(url=text):
+				self.assertIn(Protocols.TLS, URL.Parse(text).Scheme)
+
+	def test_SFTPIsCarriedBySSHAndIsNotFTP(self) -> None:
+		""":attr:`Protocols.FTP` secured by TLS is :attr:`Protocols.FTPS`; SFTP is SSH's own file transfer."""
+		self.assertEqual(Protocols.FTP | Protocols.TLS, Protocols.FTPS)
+
+		self.assertIn(Protocols.SSH, Protocols.SFTP)
+		self.assertNotIn(Protocols.FTP, Protocols.SFTP)
+		self.assertNotIn(Protocols.TLS, Protocols.SFTP)
+		self.assertNotEqual(Protocols.FTPS, Protocols.SFTP)
+
+	def test_TCPAndUDPDoNotCombine(self) -> None:
+		"""They name a scheme, not the transport another scheme runs over - ``http://`` is over TCP and says so nowhere."""
+		self.assertNotIn(Protocols.TCP, Protocols.HTTP)
+		self.assertNotIn(Protocols.TCP, Protocols.HTTPS)
+		self.assertNotIn(Protocols.UDP, Protocols.HTTP)
+
+	def test_RawEndpointsCarryHostAndPort(self) -> None:
+		url = URL.Parse("tcp://0.0.0.0:2375")
+
+		self.assertEqual("0.0.0.0", url.Host.Hostname)
+		self.assertEqual(2375, url.Host.Port)
+
+	def test_IsEncrypted(self) -> None:
+		"""SSH and SFTP are encrypted and carry no TLS flag, which testing a single flag would miss."""
+		for text in ("https://h/p", "ftps://h/f", "wss://h/s", "ldaps://d/o", "ssh://h/p", "sftp://h/f"):
+			with self.subTest(url=text):
+				self.assertTrue(URL.Parse(text).Scheme.IsEncrypted)
+
+		for text in ("http://h/p", "ftp://h/f", "ws://h/s", "ldap://d/o", "git://h/r.git", "tcp://h:1", "udp://h:1"):
+			with self.subTest(url=text):
+				self.assertFalse(URL.Parse(text).Scheme.IsEncrypted)
+
+	def test_IsEncryptedIsNoEnumerationMember(self) -> None:
+		self.assertNotIn("IsEncrypted", Protocols.__members__)
+
+	def test_AnOpaqueSchemeIsMisparsedAsCredentials(self) -> None:
+		"""
+		``URL_PATTERN`` only recognises a scheme written before ``://``.
+
+		A URI like ``sip:alice@atlanta.com`` or ``mailto:a@b.org`` carries no ``//``, so the scheme is not recognised
+		and the ``scheme:user`` part is taken for ``user:password`` instead - it parses wrongly rather than raising.
+		Listing such a scheme in :class:`Protocols` would change nothing; the pattern would have to.
+		"""
+		url = URL.Parse("sip:alice@atlanta.com")
+
+		self.assertIsNone(url.Scheme)
+		self.assertEqual("sip", url.User)
+		self.assertEqual("alice", url.Password)
+		self.assertEqual("atlanta.com", url.Host.Hostname)
+
+
+class ForbiddenCharacters(Testcase):
+	"""A rejected URL holding a character :rfc:`3986` forbids says how to write it."""
+
+	def test_SpaceIsExplained(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("a b?#")
+
+		self.assertIn(
+			"Character ' ' is not allowed in a URL. Write it percent-encoded as '%20'.",
+			context.exception.__notes__
+		)
+
+	def test_ControlCharacterIsExplained(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("?#\n")
+
+		self.assertIn(
+			"Character '\\n' is not allowed in a URL. Write it percent-encoded as '%0A'.",
+			context.exception.__notes__
+		)
+
+	def test_TheMessageStaysOnOneLine(self) -> None:
+		"""The URL is rendered with :func:`repr`, so a control character can't break the message apart."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("?#\n")
+
+		self.assertNotIn("\n", str(context.exception))
+
+	def test_NoNoteWhenNothingIsForbidden(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("?#")
+
+		self.assertEqual([], getattr(context.exception, "__notes__", []))
+
+	def test_AnAcceptedURLIsUnaffected(self) -> None:
+		"""A space is accepted today, so the note never fires for one - see the pull-request's Known Issues."""
+		self.assertEqual("https://a b/c", str(URL.Parse("https://a b/c")))
+
+
+class IPv6Hosts(Testcase):
+	"""A bracketed IPv6 literal is a host, not the start of the path."""
+
+	def test_HostAndPort(self) -> None:
+		url = URL.Parse("https://[2001:db8::1]:8080/path")
+
+		self.assertEqual("[2001:db8::1]", url.Host.Hostname)
+		self.assertEqual(8080, url.Host.Port)
+		self.assertEqual("/path", str(url.Path))
+
+	def test_WithoutPort(self) -> None:
+		url = URL.Parse("https://[::1]/path")
+
+		self.assertEqual("[::1]", url.Host.Hostname)
+		self.assertIsNone(url.Host.Port)
+
+	def test_WithCredentialsQueryAndFragment(self) -> None:
+		url = URL.Parse("https://user:pw@[fe80::1]:443/p?q=1#f")
+
+		self.assertEqual("[fe80::1]", url.Host.Hostname)
+		self.assertEqual(443, url.Host.Port)
+		self.assertEqual("user", url.User)
+		self.assertDictEqual({"q": "1"}, url.Query)
+		self.assertEqual("f", url.Fragment)
+
+	def test_IPv4IsUnaffected(self) -> None:
+		url = URL.Parse("https://192.0.2.1:8080/path")
+
+		self.assertEqual("192.0.2.1", url.Host.Hostname)
+		self.assertEqual(8080, url.Host.Port)
+
+	def test_TheBracketsAreKeptInTheHostname(self) -> None:
+		"""
+		:rfc:`3986` writes the literal in brackets, and they are kept, so the URL reassembles unchanged.
+
+		A consumer wanting the bare address strips them itself.
+		"""
+		url = URL.Parse("https://[2001:db8::1]:8080/path")
+
+		self.assertTrue(url.Host.Hostname.startswith("["))
+		self.assertEqual("https://[2001:db8::1]:8080/path", str(url))
