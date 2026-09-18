@@ -30,6 +30,17 @@ Version 10.x (2026)
        :meth:`~pyTooling.CI.GitHub.PipelineGroup.ByGitReference` separates a commit's checks from the run at its tag,
        which the API reports under the same commit.
 
+   * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
+     it.
+
+     * A class variable naming the class it is declared in couldn't be written, because the class doesn't exist while
+       its body runs - it had to be assigned after the class statement. ``ClassVar[...] = ThisClass`` says it in the
+       body, and :class:`~pyTooling.MetaClasses.ExtendedType` rebinds it once the class exists.
+     * Only a variable the class **declared** is rebound; an inherited one keeps the value its own class resolved.
+       The value is read back from the class, so an ``__init_subclass__`` that replaced it wins.
+     * The sentinel is an empty class rather than a bare object, so a variable annotated as a :class:`type` still
+       type-checks.
+
    * :mod:`pyTooling.MetaClasses`
 
      * A class or a mixin-class can name the members it expects from wherever it ends up, with the new ``expects``
