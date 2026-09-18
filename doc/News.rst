@@ -41,6 +41,41 @@ Version 10.x (2026)
      * The sentinel is an empty class rather than a bare object, so a variable annotated as a :class:`type` still
        type-checks.
 
+   * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
+     :exc:`~pyTooling.GenericPath.URL.URLError` for it.
+
+     * :exc:`~pyTooling.GenericPath.URL.URLError` replaces the bare
+       :exc:`~pyTooling.Exceptions.ToolingException` the module raised, so a consumer can catch a URL problem
+       without catching everything pyTooling raises. It still derives from it.
+     * A rejected URL holding a character :rfc:`3986` forbids - a space, a control character, ``<``, ``|``,
+       ... - gets a note naming it and its percent-encoding, e.g. *"Character ' ' is not allowed in a URL.
+       Write it percent-encoded as '%20'."*
+     * :class:`~pyTooling.GenericPath.URL.Protocols` gains ``ws``, ``wss``, ``ssh``, ``sftp``, ``git``,
+       ``ldap`` and ``ldaps``. A scheme missing from the enumeration makes a URL unparseable, so the list
+       grows as schemes are needed. ``sftp`` is carried by :attr:`~Protocols.SSH` rather than being
+       :attr:`~Protocols.FTP` plus :attr:`~Protocols.TLS` - that combination is :attr:`~Protocols.FTPS`.
+     * :attr:`~pyTooling.GenericPath.URL.Protocols.IsEncrypted` answers whether a scheme is secured, by TLS or
+       by SSH. Testing :attr:`~pyTooling.GenericPath.URL.Protocols.TLS` alone answers *"is this TLS"* and
+       misses ``ssh`` and ``sftp``, which are encrypted and carry no TLS flag.
+     * ``tcp``, ``udp`` and ``unix`` name an endpoint whose higher protocol is unspecified -
+       ``tcp://0.0.0.0:2375`` as the Docker daemon writes it, ``unix:///var/run/docker.sock`` for a local
+       socket. They do not combine with the other schemes: ``http://`` runs over TCP without saying so.
+     * ``mqtt``/``mqtts``, ``amqp``/``amqps``, ``redis``/``rediss``, ``mongodb`` and
+       ``postgres``/``postgresql`` are listed too.
+     * A **bracketed IPv6 literal is parsed as the host**: ``https://[2001:db8::1]:8080/path`` gave a host of
+       ``None`` and a path of ``[2001:db8::1]:8080/path``, while reassembling into the original string - so a
+       round-trip looked correct while the model was wrong.
+
+     * :meth:`~pyTooling.GenericPath.URL.URL.Parse` checks its parameter: ``None`` raises a :exc:`ValueError` and a
+       value of another type a :exc:`TypeError` naming it, instead of the :mod:`re` module reporting *"expected
+       string or bytes-like object"* about neither the parameter nor the value.
+     * An unknown scheme raises a :exc:`~pyTooling.Exceptions.ToolingException` listing the known ones, where
+       ``ftpx://host`` used to raise ``KeyError: 'FTPX'``.
+     * A query parameter that is no ``key=value`` pair raises a :exc:`~pyTooling.Exceptions.ToolingException` naming
+       it, where ``?flag`` used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no
+       longer an error - ``?key=a=b`` parses as ``{"key": "a=b"}``, where it used to raise *"too many values to
+       unpack"*.
+
    * :mod:`pyTooling.MetaClasses`
 
      * A class or a mixin-class can name the members it expects from wherever it ends up, with the new ``expects``

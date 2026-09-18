@@ -39,6 +39,7 @@ from __future__            import annotations
 
 from enum                  import Flag
 from re                    import compile as re_compile
+from urllib.parse          import quote as urlQuote
 from typing                import ClassVar, Optional as Nullable, Mapping
 
 from pyTooling.Decorators  import export, readonly
@@ -52,12 +53,26 @@ __all__ = ["URL_PATTERN", "URL_REGEXP"]
 URL_PATTERN = (
 	r"""(?:(?P<scheme>\w+)://)?"""
 	r"""(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?"""
-	r"""(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
+	r"""(?:(?P<host>\[[0-9A-Fa-f:.]+\]|(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
 	r"""(?P<path>[^?#]*?)"""
 	r"""(?:\?(?P<query>[^#]+?))?"""
 	r"""(?:#(?P<fragment>.+?))?"""
 )                                                 #: Regular expression pattern for validating and splitting a URL.
 URL_REGEXP = re_compile("^" + URL_PATTERN + "$")  #: Precompiled regular expression for URL validation.
+
+FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"  #: Characters :rfc:`3986` forbids in a URL unless they are percent-encoded.
+
+
+@export
+class URLError(ToolingException):
+	"""
+	Raised when a URL can't be parsed.
+
+	.. note::
+
+	   :class:`urllib.error.URLError` from the standard library carries the same name and a different meaning - it
+	   reports that a *request* failed. A module using both imports one of them under another name.
+	"""
 
 
 @export
@@ -65,22 +80,84 @@ class Protocols(Flag):
 	"""
 	Enumeration of supported URL schemes.
 
-	The members are flags, so a TLS secured scheme is the combination of :attr:`TLS` and the plain protocol. Thus, a
-	scheme can be checked for encryption without enumerating every secured variant:
+	The members are flags, so a scheme secured by a transport is the combination of that transport and the plain
+	protocol: :attr:`HTTPS` is :attr:`TLS` with :attr:`HTTP`, and :attr:`SFTP` is :attr:`SSH` carrying its own file
+	transfer. A scheme can therefore be asked which transport secures it, without enumerating every variant:
 
 	.. code-block:: Python
 
 	   if Protocols.TLS in url.Scheme:
+	     print(f"'{url}' is secured by TLS.")
+
+	   if url.Scheme.IsEncrypted:
 	     print(f"'{url}' is encrypted.")
+
+	.. attention::
+
+	   :attr:`TLS` answers *"is this TLS"*, not *"is this encrypted"* - :attr:`SSH` and :attr:`SFTP` are encrypted
+	   and carry no :attr:`TLS` flag. Use :attr:`IsEncrypted`, which asks for both.
+
+	   :attr:`SFTP` is **not** :attr:`FTP` carried by :attr:`SSH`: it is a protocol of its own, defined as an SSH
+	   subsystem and sharing nothing with FTP but its purpose. :attr:`FTP` secured by :attr:`TLS` is :attr:`FTPS`.
+
+	.. note::
+
+	   :attr:`TCP` and :attr:`UDP` name a scheme written as ``tcp://host:port``, which is what ZeroMQ, the Docker
+	   daemon and syslog configurations use. They do **not** combine with the other members the way :attr:`TLS` and
+	   :attr:`SSH` do: ``http://`` runs over TCP without saying so, so :attr:`HTTP` carries no :attr:`TCP` flag.
+	   ``tcp`` is not registered with IANA - ``udp`` is registered provisionally - but both appear often enough that
+	   refusing them would be unhelpful.
+
+	.. caution::
+
+	   The enumeration lists the schemes written as ``scheme://``, and :meth:`URL.Parse` raises
+	   :exc:`URLError` for one it doesn't know - so a scheme missing here makes a URL unparseable. Schemes are added
+	   as they are needed.
+
+	   An **opaque** scheme - ``mailto:a@b.org``, ``urn:isbn:…``, and ``sip:alice@atlanta.com``, whose URI carries no
+	   ``//`` - is a different matter: :data:`URL_PATTERN` only recognises a scheme before ``://``, so such a URL
+	   parses with its scheme silently dropped rather than raising. Listing it here would change nothing.
 	"""
 
-	TLS =   1  #: Transport Layer Security
-	FILE =  2  #: Local files
-	HTTP =  4  #: Hyper Text Transfer Protocol
-	FTP =   8  #: File Transfer Protocol
+	TLS      = 1      #: Transport Layer Security
+	FILE     = 2      #: Local files
+	HTTP     = 4      #: Hyper Text Transfer Protocol
+	FTP      = 8      #: File Transfer Protocol
+	WS       = 16     #: WebSocket
+	SSH      = 32     #: Secure Shell
+	GIT      = 64     #: Git's own transport
+	LDAP     = 128    #: Lightweight Directory Access Protocol
+	TCP      = 512    #: A raw TCP endpoint, the higher protocol unspecified - as ZeroMQ and Docker write it.
+	UDP      = 1024   #: A raw UDP endpoint of an unspecified higher protocol.
+	UNIX     = 2048   #: A local Unix domain socket, addressed by a file system path.
+	MQTT     = 4096   #: Message Queuing Telemetry Transport
+	AMQP     = 8192   #: Advanced Message Queuing Protocol - the protocol RabbitMQ speaks.
+	REDIS    = 16384  #: Redis
+	MONGODB  = 32768  #: MongoDB
+	POSTGRES = 65536  #: PostgreSQL
 
-	HTTPS = TLS | HTTP  #: SSL/TLS secured HTTP: combination of :attr:`TLS` and :attr:`HTTP`.
-	FTPS =  TLS | FTP   #: SSL/TLS secured FTP: combination of :attr:`TLS` and :attr:`FTP`.
+	HTTPS  = TLS | HTTP   #: SSL/TLS secured HTTP: combination of :attr:`TLS` and :attr:`HTTP`.
+	FTPS   = TLS | FTP    #: SSL/TLS secured FTP: combination of :attr:`TLS` and :attr:`FTP`.
+	WSS    = TLS | WS     #: SSL/TLS secured WebSocket: combination of :attr:`TLS` and :attr:`WS`.
+	LDAPS  = TLS | LDAP   #: SSL/TLS secured LDAP: combination of :attr:`TLS` and :attr:`LDAP`.
+	SFTP   = SSH | 256    #: SSH File Transfer Protocol, carried by :attr:`SSH`.
+	MQTTS  = TLS | MQTT   #: SSL/TLS secured MQTT: combination of :attr:`TLS` and :attr:`MQTT`.
+	AMQPS  = TLS | AMQP   #: SSL/TLS secured AMQP: combination of :attr:`TLS` and :attr:`AMQP`.
+	REDISS = TLS | REDIS  #: SSL/TLS secured Redis: combination of :attr:`TLS` and :attr:`REDIS`.
+
+	POSTGRESQL = POSTGRES  #: Alias of :attr:`POSTGRES`, the spelling ``libpq`` documents.
+
+	@readonly
+	def IsEncrypted(self) -> bool:
+		"""
+		Read-only property to return whether the scheme is encrypted.
+
+		A scheme is encrypted when it is secured by :attr:`TLS` or carried by :attr:`SSH`, so this answers e.g.
+		for :attr:`HTTPS` or :attr:`SFTP` alike - which testing a single flag doesn't.
+
+		:returns: ``True``, if the scheme is secured by TLS or carried by SSH.
+		"""
+		return bool(self & (Protocols.TLS | Protocols.SSH))
 
 
 @export
@@ -352,8 +429,22 @@ class URL:
 
 		:param url:               URL as string to be parsed.
 		:returns:                 A URL object.
-		:raises ToolingException: When syntax does not match.
+		:raises ValueError:       If parameter 'url' is ``None``.
+		:raises TypeError:        If parameter 'url' is not of type :class:`str`.
+		:raises URLError:         When syntax does not match. |br|
+		                          A note names the first character :rfc:`3986` forbids, if the URL holds one, and how
+		                          to percent-encode it.
+		:raises URLError:         When the URL names a scheme that is not in :class:`Protocols`. |br|
+		                          The note lists the known schemes.
+		:raises URLError:         When a parameter of the query is not a ``key=value`` pair.
 		"""
+		if url is None:
+			raise ValueError("Parameter 'url' is None.")
+		elif not isinstance(url, str):
+			ex = TypeError("Parameter 'url' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
+			raise ex
+
 		if (matches := URL_REGEXP.match(url)) is not None:
 			scheme =    matches.group("scheme")
 			user =      matches.group("user")
@@ -367,7 +458,14 @@ class URL:
 			query =     matches.group("query")
 			fragment =  matches.group("fragment")
 
-			scheme =    None if scheme is None else Protocols[scheme.upper()]
+			if scheme is not None:
+				try:
+					scheme = Protocols[scheme.upper()]
+				except KeyError as ex:
+					error = URLError(f"Unknown scheme '{scheme}' when parsing URL '{url}'.")
+					error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
+					raise error from ex
+
 			hostObj =   None if host is None   else Host(host, port)
 
 			pathObj =   Path.Parse(path, hostObj)
@@ -375,7 +473,12 @@ class URL:
 			parameters = {}
 			if query is not None:
 				for pair in query.split("&"):
-					key, value = pair.split("=")
+					key, separator, value = pair.partition("=")
+					if separator == "":
+						error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
+						error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
+						raise error
+
 					parameters[key] = value
 
 			return cls(
@@ -388,7 +491,16 @@ class URL:
 				fragment
 			)
 
-		raise ToolingException(f"Syntax error when parsing URL '{url}'.")
+		error = URLError(f"Syntax error when parsing URL {url!r}.")
+		for character in url:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				error.add_note(
+					f"Character {character!r} is not allowed in a URL. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				break
+
+		raise error
 
 	def __str__(self) -> str:
 		"""
