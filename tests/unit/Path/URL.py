@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.GenericPath.URL`: parsing a URL into its
 parts and rendering it back.
 """
-from pyTooling.Exceptions       import ToolingException
+from pyTooling.Exceptions      import ToolingException
 from pyTooling.GenericPath.URL import URL, URLError, Protocols
 from pyTooling.Testing         import Testcase
 

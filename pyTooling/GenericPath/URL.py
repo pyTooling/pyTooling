@@ -152,9 +152,8 @@ class Protocols(Flag):
 		"""
 		Read-only property to return whether the scheme is encrypted.
 
-		A scheme is encrypted when it is secured by :attr:`TLS` or carried by :attr:`SSH`, so this answers for
-		:attr:`HTTPS`, :attr:`FTPS`, :attr:`WSS`, :attr:`LDAPS`, :attr:`SSH` and :attr:`SFTP` alike - which testing a
-		single flag does not.
+		A scheme is encrypted when it is secured by :attr:`TLS` or carried by :attr:`SSH`, so this answers e.g.
+		for :attr:`HTTPS` or :attr:`SFTP` alike - which testing a single flag doesn't.
 
 		:returns: ``True``, if the scheme is secured by TLS or carried by SSH.
 		"""
