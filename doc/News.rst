@@ -14,6 +14,22 @@ Version 10.x (2026)
 
    .. rubric:: New Features
 
+   * :mod:`pyTooling.CI` is a new package holding data models of continuous integration services.
+
+     * :mod:`pyTooling.CI.GitHub` reads a GitHub Actions workflow run into a tree of
+       :class:`~pyTooling.CI.GitHub.Pipeline`, :class:`~pyTooling.CI.GitHub.Workflow`,
+       :class:`~pyTooling.CI.GitHub.Matrix`, :class:`~pyTooling.CI.GitHub.Job` and
+       :class:`~pyTooling.CI.GitHub.Step` objects, each knowing its parent and the run it belongs to.
+     * A called workflow and a matrix are encoded in a job's name - ``Caller / Job`` and
+       ``Job (ubuntu-26.04, 3.14)`` - and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads them back into the
+       tree. Neither level reports times, so :class:`~pyTooling.CI.GitHub.JobGroup` spans the jobs below it.
+     * ``status``, ``conclusion`` and ``event`` become :class:`~pyTooling.CI.GitHub.Status`,
+       :class:`~pyTooling.CI.GitHub.Conclusion` and :class:`~pyTooling.CI.GitHub.Event` members, so a value GitHub
+       doesn't document raises :exc:`~pyTooling.CI.GitHub.GitHubError` instead of matching no comparison.
+     * :class:`~pyTooling.CI.GitHub.PipelineGroup` holds every run of one commit, and
+       :meth:`~pyTooling.CI.GitHub.PipelineGroup.ByGitReference` separates a commit's checks from the run at its tag,
+       which the API reports under the same commit.
+
    * :mod:`pyTooling.MetaClasses`
 
      * A class or a mixin-class can name the members it expects from wherever it ends up, with the new ``expects``
