@@ -32,7 +32,8 @@
 Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.GenericPath.URL`: parsing a URL into its
 parts and rendering it back.
 """
-from pyTooling.GenericPath.URL import URL, Protocols
+from pyTooling.Exceptions       import ToolingException
+from pyTooling.GenericPath.URL import URL, URLError, Protocols
 from pyTooling.Testing         import Testcase
 
 
@@ -322,3 +323,79 @@ class URLs(Testcase):
 		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
 		self.assertEqual("ref-45", url.Fragment)
 
+
+
+class ParseErrors(Testcase):
+	"""What :meth:`~pyTooling.GenericPath.URL.URL.Parse` rejects, and how it says so."""
+
+	def test_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = URL.Parse(None)
+
+		self.assertEqual("Parameter 'url' is None.", str(context.exception))
+
+	def test_WrongType(self) -> None:
+		for value in (42, b"https://example.org", ["https://example.org"]):
+			with self.subTest(url=value):
+				with self.assertRaises(TypeError) as context:
+					_ = URL.Parse(value)
+
+				self.assertEqual("Parameter 'url' is not of type 'str'.", str(context.exception))
+
+	def test_WrongTypeReportsTheType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = URL.Parse(42)
+
+		self.assertIn("Got type 'int'.", context.exception.__notes__)
+
+	def test_UnknownScheme(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("ftpx://example.org/file.txt")
+
+		self.assertEqual("Unknown scheme 'ftpx' when parsing URL 'ftpx://example.org/file.txt'.", str(context.exception))
+
+	def test_UnknownSchemeListsTheKnownOnes(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("ftpx://example.org")
+
+		self.assertIn("Known schemes: tls, file, http, ftp, https, ftps.", context.exception.__notes__)
+
+	def test_CompositeSchemesAreKnown(self) -> None:
+		for scheme, protocol in (("https", Protocols.HTTPS), ("ftps", Protocols.FTPS)):
+			with self.subTest(scheme=scheme):
+				self.assertEqual(protocol, URL.Parse(f"{scheme}://example.org/file.txt").Scheme)
+
+	def test_QueryParameterWithoutValue(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("https://example.org/p?flag")
+
+		self.assertEqual(
+			"Query parameter 'flag' is no 'key=value' pair in URL 'https://example.org/p?flag'.",
+			str(context.exception)
+		)
+
+	def test_QueryParameterWithAnEmptyValue(self) -> None:
+		self.assertDictEqual({"key": ""}, URL.Parse("https://example.org/p?key=").Query)
+
+	def test_QueryValueContainingAnEqualsSign(self) -> None:
+		"""A '=' is legal inside a value; only the first one separates."""
+		self.assertDictEqual({"key": "a=b"}, URL.Parse("https://example.org/p?key=a=b").Query)
+
+	def test_URLErrorIsAToolingException(self) -> None:
+		"""So a consumer catching the package's base exception still catches it."""
+		self.assertTrue(issubclass(URLError, ToolingException))
+
+		with self.assertRaises(ToolingException):
+			_ = URL.Parse("ftpx://example.org")
+
+	def test_SyntaxErrorRaisesURLError(self) -> None:
+		"""
+		``'?#'`` is one of the few strings ``URL_PATTERN`` rejects.
+
+		Every group of the pattern is optional, so almost nothing fails it - ``'https://a b/c'`` and even a string
+		holding a newline are accepted. See the pull-request's *Known Issues*.
+		"""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("?#")
+
+		self.assertEqual("Syntax error when parsing URL '?#'.", str(context.exception))

@@ -41,6 +41,23 @@ Version 10.x (2026)
      * The sentinel is an empty class rather than a bare object, so a variable annotated as a :class:`type` still
        type-checks.
 
+   * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
+     :exc:`~pyTooling.GenericPath.URL.URLError` for it.
+
+     * :exc:`~pyTooling.GenericPath.URL.URLError` replaces the bare
+       :exc:`~pyTooling.Exceptions.ToolingException` the module raised, so a consumer can catch a URL problem
+       without catching everything pyTooling raises. It still derives from it.
+
+     * :meth:`~pyTooling.GenericPath.URL.URL.Parse` checks its parameter: ``None`` raises a :exc:`ValueError` and a
+       value of another type a :exc:`TypeError` naming it, instead of the :mod:`re` module reporting *"expected
+       string or bytes-like object"* about neither the parameter nor the value.
+     * An unknown scheme raises a :exc:`~pyTooling.Exceptions.ToolingException` listing the known ones, where
+       ``ftpx://host`` used to raise ``KeyError: 'FTPX'``.
+     * A query parameter that is no ``key=value`` pair raises a :exc:`~pyTooling.Exceptions.ToolingException` naming
+       it, where ``?flag`` used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no
+       longer an error - ``?key=a=b`` parses as ``{"key": "a=b"}``, where it used to raise *"too many values to
+       unpack"*.
+
    * :mod:`pyTooling.MetaClasses`
 
      * A class or a mixin-class can name the members it expects from wherever it ends up, with the new ``expects``

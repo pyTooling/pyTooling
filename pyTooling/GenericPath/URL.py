@@ -61,6 +61,18 @@ URL_REGEXP = re_compile("^" + URL_PATTERN + "$")  #: Precompiled regular express
 
 
 @export
+class URLError(ToolingException):
+	"""
+	Raised when a URL can't be parsed.
+
+	.. note::
+
+	   :class:`urllib.error.URLError` from the standard library carries the same name and a different meaning - it
+	   reports that a *request* failed. A module using both imports one of them under another name.
+	"""
+
+
+@export
 class Protocols(Flag):
 	"""
 	Enumeration of supported URL schemes.
@@ -352,8 +364,20 @@ class URL:
 
 		:param url:               URL as string to be parsed.
 		:returns:                 A URL object.
-		:raises ToolingException: When syntax does not match.
+		:raises ValueError:       If parameter 'url' is ``None``.
+		:raises TypeError:        If parameter 'url' is not of type :class:`str`.
+		:raises URLError:         When syntax does not match.
+		:raises URLError:         When the URL names a scheme that is not in :class:`Protocols`. |br|
+		                          The note lists the known schemes.
+		:raises URLError:         When a parameter of the query is not a ``key=value`` pair.
 		"""
+		if url is None:
+			raise ValueError("Parameter 'url' is None.")
+		elif not isinstance(url, str):
+			ex = TypeError("Parameter 'url' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
+			raise ex
+
 		if (matches := URL_REGEXP.match(url)) is not None:
 			scheme =    matches.group("scheme")
 			user =      matches.group("user")
@@ -367,7 +391,14 @@ class URL:
 			query =     matches.group("query")
 			fragment =  matches.group("fragment")
 
-			scheme =    None if scheme is None else Protocols[scheme.upper()]
+			if scheme is not None:
+				try:
+					scheme = Protocols[scheme.upper()]
+				except KeyError as ex:
+					error = URLError(f"Unknown scheme '{scheme}' when parsing URL '{url}'.")
+					error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
+					raise error from ex
+
 			hostObj =   None if host is None   else Host(host, port)
 
 			pathObj =   Path.Parse(path, hostObj)
@@ -375,7 +406,12 @@ class URL:
 			parameters = {}
 			if query is not None:
 				for pair in query.split("&"):
-					key, value = pair.split("=")
+					key, separator, value = pair.partition("=")
+					if separator == "":
+						error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
+						error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
+						raise error
+
 					parameters[key] = value
 
 			return cls(
@@ -388,7 +424,7 @@ class URL:
 				fragment
 			)
 
-		raise ToolingException(f"Syntax error when parsing URL '{url}'.")
+		raise URLError(f"Syntax error when parsing URL '{url}'.")
 
 	def __str__(self) -> str:
 		"""
