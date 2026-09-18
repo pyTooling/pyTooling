@@ -73,6 +73,34 @@ iterable of those."""
 
 
 @export
+class ThisClass:
+	"""
+	Sentinel for a class variable whose value is the class declaring it.
+
+	A class doesn't exist while its body runs, so a class variable can't name it. Setting the variable to this
+	sentinel says *"the class I am declared in"*, and :class:`ExtendedType` rebinds it once the class exists.
+
+	.. code-block:: python
+
+	   class Workflow(metaclass=ExtendedType, slots=True):
+	     _PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass   # a workflow is contained in a workflow
+
+	   assert Workflow._PARENT_TYPE is Workflow
+
+	Only a variable the class **declared** is rebound; an inherited one keeps the value its own class resolved. It is
+	an empty class rather than a bare object, so a variable annotated as a :class:`type` still type-checks.
+
+	.. note::
+
+	   :pep:`661` adds a ``sentinel`` builtin in Python 3.15, and ``ThisClass = sentinel("ThisClass")`` would give a
+	   better :func:`repr` and identity through :mod:`pickle` and :mod:`copy`. It is **not** used here: a sentinel is
+	   an *instance*, so a variable annotated :class:`type` would no longer type-check, and this sentinel never
+	   survives class creation anyway - it is replaced before anyone can pickle or print it. :class:`ExtendedType`
+	   compares by identity, so swapping the definition is a one-line change if that day comes.
+	"""
+
+
+@export
 class ExtendedTypeError(ToolingException):
 	"""The exception is raised by the meta-class :class:`~pyTooling.MetaClasses.ExtendedType`."""
 
@@ -744,6 +772,14 @@ class ExtendedType(type):
 		# Class variables with an initial value are part of 'members', so they are bound before that hook runs and
 		# are not re-assigned afterwards - doing so would overwrite whatever '__init_subclass__' computed from them.
 		newClass = type.__new__(self, className, baseClasses, members, **kwargs)
+
+		# A class variable set to 'ThisClass' means "the class I am declared in". The class doesn't exist while its body
+		# runs, so the value is resolved here. Only a variable this class declared is rebound - an inherited one keeps
+		# the value its own class resolved - and the current value is read from the class, so an '__init_subclass__'
+		# that replaced it wins.
+		for memberName in members:
+			if getattr(newClass, memberName, None) is ThisClass:
+				setattr(newClass, memberName, newClass)
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
