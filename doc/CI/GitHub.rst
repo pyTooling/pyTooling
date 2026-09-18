@@ -37,6 +37,19 @@ The Tree
 Every element knows its :attr:`~pyTooling.CI.GitHub.Base.Parent`, and holds a reference to the workflow run it
 belongs to in :attr:`~pyTooling.CI.GitHub.Base.Pipeline` - so reaching the run from any depth costs no walk.
 
+Iterating an element yields what it contains one level down: a workflow yields its jobs, its matrices and the
+workflows it calls, a matrix its instances, and a job its steps. To reach every job below a workflow at once - those
+of its matrices and of the workflows it calls included - use
+:meth:`~pyTooling.CI.GitHub.Workflow.IterateJobs`:
+
+.. code-block:: python
+
+   for element in pipeline:           # one level: jobs, matrices, called workflows
+     print(f"{type(element).__name__}: {element}")
+
+   for job in pipeline.IterateJobs():  # every job below the run, at any depth
+     print(job.QualifiedName)
+
 * **A called workflow and a matrix are not elements GitHub reports.** It encodes both in a job's name -
   ``Caller / Job`` for a called workflow, ``Job (ubuntu-26.04, 3.14)`` for a matrix instance -
   and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads the name back into the tree.
@@ -59,6 +72,12 @@ belongs to in :attr:`~pyTooling.CI.GitHub.Base.Pipeline` - so reaching the run f
   ``B``.
 * Neither level reports times, so :class:`~pyTooling.CI.GitHub.JobGroup` derives them: a group begins with its
   earliest job and ends with its latest, and has no end while a job below it is still running.
+* Because the name is taken apart, :class:`~pyTooling.CI.GitHub.QualifiedNameMixin` puts it back together - a job
+  below ``Caller`` reports ``Caller / Build (ubuntu-26.04)`` as its
+  :attr:`~pyTooling.CI.GitHub.QualifiedNameMixin.QualifiedName` while :attr:`~pyTooling.CI.GitHub.Base.Name` stays
+  ``Build``, so a report can name a job the way the service does without walking the tree itself. A
+  :class:`~pyTooling.CI.GitHub.Job` and a :class:`~pyTooling.CI.GitHub.Workflow` are named that way; a
+  :class:`~pyTooling.CI.GitHub.Matrix` isn't, since GitHub reports no name for it.
 * The bracketed suffix is a convention of GitHub's own interface rather than a field, so a job genuinely named
   ``Build (fast)`` and produced by no matrix is indistinguishable from one that was - it becomes a matrix of one
   instance. A job whose workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.
