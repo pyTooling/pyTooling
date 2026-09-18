@@ -1161,6 +1161,12 @@ License
    PackageDependencies
 
 .. toctree::
+   :caption: Continuous Integration
+   :hidden:
+
+   CI/index
+
+.. toctree::
    :caption: Testing
    :hidden:
 
