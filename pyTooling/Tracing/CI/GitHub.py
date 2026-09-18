@@ -56,18 +56,21 @@ from typing                import Any, Iterable, Optional as Nullable
 from urllib.error          import HTTPError
 from urllib.request        import Request, urlopen
 
+from pyTooling.CI          import JSONObject
+from pyTooling.CI.GitHub   import Base, Conclusion, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step, Workflow
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Tracing     import AttributeValue, Span, Trace, TracingError
-from pyTooling.Tracing.CI  import SPAN_KIND, SPAN_KIND_PIPELINE, SPAN_KIND_WORKFLOW, SPAN_KIND_QUEUED, SPAN_KIND_JOB
+from pyTooling.Tracing.CI  import SPAN_KIND, SPAN_KIND_PIPELINE, SPAN_KIND_WORKFLOW, SPAN_KIND_MATRIX
+from pyTooling.Tracing.CI  import SPAN_KIND_QUEUED, SPAN_KIND_JOB
 from pyTooling.Tracing.CI  import SPAN_KIND_STEP, PIPELINE_NAME, PIPELINE_RUN_ID, PIPELINE_RUN_URL, PIPELINE_RESULT
 from pyTooling.Tracing.CI  import TASK_NAME, TASK_RUN_ID, TASK_RUN_URL, TASK_RUN_RESULT, WORKER_NAME
 from pyTooling.Tracing.CI  import RESULT_SUCCESS, RESULT_FAILURE, RESULT_TIMEOUT, RESULT_SKIP, RESULT_CANCELLATION
-from pyTooling.Tracing.CI  import RESULT_ERROR, parseISO8601Timestamp
+from pyTooling.Tracing.CI  import RESULT_ERROR
 
 
-__all__ = ["GITHUB_API_URL", "RUNNER_LABELS", "RUNNER_GROUP", "CONCLUSION", "JSONObject"]
+__all__ = ["GITHUB_API_URL", "MATRIX_DIMENSIONS", "RUNNER_LABELS", "RUNNER_GROUP", "CONCLUSION"]
 
 GITHUB_API_URL = "https://api.github.com"
 """Base URL of the GitHub REST API."""
@@ -75,14 +78,14 @@ GITHUB_API_URL = "https://api.github.com"
 RUNNER_LABELS = "github.runner.labels"
 """Attribute: the labels a job requested its runner by, e.g. ``['ubuntu-26.04']``."""
 
+MATRIX_DIMENSIONS = "github.matrix.dimensions"
+"""Attribute: the values of the matrix' dimensions a job instance ran with, e.g. ``['ubuntu-26.04', '3.14']``."""
+
 RUNNER_GROUP = "github.runner.group"
 """Attribute: the runner group the job's runner belongs to."""
 
 CONCLUSION = "github.conclusion"
 """Attribute: GitHub's own conclusion of a run, job or step, next to the CI/CD result it was mapped to."""
-
-JSONObject = dict[str, Any]
-"""A JSON object, as the GitHub REST API returns it."""
 
 _CONCLUSION_TO_RESULT: dict[str, str] = {
 	"success":   RESULT_SUCCESS,
@@ -103,42 +106,36 @@ _MAXIMUM_RETRY_AFTER = 60.0
 """The longest pause in seconds a ``Retry-After`` header can demand before a request is tried again."""
 
 
-def _result(conclusion: Nullable[str]) -> Nullable[str]:
+_CONCLUSION_TO_RESULT = {
+	Conclusion.Success:   RESULT_SUCCESS,
+	Conclusion.Failure:   RESULT_FAILURE,
+	Conclusion.TimedOut:  RESULT_TIMEOUT,
+	Conclusion.Skipped:   RESULT_SKIP,
+	Conclusion.Cancelled: RESULT_CANCELLATION,
+}
+"""GitHub's conclusions and the CI/CD results they correspond to. Any other conclusion is an error."""
+
+
+def _result(conclusion: Nullable[Conclusion]) -> Nullable[str]:
 	"""
 	Map a GitHub conclusion to a CI/CD result.
 
-	:param conclusion: GitHub's conclusion, or ``None`` while the run, job or step hasn't concluded.
+	:param conclusion: Optional, the conclusion, or ``None`` while it hasn't concluded. Default: ``None``.
 	:returns:          The CI/CD result, or ``None`` if there is no conclusion yet.
 	"""
-	if conclusion is None or conclusion == "":
+	if conclusion is None:
 		return None
 
 	return _CONCLUSION_TO_RESULT.get(conclusion, RESULT_ERROR)
 
 
-def _field(mapping: JSONObject, key: str, path: str) -> Any:
-	"""
-	Read a mandatory field of a JSON object.
-
-	:param mapping:       The JSON object.
-	:param key:           The field's name.
-	:param path:          Position of the JSON object, for the exception's message.
-	:returns:             The field's value.
-	:raises TracingError: If the field is missing or ``None``.
-	"""
-	if (value := mapping.get(key, None)) is None:
-		raise TracingError(f"Field '{path}.{key}' is missing.")
-
-	return value
-
-
 def _setAttribute(span: Span, key: str, value: Nullable[AttributeValue]) -> None:
 	"""
-	Attach an attribute to a timespan, unless the value is ``None`` or empty.
+	Set an attribute on a timespan, unless the value is ``None`` or empty.
 
 	:param span:  The timespan.
-	:param key:   The attribute's key.
-	:param value: The attribute's value.
+	:param key:   Name of the attribute.
+	:param value: Optional, the value. Default: ``None``.
 	"""
 	if value is not None and value != "" and value != []:
 		span[key] = value
@@ -146,221 +143,223 @@ def _setAttribute(span: Span, key: str, value: Nullable[AttributeValue]) -> None
 
 def _notBefore(end: Nullable[datetime], begin: datetime) -> Nullable[datetime]:
 	"""
-	Clamp an end time to a begin time.
+	Clamp an end time so it doesn't precede a begin time.
 
-	GitHub reports timestamps in whole seconds and occasionally an end a second before the begin, which a timespan
-	doesn't accept.
-
-	:param end:   The end time, or ``None`` while still running.
+	:param end:   Optional, the end time. Default: ``None``.
 	:param begin: The begin time.
 	:returns:     The end time, but not before the begin time.
 	"""
 	return None if end is None else max(end, begin)
 
 
-def _endTime(mapping: JSONObject, key: str) -> Nullable[datetime]:
+def _fullName(job: Job) -> str:
 	"""
-	Read the end time of a run, job or step, which only counts once its status is ``completed``.
+	Return a job's name as GitHub reports it, with the names of the workflows calling it.
 
-	:param mapping: The run, job or step.
-	:param key:     The field holding the end time.
-	:returns:       The end time, or ``None`` while not completed.
-	"""
-	return parseISO8601Timestamp(mapping.get(key, None)) if mapping.get("status", None) == "completed" else None
-
-
-def _jobTimes(job: JSONObject) -> tuple[Nullable[datetime], Nullable[datetime]]:
-	"""
-	Return the time range a job occupies, from being queued to being completed.
+	The model keeps the parts apart - a job named ``Caller / Build`` is a :class:`~pyTooling.CI.GitHub.Job` called
+	``Build`` below a :class:`~pyTooling.CI.GitHub.Workflow` called ``Caller`` - while the attribute names the task the
+	way the service does.
 
 	:param job: The job.
-	:returns:   The time the job was created (or started), and the time it completed or ``None`` while not completed.
+	:returns:   The job's name, prefixed by the workflows calling it.
 	"""
-	begin = parseISO8601Timestamp(job.get("created_at", None)) or parseISO8601Timestamp(job.get("started_at", None))
-	return begin, _endTime(job, "completed_at")
+	callers = []
+	element = job.Parent
+	while element is not None and not isinstance(element, Pipeline):
+		# a matrix is walked through rather than named: its name is the one the job already carries
+		if isinstance(element, Workflow):
+			callers.append(element.Name)
+
+		element = element.Parent
+
+	return " / ".join([*reversed(callers), str(job)])
 
 
-def _groupTimes(group: JSONObject) -> tuple[Nullable[datetime], Nullable[datetime]]:
+def _addStep(step: Step, parent: Span) -> None:
 	"""
-	Return the time range of a group of jobs - from the first job being queued to the last job being completed.
+	Add a step to the timespan of its job.
 
-	:param group: The group, as built by :func:`ConvertWorkflowRun`.
-	:returns:     The begin time, and the end time or ``None`` while a job of the group isn't completed.
+	A step that never started has no timespan - there is nothing to place on a timeline.
+
+	:param step:   The step.
+	:param parent: The timespan of the job containing the step.
 	"""
-	times = [_jobTimes(job) for job in group["jobs"]] + [_groupTimes(subGroup) for subGroup in group["groups"].values()]
-	begins = [begin for begin, _ in times if begin is not None]
-	if len(begins) == 0:
-		return None, None
+	if step.StartedAt is None:
+		return
 
-	begin = min(begins)
-	if any(end is None for _, end in times):
-		return begin, None
+	span = Span(step.Name, step.StartedAt, _notBefore(step.CompletedAt, step.StartedAt), parent=parent)
+	span[SPAN_KIND] = SPAN_KIND_STEP
+	span[TASK_NAME] = step.Name
+	_setAttribute(span, "github.step.number", step.Number)
+	_setAttribute(span, TASK_RUN_RESULT, _result(step.Conclusion))
+	_setAttribute(span, CONCLUSION, None if step.Conclusion is None else step.Conclusion.value)
 
-	return begin, max(max(end for _, end in times), begin)
 
-
-def _addJob(job: JSONObject, parent: Span) -> None:
+def _addJob(job: Job, parent: Span) -> None:
 	"""
 	Add a job to its parent: a timespan for waiting on a runner, a timespan for the job, and one per step.
 
-	:param job:    The job.
-	:param parent: The trace or the timespan of the calling job.
-	"""
-	fullName =   job["name"]
-	name =       fullName.rsplit(" / ", 1)[-1]
-	created =    parseISO8601Timestamp(job.get("created_at", None))
-	started =    parseISO8601Timestamp(job.get("started_at", None))
-	completed =  _endTime(job, "completed_at")
-	conclusion = job.get("conclusion", None)
-	labels =     list(job.get("labels", None) or [])
-	steps =      list(job.get("steps", None) or [])
+	A step may be reported as starting before, or completing after, the job containing it, so the job's timespan is
+	widened to hold its steps - :mod:`pyTooling.Tracing` requires a timespan to lie within its parent.
 
-	# a step may be reported as starting before, or completing after, the job that contains it
-	stepBegins = [begin for step in steps if (begin := parseISO8601Timestamp(step.get("started_at", None))) is not None]
+	:param job:    The job.
+	:param parent: The timespan of the trace, workflow or matrix containing the job.
+	"""
+	created =   job.CreatedAt
+	started =   job.StartedAt
+	completed = job.CompletedAt
+
+	stepBegins = [step.StartedAt for step in job.Steps if step.StartedAt is not None]
 	if len(stepBegins) > 0:
 		started = min(stepBegins) if started is None else min(started, min(stepBegins))
 		if created is not None:
 			created = min(created, started)
 
-		stepEnds = [end for step in steps if (end := _endTime(step, "completed_at")) is not None]
+		stepEnds = [step.CompletedAt for step in job.Steps if step.CompletedAt is not None]
 		if completed is not None and len(stepEnds) > 0:
 			completed = max(completed, max(stepEnds))
 
-	if conclusion == "skipped":
+	fullName = _fullName(job)
+	displayName = str(job)   # a matrix instance carries its dimension values, so two of them are distinguishable
+	if job.Conclusion is Conclusion.Skipped:
 		# A skipped job neither waited for a runner nor ran on one.
-		begin = started or created
-		jobSpan = Span(name, parent=parent) if begin is None else Span(name, begin, _notBefore(completed or begin, begin), parent=parent)
+		begin = started if started is not None else created
+		if begin is None:
+			jobSpan = Span(displayName, parent=parent)
+		else:
+			end = _notBefore(completed if completed is not None else begin, begin)
+			jobSpan = Span(displayName, begin, end, parent=parent)
 	else:
 		if created is not None and (started is None or created < started):
-			queued = Span(f"{name} (queued)", created, _notBefore(started, created), parent=parent)
+			queued = Span(f"{displayName} (queued)", created, _notBefore(started, created), parent=parent)
 			queued[SPAN_KIND] = SPAN_KIND_QUEUED
 			queued[TASK_NAME] = fullName
-			_setAttribute(queued, RUNNER_LABELS, labels)
+			_setAttribute(queued, RUNNER_LABELS, list(job.Labels))
 
 		if started is None:
 			return
 
-		jobSpan = Span(name, started, _notBefore(completed, started), parent=parent)
+		jobSpan = Span(displayName, started, _notBefore(completed, started), parent=parent)
 
 	jobSpan[SPAN_KIND] = SPAN_KIND_JOB
 	jobSpan[TASK_NAME] = fullName
-	_setAttribute(jobSpan, TASK_RUN_ID, None if job.get("id", None) is None else str(job["id"]))
-	_setAttribute(jobSpan, TASK_RUN_URL, job.get("html_url", None))
-	_setAttribute(jobSpan, TASK_RUN_RESULT, _result(conclusion))
-	_setAttribute(jobSpan, CONCLUSION, conclusion)
-	_setAttribute(jobSpan, WORKER_NAME, job.get("runner_name", None))
-	_setAttribute(jobSpan, RUNNER_GROUP, job.get("runner_group_name", None))
-	_setAttribute(jobSpan, RUNNER_LABELS, labels)
+	_setAttribute(jobSpan, TASK_RUN_ID, None if job.ID is None else str(job.ID))
+	_setAttribute(jobSpan, TASK_RUN_URL, None if job.URL is None else str(job.URL))
+	_setAttribute(jobSpan, TASK_RUN_RESULT, _result(job.Conclusion))
+	_setAttribute(jobSpan, CONCLUSION, None if job.Conclusion is None else job.Conclusion.value)
+	_setAttribute(jobSpan, WORKER_NAME, job.RunnerName)
+	_setAttribute(jobSpan, RUNNER_GROUP, job.RunnerGroupName)
+	_setAttribute(jobSpan, RUNNER_LABELS, list(job.Labels))
+	if isinstance(job, MatrixJob) and len(job.DimensionValues) > 0:
+		jobSpan[MATRIX_DIMENSIONS] = list(job.DimensionValues)
 
-	for position, step in enumerate(steps):
-		if (stepBegin := parseISO8601Timestamp(step.get("started_at", None))) is None:
-			continue
-
-		stepName = _field(step, "name", f"{fullName}.steps[{position}]")
-		stepSpan = Span(stepName, stepBegin, _notBefore(_endTime(step, "completed_at"), stepBegin), parent=jobSpan)
-		stepSpan[SPAN_KIND] = SPAN_KIND_STEP
-		stepSpan[TASK_NAME] = stepName
-		_setAttribute(stepSpan, "github.step.number", step.get("number", None))
-		_setAttribute(stepSpan, TASK_RUN_RESULT, _result(step.get("conclusion", None)))
-		_setAttribute(stepSpan, CONCLUSION, step.get("conclusion", None))
+	for step in job.Steps:
+		_addStep(step, jobSpan)
 
 
-def _addGroup(group: JSONObject, parent: Span) -> None:
+def _addGroup(group: JobGroup, parent: Span) -> None:
 	"""
-	Add the jobs and called workflows of a group to its parent, ordered by the time they were queued.
+	Add the jobs, matrices and called workflows of a group to its parent, ordered by the time they were queued.
 
-	:param group:  The group, as built by :func:`ConvertWorkflowRun`.
-	:param parent: The trace or the timespan of the calling job.
+	:param group:  The group - a trace's pipeline, a called workflow or a matrix.
+	:param parent: The timespan the group's contents are added to.
 	"""
-	items: list[tuple[Nullable[datetime], bool, str, JSONObject]] = []
-	for name, subGroup in group["groups"].items():
-		items.append((_groupTimes(subGroup)[0], True, name, subGroup))
-	for job in group["jobs"]:
-		items.append((_jobTimes(job)[0], False, "", job))
+	items: list[Base] = list(group.Jobs)
+	if isinstance(group, Workflow):
+		items.extend(group.Matrices.values())
+		items.extend(group.Workflows.values())
 
-	# stable sort: timespans without a begin time keep their order at the end
-	items.sort(key=lambda item: (item[0] is None, item[0] or datetime.min))
+	# stable sort: elements without a begin time keep their order at the end
+	items.sort(key=lambda item: (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min))
 
-	for begin, isGroup, name, item in items:
-		if not isGroup:
+	for item in items:
+		if isinstance(item, Job):
 			_addJob(item, parent)
 			continue
 
-		_, end = _groupTimes(item)
-		groupSpan = Span(name, parent=parent) if begin is None else Span(name, begin, end, parent=parent)
-		groupSpan[SPAN_KIND] = SPAN_KIND_WORKFLOW
-		groupSpan[TASK_NAME] = name
-		_addGroup(item, groupSpan)
+		if item.CreatedAt is None:
+			span = Span(item.Name, parent=parent)
+		else:
+			span = Span(item.Name, item.CreatedAt, item.CompletedAt, parent=parent)
+
+		span[SPAN_KIND] = SPAN_KIND_MATRIX if isinstance(item, Matrix) else SPAN_KIND_WORKFLOW
+		span[TASK_NAME] = item.Name
+		_addGroup(item, span)
 
 
 @export
-def ConvertWorkflowRun(run: JSONObject, jobs: Iterable[JSONObject]) -> Trace:
+def ConvertPipeline(pipeline: Pipeline) -> Trace:
 	"""
-	Convert a GitHub Actions workflow run and its jobs, as the GitHub REST API returns them, into a trace.
+	Convert a workflow run, as :mod:`pyTooling.CI.GitHub` models it, into a trace.
 
-	* The run becomes the trace. It begins when the run started and ends at its last update once it is completed,
-	  widened where a job was queued earlier or completed later than the run reports.
-	* A job becomes a timespan from its start to its completion, preceded by a timespan named ``<job> (queued)`` from
-	  its creation to its start, if it waited. A skipped job has no waiting timespan, and a job that didn't start yet
-	  only a running waiting timespan.
+	* The run becomes the trace, widened where a job was queued earlier or completed later than the run reports.
+	* A called workflow and a matrix become a timespan holding the jobs below them.
+	* A job becomes a timespan from its start to its completion, preceded by ``<job> (queued)`` from its creation to
+	  its start, if it waited. A skipped job has no waiting timespan, and a job that hasn't started yet only a running
+	  waiting timespan.
 	* A step that started becomes a sub-span of its job.
-	* Jobs named ``Caller / Job`` are grouped below a timespan ``Caller``, which spans all of them.
 	* Every timespan is classified by :data:`~pyTooling.Tracing.CI.SPAN_KIND` and carries the OpenTelemetry CI/CD
 	  attributes, GitHub's conclusion (:data:`CONCLUSION`), and for jobs the runner's labels and group.
 
-	:param run:           The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
-	:param jobs:          The run's jobs, as listed by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs``.
-	:returns:             The workflow run as a trace.
-	:raises TypeError:    If parameter 'run' is not of type :class:`dict`.
-	:raises TypeError:    If a job is not of type :class:`dict`.
-	:raises TracingError: If a mandatory field of the run, a job or a step is missing.
-	:raises TracingError: If a timestamp isn't an ISO 8601 timestamp.
+	:param pipeline:   The workflow run.
+	:returns:          The workflow run as a trace.
+	:raises TypeError: If parameter 'pipeline' is not of type :class:`~pyTooling.CI.GitHub.Pipeline`.
 	"""
-	if not isinstance(run, dict):
-		ex = TypeError("Parameter 'run' is not of type 'dict'.")
-		ex.add_note(f"Got type '{getFullyQualifiedName(run)}'.")
+	if not isinstance(pipeline, Pipeline):
+		ex = TypeError("Parameter 'pipeline' is not of type 'Pipeline'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(pipeline)}'.")
 		raise ex
 
-	name =      _field(run, "name", "run")
-	beginTime = parseISO8601Timestamp(run.get("run_started_at", None)) \
-	            or parseISO8601Timestamp(_field(run, "created_at", "run"))
-	endTime =   _notBefore(_endTime(run, "updated_at"), beginTime)
-
-	root: JSONObject = {"groups": {}, "jobs": []}
-	for position, job in enumerate(jobs):
-		if not isinstance(job, dict):
-			ex = TypeError(f"Job {position} is not of type 'dict'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(job)}'.")
-			raise ex
-
-		group = root
-		for caller in _field(job, "name", f"jobs[{position}]").split(" / ")[:-1]:
-			group = group["groups"].setdefault(caller, {"groups": {}, "jobs": []})
-		group["jobs"].append(job)
+	beginTime = pipeline.StartedAt if pipeline.StartedAt is not None else pipeline.CreatedAt
+	endTime =   _notBefore(pipeline.CompletedAt, beginTime) if beginTime is not None else pipeline.CompletedAt
 
 	# a job may be queued before the run reports itself started, and may complete after the run's last update
-	jobsBegin, jobsEnd = _groupTimes(root)
-	if jobsBegin is not None:
+	jobTimes = [job.CreatedAt for job in pipeline.IterateJobs() if job.CreatedAt is not None]
+	if len(jobTimes) > 0:
+		jobsBegin = min(jobTimes)
 		beginTime = jobsBegin if beginTime is None else min(beginTime, jobsBegin)
+
 	if endTime is not None:
-		endTime = endTime if jobsEnd is None else max(endTime, jobsEnd)
+		jobEnds = [job.CompletedAt for job in pipeline.IterateJobs() if job.CompletedAt is not None]
+		if len(jobEnds) > 0:
+			endTime = max(endTime, max(jobEnds))
 
-	trace = Trace(name, beginTime, endTime)
-	trace[SPAN_KIND] =       SPAN_KIND_PIPELINE
-	trace[PIPELINE_NAME] =   name
-	trace[PIPELINE_RUN_ID] = str(_field(run, "id", "run"))
-	_setAttribute(trace, PIPELINE_RUN_URL, run.get("html_url", None))
-	_setAttribute(trace, PIPELINE_RESULT, _result(run.get("conclusion", None)))
-	_setAttribute(trace, CONCLUSION, run.get("conclusion", None))
-	_setAttribute(trace, "github.run.attempt", run.get("run_attempt", None))
-	_setAttribute(trace, "github.run.number", run.get("run_number", None))
-	_setAttribute(trace, "github.event", run.get("event", None))
-	_setAttribute(trace, "vcs.ref.head.name", run.get("head_branch", None))
-	_setAttribute(trace, "vcs.ref.head.revision", run.get("head_sha", None))
+	trace = Trace(pipeline.Name, beginTime, endTime)
+	trace[SPAN_KIND] =     SPAN_KIND_PIPELINE
+	trace[PIPELINE_NAME] = pipeline.Name
+	_setAttribute(trace, PIPELINE_RUN_ID, None if pipeline.ID is None else str(pipeline.ID))
+	_setAttribute(trace, PIPELINE_RUN_URL, None if pipeline.URL is None else str(pipeline.URL))
+	_setAttribute(trace, PIPELINE_RESULT, _result(pipeline.Conclusion))
+	_setAttribute(trace, CONCLUSION, None if pipeline.Conclusion is None else pipeline.Conclusion.value)
+	_setAttribute(trace, "github.run.attempt", pipeline.RunAttempt)
+	_setAttribute(trace, "github.run.number", pipeline.RunNumber)
+	_setAttribute(trace, "github.workflow.path", pipeline.Path)
+	_setAttribute(trace, "github.event", None if pipeline.Event is None else pipeline.Event.value)
+	_setAttribute(trace, "vcs.ref.head.name", pipeline.GitReference)
+	_setAttribute(trace, "vcs.ref.head.revision", pipeline.SHA)
 
-	_addGroup(root, trace)
+	_addGroup(pipeline, trace)
 
 	return trace
+
+
+@export
+def ConvertWorkflowRun(run: JSONObject, jobs: Nullable[Iterable[JSONObject]] = None) -> Trace:
+	"""
+	Convert a GitHub Actions workflow run and its jobs, as the GitHub REST API returns them, into a trace.
+
+	The payloads are read into a :class:`~pyTooling.CI.GitHub.Pipeline` first, so the tree - a called workflow, a
+	matrix, the jobs and their steps - is reconstructed by the model rather than here, and :func:`ConvertPipeline`
+	turns it into timespans.
+
+	:param run:          The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
+	:param jobs:         Optional, the run's jobs, as listed by ``GET .../actions/runs/{run_id}/jobs``.
+	:returns:            The workflow run as a trace.
+	:raises TypeError:   If parameter 'run' is not of type :class:`dict`.
+	:raises GitHubError: If a mandatory field is missing, or a field holds a value GitHub doesn't document.
+	"""
+	return ConvertPipeline(Pipeline.FromJSON(run, jobs))
+
 
 
 @export

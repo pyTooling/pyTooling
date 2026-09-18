@@ -216,7 +216,12 @@ A request failing transiently - HTTP 429, 500, 502, 503 or 504, a timeout, or an
 or lasts as long as a ``Retry-After`` header demands, up to a minute. HTTP 401, 403 and 404 fail at once.
 
 :func:`~pyTooling.Tracing.CI.GitHub.ConvertWorkflowRun` does the conversion alone, for a run and jobs that were
-fetched another way. The run becomes the trace, and every timespan below it is marked by the attribute
+fetched another way. It reads both payloads into a :class:`~pyTooling.CI.GitHub.Pipeline` - see :ref:`CI/GitHub` - and
+hands that to :func:`~pyTooling.Tracing.CI.GitHub.ConvertPipeline`, which is the entry point when the model was built
+elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
+:exc:`~pyTooling.CI.GitHub.GitHubError`.
+
+The run becomes the trace, and every timespan below it is marked by the attribute
 :data:`~pyTooling.Tracing.CI.SPAN_KIND`:
 
 +--------------+------------------------------------------------------------------------------------------------------+
@@ -225,6 +230,8 @@ fetched another way. The run becomes the trace, and every timespan below it is m
 | ``pipeline`` | The workflow run, from its start to its last update once it completed.                               |
 +--------------+------------------------------------------------------------------------------------------------------+
 | ``workflow`` | A called workflow: the jobs named ``Caller / Job`` are grouped below a timespan ``Caller``.          |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``matrix``   | A matrix: the jobs named ``Job (ubuntu-26.04, 3.14)`` are grouped below a timespan ``Job``.          |
 +--------------+------------------------------------------------------------------------------------------------------+
 | ``queued``   | ``<job> (queued)``, the time a job waited for a runner, in front of the job.                         |
 +--------------+------------------------------------------------------------------------------------------------------+
@@ -236,7 +243,11 @@ fetched another way. The run becomes the trace, and every timespan below it is m
 Every timespan also carries the attributes of OpenTelemetry's semantic conventions for CI/CD - ``cicd.pipeline.name``,
 ``cicd.pipeline.task.name``, ``cicd.pipeline.task.run.result`` and more - with GitHub's conclusions mapped to their
 results, and GitHub's own conclusion as ``github.conclusion``. A job's timespan names its runner and the labels it was
-requested by, so a renderer can group waiting times per operating system.
+requested by, so a renderer can group waiting times per operating system, and a matrix instance additionally lists the
+values it was produced for in ``github.matrix.dimensions``.
+
+A task is named the way GitHub reports it - ``Caller / Build (ubuntu-26.04)`` - while the timespan itself is named by
+the part the model holds, so a timespan reads in the context its parents already give.
 
 GitHub reports timestamps in whole seconds. A step shorter than a second lasts zero seconds, and an end reported a
 second before its begin is moved to the begin.

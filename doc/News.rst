@@ -214,9 +214,11 @@ Version 10.x (2026)
        timespans measured elsewhere, e.g. by a CI service. Without them, a timespan is timed by its
        ``with``-statement as before.
      * :mod:`pyTooling.Tracing.CI.GitHub` reads a **GitHub Actions workflow run** into a trace: jobs, their steps,
-       the time each job waited for a runner, and called workflows as groups. The timespans carry OpenTelemetry's
-       CI/CD attributes, so a rendering or a query doesn't depend on the CI service. A transiently failing request
-       is tried again.
+       the time each job waited for a runner, and called workflows and matrices as groups. The timespans carry
+       OpenTelemetry's CI/CD attributes, so a rendering or a query doesn't depend on the CI service. A transiently
+       failing request is tried again.
+     * The run is read by :mod:`pyTooling.CI.GitHub`, so reconstructing the tree is the model's job and
+       :func:`~pyTooling.Tracing.CI.GitHub.ConvertPipeline` converts a model that was built elsewhere.
 
    * :mod:`pyTooling.Packaging`
 

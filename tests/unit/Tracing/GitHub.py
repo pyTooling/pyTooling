@@ -37,6 +37,8 @@ from typing                      import Any, Optional as Nullable
 from unittest                    import mock
 from urllib.error                import HTTPError, URLError
 
+from pyTooling.CI.GitHub         import GitHubError
+from pyTooling.Exceptions        import ToolingException
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import SPAN_KIND, parseISO8601Timestamp
 from pyTooling.Tracing.CI.GitHub import ConvertWorkflowRun, WorkflowRunReader
@@ -56,7 +58,8 @@ def _time(seconds: int) -> str:
 	:param seconds: Seconds after 2026-09-15T06:35:00Z.
 	:returns:       The timestamp as GitHub formats it.
 	"""
-	return (datetime(2026, 9, 15, 6, 35, 0, tzinfo=timezone.utc) + timedelta(seconds=seconds)).strftime("%Y-%m-%dT%H:%M:%SZ")
+	timestamp = datetime(2026, 9, 15, 6, 35, 0, tzinfo=timezone.utc) + timedelta(seconds=seconds)
+	return timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _run(**fields: Any) -> dict[str, Any]:
@@ -75,7 +78,13 @@ def _run(**fields: Any) -> dict[str, Any]:
 	return run
 
 
-def _job(name: str, created: Nullable[int], started: Nullable[int], completed: Nullable[int], **fields: Any) -> dict[str, Any]:
+def _job(
+	name: str,
+	created: Nullable[int],
+	started: Nullable[int],
+	completed: Nullable[int],
+	**fields: Any
+) -> dict[str, Any]:
 	"""
 	Build a job.
 
@@ -89,8 +98,10 @@ def _job(name: str, created: Nullable[int], started: Nullable[int], completed: N
 	job = {
 		"id": abs(hash(name)) % 1_000_000, "name": name, "status": "completed" if completed is not None else "in_progress",
 		"conclusion": "success" if completed is not None else None,
-		"created_at": None if created is None else _time(created), "started_at": None if started is None else _time(started),
-		"completed_at": None if completed is None else _time(completed), "labels": ["ubuntu-26.04"],
+		"created_at": None if created is None else _time(created),
+		"started_at": None if started is None else _time(started),
+		"completed_at": None if completed is None else _time(completed),
+		"labels": ["ubuntu-26.04"],
 		"runner_name": "GitHub Actions 1000184490", "runner_group_name": "GitHub Actions",
 		"html_url": f"https://github.com/owner/repo/actions/runs/4711/job/{name}", "steps": [],
 	}
@@ -213,9 +224,12 @@ class Conversion(Testcase):
 
 	def test_Steps(self) -> None:
 		steps = [
-			{"name": "Set up job", "number": 1, "status": "completed", "conclusion": "success", "started_at": _time(5), "completed_at": _time(6)},
-			{"name": "Compile", "number": 2, "status": "completed", "conclusion": "failure", "started_at": _time(6), "completed_at": _time(9)},
-			{"name": "Upload", "number": 3, "status": "completed", "conclusion": "skipped", "started_at": None, "completed_at": None},
+			{"name": "Set up job", "number": 1, "status": "completed", "conclusion": "success",
+			 "started_at": _time(5), "completed_at": _time(6)},
+			{"name": "Compile", "number": 2, "status": "completed", "conclusion": "failure",
+			 "started_at": _time(6), "completed_at": _time(9)},
+			{"name": "Upload", "number": 3, "status": "completed", "conclusion": "skipped",
+			 "started_at": None, "completed_at": None},
 		]
 		trace = ConvertWorkflowRun(_run(), [_job("Build", 4, 5, 10, steps=steps)])
 		job = _children(trace)["Build"]
@@ -238,11 +252,16 @@ class Conversion(Testcase):
 				self.assertEqual(conclusion, children[conclusion]["github.conclusion"])
 
 	def test_ReusableWorkflow(self) -> None:
-		jobs = [_job("Prepare", 0, 2, 8), _job("UnitTesting / Linux", 10, 12, 60), _job("UnitTesting / Windows", 10, 30, 90)]
+		jobs = [
+			_job("Prepare", 0, 2, 8),
+			_job("UnitTesting / Linux", 10, 12, 60),
+			_job("UnitTesting / Windows", 10, 30, 90),
+		]
 		trace = ConvertWorkflowRun(_run(), jobs)
 		children = _children(trace)
 
-		self.assertListEqual(["Prepare (queued)", "Prepare", "UnitTesting"], [span.Name for span in trace.IterateSubSpans()])
+		spanNames = [span.Name for span in trace.IterateSubSpans()]
+		self.assertListEqual(["Prepare (queued)", "Prepare", "UnitTesting"], spanNames)
 
 		group = children["UnitTesting"]
 		self.assertEqual("workflow", group[SPAN_KIND])
@@ -268,7 +287,8 @@ class Conversion(Testcase):
 
 	def test_Order(self) -> None:
 		"""Jobs and called workflows are ordered by the time they were queued, not by the API's order."""
-		trace = ConvertWorkflowRun(_run(), [_job("Late", 50, 50, 60), _job("Group / Early", 5, 5, 9), _job("Middle", 20, 20, 30)])
+		jobs = [_job("Late", 50, 50, 60), _job("Group / Early", 5, 5, 9), _job("Middle", 20, 20, 30)]
+		trace = ConvertWorkflowRun(_run(), jobs)
 
 		self.assertListEqual(["Group", "Middle", "Late"], [span.Name for span in trace.IterateSubSpans()])
 
@@ -285,13 +305,22 @@ class Conversion(Testcase):
 		self.assertEqual("Parameter 'run' is not of type 'dict'.", str(context.exception))
 
 	def test_MissingField(self) -> None:
+		"""Reading the payload is the model's job, so a malformed one raises its exception, not a tracing one."""
 		job = _job("Build", 1, 2, 3)
 		del job["name"]
 
-		with self.assertRaises(TracingError) as context:
+		with self.assertRaises(GitHubError) as context:
 			_ = ConvertWorkflowRun(_run(), [job])
 
 		self.assertEqual("Field 'jobs[0].name' is missing.", str(context.exception))
+
+	def test_MissingFieldIsStillAToolingException(self) -> None:
+		"""Both exceptions derive from it, so a consumer catching the base is unaffected by the change."""
+		job = _job("Build", 1, 2, 3)
+		del job["name"]
+
+		with self.assertRaises(ToolingException):
+			_ = ConvertWorkflowRun(_run(), [job])
 
 
 class _Response:
@@ -557,7 +586,8 @@ class Reader(Testcase):
 					_ = WorkflowRunReader(repository)
 
 		self.assertEqual("owner/repo", WorkflowRunReader("owner/repo").Repository)
-		self.assertEqual("https://ghe.example.com/api/v3", WorkflowRunReader("owner/repo", apiURL="https://ghe.example.com/api/v3/").APIURL)
+		reader = WorkflowRunReader("owner/repo", apiURL="https://ghe.example.com/api/v3/")
+		self.assertEqual("https://ghe.example.com/api/v3", reader.APIURL)
 
 	def test_RunID(self) -> None:
 		reader = WorkflowRunReader("owner/repo")
@@ -657,3 +687,51 @@ class Containment(Testcase):
 
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:10Z"), trace.StartTime)
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:05:00Z"), trace.StopTime)
+
+
+class Matrices(Testcase):
+	"""A matrix becomes a timespan of its own, which the model reconstructs from the jobs' names."""
+
+	def test_MatrixBecomesASpan(self) -> None:
+		trace = ConvertWorkflowRun(_run(), [
+			_job("Unit Tests (ubuntu-26.04, 3.14)", 10, 12, 60),
+			_job("Unit Tests (windows-2025, 3.14)", 10, 12, 90),
+		])
+
+		matrix = _children(trace)["Unit Tests"]
+
+		self.assertEqual("matrix", matrix[SPAN_KIND])
+		self.assertEqual(2, len([name for name in _children(matrix) if not name.endswith("(queued)")]))
+
+	def test_InstancesAreNamedByTheirDimensions(self) -> None:
+		trace = ConvertWorkflowRun(_run(), [
+			_job("Unit Tests (ubuntu-26.04, 3.14)", 10, 12, 60),
+			_job("Unit Tests (windows-2025, 3.14)", 10, 12, 90),
+		])
+
+		names = set(_children(_children(trace)["Unit Tests"]))
+
+		self.assertIn("Unit Tests (ubuntu-26.04, 3.14)", names)
+		self.assertIn("Unit Tests (windows-2025, 3.14)", names)
+
+	def test_InstanceCarriesItsDimensionsAsAnAttribute(self) -> None:
+		trace = ConvertWorkflowRun(_run(), [_job("Unit Tests (ubuntu-26.04, 3.14)", 10, 12, 60)])
+		instance = _children(_children(trace)["Unit Tests"])["Unit Tests (ubuntu-26.04, 3.14)"]
+
+		self.assertListEqual(["ubuntu-26.04", "3.14"], instance["github.matrix.dimensions"])
+
+	def test_TaskNameKeepsTheCallerPrefix(self) -> None:
+		trace = ConvertWorkflowRun(_run(), [_job("UnitTesting / Unit Tests (ubuntu-26.04)", 10, 12, 60)])
+		matrix = _children(_children(trace)["UnitTesting"])["Unit Tests"]
+		instance = _children(matrix)["Unit Tests (ubuntu-26.04)"]
+
+		self.assertEqual("UnitTesting / Unit Tests (ubuntu-26.04)", instance["cicd.pipeline.task.name"])
+
+	def test_AMatrixInsideACalledWorkflow(self) -> None:
+		trace = ConvertWorkflowRun(_run(), [_job("Docs / Sphinx (html)", 10, 12, 60)])
+
+		workflow = _children(trace)["Docs"]
+		self.assertEqual("workflow", workflow[SPAN_KIND])
+
+		matrix = _children(workflow)["Sphinx"]
+		self.assertEqual("matrix", matrix[SPAN_KIND])
