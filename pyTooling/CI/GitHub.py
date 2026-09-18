@@ -65,7 +65,7 @@ from pyTooling.Common      import __version__, getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.GenericPath.URL import URL
-from pyTooling.MetaClasses import ExtendedType, abstractclass
+from pyTooling.MetaClasses import ExtendedType, ThisClass, abstractclass
 
 
 @export
@@ -841,6 +841,8 @@ class Workflow(JobGroup):
 	   file and resolving its ``uses:`` entries, which is a different source than this model reads. See
 	   `issue #408 <https://github.com/pyTooling/pyTooling/issues/408>`__.
 	"""
+
+	_PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass  #: A workflow is contained in a workflow.
 
 	_workflows: dict[str, Workflow]  #: Workflows called by this workflow, by name.
 	_matrices:  dict[str, Matrix]    #: Matrices of this workflow, by the name their jobs share.
@@ -1757,8 +1759,3 @@ class Step(Base):
 
 		return cls(name, number, status, conclusion, startedAt, completedAt, parent=parent)
 
-
-# A workflow's parent is a workflow, which no class body can name, so this one assignment stays outside. Every other
-# class declares its own, above.
-# TODO: move into the class body as 'Workflow._PARENT_TYPE = Self' once pyTooling/pyTooling#410 has landed.
-Workflow._PARENT_TYPE = Workflow
