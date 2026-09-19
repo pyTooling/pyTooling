@@ -545,3 +545,31 @@ class URL:
 			query=self._query,
 			fragment=self._fragment
 		)
+
+	def WithoutTrailingSlash(self) -> URL:
+		"""
+		Returns a URL object whose path doesn't end in a slash.
+
+		A trailing slash is an empty last path element, so ``https://example.org/api/v3/`` and
+		``https://example.org/api/v3`` differ although they usually address the same resource. A URL that is composed
+		with a path below it wants the latter, or the composition yields a double slash.
+
+		:returns: New URL object without a trailing slash, or this URL, if its path has none.
+
+		.. seealso::
+
+		   :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingSlash`
+		      |rarr| What it does to the path, and what it leaves alone.
+		"""
+		if (path := self._path.WithoutTrailingSlash()) is self._path:
+			return self
+
+		return self.__class__(
+			scheme=self._scheme,
+			path=path,
+			host=self._host,
+			user=self._user,
+			password=self._password,
+			query=self._query,
+			fragment=self._fragment
+		)

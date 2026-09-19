@@ -144,20 +144,36 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		                    once. Default: ``3``.
 		:param retryDelay:  Optional, pause in seconds before a request is tried again the first time. The pause doubles
 		                    with every further attempt. Default: ``2.0``.
-		:raises TypeError:  If parameter 'apiURL' is neither a :class:`str` nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises ValueError: If parameter 'apiURL' is ``None``.
+		:raises TypeError:  If parameter 'apiURL' is neither of type :class:`str` nor of type
+		                    :class:`~pyTooling.GenericPath.URL.URL`.
 		:raises ValueError: If parameter 'apiURL' names no scheme or no host.
 		:raises TypeError:  If parameter 'token' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'headers' is not of type :class:`dict`.
+		:raises ValueError: If parameter 'timeout' is ``None``.
 		:raises TypeError:  If parameter 'timeout' is not a number.
 		:raises ValueError: If parameter 'timeout' isn't positive.
+		:raises ValueError: If parameter 'retries' is ``None``.
 		:raises TypeError:  If parameter 'retries' is not of type :class:`int`.
 		:raises ValueError: If parameter 'retries' is negative.
+		:raises ValueError: If parameter 'retryDelay' is ``None``.
 		:raises TypeError:  If parameter 'retryDelay' is not a number.
 		:raises ValueError: If parameter 'retryDelay' is negative.
 		"""
-		if not isinstance(apiURL, (str, URL)):
-			ex = TypeError("Parameter 'apiURL' is neither of type 'str' nor 'URL'.")
+		if apiURL is None:
+			raise ValueError("Parameter 'apiURL' is None.")
+		elif isinstance(apiURL, str):
+			parsedURL = URL.Parse(apiURL).WithoutTrailingSlash()
+		elif isinstance(apiURL, URL):
+			parsedURL = apiURL.WithoutTrailingSlash()
+		else:
+			ex = TypeError("Parameter 'apiURL' is neither of type 'str' nor of type 'URL'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(apiURL)}'.")
+			raise ex
+
+		if parsedURL.Scheme is None or parsedURL.Host is None:
+			ex = ValueError("Parameter 'apiURL' names no scheme or no host.")
+			ex.add_note(f"Got value '{apiURL}'.")
 			raise ex
 
 		if token is not None and not isinstance(token, str):
@@ -170,7 +186,9 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(headers)}'.")
 			raise ex
 
-		if isinstance(timeout, bool) or not isinstance(timeout, (int, float)):
+		if timeout is None:
+			raise ValueError("Parameter 'timeout' is None.")
+		elif isinstance(timeout, bool) or not isinstance(timeout, (int, float)):
 			ex = TypeError("Parameter 'timeout' is not a number.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(timeout)}'.")
 			raise ex
@@ -179,7 +197,9 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{timeout}'.")
 			raise ex
 
-		if isinstance(retries, bool) or not isinstance(retries, int):
+		if retries is None:
+			raise ValueError("Parameter 'retries' is None.")
+		elif isinstance(retries, bool) or not isinstance(retries, int):
 			ex = TypeError("Parameter 'retries' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(retries)}'.")
 			raise ex
@@ -188,19 +208,15 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{retries}'.")
 			raise ex
 
-		if isinstance(retryDelay, bool) or not isinstance(retryDelay, (int, float)):
+		if retryDelay is None:
+			raise ValueError("Parameter 'retryDelay' is None.")
+		elif isinstance(retryDelay, bool) or not isinstance(retryDelay, (int, float)):
 			ex = TypeError("Parameter 'retryDelay' is not a number.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(retryDelay)}'.")
 			raise ex
 		elif retryDelay < 0:
 			ex = ValueError("Parameter 'retryDelay' is negative.")
 			ex.add_note(f"Got value '{retryDelay}'.")
-			raise ex
-
-		parsedURL = URL.Parse(str(apiURL).rstrip("/"))
-		if parsedURL.Scheme is None or parsedURL.Host is None:
-			ex = ValueError("Parameter 'apiURL' names no scheme or no host.")
-			ex.add_note(f"Got value '{apiURL}'.")
 			raise ex
 
 		self._apiURL =     parsedURL
@@ -266,6 +282,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param resourcePath: Path of the resource below :attr:`APIURL`, e.g. ``'repos/owner/name'``.
 		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
 		:returns:            The JSON object, and the path of the next page, or ``None`` if the answer names none.
+		:raises ValueError:  If parameter 'resourcePath' is ``None``.
 		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer isn't a JSON object.
@@ -292,11 +309,16 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param document:     The JSON object to send.
 		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
 		:returns:            The answer's JSON object, or ``None`` if the API answered with no body.
+		:raises ValueError:  If parameter 'resourcePath' is ``None``.
 		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises ValueError:  If parameter 'document' is ``None``.
 		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
 		"""
+		if document is None:
+			raise ValueError("Parameter 'document' is None.")
+
 		return self._Request(HTTPMethod.POST, resourcePath, document, headers, idempotent=False)[0]
 
 	def PutJSONObject(
@@ -312,11 +334,16 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param document:     The JSON object to send.
 		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
 		:returns:            The answer's JSON object, or ``None`` if the API answered with no body.
+		:raises ValueError:  If parameter 'resourcePath' is ``None``.
 		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises ValueError:  If parameter 'document' is ``None``.
 		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
 		"""
+		if document is None:
+			raise ValueError("Parameter 'document' is None.")
+
 		return self._Request(HTTPMethod.PUT, resourcePath, document, headers)[0]
 
 	def PatchJSONObject(
@@ -335,11 +362,16 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param document:     The JSON object holding the fields to change.
 		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
 		:returns:            The answer's JSON object, or ``None`` if the API answered with no body.
+		:raises ValueError:  If parameter 'resourcePath' is ``None``.
 		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises ValueError:  If parameter 'document' is ``None``.
 		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
 		"""
+		if document is None:
+			raise ValueError("Parameter 'document' is None.")
+
 		return self._Request(HTTPMethod.PATCH, resourcePath, document, headers, idempotent=False)[0]
 
 	def DeleteResource(self, resourcePath: str, headers: Nullable[dict[str, str]] = None) -> Nullable[JSONObject]:
@@ -350,6 +382,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
 		:returns:            The answer's JSON object, or ``None`` if the API answered with no body, which is what a
 		                     deletion usually answers with.
+		:raises ValueError:  If parameter 'resourcePath' is ``None``.
 		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
@@ -375,6 +408,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		                     is what makes trying it again safe. Default: ``True``.
 		:returns:            The answer's JSON object or ``None`` if it had no body, and the path of the next page or
 		                     ``None`` if the answer names none.
+		:raises ValueError:  If parameter 'resourcePath' is ``None``.
 		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
 		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
@@ -384,7 +418,9 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises RESTError:   If the next page's URL doesn't belong to this API. |br|
 		                     The note says that the token is only sent to the API itself.
 		"""
-		if not isinstance(resourcePath, str):
+		if resourcePath is None:
+			raise ValueError("Parameter 'resourcePath' is None.")
+		elif not isinstance(resourcePath, str):
 			ex = TypeError("Parameter 'resourcePath' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(resourcePath)}'.")
 			raise ex

@@ -74,6 +74,11 @@ Version 10.x (2026)
      * The sentinel is an empty class rather than a bare object, so a variable annotated as a :class:`type` still
        type-checks.
 
+   * :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingSlash` returns a path that doesn't end in the element
+     delimiter, and :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` a URL whose path doesn't. A trailing
+     delimiter is an empty last element, so ``/api/v3/`` and ``/api/v3`` are different paths although they usually
+     name the same thing - and a URL something is appended to wants the latter. A path with none answers with itself.
+
    * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
      :exc:`~pyTooling.GenericPath.URL.URLError` for it.
 
