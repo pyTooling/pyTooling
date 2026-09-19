@@ -550,7 +550,8 @@ class URL:
 		"""
 		Returns a URL object whose path doesn't end in a slash.
 
-		A trailing slash is an empty last path element, so ``https://example.org/api/v3/`` and
+		A URL's element delimiter is the slash, so this is :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
+		applied to the URL's path. A trailing slash is an empty last element, so ``https://example.org/api/v3/`` and
 		``https://example.org/api/v3`` differ although they usually address the same resource. A URL that is composed
 		with a path below it wants the latter, or the composition yields a double slash.
 
@@ -558,10 +559,10 @@ class URL:
 
 		.. seealso::
 
-		   :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingSlash`
+		   :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
 		      |rarr| What it does to the path, and what it leaves alone.
 		"""
-		if (path := self._path.WithoutTrailingSlash()) is self._path:
+		if (path := self._path.WithoutTrailingDelimiter()) is self._path:
 			return self
 
 		return self.__class__(
