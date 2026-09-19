@@ -207,6 +207,8 @@ Version 10.x (2026)
      * A trace **renders as a Gantt chart**: :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans
        in rows independently of a drawing library, and :mod:`pyTooling.Tracing.Render.Matplotlib` writes the chart as
        SVG, PNG or PDF. matplotlib is installed by the new extra ``pyTooling[diagram]``.
+     * A Gantt chart written as SVG can be **collapsible**: a click on a called workflow or a job hides or shows the
+       rows below it.
 
    * :mod:`pyTooling.Packaging`
 
