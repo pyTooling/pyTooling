@@ -215,18 +215,20 @@ A request failing transiently - HTTP 429, 500, 502, 503 or 504, a timeout, or an
 ``retries`` times (default: 3), after a pause of ``retryDelay`` seconds (default: 2), which doubles with every attempt
 or lasts as long as a ``Retry-After`` header demands, up to a minute. HTTP 401, 403 and 404 fail at once.
 
-:meth:`WorkflowRunReader.ConvertWorkflowRun <pyTooling.Tracing.CI.GitHub.WorkflowRunReader.ConvertWorkflowRun>` does
-the conversion alone, for a run and jobs that were fetched another way. It is a class method, so converting needs no
-reader and therefore no token. It reads both payloads into a :class:`~pyTooling.CI.GitHub.Pipeline` - see
-:ref:`CI/GitHub` - and hands that to
-:meth:`~pyTooling.Tracing.CI.GitHub.WorkflowRunReader.ConvertPipeline`, which is the entry point when the model was
-built elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
+:meth:`WorkflowRunTrace.FromJSON <pyTooling.Tracing.CI.GitHub.WorkflowRunTrace.FromJSON>` does the conversion alone,
+for a run and jobs that were fetched another way. It is a class method, so converting needs no reader and therefore
+no token. It reads both payloads into a :class:`~pyTooling.CI.GitHub.Pipeline` - see :ref:`CI/GitHub` - and hands
+that to :meth:`~pyTooling.Tracing.CI.GitHub.WorkflowRunTrace.FromPipeline`, which is the entry point when the model
+was built elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
 :exc:`~pyTooling.CI.GitHub.GitHubError` - as does an answer the reader itself can't read, so everything GitHub says
 that can't be made sense of is one exception type. A request that *fails* is a
 :exc:`~pyTooling.REST.RESTError`, because nothing about GitHub's answer was wrong - there wasn't one.
 
 The run becomes the trace, and every timespan below it is marked by :attr:`~pyTooling.Tracing.CI.CI.Span.Kind` with a
-member of :class:`~pyTooling.Tracing.CI.SpanKind`:
+member of :class:`~pyTooling.Tracing.CI.SpanKind`. Each kind is a class of its own - a
+:class:`~pyTooling.Tracing.CI.JobSpan` sets ``ci.span.kind`` to ``job`` because that is what it is, and takes the
+attributes of a job as parameters - so a reader states values and never a key, and a reader of another service
+builds the same classes:
 
 +--------------+------------------------------------------------------------------------------------------------------+
 | Kind         | Timespan                                                                                             |
@@ -255,6 +257,12 @@ values it was produced for in ``github.matrix.dimensions``.
 
 A task is named the way GitHub reports it - ``Caller / Build (ubuntu-26.04)`` - while the timespan itself is named by
 the part the model holds, so a timespan reads in the context its parents already give.
+
+Each flavour builds itself from the model: :meth:`JobSpan.FromJob <pyTooling.Tracing.CI.GitHub.JobSpan.FromJob>` takes
+a :class:`~pyTooling.CI.GitHub.Job` and produces the job's timespan, the waiting timespan in front of it, and a
+timespan per step. So reading a service means mapping its model onto these classes, and everything else - the kinds,
+the attribute keys, and skipping what the service doesn't report - is
+:mod:`pyTooling.Tracing.CI`'s.
 
 GitHub reports timestamps in whole seconds. A step shorter than a second lasts zero seconds, and an end reported a
 second before its begin is moved to the begin.

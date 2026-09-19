@@ -49,7 +49,7 @@ sub-span per step. The time a job waited for a runner is a separate timespan in 
    See :ref:`high-level help <TRACING/CI>` for explanations and usage examples.
 """
 from datetime              import datetime
-from typing                import Any, ClassVar, Iterable, Optional as Nullable, Union
+from typing                import Any, ClassVar, Iterable, Optional as Nullable, Self, Union
 
 from pyTooling.CI              import JSONObject
 from pyTooling.CI.GitHub       import Base, Conclusion, GitHubError, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
@@ -58,8 +58,11 @@ from pyTooling.Decorators      import export, readonly
 from pyTooling.GenericPath.URL import URL
 from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.REST            import RESTClient, RESTError
-from pyTooling.Tracing         import AttributeValue, Span, Trace
-from pyTooling.Tracing.CI      import CI, OTLP, Result, SpanKind
+from pyTooling.Tracing         import Span, Trace
+from pyTooling.Tracing.CI      import Result
+from pyTooling.Tracing.CI      import JobSpan as CIJobSpan, MatrixSpan as CIMatrixSpan
+from pyTooling.Tracing.CI      import PipelineTrace as CIPipelineTrace, QueuedSpan as CIQueuedSpan
+from pyTooling.Tracing.CI      import StepSpan as CIStepSpan, WorkflowSpan as CIWorkflowSpan
 
 
 __all__ = ["GITHUB_API_URL"]
@@ -123,6 +126,374 @@ _CONCLUSION_TO_RESULT = {
 	Conclusion.Cancelled: Result.Cancellation,
 }
 """GitHub's conclusions and the CI/CD results they correspond to. Any other conclusion is an error."""
+
+
+@export
+class GitHubTimespanMixIn(metaclass=ExtendedType, mixin=True):
+	"""
+	Mixin-class for a timespan built from :mod:`pyTooling.CI.GitHub`'s model of a workflow run.
+
+	It holds what every flavour needs to read that model: GitHub's conclusions, the order a group's contents are in,
+	and the times a job's timespans are built from - which are wider than the times GitHub reports, because a step
+	may run outside the job containing it.
+	"""
+
+	@staticmethod
+	def _Result(conclusion: Nullable[Conclusion]) -> Nullable[Result]:
+		"""
+		Map a GitHub conclusion to a CI/CD result.
+
+		:param conclusion: Optional, the conclusion, or ``None`` while it hasn't concluded. Default: ``None``.
+		:returns:          The CI/CD result, or ``None`` if there is no conclusion yet.
+		"""
+		if conclusion is None:
+			return None
+
+		return _CONCLUSION_TO_RESULT.get(conclusion, Result.Error)
+
+	@staticmethod
+	def _NotBefore(end: Nullable[datetime], begin: datetime) -> Nullable[datetime]:
+		"""
+		Clamp an end time so it doesn't precede a begin time.
+
+		:param end:   Optional, the end time. Default: ``None``.
+		:param begin: The begin time.
+		:returns:     The end time, but not before the begin time.
+		"""
+		return None if end is None else max(end, begin)
+
+	@staticmethod
+	def _Contents(group: JobGroup) -> list[Base]:
+		"""
+		Return what a group contains, ordered by the time its elements were queued.
+
+		:param group: The group - a workflow run, a called workflow or a matrix.
+		:returns:     The jobs, matrices and called workflows one level below the group.
+		"""
+		def queuedAt(item: Base) -> tuple[bool, datetime]:
+			"""
+			Nested function sorting an element without a begin time behind every element that has one.
+
+			:param item: The element.
+			:returns:    The sort key.
+			"""
+			return (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min)
+
+		# a stable sort, so elements without a begin time keep the order the model reports them in
+		return sorted(group, key=queuedAt)
+
+	@staticmethod
+	def _JobTimes(job: Job) -> tuple[Nullable[datetime], Nullable[datetime], Nullable[datetime]]:
+		"""
+		Return when a job was created, started and completed, widened to hold its steps.
+
+		A step may be reported as starting before, or completing after, the job containing it, and
+		:mod:`pyTooling.Tracing` requires a timespan to lie within its parent - so the job is stretched rather than its
+		steps clamped: a step really did run when it says it did.
+
+		:param job: The job.
+		:returns:   The times the job's timespans are built from.
+		"""
+		created =   job.CreatedAt
+		started =   job.StartedAt
+		completed = job.CompletedAt
+
+		stepBegins = [step.StartedAt for step in job.Steps if step.StartedAt is not None]
+		if len(stepBegins) > 0:
+			started = min(stepBegins) if started is None else min(started, min(stepBegins))
+			if created is not None:
+				created = min(created, started)
+
+			stepEnds = [step.CompletedAt for step in job.Steps if step.CompletedAt is not None]
+			if completed is not None and len(stepEnds) > 0:
+				completed = max(completed, max(stepEnds))
+
+		return created, started, completed
+
+	@classmethod
+	def _GroupTimes(cls, group: JobGroup) -> tuple[Nullable[datetime], Nullable[datetime]]:
+		"""
+		Return when a group begins and ends, from the timespans its contents produce.
+
+		The group's own :attr:`~pyTooling.CI.GitHub.JobGroup.CreatedAt` and
+		:attr:`~pyTooling.CI.GitHub.JobGroup.CompletedAt` are derived from the times GitHub reports, which do not account
+		for a step running outside its job - so the range is taken from the widened times instead, or a job's timespan
+		would fall outside its group's.
+
+		:param group: The group - a workflow run, a called workflow or a matrix.
+		:returns:     When the group begins and ends, each ``None`` if it holds nothing respectively hasn't completed.
+		"""
+		begins:   list[datetime] = []
+		ends:     list[datetime] = []
+		complete = True
+
+		for item in cls._Contents(group):
+			if isinstance(item, Job):
+				created, started, end = cls._JobTimes(item)
+				begin = created if created is not None else started
+			else:
+				begin, end = cls._GroupTimes(item)
+
+			if begin is not None:
+				begins.append(begin)
+
+			if end is None:
+				complete = False
+			else:
+				ends.append(end)
+
+		if len(begins) == 0:
+			return None, None
+
+		begin = min(begins)
+
+		return begin, cls._NotBefore(max(ends), begin) if complete and len(ends) > 0 else None
+
+	@classmethod
+	def _AddContents(cls, group: JobGroup, parent: Span) -> None:
+		"""
+		Add the jobs, matrices and called workflows of a group to a timespan, ordered by the time they were queued.
+
+		:param group:  The group - a workflow run, a called workflow or a matrix.
+		:param parent: The timespan the group's contents are added to.
+		"""
+		for item in cls._Contents(group):
+			if isinstance(item, Job):
+				JobSpan.FromJob(item, parent)
+			elif isinstance(item, Matrix):
+				MatrixSpan.FromGroup(item, parent)
+			else:
+				WorkflowSpan.FromGroup(item, parent)
+
+
+@export
+class StepSpan(CIStepSpan, GitHubTimespanMixIn):
+	"""The timespan of a step of a GitHub Actions job."""
+
+	@classmethod
+	def FromStep(cls, step: Step, parent: Span) -> Nullable[Self]:
+		"""
+		Build the timespan of a step, below the timespan of its job.
+
+		A step that never started has no timespan - there is nothing to place on a timeline.
+
+		:param step:   The step.
+		:param parent: The timespan of the job containing the step.
+		:returns:      The step's timespan, or ``None`` if the step never started.
+		"""
+		if step.StartedAt is None:
+			return None
+
+		return cls(
+			step.Name,
+			step.StartedAt,
+			cls._NotBefore(step.CompletedAt, step.StartedAt),
+			parent=parent,
+			result=cls._Result(step.Conclusion),
+			attributes={
+				GitHub.Step.Number: step.Number,
+				GitHub.Conclusion:  None if step.Conclusion is None else step.Conclusion.value
+			}
+		)
+
+
+@export
+class QueuedSpan(CIQueuedSpan, GitHubTimespanMixIn):
+	"""The timespan a GitHub Actions job waited for a runner, in front of the job's own timespan."""
+
+	@classmethod
+	def FromJob(cls, job: Job, created: datetime, started: Nullable[datetime], parent: Span) -> Self:
+		"""
+		Build the timespan a job waited for a runner.
+
+		:param job:     The job that waited.
+		:param created: When the job was created, which is when it started waiting.
+		:param started: Optional, when the job started, or ``None`` while it is still waiting.
+		:param parent:  The timespan of the trace, workflow or matrix containing the job.
+		:returns:       The waiting timespan.
+		"""
+		return cls(
+			f"{job!s} (queued)",
+			created,
+			cls._NotBefore(started, created),
+			parent=parent,
+			taskName=job.QualifiedName,
+			attributes={GitHub.Runner.Labels: list(job.Labels)}
+		)
+
+
+@export
+class JobSpan(CIJobSpan, GitHubTimespanMixIn):
+	"""The timespan of a GitHub Actions job, from the moment it started on a runner until it completed."""
+
+	@classmethod
+	def FromJob(cls, job: Job, parent: Span) -> Nullable[Self]:
+		"""
+		Build the timespans of a job: the time it waited for a runner, the job itself, and one per step.
+
+		A step may be reported as starting before, or completing after, the job containing it, so the job's timespan is
+		widened to hold its steps - :mod:`pyTooling.Tracing` requires a timespan to lie within its parent.
+
+		:param job:    The job.
+		:param parent: The timespan of the trace, workflow or matrix containing the job.
+		:returns:      The job's timespan, or ``None`` if the job hasn't started and therefore only waited.
+		"""
+		created, started, completed = cls._JobTimes(job)
+
+		# a matrix instance carries its dimension values, so two of them are distinguishable
+		displayName = str(job)
+		if job.Conclusion is Conclusion.Skipped:
+			# A skipped job neither waited for a runner nor ran on one.
+			begin = started if started is not None else created
+			end =   None if begin is None else cls._NotBefore(completed if completed is not None else begin, begin)
+		else:
+			if created is not None and (started is None or created < started):
+				QueuedSpan.FromJob(job, created, started, parent)
+
+			if started is None:
+				return None
+
+			begin = started
+			end =   cls._NotBefore(completed, started)
+
+		attributes = {
+			GitHub.Conclusion:    None if job.Conclusion is None else job.Conclusion.value,
+			GitHub.Runner.Group:  job.RunnerGroupName,
+			GitHub.Runner.Labels: list(job.Labels)
+		}
+		if isinstance(job, MatrixJob):
+			attributes[GitHub.Matrix.Dimensions] = list(job.DimensionValues)
+
+		jobSpan = cls(
+			displayName,
+			begin,
+			end,
+			parent=parent,
+			taskName=job.QualifiedName,
+			runID=None if job.ID is None else str(job.ID),
+			runURL=None if job.URL is None else str(job.URL),
+			result=cls._Result(job.Conclusion),
+			workerName=job.RunnerName,
+			attributes=attributes
+		)
+
+		for step in job.Steps:
+			StepSpan.FromStep(step, jobSpan)
+
+		return jobSpan
+
+
+@export
+class GitHubGroupMixIn(metaclass=ExtendedType, mixin=True):
+	"""
+	Mixin-class for a timespan holding other timespans - a called workflow or a matrix.
+
+	Both are built the same way and differ only in what they are, which their class says. Its
+	:meth:`~GitHubTimespanMixIn._GroupTimes` and :meth:`~GitHubTimespanMixIn._AddContents` come from
+	:class:`GitHubTimespanMixIn`.
+	"""
+
+	@classmethod
+	def FromGroup(cls, group: JobGroup, parent: Span) -> Self:
+		"""
+		Build the timespan of a group and everything below it.
+
+		:param group:  The called workflow or the matrix.
+		:param parent: The timespan containing the group.
+		:returns:      The group's timespan.
+		"""
+		begin, end = cls._GroupTimes(group)
+		span = cls(group.Name, begin, end, parent=parent)
+		cls._AddContents(group, span)
+
+		return span
+
+
+@export
+class WorkflowSpan(CIWorkflowSpan, GitHubTimespanMixIn, GitHubGroupMixIn):
+	"""The jobs of a called workflow, grouped into one timespan."""
+
+
+@export
+class MatrixSpan(CIMatrixSpan, GitHubTimespanMixIn, GitHubGroupMixIn):
+	"""The instances a matrix produced, grouped into one timespan."""
+
+
+@export
+class WorkflowRunTrace(CIPipelineTrace, GitHubTimespanMixIn):
+	"""A GitHub Actions workflow run as a trace."""
+
+	@classmethod
+	def FromJSON(cls, run: JSONObject, jobs: Nullable[Iterable[JSONObject]] = None) -> Self:
+		"""
+		Build the trace of a workflow run from the payloads the GitHub REST API answers with.
+
+		The payloads are read into a :class:`~pyTooling.CI.GitHub.Pipeline` first, so the tree - a called workflow, a
+		matrix, the jobs and their steps - is reconstructed by the model rather than here, and :meth:`FromPipeline`
+		turns it into timespans.
+
+		:param run:          The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
+		:param jobs:         Optional, the run's jobs, as listed by ``GET .../actions/runs/{run_id}/jobs``.
+		:returns:            The workflow run as a trace.
+		:raises TypeError:   If parameter 'run' is not of type :class:`dict`.
+		:raises GitHubError: If a mandatory field is missing, or a field holds a value GitHub doesn't document.
+		"""
+		return cls.FromPipeline(Pipeline.FromJSON(run, jobs))
+
+	@classmethod
+	def FromPipeline(cls, pipeline: Pipeline) -> Self:
+		"""
+		Build the trace of a workflow run, as :mod:`pyTooling.CI.GitHub` models it.
+
+		* The run becomes the trace, widened where a job was queued earlier or completed later than the run reports.
+		* A called workflow and a matrix become a timespan holding the jobs below them.
+		* A job becomes a timespan from its start to its completion, preceded by ``<job> (queued)`` from its creation to
+		  its start, if it waited. A skipped job has no waiting timespan, and a job that hasn't started yet only a running
+		  waiting timespan.
+		* A step that started becomes a sub-span of its job.
+		* Every timespan is classified by :attr:`CI.Span.Kind <pyTooling.Tracing.CI.CI>` and carries the OpenTelemetry CI/CD
+		  attributes, GitHub's conclusion (:data:`CONCLUSION`), and for jobs the runner's labels and group.
+
+		:param pipeline:   The workflow run.
+		:returns:          The workflow run as a trace.
+		:raises TypeError: If parameter 'pipeline' is not of type :class:`~pyTooling.CI.GitHub.Pipeline`.
+		"""
+		if not isinstance(pipeline, Pipeline):
+			ex = TypeError("Parameter 'pipeline' is not of type 'Pipeline'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(pipeline)}'.")
+			raise ex
+
+		beginTime = pipeline.StartedAt if pipeline.StartedAt is not None else pipeline.CreatedAt
+		endTime =   cls._NotBefore(pipeline.CompletedAt, beginTime) if beginTime is not None else pipeline.CompletedAt
+
+		# a job may be queued before the run reports itself started, and may complete after the run's last update
+		jobsBegin, jobsEnd = cls._GroupTimes(pipeline)
+		if jobsBegin is not None:
+			beginTime = jobsBegin if beginTime is None else min(beginTime, jobsBegin)
+
+		if endTime is not None and jobsEnd is not None:
+			endTime = max(endTime, jobsEnd)
+
+		trace = cls(
+			pipeline.Name,
+			beginTime,
+			endTime,
+			runID=None if pipeline.ID is None else str(pipeline.ID),
+			runURL=None if pipeline.URL is None else str(pipeline.URL),
+			result=cls._Result(pipeline.Conclusion),
+			reference=pipeline.GitReference,
+			revision=pipeline.SHA,
+			attributes={
+				GitHub.Conclusion:    None if pipeline.Conclusion is None else pipeline.Conclusion.value,
+				GitHub.Run.Attempt:   pipeline.RunAttempt,
+				GitHub.Run.Number:    pipeline.RunNumber,
+				GitHub.Workflow.Path: pipeline.Path,
+				GitHub.Event:         None if pipeline.Event is None else pipeline.Event.value
+			}
+		)
+		cls._AddContents(pipeline, trace)
+
+		return trace
 
 
 @export
@@ -196,7 +567,7 @@ class WorkflowRunReader(RESTClient):
 
 		:param runID:         The workflow run's identifier.
 		:param attempt:       Optional, the run attempt to read. Default: the latest attempt.
-		:returns:             The workflow run as a trace (see :meth:`ConvertWorkflowRun`).
+		:returns:             The workflow run as a trace (see :meth:`WorkflowRunTrace.FromJSON`).
 		:raises ValueError:   If parameter 'runID' is ``None``.
 		:raises TypeError:    If parameter 'runID' is not of type :class:`int`.
 		:raises ValueError:   If parameter 'runID' isn't positive.
@@ -242,292 +613,7 @@ class WorkflowRunReader(RESTClient):
 				raise GitHubError(f"Field 'jobs' is missing in the answer of '{jobsPath}'.")
 			jobs.extend(pageJobs)
 
-		return self.ConvertWorkflowRun(run, jobs)
-
-	@classmethod
-	def ConvertWorkflowRun(cls, run: JSONObject, jobs: Nullable[Iterable[JSONObject]] = None) -> Trace:
-		"""
-		Convert a GitHub Actions workflow run and its jobs, as the GitHub REST API returns them, into a trace.
-
-		The payloads are read into a :class:`~pyTooling.CI.GitHub.Pipeline` first, so the tree - a called workflow, a
-		matrix, the jobs and their steps - is reconstructed by the model rather than here, and :meth:`ConvertPipeline`
-		turns it into timespans.
-
-		:param run:          The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
-		:param jobs:         Optional, the run's jobs, as listed by ``GET .../actions/runs/{run_id}/jobs``.
-		:returns:            The workflow run as a trace.
-		:raises TypeError:   If parameter 'run' is not of type :class:`dict`.
-		:raises GitHubError: If a mandatory field is missing, or a field holds a value GitHub doesn't document.
-		"""
-		return cls.ConvertPipeline(Pipeline.FromJSON(run, jobs))
-
-	@classmethod
-	def ConvertPipeline(cls, pipeline: Pipeline) -> Trace:
-		"""
-		Convert a workflow run, as :mod:`pyTooling.CI.GitHub` models it, into a trace.
-
-		* The run becomes the trace, widened where a job was queued earlier or completed later than the run reports.
-		* A called workflow and a matrix become a timespan holding the jobs below them.
-		* A job becomes a timespan from its start to its completion, preceded by ``<job> (queued)`` from its creation to
-		  its start, if it waited. A skipped job has no waiting timespan, and a job that hasn't started yet only a running
-		  waiting timespan.
-		* A step that started becomes a sub-span of its job.
-		* Every timespan is classified by :attr:`CI.Span.Kind <pyTooling.Tracing.CI.CI>` and carries the OpenTelemetry CI/CD
-		  attributes, GitHub's conclusion (:data:`CONCLUSION`), and for jobs the runner's labels and group.
-
-		:param pipeline:   The workflow run.
-		:returns:          The workflow run as a trace.
-		:raises TypeError: If parameter 'pipeline' is not of type :class:`~pyTooling.CI.GitHub.Pipeline`.
-		"""
-		if not isinstance(pipeline, Pipeline):
-			ex = TypeError("Parameter 'pipeline' is not of type 'Pipeline'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(pipeline)}'.")
-			raise ex
-
-		beginTime = pipeline.StartedAt if pipeline.StartedAt is not None else pipeline.CreatedAt
-		endTime =   cls._NotBefore(pipeline.CompletedAt, beginTime) if beginTime is not None else pipeline.CompletedAt
-
-		# a job may be queued before the run reports itself started, and may complete after the run's last update
-		jobsBegin, jobsEnd = cls._GroupTimes(pipeline)
-		if jobsBegin is not None:
-			beginTime = jobsBegin if beginTime is None else min(beginTime, jobsBegin)
-
-		if endTime is not None and jobsEnd is not None:
-			endTime = max(endTime, jobsEnd)
-
-		trace = Trace(pipeline.Name, beginTime, endTime)
-		trace[CI.Span.Kind] = SpanKind.Pipeline
-		trace[OTLP.CICD.Pipeline.Name] = pipeline.Name
-		cls._SetAttribute(trace, OTLP.CICD.Pipeline.Run.ID, None if pipeline.ID is None else str(pipeline.ID))
-		cls._SetAttribute(trace, OTLP.CICD.Pipeline.Run.URL.Full, None if pipeline.URL is None else str(pipeline.URL))
-		cls._SetAttribute(trace, OTLP.CICD.Pipeline.Result, cls._Result(pipeline.Conclusion))
-		cls._SetAttribute(trace, GitHub.Conclusion, None if pipeline.Conclusion is None else pipeline.Conclusion.value)
-		cls._SetAttribute(trace, GitHub.Run.Attempt, pipeline.RunAttempt)
-		cls._SetAttribute(trace, GitHub.Run.Number, pipeline.RunNumber)
-		cls._SetAttribute(trace, GitHub.Workflow.Path, pipeline.Path)
-		cls._SetAttribute(trace, GitHub.Event, None if pipeline.Event is None else pipeline.Event.value)
-		cls._SetAttribute(trace, OTLP.VCS.Ref.Head.Name, pipeline.GitReference)
-		cls._SetAttribute(trace, OTLP.VCS.Ref.Head.Revision, pipeline.SHA)
-
-		cls._AddGroup(pipeline, trace)
-
-		return trace
-
-	@classmethod
-	def _AddGroup(cls, group: JobGroup, parent: Span) -> None:
-		"""
-		Add the jobs, matrices and called workflows of a group to its parent, ordered by the time they were queued.
-
-		:param group:  The group - a trace's pipeline, a called workflow or a matrix.
-		:param parent: The timespan the group's contents are added to.
-		"""
-		for item in cls._Contents(group):
-			if isinstance(item, Job):
-				cls._AddJob(item, parent)
-				continue
-
-			begin, end = cls._GroupTimes(item)
-			if begin is None:
-				span = Span(item.Name, parent=parent)
-			else:
-				span = Span(item.Name, begin, end, parent=parent)
-
-			span[CI.Span.Kind] = SpanKind.Matrix if isinstance(item, Matrix) else SpanKind.Workflow
-			span[OTLP.CICD.Pipeline.Task.Name] = item.Name
-			cls._AddGroup(item, span)
-
-	@classmethod
-	def _AddJob(cls, job: Job, parent: Span) -> None:
-		"""
-		Add a job to its parent: a timespan for waiting on a runner, a timespan for the job, and one per step.
-
-		A step may be reported as starting before, or completing after, the job containing it, so the job's timespan is
-		widened to hold its steps - :mod:`pyTooling.Tracing` requires a timespan to lie within its parent.
-
-		:param job:    The job.
-		:param parent: The timespan of the trace, workflow or matrix containing the job.
-		"""
-		created, started, completed = cls._JobTimes(job)
-
-		fullName = job.QualifiedName
-		displayName = str(job)   # a matrix instance carries its dimension values, so two of them are distinguishable
-		if job.Conclusion is Conclusion.Skipped:
-			# A skipped job neither waited for a runner nor ran on one.
-			begin = started if started is not None else created
-			if begin is None:
-				jobSpan = Span(displayName, parent=parent)
-			else:
-				end = cls._NotBefore(completed if completed is not None else begin, begin)
-				jobSpan = Span(displayName, begin, end, parent=parent)
-		else:
-			if created is not None and (started is None or created < started):
-				queued = Span(f"{displayName} (queued)", created, cls._NotBefore(started, created), parent=parent)
-				queued[CI.Span.Kind] = SpanKind.Queued
-				queued[OTLP.CICD.Pipeline.Task.Name] = fullName
-				cls._SetAttribute(queued, GitHub.Runner.Labels, list(job.Labels))
-
-			if started is None:
-				return
-
-			jobSpan = Span(displayName, started, cls._NotBefore(completed, started), parent=parent)
-
-		jobSpan[CI.Span.Kind] = SpanKind.Job
-		jobSpan[OTLP.CICD.Pipeline.Task.Name] = fullName
-		cls._SetAttribute(jobSpan, OTLP.CICD.Pipeline.Task.Run.ID, None if job.ID is None else str(job.ID))
-		cls._SetAttribute(jobSpan, OTLP.CICD.Pipeline.Task.Run.URL.Full, None if job.URL is None else str(job.URL))
-		cls._SetAttribute(jobSpan, OTLP.CICD.Pipeline.Task.Run.Result, cls._Result(job.Conclusion))
-		cls._SetAttribute(jobSpan, GitHub.Conclusion, None if job.Conclusion is None else job.Conclusion.value)
-		cls._SetAttribute(jobSpan, OTLP.CICD.Worker.Name, job.RunnerName)
-		cls._SetAttribute(jobSpan, GitHub.Runner.Group, job.RunnerGroupName)
-		cls._SetAttribute(jobSpan, GitHub.Runner.Labels, list(job.Labels))
-		if isinstance(job, MatrixJob) and len(job.DimensionValues) > 0:
-			jobSpan[GitHub.Matrix.Dimensions] = list(job.DimensionValues)
-
-		for step in job.Steps:
-			cls._AddStep(step, jobSpan)
-
-	@classmethod
-	def _AddStep(cls, step: Step, parent: Span) -> None:
-		"""
-		Add a step to the timespan of its job.
-
-		A step that never started has no timespan - there is nothing to place on a timeline.
-
-		:param step:   The step.
-		:param parent: The timespan of the job containing the step.
-		"""
-		if step.StartedAt is None:
-			return
-
-		span = Span(step.Name, step.StartedAt, cls._NotBefore(step.CompletedAt, step.StartedAt), parent=parent)
-		span[CI.Span.Kind] = SpanKind.Step
-		span[OTLP.CICD.Pipeline.Task.Name] = step.Name
-		cls._SetAttribute(span, GitHub.Step.Number, step.Number)
-		cls._SetAttribute(span, OTLP.CICD.Pipeline.Task.Run.Result, cls._Result(step.Conclusion))
-		cls._SetAttribute(span, GitHub.Conclusion, None if step.Conclusion is None else step.Conclusion.value)
-
-	@classmethod
-	def _GroupTimes(cls, group: JobGroup) -> tuple[Nullable[datetime], Nullable[datetime]]:
-		"""
-		Return when a group begins and ends, from the timespans its contents produce.
-
-		The group's own :attr:`~pyTooling.CI.GitHub.JobGroup.CreatedAt` and
-		:attr:`~pyTooling.CI.GitHub.JobGroup.CompletedAt` are derived from the times GitHub reports, which do not account
-		for a step running outside its job - so the range is taken from the widened times instead, or a job's timespan
-		would fall outside its group's.
-
-		:param group: The group - a workflow run, a called workflow or a matrix.
-		:returns:     When the group begins and ends, each ``None`` if it holds nothing respectively hasn't completed.
-		"""
-		begins:   list[datetime] = []
-		ends:     list[datetime] = []
-		complete = True
-
-		for item in cls._Contents(group):
-			if isinstance(item, Job):
-				created, started, end = cls._JobTimes(item)
-				begin = created if created is not None else started
-			else:
-				begin, end = cls._GroupTimes(item)
-
-			if begin is not None:
-				begins.append(begin)
-
-			if end is None:
-				complete = False
-			else:
-				ends.append(end)
-
-		if len(begins) == 0:
-			return None, None
-
-		begin = min(begins)
-
-		return begin, cls._NotBefore(max(ends), begin) if complete and len(ends) > 0 else None
-
-	@staticmethod
-	def _JobTimes(job: Job) -> tuple[Nullable[datetime], Nullable[datetime], Nullable[datetime]]:
-		"""
-		Return when a job was created, started and completed, widened to hold its steps.
-
-		A step may be reported as starting before, or completing after, the job containing it, and
-		:mod:`pyTooling.Tracing` requires a timespan to lie within its parent - so the job is stretched rather than its
-		steps clamped: a step really did run when it says it did.
-
-		:param job: The job.
-		:returns:   The times the job's timespans are built from.
-		"""
-		created =   job.CreatedAt
-		started =   job.StartedAt
-		completed = job.CompletedAt
-
-		stepBegins = [step.StartedAt for step in job.Steps if step.StartedAt is not None]
-		if len(stepBegins) > 0:
-			started = min(stepBegins) if started is None else min(started, min(stepBegins))
-			if created is not None:
-				created = min(created, started)
-
-			stepEnds = [step.CompletedAt for step in job.Steps if step.CompletedAt is not None]
-			if completed is not None and len(stepEnds) > 0:
-				completed = max(completed, max(stepEnds))
-
-		return created, started, completed
-
-	@staticmethod
-	def _Contents(group: JobGroup) -> list[Base]:
-		"""
-		Return what a group contains, ordered by the time its elements were queued.
-
-		:param group: The group - a workflow run, a called workflow or a matrix.
-		:returns:     The jobs, matrices and called workflows one level below the group.
-		"""
-		def queuedAt(item: Base) -> tuple[bool, datetime]:
-			"""
-			Nested function sorting an element without a begin time behind every element that has one.
-
-			:param item: The element.
-			:returns:    The sort key.
-			"""
-			return (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min)
-
-		# a stable sort, so elements without a begin time keep the order the model reports them in
-		return sorted(group, key=queuedAt)
-
-	@staticmethod
-	def _NotBefore(end: Nullable[datetime], begin: datetime) -> Nullable[datetime]:
-		"""
-		Clamp an end time so it doesn't precede a begin time.
-
-		:param end:   Optional, the end time. Default: ``None``.
-		:param begin: The begin time.
-		:returns:     The end time, but not before the begin time.
-		"""
-		return None if end is None else max(end, begin)
-
-	@staticmethod
-	def _Result(conclusion: Nullable[Conclusion]) -> Nullable[str]:
-		"""
-		Map a GitHub conclusion to a CI/CD result.
-
-		:param conclusion: Optional, the conclusion, or ``None`` while it hasn't concluded. Default: ``None``.
-		:returns:          The CI/CD result, or ``None`` if there is no conclusion yet.
-		"""
-		if conclusion is None:
-			return None
-
-		return _CONCLUSION_TO_RESULT.get(conclusion, Result.Error)
-
-	@staticmethod
-	def _SetAttribute(span: Span, key: str, value: Nullable[AttributeValue]) -> None:
-		"""
-		Set an attribute on a timespan, unless the value is ``None`` or empty.
-
-		:param span:  The timespan.
-		:param key:   Name of the attribute.
-		:param value: Optional, the value. Default: ``None``.
-		"""
-		if value is not None and value != "" and value != []:
-			span[key] = value
+		return WorkflowRunTrace.FromJSON(run, jobs)
 
 	def _AddErrorNotes(self, error: RESTError, status: int) -> None:
 		"""
