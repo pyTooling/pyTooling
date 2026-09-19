@@ -179,3 +179,78 @@ searchable field, which is worse than a failed export.
    An :class:`~pyTooling.Tracing.Event` always carries a timestamp: the constructor stamps the current system time
    when none is given. OTLP has no way to say *unknown* - a missing ``timeUnixNano`` reads as the Unix epoch - so an
    event without a time would be exported as having happened in 1970.
+
+
+.. _TRACING/CI:
+
+CI Pipelines
+############
+
+:mod:`pyTooling.Tracing.CI` reads the timing of a CI pipeline into a trace, built from
+:ref:`recorded timespans <TRACING/Recorded>`. A trace read this way renders and exports like any other, so the time
+a pipeline spends waiting for runners and running jobs and steps can be inspected in the same viewers.
+
+.. _TRACING/CI/GitHub:
+
+GitHub Actions
+==============
+
+:class:`~pyTooling.Tracing.CI.GitHub.WorkflowRunReader` reads a workflow run through the GitHub REST API, using the
+standard library only:
+
+.. code-block:: python
+
+   from os import getenv
+   from pathlib import Path
+   from pyTooling.Tracing.CI.GitHub import WorkflowRunReader
+
+   reader = WorkflowRunReader("pyTooling/Actions", token=getenv("GITHUB_TOKEN"))
+   trace = reader.ReadRun(34937615362)      # optionally: attempt=2
+   trace.WriteJSONFile(Path("report/Pipeline.otlp.json"))
+
+Inside a workflow, ``GITHUB_TOKEN`` with the ``actions: read`` permission suffices. A job can't see itself: it is
+still running when it reads the run, so a timing job depends on every other job and runs last.
+
+A request failing transiently - HTTP 429, 500, 502, 503 or 504, a timeout, or an unreachable API - is tried again,
+``retries`` times (default: 3), after a pause of ``retryDelay`` seconds (default: 2), which doubles with every attempt
+or lasts as long as a ``Retry-After`` header demands, up to a minute. HTTP 401, 403 and 404 fail at once.
+
+:func:`~pyTooling.Tracing.CI.GitHub.ConvertWorkflowRun` does the conversion alone, for a run and jobs that were
+fetched another way. It reads both payloads into a :class:`~pyTooling.CI.GitHub.Pipeline` - see :ref:`CI/GitHub` - and
+hands that to :func:`~pyTooling.Tracing.CI.GitHub.ConvertPipeline`, which is the entry point when the model was built
+elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
+:exc:`~pyTooling.CI.GitHub.GitHubError`.
+
+The run becomes the trace, and every timespan below it is marked by :attr:`~pyTooling.Tracing.CI.CI.Span.Kind` with a
+member of :class:`~pyTooling.Tracing.CI.SpanKind`:
+
++--------------+------------------------------------------------------------------------------------------------------+
+| Kind         | Timespan                                                                                             |
++==============+======================================================================================================+
+| ``pipeline`` | The workflow run, from its start to its last update once it completed.                               |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``workflow`` | A called workflow: the jobs named ``Caller / Job`` are grouped below a timespan ``Caller``.          |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``matrix``   | A matrix: the jobs named ``Job (ubuntu-26.04, 3.14)`` are grouped below a timespan ``Job``.          |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``queued``   | ``<job> (queued)``, the time a job waited for a runner, in front of the job.                         |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``job``      | A job, from its start to its completion.                                                             |
++--------------+------------------------------------------------------------------------------------------------------+
+| ``step``     | A step that started, below its job.                                                                  |
++--------------+------------------------------------------------------------------------------------------------------+
+
+Every timespan also carries the attributes of OpenTelemetry's semantic conventions for CI/CD, which
+:class:`~pyTooling.Tracing.CI.OTLP` names as a namespace nested the way the keys are - so
+:attr:`OTLP.CICD.Pipeline.Task.Run.ID <pyTooling.Tracing.CI.OTLP>` spells ``cicd.pipeline.task.run.id`` and the path
+can be read to check the key. The values a result may take are :class:`~pyTooling.Tracing.CI.Result`. What only GitHub
+reports is named the same way by :class:`~pyTooling.Tracing.CI.GitHub.GitHub`, e.g.
+``github.conclusion`` beside the result it was mapped to. A job's timespan names its runner and the labels it was
+requested by, so a renderer can group waiting times per operating system, and a matrix instance additionally lists the
+values it was produced for in ``github.matrix.dimensions``.
+
+A task is named the way GitHub reports it - ``Caller / Build (ubuntu-26.04)`` - while the timespan itself is named by
+the part the model holds, so a timespan reads in the context its parents already give.
+
+GitHub reports timestamps in whole seconds. A step shorter than a second lasts zero seconds, and an end reported a
+second before its begin is moved to the begin.
