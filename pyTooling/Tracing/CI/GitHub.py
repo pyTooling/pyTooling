@@ -52,7 +52,7 @@ from datetime              import datetime
 from typing                import Any, ClassVar, Iterable, Optional as Nullable, Self, Union
 
 from pyTooling.CI              import JSONObject
-from pyTooling.CI.GitHub       import Base, Conclusion, GitHubError, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
+from pyTooling.CI.GitHub       import Conclusion, GitHubError, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, readonly
 from pyTooling.GenericPath.URL import URL
@@ -133,9 +133,9 @@ class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	Mixin-class for a timespan built from :mod:`pyTooling.CI.GitHub`'s model of a workflow run.
 
-	It holds what every flavour needs to read that model: GitHub's conclusions, the order a group's contents are in,
-	and the times a job's timespans are built from - which are wider than the times GitHub reports, because a step
-	may run outside the job containing it.
+	It holds what every flavour needs to read that model: GitHub's conclusions, and the span a group's contents
+	have. Everything else the model answers itself - the order its elements are in, and the times of a job, which
+	are wider than the ones GitHub reports because a step may run outside the job containing it.
 	"""
 
 	@staticmethod
@@ -162,92 +162,24 @@ class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		return None if end is None else max(end, begin)
 
-	@staticmethod
-	def _Contents(group: JobGroup) -> list[Base]:
-		"""
-		Return what a group contains, ordered by the time its elements were queued.
-
-		:param group: The group - a workflow run, a called workflow or a matrix.
-		:returns:     The jobs, matrices and called workflows one level below the group.
-		"""
-		def queuedAt(item: Base) -> tuple[bool, datetime]:
-			"""
-			Nested function sorting an element without a begin time behind every element that has one.
-
-			:param item: The element.
-			:returns:    The sort key.
-			"""
-			return (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min)
-
-		# a stable sort, so elements without a begin time keep the order the model reports them in
-		return sorted(group, key=queuedAt)
-
-	@staticmethod
-	def _JobTimes(job: Job) -> tuple[Nullable[datetime], Nullable[datetime], Nullable[datetime]]:
-		"""
-		Return when a job was created, started and completed, widened to hold its steps.
-
-		A step may be reported as starting before, or completing after, the job containing it, and
-		:mod:`pyTooling.Tracing` requires a timespan to lie within its parent - so the job is stretched rather than its
-		steps clamped: a step really did run when it says it did.
-
-		:param job: The job.
-		:returns:   The times the job's timespans are built from.
-		"""
-		created =   job.CreatedAt
-		started =   job.StartedAt
-		completed = job.CompletedAt
-
-		stepBegins = [step.StartedAt for step in job.Steps if step.StartedAt is not None]
-		if len(stepBegins) > 0:
-			started = min(stepBegins) if started is None else min(started, min(stepBegins))
-			if created is not None:
-				created = min(created, started)
-
-			stepEnds = [step.CompletedAt for step in job.Steps if step.CompletedAt is not None]
-			if completed is not None and len(stepEnds) > 0:
-				completed = max(completed, max(stepEnds))
-
-		return created, started, completed
-
 	@classmethod
 	def _GroupTimes(cls, group: JobGroup) -> tuple[Nullable[datetime], Nullable[datetime]]:
 		"""
-		Return when a group begins and ends, from the timespans its contents produce.
+		Return when the contents of a group begin and end.
 
-		The group's own :attr:`~pyTooling.CI.GitHub.JobGroup.CreatedAt` and
-		:attr:`~pyTooling.CI.GitHub.JobGroup.CompletedAt` are derived from the times GitHub reports, which do not account
-		for a step running outside its job - so the range is taken from the widened times instead, or a job's timespan
-		would fall outside its group's.
+		The model spans them - :attr:`~pyTooling.CI.GitHub.JobGroup.ContentsCreatedAt` and its two siblings - and
+		this is where the span becomes a timespan: it begins when the first element was queued, or started if it was
+		never queued, and it doesn't end before it begins.
 
 		:param group: The group - a workflow run, a called workflow or a matrix.
-		:returns:     When the group begins and ends, each ``None`` if it holds nothing respectively hasn't completed.
+		:returns:     When the contents begin and end, each ``None`` if the group holds nothing respectively hasn't
+		              completed.
 		"""
-		begins:   list[datetime] = []
-		ends:     list[datetime] = []
-		complete = True
-
-		for item in cls._Contents(group):
-			if isinstance(item, Job):
-				created, started, end = cls._JobTimes(item)
-				begin = created if created is not None else started
-			else:
-				begin, end = cls._GroupTimes(item)
-
-			if begin is not None:
-				begins.append(begin)
-
-			if end is None:
-				complete = False
-			else:
-				ends.append(end)
-
-		if len(begins) == 0:
+		begin = group.ContentsCreatedAt if group.ContentsCreatedAt is not None else group.ContentsStartedAt
+		if begin is None:
 			return None, None
 
-		begin = min(begins)
-
-		return begin, cls._NotBefore(max(ends), begin) if complete and len(ends) > 0 else None
+		return begin, cls._NotBefore(group.ContentsCompletedAt, begin)
 
 	@classmethod
 	def _AddContents(cls, group: JobGroup, parent: Span) -> None:
@@ -257,7 +189,7 @@ class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 		:param group:  The group - a workflow run, a called workflow or a matrix.
 		:param parent: The timespan the group's contents are added to.
 		"""
-		for item in cls._Contents(group):
+		for item in group:
 			if isinstance(item, Job):
 				JobSpan.FromJob(item, parent)
 			elif isinstance(item, Matrix):
@@ -338,7 +270,7 @@ class JobSpan(CIJobSpan, GitHubTimespanMixin):
 		:param parent: The timespan of the trace, workflow or matrix containing the job.
 		:returns:      The job's timespan, or ``None`` if the job hasn't started and therefore only waited.
 		"""
-		created, started, completed = cls._JobTimes(job)
+		created, started, completed = job.CreatedAt, job.StartedAt, job.CompletedAt
 
 		# a matrix instance carries its dimension values, so two of them are distinguishable
 		displayName = str(job)

@@ -264,5 +264,9 @@ timespan per step. So reading a service means mapping its model onto these class
 the attribute keys, and skipping what the service doesn't report - is
 :mod:`pyTooling.Tracing.CI`'s.
 
+What the payloads *say* is the model's, including the two facts a timeline depends on: a group's elements come in
+the order they were queued, and a job's times contain its steps, because GitHub reports both in whole seconds and a
+step is sometimes reported as running outside the job holding it - see :ref:`CI/GitHub`.
+
 GitHub reports timestamps in whole seconds. A step shorter than a second lasts zero seconds, and an end reported a
 second before its begin is moved to the begin.
