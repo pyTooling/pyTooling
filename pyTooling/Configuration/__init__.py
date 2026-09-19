@@ -166,6 +166,22 @@ class Node(metaclass=ExtendedType, slots=True):
 	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError("Renaming a key isn't supported by a configuration.")
 
+	def _GetParentNode(self, path: list[KeyT]) -> NodeT:
+		"""
+		Return this node's parent node, as ``..`` in a path expression selects it.
+
+		:param path:                 Path elements of the expression being resolved, used to describe the error.
+		:returns:                    The parent node.
+		:raises PathExpressionError: If this node is the root node, which has no parent to navigate to.
+		"""
+		if self._parent is self:
+			pathExpression = ":".join(str(element) for element in path)
+			ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
+			ex.add_note("Element '..' was applied to the root node, which has no parent node.")
+			raise ex
+
+		return self._parent
+
 	@abstractmethod
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
 		"""
@@ -354,15 +370,15 @@ class Configuration(Node):
 
 	_configFile: Path  #: Path to the configuration file.
 
-	def __init__(self, configFile: Path, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, configFile: Path) -> None:
 		"""
-		Initializes a configuration.
+		Initializes the configuration's file reference.
+
+		A deriving class has already initialized the node itself, so this constructor initializes only the field this
+		mixin adds.
 
 		:param configFile: Configuration file.
-		:param root:       Optional, reference to the root node.
-		:param parent:     Optional, reference to the parent node.
 		"""
-		Node.__init__(self, root, parent)
 		self._configFile = configFile
 
 	@readonly
