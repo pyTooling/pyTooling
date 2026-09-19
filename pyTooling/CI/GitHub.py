@@ -856,6 +856,7 @@ class JobGroup(Base):
 		"""
 		return any(str(job) == name for job in self._jobs)
 
+	@readonly
 	def _Contents(self) -> Iterable[Base]:
 		"""
 		Return what this group holds, in the order GitHub listed it.
@@ -883,7 +884,7 @@ class JobGroup(Base):
 			"""
 			return (element.CreatedAt is None, element.CreatedAt if element.CreatedAt is not None else datetime.min)
 
-		return iter(sorted(self._Contents(), key=queuedAt))
+		return iter(sorted(self._Contents, key=queuedAt))
 
 
 @export
@@ -982,6 +983,7 @@ class Workflow(JobGroup, QualifiedNameMixin):
 		"""
 		return name in self._workflows or name in self._matrices or super().__contains__(name)
 
+	@readonly
 	def _Contents(self) -> Iterable[Base]:
 		"""
 		Return what this workflow holds: its jobs, its matrices and the workflows it calls.
