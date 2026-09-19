@@ -44,14 +44,15 @@ service a trace came from:
 """
 from datetime              import datetime, timezone
 from enum                  import StrEnum
-from typing                import Optional as Nullable
+from typing                import ClassVar, Optional as Nullable
 
 from pyTooling.Decorators  import export
+from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Tracing     import TracingError
 
 
 @export
-class OTLP:
+class OTLP(metaclass=ExtendedType, slots=True):
 	"""
 	Attribute keys defined by OpenTelemetry's `semantic conventions <https://opentelemetry.io/docs/specs/semconv/>`__.
 
@@ -64,71 +65,71 @@ class OTLP:
 	   span[OTLP.CICD.Pipeline.Task.Run.ID] =  str(job.ID)
 	"""
 
-	class CICD:
+	class CICD(metaclass=ExtendedType, slots=True):
 		"""Attribute keys of the conventions for **CI/CD pipelines**."""
 
-		class Pipeline:
+		class Pipeline(metaclass=ExtendedType, slots=True):
 			"""Attribute keys naming a pipeline and its run."""
 
-			Name =   "cicd.pipeline.name"    #: The pipeline's name.
-			Result = "cicd.pipeline.result"  #: How the run ended - a member of :class:`Result`.
+			Name:   ClassVar[str] = "cicd.pipeline.name"    #: The pipeline's name.
+			Result: ClassVar[str] = "cicd.pipeline.result"  #: How the run ended - a member of :class:`Result`.
 
-			class Run:
+			class Run(metaclass=ExtendedType, slots=True):
 				"""Attribute keys naming one run of a pipeline."""
 
-				ID = "cicd.pipeline.run.id"  #: The run's identifier.
+				ID: ClassVar[str] = "cicd.pipeline.run.id"  #: The run's identifier.
 
-				class URL:
+				class URL(metaclass=ExtendedType, slots=True):
 					"""Attribute keys naming the addresses of a run."""
 
-					Full = "cicd.pipeline.run.url.full"  #: The run's address.
+					Full: ClassVar[str] = "cicd.pipeline.run.url.full"  #: The run's address.
 
-			class Task:
+			class Task(metaclass=ExtendedType, slots=True):
 				"""Attribute keys naming a task of a pipeline - a job or a step."""
 
-				Name = "cicd.pipeline.task.name"  #: The task's name, as the service reports it.
+				Name: ClassVar[str] = "cicd.pipeline.task.name"  #: The task's name, as the service reports it.
 
-				class Run:
+				class Run(metaclass=ExtendedType, slots=True):
 					"""Attribute keys naming one run of a task."""
 
-					ID =     "cicd.pipeline.task.run.id"      #: The task run's identifier.
-					Result = "cicd.pipeline.task.run.result"  #: How the task ended - a member of :class:`Result`.
+					ID:     ClassVar[str] = "cicd.pipeline.task.run.id"      #: The task run's identifier.
+					Result: ClassVar[str] = "cicd.pipeline.task.run.result"  #: How the task ended - a member of :class:`Result`.
 
-					class URL:
+					class URL(metaclass=ExtendedType, slots=True):
 						"""Attribute keys naming the addresses of a task run."""
 
-						Full = "cicd.pipeline.task.run.url.full"  #: The task run's address.
+						Full: ClassVar[str] = "cicd.pipeline.task.run.url.full"  #: The task run's address.
 
-		class Worker:
+		class Worker(metaclass=ExtendedType, slots=True):
 			"""Attribute keys naming the worker a task ran on."""
 
-			Name = "cicd.worker.name"  #: The worker's name.
+			Name: ClassVar[str] = "cicd.worker.name"  #: The worker's name.
 
-	class VCS:
+	class VCS(metaclass=ExtendedType, slots=True):
 		"""Attribute keys of the conventions for **version control systems**."""
 
-		class Ref:
+		class Ref(metaclass=ExtendedType, slots=True):
 			"""Attribute keys naming a reference."""
 
-			class Head:
+			class Head(metaclass=ExtendedType, slots=True):
 				"""Attribute keys naming the reference a pipeline was started on."""
 
-				Name =     "vcs.ref.head.name"      #: The branch or tag the run was started on.
-				Revision = "vcs.ref.head.revision"  #: The commit the run was started on.
+				Name:     ClassVar[str] = "vcs.ref.head.name"      #: The branch or tag the run was started on.
+				Revision: ClassVar[str] = "vcs.ref.head.revision"  #: The commit the run was started on.
 
 
 @export
-class CI:
+class CI(metaclass=ExtendedType, slots=True):
 	"""
 	Attribute keys pyTooling defines for the timespans of a CI pipeline, which the conventions don't cover.
 
 	The nesting mirrors the key the same way :class:`OTLP` does.
 	"""
 
-	class Span:
+	class Span(metaclass=ExtendedType, slots=True):
 		"""Attribute keys classifying a timespan."""
 
-		Kind = "ci.span.kind"  #: What the timespan represents - a member of :class:`SpanKind`.
+		Kind: ClassVar[str] = "ci.span.kind"  #: What the timespan represents - a member of :class:`SpanKind`.
 
 
 @export
