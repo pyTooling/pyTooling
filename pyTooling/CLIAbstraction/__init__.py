@@ -54,7 +54,7 @@ from typing     import Optional as Nullable, ClassVar, Iterator, Generator, Any,
 
 from pyTooling.Decorators                import export, readonly
 from pyTooling.MetaClasses               import ExtendedType
-from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedException
+from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
 from pyTooling.Common                    import getFullyQualifiedName
 from pyTooling.Attributes                import Attribute
 from pyTooling.CLIAbstraction.Argument   import CommandLineArgument
@@ -64,12 +64,12 @@ from pyTooling.Platform                  import Platform
 
 
 @export
-class CLIAbstractionException(ToolingException):
+class CLIAbstractionError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.CLIAbstraction`."""
 
 
 @export
-class DryRunException(CLIAbstractionException):
+class DryRunError(CLIAbstractionError):
 	"""This exception is raised if an executable is launched while in dry-run mode."""
 
 
@@ -220,11 +220,11 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		.. todo:: Document algorithm
 
-		:param executablePath:           Optional, path to the executable.
-		:param binaryDirectoryPath:      Optional, path to the executable's directory.
-		:param dryRun:                   Optional, ``True``, when the program should run in dryrun mode.
-		:raises TypeError:               If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
-		:raises CLIAbstractionException: If the executable doesn't exist at the given path.
+		:param executablePath:       Optional, path to the executable.
+		:param binaryDirectoryPath:  Optional, path to the executable's directory.
+		:param dryRun:               Optional, ``True``, when the program should run in dryrun mode.
+		:raises TypeError:           If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
+		:raises CLIAbstractionError: If the executable doesn't exist at the given path.
 		"""
 		self._platform =    system()
 		self._dryRun =      dryRun
@@ -235,9 +235,9 @@ class Program(metaclass=ExtendedType, slots=True):
 					if dryRun:
 						self.LogDryRun(f"File check for '{executablePath}' failed. [SKIPPING]")
 					else:
-						raise CLIAbstractionException(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
+						raise CLIAbstractionError(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
-				ex = TypeError(f"Parameter 'executablePath' is not of type 'Path'.")
+				ex = TypeError("Parameter 'executablePath' is not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(executablePath)}'.")
 				raise ex
 		elif binaryDirectoryPath is not None:
@@ -246,27 +246,27 @@ class Program(metaclass=ExtendedType, slots=True):
 					if dryRun:
 						self.LogDryRun(f"Directory check for '{binaryDirectoryPath}' failed. [SKIPPING]")
 					else:
-						raise CLIAbstractionException(f"Binary directory '{binaryDirectoryPath}' not found.") from FileNotFoundError(binaryDirectoryPath)
+						raise CLIAbstractionError(f"Binary directory '{binaryDirectoryPath}' not found.") from FileNotFoundError(binaryDirectoryPath)
 
 				try:
 					executablePath = binaryDirectoryPath / self.__class__._executableNames[self._platform]
 				except KeyError:
-					raise CLIAbstractionException(f"Program is not supported on platform '{self._platform}'.") from PlatformNotSupportedException(self._platform)
+					raise CLIAbstractionError(f"Program is not supported on platform '{self._platform}'.") from PlatformNotSupportedError(self._platform)
 
 				if not executablePath.exists():
 					if dryRun:
 						self.LogDryRun(f"File check for '{executablePath}' failed. [SKIPPING]")
 					else:
-						raise CLIAbstractionException(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
+						raise CLIAbstractionError(f"Program '{executablePath}' not found.") from FileNotFoundError(executablePath)
 			else:
-				ex = TypeError(f"Parameter 'binaryDirectoryPath' is not of type 'Path'.")
+				ex = TypeError("Parameter 'binaryDirectoryPath' is not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(binaryDirectoryPath)}'.")
 				raise ex
 		else:
 			try:
 				executablePath = Path(self._executableNames[self._platform])
 			except KeyError:
-				raise CLIAbstractionException(f"Program is not supported on platform '{self._platform}'.") from PlatformNotSupportedException(self._platform)
+				raise CLIAbstractionError(f"Program is not supported on platform '{self._platform}'.") from PlatformNotSupportedError(self._platform)
 
 			resolvedExecutable = shutil_which(str(executablePath))
 			if dryRun:
@@ -282,11 +282,11 @@ class Program(metaclass=ExtendedType, slots=True):
 						# self.LogDryRun(f"File check for '{fullExecutablePath}' failed. [SKIPPING]")
 			else:
 				if resolvedExecutable is None:
-					raise CLIAbstractionException(f"Program could not be found in PATH.") from FileNotFoundError(executablePath)
+					raise CLIAbstractionError("Program could not be found in PATH.") from FileNotFoundError(executablePath)
 
 				fullExecutablePath = Path(resolvedExecutable)
 				if not fullExecutablePath.exists():
-					raise CLIAbstractionException(f"Program '{fullExecutablePath}' not found.") from FileNotFoundError(fullExecutablePath)
+					raise CLIAbstractionError(f"Program '{fullExecutablePath}' not found.") from FileNotFoundError(fullExecutablePath)
 
 			# TODO: log found executable in PATH
 			# TODO: check if found executable has execute permissions
@@ -454,9 +454,9 @@ class Executable(Program):  # (ILogable):
 		"""
 		Start the executable as a child-process.
 
-		:param environment:              Optional, environment that should be setup when launching the executable. |br|
-		                                 If ``None``, the :attr:`_environment` is used.
-		:raises CLIAbstractionException: When an :exc:`OSError` occurs while launching the child-process.
+		:param environment:          Optional, environment that should be setup when launching the executable. |br|
+		                             If ``None``, the :attr:`_environment` is used.
+		:raises CLIAbstractionError: When an :exc:`OSError` occurs while launching the child-process.
 		"""
 		if self._dryRun:
 			self.LogDryRun(f"Start process: {self!r}")
@@ -484,19 +484,19 @@ class Executable(Program):  # (ILogable):
 			)
 
 		except OSError as ex:
-			raise CLIAbstractionException(f"Error while launching a process for '{self._executablePath}'.") from ex
+			raise CLIAbstractionError(f"Error while launching a process for '{self._executablePath}'.") from ex
 
 	def Send(self, line: str, end: str = "\n") -> None:
 		"""
 		Send a string to STDIN of the running child-process.
 
-		:param line:                     Line to send.
-		:param end:                      Optional, line end character.
-		:raises CLIAbstractionException: If the child-process was not started, or has no standard input.
-		:raises CLIAbstractionException: When any error occurs while sending data to the child-process.
+		:param line:                 Line to send.
+		:param end:                  Optional, line end character.
+		:raises CLIAbstractionError: If the child-process was not started, or has no standard input.
+		:raises CLIAbstractionError: When any error occurs while sending data to the child-process.
 		"""
 		if self._process is None or self._process.stdin is None:
-			raise CLIAbstractionException(
+			raise CLIAbstractionError(
 				f"The child-process '{self._executablePath}' was not started, or has no standard input."
 			)
 
@@ -504,7 +504,7 @@ class Executable(Program):  # (ILogable):
 			self._process.stdin.write(line + end)
 			self._process.stdin.flush()
 		except Exception as ex:
-			raise CLIAbstractionException(f"Error while sending data to the child-process '{self._executablePath}'.") from ex
+			raise CLIAbstractionError(f"Error while sending data to the child-process '{self._executablePath}'.") from ex
 
 	# This is TCL specific ...
 	# def SendBoundary(self):
@@ -514,15 +514,15 @@ class Executable(Program):  # (ILogable):
 		"""
 		Return a line-reader for STDOUT.
 
-		:returns:                        A generator object to read from STDOUT line-by-line.
-		:raises DryRunException:         In case dryrun mode is active.
-		:raises CLIAbstractionException: When any error occurs while reading outputs from the child-process.
+		:returns:                    A generator object to read from STDOUT line-by-line.
+		:raises DryRunError:         In case dryrun mode is active.
+		:raises CLIAbstractionError: When any error occurs while reading outputs from the child-process.
 		"""
 		if self._dryRun:
-			raise DryRunException(f"Can't read from the child-process '{self._executablePath}' in dry-run mode.")
+			raise DryRunError(f"Can't read from the child-process '{self._executablePath}' in dry-run mode.")
 
 		if self._process is None or self._process.stdout is None:
-			raise CLIAbstractionException(
+			raise CLIAbstractionError(
 				f"The child-process '{self._executablePath}' was not started, or has no standard output."
 			)
 
@@ -530,7 +530,7 @@ class Executable(Program):  # (ILogable):
 			for line in iter(self._process.stdout.readline, ""):     # FIXME: can it be improved?
 				yield line[:-1]
 		except Exception as ex:
-			raise CLIAbstractionException(f"Error while reading from the child-process '{self._executablePath}'.") from ex
+			raise CLIAbstractionError(f"Error while reading from the child-process '{self._executablePath}'.") from ex
 		# finally:
 			# self._process.terminate()
 
@@ -540,12 +540,12 @@ class Executable(Program):  # (ILogable):
 
 		When the timeout period exceeds, the child-process can be forcefully terminated.
 
-		:param timeout:                  Optional, timeout in seconds. |br|
-		                                 Default: infinitely wait on the child-process.
-		:param kill:                     Optional, if ``True``, terminate (kill) the child-process if it didn't terminate by
-		                                 itself within the timeout period.
-		:returns:                        ``None`` when the child-process is still running, otherwise the exit code.
-		:raises CLIAbstractionException: When the child-process is not started yet.
+		:param timeout:              Optional, timeout in seconds. |br|
+		                             Default: infinitely wait on the child-process.
+		:param kill:                 Optional, if ``True``, terminate (kill) the child-process if it didn't terminate by
+		                             itself within the timeout period.
+		:returns:                    ``None`` when the child-process is still running, otherwise the exit code.
+		:raises CLIAbstractionError: When the child-process is not started yet.
 
 		.. topic:: Usecases
 
@@ -572,7 +572,7 @@ class Executable(Program):  # (ILogable):
 		   :meth:`Terminate` - Terminate the child-process.
 		"""
 		if self._process is None:
-			raise CLIAbstractionException(f"Process not yet started.")
+			raise CLIAbstractionError("Process not yet started.")
 
 		try:
 			self._exitCode = self._process.wait(timeout=timeout)
@@ -590,8 +590,8 @@ class Executable(Program):  # (ILogable):
 		"""
 		Terminate the child-process.
 
-		:returns:                        The child-process' exit code.
-		:raises CLIAbstractionException: When the child-process is not started yet.
+		:returns:                    The child-process' exit code.
+		:raises CLIAbstractionError: When the child-process is not started yet.
 
 		.. seealso::
 

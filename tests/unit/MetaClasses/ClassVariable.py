@@ -34,7 +34,7 @@ slots, and through inheritance.
 """
 from typing                import ClassVar
 
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, DuplicateFieldInSlotsError
 from pyTooling.Testing     import Testcase
 
 
@@ -88,9 +88,12 @@ class WithSlots(Testcase):
 			_ = Base._data0
 
 	def test_NoInitValue_DerivedAssigned_ClassCheck(self) -> None:
-		"""A ``ClassVar`` without an initial value is a forward declaration: derived classes assign the
-		value. If the base turned it into a slot, the derived class' assignment would shadow the slot
-		descriptor and make the field read-only on instances."""
+		"""
+		A ``ClassVar`` without an initial value is a forward declaration: derived classes assign the value.
+
+		If the base turned it into a slot, the derived class' assignment would shadow the slot descriptor and
+		make the field read-only on instances.
+		"""
 		class Base(metaclass=ExtendedType, slots=True):
 			_data0: ClassVar[int]
 			_data1: ClassVar[int] = 1
@@ -184,3 +187,83 @@ class Inheritance_WithSlots(Testcase):
 		parent = Parent()
 
 		self.assertEqual(2, parent._data0)
+
+
+class ClassVariablesInInitSubclass(Testcase):
+	"""A derived class' class variable is visible to ``__init_subclass__``."""
+
+	def test_AnAnnotatedOverrideIsVisible(self) -> None:
+		"""
+		It was not: the value was removed from the namespace and assigned after ``type.__new__``, so the hook read
+		the base class' value and any pattern, table or key derived from it was silently built from the wrong one.
+		"""
+		seen = []
+
+		class Base(metaclass=ExtendedType, slots=True):
+			Separator: ClassVar[str] = ":"
+
+			def __init_subclass__(cls, **kwargs) -> None:
+				super().__init_subclass__(**kwargs)
+				seen.append(cls.Separator)
+
+		class Annotated(Base):
+			Separator: ClassVar[str] = "!"
+
+		self.assertEqual(["!"], seen)
+		self.assertEqual("!", Annotated.Separator)
+
+	def test_AnUnannotatedOverrideIsVisibleToo(self) -> None:
+		"""This always worked; it must keep working."""
+		seen = []
+
+		class Base(metaclass=ExtendedType, slots=True):
+			Separator: ClassVar[str] = ":"
+
+			def __init_subclass__(cls, **kwargs) -> None:
+				super().__init_subclass__(**kwargs)
+				seen.append(cls.Separator)
+
+		class Unannotated(Base):
+			Separator = "!"
+
+		self.assertEqual(["!"], seen)
+
+	def test_TheHookMayDeriveFromTheValue(self) -> None:
+		"""The point of seeing it: computing something per class from it, once, at class creation."""
+		class Base(metaclass=ExtendedType, slots=True):
+			Separator: ClassVar[str] = ":"
+			Pattern:   ClassVar[str] = "<none>"
+
+			def __init_subclass__(cls, **kwargs) -> None:
+				super().__init_subclass__(**kwargs)
+				cls.Pattern = f"epoch{cls.Separator}version"
+
+		class Derived(Base):
+			Separator: ClassVar[str] = "!"
+
+		self.assertEqual("epoch!version", Derived.Pattern)
+
+	def test_WhatTheHookAssignsIsNotOverwritten(self) -> None:
+		"""The class fields used to be re-assigned after the hook ran, undoing whatever it had computed."""
+		class Base(metaclass=ExtendedType, slots=True):
+			Value: ClassVar[int] = 0
+
+			def __init_subclass__(cls, **kwargs) -> None:
+				super().__init_subclass__(**kwargs)
+				cls.Value = cls.Value * 10
+
+		class Derived(Base):
+			Value: ClassVar[int] = 7
+
+		self.assertEqual(70, Derived.Value)
+
+	def test_AClassVariableStillShadowsNoSlot(self) -> None:
+		"""A name that is both a mixin's slot and a class variable is rejected, with advice that fits the case."""
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_field: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as capture:
+			class Host(Mixin, metaclass=ExtendedType, slots=True):
+				_field: ClassVar[int] = 1
+
+		self.assertIn("Rename the class variable", capture.exception.__notes__[-1])

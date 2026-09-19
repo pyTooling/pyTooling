@@ -60,19 +60,19 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:raises TypeError: If a given point is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
 		if not isinstance(p00, Point2D):
-			ex = TypeError(f"Parameter 'p00' is not of type Point2D.")
+			ex = TypeError("Parameter 'p00' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p00)}'.")
 			raise ex
 		if not isinstance(p01, Point2D):
-			ex = TypeError(f"Parameter 'p01' is not of type Point2D.")
+			ex = TypeError("Parameter 'p01' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p01)}'.")
 			raise ex
 		if not isinstance(p11, Point2D):
-			ex = TypeError(f"Parameter 'p11' is not of type Point2D.")
+			ex = TypeError("Parameter 'p11' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p11)}'.")
 			raise ex
 		if not isinstance(p10, Point2D):
-			ex = TypeError(f"Parameter 'p10' is not of type Point2D.")
+			ex = TypeError("Parameter 'p10' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")
 			raise ex
 
@@ -110,11 +110,11 @@ class Rectangle(Trapezium[Coordinate]):
 		super().__init__(p00, p01, p11, p10)
 
 		if self.segments[0].Length != self.segments[2].Length or self.segments[1].Length != self.segments[3].Length:
-			raise ValueError(f"Line segments (edges) of opposite edges different lengths.")
+			raise ValueError("Line segments (edges) of opposite edges different lengths.")
 
 		if (self.segments[0].AngleTo(self.segments[1]) == 0.0 and self.segments[1].AngleTo(self.segments[2]) == 0.0
 			and self.segments[2].AngleTo(self.segments[3]) == 0.0 and self.segments[3].AngleTo(self.segments[0]) == 0.0):
-			raise ValueError(f"Line segments (edges) have no 90° angles.")
+			raise ValueError("Line segments (edges) have no 90° angles.")
 
 
 @export
@@ -136,4 +136,4 @@ class Square(Rectangle[Coordinate]):
 		super().__init__(p00, p01, p11, p10)
 
 		if self.segments[0].Length != self.segments[1].Length:
-			raise ValueError(f"Line segments (edges) between corners have different lengths.")
+			raise ValueError("Line segments (edges) between corners have different lengths.")
