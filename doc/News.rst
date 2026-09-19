@@ -218,7 +218,7 @@ Version 10.x (2026)
        OpenTelemetry's CI/CD attributes, so a rendering or a query doesn't depend on the CI service. A transiently
        failing request is tried again.
      * The run is read by :mod:`pyTooling.CI.GitHub`, so reconstructing the tree is the model's job and
-       :func:`~pyTooling.Tracing.CI.GitHub.ConvertPipeline` converts a model that was built elsewhere.
+       :meth:`~pyTooling.Tracing.CI.GitHub.WorkflowRunReader.ConvertPipeline` converts a model that was built elsewhere.
      * The attribute keys are namespaces nested the way the keys themselves are, instead of a flat block of module
        constants: :class:`~pyTooling.Tracing.CI.OTLP` for OpenTelemetry's conventions,
        :class:`~pyTooling.Tracing.CI.CI` for what pyTooling adds and :class:`~pyTooling.Tracing.CI.GitHub.GitHub` for

@@ -215,10 +215,12 @@ A request failing transiently - HTTP 429, 500, 502, 503 or 504, a timeout, or an
 ``retries`` times (default: 3), after a pause of ``retryDelay`` seconds (default: 2), which doubles with every attempt
 or lasts as long as a ``Retry-After`` header demands, up to a minute. HTTP 401, 403 and 404 fail at once.
 
-:func:`~pyTooling.Tracing.CI.GitHub.ConvertWorkflowRun` does the conversion alone, for a run and jobs that were
-fetched another way. It reads both payloads into a :class:`~pyTooling.CI.GitHub.Pipeline` - see :ref:`CI/GitHub` - and
-hands that to :func:`~pyTooling.Tracing.CI.GitHub.ConvertPipeline`, which is the entry point when the model was built
-elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
+:meth:`WorkflowRunReader.ConvertWorkflowRun <pyTooling.Tracing.CI.GitHub.WorkflowRunReader.ConvertWorkflowRun>` does
+the conversion alone, for a run and jobs that were fetched another way. It is a class method, so converting needs no
+reader and therefore no token. It reads both payloads into a :class:`~pyTooling.CI.GitHub.Pipeline` - see
+:ref:`CI/GitHub` - and hands that to
+:meth:`~pyTooling.Tracing.CI.GitHub.WorkflowRunReader.ConvertPipeline`, which is the entry point when the model was
+built elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
 :exc:`~pyTooling.CI.GitHub.GitHubError`.
 
 The run becomes the trace, and every timespan below it is marked by :attr:`~pyTooling.Tracing.CI.CI.Span.Kind` with a

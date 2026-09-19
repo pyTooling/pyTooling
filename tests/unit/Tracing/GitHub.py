@@ -43,7 +43,7 @@ from pyTooling.Exceptions        import ToolingException
 from pyTooling.REST              import RESTError
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
-from pyTooling.Tracing.CI.GitHub import ConvertWorkflowRun, GitHub, WorkflowRunReader
+from pyTooling.Tracing.CI.GitHub import GitHub, WorkflowRunReader
 from pyTooling.Testing           import Testcase
 
 
@@ -178,7 +178,7 @@ class AttributeKeys(Testcase):
 
 class Conversion(Testcase):
 	def test_Trace(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [])
 
 		self.assertEqual("Pipeline", trace.Name)
 		self.assertEqual(600.0, trace.Duration)
@@ -191,13 +191,13 @@ class Conversion(Testcase):
 		self.assertEqual("0123abcd", trace["vcs.ref.head.revision"])
 
 	def test_Trace_Running(self) -> None:
-		trace = ConvertWorkflowRun(_run(status="in_progress", conclusion=None), [])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(status="in_progress", conclusion=None), [])
 
 		self.assertIsNone(trace.StopTime)
 		self.assertNotIn("cicd.pipeline.result", trace)
 
 	def test_Job(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Build", 1, 4, 10)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Build", 1, 4, 10)])
 		children = _children(trace)
 
 		self.assertListEqual(["Build (queued)", "Build"], [span.Name for span in trace.IterateSubSpans()])
@@ -217,27 +217,28 @@ class Conversion(Testcase):
 		self.assertListEqual(["ubuntu-26.04"], job["github.runner.labels"])
 
 	def test_Job_NoWait(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Build", 4, 4, 10)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Build", 4, 4, 10)])
 
 		self.assertListEqual(["Build"], [span.Name for span in trace.IterateSubSpans()])
 
 	def test_Job_Waiting(self) -> None:
 		"""A job that didn't start yet is only waiting."""
-		trace = ConvertWorkflowRun(_run(), [_job("Build", 1, None, None, status="queued")])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Build", 1, None, None, status="queued")])
 		spans = list(trace.IterateSubSpans())
 
 		self.assertListEqual(["Build (queued)"], [span.Name for span in spans])
 		self.assertIsNone(spans[0].StopTime)
 
 	def test_Job_Running(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Build", 1, 4, None)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Build", 1, 4, None)])
 		job = _children(trace)["Build"]
 
 		self.assertIsNone(job.StopTime)
 		self.assertNotIn("cicd.pipeline.task.run.result", job)
 
 	def test_Job_Skipped(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Release", 3, 3, 3, conclusion="skipped", runner_name="", labels=[])])
+		job =   _job("Release", 3, 3, 3, conclusion="skipped", runner_name="", labels=[])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [job])
 		spans = list(trace.IterateSubSpans())
 
 		self.assertListEqual(["Release"], [span.Name for span in spans])
@@ -248,7 +249,7 @@ class Conversion(Testcase):
 
 	def test_Job_EndBeforeBegin(self) -> None:
 		"""GitHub's whole-second timestamps occasionally put the end a second before the begin."""
-		trace = ConvertWorkflowRun(_run(), [_job("Build", 4, 5, 4)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Build", 4, 5, 4)])
 
 		self.assertEqual(0.0, _children(trace)["Build"].Duration)
 
@@ -261,7 +262,7 @@ class Conversion(Testcase):
 			{"name": "Upload", "number": 3, "status": "completed", "conclusion": "skipped",
 			 "started_at": None, "completed_at": None},
 		]
-		trace = ConvertWorkflowRun(_run(), [_job("Build", 4, 5, 10, steps=steps)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Build", 4, 5, 10, steps=steps)])
 		job = _children(trace)["Build"]
 		stepSpans = list(job.IterateSubSpans())
 
@@ -274,7 +275,7 @@ class Conversion(Testcase):
 	def test_Results(self) -> None:
 		conclusions = {"cancelled": "cancellation", "timed_out": "timeout", "action_required": "error", "neutral": "error"}
 		jobs = [_job(conclusion, 1, 2, 3, conclusion=conclusion) for conclusion in conclusions]
-		children = _children(ConvertWorkflowRun(_run(), jobs))
+		children = _children(WorkflowRunReader.ConvertWorkflowRun(_run(), jobs))
 
 		for conclusion, result in conclusions.items():
 			with self.subTest(conclusion=conclusion):
@@ -287,7 +288,7 @@ class Conversion(Testcase):
 			_job("UnitTesting / Linux", 10, 12, 60),
 			_job("UnitTesting / Windows", 10, 30, 90),
 		]
-		trace = ConvertWorkflowRun(_run(), jobs)
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), jobs)
 		children = _children(trace)
 
 		spanNames = [span.Name for span in trace.IterateSubSpans()]
@@ -303,7 +304,7 @@ class Conversion(Testcase):
 		self.assertEqual("UnitTesting / Linux", _children(group)["Linux"]["cicd.pipeline.task.name"])
 
 	def test_ReusableWorkflow_Nested(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Release / Publish / PyPI", 100, 101, 120)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Release / Publish / PyPI", 100, 101, 120)])
 		release = _children(trace)["Release"]
 		publish = _children(release)["Publish"]
 
@@ -311,26 +312,27 @@ class Conversion(Testcase):
 		self.assertIn("PyPI", _children(publish))
 
 	def test_ReusableWorkflow_Running(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Tests / Linux", 10, 12, 60), _job("Tests / Windows", 10, 30, None)])
+		jobs =  [_job("Tests / Linux", 10, 12, 60), _job("Tests / Windows", 10, 30, None)]
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), jobs)
 
 		self.assertIsNone(_children(trace)["Tests"].StopTime)
 
 	def test_Order(self) -> None:
 		"""Jobs and called workflows are ordered by the time they were queued, not by the API's order."""
 		jobs = [_job("Late", 50, 50, 60), _job("Group / Early", 5, 5, 9), _job("Middle", 20, 20, 30)]
-		trace = ConvertWorkflowRun(_run(), jobs)
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), jobs)
 
 		self.assertListEqual(["Group", "Middle", "Late"], [span.Name for span in trace.IterateSubSpans()])
 
 	def test_OTLPExport(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Tests / Linux", 1, 4, 10), _job("Build", 1, 1, 5)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Tests / Linux", 1, 4, 10), _job("Build", 1, 1, 5)])
 		spans = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 
 		self.assertEqual(5, len(spans), "The trace, a group, a waiting and a running job, and a job without waiting.")
 
 	def test_RunType(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = ConvertWorkflowRun([], [])
+			_ = WorkflowRunReader.ConvertWorkflowRun([], [])
 
 		self.assertEqual("Parameter 'run' is not of type 'dict'.", str(context.exception))
 
@@ -340,7 +342,7 @@ class Conversion(Testcase):
 		del job["name"]
 
 		with self.assertRaises(GitHubError) as context:
-			_ = ConvertWorkflowRun(_run(), [job])
+			_ = WorkflowRunReader.ConvertWorkflowRun(_run(), [job])
 
 		self.assertEqual("Field 'jobs[0].name' is missing.", str(context.exception))
 
@@ -350,7 +352,7 @@ class Conversion(Testcase):
 		del job["name"]
 
 		with self.assertRaises(ToolingException):
-			_ = ConvertWorkflowRun(_run(), [job])
+			_ = WorkflowRunReader.ConvertWorkflowRun(_run(), [job])
 
 
 class _Response:
@@ -591,21 +593,21 @@ class Containment(Testcase):
 		return step
 
 	def test_JobQueuedBeforeTheRunStarted(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			created_at="2026-09-17T10:00:00Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:04:00Z"
 		)])
 
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:00Z"), trace.StartTime)
 
 	def test_JobCompletedAfterTheRunsLastUpdate(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:09:00Z"
 		)])
 
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:09:00Z"), trace.StopTime)
 
 	def test_StepStartedBeforeItsJob(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:02:00Z",
 			steps=[self._Step(started_at="2026-09-17T10:00:25Z", completed_at="2026-09-17T10:00:50Z")]
 		)])
@@ -615,7 +617,7 @@ class Containment(Testcase):
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:25Z"), self._SubSpan(job, "Compile").StartTime)
 
 	def test_StepCompletedAfterItsJob(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z",
 			steps=[self._Step(started_at="2026-09-17T10:00:40Z", completed_at="2026-09-17T10:02:00Z")]
 		)])
@@ -625,7 +627,7 @@ class Containment(Testcase):
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:02:00Z"), self._SubSpan(job, "Compile").StopTime)
 
 	def test_GroupedJobOutsideTheRun(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			name="Caller / Build",
 			created_at="2026-09-17T09:59:00Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:09:00Z",
 			steps=[self._Step(started_at="2026-09-17T10:00:31Z", completed_at="2026-09-17T10:08:00Z")]
@@ -636,7 +638,7 @@ class Containment(Testcase):
 
 	def test_StepStartedBeforeItsGroupedJob(self) -> None:
 		"""A called workflow derives its times from its jobs, which don't account for a step outside its job."""
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			name="Caller / Build",
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:02:00Z",
 			steps=[self._Step(started_at="2026-09-17T10:00:15Z", completed_at="2026-09-17T10:00:50Z")]
@@ -647,7 +649,7 @@ class Containment(Testcase):
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:15Z"), self._SubSpan(group, "Build").StartTime)
 
 	def test_StepCompletedAfterItsGroupedJob(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			name="Caller / Build",
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z",
 			steps=[self._Step(started_at="2026-09-17T10:00:40Z", completed_at="2026-09-17T10:02:00Z")]
@@ -658,7 +660,7 @@ class Containment(Testcase):
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:02:00Z"), self._SubSpan(group, "Build").StopTime)
 
 	def test_AMatrixHoldsItsWidenedInstances(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			name="Caller / Build (fast)",
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z",
 			steps=[self._Step(started_at="2026-09-17T10:00:10Z", completed_at="2026-09-17T10:03:00Z")]
@@ -669,7 +671,7 @@ class Containment(Testcase):
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:03:00Z"), matrix.StopTime)
 
 	def test_ARunningJobLeavesItsGroupRunning(self) -> None:
-		trace = ConvertWorkflowRun(dict(self._RUN, status="in_progress", conclusion=None), [
+		trace = WorkflowRunReader.ConvertWorkflowRun(dict(self._RUN, status="in_progress", conclusion=None), [
 			self._Job(name="Caller / Build", created_at="2026-09-17T10:00:20Z",
 			          started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z"),
 			self._Job(name="Caller / Test", id=12, status="in_progress", conclusion=None,
@@ -679,7 +681,7 @@ class Containment(Testcase):
 		self.assertIsNone(self._SubSpan(trace, "Caller").StopTime)
 
 	def test_ConsistentTimestampsAreUnchanged(self) -> None:
-		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+		trace = WorkflowRunReader.ConvertWorkflowRun(self._RUN, [self._Job(
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:02:00Z",
 			steps=[self._Step(started_at="2026-09-17T10:00:35Z", completed_at="2026-09-17T10:01:50Z")]
 		)])
@@ -692,7 +694,7 @@ class Matrices(Testcase):
 	"""A matrix becomes a timespan of its own, which the model reconstructs from the jobs' names."""
 
 	def test_MatrixBecomesASpan(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [
 			_job("Unit Tests (ubuntu-26.04, 3.14)", 10, 12, 60),
 			_job("Unit Tests (windows-2025, 3.14)", 10, 12, 90),
 		])
@@ -703,7 +705,7 @@ class Matrices(Testcase):
 		self.assertEqual(2, len([name for name in _children(matrix) if not name.endswith("(queued)")]))
 
 	def test_InstancesAreNamedByTheirDimensions(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [
 			_job("Unit Tests (ubuntu-26.04, 3.14)", 10, 12, 60),
 			_job("Unit Tests (windows-2025, 3.14)", 10, 12, 90),
 		])
@@ -714,20 +716,20 @@ class Matrices(Testcase):
 		self.assertIn("Unit Tests (windows-2025, 3.14)", names)
 
 	def test_InstanceCarriesItsDimensionsAsAnAttribute(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Unit Tests (ubuntu-26.04, 3.14)", 10, 12, 60)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Unit Tests (ubuntu-26.04, 3.14)", 10, 12, 60)])
 		instance = _children(_children(trace)["Unit Tests"])["Unit Tests (ubuntu-26.04, 3.14)"]
 
 		self.assertListEqual(["ubuntu-26.04", "3.14"], instance["github.matrix.dimensions"])
 
 	def test_TaskNameKeepsTheCallerPrefix(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("UnitTesting / Unit Tests (ubuntu-26.04)", 10, 12, 60)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("UnitTesting / Unit Tests (ubuntu-26.04)", 10, 12, 60)])
 		matrix = _children(_children(trace)["UnitTesting"])["Unit Tests"]
 		instance = _children(matrix)["Unit Tests (ubuntu-26.04)"]
 
 		self.assertEqual("UnitTesting / Unit Tests (ubuntu-26.04)", instance["cicd.pipeline.task.name"])
 
 	def test_AMatrixInsideACalledWorkflow(self) -> None:
-		trace = ConvertWorkflowRun(_run(), [_job("Docs / Sphinx (html)", 10, 12, 60)])
+		trace = WorkflowRunReader.ConvertWorkflowRun(_run(), [_job("Docs / Sphinx (html)", 10, 12, 60)])
 
 		workflow = _children(trace)["Docs"]
 		self.assertEqual("workflow", workflow[CI.Span.Kind])
