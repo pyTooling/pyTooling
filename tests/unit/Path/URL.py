@@ -380,6 +380,30 @@ class Concatenation(Testcase):
 
 				self.assertIn("Got type 'int'.", context.exception.__notes__)
 
+	def test_ACompleteURLOnTheRightSide(self) -> None:
+		"""The right side names a resource below the URL, so a scheme or an authority is refused."""
+		base = URL.Parse("https://example.org/api")
+
+		for resource in ("https://elsewhere.org/things", "//elsewhere.org/things", "elsewhere.org:8443/things"):
+			with self.subTest(resource=resource):
+				with self.assertRaises(URLError):
+					_ = base / resource
+
+	def test_AColonBelowTheFirstElement(self) -> None:
+		"""Only the first element of a relative path may not carry a ':' - RFC 3986's 'path-noscheme'."""
+		self.assertEqual("https://example.org/api/things/a:b", str(URL.Parse("https://example.org/api") / "things/a:b"))
+		self.assertEqual("https://example.org/a:b", str(URL.Parse("https://example.org/api") / "/a:b"))
+
+	def test_AForbiddenCharacterOnTheRightSide(self) -> None:
+		base = URL.Parse("https://example.org/api")
+
+		for resource in ("things/a b", "things/a<b", "things/a\tb"):
+			with self.subTest(resource=resource):
+				with self.assertRaises(URLError) as context:
+					_ = base / resource
+
+				self.assertTrue(any("percent-encoded" in note for note in context.exception.__notes__))
+
 	def test_AStringOnThePath(self) -> None:
 		"""A path takes a string on the right, the way :class:`pathlib.PurePath` does."""
 		path = URL.Parse("https://example.org/api/v3/").Path

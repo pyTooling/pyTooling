@@ -105,8 +105,8 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"          #: Path element delimiter sign.
-	ROOT_DELIMITER:    ClassVar[str] = "/"          #: Root element delimiter sign.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"           #: Path element delimiter sign.
+	ROOT_DELIMITER:    ClassVar[str] = "/"           #: Root element delimiter sign.
 	ELEMENT_TYPE:      ClassVar[type[ElementMixIn]]  #: Type an element of this path flavour has. Every flavour names it.
 
 	_isAbsolute: bool                       #: True, if the path is absolute.
@@ -168,11 +168,16 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		else:
 			ex = TypeError("Second operand is not supported by / operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: 'str' or '{self.__class__.__name__}'.")
+			ex.add_note(f"Supported types for second operand: 'str' or '{getFullyQualifiedName(self)}'.")
 			raise ex
 
-		path =     self if isAbsolute else self.WithoutTrailingDelimiter()
-		elements = [] if isAbsolute else list(path._elements)
+		if isAbsolute:
+			path =     self
+			elements = []
+		else:
+			path =     self.WithoutTrailingDelimiter()
+			elements = list(path._elements)
+
 		parent =   elements[-1] if len(elements) > 0 else None
 		for name in names:
 			elements.append(parent := self.ELEMENT_TYPE(parent, name))
@@ -215,11 +220,11 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		"""
 		if path.startswith(cls.ROOT_DELIMITER):
 			isAbsolute = True
-			path = path[len(cls.ROOT_DELIMITER):]
+			path =       path[len(cls.ROOT_DELIMITER):]
 		else:
 			isAbsolute = False
 
-		parent = root
+		parent =   root
 		elements = []
 		for part in path.split(cls.ELEMENT_DELIMITER):
 			elements.append(parent := cls.ELEMENT_TYPE(parent, part))
