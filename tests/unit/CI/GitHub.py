@@ -415,6 +415,121 @@ class Hierarchy(Testcase):
 		self.assertEqual(["ubuntu-26.04"], instance.Labels)
 
 
+class Times(Testcase):
+	"""A job's times contain its steps, and a group's contain what is below it."""
+
+	@staticmethod
+	def _step(name: str, started: Nullable[int], completed: Nullable[int]) -> dict[str, Any]:
+		"""
+		Build a step.
+
+		:param name:      The step's name.
+		:param started:   Seconds after the run was created, when the step started, or ``None``.
+		:param completed: Seconds after the run was created, when the step completed, or ``None``.
+		:returns:         The step, as the GitHub REST API returns it.
+		"""
+		return {
+			"name": name, "number": 1, "status": "completed" if completed is not None else "in_progress",
+			"conclusion": "success" if completed is not None else None,
+			"started_at": None if started is None else _time(started),
+			"completed_at": None if completed is None else _time(completed),
+		}
+
+	def test_AStepStartingBeforeItsJob(self) -> None:
+		"""GitHub reports whole seconds, so a step is sometimes reported as starting before the job holding it."""
+		job = Job.FromJSON(_job("Build", 60, 70, 300, steps=[self._step("Checkout", 65, 80)]))
+
+		self.assertEqual(_time(65), job.StartedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(60), job.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+	def test_AStepCompletingAfterItsJob(self) -> None:
+		job = Job.FromJSON(_job("Build", 60, 70, 300, steps=[self._step("Checkout", 70, 320)]))
+
+		self.assertEqual(_time(320), job.CompletedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+	def test_AJobCreatedAfterItsFirstStepStarted(self) -> None:
+		"""The job was created at the latest when something of it ran."""
+		job = Job.FromJSON(_job("Build", 60, 70, 300, steps=[self._step("Checkout", 55, 80)]))
+
+		self.assertEqual(_time(55), job.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(55), job.StartedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+	def test_AJobWithConsistentSteps(self) -> None:
+		job = Job.FromJSON(_job("Build", 60, 70, 300, steps=[self._step("Checkout", 75, 80)]))
+
+		self.assertEqual(_time(60), job.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(70), job.StartedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(300), job.CompletedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+	def test_ARunningJobReportsNoCompletion(self) -> None:
+		"""A step that completed doesn't complete the job holding it."""
+		job = Job.FromJSON(_job("Build", 60, 70, None, steps=[self._step("Checkout", 70, 80)]))
+
+		self.assertIsNone(job.CompletedAt)
+
+	def test_AGroupCoversTheWidenedTimes(self) -> None:
+		"""A group aggregates the jobs' times, so it covers a step running outside its job too."""
+		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 60, 70, 300, steps=[self._step("Checkout", 65, 320)])])
+		workflow = Pipeline.FromJSON(_run(), [
+			_job("Caller / Build", 60, 70, 300, steps=[self._step("Checkout", 65, 320)])
+		]).Workflows["Caller"]
+
+		self.assertEqual(_time(65), workflow.StartedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(320), workflow.CompletedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(4711, pipeline.ID, "The run's own times are unaffected.")
+
+
+	def test_APipelineKeepsItsOwnTimes(self) -> None:
+		"""A run reports its times, while 'Contents*At' spans what it holds."""
+		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 60, 70, 300)])
+
+		self.assertEqual(_time(0), pipeline.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(10), pipeline.StartedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(60), pipeline.ContentsCreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(70), pipeline.ContentsStartedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(300), pipeline.ContentsCompletedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+	def test_AGroupHoldingARunningElementHasNoEnd(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [_job("Done", 60, 70, 100), _job("Running", 60, 70, None)])
+
+		self.assertIsNone(pipeline.ContentsCompletedAt)
+
+	def test_AWorkflowHasOnlyTheOneSet(self) -> None:
+		"""A called workflow reports no time of its own, so its times are the span of what it holds."""
+		workflow = Pipeline.FromJSON(_run(), [_job("Caller / Build", 60, 70, 300)]).Workflows["Caller"]
+
+		self.assertEqual(_time(60), workflow.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertFalse(hasattr(workflow, "ContentsCreatedAt"), "Only a run has two sets of times.")
+
+
+class Ordering(Testcase):
+	"""A group iterates what it holds in the order it was queued."""
+
+	def test_JobsAreOrderedByQueueTime(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Third", 300, 310, 400), _job("First", 60, 70, 100), _job("Second", 120, 130, 200)
+		])
+
+		self.assertEqual(["First", "Second", "Third"], [str(job) for job in pipeline])
+
+	def test_AGroupSortsBesideTheJobs(self) -> None:
+		"""A called workflow takes the place its first job was queued at, not a place after every job."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Late", 300, 310, 400), _job("Caller / Early", 60, 70, 100)
+		])
+
+		self.assertEqual(["Caller", "Late"], [str(element) for element in pipeline])
+
+	def test_AnElementWithoutATimeSortsLast(self) -> None:
+		"""It also keeps the order GitHub listed them in, because the sort is stable."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Unknown A", 0, None, None, created_at=None), _job("Timed", 120, 130, 200),
+			_job("Unknown B", 0, None, None, created_at=None)
+		])
+
+		self.assertEqual(["Timed", "Unknown A", "Unknown B"], [str(job) for job in pipeline])
+
+
 class Groups(Testcase):
 	"""A push starts one run per matching workflow, so a commit has several pipelines."""
 

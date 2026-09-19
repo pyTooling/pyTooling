@@ -89,6 +89,15 @@ answers it without a search:
   ``B``.
 * Neither level reports times, so :class:`~pyTooling.CI.GitHub.JobGroup` derives them: a group begins with its
   earliest job and ends with its latest, and has no end while a job below it is still running.
+* **A job's times contain its steps.** GitHub reports both in whole seconds and independently, so a step is
+  sometimes reported as starting before, or completing after, the job holding it. The job is the timespan that
+  stretches - the step really did run when it says it did - and a group's times follow, so a consumer building a
+  tree never has a child outside its parent. :attr:`~pyTooling.CI.GitHub.Base.CreatedAt`,
+  :attr:`~pyTooling.CI.GitHub.Base.StartedAt` and :attr:`~pyTooling.CI.GitHub.Base.CompletedAt` report the
+  widened times; a job that hasn't completed still reports no completion, however far its steps got.
+* **A group iterates what it holds in the order it was queued** - jobs and nested groups alike, so a called
+  workflow takes the place its first job was queued at rather than a place behind every job. The sort is stable,
+  so elements reporting no time keep the order GitHub listed them in.
 * Because the name is taken apart, :class:`~pyTooling.CI.GitHub.QualifiedNameMixin` puts it back together - a job
   below ``Caller`` reports ``Caller / Build (ubuntu-26.04)`` as its
   :attr:`~pyTooling.CI.GitHub.QualifiedNameMixin.QualifiedName` while :attr:`~pyTooling.CI.GitHub.Base.Name` stays
