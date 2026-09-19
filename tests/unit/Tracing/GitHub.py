@@ -537,7 +537,7 @@ class Reader(Testcase):
 
 		self.assertEqual("owner/repo", WorkflowRunReader("owner/repo").Repository)
 		reader = WorkflowRunReader("owner/repo", apiURL="https://ghe.example.com/api/v3/")
-		self.assertEqual("https://ghe.example.com/api/v3", reader.APIURL)
+		self.assertEqual("https://ghe.example.com/api/v3", str(reader.APIURL))
 
 	def test_RunID(self) -> None:
 		reader = WorkflowRunReader("owner/repo")
