@@ -24,7 +24,11 @@ Resources
 *********
 
 A client is constructed with the API's base URL, and every request names a **resource path** below it - the API is
-stated once, not in every call. The base URL is a :class:`~pyTooling.GenericPath.URL.URL`, so a value that names no
+stated once, not in every call. The two are composed by
+:meth:`URL.__truediv__ <pyTooling.GenericPath.URL.URL.__truediv__>`, which puts a query the resource path carries
+where a query belongs instead of leaving it inside a path element.
+
+The base URL is a :class:`~pyTooling.GenericPath.URL.URL`, so a value that names no
 scheme or no host is refused where it is given rather than where it is requested. It may be given as a ``URL``, which
 is then kept as it is, or as a string, which is parsed once; either way a trailing slash is removed, so
 ``https://example.org/api/v3/`` and ``https://example.org/api/v3`` are the same client.
