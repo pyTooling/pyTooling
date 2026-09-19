@@ -34,9 +34,9 @@ Unit tests for :mod:`pyTooling.CI.GitHub`.
 from datetime            import datetime, timezone
 from typing              import Any, Optional as Nullable
 
-from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step, \
-	Status, Conclusion, Event, GitHubError
-from pyTooling.MetaClasses import AbstractClassError
+from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
+from pyTooling.CI.GitHub import Status, Conclusion, Event, GitHubError, QualifiedNameMixin
+from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Testing   import Testcase
 
 
@@ -581,6 +581,179 @@ class Groups(Testcase):
 		self.assertEqual(datetime(2026, 9, 17, 10, 2, 0, tzinfo=timezone.utc), a.StartedAt)
 		self.assertEqual(datetime(2026, 9, 17, 10, 9, 0, tzinfo=timezone.utc), a.CompletedAt)
 		self.assertEqual(datetime(2026, 9, 17, 10, 4, 0, tzinfo=timezone.utc), d.CompletedAt)
+
+
+class QualifiedNames(Testcase):
+	"""A name taken apart by 'FromJSON' is put back together the way GitHub reported it."""
+
+	def test_AJobOutsideAnyWorkflow(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 60, 120, 240)])
+
+		self.assertEqual("Build", pipeline.Jobs[0].QualifiedName)
+
+	def test_ACalledWorkflowPrefixesItsJobs(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [_job("A / B / C / Deep", 60, 120, 240)])
+
+		deep = pipeline.Workflows["A"].Workflows["B"].Workflows["C"].Jobs[0]
+		self.assertEqual("Deep", deep.Name)
+		self.assertEqual("A / B / C / Deep", deep.QualifiedName)
+
+	def test_AMatrixIsNotNamedTwice(self) -> None:
+		"""A matrix shares its name with the instances it produced, so the walk passes through it."""
+		pipeline = Pipeline.FromJSON(_run(), [_job("A / Matrixed (x, 1)", 60, 300, 420)])
+
+		instance = pipeline.Workflows["A"].Matrices["Matrixed"].Instances[0]
+		self.assertEqual("Matrixed", instance.Name)
+		self.assertEqual("A / Matrixed (x, 1)", instance.QualifiedName)
+
+	def test_AWorkflowNamesItsCallers(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [_job("A / B / C / Deep", 60, 120, 240)])
+
+		a = pipeline.Workflows["A"]
+		self.assertEqual("A", a.QualifiedName)
+		self.assertEqual("A / B", a.Workflows["B"].QualifiedName)
+		self.assertEqual("A / B / C", a.Workflows["B"].Workflows["C"].QualifiedName)
+
+	def test_TheRunIsNotACallingWorkflow(self) -> None:
+		"""A 'Pipeline' is a run rather than a called workflow, so its name prefixes nothing."""
+		pipeline = Pipeline.FromJSON(_run(name="Caller"), [_job("A / Deep", 60, 120, 240)])
+
+		self.assertEqual("Caller", pipeline.QualifiedName)
+		self.assertEqual("A / Deep", pipeline.Workflows["A"].Jobs[0].QualifiedName)
+
+	def test_OnlyAJobAndAWorkflowAreNamedThatWay(self) -> None:
+		"""GitHub reports no name for a matrix, and a step's name carries no prefix."""
+		self.assertTrue(issubclass(Job, QualifiedNameMixin))
+		self.assertTrue(issubclass(Workflow, QualifiedNameMixin))
+		self.assertFalse(issubclass(Matrix, QualifiedNameMixin))
+		self.assertFalse(issubclass(Step, QualifiedNameMixin))
+
+	def test_TheMixinExpectsTheFieldItWalks(self) -> None:
+		self.assertEqual({"_parent"}, set(QualifiedNameMixin.__expectedMembers__))
+		for cls in (Job, MatrixJob, Workflow, Pipeline):
+			with self.subTest(cls=cls.__name__):
+				self.assertEqual(tuple(), cls.__missingMembers__)
+
+	def test_AHostWithoutThatFieldIsRejected(self) -> None:
+		class Rootless(metaclass=ExtendedType, slots=True):
+			pass
+
+		class Unrooted(Rootless, QualifiedNameMixin):
+			pass
+
+		self.assertEqual(("_parent",), Unrooted.__missingMembers__)
+		with self.assertRaises(UnfulfilledExpectationError):
+			_ = Unrooted()
+
+
+class ContainedElements(Testcase):
+	"""A workflow contains jobs, matrices and further workflows, so it iterates all three."""
+
+	def test_AWorkflowIteratesEveryElementBelowIt(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("A / Plain", 60, 120, 240),
+			_job("A / Matrixed (x)", 60, 300, 420),
+			_job("A / B / Deep", 60, 120, 180),
+		])
+
+		a = pipeline.Workflows["A"]
+		self.assertEqual(3, len(a))
+		self.assertListEqual(["Plain", "Matrixed", "B"], [str(element) for element in a])
+		self.assertListEqual([Job, Matrix, Workflow], [type(element) for element in a])
+
+	def test_AWorkflowContainsWhatItIterates(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("A / Plain", 60, 120, 240),
+			_job("A / Matrixed (x)", 60, 300, 420),
+			_job("A / B / Deep", 60, 120, 180),
+		])
+
+		a = pipeline.Workflows["A"]
+		for element in a:
+			with self.subTest(element=str(element)):
+				self.assertIn(str(element), a)
+
+		# a job one level further down belongs to 'B', not to 'A'
+		self.assertNotIn("Deep", a)
+		self.assertIn("A", pipeline)
+
+	def test_ContainmentTakesAName(self) -> None:
+		"""An element is placed in its group under its own name, so containment is asked for that name."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("A / B / Deep", 60, 120, 240),
+			_job("A / Plain", 60, 120, 180),
+			_job("Top", 60, 120, 190),
+		])
+
+		a = pipeline.Workflows["A"]
+		self.assertIn("B", a)        # a called workflow
+		self.assertIn("Plain", a)    # a job
+		self.assertNotIn("Top", a)   # a job of the run, not of this workflow
+		self.assertNotIn("Deep", a)  # a job of the workflow below
+
+		self.assertIn("Top", pipeline)
+		self.assertIn("A", pipeline)
+
+	def test_MatrixInstancesAreAskedForWithTheirValues(self) -> None:
+		"""Every instance of a matrix shares the matrix' name, so a job is named by 'str' rather than 'Name'."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Matrixed (x)", 60, 300, 420),
+			_job("Matrixed (y)", 60, 300, 540),
+		])
+
+		matrix = pipeline.Matrices["Matrixed"]
+		self.assertEqual(["Matrixed", "Matrixed"], [instance.Name for instance in matrix.Instances])
+		self.assertIn("Matrixed (x)", matrix)
+		self.assertNotIn("Matrixed (z)", matrix)
+		self.assertNotIn("Matrixed", matrix)  # that is the matrix' own name, not one of its instances'
+
+		self.assertIn("Matrixed", pipeline)   # the matrix, one level up
+
+	def test_AJobIsAskedForItsSteps(self) -> None:
+		steps = [
+			{"name": "Checkout", "number": 1, "status": "completed", "conclusion": "success",
+			 "started_at": _time(120), "completed_at": _time(130)},
+		]
+		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 60, 120, 240, steps=steps)])
+
+		self.assertIn("Checkout", pipeline.Jobs[0])
+		self.assertNotIn("Upload", pipeline.Jobs[0])
+
+	def test_IdentityIsAnsweredByTheParent(self) -> None:
+		"""Containment asks the name; which container an element really sits in is 'Parent'."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("A / B / Deep", 60, 120, 240),
+			_job("C / B / Deep", 60, 120, 200),
+		])
+
+		a = pipeline.Workflows["A"]
+		c = pipeline.Workflows["C"]
+
+		self.assertIsNot(a.Workflows["B"], c.Workflows["B"])
+		self.assertIs(a, a.Workflows["B"].Parent)
+		self.assertIsNot(a, c.Workflows["B"].Parent)
+
+	def test_AMatrixIteratesItsInstances(self) -> None:
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Matrixed (x)", 60, 300, 420),
+			_job("Matrixed (y)", 60, 300, 540),
+		])
+
+		matrix = pipeline.Matrices["Matrixed"]
+		self.assertEqual(2, len(matrix))
+		self.assertListEqual(["Matrixed (x)", "Matrixed (y)"], [str(instance) for instance in matrix])
+
+	def test_IterateJobsStillReachesEveryJob(self) -> None:
+		"""Iterating a workflow is one level deep; 'IterateJobs' is the whole subtree."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("A / Plain", 60, 120, 240),
+			_job("A / Matrixed (x)", 60, 300, 420),
+			_job("A / B / Deep", 60, 120, 180),
+		])
+
+		a = pipeline.Workflows["A"]
+		self.assertEqual(3, len(a))
+		self.assertListEqual(["Plain", "Matrixed", "Deep"], [job.Name for job in a.IterateJobs()])
 
 
 class ParameterChecks(Testcase):

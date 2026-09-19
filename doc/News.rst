@@ -29,6 +29,16 @@ Version 10.x (2026)
      * :class:`~pyTooling.CI.GitHub.PipelineGroup` holds every run of one commit, and
        :meth:`~pyTooling.CI.GitHub.PipelineGroup.ByGitReference` separates a commit's checks from the run at its tag,
        which the API reports under the same commit.
+     * :class:`~pyTooling.CI.GitHub.QualifiedNameMixin` reports an element's name the way GitHub does -
+       ``Caller / Build (ubuntu-26.04)`` - so the name :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` took apart can
+       be put back together. :class:`~pyTooling.CI.GitHub.Job` and :class:`~pyTooling.CI.GitHub.Workflow` are named
+       that way; the mixin ``expects`` the field it walks, so mixing it into a class without ``_parent`` is reported
+       instead of failing with an :exc:`AttributeError` later.
+     * Iterating a :class:`~pyTooling.CI.GitHub.Workflow` yields its jobs, its matrices **and** the workflows it
+       calls, so the containers one level below it are reachable without asking for each kind separately.
+       :meth:`~pyTooling.CI.GitHub.Workflow.IterateJobs` remains the way to reach every job below it. Because an
+       element is placed in its group under its own name, every ``in`` of this module takes that name:
+       :pycode:`"UnitTesting" in pipeline`.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
