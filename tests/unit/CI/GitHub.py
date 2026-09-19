@@ -34,8 +34,8 @@ Unit tests for :mod:`pyTooling.CI.GitHub`.
 from datetime            import datetime, timezone
 from typing              import Any, Optional as Nullable
 
-from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step, \
-	Status, Conclusion, Event, GitHubError, QualifiedNameMixin
+from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
+from pyTooling.CI.GitHub import Status, Conclusion, Event, GitHubError, QualifiedNameMixin
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Testing   import Testcase
 
@@ -671,11 +671,67 @@ class ContainedElements(Testcase):
 		a = pipeline.Workflows["A"]
 		for element in a:
 			with self.subTest(element=str(element)):
-				self.assertIn(element, a)
+				self.assertIn(str(element), a)
 
 		# a job one level further down belongs to 'B', not to 'A'
-		self.assertNotIn(a.Workflows["B"].Jobs[0], a)
-		self.assertIn(a, pipeline)
+		self.assertNotIn("Deep", a)
+		self.assertIn("A", pipeline)
+
+	def test_ContainmentTakesAName(self) -> None:
+		"""An element is placed in its group under its own name, so containment is asked for that name."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("A / B / Deep", 60, 120, 240),
+			_job("A / Plain", 60, 120, 180),
+			_job("Top", 60, 120, 190),
+		])
+
+		a = pipeline.Workflows["A"]
+		self.assertIn("B", a)        # a called workflow
+		self.assertIn("Plain", a)    # a job
+		self.assertNotIn("Top", a)   # a job of the run, not of this workflow
+		self.assertNotIn("Deep", a)  # a job of the workflow below
+
+		self.assertIn("Top", pipeline)
+		self.assertIn("A", pipeline)
+
+	def test_MatrixInstancesAreAskedForWithTheirValues(self) -> None:
+		"""Every instance of a matrix shares the matrix' name, so a job is named by 'str' rather than 'Name'."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Matrixed (x)", 60, 300, 420),
+			_job("Matrixed (y)", 60, 300, 540),
+		])
+
+		matrix = pipeline.Matrices["Matrixed"]
+		self.assertEqual(["Matrixed", "Matrixed"], [instance.Name for instance in matrix.Instances])
+		self.assertIn("Matrixed (x)", matrix)
+		self.assertNotIn("Matrixed (z)", matrix)
+		self.assertNotIn("Matrixed", matrix)  # that is the matrix' own name, not one of its instances'
+
+		self.assertIn("Matrixed", pipeline)   # the matrix, one level up
+
+	def test_AJobIsAskedForItsSteps(self) -> None:
+		steps = [
+			{"name": "Checkout", "number": 1, "status": "completed", "conclusion": "success",
+			 "started_at": _time(120), "completed_at": _time(130)},
+		]
+		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 60, 120, 240, steps=steps)])
+
+		self.assertIn("Checkout", pipeline.Jobs[0])
+		self.assertNotIn("Upload", pipeline.Jobs[0])
+
+	def test_IdentityIsAnsweredByTheParent(self) -> None:
+		"""Containment asks the name; which container an element really sits in is 'Parent'."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("A / B / Deep", 60, 120, 240),
+			_job("C / B / Deep", 60, 120, 200),
+		])
+
+		a = pipeline.Workflows["A"]
+		c = pipeline.Workflows["C"]
+
+		self.assertIsNot(a.Workflows["B"], c.Workflows["B"])
+		self.assertIs(a, a.Workflows["B"].Parent)
+		self.assertIsNot(a, c.Workflows["B"].Parent)
 
 	def test_AMatrixIteratesItsInstances(self) -> None:
 		pipeline = Pipeline.FromJSON(_run(), [
