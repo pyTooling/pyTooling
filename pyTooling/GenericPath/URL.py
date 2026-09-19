@@ -252,8 +252,9 @@ class Element(ElementMixIn):
 class Path(PathMixIn):
 	"""Represents a path in a URL."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Delimiter symbol in URLs between path elements.
-	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Delimiter symbol in URLs between root element and first path element.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"                #: Delimiter symbol in URLs between path elements.
+	ROOT_DELIMITER:    ClassVar[str] = "/"                #: Delimiter symbol in URLs between root and first element.
+	ELEMENT_TYPE:      ClassVar[type[Element]] = Element  #: Type an element of a URL's path has.
 
 	@classmethod
 	def Parse(cls, path: str, root: Nullable[Host] = None) -> Path:
@@ -529,26 +530,29 @@ class URL:
 		   URL.Parse("https://example.org/api/v3") / "things/4711?fields=name"
 		   # https://example.org/api/v3/things/4711?fields=name
 
-		:param other:     The resource below this URL, as a string to parse or as a :class:`Path`.
-		:returns:         A new URL naming that resource.
-		:raises URLError: When a parameter of the right side's query is not a ``key=value`` pair.
+		:param other:      The resource below this URL, as a string to parse or as a :class:`Path`.
+		:returns:          A new URL naming that resource.
+		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`Path`.
+		:raises URLError:  When a parameter of the right side's query is not a ``key=value`` pair.
 		"""
 		if isinstance(other, str):
-			path, _, fragment = other.partition("#")
-			path, _, query =    path.partition("?")
-			otherPath =  Path.Parse(path, self._host)
+			resource, _, fragment = other.partition("#")
+			resource, _, query =    resource.partition("?")
 			parameters = self._ParseQuery(query if query != "" else None, other)
 			fragment =   fragment if fragment != "" else None
 		elif isinstance(other, Path):
-			otherPath =  other
+			resource =   other
 			parameters = None
 			fragment =   None
 		else:
-			return NotImplemented
+			ex = TypeError("Second operand is not supported by / operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: 'str' or 'Path'.")
+			raise ex
 
 		return self.__class__(
 			scheme=self._scheme,
-			path=self._path / otherPath,
+			path=self._path / resource,
 			host=self._host,
 			user=self._user,
 			password=self._password,

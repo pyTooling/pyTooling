@@ -373,8 +373,19 @@ class Concatenation(Testcase):
 			_ = URL.Parse("https://example.org/api") / "things?novalue"
 
 	def test_SomethingElse(self) -> None:
-		with self.assertRaises(TypeError):
-			_ = URL.Parse("https://example.org/api") / 4711
+		for left in (URL.Parse("https://example.org/api"), URL.Parse("https://example.org/api").Path):
+			with self.subTest(left=left.__class__.__name__):
+				with self.assertRaises(TypeError) as context:
+					_ = left / 4711
+
+				self.assertIn("Got type 'int'.", context.exception.__notes__)
+
+	def test_AStringOnThePath(self) -> None:
+		"""A path takes a string on the right, the way :class:`pathlib.PurePath` does."""
+		path = URL.Parse("https://example.org/api/v3/").Path
+
+		self.assertEqual("/api/v3/things/4711", str(path / "things/4711"))
+		self.assertEqual("/other", str(path / "/other"), "An absolute path names its own root.")
 
 
 class TrailingSlash(Testcase):
