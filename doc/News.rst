@@ -219,6 +219,12 @@ Version 10.x (2026)
        failing request is tried again.
      * The run is read by :mod:`pyTooling.CI.GitHub`, so reconstructing the tree is the model's job and
        :func:`~pyTooling.Tracing.CI.GitHub.ConvertPipeline` converts a model that was built elsewhere.
+     * The attribute keys are namespaces nested the way the keys themselves are, instead of a flat block of module
+       constants: :class:`~pyTooling.Tracing.CI.OTLP` for OpenTelemetry's conventions,
+       :class:`~pyTooling.Tracing.CI.CI` for what pyTooling adds and :class:`~pyTooling.Tracing.CI.GitHub.GitHub` for
+       what only GitHub reports, so :attr:`OTLP.CICD.Pipeline.Task.Run.ID <pyTooling.Tracing.CI.OTLP>` spells
+       ``cicd.pipeline.task.run.id``. The closed value sets are enumerations -
+       :class:`~pyTooling.Tracing.CI.SpanKind` and :class:`~pyTooling.Tracing.CI.Result`.
 
    * :mod:`pyTooling.Packaging`
 

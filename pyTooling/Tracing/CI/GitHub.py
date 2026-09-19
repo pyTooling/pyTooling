@@ -62,39 +62,54 @@ from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Tracing     import AttributeValue, Span, Trace, TracingError
-from pyTooling.Tracing.CI  import SPAN_KIND, SPAN_KIND_PIPELINE, SPAN_KIND_WORKFLOW, SPAN_KIND_MATRIX
-from pyTooling.Tracing.CI  import SPAN_KIND_QUEUED, SPAN_KIND_JOB
-from pyTooling.Tracing.CI  import SPAN_KIND_STEP, PIPELINE_NAME, PIPELINE_RUN_ID, PIPELINE_RUN_URL, PIPELINE_RESULT
-from pyTooling.Tracing.CI  import TASK_NAME, TASK_RUN_ID, TASK_RUN_URL, TASK_RUN_RESULT, WORKER_NAME
-from pyTooling.Tracing.CI  import RESULT_SUCCESS, RESULT_FAILURE, RESULT_TIMEOUT, RESULT_SKIP, RESULT_CANCELLATION
-from pyTooling.Tracing.CI  import RESULT_ERROR
+from pyTooling.Tracing.CI  import CI, OTLP, Result, SpanKind
 
 
-__all__ = ["GITHUB_API_URL", "MATRIX_DIMENSIONS", "RUNNER_LABELS", "RUNNER_GROUP", "CONCLUSION"]
+__all__ = ["GITHUB_API_URL"]
 
 GITHUB_API_URL = "https://api.github.com"
 """Base URL of the GitHub REST API."""
 
-RUNNER_LABELS = "github.runner.labels"
-"""Attribute: the labels a job requested its runner by, e.g. ``['ubuntu-26.04']``."""
 
-MATRIX_DIMENSIONS = "github.matrix.dimensions"
-"""Attribute: the values of the matrix' dimensions a job instance ran with, e.g. ``['ubuntu-26.04', '3.14']``."""
+@export
+class GitHub:
+	"""
+	Attribute keys naming what only GitHub Actions reports, beside the keys of
+	:class:`~pyTooling.Tracing.CI.OTLP`.
 
-RUNNER_GROUP = "github.runner.group"
-"""Attribute: the runner group the job's runner belongs to."""
+	The nesting mirrors the key itself, as it does there: :attr:`GitHub.Runner.Labels` spells
+	``'github.runner.labels'``.
+	"""
 
-CONCLUSION = "github.conclusion"
-"""Attribute: GitHub's own conclusion of a run, job or step, next to the CI/CD result it was mapped to."""
+	Conclusion = "github.conclusion"  #: GitHub's own conclusion, next to the CI/CD result it was mapped to.
+	Event =      "github.event"       #: The event that started the run, e.g. ``'push'``.
 
-_CONCLUSION_TO_RESULT: dict[str, str] = {
-	"success":   RESULT_SUCCESS,
-	"failure":   RESULT_FAILURE,
-	"timed_out": RESULT_TIMEOUT,
-	"skipped":   RESULT_SKIP,
-	"cancelled": RESULT_CANCELLATION,
-}
-"""GitHub's conclusions and the CI/CD results they correspond to. Any other conclusion is an error."""
+	class Run:
+		"""Attribute keys naming a workflow run."""
+
+		Attempt = "github.run.attempt"  #: Which attempt of the run this is.
+		Number =  "github.run.number"   #: The run's number within its workflow.
+
+	class Workflow:
+		"""Attribute keys naming the workflow a run belongs to."""
+
+		Path = "github.workflow.path"  #: The workflow's YAML file in the repository.
+
+	class Matrix:
+		"""Attribute keys naming a matrix."""
+
+		Dimensions = "github.matrix.dimensions"  #: The values an instance ran with, e.g. ``['ubuntu-26.04', '3.14']``.
+
+	class Runner:
+		"""Attribute keys naming the runner a job ran on."""
+
+		Labels = "github.runner.labels"  #: The labels the job requested its runner by, e.g. ``['ubuntu-26.04']``.
+		Group =  "github.runner.group"   #: The runner group the runner belongs to.
+
+	class Step:
+		"""Attribute keys naming a step of a job."""
+
+		Number = "github.step.number"  #: The step's position in its job, counted from one.
 
 _NEXT_LINK = re_compile(r'<([^>]+)>;\s*rel="next"')
 """Pattern extracting the URL of the next page from a ``Link`` header."""
@@ -107,11 +122,11 @@ _MAXIMUM_RETRY_AFTER = 60.0
 
 
 _CONCLUSION_TO_RESULT = {
-	Conclusion.Success:   RESULT_SUCCESS,
-	Conclusion.Failure:   RESULT_FAILURE,
-	Conclusion.TimedOut:  RESULT_TIMEOUT,
-	Conclusion.Skipped:   RESULT_SKIP,
-	Conclusion.Cancelled: RESULT_CANCELLATION,
+	Conclusion.Success:   Result.Success,
+	Conclusion.Failure:   Result.Failure,
+	Conclusion.TimedOut:  Result.Timeout,
+	Conclusion.Skipped:   Result.Skip,
+	Conclusion.Cancelled: Result.Cancellation,
 }
 """GitHub's conclusions and the CI/CD results they correspond to. Any other conclusion is an error."""
 
@@ -126,7 +141,7 @@ def _result(conclusion: Nullable[Conclusion]) -> Nullable[str]:
 	if conclusion is None:
 		return None
 
-	return _CONCLUSION_TO_RESULT.get(conclusion, RESULT_ERROR)
+	return _CONCLUSION_TO_RESULT.get(conclusion, Result.Error)
 
 
 def _setAttribute(span: Span, key: str, value: Nullable[AttributeValue]) -> None:
@@ -252,11 +267,11 @@ def _addStep(step: Step, parent: Span) -> None:
 		return
 
 	span = Span(step.Name, step.StartedAt, _notBefore(step.CompletedAt, step.StartedAt), parent=parent)
-	span[SPAN_KIND] = SPAN_KIND_STEP
-	span[TASK_NAME] = step.Name
-	_setAttribute(span, "github.step.number", step.Number)
-	_setAttribute(span, TASK_RUN_RESULT, _result(step.Conclusion))
-	_setAttribute(span, CONCLUSION, None if step.Conclusion is None else step.Conclusion.value)
+	span[CI.Span.Kind] = SpanKind.Step
+	span[OTLP.CICD.Pipeline.Task.Name] = step.Name
+	_setAttribute(span, GitHub.Step.Number, step.Number)
+	_setAttribute(span, OTLP.CICD.Pipeline.Task.Run.Result, _result(step.Conclusion))
+	_setAttribute(span, GitHub.Conclusion, None if step.Conclusion is None else step.Conclusion.value)
 
 
 def _addJob(job: Job, parent: Span) -> None:
@@ -284,26 +299,26 @@ def _addJob(job: Job, parent: Span) -> None:
 	else:
 		if created is not None and (started is None or created < started):
 			queued = Span(f"{displayName} (queued)", created, _notBefore(started, created), parent=parent)
-			queued[SPAN_KIND] = SPAN_KIND_QUEUED
-			queued[TASK_NAME] = fullName
-			_setAttribute(queued, RUNNER_LABELS, list(job.Labels))
+			queued[CI.Span.Kind] = SpanKind.Queued
+			queued[OTLP.CICD.Pipeline.Task.Name] = fullName
+			_setAttribute(queued, GitHub.Runner.Labels, list(job.Labels))
 
 		if started is None:
 			return
 
 		jobSpan = Span(displayName, started, _notBefore(completed, started), parent=parent)
 
-	jobSpan[SPAN_KIND] = SPAN_KIND_JOB
-	jobSpan[TASK_NAME] = fullName
-	_setAttribute(jobSpan, TASK_RUN_ID, None if job.ID is None else str(job.ID))
-	_setAttribute(jobSpan, TASK_RUN_URL, None if job.URL is None else str(job.URL))
-	_setAttribute(jobSpan, TASK_RUN_RESULT, _result(job.Conclusion))
-	_setAttribute(jobSpan, CONCLUSION, None if job.Conclusion is None else job.Conclusion.value)
-	_setAttribute(jobSpan, WORKER_NAME, job.RunnerName)
-	_setAttribute(jobSpan, RUNNER_GROUP, job.RunnerGroupName)
-	_setAttribute(jobSpan, RUNNER_LABELS, list(job.Labels))
+	jobSpan[CI.Span.Kind] = SpanKind.Job
+	jobSpan[OTLP.CICD.Pipeline.Task.Name] = fullName
+	_setAttribute(jobSpan, OTLP.CICD.Pipeline.Task.Run.ID, None if job.ID is None else str(job.ID))
+	_setAttribute(jobSpan, OTLP.CICD.Pipeline.Task.Run.URL.Full, None if job.URL is None else str(job.URL))
+	_setAttribute(jobSpan, OTLP.CICD.Pipeline.Task.Run.Result, _result(job.Conclusion))
+	_setAttribute(jobSpan, GitHub.Conclusion, None if job.Conclusion is None else job.Conclusion.value)
+	_setAttribute(jobSpan, OTLP.CICD.Worker.Name, job.RunnerName)
+	_setAttribute(jobSpan, GitHub.Runner.Group, job.RunnerGroupName)
+	_setAttribute(jobSpan, GitHub.Runner.Labels, list(job.Labels))
 	if isinstance(job, MatrixJob) and len(job.DimensionValues) > 0:
-		jobSpan[MATRIX_DIMENSIONS] = list(job.DimensionValues)
+		jobSpan[GitHub.Matrix.Dimensions] = list(job.DimensionValues)
 
 	for step in job.Steps:
 		_addStep(step, jobSpan)
@@ -327,8 +342,8 @@ def _addGroup(group: JobGroup, parent: Span) -> None:
 		else:
 			span = Span(item.Name, begin, end, parent=parent)
 
-		span[SPAN_KIND] = SPAN_KIND_MATRIX if isinstance(item, Matrix) else SPAN_KIND_WORKFLOW
-		span[TASK_NAME] = item.Name
+		span[CI.Span.Kind] = SpanKind.Matrix if isinstance(item, Matrix) else SpanKind.Workflow
+		span[OTLP.CICD.Pipeline.Task.Name] = item.Name
 		_addGroup(item, span)
 
 
@@ -343,7 +358,7 @@ def ConvertPipeline(pipeline: Pipeline) -> Trace:
 	  its start, if it waited. A skipped job has no waiting timespan, and a job that hasn't started yet only a running
 	  waiting timespan.
 	* A step that started becomes a sub-span of its job.
-	* Every timespan is classified by :data:`~pyTooling.Tracing.CI.SPAN_KIND` and carries the OpenTelemetry CI/CD
+	* Every timespan is classified by :attr:`CI.Span.Kind <pyTooling.Tracing.CI.CI>` and carries the OpenTelemetry CI/CD
 	  attributes, GitHub's conclusion (:data:`CONCLUSION`), and for jobs the runner's labels and group.
 
 	:param pipeline:   The workflow run.
@@ -367,18 +382,18 @@ def ConvertPipeline(pipeline: Pipeline) -> Trace:
 		endTime = max(endTime, jobsEnd)
 
 	trace = Trace(pipeline.Name, beginTime, endTime)
-	trace[SPAN_KIND] =     SPAN_KIND_PIPELINE
-	trace[PIPELINE_NAME] = pipeline.Name
-	_setAttribute(trace, PIPELINE_RUN_ID, None if pipeline.ID is None else str(pipeline.ID))
-	_setAttribute(trace, PIPELINE_RUN_URL, None if pipeline.URL is None else str(pipeline.URL))
-	_setAttribute(trace, PIPELINE_RESULT, _result(pipeline.Conclusion))
-	_setAttribute(trace, CONCLUSION, None if pipeline.Conclusion is None else pipeline.Conclusion.value)
-	_setAttribute(trace, "github.run.attempt", pipeline.RunAttempt)
-	_setAttribute(trace, "github.run.number", pipeline.RunNumber)
-	_setAttribute(trace, "github.workflow.path", pipeline.Path)
-	_setAttribute(trace, "github.event", None if pipeline.Event is None else pipeline.Event.value)
-	_setAttribute(trace, "vcs.ref.head.name", pipeline.GitReference)
-	_setAttribute(trace, "vcs.ref.head.revision", pipeline.SHA)
+	trace[CI.Span.Kind] = SpanKind.Pipeline
+	trace[OTLP.CICD.Pipeline.Name] = pipeline.Name
+	_setAttribute(trace, OTLP.CICD.Pipeline.Run.ID, None if pipeline.ID is None else str(pipeline.ID))
+	_setAttribute(trace, OTLP.CICD.Pipeline.Run.URL.Full, None if pipeline.URL is None else str(pipeline.URL))
+	_setAttribute(trace, OTLP.CICD.Pipeline.Result, _result(pipeline.Conclusion))
+	_setAttribute(trace, GitHub.Conclusion, None if pipeline.Conclusion is None else pipeline.Conclusion.value)
+	_setAttribute(trace, GitHub.Run.Attempt, pipeline.RunAttempt)
+	_setAttribute(trace, GitHub.Run.Number, pipeline.RunNumber)
+	_setAttribute(trace, GitHub.Workflow.Path, pipeline.Path)
+	_setAttribute(trace, GitHub.Event, None if pipeline.Event is None else pipeline.Event.value)
+	_setAttribute(trace, OTLP.VCS.Ref.Head.Name, pipeline.GitReference)
+	_setAttribute(trace, OTLP.VCS.Ref.Head.Revision, pipeline.SHA)
 
 	_addGroup(pipeline, trace)
 

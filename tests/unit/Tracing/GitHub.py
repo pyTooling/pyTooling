@@ -40,8 +40,8 @@ from urllib.error                import HTTPError, URLError
 from pyTooling.CI.GitHub         import GitHubError
 from pyTooling.Exceptions        import ToolingException
 from pyTooling.Tracing           import Span, Trace, TracingError
-from pyTooling.Tracing.CI        import SPAN_KIND, parseISO8601Timestamp
-from pyTooling.Tracing.CI.GitHub import ConvertWorkflowRun, WorkflowRunReader
+from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind, parseISO8601Timestamp
+from pyTooling.Tracing.CI.GitHub import ConvertWorkflowRun, GitHub, WorkflowRunReader
 from pyTooling.Testing           import Testcase
 
 
@@ -119,6 +119,61 @@ def _children(span: Span) -> dict[str, Span]:
 	return {subSpan.Name: subSpan for subSpan in span.IterateSubSpans()}
 
 
+class AttributeKeys(Testcase):
+	"""A namespace of attribute keys is nested the way the key is spelled, so the path names the key."""
+
+	@staticmethod
+	def _keys(namespace: type, path: tuple[str, ...] = ()) -> list[tuple[tuple[str, ...], str]]:
+		"""
+		Walk a namespace of attribute keys.
+
+		:param namespace: The namespace class to walk.
+		:param path:      Names of the enclosing namespaces.
+		:returns:         For every key, the path naming it and the key's value.
+		"""
+		found = []
+		for name, member in vars(namespace).items():
+			if name.startswith("_"):
+				continue
+			elif isinstance(member, type):
+				found += AttributeKeys._keys(member, path + (name,))
+			elif isinstance(member, str):
+				found.append((path + (name,), member))
+
+		return found
+
+	def test_EveryPathSpellsItsKey(self) -> None:
+		# 'OTLP' names the authority and is not part of the key; 'CI' and 'GitHub' are the key's own prefix
+		for namespace, prefix in ((OTLP, ()), (CI, ("CI",)), (GitHub, ("GitHub",))):
+			for path, key in self._keys(namespace):
+				with self.subTest(path=namespace.__name__ + "." + ".".join(path)):
+					self.assertEqual(".".join(prefix + path).lower(), key)
+
+	def test_TheNamespacesAreNotEmpty(self) -> None:
+		self.assertEqual(11, len(self._keys(OTLP)))
+		self.assertEqual(1, len(self._keys(CI)))
+		self.assertEqual(9, len(self._keys(GitHub)))
+
+	def test_TheResultsAreTheOnesTheConventionsAllow(self) -> None:
+		self.assertSetEqual(
+			{"success", "failure", "timeout", "skip", "cancellation", "error"},
+			{result.value for result in Result}
+		)
+
+	def test_AnEnumMemberIsWrittenAsItsString(self) -> None:
+		"""A backend groups by the attribute's string, so the member has to reach OTLP as that exact string."""
+		trace = Trace("Pipeline")
+		trace[CI.Span.Kind] = SpanKind.Pipeline
+		trace[OTLP.CICD.Pipeline.Result] = Result.Cancellation
+
+		attributes = {
+			attribute["key"]: attribute["value"]
+			for attribute in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["attributes"]
+		}
+		self.assertEqual({"stringValue": "pipeline"}, attributes["ci.span.kind"])
+		self.assertEqual({"stringValue": "cancellation"}, attributes["cicd.pipeline.result"])
+
+
 class Timestamps(Testcase):
 	def test_UTC(self) -> None:
 		self.assertEqual(
@@ -152,7 +207,7 @@ class Conversion(Testcase):
 
 		self.assertEqual("Pipeline", trace.Name)
 		self.assertEqual(600.0, trace.Duration)
-		self.assertEqual("pipeline", trace[SPAN_KIND])
+		self.assertEqual("pipeline", trace[CI.Span.Kind])
 		self.assertEqual("Pipeline", trace["cicd.pipeline.name"])
 		self.assertEqual("4711", trace["cicd.pipeline.run.id"])
 		self.assertEqual("success", trace["cicd.pipeline.result"])
@@ -173,12 +228,12 @@ class Conversion(Testcase):
 		self.assertListEqual(["Build (queued)", "Build"], [span.Name for span in trace.IterateSubSpans()])
 
 		queued = children["Build (queued)"]
-		self.assertEqual("queued", queued[SPAN_KIND])
+		self.assertEqual("queued", queued[CI.Span.Kind])
 		self.assertEqual(3.0, queued.Duration)
 		self.assertListEqual(["ubuntu-26.04"], queued["github.runner.labels"])
 
 		job = children["Build"]
-		self.assertEqual("job", job[SPAN_KIND])
+		self.assertEqual("job", job[CI.Span.Kind])
 		self.assertEqual(6.0, job.Duration)
 		self.assertEqual("Build", job["cicd.pipeline.task.name"])
 		self.assertEqual("success", job["cicd.pipeline.task.run.result"])
@@ -236,7 +291,7 @@ class Conversion(Testcase):
 		stepSpans = list(job.IterateSubSpans())
 
 		self.assertListEqual(["Set up job", "Compile"], [span.Name for span in stepSpans])
-		self.assertEqual("step", stepSpans[1][SPAN_KIND])
+		self.assertEqual("step", stepSpans[1][CI.Span.Kind])
 		self.assertEqual(3.0, stepSpans[1].Duration)
 		self.assertEqual(2, stepSpans[1]["github.step.number"])
 		self.assertEqual("failure", stepSpans[1]["cicd.pipeline.task.run.result"])
@@ -264,7 +319,7 @@ class Conversion(Testcase):
 		self.assertListEqual(["Prepare (queued)", "Prepare", "UnitTesting"], spanNames)
 
 		group = children["UnitTesting"]
-		self.assertEqual("workflow", group[SPAN_KIND])
+		self.assertEqual("workflow", group[CI.Span.Kind])
 		self.assertEqual(parseISO8601Timestamp(_time(10)), group.StartTime)
 		self.assertEqual(80.0, group.Duration)
 		self.assertListEqual(
@@ -277,7 +332,7 @@ class Conversion(Testcase):
 		release = _children(trace)["Release"]
 		publish = _children(release)["Publish"]
 
-		self.assertEqual("workflow", publish[SPAN_KIND])
+		self.assertEqual("workflow", publish[CI.Span.Kind])
 		self.assertIn("PyPI", _children(publish))
 
 	def test_ReusableWorkflow_Running(self) -> None:
@@ -744,7 +799,7 @@ class Matrices(Testcase):
 
 		matrix = _children(trace)["Unit Tests"]
 
-		self.assertEqual("matrix", matrix[SPAN_KIND])
+		self.assertEqual("matrix", matrix[CI.Span.Kind])
 		self.assertEqual(2, len([name for name in _children(matrix) if not name.endswith("(queued)")]))
 
 	def test_InstancesAreNamedByTheirDimensions(self) -> None:
@@ -775,7 +830,7 @@ class Matrices(Testcase):
 		trace = ConvertWorkflowRun(_run(), [_job("Docs / Sphinx (html)", 10, 12, 60)])
 
 		workflow = _children(trace)["Docs"]
-		self.assertEqual("workflow", workflow[SPAN_KIND])
+		self.assertEqual("workflow", workflow[CI.Span.Kind])
 
 		matrix = _children(workflow)["Sphinx"]
-		self.assertEqual("matrix", matrix[SPAN_KIND])
+		self.assertEqual("matrix", matrix[CI.Span.Kind])
