@@ -126,6 +126,16 @@ class Construction(Testcase):
 				with self.assertRaises(TypeError):
 					_ = RESTClient(API, **{name: value})
 
+	def test_None(self) -> None:
+		"""A parameter that isn't optional is None by mistake, which is a value, not a type."""
+		with self.assertRaises(ValueError):
+			_ = RESTClient(None)
+
+		for name in ("timeout", "retries", "retryDelay"):
+			with self.subTest(parameter=name):
+				with self.assertRaises(ValueError):
+					_ = RESTClient(API, **{name: None})
+
 	def test_WrongValues(self) -> None:
 		for name, value in (("timeout", 0.0), ("retries", -1), ("retryDelay", -1.0)):
 			with self.subTest(parameter=name):
@@ -368,6 +378,16 @@ class Writing(Testcase):
 		with self.assertRaises(TypeError):
 			_ = client.GetJSONObject("things", headers="Accept")
 
+	def test_None(self) -> None:
+		client = RESTClient(API)
+
+		with self.assertRaises(ValueError):
+			_ = client.GetJSONObject(None)
+		for method in (client.PostJSONObject, client.PutJSONObject, client.PatchJSONObject):
+			with self.subTest(method=method.__name__):
+				with self.assertRaises(ValueError):
+					_ = method("things", None)
+
 	def test_AnEmptyAnswerToAGetIsAnError(self) -> None:
 		patcher, _ = self._Capture(_Response(b"", contentType=None))
 		with patcher:
@@ -493,9 +513,18 @@ class Idempotency(Testcase):
 
 class BaseURL(Testcase):
 	def test_AURLIsAccepted(self) -> None:
-		client = RESTClient(URL.Parse("https://ghe.example.com/api/v3/"))
+		"""A URL is taken as it is - it isn't rendered and parsed again."""
+		apiURL = URL.Parse("https://ghe.example.com/api/v3/")
+		client = RESTClient(apiURL)
 
-		self.assertEqual("https://ghe.example.com/api/v3", str(client.APIURL), "The trailing slash is normalized away.")
+		self.assertEqual("https://ghe.example.com/api/v3", str(client.APIURL), "The trailing slash is removed.")
+
+		apiURL = URL.Parse("https://ghe.example.com/api/v3")
+		self.assertIs(apiURL, RESTClient(apiURL).APIURL, "A URL that needs nothing done to it is kept, not re-parsed.")
+
+	def test_SomethingThatIsNeitherAStringNorAURL(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = RESTClient(4711)
 
 	def test_TheAPIURLIsAURL(self) -> None:
 		client = RESTClient(API)
