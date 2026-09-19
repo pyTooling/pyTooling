@@ -129,7 +129,7 @@ _CONCLUSION_TO_RESULT = {
 
 
 @export
-class GitHubTimespanMixIn(metaclass=ExtendedType, mixin=True):
+class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	Mixin-class for a timespan built from :mod:`pyTooling.CI.GitHub`'s model of a workflow run.
 
@@ -267,7 +267,7 @@ class GitHubTimespanMixIn(metaclass=ExtendedType, mixin=True):
 
 
 @export
-class StepSpan(CIStepSpan, GitHubTimespanMixIn):
+class StepSpan(CIStepSpan, GitHubTimespanMixin):
 	"""The timespan of a step of a GitHub Actions job."""
 
 	@classmethod
@@ -298,7 +298,7 @@ class StepSpan(CIStepSpan, GitHubTimespanMixIn):
 
 
 @export
-class QueuedSpan(CIQueuedSpan, GitHubTimespanMixIn):
+class QueuedSpan(CIQueuedSpan, GitHubTimespanMixin):
 	"""The timespan a GitHub Actions job waited for a runner, in front of the job's own timespan."""
 
 	@classmethod
@@ -323,7 +323,7 @@ class QueuedSpan(CIQueuedSpan, GitHubTimespanMixIn):
 
 
 @export
-class JobSpan(CIJobSpan, GitHubTimespanMixIn):
+class JobSpan(CIJobSpan, GitHubTimespanMixin):
 	"""The timespan of a GitHub Actions job, from the moment it started on a runner until it completed."""
 
 	@classmethod
@@ -384,13 +384,13 @@ class JobSpan(CIJobSpan, GitHubTimespanMixIn):
 
 
 @export
-class GitHubGroupMixIn(metaclass=ExtendedType, mixin=True):
+class GitHubGroupMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	Mixin-class for a timespan holding other timespans - a called workflow or a matrix.
 
 	Both are built the same way and differ only in what they are, which their class says. Its
-	:meth:`~GitHubTimespanMixIn._GroupTimes` and :meth:`~GitHubTimespanMixIn._AddContents` come from
-	:class:`GitHubTimespanMixIn`.
+	:meth:`~GitHubTimespanMixin._GroupTimes` and :meth:`~GitHubTimespanMixin._AddContents` come from
+	:class:`GitHubTimespanMixin`.
 	"""
 
 	@classmethod
@@ -410,17 +410,17 @@ class GitHubGroupMixIn(metaclass=ExtendedType, mixin=True):
 
 
 @export
-class WorkflowSpan(CIWorkflowSpan, GitHubTimespanMixIn, GitHubGroupMixIn):
+class WorkflowSpan(CIWorkflowSpan, GitHubTimespanMixin, GitHubGroupMixin):
 	"""The jobs of a called workflow, grouped into one timespan."""
 
 
 @export
-class MatrixSpan(CIMatrixSpan, GitHubTimespanMixIn, GitHubGroupMixIn):
+class MatrixSpan(CIMatrixSpan, GitHubTimespanMixin, GitHubGroupMixin):
 	"""The instances a matrix produced, grouped into one timespan."""
 
 
 @export
-class WorkflowRunTrace(CIPipelineTrace, GitHubTimespanMixIn):
+class WorkflowRunTrace(CIPipelineTrace, GitHubTimespanMixin):
 	"""A GitHub Actions workflow run as a trace."""
 
 	@classmethod
