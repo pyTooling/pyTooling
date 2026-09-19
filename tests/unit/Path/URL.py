@@ -346,6 +346,12 @@ class TrailingSlash(Testcase):
 
 				self.assertIs(parsedURL, parsedURL.WithoutTrailingSlash())
 
+	def test_ThePathAnswersTheGenericMethod(self) -> None:
+		"""'WithoutTrailingSlash' is 'WithoutTrailingDelimiter' applied to the URL's path."""
+		path = URL.Parse("https://example.org/api/v3/").Path
+
+		self.assertEqual("/api/v3", str(path.WithoutTrailingDelimiter()))
+
 	def test_OnlyOneSlashIsRemoved(self) -> None:
 		"""A path ending in '//' names an empty element and then another, which isn't the same as naming neither."""
 		self.assertEqual("https://example.org/api/", str(URL.Parse("https://example.org/api//").WithoutTrailingSlash()))

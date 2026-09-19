@@ -74,10 +74,15 @@ Version 10.x (2026)
      * The sentinel is an empty class rather than a bare object, so a variable annotated as a :class:`type` still
        type-checks.
 
-   * :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingSlash` returns a path that doesn't end in the element
-     delimiter, and :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` a URL whose path doesn't. A trailing
-     delimiter is an empty last element, so ``/api/v3/`` and ``/api/v3`` are different paths although they usually
-     name the same thing - and a URL something is appended to wants the latter. A path with none answers with itself.
+   * :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter` returns a path that doesn't end in
+     ``ELEMENT_DELIMITER``, and :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` a URL whose path doesn't -
+     a URL's element delimiter is the slash. A trailing delimiter is an empty last element, so ``/api/v3/`` and
+     ``/api/v3`` are different paths although they usually name the same thing - and a path something is appended to
+     wants the latter. A path with none answers with itself.
+   * :meth:`~pyTooling.GenericPath.PathMixIn.Parse` strips ``ROOT_DELIMITER`` from an absolute path, not as many
+     characters as ``ELEMENT_DELIMITER`` is long. The two are the same in a URL, so nothing parses differently today,
+     but a path flavour marking its root differently - a drive letter, a host separated by a colon - would have lost
+     the wrong number of characters.
 
    * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
      :exc:`~pyTooling.GenericPath.URL.URLError` for it.
