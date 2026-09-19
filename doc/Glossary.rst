@@ -56,6 +56,7 @@ Glossary
           classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;
           classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
 
+   Base
    Base-Class
      A *base-class* is an ancestor class for other classes derived therefrom.
 
@@ -338,6 +339,31 @@ Glossary
      Unlike a :term:`softlink`, a hard link cannot point at a directory, cannot cross a filesystem boundary, and cannot
      dangle.
 
+   Inheritance
+     :external+python:ref:`Inheritance <tut-inheritance>` derives a class from another, so the derived class has the
+     fields and methods of its :term:`base-class` and may add to or replace them.
+
+     pyTooling's :ref:`META/ExtendedType` takes part in it: a derived class' slots are the fields it declares plus the
+     ones it inherits, and an :term:`abstract method` stays abstract until a derived class
+     :term:`overrides <Overriding>` it.
+
+     Wikipedia: :wiki:`Inheritance <Inheritance_(object-oriented_programming)>`
+
+   JSON
+     The *JavaScript Object Notation* is a text format for structured data, specified by :rfc:`8259` and
+     `json.org <https://www.json.org/>`__.
+
+     pyTooling reads it as a configuration format - :ref:`CONFIG/FileFormat/JSON` - and writes a trace as
+     :ref:`OTLP/JSON <TRACING/OTLP>`, with the standard library's :external+python:mod:`json` doing the parsing.
+
+     Wikipedia: :wiki:`JSON <JSON>`
+
+   JSON-Schema
+     A `JSON Schema <https://json-schema.org/>`__ describes the structure a :term:`JSON` document must have - which
+     members exist, of which type, and which are required - and is a JSON document itself.
+
+     It is to JSON what an :term:`XSD` is to :term:`XML`.
+
    Meta-Class
      A *meta-class* is a class helping to construct classes. Thus, it's the type of a type.
 
@@ -398,6 +424,17 @@ Glossary
 
      Wikipedia: :wiki:`MSYS2 <Mingw-w64#MSYS2>`
 
+   Multiple Inheritance
+     :external+python:ref:`Multiple inheritance <tut-multiple>` derives a class from more than one base-class. The
+     first is the primary base-class; the others usually contribute behaviour rather than identity - a
+     :term:`mixin-class`.
+
+     pyTooling's :ref:`META/ExtendedType` is what makes it work with :term:`slots`: a mixin-class marked
+     ``mixin=True`` may declare fields although it is not the primary base-class, and they become slots of whichever
+     class mixes it in.
+
+     Wikipedia: :wiki:`Multiple inheritance <Multiple_inheritance>`
+
    Mustoverride Method
      A *must-override* method provides a partial implementation (incomplete code) and must therefore be fully
      implemented by all derived classes.
@@ -422,6 +459,17 @@ Glossary
      Python has no overloading: a second ``def`` of a name replaces the first. What it has is
      :func:`~typing.overload`, which declares the accepted signatures for a type checker while a single
      implementation dispatches on them itself.
+
+   Overriding
+     :wiki:`Overriding <Method_overriding>` replaces a method inherited from a :term:`base-class` with another
+     implementation of the same name. Python needs no keyword for it - a ``def`` in the derived class shadows the
+     inherited one, and :external+python:class:`super` reaches the replaced implementation.
+
+     pyTooling makes the *obligation* explicit where there is one: an :term:`abstract method` has no implementation
+     and must be overridden, a :term:`mustoverride method` has a partial one that must be, and both are checked when
+     the class is instantiated - see :ref:`META/AbstractMethod` and :ref:`META/MustOverwrite`.
+
+     Not to be confused with :term:`overloading`, which is several implementations of one name in *one* class.
 
    Parent
      A *parent* is direct predecessor of a :term:`node`.
@@ -534,6 +582,19 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   REST
+   REST-API
+     *Representational State Transfer* is an architectural style for web APIs: a resource is addressed by a
+     :term:`URL`, and the HTTP method says what to do with it - read it, create it, replace it, delete it. It is
+     described in `chapter 5 of Roy Fielding's dissertation
+     <https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm>`__ rather than by a standard, so what
+     an API calls REST varies.
+
+     A REST API usually answers in :term:`JSON`. :mod:`pyTooling.CI.GitHub` reads the payloads GitHub's REST API
+     answers with for a workflow run.
+
+     Wikipedia: :wiki:`REST <REST>`
+
    Root
      All :term:`nodes <node>` in a :term:`tree` have one common :term:`ancestor` called *root*.
 
@@ -564,6 +625,24 @@ Glossary
           classDef node fill:#eee,stroke:#777,font-size:smaller;
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee;
+
+   Schema
+     A *schema* is a formal description of the structure a document must have, written in a language of its own, so
+     that a document can be checked against it instead of by reading it. :term:`XSD` is one for :term:`XML`,
+     :term:`JSON-Schema` one for :term:`JSON`.
+
+     pyTooling publishes the schemas of the file formats it writes - see :ref:`SCHEMAS` - so a consumer of such a
+     file can validate it without owning pyTooling.
+
+   Schema Validation
+     *Schema validation* checks a document against its :term:`schema` and reports where the document deviates - a
+     missing element, an attribute of the wrong type, children in the wrong order.
+
+     A file pyTooling writes names its schema, so validating it is one command:
+
+     .. code-block:: Bash
+
+        xmllint --schema TestReport-v0.1.xsd --noout TestReport.xml
 
    Sibling
      *Siblings* are all direct :term:`child nodes <child>` of a node's :term:`parent` node except itself.
@@ -616,6 +695,15 @@ Glossary
      Unlike a :term:`hardlink` it may point at a directory, may cross filesystems, and may *dangle* - the target can be
      removed or never have existed, which is why following one is an operation that can fail.
 
+   TOML
+     *Tom's Obvious, Minimal Language* is a text format for configuration files, specified at
+     `toml.io <https://toml.io/>`__. It is what :file:`pyproject.toml` is written in, and the standard library reads
+     it with :external+python:mod:`tomllib`.
+
+     As a pyTooling configuration format it is :ref:`planned <CONFIG/FileFormat/TOML>`.
+
+     Wikipedia: :wiki:`TOML <TOML>`
+
    Tree
      A *tree* is a data structure made of :term:`nodes <node>` and parent-child relations. All nodes in a tree share one
      common :term:`ancestor` call :term:`root`.
@@ -649,3 +737,33 @@ Glossary
      Windows System for Linux
 
      Wikipedia: :wiki:`Windows Subsystem for Linux <Windows_Subsystem_for_Linux>`
+
+   XML
+     The *Extensible Markup Language* is a text format for structured data, specified by the W3C's
+     `XML recommendation <https://www.w3.org/TR/xml/>`__.
+
+     :mod:`pyTooling.Testing.ReportWriter` writes a test report as one nested XML document, and the
+     :term:`XSD <XML-Schema>` describing it is shipped with pyTooling. As a configuration format XML is
+     :ref:`planned <CONFIG/FileFormat/XML>`.
+
+     Wikipedia: :wiki:`XML <XML>`
+
+   XML-Schema
+   XSD
+     An *XML Schema Definition* describes the structure an :term:`XML` document must have - the elements, their
+     attributes and their order - and is an XML document itself. It is specified by the W3C's
+     `XML Schema <https://www.w3.org/XML/Schema>`__.
+
+     pyTooling publishes one per file format it writes, each rendered with its types drawn as a graph - see
+     :ref:`SCHEMAS`.
+
+     Wikipedia: :wiki:`XML Schema <XML_Schema_(W3C)>`
+
+   YAML
+     *YAML Ain't Markup Language* is an indentation-based text format for structured data, specified at
+     `yaml.org <https://yaml.org/spec/>`__.
+
+     pyTooling reads it as a configuration format - :ref:`CONFIG/FileFormat/YAML`.
+
+     Wikipedia: :wiki:`YAML <YAML>`
+
