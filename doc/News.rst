@@ -213,6 +213,27 @@ Version 10.x (2026)
      * A trace and its timespans can be constructed with **recorded times** - ``beginTime`` and ``endTime`` - for
        timespans measured elsewhere, e.g. by a CI service. Without them, a timespan is timed by its
        ``with``-statement as before.
+     * :mod:`pyTooling.Tracing.CI.GitHub` reads a **GitHub Actions workflow run** into a trace: jobs, their steps,
+       the time each job waited for a runner, and called workflows and matrices as groups. The timespans carry
+       OpenTelemetry's CI/CD attributes, so a rendering or a query doesn't depend on the CI service. A transiently
+       failing request is tried again.
+     * The run is read by :mod:`pyTooling.CI.GitHub`, so reconstructing the tree is the model's job and
+       :meth:`~pyTooling.Tracing.CI.GitHub.WorkflowRunTrace.FromPipeline` converts a model that was built elsewhere.
+     * Every kind of timespan is a class: :class:`~pyTooling.Tracing.CI.PipelineTrace`,
+       :class:`~pyTooling.Tracing.CI.WorkflowSpan`, :class:`~pyTooling.Tracing.CI.MatrixSpan`,
+       :class:`~pyTooling.Tracing.CI.QueuedSpan`, :class:`~pyTooling.Tracing.CI.JobSpan` and
+       :class:`~pyTooling.Tracing.CI.StepSpan`. Each names its kind in ``KIND`` and takes the conventions'
+       attributes as parameters, so a reader states values and never a key, and an unknown value sets no attribute.
+       The classes are service-independent, and :mod:`pyTooling.Tracing.CI.GitHub` derives them into flavours that
+       build themselves from the model -
+       :meth:`JobSpan.FromJob <pyTooling.Tracing.CI.GitHub.JobSpan.FromJob>`. Everything below the trace derives
+       from the abstract :class:`~pyTooling.Tracing.CI.TaskSpan`, because it is a *task* in the conventions' sense.
+     * The attribute keys are namespaces nested the way the keys themselves are, instead of a flat block of module
+       constants: :class:`~pyTooling.Tracing.CI.OTLP` for OpenTelemetry's conventions,
+       :class:`~pyTooling.Tracing.CI.CI` for what pyTooling adds and :class:`~pyTooling.Tracing.CI.GitHub.GitHub` for
+       what only GitHub reports, so :attr:`OTLP.CICD.Pipeline.Task.Run.ID <pyTooling.Tracing.CI.OTLP>` spells
+       ``cicd.pipeline.task.run.id``. The closed value sets are enumerations -
+       :class:`~pyTooling.Tracing.CI.SpanKind` and :class:`~pyTooling.Tracing.CI.Result`.
 
    * :mod:`pyTooling.Packaging`
 
@@ -224,6 +245,11 @@ Version 10.x (2026)
        is removed, because nothing renders ReST where a short description is displayed.
      * The module raises its own :exc:`~pyTooling.Packaging.PackagingError`, so a caller can catch what this module
        reports without catching everything derived from :exc:`~pyTooling.Exceptions.ToolingException`.
+
+   * :mod:`pyTooling.Common`
+
+     * :func:`~pyTooling.Common.parseISO8601Timestamp` parses an ISO 8601 timestamp. Whether a timestamp carrying no
+       UTC offset stays naive is the caller's decision, given as ``defaultTimeZone``.
 
    * :mod:`pyTooling.Decorators`
 
