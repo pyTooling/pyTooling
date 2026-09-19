@@ -59,8 +59,9 @@ defines.
 
 An answer that isn't a JSON object - an array, an HTML error page, a truncated body - raises a
 :exc:`~pyTooling.REST.RESTError` naming the URL, rather than being handed on as something a caller has to check. The
-answer's media type is checked first: ``application/json`` and the :rfc:`6839` suffix, so
-``application/vnd.github+json`` counts too.
+answer's media type is checked first, by :meth:`MediaType.Matches <pyTooling.REST.MediaType.Matches>`: it ignores the
+header's parameters, compares the name case-insensitively, and counts the :rfc:`6839` structured syntax suffix, so
+``application/vnd.github+json`` is ``application/json``.
 
 .. _REST/Pagination:
 

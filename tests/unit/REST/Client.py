@@ -37,7 +37,7 @@ from unittest                  import mock
 from urllib.error              import HTTPError, URLError
 
 from pyTooling.GenericPath.URL import URL
-from pyTooling.REST            import RESTClient, RESTError
+from pyTooling.REST            import MediaType, RESTClient, RESTError
 from pyTooling.Testing         import Testcase
 
 
@@ -441,6 +441,31 @@ class Headers(Testcase):
 
 
 class MediaTypes(Testcase):
+	def test_AHeaderNamingTheMediaType(self) -> None:
+		"""A 'Content-Type' names a media type although it carries parameters or another case."""
+		for contentType in ("application/json", "application/json; charset=utf-8", "Application/JSON", " text/plain "):
+			with self.subTest(contentType=contentType):
+				self.assertTrue((MediaType.PlainText if "plain" in contentType else MediaType.JSON).Matches(contentType))
+
+	def test_AHeaderNamingTheSuffix(self) -> None:
+		"""RFC 6839's structured syntax suffix names the media type it is a syntax of."""
+		self.assertTrue(MediaType.JSON.Matches("application/vnd.github+json"))
+		self.assertTrue(MediaType.JSON.Matches("application/vnd.github+json; charset=utf-8"))
+
+	def test_AHeaderNamingAnotherMediaType(self) -> None:
+		for contentType in ("text/html", "application/octet-stream", "application/json-patch", "application/xml"):
+			with self.subTest(contentType=contentType):
+				self.assertFalse(MediaType.JSON.Matches(contentType))
+
+	def test_NoHeader(self) -> None:
+		with self.assertRaises(ValueError):
+			MediaType.JSON.Matches(None)
+
+		with self.assertRaises(TypeError) as context:
+			MediaType.JSON.Matches(4711)
+
+		self.assertIn("Got type 'int'.", context.exception.__notes__)
+
 	def test_AnAnswerThatIsNotJSON(self) -> None:
 		with mock.patch("pyTooling.REST.urlopen", return_value=_Response(b"<html>", contentType="text/html")):
 			with self.assertRaises(RESTError) as context:
