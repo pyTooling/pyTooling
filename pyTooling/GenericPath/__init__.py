@@ -144,6 +144,31 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		return result
 
+	def __truediv__(self, other: PathMixIn) -> PathMixIn:
+		"""
+		Return this path with another path below it.
+
+		A trailing delimiter is dropped before appending, so composing ``/api/`` with ``things`` names
+		``/api/things`` and not an empty element between them. An absolute path names where it starts itself, so it
+		replaces this one rather than being appended - as :rfc:`3986` resolves a reference and :mod:`pathlib` joins a
+		path.
+
+		:param other: The path to append.
+		:returns:     A new path, or ``other``, if that one is absolute.
+		"""
+		if not isinstance(other, PathMixIn):
+			return NotImplemented
+		elif other._isAbsolute:
+			return other
+
+		path =     self.WithoutTrailingDelimiter()
+		elements = list(path._elements)
+		parent =   elements[-1] if len(elements) > 0 else None
+		for element in other._elements:
+			elements.append(parent := element.__class__(parent, str(element)))
+
+		return self.__class__(elements, path._isAbsolute)
+
 	def WithoutTrailingDelimiter(self) -> PathMixIn:
 		"""
 		Return a path that doesn't end in :attr:`ELEMENT_DELIMITER`.

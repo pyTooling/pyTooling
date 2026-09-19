@@ -326,6 +326,57 @@ class URLs(Testcase):
 
 
 
+class Concatenation(Testcase):
+	"""What ``URL / resource`` composes, and what it takes from which side."""
+
+	def test_AResourceBelowTheURL(self) -> None:
+		base = URL.Parse("https://example.org/api/v3")
+
+		for resource, expected in (
+			("things", "https://example.org/api/v3/things"),
+			("things/4711", "https://example.org/api/v3/things/4711"),
+			("things?per_page=100", "https://example.org/api/v3/things?per_page=100"),
+			("things#ref", "https://example.org/api/v3/things#ref"),
+		):
+			with self.subTest(resource=resource):
+				self.assertEqual(expected, str(base / resource))
+
+	def test_ATrailingSlashDoesNotBecomeAnEmptyElement(self) -> None:
+		for base in ("https://example.org/api/", "https://example.org/api", "https://example.org/"):
+			with self.subTest(base=base):
+				self.assertNotIn("//", str(URL.Parse(base) / "things").removeprefix("https://"))
+
+	def test_AnAbsolutePathNamesItsOwnRoot(self) -> None:
+		"""A path starting with the delimiter says where it starts, as RFC 3986 resolves a reference."""
+		self.assertEqual("https://example.org/other", str(URL.Parse("https://example.org/api/v3") / "/other"))
+
+	def test_TheQueryComesFromTheRightSide(self) -> None:
+		"""A relative reference brings its own query; the base URL's isn't carried into it."""
+		composed = URL.Parse("https://example.org/api?token=abc") / "things?fields=name"
+
+		self.assertEqual("https://example.org/api/things?fields=name", str(composed))
+		self.assertDictEqual({"fields": "name"}, composed.Query)
+
+	def test_TheHostAndCredentialsAreKept(self) -> None:
+		composed = URL.Parse("https://user:pass@example.org:8443/api") / "things"
+
+		self.assertEqual("https://user:pass@example.org:8443/api/things", str(composed))
+		self.assertEqual(8443, composed.Host.Port)
+
+	def test_APathObject(self) -> None:
+		composed = URL.Parse("https://example.org/api") / URL.Parse("https://elsewhere.org/things").Path
+
+		self.assertEqual("https://example.org/things", str(composed), "That path is absolute, so it replaces.")
+
+	def test_ABrokenQuery(self) -> None:
+		with self.assertRaises(URLError):
+			_ = URL.Parse("https://example.org/api") / "things?novalue"
+
+	def test_SomethingElse(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = URL.Parse("https://example.org/api") / 4711
+
+
 class TrailingSlash(Testcase):
 	"""What :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` removes, and what it leaves alone."""
 
