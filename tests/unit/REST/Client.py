@@ -538,6 +538,20 @@ class BaseURL(Testcase):
 				with self.assertRaises(ValueError):
 					_ = RESTClient(apiURL)
 
+	def test_AnEmptyPathElement(self) -> None:
+		"""'/api//' is a valid URL naming an empty element - as a base URL it is a typo every request would carry."""
+		for apiURL in ("https://example.org/api//", "https://example.org//", "https://example.org/api///"):
+			with self.subTest(apiURL=apiURL):
+				with self.assertRaises(ValueError) as context:
+					_ = RESTClient(apiURL)
+
+				self.assertIn("empty path element", str(context.exception))
+
+	def test_OneTrailingSlashIsFine(self) -> None:
+		for apiURL in ("https://example.org/", "https://example.org/api/", "https://example.org"):
+			with self.subTest(apiURL=apiURL):
+				self.assertFalse(str(RESTClient(apiURL).APIURL).endswith("/"))
+
 	def test_TheResourcePathIsAppended(self) -> None:
 		client = RESTClient("https://ghe.example.com/api/v3")
 		with mock.patch("pyTooling.REST.urlopen", return_value=_Response({})) as urlopen:
