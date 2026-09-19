@@ -836,7 +836,7 @@ class ILineTerminal:
 
 	def __init__(self, terminal: Nullable[TerminalApplication] = None) -> None:
 		"""
-		MixIn initializer.
+		Mixin initializer.
 
 		:param terminal: Optional, the terminal to write to. If ``None``, every writing method does nothing.
 		"""

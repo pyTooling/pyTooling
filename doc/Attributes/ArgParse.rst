@@ -124,7 +124,7 @@ Commands
 Grouping Arguments
 ******************
 
-.. _ATTR/ArgParse/MixIn:
+.. _ATTR/ArgParse/Mixin:
 
 Split Handlers into multiple classes
 ************************************
