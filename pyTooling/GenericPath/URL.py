@@ -40,7 +40,7 @@ from __future__            import annotations
 from enum                  import Flag
 from re                    import compile as re_compile
 from urllib.parse          import quote as urlQuote
-from typing                import ClassVar, Optional as Nullable, Mapping
+from typing                import ClassVar, Optional as Nullable, Mapping, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -252,19 +252,9 @@ class Element(ElementMixIn):
 class Path(PathMixIn):
 	"""Represents a path in a URL."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Delimiter symbol in URLs between path elements.
-	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Delimiter symbol in URLs between root element and first path element.
-
-	@classmethod
-	def Parse(cls, path: str, root: Nullable[Host] = None) -> Path:
-		"""
-		Parse a string into a URL path.
-
-		:param path: The path portion of a URL.
-		:param root: Optional, host the path is relative to.
-		:returns:    The parsed path.
-		"""
-		return super().Parse(path, root, cls, Element)
+	ELEMENT_DELIMITER: ClassVar[str] = "/"                #: Delimiter symbol in URLs between path elements.
+	ROOT_DELIMITER:    ClassVar[str] = "/"                #: Delimiter symbol in URLs between root and first element.
+	ELEMENT_TYPE:      ClassVar[type[Element]] = Element  #: Type an element of a URL's path has.
 
 
 @export
@@ -466,20 +456,9 @@ class URL:
 					error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
 					raise error from ex
 
-			hostObj =   None if host is None   else Host(host, port)
-
-			pathObj =   Path.Parse(path, hostObj)
-
-			parameters = {}
-			if query is not None:
-				for pair in query.split("&"):
-					key, separator, value = pair.partition("=")
-					if separator == "":
-						error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
-						error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
-						raise error
-
-					parameters[key] = value
+			hostObj =    None if host is None else Host(host, port)
+			pathObj =    Path.Parse(path, hostObj)
+			parameters = None if query is None else cls._ParseQuery(query, url)
 
 			return cls(
 				scheme,
@@ -487,7 +466,7 @@ class URL:
 				hostObj,
 				user,
 				password,
-				parameters if len(parameters) > 0 else None,
+				parameters,
 				fragment
 			)
 
@@ -501,6 +480,112 @@ class URL:
 				break
 
 		raise error
+
+	@classmethod
+	def _ParseQuery(cls, query: str, url: str) -> dict[str, str]:
+		"""
+		Parse a URL's query into its parameters.
+
+		:param query:     The query, without the leading ``?``. It is not empty - a URL carrying no query has none.
+		:param url:       The URL the query came from, for the exception's message.
+		:returns:         The parameters by name.
+		:raises URLError: When a parameter of the query is not a ``key=value`` pair.
+		"""
+		parameters = {}
+		for pair in query.split("&"):
+			key, separator, value = pair.partition("=")
+			if separator == "":
+				error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
+				error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
+				raise error
+
+			parameters[key] = value
+
+		return parameters
+
+	@classmethod
+	def _CheckRelativeReference(cls, reference: str) -> None:
+		"""
+		Check a string names a resource below a URL.
+
+		A relative reference of :rfc:`3986` names no scheme and no authority: it starts with no ``//``, and the first
+		segment of its path holds no ``:``, which is the ``path-noscheme`` rule. A complete URL is read by
+		:meth:`Parse` instead of being appended to another.
+
+		:param reference: The right side of the ``/`` operator.
+		:raises URLError: When the reference names a scheme or an authority.
+		:raises URLError: When the reference holds a character :rfc:`3986` forbids. |br|
+		                  The note names the character and how to percent-encode it.
+		"""
+		path = reference.partition("#")[0].partition("?")[0]
+		if path.startswith("//"):
+			error = URLError(f"Relative reference '{reference}' names an authority.")
+			error.add_note("A reference below a URL carries no host, user, password or port.")
+			error.add_note("Read a complete URL with 'URL.Parse' instead of appending it.")
+			raise error
+		elif ":" in path.split(Path.ELEMENT_DELIMITER, 1)[0]:
+			error = URLError(f"Relative reference '{reference}' names a scheme.")
+			error.add_note("The first element of a relative path carries no ':' - it would read as a scheme.")
+			error.add_note("Read a complete URL with 'URL.Parse' instead of appending it. Write a ':' further down "
+			               "the path percent-encoded as '%3A'.")
+			raise error
+
+		for character in reference:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				error = URLError(f"Relative reference '{reference}' holds a forbidden character.")
+				error.add_note(
+					f"Character {character!r} is not allowed in a URL. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				raise error
+
+	def __truediv__(self, other: Union[str, Path]) -> URL:
+		"""
+		Return this URL with a resource below it.
+
+		The right side is a **relative reference**: its path is appended below this URL's, and it brings its own query
+		and fragment, which this URL's are not carried into - :rfc:`3986` resolves a reference the same way. A path
+		that starts with a slash names where it starts itself and replaces this URL's path.
+
+		.. code-block:: python
+
+		   URL.Parse("https://example.org/api/v3") / "things/4711?fields=name"
+		   # https://example.org/api/v3/things/4711?fields=name
+
+		:param other:      The resource below this URL, as a string to parse or as a :class:`Path`.
+		:returns:          A new URL naming that resource.
+		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`Path`.
+		:raises URLError:  When the right side names a scheme or an authority instead of a resource.
+		:raises URLError:  When the right side holds a character :rfc:`3986` forbids. |br|
+		                   The note names the character and how to percent-encode it.
+		:raises URLError:  When a parameter of the right side's query is not a ``key=value`` pair.
+		"""
+		if isinstance(other, str):
+			self._CheckRelativeReference(other)
+
+			resource, _, fragment = other.partition("#")
+			resource, _, query =    resource.partition("?")
+			parameters = None if query == "" else self._ParseQuery(query, other)
+			fragment =   fragment if fragment != "" else None
+		elif isinstance(other, Path):
+			resource =   other
+			parameters = None
+			fragment =   None
+		else:
+			ex = TypeError("Second operand is not supported by / operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: 'str' or 'Path'.")
+			raise ex
+
+		return self.__class__(
+			scheme=self._scheme,
+			path=self._path / resource,
+			host=self._host,
+			user=self._user,
+			password=self._password,
+			query=parameters,
+			fragment=fragment
+		)
 
 	def __str__(self) -> str:
 		"""
@@ -542,6 +627,35 @@ class URL:
 			scheme=self._scheme,
 			path=self._path,
 			host=self._host,
+			query=self._query,
+			fragment=self._fragment
+		)
+
+	def WithoutTrailingSlash(self) -> URL:
+		"""
+		Returns a URL object whose path doesn't end in a slash.
+
+		A URL's element delimiter is the slash, so this is :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
+		applied to the URL's path. A trailing slash is an empty last element, so ``https://example.org/api/v3/`` and
+		``https://example.org/api/v3`` differ although they usually address the same resource. A URL that is composed
+		with a path below it wants the latter, or the composition yields a double slash.
+
+		:returns: New URL object without a trailing slash, or this URL, if its path has none.
+
+		.. seealso::
+
+		   :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
+		      |rarr| What it does to the path, and what it leaves alone.
+		"""
+		if (path := self._path.WithoutTrailingDelimiter()) is self._path:
+			return self
+
+		return self.__class__(
+			scheme=self._scheme,
+			path=path,
+			host=self._host,
+			user=self._user,
+			password=self._password,
 			query=self._query,
 			fragment=self._fragment
 		)

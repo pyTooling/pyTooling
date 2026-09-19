@@ -51,6 +51,32 @@ Version 10.x (2026)
      * The sentinel is an empty class rather than a bare object, so a variable annotated as a :class:`type` still
        type-checks.
 
+   * :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter` returns a path that doesn't end in
+     ``ELEMENT_DELIMITER``, and :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` a URL whose path doesn't -
+     a URL's element delimiter is the slash. A trailing delimiter is an empty last element, so ``/api/v3/`` and
+     ``/api/v3`` are different paths although they usually name the same thing - and a path something is appended to
+     wants the latter. A path with none answers with itself.
+   * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.GenericPath.URL.URL.__truediv__` and
+     :meth:`~pyTooling.GenericPath.PathMixIn.__truediv__`, each taking a string or a path on the right, the way
+     :class:`pathlib.PurePath` does. The right side is a **relative reference**: its path goes
+     below the left side's, and a string brings its own query and fragment, which the left side's are not carried
+     into, the way :rfc:`3986` resolves one. A path that starts with the delimiter names its own root and replaces
+     the left side, as :mod:`pathlib` joins a path. A trailing delimiter on the left is dropped first, so composing
+     ``/api/`` with ``things`` names ``/api/things`` and not an empty element between them. A string on a URL's right
+     side is checked to be a relative reference: it names no authority (no leading ``//``) and no scheme (no ``:`` in
+     the first path element, :rfc:`3986`'s ``path-noscheme``), and holds none of the characters the RFC forbids -
+     ``URL.Parse("https://example.org/api") / "https://elsewhere.org/things"`` raises instead of appending a URL to a
+     path.
+   * A path flavour names the type of its elements - ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and
+     ``ROOT_DELIMITER``. :meth:`~pyTooling.GenericPath.PathMixIn.Parse` reads that instead of being handed the path
+     and element classes as parameters, so its signature is ``Parse(path, root=None)`` and a flavour needs no
+     ``Parse`` of its own - :class:`~pyTooling.GenericPath.URL.Path` lost the one it had. **A flavour outside
+     pyTooling passing ``pathCls`` and ``elementCls`` has to drop them and declare ``ELEMENT_TYPE``.**
+   * :meth:`~pyTooling.GenericPath.PathMixIn.Parse` strips ``ROOT_DELIMITER`` from an absolute path, not as many
+     characters as ``ELEMENT_DELIMITER`` is long. The two are the same in a URL, so nothing parses differently today,
+     but a path flavour marking its root differently - a drive letter, a host separated by a colon - would have lost
+     the wrong number of characters.
+
    * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
      :exc:`~pyTooling.GenericPath.URL.URLError` for it.
 

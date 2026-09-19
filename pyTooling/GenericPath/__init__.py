@@ -40,8 +40,9 @@ A generic path to derive domain specific path libraries.
 """
 from __future__            import annotations
 
-from typing                import ClassVar, Optional as Nullable
+from typing                import ClassVar, Optional as Nullable, Union
 
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
 
@@ -104,8 +105,9 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Path element delimiter sign.
-	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Root element delimiter sign.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"           #: Path element delimiter sign.
+	ROOT_DELIMITER:    ClassVar[str] = "/"           #: Root element delimiter sign.
+	ELEMENT_TYPE:      ClassVar[type[ElementMixIn]]  #: Type an element of this path flavour has. Every flavour names it.
 
 	_isAbsolute: bool                       #: True, if the path is absolute.
 	_elements:   list[ElementMixIn]         #: List of path elements.
@@ -144,37 +146,90 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		return result
 
+	def __truediv__(self, other: Union[str, PathMixIn]) -> PathMixIn:
+		"""
+		Return this path with another path below it.
+
+		A trailing delimiter is dropped before appending, so composing ``/api/`` with ``things`` names
+		``/api/things`` and not an empty element between them. An absolute path names where it starts itself, so it
+		replaces this one rather than being appended - as :rfc:`3986` resolves a reference and :mod:`pathlib` joins a
+		path.
+
+		:param other:      The path to append, as a string to parse or as a path.
+		:returns:          A new path, or ``other``, if that one is absolute.
+		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`PathMixIn`.
+		"""
+		if isinstance(other, str):
+			isAbsolute = other.startswith(self.ROOT_DELIMITER)
+			names =      (other[len(self.ROOT_DELIMITER):] if isAbsolute else other).split(self.ELEMENT_DELIMITER)
+		elif isinstance(other, PathMixIn):
+			isAbsolute = other._isAbsolute
+			names =      [str(element) for element in other._elements]
+		else:
+			ex = TypeError("Second operand is not supported by / operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Supported types for second operand: 'str' or '{getFullyQualifiedName(self)}'.")
+			raise ex
+
+		if isAbsolute:
+			path =     self
+			elements = []
+		else:
+			path =     self.WithoutTrailingDelimiter()
+			elements = list(path._elements)
+
+		parent =   elements[-1] if len(elements) > 0 else None
+		for name in names:
+			elements.append(parent := self.ELEMENT_TYPE(parent, name))
+
+		return self.__class__(elements, isAbsolute or path._isAbsolute)
+
+	def WithoutTrailingDelimiter(self) -> PathMixIn:
+		"""
+		Return a path that doesn't end in :attr:`ELEMENT_DELIMITER`.
+
+		A trailing delimiter is an empty last element, so ``/api/v3/`` and ``/api/v3`` are different paths although
+		they usually name the same thing. A path that something is appended to wants the latter, or the composition
+		yields two delimiters in a row.
+
+		Only one trailing delimiter is removed: a path ending in two of them names an empty element and then another,
+		which isn't the same as naming neither.
+
+		:returns: A new path without a trailing delimiter, or this path, if it has none.
+		"""
+		if (elementCount := len(self._elements)) == 0 or str(self._elements[-1]) != "":
+			return self
+		elif elementCount > 1:
+			return self.__class__(self._elements[:-1], self._isAbsolute)
+
+		# A path of nothing but the empty element is the root: it has no element to drop, so it stops being absolute.
+		# The same path that isn't absolute is the empty path, which has no trailing delimiter to begin with.
+		return self if not self._isAbsolute else self.__class__(self._elements, False)
+
 	@classmethod
-	def Parse(
-		cls,
-		path: str,
-		root: RootMixIn,
-		pathCls: type[PathMixIn],
-		elementCls: type[ElementMixIn]
-	) -> PathMixIn:
+	def Parse(cls, path: str, root: Nullable[RootMixIn] = None) -> PathMixIn:
 		"""
 		Parses a string representation of a path and returns a path instance.
 
-		:param path:       Path to be parsed.
-		:param root:       Root element the parsed path is relative to.
-		:param pathCls:    Type used to create the path.
-		:param elementCls: Type used to create the path elements.
-		:returns:          A path instance of type ``pathCls``.
+		The path and its elements are of this flavour's types - the class this is called on, and the
+		:attr:`ELEMENT_TYPE` it names.
+
+		:param path: Path to be parsed.
+		:param root: Optional, root element the parsed path is relative to. Default: no root.
+		:returns:    A path instance of this class.
 		"""
 		if path.startswith(cls.ROOT_DELIMITER):
 			isAbsolute = True
-			path = path[len(cls.ELEMENT_DELIMITER):]
+			path =       path[len(cls.ROOT_DELIMITER):]
 		else:
 			isAbsolute = False
 
-		parent = root
+		parent =   root
 		elements = []
 		for part in path.split(cls.ELEMENT_DELIMITER):
-			element = elementCls(parent, part)
-			parent = element
-			elements.append(element)
+			elements.append(parent := cls.ELEMENT_TYPE(parent, part))
 
-		return pathCls(elements, isAbsolute)
+		return cls(elements, isAbsolute)
 
 
 @export

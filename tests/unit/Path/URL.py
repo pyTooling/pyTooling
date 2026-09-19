@@ -325,6 +325,134 @@ class URLs(Testcase):
 
 
 
+
+class Concatenation(Testcase):
+	"""What ``URL / resource`` composes, and what it takes from which side."""
+
+	def test_AResourceBelowTheURL(self) -> None:
+		base = URL.Parse("https://example.org/api/v3")
+
+		for resource, expected in (
+			("things", "https://example.org/api/v3/things"),
+			("things/4711", "https://example.org/api/v3/things/4711"),
+			("things?per_page=100", "https://example.org/api/v3/things?per_page=100"),
+			("things#ref", "https://example.org/api/v3/things#ref"),
+		):
+			with self.subTest(resource=resource):
+				self.assertEqual(expected, str(base / resource))
+
+	def test_ATrailingSlashDoesNotBecomeAnEmptyElement(self) -> None:
+		for base in ("https://example.org/api/", "https://example.org/api", "https://example.org/"):
+			with self.subTest(base=base):
+				self.assertNotIn("//", str(URL.Parse(base) / "things").removeprefix("https://"))
+
+	def test_AnAbsolutePathNamesItsOwnRoot(self) -> None:
+		"""A path starting with the delimiter says where it starts, as RFC 3986 resolves a reference."""
+		self.assertEqual("https://example.org/other", str(URL.Parse("https://example.org/api/v3") / "/other"))
+
+	def test_TheQueryComesFromTheRightSide(self) -> None:
+		"""A relative reference brings its own query; the base URL's isn't carried into it."""
+		composed = URL.Parse("https://example.org/api?token=abc") / "things?fields=name"
+
+		self.assertEqual("https://example.org/api/things?fields=name", str(composed))
+		self.assertDictEqual({"fields": "name"}, composed.Query)
+
+	def test_TheHostAndCredentialsAreKept(self) -> None:
+		composed = URL.Parse("https://user:pass@example.org:8443/api") / "things"
+
+		self.assertEqual("https://user:pass@example.org:8443/api/things", str(composed))
+		self.assertEqual(8443, composed.Host.Port)
+
+	def test_APathObject(self) -> None:
+		composed = URL.Parse("https://example.org/api") / URL.Parse("https://elsewhere.org/things").Path
+
+		self.assertEqual("https://example.org/things", str(composed), "That path is absolute, so it replaces.")
+
+	def test_ABrokenQuery(self) -> None:
+		with self.assertRaises(URLError):
+			_ = URL.Parse("https://example.org/api") / "things?novalue"
+
+	def test_SomethingElse(self) -> None:
+		for left in (URL.Parse("https://example.org/api"), URL.Parse("https://example.org/api").Path):
+			with self.subTest(left=left.__class__.__name__):
+				with self.assertRaises(TypeError) as context:
+					_ = left / 4711
+
+				self.assertIn("Got type 'int'.", context.exception.__notes__)
+
+	def test_ACompleteURLOnTheRightSide(self) -> None:
+		"""The right side names a resource below the URL, so a scheme or an authority is refused."""
+		base = URL.Parse("https://example.org/api")
+
+		for resource in ("https://elsewhere.org/things", "//elsewhere.org/things", "elsewhere.org:8443/things"):
+			with self.subTest(resource=resource):
+				with self.assertRaises(URLError):
+					_ = base / resource
+
+	def test_AColonBelowTheFirstElement(self) -> None:
+		"""Only the first element of a relative path may not carry a ':' - RFC 3986's 'path-noscheme'."""
+		self.assertEqual("https://example.org/api/things/a:b", str(URL.Parse("https://example.org/api") / "things/a:b"))
+		self.assertEqual("https://example.org/a:b", str(URL.Parse("https://example.org/api") / "/a:b"))
+
+	def test_AForbiddenCharacterOnTheRightSide(self) -> None:
+		base = URL.Parse("https://example.org/api")
+
+		for resource in ("things/a b", "things/a<b", "things/a\tb"):
+			with self.subTest(resource=resource):
+				with self.assertRaises(URLError) as context:
+					_ = base / resource
+
+				self.assertTrue(any("percent-encoded" in note for note in context.exception.__notes__))
+
+	def test_AStringOnThePath(self) -> None:
+		"""A path takes a string on the right, the way :class:`pathlib.PurePath` does."""
+		path = URL.Parse("https://example.org/api/v3/").Path
+
+		self.assertEqual("/api/v3/things/4711", str(path / "things/4711"))
+		self.assertEqual("/other", str(path / "/other"), "An absolute path names its own root.")
+
+
+class TrailingSlash(Testcase):
+	"""What :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` removes, and what it leaves alone."""
+
+	def test_APathEndingInASlash(self) -> None:
+		for url, expected in (
+			("https://example.org/api/v3/", "https://example.org/api/v3"),
+			("https://example.org/", "https://example.org"),
+			("https://user:pass@example.org/api/", "https://user:pass@example.org/api"),
+			("https://example.org/api/?query=1#ref", "https://example.org/api?query=1#ref"),
+		):
+			with self.subTest(url=url):
+				self.assertEqual(expected, str(URL.Parse(url).WithoutTrailingSlash()))
+
+	def test_APathEndingInSomethingElseIsThisURL(self) -> None:
+		for url in ("https://example.org/api/v3", "https://example.org", "https://example.org/api/v3?query=1"):
+			with self.subTest(url=url):
+				parsedURL = URL.Parse(url)
+
+				self.assertIs(parsedURL, parsedURL.WithoutTrailingSlash())
+
+	def test_ThePathAnswersTheGenericMethod(self) -> None:
+		"""'WithoutTrailingSlash' is 'WithoutTrailingDelimiter' applied to the URL's path."""
+		path = URL.Parse("https://example.org/api/v3/").Path
+
+		self.assertEqual("/api/v3", str(path.WithoutTrailingDelimiter()))
+
+	def test_OnlyOneSlashIsRemoved(self) -> None:
+		"""A path ending in '//' names an empty element and then another, which isn't the same as naming neither."""
+		self.assertEqual("https://example.org/api/", str(URL.Parse("https://example.org/api//").WithoutTrailingSlash()))
+
+	def test_TheURLIsUnchanged(self) -> None:
+		url = URL.Parse("https://user:pass@example.org/api/?query=1#ref")
+		shortenedURL = url.WithoutTrailingSlash()
+
+		self.assertEqual("https://user:pass@example.org/api/?query=1#ref", str(url))
+		self.assertEqual("user", shortenedURL.User)
+		self.assertEqual("pass", shortenedURL.Password)
+		self.assertEqual("example.org", shortenedURL.Host.Hostname)
+		self.assertDictEqual({"query": "1"}, shortenedURL.Query)
+		self.assertEqual("ref", shortenedURL.Fragment)
+
 class ParseErrors(Testcase):
 	"""What :meth:`~pyTooling.GenericPath.URL.URL.Parse` rejects, and how it says so."""
 
