@@ -55,7 +55,7 @@ from pyTooling.Decorators        import export
 from pyTooling.Common            import getFullyQualifiedName
 from pyTooling.Exceptions        import MissingDependencyError
 from pyTooling.Tracing           import Trace, TracingError
-from pyTooling.Tracing.CI        import SPAN_KIND_PIPELINE, SPAN_KIND_WORKFLOW
+from pyTooling.Tracing.CI        import SpanKind
 from pyTooling.Tracing.Render    import GanttLayout, SpanCategory, SpanFilter, runnerCategory
 
 try:
@@ -269,7 +269,7 @@ def RenderGantt(
 		hasQueued = False
 		hasLines = False
 		for position, row in enumerate(rows):
-			if row.Kind in (SPAN_KIND_PIPELINE, SPAN_KIND_WORKFLOW):
+			if row.Kind in (SpanKind.Pipeline, SpanKind.Workflow):
 				for bar in row.Bars:
 					hasLines = True
 					style = "dashed" if bar.IsRunning else "solid"
