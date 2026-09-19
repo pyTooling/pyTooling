@@ -46,8 +46,9 @@ from __future__            import annotations
 
 from collections.abc       import Iterable as abc_Iterable
 from enum                  import Flag, Enum
-from re                    import compile as re_compile, Pattern
-from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable, Iterator
+from re                    import compile as re_compile, escape as re_escape, Pattern
+from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable
+from typing                import Iterator, Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
@@ -56,7 +57,7 @@ from pyTooling.Common      import getFullyQualifiedName
 
 
 @export
-class VersionValidatorException(ToolingException):
+class VersionValidatorError(ToolingException):
 	"""
 	Raised when a parsed version is rejected by the validator it was parsed with.
 
@@ -91,21 +92,22 @@ class VersionValidatorException(ToolingException):
 class Parts(Flag):
 	"""Enumeration describing parts of a version number that can be present."""
 	Unknown = 0     #: Undocumented
-	Major = 1       #: Major number is present. (e.g. X in ``vX.0.0``).
-	Year = 1        #: Year is present. (e.g. X in ``XXXX.10``).
-	Minor = 2       #: Minor number is present. (e.g. Y in ``v0.Y.0``).
-	Month = 2       #: Month is present. (e.g. X in ``2024.YY``).
-	Week = 2        #: Week is present. (e.g. X in ``2024.YY``).
-	Micro = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
-	Patch = 4       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
-	Day = 4         #: Day is present. (e.g. X in ``2024.10.ZZ``).
-	Level = 8       #: Release level is present.
-	Dev = 16        #: Development part is present.
-	Build = 32      #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
-	Post  = 64      #: Post-release number is present.
-	Prefix = 128    #: Prefix is present.
-	Postfix = 256   #: Postfix is present.
-	Hash = 512      #: Hash is present.
+	Epoch = 1       #: Epoch is present. (e.g. E in ``E:1.2.3`` or ``vE!1.2.3``)
+	Major = 2       #: Major number is present. (e.g. X in ``vX.0.0``).
+	Year = 2        #: Year is present. (e.g. X in ``XXXX.10``).
+	Minor = 4       #: Minor number is present. (e.g. Y in ``v0.Y.0``).
+	Month = 4       #: Month is present. (e.g. X in ``2024.YY``).
+	Week = 4        #: Week is present. (e.g. X in ``2024.YY``).
+	Micro = 8       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
+	Patch = 8       #: Patch number is present. (e.g. Z in ``v0.0.Z``).
+	Day = 8         #: Day is present. (e.g. X in ``2024.10.ZZ``).
+	Level = 16      #: Release level is present.
+	Dev = 32        #: Development part is present.
+	Build = 64      #: Build number is present. (e.g. bbbb in ``v0.0.0.bbbb``)
+	Post  = 128     #: Post-release number is present.
+	Prefix = 256    #: Prefix is present.
+	Postfix = 512   #: Postfix is present.
+	Hash = 1024     #: Hash is present.
 #		AHead   = 256
 
 
@@ -123,15 +125,15 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is equal to the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is equal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is equal the second operand's release level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
@@ -142,15 +144,15 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is unequal to the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is unequal the second operand's release level.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is unequal the second operand's release level.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
@@ -161,15 +163,15 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is less than the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is less than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is less than the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
@@ -180,15 +182,15 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is less than or equal the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is less than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is less than or equal the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand is not supported by <=>= operator.")
+			ex = TypeError("Second operand is not supported by <=>= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
@@ -199,15 +201,15 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is greater than the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is greater than the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is greater than the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
@@ -218,15 +220,15 @@ class ReleaseLevel(Enum):
 		"""
 		Compare two release levels if the level is greater than or equal the second operand.
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if release level is greater than or equal the second operand.
-		:raises TypeError:  If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if release level is greater than or equal the second operand.
+		:raises TypeError: If parameter ``other`` is not of type :class:`ReleaseLevel` or string.
 		"""
 		if isinstance(other, str):
 			other = ReleaseLevel(other)
 
 		if not isinstance(other, ReleaseLevel):
-			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
 			raise ex
@@ -385,8 +387,13 @@ class Version(metaclass=ExtendedType, slots=True):
 
 	__hash:         Nullable[int]  #: once computed hash of the object
 
+	#: Separator between an epoch and the rest of the version number. Debian writes ``2:1.2.3``; PEP 440 writes
+	#: ``2!1.2.3``, so :class:`PythonVersion` overrides this.
+	_EPOCH_SEPARATOR: ClassVar[str] = ":"
+
 	_parts:         Parts          #: Integer flag enumeration of present parts in a version number.
 	_prefix:        str            #: Prefix string
+	_epoch:         int            #: Epoch, which outranks every other part of the version number.
 	_major:         int            #: Major number part of the version number.
 	_minor:         int            #: Minor number part of the version number.
 	_micro:         int            #: Micro number part of the version number.
@@ -409,6 +416,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		post:    Nullable[int] = None,
 		dev:     Nullable[int] = None,
 		*,
+		epoch:   Nullable[int] = None,
 		build:   Nullable[int] = None,
 		postfix: Nullable[str] = None,
 		prefix:  Nullable[str] = None,
@@ -425,6 +433,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:param number:      Optional, release number part (in combination with release level) of the version number.
 		:param post:        Optional, post number part of the version number.
 		:param dev:         Optional, development number part of the version number.
+		:param epoch:       Optional, the version number's epoch, which outranks every other part.
 		:param build:       Optional, build number part of the version number.
 		:param postfix:     Optional, the version number's postfix.
 		:param prefix:      Optional, the version number's prefix.
@@ -436,6 +445,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'minor' is a negative number.
 		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises TypeError:  If parameter 'epoch' is not of type integer.
+		:raises ValueError: If parameter 'epoch' is a negative number.
 		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
@@ -444,16 +455,33 @@ class Version(metaclass=ExtendedType, slots=True):
 		self.__hash = None
 
 		if not isinstance(major, int):
-			raise TypeError("Parameter 'major' is not of type 'int'.")
+			ex = TypeError("Parameter 'major' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(major)}'.")
+			raise ex
 		elif major < 0:
 			raise ValueError("Parameter 'major' is negative.")
 
 		self._parts = Parts.Major
 		self._major = major
 
+		if epoch is not None:
+			if not isinstance(epoch, int):
+				ex = TypeError("Parameter 'epoch' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(epoch)}'.")
+				raise ex
+			elif epoch < 0:
+				raise ValueError("Parameter 'epoch' is negative.")
+
+			self._parts |= Parts.Epoch
+			self._epoch = epoch
+		else:
+			self._epoch = 0
+
 		if minor is not None:
 			if not isinstance(minor, int):
-				raise TypeError("Parameter 'minor' is not of type 'int'.")
+				ex = TypeError("Parameter 'minor' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(minor)}'.")
+				raise ex
 			elif minor < 0:
 				raise ValueError("Parameter 'minor' is negative.")
 
@@ -464,7 +492,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		if micro is not None:
 			if not isinstance(micro, int):
-				raise TypeError("Parameter 'micro' is not of type 'int'.")
+				ex = TypeError("Parameter 'micro' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(micro)}'.")
+				raise ex
 			elif micro < 0:
 				raise ValueError("Parameter 'micro' is negative.")
 
@@ -476,7 +506,9 @@ class Version(metaclass=ExtendedType, slots=True):
 		if level is None:
 			raise ValueError("Parameter 'level' is None.")
 		elif not isinstance(level, ReleaseLevel):
-			raise TypeError("Parameter 'level' is not of type 'ReleaseLevel'.")
+			ex = TypeError("Parameter 'level' is not of type 'ReleaseLevel'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(level)}'.")
+			raise ex
 		elif level is ReleaseLevel.Final:
 			if number is not None:
 				raise ValueError("Parameter 'number' must be None, if parameter 'level' is 'Final'.")
@@ -490,7 +522,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 			if number is not None:
 				if not isinstance(number, int):
-					raise TypeError("Parameter 'number' is not of type 'int'.")
+					ex = TypeError("Parameter 'number' is not of type 'int'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(number)}'.")
+					raise ex
 				elif number < 0:
 					raise ValueError("Parameter 'number' is negative.")
 
@@ -500,7 +534,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		if dev is not None:
 			if not isinstance(dev, int):
-				raise TypeError("Parameter 'dev' is not of type 'int'.")
+				ex = TypeError("Parameter 'dev' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(dev)}'.")
+				raise ex
 			elif dev < 0:
 				raise ValueError("Parameter 'dev' is negative.")
 
@@ -511,7 +547,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		if post is not None:
 			if not isinstance(post, int):
-				raise TypeError("Parameter 'post' is not of type 'int'.")
+				ex = TypeError("Parameter 'post' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(post)}'.")
+				raise ex
 			elif post < 0:
 				raise ValueError("Parameter 'post' is negative.")
 
@@ -522,7 +560,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		if build is not None:
 			if not isinstance(build, int):
-				raise TypeError("Parameter 'build' is not of type 'int'.")
+				ex = TypeError("Parameter 'build' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(build)}'.")
+				raise ex
 			elif build < 0:
 				raise ValueError("Parameter 'build' is negative.")
 
@@ -533,7 +573,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		if postfix is not None:
 			if not isinstance(postfix, str):
-				raise TypeError("Parameter 'postfix' is not of type 'str'.")
+				ex = TypeError("Parameter 'postfix' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(postfix)}'.")
+				raise ex
 
 			self._parts |= Parts.Postfix
 			self._postfix = postfix
@@ -542,7 +584,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		if prefix is not None:
 			if not isinstance(prefix, str):
-				raise TypeError("Parameter 'prefix' is not of type 'str'.")
+				ex = TypeError("Parameter 'prefix' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(prefix)}'.")
+				raise ex
 
 			self._parts |= Parts.Prefix
 			self._prefix = prefix
@@ -551,7 +595,9 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		if hash is not None:
 			if not isinstance(hash, str):
-				raise TypeError("Parameter 'hash' is not of type 'str'.")
+				ex = TypeError("Parameter 'hash' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(hash)}'.")
+				raise ex
 
 			self._parts |= Parts.Hash
 			self._hash = hash
@@ -561,7 +607,9 @@ class Version(metaclass=ExtendedType, slots=True):
 		if flags is None:
 			raise ValueError("Parameter 'flags' is None.")
 		elif not isinstance(flags, Flags):
-			raise TypeError("Parameter 'flags' is not of type 'Flags'.")
+			ex = TypeError("Parameter 'flags' is not of type 'Flags'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(flags)}'.")
+			raise ex
 
 		self._flags = flags
 
@@ -593,6 +641,20 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns: The prefix of the version number.
 		"""
 		return self._prefix
+
+	@readonly
+	def Epoch(self) -> int:
+		"""
+		Read-only property to access the epoch (:attr:`_epoch`).
+
+		An epoch outranks every other part, so a version carrying one is newer than any version with a lower epoch
+		however high the rest of its numbers are. It exists so a project can *lower* its version number - change
+		scheme, or recover from a bad release - without every later version comparing as older. A version without one
+		has epoch ``0``, which is what keeps it comparable with a version that has one.
+
+		:returns: The epoch, or ``0`` if the version carries none.
+		"""
+		return self._epoch
 
 	@readonly
 	def Major(self) -> int:
@@ -702,6 +764,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
 		return (
+			(left._epoch == right._epoch) and
 			(left._major == right._major) and
 			(left._minor == right._minor) and
 			(left._micro == right._micro) and
@@ -723,6 +786,11 @@ class Version(metaclass=ExtendedType, slots=True):
 		              False if ``left`` is greater than ``right``. |br|
 		              Otherwise it's None (both operands are equal).
 		"""
+		if left._epoch < right._epoch:
+			return True
+		elif left._epoch > right._epoch:
+			return False
+
 		if left._major < right._major:
 			return True
 		elif left._major > right._major:
@@ -844,7 +912,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, string or integer.
 		"""
 		if other is None:
-			raise ValueError(f"Second operand is None.")
+			raise ValueError("Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, str):
@@ -852,7 +920,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
@@ -877,7 +945,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, string or integer.
 		"""
 		if other is None:
-			raise ValueError(f"Second operand is None.")
+			raise ValueError("Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, str):
@@ -885,7 +953,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
@@ -909,10 +977,10 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is less than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
-			raise ValueError(f"Second operand is None.")
+			raise ValueError("Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
@@ -924,7 +992,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
@@ -948,11 +1016,11 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is less than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
-			raise ValueError(f"Second operand is None.")
+			raise ValueError("Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
@@ -965,7 +1033,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex = TypeError("Second operand is not supported by <= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
@@ -990,10 +1058,10 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is greater than the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		if other is None:
-			raise ValueError(f"Second operand is None.")
+			raise ValueError("Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
@@ -1005,7 +1073,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
@@ -1029,11 +1097,11 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:           ``True``, if version is greater than or equal the second operand.
 		:raises ValueError: If parameter ``other`` is None.
 		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`, :class:`VersionRange`,
-		                   :class:`VersionSet`, string or integer.
+		                    :class:`VersionSet`, string or integer.
 		"""
 		equalValue = True
 		if other is None:
-			raise ValueError(f"Second operand is None.")
+			raise ValueError("Second operand is None.")
 		elif ((sC := self.__class__) is (oC := other.__class__) or issubclass(sC, oC) or issubclass(oC, sC)):
 			pass
 		elif isinstance(other, VersionRange):
@@ -1046,7 +1114,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
 			raise ex
@@ -1064,7 +1132,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If the second operand is not a version, a string or an integer.
 		"""
 		if other is None:
-			raise ValueError(f"Second operand is None.")
+			raise ValueError("Second operand is None.")
 		elif isinstance(other, self.__class__):
 			pass
 		elif isinstance(other, str):
@@ -1072,7 +1140,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, int):
 			other = self.__class__(major=other)
 		else:
-			ex = TypeError(f"Second operand is not supported by >> operator.")
+			ex = TypeError("Second operand is not supported by >> operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
 			raise ex
@@ -1091,6 +1159,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		if self.__hash is None:
 			self.__hash = hash((
 				self._prefix,
+				self._epoch,
 				self._major,
 				self._minor,
 				self._micro,
@@ -1113,6 +1182,7 @@ class SemanticVersion(Version):
 	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
 		r"(?P<prefix>rev|REV|[vViIrR])?"
+		r"(?:(?P<epoch>\d+):)?"
 		r"(?P<major>\d+)"
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
@@ -1131,6 +1201,26 @@ class SemanticVersion(Version):
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead:    int = 0
 
+	def __init_subclass__(cls, **kwargs: Any) -> None:
+		"""
+		Rebuild the pattern when a derived class spells the epoch separator differently.
+
+		A compiled pattern still carries the expression it was built from, so the base class' one is taken apart and
+		put back together with this class' separator. Only the epoch's separator is substituted, and only when the
+		class states no pattern of its own - a class replacing the whole expression means it.
+
+		:param kwargs: Keyword arguments passed on to the base implementation.
+		"""
+		super().__init_subclass__(**kwargs)
+
+		if "_PATTERN" in cls.__dict__ or cls._EPOCH_SEPARATOR == SemanticVersion._EPOCH_SEPARATOR:
+			return
+
+		cls._PATTERN = re_compile(SemanticVersion._PATTERN.pattern.replace(
+			f"(?P<epoch>\\d+){re_escape(SemanticVersion._EPOCH_SEPARATOR)}",
+			f"(?P<epoch>\\d+){re_escape(cls._EPOCH_SEPARATOR)}"
+		))
+
 	def __init__(
 		self,
 		major:   int,
@@ -1141,6 +1231,7 @@ class SemanticVersion(Version):
 		post:    Nullable[int] = None,
 		dev:     Nullable[int] = None,
 		*,
+		epoch:   Nullable[int] = None,
 		build:   Nullable[int] = None,
 		postfix: Nullable[str] = None,
 		prefix:  Nullable[str] = None,
@@ -1157,6 +1248,7 @@ class SemanticVersion(Version):
 		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
 		:param post:        Optional, post number part of the version number.
 		:param dev:         Optional, development number part of the version number.
+		:param epoch:       Optional, the version number's epoch, which outranks every other part.
 		:param build:       Optional, build number part of the version number.
 		:param postfix:     Optional, the version number's postfix.
 		:param prefix:      Optional, the version number's prefix.
@@ -1168,16 +1260,19 @@ class SemanticVersion(Version):
 		:raises ValueError: If parameter 'minor' is a negative number.
 		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type integer.
-		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'post' is not of type integer.
 		:raises ValueError: If parameter 'post' is a negative number.
 		:raises TypeError:  If parameter 'dev' is not of type integer.
 		:raises ValueError: If parameter 'dev' is a negative number.
+		:raises TypeError:  If parameter 'epoch' is not of type integer.
+		:raises ValueError: If parameter 'epoch' is a negative number.
+		:raises TypeError:  If parameter 'build' is not of type integer.
+		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
 		"""
-		super().__init__(major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags)
+		super().__init__(major, minor, micro, level, number, post, dev, epoch=epoch, build=build, postfix=postfix,
+		                 prefix=prefix, hash=hash, flags=flags)
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> SemanticVersion:
@@ -1191,19 +1286,22 @@ class SemanticVersion(Version):
 		* ``r|R`` - release, revision
 		* ``rev|REV`` - revision
 
-		:param versionString:              The version string to parse.
-		:param validator:                  Optional, a validation function.
-		:returns:                          An object representing a semantic version.
-		:raises TypeError:                 When parameter ``versionString`` is not a string.
-		:raises ValueError:                When parameter ``versionString`` is None or empty.
-		:raises ValueError:                When parameter ``versionString`` isn't a semantic version number. |br|
-		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
-		:raises VersionValidatorException: When the parsed version is rejected by ``validator``.
+		:param versionString:          The version string to parse.
+		:param validator:              Optional, a validation function.
+		:returns:                      An object representing a semantic version.
+		:raises TypeError:             When parameter ``versionString`` is not a string.
+		:raises ValueError:            When parameter ``versionString`` is None or empty.
+		:raises ValueError:            When parameter ``versionString`` isn't a semantic version number. |br|
+		                               It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g. ``v1.2.3``.
+		:raises ValueError:            When the epoch is malformed. |br|
+		                               An epoch is a number followed by the separator and comes after any prefix,
+		                               e.g. ``2:1.2.3`` or ``v2!1.2.3``.
+		:raises VersionValidatorError: When the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
 		elif not isinstance(versionString, str):
-			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
+			ex = TypeError("Parameter 'versionString' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
 		elif (versionString := versionString.strip()) == "":
@@ -1211,7 +1309,7 @@ class SemanticVersion(Version):
 
 		if (match := cls._PATTERN.match(versionString)) is None:
 			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
-			ex.add_note(f"It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v1.2.3'.")
+			ex.add_note("It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v1.2.3'.")
 			raise ex
 
 		def toInt(value: Nullable[str]) -> Nullable[int]:
@@ -1265,6 +1363,7 @@ class SemanticVersion(Version):
 			number=toInt(match["number"]),
 			post=toInt(match["post"]),
 			dev=toInt(match["dev"]),
+			epoch=toInt(match["epoch"]),
 			build=toInt(match["build"]),
 			postfix=match["postfix"],
 			prefix=prefix if prefix != "" else None,
@@ -1273,7 +1372,7 @@ class SemanticVersion(Version):
 		)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
+			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -1466,7 +1565,9 @@ class SemanticVersion(Version):
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		return f"{self._major}.{self._minor}.{self._micro}"
+		epoch = f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
+
+		return f"{epoch}{self._major}.{self._minor}.{self._micro}"
 
 	def __str__(self) -> str:
 		"""
@@ -1475,6 +1576,7 @@ class SemanticVersion(Version):
 		:returns: Version number representation.
 		"""
 		result = self._prefix if Parts.Prefix in self._parts else ""
+		result += f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
 		result += f"{self._major}"  # major is always present
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 		result += f".{self._micro}" if Parts.Micro in self._parts else ""
@@ -1501,6 +1603,9 @@ class PythonVersion(SemanticVersion):
 	"""
 	Represents a Python version.
 	"""
+
+	#: :pep:`440` writes an epoch ``v2!1.2.3``, where Debian and the default write ``2:1.2.3``.
+	_EPOCH_SEPARATOR: ClassVar[str] = "!"
 
 	@classmethod
 	def FromSysVersionInfo(cls) -> PythonVersion:
@@ -1547,6 +1652,7 @@ class PythonVersion(SemanticVersion):
 		:returns: Version number representation.
 		"""
 		result = self._prefix if Parts.Prefix in self._parts else ""
+		result += f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
 		result += f"{self._major}"  # major is always present
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 		result += f".{self._micro}" if Parts.Micro in self._parts else ""
@@ -1629,23 +1735,23 @@ class CalendarVersion(Version):
 		:class:`YearWeekVersion` and :class:`YearReleaseVersion` describe two parts, so a third part is rejected for
 		them.
 
-		:param versionString:              The version string to parse.
-		:param validator:                  Optional, a validation function.
-		:returns:                          An object representing a calendar version.
-		:raises TypeError:                 If parameter ``versionString`` is not a string.
-		:raises ValueError:                If parameter ``versionString`` is None or empty.
-		:raises ValueError:                If parameter ``versionString`` isn't a calendar version number. |br|
-		                                   It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g.
-		                                   ``v2024.04``.
-		:raises ValueError:                If parameter ``versionString`` has more parts than the class describes. |br|
-		                                   Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
-		                                   three-part calendar version number.
-		:raises VersionValidatorException: If the parsed version is rejected by ``validator``.
+		:param versionString:          The version string to parse.
+		:param validator:              Optional, a validation function.
+		:returns:                      An object representing a calendar version.
+		:raises TypeError:             If parameter ``versionString`` is not a string.
+		:raises ValueError:            If parameter ``versionString`` is None or empty.
+		:raises ValueError:            If parameter ``versionString`` isn't a calendar version number. |br|
+		                               It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g.
+		                               ``v2024.04``.
+		:raises ValueError:            If parameter ``versionString`` has more parts than the class describes. |br|
+		                               Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
+		                               three-part calendar version number.
+		:raises VersionValidatorError: If the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
 			raise ValueError("Parameter 'versionString' is None.")
 		elif not isinstance(versionString, str):
-			ex = TypeError(f"Parameter 'versionString' is not of type 'str'.")
+			ex = TypeError("Parameter 'versionString' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
 			raise ex
 		elif (versionString := versionString.strip()) == "":
@@ -1654,7 +1760,7 @@ class CalendarVersion(Version):
 		if (match := cls._PATTERN.match(versionString)) is None:
 			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
 			ex.add_note(f"A calendar version number is made of up to {cls._PARTCOUNT} numeric parts, e.g. '2024.04'.")
-			ex.add_note(f"It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v2024.04'.")
+			ex.add_note("It may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v2024.04'.")
 			raise ex
 
 		prefix = match["prefix"]
@@ -1663,7 +1769,7 @@ class CalendarVersion(Version):
 
 		if micro is not None and cls._PARTCOUNT < 3:
 			ex = ValueError(f"Version number '{versionString}' has 3 parts, but '{cls.__name__}' describes {cls._PARTCOUNT}.")
-			ex.add_note(f"Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
+			ex.add_note("Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
 			raise ex
 
 		numbers = [int(match["major"])]
@@ -1675,7 +1781,7 @@ class CalendarVersion(Version):
 		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
 
 		if validator is not None and not validator(version):
-			raise VersionValidatorException(f"Failed to validate version string '{versionString}'.", version=version)
+			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
 
 		return version
 
@@ -2164,82 +2270,140 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 	Representation of a version range described by a lower bound and upper bound version.
 
 	This version range works with :class:`SemanticVersion` and :class:`CalendarVersion` and its derived classes.
+
+	A bound may be **unbound**, written as ``None``, meaning the range is open in that direction. That is how a
+	dependency range like Maven's ``[1.0,)`` - *1.0 and everything after it* - is expressed, and it is what makes a
+	single comparison such as ``>=1.0`` a range at all. A range unbound at both ends contains every version.
+
+	Whether the bound itself belongs to the range is :class:`RangeBoundHandling`'s business, not the bound's, so
+	each example names the comparison it stands for:
+
+	.. code-block:: python
+
+	   VersionRange(SemanticVersion.Parse("1.0.0"), None)   # >=1.0.0 ⟶ 1.0.0 and everything above it
+	   VersionRange(None, SemanticVersion.Parse("2.0.0"))   # <=2.0.0 ⟶ everything up to 2.0.0
+	   VersionRange(None, None)                             # every version
 	"""
-	_lowerBound:    V                   #: Lower bound of the version range.
-	_upperBound:    V                   #: Upper bound of the version range.
+	_lowerBound:    Nullable[V]         #: Lower bound of the version range, or ``None`` if it is unbound.
+	_upperBound:    Nullable[V]         #: Upper bound of the version range, or ``None`` if it is unbound.
 	_boundHandling: RangeBoundHandling  #: Strategy deciding whether the bounds are part of the range.
 
-	def __init__(self, lowerBound: V, upperBound: V, boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive) -> None:
+	def __init__(
+		self,
+		lowerBound: Nullable[V],
+		upperBound: Nullable[V],
+		boundHandling: RangeBoundHandling = RangeBoundHandling.BothBoundsInclusive
+	) -> None:
 		"""
 		Initializes a version range described by a lower and upper bound.
 
-		:param lowerBound:    lowest version (inclusive).
-		:param upperBound:    hightest version (inclusive).
+		Either bound may be ``None``, which leaves the range open in that direction. The checks that relate the two
+		bounds - that they are compatible types, and that the lower one isn't above the upper one - can only be made
+		when both are present, so they are skipped for an open bound rather than failing on it.
+
+		:param lowerBound:    Lowest version (inclusive), or ``None`` to leave the range open downwards.
+		:param upperBound:    Highest version (inclusive), or ``None`` to leave the range open upwards.
 		:param boundHandling: Optional, strategy deciding whether the bounds are part of the range.
-		:raises TypeError:    If parameter ``lowerBound`` is not of type :class:`Version`.
-		:raises TypeError:    If parameter ``upperBound`` is not of type :class:`Version`.
+		:raises TypeError:    If parameter ``lowerBound`` is neither ``None`` nor of type :class:`Version`.
+		:raises TypeError:    If parameter ``upperBound`` is neither ``None`` nor of type :class:`Version`.
 		:raises TypeError:    If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
 		:raises ValueError:   If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
 		"""
-		if not isinstance(lowerBound, Version):
-			ex = TypeError(f"Parameter 'lowerBound' is not of type 'Version'.")
+		if lowerBound is not None and not isinstance(lowerBound, Version):
+			ex = TypeError("Parameter 'lowerBound' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}'.")
 			raise ex
 
-		if not isinstance(upperBound, Version):
-			ex = TypeError(f"Parameter 'upperBound' is not of type 'Version'.")
+		if upperBound is not None and not isinstance(upperBound, Version):
+			ex = TypeError("Parameter 'upperBound' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(upperBound)}'.")
 			raise ex
 
-		if not ((lBC := lowerBound.__class__) is (uBC := upperBound.__class__) or issubclass(lBC, uBC) or issubclass(uBC, lBC)):
-			ex = TypeError(f"Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and type '{getFullyQualifiedName(upperBound)}' for upperBound.")
-			raise ex
+		if lowerBound is not None and upperBound is not None:
+			if not self._AreCompatible(lowerBound, upperBound):
+				ex = TypeError("Parameters 'lowerBound' and 'upperBound' are not compatible with each other.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(lowerBound)}' for lowerBound and "
+				            f"type '{getFullyQualifiedName(upperBound)}' for upperBound.")
+				raise ex
 
-		if not (lowerBound <= upperBound):
-			ex = ValueError(f"Parameter 'lowerBound' isn't less than parameter 'upperBound'.")
-			ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
-			raise ex
+			if not (lowerBound <= upperBound):
+				ex = ValueError("Parameter 'lowerBound' isn't less than parameter 'upperBound'.")
+				ex.add_note(f"Got '{lowerBound}' for lowerBound and '{upperBound}' for upperBound.")
+				raise ex
 
 		self._lowerBound = lowerBound
 		self._upperBound = upperBound
 		self._boundHandling = boundHandling
 
 	@property
-	def LowerBound(self) -> V:
+	def LowerBound(self) -> Nullable[V]:
 		"""
 		Property to access the range's lower bound.
 
-		:returns:          Lower bound of the version range.
-		:raises TypeError: If an assigned value is not of type :class:`Version`.
+		Assigning ``None`` leaves the bound unbound, opening the range in that direction.
+
+		:returns:           Lower bound of the version range, or ``None`` if it is unbound.
+		:raises TypeError:  If an assigned value is neither ``None`` nor of type :class:`Version`.
+		:raises TypeError:  If an assigned value's type is unrelated to the range's upper bound.
+		:raises ValueError: If an assigned value is above the range's upper bound. |br|
+		                    The bounds are only related when both are present.
 		"""
 		return self._lowerBound
 
 	@LowerBound.setter
-	def LowerBound(self, value: V) -> None:
-		if not isinstance(value, Version):
-			ex = TypeError(f"Parameter 'value' is not of type 'Version'.")
+	def LowerBound(self, value: Nullable[V]) -> None:
+		if value is not None and not isinstance(value, Version):
+			ex = TypeError("Parameter 'value' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
+
+		if value is not None and self._upperBound is not None:
+			if not self._AreCompatible(value, self._upperBound):
+				ex = TypeError("Parameter 'value' is not compatible with the range's upper bound.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"The upper bound is of type '{getFullyQualifiedName(self._upperBound)}'.")
+				raise ex
+
+			if not (value <= self._upperBound):
+				ex = ValueError("Parameter 'value' isn't less than or equal to the range's upper bound.")
+				ex.add_note(f"Got '{value}' for the lower bound; the upper bound is '{self._upperBound}'.")
+				raise ex
 
 		self._lowerBound = value
 
 	@property
-	def UpperBound(self) -> V:
+	def UpperBound(self) -> Nullable[V]:
 		"""
 		Property to access the range's upper bound.
 
-		:returns:          Upper bound of the version range.
-		:raises TypeError: If an assigned value is not of type :class:`Version`.
+		Assigning ``None`` leaves the bound unbound, opening the range in that direction.
+
+		:returns:           Upper bound of the version range, or ``None`` if it is unbound.
+		:raises TypeError:  If an assigned value is neither ``None`` nor of type :class:`Version`.
+		:raises TypeError:  If an assigned value's type is unrelated to the range's lower bound.
+		:raises ValueError: If an assigned value is below the range's lower bound. |br|
+		                    The bounds are only related when both are present.
 		"""
 		return self._upperBound
 
 	@UpperBound.setter
-	def UpperBound(self, value: V) -> None:
-		if not isinstance(value, Version):
-			ex = TypeError(f"Parameter 'value' is not of type 'Version'.")
+	def UpperBound(self, value: Nullable[V]) -> None:
+		if value is not None and not isinstance(value, Version):
+			ex = TypeError("Parameter 'value' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
+
+		if value is not None and self._lowerBound is not None:
+			if not self._AreCompatible(value, self._lowerBound):
+				ex = TypeError("Parameter 'value' is not compatible with the range's lower bound.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				ex.add_note(f"The lower bound is of type '{getFullyQualifiedName(self._lowerBound)}'.")
+				raise ex
+
+			if not (self._lowerBound <= value):
+				ex = ValueError("Parameter 'value' isn't greater than or equal to the range's lower bound.")
+				ex.add_note(f"Got '{value}' for the upper bound; the lower bound is '{self._lowerBound}'.")
+				raise ex
 
 		self._upperBound = value
 
@@ -2256,73 +2420,154 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 	@BoundHandling.setter
 	def BoundHandling(self, value: RangeBoundHandling) -> None:
 		if not isinstance(value, RangeBoundHandling):
-			ex = TypeError(f"Parameter 'value' is not of type 'RangeBoundHandling'.")
+			ex = TypeError("Parameter 'value' is not of type 'RangeBoundHandling'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
 		self._boundHandling = value
 
-	def __and__(self, other: Any) -> VersionRange[T]:
+	@staticmethod
+	def _AreCompatible(left: Version, right: Version) -> bool:
+		"""
+		Check whether two versions' types can be related to each other.
+
+		Two versions relate when they are of the same class, or when one's class derives from the other's. So a
+		:class:`SemanticVersion` relates to a :class:`PythonVersion`, which derives from it, and not to a
+		:class:`CalendarVersion`, which is a sibling under :class:`Version`.
+
+		This is the single rule every part of a range applies: to its two bounds against each other, to a version
+		held against them, and to a bound assigned after construction.
+
+		:param left:  The first version.
+		:param right: The second version.
+		:returns:     ``True``, if the two versions' types are related.
+		"""
+		leftType = left.__class__
+		rightType = right.__class__
+
+		return leftType is rightType or issubclass(leftType, rightType) or issubclass(rightType, leftType)
+
+	def _CheckCompatibility(self, other: Version) -> None:
+		"""
+		Check that a version can be related to this range's bounds.
+
+		The rule is the one :meth:`__init__` applies *between* the two bounds: the same class, or one deriving from
+		the other. So a range bounded by :class:`SemanticVersion` accepts a :class:`PythonVersion`, because that
+		derives from it, and refuses a :class:`CalendarVersion`, which is a sibling. A range whose bounds are both
+		unbound carries no type to check against, so it accepts any version.
+
+		:param other:      The version to check against this range's bounds.
+		:raises TypeError: If the version's type is unrelated to this range's bounds.
+		"""
+		reference = self._lowerBound if self._lowerBound is not None else self._upperBound
+		if reference is None:
+			return
+
+		if not self._AreCompatible(other, reference):
+			ex = TypeError("Parameter 'other' is not compatible with version range.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"This range is bounded by type '{getFullyQualifiedName(reference)}'.")
+			raise ex
+
+	def __and__(self, other: Any) -> VersionRange[V]:
 		"""
 		Compute the intersection of two version ranges.
+
+		Each bound of the result comes from whichever range constrains it more tightly, and is inclusive only if it
+		is inclusive in *that* range. Where both ranges name the same bound value, it is inclusive only when **both**
+		include it - the intersection cannot admit a version one of its operands excludes.
 
 		:param other:       Second version range to intersect with.
 		:returns:           Intersected version range.
 		:raises TypeError:  If parameter 'other' is not of type :class:`VersionRange`.
+		:raises TypeError:  If the two ranges' bounds are of unrelated types.
 		:raises ValueError: If intersection is empty.
 		"""
 		if not isinstance(other, VersionRange):
-			ex = TypeError(f"Parameter 'other' is not of type 'VersionRange'.")
+			ex = TypeError("Parameter 'other' is not of type 'VersionRange'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other._lowerBound, self._lowerBound.__class__) and isinstance(self._lowerBound, other._lowerBound.__class__)):
-			ex = TypeError(f"Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible with each other.")
-			ex.add_note(
-					f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
-			raise ex
+		if self._lowerBound is not None and other._lowerBound is not None:
+			if not self._AreCompatible(self._lowerBound, other._lowerBound):
+				ex = TypeError("Parameter 'other's LowerBound and this range's 'LowerBound' are not compatible "
+				               "with each other.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(other._lowerBound)}' for other.LowerBound and "
+				            f"type '{getFullyQualifiedName(self._lowerBound)}' for self.LowerBound.")
+				raise ex
 
-		if other._lowerBound < self._lowerBound:
-			lBound = self._lowerBound
-		elif other._lowerBound in self:
+		ownLowerExclusive =     RangeBoundHandling.LowerBoundExclusive in self._boundHandling
+		otherLowerExclusive =   RangeBoundHandling.LowerBoundExclusive in other._boundHandling
+		ownUpperExclusive =     RangeBoundHandling.UpperBoundExclusive in self._boundHandling
+		otherUpperExclusive =   RangeBoundHandling.UpperBoundExclusive in other._boundHandling
+
+		# An unbound lower end is the lowest of all, so the other range's bound wins; likewise the highest upper one.
+		# Each bound keeps the handling of the range it came from; a shared value keeps the stricter of the two.
+		if self._lowerBound is None:
 			lBound = other._lowerBound
+			lowerExclusive = otherLowerExclusive
+		elif other._lowerBound is None:
+			lBound = self._lowerBound
+			lowerExclusive = ownLowerExclusive
+		elif self._lowerBound > other._lowerBound:
+			lBound = self._lowerBound
+			lowerExclusive = ownLowerExclusive
+		elif other._lowerBound > self._lowerBound:
+			lBound = other._lowerBound
+			lowerExclusive = otherLowerExclusive
 		else:
-			ex = ValueError("The intersection of both version ranges is empty.")
-			ex.add_note(f"Got value '{other._lowerBound}' for other's lower bound.")
-			ex.add_note(f"This range's upper bound is '{self._upperBound}'.")
-			raise ex
+			lBound = self._lowerBound
+			lowerExclusive = ownLowerExclusive or otherLowerExclusive
 
-		if other._upperBound > self._upperBound:
-			uBound = self._upperBound
-		elif other._upperBound in self:
+		if self._upperBound is None:
 			uBound = other._upperBound
+			upperExclusive = otherUpperExclusive
+		elif other._upperBound is None:
+			uBound = self._upperBound
+			upperExclusive = ownUpperExclusive
+		elif self._upperBound < other._upperBound:
+			uBound = self._upperBound
+			upperExclusive = ownUpperExclusive
+		elif other._upperBound < self._upperBound:
+			uBound = other._upperBound
+			upperExclusive = otherUpperExclusive
 		else:
+			uBound = self._upperBound
+			upperExclusive = ownUpperExclusive or otherUpperExclusive
+
+		if lBound is not None and uBound is not None and not (lBound <= uBound):
 			ex = ValueError("The intersection of both version ranges is empty.")
-			ex.add_note(f"Got value '{other._upperBound}' for other's upper bound.")
-			ex.add_note(f"This range's lower bound is '{self._lowerBound}'.")
+			ex.add_note(f"Got value '{lBound}' for the highest lower bound.")
+			ex.add_note(f"The lowest upper bound is '{uBound}'.")
 			raise ex
 
-		return self.__class__(lBound, uBound)
+		boundHandling = RangeBoundHandling.BothBoundsInclusive
+		if lowerExclusive:
+			boundHandling |= RangeBoundHandling.LowerBoundExclusive
+		if upperExclusive:
+			boundHandling |= RangeBoundHandling.UpperBoundExclusive
+
+		return self.__class__(lBound, uBound, boundHandling)
 
 	def __lt__(self, other: Any) -> bool:
 		"""
 		Compare a version range and a version numbers if the version range is less than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is less than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is less than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
-			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		self._CheckCompatibility(other)
+
+		if self._upperBound is None:
+			return False
 
 		return self._upperBound < other
 
@@ -2330,46 +2575,46 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version range and a version numbers if the version range is less than or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is less than  or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is less than  or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._lowerBound.__class__) and isinstance(self._lowerBound, other.__class__)):
-			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		self._CheckCompatibility(other)
+
+		if self._upperBound is None:
+			return False
 
 		if RangeBoundHandling.UpperBoundExclusive in self._boundHandling:
 			return self._upperBound < other
-		else:
-			return self._upperBound <= other
+
+		return self._upperBound <= other
 
 	def __gt__(self, other: Any) -> bool:
 		"""
 		Compare a version range and a version numbers if the version range is greater than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is greater than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is greater than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
-			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		self._CheckCompatibility(other)
+
+		if self._lowerBound is None:
+			return False
 
 		return self._lowerBound > other
 
@@ -2377,26 +2622,26 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version range and a version numbers if the version range is greater than  or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version range is greater than or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version range is greater than or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
-		if not (isinstance(other, self._upperBound.__class__) and isinstance(self._upperBound, other.__class__)):
-			ex = TypeError(f"Parameter 'other' is not compatible with version range.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
+		self._CheckCompatibility(other)
+
+		if self._lowerBound is None:
+			return False
 
 		if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
 			return self._lowerBound > other
-		else:
-			return self._lowerBound >= other
+
+		return self._lowerBound >= other
 
 	def __contains__(self, version: Version) -> bool:
 		"""
@@ -2405,20 +2650,32 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		:param version:    Optional, version to check.
 		:returns:          ``True``, if version is in range.
 		:raises TypeError: If parameter ``version`` is not of type :class:`Version`.
+		:raises TypeError: If parameter ``version``'s type is unrelated to this range's bounds. |br|
+		                   The rule is the one :meth:`__init__` applies between the bounds.
 		"""
 		if not isinstance(version, Version):
-			ex = TypeError(f"Parameter 'item' is not of type 'Version'.")
+			ex = TypeError("Parameter 'item' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
 			raise ex
 
-		if self._boundHandling is RangeBoundHandling.BothBoundsInclusive:
-			return self._lowerBound <= version <= self._upperBound
-		elif self._boundHandling is (RangeBoundHandling.LowerBoundInclusive | RangeBoundHandling.UpperBoundExclusive):
-			return self._lowerBound <= version < self._upperBound
-		elif self._boundHandling is (RangeBoundHandling.LowerBoundExclusive | RangeBoundHandling.UpperBoundInclusive):
-			return self._lowerBound < version <= self._upperBound
-		else:
-			return self._lowerBound < version < self._upperBound
+		self._CheckCompatibility(version)
+
+		# An unbound end excludes nothing, so its half of the comparison is simply not made.
+		if self._lowerBound is not None:
+			if RangeBoundHandling.LowerBoundExclusive in self._boundHandling:
+				if not (self._lowerBound < version):
+					return False
+			elif not (self._lowerBound <= version):
+				return False
+
+		if self._upperBound is not None:
+			if RangeBoundHandling.UpperBoundExclusive in self._boundHandling:
+				if not (version < self._upperBound):
+					return False
+			elif not (version <= self._upperBound):
+				return False
+
+		return True
 
 
 @export
@@ -2441,7 +2698,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter ``versions`` is neither a single version nor an iterable thereof.
 		"""
 		if versions is None:
-			raise ValueError(f"Parameter 'versions' is None.")
+			raise ValueError("Parameter 'versions' is None.")
 
 		if isinstance(versions, Version):
 			self._items = [versions]
@@ -2454,7 +2711,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 				return
 
 			if not isinstance(firstVersion, Version):
-				raise TypeError(f"First element in parameter 'versions' is not of type Version.")
+				raise TypeError("First element in parameter 'versions' is not of type Version.")
 
 			baseType = firstVersion.__class__
 			for version in iterator:
@@ -2463,9 +2720,9 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 			self._items = list(sorted(versions))
 		else:
-			raise TypeError(f"Parameter 'versions' is not an Iterable.")
+			raise TypeError("Parameter 'versions' is not an Iterable.")
 
-	def __and__(self, other: VersionSet[V]) -> VersionSet[T]:
+	def __and__(self, other: VersionSet[V]) -> VersionSet[V]:
 		"""
 		Compute intersection of two version sets.
 
@@ -2495,7 +2752,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 
 		return VersionSet(result)
 
-	def __or__(self, other: VersionSet[V]) -> VersionSet[T]:
+	def __or__(self, other: VersionSet[V]) -> VersionSet[V]:
 		"""
 		Compute union of two version sets.
 
@@ -2563,14 +2820,14 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is less than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is less than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is less than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -2580,14 +2837,14 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is less than or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is less than or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is less than or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -2597,14 +2854,14 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is greater than the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is greater than the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is greater than the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -2614,14 +2871,14 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Compare a version set and a version numbers if the version set is greater than or equal the second operand (version).
 
-		:param other:       Operand to compare against.
-		:returns:           ``True``, if version set is greater than or equal the second operand (version).
-		:raises TypeError:  If parameter ``other`` is not of type :class:`Version`.
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if version set is greater than or equal the second operand (version).
+		:raises TypeError: If parameter ``other`` is not of type :class:`Version`.
 		"""
 		# TODO: support VersionRange < VersionRange too
 		# TODO: support str, int, ... like Version ?
 		if not isinstance(other, Version):
-			ex = TypeError(f"Parameter 'other' is not of type 'Version'.")
+			ex = TypeError("Parameter 'other' is not of type 'Version'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -2664,3 +2921,846 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		   Versions are ordered from lowest to highest version number.
 		"""
 		return self._items[index]
+
+
+#: The :class:`Version` class under a name no constraint shadows with a property of its own.
+_VersionType = Version
+
+
+@export
+class VersionComparison(Enum):
+	"""
+	The comparison one constraint of a :class:`VersionExpression` applies to a version.
+
+	The six ordering comparisons mean the same thing in every packaging ecosystem, even where the spelling differs -
+	Debian writes ``<<`` for :attr:`LessThan` and npm writes ``=`` for :attr:`Equal`. Each member's value is its
+	*canonical* spelling, which is what a constraint renders as; a dialect maps its own spellings onto these members
+	while parsing.
+	"""
+
+	Equal              = "=="  #: The version has to be equal to the constraint's version.
+	Unequal            = "!="  #: The version must not be the constraint's version.
+	LessThan           = "<"   #: The version has to be lower than the constraint's version.
+	LessThanOrEqual    = "<="  #: The version must not be higher than the constraint's version.
+	GreaterThan        = ">"   #: The version has to be higher than the constraint's version.
+	GreaterThanOrEqual = ">="  #: The version must not be lower than the constraint's version.
+	CompatibleRelease  = "~="  #: The version has to be compatible with the constraint's version (:pep:`440`).
+	Caret              = "^"   #: The version must not change the constraint's leftmost non-zero part (npm).
+	Tilde              = "~"   #: The version must not change the constraint's minor part (npm).
+
+	def __str__(self) -> str:
+		"""
+		Return the operator in its canonical spelling.
+
+		:returns: The comparison's operator.
+		"""
+		return self.value
+
+
+@export
+class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
+	"""
+	One comparison of a :class:`VersionExpression`, such as ``>=1.2.0``.
+
+	A constraint is a container of the versions satisfying it, so membership is asked with ``in``:
+
+	.. code-block:: python
+
+	   constraint = VersionConstraint(VersionComparison.GreaterThanOrEqual, SemanticVersion.Parse("1.2.0"))  # >=1.2.0
+	   SemanticVersion.Parse("1.5.0") in constraint   # True
+
+	.. seealso::
+
+	   :class:`CompatibleVersionConstraint`
+	      |rarr| The constraint implementing :attr:`~VersionComparison.CompatibleRelease`.
+	"""
+
+	_comparison: VersionComparison  #: The comparison this constraint applies.
+	_version:    V                  #: The version the compared version is held against.
+
+	def __init__(self, comparison: VersionComparison, version: V) -> None:
+		"""
+		Initialize a constraint from a comparison and the version it compares against.
+
+		:param comparison:  The comparison to apply.
+		:param version:     The version to compare against.
+		:raises TypeError:  If parameter 'comparison' is not of type :class:`VersionComparison`.
+		:raises TypeError:  If parameter 'version' is not of type :class:`Version`.
+		:raises ValueError: If parameter 'comparison' is a shorthand like
+		                    :attr:`~VersionComparison.CompatibleRelease`. |br|
+		                    Use the matching :class:`RangeVersionConstraint`, which derives an upper bound from the
+		                    version.
+		"""
+		if not isinstance(comparison, VersionComparison):
+			ex = TypeError("Parameter 'comparison' is not of type 'VersionComparison'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(comparison)}'.")
+			raise ex
+
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		if comparison in _SHORTHAND_COMPARISONS and not isinstance(self, RangeVersionConstraint):
+			ex = ValueError(f"Comparison '{comparison.name}' is not a plain comparison.")
+			ex.add_note("Use the matching 'RangeVersionConstraint', which derives an upper bound from the version.")
+			raise ex
+
+		self._comparison = comparison
+		self._version =    version
+
+	@readonly
+	def Comparison(self) -> VersionComparison:
+		"""
+		Read-only property to access the comparison this constraint applies (:attr:`_comparison`).
+
+		:returns: The comparison.
+		"""
+		return self._comparison
+
+	@readonly
+	def Version(self) -> V:
+		"""
+		Read-only property to access the version this constraint compares against (:attr:`_version`).
+
+		:returns: The version.
+		"""
+		return self._version
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version satisfies this constraint.
+
+		:param version:     The version to check.
+		:returns:           ``True``, if the version satisfies the constraint.
+		:raises TypeError:  If parameter 'version' is not of type :class:`Version`.
+		:raises ValueError: If this constraint carries a comparison a plain constraint cannot apply. |br|
+		                    A shorthand is implemented by a :class:`RangeVersionConstraint`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		if self._comparison is VersionComparison.Equal:
+			return version == self._version
+		elif self._comparison is VersionComparison.Unequal:
+			return version != self._version
+		elif self._comparison is VersionComparison.LessThan:
+			return version < self._version
+		elif self._comparison is VersionComparison.LessThanOrEqual:
+			return version <= self._version
+		elif self._comparison is VersionComparison.GreaterThan:
+			return version > self._version
+		elif self._comparison is VersionComparison.GreaterThanOrEqual:
+			return version >= self._version
+
+		ex = ValueError(f"Comparison '{self._comparison.name}' cannot be applied by a plain constraint.")
+		ex.add_note("A shorthand is implemented by a 'RangeVersionConstraint'.")
+		raise ex
+
+	def ToVersionRange(self) -> VersionRange[_VersionType]:
+		"""
+		Convert this constraint into the :class:`VersionRange` it describes.
+
+		Five of the six comparisons are intervals once a bound may be unbound:
+
+		* ``>=1.2.0`` is ``[1.2.0, )``,
+		* ``>1.2.0`` is ``(1.2.0, )``,
+		* ``<=2.0.0`` is ``( , 2.0.0]``,
+		* ``<2.0.0`` is ``( , 2.0.0)``,
+		* ``==1.2.0`` is ``[1.2.0, 1.2.0]``, a range of exactly one version.
+
+		:attr:`~VersionComparison.Unequal` is the exception and has no range: the complement of a single version is
+		not an interval but a *union* of two, one below it and one above. That is why an expression keeps both
+		representations rather than being replaced by a range.
+
+		:returns:           The range of versions satisfying this constraint.
+		:raises ValueError: If this constraint is an :attr:`~VersionComparison.Unequal`, which no single range
+		                    describes. |br|
+		                    The complement of a version is a union of two intervals.
+		"""
+		if self._comparison is VersionComparison.Equal:
+			return VersionRange(self._version, self._version)
+		elif self._comparison is VersionComparison.GreaterThanOrEqual:
+			return VersionRange(self._version, None)
+		elif self._comparison is VersionComparison.GreaterThan:
+			return VersionRange(self._version, None, RangeBoundHandling.LowerBoundExclusive)
+		elif self._comparison is VersionComparison.LessThanOrEqual:
+			return VersionRange(None, self._version)
+		elif self._comparison is VersionComparison.LessThan:
+			return VersionRange(None, self._version, RangeBoundHandling.UpperBoundExclusive)
+
+		ex = ValueError(f"Comparison '{self._comparison.name}' describes no single version range.")
+		ex.add_note("The complement of a version is a union of two intervals, which a 'VersionRange' cannot hold.")
+		raise ex
+
+	def __str__(self) -> str:
+		"""
+		Return the constraint in its canonical spelling.
+
+		:returns: The operator followed by the version.
+		"""
+		return f"{self._comparison}{self._version}"
+
+
+#: The comparisons a plain :class:`VersionConstraint` cannot express, because each derives an upper bound.
+_SHORTHAND_COMPARISONS = (
+	VersionComparison.CompatibleRelease,
+	VersionComparison.Caret,
+	VersionComparison.Tilde,
+)
+
+
+@export
+class RangeVersionConstraint(VersionConstraint[V]):
+	"""
+	Base-class of the shorthand constraints meaning *at least this version, and below a derived bound*.
+
+	Every packaging ecosystem has one of these, spells it differently, and derives its upper bound by a **different**
+	rule:
+
+	* :pep:`440` writes ``~=``,
+	* npm writes ``^`` and ``~``,
+	* RubyGems writes ``~>``.
+
+	The rule is the only thing that differs, so it is what a derived class supplies in :meth:`_DeriveUpperBound`.
+
+	.. seealso::
+
+	   :class:`CompatibleVersionConstraint`
+	      |rarr| :pep:`440`'s ``~=``.
+	   :class:`CaretVersionConstraint`
+	      |rarr| npm's ``^``.
+	   :class:`TildeVersionConstraint`
+	      |rarr| npm's ``~``.
+	"""
+
+	_upperBound: SemanticVersion  #: The first version outside the constraint, derived from the written version.
+
+	def __init__(self, comparison: VersionComparison, version: V) -> None:
+		"""
+		Initialize a shorthand constraint and derive its upper bound.
+
+		:param comparison:  The shorthand comparison this constraint applies.
+		:param version:     The version the shorthand is written with.
+		:raises TypeError:  If parameter 'version' is not of type :class:`SemanticVersion`. |br|
+		                    An upper bound is derived from the version's parts, which only a semantic version has.
+		:raises ValueError: If the version has too few parts for this shorthand.
+		"""
+		if not isinstance(version, SemanticVersion):
+			ex = TypeError("Parameter 'version' is not of type 'SemanticVersion'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		super().__init__(comparison, version)
+
+		self._upperBound = self._DeriveUpperBound(version)
+
+	@abstractmethod
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:  # type: ignore[empty-body]
+		"""
+		Derive the first version outside this constraint from the version it is written with.
+
+		The bound has to be built in the written version's **epoch**. A bound left in epoch 0 outranks nothing, so
+		the constraint would match no version at all - not even the one it was written with.
+
+		:param version:     The version the shorthand is written with, always a semantic version.
+		:returns:           The exclusive upper bound, in the same epoch as ``version``.
+		:raises ValueError: If the version has too few parts for this shorthand.
+		"""
+
+	@readonly
+	def UpperBound(self) -> SemanticVersion:
+		"""
+		Read-only property to access the first version outside this constraint (:attr:`_upperBound`).
+
+		:returns: The exclusive upper bound derived from the written version.
+		"""
+		return self._upperBound
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version is within this constraint.
+
+		:param version:    The version to check.
+		:returns:          ``True``, if the version is at least the written one and below the derived upper bound.
+		:raises TypeError: If parameter 'version' is not of type :class:`Version`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		return self._version <= version < self._upperBound
+
+	def ToVersionRange(self) -> VersionRange[_VersionType]:
+		"""
+		Convert this constraint into the :class:`VersionRange` it describes.
+
+		A shorthand constraint knows both of its bounds - the written version is the inclusive lower one, the derived
+		bound the exclusive upper one - so the conversion is exact and loses nothing.
+
+		:returns: The range of versions satisfying this constraint.
+		"""
+		return VersionRange(
+			self._version,
+			self._upperBound,
+			RangeBoundHandling.LowerBoundInclusive | RangeBoundHandling.UpperBoundExclusive
+		)
+
+
+@export
+class CompatibleVersionConstraint(RangeVersionConstraint[V]):
+	"""
+	The *compatible release* constraint, written ``~=`` by :pep:`440`.
+
+	The last part written may move, the one to its left may not: ``~=1.2.3`` is ``<1.3``, ``~=1.2`` is ``<2`` and
+	``~=1.2.3.4`` is ``<1.2.4``. The written version therefore needs at least two parts - ``~=1`` would say nothing
+	that ``>=1`` doesn't, and :pep:`440` rejects it for that reason.
+
+	.. code-block:: python
+
+	   constraint = CompatibleVersionConstraint(PythonVersion.Parse("1.2.3"))
+	   PythonVersion.Parse("1.2.9") in constraint   # True
+	   PythonVersion.Parse("1.3.0") in constraint   # False
+	"""
+
+	def __init__(self, version: V) -> None:
+		"""
+		Initialize a compatible-release constraint from the version it is written with.
+
+		:param version: The version to be compatible with, with at least two parts.
+		"""
+		super().__init__(VersionComparison.CompatibleRelease, version)
+
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:
+		"""
+		Drop the last part written and increment the one that becomes the last.
+
+		:param version:     The version the shorthand is written with.
+		:returns:           The exclusive upper bound.
+		:raises ValueError: If the version has fewer than two parts.
+		"""
+		versionType = version.__class__
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
+		if Parts.Build in version._parts:
+			return versionType(version.Major, version.Minor, version.Patch + 1, epoch=epoch)
+		elif Parts.Micro in version._parts:
+			return versionType(version.Major, version.Minor + 1, epoch=epoch)
+		elif Parts.Minor in version._parts:
+			return versionType(version.Major + 1, epoch=epoch)
+
+		ex = ValueError(f"Version '{version}' has too few parts for a compatible release.")
+		ex.add_note("'~=1' would mean the same as '>=1'; write at least a major and a minor part.")
+		raise ex
+
+
+@export
+class CaretVersionConstraint(RangeVersionConstraint[V]):
+	"""
+	npm's ``^``: the version must not change the **leftmost non-zero** part of the one written.
+
+	``^1.2.3`` is ``<2.0.0``, but ``^0.2.3`` is ``<0.3.0`` and ``^0.0.3`` is ``<0.0.4`` - below 1.0.0 npm treats
+	each part as breaking, which is what makes this different from :class:`TildeVersionConstraint`. A part that was
+	not written cannot be the pivot, so ``^0`` is ``<1.0.0`` while ``^0.0`` is ``<0.1.0``.
+
+	.. note::
+
+	   npm excludes pre-releases of the upper bound by writing it ``<2.0.0-0``. That distinction is not modelled
+	   here; a pre-release of the bound is compared by :class:`SemanticVersion`'s own ordering.
+	"""
+
+	def __init__(self, version: V) -> None:
+		"""
+		Initialize a caret constraint from the version it is written with.
+
+		:param version: The version to be compatible with.
+		"""
+		super().__init__(VersionComparison.Caret, version)
+
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:
+		"""
+		Increment the leftmost non-zero part that was actually written.
+
+		:param version: The version the shorthand is written with.
+		:returns:       The exclusive upper bound.
+		"""
+		versionType = version.__class__
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
+		if version.Major != 0 or Parts.Minor not in version._parts:
+			return versionType(version.Major + 1, epoch=epoch)
+		elif version.Minor != 0 or Parts.Micro not in version._parts:
+			return versionType(0, version.Minor + 1, epoch=epoch)
+
+		return versionType(0, 0, version.Patch + 1, epoch=epoch)
+
+
+@export
+class TildeVersionConstraint(RangeVersionConstraint[V]):
+	"""
+	npm's ``~``: the version must not change the minor part of the one written.
+
+	``~1.2.3`` and ``~1.2`` are both ``<1.3.0``. Only when no minor part was written does the major one become the
+	pivot, so ``~1`` is ``<2.0.0``.
+
+	This is **not** :pep:`440`'s ``~=``: the two agree on ``~1.2.3`` and disagree on ``~1.2``, which npm reads as
+	``<1.3.0`` and :pep:`440` as ``<2``.
+	"""
+
+	def __init__(self, version: V) -> None:
+		"""
+		Initialize a tilde constraint from the version it is written with.
+
+		:param version: The version to be compatible with.
+		"""
+		super().__init__(VersionComparison.Tilde, version)
+
+	def _DeriveUpperBound(self, version: SemanticVersion) -> SemanticVersion:
+		"""
+		Increment the minor part, or the major one when no minor part was written.
+
+		:param version: The version the shorthand is written with.
+		:returns:       The exclusive upper bound.
+		"""
+		versionType = version.__class__
+		epoch =       version.Epoch if Parts.Epoch in version._parts else None
+		if Parts.Minor in version._parts:
+			return versionType(version.Major, version.Minor + 1, epoch=epoch)
+
+		return versionType(version.Major + 1, epoch=epoch)
+
+
+@export
+def _BuildConstraintPattern(
+	operators:   dict[str, VersionComparison],
+	separators:  str,
+	versionType: type[Version]
+) -> Pattern[str]:
+	"""
+	Build the pattern matching one constraint of a :class:`VersionExpression` dialect.
+
+	The operators are alternated longest-first, so ``>=`` wins over ``>`` and ``~=`` over any single character. The
+	operator and its version are matched *together*, with whitespace allowed between them, which is what lets
+	whitespace separate constraints without splitting ``>= 1.2.0`` in half.
+
+	A version may hold none of the characters the dialect's operators are built from, and none of its separators, so
+	those are excluded from it. Without that the optional operator group would let ``>=1.2.0 <2.0.0`` read its second
+	constraint as the *version* ``<2.0.0``.
+
+	The **epoch separator is the exception** and stays allowed: :pep:`440` writes an epoch ``1!1.0``, and ``!`` is
+	also the first character of ``!=``. Excluding it would cut ``>=1!1.0`` short at the epoch. The operator
+	alternation is tried before the version at every position, so ``!=`` is still read as an operator wherever a
+	constraint can begin.
+
+	This is a function rather than a method, so :class:`VersionExpression` can call it in its own class body. A
+	dialect derived from it is served by :meth:`VersionExpression.__init_subclass__`.
+
+	:param operators:   The dialect's operator spellings.
+	:param separators:  The dialect's constraint separators.
+	:param versionType: The dialect's version class, which names the epoch separator to keep.
+	:returns:           The pattern, with the operator as group 1 and the version as group 2.
+	"""
+	alternation = "|".join(re_escape(operator) for operator in sorted(operators, key=len, reverse=True))
+	excluded =    (set("".join(operators)) | set(separators)) - set(versionType._EPOCH_SEPARATOR)
+
+	# WORKAROUND: Python <3.12
+	#   Reusing the f-string's own quote character inside its expression needs PEP 701, so the escaped character
+	#   class is built into a variable first. On 3.11 the inlined form is a 'SyntaxError: f-string: unmatched (',
+	#   raised at import, which takes the whole package with it.
+	#   Replace by:
+	#     return re_compile(rf"({alternation})?\s*([^\s{re_escape("".join(sorted(excluded)))}]+)")
+	excludedCharacters = re_escape("".join(sorted(excluded)))
+
+	return re_compile(rf"({alternation})?\s*([^\s{excludedCharacters}]+)")
+
+
+@export
+class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
+	"""
+	A conjunction of :class:`VersionConstraint`\\ s, such as ``>=1.2.0,<2.0.0``.
+
+	Every constraint has to be satisfied, which is what separating them means in every packaging ecosystem that has
+	the notion. An expression with **no** constraints matches every version, so *no version restriction* can be
+	represented rather than special-cased by its callers.
+
+	.. code-block:: python
+
+	   expression = VersionExpression.Parse(">=1.2.0,<2.0.0")
+	   SemanticVersion.Parse("1.5.0") in expression   # True
+	   SemanticVersion.Parse("2.0.0") in expression   # False
+
+	   SemanticVersion.Parse("4.2.0") in VersionExpression.Parse("")   # True - no constraints matches anything
+
+	This class is the **ecosystem-neutral** dialect: the six ordering comparisons in their canonical spelling,
+	separated by commas or whitespace. An ecosystem that spells its operators differently, or adds a shorthand,
+	derives from it and overrides :attr:`_OPERATORS`, :attr:`_SEPARATORS`, :attr:`_VERSION_TYPE` or
+	:attr:`_SHORTHANDS`. A dialect is data, not behavior.
+
+	.. seealso::
+
+	   :class:`PythonVersionExpression`
+	      |rarr| The dialect :pep:`440` defines, which a Python requirement file writes.
+	"""
+
+	#: Operator spellings this dialect accepts, mapped onto the comparison they mean.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		"==": VersionComparison.Equal,
+		"!=": VersionComparison.Unequal,
+		"<=": VersionComparison.LessThanOrEqual,
+		">=": VersionComparison.GreaterThanOrEqual,
+		"<":  VersionComparison.LessThan,
+		">":  VersionComparison.GreaterThan,
+	}
+
+	#: Characters separating one constraint from the next. Whitespace always separates as well.
+	_SEPARATORS: ClassVar[str] = ","
+
+	#: The :class:`Version` class this dialect parses its versions as, unless a caller names another.
+	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion
+
+	#: The class each shorthand comparison is built as. A comparison absent here is a plain
+	#: :class:`VersionConstraint`; the neutral dialect has no shorthand at all.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {}
+
+	#: This dialect's compiled constraint pattern, built from the three tables above. A derived dialect gets its own
+	#: in :meth:`__init_subclass__`.
+	_CONSTRAINT_PATTERN: ClassVar[Pattern[str]] = _BuildConstraintPattern(_OPERATORS, _SEPARATORS, _VERSION_TYPE)
+
+	_constraints: tuple[VersionConstraint[V], ...]  #: The constraints a version has to satisfy, all of them.
+
+	def __init__(self, constraints: Iterable[VersionConstraint[V]] = ()) -> None:
+		"""
+		Initialize an expression from its constraints.
+
+		:param constraints: Optional, the constraints a version has to satisfy. None of them means *any version*.
+		:raises ValueError: If parameter 'constraints' is None.
+		:raises TypeError:  If parameter 'constraints' is not iterable.
+		:raises TypeError:  If parameter 'constraints' contains an item that is not a :class:`VersionConstraint`.
+		"""
+		if constraints is None:
+			raise ValueError("Parameter 'constraints' is None.")
+		elif not isinstance(constraints, abc_Iterable):
+			ex = TypeError("Parameter 'constraints' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(constraints)}'.")
+			raise ex
+
+		items = tuple(constraints)
+		for constraint in items:
+			if not isinstance(constraint, VersionConstraint):
+				ex = TypeError("Parameter 'constraints' contains an item that is not of type 'VersionConstraint'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(constraint)}'.")
+				raise ex
+
+		self._constraints = items
+
+	def __init_subclass__(cls, **kwargs: Any) -> None:
+		"""
+		Compile the constraint pattern of a newly defined dialect.
+
+		A dialect is data: its operators, its separators and its version type are class variables, so its pattern is
+		settled once the class body has been read and is built here instead of on every :meth:`Parse`.
+
+		:param kwargs: Keyword arguments passed on to the base implementation.
+		"""
+		super().__init_subclass__(**kwargs)
+
+		cls._CONSTRAINT_PATTERN = _BuildConstraintPattern(cls._OPERATORS, cls._SEPARATORS, cls._VERSION_TYPE)
+
+	@classmethod
+	def Parse(cls, expression: Nullable[str], versionType: Nullable[type[Version]] = None) -> Self:
+		"""
+		Parse an expression such as ``>=1.2.0,<2.0.0`` into its constraints.
+
+		A constraint without an operator is an equality, so ``1.2.0`` and ``==1.2.0`` are the same statement. An
+		empty expression yields an expression with no constraints, which every version satisfies - that is how *no
+		version restriction* is written.
+
+		The expression is *scanned* rather than split, so a dialect separating constraints by whitespace does not
+		break a constraint that has whitespace after its operator.
+
+		:param expression:  The expression to parse, or ``None`` for *any version*.
+		:param versionType: Optional, the :class:`Version` class the versions are parsed as. Defaults to the
+		                    dialect's :attr:`_VERSION_TYPE`.
+		:returns:           The parsed expression.
+		:raises TypeError:  If parameter 'expression' is not a string.
+		:raises ValueError: If the expression holds input this dialect doesn't accept. |br|
+		                    The note names the operators this dialect accepts.
+		:raises ValueError: If a version in the expression can't be parsed. |br|
+		                    The note names the operators this dialect accepts, because an operator another
+		                    ecosystem spells differently is read as part of the version.
+		"""
+		if expression is None:
+			return cls()
+		elif not isinstance(expression, str):
+			ex = TypeError("Parameter 'expression' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(expression)}'.")
+			raise ex
+		elif (expression := expression.strip()) == "":
+			return cls()
+
+		versionType = cls._VERSION_TYPE if versionType is None else versionType
+		skippable =   cls._SEPARATORS + " \t"
+		# 'V' is unbound here - the version class comes from the dialect or the parameter, not from the type variable.
+		constraints: list[VersionConstraint[Any]] = []
+		position =    0
+
+		for match in cls._CONSTRAINT_PATTERN.finditer(expression):
+			if (skipped := expression[position:match.start()].strip(skippable)) != "":
+				ex = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
+				ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+				raise ex
+
+			operator = match.group(1)
+			comparison = VersionComparison.Equal if operator is None else cls._OPERATORS[operator]
+			try:
+				version = versionType.Parse(match.group(2))
+			except ValueError as cause:
+				# An operator this dialect doesn't know is not recognized as one, so it lands in the version instead.
+				ex = ValueError(f"Expression '{expression}' has unexpected input at '{match.group(0).strip()}'.")
+				ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+				raise ex from cause
+
+			if (shorthand := cls._SHORTHANDS.get(comparison, None)) is not None:
+				constraints.append(shorthand(version))
+			else:
+				constraints.append(VersionConstraint(comparison, version))
+			position = match.end()
+
+		if (skipped := expression[position:].strip(skippable)) != "":
+			ex = ValueError(f"Expression '{expression}' has unexpected input at '{skipped}'.")
+			ex.add_note(f"This dialect accepts the operators {', '.join(sorted(cls._OPERATORS))}.")
+			raise ex
+
+		return cls(constraints)
+
+	@readonly
+	def Constraints(self) -> tuple[VersionConstraint[V], ...]:
+		"""
+		Read-only property to access the constraints a version has to satisfy (:attr:`_constraints`).
+
+		:returns: The constraints, empty if the expression matches every version.
+		"""
+		return self._constraints
+
+	@readonly
+	def MatchesAnyVersion(self) -> bool:
+		"""
+		Read-only property to return whether this expression constrains nothing.
+
+		:returns: ``True``, if the expression has no constraints and every version satisfies it.
+		"""
+		return len(self._constraints) == 0
+
+	def __contains__(self, version: V) -> bool:
+		"""
+		Check if a version satisfies every constraint of this expression.
+
+		:param version:    The version to check.
+		:returns:          ``True``, if the version satisfies all constraints. An expression without constraints is
+		                   satisfied by every version.
+		:raises TypeError: If parameter 'version' is not of type :class:`Version`.
+		"""
+		if not isinstance(version, Version):
+			ex = TypeError("Parameter 'version' is not of type 'Version'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(version)}'.")
+			raise ex
+
+		return all(version in constraint for constraint in self._constraints)
+
+	def ToVersionRange(self) -> VersionRange[Version]:
+		"""
+		Convert this expression into the single :class:`VersionRange` it describes.
+
+		An expression is a conjunction, so its range is the **intersection** of its constraints' ranges, which
+		:meth:`VersionRange.__and__` computes. An expression with no constraints is the range unbound at both ends,
+		since both match every version.
+
+		Not every expression has a range. One containing an :attr:`~VersionComparison.Unequal` does not, because the
+		complement of a version is a union of two intervals - ``>=1.0,!=1.3,<2.0`` is an ordinary requirement with
+		no single range. That is why :class:`VersionExpression` is not replaced by :class:`VersionRange`: a range is
+		one interval, an expression is any conjunction, and the second is strictly more expressive.
+
+		:returns:           The range of versions satisfying every constraint.
+		:raises ValueError: If a constraint describes no range, which an :attr:`~VersionComparison.Unequal` never
+		                    does.
+		:raises ValueError: If the constraints have no version in common.
+		"""
+		versionRange: VersionRange[_VersionType] = VersionRange(None, None)
+		for constraint in self._constraints:
+			versionRange = versionRange & constraint.ToVersionRange()
+
+		return versionRange
+
+	def __len__(self) -> int:
+		"""
+		Return the number of constraints in this expression.
+
+		:returns: Number of constraints.
+		"""
+		return len(self._constraints)
+
+	def __iter__(self) -> Iterator[VersionConstraint[V]]:
+		"""
+		Iterate the constraints of this expression, in the order they were written.
+
+		:returns: An iterator over the constraints.
+		"""
+		return iter(self._constraints)
+
+	def __str__(self) -> str:
+		"""
+		Return the expression in this dialect's spelling.
+
+		A :class:`VersionConstraint` renders itself canonically, which is not what every dialect writes - Debian
+		spells :attr:`~VersionComparison.Equal` ``=`` and :attr:`~VersionComparison.LessThan` ``<<``. The dialect's
+		own operator table answers what it writes; where a dialect has several spellings for one comparison, the
+		first one wins.
+
+		:returns: The constraints, joined by this dialect's separator, or an empty string if it constrains nothing.
+		"""
+		separator: str =       self._SEPARATORS[0] if len(self._SEPARATORS) > 0 else " "
+		spelled:   list[str] = []
+
+		for constraint in self._constraints:
+			for spelling, comparison in self._OPERATORS.items():
+				if comparison is constraint.Comparison:
+					spelled.append(f"{spelling}{constraint.Version}")
+					break
+			else:
+				spelled.append(str(constraint))
+
+		return separator.join(spelled)
+
+
+@export
+class PythonVersionExpression(VersionExpression[V]):
+	"""
+	A version expression in the dialect :pep:`440` defines, which is what a Python requirement file writes.
+
+	It adds the compatible release operator ``~=`` to the six ordering comparisons and parses its versions as
+	:class:`PythonVersion`:
+
+	.. code-block:: python
+
+	   expression = PythonVersionExpression.Parse("~=1.2.3")
+	   PythonVersion.Parse("1.2.9") in expression   # True
+	   PythonVersion.Parse("1.3.0") in expression   # False
+
+	.. seealso::
+
+	   :class:`CompatibleVersionConstraint`
+	      |rarr| What ``~=`` is parsed into, and how its upper bound is derived.
+	"""
+
+	#: The neutral dialect's operators, plus the compatible release operator :pep:`440` defines.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		**VersionExpression._OPERATORS,
+		"~=": VersionComparison.CompatibleRelease,
+	}
+
+	#: :pep:`440` versions, so an epoch, a release candidate or a post-release parses.
+	_VERSION_TYPE: ClassVar[type[Version]] = PythonVersion
+
+	#: ``~=`` derives an upper bound, so it is not a plain comparison.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {
+		VersionComparison.CompatibleRelease: CompatibleVersionConstraint,
+	}
+
+
+@export
+class NPMVersionExpression(VersionExpression[V]):
+	"""
+	A version expression in npm's dialect, which is what a ``package.json`` dependency writes.
+
+	npm differs from :pep:`440` in three ways that matter to a parser:
+
+	* constraints are separated by **whitespace**, and a comma is a syntax error;
+	* equality is written ``=``, never ``==``;
+	* there is **no** ``!=`` - npm cannot exclude a single version this way.
+
+	It adds ``^`` and ``~``, which are not :pep:`440`'s ``~=``:
+
+	.. code-block:: python
+
+	   expression = NPMVersionExpression.Parse("^1.2.3")
+	   SemanticVersion.Parse("1.9.0") in expression   # True
+	   SemanticVersion.Parse("2.0.0") in expression   # False
+
+	.. note::
+
+	   The shorthands ``1.2.x``, ``*``, the hyphen range ``1.2.3 - 2.3.4`` and the alternative ``||`` are **not**
+	   parsed. The first three are further rewriting rules; ``||`` is a disjunction, which this class cannot hold
+	   because every constraint of an expression has to be satisfied.
+
+	.. seealso::
+
+	   :class:`CaretVersionConstraint` |br|
+	   :class:`TildeVersionConstraint`
+	"""
+
+	#: npm's operators. No ``==`` and no ``!=``; ``^`` and ``~`` are npm's own shorthands.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		"<=": VersionComparison.LessThanOrEqual,
+		">=": VersionComparison.GreaterThanOrEqual,
+		"<":  VersionComparison.LessThan,
+		">":  VersionComparison.GreaterThan,
+		"=":  VersionComparison.Equal,
+		"^":  VersionComparison.Caret,
+		"~":  VersionComparison.Tilde,
+	}
+
+	#: npm separates constraints by whitespace alone; a comma is a syntax error there.
+	_SEPARATORS: ClassVar[str] = ""
+
+	#: npm is strict semantic versioning.
+	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion
+
+	#: ``^`` and ``~`` each derive an upper bound, by different rules.
+	_SHORTHANDS: ClassVar[dict[VersionComparison, type]] = {
+		VersionComparison.Caret: CaretVersionConstraint,
+		VersionComparison.Tilde: TildeVersionConstraint,
+	}
+
+
+@export
+class DebianVersionExpression(VersionExpression[V]):
+	"""
+	A version expression in Debian's dialect, as a ``debian/control`` dependency writes it inside its parentheses.
+
+	Debian spells the strict comparisons ``<<`` and ``>>``, equality ``=``, and has **no** ``!=``. The obsolete
+	spellings ``<`` and ``>`` are deliberately **not** accepted: ``dpkg`` still takes them but warns, because they
+	historically meant ``<=`` and ``>=`` - reading them silently as the strict operators would invert their meaning.
+
+	.. code-block:: python
+
+	   expression = DebianVersionExpression.Parse(">> 1.2.3")
+	   SemanticVersion.Parse("1.3.0") in expression   # True
+
+	.. note::
+
+	   A Debian dependency states **one** constraint per package mention - ``pkg (>= 1.0), pkg (<< 2.0)`` - so an
+	   expression here usually holds a single constraint. The comma is Debian's *dependency* separator, not a
+	   constraint separator.
+
+	.. attention::
+
+	   Debian version strings are ``epoch:upstream-revision``. :class:`SemanticVersion` reads the revision as a
+	   postfix, but an **epoch** (``2:1.2.3-1``) does not parse, and ``1.2.3-1`` renders back as ``1.2.3+1``.
+	   Matching Debian versions faithfully needs a ``DebianVersion`` class, which pyTooling does not have.
+	"""
+
+	#: Debian's operators. ``<<`` and ``>>`` are the strict ones; there is no ``!=``.
+	_OPERATORS: ClassVar[dict[str, VersionComparison]] = {
+		"<<": VersionComparison.LessThan,
+		">>": VersionComparison.GreaterThan,
+		"<=": VersionComparison.LessThanOrEqual,
+		">=": VersionComparison.GreaterThanOrEqual,
+		"=":  VersionComparison.Equal,
+	}
+
+	#: Debian's comma separates dependencies rather than constraints, but accepting it costs nothing.
+	_SEPARATORS: ClassVar[str] = ","
+
+	#: The closest pyTooling has to a Debian version - see the class doc-string's caveat.
+	_VERSION_TYPE: ClassVar[type[Version]] = SemanticVersion

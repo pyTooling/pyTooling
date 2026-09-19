@@ -125,7 +125,7 @@ once in the constructor by :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.
 supports native Windows (``kernel32.dll:GetConsoleScreenBufferInfo``) as well as Linux, macOS, FreeBSD, MinGW32/64,
 UCRT64, Clang64 and Cygwin (``ioctl(TIOCGWINSZ)``, falling back to the environment variables ``COLUMNS`` and ``LINES``).
 If the size can't be determined, ``(80, 25)`` is assumed; on an unsupported platform, a
-:exc:`~pyTooling.Exceptions.PlatformNotSupportedException` is raised.
+:exc:`~pyTooling.Exceptions.PlatformNotSupportedError` is raised.
 
 
 .. _TERM/LowLevelWriting:
@@ -482,9 +482,9 @@ Three helper methods print the parts of a program's user interface that look the
                         Report Service Program
    ================================================================
 
-:meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHelp` prints the help page of the argument parser, or of one
-subcommand. It expects ``MainParser`` and ``SubParsers``, which come from
-:class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin` - so it's usable in an application combining both classes.
+:meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin._PrintHelp` prints the help page of the argument parser,
+or of one subcommand. It belongs to the mixin-class, which owns the parsers, and expects the ``Write***`` methods of
+:class:`~pyTooling.TerminalUI.TerminalApplication` - so it is usable in an application combining both classes.
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` prints the program's meta data, read from the dunder
 variables of the module handed to it:

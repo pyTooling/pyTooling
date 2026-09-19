@@ -39,6 +39,7 @@ from pathlib       import Path
 from typing        import Callable, Any, Tuple, NoReturn
 from unittest.mock import patch
 
+from pyTooling.MetaClasses                   import UnfulfilledExpectationError
 from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
 from pyTooling.Attributes.ArgParse.Argument   import StringArgument, StringListArgument, PositionalArgument
 from pyTooling.Attributes.ArgParse.Argument   import PathArgument, PathListArgument, ListArgument
@@ -1237,3 +1238,39 @@ class MockedUserManager(Testcase):
 		# self.assertIn(f"usage: {PROGRAM}", stdout)
 		# self.assertIn(f"usage: {PROGRAM}", stderr)
 		self.assertEqual("", stderr)
+
+
+class PrintHelpWithoutATerminal(Testcase):
+	"""'_PrintHelp()' writes through the 'Write***' methods, which 'ArgParseHelperMixin' alone does not provide."""
+
+	def test_ReportsTheMissingMembers(self) -> None:
+		class Application(ArgParseHelperMixin):
+			pass
+
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			Application(prog="app")._PrintHelp("unknown")
+
+		self.assertEqual(
+			"Method 'Application._PrintHelp()' expects members this class doesn't provide.",
+			str(exceptionCapture.exception)
+		)
+		self.assertIn("Missing 'WriteWarning'.", exceptionCapture.exception.__notes__)
+		self.assertIn("Missing 'WriteError'.", exceptionCapture.exception.__notes__)
+
+	def test_TheMixinIsOtherwiseUsable(self) -> None:
+		"""Only the one method that needs a terminal is rejected; parsing works."""
+
+		class Application(ArgParseHelperMixin):
+			pass
+
+		application = Application(prog="app")
+
+		self.assertIsNotNone(application.MainParser)
+
+	def test_WithATerminalTheOriginalMethodIsRestored(self) -> None:
+		from pyTooling.TerminalUI import TerminalApplication
+
+		class Application(TerminalApplication, ArgParseHelperMixin):    # own class: the base class is a singleton
+			pass
+
+		self.assertFalse(hasattr(Application._PrintHelp, "__raises_unfulfilled_expectation_error__"))
