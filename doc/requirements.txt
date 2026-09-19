@@ -12,6 +12,9 @@ aiohttp >= 3.14
 packaging >= 25.0
 requests >= 2.32
 
+# 'sphinx' - read by the 'xsd-graph' directive, which draws the XML schemas in 'Schemas/'
+xmlschema ~= 4.3
+
 # Enforce latest version on ReadTheDocs
 sphinx ~= 9.1
 #docutils ~= 0.22.0
@@ -27,6 +30,3 @@ sphinx_design ~= 0.7.0
 sphinx-copybutton >= 0.5.2
 sphinx_autodoc_typehints ~= 3.12
 sphinx_reports ~= 0.11.0
-
-# Used by the 'XSDGraphviz' extension to read a schema
-xmlschema ~= 4.3
