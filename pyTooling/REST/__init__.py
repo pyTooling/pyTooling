@@ -104,8 +104,8 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 	``repos/owner/name`` and the API it belongs to is stated once.
 
 	A token, when given, is sent as a bearer token - and only to the API it was given for, which is why a paginated
-	answer pointing outside that API is rejected. :meth:`_Authorization` is what an API authorizing differently
-	overrides.
+	answer pointing outside that API is rejected. An API authorizing differently overrides :meth:`_RequestHeaders`,
+	which is where the header is built.
 
 	A request failing transiently - a status in :data:`TRANSIENT_HTTP_STATUS`, a timeout, or an unreachable API - is
 	tried again after an exponentially growing pause, or one as long as a ``Retry-After`` header demands. A request
@@ -526,8 +526,10 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:returns:         The headers of this request.
 		"""
 		requestHeaders = dict(self._headers)
-		if (authorization := self._Authorization()) is not None:
-			requestHeaders["Authorization"] = authorization
+		# The bearer scheme of :rfc:`6750` is what a token-based REST API expects, and what an OAuth 2.0 flow's access
+		# token is used with once the flow handed one out. An API authorizing differently overrides this method.
+		if self._token is not None:
+			requestHeaders["Authorization"] = f"Bearer {self._token}"
 
 		if mediaType is not None:
 			requestHeaders["Content-Type"] = mediaType
@@ -536,18 +538,6 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			requestHeaders.update(headers)
 
 		return requestHeaders
-
-	def _Authorization(self) -> Nullable[str]:
-		"""
-		Return the value of the ``Authorization`` header.
-
-		The bearer scheme of :rfc:`6750` is what a token-based REST API expects, and it is what an OAuth 2.0 flow's
-		access token is used with once the flow handed one out. A client of an API authorizing differently - the basic
-		scheme of :rfc:`7617`, say - overrides this.
-
-		:returns: The header's value, or ``None`` for an anonymous request.
-		"""
-		return None if self._token is None else f"Bearer {self._token}"
 
 	def _AddErrorNotes(self, error: RESTError, status: int) -> None:
 		"""
