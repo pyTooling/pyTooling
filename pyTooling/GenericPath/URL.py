@@ -456,9 +456,9 @@ class URL:
 					error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
 					raise error from ex
 
-			hostObj =   None if host is None   else Host(host, port)
-
-			pathObj =   Path.Parse(path, hostObj)
+			hostObj =    None if host is None   else Host(host, port)
+			pathObj =    Path.Parse(path, hostObj)
+			parameters = None if query is None else cls._ParseQuery(query, url)
 
 			return cls(
 				scheme,
@@ -466,7 +466,7 @@ class URL:
 				hostObj,
 				user,
 				password,
-				cls._ParseQuery(query, url),
+				parameters,
 				fragment
 			)
 
@@ -482,18 +482,15 @@ class URL:
 		raise error
 
 	@classmethod
-	def _ParseQuery(cls, query: Nullable[str], url: str) -> Nullable[dict[str, str]]:
+	def _ParseQuery(cls, query: str, url: str) -> dict[str, str]:
 		"""
 		Parse a URL's query into its parameters.
 
-		:param query:     The query, without the leading ``?``, or ``None``.
+		:param query:     The query, without the leading ``?``. It is not empty - a URL carrying no query has none.
 		:param url:       The URL the query came from, for the exception's message.
-		:returns:         The parameters by name, or ``None`` if the URL carries no query.
+		:returns:         The parameters by name.
 		:raises URLError: When a parameter of the query is not a ``key=value`` pair.
 		"""
-		if query is None:
-			return None
-
 		parameters = {}
 		for pair in query.split("&"):
 			key, separator, value = pair.partition("=")
@@ -504,7 +501,43 @@ class URL:
 
 			parameters[key] = value
 
-		return parameters if len(parameters) > 0 else None
+		return parameters
+
+	@classmethod
+	def _CheckRelativeReference(cls, reference: str) -> None:
+		"""
+		Check a string names a resource below a URL.
+
+		A relative reference of :rfc:`3986` names no scheme and no authority: it starts with no ``//``, and the first
+		segment of its path holds no ``:``, which is the ``path-noscheme`` rule. A complete URL is read by
+		:meth:`Parse` instead of being appended to another.
+
+		:param reference: The right side of the ``/`` operator.
+		:raises URLError: When the reference names a scheme or an authority.
+		:raises URLError: When the reference holds a character :rfc:`3986` forbids. |br|
+		                  The note names the character and how to percent-encode it.
+		"""
+		path = reference.partition("#")[0].partition("?")[0]
+		if path.startswith("//"):
+			error = URLError(f"Relative reference '{reference}' names an authority.")
+			error.add_note("A reference below a URL carries no host, user, password or port.")
+			error.add_note("Read a complete URL with 'URL.Parse' instead of appending it.")
+			raise error
+		elif ":" in path.split(Path.ELEMENT_DELIMITER, 1)[0]:
+			error = URLError(f"Relative reference '{reference}' names a scheme.")
+			error.add_note("The first element of a relative path carries no ':' - it would read as a scheme.")
+			error.add_note("Read a complete URL with 'URL.Parse' instead of appending it. Write a ':' further down "
+			               "the path percent-encoded as '%3A'.")
+			raise error
+
+		for character in reference:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				error = URLError(f"Relative reference '{reference}' holds a forbidden character.")
+				error.add_note(
+					f"Character {character!r} is not allowed in a URL. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				raise error
 
 	def __truediv__(self, other: Union[str, Path]) -> URL:
 		"""
@@ -522,12 +555,17 @@ class URL:
 		:param other:      The resource below this URL, as a string to parse or as a :class:`Path`.
 		:returns:          A new URL naming that resource.
 		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`Path`.
+		:raises URLError:  When the right side names a scheme or an authority instead of a resource.
+		:raises URLError:  When the right side holds a character :rfc:`3986` forbids. |br|
+		                   The note names the character and how to percent-encode it.
 		:raises URLError:  When a parameter of the right side's query is not a ``key=value`` pair.
 		"""
 		if isinstance(other, str):
+			self._CheckRelativeReference(other)
+
 			resource, _, fragment = other.partition("#")
 			resource, _, query =    resource.partition("?")
-			parameters = self._ParseQuery(query if query != "" else None, other)
+			parameters = None if query == "" else self._ParseQuery(query, other)
 			fragment =   fragment if fragment != "" else None
 		elif isinstance(other, Path):
 			resource =   other
