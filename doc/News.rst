@@ -48,6 +48,21 @@ Version 10.x (2026)
      * A called workflow and a matrix are encoded in a job's name - ``Caller / Job`` and
        ``Job (ubuntu-26.04, 3.14)`` - and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads them back into the
        tree. Neither level reports times, so :class:`~pyTooling.CI.GitHub.JobGroup` spans the jobs below it.
+     * A job's times **contain its steps**. GitHub reports both in whole seconds and independently, so a step is
+       sometimes reported as starting before, or completing after, the job holding it - and a consumer building a
+       tree then has a child outside its parent. The job is the timespan that stretches, because the step really
+       did run when it says it did, and a group's times follow.
+     * A group iterates what it holds **in the order it was queued**, jobs and nested groups alike, rather than
+       jobs first and called workflows last. The sort is stable, so elements reporting no time keep the order
+       GitHub listed them in.
+     * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.GitHub.Workflow` the matrices
+       and called workflows below it as well. :class:`~pyTooling.CI.GitHub.Workflow` needed three overrides to say
+       that and has none now.
+     * A :class:`~pyTooling.CI.GitHub.Pipeline` is the one group reporting times of its own, so it is the one with
+       two sets: :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsCreatedAt`,
+       :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsStartedAt` and
+       :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsCompletedAt` span what the run holds, beside the run's own
+       times. They differ, because a job may be queued before the run reports itself created.
      * ``status``, ``conclusion`` and ``event`` become :class:`~pyTooling.CI.GitHub.Status`,
        :class:`~pyTooling.CI.GitHub.Conclusion` and :class:`~pyTooling.CI.GitHub.Event` members, so a value GitHub
        doesn't document raises :exc:`~pyTooling.CI.GitHub.GitHubError` instead of matching no comparison.
