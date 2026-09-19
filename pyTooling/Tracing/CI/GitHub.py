@@ -497,20 +497,20 @@ class WorkflowRunReader(RESTClient):
 				ex.add_note(f"Got value '{value}'.")
 				raise ex
 
-		runURL = f"{self._apiURL}/repos/{self._repository}/actions/runs/{runID}"
+		runPath = f"repos/{self._repository}/actions/runs/{runID}"
 		if attempt is None:
-			run, _ = self.GetJSONObject(runURL)
-			jobsURL = f"{runURL}/jobs?filter=latest&per_page=100"
+			run, _ = self.GetJSONObject(runPath)
+			jobsPath = f"{runPath}/jobs?filter=latest&per_page=100"
 		else:
-			run, _ = self.GetJSONObject(f"{runURL}/attempts/{attempt}")
-			jobsURL = f"{runURL}/attempts/{attempt}/jobs?per_page=100"
+			run, _ = self.GetJSONObject(f"{runPath}/attempts/{attempt}")
+			jobsPath = f"{runPath}/attempts/{attempt}/jobs?per_page=100"
 
 		jobs: list[JSONObject] = []
-		nextURL: Nullable[str] = jobsURL
-		while nextURL is not None:
-			page, nextURL = self.GetJSONObject(nextURL)
+		nextPath: Nullable[str] = jobsPath
+		while nextPath is not None:
+			page, nextPath = self.GetJSONObject(nextPath)
 			if not isinstance(pageJobs := page.get("jobs", None), list):
-				raise TracingError(f"Field 'jobs' is missing in the answer of '{jobsURL}'.")
+				raise TracingError(f"Field 'jobs' is missing in the answer of '{jobsPath}'.")
 			jobs.extend(pageJobs)
 
 		return ConvertWorkflowRun(run, jobs)
