@@ -45,6 +45,7 @@ from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import GitHub
 from pyTooling.Tracing.Render    import GanttLayout, StepExclusion, ciSpanFilter, msys2Environment, runnerCategory
+from pyTooling.Tracing.Render    import formatDuration, formatTime, legendLabel, legendTitle
 from pyTooling.Testing           import Testcase
 
 try:
@@ -52,6 +53,13 @@ try:
 	HAS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
 	HAS_MATPLOTLIB = False
+
+try:
+	from pyTooling.Tracing.Render.Plotly import RenderGantt as RenderPlotlyGantt, WriteGantt as WritePlotlyGantt
+	from pyTooling.Tracing.Render.Plotly import TIME_AXIS_ORIGIN
+	HAS_PLOTLY = True
+except ImportError:  # pragma: no cover
+	HAS_PLOTLY = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -461,3 +469,125 @@ class Matplotlib(Testcase):
 			WriteGantt(_pipeline()["Pipeline"], Path("Pipeline.png"), collapsible=True)
 
 		self.assertEqual("File 'Pipeline.png' can't be collapsible.", str(context.exception))
+
+
+class Legend(Testcase):
+	def test_Duration(self) -> None:
+		self.assertEqual("0:00", formatDuration(0.4))
+		self.assertEqual("1:00", formatDuration(59.6))
+		self.assertEqual("1:02:05", formatDuration(3725))
+
+	def test_Time(self) -> None:
+		self.assertEqual("2026-09-15 06:35:00 UTC", formatTime(_BEGIN))
+
+	def test_TitleAndLabel(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))
+		title = legendTitle(layout)
+		label = legendLabel(layout, "ubuntu-26.04")
+
+		self.assertIn("started     2026-09-15 06:35:00 UTC\n", title)
+		self.assertIn("2 jobs", title)
+		self.assertTrue(label.startswith("ubuntu-26.04 "))
+		self.assertIn("0:03 / 0:03 / 0:03", label)
+		self.assertEqual(title.split("\n")[-1].index("jobs") + 4, label.index(" 1   ") + 2, "Columns align.")
+
+
+def _plain(text: str) -> str:
+	"""
+	Undo the non-breaking spaces and line breaks of plotly's markup.
+
+	:param text: The text in plotly's markup.
+	:returns:    The text with spaces and ``\n``.
+	"""
+	return text.replace("\u00a0", " ").replace("<br>", "\n")
+
+
+@skipUnless(HAS_PLOTLY, "Needs plotly, installed by the extra 'pyTooling[diagram]'.")
+class Plotly(Testcase):
+	def test_Figure(self) -> None:
+		figure = RenderPlotlyGantt(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50)))
+		names = [_plain(trace.name) for trace in figure.data]
+
+		self.assertEqual("Pipeline (1:40)", figure.layout.title.text)
+		self.assertEqual(5, len(figure.layout.yaxis.ticktext))
+		self.assertEqual("date", figure.layout.xaxis.type)
+		self.assertIn("started     2026-09-15 06:35:00 UTC\n", _plain(figure.layout.legend.title.text))
+		self.assertTrue(names[0].startswith("ubuntu-26.04"))
+		self.assertIn("0:03 / 0:03 / 0:03", names[0])
+		self.assertIn("waiting for a runner", names)
+		self.assertIn("pipeline, called workflow", names)
+
+	def test_Bars(self) -> None:
+		figure = RenderPlotlyGantt(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50)))
+		bars = {_plain(trace.name).split("  ")[0]: trace for trace in figure.data if trace.type == "bar"}
+		build = bars["ubuntu-26.04"]
+		queued = bars["waiting for a runner"]
+		windows = bars["windows-2025 + UCRT64"]
+
+		self.assertEqual(TIME_AXIS_ORIGIN + timedelta(seconds=4), build.base[0])
+		self.assertEqual(26_000, build.x[0], "A bar's length is its duration in milliseconds.")
+		self.assertEqual(
+			["Build", "2026-09-15 06:35:04 UTC", "2026-09-15 06:35:30 UTC", "0:26", "ubuntu-26.04"],
+			list(build.customdata[0])
+		)
+		self.assertEqual((1, 3_000), (queued.y[0], queued.x[0]), "The waiting bar is on the job's row.")
+		self.assertEqual("/", windows.marker.pattern.shape[0], "A running bar is hatched.")
+		self.assertEqual("windows-2025 + UCRT64, running", windows.customdata[0][4])
+
+	def test_Lines(self) -> None:
+		figure = RenderPlotlyGantt(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50)))
+		lines = [trace for trace in figure.data if trace.type == "scatter"]
+
+		self.assertEqual(["solid", "dash"], [line.line.dash for line in lines], "The running called workflow is dashed.")
+		self.assertEqual([True, False], [line.showlegend for line in lines])
+
+	def test_Escaping(self) -> None:
+		trace = Trace("<b>Pipeline</b>", _at(0), _at(10))
+		Span("Tests & <i>Checks</i>", _at(1), _at(5), parent=trace)
+		figure = RenderPlotlyGantt(GanttLayout(trace))
+
+		self.assertEqual("&lt;b&gt;Pipeline&lt;/b&gt; (0:10)", figure.layout.title.text)
+		self.assertEqual("\u00a0\u00a0Tests &amp; &lt;i&gt;Checks&lt;/i&gt;", figure.layout.yaxis.ticktext[1])
+
+	def test_HTML(self) -> None:
+		with TemporaryDirectory() as directory:
+			embedded = Path(directory) / "report" / "Pipeline.html"
+			cdn = Path(directory) / "Pipeline-CDN.html"
+			WritePlotlyGantt(_pipeline()["Pipeline"], embedded, now=_at(50))
+			WritePlotlyGantt(_pipeline()["Pipeline"], cdn, now=_at(50), includePlotlyJS="cdn")
+			embeddedContent = embedded.read_text(encoding="utf-8")
+			cdnContent = cdn.read_text(encoding="utf-8")
+
+		self.assertIn("<html>", embeddedContent)
+		self.assertGreater(len(embeddedContent), 1_000_000, "plotly's library is embedded.")
+		self.assertIn("Plotly.newPlot", cdnContent)
+		self.assertIn("cdn.plot.ly", cdnContent)
+
+	def test_JSON(self) -> None:
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "Pipeline.json"
+			WritePlotlyGantt(_pipeline()["Pipeline"], file, spanFilter=ciSpanFilter(), now=_at(50))
+			content = json_loads(file.read_text(encoding="utf-8"))
+
+		self.assertEqual("Pipeline (1:40)", content["layout"]["title"]["text"])
+		self.assertEqual(5, len(content["layout"]["yaxis"]["ticktext"]))
+
+	def test_UnsupportedFormat(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			WritePlotlyGantt(_pipeline()["Pipeline"], Path("Pipeline.svg"))
+
+		self.assertEqual("File 'Pipeline.svg' has an unsupported format.", str(context.exception))
+
+	def test_FileType(self) -> None:
+		with self.assertRaises(TypeError):
+			WritePlotlyGantt(_pipeline()["Pipeline"], "Pipeline.html")
+
+	def test_LayoutType(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = RenderPlotlyGantt(_pipeline()["Pipeline"])
+
+	def test_RowHeight(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = RenderPlotlyGantt(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), rowHeight=0)
+
+		self.assertEqual("Parameter 'rowHeight' isn't positive.", str(context.exception))

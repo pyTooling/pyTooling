@@ -53,7 +53,7 @@ from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import GitHub
 
 
-__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP"]
+__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP", "QUEUED_LEGEND", "LINE_LEGEND"]
 
 SpanFilter = Callable[[Span], bool]
 """A function deciding whether a timespan - and with it, its sub-spans - is shown."""
@@ -63,6 +63,12 @@ SpanCategory = Callable[[Span], str]
 
 MSYS2_SETUP_STEP = re_compile(r"Setup MSYS2 for (\w+)", IGNORECASE)
 """Pattern of the step name setting up MSYS2 in a CI job, capturing the MSYS2 environment, e.g. ``UCRT64``."""
+
+QUEUED_LEGEND = "waiting for a runner"
+"""Legend entry of the bars showing the time a job waited for a runner."""
+
+LINE_LEGEND = "pipeline, called workflow"
+"""Legend entry of the lines spanning the pipeline or a called workflow."""
 
 
 def _kind(span: Span) -> Nullable[str]:
@@ -784,3 +790,88 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:returns: The categories in the order they first appear, without the empty string.
 		"""
 		return tuple(self._categories)
+
+
+@export
+def formatDuration(seconds: float) -> str:
+	"""
+	Format a duration as minutes and seconds, or as hours, minutes and seconds from one hour on.
+
+	:param seconds: The duration in seconds.
+	:returns:       The duration as ``m:ss`` or ``h:mm:ss``.
+	"""
+	minutes, rest = divmod(int(round(seconds)), 60)
+	if minutes < 60:
+		return f"{minutes}:{rest:02d}"
+
+	hours, minutes = divmod(minutes, 60)
+	return f"{hours}:{minutes:02d}:{rest:02d}"
+
+
+@export
+def formatTime(time: datetime) -> str:
+	"""
+	Format an absolute time with its time zone.
+
+	:param time: The time.
+	:returns:    The time as ``YYYY-MM-DD hh:mm:ss <zone>``.
+	"""
+	return f"{time:%Y-%m-%d %H:%M:%S} {time.tzname() or 'local time'}"
+
+
+def _categoryWidth(layout: GanttLayout) -> int:
+	"""
+	Return the width of a legend's category column.
+
+	:param layout: The layout of the trace.
+	:returns:      Width in characters, fitting every category and :data:`LINE_LEGEND`.
+	"""
+	return max([len(category) for category in layout.Categories] + [len(LINE_LEGEND)])
+
+
+@export
+def legendTitle(layout: GanttLayout) -> str:
+	"""
+	Compose a legend's title: the trace's times and totals, and the header of the statistics' columns.
+
+	The columns align with the labels of :func:`legendLabel` in a monospace font.
+
+	:param layout: The layout of the trace.
+	:returns:      The title's lines, separated by ``\\n``.
+	"""
+	lines = [
+		f"started     {formatTime(layout.BeginTime)}",
+		f"{'running at' if layout.IsRunning else 'finished':<11} {formatTime(layout.EndTime)}",
+		f"wall time   {formatDuration(layout.WallTime)}   runner time {formatDuration(layout.RunnerTime)}   "
+		f"{layout.JobCount} jobs",
+	]
+	if layout.JobCount > 0:
+		lines.append("")
+		lines.append(f"{'':<{_categoryWidth(layout)}}  jobs    wait min /  avg /  max       run min /  avg /  max")
+
+	return "\n".join(lines)
+
+
+@export
+def legendLabel(layout: GanttLayout, category: str) -> str:
+	"""
+	Compose a legend's label of a category: the category and the statistics of its jobs.
+
+	:param layout:   The layout of the trace.
+	:param category: The category.
+	:returns:        The label, whose columns align with the header of :func:`legendTitle` in a monospace font.
+	"""
+	label = f"{category:<{_categoryWidth(layout)}}"
+	for entry in layout.IterateStatistics():
+		if entry.Category != category:
+			continue
+
+		label += (
+			f"  {entry.JobCount:>4}   "
+			f"{formatDuration(entry.MinimumWaitTime):>9} /{formatDuration(entry.AverageWaitTime):>5} /"
+			f"{formatDuration(entry.MaximumWaitTime):>5}   "
+			f"{formatDuration(entry.MinimumRunTime):>11} /{formatDuration(entry.AverageRunTime):>5} /"
+			f"{formatDuration(entry.MaximumRunTime):>5}"
+		)
+
+	return label
