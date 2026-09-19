@@ -444,12 +444,15 @@ class WorkflowRunReader(RESTClient):
 		                    Default: ``3``.
 		:param retryDelay:  Optional, pause in seconds before a request is tried again the first time. The pause doubles
 		                    with every further attempt. Default: ``2.0``.
+		:raises ValueError: If parameter 'repository' is ``None``.
 		:raises TypeError:  If parameter 'repository' is not of type :class:`str`.
 		:raises ValueError: If parameter 'repository' isn't of the form ``owner/name``.
 		:raises TypeError:  If a parameter of :class:`~pyTooling.REST.RESTClient` has the wrong type.
 		:raises ValueError: If a parameter of :class:`~pyTooling.REST.RESTClient` has an invalid value.
 		"""
-		if not isinstance(repository, str):
+		if repository is None:
+			raise ValueError("Parameter 'repository' is None.")
+		elif not isinstance(repository, str):
 			ex = TypeError("Parameter 'repository' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(repository)}'.")
 			raise ex
@@ -478,6 +481,7 @@ class WorkflowRunReader(RESTClient):
 		:param runID:         The workflow run's identifier.
 		:param attempt:       Optional, the run attempt to read. Default: the latest attempt.
 		:returns:             The workflow run as a trace (see :func:`ConvertWorkflowRun`).
+		:raises ValueError:   If parameter 'runID' is ``None``.
 		:raises TypeError:    If parameter 'runID' is not of type :class:`int`.
 		:raises ValueError:   If parameter 'runID' isn't positive.
 		:raises TypeError:    If parameter 'attempt' is not of type :class:`int`.
@@ -485,8 +489,11 @@ class WorkflowRunReader(RESTClient):
 		:raises RESTError:    If a request fails, or GitHub's answer isn't a JSON object.
 		:raises TracingError: If GitHub's answer lacks a mandatory field.
 		"""
+		if runID is None:
+			raise ValueError("Parameter 'runID' is None.")
+
 		for parameter, value in (("runID", runID), ("attempt", attempt)):
-			if value is None and parameter == "attempt":
+			if value is None:
 				continue
 			elif isinstance(value, bool) or not isinstance(value, int):
 				ex = TypeError(f"Parameter '{parameter}' is not of type 'int'.")

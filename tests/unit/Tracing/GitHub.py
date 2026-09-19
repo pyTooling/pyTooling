@@ -530,6 +530,9 @@ class Reader(Testcase):
 			_ = WorkflowRunReader("owner/repo", retryDelay=-0.1)
 
 	def test_Repository(self) -> None:
+		with self.assertRaises(ValueError):
+			_ = WorkflowRunReader(None)
+
 		for repository in ("repo", "owner/", "owner/repo/extra"):
 			with self.subTest(repository=repository):
 				with self.assertRaises(ValueError):
@@ -542,6 +545,8 @@ class Reader(Testcase):
 	def test_RunID(self) -> None:
 		reader = WorkflowRunReader("owner/repo")
 
+		with self.assertRaises(ValueError):
+			_ = reader.ReadRun(None)
 		with self.assertRaises(TypeError):
 			_ = reader.ReadRun("4711")
 		with self.assertRaises(ValueError):
