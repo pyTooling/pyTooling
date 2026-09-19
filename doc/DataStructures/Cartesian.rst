@@ -6,6 +6,11 @@
 The :mod:`pyTooling.Cartesian2D` package implements points, offsets, sizes and line segments in a 2-dimensional
 cartesian coordinate system, plus the four-cornered shapes built from them.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D`
+      |rarr| The same classes with a third axis, and the volumes built from them.
+
 .. #contents:: Table of Contents
    :local:
    :depth: 2
@@ -15,19 +20,18 @@ cartesian coordinate system, plus the four-cornered shapes built from them.
 * Coordinates as ``int`` or ``float``.
 * Every class is generic in its coordinate type, so a grid of integers and a drawing of floats use the same classes.
 * A point and an offset are **different types**, which is what makes the arithmetic below unambiguous.
-* Instances use ``__slots__``, so a coordinate typo raises instead of silently creating a field.
 
 .. _STRUCT/Cartesian2D/Features:
 
 Features
 ********
 
-* :class:`~pyTooling.Cartesian2D.Point2D` and :class:`~pyTooling.Cartesian2D.Offset2D` with the arithmetic relating
-  them, in both the copying and the in-place form.
-* :class:`~pyTooling.Cartesian2D.Origin2D` as a point fixed at ``(0, 0)``.
-* :class:`~pyTooling.Cartesian2D.Size2D` as a width/height pair.
-* :class:`~pyTooling.Cartesian2D.Segment2D` and :class:`~pyTooling.Cartesian2D.LineSegment2D`, the latter with a
-  length and an angle.
+* An **integer or a floating-point coordinate system**, chosen per instance - every class is generic in its
+  coordinate type, so a grid of integers and a drawing of floats use the same classes.
+* **Points and offsets as separate types**, with the arithmetic relating them: a point plus an offset is a point, a
+  point minus a point is an offset - in both the copying and the in-place form.
+* **Distances measured** - a line segment reports its length and its angle.
+* **Shapes placed by their corners**, so a shape is positioned by the points it is built from.
 * Shapes validated on construction: :class:`~pyTooling.Cartesian2D.Shapes.Trapezium`,
   :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` and :class:`~pyTooling.Cartesian2D.Shapes.Square`.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
@@ -38,6 +42,8 @@ Features
 Missing Features
 ================
 
+* Moving a shape as a whole. A point can be shifted, but a shape holds its corners and offers no way to translate
+  them together.
 * Rotation, scaling and mirroring - a point can be shifted, but not transformed.
 * Polygons with a number of corners other than four, and shapes with curved edges.
 * Containment and intersection tests (*is this point inside that rectangle?*).
@@ -59,7 +65,8 @@ Out of Scope
 ============
 
 * A general-purpose geometry or linear-algebra library. These classes exist to give coordinates a **name and a
-  type** in the packages using them; a program doing real geometry wants `NumPy <https://numpy.org/>`__ or
+  type** in the packages using them. |br|
+  For doing real geometry have a look at `NumPy <https://numpy.org/>`__ or
   `Shapely <https://shapely.readthedocs.io/>`__.
 * Rendering. Nothing here draws anything - ``ToTuple`` hands the numbers to whatever does.
 * Coordinate systems other than cartesian - no polar, spherical or geographic coordinates.
@@ -122,6 +129,11 @@ the offending type in a note.
 
 :meth:`~pyTooling.Cartesian2D.Point2D.Copy` returns an independent point and
 :meth:`~pyTooling.Cartesian2D.Point2D.ToTuple` the ``(x, y)`` pair.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Point3D`
+      |rarr| The same point with a ``z`` coordinate.
 
 
 .. _STRUCT/Cartesian2D/Origin2D:
@@ -248,6 +260,11 @@ The :mod:`pyTooling.Cartesian3D` package is :mod:`pyTooling.Cartesian2D` with a 
 same arithmetic, and a ``z`` coordinate throughout. Everything above applies, so this section names only what
 differs.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D`
+      |rarr| The 2-dimensional classes this package extends, where the arithmetic is written out.
+
 
 .. _STRUCT/Cartesian3D/Classes:
 
@@ -261,8 +278,12 @@ Point3D
 =======
 
 A :class:`~pyTooling.Cartesian3D.Point3D` has ``x``, ``y`` and ``z``, and the same arithmetic against an
-:class:`~pyTooling.Cartesian3D.Offset3D` - see :ref:`STRUCT/Cartesian2D/Point2D` for the table. A plain 3-tuple is
-accepted wherever an offset is.
+:class:`~pyTooling.Cartesian3D.Offset3D`. A plain 3-tuple is accepted wherever an offset is.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Point2D`
+      |rarr| The 2-dimensional point, where the arithmetic is written out as a table.
 
 
 .. _STRUCT/Cartesian3D/Origin3D:
