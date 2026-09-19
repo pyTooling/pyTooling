@@ -44,6 +44,65 @@ Mixin
 *****
 
 
+.. _META/WeakReferences:
+
+Weak References
+***************
+
+A class using :term:`__slots__ <slots>` cannot be referenced weakly. There is no ``__dict__`` for :mod:`weakref` to
+put its bookkeeping in, and the slot that would hold it is not created unless it is asked for:
+
+.. code-block:: Python
+
+   class Slotted(metaclass=ExtendedType, slots=True):
+     _field: int
+
+   weakref.ref(Slotted())     # TypeError: cannot create weak reference to 'Slotted' object
+
+``weakref=True`` adds ``__weakref__`` to the class' slots, which is what makes an instance weak-referenceable:
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from weakref               import ref
+   from pyTooling.MetaClasses import ExtendedType
+
+   class Node(metaclass=ExtendedType, slots=True, weakref=True):
+     _parent: "Node"
+
+   node = Node()
+   reference = ref(node)      # fine
+
+   reference()                # -> the node
+   del node
+   reference()                # -> None
+
+The typical reason to want it is a back-reference: a child pointing at its parent keeps the parent alive as long as
+the child lives, and a weak reference is how that cycle is avoided.
+
+.. important::
+
+   ``__weakref__`` may appear **once** in an inheritance hierarchy - Python rejects a second one with
+   ``TypeError: __weakref__ slot disallowed``. A derived class therefore inherits the capability rather than
+   repeating it, and asking for it again is a no-op rather than an error:
+
+   .. code-block:: Python
+
+      class Base(metaclass=ExtendedType, slots=True, weakref=True): ...
+      class Derived(Base): ...                       # already weak-referenceable
+
+.. note::
+
+   A class **without** slots is weak-referenceable already, because it has a ``__dict__``. ``weakref=True`` is
+   therefore only meaningful together with ``slots=True``.
+
+.. note::
+
+   The restriction is **CPython's**. On PyPy every object is weak-referenceable whether or not the class uses
+   slots, so ``weakref=True`` adds the slot but changes nothing observable there. Code written for both keeps the
+   keyword: it is what makes the class work on CPython.
+
+
 .. _META/ExpectedMembers:
 
 Expected Members
