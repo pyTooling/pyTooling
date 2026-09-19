@@ -50,6 +50,23 @@ of its matrices and of the workflows it calls included - use
    for job in pipeline.IterateJobs():  # every job below the run, at any depth
      print(job.QualifiedName)
 
+An element is placed in its group **under its own name** - a called workflow and a matrix as that key of
+:attr:`~pyTooling.CI.GitHub.Workflow.Workflows` respectively :attr:`~pyTooling.CI.GitHub.Workflow.Matrices`, a job by
+the name it reports - so ``in`` is asked for that name:
+
+.. code-block:: python
+
+   "UnitTesting" in pipeline          # a called workflow, a matrix or a job of the run
+   "Unit Tests (ubuntu-26.04)" in matrix   # an instance carries the values telling it from its siblings
+   "Checkout" in job                  # a step
+
+Which container an element really sits in is a different question, and :attr:`~pyTooling.CI.GitHub.Base.Parent`
+answers it without a search:
+
+.. code-block:: python
+
+   workflow.Jobs[0].Parent is workflow   # True
+
 * **A called workflow and a matrix are not elements GitHub reports.** It encodes both in a job's name -
   ``Caller / Job`` for a called workflow, ``Job (ubuntu-26.04, 3.14)`` for a matrix instance -
   and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads the name back into the tree.

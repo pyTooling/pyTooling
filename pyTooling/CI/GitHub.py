@@ -500,12 +500,10 @@ class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",
 		:returns: The name, with every calling workflow in front of it, separated by ``' / '``.
 		"""
 		names =   [str(self)]
-		element = self._parent
-		while element is not None and not isinstance(element, Pipeline):
+		element = self
+		while (element := element._parent) is not None and not isinstance(element, Pipeline):
 			if isinstance(element, Workflow):
 				names.append(element._name)
-
-			element = element._parent
 
 		return " / ".join(reversed(names))
 
@@ -697,14 +695,14 @@ class PipelineGroup(Base):
 		"""
 		return len(self._pipelines)
 
-	def __contains__(self, pipeline: Pipeline) -> bool:
+	def __contains__(self, name: str) -> bool:
 		"""
-		Check whether a pipeline belongs to the group.
+		Check whether a pipeline of that name was started for the commit.
 
-		:param pipeline: The pipeline to check for.
-		:returns:        ``True``, if the pipeline belongs to the group.
+		:param name: Name of the pipeline to check for.
+		:returns:    ``True``, if a pipeline of that name belongs to the group.
 		"""
-		return pipeline in self._pipelines
+		return any(str(pipeline) == name for pipeline in self._pipelines)
 
 	def __iter__(self) -> Iterator[Pipeline]:
 		"""
@@ -838,14 +836,17 @@ class JobGroup(Base):
 		"""
 		return len(self._jobs)
 
-	def __contains__(self, job: Job) -> bool:
+	def __contains__(self, name: str) -> bool:
 		"""
-		Check whether a job belongs to this group.
+		Check whether a job of that name belongs to this group.
 
-		:param job: The job to check for.
-		:returns:   ``True``, if the job belongs to this group.
+		A job is named the way :func:`str` names it, so an instance of a :class:`Matrix` - which carries the matrix'
+		name - is asked for with its dimension values: ``"Unit Tests (ubuntu-26.04, 3.14)"``.
+
+		:param name: Name of the job to check for.
+		:returns:    ``True``, if a job of that name belongs to this group.
 		"""
-		return job in self._jobs
+		return any(str(job) == name for job in self._jobs)
 
 	def __iter__(self) -> Iterator[Job]:
 		"""
@@ -1007,19 +1008,17 @@ class Workflow(JobGroup, QualifiedNameMixin):
 		"""
 		return len(self._jobs) + len(self._matrices) + len(self._workflows)
 
-	def __contains__(self, element: Base) -> bool:
+	def __contains__(self, name: str) -> bool:
 		"""
-		Check whether an element is contained in this workflow.
+		Check whether an element of that name is contained in this workflow.
 
-		:param element: The job, matrix or called workflow to check for.
-		:returns:       ``True``, if the element is contained in this workflow.
+		The name is looked for among the workflows this one calls, its matrices and its jobs - the elements one level
+		below it, the same :meth:`__iter__` yields.
+
+		:param name: Name of the called workflow, matrix or job to check for.
+		:returns:    ``True``, if an element of that name is contained in this workflow.
 		"""
-		if isinstance(element, Matrix):
-			return self._matrices.get(element._name, None) is element
-		elif isinstance(element, Workflow):
-			return self._workflows.get(element._name, None) is element
-
-		return element in self._jobs
+		return name in self._workflows or name in self._matrices or super().__contains__(name)
 
 	def __iter__(self) -> Iterator[Base]:
 		"""
@@ -1537,14 +1536,14 @@ class Job(Base, QualifiedNameMixin):
 		"""
 		return len(self._steps)
 
-	def __contains__(self, step: Step) -> bool:
+	def __contains__(self, name: str) -> bool:
 		"""
-		Check whether a step belongs to the job.
+		Check whether a step of that name belongs to the job.
 
-		:param step: The step to check for.
-		:returns:    ``True``, if the step belongs to the job.
+		:param name: Name of the step to check for.
+		:returns:    ``True``, if a step of that name belongs to the job.
 		"""
-		return step in self._steps
+		return any(str(step) == name for step in self._steps)
 
 	def __iter__(self) -> Iterator[Step]:
 		"""

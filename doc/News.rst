@@ -36,7 +36,9 @@ Version 10.x (2026)
        instead of failing with an :exc:`AttributeError` later.
      * Iterating a :class:`~pyTooling.CI.GitHub.Workflow` yields its jobs, its matrices **and** the workflows it
        calls, so the containers one level below it are reachable without asking for each kind separately.
-       :meth:`~pyTooling.CI.GitHub.Workflow.IterateJobs` remains the way to reach every job below it.
+       :meth:`~pyTooling.CI.GitHub.Workflow.IterateJobs` remains the way to reach every job below it. Because an
+       element is placed in its group under its own name, every ``in`` of this module takes that name:
+       :pycode:`"UnitTesting" in pipeline`.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
