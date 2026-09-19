@@ -175,6 +175,91 @@ def _fullName(job: Job) -> str:
 	return " / ".join([*reversed(callers), str(job)])
 
 
+def _contents(group: JobGroup) -> list[Base]:
+	"""
+	Return what a group contains, ordered by the time its elements were queued.
+
+	:param group: The group - a workflow run, a called workflow or a matrix.
+	:returns:     The jobs, matrices and called workflows one level below the group.
+	"""
+	items: list[Base] = list(group.Jobs)
+	if isinstance(group, Workflow):
+		items.extend(group.Matrices.values())
+		items.extend(group.Workflows.values())
+
+	# stable sort: elements without a begin time keep their order at the end
+	items.sort(key=lambda item: (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min))
+
+	return items
+
+
+def _jobTimes(job: Job) -> tuple[Nullable[datetime], Nullable[datetime], Nullable[datetime]]:
+	"""
+	Return when a job was created, started and completed, widened to hold its steps.
+
+	A step may be reported as starting before, or completing after, the job containing it, and
+	:mod:`pyTooling.Tracing` requires a timespan to lie within its parent - so the job is stretched rather than its
+	steps clamped: a step really did run when it says it did.
+
+	:param job: The job.
+	:returns:   The times the job's timespans are built from.
+	"""
+	created =   job.CreatedAt
+	started =   job.StartedAt
+	completed = job.CompletedAt
+
+	stepBegins = [step.StartedAt for step in job.Steps if step.StartedAt is not None]
+	if len(stepBegins) > 0:
+		started = min(stepBegins) if started is None else min(started, min(stepBegins))
+		if created is not None:
+			created = min(created, started)
+
+		stepEnds = [step.CompletedAt for step in job.Steps if step.CompletedAt is not None]
+		if completed is not None and len(stepEnds) > 0:
+			completed = max(completed, max(stepEnds))
+
+	return created, started, completed
+
+
+def _groupTimes(group: JobGroup) -> tuple[Nullable[datetime], Nullable[datetime]]:
+	"""
+	Return when a group begins and ends, from the timespans its contents produce.
+
+	The group's own :attr:`~pyTooling.CI.GitHub.JobGroup.CreatedAt` and
+	:attr:`~pyTooling.CI.GitHub.JobGroup.CompletedAt` are derived from the times GitHub reports, which do not account
+	for a step running outside its job - so the range is taken from the widened times instead, or a job's timespan
+	would fall outside its group's.
+
+	:param group: The group - a workflow run, a called workflow or a matrix.
+	:returns:     When the group begins and ends, each ``None`` if it holds nothing respectively hasn't completed.
+	"""
+	begins:   list[datetime] = []
+	ends:     list[datetime] = []
+	complete = True
+
+	for item in _contents(group):
+		if isinstance(item, Job):
+			created, started, end = _jobTimes(item)
+			begin = created if created is not None else started
+		else:
+			begin, end = _groupTimes(item)
+
+		if begin is not None:
+			begins.append(begin)
+
+		if end is None:
+			complete = False
+		else:
+			ends.append(end)
+
+	if len(begins) == 0:
+		return None, None
+
+	begin = min(begins)
+
+	return begin, _notBefore(max(ends), begin) if complete and len(ends) > 0 else None
+
+
 def _addStep(step: Step, parent: Span) -> None:
 	"""
 	Add a step to the timespan of its job.
@@ -205,19 +290,7 @@ def _addJob(job: Job, parent: Span) -> None:
 	:param job:    The job.
 	:param parent: The timespan of the trace, workflow or matrix containing the job.
 	"""
-	created =   job.CreatedAt
-	started =   job.StartedAt
-	completed = job.CompletedAt
-
-	stepBegins = [step.StartedAt for step in job.Steps if step.StartedAt is not None]
-	if len(stepBegins) > 0:
-		started = min(stepBegins) if started is None else min(started, min(stepBegins))
-		if created is not None:
-			created = min(created, started)
-
-		stepEnds = [step.CompletedAt for step in job.Steps if step.CompletedAt is not None]
-		if completed is not None and len(stepEnds) > 0:
-			completed = max(completed, max(stepEnds))
+	created, started, completed = _jobTimes(job)
 
 	fullName = _fullName(job)
 	displayName = str(job)   # a matrix instance carries its dimension values, so two of them are distinguishable
@@ -264,23 +337,16 @@ def _addGroup(group: JobGroup, parent: Span) -> None:
 	:param group:  The group - a trace's pipeline, a called workflow or a matrix.
 	:param parent: The timespan the group's contents are added to.
 	"""
-	items: list[Base] = list(group.Jobs)
-	if isinstance(group, Workflow):
-		items.extend(group.Matrices.values())
-		items.extend(group.Workflows.values())
-
-	# stable sort: elements without a begin time keep their order at the end
-	items.sort(key=lambda item: (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min))
-
-	for item in items:
+	for item in _contents(group):
 		if isinstance(item, Job):
 			_addJob(item, parent)
 			continue
 
-		if item.CreatedAt is None:
+		begin, end = _groupTimes(item)
+		if begin is None:
 			span = Span(item.Name, parent=parent)
 		else:
-			span = Span(item.Name, item.CreatedAt, item.CompletedAt, parent=parent)
+			span = Span(item.Name, begin, end, parent=parent)
 
 		span[SPAN_KIND] = SPAN_KIND_MATRIX if isinstance(item, Matrix) else SPAN_KIND_WORKFLOW
 		span[TASK_NAME] = item.Name
@@ -314,15 +380,12 @@ def ConvertPipeline(pipeline: Pipeline) -> Trace:
 	endTime =   _notBefore(pipeline.CompletedAt, beginTime) if beginTime is not None else pipeline.CompletedAt
 
 	# a job may be queued before the run reports itself started, and may complete after the run's last update
-	jobTimes = [job.CreatedAt for job in pipeline.IterateJobs() if job.CreatedAt is not None]
-	if len(jobTimes) > 0:
-		jobsBegin = min(jobTimes)
+	jobsBegin, jobsEnd = _groupTimes(pipeline)
+	if jobsBegin is not None:
 		beginTime = jobsBegin if beginTime is None else min(beginTime, jobsBegin)
 
-	if endTime is not None:
-		jobEnds = [job.CompletedAt for job in pipeline.IterateJobs() if job.CompletedAt is not None]
-		if len(jobEnds) > 0:
-			endTime = max(endTime, max(jobEnds))
+	if endTime is not None and jobsEnd is not None:
+		endTime = max(endTime, jobsEnd)
 
 	trace = Trace(pipeline.Name, beginTime, endTime)
 	trace[SPAN_KIND] =     SPAN_KIND_PIPELINE

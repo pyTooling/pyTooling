@@ -679,6 +679,50 @@ class Containment(Testcase):
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T09:59:00Z"), trace.StartTime)
 		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:09:00Z"), trace.StopTime)
 
+	def test_StepStartedBeforeItsGroupedJob(self) -> None:
+		"""A called workflow derives its times from its jobs, which don't account for a step outside its job."""
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			name="Caller / Build",
+			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:02:00Z",
+			steps=[self._Step(started_at="2026-09-17T10:00:15Z", completed_at="2026-09-17T10:00:50Z")]
+		)])
+
+		group = self._SubSpan(trace, "Caller")
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:15Z"), group.StartTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:15Z"), self._SubSpan(group, "Build").StartTime)
+
+	def test_StepCompletedAfterItsGroupedJob(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			name="Caller / Build",
+			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z",
+			steps=[self._Step(started_at="2026-09-17T10:00:40Z", completed_at="2026-09-17T10:02:00Z")]
+		)])
+
+		group = self._SubSpan(trace, "Caller")
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:02:00Z"), group.StopTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:02:00Z"), self._SubSpan(group, "Build").StopTime)
+
+	def test_AMatrixHoldsItsWidenedInstances(self) -> None:
+		trace = ConvertWorkflowRun(self._RUN, [self._Job(
+			name="Caller / Build (fast)",
+			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z",
+			steps=[self._Step(started_at="2026-09-17T10:00:10Z", completed_at="2026-09-17T10:03:00Z")]
+		)])
+
+		matrix = self._SubSpan(self._SubSpan(trace, "Caller"), "Build")
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:00:10Z"), matrix.StartTime)
+		self.assertEqual(parseISO8601Timestamp("2026-09-17T10:03:00Z"), matrix.StopTime)
+
+	def test_ARunningJobLeavesItsGroupRunning(self) -> None:
+		trace = ConvertWorkflowRun(dict(self._RUN, status="in_progress", conclusion=None), [
+			self._Job(name="Caller / Build", created_at="2026-09-17T10:00:20Z",
+			          started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:01:00Z"),
+			self._Job(name="Caller / Test", id=12, status="in_progress", conclusion=None,
+			          created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at=None),
+		])
+
+		self.assertIsNone(self._SubSpan(trace, "Caller").StopTime)
+
 	def test_ConsistentTimestampsAreUnchanged(self) -> None:
 		trace = ConvertWorkflowRun(self._RUN, [self._Job(
 			created_at="2026-09-17T10:00:20Z", started_at="2026-09-17T10:00:30Z", completed_at="2026-09-17T10:02:00Z",
