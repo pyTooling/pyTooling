@@ -304,8 +304,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 					raise UnknownPlatformError(f"Unknown architecture '{machine}' for Cygwin on Windows.")
 
 			elif sys_platform.startswith("freebsd"):
+				self._platform = Platforms.OS_FreeBSD | Platforms.ENV_Native
 				if machine == "amd64":
-					self._platform = Platforms.FreeBSD
+					self._platform |= Platforms.ARCH_x86_64
+				elif machine in ("aarch64", "arm64"):
+					self._platform |= Platforms.ARCH_AArch64
 				else:  # pragma: no cover
 					raise UnknownPlatformError(f"Unknown architecture '{machine}' for FreeBSD.")
 			else:  # pragma: no cover
@@ -366,11 +369,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 	@readonly
 	def IsNativeFreeBSD(self) -> bool:
-		"""Returns true, if the platform is a :term:`native` FreeBSD x86-64 platform.
+		"""Returns true, if the platform is a :term:`native` FreeBSD platform.
 
-		:returns: ``True``, if the platform is a native FreeBSD x86-64 platform.
+		:returns: ``True``, if the platform is a native FreeBSD platform.
 		"""
-		return Platforms.FreeBSD in self._platform
+		return (Platforms.OS_FreeBSD in self._platform) and (Platforms.ENV_Native in self._platform)
 
 	@readonly
 	def IsNativeMacOS(self) -> bool:
