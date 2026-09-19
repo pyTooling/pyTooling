@@ -421,13 +421,18 @@ class Headers(Testcase):
 		class _BasicClient(RESTClient):
 			"""A client of an API expecting the basic scheme."""
 
-			def _Authorization(self) -> Nullable[str]:
+			def _RequestHeaders(self, mediaType, headers) -> dict[str, str]:
 				"""
-				Return the basic scheme's header value.
+				Return the headers, authorizing with the basic scheme instead of the bearer one.
 
-				:returns: The header's value.
+				:param mediaType: The media type of the request's body, or ``None``.
+				:param headers:   This request's headers, or ``None``.
+				:returns:         The headers of this request.
 				"""
-				return f"Basic {self._token}"
+				requestHeaders = super()._RequestHeaders(mediaType, headers)
+				requestHeaders["Authorization"] = f"Basic {self._token}"
+
+				return requestHeaders
 
 		with mock.patch("pyTooling.REST.urlopen", return_value=_Response({})) as urlopen:
 			_BasicClient(API, "dXNlcjpwYXNz").GetJSONObject("things")

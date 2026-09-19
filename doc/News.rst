@@ -81,13 +81,16 @@ Version 10.x (2026)
      wants the latter. A path with none answers with itself.
    * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.GenericPath.URL.URL.__truediv__` and
      :meth:`~pyTooling.GenericPath.PathMixIn.__truediv__`, each taking a string or a path on the right, the way
-     :class:`pathlib.PurePath` does. A path flavour says which type its elements have -
-     ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and ``ROOT_DELIMITER`` - so a string can be read into the
-     flavour's own elements. The right side is a **relative reference**: its path goes
+     :class:`pathlib.PurePath` does. The right side is a **relative reference**: its path goes
      below the left side's, and a string brings its own query and fragment, which the left side's are not carried
      into, the way :rfc:`3986` resolves one. A path that starts with the delimiter names its own root and replaces
      the left side, as :mod:`pathlib` joins a path. A trailing delimiter on the left is dropped first, so composing
      ``/api/`` with ``things`` names ``/api/things`` and not an empty element between them.
+   * A path flavour names the type of its elements - ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and
+     ``ROOT_DELIMITER``. :meth:`~pyTooling.GenericPath.PathMixIn.Parse` reads that instead of being handed the path
+     and element classes as parameters, so its signature is ``Parse(path, root=None)`` and a flavour needs no
+     ``Parse`` of its own - :class:`~pyTooling.GenericPath.URL.Path` lost the one it had. **A flavour outside
+     pyTooling passing ``pathCls`` and ``elementCls`` has to drop them and declare ``ELEMENT_TYPE``.**
    * :meth:`~pyTooling.GenericPath.PathMixIn.Parse` strips ``ROOT_DELIMITER`` from an absolute path, not as many
      characters as ``ELEMENT_DELIMITER`` is long. The two are the same in a URL, so nothing parses differently today,
      but a path flavour marking its root differently - a drive letter, a host separated by a colon - would have lost
