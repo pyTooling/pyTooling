@@ -45,7 +45,7 @@ from typing                import ClassVar, Optional as Nullable, Mapping, Union
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.GenericPath import RootMixIn, ElementMixIn, PathMixIn
+from pyTooling.GenericPath import RootMixin, ElementMixin, PathMixin
 
 
 __all__ = ["URL_PATTERN", "URL_REGEXP"]
@@ -161,7 +161,7 @@ class Protocols(Flag):
 
 
 @export
-class Host(RootMixIn):
+class Host(RootMixin):
 	"""Represents a host as either hostname, DNS or IP-address including the port number in a URL."""
 
 	_hostname: str            #: Name of the host (DNS name or IP address).
@@ -244,12 +244,12 @@ class Host(RootMixIn):
 
 
 @export
-class Element(ElementMixIn):
+class Element(ElementMixin):
 	"""Derived class for the URL context."""
 
 
 @export
-class Path(PathMixIn):
+class Path(PathMixin):
 	"""Represents a path in a URL."""
 
 	ELEMENT_DELIMITER: ClassVar[str] = "/"                #: Delimiter symbol in URLs between path elements.
@@ -635,7 +635,7 @@ class URL:
 		"""
 		Returns a URL object whose path doesn't end in a slash.
 
-		A URL's element delimiter is the slash, so this is :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
+		A URL's element delimiter is the slash, so this is :meth:`~pyTooling.GenericPath.PathMixin.WithoutTrailingDelimiter`
 		applied to the URL's path. A trailing slash is an empty last element, so ``https://example.org/api/v3/`` and
 		``https://example.org/api/v3`` differ although they usually address the same resource. A URL that is composed
 		with a path below it wants the latter, or the composition yields a double slash.
@@ -644,7 +644,7 @@ class URL:
 
 		.. seealso::
 
-		   :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
+		   :meth:`~pyTooling.GenericPath.PathMixin.WithoutTrailingDelimiter`
 		      |rarr| What it does to the path, and what it leaves alone.
 		"""
 		if (path := self._path.WithoutTrailingDelimiter()) is self._path:
