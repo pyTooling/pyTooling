@@ -23,8 +23,8 @@ Version 10.x (2026)
        :meth:`~pyTooling.REST.RESTClient.PostJSONObject`, :meth:`~pyTooling.REST.RESTClient.PutJSONObject`,
        :meth:`~pyTooling.REST.RESTClient.PatchJSONObject` and :meth:`~pyTooling.REST.RESTClient.DeleteResource`
        write one.
-     * The answer's media type is checked - ``application/json`` and the :rfc:`6839` suffix - before it is read as a
-       JSON object.
+     * The answer's media type is checked - :attr:`MediaType.JSON <pyTooling.REST.MediaType>` and the :rfc:`6839`
+       suffix - before it is read as a JSON object.
      * The next page is read from the :rfc:`8288` ``Link`` header. One pointing outside the client's own API is
        rejected rather than followed, because the token is only sent to that API.
      * A transiently failing request - :data:`~pyTooling.REST.TRANSIENT_HTTP_STATUS`, a timeout, or an unreachable
