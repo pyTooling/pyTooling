@@ -40,8 +40,9 @@ A generic path to derive domain specific path libraries.
 """
 from __future__            import annotations
 
-from typing                import ClassVar, Optional as Nullable
+from typing                import ClassVar, Optional as Nullable, Union
 
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
 
@@ -104,8 +105,9 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Path element delimiter sign.
-	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Root element delimiter sign.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"              #: Path element delimiter sign.
+	ROOT_DELIMITER:    ClassVar[str] = "/"              #: Root element delimiter sign.
+	ELEMENT_TYPE:      ClassVar[type[ElementMixIn]] = ElementMixIn  #: Type an element of this path flavour has.
 
 	_isAbsolute: bool                       #: True, if the path is absolute.
 	_elements:   list[ElementMixIn]         #: List of path elements.
@@ -144,7 +146,7 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		return result
 
-	def __truediv__(self, other: PathMixIn) -> PathMixIn:
+	def __truediv__(self, other: Union[str, PathMixIn]) -> PathMixIn:
 		"""
 		Return this path with another path below it.
 
@@ -153,21 +155,29 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		replaces this one rather than being appended - as :rfc:`3986` resolves a reference and :mod:`pathlib` joins a
 		path.
 
-		:param other: The path to append.
-		:returns:     A new path, or ``other``, if that one is absolute.
+		:param other:      The path to append, as a string to parse or as a path.
+		:returns:          A new path, or ``other``, if that one is absolute.
+		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`PathMixIn`.
 		"""
-		if not isinstance(other, PathMixIn):
-			return NotImplemented
-		elif other._isAbsolute:
-			return other
+		if isinstance(other, str):
+			isAbsolute = other.startswith(self.ROOT_DELIMITER)
+			names =      (other[len(self.ROOT_DELIMITER):] if isAbsolute else other).split(self.ELEMENT_DELIMITER)
+		elif isinstance(other, PathMixIn):
+			isAbsolute = other._isAbsolute
+			names =      [str(element) for element in other._elements]
+		else:
+			ex = TypeError("Second operand is not supported by / operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note(f"Supported types for second operand: 'str' or '{self.__class__.__name__}'.")
+			raise ex
 
-		path =     self.WithoutTrailingDelimiter()
-		elements = list(path._elements)
+		path =     self if isAbsolute else self.WithoutTrailingDelimiter()
+		elements = [] if isAbsolute else list(path._elements)
 		parent =   elements[-1] if len(elements) > 0 else None
-		for element in other._elements:
-			elements.append(parent := element.__class__(parent, str(element)))
+		for name in names:
+			elements.append(parent := self.ELEMENT_TYPE(parent, name))
 
-		return self.__class__(elements, path._isAbsolute)
+		return self.__class__(elements, isAbsolute or path._isAbsolute)
 
 	def WithoutTrailingDelimiter(self) -> PathMixIn:
 		"""
