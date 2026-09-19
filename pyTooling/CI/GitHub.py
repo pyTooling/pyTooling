@@ -58,6 +58,7 @@ from __future__            import annotations
 
 from datetime              import datetime, timezone
 from enum                  import Enum
+from itertools             import chain
 from typing                import Optional as Nullable, Any, ClassVar, Iterable, Iterator, Self, Union
 
 from pyTooling.CI          import JSONObject
@@ -797,36 +798,43 @@ class JobGroup(Base):
 	@readonly
 	def CreatedAt(self) -> Nullable[datetime]:
 		"""
-		Read-only property to return when the first job of this group was created.
+		Read-only property to return when the first element below this group was created.
 
-		:returns: The time, or ``None`` if no job of the group reports one.
+		A group reports no time of its own, so it spans what it holds - its jobs, and for a :class:`Workflow` the
+		matrices and called workflows below it as well.
+
+		:returns: The time, or ``None`` if no element below the group reports one.
 		"""
-		times = [job.CreatedAt for job in self._jobs if job.CreatedAt is not None]
+		times = [element.CreatedAt for element in self if element.CreatedAt is not None]
 
 		return min(times) if len(times) > 0 else None
 
 	@readonly
 	def StartedAt(self) -> Nullable[datetime]:
 		"""
-		Read-only property to return when the first job of this group started.
+		Read-only property to return when the first element below this group started.
 
-		:returns: The time, or ``None`` if no job of the group has started.
+		:returns: The time, or ``None`` if no element below the group has started.
 		"""
-		times = [job.StartedAt for job in self._jobs if job.StartedAt is not None]
+		times = [element.StartedAt for element in self if element.StartedAt is not None]
 
 		return min(times) if len(times) > 0 else None
 
 	@readonly
 	def CompletedAt(self) -> Nullable[datetime]:
 		"""
-		Read-only property to return when the last job of this group completed.
+		Read-only property to return when the last element below this group completed.
 
-		:returns: The time, or ``None`` while a job of the group hasn't completed.
+		:returns: The time, or ``None`` while an element below the group hasn't completed, or while it holds none.
 		"""
-		if len(self._jobs) == 0 or any(job.CompletedAt is None for job in self._jobs):
-			return None
+		times = []
+		for element in self:
+			if element.CompletedAt is None:
+				return None
 
-		return max(job.CompletedAt for job in self._jobs)
+			times.append(element.CompletedAt)
+
+		return max(times) if len(times) > 0 else None
 
 	def __len__(self) -> int:
 		"""
@@ -848,13 +856,35 @@ class JobGroup(Base):
 		"""
 		return any(str(job) == name for job in self._jobs)
 
-	def __iter__(self) -> Iterator[Job]:
+	@readonly
+	def _Contents(self) -> Iterable[Base]:
 		"""
-		Iterate the jobs of this group.
+		Return what this group holds, in the order GitHub listed it.
 
-		:returns: An iterator over the jobs.
+		A group holds its jobs; a :class:`Workflow` holds further groups and says so by overriding this.
+
+		:returns: The elements one level below this group.
 		"""
-		return iter(self._jobs)
+		return self._jobs
+
+	def __iter__(self) -> Iterator[Base]:
+		"""
+		Iterate what this group holds, ordered by the time it was queued.
+
+		The order is stable, so elements reporting no time keep the order GitHub listed them in.
+
+		:returns: An iterator over the contained elements.
+		"""
+		def queuedAt(element: Base) -> tuple[bool, datetime]:
+			"""
+			Nested function sorting an element without a creation time behind every element that has one.
+
+			:param element: The element.
+			:returns:       The sort key.
+			"""
+			return (element.CreatedAt is None, element.CreatedAt if element.CreatedAt is not None else datetime.min)
+
+		return iter(sorted(self._Contents, key=queuedAt))
 
 
 @export
@@ -917,73 +947,6 @@ class Workflow(JobGroup, QualifiedNameMixin):
 		"""
 		return self._matrices
 
-	@readonly
-	def CreatedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first job below this workflow was created.
-
-		Unlike a :class:`Matrix`, a workflow contains further groups, so the time covers the jobs of its matrices and
-		of the workflows it calls as well.
-
-		:returns: The time, or ``None`` if no job below the workflow reports one.
-		"""
-		times = [job.CreatedAt for job in self._jobs if job.CreatedAt is not None]
-		for matrix in self._matrices.values():
-			if matrix.CreatedAt is not None:
-				times.append(matrix.CreatedAt)
-
-		for workflow in self._workflows.values():
-			if workflow.CreatedAt is not None:
-				times.append(workflow.CreatedAt)
-
-		return min(times) if len(times) > 0 else None
-
-	@readonly
-	def StartedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first job below this workflow started.
-
-		:returns: The time, or ``None`` if no job below the workflow has started.
-		"""
-		times = [job.StartedAt for job in self._jobs if job.StartedAt is not None]
-		for matrix in self._matrices.values():
-			if matrix.StartedAt is not None:
-				times.append(matrix.StartedAt)
-
-		for workflow in self._workflows.values():
-			if workflow.StartedAt is not None:
-				times.append(workflow.StartedAt)
-
-		return min(times) if len(times) > 0 else None
-
-	@readonly
-	def CompletedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the last job below this workflow completed.
-
-		:returns: The time, or ``None`` while a job below the workflow hasn't completed, or while it holds none.
-		"""
-		times = []
-		for job in self._jobs:
-			if job.CompletedAt is None:
-				return None
-
-			times.append(job.CompletedAt)
-
-		for matrix in self._matrices.values():
-			if matrix.CompletedAt is None:
-				return None
-
-			times.append(matrix.CompletedAt)
-
-		for workflow in self._workflows.values():
-			if workflow.CompletedAt is None:
-				return None
-
-			times.append(workflow.CompletedAt)
-
-		return max(times) if len(times) > 0 else None
-
 	def IterateJobs(self) -> Iterator[Job]:
 		"""
 		Iterate every job below this workflow, including those of its matrices and of the workflows it calls.
@@ -1020,18 +983,17 @@ class Workflow(JobGroup, QualifiedNameMixin):
 		"""
 		return name in self._workflows or name in self._matrices or super().__contains__(name)
 
-	def __iter__(self) -> Iterator[Base]:
+	@readonly
+	def _Contents(self) -> Iterable[Base]:
 		"""
-		Iterate the elements this workflow contains: its jobs, then its matrices, then the workflows it calls.
+		Return what this workflow holds: its jobs, its matrices and the workflows it calls.
 
-		A :class:`JobGroup` iterates its jobs, but a workflow contains further groups, so it iterates everything one
-		level below it. Use :meth:`IterateJobs` to reach the jobs below those groups as well.
+		A :class:`JobGroup` holds jobs, but a workflow holds further groups, so :meth:`~JobGroup.__iter__` yields
+		everything one level below it. Use :meth:`IterateJobs` to reach the jobs below those groups as well.
 
-		:returns: An iterator over the contained elements.
+		:returns: The elements one level below this workflow.
 		"""
-		yield from self._jobs
-		yield from self._matrices.values()
-		yield from self._workflows.values()
+		return chain(self._jobs, self._matrices.values(), self._workflows.values())
 
 
 @export
@@ -1265,6 +1227,37 @@ class Pipeline(Workflow):
 		:returns: The time, or ``None`` while the run isn't completed.
 		"""
 		return self._completedAt
+
+	@readonly
+	def ContentsCreatedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return when the first element below the run was created.
+
+		A run is the one group that reports times of its own, so it is the one that has two: what GitHub says about
+		the run, and the span of what the run holds. They differ - a job may be queued before the run reports itself
+		created, because GitHub reports both in whole seconds.
+
+		:returns: The time, or ``None`` if no element below the run reports one.
+		"""
+		return super().CreatedAt
+
+	@readonly
+	def ContentsStartedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return when the first element below the run started.
+
+		:returns: The time, or ``None`` if no element below the run has started.
+		"""
+		return super().StartedAt
+
+	@readonly
+	def ContentsCompletedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return when the last element below the run completed.
+
+		:returns: The time, or ``None`` while an element below the run hasn't completed, or while it holds none.
+		"""
+		return super().CompletedAt
 
 	@classmethod
 	def FromJSON(
@@ -1515,6 +1508,56 @@ class Job(Base, QualifiedNameMixin):
 		:returns: The steps, in the order GitHub reported them.
 		"""
 		return self._steps
+
+	@readonly
+	def CreatedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return the time the job was created, at the latest when it started.
+
+		:returns: The time, or ``None`` if GitHub reported none.
+		"""
+		if self._createdAt is None or all(step.StartedAt is None for step in self._steps):
+			return self._createdAt
+
+		return min(self._createdAt, self.StartedAt)
+
+	@readonly
+	def StartedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return the time the job started, at the latest when its first step started.
+
+		GitHub reports a job's times and its steps' times independently and in whole seconds, so a step is sometimes
+		reported as starting before the job containing it. The step really did run then, so the job is the timespan
+		that stretches - otherwise a consumer building a tree has a child outside its parent.
+
+		:returns: The time, or ``None`` while neither the job nor a step of it has started.
+		"""
+		times = [step.StartedAt for step in self._steps if step.StartedAt is not None]
+		if len(times) == 0:
+			return self._startedAt
+
+		first = min(times)
+
+		return first if self._startedAt is None else min(self._startedAt, first)
+
+	@readonly
+	def CompletedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return the time the job completed, at the earliest when its last step completed.
+
+		A job that hasn't completed reports no time, even when a step of it has - see :attr:`StartedAt` for why the
+		job is the timespan that stretches.
+
+		:returns: The time, or ``None`` while the job hasn't completed.
+		"""
+		if self._completedAt is None or all(step.StartedAt is None for step in self._steps):
+			return self._completedAt
+
+		times = [step.CompletedAt for step in self._steps if step.CompletedAt is not None]
+		if len(times) == 0:
+			return self._completedAt
+
+		return max(self._completedAt, max(times))
 
 	@readonly
 	def QueuedDuration(self) -> Nullable[float]:
