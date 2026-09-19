@@ -61,7 +61,7 @@ from enum                  import Enum
 from typing                import Optional as Nullable, Any, ClassVar, Iterable, Iterator, Self, Union
 
 from pyTooling.CI          import JSONObject
-from pyTooling.Common      import __version__, getFullyQualifiedName
+from pyTooling.Common      import __version__, getFullyQualifiedName, parseISO8601Timestamp
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.GenericPath.URL import URL
@@ -211,17 +211,12 @@ def _parseISO8601Timestamp(value: Nullable[str], field: str) -> Nullable[datetim
 	:raises GitHubError: If the value isn't an ISO 8601 timestamp. |br|
 	                     The note reports the value that was read.
 	"""
-	if value is None or value == "":
-		return None
-
 	try:
-		timestamp = datetime.fromisoformat(value)
+		return parseISO8601Timestamp(value, timezone.utc)
 	except ValueError as ex:
 		error = GitHubError(f"Field '{field}' isn't an ISO 8601 timestamp.")
 		error.add_note(f"Got '{value}'.")
 		raise error from ex
-
-	return timestamp if timestamp.tzinfo is not None else timestamp.replace(tzinfo=timezone.utc)
 
 
 def _parseURL(value: Nullable[str], field: str) -> Nullable[URL]:

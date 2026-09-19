@@ -42,13 +42,11 @@ service a trace came from:
 
    See :ref:`high-level help <TRACING/CI>` for explanations and usage examples.
 """
-from datetime              import datetime, timezone
 from enum                  import StrEnum
-from typing                import ClassVar, Optional as Nullable
+from typing                import ClassVar
 
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Tracing     import TracingError
 
 
 @export
@@ -165,29 +163,3 @@ class Result(StrEnum):
 	Cancellation = "cancellation"  #: It was cancelled.
 	Error =        "error"         #: It ended for any other reason.
 
-
-@export
-def parseISO8601Timestamp(value: Nullable[str]) -> Nullable[datetime]:
-	"""
-	Parse an ISO 8601 timestamp, as CI services report them.
-
-	A timestamp without a time zone is taken as UTC, so every timestamp of a trace can be compared with every other.
-
-	:param value:         The timestamp, e.g. ``'2026-09-15T06:35:24Z'``, or ``None``.
-	:returns:             The time zone aware timestamp, or ``None`` if the value is ``None`` or empty.
-	:raises TracingError: If the value isn't an ISO 8601 timestamp.
-	"""
-	if value is None or value == "":
-		return None
-
-	try:
-		timestamp = datetime.fromisoformat(value)
-	except (TypeError, ValueError) as ex:
-		error = TracingError(f"'{value}' isn't an ISO 8601 timestamp.")
-		error.add_note("CI services report timestamps like '2026-09-15T06:35:24Z'.")
-		raise error from ex
-
-	if timestamp.utcoffset() is None:
-		timestamp = timestamp.replace(tzinfo=timezone.utc)
-
-	return timestamp
