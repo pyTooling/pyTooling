@@ -57,7 +57,7 @@ from urllib.error          import HTTPError
 from urllib.request        import Request, urlopen
 
 from pyTooling.CI          import JSONObject
-from pyTooling.CI.GitHub   import Base, Conclusion, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step, Workflow
+from pyTooling.CI.GitHub   import Base, Conclusion, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -152,29 +152,6 @@ def _notBefore(end: Nullable[datetime], begin: datetime) -> Nullable[datetime]:
 	return None if end is None else max(end, begin)
 
 
-def _fullName(job: Job) -> str:
-	"""
-	Return a job's name as GitHub reports it, with the names of the workflows calling it.
-
-	The model keeps the parts apart - a job named ``Caller / Build`` is a :class:`~pyTooling.CI.GitHub.Job` called
-	``Build`` below a :class:`~pyTooling.CI.GitHub.Workflow` called ``Caller`` - while the attribute names the task the
-	way the service does.
-
-	:param job: The job.
-	:returns:   The job's name, prefixed by the workflows calling it.
-	"""
-	callers = []
-	element = job.Parent
-	while element is not None and not isinstance(element, Pipeline):
-		# a matrix is walked through rather than named: its name is the one the job already carries
-		if isinstance(element, Workflow):
-			callers.append(element.Name)
-
-		element = element.Parent
-
-	return " / ".join([*reversed(callers), str(job)])
-
-
 def _contents(group: JobGroup) -> list[Base]:
 	"""
 	Return what a group contains, ordered by the time its elements were queued.
@@ -182,15 +159,17 @@ def _contents(group: JobGroup) -> list[Base]:
 	:param group: The group - a workflow run, a called workflow or a matrix.
 	:returns:     The jobs, matrices and called workflows one level below the group.
 	"""
-	items: list[Base] = list(group.Jobs)
-	if isinstance(group, Workflow):
-		items.extend(group.Matrices.values())
-		items.extend(group.Workflows.values())
+	def queuedAt(item: Base) -> tuple[bool, datetime]:
+		"""
+		Nested function sorting an element without a begin time behind every element that has one.
 
-	# stable sort: elements without a begin time keep their order at the end
-	items.sort(key=lambda item: (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min))
+		:param item: The element.
+		:returns:    The sort key.
+		"""
+		return (item.CreatedAt is None, item.CreatedAt if item.CreatedAt is not None else datetime.min)
 
-	return items
+	# a stable sort, so elements without a begin time keep the order the model reports them in
+	return sorted(group, key=queuedAt)
 
 
 def _jobTimes(job: Job) -> tuple[Nullable[datetime], Nullable[datetime], Nullable[datetime]]:
@@ -292,7 +271,7 @@ def _addJob(job: Job, parent: Span) -> None:
 	"""
 	created, started, completed = _jobTimes(job)
 
-	fullName = _fullName(job)
+	fullName = job.QualifiedName
 	displayName = str(job)   # a matrix instance carries its dimension values, so two of them are distinguishable
 	if job.Conclusion is Conclusion.Skipped:
 		# A skipped job neither waited for a runner nor ran on one.
