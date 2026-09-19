@@ -393,8 +393,8 @@ Glossary
 
      Wikipedia: :wiki:`MinGW <Mingw-w64>`
 
-   Mixin-Class
    Mixin
+   Mixin-Class
      A *mixin class* is a class used as a secondary base-class in multiple inheritance. It contributes fields and
      methods to the class mixing it in, and is not meant to be instantiated on its own.
 
