@@ -57,6 +57,8 @@ if sphinxIsSupported:
 	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, formatUnresolvedLicenses
 	from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
+	from pyTooling.Documentation.Sphinx.Shields         import CONFIG_NAME, SHIELDS, Shield
+	from pyTooling.Documentation.Sphinx.Shields         import prepareSettings
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -448,3 +450,153 @@ class UnresolvedLicenseReport(Testcase):
 		})
 
 		self.assertIn("license: BSD; classifier: License :: OSI Approved :: BSD License", message)
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class ShieldSettings(Testcase):
+	"""What a project states in 'conf.py', and what is derived from it rather than asked for."""
+
+	class _Config:
+		"""A stand-in for Sphinx' configuration, which only has to carry the one value."""
+
+		def __init__(self, stated: "Nullable[dict]" = None) -> None:
+			setattr(self, "pyTooling_Shields", stated)
+
+	def _Prepare(self, stated: Nullable[dict] = None) -> dict:
+		"""
+		Run the 'config-inited' call-back over a stated configuration.
+
+		:param stated: Optional, what 'conf.py' set.
+		:returns:      The completed settings.
+		"""
+		config = self._Config(stated)
+		prepareSettings(None, config)                          # type: ignore[arg-type]
+
+		return getattr(config, CONFIG_NAME)
+
+	def test_TheGitHubSlugIsSplit(self) -> None:
+		"""Every badge URL names the organization and the repository apart; a project states them as one slug."""
+		settings = self._Prepare({"GitHub": "pyTooling/pyVHDLModel"})
+
+		self.assertEqual("pyTooling", settings["GitHubOrganization"])
+		self.assertEqual("pyVHDLModel", settings["GitHubRepository"])
+
+	def test_ThePackageNameDefaultsToTheRepository(self) -> None:
+		"""They agree in every project in this family, and the exception states it."""
+		self.assertEqual("pyVHDLModel", self._Prepare({"GitHub": "pyTooling/pyVHDLModel"})["PyPI"])
+
+	def test_AStatedPackageNameWins(self) -> None:
+		"""They don't always agree - 'sphinx-reports' is 'sphinx_reports' on PyPI."""
+		settings = self._Prepare({"GitHub": "pyTooling/sphinx-reports", "PyPI": "sphinx_reports"})
+
+		self.assertEqual("sphinx_reports", settings["PyPI"])
+
+	def test_TheDefaultsFillTheRest(self) -> None:
+		"""A project states three things; the workflow, the branch and the licence are the same everywhere."""
+		settings = self._Prepare({"GitHub": "pyTooling/pyTooling"})
+
+		self.assertEqual("Pipeline.yml", settings["Workflow"])
+		self.assertEqual("main", settings["Branch"])
+
+	def test_ADefaultCanBeOverridden(self) -> None:
+		"""A project whose pipeline has another name must not have to state every other default with it."""
+		settings = self._Prepare({"GitHub": "pyTooling/Actions", "Workflow": "Checking.yml"})
+
+		self.assertEqual("Checking.yml", settings["Workflow"])
+		self.assertEqual("main", settings["Branch"])
+
+	def test_ThePagesValuesArePercentEncoded(self) -> None:
+		"""They are query parameters inside a URL, so a '/' in them has to stop being a separator."""
+		settings = self._Prepare({"GitHub": "pyTooling/pyTooling"})
+
+		self.assertEqual("pyTooling.github.io%2FpyTooling", settings["PagesLabel"])
+		self.assertEqual("https%3A%2F%2FpyTooling.github.io%2FpyTooling%2Findex.html", settings["PagesURL"])
+
+	def test_TheLicenceBadgeEscapesItsSpaceAndDashes(self) -> None:
+		"""A literal space makes the URL malformed, and a single dash is shields.io's field separator."""
+		settings = self._Prepare({"GitHub": "pyTooling/pyTooling"})
+
+		self.assertEqual("CC--BY%204.0", settings["DocumentationLicenseBadge"])
+
+	def test_AProjectStatingNothingIsLeftAlone(self) -> None:
+		"""Every project enabling the extension gets the config value; only the ones drawing badges fill it."""
+		self.assertIsNone(self._Prepare(None))
+
+	def test_AMalformedSlugIsRejected(self) -> None:
+		"""'<organization>/<repository>' has exactly one slash, and silently mis-splitting it makes dead badges."""
+		for slug in ("pyTooling", "pyTooling/pyTooling/doc"):
+			with self.assertRaises(SphinxExtensionError):
+				self._Prepare({"GitHub": slug})
+
+	def test_AStatedConfigurationWithoutGitHubIsRejected(self) -> None:
+		"""A project that filled the value but forgot the one required key gets told which key."""
+		with self.assertRaises(SphinxExtensionError) as context:
+			self._Prepare({"PyPI": "pyTooling"})
+
+		self.assertIn("GitHub", str(context.exception))
+
+
+@mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
+class Shields(Testcase):
+	"""The badge table, and the two URLs each of its entries formats."""
+
+	_SETTINGS = {
+		"GitHub": "pyTooling/pyTooling", "GitHubOrganization": "pyTooling", "GitHubRepository": "pyTooling",
+		"PyPI": "pyTooling", "Codacy": "0123456789abcdef", "Gitter": "hdl/community",
+		"Workflow": "Pipeline.yml", "Branch": "main",
+		"DocumentationLicense": "CC-BY 4.0", "DocumentationLicenseBadge": "CC--BY%204.0",
+		"PagesLabel": "pyTooling.github.io%2FpyTooling",
+		"PagesURL": "https%3A%2F%2FpyTooling.github.io%2FpyTooling%2Findex.html",
+	}
+
+	def test_EveryBadgeFormatsFromTheSettings(self) -> None:
+		"""A placeholder no setting fills is a 'KeyError' in the middle of a documentation build."""
+		for identifier, shield in SHIELDS.items():
+			with self.subTest(shield=identifier):
+				self.assertTrue(shield.ImageURL(self._SETTINGS, False).startswith("https://img.shields.io/"))
+				shield.TargetURL(self._SETTINGS, False)
+				shield.TargetURL(self._SETTINGS, True)
+
+	def test_LaTeXTakesTheRasterizedBadge(self) -> None:
+		"""A PDF cannot embed an SVG, which is the whole reason the two variants exist."""
+		shield = SHIELDS["pypi-tag"]
+
+		self.assertTrue(shield.ImageURL(self._SETTINGS, True).startswith("https://raster.shields.io/"))
+		self.assertEqual(
+			shield.ImageURL(self._SETTINGS, False).replace("img.shields.io", "raster.shields.io"),
+			shield.ImageURL(self._SETTINGS, True)
+		)
+
+	def test_APageRelativeTargetIsReplacedForLaTeX(self) -> None:
+		"""'Code-License.html' resolves against the HTML output and means nothing in a PDF."""
+		shield = SHIELDS["src-license"]
+
+		self.assertEqual("Code-License.html", shield.TargetURL(self._SETTINGS, False))
+		self.assertEqual(
+			"https://GitHub.com/pyTooling/pyTooling/blob/main/LICENSE.md",
+			shield.TargetURL(self._SETTINGS, True)
+		)
+
+	def test_ABadgeWithoutATargetHasNoneInBothVariants(self) -> None:
+		"""'pypi-status' states a fact and has nowhere to link to."""
+		shield = SHIELDS["pypi-status"]
+
+		self.assertIsNone(shield.TargetURL(self._SETTINGS, False))
+		self.assertIsNone(shield.TargetURL(self._SETTINGS, True))
+
+	def test_TheBadgeSurvivesARoundTripThroughShieldsIO(self) -> None:
+		"""The percent-encoded licence is what makes the URL well-formed; a literal space is rejected."""
+		self.assertIn("doc-CC--BY%204.0-green", SHIELDS["doc-license"].ImageURL(self._SETTINGS, False))
+
+	def test_EveryIdentifierIsWrittenTheWayADocumentWritesIt(self) -> None:
+		"""They are typed into a directive's content, so they are lower case and separated by dashes."""
+		for identifier in SHIELDS:
+			with self.subTest(shield=identifier):
+				self.assertEqual(identifier.lower(), identifier)
+				self.assertNotIn("_", identifier)
+
+	def test_EveryBadgeHasAlternativeText(self) -> None:
+		"""An image without it is unreadable to a screen reader and invisible when the host is down."""
+		for identifier, shield in SHIELDS.items():
+			with self.subTest(shield=identifier):
+				self.assertNotEqual("", shield.AlternativeText)

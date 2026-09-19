@@ -61,7 +61,10 @@ document of every project. This extension declares them once:
 
   * :rst:dir:`condensed-class` - renders a class' public interface from its source;
   * :rst:dir:`dependency-table` - renders a project's dependencies from its requirements files, which
-    :file:`conf.py` declares under ``pyTooling_dependency_requirements``.
+    :file:`conf.py` declares under ``pyTooling_dependency_requirements``;
+  * :rst:dir:`shields` - renders a project's badges, from the identifiers :file:`conf.py` declares under
+    ``pyTooling_Shields``. It replaces a hand-written :file:`doc/shields.inc` and the two ``.. only::``
+    blocks that went with it.
 
 :class:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective` isn't registered - it is a base-class for a
 project's own directives, offering typed option access and table construction over the untyped mapping and the
@@ -103,6 +106,8 @@ from pyTooling.Documentation.Sphinx.DependencyTable import prepareEntrypoints, r
 from pyTooling.Documentation.Sphinx.Directives      import BaseDirective, SphinxExtensionError, strip
 from pyTooling.Documentation.Sphinx.Directives      import stripAndNormalize
 from pyTooling.Documentation.Sphinx.Roles           import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
+from pyTooling.Documentation.Sphinx.Shields         import Shields, prepareSettings
+from pyTooling.Documentation.Sphinx.Shields         import CONFIG_VALUES as SHIELD_CONFIG_VALUES
 from pyTooling.Documentation.Sphinx.Roles           import breakRole, pythonCodeRole, styleRole
 
 
@@ -186,14 +191,17 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 
 	sphinx.add_directive("condensed-class", CondensedClass)
 	sphinx.add_directive("dependency-table", DependencyTable)
+	sphinx.add_directive("shields", Shields)
 
-	for configName, (default, rebuild, types) in CONFIG_VALUES.items():
+	for configName, (default, rebuild, types) in (CONFIG_VALUES | SHIELD_CONFIG_VALUES).items():
 		sphinx.add_config_value(configName, default, rebuild, types)
 
 	sphinx.connect("config-inited", extendProlog)
 	# after the configuration values above are registered, and before any document is read - a requirements file
 	# that doesn't exist should end the build here rather than in the middle of a page
 	sphinx.connect("config-inited", prepareEntrypoints)
+	# same reason: a badge naming an organization that isn't stated should end the build here, not on a page
+	sphinx.connect("config-inited", prepareSettings)
 	sphinx.connect("build-finished", reportBuildTime)
 	sphinx.connect("builder-inited", installStylesheet)
 
