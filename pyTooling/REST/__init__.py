@@ -463,7 +463,13 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 				break
 			except HTTPError as ex:
 				if ex.code in TRANSIENT_HTTP_STATUS and attempt <= retries:
-					sleep(self._RetryDelay(attempt, None if ex.headers is None else ex.headers.get("Retry-After", None)))
+					delay = self._RetryDelay(attempt)
+					# :rfc:`9110` writes 'Retry-After' as a non-negative number of seconds or as an HTTP-date. Only the
+					# first is honored, and only while it asks for longer than the backoff already waits.
+					if ex.headers is not None and (pause := ex.headers.get("Retry-After", "")).strip().isdigit():
+						delay = max(delay, min(float(pause), MAXIMUM_RETRY_AFTER))
+
+					sleep(delay)
 					continue
 
 				error = RESTError(f"Request failed with HTTP {ex.code}: {url}")
@@ -484,7 +490,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 				raise error from ex
 			except OSError as ex:
 				if attempt <= retries:
-					sleep(self._RetryDelay(attempt, None))
+					sleep(self._RetryDelay(attempt))
 					continue
 
 				error = RESTError(f"API couldn't be reached: {url}")
@@ -554,22 +560,16 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param status: The HTTP status the request failed with.
 		"""
 
-	def _RetryDelay(self, attempt: int, retryAfter: Nullable[str]) -> float:
+	def _RetryDelay(self, attempt: int) -> float:
 		"""
 		Return the pause before a request is tried again.
 
 		The pause grows exponentially: :attr:`RetryDelay` doubled for every earlier attempt.
 
-		:param attempt:    The attempt that failed, starting at 1.
-		:param retryAfter: The value of the failed answer's ``Retry-After`` header, or ``None``.
-		:returns:          The pause in seconds, or the one the ``Retry-After`` header demands, if that is longer - but
-		                   not longer than :data:`MAXIMUM_RETRY_AFTER`.
+		:param attempt: The attempt that failed, starting at 1.
+		:returns:       The pause in seconds.
 		"""
-		delay = self._retryDelay * 2 ** (attempt - 1)
-		try:
-			return max(delay, min(float(retryAfter), MAXIMUM_RETRY_AFTER))
-		except (TypeError, ValueError):
-			return delay
+		return self._retryDelay * 2 ** (attempt - 1)
 
 	def _ProcessAnswer(self, body: bytes, contentType: Nullable[str], url: str) -> Nullable[JSONObject]:
 		"""

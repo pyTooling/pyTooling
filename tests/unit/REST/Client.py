@@ -256,6 +256,15 @@ class Failures(Testcase):
 
 		self.assertEqual([mock.call(60.0)], sleep.call_args_list)
 
+	def test_ARetryAfterThatIsNotSecondsIsIgnored(self) -> None:
+		"""RFC 9110 allows an HTTP-date as well, which says nothing about how long the backoff should be."""
+		with mock.patch("pyTooling.REST.urlopen", side_effect=self._Fail(429, {"Retry-After": "10.5"})):
+			with mock.patch("pyTooling.REST.sleep") as sleep:
+				with self.assertRaises(RESTError):
+					RESTClient(API, retries=1, retryDelay=2.0).GetJSONObject("things")
+
+		self.assertEqual([mock.call(2.0)], sleep.call_args_list, "'delay-seconds' is a non-negative integer.")
+
 	def test_UnparsableRetryAfterIsIgnored(self) -> None:
 		with mock.patch("pyTooling.REST.urlopen", side_effect=self._Fail(429, {"Retry-After": "Tue, 1 Sep 2026 12:00"})):
 			with mock.patch("pyTooling.REST.sleep") as sleep:
