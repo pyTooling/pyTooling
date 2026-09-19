@@ -79,11 +79,12 @@ When installed as ``pyTooling[diagram]``:
 .. The extra isn't on PyPI yet, which 'dependency-table' reads extras from. Replace this table by
    '.. dependency-table:: matplotlib' and an entry in 'conf.py' once a release contains the extra.
 
-+------------+---------+------------------------------+------------------------------------------------------------------------------------------------+
-| Package    | Version | License                      | Dependencies                                                                                   |
-+============+=========+==============================+================================================================================================+
-| matplotlib | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy, packaging, pillow, pyparsing, python-dateutil |
-+------------+---------+------------------------------+------------------------------------------------------------------------------------------------+
++------------+---------+------------------------------+----------------------------------------------------------+
+| Package    | Version | License                      | Dependencies                                             |
++============+=========+==============================+==========================================================+
+| matplotlib | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
+|            |         |                              | packaging, pillow, pyparsing, python-dateutil            |
++------------+---------+------------------------------+----------------------------------------------------------+
 
 
 .. _DEP/testing:
