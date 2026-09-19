@@ -163,23 +163,29 @@ class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 		return None if end is None else max(end, begin)
 
 	@classmethod
-	def _GroupTimes(cls, group: JobGroup) -> tuple[Nullable[datetime], Nullable[datetime]]:
+	def _Timespan(
+		cls,
+		created:   Nullable[datetime],
+		started:   Nullable[datetime],
+		completed: Nullable[datetime]
+	) -> tuple[Nullable[datetime], Nullable[datetime]]:
 		"""
-		Return when the contents of a group begin and end.
+		Return the timespan the model's three times describe.
 
-		The model spans them - :attr:`~pyTooling.CI.GitHub.JobGroup.ContentsCreatedAt` and its two siblings - and
-		this is where the span becomes a timespan: it begins when the first element was queued, or started if it was
-		never queued, and it doesn't end before it begins.
+		The model spans what a group holds; this is where the span becomes a timespan: it begins when the first
+		element was queued, or started if it was never queued, and it doesn't end before it begins.
 
-		:param group: The group - a workflow run, a called workflow or a matrix.
-		:returns:     When the contents begin and end, each ``None`` if the group holds nothing respectively hasn't
-		              completed.
+		:param created:   When the first element was created, or ``None`` if none reports a time.
+		:param started:   When the first element started, or ``None`` if none has started.
+		:param completed: When the last element completed, or ``None`` while one hasn't.
+		:returns:         When the timespan begins and ends, each ``None`` if there is nothing to place on a
+		                  timeline respectively while it is still running.
 		"""
-		begin = group.ContentsCreatedAt if group.ContentsCreatedAt is not None else group.ContentsStartedAt
+		begin = created if created is not None else started
 		if begin is None:
 			return None, None
 
-		return begin, cls._NotBefore(group.ContentsCompletedAt, begin)
+		return begin, cls._NotBefore(completed, begin)
 
 	@classmethod
 	def _AddContents(cls, group: JobGroup, parent: Span) -> None:
@@ -321,7 +327,7 @@ class GitHubGroupMixin(metaclass=ExtendedType, mixin=True):
 	Mixin-class for a timespan holding other timespans - a called workflow or a matrix.
 
 	Both are built the same way and differ only in what they are, which their class says. Its
-	:meth:`~GitHubTimespanMixin._GroupTimes` and :meth:`~GitHubTimespanMixin._AddContents` come from
+	:meth:`~GitHubTimespanMixin._Timespan` and :meth:`~GitHubTimespanMixin._AddContents` come from
 	:class:`GitHubTimespanMixin`.
 	"""
 
@@ -334,7 +340,7 @@ class GitHubGroupMixin(metaclass=ExtendedType, mixin=True):
 		:param parent: The timespan containing the group.
 		:returns:      The group's timespan.
 		"""
-		begin, end = cls._GroupTimes(group)
+		begin, end = cls._Timespan(group.CreatedAt, group.StartedAt, group.CompletedAt)
 		span = cls(group.Name, begin, end, parent=parent)
 		cls._AddContents(group, span)
 
@@ -399,7 +405,9 @@ class WorkflowRunTrace(CIPipelineTrace, GitHubTimespanMixin):
 		endTime =   cls._NotBefore(pipeline.CompletedAt, beginTime) if beginTime is not None else pipeline.CompletedAt
 
 		# a job may be queued before the run reports itself started, and may complete after the run's last update
-		jobsBegin, jobsEnd = cls._GroupTimes(pipeline)
+		jobsBegin, jobsEnd = cls._Timespan(
+			pipeline.ContentsCreatedAt, pipeline.ContentsStartedAt, pipeline.ContentsCompletedAt
+		)
 		if jobsBegin is not None:
 			beginTime = jobsBegin if beginTime is None else min(beginTime, jobsBegin)
 
