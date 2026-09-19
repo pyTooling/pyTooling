@@ -44,17 +44,18 @@ knowledge about a particular service, so it lives here rather than in each reade
    :mod:`pyTooling.CI.GitHub`
       |rarr| A data model read from a REST API through this client.
 """
-from json                  import loads as json_loads
-from re                    import compile as re_compile
-from time                  import sleep
-from typing                import Any, Optional as Nullable
-from urllib.error          import HTTPError
-from urllib.request        import Request, urlopen
+from json                      import dumps as json_dumps, loads as json_loads
+from re                        import compile as re_compile
+from time                      import sleep
+from typing                    import Any, Optional as Nullable, Union
+from urllib.error              import HTTPError, URLError
+from urllib.request            import Request, urlopen
 
-from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Common          import getFullyQualifiedName
+from pyTooling.Decorators      import export, readonly
+from pyTooling.Exceptions      import ToolingException
+from pyTooling.GenericPath.URL import URL
+from pyTooling.MetaClasses     import ExtendedType
 
 
 __all__ = ["JSONObject"]
@@ -74,33 +75,41 @@ _NEXT_LINK = re_compile(r'<([^>]+)>;\s*rel="next"')
 
 @export
 class RESTError(ToolingException):
-	"""A request to a REST API failed, or its answer wasn't the JSON object the caller asked for."""
+	"""A request to a REST API failed, or its answer wasn't the JSON the caller asked for."""
 
 
 @export
 class RESTClient(metaclass=ExtendedType, slots=True):
 	"""
-	Reads JSON objects from a REST API.
+	Reads and writes JSON resources of a REST API.
 
 	The requests use only the standard library, so a package building on this client doesn't drag an HTTP stack into
-	every consumer. A token, when given, is sent as a bearer token - and only to the API it was given for, which is
-	why a paginated answer pointing outside that API is rejected.
+	every consumer. A resource is addressed by its path below :attr:`APIURL`, not by a URL, so a client says
+	``repos/owner/name`` and the API it belongs to is stated once.
+
+	A token, when given, is sent as a bearer token - and only to the API it was given for, which is why a paginated
+	answer pointing outside that API is rejected. :meth:`_Authorization` is what an API authorizing differently
+	overrides.
 
 	A request failing transiently - a status in :data:`TRANSIENT_HTTP_STATUS`, a timeout, or an unreachable API - is
-	tried again after a pause, which doubles with every attempt, or lasts as long as a ``Retry-After`` header demands.
-	A request failing with any other HTTP status, like 401, 403 or 404, isn't tried again, because another attempt
-	can't succeed.
+	tried again after an exponentially growing pause, or one as long as a ``Retry-After`` header demands. A request
+	failing with any other HTTP status, like 401, 403 or 404, isn't tried again, because another attempt can't
+	succeed. **A request that isn't idempotent is never tried again**: repeating a ``POST`` that the API did carry
+	out, but whose answer was lost, creates the resource twice.
+
+	An instance holds no state beyond what it was constructed with, and every request builds its own headers, so one
+	client can serve several threads. The pause before a retry blocks only the thread waiting for that answer.
 	"""
-	_apiURL:     str             #: Base URL of the REST API, without a trailing slash.
+	_apiURL:     URL             #: Base URL of the REST API, without a trailing slash.
 	_token:      Nullable[str]   #: Token authorizing the requests, or ``None`` for anonymous requests.
 	_headers:    dict[str, str]  #: Headers sent with every request, beside the authorization.
 	_timeout:    float           #: Timeout of a single request in seconds.
-	_retries:    int             #: How often a transiently failing request is tried again.
+	_retries:    int             #: How often a transiently failing idempotent request is tried again.
 	_retryDelay: float           #: Pause in seconds before a request is tried again the first time.
 
 	def __init__(
 		self,
-		apiURL:     str,
+		apiURL:     Union[str, URL],
 		token:      Nullable[str] = None,
 		*,
 		headers:    Nullable[dict[str, str]] = None,
@@ -111,15 +120,16 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a client for one REST API.
 
-		:param apiURL:      Base URL of the REST API.
+		:param apiURL:      Base URL of the REST API, as a string to parse or as a :class:`~pyTooling.GenericPath.URL.URL`.
 		:param token:       Optional, token authorizing the requests. Default: anonymous requests.
 		:param headers:     Optional, headers sent with every request. Default: no headers beside the authorization.
 		:param timeout:     Optional, timeout of a single request in seconds. Default: ``30.0``.
-		:param retries:     Optional, how often a transiently failing request is tried again. ``0`` tries once.
-		                    Default: ``3``.
+		:param retries:     Optional, how often a transiently failing idempotent request is tried again. ``0`` tries
+		                    once. Default: ``3``.
 		:param retryDelay:  Optional, pause in seconds before a request is tried again the first time. The pause doubles
 		                    with every further attempt. Default: ``2.0``.
-		:raises TypeError:  If parameter 'apiURL' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'apiURL' is neither a :class:`str` nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises ValueError: If parameter 'apiURL' names no scheme or no host.
 		:raises TypeError:  If parameter 'token' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'headers' is not of type :class:`dict`.
 		:raises TypeError:  If parameter 'timeout' is not a number.
@@ -129,8 +139,8 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'retryDelay' is not a number.
 		:raises ValueError: If parameter 'retryDelay' is negative.
 		"""
-		if not isinstance(apiURL, str):
-			ex = TypeError("Parameter 'apiURL' is not of type 'str'.")
+		if not isinstance(apiURL, (str, URL)):
+			ex = TypeError("Parameter 'apiURL' is neither of type 'str' nor 'URL'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(apiURL)}'.")
 			raise ex
 
@@ -171,7 +181,13 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{retryDelay}'.")
 			raise ex
 
-		self._apiURL =     apiURL.rstrip("/")
+		parsedURL = URL.Parse(str(apiURL).rstrip("/"))
+		if parsedURL.Scheme is None or parsedURL.Host is None:
+			ex = ValueError("Parameter 'apiURL' names no scheme or no host.")
+			ex.add_note(f"Got value '{apiURL}'.")
+			raise ex
+
+		self._apiURL =     parsedURL
 		self._token =      token
 		self._headers =    {} if headers is None else dict(headers)
 		self._timeout =    float(timeout)
@@ -179,7 +195,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		self._retryDelay = float(retryDelay)
 
 	@readonly
-	def APIURL(self) -> str:
+	def APIURL(self) -> URL:
 		"""
 		Read-only property to access the base URL of the REST API (:attr:`_apiURL`).
 
@@ -223,69 +239,229 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		return self._retryDelay
 
-	def GetJSONObject(self, url: str) -> tuple[JSONObject, Nullable[str]]:
+	def GetJSONObject(
+		self,
+		resourcePath: str,
+		headers:      Nullable[dict[str, str]] = None
+	) -> tuple[JSONObject, Nullable[str]]:
 		"""
-		Request a JSON object from the REST API.
+		Read a resource as a JSON object.
 
-		A transiently failing request is tried again up to :attr:`Retries` times.
-
-		:param url:        The URL to request.
-		:returns:          The JSON object, and the URL of the next page, or ``None`` if the answer names none.
-		:raises RESTError: If the request fails with an HTTP error, or the API can't be reached.
-		:raises RESTError: If the answer isn't a JSON object.
-		:raises RESTError: If the next page's URL doesn't belong to this API. |br|
-		                   The note says that the token is only sent to the API itself.
+		:param resourcePath: Path of the resource below :attr:`APIURL`, e.g. ``'repos/owner/name'``.
+		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
+		:returns:            The JSON object, and the path of the next page, or ``None`` if the answer names none.
+		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
+		:raises RESTError:   If the request fails, or the answer isn't a JSON object.
 		"""
-		headers = dict(self._headers)
-		if self._token is not None:
-			headers["Authorization"] = f"Bearer {self._token}"
+		document, nextResourcePath = self._Request("GET", resourcePath, headers=headers)
+		if document is None:
+			raise RESTError(f"API answered with an empty body: {self._URL(resourcePath)}")
 
-		for attempt in range(1, self._retries + 2):
+		return document, nextResourcePath
+
+	def PostJSONObject(
+		self,
+		resourcePath: str,
+		document:     JSONObject,
+		headers:      Nullable[dict[str, str]] = None
+	) -> Nullable[JSONObject]:
+		"""
+		Create a resource from a JSON object.
+
+		A ``POST`` isn't idempotent, so a transient failure isn't tried again - the API may have created the resource
+		and lost only the answer.
+
+		:param resourcePath: Path of the collection below :attr:`APIURL`, e.g. ``'repos/owner/name/issues'``.
+		:param document:     The JSON object to send.
+		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
+		:returns:            The answer's JSON object, or ``None`` if the API answered with no body.
+		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
+		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
+		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
+		"""
+		return self._Request("POST", resourcePath, document, headers, idempotent=False)[0]
+
+	def PutJSONObject(
+		self,
+		resourcePath: str,
+		document:     JSONObject,
+		headers:      Nullable[dict[str, str]] = None
+	) -> Nullable[JSONObject]:
+		"""
+		Replace a resource by a JSON object.
+
+		:param resourcePath: Path of the resource below :attr:`APIURL`, e.g. ``'repos/owner/name/issues/1'``.
+		:param document:     The JSON object to send.
+		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
+		:returns:            The answer's JSON object, or ``None`` if the API answered with no body.
+		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
+		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
+		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
+		"""
+		return self._Request("PUT", resourcePath, document, headers)[0]
+
+	def PatchJSONObject(
+		self,
+		resourcePath: str,
+		document:     JSONObject,
+		headers:      Nullable[dict[str, str]] = None
+	) -> Nullable[JSONObject]:
+		"""
+		Alter a resource by a JSON object holding the fields to change.
+
+		:rfc:`9110` doesn't call ``PATCH`` idempotent - whether applying the same change twice is the same as applying
+		it once depends on the change - so a transient failure isn't tried again.
+
+		:param resourcePath: Path of the resource below :attr:`APIURL`, e.g. ``'repos/owner/name/issues/1'``.
+		:param document:     The JSON object holding the fields to change.
+		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
+		:returns:            The answer's JSON object, or ``None`` if the API answered with no body.
+		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
+		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
+		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
+		"""
+		return self._Request("PATCH", resourcePath, document, headers, idempotent=False)[0]
+
+	def DeleteResource(self, resourcePath: str, headers: Nullable[dict[str, str]] = None) -> Nullable[JSONObject]:
+		"""
+		Delete a resource.
+
+		:param resourcePath: Path of the resource below :attr:`APIURL`, e.g. ``'repos/owner/name/issues/1'``.
+		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
+		:returns:            The answer's JSON object, or ``None`` if the API answered with no body, which is what a
+		                     deletion usually answers with.
+		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
+		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
+		"""
+		return self._Request("DELETE", resourcePath, headers=headers)[0]
+
+	def _Request(
+		self,
+		method:       str,
+		resourcePath: str,
+		document:     Nullable[JSONObject] = None,
+		headers:      Nullable[dict[str, str]] = None,
+		idempotent:   bool = True
+	) -> tuple[Nullable[JSONObject], Nullable[str]]:
+		"""
+		Send one request to the REST API and read its answer.
+
+		:param method:       The HTTP method, e.g. ``'GET'``.
+		:param resourcePath: Path of the resource below :attr:`APIURL`.
+		:param document:     Optional, the JSON object to send as the request's body. Default: no body.
+		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
+		:param idempotent:   Optional, ``True``, if repeating the request has the same effect as sending it once, which
+		                     is what makes trying it again safe. Default: ``True``.
+		:returns:            The answer's JSON object or ``None`` if it had no body, and the path of the next page or
+		                     ``None`` if the answer names none.
+		:raises TypeError:   If parameter 'resourcePath' is not of type :class:`str`.
+		:raises TypeError:   If parameter 'document' is not of type :class:`dict`.
+		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
+		:raises RESTError:   If the request fails with an HTTP error, or the API can't be reached. |br|
+		                     The notes report what the API said and how often the request was tried.
+		:raises RESTError:   If the answer isn't JSON, isn't valid JSON, or isn't a JSON object.
+		:raises RESTError:   If the next page's URL doesn't belong to this API. |br|
+		                     The note says that the token is only sent to the API itself.
+		"""
+		if not isinstance(resourcePath, str):
+			ex = TypeError("Parameter 'resourcePath' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(resourcePath)}'.")
+			raise ex
+
+		if document is not None and not isinstance(document, dict):
+			ex = TypeError("Parameter 'document' is not of type 'dict'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}'.")
+			raise ex
+
+		if headers is not None and not isinstance(headers, dict):
+			ex = TypeError("Parameter 'headers' is not of type 'dict'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(headers)}'.")
+			raise ex
+
+		url =     self._URL(resourcePath)
+		request = Request(url, data=self._Body(document), method=method, headers=self._RequestHeaders(document, headers))
+		retries = self._retries if idempotent else 0
+
+		for attempt in range(1, retries + 2):
 			try:
-				with urlopen(Request(url, headers=headers), timeout=self._timeout) as response:
-					body = response.read()
-					link = response.headers.get("Link", None)
+				with urlopen(request, timeout=self._timeout) as response:
+					body =        response.read()
+					contentType = response.headers.get("Content-Type", None)
+					link =        response.headers.get("Link", None)
 				break
 			except HTTPError as ex:
-				if ex.code in TRANSIENT_HTTP_STATUS and attempt <= self._retries:
-					sleep(self._RetryDelay(attempt, None if ex.headers is None else ex.headers.get("Retry-After", None)))
+				if ex.code in TRANSIENT_HTTP_STATUS and attempt <= retries:
+					sleep(self._RetryDelay(attempt, self._RetryAfter(ex)))
 					continue
 
-				error = RESTError(f"Request failed with HTTP {ex.code}: {url}")
-				try:
-					error.add_note(f"Answer: {json_loads(ex.read())['message']}")
-				except Exception:  # pragma: no cover - the answer's body is optional and may be anything
-					pass
-				self._AddErrorNotes(error, ex.code)
-				if attempt > 1:
-					error.add_note(f"Tried {attempt} times.")
-				raise error from ex
+				raise self._Failed(ex, url, attempt) from ex
 			except OSError as ex:
-				if attempt <= self._retries:
+				if attempt <= retries:
 					sleep(self._RetryDelay(attempt, None))
 					continue
 
-				error = RESTError(f"API couldn't be reached: {url}")
-				error.add_note(f"Reason: {getattr(ex, 'reason', ex)}")
-				if attempt > 1:
-					error.add_note(f"Tried {attempt} times.")
-				raise error from ex
+				raise self._Unreachable(ex, url, attempt) from ex
 
-		try:
-			document = json_loads(body)
-		except ValueError as ex:
-			raise RESTError(f"API answered with invalid JSON: {url}") from ex
+		return self._ReadAnswer(body, contentType, url), self._NextResourcePath(link)
 
-		if not isinstance(document, dict):
-			raise RESTError(f"API didn't answer with a JSON object: {url}")
+	def _URL(self, resourcePath: str) -> str:
+		"""
+		Return the URL a resource is addressed by.
 
-		nextURL = None if link is None or (match := _NEXT_LINK.search(link)) is None else match.group(1)
-		if nextURL is not None and not nextURL.startswith(f"{self._apiURL}/"):
-			ex = RESTError(f"The next page is outside the API: {nextURL}")
-			ex.add_note("The request's token is only sent to the API itself.")
-			raise ex
+		:param resourcePath: Path of the resource below :attr:`APIURL`.
+		:returns:            The resource's URL.
+		"""
+		return f"{self._apiURL}/{resourcePath.lstrip('/')}"
 
-		return document, nextURL
+	def _RequestHeaders(self, document: Nullable[JSONObject], headers: Nullable[dict[str, str]]) -> dict[str, str]:
+		"""
+		Return the headers one request is sent with.
+
+		The client's headers are the base, the authorization is added, and this request's own headers win, so a caller
+		can state an ``Accept`` or a conditional header for a single request.
+
+		:param document: The JSON object sent as the request's body, or ``None``.
+		:param headers:  This request's headers, or ``None``.
+		:returns:        The headers of this request.
+		"""
+		requestHeaders = dict(self._headers)
+		if (authorization := self._Authorization()) is not None:
+			requestHeaders["Authorization"] = authorization
+
+		if document is not None:
+			requestHeaders["Content-Type"] = "application/json"
+
+		if headers is not None:
+			requestHeaders.update(headers)
+
+		return requestHeaders
+
+	@staticmethod
+	def _Body(document: Nullable[JSONObject]) -> Nullable[bytes]:
+		"""
+		Return the request's body.
+
+		:param document: The JSON object to send, or ``None``.
+		:returns:        The encoded JSON object, or ``None`` for a request without a body.
+		"""
+		return None if document is None else json_dumps(document).encode("utf-8")
+
+	def _Authorization(self) -> Nullable[str]:
+		"""
+		Return the value of the ``Authorization`` header.
+
+		The bearer scheme of :rfc:`6750` is what a token-based REST API expects, and it is what an OAuth 2.0 flow's
+		access token is used with once the flow handed one out. A client of an API authorizing differently - the basic
+		scheme of :rfc:`7617`, say - overrides this.
+
+		:returns: The header's value, or ``None`` for an anonymous request.
+		"""
+		return None if self._token is None else f"Bearer {self._token}"
 
 	def _AddErrorNotes(self, error: RESTError, status: int) -> None:
 		"""
@@ -298,18 +474,155 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param status: The HTTP status the request failed with.
 		"""
 
+	def _Failed(self, exception: HTTPError, url: str, attempts: int) -> RESTError:
+		"""
+		Return the error for a request the API refused.
+
+		:param exception: The HTTP error the request failed with.
+		:param url:       The URL that was requested.
+		:param attempts:  How often the request was sent.
+		:returns:         The error to raise.
+		"""
+		error = RESTError(f"Request failed with HTTP {exception.code}: {url}")
+		if (message := self._AnswerMessage(exception)) is not None:
+			error.add_note(f"Answer: {message}")
+
+		self._AddErrorNotes(error, exception.code)
+		if attempts > 1:
+			error.add_note(f"Tried {attempts} times.")
+
+		return error
+
+	@staticmethod
+	def _Unreachable(exception: OSError, url: str, attempts: int) -> RESTError:
+		"""
+		Return the error for a request that never reached the API.
+
+		:param exception: The error the request failed with.
+		:param url:       The URL that was requested.
+		:param attempts:  How often the request was sent.
+		:returns:         The error to raise.
+		"""
+		error = RESTError(f"API couldn't be reached: {url}")
+		error.add_note(f"Reason: {exception.reason if isinstance(exception, URLError) else exception}")
+		if attempts > 1:
+			error.add_note(f"Tried {attempts} times.")
+
+		return error
+
+	@staticmethod
+	def _AnswerMessage(exception: HTTPError) -> Nullable[str]:
+		"""
+		Return what a refusing API said about itself.
+
+		A REST API reports the reason in a ``message`` field. An answer that has none, or isn't JSON at all, is not a
+		second failure - it just says nothing.
+
+		:param exception: The HTTP error the request failed with.
+		:returns:         The ``message`` field of the answer's body, or ``None``.
+		"""
+		try:
+			answer = json_loads(exception.read())
+		except (OSError, ValueError):
+			return None
+
+		if isinstance(answer, dict) and isinstance(message := answer.get("message", None), str):
+			return message
+
+		return None
+
+	@staticmethod
+	def _RetryAfter(exception: HTTPError) -> Nullable[str]:
+		"""
+		Return the pause a refusing API demands.
+
+		:param exception: The HTTP error the request failed with.
+		:returns:         The value of the answer's ``Retry-After`` header, or ``None``.
+		"""
+		return None if exception.headers is None else exception.headers.get("Retry-After", None)
+
 	def _RetryDelay(self, attempt: int, retryAfter: Nullable[str]) -> float:
 		"""
 		Return the pause before a request is tried again.
 
+		The pause grows exponentially: :attr:`RetryDelay` doubled for every earlier attempt.
+
 		:param attempt:    The attempt that failed, starting at 1.
 		:param retryAfter: The value of the failed answer's ``Retry-After`` header, or ``None``.
-		:returns:          The pause in seconds: the retry delay doubled for every earlier attempt, or the pause the
-		                   ``Retry-After`` header demands, if that is longer - but not longer than
-		                   :data:`MAXIMUM_RETRY_AFTER`.
+		:returns:          The pause in seconds, or the one the ``Retry-After`` header demands, if that is longer - but
+		                   not longer than :data:`MAXIMUM_RETRY_AFTER`.
 		"""
 		delay = self._retryDelay * 2 ** (attempt - 1)
 		try:
 			return max(delay, min(float(retryAfter), MAXIMUM_RETRY_AFTER))
 		except (TypeError, ValueError):
 			return delay
+
+	def _ReadAnswer(self, body: bytes, contentType: Nullable[str], url: str) -> Nullable[JSONObject]:
+		"""
+		Read an answer's body as a JSON object.
+
+		:param body:        The answer's body.
+		:param contentType: The answer's ``Content-Type`` header, or ``None``.
+		:param url:         The URL that was requested.
+		:returns:           The JSON object, or ``None`` if the answer had no body.
+		:raises RESTError:  If the answer's media type isn't JSON. |br|
+		                    The note reports the media type that was announced.
+		:raises RESTError:  If the answer isn't valid JSON.
+		:raises RESTError:  If the answer is JSON, but not a JSON object.
+		"""
+		if len(body) == 0:
+			return None
+
+		if contentType is not None and not self._IsJSON(contentType):
+			error = RESTError(f"API didn't answer with JSON: {url}")
+			error.add_note(f"Got 'Content-Type: {contentType}'.")
+			raise error
+
+		try:
+			document = json_loads(body)
+		except ValueError as ex:
+			raise RESTError(f"API answered with invalid JSON: {url}") from ex
+
+		if not isinstance(document, dict):
+			raise RESTError(f"API didn't answer with a JSON object: {url}")
+
+		return document
+
+	@staticmethod
+	def _IsJSON(contentType: str) -> bool:
+		"""
+		Check if a media type is JSON.
+
+		The structured syntax suffix of :rfc:`6839` counts too, so ``application/vnd.github+json`` is JSON.
+
+		:param contentType: The answer's ``Content-Type`` header.
+		:returns:           ``True``, if the media type is JSON.
+		"""
+		mediaType = contentType.split(";", 1)[0].strip().lower()
+
+		return mediaType == "application/json" or mediaType.endswith("+json")
+
+	def _NextResourcePath(self, link: Nullable[str]) -> Nullable[str]:
+		"""
+		Return where a paginated collection continues.
+
+		:param link:       The answer's :rfc:`8288` ``Link`` header, or ``None``.
+		:returns:          Path of the next page below :attr:`APIURL`, or ``None`` if the answer names none.
+		:raises RESTError: If the next page's URL doesn't belong to this API. |br|
+		                   The note says that the token is only sent to the API itself.
+		"""
+		if link is None:
+			return None
+
+		if (match := _NEXT_LINK.search(link)) is None:
+			return None
+
+		nextURL = match.group(1)
+		prefix =  f"{self._apiURL}/"
+		if not nextURL.startswith(prefix):
+			error = RESTError(f"The next page is outside the API: {nextURL}")
+			error.add_note("The request's token is only sent to the API itself.")
+			raise error
+
+		return nextURL[len(prefix):]
