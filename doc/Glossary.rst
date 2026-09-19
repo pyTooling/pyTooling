@@ -121,7 +121,8 @@ Glossary
 
    CopyLeft
      :wiki:`Copyleft <Copyleft>` is a licensing principle requiring that derived works are distributed under the same
-     license as the original. The GPL family is the best known example.
+     license as the original. The `GPL family <https://www.gnu.org/licenses/licenses.html>`__ is the best known
+     example.
 
      It is the reason a dependency's license matters beyond attribution, and why
      :mod:`pyTooling.Licensing` resolves a license to an :wiki:`SPDX <Software_Package_Data_Exchange>` expression
@@ -174,13 +175,15 @@ Glossary
           classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    Decorator
-     A :wiki:`decorator <Python_syntax_and_semantics#Decorators>` is a callable applied to a function, method or class
-     with the ``@`` syntax, returning a replacement for what it was applied to - or the original, when it only records
-     something about it.
+     A :external+python:term:`decorator` is a callable applied to a function, method or class with the ``@``
+     syntax, returning a replacement for what it was applied to - or the original, when it only records something
+     about it.
 
      pyTooling uses both forms: :func:`~pyTooling.Decorators.export` records a name in its module's ``__all__`` and
      returns the class unchanged, while :func:`~pyTooling.Decorators.readonly` replaces a method with a property.
      :ref:`Attributes <ATTR>` are decorators too.
+
+     Wikipedia: :wiki:`Decorator <Python_syntax_and_semantics#Decorators>`
 
    Descendant
      *Descendants* are all direct and indirect successors of a :term:`node` (:term:`child nodes <child>` and child
@@ -228,11 +231,13 @@ Glossary
      command line abstraction a program provides.
 
    Exception
-     An :wiki:`exception <Exception_handling>` is the object a program raises to signal that it cannot continue
+     An :external+python:ref:`exception <exceptions>` is the object a program raises to signal that it cannot continue
      normally, and the mechanism that transfers control to whatever handles it.
 
      Every exception pyTooling raises derives from :exc:`~pyTooling.Exceptions.ToolingException`, and carries the
      offending value in a :meth:`note <BaseException.add_note>` rather than only in its message.
+
+     Wikipedia: :wiki:`Exception handling <Exception_handling>`
 
    Graph
      A *graph* is a data structure made of :term:`vertices <vertex>` (nodes) and vertex-vertex relations called
@@ -328,7 +333,7 @@ Glossary
 
    Hardlink
      A :wiki:`hard link <Hard_link>` is a second directory entry for the **same** file content. Both entries are equal -
-     neither is the original - and the content exists as long as at least one of them does.
+     neither is the original - and the file content (BLOB) exists as long as at least one of them does.
 
      Unlike a :term:`softlink`, a hard link cannot point at a directory, cannot cross a filesystem boundary, and cannot
      dangle.
@@ -367,13 +372,26 @@ Glossary
      A *mixin class* is a class used as a secondary base-class in multiple inheritance. It contributes fields and
      methods to the class mixing it in, and is not meant to be instantiated on its own.
 
-     pyTooling marks one with :deco:`~pyTooling.MetaClasses.mixin`, so a class that is only ever a secondary
-     base-class says so.
+     pyTooling writes one with :class:`~pyTooling.MetaClasses.ExtendedType` and the ``mixin`` class keyword argument,
+     which lets the mixin-class declare fields although it is not the primary base-class:
+
+     .. code-block:: Python
+
+        class ReportMixin(metaclass=ExtendedType, mixin=True, expects=("_counter", "Write")):
+          def Report(self) -> bool:
+            return self.Write(f"{self._counter}")
+
+     ``expects`` is the other half: a mixin-class contributing methods usually needs fields or methods *from* the
+     class mixing it in, and naming them makes the combined class refuse to be instantiated when one is missing -
+     see :ref:`META/ExpectedMembers`.
+
+     A class deriving from a mixin-class rather than declaring the meta-class itself is marked with
+     :deco:`~pyTooling.MetaClasses.mixin`, so a class that is only ever a secondary base-class says so.
 
    MSYS2
-     :wiki:`MSYS2 <MSYS2>` is a software distribution and building platform for Windows, providing a Unix-like shell,
-     a package manager (``pacman``) and several toolchains - among them :term:`MinGW` and :term:`UCRT` - each of which
-     is a separate environment with its own Python.
+     `MSYS2 <https://www.msys2.org/>`__ is a software distribution and building platform for Windows, providing a
+     Unix-like shell, a package manager (``pacman``) and several toolchains - among them :term:`MinGW` and
+     :term:`UCRT` - each of which is a separate environment with its own Python.
 
      Which environment a program runs in is what :class:`pyTooling.Platform.Platform` reports, because a path or an
      executable's name differs between them.
@@ -402,7 +420,7 @@ Glossary
      arguments they are called with.
 
      Python has no overloading: a second ``def`` of a name replaces the first. What it has is
-     :func:`~typing.overload`, which declares the accepted signatures **for a type checker** while a single
+     :func:`~typing.overload`, which declares the accepted signatures for a type checker while a single
      implementation dispatches on them itself.
 
    Parent
@@ -437,14 +455,16 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Post-Order
-     *Post-order* is a depth-first traversal of a :term:`tree` visiting a :term:`node` **after** its children.
+     :wiki:`Post-order <Tree_traversal#Post-order,_LRN>` is a depth-first traversal of a :term:`tree` visiting a
+     :term:`node` **after** its children.
 
      It is the order to use when a node's result depends on its children's - computing a size, or deleting a subtree.
 
      See :term:`Pre-Order` for the opposite.
 
    Pre-Order
-     *Pre-order* is a depth-first traversal of a :term:`tree` visiting a :term:`node` **before** its children.
+     :wiki:`Pre-order <Tree_traversal#Pre-order,_NLR>` is a depth-first traversal of a :term:`tree` visiting a
+     :term:`node` **before** its children.
 
      It is the order to use when a child's handling depends on its parent's - rendering an indented outline, or
      resolving a path from the :term:`root` down.
@@ -456,10 +476,10 @@ Glossary
      :class:`~pyTooling.CLIAbstraction.Program`: its name per operating system, and the arguments it accepts as
      :term:`CLI options <CLIOption>`.
 
-     A program only assembles a command line. An :term:`executable` also runs it.
+     A program only assembles a command line, whereas an :term:`executable` also runs it.
 
    PyPI
-     The :wiki:`Python Package Index <Python_Package_Index>` is the public repository :program:`pip` installs from by
+     The `Python Package Index <https://pypi.org/>`__ is the public repository :program:`pip` installs from by
      default.
 
      It is also what the :rst:dir:`dependency-table` directive queries to resolve a dependency's version and license.
@@ -467,7 +487,8 @@ Glossary
      Wikipedia: :wiki:`Python Package Index <Python_Package_Index>`
 
    PyPy
-     :wiki:`PyPy <PyPy>` is an alternative Python implementation with a just-in-time compiler, generally faster than
+     `PyPy <https://pypy.org/>`__ is an alternative Python implementation with a just-in-time compiler, generally
+     faster than
      CPython for long-running pure-Python code and slower for anything dominated by C extensions.
 
      pyTooling's pipelines test against it, which is why the code avoids assuming CPython's reference-counting
@@ -580,13 +601,16 @@ Glossary
      another instance is going to be created, a previously cached instance of that class will be returned.
 
    Slots
-     ``__slots__`` fixes the set of instance attributes a class allows, so instances need no ``__dict__``.
+     :external+python:ref:`__slots__ <slots>` fixes the set of instance attributes a class allows, so instances need
+     no ``__dict__``.
      That saves memory per instance and turns a **typo into an error** instead of a new attribute.
 
      pyTooling's :ref:`META/ExtendedType` meta-class derives the slots from the class' annotated fields, so a class
      gets them by declaring its fields rather than by repeating their names.
 
    Softlink
+   Symbolic Link
+   Symlink
      A :wiki:`symbolic link <Symbolic_link>` is a file whose content is a **path** to another file or directory.
 
      Unlike a :term:`hardlink` it may point at a directory, may cross filesystems, and may *dangle* - the target can be
