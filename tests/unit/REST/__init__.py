@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _               ____ ___                                                               #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|_ _|                                                              #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |    | |                                                               #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| || |___ | |                                                               #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____|___|                                                              #
+#             _____           _ _               ____  _____ ____ _____                                                 #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \| ____/ ___|_   _|                                                #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | |_) |  _| \___ \ | |                                                  #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_|  _ <| |___ ___) || |                                                  #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_| \_\_____|____/ |_|                                                  #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -29,17 +29,5 @@
 # ==================================================================================================================== #
 #
 """
-Data models of continuous integration services.
-
-A model reads a service's REST payloads into objects with a parent-child relation, so a consumer works with named
-attributes and typed enumerations instead of nested dictionaries and magic strings. The models carry no dependency on
-what is done with them - rendering, tracing or reporting are consumers of a model, not part of it.
-
-.. seealso::
-
-   :mod:`pyTooling.CI.GitHub`
-      |rarr| The model of a GitHub Actions workflow run.
-   :mod:`pyTooling.REST`
-      |rarr| The client a model's payloads are read with.
+Unit tests for :mod:`pyTooling.REST`.
 """
-from pyTooling.REST import JSONObject
