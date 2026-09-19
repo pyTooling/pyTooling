@@ -29,3 +29,8 @@ colorama ~= 0.4.6
 
 # For pyTooling.Testing.ReportWriter testing - validates the report against its schema
 xmlschema ~= 4.3
+
+# For pyTooling.Dependency.Python testing - validates the package-override file against its schema.
+# On MSYS2 this comes from pacman, not pip: 'jsonschema' needs 'rpds-py', a Rust extension with no PyPI wheel for
+# 'mingw_x86_64_ucrt_gnu'. MSYS2 ships it prebuilt, and 'Pipeline.yml' names it there through 'pacboy'.
+jsonschema ~= 4.26
