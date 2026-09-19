@@ -115,11 +115,14 @@ A client for one API
 A derived class is what turns the generic client into a reader of one service: it fixes the base URL and the headers
 that service expects, and adds the requests it offers as methods.
 
-Two hooks are what an API states for itself. :meth:`~pyTooling.REST.RESTClient._AddErrorNotes` says what a status
+:meth:`~pyTooling.REST.RESTClient._AddErrorNotes` is the hook for what an API states about itself: what a status
 means there - a 404 from an API that reads repositories is worth a different sentence than a 404 from one that reads
-invoices. :meth:`~pyTooling.REST.RESTClient._Authorization` builds the ``Authorization`` header: the default is the
-bearer scheme of :rfc:`6750`, which is what a token-based API expects and what an OAuth 2.0 flow's access token is
-used with, and an API expecting the basic scheme of :rfc:`7617` overrides it.
+invoices.
+
+The ``Authorization`` header carries the bearer scheme of :rfc:`6750`, which is what a token-based API expects and
+what an OAuth 2.0 flow's access token is used with once the flow handed one out. An API expecting something else -
+the basic scheme of :rfc:`7617`, say - overrides :meth:`~pyTooling.REST.RESTClient._RequestHeaders`, which is where
+every header of a request is decided.
 
 .. code-block:: python
 
