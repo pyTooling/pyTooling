@@ -43,6 +43,3 @@ what is done with them - rendering, tracing or reporting are consumers of a mode
       |rarr| The client a model's payloads are read with.
 """
 from pyTooling.REST import JSONObject
-
-
-__all__ = ["JSONObject"]
