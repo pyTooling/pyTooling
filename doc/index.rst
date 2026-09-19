@@ -1161,6 +1161,12 @@ License
    PackageDependencies
 
 .. toctree::
+   :caption: REST APIs
+   :hidden:
+
+   REST
+
+.. toctree::
    :caption: Continuous Integration
    :hidden:
 
