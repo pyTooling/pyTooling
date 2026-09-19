@@ -144,6 +144,29 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		return result
 
+	def WithoutTrailingSlash(self) -> PathMixIn:
+		"""
+		Return a path that doesn't end in the element delimiter.
+
+		A trailing delimiter is an empty last element, so ``/api/v3/`` and ``/api/v3`` are different paths although
+		they usually name the same thing. A path that something is appended to wants the latter, or the composition
+		yields a double delimiter.
+
+		Only one trailing delimiter is removed: a path ending in ``//`` names an empty element and then another, which
+		isn't the same as naming neither.
+
+		:returns: A new path without a trailing delimiter, or this path, if it has none.
+		"""
+		if len(self._elements) == 0 or str(self._elements[-1]) != "":
+			return self
+
+		if len(self._elements) > 1:
+			return self.__class__(self._elements[:-1], self._isAbsolute)
+
+		# A path of nothing but the empty element is the root: it has no element to drop, so it stops being absolute.
+		# The same path that isn't absolute is the empty path, which has no trailing delimiter to begin with.
+		return self if not self._isAbsolute else self.__class__(self._elements, False)
+
 	@classmethod
 	def Parse(
 		cls,

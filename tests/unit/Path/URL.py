@@ -325,6 +325,42 @@ class URLs(Testcase):
 
 
 
+
+class TrailingSlash(Testcase):
+	"""What :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` removes, and what it leaves alone."""
+
+	def test_APathEndingInASlash(self) -> None:
+		for url, expected in (
+			("https://example.org/api/v3/", "https://example.org/api/v3"),
+			("https://example.org/", "https://example.org"),
+			("https://user:pass@example.org/api/", "https://user:pass@example.org/api"),
+			("https://example.org/api/?query=1#ref", "https://example.org/api?query=1#ref"),
+		):
+			with self.subTest(url=url):
+				self.assertEqual(expected, str(URL.Parse(url).WithoutTrailingSlash()))
+
+	def test_APathEndingInSomethingElseIsThisURL(self) -> None:
+		for url in ("https://example.org/api/v3", "https://example.org", "https://example.org/api/v3?query=1"):
+			with self.subTest(url=url):
+				parsedURL = URL.Parse(url)
+
+				self.assertIs(parsedURL, parsedURL.WithoutTrailingSlash())
+
+	def test_OnlyOneSlashIsRemoved(self) -> None:
+		"""A path ending in '//' names an empty element and then another, which isn't the same as naming neither."""
+		self.assertEqual("https://example.org/api/", str(URL.Parse("https://example.org/api//").WithoutTrailingSlash()))
+
+	def test_TheURLIsUnchanged(self) -> None:
+		url = URL.Parse("https://user:pass@example.org/api/?query=1#ref")
+		shortenedURL = url.WithoutTrailingSlash()
+
+		self.assertEqual("https://user:pass@example.org/api/?query=1#ref", str(url))
+		self.assertEqual("user", shortenedURL.User)
+		self.assertEqual("pass", shortenedURL.Password)
+		self.assertEqual("example.org", shortenedURL.Host.Hostname)
+		self.assertDictEqual({"query": "1"}, shortenedURL.Query)
+		self.assertEqual("ref", shortenedURL.Fragment)
+
 class ParseErrors(Testcase):
 	"""What :meth:`~pyTooling.GenericPath.URL.URL.Parse` rejects, and how it says so."""
 
