@@ -42,7 +42,10 @@ scheme or no host is refused where it is given rather than where it is requested
 +----------------------------------------------------------+-------------------------------------------------------+
 
 A write sends its JSON object as the body and answers with the API's answer, or ``None`` where the API answers with
-no body - which is what a deletion usually does.
+no body - which is what a deletion usually does. The body's ``Content-Type`` is a member of
+:class:`~pyTooling.REST.MediaType`, which is its own media type, so it is written where a header's value is expected.
+The method itself is a member of :class:`http.HTTPMethod`, the standard library's own enumeration of what :rfc:`9110`
+defines.
 
 An answer that isn't a JSON object - an array, an HTML error page, a truncated body - raises a
 :exc:`~pyTooling.REST.RESTError` naming the URL, rather than being handed on as something a caller has to check. The

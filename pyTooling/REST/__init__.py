@@ -44,6 +44,8 @@ knowledge about a particular service, so it lives here rather than in each reade
    :mod:`pyTooling.CI.GitHub`
       |rarr| A data model read from a REST API through this client.
 """
+from enum                      import StrEnum
+from http                      import HTTPMethod
 from json                      import dumps as json_dumps, loads as json_loads
 from re                        import compile as re_compile
 from time                      import sleep
@@ -71,6 +73,20 @@ MAXIMUM_RETRY_AFTER = 60.0
 
 _NEXT_LINK = re_compile(r'<([^>]+)>;\s*rel="next"')
 """Pattern extracting the URL of the next page from a :rfc:`8288` ``Link`` header."""
+
+
+@export
+class MediaType(StrEnum):
+	"""
+	Media types a REST API sends and receives, as :rfc:`9110` calls them.
+
+	A member is its own media type, so it is written where a header's value is expected.
+	"""
+
+	JSON =      "application/json"          #: A JSON document.
+	PlainText = "text/plain"                #: Plain text.
+	HTML =      "text/html"                 #: An HTML document.
+	Binary =    "application/octet-stream"  #: Bytes of an unnamed type.
 
 
 @export
@@ -254,7 +270,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer isn't a JSON object.
 		"""
-		document, nextResourcePath = self._Request("GET", resourcePath, headers=headers)
+		document, nextResourcePath = self._Request(HTTPMethod.GET, resourcePath, headers=headers)
 		if document is None:
 			raise RESTError(f"API answered with an empty body: {self._URL(resourcePath)}")
 
@@ -281,7 +297,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
 		"""
-		return self._Request("POST", resourcePath, document, headers, idempotent=False)[0]
+		return self._Request(HTTPMethod.POST, resourcePath, document, headers, idempotent=False)[0]
 
 	def PutJSONObject(
 		self,
@@ -301,7 +317,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
 		"""
-		return self._Request("PUT", resourcePath, document, headers)[0]
+		return self._Request(HTTPMethod.PUT, resourcePath, document, headers)[0]
 
 	def PatchJSONObject(
 		self,
@@ -324,7 +340,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
 		"""
-		return self._Request("PATCH", resourcePath, document, headers, idempotent=False)[0]
+		return self._Request(HTTPMethod.PATCH, resourcePath, document, headers, idempotent=False)[0]
 
 	def DeleteResource(self, resourcePath: str, headers: Nullable[dict[str, str]] = None) -> Nullable[JSONObject]:
 		"""
@@ -338,11 +354,11 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises TypeError:   If parameter 'headers' is not of type :class:`dict`.
 		:raises RESTError:   If the request fails, or the answer is neither empty nor a JSON object.
 		"""
-		return self._Request("DELETE", resourcePath, headers=headers)[0]
+		return self._Request(HTTPMethod.DELETE, resourcePath, headers=headers)[0]
 
 	def _Request(
 		self,
-		method:       str,
+		method:       HTTPMethod,
 		resourcePath: str,
 		document:     Nullable[JSONObject] = None,
 		headers:      Nullable[dict[str, str]] = None,
@@ -351,7 +367,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		Send one request to the REST API and read its answer.
 
-		:param method:       The HTTP method, e.g. ``'GET'``.
+		:param method:       The HTTP method.
 		:param resourcePath: Path of the resource below :attr:`APIURL`.
 		:param document:     Optional, the JSON object to send as the request's body. Default: no body.
 		:param headers:      Optional, headers for this request, added to and overriding :attr:`Headers`.
@@ -383,8 +399,15 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(headers)}'.")
 			raise ex
 
+		if document is None:
+			data =      None
+			mediaType = None
+		else:
+			data =      json_dumps(document).encode("utf-8")
+			mediaType = MediaType.JSON
+
 		url =     self._URL(resourcePath)
-		request = Request(url, data=self._Body(document), method=method, headers=self._RequestHeaders(document, headers))
+		request = Request(url, data=data, method=method, headers=self._RequestHeaders(mediaType, headers))
 		retries = self._retries if idempotent else 0
 
 		for attempt in range(1, retries + 2):
@@ -407,7 +430,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 
 				raise self._Unreachable(ex, url, attempt) from ex
 
-		return self._ReadAnswer(body, contentType, url), self._NextResourcePath(link)
+		return self._ProcessAnswer(body, contentType, url), self._NextResourcePath(link)
 
 	def _URL(self, resourcePath: str) -> str:
 		"""
@@ -418,38 +441,28 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		return f"{self._apiURL}/{resourcePath.lstrip('/')}"
 
-	def _RequestHeaders(self, document: Nullable[JSONObject], headers: Nullable[dict[str, str]]) -> dict[str, str]:
+	def _RequestHeaders(self, mediaType: Nullable[MediaType], headers: Nullable[dict[str, str]]) -> dict[str, str]:
 		"""
 		Return the headers one request is sent with.
 
 		The client's headers are the base, the authorization is added, and this request's own headers win, so a caller
 		can state an ``Accept`` or a conditional header for a single request.
 
-		:param document: The JSON object sent as the request's body, or ``None``.
-		:param headers:  This request's headers, or ``None``.
-		:returns:        The headers of this request.
+		:param mediaType: The media type of the request's body, or ``None`` for a request without one.
+		:param headers:   This request's headers, or ``None``.
+		:returns:         The headers of this request.
 		"""
 		requestHeaders = dict(self._headers)
 		if (authorization := self._Authorization()) is not None:
 			requestHeaders["Authorization"] = authorization
 
-		if document is not None:
-			requestHeaders["Content-Type"] = "application/json"
+		if mediaType is not None:
+			requestHeaders["Content-Type"] = mediaType
 
 		if headers is not None:
 			requestHeaders.update(headers)
 
 		return requestHeaders
-
-	@staticmethod
-	def _Body(document: Nullable[JSONObject]) -> Nullable[bytes]:
-		"""
-		Return the request's body.
-
-		:param document: The JSON object to send, or ``None``.
-		:returns:        The encoded JSON object, or ``None`` for a request without a body.
-		"""
-		return None if document is None else json_dumps(document).encode("utf-8")
 
 	def _Authorization(self) -> Nullable[str]:
 		"""
@@ -558,7 +571,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		except (TypeError, ValueError):
 			return delay
 
-	def _ReadAnswer(self, body: bytes, contentType: Nullable[str], url: str) -> Nullable[JSONObject]:
+	def _ProcessAnswer(self, body: bytes, contentType: Nullable[str], url: str) -> Nullable[JSONObject]:
 		"""
 		Read an answer's body as a JSON object.
 
@@ -601,7 +614,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		mediaType = contentType.split(";", 1)[0].strip().lower()
 
-		return mediaType == "application/json" or mediaType.endswith("+json")
+		return mediaType == MediaType.JSON or mediaType.endswith("+json")
 
 	def _NextResourcePath(self, link: Nullable[str]) -> Nullable[str]:
 		"""
@@ -614,8 +627,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		if link is None:
 			return None
-
-		if (match := _NEXT_LINK.search(link)) is None:
+		elif (match := _NEXT_LINK.search(link)) is None:
 			return None
 
 		nextURL = match.group(1)
