@@ -29,6 +29,10 @@ scheme or no host is refused where it is given rather than where it is requested
 is then kept as it is, or as a string, which is parsed once; either way a trailing slash is removed, so
 ``https://example.org/api/v3/`` and ``https://example.org/api/v3`` are the same client.
 
+``https://example.org/api//`` is refused, though. :rfc:`3986` allows an empty path element - ``segment = *pchar`` -
+so it is a valid URL and :meth:`~pyTooling.GenericPath.URL.URL.Parse` reads it, and normalization doesn't collapse
+one either. As a *base* URL it is a typo, and every request would carry it as a double slash.
+
 +----------------------------------------------------------+-------------------------------------------------------+
 | Method                                                    | What it does                                          |
 +==========================================================+=======================================================+
