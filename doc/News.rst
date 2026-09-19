@@ -226,7 +226,8 @@ Version 10.x (2026)
        attributes as parameters, so a reader states values and never a key, and an unknown value sets no attribute.
        The classes are service-independent, and :mod:`pyTooling.Tracing.CI.GitHub` derives them into flavours that
        build themselves from the model -
-       :meth:`JobSpan.FromJob <pyTooling.Tracing.CI.GitHub.JobSpan.FromJob>`.
+       :meth:`JobSpan.FromJob <pyTooling.Tracing.CI.GitHub.JobSpan.FromJob>`. Everything below the trace derives
+       from the abstract :class:`~pyTooling.Tracing.CI.TaskSpan`, because it is a *task* in the conventions' sense.
      * The attribute keys are namespaces nested the way the keys themselves are, instead of a flat block of module
        constants: :class:`~pyTooling.Tracing.CI.OTLP` for OpenTelemetry's conventions,
        :class:`~pyTooling.Tracing.CI.CI` for what pyTooling adds and :class:`~pyTooling.Tracing.CI.GitHub.GitHub` for

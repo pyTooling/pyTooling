@@ -47,7 +47,7 @@ from enum                  import StrEnum
 from typing                import ClassVar, Mapping, Optional as Nullable
 
 from pyTooling.Decorators  import export
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Tracing     import AttributeValue, Span, Trace
 
 
@@ -168,18 +168,10 @@ class Result(StrEnum):
 
 
 @export
-class CITimespanMixIn(metaclass=ExtendedType, mixin=True, expects=("__setitem__",)):
-	"""
-	Mixin-class for a timespan of a CI pipeline.
+class SetAttributesMixin(metaclass=ExtendedType, mixin=True, expects=("__setitem__",)):
+	"""Mixin-class for a timespan that is given many attributes at once, of which some may be unknown."""
 
-	A timespan of a pipeline is classified by :attr:`CI.Span.Kind` and carries the attributes the conventions define
-	for what it represents. The flavour names its kind in :attr:`KIND`, so the classification is a property of the
-	type rather than something every producer remembers to set.
-	"""
-
-	KIND: ClassVar[SpanKind]  #: What a timespan of this flavour represents. Every flavour names it.
-
-	def SetAttributes(self, attributes: Mapping[str, Nullable[AttributeValue]]) -> None:
+	def _SetAttributes(self, attributes: Mapping[str, Nullable[AttributeValue]]) -> None:
 		"""
 		Set the attributes whose value is known.
 
@@ -195,7 +187,7 @@ class CITimespanMixIn(metaclass=ExtendedType, mixin=True, expects=("__setitem__"
 
 
 @export
-class PipelineTrace(Trace, CITimespanMixIn):
+class PipelineTrace(Trace, SetAttributesMixin):
 	"""A pipeline run - the trace every other timespan of the run is below."""
 
 	KIND: ClassVar[SpanKind] = SpanKind.Pipeline  #: This flavour represents a pipeline run.
@@ -231,7 +223,7 @@ class PipelineTrace(Trace, CITimespanMixIn):
 		super().__init__(name, beginTime, endTime)
 
 		self[CI.Span.Kind] = self.KIND
-		self.SetAttributes({
+		self._SetAttributes({
 			OTLP.CICD.Pipeline.Name:         name if pipelineName is None else pipelineName,
 			OTLP.CICD.Pipeline.Run.ID:       runID,
 			OTLP.CICD.Pipeline.Run.URL.Full: runURL,
@@ -241,18 +233,23 @@ class PipelineTrace(Trace, CITimespanMixIn):
 		})
 
 		if attributes is not None:
-			self.SetAttributes(attributes)
+			self._SetAttributes(attributes)
 
 
 @export
-class TaskSpan(Span, CITimespanMixIn):
+@abstractclass
+class TaskSpan(Span, SetAttributesMixin):
 	"""
 	Base-class of the timespans below a pipeline run.
 
 	Every one of them is a task of the pipeline in the conventions' sense, so every one names itself in
 	:attr:`OTLP.CICD.Pipeline.Task.Name <pyTooling.Tracing.CI.OTLP>` - with the name the service reports, which may
 	differ from the timespan's when a timespan is named by the part of the tree it sits in.
+
+	It names no :attr:`KIND` itself, because there is no timespan that is a task and nothing more.
 	"""
+
+	KIND: ClassVar[SpanKind]  #: What a timespan of this flavour represents. Every flavour names it.
 
 	def __init__(
 		self,
@@ -281,7 +278,7 @@ class TaskSpan(Span, CITimespanMixIn):
 		self[OTLP.CICD.Pipeline.Task.Name] = name if taskName is None else taskName
 
 		if attributes is not None:
-			self.SetAttributes(attributes)
+			self._SetAttributes(attributes)
 
 
 @export
@@ -342,7 +339,7 @@ class JobSpan(TaskSpan):
 		"""
 		super().__init__(name, beginTime, endTime, parent=parent, taskName=taskName)
 
-		self.SetAttributes({
+		self._SetAttributes({
 			OTLP.CICD.Pipeline.Task.Run.ID:       runID,
 			OTLP.CICD.Pipeline.Task.Run.URL.Full: runURL,
 			OTLP.CICD.Pipeline.Task.Run.Result:   result,
@@ -350,7 +347,7 @@ class JobSpan(TaskSpan):
 		})
 
 		if attributes is not None:
-			self.SetAttributes(attributes)
+			self._SetAttributes(attributes)
 
 
 @export
@@ -384,7 +381,7 @@ class StepSpan(TaskSpan):
 		"""
 		super().__init__(name, beginTime, endTime, parent=parent, taskName=taskName)
 
-		self.SetAttributes({OTLP.CICD.Pipeline.Task.Run.Result: result})
+		self._SetAttributes({OTLP.CICD.Pipeline.Task.Run.Result: result})
 
 		if attributes is not None:
-			self.SetAttributes(attributes)
+			self._SetAttributes(attributes)
