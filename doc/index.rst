@@ -160,7 +160,7 @@ ArgParse
       routine. Thus parser and handler code is not separated.
 
       If the command line interface uses many commands, handlers and their arguments can be spread across
-      :ref:`mixin classes <ATTR/ArgParse/MixIn>`. Later, the whole CLI is assembled by using multiple inheritance. In
+      :ref:`mixin classes <ATTR/ArgParse/Mixin>`. Later, the whole CLI is assembled by using multiple inheritance. In
       case handlers use shared argument sets, arguments can be :ref:`grouped <ATTR/ArgParse/Grouping>` and shared by
       defining grouping attributes.
 
@@ -900,7 +900,7 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
                data = Data(11)
 
-         .. tab-item:: MixIn Class
+         .. tab-item:: Mixin Class
 
             .. todo:: Needs example code
 

@@ -65,7 +65,7 @@ class Base(metaclass=ExtendedType, mixin=True):
 
 
 @export
-class RootMixIn(Base, mixin=True):
+class RootMixin(Base, mixin=True):
 	"""Mixin-class for root elements in a path system."""
 
 	def __init__(self) -> None:
@@ -76,7 +76,7 @@ class RootMixIn(Base, mixin=True):
 
 
 @export
-class ElementMixIn(Base, mixin=True):
+class ElementMixin(Base, mixin=True):
 	"""Mixin-class for elements in a path system."""
 
 	_elementName: str  #: Name of the path element.
@@ -102,17 +102,17 @@ class ElementMixIn(Base, mixin=True):
 
 
 @export
-class PathMixIn(metaclass=ExtendedType, mixin=True):
+class PathMixin(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
 	ELEMENT_DELIMITER: ClassVar[str] = "/"           #: Path element delimiter sign.
 	ROOT_DELIMITER:    ClassVar[str] = "/"           #: Root element delimiter sign.
-	ELEMENT_TYPE:      ClassVar[type[ElementMixIn]]  #: Type an element of this path flavour has. Every flavour names it.
+	ELEMENT_TYPE:      ClassVar[type[ElementMixin]]  #: Type an element of this path flavour has. Every flavour names it.
 
 	_isAbsolute: bool                       #: True, if the path is absolute.
-	_elements:   list[ElementMixIn]         #: List of path elements.
+	_elements:   list[ElementMixin]         #: List of path elements.
 
-	def __init__(self, elements: list[ElementMixIn], isAbsolute: bool) -> None:
+	def __init__(self, elements: list[ElementMixin], isAbsolute: bool) -> None:
 		"""
 		Initialize the mixin-class for a path.
 
@@ -146,7 +146,7 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		return result
 
-	def __truediv__(self, other: Union[str, PathMixIn]) -> PathMixIn:
+	def __truediv__(self, other: Union[str, PathMixin]) -> PathMixin:
 		"""
 		Return this path with another path below it.
 
@@ -157,12 +157,12 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		:param other:      The path to append, as a string to parse or as a path.
 		:returns:          A new path, or ``other``, if that one is absolute.
-		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`PathMixIn`.
+		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`PathMixin`.
 		"""
 		if isinstance(other, str):
 			isAbsolute = other.startswith(self.ROOT_DELIMITER)
 			names =      (other[len(self.ROOT_DELIMITER):] if isAbsolute else other).split(self.ELEMENT_DELIMITER)
-		elif isinstance(other, PathMixIn):
+		elif isinstance(other, PathMixin):
 			isAbsolute = other._isAbsolute
 			names =      [str(element) for element in other._elements]
 		else:
@@ -184,7 +184,7 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		return self.__class__(elements, isAbsolute or path._isAbsolute)
 
-	def WithoutTrailingDelimiter(self) -> PathMixIn:
+	def WithoutTrailingDelimiter(self) -> PathMixin:
 		"""
 		Return a path that doesn't end in :attr:`ELEMENT_DELIMITER`.
 
@@ -207,7 +207,7 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		return self if not self._isAbsolute else self.__class__(self._elements, False)
 
 	@classmethod
-	def Parse(cls, path: str, root: Nullable[RootMixIn] = None) -> PathMixIn:
+	def Parse(cls, path: str, root: Nullable[RootMixin] = None) -> PathMixin:
 		"""
 		Parses a string representation of a path and returns a path instance.
 
@@ -233,5 +233,5 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 
 @export
-class SystemMixIn(metaclass=ExtendedType, mixin=True):
+class SystemMixin(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path system."""
