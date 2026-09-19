@@ -49,9 +49,8 @@ from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import getFullyQualifiedName
 from pyTooling.Tracing           import Span, Trace, TracingError
-from pyTooling.Tracing.CI        import SPAN_KIND, SPAN_KIND_QUEUED, SPAN_KIND_JOB, SPAN_KIND_STEP, TASK_NAME
-from pyTooling.Tracing.CI        import TASK_RUN_RESULT, RESULT_SKIP, RESULT_SUCCESS
-from pyTooling.Tracing.CI.GitHub import RUNNER_LABELS
+from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
+from pyTooling.Tracing.CI.GitHub import GitHub
 
 
 __all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP"]
@@ -71,9 +70,9 @@ def _kind(span: Span) -> Nullable[str]:
 	Return the CI span kind of a timespan.
 
 	:param span: The timespan.
-	:returns:    The value of :data:`~pyTooling.Tracing.CI.SPAN_KIND`, or ``None`` if the timespan has none.
+	:returns:    What the timespan represents, or ``None`` if the timespan doesn't say.
 	"""
-	return span[SPAN_KIND] if SPAN_KIND in span else None
+	return span[CI.Span.Kind] if CI.Span.Kind in span else None
 
 
 def _result(span: Span) -> Nullable[str]:
@@ -81,9 +80,19 @@ def _result(span: Span) -> Nullable[str]:
 	Return the CI result of a timespan.
 
 	:param span: The timespan.
-	:returns:    The value of :data:`~pyTooling.Tracing.CI.TASK_RUN_RESULT`, or ``None`` if the timespan has none.
+	:returns:    The task run's result, or ``None`` if the timespan has none.
 	"""
-	return span[TASK_RUN_RESULT] if TASK_RUN_RESULT in span else None
+	return span[OTLP.CICD.Pipeline.Task.Run.Result] if OTLP.CICD.Pipeline.Task.Run.Result in span else None
+
+
+def _taskName(span: Span) -> Nullable[str]:
+	"""
+	Return the name of the task a timespan belongs to.
+
+	:param span: The timespan.
+	:returns:    The task's name, or ``None`` if the timespan doesn't carry one.
+	"""
+	return span[OTLP.CICD.Pipeline.Task.Name] if OTLP.CICD.Pipeline.Task.Name in span else None
 
 
 @export
@@ -129,12 +138,12 @@ def ciSpanFilter(
 		:returns:    ``False``, if the timespan is hidden.
 		"""
 		kind = _kind(span)
-		if kind == SPAN_KIND_STEP:
+		if kind == SpanKind.Step:
 			if excludeSteps is StepExclusion.All:
 				return False
-			return excludeSteps is StepExclusion.Nothing or _result(span) != RESULT_SKIP
-		elif kind == SPAN_KIND_JOB and excludeSkippedJobs:
-			return _result(span) != RESULT_SKIP
+			return excludeSteps is StepExclusion.Nothing or _result(span) != Result.Skip
+		elif kind == SpanKind.Job and excludeSkippedJobs:
+			return _result(span) != Result.Skip
 
 		return True
 
@@ -153,7 +162,7 @@ def msys2Environment(job: Span) -> Nullable[str]:
 	:returns:   The environment in upper case, e.g. ``UCRT64``, or ``None`` if the job didn't use an MSYS2 environment.
 	"""
 	for step in job.IterateSubSpans():
-		if (match := MSYS2_SETUP_STEP.search(step.Name)) is None or _result(step) != RESULT_SUCCESS:
+		if (match := MSYS2_SETUP_STEP.search(step.Name)) is None or _result(step) != Result.Success:
 			continue
 		elif (environment := match.group(1).upper()) != "NATIVE":
 			return environment
@@ -177,9 +186,9 @@ def runnerCategory(span: Span) -> str:
 	job: Nullable[Span] = None
 	current: Nullable[Span] = span
 	while current is not None:
-		if job is None and _kind(current) == SPAN_KIND_JOB:
+		if job is None and _kind(current) == SpanKind.Job:
 			job = current
-		if label == "" and RUNNER_LABELS in current and len(labels := current[RUNNER_LABELS]) > 0:
+		if label == "" and GitHub.Runner.Labels in current and len(labels := current[GitHub.Runner.Labels]) > 0:
 			label = str(labels[0])
 		current = current.Parent
 
@@ -324,7 +333,7 @@ class GanttRow(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to return the CI span kind of the row's timespan.
 
-		:returns: The value of :data:`~pyTooling.Tracing.CI.SPAN_KIND`, or ``None`` if the timespan has none.
+		:returns: The value of :data:`~pyTooling.Tracing.CI.CI.Span.Kind`, or ``None`` if the timespan has none.
 		"""
 		return _kind(self._span)
 
@@ -590,7 +599,7 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:param queued: The timespan the job waited for a runner in, or ``None``.
 		"""
 		bars: list[GanttBar] = []
-		for barSpan, isQueued in ((queued, True), (span, _kind(span) == SPAN_KIND_QUEUED)):
+		for barSpan, isQueued in ((queued, True), (span, _kind(span) == SpanKind.Queued)):
 			if barSpan is not None and (bar := self._Bar(barSpan, isQueued)) is not None:
 				bars.append(bar)
 				self._duration = max(self._duration, bar.End)
@@ -613,7 +622,7 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 			if self._spanFilter is not None and not self._spanFilter(span):
 				continue
 
-			if _kind(span) == SPAN_KIND_QUEUED:
+			if _kind(span) == SpanKind.Queued:
 				if pending is not None:
 					self._AddRow(pending, depth, None)
 				pending = span
@@ -621,8 +630,8 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 
 			queued = None
 			if pending is not None:
-				sameTask = TASK_NAME in span and TASK_NAME in pending and span[TASK_NAME] == pending[TASK_NAME]
-				if _kind(span) == SPAN_KIND_JOB and sameTask:
+				taskName = _taskName(span)
+				if _kind(span) == SpanKind.Job and taskName is not None and taskName == _taskName(pending):
 					queued = pending
 				else:
 					self._AddRow(pending, depth, None)
@@ -643,11 +652,11 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		queued: dict[str, Span] = {}
 		for span in parent.IterateSubSpans():
 			kind = _kind(span)
-			if kind == SPAN_KIND_QUEUED and TASK_NAME in span:
-				queued[span[TASK_NAME]] = span
-			elif kind == SPAN_KIND_JOB and _result(span) != RESULT_SKIP and span.StartTime is not None:
+			if kind == SpanKind.Queued and (taskName := _taskName(span)) is not None:
+				queued[taskName] = span
+			elif kind == SpanKind.Job and _result(span) != Result.Skip and span.StartTime is not None:
 				if (category := self._categorize(span)) != "":
-					waiting = queued.get(span[TASK_NAME], None) if TASK_NAME in span else None
+					waiting = queued.get(_taskName(span), None)
 					waitTime = 0.0
 					if waiting is not None and waiting.StartTime is not None:
 						waitTime = self._Offset(span.StartTime) - self._Offset(waiting.StartTime)

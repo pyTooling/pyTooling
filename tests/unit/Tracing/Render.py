@@ -39,8 +39,8 @@ from unittest                    import skipUnless
 from warnings                    import catch_warnings, simplefilter
 
 from pyTooling.Tracing           import Span, Trace, TracingError
-from pyTooling.Tracing.CI        import SPAN_KIND, TASK_NAME, TASK_RUN_RESULT
-from pyTooling.Tracing.CI.GitHub import RUNNER_LABELS
+from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
+from pyTooling.Tracing.CI.GitHub import GitHub
 from pyTooling.Tracing.Render    import GanttLayout, StepExclusion, ciSpanFilter, msys2Environment, runnerCategory
 from pyTooling.Testing           import Testcase
 
@@ -95,13 +95,13 @@ def _span(
 	:returns:      The timespan.
 	"""
 	span = Span(name, _at(begin), None if end is None else _at(end), parent=parent)
-	span[SPAN_KIND] = kind
+	span[CI.Span.Kind] = kind
 	if task != "":
-		span[TASK_NAME] = task
+		span[OTLP.CICD.Pipeline.Task.Name] = task
 	if runner != "":
-		span[RUNNER_LABELS] = [runner]
+		span[GitHub.Runner.Labels] = [runner]
 	if result != "":
-		span[TASK_RUN_RESULT] = result
+		span[OTLP.CICD.Pipeline.Task.Run.Result] = result
 	return span
 
 
@@ -115,7 +115,7 @@ def _pipeline() -> dict[str, Span]:
 	:returns: Dictionary of a name to its timespan, including the trace as ``Pipeline``.
 	"""
 	trace = Trace("Pipeline", _at(0), _at(100))
-	trace[SPAN_KIND] = "pipeline"
+	trace[CI.Span.Kind] = "pipeline"
 
 	s: dict[str, Span] = {"Pipeline": trace}
 	s["Build (queued)"] =   _span("Build (queued)", 1, 4, trace, "queued", "Build", "ubuntu-26.04")

@@ -27,8 +27,9 @@ trove-classifiers >= 2025.1
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6
 
-# For pyTooling.Tracing.Render.Matplotlib testing
-matplotlib >= 3.10
+# For pyTooling.Tracing.Render.Matplotlib testing - PyPI has no wheel for PyPy on Windows and building matplotlib from
+# source fails there (ft2font doesn't link), so these testcases are skipped in that combination.
+matplotlib >= 3.10 ; platform_python_implementation != "PyPy" or sys_platform != "win32"
 
 # For pyTooling.Testing.ReportWriter testing - validates the report against its schema
 xmlschema ~= 4.3
