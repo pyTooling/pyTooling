@@ -221,7 +221,9 @@ reader and therefore no token. It reads both payloads into a :class:`~pyTooling.
 :ref:`CI/GitHub` - and hands that to
 :meth:`~pyTooling.Tracing.CI.GitHub.WorkflowRunReader.ConvertPipeline`, which is the entry point when the model was
 built elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
-:exc:`~pyTooling.CI.GitHub.GitHubError`.
+:exc:`~pyTooling.CI.GitHub.GitHubError` - as does an answer the reader itself can't read, so everything GitHub says
+that can't be made sense of is one exception type. A request that *fails* is a
+:exc:`~pyTooling.REST.RESTError`, because nothing about GitHub's answer was wrong - there wasn't one.
 
 The run becomes the trace, and every timespan below it is marked by :attr:`~pyTooling.Tracing.CI.CI.Span.Kind` with a
 member of :class:`~pyTooling.Tracing.CI.SpanKind`:
