@@ -49,13 +49,14 @@ from time                  import perf_counter_ns
 from types                 import TracebackType
 from typing                import Optional as Nullable, Iterator, Self
 
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import SlottedObject
 from pyTooling.Exceptions  import ToolingException
 
 
 @export
-class StopwatchException(ToolingException):
+class StopwatchError(ToolingException):
 	"""This exception is caused by wrong usage of the stopwatch."""
 
 
@@ -122,6 +123,7 @@ class Stopwatch(SlottedObject):
 
 	_name:         Nullable[str]  #: Optional name of the stopwatch.
 	_preferPause:  bool           #: If ``True``, the context manager pauses instead of stopping on exit.
+	_digits:       int            #: Number of fractional digits ``__str__`` renders the duration with.
 
 	_beginTime:    Nullable[datetime]        #: Absolute time when the stopwatch was started.
 	_endTime:      Nullable[datetime]        #: Absolute time when the stopwatch was stopped.
@@ -134,7 +136,13 @@ class Stopwatch(SlottedObject):
 
 	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
 
-	def __init__(self, name: str = None, started: bool = False, preferPause: bool = False) -> None:
+	def __init__(
+		self,
+		name: Nullable[str] = None,
+		started: bool = False,
+		preferPause: bool = False,
+		digits: int = 3
+	) -> None:
 		"""
 		Initializes the fields of the stopwatch.
 
@@ -143,9 +151,22 @@ class Stopwatch(SlottedObject):
 		:param name:        Optional, name of the stopwatch.
 		:param started:     Optional, if ``True``, start the stopwatch immediately.
 		:param preferPause: Optional, if ``True``, ``__exit__(...)`` prefers pause over stop behavior.
+		:param digits:      Optional, number of fractional digits :meth:`__str__` renders the duration with.
+		:raises TypeError:  If parameter 'digits' is not of type :class:`int`.
+		:raises ValueError: If parameter 'digits' is negative or greater than 9.
 		"""
+		if not isinstance(digits, int):
+			ex = TypeError("Parameter 'digits' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(digits)}'.")
+			raise ex
+		elif not 0 <= digits <= 9:
+			ex = ValueError(f"Parameter 'digits' is out of range 0..9. Got {digits}.")
+			ex.add_note("A duration in seconds has at most 9 digits (nanoseconds).")
+			raise ex
+
 		self._name =         name
 		self._preferPause =  preferPause
+		self._digits =       digits
 
 		self._endTime =      None
 		self._pauseTime =    None
@@ -169,13 +190,13 @@ class Stopwatch(SlottedObject):
 
 		A stopwatch can only be started once. There is no restart or reset operation provided.
 
-		:raises StopwatchException: If stopwatch was already started.
-		:raises StopwatchException: If stopwatch was already started and stopped.
+		:raises StopwatchError: If stopwatch was already started.
+		:raises StopwatchError: If stopwatch was already started and stopped.
 		"""
 		if self._startTime is not None:
-			raise StopwatchException("Stopwatch was already started.")
+			raise StopwatchError("Stopwatch was already started.")
 		if self._stopTime is not None:
-			raise StopwatchException("Stopwatch was already used (started and stopped).")
+			raise StopwatchError("Stopwatch was already used (started and stopped).")
 
 		self._beginTime = datetime.now()
 		self._resumeTime = self._startTime = perf_counter_ns()
@@ -191,13 +212,13 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first split.
 		* the duration from last resume to this split.
 
-		:returns:                   Duration in seconds since last stopwatch operation
-		:raises StopwatchException: If stopwatch was not started or resumed.
+		:returns:               Duration in seconds since last stopwatch operation
+		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		pauseTime = perf_counter_ns()
 
 		if self._resumeTime is None:
-			raise StopwatchException("Stopwatch was not started or resumed.")
+			raise StopwatchError("Stopwatch was not started or resumed.")
 
 		diff = (pauseTime - self._resumeTime) / 1e9
 		self._splits.append((diff, True))
@@ -216,13 +237,13 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first pause.
 		* the duration from last resume to this pause.
 
-		:returns:                   Duration in seconds since last stopwatch operation
-		:raises StopwatchException: If stopwatch was not started or resumed.
+		:returns:               Duration in seconds since last stopwatch operation
+		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		self._pauseTime = perf_counter_ns()
 
 		if self._resumeTime is None:
-			raise StopwatchException("Stopwatch was not started or resumed.")
+			raise StopwatchError("Stopwatch was not started or resumed.")
 
 		diff = (self._pauseTime - self._resumeTime) / 1e9
 		self._splits.append((diff, True))
@@ -238,13 +259,13 @@ class Stopwatch(SlottedObject):
 		and the resume operation is possible. |br|
 		The time delta will be the duration from last pause to this resume.
 
-		:returns:                   Duration in seconds since last pause operation
-		:raises StopwatchException: If stopwatch was not paused.
+		:returns:               Duration in seconds since last pause operation
+		:raises StopwatchError: If stopwatch was not paused.
 		"""
 		self._resumeTime = perf_counter_ns()
 
 		if self._pauseTime is None:
-			raise StopwatchException("Stopwatch was not paused.")
+			raise StopwatchError("Stopwatch was not paused.")
 
 		diff = (self._resumeTime - self._pauseTime) / 1e9
 		self._splits.append((diff, False))
@@ -263,17 +284,17 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the stop operation.
 		* the duration from last resume to the stop operation.
 
-		:returns:                   Duration in seconds since last stopwatch operation
-		:raises StopwatchException: If stopwatch was not started.
-		:raises StopwatchException: If stopwatch was already stopped.
+		:returns:               Duration in seconds since last stopwatch operation
+		:raises StopwatchError: If stopwatch was not started.
+		:raises StopwatchError: If stopwatch was already stopped.
 		"""
 		self._stopTime = perf_counter_ns()
 		self._endTime =  datetime.now()
 
 		if self._startTime is None:
-			raise StopwatchException("Stopwatch was never started.")
+			raise StopwatchError("Stopwatch was never started.")
 		if self._totalTime is not None:
-			raise StopwatchException("Stopwatch was already stopped.")
+			raise StopwatchError("Stopwatch was already stopped.")
 
 		if len(self._splits) == 0:    # was never paused
 			diff = (self._stopTime - self._startTime) / 1e9
@@ -292,6 +313,33 @@ class Stopwatch(SlottedObject):
 		beginEndDiff = self._endTime - self._beginTime
 
 		return diff
+
+	@property
+	def Digits(self) -> int:
+		"""
+		Property to get and set the number of fractional digits (:attr:`_digits`) used by :meth:`__str__`.
+
+		The measurement itself is unaffected - this only decides how many digits of the duration in seconds are
+		rendered. It defaults to ``3``, which is milliseconds.
+
+		:returns:           Number of fractional digits.
+		:raises TypeError:  If the assigned value is not of type :class:`int`.
+		:raises ValueError: If the assigned value is negative or greater than 9.
+		"""
+		return self._digits
+
+	@Digits.setter
+	def Digits(self, digits: int) -> None:
+		if not isinstance(digits, int):
+			ex = TypeError("Parameter 'digits' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(digits)}'.")
+			raise ex
+		elif not 0 <= digits <= 9:
+			ex = ValueError(f"Parameter 'digits' is out of range 0..9. Got {digits}.")
+			ex.add_note("A duration in seconds has at most 9 digits (nanoseconds).")
+			raise ex
+
+		self._digits = digits
 
 	@readonly
 	def Name(self) -> Nullable[str]:
@@ -361,9 +409,9 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property checking if split times have been taken.
 
-		:returns: True, if split times have been taken.
+		:returns: True, if at least one split time has been taken.
 		"""
-		return len(self._splits) > 1
+		return len(self._splits) > 0
 
 	@readonly
 	def SplitCount(self) -> int:
@@ -379,32 +427,32 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the number of active split times.
 
-		:returns: Number of active split times.
+		A running stopwatch is inside an active span that hasn't been recorded yet, and that span is counted here -
+		the result is what the stopwatch would report if it were stopped right now. This matches
+		:attr:`Activity`, which includes the running span's duration.
 
-		.. warning::
-
-		   This won't include all activities, unless the stopwatch got stopped.
+		:returns: Number of active split times, including the one in progress.
 		"""
 		if self._startTime is None:
 			return 0
 
-		return len(list(t for t, a in self._splits if a is True))
+		return len([t for t, a in self._splits if a is True]) + (1 if self._resumeTime is not None else 0)
 
 	@readonly
 	def InactiveCount(self) -> int:
 		"""
-		Read-only property returning the number of active split times.
+		Read-only property returning the number of inactive split times.
 
-		:returns: Number of active split times.
+		A paused stopwatch is inside an inactive span that hasn't been recorded yet, and that span is counted here -
+		the result is what the stopwatch would report if it were stopped right now. This matches
+		:attr:`Inactivity`, which includes the paused span's duration.
 
-		.. warning::
-
-		   This won't include all inactivities, unless the stopwatch got stopped.
+		:returns: Number of inactive split times, including the one in progress.
 		"""
 		if self._startTime is None:
 			return 0
 
-		return len(list(t for t, a in self._splits if a is False))
+		return len([t for t, a in self._splits if a is False]) + (1 if self._pauseTime is not None else 0)
 
 	@readonly
 	def Activity(self) -> float:
@@ -414,7 +462,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is currently running, the duration since start or last resume operation will be included.
 
 		:returns: Duration of all active split times in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -430,7 +478,7 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is currently paused, the duration since last pause operation will be included.
 
 		:returns: Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
 		"""
 		if self._startTime is None:
 			return 0.0
@@ -446,12 +494,30 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is not yet stopped, the duration from start to now is returned.
 
 		:returns: Duration since stopwatch was started in seconds. If the stopwatch was never started, the return value will
-		         be 0.0.
+		          be 0.0.
+		"""
+		return self.DurationInNanoseconds / 1e9
+
+	@readonly
+	def DurationInNanoseconds(self) -> int:
+		"""
+		Read-only property returning the same duration as :attr:`Duration`, but in whole nanoseconds.
+
+		This is the measurement as the underlying :func:`time.perf_counter_ns` took it, so anything that divides a
+		duration into parts - :meth:`__format__` does - works from an integer instead of converting a float back.
+
+		Precision is not the reason to prefer it. A float holds a duration in seconds exactly, to the nanosecond, up
+		to :math:`2^{53}` ns - a little over 104 days - which no stopwatch will reach.
+
+		:returns: Duration since the stopwatch was started in nanoseconds. If the stopwatch was never started, the
+		          return value will be 0.
 		"""
 		if self._startTime is None:
-			return 0.0
+			return 0
+		elif self._totalTime is not None:    # was stopped, so the total is final
+			return self._totalTime
 
-		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
+		return perf_counter_ns() - self._startTime
 
 	@readonly
 	def Exclude(self) -> ExcludeContextManager:
@@ -461,10 +527,9 @@ class Stopwatch(SlottedObject):
 		:returns: An excluding context manager.
 		"""
 		if self._excludeContextManager is None:
-			excludeContextManager = ExcludeContextManager(self)
-			self._excludeContextManager = excludeContextManager
+			self._excludeContextManager = ExcludeContextManager(self)
 
-		return excludeContextManager
+		return self._excludeContextManager
 
 	def __enter__(self) -> Self:
 		"""
@@ -472,8 +537,8 @@ class Stopwatch(SlottedObject):
 
 		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
 
-		:returns:                   The stopwatch itself.
-		:raises StopwatchException: If the stopwatch was already started.
+		:returns:               The stopwatch itself.
+		:raises StopwatchError: If the stopwatch was already started.
 		"""
 		if self._startTime is None:           # start stopwatch
 			self._beginTime = datetime.now()
@@ -485,11 +550,11 @@ class Stopwatch(SlottedObject):
 			self._splits.append((diff, False))
 			self._pauseTime = None
 		elif self._resumeTime is not None:    # is running?
-			raise StopwatchException("Stopwatch is currently running and can not be started/resumed again.")
+			raise StopwatchError("Stopwatch is currently running and can not be started/resumed again.")
 		elif self._stopTime is not None:      # is stopped?
-			raise StopwatchException(f"Stopwatch was already stopped.")
+			raise StopwatchError("Stopwatch was already stopped.")
 		else:
-			raise StopwatchException(f"Internal error.")
+			raise StopwatchError("Internal error.")
 
 		return self
 
@@ -504,16 +569,16 @@ class Stopwatch(SlottedObject):
 
 		A running stopwatch will be paused or stopped depending on the configured ``preferPause`` behavior.
 
-		:param exc_type:            Exception type, otherwise None.
-		:param exc_val:             Exception object, otherwise None.
-		:param exc_tb:              Exception's traceback, otherwise None.
-		:returns:                   True, if exceptions should be suppressed.
-		:raises StopwatchException: If the stopwatch was already stopped.
+		:param exc_type:        Exception type, otherwise None.
+		:param exc_val:         Exception object, otherwise None.
+		:param exc_tb:          Exception's traceback, otherwise None.
+		:returns:               True, if exceptions should be suppressed.
+		:raises StopwatchError: If the stopwatch was already stopped.
 		"""
 		if self._startTime is None:           # never started?
-			raise StopwatchException("Stopwatch was never started.")
+			raise StopwatchError("Stopwatch was never started.")
 		elif self._stopTime is not None:
-			raise StopwatchException("Stopwatch was already stopped.")
+			raise StopwatchError("Stopwatch was already stopped.")
 		elif self._resumeTime is not None:    # pause or stop
 			if self._preferPause:
 				self._pauseTime = perf_counter_ns()
@@ -531,7 +596,7 @@ class Stopwatch(SlottedObject):
 				self._resumeTime = None
 				self._totalTime =  self._stopTime - self._startTime
 		else:
-			raise StopwatchException("Stopwatch was not resumed.")
+			raise StopwatchError("Stopwatch was not resumed.")
 
 	def __len__(self) -> int:
 		"""
@@ -560,23 +625,100 @@ class Stopwatch(SlottedObject):
 		If the stopwatch is not stopped yet, the last split won't be included.
 
 		:returns: Iterator of split time tuples of: |br|
-		         (1) delta time to the previous stopwatch operation and |br|
-		         (2) a boolean indicating if the split was an activity (true) or inactivity (false).
+		          (1) delta time to the previous stopwatch operation and |br|
+		          (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		"""
 		return self._splits.__iter__()
+
+	def __format__(self, formatSpec: str) -> str:
+		"""
+		Return the measured duration according to the format specification.
+
+		.. topic:: Format Specifiers
+
+		   An **uppercase** specifier is a field of the duration as it would be displayed. A **lowercase** specifier is
+		   the whole duration expressed in one unit, which is what a report or a comparison wants.
+
+		   +-----------+--------------------------------------------------------+
+		   | Specifier | Meaning                                                |
+		   +===========+========================================================+
+		   | ``%H``    | hours, not capped - a 26 hour measurement shows ``26`` |
+		   +-----------+--------------------------------------------------------+
+		   | ``%M``    | minutes, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%S``    | seconds, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%L``    | fractional seconds, 3 digits (milliseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%U``    | fractional seconds, 6 digits (microseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%N``    | fractional seconds, 9 digits (nanoseconds)             |
+		   +-----------+--------------------------------------------------------+
+		   | ``%s``    | the whole duration in seconds                          |
+		   +-----------+--------------------------------------------------------+
+		   | ``%m``    | the whole duration in milliseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%u``    | the whole duration in microseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%n``    | the whole duration in nanoseconds                      |
+		   +-----------+--------------------------------------------------------+
+
+		   The fractional specifiers are truncations of the same fraction, so ``%S.%U`` renders ``04.123456`` without
+		   having to be combined with anything. ``%H`` is not capped, so ``%H:%M:%S`` never silently drops a day.
+
+		   ``%%`` renders a literal percent sign. An empty format specification returns :meth:`__str__`.
+
+		:param formatSpec:  The format specification, using ``%``-placeholders for the duration's parts.
+		:returns:           The formatted duration.
+		:raises ValueError: If the format specification contains an unknown placeholder.
+		"""
+		if formatSpec == "":
+			return self.__str__()
+
+		nanoseconds = self.DurationInNanoseconds
+		seconds, fraction = divmod(nanoseconds, 1_000_000_000)
+		minutes, secondField = divmod(seconds, 60)
+		hours, minuteField = divmod(minutes, 60)
+
+		result = formatSpec
+		for placeholder, value in (
+			("%H", f"{hours:02}"),
+			("%M", f"{minuteField:02}"),
+			("%S", f"{secondField:02}"),
+			("%L", f"{fraction // 1_000_000:03}"),
+			("%U", f"{fraction // 1_000:06}"),
+			("%N", f"{fraction:09}"),
+			("%s", f"{nanoseconds // 1_000_000_000}"),
+			("%m", f"{nanoseconds // 1_000_000}"),
+			("%u", f"{nanoseconds // 1_000}"),
+			("%n", f"{nanoseconds}"),
+		):
+			result = result.replace(placeholder, value)
+
+		if (position := result.find("%")) != -1:
+			following = result[position + 1] if position + 1 < len(result) else ""
+			if following != "%":
+				raise ValueError(f"Unknown format specifier '%{following}' in '{formatSpec}'.")
+
+		return result.replace("%%", "%")
 
 	def __str__(self) -> str:
 		"""
 		Returns the stopwatch's state and its measured time span.
 
+		The duration is rendered in seconds with :attr:`Digits` fractional digits, in every state - a running and a
+		stopped stopwatch report the same unit at the same resolution.
+
 		:returns: The string equivalent of the stopwatch.
 		"""
 		name = f" {self._name}" if self._name is not None else ""
+		duration = f"{self.Duration:.{self._digits}f}"
+
 		if self.IsStopped:
-			return f"Stopwatch{name} (stopped): {self._beginTime} -> {self._endTime}: {self._totalTime}"
+			return f"Stopwatch{name} (stopped): {self._beginTime} -> {self._endTime}: {duration}"
 		elif self.IsRunning:
-			return f"Stopwatch{name} (running): {self._beginTime} -> now: {self.Duration}"
+			return f"Stopwatch{name} (running): {self._beginTime} -> now: {duration}"
 		elif self.IsPaused:
-			return f"Stopwatch{name} (paused): {self._beginTime} -> now: {self.Duration}"
+			return f"Stopwatch{name} (paused): {self._beginTime} -> now: {duration}"
 		else:
 			return f"Stopwatch{name}: not started"

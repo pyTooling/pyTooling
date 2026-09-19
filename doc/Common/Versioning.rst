@@ -895,3 +895,166 @@ VersionSet
 
                for version in versionSet:
                  pass
+
+
+.. _VERSIONING/Constraints:
+
+Version Constraints and Expressions
+***********************************
+
+A :class:`~pyTooling.Versioning.VersionRange` says which versions are acceptable; a **version expression** is how a
+packaging ecosystem *writes* that down - ``>=1.2.0,<2.0.0`` in a requirements file, ``^1.2.3`` in a
+:file:`package.json`, ``(>= 1.2.0)`` in a :file:`debian/control`.
+
+.. _VERSIONING/Constraints/Expression:
+
+VersionExpression
+=================
+
+A :class:`~pyTooling.Versioning.VersionExpression` is a **conjunction** of constraints: every one of them has to be
+satisfied, which is what separating them means in every ecosystem that has the notion.
+
+.. code-block:: Python
+
+   from pyTooling.Versioning import VersionExpression, SemanticVersion
+
+   expression = VersionExpression.Parse(">=1.2.0,<2.0.0")
+
+   SemanticVersion.Parse("1.5.0") in expression   # True
+   SemanticVersion.Parse("2.0.0") in expression   # False
+
+An expression with **no** constraints matches every version, and
+:attr:`~pyTooling.Versioning.VersionExpression.MatchesAnyVersion` reports it - so *no version restriction* is a value
+its callers can carry rather than a case they have to special-case.
+
+:attr:`~pyTooling.Versioning.VersionExpression.Constraints` gives the individual
+:class:`~pyTooling.Versioning.VersionConstraint` objects, and
+:meth:`~pyTooling.Versioning.VersionExpression.ToVersionRange` collapses the whole expression into the single
+:ref:`VersionRange <VERSIONING/VersionRange>` it describes - which is the bridge between how a dependency is written
+and how it is reasoned about.
+
+.. _VERSIONING/Constraints/Constraint:
+
+VersionConstraint
+=================
+
+One :class:`~pyTooling.Versioning.VersionConstraint` is one comparison: a
+:class:`~pyTooling.Versioning.VersionComparison` and the version it compares against.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 30 45
+
+   * - Written
+     - ``VersionComparison``
+     - Meaning
+   * - ``==`` ``!=``
+     - ``Equal`` ``Unequal``
+     - Exactly this version, or anything but it.
+   * - ``<`` ``<=`` ``>`` ``>=``
+     - ``LessThan`` … ``GreaterThanOrEqual``
+     - The four ordering comparisons.
+   * - ``~=``
+     - ``CompatibleRelease``
+     - :pep:`440`'s *compatible release*.
+   * - ``^``
+     - ``Caret``
+     - npm's *may not change the leftmost non-zero part*.
+   * - ``~``
+     - ``Tilde``
+     - npm's *may not change the minor part*.
+
+The last three are **shorthands for a range**, and they are what
+:class:`~pyTooling.Versioning.RangeVersionConstraint` implements: *at least the version written, and below a bound
+derived from it*. The derived bound is readable as
+:attr:`~pyTooling.Versioning.RangeVersionConstraint.UpperBound`, and each subclass derives it differently:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 32 20 48
+
+   * - Class
+     - Example
+     - Upper bound
+   * - :class:`~pyTooling.Versioning.CompatibleVersionConstraint`
+     - ``~=1.2.3``
+     - ``1.3.0`` - drop the last part written, increment what becomes the last.
+   * - :class:`~pyTooling.Versioning.CaretVersionConstraint`
+     - ``^1.2.3``
+     - ``2.0.0`` - increment the leftmost non-zero part that was written.
+   * - :class:`~pyTooling.Versioning.TildeVersionConstraint`
+     - ``~1.2.3``
+     - ``1.3.0`` - increment the minor part, or the major one when no minor part was written.
+
+.. attention::
+
+   ``~=`` and ``~`` are **not** the same operator: :pep:`440`'s ``~=`` depends on how many parts were written, while
+   npm's ``~`` always works on the minor part. They agree for ``1.2.3`` and disagree for ``1.2``.
+
+.. _VERSIONING/Constraints/Dialects:
+
+Dialects
+========
+
+The operators above are not spelled the same everywhere, so an expression is parsed by the class belonging to the
+ecosystem it was written in.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 50
+
+   * - Class
+     - Separator
+     - Differences
+   * - :class:`~pyTooling.Versioning.PythonVersionExpression`
+     - ``,``
+     - :pep:`440`: the six ordering comparisons plus ``~=``. Versions parse as
+       :class:`~pyTooling.Versioning.PythonVersion`.
+   * - :class:`~pyTooling.Versioning.NPMVersionExpression`
+     - whitespace
+     - Equality is ``=``, never ``==``; there is no ``!=``; adds ``^`` and ``~``. A comma is a syntax error.
+   * - :class:`~pyTooling.Versioning.DebianVersionExpression`
+     - ``,``
+     - Strict comparisons are ``<<`` and ``>>``, equality is ``=``, and there is no ``!=``.
+
+.. attention::
+
+   :class:`~pyTooling.Versioning.DebianVersionExpression` deliberately **rejects** the obsolete ``<`` and ``>``.
+   :program:`dpkg` still accepts them with a warning, because they historically meant ``<=`` and ``>=`` - reading
+   them as the strict operators would silently invert their meaning.
+
+
+.. _VERSIONING/Epoch:
+
+Epoch
+*****
+
+An **epoch** outranks every other part of a version number, and exists for the case a project's versioning scheme
+changed so that the new numbers sort below the old ones. It is readable as
+:attr:`~pyTooling.Versioning.Version.Epoch`, and it is present only when the parsed string stated one.
+
+The separator differs by scheme: :class:`~pyTooling.Versioning.SemanticVersion` writes ``1:1.2.3``, while
+:class:`~pyTooling.Versioning.PythonVersion` writes ``1!1.2.3`` as :pep:`440` prescribes.
+
+
+.. _VERSIONING/Validators:
+
+Validators
+**********
+
+A version parsed from an untrusted string can carry any number, which is a problem when it has to fit a fixed-width
+field later. A **validator** is a callable given to the parser, and it rejects a version instead of letting it
+through.
+
+Two factories build one:
+
+* :func:`~pyTooling.Versioning.WordSizeValidator` - bounds each part by a number of **bits**, for a version that has
+  to fit a hardware register or a packed struct;
+* :func:`~pyTooling.Versioning.MaxValueValidator` - bounds each part by an explicit **maximum**.
+
+Both take one limit for every part (``bits`` / ``max``) or a limit per part (``majorBits``, ``minorBits``,
+``microBits``, …), so the common case is one argument.
+
+A rejected version raises :exc:`~pyTooling.Versioning.VersionValidatorError`, whose ``Version`` property is the
+version that was rejected.
+

@@ -1,0 +1,6 @@
+version:    "0.1"
+analysedAt: 2026-09-02
+
+packages:
+  "igraph not a specifier":
+    license: MIT

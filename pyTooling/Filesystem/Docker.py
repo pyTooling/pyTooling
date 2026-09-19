@@ -43,7 +43,7 @@ from typing                import Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Filesystem  import Root, Element, Directory, Filename, SymbolicLink, FilesystemException
+from pyTooling.Filesystem  import Root, Element, Directory, Filename, SymbolicLink, FilesystemError
 from pyTooling.Stopwatch   import Stopwatch
 
 
@@ -153,7 +153,7 @@ class Layer(metaclass=ExtendedType):
 			self._files.append(element)
 			usedFiles.add(element)
 		else:
-			ex = TypeError(f"Parameter 'element' is not a filename nor symbolic link.")
+			ex = TypeError("Parameter 'element' is not a filename nor symbolic link.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
 			raise ex
 
@@ -277,11 +277,11 @@ class LayerCake(metaclass=ExtendedType):
 		"""
 		Read-only property to access the time needed to slice the filesystem structure into docker layers.
 
-		:returns:                    The slicing duration in seconds.
-		:raises FilesystemException: If the filesystem was not sliced into layers.
+		:returns:                The slicing duration in seconds.
+		:raises FilesystemError: If the filesystem was not sliced into layers.
 		"""
 		if self._slicingDuration is None:
-			raise FilesystemException(f"Filesystem was not sliced, yet.")
+			raise FilesystemError("Filesystem was not sliced, yet.")
 
 		return self._slicingDuration
 

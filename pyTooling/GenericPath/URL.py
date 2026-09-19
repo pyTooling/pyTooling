@@ -39,7 +39,8 @@ from __future__            import annotations
 
 from enum                  import Flag
 from re                    import compile as re_compile
-from typing                import ClassVar, Optional as Nullable, Mapping
+from urllib.parse          import quote as urlQuote
+from typing                import ClassVar, Optional as Nullable, Mapping, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -52,12 +53,26 @@ __all__ = ["URL_PATTERN", "URL_REGEXP"]
 URL_PATTERN = (
 	r"""(?:(?P<scheme>\w+)://)?"""
 	r"""(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?"""
-	r"""(?:(?P<host>(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
+	r"""(?:(?P<host>\[[0-9A-Fa-f:.]+\]|(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
 	r"""(?P<path>[^?#]*?)"""
 	r"""(?:\?(?P<query>[^#]+?))?"""
 	r"""(?:#(?P<fragment>.+?))?"""
 )                                                 #: Regular expression pattern for validating and splitting a URL.
 URL_REGEXP = re_compile("^" + URL_PATTERN + "$")  #: Precompiled regular expression for URL validation.
+
+FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"  #: Characters :rfc:`3986` forbids in a URL unless they are percent-encoded.
+
+
+@export
+class URLError(ToolingException):
+	"""
+	Raised when a URL can't be parsed.
+
+	.. note::
+
+	   :class:`urllib.error.URLError` from the standard library carries the same name and a different meaning - it
+	   reports that a *request* failed. A module using both imports one of them under another name.
+	"""
 
 
 @export
@@ -65,22 +80,84 @@ class Protocols(Flag):
 	"""
 	Enumeration of supported URL schemes.
 
-	The members are flags, so a TLS secured scheme is the combination of :attr:`TLS` and the plain protocol. Thus, a
-	scheme can be checked for encryption without enumerating every secured variant:
+	The members are flags, so a scheme secured by a transport is the combination of that transport and the plain
+	protocol: :attr:`HTTPS` is :attr:`TLS` with :attr:`HTTP`, and :attr:`SFTP` is :attr:`SSH` carrying its own file
+	transfer. A scheme can therefore be asked which transport secures it, without enumerating every variant:
 
 	.. code-block:: Python
 
 	   if Protocols.TLS in url.Scheme:
+	     print(f"'{url}' is secured by TLS.")
+
+	   if url.Scheme.IsEncrypted:
 	     print(f"'{url}' is encrypted.")
+
+	.. attention::
+
+	   :attr:`TLS` answers *"is this TLS"*, not *"is this encrypted"* - :attr:`SSH` and :attr:`SFTP` are encrypted
+	   and carry no :attr:`TLS` flag. Use :attr:`IsEncrypted`, which asks for both.
+
+	   :attr:`SFTP` is **not** :attr:`FTP` carried by :attr:`SSH`: it is a protocol of its own, defined as an SSH
+	   subsystem and sharing nothing with FTP but its purpose. :attr:`FTP` secured by :attr:`TLS` is :attr:`FTPS`.
+
+	.. note::
+
+	   :attr:`TCP` and :attr:`UDP` name a scheme written as ``tcp://host:port``, which is what ZeroMQ, the Docker
+	   daemon and syslog configurations use. They do **not** combine with the other members the way :attr:`TLS` and
+	   :attr:`SSH` do: ``http://`` runs over TCP without saying so, so :attr:`HTTP` carries no :attr:`TCP` flag.
+	   ``tcp`` is not registered with IANA - ``udp`` is registered provisionally - but both appear often enough that
+	   refusing them would be unhelpful.
+
+	.. caution::
+
+	   The enumeration lists the schemes written as ``scheme://``, and :meth:`URL.Parse` raises
+	   :exc:`URLError` for one it doesn't know - so a scheme missing here makes a URL unparseable. Schemes are added
+	   as they are needed.
+
+	   An **opaque** scheme - ``mailto:a@b.org``, ``urn:isbn:…``, and ``sip:alice@atlanta.com``, whose URI carries no
+	   ``//`` - is a different matter: :data:`URL_PATTERN` only recognises a scheme before ``://``, so such a URL
+	   parses with its scheme silently dropped rather than raising. Listing it here would change nothing.
 	"""
 
-	TLS =   1  #: Transport Layer Security
-	FILE =  2  #: Local files
-	HTTP =  4  #: Hyper Text Transfer Protocol
-	FTP =   8  #: File Transfer Protocol
+	TLS      = 1      #: Transport Layer Security
+	FILE     = 2      #: Local files
+	HTTP     = 4      #: Hyper Text Transfer Protocol
+	FTP      = 8      #: File Transfer Protocol
+	WS       = 16     #: WebSocket
+	SSH      = 32     #: Secure Shell
+	GIT      = 64     #: Git's own transport
+	LDAP     = 128    #: Lightweight Directory Access Protocol
+	TCP      = 512    #: A raw TCP endpoint, the higher protocol unspecified - as ZeroMQ and Docker write it.
+	UDP      = 1024   #: A raw UDP endpoint of an unspecified higher protocol.
+	UNIX     = 2048   #: A local Unix domain socket, addressed by a file system path.
+	MQTT     = 4096   #: Message Queuing Telemetry Transport
+	AMQP     = 8192   #: Advanced Message Queuing Protocol - the protocol RabbitMQ speaks.
+	REDIS    = 16384  #: Redis
+	MONGODB  = 32768  #: MongoDB
+	POSTGRES = 65536  #: PostgreSQL
 
-	HTTPS = TLS | HTTP  #: SSL/TLS secured HTTP: combination of :attr:`TLS` and :attr:`HTTP`.
-	FTPS =  TLS | FTP   #: SSL/TLS secured FTP: combination of :attr:`TLS` and :attr:`FTP`.
+	HTTPS  = TLS | HTTP   #: SSL/TLS secured HTTP: combination of :attr:`TLS` and :attr:`HTTP`.
+	FTPS   = TLS | FTP    #: SSL/TLS secured FTP: combination of :attr:`TLS` and :attr:`FTP`.
+	WSS    = TLS | WS     #: SSL/TLS secured WebSocket: combination of :attr:`TLS` and :attr:`WS`.
+	LDAPS  = TLS | LDAP   #: SSL/TLS secured LDAP: combination of :attr:`TLS` and :attr:`LDAP`.
+	SFTP   = SSH | 256    #: SSH File Transfer Protocol, carried by :attr:`SSH`.
+	MQTTS  = TLS | MQTT   #: SSL/TLS secured MQTT: combination of :attr:`TLS` and :attr:`MQTT`.
+	AMQPS  = TLS | AMQP   #: SSL/TLS secured AMQP: combination of :attr:`TLS` and :attr:`AMQP`.
+	REDISS = TLS | REDIS  #: SSL/TLS secured Redis: combination of :attr:`TLS` and :attr:`REDIS`.
+
+	POSTGRESQL = POSTGRES  #: Alias of :attr:`POSTGRES`, the spelling ``libpq`` documents.
+
+	@readonly
+	def IsEncrypted(self) -> bool:
+		"""
+		Read-only property to return whether the scheme is encrypted.
+
+		A scheme is encrypted when it is secured by :attr:`TLS` or carried by :attr:`SSH`, so this answers e.g.
+		for :attr:`HTTPS` or :attr:`SFTP` alike - which testing a single flag doesn't.
+
+		:returns: ``True``, if the scheme is secured by TLS or carried by SSH.
+		"""
+		return bool(self & (Protocols.TLS | Protocols.SSH))
 
 
 @export
@@ -175,19 +252,9 @@ class Element(ElementMixIn):
 class Path(PathMixIn):
 	"""Represents a path in a URL."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"  #: Delimiter symbol in URLs between path elements.
-	ROOT_DELIMITER:    ClassVar[str] = "/"  #: Delimiter symbol in URLs between root element and first path element.
-
-	@classmethod
-	def Parse(cls, path: str, root: Nullable[Host] = None) -> Path:
-		"""
-		Parse a string into a URL path.
-
-		:param path: The path portion of a URL.
-		:param root: Optional, host the path is relative to.
-		:returns:    The parsed path.
-		"""
-		return super().Parse(path, root, cls, Element)
+	ELEMENT_DELIMITER: ClassVar[str] = "/"                #: Delimiter symbol in URLs between path elements.
+	ROOT_DELIMITER:    ClassVar[str] = "/"                #: Delimiter symbol in URLs between root and first element.
+	ELEMENT_TYPE:      ClassVar[type[Element]] = Element  #: Type an element of a URL's path has.
 
 
 @export
@@ -245,20 +312,20 @@ class URL:
 		self._user = user
 
 		if password is not None and not isinstance(password, str):
-			ex = TypeError(f"Parameter 'password' is not of type 'str'.")
+			ex = TypeError("Parameter 'password' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
 			raise ex
 
 		self._password = password
 
 		if host is not None and not isinstance(host, Host):
-			ex = TypeError(f"Parameter 'host' is not of type 'Host'.")
+			ex = TypeError("Parameter 'host' is not of type 'Host'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
 			raise ex
 		self._host = host
 
 		if path is not None and not isinstance(path, Path):
-			ex = TypeError(f"Parameter 'path' is not of type 'Path'.")
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
 
@@ -266,7 +333,7 @@ class URL:
 
 		if query is not None:
 			if not isinstance(query, Mapping):
-				ex = TypeError(f"Parameter 'query' is not a mapping ('dict', ...).")
+				ex = TypeError("Parameter 'query' is not a mapping ('dict', ...).")
 				ex.add_note(f"Got type '{getFullyQualifiedName(query)}'.")
 				raise ex
 
@@ -275,7 +342,7 @@ class URL:
 			self._query = None
 
 		if fragment is not None and not isinstance(fragment, str):
-			ex = TypeError(f"Parameter 'fragment' is not of type 'str'.")
+			ex = TypeError("Parameter 'fragment' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(fragment)}'.")
 			raise ex
 
@@ -352,8 +419,22 @@ class URL:
 
 		:param url:               URL as string to be parsed.
 		:returns:                 A URL object.
-		:raises ToolingException: When syntax does not match.
+		:raises ValueError:       If parameter 'url' is ``None``.
+		:raises TypeError:        If parameter 'url' is not of type :class:`str`.
+		:raises URLError:         When syntax does not match. |br|
+		                          A note names the first character :rfc:`3986` forbids, if the URL holds one, and how
+		                          to percent-encode it.
+		:raises URLError:         When the URL names a scheme that is not in :class:`Protocols`. |br|
+		                          The note lists the known schemes.
+		:raises URLError:         When a parameter of the query is not a ``key=value`` pair.
 		"""
+		if url is None:
+			raise ValueError("Parameter 'url' is None.")
+		elif not isinstance(url, str):
+			ex = TypeError("Parameter 'url' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
+			raise ex
+
 		if (matches := URL_REGEXP.match(url)) is not None:
 			scheme =    matches.group("scheme")
 			user =      matches.group("user")
@@ -367,16 +448,17 @@ class URL:
 			query =     matches.group("query")
 			fragment =  matches.group("fragment")
 
-			scheme =    None if scheme is None else Protocols[scheme.upper()]
-			hostObj =   None if host is None   else Host(host, port)
+			if scheme is not None:
+				try:
+					scheme = Protocols[scheme.upper()]
+				except KeyError as ex:
+					error = URLError(f"Unknown scheme '{scheme}' when parsing URL '{url}'.")
+					error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
+					raise error from ex
 
-			pathObj =   Path.Parse(path, hostObj)
-
-			parameters = {}
-			if query is not None:
-				for pair in query.split("&"):
-					key, value = pair.split("=")
-					parameters[key] = value
+			hostObj =    None if host is None else Host(host, port)
+			pathObj =    Path.Parse(path, hostObj)
+			parameters = None if query is None else cls._ParseQuery(query, url)
 
 			return cls(
 				scheme,
@@ -384,11 +466,126 @@ class URL:
 				hostObj,
 				user,
 				password,
-				parameters if len(parameters) > 0 else None,
+				parameters,
 				fragment
 			)
 
-		raise ToolingException(f"Syntax error when parsing URL '{url}'.")
+		error = URLError(f"Syntax error when parsing URL {url!r}.")
+		for character in url:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				error.add_note(
+					f"Character {character!r} is not allowed in a URL. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				break
+
+		raise error
+
+	@classmethod
+	def _ParseQuery(cls, query: str, url: str) -> dict[str, str]:
+		"""
+		Parse a URL's query into its parameters.
+
+		:param query:     The query, without the leading ``?``. It is not empty - a URL carrying no query has none.
+		:param url:       The URL the query came from, for the exception's message.
+		:returns:         The parameters by name.
+		:raises URLError: When a parameter of the query is not a ``key=value`` pair.
+		"""
+		parameters = {}
+		for pair in query.split("&"):
+			key, separator, value = pair.partition("=")
+			if separator == "":
+				error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
+				error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
+				raise error
+
+			parameters[key] = value
+
+		return parameters
+
+	@classmethod
+	def _CheckRelativeReference(cls, reference: str) -> None:
+		"""
+		Check a string names a resource below a URL.
+
+		A relative reference of :rfc:`3986` names no scheme and no authority: it starts with no ``//``, and the first
+		segment of its path holds no ``:``, which is the ``path-noscheme`` rule. A complete URL is read by
+		:meth:`Parse` instead of being appended to another.
+
+		:param reference: The right side of the ``/`` operator.
+		:raises URLError: When the reference names a scheme or an authority.
+		:raises URLError: When the reference holds a character :rfc:`3986` forbids. |br|
+		                  The note names the character and how to percent-encode it.
+		"""
+		path = reference.partition("#")[0].partition("?")[0]
+		if path.startswith("//"):
+			error = URLError(f"Relative reference '{reference}' names an authority.")
+			error.add_note("A reference below a URL carries no host, user, password or port.")
+			error.add_note("Read a complete URL with 'URL.Parse' instead of appending it.")
+			raise error
+		elif ":" in path.split(Path.ELEMENT_DELIMITER, 1)[0]:
+			error = URLError(f"Relative reference '{reference}' names a scheme.")
+			error.add_note("The first element of a relative path carries no ':' - it would read as a scheme.")
+			error.add_note("Read a complete URL with 'URL.Parse' instead of appending it. Write a ':' further down "
+			               "the path percent-encoded as '%3A'.")
+			raise error
+
+		for character in reference:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				error = URLError(f"Relative reference '{reference}' holds a forbidden character.")
+				error.add_note(
+					f"Character {character!r} is not allowed in a URL. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				raise error
+
+	def __truediv__(self, other: Union[str, Path]) -> URL:
+		"""
+		Return this URL with a resource below it.
+
+		The right side is a **relative reference**: its path is appended below this URL's, and it brings its own query
+		and fragment, which this URL's are not carried into - :rfc:`3986` resolves a reference the same way. A path
+		that starts with a slash names where it starts itself and replaces this URL's path.
+
+		.. code-block:: python
+
+		   URL.Parse("https://example.org/api/v3") / "things/4711?fields=name"
+		   # https://example.org/api/v3/things/4711?fields=name
+
+		:param other:      The resource below this URL, as a string to parse or as a :class:`Path`.
+		:returns:          A new URL naming that resource.
+		:raises TypeError: If parameter 'other' is neither of type :class:`str` nor of type :class:`Path`.
+		:raises URLError:  When the right side names a scheme or an authority instead of a resource.
+		:raises URLError:  When the right side holds a character :rfc:`3986` forbids. |br|
+		                   The note names the character and how to percent-encode it.
+		:raises URLError:  When a parameter of the right side's query is not a ``key=value`` pair.
+		"""
+		if isinstance(other, str):
+			self._CheckRelativeReference(other)
+
+			resource, _, fragment = other.partition("#")
+			resource, _, query =    resource.partition("?")
+			parameters = None if query == "" else self._ParseQuery(query, other)
+			fragment =   fragment if fragment != "" else None
+		elif isinstance(other, Path):
+			resource =   other
+			parameters = None
+			fragment =   None
+		else:
+			ex = TypeError("Second operand is not supported by / operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: 'str' or 'Path'.")
+			raise ex
+
+		return self.__class__(
+			scheme=self._scheme,
+			path=self._path / resource,
+			host=self._host,
+			user=self._user,
+			password=self._password,
+			query=parameters,
+			fragment=fragment
+		)
 
 	def __str__(self) -> str:
 		"""
@@ -430,6 +627,35 @@ class URL:
 			scheme=self._scheme,
 			path=self._path,
 			host=self._host,
+			query=self._query,
+			fragment=self._fragment
+		)
+
+	def WithoutTrailingSlash(self) -> URL:
+		"""
+		Returns a URL object whose path doesn't end in a slash.
+
+		A URL's element delimiter is the slash, so this is :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
+		applied to the URL's path. A trailing slash is an empty last element, so ``https://example.org/api/v3/`` and
+		``https://example.org/api/v3`` differ although they usually address the same resource. A URL that is composed
+		with a path below it wants the latter, or the composition yields a double slash.
+
+		:returns: New URL object without a trailing slash, or this URL, if its path has none.
+
+		.. seealso::
+
+		   :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter`
+		      |rarr| What it does to the path, and what it leaves alone.
+		"""
+		if (path := self._path.WithoutTrailingDelimiter()) is self._path:
+			return self
+
+		return self.__class__(
+			scheme=self._scheme,
+			path=path,
+			host=self._host,
+			user=self._user,
+			password=self._password,
 			query=self._query,
 			fragment=self._fragment
 		)

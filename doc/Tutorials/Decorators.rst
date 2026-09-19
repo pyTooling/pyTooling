@@ -1,3 +1,5 @@
+.. _TUTORIAL/Decorators:
+
 Decorators
 ##########
 
