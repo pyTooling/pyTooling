@@ -297,7 +297,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		document, nextResourcePath = self._Request(HTTPMethod.GET, resourcePath, headers=headers)
 		if document is None:
-			raise RESTError(f"API answered with an empty body: {self._URL(resourcePath)}")
+			raise RESTError(f"API answered with an empty body: {self._apiURL / resourcePath.lstrip('/')}")
 
 		return document, nextResourcePath
 
@@ -450,8 +450,10 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			data =      json_dumps(document).encode("utf-8")
 			mediaType = MediaType.JSON
 
-		url =     self._URL(resourcePath)
-		request = Request(url, data=data, method=method, headers=self._RequestHeaders(mediaType, headers))
+		# A resource path is always **below** the API, so a leading delimiter is removed - :meth:`URL.__truediv__
+		# <pyTooling.GenericPath.URL.URL.__truediv__>` would otherwise read it as naming its own root.
+		url =     self._apiURL / resourcePath.lstrip("/")
+		request = Request(str(url), data=data, method=method, headers=self._RequestHeaders(mediaType, headers))
 		retries = self._retries if idempotent else 0
 
 		for attempt in range(1, retries + 2):
@@ -502,18 +504,6 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 
 		return self._ProcessAnswer(body, contentType, url), self._NextResourcePath(link)
 
-	def _URL(self, resourcePath: str) -> str:
-		"""
-		Return the URL a resource is addressed by.
-
-		A resource path is always **below** the API, so a leading delimiter doesn't make it name its own root - which
-		is what :meth:`URL.__truediv__ <pyTooling.GenericPath.URL.URL.__truediv__>` would otherwise read it as.
-
-		:param resourcePath: Path of the resource below :attr:`APIURL`.
-		:returns:            The resource's URL.
-		"""
-		return str(self._apiURL / resourcePath.lstrip("/"))
-
 	def _RequestHeaders(self, mediaType: Nullable[MediaType], headers: Nullable[dict[str, str]]) -> dict[str, str]:
 		"""
 		Return the headers one request is sent with.
@@ -561,7 +551,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		return self._retryDelay * 2 ** (attempt - 1)
 
-	def _ProcessAnswer(self, body: bytes, contentType: Nullable[str], url: str) -> Nullable[JSONObject]:
+	def _ProcessAnswer(self, body: bytes, contentType: Nullable[str], url: URL) -> Nullable[JSONObject]:
 		"""
 		Read an answer's body as a JSON object.
 
