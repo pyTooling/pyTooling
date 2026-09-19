@@ -64,6 +64,17 @@ Glossary
           classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;
           classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
 
+   Annotation
+   Type Hint
+     An :external+python:term:`annotation` states the type a variable, a parameter or a return value has. Python
+     does not check it - a type checker like :program:`mypy` does, and a library may read it.
+
+     pyTooling reads them: :ref:`META/ExtendedType` derives a class' :term:`slots` from its annotated fields, so a
+     field is declared once and the slot follows. Since v10.0.0 an annotation is evaluated lazily (:pep:`563`,
+     :pep:`649`), so a class may name a type that doesn't exist yet - including itself.
+
+     Wikipedia: :wiki:`Type signature <Type_signature>`
+
    Base
    Base-Class
      A *base-class* is an ancestor class for other classes derived therefrom by :term:`inheritance`. A class derived
@@ -83,6 +94,42 @@ Glossary
           classDef node font-size:smaller;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee,font-size:smaller;
           classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
+
+   Basic Authentication
+     The *basic* scheme of :rfc:`7617` authorizes a request with a user name and a password, base64-encoded in the
+     ``Authorization`` header. It says nothing about who may do what, so it belongs behind TLS.
+
+     :class:`~pyTooling.REST.RESTClient` sends a :term:`bearer token` by default; a client of an API expecting the
+     basic scheme overrides :meth:`~pyTooling.REST.RESTClient._RequestHeaders` - see :ref:`REST/Deriving`.
+
+     Wikipedia: :wiki:`Basic access authentication <Basic_access_authentication>`
+
+   Bearer Token
+     The *bearer* scheme of :rfc:`6750` authorizes a request with a token in the ``Authorization`` header:
+     *whoever bears this token may do what it allows*, so the token is the credential and is never sent to another
+     host. An OAuth 2.0 flow hands one out.
+
+     It is what :class:`~pyTooling.REST.RESTClient` sends, and why a ``Link`` header pointing outside the API is
+     rejected rather than followed.
+
+   Breadth-First
+     *Breadth-first* visits a :term:`graph`'s or :term:`tree`'s :term:`nodes <node>` by distance: everything one
+     edge away, then everything two edges away. It finds the shortest path in an unweighted graph, because a node
+     is reached the first time by the fewest edges.
+
+     :meth:`Vertex.IterateVerticesBFS <pyTooling.Graph.Vertex.IterateVerticesBFS>` walks a graph that way. See
+     :term:`depth-first` for the opposite, and :term:`level-order` for what breadth-first is called in a tree.
+
+     Wikipedia: :wiki:`Breadth-first search <Breadth-first_search>`
+
+   Calendar Version
+     A *calendar version* numbers a release by the date it was made - ``2026.09`` - rather than by what changed in
+     it. It is the scheme a rolling distribution or a dated dataset uses, where "what changed" has no single answer.
+
+     :class:`~pyTooling.Versioning.CalendarVersion` parses one, in the variants
+     :ref:`VERSIONING/CalVerVariants` lists. See :term:`semantic version` for the other scheme.
+
+     `calver.org <https://calver.org/>`__
 
    Child
      *Children* are all direct successors of a :term:`node`.
@@ -129,6 +176,37 @@ Glossary
      accepts are fixed when its class is written; the parameters are chosen per program instance, and are what
      :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` renders.
 
+   Console Script
+   Entry Point
+     An *entry point* is a name a distribution publishes for something else to find: the group says what kind of
+     thing it is, and the name maps to an object in the distribution. A *console script* is the ``console_scripts``
+     group - an installer writes an executable for each of its entries.
+
+     :func:`~pyTooling.Packaging.DescribePythonPackage` declares them, and since v10.0.0 for **any** group, not
+     only console scripts - see :ref:`PACKAGING/Descriptions/EntryPoints`.
+
+     `Python Packaging User Guide <https://packaging.python.org/en/latest/specifications/entry-points/>`__
+
+   Content-Type
+   Media Type
+     A *media type* names the format of a body - ``application/json``, ``text/plain`` - and is what the
+     ``Content-Type`` header of :rfc:`9110` carries, optionally with parameters like ``; charset=utf-8``. The
+     :rfc:`6839` structured syntax suffix says a type *is written in* another one, so ``application/vnd.github+json``
+     is JSON.
+
+     :class:`~pyTooling.REST.MediaType` is the enumeration of the types a REST API sends and receives, and
+     :meth:`~pyTooling.REST.MediaType.Matches` answers whether a header names one, suffix and parameters included.
+
+     Wikipedia: :wiki:`Media type <Media_type>`
+
+   Context Manager
+     A :external+python:term:`context manager` is an object a ``with``-statement enters and leaves, so what has to
+     happen afterwards happens even when the block raises.
+
+     :class:`~pyTooling.Stopwatch.Stopwatch` and :class:`~pyTooling.Tracing.Span` are used that way: entering
+     starts the measurement and leaving ends it - see :ref:`COMMON/Stopwatch/ContextManager`. A timespan measured
+     elsewhere is constructed with its recorded times instead.
+
    CopyLeft
      :wiki:`Copyleft <Copyleft>` is a licensing principle requiring that derived works are distributed under the same
      license as the original. The `GPL family <https://www.gnu.org/licenses/licenses.html>`__ is the best known
@@ -169,6 +247,24 @@ Glossary
 
           classDef node fill:#eee,stroke:#777,font-size:smaller;
 
+   Descriptor
+     A :external+python:term:`descriptor` is an object that defines what reading, writing or deleting an attribute
+     does - the mechanism behind a :term:`property`, a method, and a :term:`slot <Slots>`.
+
+     It is why :ref:`META/ExtendedType` can turn an annotated field into a slot: the slot is a descriptor on the
+     class, and the value lives in the instance's fixed storage rather than in a ``__dict__``.
+
+   Distribution
+   sdist
+   Wheel
+     A *distribution* is a package as it is published and installed - not the importable directory, but the archive
+     the index serves. A **wheel** (:pep:`427`) is the built form, installed by unpacking it; an **sdist** is the
+     source form, from which a wheel is built first.
+
+     :func:`~pyTooling.Packaging.DescribePythonPackage` describes what goes into both - see :ref:`PACKAGING`.
+
+     `Python Packaging User Guide <https://packaging.python.org/en/latest/discussions/package-formats/>`__
+
    DG
      A *directed graph* (DG) is a :term:`graph` where all :term:`edges <edge>` have a direction.
 
@@ -198,6 +294,16 @@ Glossary
      :ref:`Attributes <ATTR>` are decorators too.
 
      Wikipedia: :wiki:`Decorator <Python_syntax_and_semantics#Decorators>`
+
+   Depth-First
+     *Depth-first* follows one branch of a :term:`graph` or :term:`tree` to its end before taking the next. It is
+     how a tree is usually walked, in :term:`pre-order` or :term:`post-order` depending on when the
+     :term:`node` itself is visited.
+
+     :meth:`Vertex.IterateVerticesDFS <pyTooling.Graph.Vertex.IterateVerticesDFS>` walks a graph that way. See
+     :term:`breadth-first` for the opposite.
+
+     Wikipedia: :wiki:`Depth-first search <Depth-first_search>`
 
    Descendant
      *Descendants* are all direct and indirect successors of a :term:`node` (:term:`child nodes <child>` and child
@@ -245,6 +351,14 @@ Glossary
      adds process handling - starting it, sending it lines, reading its output and waiting for its exit code - to the
      command line abstraction a program provides.
 
+   Extra
+     An *extra* is an optional feature of a :term:`distribution`, named in the install as
+     ``pyTooling[terminal]``, which pulls the requirements that feature needs.
+
+     pyTooling names an extra after the **feature**, not after the dependency it happens to pull, so an extra
+     survives a dependency being replaced. :func:`~pyTooling.Packaging.DescribePythonPackage` declares them from
+     ``additionalRequirements``.
+
    Exception
      An :external+python:ref:`exception <exceptions>` is the object a program raises to signal that it cannot continue
      normally, and the mechanism that transfers control to whatever handles it.
@@ -253,6 +367,16 @@ Glossary
      offending value in a :meth:`note <BaseException.add_note>` rather than only in its message.
 
      Wikipedia: :wiki:`Exception handling <Exception_handling>`
+
+   Generic
+   Type Variable
+     A `generic <https://typing.python.org/en/latest/spec/generics.html>`__ type is parametrized by another type,
+     so one class serves every element type without losing what a type checker knows: a *type variable* stands for
+     the type a use fills in.
+
+     :class:`pyTooling.Tree.Node`, :class:`pyTooling.Graph.Graph` and :class:`~pyTooling.LinkedList.LinkedList` are
+     generic in several parameters at once - a node's identifier, its value and its dictionary types are separate
+     variables, so a tree of one shape doesn't force the other two.
 
    Graph
      A *graph* is a data structure made of :term:`vertices <vertex>` (nodes) and vertex-vertex relations called
@@ -356,6 +480,25 @@ Glossary
      Unlike a :term:`softlink`, a hard link cannot point at a directory, cannot cross a filesystem boundary, and cannot
      dangle.
 
+   HTTP Method
+     The *method* of an HTTP request says what to do with the resource its URL names - ``GET``, ``POST``, ``PUT``,
+     ``PATCH``, ``DELETE`` - and :rfc:`9110` defines what each means. The standard library's
+     :class:`http.HTTPMethod` enumerates them.
+
+     Which method a request uses decides whether it may be repeated: see :term:`idempotency`.
+
+     Wikipedia: :wiki:`HTTP methods <HTTP#Request_methods>`
+
+   Idempotency
+     A request is *idempotent* when sending it twice has the same effect as sending it once - :rfc:`9110` calls
+     ``GET``, ``PUT`` and ``DELETE`` idempotent, and ``POST`` and ``PATCH`` not.
+
+     It is what decides whether a failing request may be tried again: :class:`~pyTooling.REST.RESTClient` retries
+     the first three and sends the other two once, because a ``POST`` whose answer was lost on the way back may
+     have created the resource already - see :ref:`REST/Retries`.
+
+     Wikipedia: :wiki:`Idempotence <Idempotence>`
+
    Inheritance
      :external+python:ref:`Inheritance <tut-inheritance>` derives a class from another, so the derived class has the
      fields and methods of its :term:`base-class` and may add to or replace them.
@@ -365,6 +508,23 @@ Glossary
      :term:`overrides <Overriding>` it.
 
      Wikipedia: :wiki:`Inheritance <Inheritance_(object-oriented_programming)>`
+
+   Iterator
+   Generator
+     An :external+python:term:`iterator` yields its elements one at a time, so a caller can stop after the first
+     and nothing computes the rest. A :external+python:term:`generator` is the usual way to write one - a function
+     with ``yield``.
+
+     pyTooling's traversals are generators: :meth:`Node.IteratePreOrder <pyTooling.Tree.Node.IteratePreOrder>`,
+     :meth:`~pyTooling.Tree.Node.IterateLeafs` and their siblings walk a :term:`tree` lazily, which is what makes
+     searching a large tree cheap.
+
+   Job
+     A *job* is the unit a :term:`pipeline` schedules onto a :term:`runner`: a sequence of :term:`steps <step>`
+     running on one machine, with its own result.
+
+     :class:`pyTooling.CI.GitHub.Job` models one - see :ref:`CI/GitHub`. A job produced by a :term:`matrix` is a
+     :class:`~pyTooling.CI.GitHub.MatrixJob` and carries the values it was produced for.
 
    JSON
      The *JavaScript Object Notation* is a text format for structured data, specified by :rfc:`8259` and
@@ -380,6 +540,56 @@ Glossary
      members exist, of which type, and which are required - and is a JSON document itself.
 
      It is to JSON what an :term:`XSD` is to :term:`XML`.
+
+   JUnit
+     *JUnit XML* is the test report format every CI service reads, although no standard defines it - it grew out of
+     the Java testing framework of that name and every writer adds its own dialect.
+
+     pyTooling writes it, and writes its own format beside it, because JUnit XML cannot express two things a marked
+     test suite has: suites **nest**, where JUnit flattens them into a dotted ``classname``, and every item carries
+     four names rather than one - see :ref:`TESTING/ReportFormat`.
+
+     Wikipedia: :wiki:`JUnit <JUnit>`
+
+   Label
+     A *label* is what a :term:`job` asks of the :term:`runner` it wants - an operating system, an architecture, a
+     capability - and what a self-hosted runner is registered with. A service picks a runner whose labels cover the
+     job's.
+
+     :attr:`Job.Labels <pyTooling.CI.GitHub.Job.Labels>` reports them.
+
+   Leaf
+     A *leaf* is a :term:`node` of a :term:`tree` that has no :term:`children <child>` - the other end of the tree
+     from its :term:`root`.
+
+     :attr:`Node.IsLeaf <pyTooling.Tree.Node.IsLeaf>` asks whether a node is one, and
+     :meth:`~pyTooling.Tree.Node.IterateLeafs` yields every leaf below a node.
+
+   Level-Order
+     *Level-order* visits a :term:`tree`'s :term:`nodes <node>` level by level: the :term:`root`, then its
+     :term:`children <child>`, then their children. It is :term:`breadth-first` applied to a tree.
+
+     :meth:`Node.IterateLevelOrder <pyTooling.Tree.Node.IterateLevelOrder>` walks a tree that way. See
+     :term:`pre-order` and :term:`post-order` for the two depth-first orders.
+
+     Wikipedia: :wiki:`Level order <Tree_traversal#Breadth-first_search_/_level_order>`
+
+   License Expression
+     A *license expression* states how a work is licensed when one identifier can't: ``Apache-2.0 OR MIT`` offers a
+     choice, ``GPL-2.0-only WITH Classpath-exception-2.0`` names an exception. :term:`SPDX` defines the syntax.
+
+     :mod:`pyTooling.Licensing` models one as a **tree** - :class:`~pyTooling.Licensing.SPDXLicense` with
+     :class:`~pyTooling.Licensing.AndOperator`, :class:`~pyTooling.Licensing.OrOperator`,
+     :class:`~pyTooling.Licensing.WithOperator` and :class:`~pyTooling.Licensing.OrLaterOperator` - so the licenses
+     in an expression are one comprehension away. See :ref:`LICENSING`.
+
+   Matrix
+     A *matrix* is a :term:`job` written once and run several times, once per combination of the values it is
+     given - three Python versions on two operating systems are six jobs.
+
+     :class:`pyTooling.CI.GitHub.Matrix` groups the instances a matrix produced, and each
+     :class:`~pyTooling.CI.GitHub.MatrixJob` carries the values it was produced for. GitHub reports no matrix as
+     such - the instances are recognized by the bracketed values in a job's name - see :ref:`CI/GitHub/Strings`.
 
    Meta-Class
      A *meta-class* is a class helping to construct classes. Thus, it's the type of a type - the default one is
@@ -438,6 +648,16 @@ Glossary
      A class deriving from a mixin-class rather than declaring the meta-class itself is marked with
      :deco:`~pyTooling.MetaClasses.mixin`, so a class that is only ever a secondary base-class says so.
 
+   MRO
+     The *method resolution order* is the sequence Python searches a class' bases in, which decides which
+     implementation an inherited name resolves to. It is computed once per class (the C3 linearization) and read
+     from :attr:`~type.__mro__`.
+
+     It is what makes :term:`multiple inheritance` predictable: a :term:`mixin` listed before a base-class wins,
+     and a ``super()`` call follows the order rather than the class it is written in.
+
+     Wikipedia: :wiki:`C3 linearization <C3_linearization>`
+
    MSYS2
      `MSYS2 <https://www.msys2.org/>`__ is a software distribution and building platform for Windows, providing a
      Unix-like shell, a package manager (``pacman``) and several toolchains - among them :term:`MinGW` and
@@ -468,6 +688,14 @@ Glossary
      If a *must-override* method is not overridden, an exception is raised when the class is instantiated, because
      the :term:`class is abstract <Abstract Class>`.
 
+   Namespace Package
+     A :external+python:term:`namespace package` is a package whose parts may come from several distributions,
+     because it has no ``__init__.py`` of its own: importing it merges what every distribution contributes.
+
+     **pyTooling is one.** There is no :file:`pyTooling/__init__.py`, which is why the package's ``__version__``
+     lives in :mod:`pyTooling.Common` - named as the ``packageInformationFile`` in :file:`setup.py` - and why
+     another distribution could add a :samp:`pyTooling.{Something}` of its own.
+
    Native
      A *native environment* is a platform just with the operating system. There is no additional environment layer
      like :term:`MSYS2`, :term:`Cygwin` or :term:`WSL`, which is what
@@ -478,6 +706,25 @@ Glossary
 
      In a tree a node has at most one :term:`parent` - :class:`pyTooling.Tree.Node`; in a graph it is called a
      :term:`vertex` and is connected by :term:`edges <edge>`.
+
+   Nullable
+     ``Nullable[T]`` is how pyTooling spells :external+python:data:`typing.Optional`: every module imports it as
+     ``from typing import Optional as Nullable``, and every signature uses that spelling.
+
+     It says the value may be ``None`` - nothing more. Whether a parameter is *optional* is decided by its default,
+     not by its annotation: a ``Nullable[...]`` parameter without a default is required and may be given ``None``.
+
+   OpenTelemetry
+   OTLP
+     `OpenTelemetry <https://opentelemetry.io/>`__ is the vendor-neutral standard for traces, metrics and logs, and
+     **OTLP** is its protocol. Its JSON encoding is one document every usual destination reads: a collector accepts
+     it natively, and Jaeger imports it.
+
+     A :term:`trace` exports itself that way - :meth:`Trace.ToJSON <pyTooling.Tracing.Trace.ToJSON>` and
+     :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`, see :ref:`TRACING/OTLP`. pyTooling exports every
+     :term:`span` as kind ``INTERNAL``, so the trace follows the conventions' *attributes*, not their span kinds.
+
+     Wikipedia: :wiki:`OpenTelemetry <OpenTelemetry>`
 
    Overloading
      :wiki:`Overloading <Function_overloading>` is providing several implementations of one name, chosen by the
@@ -529,6 +776,29 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   Path
+   Path Flavour
+     A *path* names a place in a hierarchy as a sequence of elements, not as a string: :mod:`pyTooling.GenericPath`
+     holds the elements, and a **flavour** says what the hierarchy looks like - its ``ELEMENT_DELIMITER``,
+     its ``ROOT_DELIMITER`` and the ``ELEMENT_TYPE`` its elements have.
+
+     :class:`pyTooling.GenericPath.URL.Path` is the flavour of a :term:`URL`. Composing with ``/`` and removing a
+     trailing delimiter are the flavour-independent part, so a new flavour states its three declarations and
+     inherits the rest.
+
+     .. note::
+
+        A path that starts at the root is *absolute*, and one that starts where it is read is *relative* - in the
+        path sense, which is not this glossary's :term:`relative`, a sibling's descendant in a tree.
+
+   Pipeline
+     A *pipeline* is one run of a CI service's automation for one commit: the :term:`jobs <job>` it schedules, the
+     :term:`steps <step>` they run, and the result they produce together.
+
+     :class:`pyTooling.CI.GitHub.Pipeline` models a GitHub Actions workflow run as one - with
+     :term:`called workflows <workflow>`, :term:`matrices <matrix>`, jobs and steps below it, each knowing its
+     parent. See :ref:`CI/GitHub`.
+
    Post-Order
      :wiki:`Post-order <Tree_traversal#Post-order,_LRN>` is a depth-first traversal of a :term:`tree` visiting a
      :term:`node` **after** its children.
@@ -552,6 +822,16 @@ Glossary
      :term:`CLI options <CLIOption>`.
 
      A program only assembles a command line, whereas an :term:`executable` also runs it.
+
+   Property
+   Read-only Property
+     A :external+python:class:`property` is an attribute computed by a method: reading it calls a getter, and
+     assigning it calls a setter - or fails, if there is none.
+
+     pyTooling writes a **read-only property** with :deco:`~pyTooling.Decorators.readonly`, which is a property
+     with a getter and nothing else, and which hands out the getter's type rather than :class:`~typing.Any` - see
+     :ref:`DECO/readonly`. Assignment behaviour is documented on the getter, because that is the doc-string Sphinx
+     renders.
 
    PyPI
      The `Python Package Index <https://pypi.org/>`__ is the public repository :program:`pip` installs from by
@@ -609,6 +889,17 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark2 fill:#69f,stroke:#37f;
 
+   Requirement
+   Requirements File
+     A *requirement* is a distribution another one needs, with the versions it accepts - ``pyTooling ~= 8.19`` -
+     and optionally an environment marker saying when it applies at all. A *requirements file* lists them, and may
+     include another with ``-r``.
+
+     :class:`~pyTooling.Dependency.Python.RequirementsFile` reads such a file as a **tree**: every file knows its
+     parent, its root and the chain between, ``AllRequirements`` yields them in the order the files state them
+     with the nearer statement winning, and a cycle raises rather than being read twice. See
+     :ref:`DEPENDENCIES/Python`.
+
    REST
    REST-API
      *Representational State Transfer* is an architectural style for web APIs: a resource is addressed by a
@@ -653,6 +944,15 @@ Glossary
           classDef cur fill:#9e9,stroke:#6e6;
           classDef mark1 fill:#69f,stroke:#37f,color:#eee;
 
+   Runner
+   Runner Group
+     A *runner* is the machine a :term:`job` runs on - hosted by the service or self-hosted - and a *runner group*
+     is how several of them are administered together, with who may use them.
+
+     :attr:`Job.RunnerName <pyTooling.CI.GitHub.Job.RunnerName>` and
+     :attr:`~pyTooling.CI.GitHub.Job.RunnerGroupName` report which one a job ran on; the :term:`labels <label>` it
+     asked for say what it wanted.
+
    Schema
      A *schema* is a formal description of the structure a document must have, written in a language of its own, so
      that a document can be checked against it instead of by reading it. :term:`XSD` is one for :term:`XML`,
@@ -670,6 +970,25 @@ Glossary
      .. code-block:: Bash
 
         xmllint --schema TestReport-v0.1.xsd --noout TestReport.xml
+
+   Semantic Version
+     A `semantic version <https://semver.org/>`__ numbers a release by what changed in it: ``major.minor.patch``,
+     where the major part is raised for a breaking change, the minor for a compatible feature and the patch for a
+     fix. A consumer can therefore state what it accepts.
+
+     :class:`~pyTooling.Versioning.SemanticVersion` parses one, in the variants :ref:`VERSIONING/SemVerVariants`
+     lists, and :term:`version range` states what a requirement accepts. See :term:`calendar version` for the
+     other scheme.
+
+     Wikipedia: :wiki:`Software versioning <Software_versioning#Semantic_versioning>`
+
+   Sentinel
+     A *sentinel* is a value that stands for "nothing to say here" where ``None`` is a legitimate value, or where
+     the real value can't be written yet.
+
+     :class:`~pyTooling.MetaClasses.ThisClass` is one: a class variable holding the class declaring it can't be
+     written in the class body, because the class doesn't exist while its body runs, so the sentinel stands in it
+     and :ref:`META/ExtendedType` replaces it with the finished class.
 
    Sibling
      *Siblings* are all direct :term:`child nodes <child>` of a node's :term:`parent` node except itself.
@@ -725,6 +1044,59 @@ Glossary
      Unlike a :term:`hardlink` it may point at a directory, may cross filesystems, and may *dangle* - the target can be
      removed or never have existed, which is why following one is an operation that can fail.
 
+   Span
+     A *span* is one timespan of a :term:`trace`: when it began, when it ended, what it is called, and the
+     attributes it carries. Spans nest, so a span holds the spans of whatever ran inside it.
+
+     :class:`pyTooling.Tracing.Span` is one. A span is timed by the ``with``-statement that enters and leaves it,
+     or constructed with times recorded elsewhere - see :ref:`TRACING/Recorded`.
+
+   SPDX
+     The `System Package Data Exchange <https://spdx.dev/>`__ is the standard for stating what a work is licensed
+     under: an identifier per license (``Apache-2.0``, ``MIT-0``), an exception list, and a syntax for combining
+     them - a :term:`license expression`.
+
+     :mod:`pyTooling.Licensing` is built on it: ``SPDX_INDEX`` maps every identifier it knows to a
+     :class:`~pyTooling.Licensing.License`, and a package's license is published as an expression rather than as a
+     classifier. See :ref:`LICENSING`.
+
+     Wikipedia: :wiki:`SPDX <Software_Package_Data_Exchange>`
+
+   Step
+     A *step* is one command or action of a :term:`job`, run in the job's order on the job's :term:`runner`, with
+     its own result.
+
+     :class:`pyTooling.CI.GitHub.Step` models one. A step that never started has no timing to report.
+
+   Subgraph
+     A *subgraph* is a part of a :term:`graph` handled as a unit - a cluster the drawing keeps together, or a
+     component the algorithm walks on its own.
+
+     :class:`pyTooling.Graph.Subgraph` is one, and it is the difference between the two relations a graph has: an
+     :class:`~pyTooling.Graph.Edge` stays inside a graph, while a :class:`~pyTooling.Graph.Link` crosses from one
+     subgraph into another.
+
+     Wikipedia: :wiki:`Glossary of graph theory: subgraph <Glossary_of_graph_theory#subgraph>`
+
+   Test Suite
+   Testcase
+   Marker
+     A *testcase* is one test - one thing that either holds or doesn't - and a *test suite* groups testcases and
+     further suites, so a run is a tree rather than a list.
+
+     pyTooling *marks* them instead of naming them: :deco:`~pyTooling.Testing.testsuite` and
+     :deco:`~pyTooling.Testing.testcase` are the **markers**, and they carry the title a report shows, which
+     frees the class' and method's names from having to read as prose. See :ref:`TESTING/Markers`.
+
+   Trace
+     A *trace* is the record of one execution: a tree of :term:`spans <span>` with their times, and the attributes
+     describing what each of them was.
+
+     :class:`pyTooling.Tracing.Trace` is the root span of such a tree, and exports itself as :term:`OTLP` JSON -
+     see :ref:`TRACING`.
+
+     Wikipedia: :wiki:`Tracing <Tracing_(software)>`
+
    TOML
      *Tom's Obvious, Minimal Language* is a text format for configuration files, specified at
      `toml.io <https://toml.io/>`__. It is what :file:`pyproject.toml` is written in, and the standard library reads
@@ -773,9 +1145,25 @@ Glossary
 
      Wikipedia: :wiki:`Uniform Resource Name <Uniform_Resource_Name>`
 
+   Version Range
+     A *version range* states which versions a requirement accepts - ``>=1.2.0,<2.0.0`` - as a set with a lower
+     and an upper bound, either of which may be open or absent.
+
+     :class:`~pyTooling.Versioning.VersionRange` is one, and a version expression is what a requirements file
+     writes, in the four dialects :ref:`VERSIONING/VersionRange` describes. An intersection keeps both operands'
+     bound handling, so an excluded bound stays excluded.
+
    Vertex
      A *vertex* is a :term:`node` in a :term:`graph` - :class:`pyTooling.Graph.Vertex`. Vertices in a graph are
      connected using :term:`edges <edge>`.
+
+   Workflow
+     A *workflow* is an automation file a CI service runs - and, below a :term:`pipeline`, a **called** workflow:
+     one workflow started by another, whose :term:`jobs <job>` belong to the caller's run.
+
+     :class:`pyTooling.CI.GitHub.Workflow` groups them, nested as deeply as they are called. GitHub reports no
+     nesting as such - a called workflow is recognized by the ``Caller / Job`` shape of a job's name, see
+     :ref:`CI/GitHub/Strings`.
 
    WSL
      The *Windows Subsystem for Linux* runs a Linux distribution on Windows. Python running in it **is** Python on
