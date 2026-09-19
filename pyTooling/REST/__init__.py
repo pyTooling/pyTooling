@@ -463,16 +463,36 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 				break
 			except HTTPError as ex:
 				if ex.code in TRANSIENT_HTTP_STATUS and attempt <= retries:
-					sleep(self._RetryDelay(attempt, self._RetryAfter(ex)))
+					sleep(self._RetryDelay(attempt, None if ex.headers is None else ex.headers.get("Retry-After", None)))
 					continue
 
-				raise self._Failed(ex, url, attempt) from ex
+				error = RESTError(f"Request failed with HTTP {ex.code}: {url}")
+				try:
+					answer = json_loads(ex.read())
+				except (OSError, ValueError):
+					answer = None
+
+				# A REST API reports the reason in a 'message' field. An answer that has none, or isn't JSON at all,
+				# is not a second failure - it just says nothing.
+				if isinstance(answer, dict) and isinstance(message := answer.get("message", None), str):
+					error.add_note(f"Answer: {message}")
+
+				self._AddErrorNotes(error, ex.code)
+				if attempt > 1:
+					error.add_note(f"Tried {attempt} times.")
+
+				raise error from ex
 			except OSError as ex:
 				if attempt <= retries:
 					sleep(self._RetryDelay(attempt, None))
 					continue
 
-				raise self._Unreachable(ex, url, attempt) from ex
+				error = RESTError(f"API couldn't be reached: {url}")
+				error.add_note(f"Reason: {ex.reason if isinstance(ex, URLError) else ex}")
+				if attempt > 1:
+					error.add_note(f"Tried {attempt} times.")
+
+				raise error from ex
 
 		return self._ProcessAnswer(body, contentType, url), self._NextResourcePath(link)
 
@@ -480,10 +500,13 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		Return the URL a resource is addressed by.
 
+		A resource path is always **below** the API, so a leading delimiter doesn't make it name its own root - which
+		is what :meth:`URL.__truediv__ <pyTooling.GenericPath.URL.URL.__truediv__>` would otherwise read it as.
+
 		:param resourcePath: Path of the resource below :attr:`APIURL`.
 		:returns:            The resource's URL.
 		"""
-		return f"{self._apiURL}/{resourcePath.lstrip('/')}"
+		return str(self._apiURL / resourcePath.lstrip("/"))
 
 	def _RequestHeaders(self, mediaType: Nullable[MediaType], headers: Nullable[dict[str, str]]) -> dict[str, str]:
 		"""
@@ -530,73 +553,6 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:param error:  The error the notes are added to.
 		:param status: The HTTP status the request failed with.
 		"""
-
-	def _Failed(self, exception: HTTPError, url: str, attempts: int) -> RESTError:
-		"""
-		Return the error for a request the API refused.
-
-		:param exception: The HTTP error the request failed with.
-		:param url:       The URL that was requested.
-		:param attempts:  How often the request was sent.
-		:returns:         The error to raise.
-		"""
-		error = RESTError(f"Request failed with HTTP {exception.code}: {url}")
-		if (message := self._AnswerMessage(exception)) is not None:
-			error.add_note(f"Answer: {message}")
-
-		self._AddErrorNotes(error, exception.code)
-		if attempts > 1:
-			error.add_note(f"Tried {attempts} times.")
-
-		return error
-
-	@staticmethod
-	def _Unreachable(exception: OSError, url: str, attempts: int) -> RESTError:
-		"""
-		Return the error for a request that never reached the API.
-
-		:param exception: The error the request failed with.
-		:param url:       The URL that was requested.
-		:param attempts:  How often the request was sent.
-		:returns:         The error to raise.
-		"""
-		error = RESTError(f"API couldn't be reached: {url}")
-		error.add_note(f"Reason: {exception.reason if isinstance(exception, URLError) else exception}")
-		if attempts > 1:
-			error.add_note(f"Tried {attempts} times.")
-
-		return error
-
-	@staticmethod
-	def _AnswerMessage(exception: HTTPError) -> Nullable[str]:
-		"""
-		Return what a refusing API said about itself.
-
-		A REST API reports the reason in a ``message`` field. An answer that has none, or isn't JSON at all, is not a
-		second failure - it just says nothing.
-
-		:param exception: The HTTP error the request failed with.
-		:returns:         The ``message`` field of the answer's body, or ``None``.
-		"""
-		try:
-			answer = json_loads(exception.read())
-		except (OSError, ValueError):
-			return None
-
-		if isinstance(answer, dict) and isinstance(message := answer.get("message", None), str):
-			return message
-
-		return None
-
-	@staticmethod
-	def _RetryAfter(exception: HTTPError) -> Nullable[str]:
-		"""
-		Return the pause a refusing API demands.
-
-		:param exception: The HTTP error the request failed with.
-		:returns:         The value of the answer's ``Retry-After`` header, or ``None``.
-		"""
-		return None if exception.headers is None else exception.headers.get("Retry-After", None)
 
 	def _RetryDelay(self, attempt: int, retryAfter: Nullable[str]) -> float:
 		"""

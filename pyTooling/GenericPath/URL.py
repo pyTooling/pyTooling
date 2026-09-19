@@ -40,7 +40,7 @@ from __future__            import annotations
 from enum                  import Flag
 from re                    import compile as re_compile
 from urllib.parse          import quote as urlQuote
-from typing                import ClassVar, Optional as Nullable, Mapping
+from typing                import ClassVar, Optional as Nullable, Mapping, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -470,24 +470,13 @@ class URL:
 
 			pathObj =   Path.Parse(path, hostObj)
 
-			parameters = {}
-			if query is not None:
-				for pair in query.split("&"):
-					key, separator, value = pair.partition("=")
-					if separator == "":
-						error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
-						error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
-						raise error
-
-					parameters[key] = value
-
 			return cls(
 				scheme,
 				pathObj,
 				hostObj,
 				user,
 				password,
-				parameters if len(parameters) > 0 else None,
+				cls._ParseQuery(query, url),
 				fragment
 			)
 
@@ -501,6 +490,71 @@ class URL:
 				break
 
 		raise error
+
+	@classmethod
+	def _ParseQuery(cls, query: Nullable[str], url: str) -> Nullable[dict[str, str]]:
+		"""
+		Parse a URL's query into its parameters.
+
+		:param query:     The query, without the leading ``?``, or ``None``.
+		:param url:       The URL the query came from, for the exception's message.
+		:returns:         The parameters by name, or ``None`` if the URL carries no query.
+		:raises URLError: When a parameter of the query is not a ``key=value`` pair.
+		"""
+		if query is None:
+			return None
+
+		parameters = {}
+		for pair in query.split("&"):
+			key, separator, value = pair.partition("=")
+			if separator == "":
+				error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
+				error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
+				raise error
+
+			parameters[key] = value
+
+		return parameters if len(parameters) > 0 else None
+
+	def __truediv__(self, other: Union[str, Path]) -> URL:
+		"""
+		Return this URL with a resource below it.
+
+		The right side is a **relative reference**: its path is appended below this URL's, and it brings its own query
+		and fragment, which this URL's are not carried into - :rfc:`3986` resolves a reference the same way. A path
+		that starts with a slash names where it starts itself and replaces this URL's path.
+
+		.. code-block:: python
+
+		   URL.Parse("https://example.org/api/v3") / "things/4711?fields=name"
+		   # https://example.org/api/v3/things/4711?fields=name
+
+		:param other:     The resource below this URL, as a string to parse or as a :class:`Path`.
+		:returns:         A new URL naming that resource.
+		:raises URLError: When a parameter of the right side's query is not a ``key=value`` pair.
+		"""
+		if isinstance(other, str):
+			path, _, fragment = other.partition("#")
+			path, _, query =    path.partition("?")
+			otherPath =  Path.Parse(path, self._host)
+			parameters = self._ParseQuery(query if query != "" else None, other)
+			fragment =   fragment if fragment != "" else None
+		elif isinstance(other, Path):
+			otherPath =  other
+			parameters = None
+			fragment =   None
+		else:
+			return NotImplemented
+
+		return self.__class__(
+			scheme=self._scheme,
+			path=self._path / otherPath,
+			host=self._host,
+			user=self._user,
+			password=self._password,
+			query=parameters,
+			fragment=fragment
+		)
 
 	def __str__(self) -> str:
 		"""
