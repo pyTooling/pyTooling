@@ -144,23 +144,22 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 
 		return result
 
-	def WithoutTrailingSlash(self) -> PathMixIn:
+	def WithoutTrailingDelimiter(self) -> PathMixIn:
 		"""
-		Return a path that doesn't end in the element delimiter.
+		Return a path that doesn't end in :attr:`ELEMENT_DELIMITER`.
 
 		A trailing delimiter is an empty last element, so ``/api/v3/`` and ``/api/v3`` are different paths although
 		they usually name the same thing. A path that something is appended to wants the latter, or the composition
-		yields a double delimiter.
+		yields two delimiters in a row.
 
-		Only one trailing delimiter is removed: a path ending in ``//`` names an empty element and then another, which
-		isn't the same as naming neither.
+		Only one trailing delimiter is removed: a path ending in two of them names an empty element and then another,
+		which isn't the same as naming neither.
 
 		:returns: A new path without a trailing delimiter, or this path, if it has none.
 		"""
-		if len(self._elements) == 0 or str(self._elements[-1]) != "":
+		if (elementCount := len(self._elements)) == 0 or str(self._elements[-1]) != "":
 			return self
-
-		if len(self._elements) > 1:
+		elif elementCount > 1:
 			return self.__class__(self._elements[:-1], self._isAbsolute)
 
 		# A path of nothing but the empty element is the root: it has no element to drop, so it stops being absolute.
@@ -186,7 +185,7 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		"""
 		if path.startswith(cls.ROOT_DELIMITER):
 			isAbsolute = True
-			path = path[len(cls.ELEMENT_DELIMITER):]
+			path = path[len(cls.ROOT_DELIMITER):]
 		else:
 			isAbsolute = False
 
