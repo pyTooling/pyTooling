@@ -34,7 +34,7 @@ A common set of missing exceptions in Python.
 
 .. hint::
 
-   See :ref:`high-level help <EXECPTION>` for explanations and usage examples.
+   See :ref:`high-level help <EXCEPTION>` for explanations and usage examples.
 
 .. seealso::
 

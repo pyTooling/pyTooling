@@ -6,19 +6,27 @@ Glossary
 .. glossary::
 
    Abstract Class
-     A :wiki:`abstract class <Abstract_type>` is a type, that cannot be instantiated directly. An *abstract* class may
+     An :wiki:`abstract class <Abstract_type>` is a type that cannot be instantiated directly. An *abstract* class may
      provide no implementation or an incomplete implementation.
 
-     In pyTooling such a type is assumed, when a class contains at least one :term:`abstract <Abstract Method>` or
-     :term:`mustoverride <Mustoverride Method>` method and pyToolings meta-class :ref:`META/ExtendedType` was applied.
+     In pyTooling a class is abstract when :ref:`META/ExtendedType` was applied and either of two things holds:
 
-     If an *abstract* class is instantiated, an exception is raised.
+     * it contains at least one :term:`abstract <Abstract Method>` or :term:`mustoverride <Mustoverride Method>`
+       method, or
+     * it is decorated with :deco:`~pyTooling.MetaClasses.abstractclass` - for a class that has nothing to mark
+       abstract and still exists only to be derived from. The marker describes that one class: a derived class is
+       concrete again unless it is decorated itself. See :ref:`META/AbstractClass`.
+
+     If an *abstract* class is instantiated, an :exc:`~pyTooling.MetaClasses.AbstractClassError` is raised.
 
    Abstract Method
-     An *abstract* method provides no implementation (no code) and must therefore be implemented by all derived classes.
+     An *abstract* method provides no implementation (no code) and must therefore be
+     :term:`overridden <Overriding>` by all derived classes. It is marked with
+     :deco:`~pyTooling.MetaClasses.abstractmethod` - see :ref:`META/AbstractMethod`.
 
-     If an *abstract* method is called, an exception is raised. Also if, an *abstract* method is not overridden, an
-     exception is raised when instantiating the class, because the :term:`class is abstract <Abstract Class>`.
+     If an *abstract* method is called, a :exc:`NotImplementedError` is raised. If it is not overridden, an
+     :exc:`~pyTooling.MetaClasses.AbstractClassError` is raised when the class is instantiated, because the
+     :term:`class is abstract <Abstract Class>`.
 
    Ancestor
      *Ancestors* are all direct and indirect predecessors of a :term:`node` (:term:`parent node <parent>` and parent
@@ -58,7 +66,8 @@ Glossary
 
    Base
    Base-Class
-     A *base-class* is an ancestor class for other classes derived therefrom.
+     A *base-class* is an ancestor class for other classes derived therefrom by :term:`inheritance`. A class derived
+     from more than one has a primary base-class and, usually, one or more :term:`mixin-classes <Mixin>`.
 
      .. mermaid::
         :caption: Base-class in a class hierarchy.
@@ -134,8 +143,12 @@ Glossary
    Cygwin
      :wiki:`Cygwin <Cygwin>` is a :wiki:`POSIX <POSIX>`-compatible programming and runtime environment for Windows.
 
+     Which environment Python runs in is what :class:`~pyTooling.Platform.Platform` reports, because a path, an
+     executable's name and the shell differ between :term:`native`, Cygwin, :term:`MSYS2` and :term:`WSL`.
+
    DAG
-     A *directed acyclic graph* (DAG) is a :term:`directed graph <DG>` without backward edges and therefore free of cycles.
+     A *directed acyclic graph* (DAG) is a :term:`directed graph <DG>` without backward edges and therefore free of
+     cycles.
 
      .. mermaid::
         :caption: A directed acyclic graph.
@@ -224,7 +237,8 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f;
 
    Edge
-     An *edge* is a relation from :term:`vertex` to vertex in a :term:`graph`.
+     An *edge* is a relation from :term:`vertex` to vertex in a :term:`graph` - :class:`pyTooling.Graph.Edge`, or
+     :class:`~pyTooling.Graph.Link` where the relation crosses into another :term:`subgraph <Graph>`.
 
    Executable
      An *executable* is a :term:`program` that this API can also **run**: :class:`~pyTooling.CLIAbstraction.Executable`
@@ -250,6 +264,9 @@ Glossary
      * Directed Graphs without Cycles: :term:`Directed Acyclic Graph <DAG>`
      * Directed Acyclic Graph without Side-Edges: :term:`Tree`
 
+     :mod:`pyTooling.Graph` implements one, with :class:`~pyTooling.Graph.Vertex`, :class:`~pyTooling.Graph.Edge`
+     and :class:`~pyTooling.Graph.Subgraph`.
+
      .. mermaid::
         :caption: A directed graph with backward-edges denoted by dotted vertex relations.
 
@@ -267,8 +284,8 @@ Glossary
           classDef node fill:#eee,stroke:#777,font-size:smaller;
 
    Grandchild
-     *Grandchildren* are direct successors of a node's :term:`children <child>` and therefore indirect successors of a
-    :term:`node`.
+     *Grandchildren* are direct successors of a node's :term:`children <child>` and therefore indirect successors of
+     a :term:`node`.
 
      .. mermaid::
         :caption: Grandchildren of the current node are marked in blue.
@@ -365,7 +382,12 @@ Glossary
      It is to JSON what an :term:`XSD` is to :term:`XML`.
 
    Meta-Class
-     A *meta-class* is a class helping to construct classes. Thus, it's the type of a type.
+     A *meta-class* is a class helping to construct classes. Thus, it's the type of a type - the default one is
+     :external+python:class:`type`.
+
+     pyTooling's is :class:`~pyTooling.MetaClasses.ExtendedType`, which derives :term:`slots` from a class' annotated
+     fields and implements the :term:`abstract class`, :term:`mixin` and :term:`singleton` behaviour this glossary
+     describes - see :ref:`META`.
 
      .. mermaid::
         :caption: Relation of meta-classes, classes and instances.
@@ -389,7 +411,9 @@ Glossary
           classDef mark2 fill:#69f,stroke:#37f,font-size:smaller;
 
    MinGW
-     Minimalistic GNU for Windows.
+     *Minimalist GNU for Windows* is a toolchain building native Windows programs with the GNU compilers. The
+     maintained fork is `MinGW-w64 <https://www.mingw-w64.org/>`__, which :term:`MSYS2` ships as one of its
+     environments - beside the :term:`UCRT` one - and which :class:`~pyTooling.Platform.Platform` tells apart.
 
      Wikipedia: :wiki:`MinGW <Mingw-w64>`
 
@@ -437,20 +461,23 @@ Glossary
 
    Mustoverride Method
      A *must-override* method provides a partial implementation (incomplete code) and must therefore be fully
-     implemented by all derived classes.
+     implemented by all derived classes. It is marked with :deco:`~pyTooling.MetaClasses.mustoverride`, and unlike an
+     :term:`abstract method` its implementation can be called through :external+python:class:`super` - see
+     :ref:`META/MustOverwrite`.
 
-     If a *must-override* method is not overridden, an exception is raised when instantiating the class, because the
-     :term:`class is abstract <Abstract Class>`.
+     If a *must-override* method is not overridden, an exception is raised when the class is instantiated, because
+     the :term:`class is abstract <Abstract Class>`.
 
-   native
-     A *native environment* is a platform just with the operating system. There is no additional environment layer like
-     MSYS2.
+   Native
+     A *native environment* is a platform just with the operating system. There is no additional environment layer
+     like :term:`MSYS2`, :term:`Cygwin` or :term:`WSL`, which is what
+     :attr:`Platform.IsNativePlatform <pyTooling.Platform.Platform.IsNativePlatform>` reports.
 
    Node
      A *node* is one element of a :term:`tree` or a :term:`graph`, holding a value and its relations to other nodes.
 
-     In a tree a node has at most one :term:`parent`; in a graph it is called a :term:`vertex` and is connected by
-     :term:`edges <edge>`.
+     In a tree a node has at most one :term:`parent` - :class:`pyTooling.Tree.Node`; in a graph it is called a
+     :term:`vertex` and is connected by :term:`edges <edge>`.
 
    Overloading
      :wiki:`Overloading <Function_overloading>` is providing several implementations of one name, chosen by the
@@ -679,6 +706,9 @@ Glossary
      The :wiki:`singleton design pattern <Singleton_pattern>` ensures only a single instance of a class to exist. If
      another instance is going to be created, a previously cached instance of that class will be returned.
 
+     pyTooling writes one with :class:`~pyTooling.MetaClasses.ExtendedType` and ``singleton=True``, or with the
+     :deco:`~pyTooling.MetaClasses.singleton` decorator - see :ref:`META/Singleton`.
+
    Slots
      :external+python:ref:`__slots__ <slots>` fixes the set of instance attributes a class allows, so instances need
      no ``__dict__``.
@@ -705,36 +735,52 @@ Glossary
      Wikipedia: :wiki:`TOML <TOML>`
 
    Tree
-     A *tree* is a data structure made of :term:`nodes <node>` and parent-child relations. All nodes in a tree share one
-     common :term:`ancestor` call :term:`root`.
+     A *tree* is a data structure made of :term:`nodes <node>` and parent-child relations. All nodes in a tree share
+     one common :term:`ancestor` called :term:`root`.
 
      A tree is a special form of a :term:`directed acyclic graph (DAG) <DAG>`.
 
+     :mod:`pyTooling.Tree` implements one, and the family words this glossary defines - :term:`ancestor`,
+     :term:`descendant`, :term:`sibling`, :term:`relative` - are the names of its iterators and properties.
+
    UCRT
-     Universal C Runtime
+     The *Universal C Runtime* is the C runtime library Windows ships itself, so a program linked against it needs
+     no runtime of its own. It is the newer of the two :term:`MSYS2` toolchains - ``UCRT64`` beside the
+     :term:`MinGW` one - and :class:`~pyTooling.Platform.Platform` reports which of them Python runs in.
 
      Wikipedia: :wiki:`Microsoft Windows library files: UCRT <Microsoft_Windows_library_files#UCRT>`
 
    URI
-     Uniform Resource Identifier
+     A *Uniform Resource Identifier* names a resource, and is specified by :rfc:`3986`. It is the general form: a
+     :term:`URL` is a URI that says **where** the resource is, a :term:`URN` one that says **what** it is without
+     saying where.
 
      Wikipedia: :wiki:`Uniform Resource Identifier <Uniform_Resource_Identifier>`
 
    URL
-     Uniform Resource Locator
+     A *Uniform Resource Locator* is a :term:`URI` that says where a resource is: a scheme, an authority - host,
+     port and optionally user and password -, a path, a query and a fragment, as :rfc:`3986` writes them.
+
+     :class:`~pyTooling.GenericPath.URL.URL` parses one, composes it with a resource below it using the ``/``
+     operator, and reports what it rejects as a :exc:`~pyTooling.GenericPath.URL.URLError`. Its path is a path
+     flavour of :mod:`pyTooling.GenericPath`, so it is a sequence of elements rather than a string.
 
      Wikipedia: :wiki:`Uniform Resource Locator <URL>`
 
    URN
-     Uniform Resource Name
+     A *Uniform Resource Name* is a :term:`URI` in the ``urn:`` scheme, specified by :rfc:`8141`. It names a
+     resource persistently without saying where to get it - ``urn:isbn:0451450523`` is a book, not a download.
 
      Wikipedia: :wiki:`Uniform Resource Name <Uniform_Resource_Name>`
 
    Vertex
-     A vertex is a :term:`node` in a graph. Vertexes in a graph are connected using :term:`edges <edge>`.
+     A *vertex* is a :term:`node` in a :term:`graph` - :class:`pyTooling.Graph.Vertex`. Vertices in a graph are
+     connected using :term:`edges <edge>`.
 
    WSL
-     Windows System for Linux
+     The *Windows Subsystem for Linux* runs a Linux distribution on Windows. Python running in it **is** Python on
+     Linux - :class:`~pyTooling.Platform.Platform` reports Linux, and says it is WSL beside it, because the file
+     system and the executables around it are the host's.
 
      Wikipedia: :wiki:`Windows Subsystem for Linux <Windows_Subsystem_for_Linux>`
 
