@@ -204,6 +204,9 @@ Version 10.x (2026)
        what only GitHub reports, so :attr:`OTLP.CICD.Pipeline.Task.Run.ID <pyTooling.Tracing.CI.OTLP>` spells
        ``cicd.pipeline.task.run.id``. The closed value sets are enumerations -
        :class:`~pyTooling.Tracing.CI.SpanKind` and :class:`~pyTooling.Tracing.CI.Result`.
+     * A trace **renders as a Gantt chart**: :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans
+       in rows independently of a drawing library, and :mod:`pyTooling.Tracing.Render.Matplotlib` writes the chart as
+       SVG, PNG or PDF. matplotlib is installed by the new extra ``pyTooling[diagram]``.
 
    * :mod:`pyTooling.Packaging`
 
