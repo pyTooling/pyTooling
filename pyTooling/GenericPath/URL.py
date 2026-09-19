@@ -456,7 +456,7 @@ class URL:
 					error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
 					raise error from ex
 
-			hostObj =    None if host is None   else Host(host, port)
+			hostObj =    None if host is None else Host(host, port)
 			pathObj =    Path.Parse(path, hostObj)
 			parameters = None if query is None else cls._ParseQuery(query, url)
 
