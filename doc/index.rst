@@ -304,6 +304,7 @@ Common Helper Functions
       * :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
       * :ref:`COMMON/Helper/mergedicts` merges multiple dictionaries into a new dictionary.
       * :ref:`COMMON/Helper/zipdicts` iterate multiple dictionaries simultaneously.
+      * :ref:`COMMON/Helper/parseISO8601Timestamp` parses an ISO 8601 timestamp.
 
    .. grid-item::
       :columns: 6

@@ -59,6 +59,7 @@ __documentation_url__ = "https://pyTooling.github.io/pyTooling"
 __issue_tracker_url__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections         import deque
+from datetime            import datetime, tzinfo
 from importlib.resources import files
 from numbers             import Number
 from os                  import chdir
@@ -435,6 +436,36 @@ def zipdicts(*dicts: dict[Hashable, Any]) -> Generator[tuple[Any, ...], None, No
 			yield key, item0, *(d[key] for d in ds[1:])
 
 	return gen(dicts)
+
+
+@export
+def parseISO8601Timestamp(value: Nullable[str], defaultTimeZone: Nullable[tzinfo] = None) -> Nullable[datetime]:
+	"""
+	Parse an ISO 8601 timestamp.
+
+	A timestamp carrying no UTC offset is naive, and a naive timestamp can't be compared with an aware one. Whether
+	that's a defect depends on where the timestamp came from, so the caller decides: a time zone given as
+	``defaultTimeZone`` is attached to such a timestamp, while ``None`` leaves it naive.
+
+	:param value:           The timestamp, e.g. ``'2026-09-15T06:35:24Z'``, or ``None``.
+	:param defaultTimeZone: Optional, time zone to attach to a timestamp that carries no UTC offset.
+	:returns:               The timestamp, or ``None`` if the value is ``None`` or empty.
+	:raises ValueError:     If the value isn't an ISO 8601 timestamp.
+	"""
+	if value is None or value == "":
+		return None
+
+	try:
+		timestamp = datetime.fromisoformat(value)
+	except (TypeError, ValueError) as ex:
+		error = ValueError(f"'{value}' isn't an ISO 8601 timestamp.")
+		error.add_note("An ISO 8601 timestamp reads like '2026-09-15T06:35:24Z'.")
+		raise error from ex
+
+	if defaultTimeZone is not None and timestamp.utcoffset() is None:
+		timestamp = timestamp.replace(tzinfo=defaultTimeZone)
+
+	return timestamp
 
 
 @export
