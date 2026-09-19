@@ -105,9 +105,9 @@ class ElementMixIn(Base, mixin=True):
 class PathMixIn(metaclass=ExtendedType, mixin=True):
 	"""Mixin-class for a path."""
 
-	ELEMENT_DELIMITER: ClassVar[str] = "/"              #: Path element delimiter sign.
-	ROOT_DELIMITER:    ClassVar[str] = "/"              #: Root element delimiter sign.
-	ELEMENT_TYPE:      ClassVar[type[ElementMixIn]] = ElementMixIn  #: Type an element of this path flavour has.
+	ELEMENT_DELIMITER: ClassVar[str] = "/"          #: Path element delimiter sign.
+	ROOT_DELIMITER:    ClassVar[str] = "/"          #: Root element delimiter sign.
+	ELEMENT_TYPE:      ClassVar[type[ElementMixIn]]  #: Type an element of this path flavour has. Every flavour names it.
 
 	_isAbsolute: bool                       #: True, if the path is absolute.
 	_elements:   list[ElementMixIn]         #: List of path elements.
@@ -202,21 +202,16 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		return self if not self._isAbsolute else self.__class__(self._elements, False)
 
 	@classmethod
-	def Parse(
-		cls,
-		path: str,
-		root: RootMixIn,
-		pathCls: type[PathMixIn],
-		elementCls: type[ElementMixIn]
-	) -> PathMixIn:
+	def Parse(cls, path: str, root: Nullable[RootMixIn] = None) -> PathMixIn:
 		"""
 		Parses a string representation of a path and returns a path instance.
 
-		:param path:       Path to be parsed.
-		:param root:       Root element the parsed path is relative to.
-		:param pathCls:    Type used to create the path.
-		:param elementCls: Type used to create the path elements.
-		:returns:          A path instance of type ``pathCls``.
+		The path and its elements are of this flavour's types - the class this is called on, and the
+		:attr:`ELEMENT_TYPE` it names.
+
+		:param path: Path to be parsed.
+		:param root: Optional, root element the parsed path is relative to. Default: no root.
+		:returns:    A path instance of this class.
 		"""
 		if path.startswith(cls.ROOT_DELIMITER):
 			isAbsolute = True
@@ -227,11 +222,9 @@ class PathMixIn(metaclass=ExtendedType, mixin=True):
 		parent = root
 		elements = []
 		for part in path.split(cls.ELEMENT_DELIMITER):
-			element = elementCls(parent, part)
-			parent = element
-			elements.append(element)
+			elements.append(parent := cls.ELEMENT_TYPE(parent, part))
 
-		return pathCls(elements, isAbsolute)
+		return cls(elements, isAbsolute)
 
 
 @export
