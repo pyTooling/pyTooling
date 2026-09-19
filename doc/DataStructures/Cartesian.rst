@@ -133,7 +133,7 @@ the offending type in a note.
 .. seealso::
 
    :ref:`STRUCT/Cartesian3D/Point3D`
-      |rarr| The same point with a ``z`` coordinate.
+      |rarr| Its counterpart, the point with a ``z`` coordinate.
 
 
 .. _STRUCT/Cartesian2D/Origin2D:
@@ -144,6 +144,13 @@ Origin2D
 An :class:`~pyTooling.Cartesian2D.Origin2D` is a :class:`~pyTooling.Cartesian2D.Point2D` fixed at ``(0, 0)`` - its
 constructor takes no coordinates. It exists so a function needing *the* origin can say so in its signature instead
 of checking two numbers.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Point2D`
+      |rarr| Its base-class, the 2-dimensional point.
+   :ref:`STRUCT/Cartesian3D/Origin3D`
+      |rarr| Its counterpart, the origin with a ``z`` coordinate.
 
 
 .. _STRUCT/Cartesian2D/Offset2D:
@@ -162,6 +169,11 @@ and subtract with each other, and negate:
 
 Unlike a point, an offset compares with ``==`` and ``!=`` - two displacements are equal when their components are.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Offset3D`
+      |rarr| Its counterpart, the offset with a ``zOffset``.
+
 
 .. _STRUCT/Cartesian2D/Size2D:
 
@@ -170,6 +182,11 @@ Size2D
 
 A :class:`~pyTooling.Cartesian2D.Size2D` is an **extent**: ``width`` and ``height``. It is deliberately not an
 offset - adding a size to a point is meaningless, and keeping the types apart is what prevents it.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Size3D`
+      |rarr| Its counterpart, the size with a depth.
 
 
 .. _STRUCT/Cartesian2D/Segment2D:
@@ -182,6 +199,11 @@ A :class:`~pyTooling.Cartesian2D.Segment2D` is a ``start`` and an ``end`` point.
 Its constructor **copies both points by default**, so a segment doesn't change when the points it was built from
 move later. ``copyPoints=False`` keeps the references instead, which is what
 :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` uses to let consecutive edges share a corner.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Segment3D`
+      |rarr| Its counterpart, the segment between two 3D points.
 
 
 .. _STRUCT/Cartesian2D/LineSegment2D:
@@ -196,6 +218,13 @@ measurements:
   even for integer coordinates;
 * :meth:`~pyTooling.Cartesian2D.LineSegment2D.AngleTo` - the angle to another line segment;
 * :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset` - the segment as the displacement from start to end.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Segment2D`
+      |rarr| Its base-class, the 2-dimensional segment.
+   :ref:`STRUCT/Cartesian3D/LineSegment3D`
+      |rarr| Its counterpart, the line segment in 3D.
 
 
 .. _STRUCT/Cartesian2D/Shapes:
@@ -216,6 +245,11 @@ Shape
 :class:`~pyTooling.Cartesian2D.Shapes.Shape` is the empty base-class of every 2D shape. It carries no fields; it
 exists so a function can accept *a shape*.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Volume`
+      |rarr| Its counterpart, the base-class of the 3-dimensional volumes.
+
 
 .. _STRUCT/Cartesian2D/Trapezium:
 
@@ -231,6 +265,11 @@ so consecutive edges share a corner object and the outline stays closed.
 
 A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+
 
 .. _STRUCT/Cartesian2D/Rectangle:
 
@@ -241,6 +280,13 @@ A :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` is a trapezium whose opposite
 length, with 90 |degree| inner angles. The constructor compares the opposite edges' lengths and the angles between
 consecutive edges, and raises :exc:`ValueError` when the four corners describe something else.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Trapezium`
+      |rarr| Its base-class, the four-cornered shape every other one narrows.
+   :ref:`STRUCT/Cartesian3D/Cuboid`
+      |rarr| Its counterpart, the volume a rectangle corresponds to.
+
 
 .. _STRUCT/Cartesian2D/Square:
 
@@ -249,6 +295,13 @@ Square
 
 A :class:`~pyTooling.Cartesian2D.Shapes.Square` is a rectangle whose edges are all the same length - one more
 comparison, one more :exc:`ValueError`.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Rectangle`
+      |rarr| Its base-class, the trapezium with four right angles.
+   :ref:`STRUCT/Cartesian3D/Cube`
+      |rarr| Its counterpart, the volume a square corresponds to.
 
 
 .. _STRUCT/Cartesian3D:
@@ -283,7 +336,7 @@ A :class:`~pyTooling.Cartesian3D.Point3D` has ``x``, ``y`` and ``z``, and the sa
 .. seealso::
 
    :ref:`STRUCT/Cartesian2D/Point2D`
-      |rarr| The 2-dimensional point, where the arithmetic is written out as a table.
+      |rarr| Its counterpart, the 2-dimensional point.
 
 
 .. _STRUCT/Cartesian3D/Origin3D:
@@ -292,6 +345,13 @@ Origin3D
 ========
 
 :class:`~pyTooling.Cartesian3D.Origin3D` is a :class:`~pyTooling.Cartesian3D.Point3D` fixed at ``(0, 0, 0)``.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Point3D`
+      |rarr| Its base-class, the point with a ``z`` coordinate.
+   :ref:`STRUCT/Cartesian2D/Origin2D`
+      |rarr| Its counterpart, the 2-dimensional origin.
 
 
 .. _STRUCT/Cartesian3D/Offset3D:
@@ -302,6 +362,11 @@ Offset3D
 :class:`~pyTooling.Cartesian3D.Offset3D` holds ``xOffset``, ``yOffset`` and ``zOffset``, and negates, adds,
 subtracts and compares as its 2D counterpart does.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Offset2D`
+      |rarr| Its counterpart, the 2-dimensional offset.
+
 
 .. _STRUCT/Cartesian3D/Size3D:
 
@@ -309,6 +374,11 @@ Size3D
 ======
 
 :class:`~pyTooling.Cartesian3D.Size3D` is ``width``, ``height`` and ``depth``.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Size2D`
+      |rarr| Its counterpart, the 2-dimensional size.
 
 
 .. _STRUCT/Cartesian3D/Segment3D:
@@ -319,6 +389,11 @@ Segment3D
 :class:`~pyTooling.Cartesian3D.Segment3D` is a ``start`` and an ``end`` point, copied on construction unless
 ``copyPoints=False``.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Segment2D`
+      |rarr| Its counterpart, the 2-dimensional segment.
+
 
 .. _STRUCT/Cartesian3D/LineSegment3D:
 
@@ -327,6 +402,13 @@ LineSegment3D
 
 :class:`~pyTooling.Cartesian3D.LineSegment3D` adds the measurements - length in three dimensions, the angle to
 another line segment, and conversion to an offset.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Segment3D`
+      |rarr| Its base-class, the segment between two 3D points.
+   :ref:`STRUCT/Cartesian2D/LineSegment2D`
+      |rarr| Its counterpart, the 2-dimensional line segment.
 
 
 .. _STRUCT/Cartesian3D/Volumes:
@@ -349,6 +431,11 @@ Volume
 :class:`~pyTooling.Cartesian3D.Volumes.Volume` is the empty base-class of every 3D volume, matching
 :class:`~pyTooling.Cartesian2D.Shapes.Shape`.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its counterpart, the base-class of the 2-dimensional shapes.
+
 
 .. _STRUCT/Cartesian3D/Cuboid:
 
@@ -358,6 +445,13 @@ Cuboid
 :class:`~pyTooling.Cartesian3D.Volumes.Cuboid` is intended as a volume bounded by six rectangles - the counterpart
 of :class:`~pyTooling.Cartesian2D.Shapes.Rectangle`.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Volume`
+      |rarr| Its base-class, the base-class of the 3-dimensional volumes.
+   :ref:`STRUCT/Cartesian2D/Rectangle`
+      |rarr| Its counterpart, the trapezium with four right angles.
+
 
 .. _STRUCT/Cartesian3D/Cube:
 
@@ -366,3 +460,10 @@ Cube
 
 :class:`~pyTooling.Cartesian3D.Volumes.Cube` is intended as a cuboid of six equally sized squares - the counterpart
 of :class:`~pyTooling.Cartesian2D.Shapes.Square`.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Cuboid`
+      |rarr| Its base-class, the volume a rectangle corresponds to.
+   :ref:`STRUCT/Cartesian2D/Square`
+      |rarr| Its counterpart, the rectangle with four equal sides.
