@@ -41,7 +41,7 @@ from pyTooling.CI.GitHub         import GitHubError
 from pyTooling.Common            import parseISO8601Timestamp
 from pyTooling.Exceptions        import ToolingException
 from pyTooling.REST              import RESTError
-from pyTooling.Tracing           import Span, Trace, TracingError
+from pyTooling.Tracing           import Span, Trace
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import GitHub, WorkflowRunReader
 from pyTooling.Testing           import Testcase
@@ -463,7 +463,7 @@ class Reader(Testcase):
 			f"{self._api}/jobs?filter=latest&per_page=100": _Response({}),
 		})
 		with patcher:
-			with self.assertRaises(TracingError) as context:
+			with self.assertRaises(GitHubError) as context:
 				_ = WorkflowRunReader("owner/repo").ReadRun(4711)
 
 		self.assertIn("Field 'jobs' is missing", str(context.exception))

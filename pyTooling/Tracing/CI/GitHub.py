@@ -52,13 +52,13 @@ from datetime              import datetime
 from typing                import Any, ClassVar, Iterable, Optional as Nullable, Union
 
 from pyTooling.CI              import JSONObject
-from pyTooling.CI.GitHub       import Base, Conclusion, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
+from pyTooling.CI.GitHub       import Base, Conclusion, GitHubError, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, readonly
 from pyTooling.GenericPath.URL import URL
 from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.REST            import RESTClient, RESTError
-from pyTooling.Tracing         import AttributeValue, Span, Trace, TracingError
+from pyTooling.Tracing         import AttributeValue, Span, Trace
 from pyTooling.Tracing.CI      import CI, OTLP, Result, SpanKind
 
 
@@ -203,7 +203,7 @@ class WorkflowRunReader(RESTClient):
 		:raises TypeError:    If parameter 'attempt' is not of type :class:`int`.
 		:raises ValueError:   If parameter 'attempt' isn't positive.
 		:raises RESTError:    If a request fails, or GitHub's answer isn't a JSON object.
-		:raises TracingError: If GitHub's answer lacks a mandatory field.
+		:raises GitHubError:  If GitHub's answer lacks a mandatory field.
 		"""
 		if runID is None:
 			raise ValueError("Parameter 'runID' is None.")
@@ -239,7 +239,7 @@ class WorkflowRunReader(RESTClient):
 		while nextPath is not None:
 			page, nextPath = self.GetJSONObject(nextPath)
 			if not isinstance(pageJobs := page.get("jobs", None), list):
-				raise TracingError(f"Field 'jobs' is missing in the answer of '{jobsPath}'.")
+				raise GitHubError(f"Field 'jobs' is missing in the answer of '{jobsPath}'.")
 			jobs.extend(pageJobs)
 
 		return self.ConvertWorkflowRun(run, jobs)
