@@ -52,7 +52,7 @@ from datetime              import datetime
 from json                  import loads as json_loads
 from re                    import compile as re_compile
 from time                  import sleep
-from typing                import Any, Iterable, Optional as Nullable
+from typing                import Any, ClassVar, Iterable, Optional as Nullable
 from urllib.error          import HTTPError
 from urllib.request        import Request, urlopen
 
@@ -72,7 +72,7 @@ GITHUB_API_URL = "https://api.github.com"
 
 
 @export
-class GitHub:
+class GitHub(metaclass=ExtendedType, slots=True):
 	"""
 	Attribute keys naming what only GitHub Actions reports, beside the keys of
 	:class:`~pyTooling.Tracing.CI.OTLP`.
@@ -81,35 +81,35 @@ class GitHub:
 	``'github.runner.labels'``.
 	"""
 
-	Conclusion = "github.conclusion"  #: GitHub's own conclusion, next to the CI/CD result it was mapped to.
-	Event =      "github.event"       #: The event that started the run, e.g. ``'push'``.
+	Conclusion: ClassVar[str] = "github.conclusion"  #: GitHub's own conclusion, next to the result it maps to.
+	Event:      ClassVar[str] = "github.event"       #: The event that started the run, e.g. ``'push'``.
 
-	class Run:
+	class Run(metaclass=ExtendedType, slots=True):
 		"""Attribute keys naming a workflow run."""
 
-		Attempt = "github.run.attempt"  #: Which attempt of the run this is.
-		Number =  "github.run.number"   #: The run's number within its workflow.
+		Attempt: ClassVar[str] = "github.run.attempt"  #: Which attempt of the run this is.
+		Number:  ClassVar[str] = "github.run.number"   #: The run's number within its workflow.
 
-	class Workflow:
+	class Workflow(metaclass=ExtendedType, slots=True):
 		"""Attribute keys naming the workflow a run belongs to."""
 
-		Path = "github.workflow.path"  #: The workflow's YAML file in the repository.
+		Path: ClassVar[str] = "github.workflow.path"  #: The workflow's YAML file in the repository.
 
-	class Matrix:
+	class Matrix(metaclass=ExtendedType, slots=True):
 		"""Attribute keys naming a matrix."""
 
-		Dimensions = "github.matrix.dimensions"  #: The values an instance ran with, e.g. ``['ubuntu-26.04', '3.14']``.
+		Dimensions: ClassVar[str] = "github.matrix.dimensions"  #: One instance's values, e.g. ``['ubuntu-26.04', '3.14']``.
 
-	class Runner:
+	class Runner(metaclass=ExtendedType, slots=True):
 		"""Attribute keys naming the runner a job ran on."""
 
-		Labels = "github.runner.labels"  #: The labels the job requested its runner by, e.g. ``['ubuntu-26.04']``.
-		Group =  "github.runner.group"   #: The runner group the runner belongs to.
+		Labels: ClassVar[str] = "github.runner.labels"  #: The labels the job asked for, e.g. ``['ubuntu-26.04']``.
+		Group:  ClassVar[str] = "github.runner.group"   #: The runner group the runner belongs to.
 
-	class Step:
+	class Step(metaclass=ExtendedType, slots=True):
 		"""Attribute keys naming a step of a job."""
 
-		Number = "github.step.number"  #: The step's position in its job, counted from one.
+		Number: ClassVar[str] = "github.step.number"  #: The step's position in its job, counted from one.
 
 _NEXT_LINK = re_compile(r'<([^>]+)>;\s*rel="next"')
 """Pattern extracting the URL of the next page from a ``Link`` header."""
