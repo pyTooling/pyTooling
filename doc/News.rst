@@ -14,6 +14,31 @@ Version 10.x (2026)
 
    .. rubric:: New Features
 
+   * :mod:`pyTooling.REST` is a new package: a small client for JSON REST APIs, built on the standard library, so
+     nothing building on it drags an HTTP stack into every consumer.
+
+     * A resource is addressed by its path below :attr:`~pyTooling.REST.RESTClient.APIURL`, which is a
+       :class:`~pyTooling.GenericPath.URL.URL`, so the API is stated once instead of in every call.
+     * :meth:`~pyTooling.REST.RESTClient.GetJSONObject` reads a resource and says where its next page is;
+       :meth:`~pyTooling.REST.RESTClient.PostJSONObject`, :meth:`~pyTooling.REST.RESTClient.PutJSONObject`,
+       :meth:`~pyTooling.REST.RESTClient.PatchJSONObject` and :meth:`~pyTooling.REST.RESTClient.DeleteResource`
+       write one.
+     * The answer's media type is checked before it is read as a JSON object.
+       :meth:`MediaType.Matches <pyTooling.REST.MediaType.Matches>` asks whether a ``Content-Type`` header names a
+       media type: the header's parameters are ignored, the name is compared case-insensitively, and the :rfc:`6839`
+       structured syntax suffix counts, so ``application/vnd.github+json`` is ``application/json``.
+     * The next page is read from the :rfc:`8288` ``Link`` header. One pointing outside the client's own API is
+       rejected rather than followed, because the token is only sent to that API.
+     * A transiently failing request - :data:`~pyTooling.REST.TRANSIENT_HTTP_STATUS`, a timeout, or an unreachable
+       API - is tried again after an exponentially growing pause, or one as long as a ``Retry-After`` header
+       demands, capped at :data:`~pyTooling.REST.MAXIMUM_RETRY_AFTER`. A request that isn't idempotent - ``POST``
+       and ``PATCH`` - is sent once, because repeating it can create or change a resource twice.
+     * :meth:`~pyTooling.REST.RESTClient._Authorization` and :meth:`~pyTooling.REST.RESTClient._AddErrorNotes` are
+       what a client of one API overrides: the bearer scheme of :rfc:`6750` is the default, and a status means what
+       that API says it means.
+     * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
+       working.
+
    * :mod:`pyTooling.CI` is a new package holding data models of continuous integration services.
 
      * :mod:`pyTooling.CI.GitHub` reads a GitHub Actions workflow run into a tree of
