@@ -237,6 +237,11 @@ Version 10.x (2026)
      * The module raises its own :exc:`~pyTooling.Packaging.PackagingError`, so a caller can catch what this module
        reports without catching everything derived from :exc:`~pyTooling.Exceptions.ToolingException`.
 
+   * :mod:`pyTooling.Common`
+
+     * :func:`~pyTooling.Common.parseISO8601Timestamp` parses an ISO 8601 timestamp. Whether a timestamp carrying no
+       UTC offset stays naive is the caller's decision, given as ``defaultTimeZone``.
+
    * :mod:`pyTooling.Decorators`
 
      * :deco:`~pyTooling.Decorators.InheritDocString` takes one ``strategy`` argument of the new

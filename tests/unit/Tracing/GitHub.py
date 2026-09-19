@@ -38,9 +38,10 @@ from unittest                    import mock
 from urllib.error                import HTTPError, URLError
 
 from pyTooling.CI.GitHub         import GitHubError
+from pyTooling.Common            import parseISO8601Timestamp
 from pyTooling.Exceptions        import ToolingException
 from pyTooling.Tracing           import Span, Trace, TracingError
-from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind, parseISO8601Timestamp
+from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import ConvertWorkflowRun, GitHub, WorkflowRunReader
 from pyTooling.Testing           import Testcase
 
@@ -172,33 +173,6 @@ class AttributeKeys(Testcase):
 		}
 		self.assertEqual({"stringValue": "pipeline"}, attributes["ci.span.kind"])
 		self.assertEqual({"stringValue": "cancellation"}, attributes["cicd.pipeline.result"])
-
-
-class Timestamps(Testcase):
-	def test_UTC(self) -> None:
-		self.assertEqual(
-			datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc),
-			parseISO8601Timestamp("2026-09-15T06:35:24Z")
-		)
-
-	def test_Offset(self) -> None:
-		timestamp = parseISO8601Timestamp("2026-09-15T08:35:24+02:00")
-
-		self.assertEqual(datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc), timestamp)
-		self.assertEqual(timedelta(hours=2), timestamp.utcoffset())
-
-	def test_Naive(self) -> None:
-		self.assertEqual(timezone.utc, parseISO8601Timestamp("2026-09-15T06:35:24").tzinfo)
-
-	def test_None(self) -> None:
-		self.assertIsNone(parseISO8601Timestamp(None))
-		self.assertIsNone(parseISO8601Timestamp(""))
-
-	def test_Invalid(self) -> None:
-		with self.assertRaises(TracingError) as context:
-			_ = parseISO8601Timestamp("yesterday")
-
-		self.assertEqual("'yesterday' isn't an ISO 8601 timestamp.", str(context.exception))
 
 
 class Conversion(Testcase):
