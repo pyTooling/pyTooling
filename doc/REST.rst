@@ -91,7 +91,8 @@ A request failing transiently is tried again: a status in :data:`~pyTooling.REST
 502, 503 and 504), a timeout, or an API that can't be reached. The pause grows exponentially -
 :attr:`~pyTooling.REST.RESTClient.RetryDelay` doubled for every earlier attempt - or lasts as long as a
 ``Retry-After`` header demands, if that is longer, but never longer than
-:data:`~pyTooling.REST.MAXIMUM_RETRY_AFTER`.
+:data:`~pyTooling.REST.MAXIMUM_RETRY_AFTER`. :rfc:`9110` writes that header as a non-negative number of seconds or as
+an HTTP-date; only the first is honored, because a date says when to try again and not how long a backoff should be.
 
 A request failing with any other HTTP status, like 401, 403 or 404, isn't tried again, because another attempt can't
 succeed. Its error carries what the API said: the ``message`` field of the answer's body, and the number of attempts
