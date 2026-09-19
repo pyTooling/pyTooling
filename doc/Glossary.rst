@@ -375,7 +375,7 @@ Glossary
           T(type)
           ET(MetaClass)
           B(BaseClass)
-          M(MixIn)
+          M(Mixin)
           C(Class)
           I1(Instance);I2(Instance)
 
