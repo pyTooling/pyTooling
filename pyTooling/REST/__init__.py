@@ -88,6 +88,30 @@ class MediaType(StrEnum):
 	HTML =      "text/html"                 #: An HTML document.
 	Binary =    "application/octet-stream"  #: Bytes of an unnamed type.
 
+	def Matches(self, contentType: str) -> bool:
+		"""
+		Check whether a ``Content-Type`` header names this media type.
+
+		The header's parameters are ignored, the name is compared case-insensitively - :rfc:`9110` writes a media type
+		that way - and the structured syntax suffix of :rfc:`6839` counts, so ``application/vnd.github+json`` is
+		``application/json``.
+
+		:param contentType: The value of a ``Content-Type`` header.
+		:returns:           ``True``, if the header names this media type.
+		:raises ValueError: If parameter 'contentType' is ``None``.
+		:raises TypeError:  If parameter 'contentType' is not of type :class:`str`.
+		"""
+		if contentType is None:
+			raise ValueError("Parameter 'contentType' is None.")
+		elif not isinstance(contentType, str):
+			ex = TypeError("Parameter 'contentType' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(contentType)}'.")
+			raise ex
+
+		mediaType = contentType.split(";", 1)[0].strip().lower()
+
+		return mediaType == self or mediaType.endswith(f"+{self.partition('/')[2]}")
+
 
 @export
 class RESTError(ToolingException):
@@ -567,7 +591,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		if len(body) == 0:
 			return None
 
-		if contentType is not None and not self._IsJSON(contentType):
+		if contentType is not None and not MediaType.JSON.Matches(contentType):
 			error = RESTError(f"API didn't answer with JSON: {url}")
 			error.add_note(f"Got 'Content-Type: {contentType}'.")
 			raise error
@@ -581,20 +605,6 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			raise RESTError(f"API didn't answer with a JSON object: {url}")
 
 		return document
-
-	@staticmethod
-	def _IsJSON(contentType: str) -> bool:
-		"""
-		Check if a media type is JSON.
-
-		The structured syntax suffix of :rfc:`6839` counts too, so ``application/vnd.github+json`` is JSON.
-
-		:param contentType: The answer's ``Content-Type`` header.
-		:returns:           ``True``, if the media type is JSON.
-		"""
-		mediaType = contentType.split(";", 1)[0].strip().lower()
-
-		return mediaType == MediaType.JSON or mediaType.endswith("+json")
 
 	def _NextResourcePath(self, link: Nullable[str]) -> Nullable[str]:
 		"""
