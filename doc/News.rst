@@ -14,6 +14,29 @@ Version 10.x (2026)
 
    .. rubric:: New Features
 
+   * :mod:`pyTooling.REST` is a new package: a small client for JSON REST APIs, built on the standard library, so
+     nothing building on it drags an HTTP stack into every consumer.
+
+     * A resource is addressed by its path below :attr:`~pyTooling.REST.RESTClient.APIURL`, which is a
+       :class:`~pyTooling.GenericPath.URL.URL`, so the API is stated once instead of in every call.
+     * :meth:`~pyTooling.REST.RESTClient.GetJSONObject` reads a resource and says where its next page is;
+       :meth:`~pyTooling.REST.RESTClient.PostJSONObject`, :meth:`~pyTooling.REST.RESTClient.PutJSONObject`,
+       :meth:`~pyTooling.REST.RESTClient.PatchJSONObject` and :meth:`~pyTooling.REST.RESTClient.DeleteResource`
+       write one.
+     * The answer's media type is checked - :attr:`MediaType.JSON <pyTooling.REST.MediaType>` and the :rfc:`6839`
+       suffix - before it is read as a JSON object.
+     * The next page is read from the :rfc:`8288` ``Link`` header. One pointing outside the client's own API is
+       rejected rather than followed, because the token is only sent to that API.
+     * A transiently failing request - :data:`~pyTooling.REST.TRANSIENT_HTTP_STATUS`, a timeout, or an unreachable
+       API - is tried again after an exponentially growing pause, or one as long as a ``Retry-After`` header
+       demands, capped at :data:`~pyTooling.REST.MAXIMUM_RETRY_AFTER`. A request that isn't idempotent - ``POST``
+       and ``PATCH`` - is sent once, because repeating it can create or change a resource twice.
+     * :meth:`~pyTooling.REST.RESTClient._Authorization` and :meth:`~pyTooling.REST.RESTClient._AddErrorNotes` are
+       what a client of one API overrides: the bearer scheme of :rfc:`6750` is the default, and a status means what
+       that API says it means.
+     * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
+       working.
+
    * :mod:`pyTooling.CI` is a new package holding data models of continuous integration services.
 
      * :mod:`pyTooling.CI.GitHub` reads a GitHub Actions workflow run into a tree of
@@ -50,6 +73,28 @@ Version 10.x (2026)
        The value is read back from the class, so an ``__init_subclass__`` that replaced it wins.
      * The sentinel is an empty class rather than a bare object, so a variable annotated as a :class:`type` still
        type-checks.
+
+   * :meth:`~pyTooling.GenericPath.PathMixIn.WithoutTrailingDelimiter` returns a path that doesn't end in
+     ``ELEMENT_DELIMITER``, and :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` a URL whose path doesn't -
+     a URL's element delimiter is the slash. A trailing delimiter is an empty last element, so ``/api/v3/`` and
+     ``/api/v3`` are different paths although they usually name the same thing - and a path something is appended to
+     wants the latter. A path with none answers with itself.
+   * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.GenericPath.URL.URL.__truediv__` and
+     :meth:`~pyTooling.GenericPath.PathMixIn.__truediv__`, each taking a string or a path on the right, the way
+     :class:`pathlib.PurePath` does. The right side is a **relative reference**: its path goes
+     below the left side's, and a string brings its own query and fragment, which the left side's are not carried
+     into, the way :rfc:`3986` resolves one. A path that starts with the delimiter names its own root and replaces
+     the left side, as :mod:`pathlib` joins a path. A trailing delimiter on the left is dropped first, so composing
+     ``/api/`` with ``things`` names ``/api/things`` and not an empty element between them.
+   * A path flavour names the type of its elements - ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and
+     ``ROOT_DELIMITER``. :meth:`~pyTooling.GenericPath.PathMixIn.Parse` reads that instead of being handed the path
+     and element classes as parameters, so its signature is ``Parse(path, root=None)`` and a flavour needs no
+     ``Parse`` of its own - :class:`~pyTooling.GenericPath.URL.Path` lost the one it had. **A flavour outside
+     pyTooling passing ``pathCls`` and ``elementCls`` has to drop them and declare ``ELEMENT_TYPE``.**
+   * :meth:`~pyTooling.GenericPath.PathMixIn.Parse` strips ``ROOT_DELIMITER`` from an absolute path, not as many
+     characters as ``ELEMENT_DELIMITER`` is long. The two are the same in a URL, so nothing parses differently today,
+     but a path flavour marking its root differently - a drive letter, a host separated by a colon - would have lost
+     the wrong number of characters.
 
    * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
      :exc:`~pyTooling.GenericPath.URL.URLError` for it.
