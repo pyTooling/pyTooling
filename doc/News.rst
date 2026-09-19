@@ -79,8 +79,11 @@ Version 10.x (2026)
      a URL's element delimiter is the slash. A trailing delimiter is an empty last element, so ``/api/v3/`` and
      ``/api/v3`` are different paths although they usually name the same thing - and a path something is appended to
      wants the latter. A path with none answers with itself.
-   * ``URL / resource`` and ``path / path`` compose - :meth:`~pyTooling.GenericPath.URL.URL.__truediv__` and
-     :meth:`~pyTooling.GenericPath.PathMixIn.__truediv__`. The right side is a **relative reference**: its path goes
+   * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.GenericPath.URL.URL.__truediv__` and
+     :meth:`~pyTooling.GenericPath.PathMixIn.__truediv__`, each taking a string or a path on the right, the way
+     :class:`pathlib.PurePath` does. A path flavour says which type its elements have -
+     ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and ``ROOT_DELIMITER`` - so a string can be read into the
+     flavour's own elements. The right side is a **relative reference**: its path goes
      below the left side's, and a string brings its own query and fragment, which the left side's are not carried
      into, the way :rfc:`3986` resolves one. A path that starts with the delimiter names its own root and replaces
      the left side, as :mod:`pathlib` joins a path. A trailing delimiter on the left is dropped first, so composing
