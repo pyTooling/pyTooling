@@ -148,6 +148,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'apiURL' is neither of type :class:`str` nor of type
 		                    :class:`~pyTooling.GenericPath.URL.URL`.
 		:raises ValueError: If parameter 'apiURL' names no scheme or no host.
+		:raises ValueError: If parameter 'apiURL' ends in an empty path element, e.g. ``'https://example.org/api//'``.
 		:raises TypeError:  If parameter 'token' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'headers' is not of type :class:`dict`.
 		:raises ValueError: If parameter 'timeout' is ``None``.
@@ -173,6 +174,13 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 
 		if parsedURL.Scheme is None or parsedURL.Host is None:
 			ex = ValueError("Parameter 'apiURL' names no scheme or no host.")
+			ex.add_note(f"Got value '{apiURL}'.")
+			raise ex
+
+		# One trailing slash is what a base URL is usually written with, and it was just removed. A path still ending
+		# in one named an empty element, which every request would carry as a double slash.
+		if str(parsedURL.Path).endswith("/"):
+			ex = ValueError("Parameter 'apiURL' ends in an empty path element.")
 			ex.add_note(f"Got value '{apiURL}'.")
 			raise ex
 
