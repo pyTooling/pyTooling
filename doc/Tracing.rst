@@ -221,8 +221,8 @@ hands that to :func:`~pyTooling.Tracing.CI.GitHub.ConvertPipeline`, which is the
 elsewhere. Reading the payloads is therefore the model's job, and a field GitHub doesn't document raises
 :exc:`~pyTooling.CI.GitHub.GitHubError`.
 
-The run becomes the trace, and every timespan below it is marked by the attribute
-:data:`~pyTooling.Tracing.CI.SPAN_KIND`:
+The run becomes the trace, and every timespan below it is marked by :attr:`~pyTooling.Tracing.CI.CI.Span.Kind` with a
+member of :class:`~pyTooling.Tracing.CI.SpanKind`:
 
 +--------------+------------------------------------------------------------------------------------------------------+
 | Kind         | Timespan                                                                                             |
@@ -240,9 +240,12 @@ The run becomes the trace, and every timespan below it is marked by the attribut
 | ``step``     | A step that started, below its job.                                                                  |
 +--------------+------------------------------------------------------------------------------------------------------+
 
-Every timespan also carries the attributes of OpenTelemetry's semantic conventions for CI/CD - ``cicd.pipeline.name``,
-``cicd.pipeline.task.name``, ``cicd.pipeline.task.run.result`` and more - with GitHub's conclusions mapped to their
-results, and GitHub's own conclusion as ``github.conclusion``. A job's timespan names its runner and the labels it was
+Every timespan also carries the attributes of OpenTelemetry's semantic conventions for CI/CD, which
+:class:`~pyTooling.Tracing.CI.OTLP` names as a namespace nested the way the keys are - so
+:attr:`OTLP.CICD.Pipeline.Task.Run.ID <pyTooling.Tracing.CI.OTLP>` spells ``cicd.pipeline.task.run.id`` and the path
+can be read to check the key. The values a result may take are :class:`~pyTooling.Tracing.CI.Result`. What only GitHub
+reports is named the same way by :class:`~pyTooling.Tracing.CI.GitHub.GitHub`, e.g.
+``github.conclusion`` beside the result it was mapped to. A job's timespan names its runner and the labels it was
 requested by, so a renderer can group waiting times per operating system, and a matrix instance additionally lists the
 values it was produced for in ``github.matrix.dimensions``.
 

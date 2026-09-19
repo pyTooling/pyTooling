@@ -34,94 +34,135 @@ Readers converting the timing of CI pipelines into a software execution trace (:
 Every reader marks its timespans with the same attributes, so a renderer or a query doesn't need to know which CI
 service a trace came from:
 
-* :data:`SPAN_KIND` classifies a timespan as :data:`SPAN_KIND_PIPELINE`, :data:`SPAN_KIND_WORKFLOW`,
-  :data:`SPAN_KIND_QUEUED`, :data:`SPAN_KIND_JOB` or :data:`SPAN_KIND_STEP`.
-* The attributes of OpenTelemetry's semantic conventions for CI/CD name the pipeline, its tasks and their results, e.g.
-  :data:`PIPELINE_NAME`, :data:`TASK_NAME` and :data:`TASK_RUN_RESULT`.
+* :attr:`CI.Span.Kind` classifies a timespan by a member of :class:`SpanKind`.
+* :class:`OTLP` holds the attribute keys of OpenTelemetry's semantic conventions, nested as the keys themselves are,
+  and :class:`Result` the values the conventions allow for a result.
 
 .. hint::
 
    See :ref:`high-level help <TRACING/CI>` for explanations and usage examples.
 """
 from datetime              import datetime, timezone
+from enum                  import StrEnum
 from typing                import Optional as Nullable
 
 from pyTooling.Decorators  import export
 from pyTooling.Tracing     import TracingError
 
 
-__all__ = [
-	"SPAN_KIND", "SPAN_KIND_PIPELINE", "SPAN_KIND_WORKFLOW", "SPAN_KIND_QUEUED", "SPAN_KIND_JOB", "SPAN_KIND_STEP",
-	"PIPELINE_NAME", "PIPELINE_RUN_ID", "PIPELINE_RUN_URL", "PIPELINE_RESULT",
-	"TASK_NAME", "TASK_RUN_ID", "TASK_RUN_URL", "TASK_RUN_RESULT", "WORKER_NAME",
-	"RESULT_SUCCESS", "RESULT_FAILURE", "RESULT_TIMEOUT", "RESULT_SKIP", "RESULT_CANCELLATION", "RESULT_ERROR",
-]
+@export
+class OTLP:
+	"""
+	Attribute keys defined by OpenTelemetry's `semantic conventions <https://opentelemetry.io/docs/specs/semconv/>`__.
 
-SPAN_KIND = "ci.span.kind"
-"""Attribute classifying what a timespan of a CI pipeline represents."""
+	The nesting mirrors the key itself: every level is one dot, so :attr:`OTLP.CICD.Pipeline.Task.Run.ID` spells
+	``'cicd.pipeline.task.run.id'``. A key can therefore be checked by reading the path that names it.
 
-SPAN_KIND_PIPELINE = "pipeline"
-"""The timespan is a whole pipeline run - the trace itself."""
+	.. code-block:: python
 
-SPAN_KIND_WORKFLOW = "workflow"
-"""The timespan groups the jobs of a called workflow or a stage."""
+	   trace[OTLP.CICD.Pipeline.Name] =        pipeline.Name
+	   span[OTLP.CICD.Pipeline.Task.Run.ID] =  str(job.ID)
+	"""
 
-SPAN_KIND_QUEUED = "queued"
-"""The timespan is the time a job waited for a runner, in front of the job's own timespan."""
+	class CICD:
+		"""Attribute keys of the conventions for **CI/CD pipelines**."""
 
-SPAN_KIND_MATRIX = "matrix"
-"""The timespan is a matrix, holding the job instances it produced."""
+		class Pipeline:
+			"""Attribute keys naming a pipeline and its run."""
 
-SPAN_KIND_JOB = "job"
-"""The timespan is a job running on a runner."""
+			Name =   "cicd.pipeline.name"    #: The pipeline's name.
+			Result = "cicd.pipeline.result"  #: How the run ended - a member of :class:`Result`.
 
-SPAN_KIND_STEP = "step"
-"""The timespan is a step of a job."""
+			class Run:
+				"""Attribute keys naming one run of a pipeline."""
 
-PIPELINE_NAME = "cicd.pipeline.name"
-"""OpenTelemetry CI/CD attribute: the pipeline's name."""
+				ID = "cicd.pipeline.run.id"  #: The run's identifier.
 
-PIPELINE_RUN_ID = "cicd.pipeline.run.id"
-"""OpenTelemetry CI/CD attribute: the pipeline run's identifier."""
+				class URL:
+					"""Attribute keys naming the addresses of a run."""
 
-PIPELINE_RUN_URL = "cicd.pipeline.run.url.full"
-"""OpenTelemetry CI/CD attribute: the URL of the pipeline run."""
+					Full = "cicd.pipeline.run.url.full"  #: The run's address.
 
-PIPELINE_RESULT = "cicd.pipeline.result"
-"""OpenTelemetry CI/CD attribute: the pipeline run's result - one of the ``RESULT_*`` values."""
+			class Task:
+				"""Attribute keys naming a task of a pipeline - a job or a step."""
 
-TASK_NAME = "cicd.pipeline.task.name"
-"""OpenTelemetry CI/CD attribute: the name of a task - a job or a step."""
+				Name = "cicd.pipeline.task.name"  #: The task's name, as the service reports it.
 
-TASK_RUN_ID = "cicd.pipeline.task.run.id"
-"""OpenTelemetry CI/CD attribute: the task run's identifier."""
+				class Run:
+					"""Attribute keys naming one run of a task."""
 
-TASK_RUN_URL = "cicd.pipeline.task.run.url.full"
-"""OpenTelemetry CI/CD attribute: the URL of the task run."""
+					ID =     "cicd.pipeline.task.run.id"      #: The task run's identifier.
+					Result = "cicd.pipeline.task.run.result"  #: How the task ended - a member of :class:`Result`.
 
-TASK_RUN_RESULT = "cicd.pipeline.task.run.result"
-"""OpenTelemetry CI/CD attribute: the task run's result - one of the ``RESULT_*`` values."""
+					class URL:
+						"""Attribute keys naming the addresses of a task run."""
 
-WORKER_NAME = "cicd.worker.name"
-"""OpenTelemetry CI/CD attribute: the name of the runner a job ran on."""
+						Full = "cicd.pipeline.task.run.url.full"  #: The task run's address.
 
-RESULT_SUCCESS = "success"
-"""OpenTelemetry CI/CD result: the pipeline or task succeeded."""
+		class Worker:
+			"""Attribute keys naming the worker a task ran on."""
 
-RESULT_FAILURE = "failure"
-"""OpenTelemetry CI/CD result: the pipeline or task failed."""
+			Name = "cicd.worker.name"  #: The worker's name.
 
-RESULT_TIMEOUT = "timeout"
-"""OpenTelemetry CI/CD result: the pipeline or task was stopped by a timeout."""
+	class VCS:
+		"""Attribute keys of the conventions for **version control systems**."""
 
-RESULT_SKIP = "skip"
-"""OpenTelemetry CI/CD result: the pipeline or task was skipped."""
+		class Ref:
+			"""Attribute keys naming a reference."""
 
-RESULT_CANCELLATION = "cancellation"
-"""OpenTelemetry CI/CD result: the pipeline or task was cancelled."""
+			class Head:
+				"""Attribute keys naming the reference a pipeline was started on."""
 
-RESULT_ERROR = "error"
-"""OpenTelemetry CI/CD result: the pipeline or task ended for any other reason."""
+				Name =     "vcs.ref.head.name"      #: The branch or tag the run was started on.
+				Revision = "vcs.ref.head.revision"  #: The commit the run was started on.
+
+
+@export
+class CI:
+	"""
+	Attribute keys pyTooling defines for the timespans of a CI pipeline, which the conventions don't cover.
+
+	The nesting mirrors the key the same way :class:`OTLP` does.
+	"""
+
+	class Span:
+		"""Attribute keys classifying a timespan."""
+
+		Kind = "ci.span.kind"  #: What the timespan represents - a member of :class:`SpanKind`.
+
+
+@export
+class SpanKind(StrEnum):
+	"""
+	What a timespan of a CI pipeline represents.
+
+	These values are pyTooling's own: OpenTelemetry's conventions classify a span by its kind (``SERVER``,
+	``INTERNAL``, ...), not by its role in a pipeline.
+	"""
+
+	Pipeline = "pipeline"  #: A whole pipeline run - the trace itself.
+	Workflow = "workflow"  #: The jobs of a called workflow or a stage, grouped.
+	Matrix =   "matrix"    #: A matrix, holding the job instances it produced.
+	Queued =   "queued"    #: The time a job waited for a worker, in front of the job's own timespan.
+	Job =      "job"       #: A job running on a worker.
+	Step =     "step"      #: A step of a job.
+
+
+@export
+class Result(StrEnum):
+	"""
+	How a pipeline run or a task run ended.
+
+	The conventions fix this set, and a backend groups runs by the string, so a member's :attr:`~enum.Enum.value` is
+	what goes on the wire.
+	"""
+
+	Success =      "success"       #: It succeeded.
+	Failure =      "failure"       #: It failed.
+	Timeout =      "timeout"       #: It was stopped by a timeout.
+	Skip =         "skip"          #: It was skipped.
+	Cancellation = "cancellation"  #: It was cancelled.
+	Error =        "error"         #: It ended for any other reason.
 
 
 @export
