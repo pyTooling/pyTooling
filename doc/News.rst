@@ -14,6 +14,19 @@ Version 10.x (2026)
 
    .. rubric:: New Features
 
+   * :mod:`pyTooling.REST` is a new package: a small client for JSON REST APIs, built on the standard library, so
+     nothing building on it drags an HTTP stack into every consumer.
+
+     * :meth:`~pyTooling.REST.RESTClient.GetJSONObject` sends a bearer token, insists on a JSON object, and reads
+       the URL of the next page from the :rfc:`8288` ``Link`` header.
+     * A next page pointing outside the client's own API is rejected rather than followed, because the token is only
+       sent to that API.
+     * A transiently failing request - :data:`~pyTooling.REST.TRANSIENT_HTTP_STATUS`, a timeout, or an unreachable
+       API - is tried again after a pause that doubles with every attempt, or lasts as long as a ``Retry-After``
+       header demands, capped at :data:`~pyTooling.REST.MAXIMUM_RETRY_AFTER`.
+     * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
+       working.
+
    * :mod:`pyTooling.CI` is a new package holding data models of continuous integration services.
 
      * :mod:`pyTooling.CI.GitHub` reads a GitHub Actions workflow run into a tree of
