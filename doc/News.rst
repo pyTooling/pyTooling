@@ -253,10 +253,6 @@ Version 10.x (2026)
        arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
        PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
        the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
-     * A trace's elements answer :meth:`~pyTooling.Tracing.AttributesMixin.Get`, which reads an attribute that may
-       not be there and returns a default value instead of raising. The attribute protocol itself moved to
-       :class:`~pyTooling.Tracing.AttributesMixin`, which :class:`~pyTooling.Tracing.Span` and
-       :class:`~pyTooling.Tracing.Event` carried a copy of each.
 
    * :mod:`pyTooling.Packaging`
 
