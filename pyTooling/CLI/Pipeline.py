@@ -45,11 +45,11 @@ The :pycode:`pipeline` command: read a CI pipeline and write what it took.
    See :ref:`high-level help <CLI/Pipeline>` for explanations and usage examples.
 """
 from argparse                                 import Namespace
-from enum                                     import StrEnum
 from os                                       import getenv
 from pathlib                                  import Path
-from typing                                   import ClassVar, Optional as Nullable, Self
+from typing                                   import ClassVar, Optional as Nullable
 
+from pyTooling.Common                         import StringEnum
 from pyTooling.Decorators                     import export
 from pyTooling.MetaClasses                    import ExtendedType
 from pyTooling.Attributes.ArgParse            import CommandHandler
@@ -59,48 +59,17 @@ from pyTooling.Tracing                        import Trace
 from pyTooling.Tracing.CI.GitHub              import WorkflowRunReader
 
 
-__all__ = ["DEFAULT_TRACE_FORMAT"]
-
-
 @export
-class OutputFormat(StrEnum):
-	"""
-	Base-class of the formats an output option of this command accepts.
-
-	It holds no members, so the deriving enumerations can add theirs, and it gives each of them the same parser -
-	the one :func:`splitFormat` calls whatever option it is splitting.
-	"""
-
-	@classmethod
-	def Parse(cls, value: str) -> Self:
-		"""
-		Return the format of that name.
-
-		:param value:       Name of the format, as a command line spells it.
-		:returns:           The format of that name.
-		:raises ValueError: If this option accepts no format of that name. The note lists the ones it accepts.
-		"""
-		if value not in cls._value2member_map_:
-			ex = ValueError(f"'{value}' is not a valid {cls.__name__}.")
-			ex.add_note(f"Allowed values: {', '.join(item.value for item in cls)}")
-			raise ex
-
-		return cls(value)
-
-
-@export
-class TraceFormat(OutputFormat):
+class TraceFormat(StringEnum):
 	"""The formats a trace can be written in, as ``--trace-file`` names them."""
 
 	OTLPJSON = "otlp-json"  #: OpenTelemetry's OTLP/JSON encoding of a trace.
 
-
-DEFAULT_TRACE_FORMAT = TraceFormat.OTLPJSON
-"""The format a trace is written in when ``--trace-file`` names none."""
+	Default = OTLPJSON      #: The format ``--trace-file`` writes when its value names none.
 
 
 @export
-def splitFormat(value: str, formats: type[OutputFormat], defaultFormat: OutputFormat) -> tuple[OutputFormat, Path]:
+def splitFormat(value: str, formats: type[StringEnum], defaultFormat: StringEnum) -> tuple[StringEnum, Path]:
 	"""
 	Split an option's value of the form ``[<format>:]<file>`` into the format and the file.
 
@@ -149,7 +118,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 	)
 	@LongValuedFlag(
 		"--trace-file", dest="traceFile", metaName="[format:]file", optional=True,
-		help=f"Write the trace. Format: {', '.join(item.value for item in TraceFormat)}. Default: {DEFAULT_TRACE_FORMAT}."
+		help=f"Write the trace. Format: {', '.join(TraceFormat)}. Default: {TraceFormat.Default}."
 	)
 	@LongFlag("--force", dest="force", help="Overwrite files that exist.")
 	def HandlePipeline(self, args: Namespace) -> None:
@@ -172,14 +141,14 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 
 		self.ExitOnPreviousErrors()
 
-	def _CheckOutputs(self, args: Namespace) -> list[tuple[str, OutputFormat, Path]]:
+	def _CheckOutputs(self, args: Namespace) -> list[tuple[str, StringEnum, Path]]:
 		"""
 		Read every output option, and report what can't be written before anything is read.
 
 		:param args: The parsed command line.
 		:returns:    One ``(option, format, file)`` per output that was asked for and can be written.
 		"""
-		outputs: list[tuple[str, OutputFormat, Path]] = []
+		outputs: list[tuple[str, StringEnum, Path]] = []
 		for option, value, formats, defaultFormat in self._Outputs(args):
 			if value is None:
 				continue
@@ -201,7 +170,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 
 		return outputs
 
-	def _Outputs(self, args: Namespace) -> tuple[tuple[str, Nullable[str], type[OutputFormat], OutputFormat], ...]:
+	def _Outputs(self, args: Namespace) -> tuple[tuple[str, Nullable[str], type[StringEnum], StringEnum], ...]:
 		"""
 		Return the output options this command offers, as ``(option, value, formats, default format)``.
 
@@ -209,10 +178,10 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 		:returns:    One entry per output option, whether or not it was given.
 		"""
 		return (
-			("--trace-file", args.traceFile, TraceFormat, DEFAULT_TRACE_FORMAT),
+			("--trace-file", args.traceFile, TraceFormat, TraceFormat.Default),
 		)
 
-	def _WriteOutputs(self, outputs: list[tuple[str, OutputFormat, Path]], trace: Trace) -> None:
+	def _WriteOutputs(self, outputs: list[tuple[str, StringEnum, Path]], trace: Trace) -> None:
 		"""
 		Write every output the command line asked for.
 
