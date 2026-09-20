@@ -39,6 +39,8 @@ only draws these rows and statistics, so every renderer shows the same chart.
 
    See :ref:`high-level help <TRACING/Render>` for explanations and usage examples.
 """
+from __future__                  import annotations
+
 from datetime                    import datetime, timedelta
 from enum                        import Enum
 from pathlib                     import Path
