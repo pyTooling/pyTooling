@@ -96,8 +96,8 @@ Arguments
 
 An argument attribute is written **on the handler method that receives it**, and each one becomes exactly one
 :meth:`~argparse.ArgumentParser.add_argument` call on the parser belonging to that handler. The attribute's
-parameters are the ones :mod:`argparse` already uses - ``dest``, ``help``, ``metaName`` - so nothing new has to be
-learned to say what a parser already knows how to do.
+parameters are the ones :mod:`argparse` already uses - :pycode:`dest`, :pycode:`help`, :pycode:`metaName` - so
+nothing new has to be learned to say what a parser already knows how to do.
 
 They form a hierarchy, and the leaves are what a program writes:
 
@@ -111,7 +111,7 @@ They form a hierarchy, and the leaves are what a program writes:
      - An argument with a **name** - ``--verbose``.
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.ValuedArgument`
      - An argument with a **value**.
-   * - ``NamedAndValuedArgument``
+   * - :pycode:`NamedAndValuedArgument`
      - Both - ``--quota=5GiB``.
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument`
      - A value with **no** name, identified by its position.
@@ -145,8 +145,8 @@ itself:
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
      - a :class:`~pathlib.Path`
 
-All four take ``(dest, metaName, optional=False, help="")``, and ``metaName`` is the placeholder ``--help`` shows
-in place of the value.
+All four take :pycode:`(dest, metaName, optional=False, help="")`, and :pycode:`metaName` is the placeholder
+``--help`` shows in place of the value.
 
 .. code-block:: Python
 
@@ -162,8 +162,9 @@ Flags
 =====
 
 A :class:`~pyTooling.Attributes.ArgParse.Flag.FlagArgument` is a switch: it carries no value, and the handler
-receives :class:`bool` - ``True`` when the switch was given, ``False`` otherwise. The attribute sets
-``action="store_const"`` with ``const=True`` and ``default=False``, which is what makes that boolean appear.
+receives :class:`bool` - :pycode:`True` when the switch was given, :pycode:`False` otherwise. The attribute sets
+:pycode:`action="store_const"` with :pycode:`const=True` and :pycode:`default=False`, which is what makes that
+boolean appear.
 
 .. code-block:: Python
 
@@ -189,7 +190,7 @@ ValuedFlags
 ===========
 
 A :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` is a named argument **followed by a value in the
-same token** - ``--quota=5GiB``. ``metaName`` is what the help page shows in place of the value.
+same token** - ``--quota=5GiB``. :pycode:`metaName` is what the help page shows in place of the value.
 
 .. code-block:: Python
 
@@ -218,9 +219,9 @@ A *tuple* flag is a named argument whose value is a **separate token** - ``--wid
 
 .. attention::
 
-   Only the base-class ``NamedTupledArgument`` exists so far. There is
-   no concrete ``ShortTupleFlag`` / ``LongTupleFlag`` attribute to apply yet, so this form has to be written as a
-   :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` with ``nargs`` passed through to
+   Only the base-class :pycode:`NamedTupledArgument` exists so far. There is no concrete
+   :pycode:`ShortTupleFlag` / :pycode:`LongTupleFlag` attribute to apply yet, so this form has to be written as a
+   :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` with :pycode:`nargs` passed through to
    :mod:`argparse` in the meantime.
 
 
@@ -339,9 +340,9 @@ the parsers from the attributes it finds.
 
 .. hint::
 
-   The mixin passes ``**kwargs`` on to :class:`~argparse.ArgumentParser`, and changes two of its defaults:
-   ``allow_abbrev=False``, so an abbreviated option isn't silently accepted, and ``exit_on_error=False``, so a
-   parse error raises instead of ending the process.
+   The mixin passes :pycode:`**kwargs` on to :class:`~argparse.ArgumentParser`, and changes two of its defaults:
+   :pycode:`allow_abbrev=False`, so an abbreviated option isn't silently accepted, and
+   :pycode:`exit_on_error=False`, so a parse error raises instead of ending the process.
 
 
 .. _ATTR/ArgParse/Grouping:
