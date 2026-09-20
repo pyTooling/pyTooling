@@ -85,7 +85,47 @@ A :class:`~pyTooling.Configuration.Dictionary` represents key-value-pairs of inf
          </items>
 
 
-.. todo:: CONFIG:: Needs documentation for Dictionary
+A :class:`~pyTooling.Configuration.Dictionary` node is read like a :class:`dict`, and it **keeps the order the
+document states its keys in** - the abstract node stores those keys in a list, so a round-trip through the reader
+never reorders a file.
+
+.. code-block:: Python
+
+   settings = config["settings"]
+
+   hasKey1 =   "key1" in settings        # membership
+   item1 =     settings["key1"]          # by key, raises KeyNotFoundError when absent
+   item3 =     settings.get("key3", "")  # by key, with a default
+   pairCount = len(settings)             # number of key-value pairs
+
+Three iterators are named alike, so nothing has to be remembered about which one plain iteration gives:
+:meth:`~pyTooling.Configuration.Dictionary.IterateKeys`,
+:meth:`~pyTooling.Configuration.Dictionary.IterateValues` and
+:meth:`~pyTooling.Configuration.Dictionary.IterateItems`. Iterating the node itself yields its **values**, which is
+what ``IterateValues`` yields.
+
+.. code-block:: Python
+
+   for key in settings.IterateKeys():
+     print(key)
+
+   for value in settings:                     # the node itself yields its values
+     print(value)
+
+   for key, value in settings.IterateItems():
+     print(f"{key}: {value}")
+
+Their materialized counterparts are spelled the way :class:`dict` spells them -
+:meth:`~pyTooling.Configuration.Dictionary.keys`, :meth:`~pyTooling.Configuration.Dictionary.values` and
+:meth:`~pyTooling.Configuration.Dictionary.items` - and return tuples. The names are deliberate: :class:`dict`
+looks for a ``keys`` method to decide whether an object is a mapping, so ``dict(node)`` and ``{**node}`` work
+because they exist.
+
+.. attention::
+
+   A value is only a :class:`str`, :class:`int` or :class:`float` when the document states a scalar there. When it
+   states a sub-mapping or a list, the value is another :class:`~pyTooling.Configuration.Dictionary` or
+   :class:`~pyTooling.Configuration.Sequence`, not a :class:`dict` or :class:`list`.
 
 
 Sequences
@@ -149,7 +189,28 @@ A :class:`~pyTooling.Configuration.Sequence` represents ordered information item
            <item>item3</item>
          </items>
 
-.. todo:: CONFIG:: Needs documentation for Sequences
+A :class:`~pyTooling.Configuration.Sequence` node is read like a :class:`list`: by index, with :func:`len`, and by
+iterating it. An index is the position the document states an item at, and a negative index counts from the end. An
+element is a scalar or another node, just as a dictionary node's value is, so a sequence of mappings is iterated and
+each element indexed by key. Because iteration yields the elements themselves, ``in`` asks whether an element is in
+the sequence - a sequence has no keys to ask for.
+
+.. code-block:: Python
+
+   files = config["files"]
+
+   firstFile = files[0]                 # by index
+   lastFile =  files[-1]                # negative indices count from the end
+   fileCount = len(files)               # number of elements
+   hasFile1 =  "path/to/file1.ext" in files
+
+   for file in files:
+     print(file)
+
+:meth:`~pyTooling.Configuration.Sequence.index` and :meth:`~pyTooling.Configuration.Sequence.count` are provided
+with :class:`list`'s signatures, so code written against a list keeps working when it is handed a sequence node.
+``index`` accepts ``start`` and ``stop``, treats negative values as offsets from the end, and raises
+:exc:`ValueError` when nothing in the searched range matches.
 
 
 Configuration
@@ -230,13 +291,58 @@ dictionaries and scalar information items.
            </files>
          </configuration>
 
-.. todo:: CONFIG:: Needs documentation for Configuration
+A :class:`~pyTooling.Configuration.Configuration` is the **root** node of a document, and it is itself a
+dictionary node - so a file is read by indexing the configuration object directly. It adds the one thing a root has
+that an inner node doesn't: :attr:`~pyTooling.Configuration.Configuration.ConfigFile`, the path it was read from.
+
+.. code-block:: Python
+
+   from pathlib                      import Path
+   from pyTooling.Configuration.YAML import Configuration
+
+   config =  Configuration(Path("settings.yml"))
+   version = config["version"]
+
+Reaching deep into a document by chained indexing is verbose, so every node also answers a **path expression**
+through :meth:`~pyTooling.Configuration.Node.QueryPath`. Its elements are separated by a colon and it is resolved
+relative to the node it is asked of:
+
+.. code-block:: Python
+
+   item1 = config.QueryPath("settings:key1")
+
+A key that names no element raises :exc:`~pyTooling.Configuration.KeyNotFoundError`, which derives from
+:exc:`KeyError` so an ordinary ``except KeyError`` still catches it. A malformed expression raises
+:exc:`~pyTooling.Configuration.PathExpressionError`, and a value the format cannot map onto the data model raises
+:exc:`~pyTooling.Configuration.UnsupportedValueTypeError`.
+
+.. attention::
+
+   **A configuration is read-only.** Assigning to a node - ``config["key"] = value`` - raises
+   :exc:`NotImplementedError`, as does renaming a key through :attr:`~pyTooling.Configuration.Node.Key`. Writing a
+   configuration file back is not implemented for any format.
 
 
 Data Model
 **********
 
-.. todo:: CONFIG:: Needs documentation for Data Model
+The data model is a **tree of three node kinds**, and the diagram below is the whole grammar: a configuration
+contains dictionaries and sequences, and each of those contains dictionaries and sequences again, to any depth. The
+leaves are the scalars the file format supports.
+
+Every node derives from :class:`~pyTooling.Configuration.Node` and knows two neighbours - its ``_root`` and its
+``_parent`` - so a node handed to a function on its own can still resolve a path against the document it came from.
+
+The abstract classes are **mixins**, and a concrete format supplies the parsing. That is why
+:class:`~pyTooling.Configuration.Node` carries the two class variables
+:attr:`~pyTooling.Configuration.Node.DICT_TYPE` and :attr:`~pyTooling.Configuration.Node.SEQ_TYPE`: the abstract
+code has to instantiate a *format's* dictionary or sequence when it descends into a document, and these are what it
+instantiates. A concrete implementation sets them, which is step 5 below.
+
+Two implementations ship with pyTooling - :mod:`pyTooling.Configuration.JSON` and
+:mod:`pyTooling.Configuration.YAML` - and the YAML one additionally interpolates ``${...}`` variable references in
+scalar values, raising :exc:`~pyTooling.Configuration.InterpolationError` for a dangling ``$`` or an unclosed
+reference.
 
 .. mermaid::
 
