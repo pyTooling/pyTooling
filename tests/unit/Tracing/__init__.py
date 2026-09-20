@@ -172,7 +172,7 @@ class RecordedTimes(Testcase):
 		t = Trace("pipeline", beginTime=self._begin, endTime=self._begin + timedelta(seconds=7, microseconds=1))
 		Span("job", parent=t, beginTime=self._begin, endTime=self._begin + timedelta(microseconds=123_457))
 
-		spans = {s["name"]: s for s in t.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]}
+		spans = {s["name"]: s for s in t.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]}
 
 		for name, expected in (("pipeline", 7_000_001_000), ("job", 123_457_000)):
 			with self.subTest(span=name):

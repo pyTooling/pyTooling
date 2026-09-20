@@ -410,7 +410,7 @@ standard library only:
 
    reader = WorkflowRunReader("pyTooling/Actions", token=getenv("GITHUB_TOKEN"))
    trace = reader.ReadRun(34937615362)      # optionally: attempt=2
-   trace.WriteJSONFile(Path("report/Pipeline.otlp.json"))
+   trace.WriteOTLPJSONFile(Path("report/Pipeline.otlp.json"))
 
 Inside a workflow, ``GITHUB_TOKEN`` with the ``actions: read`` permission suffices. A job can't see itself: it is
 still running when it reads the run, so a timing job depends on every other job and runs last.
