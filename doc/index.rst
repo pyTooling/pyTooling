@@ -1185,6 +1185,12 @@ License
 
    Tracing
 
+.. toctree::
+   :caption: Diagrams
+   :hidden:
+
+   Diagram
+
 .. raw:: latex
 
    \part{References and Reports}
