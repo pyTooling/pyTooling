@@ -897,7 +897,7 @@ class Event(TraceElement):
 		time =    _fromUnixNano(_readNumberField(mapping, "timeUnixNano", int, path), f"{path}.timeUnixNano")
 
 		try:
-			self = cls(name, time, parent)
+			self = cls(name, time, parent=parent)
 		except ValueError as cause:
 			ex = TracingError(f"Field '{path}.name' is empty.")
 			raise ex from cause
@@ -1490,7 +1490,7 @@ class Span(TraceElement):
 		name =    _readField(mapping, "name", str, path)
 
 		try:
-			timespan = cls(name, parent)
+			timespan = cls(name, parent=parent)
 		except ValueError as cause:
 			ex = TracingError(f"Field '{path}.name' is empty.")
 			raise ex from cause
