@@ -332,24 +332,29 @@ def _newIdentifier(bits: int) -> str:
 
 
 @export
-class Event(metaclass=ExtendedType, slots=True):
+class TraceElement(metaclass=ExtendedType, slots=True):
 	"""
-	Represents a named event within a timespan (:class:`Span`) used in a software execution trace.
+	Base-class of a trace's elements: a named thing within a timespan, carrying arbitrary attributes
+	(key-value-pairs).
 
-	It may contain arbitrary attributes (key-value pairs).
+	It holds what a :class:`Span` and an :class:`Event` have in common - their name, the timespan enclosing them and
+	their attributes - and validates the two parameters every element takes. **It doesn't attach the element to its
+	parent**, because where it goes differs: a sub-span joins :attr:`Span._spans` and an event
+	:attr:`Span._events`, and neither may happen before the derived class has validated the rest of its parameters.
+
+	The attributes are read, written and removed like a dictionary's items.
 	"""
-	_name:      str                 #: Name of the event.
-	_parent:    Nullable[Span]      #: Reference to the parent span.
-	_time:      datetime            #: Timestamp of the event.
-	_dict:      dict[str, AttributeValue]  #: Dictionary of associated attributes.
+	_name:   str                        #: Name of the element.
+	_parent: Nullable[Span]             #: Reference to the enclosing timespan (or trace).
+	_dict:   dict[str, AttributeValue]  #: Dictionary of associated attributes.
 
-	def __init__(self, name: str, time: Nullable[datetime] = None, *, parent: Nullable[Span] = None) -> None:
+	def __init__(self, name: str, parent: Nullable[Span] = None) -> None:
 		"""
-		Initializes a named event.
+		Initializes a trace's element, without attaching it to its parent.
 
-		:param name:        The name of the event.
-		:param time:        Optional, time when the event happened. Default: the current system time.
-		:param parent:      Optional, reference to the parent span.
+		:param name:        Name of the element.
+		:param parent:      Optional, reference to the enclosing timespan.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
@@ -363,57 +368,47 @@ class Event(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 			raise ex
 
-		if time is None:
-			self._time = datetime.now()
-		elif isinstance(time, datetime):
-			self._time = time
-		else:
-			ex = TypeError("Parameter 'time' is not of type 'datetime'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(time)}'.")
-			raise ex
-
-		if parent is None:
-			self._parent = None
-		elif isinstance(parent, Span):
-			self._parent = parent
-			parent._events.append(self)
-		else:
+		if parent is not None and not isinstance(parent, Span):
 			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
+		self._parent = parent
 		self._dict =   {}
 
 	@readonly
 	def Name(self) -> str:
 		"""
-		Read-only property to access the event's name.
+		Read-only property to access the element's name (:attr:`_name`).
 
-		:returns: Name of the event.
+		:returns: Name of the element.
 		"""
 		return self._name
 
 	@readonly
-	def Time(self) -> datetime:
-		"""
-		Read-only property to access the event's timestamp.
-
-		:returns: Timestamp of the event.
-		"""
-		return self._time
-
-	@readonly
 	def Parent(self) -> Nullable[Span]:
 		"""
-		Read-only property to access the event's parent span.
+		Read-only property to access the timespan enclosing this element (:attr:`_parent`).
 
-		:returns: Parent span.
+		:returns: The enclosing timespan, or ``None`` for a trace and for an element not attached to one.
 		"""
 		return self._parent
 
+	def get(self, key: str, default: Nullable[AttributeValue] = None) -> Nullable[AttributeValue]:
+		"""
+		Read an attached attribute (key-value-pair) by key, or a default value, if the key doesn't exist.
+
+		This method is spelled the way :meth:`dict.get` is, because that is the behaviour it offers.
+
+		:param key:     The key to look for.
+		:param default: Optional, the value returned if the key isn't an attached attribute. Default: ``None``.
+		:returns:       The value associated to the given key, otherwise the default value.
+		"""
+		return self._dict.get(key, default)
+
 	def __getitem__(self, key: str) -> AttributeValue:
 		"""
-		Read an event's attached attributes (key-value-pairs) by key.
+		Read an attached attribute (key-value-pair) by key.
 
 		:param key: The key to look for.
 		:returns:   The value associated to the given key.
@@ -422,7 +417,7 @@ class Event(metaclass=ExtendedType, slots=True):
 
 	def __setitem__(self, key: str, value: AttributeValue) -> None:
 		"""
-		Create or update an event's attached attributes (key-value-pairs) by key.
+		Create or update an attached attribute (key-value-pair) by key.
 
 		If a key doesn't exist yet, a new key-value-pair is created.
 
@@ -433,16 +428,16 @@ class Event(metaclass=ExtendedType, slots=True):
 
 	def __delitem__(self, key: str) -> None:
 		"""
-		Remove an entry from event's attached attributes (key-value-pairs) by key.
+		Remove an attached attribute (key-value-pair) by key.
 
 		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the event's attributes.
+		:raises KeyError: If key doesn't exist in the attributes.
 		"""
 		del self._dict[key]
 
 	def __contains__(self, key: str) -> bool:
 		"""
-		Checks if the key is an attached attribute (key-value-pairs) on this event.
+		Checks if the key is an attached attribute (key-value-pairs).
 
 		:param key: The key to check.
 		:returns:   ``True``, if the key is an attached attribute.
@@ -451,7 +446,7 @@ class Event(metaclass=ExtendedType, slots=True):
 
 	def __iter__(self) -> Iterator[tuple[str, AttributeValue]]:
 		"""
-		Returns an iterator to iterate all associated attributes of this event as :pycode:`(key, value)` tuples.
+		Returns an iterator to iterate all attached attributes as :pycode:`(key, value)` tuples.
 
 		:returns: Iterator to iterate all attributes.
 		"""
@@ -459,11 +454,56 @@ class Event(metaclass=ExtendedType, slots=True):
 
 	def __len__(self) -> int:
 		"""
-		Returns the number of attached attributes (key-value-pairs) on this event.
+		Returns the number of attached attributes (key-value-pairs).
 
 		:returns: Number of attached attributes.
 		"""
 		return len(self._dict)
+
+
+@export
+class Event(TraceElement):
+	"""
+	Represents a named event within a timespan (:class:`Span`) used in a software execution trace.
+
+	It may contain arbitrary attributes (key-value pairs).
+	"""
+	_time:      datetime            #: Timestamp of the event.
+
+	def __init__(self, name: str, time: Nullable[datetime] = None, *, parent: Nullable[Span] = None) -> None:
+		"""
+		Initializes a named event.
+
+		:param name:        The name of the event.
+		:param time:        Optional, time when the event happened. Default: the current system time.
+		:param parent:      Optional, reference to the parent span.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'time' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
+		"""
+		super().__init__(name, parent)
+
+		if time is None:
+			self._time = datetime.now()
+		elif isinstance(time, datetime):
+			self._time = time
+		else:
+			ex = TypeError("Parameter 'time' is not of type 'datetime'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(time)}'.")
+			raise ex
+
+		if parent is not None:
+			parent._events.append(self)
+
+	@readonly
+	def Time(self) -> datetime:
+		"""
+		Read-only property to access the event's timestamp.
+
+		:returns: Timestamp of the event.
+		"""
+		return self._time
 
 	def _ToOTLPJSON(self) -> OTLPEvent:
 		"""
@@ -492,14 +532,12 @@ class Event(metaclass=ExtendedType, slots=True):
 
 
 @export
-class Span(metaclass=ExtendedType, slots=True):
+class Span(TraceElement):
 	"""
 	Represents a timespan (span) within another timespan or trace.
 
 	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
-	_name:      str                 #: Name of the timespan
-	_parent:    Nullable[Span]      #: Reference to the parent span (or trace).
 	_trace:     Nullable[Trace]     #: Reference to the trace this timespan belongs to.
 	_spanID:    str                 #: Identifier of this timespan, as 16 hex digits.
 
@@ -509,9 +547,8 @@ class Span(metaclass=ExtendedType, slots=True):
 	_stopTime:  Nullable[int]       #: Performance counter in ns when the timespan was stopped.
 	_totalTime: Nullable[int]       #: Duration of this timespan in ns.
 
-	_spans:     list[Span]              #: Sub-timespans
-	_events:    list[Event]             #: Events happened within this timespan
-	_dict:      dict[str, AttributeValue]  #: Dictionary of associated attributes.
+	_spans:     list[Span]          #: Sub-timespans
+	_events:    list[Event]         #: Events happened within this timespan
 
 	def __init__(
 		self,
@@ -555,15 +592,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		:raises ValueError: If the timespan begins before or ends after its parent.
 		"""
-		if isinstance(name, str):
-			if name == "":
-				raise ValueError("Parameter 'name' is empty.")
-
-			self._name = name
-		else:
-			ex = TypeError("Parameter 'name' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
-			raise ex
+		super().__init__(name, parent)
 
 		if duration is not None:
 			if beginTime is None:
@@ -604,18 +633,12 @@ class Span(metaclass=ExtendedType, slots=True):
 			endTime = beginTime + duration
 
 		if parent is None:
-			self._parent = None
-			self._trace =  None
-		elif isinstance(parent, Span):
+			self._trace = None
+		else:
 			self._CheckParentRange(parent, beginTime, endTime)
 
-			self._parent = parent
-			self._trace =  parent._trace
+			self._trace = parent._trace
 			parent._spans.append(self)
-		else:
-			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-			raise ex
 
 		self._spanID =    _newIdentifier(64)
 
@@ -630,25 +653,6 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		self._spans =     []
 		self._events =    []
-		self._dict =      {}
-
-	@readonly
-	def Name(self) -> str:
-		"""
-		Read-only property to access the timespan's name.
-
-		:returns: Name of the timespan.
-		"""
-		return self._name
-
-	@readonly
-	def Parent(self) -> Nullable[Span]:
-		"""
-		Read-only property to access the span's parent span or trace.
-
-		:returns: Parent span.
-		"""
-		return self._parent
 
 	@readonly
 	def SpanID(self) -> str:
@@ -966,60 +970,6 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		currentSpan = _threadLocalData.currentSpan
 		_threadLocalData.currentSpan = currentSpan._parent
-
-	def __getitem__(self, key: str) -> AttributeValue:
-		"""
-		Read an event's attached attributes (key-value-pairs) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: str, value: AttributeValue) -> None:
-		"""
-		Create or update an event's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: str) -> None:
-		"""
-		Remove an entry from event's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the event's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: str) -> bool:
-		"""
-		Checks if the key is an attached attribute (key-value-pairs) on this event.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __iter__(self) -> Iterator[tuple[str, AttributeValue]]:
-		"""
-		Returns an iterator to iterate all associated attributes of this timespan as :pycode:`(key, value)` tuples.
-
-		:returns: Iterator to iterate all attributes.
-		"""
-		return iter(self._dict.items())
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) on this event.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
 
 	def _ToOTLPJSON(self) -> list[OTLPSpan]:
 		"""
