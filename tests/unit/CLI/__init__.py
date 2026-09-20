@@ -42,7 +42,7 @@ from unittest.mock      import patch
 
 from pyTooling.Attributes.ArgParse import splitFormat
 from pyTooling.CLI                 import Application
-from pyTooling.CLI.Pipeline        import TraceFormat
+from pyTooling.CLI.Pipeline        import GanttFormat, TraceFormat
 from pyTooling.Testing             import Testcase
 
 
@@ -162,6 +162,7 @@ class PipelineCommand(Testcase):
 		self.assertIn("--github-repository", output)
 		self.assertIn("--github-pipeline-id", output)
 		self.assertIn("--trace-file", output)
+		self.assertIn("--gantt", output)
 		self.assertIn("--force", output)
 
 	def test_Repository_Missing(self) -> None:
@@ -171,14 +172,55 @@ class PipelineCommand(Testcase):
 		with patch.dict(environ, self.NO_WORKFLOW):
 			with self.assertRaises(SystemExit):
 				application.HandlePipeline(Namespace(
-					githubRepository=None, githubPipelineID=None, traceFile=None, force=False
+					githubRepository=None, githubPipelineID=None, traceFile=None, gantt=None, force=False
 				))
 
 	def test_TraceFile_UnsupportedFormat(self) -> None:
 		"""A misspelled format is reported before anything is read."""
 		application = Application()
-		arguments = Namespace(githubRepository=None, githubPipelineID=None, traceFile="json:trace.json", force=False)
+		arguments = Namespace(
+			githubRepository=None, githubPipelineID=None, traceFile="json:trace.json", gantt=None, force=False
+		)
 
 		with patch.dict(environ, self.NO_WORKFLOW):
 			with self.assertRaises(SystemExit):
 				application.HandlePipeline(arguments)
+
+	def test_Gantt_SuffixContradictsTheFormat(self) -> None:
+		application = Application()
+		arguments = Namespace(
+			githubRepository=None, githubPipelineID=None, traceFile=None, gantt="matplotlib-png:chart.svg", force=False
+		)
+
+		with patch.dict(environ, self.NO_WORKFLOW):
+			with self.assertRaises(SystemExit):
+				application.HandlePipeline(arguments)
+
+
+class GanttFormats(Testcase):
+	def test_FromPath(self) -> None:
+		"""The file's suffix names the format, so the format is rarely written out."""
+		for value, expected in (
+			("chart.png", GanttFormat.MatplotlibPNG),
+			("chart.svg", GanttFormat.MatplotlibSVG),
+			("report/chart.pdf", GanttFormat.MatplotlibPDF),
+		):
+			with self.subTest(value=value):
+				self.assertIs(expected, GanttFormat.FromPath(Path(value)))
+
+	def test_FromPath_UnknownSuffix(self) -> None:
+		self.assertIs(GanttFormat.Default, GanttFormat.FromPath(Path("chart.gif")))
+		self.assertIs(GanttFormat.Default, GanttFormat.FromPath(Path("chart")))
+
+	def test_FromPath_EveryFormat(self) -> None:
+		"""A format is the backend and the file format, and the second half is the file's suffix."""
+		for fileFormat in GanttFormat:
+			with self.subTest(format=fileFormat):
+				backend, _, suffix = fileFormat.value.partition("-")
+				self.assertEqual("matplotlib", backend)
+				self.assertIs(fileFormat, GanttFormat.FromPath(Path(f"chart.{suffix}")))
+
+	def test_FromPath_IsWhatSplitFormatUses(self) -> None:
+		"""'--gantt=report/Pipeline.svg' draws an SVG, because the enumeration answers for the value naming none."""
+		self.assertEqual((GanttFormat.MatplotlibSVG, Path("report/Pipeline.svg")),
+		                 splitFormat("report/Pipeline.svg", GanttFormat))

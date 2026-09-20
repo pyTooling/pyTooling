@@ -75,7 +75,8 @@ derived from, so a further output is a further option rather than a second reade
 
    pyTooling pipeline --github-repository=pyTooling/pyTooling \
                       --github-pipeline-id=35479251694 \
-                      --trace-file=report/Pipeline.otlp.json
+                      --trace-file=report/Pipeline.otlp.json \
+                      --gantt=report/Pipeline.png
 
 .. list-table::
    :header-rows: 1
@@ -90,6 +91,8 @@ derived from, so a further output is a further option rather than a second reade
        :pycode:`$GITHUB_RUN_ID`, which a workflow sets.
    * - ``--trace-file=[<format>:]<file>``
      - Write the trace. Default format: ``otlp-json``, currently the only one.
+   * - ``--gantt=[<format>:]<file>``
+     - Draw the run as a Gantt chart: ``matplotlib-png``, ``matplotlib-svg`` or ``matplotlib-pdf``.
    * - ``--force``
      - Overwrite files that exist. Without it, an existing file is an error.
 
@@ -117,8 +120,34 @@ a Windows drive (:file:`C:\\report\\trace.json`) and a colon deeper down a path 
 like a format but isn't one is an error naming the formats that exist, rather than a file with a strange name.
 
 None of that is the command's own: :func:`~pyTooling.Attributes.ArgParse.splitFormat` does the splitting for any
-program declaring an option of this shape, and a value naming no format gets the enumeration's ``DEFAULT`` - see
-:ref:`ATTR/ArgParse/Formats`.
+program declaring an option of this shape, and each format enumeration answers for itself what a value naming no
+format gets - see :ref:`ATTR/ArgParse/Formats`. :class:`~pyTooling.CLI.Pipeline.TraceFormat` answers with its
+``DEFAULT``; :class:`~pyTooling.CLI.Pipeline.GanttFormat` reads the suffix, which is why
+:pycode:`--gantt=report/Pipeline.svg` draws an SVG without the format being written out.
 
 Both are checked **before** the pipeline is read, so a misspelled format or a file that exists is reported at once
 instead of after a network round-trip.
+
+
+.. _CLI/Pipeline/Gantt:
+
+Drawing the run
+===============
+
+``--gantt`` lays the trace out as a :ref:`Gantt chart <TRACING/Render>` and draws it: one row per job, the time it
+waited for a runner in light gray in front of the time it ran, and a line for the pipeline and every called
+workflow. The legend carries the statistics per runner image. **The steps are left out** - a pipeline of 57 jobs
+has more than a thousand of them, and a chart of one row per step is a different picture.
+
+A format is the backend and the file format - ``matplotlib-png``, ``matplotlib-svg``, ``matplotlib-pdf`` - and the
+file's suffix has to agree with it. It usually says it already, so the format is rarely written out:
+:pycode:`--gantt=report/Pipeline.svg` draws an SVG. A suffix that names no format gets ``matplotlib-png``, and
+then the mismatch is reported rather than a file being written under a name that lies about its content.
+
+matplotlib is an optional dependency. Without it, ``--gantt`` reports which extra installs it
+(:pycode:`pyTooling[diagram]`) instead of failing on an import.
+
+.. hint::
+
+   In an SVG, every bar or line is a group named after the timespan it draws - ``span-<SpanID>`` - so a script can
+   find the elements of a job. :ref:`TRACING/Render` describes the identifiers.
