@@ -52,8 +52,7 @@ from pyTooling.Attributes.ArgParse          import ArgParseHelperMixin, DefaultH
 from pyTooling.Attributes.ArgParse.Flag     import FlagArgument
 from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.TerminalUI                   import TerminalApplication, Mode
-
-from pyTooling.CLI.Pipeline                  import PipelineHandlers
+from pyTooling.CLI.Pipeline                 import PipelineHandlers
 
 
 @export

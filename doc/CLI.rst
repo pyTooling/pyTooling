@@ -73,7 +73,9 @@ derived from, so a further output is a further option rather than a second reade
 
 .. code-block:: bash
 
-   pyTooling pipeline --github-pipeline-id=35479251694 --trace-file=report/Pipeline.otlp.json
+   pyTooling pipeline --github-repository=pyTooling/pyTooling \
+                      --github-pipeline-id=35479251694 \
+                      --trace-file=report/Pipeline.otlp.json
 
 .. list-table::
    :header-rows: 1
@@ -81,11 +83,11 @@ derived from, so a further output is a further option rather than a second reade
 
    * - Option
      - Meaning
+   * - ``--github-repository=<owner/name>``
+     - The repository the run belongs to. Default: :pycode:`$GITHUB_REPOSITORY`, which a workflow sets.
    * - ``--github-pipeline-id=<ID>``
      - The workflow run to read - the number in its URL, :file:`.../actions/runs/35479251694`. Default:
        :pycode:`$GITHUB_RUN_ID`, which a workflow sets.
-   * - ``--github-repository=<owner/name>``
-     - The repository the run belongs to. Default: :pycode:`$GITHUB_REPOSITORY`, which a workflow sets.
    * - ``--trace-file=[<format>:]<file>``
      - Write the trace. Default format: ``otlp-json``, currently the only one.
    * - ``--force``
