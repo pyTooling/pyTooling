@@ -241,9 +241,10 @@ class Layout(Testcase):
 		bars = {row.Name: row for row in self._Layout().IterateRows()}["Build"].Bars
 
 		self.assertListEqual(
-			[(1.0, 4.0, True), (4.0, 30.0, False)], [(bar.Begin, bar.End, bar.IsQueued) for bar in bars]
+			[(1.0, 4.0, True), (4.0, 30.0, False)],
+			[(bar.BeginSinceOriginInSeconds, bar.EndSinceOriginInSeconds, bar.IsQueued) for bar in bars]
 		)
-		self.assertEqual(26.0, bars[1].Duration)
+		self.assertEqual(26.0, bars[1].DurationInSeconds)
 		self.assertFalse(bars[1].IsRunning)
 
 	def test_WaitingJob(self) -> None:
@@ -253,23 +254,28 @@ class Layout(Testcase):
 		self.assertEqual(1, len(bars))
 		self.assertTrue(bars[0].IsQueued)
 		self.assertTrue(bars[0].IsRunning)
-		self.assertEqual(50.0, bars[0].End)
+		self.assertEqual(50.0, bars[0].EndSinceOriginInSeconds)
 
 	def test_Running(self) -> None:
 		rows = {row.Name: row for row in self._Layout().IterateRows()}
 		bar = rows["Windows"].Bars[1]
 
-		self.assertEqual((15.0, 50.0, True), (bar.Begin, bar.End, bar.IsRunning))
+		self.assertEqual(
+			(15.0, 50.0, True), (bar.BeginSinceOriginInSeconds, bar.EndSinceOriginInSeconds, bar.IsRunning)
+		)
 		self.assertTrue(rows["Tests"].Bars[0].IsRunning)
 
 	def test_BarTimes(self) -> None:
 		"""A bar keeps the times it was built from, and converts them to offsets when they are asked for."""
-		bar = {row.Name: row for row in self._Layout().IterateRows()}["Build"].Bars[1]
+		row = {row.Name: row for row in self._Layout().IterateRows()}["Build"]
+		bar = row.Bars[1]
 
-		self.assertEqual((_at(4), _at(30)), (bar.BeginTime, bar.EndTime))
-		self.assertEqual((4.0, 30.0), (bar.Begin, bar.End))
-		self.assertEqual(timedelta(seconds=26), bar.Length)
-		self.assertEqual(26.0, bar.Duration)
+		self.assertEqual((_at(4), _at(30)), (bar.Begin, bar.End))
+		self.assertEqual((4.0, 30.0), (bar.BeginSinceOriginInSeconds, bar.EndSinceOriginInSeconds))
+		self.assertEqual(timedelta(seconds=26), bar.Duration)
+		self.assertEqual(26.0, bar.DurationInSeconds)
+		self.assertEqual(timedelta(seconds=3), bar.BeginSinceParent, "The waiting bar in front begins the row.")
+		self.assertEqual((_at(1), _at(30)), (row.Begin, row.End))
 
 	def test_Duration(self) -> None:
 		self.assertEqual(100.0, self._Layout().Duration)
@@ -278,7 +284,7 @@ class Layout(Testcase):
 	def test_Times(self) -> None:
 		layout = self._Layout()
 
-		self.assertEqual(_at(0), layout.BeginTime)
+		self.assertEqual(_at(0), layout.Origin)
 		self.assertEqual(_at(100), layout.EndTime)
 		self.assertFalse(layout.IsRunning)
 		self.assertEqual(100.0, layout.WallTime)

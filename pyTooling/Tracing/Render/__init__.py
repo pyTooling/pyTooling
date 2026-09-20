@@ -49,6 +49,7 @@ from typing                      import Callable, ClassVar, Generic, Iterator, O
 from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common            import getFullyQualifiedName
+from pyTooling.Diagram.Gantt     import Bar, Diagram, Row
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import GitHub
@@ -114,13 +115,13 @@ def ciSpanFilter(
 		:param span: The timespan.
 		:returns:    ``False``, if the timespan is hidden.
 		"""
-		kind = span.Get(CI.Span.Kind)
+		kind = span.get(CI.Span.Kind)
 		if kind == SpanKind.Step:
 			if excludeSteps is StepExclusion.All:
 				return False
-			return excludeSteps is StepExclusion.Nothing or span.Get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
+			return excludeSteps is StepExclusion.Nothing or span.get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
 		elif kind == SpanKind.Job and excludeSkippedJobs:
-			return span.Get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
+			return span.get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
 
 		return True
 
@@ -141,7 +142,7 @@ def msys2Environment(job: Span) -> Nullable[str]:
 	for step in job.IterateSubSpans():
 		if (match := MSYS2_SETUP_STEP.search(step.Name)) is None:
 			continue
-		elif step.Get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Success:
+		elif step.get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Success:
 			continue
 		elif (environment := match.group(1).upper()) != "NATIVE":
 			return environment
@@ -165,7 +166,7 @@ def runnerCategory(span: Span) -> str:
 	job: Nullable[Span] = None
 	current: Nullable[Span] = span
 	while current is not None:
-		if job is None and current.Get(CI.Span.Kind) == SpanKind.Job:
+		if job is None and current.get(CI.Span.Kind) == SpanKind.Job:
 			job = current
 		if label == "" and GitHub.Runner.Labels in current and len(labels := current[GitHub.Runner.Labels]) > 0:
 			label = str(labels[0])
@@ -178,90 +179,34 @@ def runnerCategory(span: Span) -> str:
 
 
 @export
-class GanttBar(metaclass=ExtendedType, slots=True):
+class GanttBar(Bar):
 	"""
-	A bar of a Gantt chart's row: the time range a timespan occupies.
+	A bar of a trace's Gantt chart: the time range one timespan occupies.
 
-	The bar keeps the times it was built from, and converts them to the offsets a chart is drawn on when they are
-	asked for: :attr:`BeginTime` and :attr:`EndTime` are what the trace recorded, :attr:`Begin` and :attr:`End` are
-	seconds after the trace began.
+	It adds to :class:`~pyTooling.Diagram.Gantt.Bar` what a trace knows about a timespan and a schedule doesn't:
+	whether the bar is the time a job waited for a runner, and whether its timespan is still running.
 	"""
-	_origin:  datetime  #: Begin of the trace, which the offsets are counted from.
-	_begin:   datetime  #: Begin of the bar.
-	_end:     datetime  #: End of the bar.
-	_queued:  bool      #: The bar is the time a job waited for a runner.
-	_running: bool      #: The bar's timespan is still running, so the bar ends at the layout's current time.
+	_queued:  bool  #: The bar is the time a job waited for a runner.
+	_running: bool  #: The bar's timespan is still running, so the bar ends at the layout's current time.
 
-	def __init__(self, origin: datetime, begin: datetime, end: datetime, queued: bool, running: bool) -> None:
+	def __init__(self, begin: datetime, end: datetime, queued: bool, running: bool, *, parent: GanttRow) -> None:
 		"""
-		Initializes a bar.
+		Initializes a bar and appends it to its row.
 
-		:param origin:  Begin of the trace, which the offsets are counted from.
-		:param begin:   Begin of the bar.
-		:param end:     End of the bar.
-		:param queued:  The bar is the time a job waited for a runner.
-		:param running: The bar's timespan is still running.
+		:param begin:       Begin of the bar.
+		:param end:         End of the bar.
+		:param queued:      The bar is the time a job waited for a runner.
+		:param running:     The bar's timespan is still running.
+		:param parent:      The row the bar sits in.
+		:raises ValueError: If parameter 'begin', 'end' or 'parent' is None.
+		:raises TypeError:  If parameter 'begin' or 'end' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Diagram.Gantt.Row`.
+		:raises ValueError: If the end precedes the begin.
 		"""
-		self._origin =  origin
-		self._begin =   begin
-		self._end =     end
+		super().__init__(begin, end, parent=parent)
+
 		self._queued =  queued
 		self._running = running
-
-	@readonly
-	def BeginTime(self) -> datetime:
-		"""
-		Read-only property to access the begin of the bar (:attr:`_begin`).
-
-		:returns: The time the bar's timespan began, with the trace's time zone.
-		"""
-		return self._begin
-
-	@readonly
-	def EndTime(self) -> datetime:
-		"""
-		Read-only property to access the end of the bar (:attr:`_end`).
-
-		:returns: The time the bar's timespan ended, with the trace's time zone. A running timespan ends at the
-		          layout's current time.
-		"""
-		return self._end
-
-	@readonly
-	def Begin(self) -> float:
-		"""
-		Read-only property to return the begin of the bar as an offset.
-
-		:returns: Begin in seconds after the trace began.
-		"""
-		return (self._begin - self._origin).total_seconds()
-
-	@readonly
-	def End(self) -> float:
-		"""
-		Read-only property to return the end of the bar as an offset.
-
-		:returns: End in seconds after the trace began.
-		"""
-		return (self._end - self._origin).total_seconds()
-
-	@readonly
-	def Length(self) -> timedelta:
-		"""
-		Read-only property to return the length of the bar.
-
-		:returns: The length as a :class:`~datetime.timedelta`.
-		"""
-		return self._end - self._begin
-
-	@readonly
-	def Duration(self) -> float:
-		"""
-		Read-only property to return the length of the bar in seconds.
-
-		:returns: Length in seconds.
-		"""
-		return (self._end - self._begin).total_seconds()
 
 	@readonly
 	def IsQueued(self) -> bool:
@@ -283,28 +228,33 @@ class GanttBar(metaclass=ExtendedType, slots=True):
 
 
 @export
-class GanttRow(metaclass=ExtendedType, slots=True):
+class GanttRow(Row):
 	"""
-	A row of a Gantt chart: one timespan, with the bar a job waited for a runner in front of the job's bar.
+	A row of a trace's Gantt chart: one timespan, with the bar a job waited for a runner in front of the job's bar.
+
+	It adds to :class:`~pyTooling.Diagram.Gantt.Row` the timespan the row shows, where that timespan sits in the
+	trace's tree, and the category its bars are colored by.
 	"""
-	_span:     Span            #: The timespan shown by the row.
-	_depth:    int             #: Nesting depth of the timespan, where the trace is at depth 0.
-	_category: str             #: Category of the timespan, or the empty string.
-	_bars:     list[GanttBar]  #: The row's bars, in time order.
+	_span:     Span  #: The timespan shown by the row.
+	_depth:    int   #: Nesting depth of the timespan, where the trace is at depth 0.
+	_category: str   #: Category of the timespan, or the empty string.
 
-	def __init__(self, span: Span, depth: int, category: str, bars: list[GanttBar]) -> None:
+	def __init__(self, span: Span, depth: int, category: str, *, parent: GanttLayout) -> None:
 		"""
-		Initializes a row.
+		Initializes a row without bars and appends it to its layout.
 
-		:param span:     The timespan shown by the row.
-		:param depth:    Nesting depth of the timespan, where the trace is at depth 0.
-		:param category: Category of the timespan, or the empty string.
-		:param bars:     The row's bars, in time order.
+		:param span:        The timespan shown by the row.
+		:param depth:       Nesting depth of the timespan, where the trace is at depth 0.
+		:param category:    Category of the timespan, or the empty string.
+		:param parent:      The layout the row belongs to.
+		:raises ValueError: If parameter 'parent' is None.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Diagram.Gantt.Diagram`.
 		"""
+		super().__init__(span.Name, parent=parent)
+
 		self._span =     span
 		self._depth =    depth
 		self._category = category
-		self._bars =     bars
 
 	@readonly
 	def Span(self) -> Span:
@@ -314,15 +264,6 @@ class GanttRow(metaclass=ExtendedType, slots=True):
 		:returns: The timespan.
 		"""
 		return self._span
-
-	@readonly
-	def Name(self) -> str:
-		"""
-		Read-only property to access the name of the row's timespan.
-
-		:returns: The timespan's name.
-		"""
-		return self._span.Name
 
 	@readonly
 	def SpanID(self) -> str:
@@ -349,7 +290,7 @@ class GanttRow(metaclass=ExtendedType, slots=True):
 
 		:returns: The value of :data:`~pyTooling.Tracing.CI.CI.Span.Kind`, or ``None`` if the timespan has none.
 		"""
-		return self._span.Get(CI.Span.Kind)
+		return self._span.get(CI.Span.Kind)
 
 	@readonly
 	def Depth(self) -> int:
@@ -368,15 +309,6 @@ class GanttRow(metaclass=ExtendedType, slots=True):
 		:returns: The category, or the empty string.
 		"""
 		return self._category
-
-	@readonly
-	def Bars(self) -> tuple[GanttBar, ...]:
-		"""
-		Read-only property to return the row's bars (:attr:`_bars`).
-
-		:returns: The bars in time order. A timespan without a begin time has none.
-		"""
-		return tuple(self._bars)
 
 
 @export
@@ -509,10 +441,14 @@ class CategoryStatistics(metaclass=ExtendedType, slots=True):
 
 
 @export
-class GanttLayout(metaclass=ExtendedType, slots=True):
+class GanttLayout(Diagram):
 	"""
 	The layout of a trace as a Gantt chart: one row per shown timespan, in the trace's tree order, and the statistics of
 	the trace's jobs per category.
+
+	It is a :class:`~pyTooling.Diagram.Gantt.Diagram` whose origin is the time the trace began, so everything a chart
+	is drawn from - rows, bars and the offsets between them - is answered by the diagram, and this class adds what
+	only a trace has: the filter deciding which timespans are shown, and the statistics of its jobs.
 
 	A timespan of kind ``queued`` is drawn on the row of the job directly following it, if that job has the same task
 	name - otherwise the job is still waiting, and the waiting timespan gets a row of its own.
@@ -524,7 +460,6 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 	_now:        datetime                       #: The time a running timespan's bar ends at.
 	_spanFilter: Nullable[SpanFilter]           #: The function deciding which timespans are shown, or ``None`` for all.
 	_categorize: SpanCategory                   #: The function returning a timespan's category.
-	_rows:       list[GanttRow]                 #: The rows in tree order.
 	_categories: dict[str, None]                #: The categories of rows and statistics, as an ordered set.
 	_statistics: dict[str, CategoryStatistics]  #: The statistics of the jobs per category.
 	_duration:   float                          #: The end of the last bar in seconds after the trace began.
@@ -565,11 +500,12 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(now)}'.")
 			raise ex
 
+		super().__init__(trace.Name, begin)
+
 		self._trace =      trace
 		self._now =        now
 		self._spanFilter = spanFilter
 		self._categorize = categorize
-		self._rows =       []
 		self._categories = {}
 		self._statistics = {}
 		self._duration =   0.0
@@ -587,21 +523,22 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		"""
 		return (time - self._trace.StartTime).total_seconds()
 
-	def _Bar(self, span: Span, queued: bool) -> Nullable[GanttBar]:
+	def _AddBar(self, span: Span, queued: bool, row: GanttRow) -> None:
 		"""
-		Create the bar of a timespan.
+		Append the bar of a timespan to a row, unless the timespan has no begin time.
 
 		:param span:   The timespan.
 		:param queued: The timespan is the time a job waited for a runner.
-		:returns:      The bar, or ``None`` if the timespan has no begin time.
+		:param row:    The row the bar is appended to.
 		"""
 		if (begin := span.StartTime) is None:
-			return None
+			return
 
 		running = span.StopTime is None
 		end = self._now if running else span.StopTime
 
-		return GanttBar(self._trace.StartTime, begin, max(end, begin), queued, running)
+		bar = GanttBar(begin, max(end, begin), queued, running, parent=row)
+		self._duration = max(self._duration, bar.EndSinceOriginInSeconds)
 
 	def _AddRow(self, span: Span, depth: int, queued: Nullable[Span]) -> None:
 		"""
@@ -611,17 +548,14 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:param depth:  Nesting depth of the timespan.
 		:param queued: The timespan the job waited for a runner in, or ``None``.
 		"""
-		bars: list[GanttBar] = []
-		for barSpan, isQueued in ((queued, True), (span, span.Get(CI.Span.Kind) == SpanKind.Queued)):
-			if barSpan is not None and (bar := self._Bar(barSpan, isQueued)) is not None:
-				bars.append(bar)
-				self._duration = max(self._duration, bar.End)
-
 		category = self._categorize(span)
 		if category != "":
 			self._categories[category] = None
 
-		self._rows.append(GanttRow(span, depth, category, bars))
+		row = GanttRow(span, depth, category, parent=self)
+		for barSpan, isQueued in ((queued, True), (span, span.get(CI.Span.Kind) == SpanKind.Queued)):
+			if barSpan is not None:
+				self._AddBar(barSpan, isQueued, row)
 
 	def _AddSubSpans(self, parent: Span, depth: int) -> None:
 		"""
@@ -635,7 +569,7 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 			if self._spanFilter is not None and not self._spanFilter(span):
 				continue
 
-			kind = span.Get(CI.Span.Kind)
+			kind = span.get(CI.Span.Kind)
 			if kind == SpanKind.Queued:
 				if pending is not None:
 					self._AddRow(pending, depth, None)
@@ -644,8 +578,8 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 
 			queued = None
 			if pending is not None:
-				taskName = span.Get(OTLP.CICD.Pipeline.Task.Name)
-				if kind == SpanKind.Job and taskName is not None and taskName == pending.Get(OTLP.CICD.Pipeline.Task.Name):
+				taskName = span.get(OTLP.CICD.Pipeline.Task.Name)
+				if kind == SpanKind.Job and taskName is not None and taskName == pending.get(OTLP.CICD.Pipeline.Task.Name):
 					queued = pending
 				else:
 					self._AddRow(pending, depth, None)
@@ -665,13 +599,13 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		"""
 		queued: dict[str, Span] = {}
 		for span in parent.IterateSubSpans():
-			kind =   span.Get(CI.Span.Kind)
-			result = span.Get(OTLP.CICD.Pipeline.Task.Run.Result)
-			if kind == SpanKind.Queued and (taskName := span.Get(OTLP.CICD.Pipeline.Task.Name)) is not None:
+			kind =   span.get(CI.Span.Kind)
+			result = span.get(OTLP.CICD.Pipeline.Task.Run.Result)
+			if kind == SpanKind.Queued and (taskName := span.get(OTLP.CICD.Pipeline.Task.Name)) is not None:
 				queued[taskName] = span
 			elif kind == SpanKind.Job and result != Result.Skip and span.StartTime is not None:
 				if (category := self._categorize(span)) != "":
-					waiting = queued.get(span.Get(OTLP.CICD.Pipeline.Task.Name), None)
+					waiting = queued.get(span.get(OTLP.CICD.Pipeline.Task.Name), None)
 					waitTime = 0.0
 					if waiting is not None and waiting.StartTime is not None:
 						waitTime = self._Offset(span.StartTime) - self._Offset(waiting.StartTime)
@@ -701,15 +635,6 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:returns: The current time of the layout.
 		"""
 		return self._now
-
-	@readonly
-	def BeginTime(self) -> datetime:
-		"""
-		Read-only property to access the time the trace began.
-
-		:returns: The begin time, with the trace's time zone.
-		"""
-		return self._trace.StartTime
 
 	@readonly
 	def EndTime(self) -> datetime:
@@ -764,23 +689,6 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:returns: The end in seconds after the trace began.
 		"""
 		return self._duration
-
-	@readonly
-	def RowCount(self) -> int:
-		"""
-		Read-only property to return the number of rows.
-
-		:returns: Number of rows.
-		"""
-		return len(self._rows)
-
-	def IterateRows(self) -> Iterator[GanttRow]:
-		"""
-		Returns an iterator to iterate all rows in tree order.
-
-		:returns: Iterator to iterate all rows.
-		"""
-		return iter(self._rows)
 
 	def IterateStatistics(self) -> Iterator[CategoryStatistics]:
 		"""
@@ -840,7 +748,7 @@ class Renderer(Generic[_FigureType], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		if title is None:
-			title = f"{layout.Trace.Name} ({self.FormatSeconds(layout.WallTime)})"
+			title = f"{layout.Title} ({self.FormatSeconds(layout.WallTime)})"
 		elif not isinstance(title, str):
 			ex = TypeError("Parameter 'title' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(title)}'.")
@@ -922,7 +830,7 @@ class Renderer(Generic[_FigureType], metaclass=ExtendedType, slots=True):
 		"""
 		layout = self._layout
 		lines = [
-			f"started     {self.FormatTime(layout.BeginTime)}",
+			f"started     {self.FormatTime(layout.Origin)}",
 			f"{'running at' if layout.IsRunning else 'finished':<11} {self.FormatTime(layout.EndTime)}",
 			f"wall time   {self.FormatSeconds(layout.WallTime)}   runner time {self.FormatSeconds(layout.RunnerTime)}"
 			f"   {layout.JobCount} jobs",

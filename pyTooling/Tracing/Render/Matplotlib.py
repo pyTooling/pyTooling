@@ -253,10 +253,10 @@ class MatplotlibRenderer(Renderer[Figure]):
 					for bar in row.Bars:
 						hasLines = True
 						style = "dashed" if bar.IsRunning else "solid"
-						line = axes.hlines(position, bar.Begin, bar.End, colors=self.LINE, linewidth=1.0, linestyles=style)
-						ends = axes.vlines(
-							[bar.Begin, bar.End], position - 0.3, position + 0.3, colors=self.LINE, linewidth=1.0
-						)
+						begin = bar.BeginSinceOriginInSeconds
+						end =   bar.EndSinceOriginInSeconds
+						line = axes.hlines(position, begin, end, colors=self.LINE, linewidth=1.0, linestyles=style)
+						ends = axes.vlines([begin, end], position - 0.3, position + 0.3, colors=self.LINE, linewidth=1.0)
 						line.set_gid(f"span-{row.SpanID}")
 						ends.set_gid(f"span-{row.SpanID}-ends")
 					continue
@@ -265,7 +265,7 @@ class MatplotlibRenderer(Renderer[Figure]):
 				for bar in row.Bars:
 					hasQueued |= bar.IsQueued
 					collection = axes.broken_barh(
-						[(bar.Begin, max(bar.Duration, minimumWidth))],
+						[(bar.BeginSinceOriginInSeconds, max(bar.DurationInSeconds, minimumWidth))],
 						(position - 0.4, 0.8),
 						facecolors=self.QUEUED if bar.IsQueued else color,
 						hatch="///" if bar.IsRunning else None,
