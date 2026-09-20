@@ -54,12 +54,6 @@ from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.TerminalUI                   import TerminalApplication, Mode
 
 
-__all__ = ["PROGRAM_NAME"]
-
-PROGRAM_NAME = "pyTooling"
-"""Name of the program, as it is installed and as its help page names it."""
-
-
 @export
 class Application(TerminalApplication, ArgParseHelperMixin):
 	"""
@@ -94,9 +88,9 @@ class Application(TerminalApplication, ArgParseHelperMixin):
 
 		ArgParseHelperMixin.__init__(
 			self,
-			prog=PROGRAM_NAME,
-			description=dedent("""\
-				'pyTooling Service Program' to work with what pyTooling models.
+			prog="pyTooling",
+			description=dedent(f"""\
+				'{self.HeadLine}' to work with pyTooling data models.
 				"""),
 			formatter_class=HelpFormatter,
 			add_help=False
@@ -154,7 +148,8 @@ def main() -> NoReturn:
 	"""
 	from sys import argv
 
-	program = Application()
+	foreground = Application.Foreground
+	program    = Application()
 	program.Configure(
 		verbose=("-v" in argv or "--verbose" in argv),
 		debug=("-d" in argv or "--debug" in argv),
@@ -164,11 +159,11 @@ def main() -> NoReturn:
 	try:
 		program.Run()
 	except ToolingException as ex:
-		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**Application.Foreground))
+		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**foreground))
 		if ex.__cause__ is not None:
-			program.WriteLineToStdErr(f"{{DARK_YELLOW}}Because of: {ex.__cause__}{{NOCOLOR}}".format(**Application.Foreground))
+			program.WriteLineToStdErr(f"{{DARK_YELLOW}}Because of: {ex.__cause__}{{NOCOLOR}}".format(**foreground))
 		for note in getattr(ex, "__notes__", ()) or ():
-			program.WriteLineToStdErr(f"{{DARK_YELLOW}} [NOTE] {note}{{NOCOLOR}}".format(**Application.Foreground))
+			program.WriteLineToStdErr(f"{{DARK_YELLOW}} [NOTE] {note}{{NOCOLOR}}".format(**foreground))
 		program.Exit(1)
 	except ExceptionBase as ex:
 		program.PrintExceptionBase(ex)

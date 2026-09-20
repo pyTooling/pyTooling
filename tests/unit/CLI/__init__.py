@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2025-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -36,7 +36,7 @@ from contextlib         import redirect_stdout
 from sys                import argv as sys_argv
 from typing             import Iterable
 
-from pyTooling.CLI      import Application, PROGRAM_NAME
+from pyTooling.CLI      import Application
 from pyTooling.Testing  import Testcase
 
 
@@ -63,7 +63,7 @@ def _run(arguments: Iterable[str]) -> str:
 	output = StringIO()
 	argv = sys_argv[:]
 	stream = application._stdout
-	sys_argv[:] = [PROGRAM_NAME, *arguments]
+	sys_argv[:] = ["pyTooling", *arguments]
 	application._stdout = output
 	try:
 		with redirect_stdout(output):
@@ -79,7 +79,7 @@ class Parser(Testcase):
 	def test_TheCommandsAreDeclaredAsAttributes(self) -> None:
 		application = Application()
 
-		self.assertEqual(PROGRAM_NAME, application.MainParser.prog)
+		self.assertEqual("pyTooling", application.MainParser.prog)
 		self.assertIn("help", application.SubParsers)
 		self.assertIn("version", application.SubParsers)
 
