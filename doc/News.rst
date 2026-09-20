@@ -282,6 +282,10 @@ Version 10.x (2026)
        member the enumeration declares as ``Default`` - an alias, so it isn't iterated - or with ``None`` where
        there is none. :class:`~pyTooling.REST.MediaType`, :class:`~pyTooling.Tracing.CI.SpanKind` and
        :class:`~pyTooling.Tracing.CI.Result` derive from it.
+       :class:`~pyTooling.CI.GitHub.Status`, :class:`~pyTooling.CI.GitHub.Conclusion` and
+       :class:`~pyTooling.CI.GitHub.Event` derive from it too, and show how an enumeration of a domain with its
+       own exception keeps it: their ``Parse`` calls the inherited one and re-raises a
+       :exc:`~pyTooling.CI.GitHub.GitHubError` with the :exc:`ValueError` as its cause.
 
    * :mod:`pyTooling.Decorators`
 

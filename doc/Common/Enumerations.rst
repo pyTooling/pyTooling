@@ -84,6 +84,45 @@ What Parse rejects
    #   Got type 'int'.
 
 
+.. _COMMON/StringEnum/Domain:
+
+An enumeration with its own exception
+*************************************
+
+:meth:`~pyTooling.Common.StringEnum.Parse` raises a :exc:`ValueError`, which is what an unknown value *is*. An
+enumeration belonging to a domain that has its own exception overrides ``Parse``, catches that ``ValueError``
+and chains it as the cause.
+
+The difference is visible to a user: :func:`pyTooling.CLI.main` prints a
+:exc:`~pyTooling.Exceptions.ToolingException` as a message, while an unhandled :exc:`ValueError` reaches
+:meth:`~pyTooling.TerminalUI.TerminalApplication.PrintException`, which prints a traceback and invites the user
+to open an issue. A value a service sent that pyTooling doesn't know is that service's problem, not a bug in
+pyTooling, so it wants the first.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   class Status(StringEnum):
+     Queued =     "queued"
+     InProgress = "in_progress"
+     Completed =  "completed"
+
+     @classmethod
+     def Parse(cls, value: Nullable[str]) -> Nullable[Self]:
+       try:
+         return super().Parse(value)
+       except ValueError as ex:
+         error = GitHubError(f"'{value}' is not a GitHub status.")
+         error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
+         raise error from ex
+
+The :exc:`TypeError` is deliberately **not** caught: a value of the wrong type is a defect at the call site, not
+a value the service chose, and it reads better as itself.
+
+:class:`~pyTooling.CI.GitHub.Status`, :class:`~pyTooling.CI.GitHub.Conclusion` and
+:class:`~pyTooling.CI.GitHub.Event` are written that way.
+
+
 .. _COMMON/StringEnum/Member:
 
 A member is its value

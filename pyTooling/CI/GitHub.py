@@ -57,12 +57,11 @@ trace, a graph or a report is a consumer of this model.
 from __future__            import annotations
 
 from datetime              import datetime, timezone
-from enum                  import Enum
 from itertools             import chain
 from typing                import Optional as Nullable, Any, ClassVar, Iterable, Iterator, Self, Union
 
 from pyTooling.CI          import JSONObject
-from pyTooling.Common      import __version__, getFullyQualifiedName, parseISO8601Timestamp
+from pyTooling.Common      import __version__, getFullyQualifiedName, parseISO8601Timestamp, StringEnum
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.GenericPath.URL import URL
@@ -75,7 +74,7 @@ class GitHubError(ToolingException):
 
 
 @export
-class Status(Enum):
+class Status(StringEnum):
 	"""The state a workflow run, job or step is in."""
 
 	Queued =     "queued"       #: Waiting to be picked up.
@@ -92,14 +91,12 @@ class Status(Enum):
 
 		:param value:        Optional, the field's value. Default: ``None``.
 		:returns:            The matching member, or ``None`` if the field was absent or empty.
+		:raises TypeError:   If parameter 'value' is not of type :class:`str`.
 		:raises GitHubError: If the value is not a status GitHub documents. |br|
 		                     The note lists the documented values.
 		"""
-		if value is None or value == "":
-			return None
-
 		try:
-			return cls(value)
+			return super().Parse(value)
 		except ValueError as ex:
 			error = GitHubError(f"'{value}' is not a GitHub status.")
 			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
@@ -107,7 +104,7 @@ class Status(Enum):
 
 
 @export
-class Conclusion(Enum):
+class Conclusion(StringEnum):
 	"""How a completed workflow run, job or step ended."""
 
 	Success =        "success"          #: Succeeded.
@@ -127,14 +124,12 @@ class Conclusion(Enum):
 
 		:param value:        Optional, the field's value. Default: ``None``.
 		:returns:            The matching member, or ``None`` while it hasn't concluded.
+		:raises TypeError:   If parameter 'value' is not of type :class:`str`.
 		:raises GitHubError: If the value is not a conclusion GitHub documents. |br|
 		                     The note lists the documented values.
 		"""
-		if value is None or value == "":
-			return None
-
 		try:
-			return cls(value)
+			return super().Parse(value)
 		except ValueError as ex:
 			error = GitHubError(f"'{value}' is not a GitHub conclusion.")
 			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
@@ -142,7 +137,7 @@ class Conclusion(Enum):
 
 
 @export
-class Event(Enum):
+class Event(StringEnum):
 	"""The event that triggered a workflow run."""
 
 	CheckRun                 = "check_run"                    #: A check run was created or completed.
@@ -186,14 +181,12 @@ class Event(Enum):
 
 		:param value:        Optional, the field's value. Default: ``None``.
 		:returns:            The matching member, or ``None`` if the field was absent or empty.
+		:raises TypeError:   If parameter 'value' is not of type :class:`str`.
 		:raises GitHubError: If the value is not an event GitHub documents. |br|
 		                     The note lists the documented values.
 		"""
-		if value is None or value == "":
-			return None
-
 		try:
-			return cls(value)
+			return super().Parse(value)
 		except ValueError as ex:
 			error = GitHubError(f"'{value}' is not a GitHub event.")
 			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
