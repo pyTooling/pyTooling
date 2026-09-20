@@ -196,6 +196,14 @@ Version 10.x (2026)
      * A :class:`~pyTooling.Licensing.License` is hashable and compares equal to its SPDX identifier as a string,
        so it can be a dictionary key and be looked up by what a user writes.
 
+   * :mod:`pyTooling.Diagram`
+
+     * A new namespace for **data models of diagrams**, which describe a picture without drawing it.
+       :mod:`pyTooling.Diagram.Gantt` describes a **Gantt chart** - a :class:`~pyTooling.Diagram.Gantt.Diagram` of
+       :class:`~pyTooling.Diagram.Gantt.Row`\ s of :class:`~pyTooling.Diagram.Gantt.Bar`\ s on a time scale. An
+       element is created with its parent and knows the diagram it belongs to, and a bar reports where it is three
+       ways: as times, as the distance from the diagram's origin, and as the distance from its row.
+
    * :mod:`pyTooling.Tracing`
 
      * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
