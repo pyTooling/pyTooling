@@ -291,14 +291,21 @@ A trace renders as a **Gantt chart**: one row per timespan, in the tree's order 
 .. code-block:: python
 
    from pathlib import Path
-   from pyTooling.Tracing.Render import StepExclusion, ciSpanFilter
-   from pyTooling.Tracing.Render.Matplotlib import WriteGantt
+   from pyTooling.Tracing.Render import GanttLayout, StepExclusion, ciSpanFilter
+   from pyTooling.Tracing.Render.Matplotlib import MatplotlibRenderer
 
-   WriteGantt(trace, Path("report/Pipeline.svg"), spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Skipped))
+   layout = GanttLayout(trace, spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Skipped))
+   MatplotlibRenderer(layout).Write(Path("report/Pipeline.svg"))
 
-The chart is laid out by :class:`~pyTooling.Tracing.Render.GanttLayout`, independently of the library drawing it:
+**Laying out and drawing are two objects.** :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans,
+and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it arranged - so a second backend draws the same chart
+without repeating the arrangement. The layout:
 
-* Times are seconds after the trace began. A running timespan ends at the layout's current time.
+* A bar keeps the times it was built from: :attr:`~pyTooling.Tracing.Render.GanttBar.BeginTime` and
+  :attr:`~pyTooling.Tracing.Render.GanttBar.EndTime` are what the trace recorded, while
+  :attr:`~pyTooling.Tracing.Render.GanttBar.Begin` and :attr:`~pyTooling.Tracing.Render.GanttBar.End` are the same
+  times as seconds after the trace began, which is the scale a chart is drawn on. A running timespan ends at the
+  layout's current time.
 * The pipeline and a called workflow are a line from their begin to their end, a job is a bar. A job's waiting
   timespan (``queued``) is a light gray bar in front of the job's bar. A job that didn't start yet has only its waiting
   bar, on a row of its own.
@@ -316,9 +323,19 @@ time** - the time all jobs ran, added up, which runners were occupied for; and p
 their minimum, average and maximum waiting and running times. These statistics count every job that wasn't skipped,
 independently of the filter.
 
-:func:`~pyTooling.Tracing.Render.Matplotlib.WriteGantt` writes the chart with :term:`matplotlib` as SVG, PNG or PDF,
-chosen by the file's suffix, and :func:`~pyTooling.Tracing.Render.Matplotlib.RenderGantt` returns it as a figure for
-further changes. matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]``.
+The renderer draws it. :meth:`~pyTooling.Tracing.Render.Renderer.Write` writes the chart to a file, in the format
+the suffix names, and :meth:`~pyTooling.Tracing.Render.Renderer.Render` returns the backend's own object for further
+changes - :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` a :class:`~matplotlib.figure.Figure`,
+which isn't registered with :mod:`~matplotlib.pyplot`, so no display is needed. It writes SVG, PNG and PDF, and
+matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]``.
+
+What no drawing library decides is decided once, on the base-class: the color of every category
+(:meth:`~pyTooling.Tracing.Render.Renderer.Color`), the chart's title, and the texts of the legend
+(:meth:`~pyTooling.Tracing.Render.Renderer.LegendTitle` and
+:meth:`~pyTooling.Tracing.Render.Renderer.LegendLabel`). A renderer for another backend derives from
+:class:`~pyTooling.Tracing.Render.Renderer`, names the file formats it writes in
+:attr:`~pyTooling.Tracing.Render.Renderer.FORMATS`, and implements two methods:
+:meth:`~pyTooling.Tracing.Render.Renderer.Render` and ``_Write``.
 
 In an SVG file, every bar or line is a group with the identifier ``span-<SpanID>``, a waiting bar
 ``span-<SpanID>-queued`` and the end marks of a line ``span-<SpanID>-ends``. Together with

@@ -249,8 +249,14 @@ Version 10.x (2026)
        ``cicd.pipeline.task.run.id``. The closed value sets are enumerations -
        :class:`~pyTooling.Tracing.CI.SpanKind` and :class:`~pyTooling.Tracing.CI.Result`.
      * A trace **renders as a Gantt chart**: :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans
-       in rows independently of a drawing library, and :mod:`pyTooling.Tracing.Render.Matplotlib` writes the chart as
-       SVG, PNG or PDF. matplotlib is installed by the new extra ``pyTooling[diagram]``.
+       in rows independently of a drawing library, and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it
+       arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
+       PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
+       the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
+     * A trace's elements answer :meth:`~pyTooling.Tracing.AttributesMixin.Get`, which reads an attribute that may
+       not be there and returns a default value instead of raising. The attribute protocol itself moved to
+       :class:`~pyTooling.Tracing.AttributesMixin`, which :class:`~pyTooling.Tracing.Span` and
+       :class:`~pyTooling.Tracing.Event` carried a copy of each.
 
    * :mod:`pyTooling.Packaging`
 
