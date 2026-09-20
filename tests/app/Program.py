@@ -160,8 +160,8 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 
 		self.assertExitCode(result, TerminalApplication.FATAL_EXIT_CODE)
 		output = self.Output(result)
-		self.assertIn("Format 'nonsense' isn't supported.", output)
-		self.assertIn("otlp-json", output)
+		self.assertIn("'nonsense' is not a valid TraceFormat.", output)
+		self.assertIn("Allowed values: otlp-json", output)
 
 	def test_Gantt_WrongSuffix(self) -> None:
 		"""A Gantt format writing another file type than the name says is reported, not silently renamed."""
