@@ -196,6 +196,13 @@ Version 10.x (2026)
      * A :class:`~pyTooling.Licensing.License` is hashable and compares equal to its SPDX identifier as a string,
        so it can be a dictionary key and be looked up by what a user writes.
 
+   * :mod:`pyTooling.CLI`
+
+     * pyTooling installs a **program of its own**: :program:`pyTooling`, the ``console_scripts`` entry point
+       :pycode:`pyTooling.CLI:main`. It is a :class:`~pyTooling.TerminalUI.TerminalApplication` whose commands are
+       declared as :mod:`pyTooling.Attributes.ArgParse` attributes, and it starts with :pycode:`help` and
+       :pycode:`version`. A group of commands is a mixin-class, so a new command adds a base-class and nothing else.
+
    * :mod:`pyTooling.Diagram`
 
      * A new namespace for **data models of diagrams**, which describe a picture without drawing it.
