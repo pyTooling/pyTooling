@@ -1191,6 +1191,12 @@ License
 
    Diagram
 
+.. toctree::
+   :caption: Command Line Interface
+   :hidden:
+
+   CLI
+
 .. raw:: latex
 
    \part{References and Reports}
