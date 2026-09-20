@@ -371,6 +371,23 @@ class Row(metaclass=ExtendedType, slots=True):
 		"""
 		return self.End - self._parent.Origin
 
+	@readonly
+	def BarCount(self) -> int:
+		"""
+		Read-only property to return the number of bars.
+
+		:returns: Number of bars.
+		"""
+		return len(self._bars)
+
+	def IterateBars(self) -> Iterator[Bar]:
+		"""
+		Returns an iterator to iterate the bars of this row.
+
+		:returns: Iterator to iterate all bars, in the order they were added.
+		"""
+		return iter(self._bars)
+
 	def __len__(self) -> int:
 		"""
 		Returns the number of bars in this row.
@@ -427,15 +444,6 @@ class Diagram(metaclass=ExtendedType, slots=True):
 		self._title =  title
 		self._origin = origin
 		self._rows =   []
-
-	@readonly
-	def Diagram(self) -> Diagram:
-		"""
-		Read-only property to access the diagram this element belongs to, which for a diagram is itself.
-
-		:returns: This diagram, so a bar, a row and the diagram answer the same question.
-		"""
-		return self
 
 	@readonly
 	def Title(self) -> str:

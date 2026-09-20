@@ -85,7 +85,6 @@ class Instantiation(Testcase):
 		self.assertEqual(0, diagram.RowCount)
 		self.assertEqual(0, len(diagram))
 		self.assertTupleEqual((), diagram.Rows)
-		self.assertIs(diagram, diagram.Diagram)
 
 	def test_RowIsAppendedToItsDiagram(self) -> None:
 		diagram = Diagram("Pipeline", _ORIGIN)
@@ -96,6 +95,7 @@ class Instantiation(Testcase):
 		self.assertTupleEqual((row,), diagram.Rows)
 		self.assertIs(diagram, row.Parent)
 		self.assertIs(diagram, row.Diagram)
+		self.assertEqual(0, row.BarCount)
 		self.assertEqual(0, len(row))
 
 	def test_BarIsAppendedToItsRow(self) -> None:
@@ -104,6 +104,7 @@ class Instantiation(Testcase):
 		bar = Bar(_at(10), _at(30), parent=row)
 
 		self.assertTupleEqual((bar,), row.Bars)
+		self.assertEqual(1, row.BarCount)
 		self.assertEqual(1, len(row))
 		self.assertIs(row, bar.Parent)
 		self.assertIs(diagram, bar.Diagram)
@@ -129,6 +130,8 @@ class Iteration(Testcase):
 		row = _diagram().Rows[0]
 
 		self.assertListEqual([_at(10), _at(40)], [bar.Begin for bar in row])
+		self.assertListEqual([_at(10), _at(40)], [bar.Begin for bar in row.IterateBars()])
+		self.assertEqual(2, row.BarCount)
 		self.assertEqual(2, len(row))
 
 
