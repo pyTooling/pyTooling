@@ -217,6 +217,8 @@ Version 10.x (2026)
      * :pycode:`--gantt=[<format>:]<file>` draws the run as a **Gantt chart** - ``matplotlib-png``,
        ``matplotlib-svg`` or ``matplotlib-pdf``, defaulting to ``matplotlib-png``. The file's suffix has to agree
        with the format.
+     * The program is reachable as a module too - :pycode:`python -m pyTooling.CLI` - and the new application
+       tests in :file:`tests/app` run it both ways, so a broken entry point can be told from a broken program.
 
    * :mod:`pyTooling.TerminalUI`
 
