@@ -41,8 +41,9 @@ from typing             import ClassVar, Iterable
 from unittest.mock      import patch
 
 from pyTooling.Attributes.ArgParse import splitFormat
-from pyTooling.CLI                 import Application
+from pyTooling.CLI                 import Application, main
 from pyTooling.CLI.Pipeline        import GanttFormat, TraceFormat
+from pyTooling.Exceptions          import MissingDependencyError
 from pyTooling.Testing             import Testcase
 
 
@@ -224,3 +225,24 @@ class GanttFormats(Testcase):
 		"""'--gantt=report/Pipeline.svg' draws an SVG, because the enumeration answers for the value naming none."""
 		self.assertEqual((GanttFormat.MatplotlibSVG, Path("report/Pipeline.svg")),
 		                 splitFormat("report/Pipeline.svg", GanttFormat))
+
+
+class MissingDependency(Testcase):
+	def test_MainPrintsTheInstallCommands(self) -> None:
+		"""An optional package that isn't installed is not a bug, so 'main' hands it to its own printer."""
+		application = Application()
+		errors = StringIO()
+		stream = application._stderr
+		exception = MissingDependencyError(dependency="matplotlib", extra="diagram")
+
+		application._stderr = errors
+		try:
+			with patch.object(Application, "Run", side_effect=exception):
+				with self.assertRaises(SystemExit) as context:
+					main()
+		finally:
+			application._stderr = stream
+
+		self.assertEqual(MissingDependencyError.EXIT_CODE, context.exception.code)
+		self.assertIn("matplotlib", errors.getvalue())
+		self.assertIn("pip install pyTooling[diagram]", errors.getvalue())

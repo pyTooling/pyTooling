@@ -61,6 +61,12 @@ and a non-zero exit code rather than a traceback. A :exc:`~pyTooling.Exceptions.
 its cause and with every note it carries, because the notes are where pyTooling puts the advice - *"check the
 repository's name"* rather than only *"404"*.
 
+A :exc:`~pyTooling.Exceptions.MissingDependencyError` is not handled where it is raised. An output needing an
+optional package - ``--gantt`` needs *matplotlib* - imports it where it draws and lets the exception travel to
+:func:`~pyTooling.CLI.main`, which hands it to
+:meth:`~pyTooling.TerminalUI.TerminalApplication.PrintMissingDependencyError`: that printer names the missing
+package and every command line installing it, and reports no bug, because nothing is wrong with the program.
+
 
 .. _CLI/Pipeline:
 

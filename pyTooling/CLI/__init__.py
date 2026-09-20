@@ -47,7 +47,7 @@ from textwrap                               import dedent
 from typing                                 import ClassVar, NoReturn
 
 from pyTooling.Decorators                   import export
-from pyTooling.Exceptions                   import ExceptionBase, ToolingException
+from pyTooling.Exceptions                   import ExceptionBase, MissingDependencyError, ToolingException
 from pyTooling.Attributes.ArgParse          import ArgParseHelperMixin, DefaultHandler, CommandHandler
 from pyTooling.Attributes.ArgParse.Flag     import FlagArgument
 from pyTooling.Attributes.ArgParse.Argument import StringArgument
@@ -158,6 +158,8 @@ def main() -> NoReturn:
 
 	try:
 		program.Run()
+	except MissingDependencyError as ex:
+		program.PrintMissingDependencyError(ex)
 	except ToolingException as ex:
 		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**program.Foreground))
 		if ex.__cause__ is not None:

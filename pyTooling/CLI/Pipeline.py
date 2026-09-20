@@ -55,7 +55,6 @@ from pyTooling.MetaClasses                    import ExtendedType
 from pyTooling.Attributes.ArgParse            import CommandHandler, splitFormat
 from pyTooling.Attributes.ArgParse.Flag       import LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import LongValuedFlag
-from pyTooling.Exceptions                     import MissingDependencyError
 from pyTooling.Tracing                        import Trace
 from pyTooling.Tracing.CI.GitHub              import WorkflowRunReader
 from pyTooling.Tracing.Render                 import GanttLayout, ciSpanFilter
@@ -223,16 +222,13 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 		The steps of a job are left out: a pipeline of 57 jobs has more than a thousand steps, and a chart of one row
 		per step is a different picture than a chart of one row per job.
 
-		:param fileFormat: The format, one of :class:`GanttFormat`.
-		:param file:       The file to write.
-		:param trace:      The workflow run as a trace.
+		:param fileFormat:              The format, one of :class:`GanttFormat`.
+		:param file:                    The file to write.
+		:param trace:                   The workflow run as a trace.
+		:raises MissingDependencyError: If *matplotlib* isn't installed. |br|
+		                                :func:`~pyTooling.CLI.main` prints it with the commands installing it.
 		"""
-		try:
-			from pyTooling.Tracing.Render.Matplotlib import MatplotlibRenderer
-		except MissingDependencyError as ex:
-			self.WriteError(f"Option '--gantt': format '{fileFormat}' needs matplotlib.")
-			self.WriteErrorNote(f"{ex}")
-			return
+		from pyTooling.Tracing.Render.Matplotlib import MatplotlibRenderer
 
 		self.WriteVerbose(f"Drawing the Gantt chart as '{fileFormat}' to '{file}' ...")
 		layout = GanttLayout(trace, spanFilter=ciSpanFilter())
