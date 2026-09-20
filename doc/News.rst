@@ -206,6 +206,12 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Tracing`
 
+     * :class:`~pyTooling.Tracing.Span` and :class:`~pyTooling.Tracing.Event` are
+       :class:`~pyTooling.Tracing.TraceElement`\ s - a **name**, the timespan **enclosing** them, and their
+       **attributes**, which each of them declared and validated itself before.
+     * A trace's elements answer :meth:`~pyTooling.Tracing.TraceElement.get`, which reads an attribute that may not
+       be there and returns a default value instead of raising.
+
      * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
        :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
