@@ -202,6 +202,16 @@ Version 10.x (2026)
        :pycode:`pyTooling.CLI:main`. It is a :class:`~pyTooling.TerminalUI.TerminalApplication` whose commands are
        declared as :mod:`pyTooling.Attributes.ArgParse` attributes, and it starts with :pycode:`help` and
        :pycode:`version`. A group of commands is a mixin-class, so a new command adds a base-class and nothing else.
+     * The :pycode:`pipeline` command reads a **GitHub Actions workflow run** into a trace -
+       :pycode:`--github-pipeline-id`, defaulting to :pycode:`$GITHUB_RUN_ID` - and writes it with
+       :pycode:`--trace-file=[<format>:]<file>`, where the format defaults to ``otlp-json``. :pycode:`--force`
+       overwrites a file that exists.
+
+   * :mod:`pyTooling.TerminalUI`
+
+     * :meth:`~pyTooling.TerminalUI.TerminalApplication.WriteErrorNote` writes the note belonging to an error - the
+       advice for fixing it - as :attr:`Severity.Error <pyTooling.TerminalUI.Severity>` was the only severity of
+       its group without one.
 
    * :mod:`pyTooling.Diagram`
 
