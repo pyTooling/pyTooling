@@ -375,6 +375,11 @@ Common Classes
       * :ref:`Call-by-reference parameters <COMMON/CallByRef>`: Python doesn't provide *call-by-reference parameters* for
         simple types. |br|
         This behavior can be emulated with classes provided by the :mod:`pyTooling.CallByRef` module.
+      * :ref:`String enumerations that parse themselves <COMMON/StringEnum>`: An enumeration whose members come from a
+        command line, a configuration file or a REST reply needs to say what a missing value means, what a value of the
+        wrong type is, and what a value no member carries is. |br|
+        :class:`~pyTooling.Common.StringEnum` answers all three, and an enumeration declares the member a missing value
+        stands for as an alias named ``Default``.
       * :ref:`Unified license names <LICENSING>`: Setuptools, PyPI, and others have a varying understanding of license names. |br|
         The :mod:`pyTooling.Licensing` module provides :ref:`unified license names <LICENSING>` as well as license name
         mappings or translations.
@@ -1093,6 +1098,7 @@ License
 
    Common/index
    Common/CallByRef
+   Common/Enumerations
    Common/Licensing
    Common/Filesystem
    Common/Platform

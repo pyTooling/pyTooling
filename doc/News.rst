@@ -276,6 +276,12 @@ Version 10.x (2026)
 
      * :func:`~pyTooling.Common.parseISO8601Timestamp` parses an ISO 8601 timestamp. Whether a timestamp carrying no
        UTC offset stays naive is the caller's decision, given as ``defaultTimeZone``.
+     * :class:`~pyTooling.Common.StringEnum` is a :class:`~enum.StrEnum` that converts a string to the member of
+       that value: :meth:`~pyTooling.Common.StringEnum.Parse` rejects a non-string with a :exc:`TypeError` and an
+       unknown value with a :exc:`ValueError` listing the values it accepts, and answers a missing value with the
+       member the enumeration declares as ``Default`` - an alias, so it isn't iterated - or with ``None`` where
+       there is none. :class:`~pyTooling.REST.MediaType`, :class:`~pyTooling.Tracing.CI.SpanKind` and
+       :class:`~pyTooling.Tracing.CI.Result` derive from it.
 
    * :mod:`pyTooling.Decorators`
 

@@ -44,7 +44,6 @@ knowledge about a particular service, so it lives here rather than in each reade
    :mod:`pyTooling.CI.GitHub`
       |rarr| A data model read from a REST API through this client.
 """
-from enum                      import StrEnum
 from http                      import HTTPMethod
 from json                      import dumps as json_dumps, loads as json_loads
 from re                        import compile as re_compile
@@ -53,7 +52,7 @@ from typing                    import Any, Optional as Nullable, Union
 from urllib.error              import HTTPError, URLError
 from urllib.request            import Request, urlopen
 
-from pyTooling.Common          import getFullyQualifiedName
+from pyTooling.Common          import getFullyQualifiedName, StringEnum
 from pyTooling.Decorators      import export, readonly
 from pyTooling.Exceptions      import ToolingException
 from pyTooling.GenericPath.URL import URL
@@ -76,7 +75,7 @@ _NEXT_LINK = re_compile(r'<([^>]+)>;\s*rel="next"')
 
 
 @export
-class MediaType(StrEnum):
+class MediaType(StringEnum):
 	"""
 	Media types a REST API sends and receives, as :rfc:`9110` calls them.
 
