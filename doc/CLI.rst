@@ -60,3 +60,59 @@ What a failure looks like
 and a non-zero exit code rather than a traceback. A :exc:`~pyTooling.Exceptions.ToolingException` is printed with
 its cause and with every note it carries, because the notes are where pyTooling puts the advice - *"check the
 repository's name"* rather than only *"404"*.
+
+
+.. _CLI/Pipeline:
+
+The ``pipeline`` command
+########################
+
+:pycode:`pyTooling pipeline` reads one run of a CI pipeline into a :class:`~pyTooling.Tracing.Trace` and writes
+what was asked of it. Reading and writing are separate steps: the trace is the intermediate every output is
+derived from, so a further output is a further option rather than a second reader.
+
+.. code-block:: bash
+
+   pyTooling pipeline --github-pipeline-id=35479251694 --trace-file=report/Pipeline.otlp.json
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 66
+
+   * - Option
+     - Meaning
+   * - ``--github-pipeline-id=<ID>``
+     - The workflow run to read - the number in its URL, :file:`.../actions/runs/35479251694`. Default:
+       :pycode:`$GITHUB_RUN_ID`, which a workflow sets.
+   * - ``--github-repository=<owner/name>``
+     - The repository the run belongs to. Default: :pycode:`$GITHUB_REPOSITORY`, which a workflow sets.
+   * - ``--trace-file=[<format>:]<file>``
+     - Write the trace. Default format: ``otlp-json``, currently the only one.
+   * - ``--force``
+     - Overwrite files that exist. Without it, an existing file is an error.
+
+The token is read from :pycode:`$GITHUB_TOKEN`. Inside a workflow, the built-in token with the
+``actions: read`` permission suffices; outside one, it raises the rate limit and is required for a private
+repository.
+
+.. hint::
+
+   **A job cannot see itself.** It is still running when it reads the run, so a job that reports the pipeline's
+   timing depends on every other job and runs last.
+
+
+.. _CLI/Pipeline/Formats:
+
+``[<format>:]<file>``
+=====================
+
+Every option that writes a file takes the format in front of the path, separated by a colon, and assumes a
+default when none is given - :pycode:`--trace-file=report/Pipeline.otlp.json` and
+:pycode:`--trace-file=otlp-json:report/Pipeline.otlp.json` are the same thing.
+
+**A colon alone doesn't make a format.** A format is more than one character long and holds no path separator, so
+a Windows drive (:file:`C:\\report\\trace.json`) and a colon deeper down a path are paths. A prefix that looks
+like a format but isn't one is an error naming the formats that exist, rather than a file with a strange name.
+
+Both are checked **before** the pipeline is read, so a misspelled format or a file that exists is reported at once
+instead of after a network round-trip.

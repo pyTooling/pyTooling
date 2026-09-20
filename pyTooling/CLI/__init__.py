@@ -53,9 +53,11 @@ from pyTooling.Attributes.ArgParse.Flag     import FlagArgument
 from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.TerminalUI                   import TerminalApplication, Mode
 
+from pyTooling.CLI.Pipeline                  import PipelineHandlers
+
 
 @export
-class Application(TerminalApplication, ArgParseHelperMixin):
+class Application(TerminalApplication, PipelineHandlers, ArgParseHelperMixin):
 	"""
 	The :program:`pyTooling` program: a terminal application whose commands are declared as attributes.
 

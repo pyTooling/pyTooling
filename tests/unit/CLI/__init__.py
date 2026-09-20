@@ -32,12 +32,15 @@
 Unit tests for :mod:`pyTooling.CLI`: the program's commands and the parser they are declared with.
 """
 from io                 import StringIO
+from argparse           import Namespace
 from contextlib         import redirect_stdout
+from pathlib            import Path
 from sys                import argv as sys_argv
 from typing             import Iterable
 
-from pyTooling.CLI      import Application
-from pyTooling.Testing  import Testcase
+from pyTooling.CLI          import Application
+from pyTooling.CLI.Pipeline import DEFAULT_TRACE_FORMAT, TRACE_FORMATS, splitFormat
+from pyTooling.Testing      import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -82,6 +85,7 @@ class Parser(Testcase):
 		self.assertEqual("pyTooling", application.MainParser.prog)
 		self.assertIn("help", application.SubParsers)
 		self.assertIn("version", application.SubParsers)
+		self.assertIn("pipeline", application.SubParsers)
 
 	def test_TheProgramIsASingleton(self) -> None:
 		"""A terminal application is a singleton, so asking for it twice hands out the same program."""
@@ -111,3 +115,60 @@ class Commands(Testcase):
 		output = _run([])
 
 		self.assertIn("usage: pyTooling", output)
+
+
+class SplitFormat(Testcase):
+	def test_NoFormat(self) -> None:
+		self.assertEqual((DEFAULT_TRACE_FORMAT, Path("report/trace.json")),
+		                 splitFormat("report/trace.json", TRACE_FORMATS, DEFAULT_TRACE_FORMAT))
+
+	def test_Format(self) -> None:
+		self.assertEqual(("otlp-json", Path("trace.json")),
+		                 splitFormat("otlp-json:trace.json", TRACE_FORMATS, DEFAULT_TRACE_FORMAT))
+
+	def test_AWindowsDriveIsNotAFormat(self) -> None:
+		"""A format is more than one character long, so a drive letter stays part of the path."""
+		value = r"C:\report\trace.json"
+
+		fileFormat, file = splitFormat(value, TRACE_FORMATS, DEFAULT_TRACE_FORMAT)
+
+		self.assertEqual(DEFAULT_TRACE_FORMAT, fileFormat)
+		self.assertEqual(Path(value), file, "The whole value is the path, so the drive is still on it.")
+
+	def test_AColonBelowADirectoryIsNotAFormat(self) -> None:
+		fileFormat, file = splitFormat("reports/run:2/trace.json", TRACE_FORMATS, DEFAULT_TRACE_FORMAT)
+
+		self.assertEqual(DEFAULT_TRACE_FORMAT, fileFormat)
+		self.assertEqual(Path("reports/run:2/trace.json"), file)
+
+	def test_AnUnsupportedFormat(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = splitFormat("json:trace.json", TRACE_FORMATS, DEFAULT_TRACE_FORMAT)
+
+		self.assertEqual("Format 'json' isn't supported.", str(context.exception))
+		self.assertIn("Supported formats: otlp-json.", context.exception.__notes__)
+
+
+class PipelineCommand(Testcase):
+	def test_ItsHelpPageNamesItsOptions(self) -> None:
+		output = _run(["help", "pipeline"])
+
+		self.assertIn("--github-pipeline-id", output)
+		self.assertIn("--trace-file", output)
+		self.assertIn("--force", output)
+
+	def test_WithoutARepository(self) -> None:
+		"""Nothing is read before the command knows which repository to read from."""
+		application = Application()
+
+		with self.assertRaises(SystemExit):
+			application.HandlePipeline(Namespace(
+				githubRepository=None, githubPipelineID=None, traceFile=None, force=False
+			))
+
+	def test_AnUnsupportedFormatIsReportedBeforeAnythingIsRead(self) -> None:
+		application = Application()
+		arguments = Namespace(githubRepository=None, githubPipelineID=None, traceFile="json:trace.json", force=False)
+
+		with self.assertRaises(SystemExit):
+			application.HandlePipeline(arguments)
