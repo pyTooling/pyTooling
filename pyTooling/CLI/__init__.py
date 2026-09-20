@@ -148,8 +148,7 @@ def main() -> NoReturn:
 	"""
 	from sys import argv
 
-	foreground = Application.Foreground
-	program    = Application()
+	program = Application()
 	program.Configure(
 		verbose=("-v" in argv or "--verbose" in argv),
 		debug=("-d" in argv or "--debug" in argv),
@@ -159,11 +158,11 @@ def main() -> NoReturn:
 	try:
 		program.Run()
 	except ToolingException as ex:
-		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**foreground))
+		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**program.Foreground))
 		if ex.__cause__ is not None:
-			program.WriteLineToStdErr(f"{{DARK_YELLOW}}Because of: {ex.__cause__}{{NOCOLOR}}".format(**foreground))
+			program.WriteLineToStdErr(f"{{DARK_YELLOW}}Because of: {ex.__cause__}{{NOCOLOR}}".format(**program.Foreground))
 		for note in getattr(ex, "__notes__", ()) or ():
-			program.WriteLineToStdErr(f"{{DARK_YELLOW}} [NOTE] {note}{{NOCOLOR}}".format(**foreground))
+			program.WriteLineToStdErr(f"{{DARK_YELLOW}} [NOTE] {note}{{NOCOLOR}}".format(**program.Foreground))
 		program.Exit(1)
 	except ExceptionBase as ex:
 		program.PrintExceptionBase(ex)
