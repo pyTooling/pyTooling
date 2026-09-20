@@ -41,11 +41,13 @@ from warnings                    import catch_warnings, simplefilter
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import GitHub
-from pyTooling.Tracing.Render    import GanttLayout, StepExclusion, ciSpanFilter, msys2Environment, runnerCategory
+from pyTooling.MetaClasses       import AbstractClassError
+from pyTooling.Tracing.Render    import GanttLayout, Renderer, StepExclusion, ciSpanFilter, msys2Environment, \
+                                       runnerCategory
 from pyTooling.Testing           import Testcase
 
 try:
-	from pyTooling.Tracing.Render.Matplotlib import RenderGantt, WriteGantt
+	from pyTooling.Tracing.Render.Matplotlib import MatplotlibRenderer
 	HAS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
 	HAS_MATPLOTLIB = False
@@ -260,6 +262,15 @@ class Layout(Testcase):
 		self.assertEqual((15.0, 50.0, True), (bar.Begin, bar.End, bar.IsRunning))
 		self.assertTrue(rows["Tests"].Bars[0].IsRunning)
 
+	def test_BarTimes(self) -> None:
+		"""A bar keeps the times it was built from, and converts them to offsets when they are asked for."""
+		bar = {row.Name: row for row in self._Layout().IterateRows()}["Build"].Bars[1]
+
+		self.assertEqual((_at(4), _at(30)), (bar.BeginTime, bar.EndTime))
+		self.assertEqual((4.0, 30.0), (bar.Begin, bar.End))
+		self.assertEqual(timedelta(seconds=26), bar.Length)
+		self.assertEqual(26.0, bar.Duration)
+
 	def test_Duration(self) -> None:
 		self.assertEqual(100.0, self._Layout().Duration)
 		self.assertEqual(120.0, GanttLayout(_pipeline()["Pipeline"], now=_at(120)).Duration)
@@ -341,7 +352,8 @@ class Statistics(Testcase):
 @skipUnless(HAS_MATPLOTLIB, "Needs matplotlib, installed by the extra 'pyTooling[diagram]'.")
 class Matplotlib(Testcase):
 	def test_Figure(self) -> None:
-		figure = RenderGantt(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50)))
+		layout = GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))
+		figure = MatplotlibRenderer(layout).Render()
 		axes = figure.get_axes()[0]
 		legend = axes.get_legend()
 		title = legend.get_title().get_text()
@@ -364,7 +376,8 @@ class Matplotlib(Testcase):
 		spans = _pipeline()
 		with TemporaryDirectory() as directory:
 			file = Path(directory) / "report" / "Pipeline.svg"
-			WriteGantt(spans["Pipeline"], file, spanFilter=ciSpanFilter(), now=_at(50))
+			layout = GanttLayout(spans["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))
+			MatplotlibRenderer(layout).Write(file)
 			content = file.read_text(encoding="utf-8")
 
 		self.assertIn(f'id="span-{spans["Build"].SpanID}"', content)
@@ -376,7 +389,7 @@ class Matplotlib(Testcase):
 	def test_PNG(self) -> None:
 		with TemporaryDirectory() as directory:
 			file = Path(directory) / "Pipeline.png"
-			WriteGantt(_pipeline()["Pipeline"], file, now=_at(50), dpi=50)
+			MatplotlibRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), dpi=50).Write(file)
 
 			self.assertEqual(b"\x89PNG", file.read_bytes()[:4])
 
@@ -387,7 +400,7 @@ class Matplotlib(Testcase):
 
 		with catch_warnings(record=True) as warnings:
 			simplefilter("always")
-			figure = RenderGantt(GanttLayout(trace), fontFamilies=("DejaVu Sans",))
+			figure = MatplotlibRenderer(GanttLayout(trace), fontFamilies=("DejaVu Sans",)).Render()
 			figure.canvas.draw()
 
 		self.assertEqual("Unit Tests - Python 3.14", figure.get_axes()[0].get_yticklabels()[1].get_text().strip())
@@ -395,17 +408,31 @@ class Matplotlib(Testcase):
 		self.assertListEqual([], [str(warning.message) for warning in warnings if "Glyph" in str(warning.message)])
 
 	def test_UnsupportedFormat(self) -> None:
+		renderer = MatplotlibRenderer(GanttLayout(_pipeline()["Pipeline"]))
+
 		with self.assertRaises(ValueError) as context:
-			WriteGantt(_pipeline()["Pipeline"], Path("Pipeline.gif"))
+			renderer.Write(Path("Pipeline.gif"))
 
 		self.assertEqual("File 'Pipeline.gif' has an unsupported format.", str(context.exception))
 
 	def test_FileType(self) -> None:
+		renderer = MatplotlibRenderer(GanttLayout(_pipeline()["Pipeline"]))
+
 		with self.assertRaises(TypeError):
-			WriteGantt(_pipeline()["Pipeline"], "Pipeline.svg")
+			renderer.Write("Pipeline.svg")
 
 	def test_Width(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = RenderGantt(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), width=0)
+			_ = MatplotlibRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), width=0)
 
 		self.assertEqual("Parameter 'width' isn't positive.", str(context.exception))
+
+	def test_Title(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		self.assertEqual("Pipeline (1:40)", MatplotlibRenderer(layout).Title)
+		self.assertEqual("Last night's run", MatplotlibRenderer(layout, title="Last night's run").Title)
+
+	def test_TheRendererIsAbstract(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = Renderer(GanttLayout(_pipeline()["Pipeline"]))

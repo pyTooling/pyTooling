@@ -34,10 +34,11 @@ Render a software execution trace as a Gantt chart with :term:`matplotlib`.
 .. code-block:: python
 
    from pathlib import Path
-   from pyTooling.Tracing.Render import ciSpanFilter
-   from pyTooling.Tracing.Render.Matplotlib import WriteGantt
+   from pyTooling.Tracing.Render import GanttLayout, ciSpanFilter
+   from pyTooling.Tracing.Render.Matplotlib import MatplotlibRenderer
 
-   WriteGantt(trace, Path("report/Pipeline.svg"), spanFilter=ciSpanFilter())
+   layout = GanttLayout(trace, spanFilter=ciSpanFilter())
+   MatplotlibRenderer(layout).Write(Path("report/Pipeline.svg"))
 
 Every bar or line of a timespan in an SVG file is a group with the identifier ``span-<SpanID>``, a waiting bar
 ``span-<SpanID>-queued`` and the end marks of a line ``span-<SpanID>-ends``, so a script can find the elements of a
@@ -47,16 +48,14 @@ timespan.
 
    See :ref:`high-level help <TRACING/Render>` for explanations and usage examples.
 """
-from datetime                    import datetime
 from pathlib                     import Path
-from typing                      import Iterable, Optional as Nullable, Union
+from typing                      import ClassVar, Iterable, Optional as Nullable, Union
 
-from pyTooling.Decorators        import export
+from pyTooling.Decorators        import export, readonly
 from pyTooling.Common            import getFullyQualifiedName
 from pyTooling.Exceptions        import MissingDependencyError
-from pyTooling.Tracing           import Trace, TracingError
 from pyTooling.Tracing.CI        import SpanKind
-from pyTooling.Tracing.Render    import GanttLayout, SpanCategory, SpanFilter, runnerCategory
+from pyTooling.Tracing.Render    import GanttLayout, LINE_LEGEND_LABEL, Renderer
 
 try:
 	from matplotlib              import rc_context
@@ -70,10 +69,7 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="matplotlib", extra="diagram") from ex
 
 
-__all__ = ["FORMATS", "FONT_FAMILIES", "MONOSPACE_FONT_FAMILY"]
-
-FORMATS = ("svg", "png", "pdf")
-"""The file formats :func:`WriteGantt` writes, by file suffix."""
+__all__ = ["FONT_FAMILIES", "MONOSPACE_FONT_FAMILY"]
 
 FONT_FAMILIES = ("DejaVu Sans", "Noto Emoji", "Symbola")
 """The font families tried in order for a character - a later emoji font supplies the emoji of job names."""
@@ -81,316 +77,244 @@ FONT_FAMILIES = ("DejaVu Sans", "Noto Emoji", "Symbola")
 MONOSPACE_FONT_FAMILY = "DejaVu Sans Mono"
 """The font family of the legend, whose statistics are aligned in columns. matplotlib ships it."""
 
-_PALETTE = ("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf")
-"""Colors of the categories, in the order the categories appear."""
-
-_NEUTRAL = "#7f7f7f"
-"""Color of a bar without a category."""
-
-_LINE = "#404040"
-"""Color of the line spanning the pipeline or a called workflow."""
-
-_QUEUED = "#d3d3d3"
-"""Color of a bar showing the time a job waited for a runner."""
-
-
-def _formatSeconds(seconds: float, position: int = 0) -> str:
-	"""
-	Format seconds as minutes and seconds, or as hours, minutes and seconds from one hour on.
-
-	:param seconds:  The seconds.
-	:param position: The tick's position, which matplotlib passes to every tick formatter. It isn't used.
-	:returns:        The time as ``m:ss`` or ``h:mm:ss``.
-	"""
-	minutes, rest = divmod(int(round(seconds)), 60)
-	if minutes < 60:
-		return f"{minutes}:{rest:02d}"
-
-	hours, minutes = divmod(minutes, 60)
-	return f"{hours}:{minutes:02d}:{rest:02d}"
-
-
-def _formatTime(time: datetime) -> str:
-	"""
-	Format an absolute time with its time zone.
-
-	:param time: The time.
-	:returns:    The time as ``YYYY-MM-DD hh:mm:ss <zone>``.
-	"""
-	return f"{time:%Y-%m-%d %H:%M:%S} {time.tzname() or 'local time'}"
-
-
-def _fonts(fontFamilies: Iterable[str]) -> tuple[list[str], list[FT2Font]]:
-	"""
-	Load the fonts of the font families, which are installed.
-
-	Installation is checked against matplotlib's font list first, because looking up a missing family logs a warning.
-
-	:param fontFamilies: The font families.
-	:returns:            The installed families and their fonts, in the order of the families.
-	"""
-	installed = {font.name for font in fontManager.ttflist}
-	families: list[str] = []
-	fonts: list[FT2Font] = []
-	for family in fontFamilies:
-		if family not in installed:
-			continue
-
-		try:
-			fonts.append(FT2Font(findfont(FontProperties(family=family), fallback_to_default=False)))
-			families.append(family)
-		except (ValueError, OSError):
-			pass
-
-	return families, fonts
-
-
-def _renderable(text: str, fonts: list[FT2Font]) -> str:
-	"""
-	Remove the characters none of the fonts has a glyph for, like emoji without an emoji font.
-
-	matplotlib would draw an empty box for each of them and warn about every one.
-
-	:param text:  The text.
-	:param fonts: The fonts tried for a character.
-	:returns:     The text without characters that can't be drawn, and without the whitespace left behind.
-	"""
-	if len(fonts) == 0:
-		return text
-
-	characters = (char for char in text if char.isspace() or any(font.get_char_index(ord(char)) != 0 for font in fonts))
-	return " ".join("".join(characters).split())
-
-
-def _legendTitle(layout: GanttLayout, categoryWidth: int) -> str:
-	"""
-	Compose the legend's title: the trace's times and totals, and the header of the statistics' columns.
-
-	:param layout:        The layout of the trace.
-	:param categoryWidth: Width of the category column in characters.
-	:returns:             The title's lines.
-	"""
-	lines = [
-		f"started     {_formatTime(layout.BeginTime)}",
-		f"{'running at' if layout.IsRunning else 'finished':<11} {_formatTime(layout.EndTime)}",
-		f"wall time   {_formatSeconds(layout.WallTime)}   runner time {_formatSeconds(layout.RunnerTime)}   "
-		f"{layout.JobCount} jobs",
-	]
-	if layout.JobCount > 0:
-		lines.append("")
-		lines.append(f"{'':<{categoryWidth}}  jobs    wait min /  avg /  max       run min /  avg /  max")
-
-	return "\n".join(lines)
-
-
-def _legendLabel(layout: GanttLayout, category: str, categoryWidth: int) -> str:
-	"""
-	Compose the legend's label of a category: the category and the statistics of its jobs.
-
-	:param layout:        The layout of the trace.
-	:param category:      The category.
-	:param categoryWidth: Width of the category column in characters.
-	:returns:             The label.
-	"""
-	label = f"{category:<{categoryWidth}}"
-	for entry in layout.IterateStatistics():
-		if entry.Category != category:
-			continue
-
-		label += (
-			f"  {entry.JobCount:>4}   "
-			f"{_formatSeconds(entry.MinimumWaitTime):>9} /{_formatSeconds(entry.AverageWaitTime):>5} /"
-			f"{_formatSeconds(entry.MaximumWaitTime):>5}   "
-			f"{_formatSeconds(entry.MinimumRunTime):>11} /{_formatSeconds(entry.AverageRunTime):>5} /"
-			f"{_formatSeconds(entry.MaximumRunTime):>5}"
-		)
-
-	return label
-
 
 @export
-def RenderGantt(
-	layout:         GanttLayout,
-	*,
-	title:          Nullable[str] = None,
-	width:          float = 16.0,
-	rowHeight:      float = 0.22,
-	fontSize:       float = 7.0,
-	fontFamilies:   Iterable[str] = FONT_FAMILIES,
-	legendLocation: str = "upper right"
-) -> Figure:
+class MatplotlibRenderer(Renderer[Figure]):
 	"""
-	Render the layout of a trace as a Gantt chart.
+	Draws a :class:`~pyTooling.Tracing.Render.GanttLayout` with :term:`matplotlib`.
 
-	Every row shows its timespan's name, indented by its depth. The pipeline and a called workflow are a line from their
-	begin to their end. A job's bar is colored by its row's category, a waiting bar is light gray, and a running bar is
-	hatched. A bar too short to see is widened to a visible minimum. A character none of the installed fonts of
-	``fontFamilies`` can draw - usually an emoji in a job's name - is left out of a label.
+	Every row shows its timespan's name, indented by its depth. The pipeline and a called workflow are a line from
+	their begin to their end; a job is a bar, colored by its row's category, a waiting bar light gray and a running
+	bar hatched. A bar too short to see is widened to a visible minimum.
 
-	The legend's title shows when the trace began and ended, its wall time, the runner time - the time all jobs ran,
-	added up - and the number of jobs. Every category shows the number of its jobs, and their minimum, average and
-	maximum waiting and running times.
-
-	:param layout:         The layout of the trace.
-	:param title:          Optional, the chart's title. Default: the trace's name and wall time.
-	:param width:          Optional, width of the figure in inches. Default: ``16.0``.
-	:param rowHeight:      Optional, height of a row in inches. Default: ``0.22``.
-	:param fontSize:       Optional, font size of labels in points. Default: ``7.0``.
-	:param fontFamilies:   Optional, font families tried in order for every character. Families that aren't installed
-	                       are skipped. Default: :data:`FONT_FAMILIES`.
-	:param legendLocation: Optional, the legend's location, as matplotlib's ``loc`` names it, e.g. ``'lower right'`` or
-	                       ``'outside right upper'``. Default: ``'upper right'``.
-	:returns:              The chart as a matplotlib figure, which isn't registered with :mod:`matplotlib.pyplot`.
-	:raises TypeError:     If parameter 'layout' is not of type :class:`~pyTooling.Tracing.Render.GanttLayout`.
-	:raises ValueError:    If parameter 'width', 'rowHeight' or 'fontSize' isn't positive.
+	matplotlib's object API is used throughout, so no global :mod:`~matplotlib.pyplot` state is touched and no
+	display is needed.
 	"""
-	if not isinstance(layout, GanttLayout):
-		ex = TypeError("Parameter 'layout' is not of type 'GanttLayout'.")
-		ex.add_note(f"Got type '{getFullyQualifiedName(layout)}'.")
-		raise ex
+	FORMATS: ClassVar[tuple[str, ...]] = ("svg", "png", "pdf")  #: The file formats this renderer writes.
 
-	for parameter, value in (("width", width), ("rowHeight", rowHeight), ("fontSize", fontSize)):
-		if not value > 0:
-			ex = ValueError(f"Parameter '{parameter}' isn't positive.")
-			ex.add_note(f"Got value '{value}'.")
-			raise ex
+	_width:          float          #: Width of the figure in inches.
+	_rowHeight:      float          #: Height of a row in inches.
+	_fontSize:       float          #: Font size of labels in points.
+	_legendLocation: str            #: The legend's location, as matplotlib's ``loc`` names it.
+	_dpi:            int            #: Resolution of a PNG file in dots per inch.
+	_families:       list[str]      #: The installed font families of ``fontFamilies``, in their order.
+	_fonts:          list[FT2Font]  #: The fonts of those families, to ask whether they can draw a character.
 
-	colors = {category: _PALETTE[position % len(_PALETTE)] for position, category in enumerate(layout.Categories)}
-	rows = list(layout.IterateRows())
-	duration = max(layout.Duration, 1.0)
-	minimumWidth = duration / 1000
-	families, fonts = _fonts(fontFamilies)
-	rcParameters = {"font.size": fontSize} if len(families) == 0 else {"font.family": families, "font.size": fontSize}
+	def __init__(
+		self,
+		layout:         GanttLayout,
+		*,
+		title:          Nullable[str] = None,
+		width:          float = 16.0,
+		rowHeight:      float = 0.22,
+		fontSize:       float = 7.0,
+		fontFamilies:   Iterable[str] = FONT_FAMILIES,
+		legendLocation: str = "upper right",
+		dpi:            int = 150
+	) -> None:
+		"""
+		Initializes a matplotlib renderer for a layout.
 
-	with rc_context(rcParameters):
-		figure = Figure(figsize=(width, 1.6 + rowHeight * max(len(rows), 12)), layout="constrained")
-		axes = figure.add_subplot()
+		:param layout:         The layout to draw.
+		:param title:          Optional, the chart's title. Default: the trace's name and wall time.
+		:param width:          Optional, width of the figure in inches. Default: ``16.0``.
+		:param rowHeight:      Optional, height of a row in inches. Default: ``0.22``.
+		:param fontSize:       Optional, font size of labels in points. Default: ``7.0``.
+		:param fontFamilies:   Optional, font families tried in order for every character. Families that aren't
+		                       installed are skipped. Default: :data:`FONT_FAMILIES`.
+		:param legendLocation: Optional, the legend's location, as matplotlib's ``loc`` names it, e.g.
+		                       ``'lower right'`` or ``'outside right upper'``. Default: ``'upper right'``.
+		:param dpi:            Optional, resolution of a PNG file in dots per inch. Default: ``150``.
+		:raises TypeError:     If parameter 'layout' is not of type :class:`~pyTooling.Tracing.Render.GanttLayout`.
+		:raises TypeError:     If parameter 'title' is not of type :class:`str`.
+		:raises ValueError:    If parameter 'width', 'rowHeight', 'fontSize' or 'dpi' isn't positive.
+		"""
+		super().__init__(layout, title=title)
 
-		hasQueued = False
-		hasLines = False
-		for position, row in enumerate(rows):
-			if row.Kind in (SpanKind.Pipeline, SpanKind.Workflow):
-				for bar in row.Bars:
-					hasLines = True
-					style = "dashed" if bar.IsRunning else "solid"
-					line = axes.hlines(position, bar.Begin, bar.End, colors=_LINE, linewidth=1.0, linestyles=style)
-					ends = axes.vlines([bar.Begin, bar.End], position - 0.3, position + 0.3, colors=_LINE, linewidth=1.0)
-					line.set_gid(f"span-{row.SpanID}")
-					ends.set_gid(f"span-{row.SpanID}-ends")
+		for parameter, value in (("width", width), ("rowHeight", rowHeight), ("fontSize", fontSize), ("dpi", dpi)):
+			if not value > 0:
+				ex = ValueError(f"Parameter '{parameter}' isn't positive.")
+				ex.add_note(f"Got value '{value}'.")
+				raise ex
+
+		self._width =          width
+		self._rowHeight =      rowHeight
+		self._fontSize =       fontSize
+		self._legendLocation = legendLocation
+		self._dpi =            dpi
+		self._families, self._fonts = self._LoadFonts(fontFamilies)
+
+	@readonly
+	def Width(self) -> float:
+		"""
+		Read-only property to access the width of the figure (:attr:`_width`).
+
+		:returns: Width in inches.
+		"""
+		return self._width
+
+	@readonly
+	def RowHeight(self) -> float:
+		"""
+		Read-only property to access the height of a row (:attr:`_rowHeight`).
+
+		:returns: Height in inches.
+		"""
+		return self._rowHeight
+
+	@readonly
+	def FontSize(self) -> float:
+		"""
+		Read-only property to access the font size of labels (:attr:`_fontSize`).
+
+		:returns: Font size in points.
+		"""
+		return self._fontSize
+
+	@readonly
+	def FontFamilies(self) -> tuple[str, ...]:
+		"""
+		Read-only property to return the font families that are installed (:attr:`_families`).
+
+		:returns: The families the chart is drawn with, in the order they are tried.
+		"""
+		return tuple(self._families)
+
+	@staticmethod
+	def _LoadFonts(fontFamilies: Iterable[str]) -> tuple[list[str], list[FT2Font]]:
+		"""
+		Load the fonts of the font families, which are installed.
+
+		Installation is checked against matplotlib's font list first, because looking up a missing family logs a
+		warning.
+
+		:param fontFamilies: The font families.
+		:returns:            The installed families and their fonts, in the order of the families.
+		"""
+		installed = {font.name for font in fontManager.ttflist}
+		families: list[str] = []
+		fonts: list[FT2Font] = []
+		for family in fontFamilies:
+			if family not in installed:
 				continue
 
-			color = colors.get(row.Category, _NEUTRAL)
-			for bar in row.Bars:
-				hasQueued |= bar.IsQueued
-				collection = axes.broken_barh(
-					[(bar.Begin, max(bar.Duration, minimumWidth))],
-					(position - 0.4, 0.8),
-					facecolors=_QUEUED if bar.IsQueued else color,
-					hatch="///" if bar.IsRunning else None,
-					linewidth=0
-				)
-				collection.set_gid(f"span-{row.SpanID}-queued" if bar.IsQueued else f"span-{row.SpanID}")
+			try:
+				fonts.append(FT2Font(findfont(FontProperties(family=family), fallback_to_default=False)))
+				families.append(family)
+			except (ValueError, OSError):
+				pass
 
-		labels = [f"{'  ' * row.Depth}{_renderable(row.Name, fonts)}" for row in rows]
-		axes.set_yticks(range(len(rows)), labels=labels)
-		axes.set_ylim(len(rows) - 0.5, -0.5)
-		axes.set_xlim(0, duration)
-		axes.xaxis.set_major_formatter(FuncFormatter(_formatSeconds))
-		axes.set_xlabel("time since the trace began")
-		axes.grid(axis="x", linewidth=0.3, alpha=0.5)
+		return families, fonts
 
-		categoryWidth = max([len(category) for category in layout.Categories] + [len("pipeline, called workflow")])
-		handles: list[Union[Patch, Line2D]] = [
-			Patch(facecolor=colors[category], label=_legendLabel(layout, category, categoryWidth))
-			for category in layout.Categories
-		]
-		if hasQueued:
-			handles.append(Patch(facecolor=_QUEUED, label="waiting for a runner"))
-		if hasLines:
-			handles.append(
-				Line2D([], [], color=_LINE, linewidth=1.0, marker="|", markersize=6, label="pipeline, called workflow")
+	def _Renderable(self, text: str) -> str:
+		"""
+		Remove the characters none of the loaded fonts has a glyph for, like emoji without an emoji font.
+
+		matplotlib would draw an empty box for each of them and warn about every one.
+
+		:param text: The text.
+		:returns:    The text without characters that can't be drawn, and without the whitespace left behind.
+		"""
+		if len(self._fonts) == 0:
+			return text
+
+		characters = (
+			character for character in text
+			if character.isspace() or any(font.get_char_index(ord(character)) != 0 for font in self._fonts)
+		)
+		return " ".join("".join(characters).split())
+
+	def Render(self) -> Figure:
+		"""
+		Draw the layout as a Gantt chart.
+
+		The legend's title shows when the trace began and ended, its wall time, the runner time - the time all jobs
+		ran, added up - and the number of jobs. Every category shows the number of its jobs, and their minimum,
+		average and maximum waiting and running times.
+
+		:returns: The chart as a matplotlib figure, which isn't registered with :mod:`matplotlib.pyplot`.
+		"""
+		layout = self._layout
+		rows = list(layout.IterateRows())
+		duration = max(layout.Duration, 1.0)
+		minimumWidth = duration / 1000
+		rcParameters = {"font.size": self._fontSize}
+		if len(self._families) > 0:
+			rcParameters["font.family"] = self._families
+
+		with rc_context(rcParameters):
+			figure = Figure(figsize=(self._width, 1.6 + self._rowHeight * max(len(rows), 12)), layout="constrained")
+			axes = figure.add_subplot()
+
+			hasQueued = False
+			hasLines = False
+			for position, row in enumerate(rows):
+				if row.Kind in (SpanKind.Pipeline, SpanKind.Workflow):
+					for bar in row.Bars:
+						hasLines = True
+						style = "dashed" if bar.IsRunning else "solid"
+						line = axes.hlines(position, bar.Begin, bar.End, colors=self.LINE, linewidth=1.0, linestyles=style)
+						ends = axes.vlines(
+							[bar.Begin, bar.End], position - 0.3, position + 0.3, colors=self.LINE, linewidth=1.0
+						)
+						line.set_gid(f"span-{row.SpanID}")
+						ends.set_gid(f"span-{row.SpanID}-ends")
+					continue
+
+				color = self.Color(row.Category)
+				for bar in row.Bars:
+					hasQueued |= bar.IsQueued
+					collection = axes.broken_barh(
+						[(bar.Begin, max(bar.Duration, minimumWidth))],
+						(position - 0.4, 0.8),
+						facecolors=self.QUEUED if bar.IsQueued else color,
+						hatch="///" if bar.IsRunning else None,
+						linewidth=0
+					)
+					collection.set_gid(f"span-{row.SpanID}-queued" if bar.IsQueued else f"span-{row.SpanID}")
+
+			labels = [f"{'  ' * row.Depth}{self._Renderable(row.Name)}" for row in rows]
+			axes.set_yticks(range(len(rows)), labels=labels)
+			axes.set_ylim(len(rows) - 0.5, -0.5)
+			axes.set_xlim(0, duration)
+			axes.xaxis.set_major_formatter(FuncFormatter(lambda value, position: self.FormatSeconds(value)))
+			axes.set_xlabel("time since the trace began")
+			axes.grid(axis="x", linewidth=0.3, alpha=0.5)
+
+			handles: list[Union[Patch, Line2D]] = [
+				Patch(facecolor=self.Color(category), label=self.LegendLabel(category))
+				for category in layout.Categories
+			]
+			if hasQueued:
+				handles.append(Patch(facecolor=self.QUEUED, label="waiting for a runner"))
+			if hasLines:
+				handles.append(Line2D(
+					[], [], color=self.LINE, linewidth=1.0, marker="|", markersize=6, label=LINE_LEGEND_LABEL
+				))
+
+			monospace = {"family": MONOSPACE_FONT_FAMILY, "size": self._fontSize}
+			axes.legend(
+				handles=handles,
+				title=self.LegendTitle(),
+				loc=self._legendLocation,
+				prop=monospace,
+				title_fontproperties=monospace,
+				alignment="left",
+				framealpha=0.95
 			)
 
-		monospace = {"family": MONOSPACE_FONT_FAMILY, "size": fontSize}
-		axes.legend(
-			handles=handles,
-			title=_legendTitle(layout, categoryWidth),
-			loc=legendLocation,
-			prop=monospace,
-			title_fontproperties=monospace,
-			alignment="left",
-			framealpha=0.95
-		)
+			figure.suptitle(self._Renderable(self._title), fontsize=self._fontSize + 2)
 
-		if title is None:
-			title = f"{layout.Trace.Name} ({_formatSeconds(layout.WallTime)})"
-		figure.suptitle(_renderable(title, fonts), fontsize=fontSize + 2)
+		return figure
 
-	return figure
+	def _Write(self, figure: Figure, file: Path, fileFormat: str) -> None:
+		"""
+		Write a drawn chart to a file.
 
-
-@export
-def WriteGantt(
-	trace:          Trace,
-	file:           Path,
-	*,
-	spanFilter:     Nullable[SpanFilter] = None,
-	categorize:     SpanCategory = runnerCategory,
-	now:            Nullable[datetime] = None,
-	title:          Nullable[str] = None,
-	width:          float = 16.0,
-	rowHeight:      float = 0.22,
-	fontSize:       float = 7.0,
-	fontFamilies:   Iterable[str] = FONT_FAMILIES,
-	legendLocation: str = "upper right",
-	dpi:            int = 150
-) -> None:
-	"""
-	Lay out a trace, render it as a Gantt chart, and write the chart to a file.
-
-	The file format is chosen by the file's suffix, one of :data:`FORMATS`. Missing parent directories are created.
-
-	:param trace:          The trace to render.
-	:param file:           Path of the file to write.
-	:param spanFilter:     Optional, function deciding which timespans are shown, e.g. created by
-	                       :func:`~pyTooling.Tracing.Render.ciSpanFilter`. Default: all timespans.
-	:param categorize:     Optional, function returning a timespan's category. Default: :func:`runnerCategory`.
-	:param now:            Optional, the time a running timespan's bar ends at. Default: the current system time.
-	:param title:          Optional, the chart's title. Default: the trace's name and wall time.
-	:param width:          Optional, width of the figure in inches. Default: ``16.0``.
-	:param rowHeight:      Optional, height of a row in inches. Default: ``0.22``.
-	:param fontSize:       Optional, font size of labels in points. Default: ``7.0``.
-	:param fontFamilies:   Optional, font families tried in order for every character. Default: :data:`FONT_FAMILIES`.
-	:param legendLocation: Optional, the legend's location, as matplotlib's ``loc`` names it. Default: ``'upper right'``.
-	:param dpi:            Optional, resolution of a PNG file in dots per inch. Default: ``150``.
-	:raises TypeError:     If parameter 'file' is not of type :class:`~pathlib.Path`.
-	:raises ValueError:    If the file's suffix isn't one of :data:`FORMATS`.
-	:raises TracingError:  If the parent directories couldn't be created.
-	:raises TracingError:  If the file couldn't be written.
-	"""
-	if not isinstance(file, Path):
-		ex = TypeError("Parameter 'file' is not of type 'Path'.")
-		ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
-		raise ex
-	elif (fileFormat := file.suffix.lower().lstrip(".")) not in FORMATS:
-		ex = ValueError(f"File '{file}' has an unsupported format.")
-		ex.add_note(f"Supported file suffixes: {', '.join(f'.{suffix}' for suffix in FORMATS)}")
-		raise ex
-
-	layout = GanttLayout(trace, spanFilter=spanFilter, categorize=categorize, now=now)
-	figure = RenderGantt(
-		layout, title=title, width=width, rowHeight=rowHeight, fontSize=fontSize, fontFamilies=fontFamilies,
-		legendLocation=legendLocation
-	)
-
-	try:
-		file.parent.mkdir(parents=True, exist_ok=True)
-	except OSError as ex:
-		raise TracingError(f"Directory '{file.parent}' couldn't be created.") from ex
-
-	families, _ = _fonts(fontFamilies)
-	try:
-		with rc_context({} if len(families) == 0 else {"font.family": families}):
-			figure.savefig(file, format=fileFormat, dpi=dpi)
-	except OSError as ex:
-		raise TracingError(f"File '{file}' couldn't be written.") from ex
+		:param figure:     The chart, as :meth:`Render` returned it.
+		:param file:       Path of the file to write, whose parent directories exist.
+		:param fileFormat: The file format, one of :attr:`FORMATS`.
+		:raises OSError:   If the file couldn't be written.
+		"""
+		with rc_context({} if len(self._families) == 0 else {"font.family": self._families}):
+			figure.savefig(file, format=fileFormat, dpi=self._dpi)

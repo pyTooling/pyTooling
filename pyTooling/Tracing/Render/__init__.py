@@ -39,21 +39,28 @@ only draws these rows and statistics, so every renderer shows the same chart.
 
    See :ref:`high-level help <TRACING/Render>` for explanations and usage examples.
 """
-from datetime                    import datetime
+from datetime                    import datetime, timedelta
 from enum                        import Enum
+from pathlib                     import Path
 from re                          import IGNORECASE, compile as re_compile
 from statistics                  import fmean
-from typing                      import Callable, Iterator, Optional as Nullable, Union
+from typing                      import Callable, ClassVar, Generic, Iterator, Optional as Nullable, TypeVar, Union
 
 from pyTooling.Decorators        import export, readonly
-from pyTooling.MetaClasses       import ExtendedType
+from pyTooling.MetaClasses       import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common            import getFullyQualifiedName
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import GitHub
 
 
-__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP"]
+__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP", "LINE_LEGEND_LABEL"]
+
+_FigureType = TypeVar("_FigureType")
+"""Type of the drawing a renderer's backend produces, e.g. matplotlib's :class:`~matplotlib.figure.Figure`."""
+
+LINE_LEGEND_LABEL = "pipeline, called workflow"
+"""The legend's label of the line drawn for the pipeline and every called workflow."""
 
 SpanFilter = Callable[[Span], bool]
 """A function deciding whether a timespan - and with it, its sub-spans - is shown."""
@@ -63,36 +70,6 @@ SpanCategory = Callable[[Span], str]
 
 MSYS2_SETUP_STEP = re_compile(r"Setup MSYS2 for (\w+)", IGNORECASE)
 """Pattern of the step name setting up MSYS2 in a CI job, capturing the MSYS2 environment, e.g. ``UCRT64``."""
-
-
-def _kind(span: Span) -> Nullable[str]:
-	"""
-	Return the CI span kind of a timespan.
-
-	:param span: The timespan.
-	:returns:    What the timespan represents, or ``None`` if the timespan doesn't say.
-	"""
-	return span[CI.Span.Kind] if CI.Span.Kind in span else None
-
-
-def _result(span: Span) -> Nullable[str]:
-	"""
-	Return the CI result of a timespan.
-
-	:param span: The timespan.
-	:returns:    The task run's result, or ``None`` if the timespan has none.
-	"""
-	return span[OTLP.CICD.Pipeline.Task.Run.Result] if OTLP.CICD.Pipeline.Task.Run.Result in span else None
-
-
-def _taskName(span: Span) -> Nullable[str]:
-	"""
-	Return the name of the task a timespan belongs to.
-
-	:param span: The timespan.
-	:returns:    The task's name, or ``None`` if the timespan doesn't carry one.
-	"""
-	return span[OTLP.CICD.Pipeline.Task.Name] if OTLP.CICD.Pipeline.Task.Name in span else None
 
 
 @export
@@ -137,13 +114,13 @@ def ciSpanFilter(
 		:param span: The timespan.
 		:returns:    ``False``, if the timespan is hidden.
 		"""
-		kind = _kind(span)
+		kind = span.Get(CI.Span.Kind)
 		if kind == SpanKind.Step:
 			if excludeSteps is StepExclusion.All:
 				return False
-			return excludeSteps is StepExclusion.Nothing or _result(span) != Result.Skip
+			return excludeSteps is StepExclusion.Nothing or span.Get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
 		elif kind == SpanKind.Job and excludeSkippedJobs:
-			return _result(span) != Result.Skip
+			return span.Get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
 
 		return True
 
@@ -162,7 +139,9 @@ def msys2Environment(job: Span) -> Nullable[str]:
 	:returns:   The environment in upper case, e.g. ``UCRT64``, or ``None`` if the job didn't use an MSYS2 environment.
 	"""
 	for step in job.IterateSubSpans():
-		if (match := MSYS2_SETUP_STEP.search(step.Name)) is None or _result(step) != Result.Success:
+		if (match := MSYS2_SETUP_STEP.search(step.Name)) is None:
+			continue
+		elif step.Get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Success:
 			continue
 		elif (environment := match.group(1).upper()) != "NATIVE":
 			return environment
@@ -186,7 +165,7 @@ def runnerCategory(span: Span) -> str:
 	job: Nullable[Span] = None
 	current: Nullable[Span] = span
 	while current is not None:
-		if job is None and _kind(current) == SpanKind.Job:
+		if job is None and current.Get(CI.Span.Kind) == SpanKind.Job:
 			job = current
 		if label == "" and GitHub.Runner.Labels in current and len(labels := current[GitHub.Runner.Labels]) > 0:
 			label = str(labels[0])
@@ -201,53 +180,88 @@ def runnerCategory(span: Span) -> str:
 @export
 class GanttBar(metaclass=ExtendedType, slots=True):
 	"""
-	A bar of a Gantt chart's row: a time range in seconds after the trace began.
-	"""
-	_begin:   float  #: Begin of the bar in seconds after the trace began.
-	_end:     float  #: End of the bar in seconds after the trace began.
-	_queued:  bool   #: The bar is the time a job waited for a runner.
-	_running: bool   #: The bar's timespan is still running, so the bar ends at the layout's current time.
+	A bar of a Gantt chart's row: the time range a timespan occupies.
 
-	def __init__(self, begin: float, end: float, queued: bool, running: bool) -> None:
+	The bar keeps the times it was built from, and converts them to the offsets a chart is drawn on when they are
+	asked for: :attr:`BeginTime` and :attr:`EndTime` are what the trace recorded, :attr:`Begin` and :attr:`End` are
+	seconds after the trace began.
+	"""
+	_origin:  datetime  #: Begin of the trace, which the offsets are counted from.
+	_begin:   datetime  #: Begin of the bar.
+	_end:     datetime  #: End of the bar.
+	_queued:  bool      #: The bar is the time a job waited for a runner.
+	_running: bool      #: The bar's timespan is still running, so the bar ends at the layout's current time.
+
+	def __init__(self, origin: datetime, begin: datetime, end: datetime, queued: bool, running: bool) -> None:
 		"""
 		Initializes a bar.
 
-		:param begin:   Begin of the bar in seconds after the trace began.
-		:param end:     End of the bar in seconds after the trace began.
+		:param origin:  Begin of the trace, which the offsets are counted from.
+		:param begin:   Begin of the bar.
+		:param end:     End of the bar.
 		:param queued:  The bar is the time a job waited for a runner.
 		:param running: The bar's timespan is still running.
 		"""
+		self._origin =  origin
 		self._begin =   begin
 		self._end =     end
 		self._queued =  queued
 		self._running = running
 
 	@readonly
-	def Begin(self) -> float:
+	def BeginTime(self) -> datetime:
 		"""
 		Read-only property to access the begin of the bar (:attr:`_begin`).
 
-		:returns: Begin in seconds after the trace began.
+		:returns: The time the bar's timespan began, with the trace's time zone.
 		"""
 		return self._begin
 
 	@readonly
-	def End(self) -> float:
+	def EndTime(self) -> datetime:
 		"""
 		Read-only property to access the end of the bar (:attr:`_end`).
 
-		:returns: End in seconds after the trace began.
+		:returns: The time the bar's timespan ended, with the trace's time zone. A running timespan ends at the
+		          layout's current time.
 		"""
 		return self._end
 
 	@readonly
-	def Duration(self) -> float:
+	def Begin(self) -> float:
+		"""
+		Read-only property to return the begin of the bar as an offset.
+
+		:returns: Begin in seconds after the trace began.
+		"""
+		return (self._begin - self._origin).total_seconds()
+
+	@readonly
+	def End(self) -> float:
+		"""
+		Read-only property to return the end of the bar as an offset.
+
+		:returns: End in seconds after the trace began.
+		"""
+		return (self._end - self._origin).total_seconds()
+
+	@readonly
+	def Length(self) -> timedelta:
 		"""
 		Read-only property to return the length of the bar.
 
-		:returns: Length in seconds.
+		:returns: The length as a :class:`~datetime.timedelta`.
 		"""
 		return self._end - self._begin
+
+	@readonly
+	def Duration(self) -> float:
+		"""
+		Read-only property to return the length of the bar in seconds.
+
+		:returns: Length in seconds.
+		"""
+		return (self._end - self._begin).total_seconds()
 
 	@readonly
 	def IsQueued(self) -> bool:
@@ -335,7 +349,7 @@ class GanttRow(metaclass=ExtendedType, slots=True):
 
 		:returns: The value of :data:`~pyTooling.Tracing.CI.CI.Span.Kind`, or ``None`` if the timespan has none.
 		"""
-		return _kind(self._span)
+		return self._span.Get(CI.Span.Kind)
 
 	@readonly
 	def Depth(self) -> int:
@@ -585,10 +599,9 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 			return None
 
 		running = span.StopTime is None
-		beginOffset = self._Offset(begin)
-		endOffset = self._Offset(self._now if running else span.StopTime)
+		end = self._now if running else span.StopTime
 
-		return GanttBar(beginOffset, max(endOffset, beginOffset), queued, running)
+		return GanttBar(self._trace.StartTime, begin, max(end, begin), queued, running)
 
 	def _AddRow(self, span: Span, depth: int, queued: Nullable[Span]) -> None:
 		"""
@@ -599,7 +612,7 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:param queued: The timespan the job waited for a runner in, or ``None``.
 		"""
 		bars: list[GanttBar] = []
-		for barSpan, isQueued in ((queued, True), (span, _kind(span) == SpanKind.Queued)):
+		for barSpan, isQueued in ((queued, True), (span, span.Get(CI.Span.Kind) == SpanKind.Queued)):
 			if barSpan is not None and (bar := self._Bar(barSpan, isQueued)) is not None:
 				bars.append(bar)
 				self._duration = max(self._duration, bar.End)
@@ -622,7 +635,8 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 			if self._spanFilter is not None and not self._spanFilter(span):
 				continue
 
-			if _kind(span) == SpanKind.Queued:
+			kind = span.Get(CI.Span.Kind)
+			if kind == SpanKind.Queued:
 				if pending is not None:
 					self._AddRow(pending, depth, None)
 				pending = span
@@ -630,8 +644,8 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 
 			queued = None
 			if pending is not None:
-				taskName = _taskName(span)
-				if _kind(span) == SpanKind.Job and taskName is not None and taskName == _taskName(pending):
+				taskName = span.Get(OTLP.CICD.Pipeline.Task.Name)
+				if kind == SpanKind.Job and taskName is not None and taskName == pending.Get(OTLP.CICD.Pipeline.Task.Name):
 					queued = pending
 				else:
 					self._AddRow(pending, depth, None)
@@ -651,12 +665,13 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		"""
 		queued: dict[str, Span] = {}
 		for span in parent.IterateSubSpans():
-			kind = _kind(span)
-			if kind == SpanKind.Queued and (taskName := _taskName(span)) is not None:
+			kind =   span.Get(CI.Span.Kind)
+			result = span.Get(OTLP.CICD.Pipeline.Task.Run.Result)
+			if kind == SpanKind.Queued and (taskName := span.Get(OTLP.CICD.Pipeline.Task.Name)) is not None:
 				queued[taskName] = span
-			elif kind == SpanKind.Job and _result(span) != Result.Skip and span.StartTime is not None:
+			elif kind == SpanKind.Job and result != Result.Skip and span.StartTime is not None:
 				if (category := self._categorize(span)) != "":
-					waiting = queued.get(_taskName(span), None)
+					waiting = queued.get(span.Get(OTLP.CICD.Pipeline.Task.Name), None)
 					waitTime = 0.0
 					if waiting is not None and waiting.StartTime is not None:
 						waitTime = self._Offset(span.StartTime) - self._Offset(waiting.StartTime)
@@ -784,3 +799,211 @@ class GanttLayout(metaclass=ExtendedType, slots=True):
 		:returns: The categories in the order they first appear, without the empty string.
 		"""
 		return tuple(self._categories)
+
+
+@export
+@abstractclass
+class Renderer(Generic[_FigureType], metaclass=ExtendedType, slots=True):
+	"""
+	Abstract base-class of a renderer drawing a :class:`GanttLayout`.
+
+	It holds what no drawing library decides: which layout is drawn, the chart's title, the color of every category,
+	and the texts of the legend. A derived class draws what these describe and names the file formats it writes in
+	:attr:`FORMATS` - :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` does so with matplotlib - so a
+	second backend renders the same chart without repeating any of it.
+	"""
+	FORMATS: ClassVar[tuple[str, ...]]  #: The file formats this renderer writes, by file suffix.
+
+	PALETTE: ClassVar[tuple[str, ...]] = (
+		"#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf"
+	)                                     #: Colors of the categories, in the order the categories appear.
+	NEUTRAL: ClassVar[str] = "#7f7f7f"    #: Color of a bar without a category.
+	LINE:    ClassVar[str] = "#404040"    #: Color of the line spanning the pipeline or a called workflow.
+	QUEUED:  ClassVar[str] = "#d3d3d3"    #: Color of a bar showing the time a job waited for a runner.
+
+	_layout: GanttLayout     #: The layout drawn by this renderer.
+	_title:  str             #: The chart's title.
+	_colors: dict[str, str]  #: The color of every category of the layout.
+
+	def __init__(self, layout: GanttLayout, *, title: Nullable[str] = None) -> None:
+		"""
+		Initializes a renderer for a layout.
+
+		:param layout:     The layout to draw.
+		:param title:      Optional, the chart's title. Default: the trace's name and wall time.
+		:raises TypeError: If parameter 'layout' is not of type :class:`GanttLayout`.
+		:raises TypeError: If parameter 'title' is not of type :class:`str`.
+		"""
+		if not isinstance(layout, GanttLayout):
+			ex = TypeError("Parameter 'layout' is not of type 'GanttLayout'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(layout)}'.")
+			raise ex
+
+		if title is None:
+			title = f"{layout.Trace.Name} ({self.FormatSeconds(layout.WallTime)})"
+		elif not isinstance(title, str):
+			ex = TypeError("Parameter 'title' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(title)}'.")
+			raise ex
+
+		self._layout = layout
+		self._title =  title
+		self._colors = {
+			category: self.PALETTE[position % len(self.PALETTE)]
+			for position, category in enumerate(layout.Categories)
+		}
+
+	@readonly
+	def Layout(self) -> GanttLayout:
+		"""
+		Read-only property to access the layout drawn by this renderer (:attr:`_layout`).
+
+		:returns: The layout.
+		"""
+		return self._layout
+
+	@readonly
+	def Title(self) -> str:
+		"""
+		Read-only property to access the chart's title (:attr:`_title`).
+
+		:returns: The title.
+		"""
+		return self._title
+
+	@readonly
+	def CategoryWidth(self) -> int:
+		"""
+		Read-only property to return the width of the legend's category column.
+
+		:returns: Width in characters, at least as wide as the legend's own entries.
+		"""
+		return max([len(category) for category in self._layout.Categories] + [len(LINE_LEGEND_LABEL)])
+
+	def Color(self, category: str) -> str:
+		"""
+		Return the color a category's bars are drawn in.
+
+		:param category: The category, or the empty string for a timespan without one.
+		:returns:        The color as a hex triplet, :attr:`NEUTRAL` for a category the layout doesn't know.
+		"""
+		return self._colors.get(category, self.NEUTRAL)
+
+	@staticmethod
+	def FormatSeconds(seconds: float) -> str:
+		"""
+		Format seconds as minutes and seconds, or as hours, minutes and seconds from one hour on.
+
+		:param seconds: The seconds.
+		:returns:       The time as ``m:ss`` or ``h:mm:ss``.
+		"""
+		minutes, rest = divmod(int(round(seconds)), 60)
+		if minutes < 60:
+			return f"{minutes}:{rest:02d}"
+
+		hours, minutes = divmod(minutes, 60)
+		return f"{hours}:{minutes:02d}:{rest:02d}"
+
+	@staticmethod
+	def FormatTime(time: datetime) -> str:
+		"""
+		Format an absolute time with its time zone.
+
+		:param time: The time.
+		:returns:    The time as ``YYYY-MM-DD hh:mm:ss <zone>``.
+		"""
+		return f"{time:%Y-%m-%d %H:%M:%S} {time.tzname() or 'local time'}"
+
+	def LegendTitle(self) -> str:
+		"""
+		Compose the legend's title: the trace's times and totals, and the header of the statistics' columns.
+
+		:returns: The title's lines.
+		"""
+		layout = self._layout
+		lines = [
+			f"started     {self.FormatTime(layout.BeginTime)}",
+			f"{'running at' if layout.IsRunning else 'finished':<11} {self.FormatTime(layout.EndTime)}",
+			f"wall time   {self.FormatSeconds(layout.WallTime)}   runner time {self.FormatSeconds(layout.RunnerTime)}"
+			f"   {layout.JobCount} jobs",
+		]
+		if layout.JobCount > 0:
+			lines.append("")
+			lines.append(f"{'':<{self.CategoryWidth}}  jobs    wait min /  avg /  max       run min /  avg /  max")
+
+		return "\n".join(lines)
+
+	def LegendLabel(self, category: str) -> str:
+		"""
+		Compose the legend's label of a category: the category and the statistics of its jobs.
+
+		:param category: The category.
+		:returns:        The label.
+		"""
+		categoryWidth = self.CategoryWidth
+		label = f"{category:<{categoryWidth}}"
+		for entry in self._layout.IterateStatistics():
+			if entry.Category != category:
+				continue
+
+			label += (
+				f"  {entry.JobCount:>4}   "
+				f"{self.FormatSeconds(entry.MinimumWaitTime):>9} /{self.FormatSeconds(entry.AverageWaitTime):>5} /"
+				f"{self.FormatSeconds(entry.MaximumWaitTime):>5}   "
+				f"{self.FormatSeconds(entry.MinimumRunTime):>11} /{self.FormatSeconds(entry.AverageRunTime):>5} /"
+				f"{self.FormatSeconds(entry.MaximumRunTime):>5}"
+			)
+
+		return label
+
+	@abstractmethod
+	def Render(self) -> _FigureType:
+		"""
+		Draw the layout as a Gantt chart.
+
+		:returns: The chart, as the backend represents a drawing.
+		"""
+
+	def Write(self, file: Path) -> None:
+		"""
+		Draw the layout as a Gantt chart, and write the chart to a file.
+
+		The file format is chosen by the file's suffix, one of :attr:`FORMATS`. Missing parent directories are created.
+
+		:param file:          Path of the file to write.
+		:raises TypeError:    If parameter 'file' is not of type :class:`~pathlib.Path`.
+		:raises ValueError:   If the file's suffix isn't one of :attr:`FORMATS`.
+		:raises TracingError: If the parent directories couldn't be created.
+		:raises TracingError: If the file couldn't be written.
+		"""
+		if not isinstance(file, Path):
+			ex = TypeError("Parameter 'file' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+			raise ex
+		elif (fileFormat := file.suffix.lower().lstrip(".")) not in self.FORMATS:
+			ex = ValueError(f"File '{file}' has an unsupported format.")
+			ex.add_note(f"Supported file suffixes: {', '.join(f'.{suffix}' for suffix in self.FORMATS)}")
+			raise ex
+
+		figure = self.Render()
+
+		try:
+			file.parent.mkdir(parents=True, exist_ok=True)
+		except OSError as ex:
+			raise TracingError(f"Directory '{file.parent}' couldn't be created.") from ex
+
+		try:
+			self._Write(figure, file, fileFormat)
+		except OSError as ex:
+			raise TracingError(f"File '{file}' couldn't be written.") from ex
+
+	@abstractmethod
+	def _Write(self, figure: _FigureType, file: Path, fileFormat: str) -> None:
+		"""
+		Write a drawn chart to a file.
+
+		:param figure:     The chart, as :meth:`Render` returned it.
+		:param file:       Path of the file to write, whose parent directories exist.
+		:param fileFormat: The file format, one of :attr:`FORMATS`.
+		:raises OSError:   If the file couldn't be written.
+		"""
