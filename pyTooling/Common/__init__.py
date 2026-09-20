@@ -503,6 +503,27 @@ class StringEnum(StrEnum):
 	Because it derives from :class:`~enum.StrEnum`, a member *is* its value: it goes into a message, a header or a
 	filename without being unwrapped, and :pycode:`", ".join(GanttFormat)` lists what an option accepts.
 
+	**An enumeration belonging to a domain with its own exception overrides** :meth:`Parse`, catches the
+	:exc:`ValueError` and chains it as the cause. :class:`pyTooling.CI.GitHub.Status` does that, because a value
+	a service sent that pyTooling doesn't know is that service's problem and not a programming error, and the
+	two are reported differently.
+
+	.. admonition:: ``GitHub.py``
+
+	   .. code-block:: python
+
+	      class Status(StringEnum):
+	        Queued = "queued"
+
+	        @classmethod
+	        def Parse(cls, value: Nullable[str]) -> Nullable[Self]:
+	          try:
+	            return super().Parse(value)
+	          except ValueError as ex:
+	            error = GitHubError(f"'{value}' is not a GitHub status.")
+	            error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
+	            raise error from ex
+
 	.. seealso::
 
 	   :class:`enum.StrEnum`
