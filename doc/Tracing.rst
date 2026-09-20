@@ -279,3 +279,64 @@ step is sometimes reported as running outside the job holding it - see :ref:`CI/
 
 GitHub reports timestamps in whole seconds. A step shorter than a second lasts zero seconds, and an end reported a
 second before its begin is moved to the begin.
+
+
+.. _TRACING/Render:
+
+Rendering
+#########
+
+A trace renders as a **Gantt chart**: one row per timespan, in the tree's order and indented by depth.
+
+.. code-block:: python
+
+   from pathlib import Path
+   from pyTooling.Tracing.Render import GanttLayout, StepExclusion, ciSpanFilter
+   from pyTooling.Tracing.Render.Matplotlib import MatplotlibRenderer
+
+   layout = GanttLayout(trace, spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Skipped))
+   MatplotlibRenderer(layout).Write(Path("report/Pipeline.svg"))
+
+**Laying out and drawing are two objects.** :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans,
+and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it arranged - so a second backend draws the same chart
+without repeating the arrangement. The layout:
+
+* A bar keeps the times it was built from: :attr:`~pyTooling.Tracing.Render.GanttBar.BeginTime` and
+  :attr:`~pyTooling.Tracing.Render.GanttBar.EndTime` are what the trace recorded, while
+  :attr:`~pyTooling.Tracing.Render.GanttBar.Begin` and :attr:`~pyTooling.Tracing.Render.GanttBar.End` are the same
+  times as seconds after the trace began, which is the scale a chart is drawn on. A running timespan ends at the
+  layout's current time.
+* The pipeline and a called workflow are a line from their begin to their end, a job is a bar. A job's waiting
+  timespan (``queued``) is a light gray bar in front of the job's bar. A job that didn't start yet has only its waiting
+  bar, on a row of its own.
+* A ``spanFilter`` hides timespans, and a hidden timespan hides its sub-spans. A filter created by
+  :func:`~pyTooling.Tracing.Render.ciSpanFilter` hides the steps of CI jobs - all of them, the skipped ones, or none, as
+  :class:`~pyTooling.Tracing.Render.StepExclusion` selects - and the jobs that were skipped. Steps outnumber jobs by
+  far: a pipeline of 74 jobs has 1653 steps, 635 of them skipped.
+* Bars are colored by category. :func:`~pyTooling.Tracing.Render.runnerCategory` names the runner image a job ran on,
+  and the MSYS2 environment of a job using one, e.g. ``windows-2025 + UCRT64``, because such a job takes significantly
+  longer than a native job on the same runner. The environment is taken from a successful step matching
+  :data:`~pyTooling.Tracing.Render.MSYS2_SETUP_STEP`, like ``Setup MSYS2 for UCRT64``.
+
+The legend summarizes the pipeline: when it started and finished, with the time zone; its wall time; its **runner
+time** - the time all jobs ran, added up, which runners were occupied for; and per category the number of jobs and
+their minimum, average and maximum waiting and running times. These statistics count every job that wasn't skipped,
+independently of the filter.
+
+The renderer draws it. :meth:`~pyTooling.Tracing.Render.Renderer.Write` writes the chart to a file, in the format
+the suffix names, and :meth:`~pyTooling.Tracing.Render.Renderer.Render` returns the backend's own object for further
+changes - :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` a :class:`~matplotlib.figure.Figure`,
+which isn't registered with :mod:`~matplotlib.pyplot`, so no display is needed. It writes SVG, PNG and PDF, and
+matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]``.
+
+What no drawing library decides is decided once, on the base-class: the color of every category
+(:meth:`~pyTooling.Tracing.Render.Renderer.Color`), the chart's title, and the texts of the legend
+(:meth:`~pyTooling.Tracing.Render.Renderer.LegendTitle` and
+:meth:`~pyTooling.Tracing.Render.Renderer.LegendLabel`). A renderer for another backend derives from
+:class:`~pyTooling.Tracing.Render.Renderer`, names the file formats it writes in
+:attr:`~pyTooling.Tracing.Render.Renderer.FORMATS`, and implements two methods:
+:meth:`~pyTooling.Tracing.Render.Renderer.Render` and ``_Write``.
+
+In an SVG file, every bar or line is a group with the identifier ``span-<SpanID>``, a waiting bar
+``span-<SpanID>-queued`` and the end marks of a line ``span-<SpanID>-ends``. Together with
+:attr:`~pyTooling.Tracing.Render.GanttRow.ParentSpanID`, a script can find all elements below a called workflow.
