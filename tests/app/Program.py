@@ -61,7 +61,13 @@ def environmentWithout(*names: str) -> dict[str, str]:
 
 
 class ProgramMixin:
-	"""Classic mixin: what every testcase here runs, and how it reads what the program printed."""
+	"""
+	What every testcase here runs, and how it reads what the program printed.
+
+	A **classic mixin** - a plain class, no metaclass: it is combined with :class:`~pyTooling.Testing.Testcase`,
+	which derives from :class:`unittest.TestCase` and has no ``__slots__``, so ``mixin=True`` would raise
+	:exc:`~pyTooling.Exceptions.BaseClassWithoutSlotsError`.
+	"""
 
 	_consoleScript:  ClassVar[str] = "pyTooling"
 	_runnableModule: ClassVar[str] = "pyTooling.CLI"
@@ -82,7 +88,8 @@ class ProgramMixin:
 class CommonCommands(ProgramMixin, ApplicationTestcase):
 	"""The commands every pyTooling program has: no command at all, ``help`` and ``version``."""
 
-	def test_WithoutACommandTheHelpPageIsPrinted(self) -> None:
+	def test_NoCommand(self) -> None:
+		"""A call without a command prints the headline and the help page."""
 		result = self.RunEntrypoint()
 
 		self.assertExitCode(result)
@@ -98,7 +105,8 @@ class CommonCommands(ProgramMixin, ApplicationTestcase):
 		self.assertIn("Version:", output)
 		self.assertIn("https://github.com/pyTooling/pyTooling", output)
 
-	def test_HelpListsEveryCommand(self) -> None:
+	def test_Help(self) -> None:
+		"""The help page names every command the program has."""
 		result = self.RunEntrypoint("help")
 
 		self.assertExitCode(result)
@@ -107,7 +115,8 @@ class CommonCommands(ProgramMixin, ApplicationTestcase):
 		self.assertIn("Display version information.", output)
 		self.assertIn("Read a CI pipeline run", output)
 
-	def test_HelpOfACommandDescribesItsOptions(self) -> None:
+	def test_Help_Command(self) -> None:
+		"""The help page of one command names every option of that command."""
 		result = self.RunEntrypoint("help", "pipeline")
 
 		self.assertExitCode(result)
@@ -115,7 +124,8 @@ class CommonCommands(ProgramMixin, ApplicationTestcase):
 		for option in ("--github-pipeline-id", "--github-repository", "--trace-file", "--gantt", "--force"):
 			self.assertIn(option, output)
 
-	def test_AnUnknownCommandIsRejected(self) -> None:
+	def test_UnknownCommand(self) -> None:
+		"""A command the program doesn't have is argparse's error, not a traceback."""
 		result = self.RunEntrypoint("nonsense")
 
 		self.assertNotEqual(0, result.returncode)
@@ -123,7 +133,7 @@ class CommonCommands(ProgramMixin, ApplicationTestcase):
 		self.assertIn("invalid choice", output)
 		self.assertIn("nonsense", output)
 
-	def test_TheModuleAndTheConsoleScriptPrintTheSame(self) -> None:
+	def test_Module(self) -> None:
 		"""Both paths reach the same program, so a difference is in the entry point rather than in the code."""
 		entrypoint = self.RunEntrypoint("version")
 		module =     self.RunModule("version")
@@ -141,7 +151,8 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 	a GitHub token and without reaching GitHub.
 	"""
 
-	def test_AnUnknownTraceFormatIsRejected(self) -> None:
+	def test_TraceFile_UnknownFormat(self) -> None:
+		"""A format '--trace-file' doesn't accept is reported with the formats it does."""
 		result = self.RunEntrypoint(
 			"pipeline", "--github-repository=pyTooling/pyTooling", "--github-pipeline-id=35479251694",
 			"--trace-file=nonsense:trace.json"
@@ -152,7 +163,8 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 		self.assertIn("Format 'nonsense' isn't supported.", output)
 		self.assertIn("otlp-json", output)
 
-	def test_AGanttFormatMustMatchTheFilesSuffix(self) -> None:
+	def test_Gantt_WrongSuffix(self) -> None:
+		"""A Gantt format writing another file type than the name says is reported, not silently renamed."""
 		result = self.RunEntrypoint(
 			"pipeline", "--github-repository=pyTooling/pyTooling", "--github-pipeline-id=35479251694",
 			"--gantt=matplotlib-png:chart.svg"
@@ -161,7 +173,8 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 		self.assertExitCode(result, TerminalApplication.FATAL_EXIT_CODE)
 		self.assertIn("writes a '.png' file", self.Output(result))
 
-	def test_AnExistingFileIsNotOverwritten(self) -> None:
+	def test_TraceFile_Exists(self) -> None:
+		"""Without '--force', a file that exists is an error and keeps its content."""
 		with TemporaryDirectory() as directory:
 			existing = Path(directory) / "trace.json"
 			existing.write_text("{}", encoding="utf-8")
@@ -177,7 +190,8 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 			self.assertIn("--force", output)
 			self.assertEqual("{}", existing.read_text(encoding="utf-8"))
 
-	def test_AMissingRepositoryIsReported(self) -> None:
+	def test_Repository_Missing(self) -> None:
+		"""Without '--github-repository' and without $GITHUB_REPOSITORY, the command says which one to set."""
 		result = self.RunEntrypoint(
 			"pipeline", "--github-pipeline-id=35479251694",
 			environment=environmentWithout("GITHUB_REPOSITORY")
@@ -188,7 +202,8 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 		self.assertIn("No repository given.", output)
 		self.assertIn("$GITHUB_REPOSITORY", output)
 
-	def test_AMissingWorkflowRunIsReported(self) -> None:
+	def test_PipelineID_Missing(self) -> None:
+		"""Without '--github-pipeline-id' and without $GITHUB_RUN_ID, the command says which one to set."""
 		result = self.RunEntrypoint(
 			"pipeline", "--github-repository=pyTooling/pyTooling",
 			environment=environmentWithout("GITHUB_RUN_ID")
@@ -199,7 +214,8 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 		self.assertIn("No workflow run given.", output)
 		self.assertIn("$GITHUB_RUN_ID", output)
 
-	def test_AWorkflowRunThatIsNoNumberIsRejected(self) -> None:
+	def test_PipelineID_NotANumber(self) -> None:
+		"""A workflow run is the number in its URL, so anything else is rejected before the request."""
 		result = self.RunEntrypoint(
 			"pipeline", "--github-repository=pyTooling/pyTooling", "--github-pipeline-id=latest"
 		)
