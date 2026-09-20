@@ -34,7 +34,7 @@ Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attach
 from datetime          import datetime, timedelta, timezone
 from time              import sleep
 
-from pyTooling.Tracing import TracingError, Trace, Span, Event, SpanState
+from pyTooling.Tracing import TracingError, Trace, TraceElement, Span, Event, SpanState
 from pyTooling.Testing import Testcase
 
 
@@ -605,6 +605,28 @@ class Context(Testcase):
 			print(line)
 
 
+class TraceElements(Testcase):
+	def test_ASpanAndAnEventAreTraceElements(self) -> None:
+		trace = Trace("trace")
+		span =  Span("span", parent=trace)
+		event = Event("event", parent=span)
+
+		for element, name, parent in ((trace, "trace", None), (span, "span", trace), (event, "event", span)):
+			with self.subTest(element=element.__class__.__name__):
+				self.assertIsInstance(element, TraceElement)
+				self.assertEqual(name, element.Name)
+				self.assertIs(parent, element.Parent)
+
+	def test_TheElementIsAttachedOnlyWhenItIsValid(self) -> None:
+		"""The base-class validates; the derived class attaches, so a rejected element doesn't reach its parent."""
+		span = Span("span")
+
+		with self.assertRaises(TypeError):
+			_ = Event("event", "yesterday", parent=span)
+
+		self.assertEqual(0, len(span._events))
+
+
 class Attributes(Testcase):
 	def test_Trace(self) -> None:
 		t = Trace("trace")
@@ -636,6 +658,16 @@ class Attributes(Testcase):
 		self.assertEqual(1, len(t))
 		self.assertListEqual([("id2", "value2")], [a for a in t])
 		self.assertIn("id2", t)
+
+	def test_Get(self) -> None:
+		for element in (Trace("trace"), Span("span"), Event("event")):
+			with self.subTest(element=element.__class__.__name__):
+				element["id1"] = "value1"
+
+				self.assertEqual("value1", element.get("id1"))
+				self.assertIsNone(element.get("id2"))
+				self.assertEqual("default", element.get("id2", "default"))
+				self.assertNotIn("id2", element, "Reading a key doesn't create it.")
 
 	def test_Span(self) -> None:
 		s = Span("span")

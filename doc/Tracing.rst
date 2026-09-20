@@ -158,6 +158,15 @@ Three details of the encoding are easy to get wrong, and each has a testcase:
 What an attribute may hold
 ==========================
 
+A timespan and an event carry their attributes like a dictionary: :pycode:`span["key"]`, :pycode:`span["key"] = 1`,
+:pycode:`"key" in span`, :pycode:`del span["key"]`, :pycode:`len(span)`, and iteration yielding
+:pycode:`(key, value)` pairs. A key that may not be there is read by
+:meth:`~pyTooling.Tracing.TraceElement.get`, which returns a default value instead of raising a :exc:`KeyError`.
+
+Both are :class:`~pyTooling.Tracing.TraceElement`\ s: a name, the timespan enclosing them, and those attributes.
+A :class:`~pyTooling.Tracing.Span` adds the times and what it contains, an :class:`~pyTooling.Tracing.Event` the
+moment it happened.
+
 An attribute's value is one of :data:`~pyTooling.Tracing.AttributeValue`: :class:`bool`, :class:`int`,
 :class:`float`, :class:`str`, :class:`bytes`, or a :class:`list`, :class:`tuple` or :class:`dict` of those, nested
 as deeply as needed. Each maps to the matching field of OTLP's ``AnyValue``, with :class:`bytes` encoded as base64
