@@ -115,16 +115,40 @@ class Enumerations(Testcase):
 		self.assertIsNone(Conclusion.Parse(""))
 
 	def test_ParseUnknownStatus(self) -> None:
+		"""A value GitHub didn't document is GitHub's problem, so it keeps the domain's exception."""
 		with self.assertRaises(GitHubError) as context:
 			_ = Status.Parse("nonsense")
 
 		self.assertEqual("'nonsense' is not a GitHub status.", str(context.exception))
+		self.assertIn("Known: queued, in_progress, completed, waiting, requested, pending.", context.exception.__notes__)
+
+	def test_ParseUnknownStatus_Cause(self) -> None:
+		"""The ValueError the inherited parser raised is chained, so nothing about the value is lost."""
+		with self.assertRaises(GitHubError) as context:
+			_ = Status.Parse("nonsense")
+
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("'nonsense' is not a valid Status.", str(context.exception.__cause__))
 
 	def test_ParseUnknownConclusion(self) -> None:
 		with self.assertRaises(GitHubError) as context:
 			_ = Conclusion.Parse("exploded")
 
 		self.assertEqual("'exploded' is not a GitHub conclusion.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+
+	def test_ParseWrongType(self) -> None:
+		"""A value of the wrong type is a defect at the call site, not a value GitHub chose, so it stays a TypeError."""
+		with self.assertRaises(TypeError) as context:
+			_ = Event.Parse(5)
+
+		self.assertEqual("Parameter 'value' is not of type 'str'.", str(context.exception))
+		self.assertIn("Got type 'int'.", context.exception.__notes__)
+
+	def test_AMemberIsItsValue(self) -> None:
+		"""They are StringEnums, so a member goes into a message or an attribute as the string GitHub sent."""
+		self.assertEqual("in_progress", f"{Status.InProgress}")
+		self.assertEqual("startup_failure", f"{Conclusion.StartupFailure}")
 
 
 class Construction(Testcase):
