@@ -34,9 +34,11 @@ Unit tests for :mod:`pyTooling.CLI`: the program's commands and the parser they 
 from io                 import StringIO
 from argparse           import Namespace
 from contextlib         import redirect_stdout
+from os                 import environ
 from pathlib            import Path
 from sys                import argv as sys_argv
-from typing             import Iterable
+from typing             import ClassVar, Iterable
+from unittest.mock      import patch
 
 from pyTooling.CLI          import Application
 from pyTooling.CLI.Pipeline import TraceFormat, splitFormat
@@ -170,6 +172,16 @@ class SplitFormat(Testcase):
 
 
 class PipelineCommand(Testcase):
+	"""
+	The ``pipeline`` command, called in-process.
+
+	:meth:`~pyTooling.CLI.Pipeline.PipelineHandlers._ReadPipeline` falls back to the variables a workflow sets, and
+	this test suite runs inside such a workflow, so a testcase about a **missing** argument has to take the fallback
+	away. Without that it passes on a developer's machine and reads the CI server's own pipeline on the CI server.
+	"""
+
+	NO_WORKFLOW: ClassVar[dict[str, str]] = {"GITHUB_REPOSITORY": "", "GITHUB_RUN_ID": ""}  #: The fallback, emptied.
+
 	def test_Help(self) -> None:
 		output = _run(["help", "pipeline"])
 
@@ -182,15 +194,17 @@ class PipelineCommand(Testcase):
 		"""Nothing is read before the command knows which repository to read from."""
 		application = Application()
 
-		with self.assertRaises(SystemExit):
-			application.HandlePipeline(Namespace(
-				githubRepository=None, githubPipelineID=None, traceFile=None, force=False
-			))
+		with patch.dict(environ, self.NO_WORKFLOW):
+			with self.assertRaises(SystemExit):
+				application.HandlePipeline(Namespace(
+					githubRepository=None, githubPipelineID=None, traceFile=None, force=False
+				))
 
 	def test_TraceFile_UnsupportedFormat(self) -> None:
 		"""A misspelled format is reported before anything is read."""
 		application = Application()
 		arguments = Namespace(githubRepository=None, githubPipelineID=None, traceFile="json:trace.json", force=False)
 
-		with self.assertRaises(SystemExit):
-			application.HandlePipeline(arguments)
+		with patch.dict(environ, self.NO_WORKFLOW):
+			with self.assertRaises(SystemExit):
+				application.HandlePipeline(arguments)
