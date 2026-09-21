@@ -589,6 +589,7 @@ class Severity(Enum):
 	ExceptionNote =  110    #: Exception notes
 	Fatal =          100    #: Fatal messages
 	Error =           80    #: Error messages
+	ErrorNote =       75    #: Error notes
 	Quiet =           70    #: Always visible messages, even in quiet mode.
 
 	Critical =        60    #: Critical messages
@@ -730,6 +731,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		Severity.ExceptionNote: "           > {message}",
 		Severity.Fatal:         "FATAL: {message}",
 		Severity.Error:         "ERROR: {message}",
+		Severity.ErrorNote:     "       > {message}",
 		Severity.Quiet:         "{message}",
 		Severity.Critical:      "CRITICAL: {message}",
 		Severity.CriticalNote:  "          > {message}",
@@ -1011,6 +1013,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		Severity.ExceptionNote:   "{DARK_RED}            > {message}{NOCOLOR}",
 		Severity.Fatal:           "{DARK_RED}[FATAL]     {message}{NOCOLOR}",
 		Severity.Error:                "{RED}[ERROR]     {message}{NOCOLOR}",
+		Severity.ErrorNote:       "{DARK_RED}            > {message}{NOCOLOR}",
 		Severity.Quiet:              "{WHITE}{message}{NOCOLOR}",
 		Severity.Critical:     "{DARK_YELLOW}[CRITICAL]  {message}{NOCOLOR}",
 		Severity.CriticalNote: "{DARK_YELLOW}            > {message}{NOCOLOR}",
@@ -1515,6 +1518,27 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		self._criticalWarningCount += 1
 		return self.WriteLine(Line(message, Severity.Critical, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteErrorNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a note belonging to an error, which is where the advice for fixing it goes.
+
+		Depending on internal settings and rules, a note might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the note.
+		:param appendLinebreak: Optional, append a linebreak after the note. Default: ``True``
+		:returns:               True, if note was actually written.
+		"""
+		return self.WriteLine(
+			Line(message, Severity.ErrorNote, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak)
+		)
 
 	def WriteCriticalNote(
 		self,
