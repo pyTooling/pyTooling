@@ -3,7 +3,8 @@
 # Test Runner
 pytest ~= 9.1
 
-# The program under test is a TerminalApplication, so it needs the 'terminal' extra at runtime. Installing the
-# wheel doesn't pull an extra in, so the dependency is named here - otherwise the program starts with
-# MissingDependencyError and every testcase fails.
+# What 'pyTooling[cli]' installs. Installing the wheel doesn't pull an extra in - a wheel path carries no extras
+# marker - so the program's own dependencies are named here. Without colorama the program doesn't start at all,
+# because it is a TerminalApplication.
 colorama ~= 0.4.6
+matplotlib >= 3.10

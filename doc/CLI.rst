@@ -19,11 +19,14 @@ so it is on the path after :pycode:`pip install pyTooling`. The same program is 
 
 .. attention::
 
-   **The program needs the** ``terminal`` **extra**: :pycode:`pip install pyTooling[terminal]`. It is a
-   :class:`~pyTooling.TerminalUI.TerminalApplication`, and that module needs *colorama*, which the minimal
-   installation deliberately leaves out. Started without it, the program says so and names both ways to install
-   it rather than failing on an import - but it doesn't run. A command writing a Gantt chart needs ``diagram``
-   as well, for the same reason.
+   **The program needs the** ``cli`` **extra**: :pycode:`pip install pyTooling[cli]`. It installs what the
+   program uses at runtime - *colorama*, because a :class:`~pyTooling.TerminalUI.TerminalApplication` needs it to
+   write anything at all, and *matplotlib*, because :pycode:`--gantt` draws with it. The minimal installation
+   leaves both out deliberately, and registers the program all the same: started without them, it names the
+   missing package and every command line installing it rather than failing on an import - but it doesn't run.
+
+   ``cli`` is the ``terminal`` and ``diagram`` extras together, so :pycode:`pip install pyTooling[terminal]` is
+   enough for a program that never draws.
 
 
 .. _CLI/Structure:

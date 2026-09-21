@@ -219,6 +219,11 @@ Version 10.x (2026)
        with the format.
      * The program is reachable as a module too - :pycode:`python -m pyTooling.CLI` - and the new application
        tests in :file:`tests/app` run it both ways, so a broken entry point can be told from a broken program.
+     * **The program needs the new** ``cli`` **extra**: :pycode:`pip install pyTooling[cli]`. It is the
+       ``terminal`` and ``diagram`` extras together - *colorama*, without which a terminal application writes
+       nothing, and *matplotlib*, which :pycode:`--gantt` draws with. The minimal installation registers the
+       program but leaves both out, and the program then reports the missing package and the commands installing
+       it.
 
    * :mod:`pyTooling.TerminalUI`
 
