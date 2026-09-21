@@ -43,9 +43,9 @@ service a trace came from:
    See :ref:`high-level help <TRACING/CI>` for explanations and usage examples.
 """
 from datetime              import datetime
-from enum                  import StrEnum
 from typing                import ClassVar, Mapping, Optional as Nullable
 
+from pyTooling.Common      import StringEnum
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Tracing     import AttributeValue, Span, Trace
@@ -133,7 +133,7 @@ class CI(metaclass=ExtendedType, slots=True):
 
 
 @export
-class SpanKind(StrEnum):
+class SpanKind(StringEnum):
 	"""
 	What a timespan of a CI pipeline represents.
 
@@ -150,7 +150,7 @@ class SpanKind(StrEnum):
 
 
 @export
-class Result(StrEnum):
+class Result(StringEnum):
 	"""
 	How a pipeline run or a task run ended.
 
