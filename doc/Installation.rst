@@ -32,6 +32,9 @@ Users can install the |PackageName| package as a minimal installation or the pac
 ``terminal``, ``yaml``) installing further dependencies. In case the provided extensions are not needed, it keeps the
 list of dependencies low - especially the minimal installation is still dependency free.
 
+The :program:`pyTooling` program is the one part that is **not** usable from the minimal installation: it is a
+terminal application, so it needs the ``terminal`` extension. See :ref:`CLI`.
+
 See :ref:`DEP/package` for more details.
 
 .. tab-set::

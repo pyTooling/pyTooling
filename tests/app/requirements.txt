@@ -2,3 +2,8 @@
 
 # Test Runner
 pytest ~= 9.1
+
+# The program under test is a TerminalApplication, so it needs the 'terminal' extra at runtime. Installing the
+# wheel doesn't pull an extra in, so the dependency is named here - otherwise the program starts with
+# MissingDependencyError and every testcase fails.
+colorama ~= 0.4.6

@@ -17,6 +17,14 @@ The program is the ``console_scripts`` entry point :pycode:`pyTooling.CLI:main`,
 so it is on the path after :pycode:`pip install pyTooling`. The same program is reachable as a module -
 :pycode:`python -m pyTooling.CLI` - which picks the interpreter it runs on and needs no script on the path.
 
+.. attention::
+
+   **The program needs the** ``terminal`` **extra**: :pycode:`pip install pyTooling[terminal]`. It is a
+   :class:`~pyTooling.TerminalUI.TerminalApplication`, and that module needs *colorama*, which the minimal
+   installation deliberately leaves out. Started without it, the program says so and names both ways to install
+   it rather than failing on an import - but it doesn't run. A command writing a Gantt chart needs ``diagram``
+   as well, for the same reason.
+
 
 .. _CLI/Structure:
 
