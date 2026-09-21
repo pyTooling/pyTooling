@@ -47,21 +47,27 @@ packageName =            "pyTooling.*"
 packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
+additionalRequirements = {
+	"diagram":   ["matplotlib >= 3.10"],
+	"pypi":      ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
+	"packaging": ["setuptools >= 83.0"],
+	"sphinx":    ["sphinx >= 9.1"],
+	"terminal":  ["colorama ~= 0.4.6"],
+	"testing":   ["pytest ~= 9.1"],
+	"yaml":      ["ruamel.yaml ~= 0.19"],
+}
+
+# What the 'pyTooling' program needs to run: it is a TerminalApplication, and '--gantt' draws with matplotlib.
+# Derived rather than repeated, so a version bump in the two extras above reaches this one.
+additionalRequirements["cli"] = additionalRequirements["terminal"] + additionalRequirements["diagram"]
+
 setup(
 	**DescribePythonPackageHostedOnGitHub(
 		packageName=packageName,
 		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
 		gitHubNamespace=gitHubNamespace,
 		unittestRequirementsFile=Path("tests/requirements.txt"),
-		additionalRequirements={
-			"diagram":   ["matplotlib >= 3.10"],
-			"pypi":      ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
-			"packaging": ["setuptools >= 83.0"],
-			"sphinx":    ["sphinx >= 9.1"],
-			"terminal":  ["colorama ~= 0.4.6"],
-			"testing":   ["pytest ~= 9.1"],
-			"yaml":      ["ruamel.yaml ~= 0.19"],
-		},
+		additionalRequirements=additionalRequirements,
 		sourceFileWithVersion=packageInformationFile,
 		pythonVersions=("3.11", "3.12", "3.13", "3.14"),
 		consoleScripts={
