@@ -32,12 +32,17 @@
 Unit tests for :mod:`pyTooling.CLI`: the program's commands and the parser they are declared with.
 """
 from io                 import StringIO
+from argparse           import Namespace
 from contextlib         import redirect_stdout
+from os                 import environ
+from pathlib            import Path
 from sys                import argv as sys_argv
-from typing             import Iterable
+from typing             import ClassVar, Iterable
+from unittest.mock      import patch
 
-from pyTooling.CLI      import Application
-from pyTooling.Testing  import Testcase
+from pyTooling.CLI          import Application
+from pyTooling.CLI.Pipeline import TraceFormat, splitFormat
+from pyTooling.Testing      import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -82,6 +87,7 @@ class Parser(Testcase):
 		self.assertEqual("pyTooling", application.MainParser.prog)
 		self.assertIn("help", application.SubParsers)
 		self.assertIn("version", application.SubParsers)
+		self.assertIn("pipeline", application.SubParsers)
 
 	def test_TheProgramIsASingleton(self) -> None:
 		"""A terminal application is a singleton, so asking for it twice hands out the same program."""
@@ -101,7 +107,7 @@ class Commands(Testcase):
 		self.assertIn("usage: pyTooling", output)
 		self.assertIn("version", output)
 
-	def test_HelpForACommand(self) -> None:
+	def test_Help_Command(self) -> None:
 		output = _run(["help", "version"])
 
 		self.assertIn("usage: pyTooling version", output)
@@ -111,3 +117,94 @@ class Commands(Testcase):
 		output = _run([])
 
 		self.assertIn("usage: pyTooling", output)
+
+
+class Formats(Testcase):
+	def test_Parse(self) -> None:
+		self.assertIs(TraceFormat.OTLPJSON, TraceFormat.Parse("otlp-json"))
+
+	def test_Parse_Unknown(self) -> None:
+		"""The enumeration names itself and lists what it accepts, because the user typed the name."""
+		with self.assertRaises(ValueError) as context:
+			_ = TraceFormat.Parse("json")
+
+		self.assertEqual("'json' is not a valid TraceFormat.", str(context.exception))
+		self.assertIn("Allowed values: otlp-json.", context.exception.__notes__)
+
+	def test_ItIsAString(self) -> None:
+		"""It's a StrEnum, so a format goes into a message without being unwrapped first."""
+		self.assertEqual("otlp-json", f"{TraceFormat.OTLPJSON}")
+
+	def test_Default(self) -> None:
+		self.assertIs(TraceFormat.OTLPJSON, TraceFormat.Default)
+
+
+class SplitFormat(Testcase):
+	def test_NoFormat(self) -> None:
+		self.assertEqual((TraceFormat.Default, Path("report/trace.json")),
+		                 splitFormat("report/trace.json", TraceFormat, TraceFormat.Default))
+
+	def test_Format(self) -> None:
+		self.assertEqual((TraceFormat.OTLPJSON, Path("trace.json")),
+		                 splitFormat("otlp-json:trace.json", TraceFormat, TraceFormat.Default))
+
+	def test_Format_WindowsDrive(self) -> None:
+		"""A format is more than one character long, so a drive letter stays part of the path."""
+		value = r"C:\report\trace.json"
+
+		fileFormat, file = splitFormat(value, TraceFormat, TraceFormat.Default)
+
+		self.assertEqual(TraceFormat.Default, fileFormat)
+		self.assertEqual(Path(value), file, "The whole value is the path, so the drive is still on it.")
+
+	def test_Format_ColonBelowADirectory(self) -> None:
+		fileFormat, file = splitFormat("reports/run:2/trace.json", TraceFormat, TraceFormat.Default)
+
+		self.assertEqual(TraceFormat.Default, fileFormat)
+		self.assertEqual(Path("reports/run:2/trace.json"), file)
+
+	def test_Format_Unsupported(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = splitFormat("json:trace.json", TraceFormat, TraceFormat.Default)
+
+		self.assertEqual("'json' is not a valid TraceFormat.", str(context.exception))
+		self.assertIn("Allowed values: otlp-json.", context.exception.__notes__)
+
+
+class PipelineCommand(Testcase):
+	"""
+	The ``pipeline`` command, called in-process.
+
+	:meth:`~pyTooling.CLI.Pipeline.PipelineHandlers._ReadPipeline` falls back to the variables a workflow sets, and
+	this test suite runs inside such a workflow, so a testcase about a **missing** argument has to take the fallback
+	away. Without that it passes on a developer's machine and reads the CI server's own pipeline on the CI server.
+	"""
+
+	NO_WORKFLOW: ClassVar[dict[str, str]] = {"GITHUB_REPOSITORY": "", "GITHUB_RUN_ID": ""}  #: The fallback, emptied.
+
+	def test_Help(self) -> None:
+		output = _run(["help", "pipeline"])
+
+		self.assertIn("--github-repository", output)
+		self.assertIn("--github-pipeline-id", output)
+		self.assertIn("--trace-file", output)
+		self.assertIn("--force", output)
+
+	def test_Repository_Missing(self) -> None:
+		"""Nothing is read before the command knows which repository to read from."""
+		application = Application()
+
+		with patch.dict(environ, self.NO_WORKFLOW):
+			with self.assertRaises(SystemExit):
+				application.HandlePipeline(Namespace(
+					githubRepository=None, githubPipelineID=None, traceFile=None, force=False
+				))
+
+	def test_TraceFile_UnsupportedFormat(self) -> None:
+		"""A misspelled format is reported before anything is read."""
+		application = Application()
+		arguments = Namespace(githubRepository=None, githubPipelineID=None, traceFile="json:trace.json", force=False)
+
+		with patch.dict(environ, self.NO_WORKFLOW):
+			with self.assertRaises(SystemExit):
+				application.HandlePipeline(arguments)
