@@ -44,15 +44,117 @@ the command line's structure is written down once - next to the code implementin
       |rarr| Marks the method implementing a sub-command.
 """
 from argparse              import ArgumentParser, Namespace
-from typing                import Callable, Any, TypeVar, Optional as Nullable
+from pathlib               import Path
+from typing                import Callable, Any, Self, TypeVar, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, expects
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import firstElement, firstPair
+from pyTooling.Common      import firstElement, firstPair, getFullyQualifiedName, StringEnum
 from pyTooling.Attributes  import Attribute
 
 
 M = TypeVar("M", bound=Callable[..., Any])
+
+
+@export
+class FormatEnum(StringEnum):
+	"""
+	The formats an option of the form ``[<format>:]<file>`` accepts.
+
+	It is a :class:`~pyTooling.Common.StringEnum`, so a member is the string a command line spells, and
+	:meth:`~pyTooling.Common.StringEnum.Parse` converts one back. What it adds is :meth:`FromPath`: **the format a
+	value gets when it names none**, which some options read off the file itself.
+
+	.. admonition:: ``Program.py``
+
+	   .. code-block:: python
+
+	      class ReportFormat(FormatEnum):
+	        JSON = "json"
+	        YAML = "yaml"
+
+	        Default = JSON
+
+	      class ImageFormat(FormatEnum):
+	        PNG = "png"
+	        SVG = "svg"
+
+	        Default = PNG
+
+	        @classmethod
+	        def FromPath(cls, file: Path) -> Self:
+	          # An image says in its name what it is, so the suffix decides.
+	          try:
+	            return cls.Parse(file.suffix.lstrip("."))
+	          except ValueError:
+	            return cls.Default
+
+	.. seealso::
+
+	   :func:`splitFormat`
+	      |rarr| Split ``[<format>:]<file>`` into one of these members and the file.
+	"""
+
+	@classmethod
+	def FromPath(cls, file: Path) -> Nullable[Self]:
+		"""
+		Return the format a file gets when the option's value named none.
+
+		The default answer is the enumeration's own ``Default``, which is what an option with one format, or with a
+		format that a file name says nothing about, wants. Override it where the file decides - an option writing
+		:file:`chart.svg` should not need ``--gantt=svg:chart.svg`` to say so twice.
+
+		:param file: The file the option named.
+		:returns:    The format for that file, or ``None`` if this enumeration declares no ``Default``.
+		"""
+		return cls.Parse(None)
+
+
+@export
+def splitFormat(value: str, formats: type[FormatEnum]) -> tuple[Nullable[FormatEnum], Path]:
+	"""
+	Split an option's value of the form ``[<format>:]<file>`` into the format and the file.
+
+	An option writing a file often accepts more than one format for it, and naming the format in front of the path
+	keeps that to one option instead of two that can disagree - :pycode:`--output=json:report.json` rather than
+	:pycode:`--output=report.json --output-format=json`.
+
+	**The format is optional**, and a value naming none is answered by :meth:`FormatEnum.FromPath`. **A colon alone
+	doesn't make a format** either: a Windows drive letter (``C:\\report\\trace.json``) and a path holding a colon
+	deeper down are paths, because a format is more than one character long and contains no path separator.
+
+	.. admonition:: ``Program.py``
+
+	   .. code-block:: python
+
+	      @CommandHandler("convert", help="Convert the report.")
+	      @LongValuedFlag("--output", dest="output", metaName="[format:]file", help="Write the report.")
+	      def HandleConvert(self, args: Namespace) -> None:
+	        reportFormat, file = splitFormat(args.output, ReportFormat)
+
+	:param value:       The option's value, as the command line spelled it.
+	:param formats:     The formats this option accepts.
+	:returns:           The format, and the file to write. The format is ``None`` only when the value named none
+	                    and ``formats`` answers ``None``.
+	:raises ValueError: If parameter 'value' is ``None``.
+	:raises ValueError: If the value names a format this option doesn't accept. |br|
+	                    The note lists the formats it accepts.
+	:raises TypeError:  If parameter 'value' is not of type :class:`str`.
+	"""
+	if value is None:
+		raise ValueError("Parameter 'value' is None.")
+	elif not isinstance(value, str):
+		ex = TypeError("Parameter 'value' is not of type 'str'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		raise ex
+
+	prefix, colon, rest = value.partition(":")
+	if colon == "" or len(prefix) < 2 or "/" in prefix or "\\" in prefix:
+		file = Path(value)
+
+		return formats.FromPath(file), file
+
+	return formats.Parse(prefix), Path(rest)
 
 
 @export

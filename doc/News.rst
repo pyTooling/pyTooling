@@ -196,6 +196,17 @@ Version 10.x (2026)
      * A :class:`~pyTooling.Licensing.License` is hashable and compares equal to its SPDX identifier as a string,
        so it can be a dictionary key and be looked up by what a user writes.
 
+   * :mod:`pyTooling.Attributes.ArgParse`
+
+     * :func:`~pyTooling.Attributes.ArgParse.splitFormat` splits an option's value of the form
+       ``[<format>:]<file>`` into the format and the file, for any program declaring an option of that shape. A
+       format is more than one character long and holds no path separator, so a Windows drive and a colon deeper
+       down a path stay part of the path.
+     * :class:`~pyTooling.Attributes.ArgParse.FormatEnum` is the enumeration it splits into: a
+       :class:`~pyTooling.Common.StringEnum` plus :meth:`~pyTooling.Attributes.ArgParse.FormatEnum.FromPath`,
+       which answers what a value naming no format gets. It answers with the enumeration's ``Default``, and an
+       option whose file says what it is overrides it to read the suffix.
+
    * :mod:`pyTooling.CLI`
 
      * pyTooling installs a **program of its own**: :program:`pyTooling`, the ``console_scripts`` entry point
