@@ -40,9 +40,10 @@ from sys                import argv as sys_argv
 from typing             import ClassVar, Iterable
 from unittest.mock      import patch
 
-from pyTooling.CLI          import Application
-from pyTooling.CLI.Pipeline import TraceFormat, splitFormat
-from pyTooling.Testing      import Testcase
+from pyTooling.Attributes.ArgParse import splitFormat
+from pyTooling.CLI                 import Application
+from pyTooling.CLI.Pipeline        import TraceFormat
+from pyTooling.Testing             import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -138,37 +139,14 @@ class Formats(Testcase):
 	def test_Default(self) -> None:
 		self.assertIs(TraceFormat.OTLPJSON, TraceFormat.Default)
 
+	def test_FromPath(self) -> None:
+		"""A trace file's name says nothing about the format, so the enumeration answers with its ``Default``."""
+		self.assertIs(TraceFormat.Default, TraceFormat.FromPath(Path("report/Pipeline.otlp.json")))
 
-class SplitFormat(Testcase):
-	def test_NoFormat(self) -> None:
-		self.assertEqual((TraceFormat.Default, Path("report/trace.json")),
-		                 splitFormat("report/trace.json", TraceFormat, TraceFormat.Default))
-
-	def test_Format(self) -> None:
-		self.assertEqual((TraceFormat.OTLPJSON, Path("trace.json")),
-		                 splitFormat("otlp-json:trace.json", TraceFormat, TraceFormat.Default))
-
-	def test_Format_WindowsDrive(self) -> None:
-		"""A format is more than one character long, so a drive letter stays part of the path."""
-		value = r"C:\report\trace.json"
-
-		fileFormat, file = splitFormat(value, TraceFormat, TraceFormat.Default)
-
-		self.assertEqual(TraceFormat.Default, fileFormat)
-		self.assertEqual(Path(value), file, "The whole value is the path, so the drive is still on it.")
-
-	def test_Format_ColonBelowADirectory(self) -> None:
-		fileFormat, file = splitFormat("reports/run:2/trace.json", TraceFormat, TraceFormat.Default)
-
-		self.assertEqual(TraceFormat.Default, fileFormat)
-		self.assertEqual(Path("reports/run:2/trace.json"), file)
-
-	def test_Format_Unsupported(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			_ = splitFormat("json:trace.json", TraceFormat, TraceFormat.Default)
-
-		self.assertEqual("'json' is not a valid TraceFormat.", str(context.exception))
-		self.assertIn("Allowed values: otlp-json.", context.exception.__notes__)
+	def test_FromPath_IsWhatSplitFormatUses(self) -> None:
+		"""'--trace-file=report/Pipeline.otlp.json' writes OTLP/JSON, because the enumeration answers for it."""
+		self.assertEqual((TraceFormat.OTLPJSON, Path("report/Pipeline.otlp.json")),
+		                 splitFormat("report/Pipeline.otlp.json", TraceFormat))
 
 
 class PipelineCommand(Testcase):
