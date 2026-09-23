@@ -49,9 +49,10 @@ from os                                       import getenv
 from pathlib                                  import Path
 from typing                                   import ClassVar, Optional as Nullable
 
+from pyTooling.Common                         import StringEnum
 from pyTooling.Decorators                     import export
 from pyTooling.MetaClasses                    import ExtendedType
-from pyTooling.Attributes.ArgParse            import CommandHandler, FormatEnum, splitFormat
+from pyTooling.Attributes.ArgParse            import CommandHandler, splitFormat
 from pyTooling.Attributes.ArgParse.Flag       import LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import LongValuedFlag
 from pyTooling.Tracing                        import Trace
@@ -59,7 +60,7 @@ from pyTooling.Tracing.CI.GitHub              import WorkflowRunReader
 
 
 @export
-class TraceFormat(FormatEnum):
+class TraceFormat(StringEnum):
 	"""The formats a trace can be written in, as ``--trace-file`` names them."""
 
 	OTLPJSON = "otlp-json"  #: OpenTelemetry's OTLP/JSON encoding of a trace.
@@ -117,14 +118,14 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 
 		self.ExitOnPreviousErrors()
 
-	def _CheckOutputs(self, args: Namespace) -> list[tuple[str, FormatEnum, Path]]:
+	def _CheckOutputs(self, args: Namespace) -> list[tuple[str, StringEnum, Path]]:
 		"""
 		Read every output option, and report what can't be written before anything is read.
 
 		:param args: The parsed command line.
 		:returns:    One ``(option, format, file)`` per output that was asked for and can be written.
 		"""
-		outputs: list[tuple[str, FormatEnum, Path]] = []
+		outputs: list[tuple[str, StringEnum, Path]] = []
 		for option, value, formats in self._Outputs(args):
 			if value is None:
 				continue
@@ -146,12 +147,11 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 
 		return outputs
 
-	def _Outputs(self, args: Namespace) -> tuple[tuple[str, Nullable[str], type[FormatEnum]], ...]:
+	def _Outputs(self, args: Namespace) -> tuple[tuple[str, Nullable[str], type[StringEnum]], ...]:
 		"""
 		Return the output options this command offers, as ``(option, value, formats)``.
 
-		What a value naming no format gets is the enumeration's business, not this command's: :class:`TraceFormat`
-		answers with its ``DEFAULT``.
+		A value naming no format gets the enumeration's ``DEFAULT``.
 
 		:param args: The parsed command line.
 		:returns:    One entry per output option, whether or not it was given.
@@ -160,7 +160,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 			("--trace-file", args.traceFile, TraceFormat),
 		)
 
-	def _WriteOutputs(self, outputs: list[tuple[str, FormatEnum, Path]], trace: Trace) -> None:
+	def _WriteOutputs(self, outputs: list[tuple[str, StringEnum, Path]], trace: Trace) -> None:
 		"""
 		Write every output the command line asked for.
 

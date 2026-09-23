@@ -36,12 +36,13 @@ decorated methods, and the command line it accepts as a result.
 from argparse      import ArgumentError
 from io            import StringIO
 from pathlib       import Path
-from typing        import Callable, Any, Self, Tuple, NoReturn
+from typing        import Callable, Any, Tuple, NoReturn
 from unittest.mock import patch
 
+from pyTooling.Common                        import StringEnum
 from pyTooling.MetaClasses                   import UnfulfilledExpectationError
 from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
-from pyTooling.Attributes.ArgParse            import FormatEnum, splitFormat
+from pyTooling.Attributes.ArgParse            import splitFormat
 from pyTooling.Attributes.ArgParse.Argument   import StringArgument, StringListArgument, PositionalArgument
 from pyTooling.Attributes.ArgParse.Argument   import PathArgument, PathListArgument, ListArgument
 from pyTooling.Attributes.ArgParse.Argument   import IntegerArgument, IntegerListArgument
@@ -1277,8 +1278,8 @@ class PrintHelpWithoutATerminal(Testcase):
 		self.assertFalse(hasattr(Application._PrintHelp, "__raises_unfulfilled_expectation_error__"))
 
 
-class ReportFormat(FormatEnum):
-	"""An option with two formats and no reason to read one off the file."""
+class ReportFormat(StringEnum):
+	"""An option with two formats and a default."""
 
 	JSON = "json"
 	YAML = "yaml"
@@ -1286,39 +1287,10 @@ class ReportFormat(FormatEnum):
 	DEFAULT = JSON
 
 
-class ImageFormat(FormatEnum):
-	"""An option whose file says what it is, so the suffix decides."""
-
-	PNG = "png"
-	SVG = "svg"
-
-	DEFAULT = PNG
-
-	@classmethod
-	def FromPath(cls, file: Path) -> Self:
-		try:
-			return cls.Parse(file.suffix.lstrip("."))
-		except ValueError:
-			return cls.DEFAULT
-
-
-class UndecidedFormat(FormatEnum):
+class UndecidedFormat(StringEnum):
 	"""An option that insists on being told, because it declares no default."""
 
 	Binary = "binary"
-
-
-class Formats(Testcase):
-	def test_FromPath(self) -> None:
-		"""Without an override the enumeration answers with its own default, whatever the file is called."""
-		self.assertIs(ReportFormat.JSON, ReportFormat.FromPath(Path("report.yaml")))
-
-	def test_FromPath_Overridden(self) -> None:
-		self.assertIs(ImageFormat.SVG, ImageFormat.FromPath(Path("chart.svg")))
-		self.assertIs(ImageFormat.PNG, ImageFormat.FromPath(Path("chart.gif")))
-
-	def test_FromPath_NoDefault(self) -> None:
-		self.assertIsNone(UndecidedFormat.FromPath(Path("dump.bin")))
 
 
 class SplitFormat(Testcase):
@@ -1326,15 +1298,23 @@ class SplitFormat(Testcase):
 		self.assertEqual((ReportFormat.YAML, Path("report.txt")), splitFormat("yaml:report.txt", ReportFormat))
 
 	def test_NoFormat(self) -> None:
-		"""A value naming none is answered by the enumeration, not by this function."""
+		"""A value naming none gets the enumeration's default."""
 		self.assertEqual((ReportFormat.JSON, Path("reports/report.txt")),
 		                 splitFormat("reports/report.txt", ReportFormat))
 
-	def test_NoFormat_SuffixDecides(self) -> None:
-		self.assertEqual((ImageFormat.SVG, Path("out/chart.svg")), splitFormat("out/chart.svg", ImageFormat))
+	def test_NoFormat_SuffixIsIgnored(self) -> None:
+		"""The suffix doesn't name the format: a '.yaml' file without a format gets the default."""
+		self.assertEqual((ReportFormat.JSON, Path("report.yaml")), splitFormat("report.yaml", ReportFormat))
 
 	def test_NoFormat_NoDefault(self) -> None:
-		self.assertEqual((None, Path("dump.bin")), splitFormat("dump.bin", UndecidedFormat))
+		with self.assertRaises(ValueError) as context:
+			_ = splitFormat("dump.bin", UndecidedFormat)
+
+		self.assertEqual("'dump.bin' names no format, and UndecidedFormat has no default.", str(context.exception))
+		self.assertIn("Write '<format>:dump.bin' with one of: binary.", context.exception.__notes__)
+
+	def test_NoDefault_FormatNamed(self) -> None:
+		self.assertEqual((UndecidedFormat.Binary, Path("dump.bin")), splitFormat("binary:dump.bin", UndecidedFormat))
 
 	def test_WindowsDrive(self) -> None:
 		"""A format is more than one character long, so a drive letter stays part of the path."""

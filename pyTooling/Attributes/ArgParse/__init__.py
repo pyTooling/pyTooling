@@ -45,7 +45,7 @@ the command line's structure is written down once - next to the code implementin
 """
 from argparse              import ArgumentParser, Namespace
 from pathlib               import Path
-from typing                import Callable, Any, Self, TypeVar, Optional as Nullable
+from typing                import Callable, Any, TypeVar, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, expects
 from pyTooling.Exceptions  import ToolingException
@@ -56,76 +56,33 @@ from pyTooling.Attributes  import Attribute
 M = TypeVar("M", bound=Callable[..., Any])
 
 
-@export
-class FormatEnum(StringEnum):
-	"""
-	The formats an option of the form ``[<format>:]<file>`` accepts.
-
-	It is a :class:`~pyTooling.Common.StringEnum`, so a member is the string a command line spells, and
-	:meth:`~pyTooling.Common.StringEnum.Parse` converts one back. What it adds is :meth:`FromPath`: **the format a
-	value gets when it names none**, which some options read off the file itself.
-
-	.. admonition:: ``Program.py``
-
-	   .. code-block:: python
-
-	      class ReportFormat(FormatEnum):
-	        JSON = "json"
-	        YAML = "yaml"
-
-	        DEFAULT = JSON
-
-	      class ImageFormat(FormatEnum):
-	        PNG = "png"
-	        SVG = "svg"
-
-	        DEFAULT = PNG
-
-	        @classmethod
-	        def FromPath(cls, file: Path) -> Self:
-	          # An image says in its name what it is, so the suffix decides.
-	          try:
-	            return cls.Parse(file.suffix.lstrip("."))
-	          except ValueError:
-	            return cls.DEFAULT
-
-	.. seealso::
-
-	   :func:`splitFormat`
-	      |rarr| Split ``[<format>:]<file>`` into one of these members and the file.
-	"""
-
-	@classmethod
-	def FromPath(cls, file: Path) -> Nullable[Self]:
-		"""
-		Return the format a file gets when the option's value named none.
-
-		The default answer is the enumeration's own ``DEFAULT``, which is what an option with one format, or with a
-		format that a file name says nothing about, wants. Override it where the file decides - an option writing
-		:file:`chart.svg` should not need ``--gantt=svg:chart.svg`` to say so twice.
-
-		:param file: The file the option named.
-		:returns:    The format for that file, or ``None`` if this enumeration declares no ``DEFAULT``.
-		"""
-		return cls.Parse(None)
+F = TypeVar("F", bound=StringEnum)
 
 
 @export
-def splitFormat(value: str, formats: type[FormatEnum]) -> tuple[Nullable[FormatEnum], Path]:
+def splitFormat(value: str, formats: type[F]) -> tuple[F, Path]:
 	"""
 	Split an option's value of the form ``[<format>:]<file>`` into the format and the file.
 
 	An option writing a file often accepts more than one format for it, and naming the format in front of the path
 	keeps that to one option instead of two that can disagree - :pycode:`--output=json:report.json` rather than
-	:pycode:`--output=report.json --output-format=json`.
+	:pycode:`--output=report.json --output-format=json`. The formats are a :class:`~pyTooling.Common.StringEnum`, so a
+	member is the string the command line spells.
 
-	**The format is optional**, and a value naming none is answered by :meth:`FormatEnum.FromPath`. **A colon alone
-	doesn't make a format** either: a Windows drive letter (``C:\\report\\trace.json``) and a path holding a colon
-	deeper down are paths, because a format is more than one character long and contains no path separator.
+	**The format is optional.** A value naming none gets the enumeration's ``DEFAULT``; an enumeration declaring none
+	insists on being told. **A colon alone doesn't make a format** either: a Windows drive letter
+	(``C:\\report\\trace.json``) and a path holding a colon deeper down are paths, because a format is more than one
+	character long and contains no path separator.
 
 	.. admonition:: ``Program.py``
 
 	   .. code-block:: python
+
+	      class ReportFormat(StringEnum):
+	        JSON = "json"
+	        YAML = "yaml"
+
+	        DEFAULT = JSON
 
 	      @CommandHandler("convert", help="Convert the report.")
 	      @LongValuedFlag("--output", dest="output", metaName="[format:]file", help="Write the report.")
@@ -134,12 +91,13 @@ def splitFormat(value: str, formats: type[FormatEnum]) -> tuple[Nullable[FormatE
 
 	:param value:       The option's value, as the command line spelled it.
 	:param formats:     The formats this option accepts.
-	:returns:           The format, and the file to write. The format is ``None`` only when the value named none
-	                    and ``formats`` answers ``None``.
+	:returns:           The format, and the file to write.
 	:raises ValueError: If parameter 'value' is ``None``.
+	:raises TypeError:  If parameter 'value' is not of type :class:`str`.
 	:raises ValueError: If the value names a format this option doesn't accept. |br|
 	                    The note lists the formats it accepts.
-	:raises TypeError:  If parameter 'value' is not of type :class:`str`.
+	:raises ValueError: If the value names no format, and ``formats`` declares no ``DEFAULT``. |br|
+	                    The note lists the formats it accepts.
 	"""
 	if value is None:
 		raise ValueError("Parameter 'value' is None.")
@@ -149,12 +107,14 @@ def splitFormat(value: str, formats: type[FormatEnum]) -> tuple[Nullable[FormatE
 		raise ex
 
 	prefix, colon, rest = value.partition(":")
-	if colon == "" or len(prefix) < 2 or "/" in prefix or "\\" in prefix:
-		file = Path(value)
+	if colon != "" and len(prefix) >= 2 and "/" not in prefix and "\\" not in prefix:
+		return formats.Parse(prefix), Path(rest)
+	elif (fileFormat := formats.Parse(None)) is None:
+		ex = ValueError(f"'{value}' names no format, and {formats.__name__} has no default.")
+		ex.add_note(f"Write '<format>:{value}' with one of: {', '.join(member.value for member in formats)}.")
+		raise ex
 
-		return formats.FromPath(file), file
-
-	return formats.Parse(prefix), Path(rest)
+	return fileFormat, Path(value)
 
 
 @export

@@ -117,9 +117,8 @@ a Windows drive (:file:`C:\\report\\trace.json`) and a colon deeper down a path 
 like a format but isn't one is an error naming the formats that exist, rather than a file with a strange name.
 
 None of that is the command's own: :func:`~pyTooling.Attributes.ArgParse.splitFormat` does the splitting for any
-program declaring an option of this shape, and each format enumeration answers for itself what a value naming no
-format gets - see :ref:`ATTR/ArgParse/Formats`. :class:`~pyTooling.CLI.Pipeline.TraceFormat` answers with its
-``DEFAULT``.
+program declaring an option of this shape, and a value naming no format gets the enumeration's ``DEFAULT`` - see
+:ref:`ATTR/ArgParse/Formats`.
 
 Both are checked **before** the pipeline is read, so a misspelled format or a file that exists is reported at once
 instead of after a network round-trip.

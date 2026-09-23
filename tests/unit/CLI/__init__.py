@@ -139,12 +139,8 @@ class Formats(Testcase):
 	def test_Default(self) -> None:
 		self.assertIs(TraceFormat.OTLPJSON, TraceFormat.DEFAULT)
 
-	def test_FromPath(self) -> None:
-		"""A trace file's name says nothing about the format, so the enumeration answers with its ``DEFAULT``."""
-		self.assertIs(TraceFormat.DEFAULT, TraceFormat.FromPath(Path("report/Pipeline.otlp.json")))
-
-	def test_FromPath_IsWhatSplitFormatUses(self) -> None:
-		"""'--trace-file=report/Pipeline.otlp.json' writes OTLP/JSON, because the enumeration answers for it."""
+	def test_NoFormat(self) -> None:
+		"""'--trace-file=report/Pipeline.otlp.json' writes OTLP/JSON, the enumeration's ``DEFAULT``."""
 		self.assertEqual((TraceFormat.OTLPJSON, Path("report/Pipeline.otlp.json")),
 		                 splitFormat("report/Pipeline.otlp.json", TraceFormat))
 

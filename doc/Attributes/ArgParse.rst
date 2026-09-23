@@ -230,13 +230,12 @@ path** keeps that to one option instead of two that can disagree:
 
    program convert --output=json:report.json     # instead of --output=report.json --output-format=json
 
-:func:`~pyTooling.Attributes.ArgParse.splitFormat` splits such a value into the format and the file, and
-:class:`~pyTooling.Attributes.ArgParse.FormatEnum` is the enumeration it splits into - a
-:class:`~pyTooling.Common.StringEnum`, so a member *is* the string the command line spells.
+:func:`~pyTooling.Attributes.ArgParse.splitFormat` splits such a value into the format and the file. The formats
+are a :class:`~pyTooling.Common.StringEnum`, so a member *is* the string the command line spells.
 
 .. code-block:: Python
 
-   class ReportFormat(FormatEnum):
+   class ReportFormat(StringEnum):
      JSON = "json"
      YAML = "yaml"
 
@@ -258,30 +257,16 @@ writing a file with a strange name.
 What a value naming no format gets
 ==================================
 
-That is the enumeration's business, not the handler's. :meth:`~pyTooling.Attributes.ArgParse.FormatEnum.FromPath`
-answers it, and by default answers with the enumeration's own ``DEFAULT`` - see :ref:`COMMON/StringEnum/Default`.
-
-An option whose **file says what it is** overrides it, so the format is rarely written out:
+The enumeration's ``DEFAULT`` - see :ref:`COMMON/StringEnum/Default`. An enumeration declaring none insists on
+being told: a value without a format raises a :exc:`ValueError`, whose note shows how to write it.
 
 .. code-block:: Python
 
-   class ImageFormat(FormatEnum):
-     PNG = "png"
-     SVG = "svg"
+   splitFormat("report.txt", ReportFormat)         # (ReportFormat.JSON, Path("report.txt"))
+   splitFormat("yaml:report.txt", ReportFormat)    # (ReportFormat.YAML, Path("report.txt"))
 
-     DEFAULT = PNG
-
-     @classmethod
-     def FromPath(cls, file: Path) -> Self:
-       try:
-         return cls.Parse(file.suffix.lstrip("."))
-       except ValueError:
-         return cls.DEFAULT
-
-   splitFormat("out/chart.svg", ImageFormat)    # (ImageFormat.SVG, Path("out/chart.svg"))
-   splitFormat("png:chart.svg", ImageFormat)    # (ImageFormat.PNG, Path("chart.svg")) - stated wins
-
-An enumeration declaring no ``DEFAULT`` answers ``None``, which is how an option insists on being told.
+The format is never read off the file's suffix. Where a format and the file's suffix have to agree, the handler
+checks them.
 
 
 .. _ATTR/ArgParse/Commands:
