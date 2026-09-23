@@ -20,7 +20,7 @@ members and inherits :meth:`~pyTooling.Common.StringEnum.Parse`.
 The default is declared as an alias
 ***********************************
 
-``Default`` is an **alias** of the member that stands for *"nothing was given"*. An alias, because that keeps it
+``DEFAULT`` is an **alias** of the member that stands for *"nothing was given"*. An alias, because that keeps it
 out of the enumeration's own list: it isn't iterated, and it is not a second member to compare against - it *is*
 the member it aliases.
 
@@ -33,13 +33,13 @@ the member it aliases.
      MatplotlibPNG = "matplotlib-png"
      MatplotlibSVG = "matplotlib-svg"
 
-     Default = MatplotlibPNG
+     DEFAULT = MatplotlibPNG
 
    GanttFormat.Parse("matplotlib-svg")    # GanttFormat.MatplotlibSVG
    GanttFormat.Parse(None)                # GanttFormat.MatplotlibPNG
    list(GanttFormat)                      # [MatplotlibPNG, MatplotlibSVG] - no third entry
 
-An enumeration declaring no ``Default`` answers ``None`` instead, which is what a field that may legitimately be
+An enumeration declaring no ``DEFAULT`` answers ``None`` instead, which is what a field that may legitimately be
 absent wants - a workflow run has no conclusion while it is still running:
 
 .. code-block:: Python
@@ -64,7 +64,7 @@ What Parse rejects
    * - Argument
      - Answer
    * - ``None`` or ``""``
-     - ``Default``, or ``None`` if the enumeration declares none.
+     - ``DEFAULT``, or ``None`` if the enumeration declares none.
    * - A value a member carries
      - That member.
    * - A value no member carries

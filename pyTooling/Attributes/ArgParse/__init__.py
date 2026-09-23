@@ -44,15 +44,77 @@ the command line's structure is written down once - next to the code implementin
       |rarr| Marks the method implementing a sub-command.
 """
 from argparse              import ArgumentParser, Namespace
+from pathlib               import Path
 from typing                import Callable, Any, TypeVar, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, expects
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import firstElement, firstPair
+from pyTooling.Common      import firstElement, firstPair, getFullyQualifiedName, StringEnum
 from pyTooling.Attributes  import Attribute
 
 
 M = TypeVar("M", bound=Callable[..., Any])
+
+
+F = TypeVar("F", bound=StringEnum)
+
+
+@export
+def splitFormat(value: str, formats: type[F]) -> tuple[F, Path]:
+	"""
+	Split an option's value of the form ``[<format>:]<file>`` into the format and the file.
+
+	An option writing a file often accepts more than one format for it, and naming the format in front of the path
+	keeps that to one option instead of two that can disagree - :pycode:`--output=json:report.json` rather than
+	:pycode:`--output=report.json --output-format=json`. The formats are a :class:`~pyTooling.Common.StringEnum`, so a
+	member is the string the command line spells.
+
+	**The format is optional.** A value naming none gets the enumeration's ``DEFAULT``; an enumeration declaring none
+	insists on being told. **A colon alone doesn't make a format** either: a Windows drive letter
+	(``C:\\report\\trace.json``) and a path holding a colon deeper down are paths, because a format is more than one
+	character long and contains no path separator.
+
+	.. admonition:: ``Program.py``
+
+	   .. code-block:: python
+
+	      class ReportFormat(StringEnum):
+	        JSON = "json"
+	        YAML = "yaml"
+
+	        DEFAULT = JSON
+
+	      @CommandHandler("convert", help="Convert the report.")
+	      @LongValuedFlag("--output", dest="output", metaName="[format:]file", help="Write the report.")
+	      def HandleConvert(self, args: Namespace) -> None:
+	        reportFormat, file = splitFormat(args.output, ReportFormat)
+
+	:param value:       The option's value, as the command line spelled it.
+	:param formats:     The formats this option accepts.
+	:returns:           The format, and the file to write.
+	:raises ValueError: If parameter 'value' is ``None``.
+	:raises TypeError:  If parameter 'value' is not of type :class:`str`.
+	:raises ValueError: If the value names a format this option doesn't accept. |br|
+	                    The note lists the formats it accepts.
+	:raises ValueError: If the value names no format, and ``formats`` declares no ``DEFAULT``. |br|
+	                    The note lists the formats it accepts.
+	"""
+	if value is None:
+		raise ValueError("Parameter 'value' is None.")
+	elif not isinstance(value, str):
+		ex = TypeError("Parameter 'value' is not of type 'str'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		raise ex
+
+	prefix, colon, rest = value.partition(":")
+	if colon != "" and len(prefix) >= 2 and "/" not in prefix and "\\" not in prefix:
+		return formats.Parse(prefix), Path(rest)
+	elif (fileFormat := formats.Parse(None)) is None:
+		ex = ValueError(f"'{value}' names no format, and {formats.__name__} has no default.")
+		ex.add_note(f"Write '<format>:{value}' with one of: {', '.join(member.value for member in formats)}.")
+		raise ex
+
+	return fileFormat, Path(value)
 
 
 @export

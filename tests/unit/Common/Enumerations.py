@@ -47,7 +47,7 @@ class Format(StringEnum):
 	PNG = "png"
 	SVG = "svg"
 
-	Default = PNG
+	DEFAULT = PNG
 
 
 class Level(StringEnum):
@@ -64,12 +64,12 @@ class Members(Testcase):
 		self.assertEqual("png, svg", ", ".join(Format))
 
 	def test_Default(self) -> None:
-		self.assertIs(Format.PNG, Format.Default)
+		self.assertIs(Format.PNG, Format.DEFAULT)
 
 	def test_Default_IsAnAlias(self) -> None:
 		"""The default is an alias, so it is neither iterated nor a second member to compare against."""
 		self.assertEqual(["PNG", "SVG"], [member.name for member in Format])
-		self.assertIn("Default", Format.__members__)
+		self.assertIn("DEFAULT", Format.__members__)
 
 
 class Parse(Testcase):

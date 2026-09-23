@@ -52,7 +52,7 @@ from typing                                   import ClassVar, Optional as Nulla
 from pyTooling.Common                         import StringEnum
 from pyTooling.Decorators                     import export
 from pyTooling.MetaClasses                    import ExtendedType
-from pyTooling.Attributes.ArgParse            import CommandHandler
+from pyTooling.Attributes.ArgParse            import CommandHandler, splitFormat
 from pyTooling.Attributes.ArgParse.Flag       import LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import LongValuedFlag
 from pyTooling.Tracing                        import Trace
@@ -65,30 +65,7 @@ class TraceFormat(StringEnum):
 
 	OTLPJSON = "otlp-json"  #: OpenTelemetry's OTLP/JSON encoding of a trace.
 
-	Default = OTLPJSON      #: The format ``--trace-file`` writes when its value names none.
-
-
-@export
-def splitFormat(value: str, formats: type[StringEnum], defaultFormat: StringEnum) -> tuple[StringEnum, Path]:
-	"""
-	Split an option's value of the form ``[<format>:]<file>`` into the format and the file.
-
-	The format is optional, so a value without a colon is a path and gets the default format. A colon alone doesn't
-	make a format either: a Windows drive letter (``C:\\report\\trace.json``) and a path holding a colon deeper down
-	are paths, because a format is more than one character long and contains no path separator.
-
-	:param value:         The option's value.
-	:param formats:       The formats this option accepts.
-	:param defaultFormat: The format to assume when the value names none.
-	:returns:             The format, and the file to write.
-	:raises ValueError:   If the value names a format this option doesn't accept.
-	"""
-	prefix, colon, rest = value.partition(":")
-	if colon == "" or len(prefix) < 2 or "/" in prefix or "\\" in prefix:
-		return defaultFormat, Path(value)
-
-	return formats.Parse(prefix), Path(rest)
-
+	DEFAULT = OTLPJSON      #: The format ``--trace-file`` writes when its value names none.
 
 @export
 class PipelineHandlers(metaclass=ExtendedType, mixin=True):
@@ -118,7 +95,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 	)
 	@LongValuedFlag(
 		"--trace-file", dest="traceFile", metaName="[format:]file", optional=True,
-		help=f"Write the trace. Format: {', '.join(TraceFormat)}. Default: {TraceFormat.Default}."
+		help=f"Write the trace. Format: {', '.join(TraceFormat)}. Default: {TraceFormat.DEFAULT}."
 	)
 	@LongFlag("--force", dest="force", help="Overwrite files that exist.")
 	def HandlePipeline(self, args: Namespace) -> None:
@@ -149,12 +126,12 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 		:returns:    One ``(option, format, file)`` per output that was asked for and can be written.
 		"""
 		outputs: list[tuple[str, StringEnum, Path]] = []
-		for option, value, formats, defaultFormat in self._Outputs(args):
+		for option, value, formats in self._Outputs(args):
 			if value is None:
 				continue
 
 			try:
-				fileFormat, file = splitFormat(value, formats, defaultFormat)
+				fileFormat, file = splitFormat(value, formats)
 			except ValueError as ex:
 				self.WriteError(f"Option '{option}': {ex}")
 				for note in ex.__notes__:
@@ -170,15 +147,17 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 
 		return outputs
 
-	def _Outputs(self, args: Namespace) -> tuple[tuple[str, Nullable[str], type[StringEnum], StringEnum], ...]:
+	def _Outputs(self, args: Namespace) -> tuple[tuple[str, Nullable[str], type[StringEnum]], ...]:
 		"""
-		Return the output options this command offers, as ``(option, value, formats, default format)``.
+		Return the output options this command offers, as ``(option, value, formats)``.
+
+		A value naming no format gets the enumeration's ``DEFAULT``.
 
 		:param args: The parsed command line.
 		:returns:    One entry per output option, whether or not it was given.
 		"""
 		return (
-			("--trace-file", args.traceFile, TraceFormat, TraceFormat.Default),
+			("--trace-file", args.traceFile, TraceFormat),
 		)
 
 	def _WriteOutputs(self, outputs: list[tuple[str, StringEnum, Path]], trace: Trace) -> None:
