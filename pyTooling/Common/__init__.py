@@ -479,7 +479,7 @@ class StringEnum(StrEnum):
 	no member carries is. Written per enumeration, those answers drift; written here, an enumeration adds its
 	members and inherits :meth:`Parse`.
 
-	**A missing value is answered by the enumeration itself.** ``Default`` is an *alias* of the member that stands
+	**A missing value is answered by the enumeration itself.** ``DEFAULT`` is an *alias* of the member that stands
 	for "nothing was given" - an alias, so it neither shows up when the enumeration is iterated nor becomes a
 	second member to compare against. An enumeration declaring none answers ``None`` instead, which is what a
 	field that may legitimately be absent wants.
@@ -494,7 +494,7 @@ class StringEnum(StrEnum):
 	        MatplotlibPNG = "matplotlib-png"
 	        MatplotlibSVG = "matplotlib-svg"
 
-	        Default = MatplotlibPNG
+	        DEFAULT = MatplotlibPNG
 
 	      GanttFormat.Parse("matplotlib-svg")  # GanttFormat.MatplotlibSVG
 	      GanttFormat.Parse(None)              # GanttFormat.MatplotlibPNG
@@ -537,14 +537,14 @@ class StringEnum(StrEnum):
 
 		:param value:       Optional, the string to convert. ``None`` and the empty string mean *no value was
 		                    given*. Default: ``None``.
-		:returns:           The member carrying that value. If no value was given: ``Default``, if the enumeration
+		:returns:           The member carrying that value. If no value was given: ``DEFAULT``, if the enumeration
 		                    declares one, otherwise ``None``.
 		:raises TypeError:  If parameter 'value' is not of type :class:`str`.
 		:raises ValueError: If no member of this enumeration carries that value. |br|
 		                    The note lists the values it accepts.
 		"""
 		if value is None or value == "":
-			return cls.__members__.get("Default", None)
+			return cls.__members__.get("DEFAULT", None)
 		elif not isinstance(value, str):
 			ex = TypeError("Parameter 'value' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")

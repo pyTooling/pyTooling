@@ -73,13 +73,13 @@ class FormatEnum(StringEnum):
 	        JSON = "json"
 	        YAML = "yaml"
 
-	        Default = JSON
+	        DEFAULT = JSON
 
 	      class ImageFormat(FormatEnum):
 	        PNG = "png"
 	        SVG = "svg"
 
-	        Default = PNG
+	        DEFAULT = PNG
 
 	        @classmethod
 	        def FromPath(cls, file: Path) -> Self:
@@ -87,7 +87,7 @@ class FormatEnum(StringEnum):
 	          try:
 	            return cls.Parse(file.suffix.lstrip("."))
 	          except ValueError:
-	            return cls.Default
+	            return cls.DEFAULT
 
 	.. seealso::
 
@@ -100,12 +100,12 @@ class FormatEnum(StringEnum):
 		"""
 		Return the format a file gets when the option's value named none.
 
-		The default answer is the enumeration's own ``Default``, which is what an option with one format, or with a
+		The default answer is the enumeration's own ``DEFAULT``, which is what an option with one format, or with a
 		format that a file name says nothing about, wants. Override it where the file decides - an option writing
 		:file:`chart.svg` should not need ``--gantt=svg:chart.svg`` to say so twice.
 
 		:param file: The file the option named.
-		:returns:    The format for that file, or ``None`` if this enumeration declares no ``Default``.
+		:returns:    The format for that file, or ``None`` if this enumeration declares no ``DEFAULT``.
 		"""
 		return cls.Parse(None)
 

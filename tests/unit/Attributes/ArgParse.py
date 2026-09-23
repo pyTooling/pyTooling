@@ -1283,7 +1283,7 @@ class ReportFormat(FormatEnum):
 	JSON = "json"
 	YAML = "yaml"
 
-	Default = JSON
+	DEFAULT = JSON
 
 
 class ImageFormat(FormatEnum):
@@ -1292,14 +1292,14 @@ class ImageFormat(FormatEnum):
 	PNG = "png"
 	SVG = "svg"
 
-	Default = PNG
+	DEFAULT = PNG
 
 	@classmethod
 	def FromPath(cls, file: Path) -> Self:
 		try:
 			return cls.Parse(file.suffix.lstrip("."))
 		except ValueError:
-			return cls.Default
+			return cls.DEFAULT
 
 
 class UndecidedFormat(FormatEnum):
@@ -1342,13 +1342,13 @@ class SplitFormat(Testcase):
 
 		fileFormat, file = splitFormat(value, ReportFormat)
 
-		self.assertIs(ReportFormat.Default, fileFormat)
+		self.assertIs(ReportFormat.DEFAULT, fileFormat)
 		self.assertEqual(Path(value), file, "The whole value is the path, so the drive is still on it.")
 
 	def test_ColonBelowADirectory(self) -> None:
 		fileFormat, file = splitFormat("reports/run:2/out.json", ReportFormat)
 
-		self.assertIs(ReportFormat.Default, fileFormat)
+		self.assertIs(ReportFormat.DEFAULT, fileFormat)
 		self.assertEqual(Path("reports/run:2/out.json"), file)
 
 	def test_UnknownFormat(self) -> None:
