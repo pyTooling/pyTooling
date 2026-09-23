@@ -201,11 +201,8 @@ Version 10.x (2026)
      * :func:`~pyTooling.Attributes.ArgParse.splitFormat` splits an option's value of the form
        ``[<format>:]<file>`` into the format and the file, for any program declaring an option of that shape. A
        format is more than one character long and holds no path separator, so a Windows drive and a colon deeper
-       down a path stay part of the path.
-     * :class:`~pyTooling.Attributes.ArgParse.FormatEnum` is the enumeration it splits into: a
-       :class:`~pyTooling.Common.StringEnum` plus :meth:`~pyTooling.Attributes.ArgParse.FormatEnum.FromPath`,
-       which answers what a value naming no format gets. It answers with the enumeration's ``DEFAULT``, and an
-       option whose file says what it is overrides it to read the suffix.
+       down a path stay part of the path. The formats are a :class:`~pyTooling.Common.StringEnum`, and a value
+       naming none gets its ``DEFAULT`` - or raises a :exc:`ValueError`, if the enumeration declares none.
 
    * :mod:`pyTooling.CLI`
 
