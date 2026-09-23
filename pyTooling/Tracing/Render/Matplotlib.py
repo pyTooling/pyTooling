@@ -58,7 +58,7 @@ from pyTooling.Common            import getFullyQualifiedName, readResourceFile
 from pyTooling.Exceptions        import MissingDependencyError
 from pyTooling.Resources         import Tracing as TracingResources
 from pyTooling.Tracing.CI        import SpanKind
-from pyTooling.Tracing.Render    import GanttLayout, LINE_LEGEND_LABEL, Renderer
+from pyTooling.Tracing.Render    import GanttLayout, LINE_LEGEND_LABEL, QUEUED_LEGEND_LABEL, Renderer
 
 try:
 	from matplotlib              import rc_context
@@ -333,7 +333,7 @@ class MatplotlibRenderer(Renderer[Figure]):
 				for category in layout.Categories
 			]
 			if hasQueued:
-				handles.append(Patch(facecolor=self.QUEUED, label="waiting for a runner"))
+				handles.append(Patch(facecolor=self.QUEUED, label=QUEUED_LEGEND_LABEL))
 
 			if hasLines:
 				handles.append(Line2D(
