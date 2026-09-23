@@ -32,11 +32,14 @@
 Unit tests for :mod:`pyTooling.Tracing.Render` and :mod:`pyTooling.Tracing.Render.Matplotlib`.
 """
 from datetime                    import datetime, timedelta, timezone
+from json                        import loads as json_loads
 from pathlib                     import Path
+from re                          import search
 from tempfile                    import TemporaryDirectory
 from typing                      import Optional as Nullable
 from unittest                    import skipUnless
 from warnings                    import catch_warnings, simplefilter
+from xml.etree                   import ElementTree
 
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
@@ -460,6 +463,63 @@ class Matplotlib(Testcase):
 
 		self.assertEqual("Pipeline (1:40)", MatplotlibRenderer(layout).Title)
 		self.assertEqual("Last night's run", MatplotlibRenderer(layout, title="Last night's run").Title)
+
+	def test_LabelIdentifiers(self) -> None:
+		spans = _pipeline()
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "Pipeline.svg"
+			MatplotlibRenderer(GanttLayout(spans["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))).Write(file)
+			content = file.read_text(encoding="utf-8")
+
+		for name in ("Pipeline", "Build", "Tests", "Windows"):
+			with self.subTest(row=name):
+				self.assertIn(f'id="label-{spans[name].SpanID}"', content)
+		self.assertNotIn("<script", content, "Only a collapsible file carries the script.")
+
+	def test_CollapsibleSVG(self) -> None:
+		spans = _pipeline()
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "Pipeline.svg"
+			layout = GanttLayout(spans["Pipeline"], spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Nothing), now=_at(50))
+			MatplotlibRenderer(layout, collapsible=True).Write(file)
+			content = file.read_text(encoding="utf-8")
+
+		ElementTree.fromstring(content)
+		data = json_loads(content.split("const data = ", 1)[1].split(";\n", 1)[0])
+		rows = {row["id"]: row for row in data["rows"]}
+		build = spans["Build"].SpanID
+		compileStep = spans["Compile"].SpanID
+
+		self.assertIn('<script type="text/ecmascript">', content)
+		self.assertTrue(rows[build]["collapsed"], "A job starts collapsed.")
+		self.assertFalse(rows[spans["Tests"].SpanID]["collapsed"], "A called workflow starts expanded.")
+		self.assertEqual(build, rows[compileStep]["parent"])
+		self.assertIsNone(rows[spans["Pipeline"].SpanID]["parent"])
+
+		def barTop(spanID: str) -> float:
+			"""
+			Nested function reading the top edge of a timespan's bar from the SVG file.
+
+			:param spanID: The timespan's identifier.
+			:returns:      The top edge in SVG coordinates.
+			"""
+			return float(search(rf'<g id="span-{spanID}">\s*<path d="M [\d.]+ ([\d.]+)', content).group(1))
+
+		self.assertAlmostEqual(barTop(compileStep) - barTop(build), data["pitch"], places=3)
+
+	def test_CollapsedKinds(self) -> None:
+		renderer = MatplotlibRenderer(GanttLayout(_pipeline()["Pipeline"]), collapsible=True, collapsedKinds=("workflow",))
+
+		self.assertTrue(renderer.Collapsible)
+		self.assertEqual(frozenset({"workflow"}), renderer.CollapsedKinds)
+
+	def test_CollapsibleNeedsSVG(self) -> None:
+		renderer = MatplotlibRenderer(GanttLayout(_pipeline()["Pipeline"]), collapsible=True)
+
+		with self.assertRaises(ValueError) as context:
+			renderer.Write(Path("Pipeline.png"))
+
+		self.assertEqual("File 'Pipeline.png' can't be collapsible.", str(context.exception))
 
 	def test_TheRendererIsAbstract(self) -> None:
 		with self.assertRaises(AbstractClassError):
