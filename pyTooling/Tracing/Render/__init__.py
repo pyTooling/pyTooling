@@ -57,13 +57,16 @@ from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 from pyTooling.Tracing.CI.GitHub import GitHub
 
 
-__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP", "LINE_LEGEND_LABEL"]
+__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP", "LINE_LEGEND_LABEL", "QUEUED_LEGEND_LABEL"]
 
 _FigureType = TypeVar("_FigureType")
 """Type of the drawing a renderer's backend produces, e.g. matplotlib's :class:`~matplotlib.figure.Figure`."""
 
 LINE_LEGEND_LABEL = "pipeline, called workflow"
 """The legend's label of the line drawn for the pipeline and every called workflow."""
+
+QUEUED_LEGEND_LABEL = "waiting for a runner"
+"""The legend's label of the bars showing the time a job waited for a runner."""
 
 SpanFilter = Callable[[Span], bool]
 """A function deciding whether a timespan - and with it, its sub-spans - is shown."""

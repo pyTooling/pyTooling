@@ -327,7 +327,8 @@ The renderer draws it. :meth:`~pyTooling.Tracing.Render.Renderer.Write` writes t
 the suffix names, and :meth:`~pyTooling.Tracing.Render.Renderer.Render` returns the backend's own object for further
 changes - :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` a :class:`~matplotlib.figure.Figure`,
 which isn't registered with :mod:`~matplotlib.pyplot`, so no display is needed. It writes SVG, PNG and PDF, and
-matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]``.
+matplotlib is an optional dependency, installed by the extra ``pyTooling[diagram]`` together with :term:`plotly`,
+which draws the same chart as an interactive HTML page - see :ref:`TRACING/Render/Plotly`.
 
 What no drawing library decides is decided once, on the base-class: the color of every category
 (:meth:`~pyTooling.Tracing.Render.Renderer.Color`), the chart's title, and the texts of the legend
@@ -361,3 +362,28 @@ The rows of the kinds in ``collapsedKinds`` start collapsed - jobs by default, s
 as one without them. The script runs where an SVG file is a document: opened in a browser, or embedded by
 ``<object>`` or inline. An SVG file shown as an image - by ``<img>``, in Markdown or in a pipeline's job summary - is
 static and shows every row expanded.
+
+.. _TRACING/Render/Plotly:
+
+Interactive HTML
+================
+
+:class:`~pyTooling.Tracing.Render.Plotly.PlotlyRenderer` draws the chart with :term:`plotly` and writes it as an HTML
+page, or as the plotly figure's JSON, chosen by the file's suffix. :meth:`~pyTooling.Tracing.Render.Renderer.Render`
+returns a plotly figure for further changes. It draws the same layout as the matplotlib renderer, and the colors and
+legend come from the same base-class, so both charts look alike.
+
+.. code-block:: python
+
+   from pyTooling.Tracing.Render.Plotly import PlotlyRenderer
+
+   layout = GanttLayout(trace, spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Skipped))
+   PlotlyRenderer(layout).Write(Path("report/Pipeline.html"))
+
+The page can be zoomed and panned. Hovering a bar or line shows the timespan's name, its absolute begin and end, and its
+duration, and a click on a legend entry hides or shows a category's bars. The page embeds plotly's JavaScript library -
+about 4 MiB - so it works offline, e.g. downloaded from a pipeline's artifacts; ``includePlotlyJS="cdn"`` loads the
+library from plotly's CDN instead.
+
+The time axis is a date axis showing the time since the trace began as ``hh:mm:ss``, so its ticks adapt when zooming.
+For a trace longer than a day, the ticks start again at ``00:00:00``.
