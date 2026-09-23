@@ -47,7 +47,7 @@ The :pycode:`pipeline` command: read a CI pipeline and write what it took.
 from argparse                                 import Namespace
 from os                                       import getenv
 from pathlib                                  import Path
-from typing                                   import ClassVar, Optional as Nullable, Self
+from typing                                   import ClassVar, Optional as Nullable
 
 from pyTooling.Common                         import StringEnum
 from pyTooling.Decorators                     import export
@@ -77,23 +77,7 @@ class GanttFormat(StringEnum):
 	MatplotlibSVG = "matplotlib-svg"  #: A vector image, drawn by matplotlib.
 	MatplotlibPDF = "matplotlib-pdf"  #: A PDF page, drawn by matplotlib.
 
-	DEFAULT = MatplotlibPNG           #: The format ``--gantt`` draws when neither its value nor the suffix names one.
-
-	@classmethod
-	def FromPath(cls, file: Path) -> Self:
-		"""
-		Return the format the file's suffix implies, so the format is rarely written out.
-
-		A format is the backend and the file format - ``matplotlib-svg`` writes the ``.svg`` half - so the suffix
-		names the format already, and :pycode:`--gantt=report/Pipeline.svg` draws an SVG.
-
-		:param file: The file ``--gantt`` named.
-		:returns:    The format matching the file's suffix, otherwise :attr:`DEFAULT`.
-		"""
-		try:
-			return cls.Parse(f"matplotlib-{file.suffix.lower().lstrip('.')}")
-		except ValueError:
-			return cls.DEFAULT
+	DEFAULT = MatplotlibPNG           #: The format ``--gantt`` draws when its value names none.
 
 
 @export
@@ -189,8 +173,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 		"""
 		Return the output options this command offers, as ``(option, value, formats)``.
 
-		What a value naming no format gets is the enumeration's business, not this command's: :class:`TraceFormat`
-		answers with its ``DEFAULT``, :class:`GanttFormat` with the one its suffix implies.
+		A value naming no format gets the enumeration's ``DEFAULT``.
 
 		:param args: The parsed command line.
 		:returns:    One entry per output option, whether or not it was given.

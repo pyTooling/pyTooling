@@ -197,33 +197,41 @@ class PipelineCommand(Testcase):
 			with self.assertRaises(SystemExit):
 				application.HandlePipeline(arguments)
 
+	def test_Gantt_NoFormat_NotAPNG(self) -> None:
+		"""A value naming no format gets 'matplotlib-png', so an SVG file has to state its format."""
+		application = Application()
+		errors = StringIO()
+		stream = application._stderr
+		arguments = Namespace(
+			githubRepository=None, githubPipelineID=None, traceFile=None, gantt="chart.svg", force=False
+		)
+
+		application._stderr = errors
+		try:
+			with patch.dict(environ, self.NO_WORKFLOW):
+				with self.assertRaises(SystemExit):
+					application.HandlePipeline(arguments)
+		finally:
+			application._stderr = stream
+
+		self.assertIn("Option '--gantt': format 'matplotlib-png' writes a '.png' file.", errors.getvalue())
+
 
 class GanttFormats(Testcase):
-	def test_FromPath(self) -> None:
-		"""The file's suffix names the format, so the format is rarely written out."""
-		for value, expected in (
-			("chart.png", GanttFormat.MatplotlibPNG),
-			("chart.svg", GanttFormat.MatplotlibSVG),
-			("report/chart.pdf", GanttFormat.MatplotlibPDF),
-		):
-			with self.subTest(value=value):
-				self.assertIs(expected, GanttFormat.FromPath(Path(value)))
+	def test_Default(self) -> None:
+		self.assertIs(GanttFormat.MatplotlibPNG, GanttFormat.DEFAULT)
 
-	def test_FromPath_UnknownSuffix(self) -> None:
-		self.assertIs(GanttFormat.Default, GanttFormat.FromPath(Path("chart.gif")))
-		self.assertIs(GanttFormat.Default, GanttFormat.FromPath(Path("chart")))
-
-	def test_FromPath_EveryFormat(self) -> None:
+	def test_EveryFormat(self) -> None:
 		"""A format is the backend and the file format, and the second half is the file's suffix."""
 		for fileFormat in GanttFormat:
 			with self.subTest(format=fileFormat):
 				backend, _, suffix = fileFormat.value.partition("-")
 				self.assertEqual("matplotlib", backend)
-				self.assertIs(fileFormat, GanttFormat.FromPath(Path(f"chart.{suffix}")))
+				self.assertIn(suffix, ("png", "svg", "pdf"))
 
-	def test_FromPath_IsWhatSplitFormatUses(self) -> None:
-		"""'--gantt=report/Pipeline.svg' draws an SVG, because the enumeration answers for the value naming none."""
-		self.assertEqual((GanttFormat.MatplotlibSVG, Path("report/Pipeline.svg")),
+	def test_NoFormat(self) -> None:
+		"""A value naming no format gets the default, whatever the file's suffix says."""
+		self.assertEqual((GanttFormat.MatplotlibPNG, Path("report/Pipeline.svg")),
 		                 splitFormat("report/Pipeline.svg", GanttFormat))
 
 
