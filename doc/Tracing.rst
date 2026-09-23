@@ -338,5 +338,26 @@ What no drawing library decides is decided once, on the base-class: the color of
 :meth:`~pyTooling.Tracing.Render.Renderer.Render` and ``_Write``.
 
 In an SVG file, every bar or line is a group with the identifier ``span-<SpanID>``, a waiting bar
-``span-<SpanID>-queued`` and the end marks of a line ``span-<SpanID>-ends``. Together with
-:attr:`~pyTooling.Tracing.Render.GanttRow.ParentSpanID`, a script can find all elements below a called workflow.
+``span-<SpanID>-queued``, the end marks of a line ``span-<SpanID>-ends`` and a row's label ``label-<SpanID>``.
+Together with :attr:`~pyTooling.Tracing.Render.GanttRow.ParentSpanID`, a script can find all elements below a called
+workflow.
+
+.. _TRACING/Render/Collapsible:
+
+Collapsible SVG
+===============
+
+With ``collapsible=True``, :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` adds a script to an SVG
+file: clicking the label, bar or line of a row with sub-rows hides the rows below it - a called workflow's jobs, or a
+job's steps - and moves the following rows up. A second click shows them again, and a marker in front of the label
+shows the state.
+
+.. code-block:: python
+
+   layout = GanttLayout(trace, spanFilter=ciSpanFilter(excludeSteps=StepExclusion.Skipped))
+   MatplotlibRenderer(layout, collapsible=True).Write(Path("report/Pipeline.svg"))
+
+The rows of the kinds in ``collapsedKinds`` start collapsed - jobs by default, so a chart with steps opens as compact
+as one without them. The script runs where an SVG file is a document: opened in a browser, or embedded by
+``<object>`` or inline. An SVG file shown as an image - by ``<img>``, in Markdown or in a pipeline's job summary - is
+static and shows every row expanded.
