@@ -379,7 +379,7 @@ Common Classes
         command line, a configuration file or a REST reply needs to say what a missing value means, what a value of the
         wrong type is, and what a value no member carries is. |br|
         :class:`~pyTooling.Common.StringEnum` answers all three, and an enumeration declares the member a missing value
-        stands for as an alias named ``Default``.
+        stands for as an alias named ``DEFAULT``.
       * :ref:`Unified license names <LICENSING>`: Setuptools, PyPI, and others have a varying understanding of license names. |br|
         The :mod:`pyTooling.Licensing` module provides :ref:`unified license names <LICENSING>` as well as license name
         mappings or translations.

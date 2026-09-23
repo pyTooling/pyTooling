@@ -240,7 +240,7 @@ path** keeps that to one option instead of two that can disagree:
      JSON = "json"
      YAML = "yaml"
 
-     Default = JSON
+     DEFAULT = JSON
 
    @CommandHandler("convert", help="Convert the report.")
    @LongValuedFlag("--output", dest="output", metaName="[format:]file", help="Write the report.")
@@ -259,7 +259,7 @@ What a value naming no format gets
 ==================================
 
 That is the enumeration's business, not the handler's. :meth:`~pyTooling.Attributes.ArgParse.FormatEnum.FromPath`
-answers it, and by default answers with the enumeration's own ``Default`` - see :ref:`COMMON/StringEnum/Default`.
+answers it, and by default answers with the enumeration's own ``DEFAULT`` - see :ref:`COMMON/StringEnum/Default`.
 
 An option whose **file says what it is** overrides it, so the format is rarely written out:
 
@@ -269,19 +269,19 @@ An option whose **file says what it is** overrides it, so the format is rarely w
      PNG = "png"
      SVG = "svg"
 
-     Default = PNG
+     DEFAULT = PNG
 
      @classmethod
      def FromPath(cls, file: Path) -> Self:
        try:
          return cls.Parse(file.suffix.lstrip("."))
        except ValueError:
-         return cls.Default
+         return cls.DEFAULT
 
    splitFormat("out/chart.svg", ImageFormat)    # (ImageFormat.SVG, Path("out/chart.svg"))
    splitFormat("png:chart.svg", ImageFormat)    # (ImageFormat.PNG, Path("chart.svg")) - stated wins
 
-An enumeration declaring no ``Default`` answers ``None``, which is how an option insists on being told.
+An enumeration declaring no ``DEFAULT`` answers ``None``, which is how an option insists on being told.
 
 
 .. _ATTR/ArgParse/Commands:

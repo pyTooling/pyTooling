@@ -119,7 +119,7 @@ like a format but isn't one is an error naming the formats that exist, rather th
 None of that is the command's own: :func:`~pyTooling.Attributes.ArgParse.splitFormat` does the splitting for any
 program declaring an option of this shape, and each format enumeration answers for itself what a value naming no
 format gets - see :ref:`ATTR/ArgParse/Formats`. :class:`~pyTooling.CLI.Pipeline.TraceFormat` answers with its
-``Default``.
+``DEFAULT``.
 
 Both are checked **before** the pipeline is read, so a misspelled format or a file that exists is reported at once
 instead of after a network round-trip.

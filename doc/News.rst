@@ -204,7 +204,7 @@ Version 10.x (2026)
        down a path stay part of the path.
      * :class:`~pyTooling.Attributes.ArgParse.FormatEnum` is the enumeration it splits into: a
        :class:`~pyTooling.Common.StringEnum` plus :meth:`~pyTooling.Attributes.ArgParse.FormatEnum.FromPath`,
-       which answers what a value naming no format gets. It answers with the enumeration's ``Default``, and an
+       which answers what a value naming no format gets. It answers with the enumeration's ``DEFAULT``, and an
        option whose file says what it is overrides it to read the suffix.
 
    * :mod:`pyTooling.CLI`
@@ -300,7 +300,7 @@ Version 10.x (2026)
      * :class:`~pyTooling.Common.StringEnum` is a :class:`~enum.StrEnum` that converts a string to the member of
        that value: :meth:`~pyTooling.Common.StringEnum.Parse` rejects a non-string with a :exc:`TypeError` and an
        unknown value with a :exc:`ValueError` listing the values it accepts, and answers a missing value with the
-       member the enumeration declares as ``Default`` - an alias, so it isn't iterated - or with ``None`` where
+       member the enumeration declares as ``DEFAULT`` - an alias, so it isn't iterated - or with ``None`` where
        there is none. :class:`~pyTooling.REST.MediaType`, :class:`~pyTooling.Tracing.CI.SpanKind` and
        :class:`~pyTooling.Tracing.CI.Result` derive from it.
        :class:`~pyTooling.CI.GitHub.Status`, :class:`~pyTooling.CI.GitHub.Conclusion` and

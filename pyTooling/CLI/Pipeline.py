@@ -64,7 +64,7 @@ class TraceFormat(FormatEnum):
 
 	OTLPJSON = "otlp-json"  #: OpenTelemetry's OTLP/JSON encoding of a trace.
 
-	Default = OTLPJSON      #: The format ``--trace-file`` writes when its value names none.
+	DEFAULT = OTLPJSON      #: The format ``--trace-file`` writes when its value names none.
 
 @export
 class PipelineHandlers(metaclass=ExtendedType, mixin=True):
@@ -94,7 +94,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 	)
 	@LongValuedFlag(
 		"--trace-file", dest="traceFile", metaName="[format:]file", optional=True,
-		help=f"Write the trace. Format: {', '.join(TraceFormat)}. Default: {TraceFormat.Default}."
+		help=f"Write the trace. Format: {', '.join(TraceFormat)}. Default: {TraceFormat.DEFAULT}."
 	)
 	@LongFlag("--force", dest="force", help="Overwrite files that exist.")
 	def HandlePipeline(self, args: Namespace) -> None:
@@ -151,7 +151,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 		Return the output options this command offers, as ``(option, value, formats)``.
 
 		What a value naming no format gets is the enumeration's business, not this command's: :class:`TraceFormat`
-		answers with its ``Default``.
+		answers with its ``DEFAULT``.
 
 		:param args: The parsed command line.
 		:returns:    One entry per output option, whether or not it was given.
