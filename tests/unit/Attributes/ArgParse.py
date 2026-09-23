@@ -39,8 +39,10 @@ from pathlib       import Path
 from typing        import Callable, Any, Tuple, NoReturn
 from unittest.mock import patch
 
+from pyTooling.Common                        import StringEnum
 from pyTooling.MetaClasses                   import UnfulfilledExpectationError
 from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
+from pyTooling.Attributes.ArgParse            import splitFormat
 from pyTooling.Attributes.ArgParse.Argument   import StringArgument, StringListArgument, PositionalArgument
 from pyTooling.Attributes.ArgParse.Argument   import PathArgument, PathListArgument, ListArgument
 from pyTooling.Attributes.ArgParse.Argument   import IntegerArgument, IntegerListArgument
@@ -1274,3 +1276,77 @@ class PrintHelpWithoutATerminal(Testcase):
 			pass
 
 		self.assertFalse(hasattr(Application._PrintHelp, "__raises_unfulfilled_expectation_error__"))
+
+
+class ReportFormat(StringEnum):
+	"""An option with two formats and a default."""
+
+	JSON = "json"
+	YAML = "yaml"
+
+	DEFAULT = JSON
+
+
+class UndecidedFormat(StringEnum):
+	"""An option that insists on being told, because it declares no default."""
+
+	Binary = "binary"
+
+
+class SplitFormat(Testcase):
+	def test_Format(self) -> None:
+		self.assertEqual((ReportFormat.YAML, Path("report.txt")), splitFormat("yaml:report.txt", ReportFormat))
+
+	def test_NoFormat(self) -> None:
+		"""A value naming none gets the enumeration's default."""
+		self.assertEqual((ReportFormat.JSON, Path("reports/report.txt")),
+		                 splitFormat("reports/report.txt", ReportFormat))
+
+	def test_NoFormat_SuffixIsIgnored(self) -> None:
+		"""The suffix doesn't name the format: a '.yaml' file without a format gets the default."""
+		self.assertEqual((ReportFormat.JSON, Path("report.yaml")), splitFormat("report.yaml", ReportFormat))
+
+	def test_NoFormat_NoDefault(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = splitFormat("dump.bin", UndecidedFormat)
+
+		self.assertEqual("'dump.bin' names no format, and UndecidedFormat has no default.", str(context.exception))
+		self.assertIn("Write '<format>:dump.bin' with one of: binary.", context.exception.__notes__)
+
+	def test_NoDefault_FormatNamed(self) -> None:
+		self.assertEqual((UndecidedFormat.Binary, Path("dump.bin")), splitFormat("binary:dump.bin", UndecidedFormat))
+
+	def test_WindowsDrive(self) -> None:
+		"""A format is more than one character long, so a drive letter stays part of the path."""
+		value = r"C:\report\out.json"
+
+		fileFormat, file = splitFormat(value, ReportFormat)
+
+		self.assertIs(ReportFormat.DEFAULT, fileFormat)
+		self.assertEqual(Path(value), file, "The whole value is the path, so the drive is still on it.")
+
+	def test_ColonBelowADirectory(self) -> None:
+		fileFormat, file = splitFormat("reports/run:2/out.json", ReportFormat)
+
+		self.assertIs(ReportFormat.DEFAULT, fileFormat)
+		self.assertEqual(Path("reports/run:2/out.json"), file)
+
+	def test_UnknownFormat(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = splitFormat("xml:report.xml", ReportFormat)
+
+		self.assertEqual("'xml' is not a valid ReportFormat.", str(context.exception))
+		self.assertIn("Allowed values: json, yaml.", context.exception.__notes__)
+
+	def test_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = splitFormat(None, ReportFormat)
+
+		self.assertEqual("Parameter 'value' is None.", str(context.exception))
+
+	def test_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = splitFormat(5, ReportFormat)
+
+		self.assertEqual("Parameter 'value' is not of type 'str'.", str(context.exception))
+		self.assertIn("Got type 'int'.", context.exception.__notes__)

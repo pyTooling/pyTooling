@@ -218,6 +218,57 @@ the typed variants convert each element:
 The handler always receives a :class:`list`, including when the command line named a single value.
 
 
+.. _ATTR/ArgParse/Formats:
+
+Values naming a format and a file
+*********************************
+
+An option that writes a file often accepts more than one format for it. Naming the format **in front of the
+path** keeps that to one option instead of two that can disagree:
+
+.. code-block:: bash
+
+   program convert --output=json:report.json     # instead of --output=report.json --output-format=json
+
+:func:`~pyTooling.Attributes.ArgParse.splitFormat` splits such a value into the format and the file. The formats
+are a :class:`~pyTooling.Common.StringEnum`, so a member *is* the string the command line spells.
+
+.. code-block:: Python
+
+   class ReportFormat(StringEnum):
+     JSON = "json"
+     YAML = "yaml"
+
+     DEFAULT = JSON
+
+   @CommandHandler("convert", help="Convert the report.")
+   @LongValuedFlag("--output", dest="output", metaName="[format:]file", help="Write the report.")
+   def HandleConvert(self, args: Namespace) -> None:
+     reportFormat, file = splitFormat(args.output, ReportFormat)
+
+**A colon alone doesn't make a format.** A format is more than one character long and contains no path
+separator, so a Windows drive (:file:`C:\\report\\out.json`) and a colon deeper down a path are paths. A prefix
+that looks like a format but isn't one raises a :exc:`ValueError` naming the formats that exist, rather than
+writing a file with a strange name.
+
+
+.. _ATTR/ArgParse/Formats/Default:
+
+What a value naming no format gets
+==================================
+
+The enumeration's ``DEFAULT`` - see :ref:`COMMON/StringEnum/Default`. An enumeration declaring none insists on
+being told: a value without a format raises a :exc:`ValueError`, whose note shows how to write it.
+
+.. code-block:: Python
+
+   splitFormat("report.txt", ReportFormat)         # (ReportFormat.JSON, Path("report.txt"))
+   splitFormat("yaml:report.txt", ReportFormat)    # (ReportFormat.YAML, Path("report.txt"))
+
+The format is never read off the file's suffix. Where a format and the file's suffix have to agree, the handler
+checks them.
+
+
 .. _ATTR/ArgParse/Commands:
 
 Commands
