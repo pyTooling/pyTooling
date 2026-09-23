@@ -215,9 +215,8 @@ Version 10.x (2026)
        :pycode:`--trace-file=[<format>:]<file>`, where the format defaults to ``otlp-json``. :pycode:`--force`
        overwrites a file that exists.
      * :pycode:`--gantt=[<format>:]<file>` draws the run as a **Gantt chart** - ``matplotlib-png``,
-       ``matplotlib-svg`` or ``matplotlib-pdf``. The file's suffix usually names the format already, so the format
-       is rarely written out - :class:`~pyTooling.CLI.Pipeline.GanttFormat` reads it through
-       :meth:`~pyTooling.Attributes.ArgParse.FormatEnum.FromPath`.
+       ``matplotlib-svg`` or ``matplotlib-pdf``, defaulting to ``matplotlib-png``. The file's suffix has to agree
+       with the format.
 
    * :mod:`pyTooling.TerminalUI`
 
