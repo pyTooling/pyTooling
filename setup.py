@@ -56,9 +56,6 @@ additionalRequirements = {
 	"testing":   ["pytest ~= 9.1"],
 	"yaml":      ["ruamel.yaml ~= 0.19"],
 }
-
-# What the 'pyTooling' program needs to run: it is a TerminalApplication, and '--gantt' draws with matplotlib.
-# Derived rather than repeated, so a version bump in the two extras above reaches this one.
 additionalRequirements["cli"] = additionalRequirements["terminal"] + additionalRequirements["diagram"]
 
 setup(
