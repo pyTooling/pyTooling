@@ -31,8 +31,10 @@
 """
 The commands of the :program:`pyTooling` program, run as the installed console script.
 """
+from json       import loads as json_loads
 from os         import environ
 from pathlib    import Path
+from re         import search
 from subprocess import CompletedProcess
 from tempfile   import TemporaryDirectory
 from typing     import ClassVar
@@ -212,3 +214,38 @@ class PipelineCommand(ProgramMixin, ApplicationTestcase):
 
 		self.assertExitCode(result, 2)
 		self.assertIn("Workflow run 'latest' isn't a number.", self.Output(result))
+
+
+class PipelineOutputs(ProgramMixin, ApplicationTestcase):
+	"""
+	What ``pipeline`` writes, read from a finished public workflow run.
+
+	A finished run doesn't change, so it can be read on every system; reading one takes two requests to GitHub's
+	REST API, which needs no token for a public repository.
+	"""
+
+	REPOSITORY: ClassVar[str] = "pyTooling/pyTooling"  #: The repository the run belongs to.
+	RUN_ID:     ClassVar[int] = 35479251694            #: A finished run of pyTooling's pipeline.
+
+	def test_TraceFileAndGantt(self) -> None:
+		"""The run is read once, and both outputs are written from it."""
+		with TemporaryDirectory() as directory:
+			trace = Path(directory) / "report" / "Pipeline.otlp.json"
+			chart = Path(directory) / "report" / "Pipeline.png"
+			result = self.RunEntrypoint(
+				"pipeline", f"--github-repository={self.REPOSITORY}", f"--github-pipeline-id={self.RUN_ID}",
+				f"--trace-file={trace}", f"--gantt={chart}",
+				timeout=120.0
+			)
+
+			self.assertExitCode(result)
+			document = json_loads(trace.read_text(encoding="utf-8"))
+			png = chart.read_bytes()
+
+		output = self.Output(result)
+		spans = document["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		self.assertIn("Pipeline:  Pipeline", output)
+		self.assertIn(f"Trace:     {trace}", output)
+		self.assertIsNotNone(search(r"Gantt: +.+Pipeline\.png \(\d+ rows\)", output), output)
+		self.assertGreater(len(spans), 1, "The trace holds the run and the jobs below it.")
+		self.assertEqual(b"\x89PNG", png[:4])
