@@ -193,8 +193,6 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	sphinx.add_directive("dependency-table", DependencyTable)
 	sphinx.add_directive("xsd-graph", XSDGraph)
 
-	# 'xsd-graph' renders through 'sphinx.ext.graphviz', which a project would otherwise have to remember to list
-	# beside this extension - and the directive's node is meaningless without it.
 	sphinx.setup_extension("sphinx.ext.graphviz")
 
 	for configName, (default, rebuild, types) in CONFIG_VALUES.items():
