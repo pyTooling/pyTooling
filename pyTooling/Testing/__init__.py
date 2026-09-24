@@ -68,9 +68,9 @@ class ApplicationTestingError(TestingError):
 	"""
 	The exception is raised when a testcase exercising an application through its command line is not set up.
 
-	It reports what the test class did not declare - a console script or a runnable module - or that the console
-	script it named is not installed, because every testcase in that class would otherwise fail with a less obvious
-	error.
+	It reports what the test class did not declare - a console script, or the runnable module a testcase asked to
+	run - or that the console script it named is not installed, because every testcase in that class would otherwise
+	fail with a less obvious error.
 	"""
 
 
@@ -279,8 +279,8 @@ class ApplicationTestcase(Testcase):
 	The base class for testcases exercising an application through its command line.
 
 	It resolves the installed console script once per test class, offers two ways to run the program - through the
-	installed entry point and through ``python -m <module>`` - and an assertion that reports the exit code together
-	with what the program printed.
+	installed entry point and, if the program has a ``__main__`` module, through ``python -m <module>`` - and an
+	assertion that reports the exit code together with what the program printed.
 
 	Derive from it and name what is being tested:
 
@@ -298,7 +298,7 @@ class ApplicationTestcase(Testcase):
 	"""
 
 	_consoleScript:  ClassVar[Nullable[str]] = None   #: Name of the installed console script, resolved on ``PATH``.
-	_runnableModule: ClassVar[Nullable[str]] = None   #: Dotted name of the module to run with ``python -m``.
+	_runnableModule: ClassVar[Nullable[str]] = None   #: Optional, dotted name of the module to run with ``python -m``.
 	_executable:     ClassVar[Nullable[str]] = None   #: The resolved console script, set by :meth:`setUpClass`.
 
 	@classmethod
@@ -306,17 +306,14 @@ class ApplicationTestcase(Testcase):
 		"""
 		Check the test class is set up, and resolve the console script on ``PATH``, once per class.
 
-		:raises ApplicationTestingError: If the test class named neither a console script nor a runnable module, or if the
-		                                 console script it named is not installed. Every testcase in the class would
-		                                 otherwise fail, each with a less obvious error.
+		:raises ApplicationTestingError: If the test class named no console script, or if the console script it named is
+		                                 not installed. Every testcase in the class would otherwise fail, each with a
+		                                 less obvious error.
 		"""
 		super().setUpClass()
 
 		if cls._consoleScript is None:
 			raise ApplicationTestingError(f"Testcase '{cls.__name__}' has no console script. Set '_consoleScript'.")
-
-		if cls._runnableModule is None:
-			raise ApplicationTestingError(f"Testcase '{cls.__name__}' has no runnable module. Set '_runnableModule'.")
 
 		if (resolved := which(cls._consoleScript)) is None:
 			ex = ApplicationTestingError(f"Console script '{cls._consoleScript}' was not found in PATH.")
@@ -369,13 +366,20 @@ class ApplicationTestcase(Testcase):
 		Use it to tell a broken entry point apart from a broken program: if this passes while
 		:meth:`RunEntrypoint` fails, the packaging is at fault, not the code.
 
-		:param arguments:        Command line arguments to pass to the program.
-		:param timeout:          Optional, seconds to wait before the program is killed.
-		:param stdInput:         Optional, text to send to the program's standard input.
-		:param environment:      Optional, the environment to run in, or ``None`` to inherit this process's environment.
-		:param workingDirectory: Optional, directory to run in, or ``None`` for the current one.
-		:returns:                The completed process, with ``stdout`` and ``stderr`` captured as text.
+		:param arguments:                Command line arguments to pass to the program.
+		:param timeout:                  Optional, seconds to wait before the program is killed.
+		:param stdInput:                 Optional, text to send to the program's standard input.
+		:param environment:              Optional, the environment to run in, or ``None`` to inherit this process's
+		                                 environment.
+		:param workingDirectory:         Optional, directory to run in, or ``None`` for the current one.
+		:returns:                        The completed process, with ``stdout`` and ``stderr`` captured as text.
+		:raises ApplicationTestingError: If the test class named no runnable module.
 		"""
+		if self._runnableModule is None:
+			ex = ApplicationTestingError(f"Testcase '{self.__class__.__name__}' has no runnable module.")
+			ex.add_note("Set '_runnableModule' to run the program with 'python -m'.")
+			raise ex
+
 		return subprocess_run(
 			[PythonExecutable, "-m", self._runnableModule, *arguments],
 			capture_output=True,

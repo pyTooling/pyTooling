@@ -28,9 +28,13 @@ PIP might download further packages as listed in :ref:`package dependencies <DEP
 Installing a Wheel Package from PyPI using PIP
 ==============================================
 
-Users can install the |PackageName| package as a minimal installation or the package with extensions (``packaging``,
-``terminal``, ``yaml``) installing further dependencies. In case the provided extensions are not needed, it keeps the
-list of dependencies low - especially the minimal installation is still dependency free.
+Users can install the |PackageName| package as a minimal installation or the package with extensions (``cli``,
+``packaging``, ``terminal``, ``yaml``) installing further dependencies. In case the provided extensions are not
+needed, it keeps the list of dependencies low - especially the minimal installation is still dependency free.
+
+The :program:`pyTooling` program is the one part that is **not** usable from the minimal installation. It needs
+the ``cli`` extension, which is ``terminal`` and ``diagram`` together: :pycode:`pip install pyTooling[cli]`. See
+:ref:`CLI`.
 
 See :ref:`DEP/package` for more details.
 
