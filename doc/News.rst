@@ -169,6 +169,9 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Testing`
 
+     * :class:`~pyTooling.Testing.ApplicationTestcase` no longer requires ``_runnableModule``: a program without a
+       ``__main__`` module is tested through its entry point, and only
+       :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` asks for the module.
      * :deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase` mark what a test runner
        collects, so a testcase's name stops carrying two unrelated jobs at once.
      * Both markers take a title, and both fall back to the doc-string: its summary becomes the summary, its body
@@ -217,8 +220,7 @@ Version 10.x (2026)
      * :pycode:`--gantt=[<format>:]<file>` draws the run as a **Gantt chart** - ``matplotlib-png``,
        ``matplotlib-svg`` or ``matplotlib-pdf``, defaulting to ``matplotlib-png``. The file's suffix has to agree
        with the format.
-     * The program is reachable as a module too - :pycode:`python -m pyTooling.CLI` - and the new application
-       tests in :file:`tests/app` run it both ways, so a broken entry point can be told from a broken program.
+     * The new application tests in :file:`tests/app` run the installed program.
      * **The program needs the new** ``cli`` **extra**: :pycode:`pip install pyTooling[cli]`. It is the
        ``terminal`` and ``diagram`` extras together - *colorama*, without which a terminal application writes
        nothing, and *matplotlib*, which :pycode:`--gantt` draws with. The minimal installation registers the
