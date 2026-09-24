@@ -69,8 +69,7 @@ class ProgramMixin:
 	:exc:`~pyTooling.Exceptions.BaseClassWithoutSlotsError`.
 	"""
 
-	_consoleScript:  ClassVar[str] = "pyTooling"
-	_runnableModule: ClassVar[str] = "pyTooling.CLI"
+	_consoleScript: ClassVar[str] = "pyTooling"
 
 	def Output(self, result: CompletedProcess) -> str:
 		"""
@@ -132,15 +131,6 @@ class CommonCommands(ProgramMixin, ApplicationTestcase):
 		output = self.Output(result)
 		self.assertIn("invalid choice", output)
 		self.assertIn("nonsense", output)
-
-	def test_Module(self) -> None:
-		"""Both paths reach the same program, so a difference is in the entry point rather than in the code."""
-		entrypoint = self.RunEntrypoint("version")
-		module =     self.RunModule("version")
-
-		self.assertExitCode(entrypoint)
-		self.assertExitCode(module)
-		self.assertEqual(self.Output(entrypoint), self.Output(module))
 
 
 class PipelineCommand(ProgramMixin, ApplicationTestcase):

@@ -14,8 +14,7 @@ things without a script of its own.
    pyTooling version           # which pyTooling is installed
 
 The program is the ``console_scripts`` entry point :pycode:`pyTooling.CLI:main`, which :file:`setup.py` registers,
-so it is on the path after :pycode:`pip install pyTooling`. The same program is reachable as a module -
-:pycode:`python -m pyTooling.CLI` - which picks the interpreter it runs on and needs no script on the path.
+so it is on the path after :pycode:`pip install pyTooling`.
 
 .. attention::
 

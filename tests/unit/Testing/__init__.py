@@ -118,14 +118,31 @@ class ATestcaseThatIsNotSetUp(Testcase):
 
 		self.assertIn("_consoleScript", str(context.exception))
 
-	def test_AMissingRunnableModuleIsReported(self) -> None:
-		class Missing(ApplicationTestcase):
+	def test_ARunnableModuleIsOptional(self) -> None:
+		"""A program without a '__main__' module is tested through its entry point alone."""
+		class EntrypointOnly(ApplicationTestcase):
 			_consoleScript = PYTHON_CONSOLE_SCRIPT
 
-		with self.assertRaises(TestingError) as context:
-			Missing.setUpClass()
+			def test_Nothing(self) -> None:
+				pass
 
-		self.assertIn("_runnableModule", str(context.exception))
+		EntrypointOnly.setUpClass()
+
+		self.assertIsNotNone(EntrypointOnly._executable)
+
+	def test_RunningAMissingRunnableModuleIsReported(self) -> None:
+		class EntrypointOnly(ApplicationTestcase):
+			_consoleScript = PYTHON_CONSOLE_SCRIPT
+
+			def test_Nothing(self) -> None:
+				pass
+
+		EntrypointOnly.setUpClass()
+		with self.assertRaises(TestingError) as context:
+			EntrypointOnly("test_Nothing").RunModule()
+
+		self.assertEqual("Testcase 'EntrypointOnly' has no runnable module.", str(context.exception))
+		self.assertIn("Set '_runnableModule' to run the program with 'python -m'.", context.exception.__notes__)
 
 	def test_AnUninstalledConsoleScriptIsReported(self) -> None:
 		class Missing(ApplicationTestcase):
