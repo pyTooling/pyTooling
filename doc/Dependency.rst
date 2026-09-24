@@ -103,6 +103,8 @@ When installed as ``pyTooling[cli]``, which is what the :program:`pyTooling` pro
 | matplotlib | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
 |            |         |                              | packaging, pillow, pyparsing, python-dateutil            |
 +------------+---------+------------------------------+----------------------------------------------------------+
+| plotly     | ≥6.0    | MIT                          | narwhals, packaging                                      |
++------------+---------+------------------------------+----------------------------------------------------------+
 
 
 .. _DEP/testing:
