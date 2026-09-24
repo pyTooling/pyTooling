@@ -14,9 +14,18 @@ things without a script of its own.
    pyTooling version           # which pyTooling is installed
 
 The program is the ``console_scripts`` entry point :pycode:`pyTooling.CLI:main`, which :file:`setup.py` registers,
-so it is on the path after :pycode:`pip install pyTooling`. Running the module directly works as well:
-:pycode:`python -m pyTooling.CLI` is not a thing, but :pycode:`python -c "from pyTooling.CLI import main; main()"`
-is, and so is the installed program.
+so it is on the path after :pycode:`pip install pyTooling`.
+
+.. attention::
+
+   **The program needs the** ``cli`` **extra**: :pycode:`pip install pyTooling[cli]`. It installs what the
+   program uses at runtime - *colorama*, because a :class:`~pyTooling.TerminalUI.TerminalApplication` needs it to
+   write anything at all, and *matplotlib*, because :pycode:`--gantt` draws with it. The minimal installation
+   leaves both out deliberately, and registers the program all the same: started without them, it names the
+   missing package and every command line installing it rather than failing on an import - but it doesn't run.
+
+   ``cli`` is the ``terminal`` and ``diagram`` extras together, so :pycode:`pip install pyTooling[terminal]` is
+   enough for a program that never draws.
 
 
 .. _CLI/Structure:

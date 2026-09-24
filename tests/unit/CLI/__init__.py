@@ -34,10 +34,14 @@ Unit tests for :mod:`pyTooling.CLI`: the program's commands and the parser they 
 from io                 import StringIO
 from argparse           import Namespace
 from contextlib         import redirect_stdout
+from datetime           import datetime, timedelta, timezone
+from json               import loads as json_loads
 from os                 import environ
 from pathlib            import Path
 from sys                import argv as sys_argv
+from tempfile           import TemporaryDirectory
 from typing             import ClassVar, Iterable
+from unittest           import skipUnless
 from unittest.mock      import patch
 
 from pyTooling.Attributes.ArgParse import splitFormat
@@ -45,6 +49,15 @@ from pyTooling.CLI                 import Application, main
 from pyTooling.CLI.Pipeline        import GanttFormat, TraceFormat
 from pyTooling.Exceptions          import MissingDependencyError
 from pyTooling.Testing             import Testcase
+from pyTooling.Tracing             import Span, Trace
+from pyTooling.Tracing.CI          import CI, OTLP
+from pyTooling.Tracing.CI.GitHub   import GitHub
+
+try:
+	import matplotlib
+	HAS_MATPLOTLIB = True
+except ImportError:  # pragma: no cover
+	HAS_MATPLOTLIB = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -254,3 +267,102 @@ class MissingDependency(Testcase):
 		self.assertEqual(MissingDependencyError.EXIT_CODE, context.exception.code)
 		self.assertIn("matplotlib", errors.getvalue())
 		self.assertIn("pip install pyTooling[diagram]", errors.getvalue())
+
+
+
+def _pipelineTrace() -> Trace:
+	"""
+	Build the trace a reader would return for a small finished run: one job with one step.
+
+	:returns: The trace.
+	"""
+	begin = datetime(2026, 9, 15, 6, 35, 0, tzinfo=timezone.utc)
+	trace = Trace("Pipeline", begin, begin + timedelta(seconds=60))
+	trace[CI.Span.Kind] = "pipeline"
+
+	job = Span("Build", begin + timedelta(seconds=5), begin + timedelta(seconds=50), parent=trace)
+	job[CI.Span.Kind] = "job"
+	job[OTLP.CICD.Pipeline.Task.Name] = "Build"
+	job[GitHub.Runner.Labels] = ["ubuntu-26.04"]
+	job[OTLP.CICD.Pipeline.Task.Run.Result] = "success"
+
+	step = Span("Compile", begin + timedelta(seconds=6), begin + timedelta(seconds=40), parent=job)
+	step[CI.Span.Kind] = "step"
+	step[OTLP.CICD.Pipeline.Task.Run.Result] = "success"
+
+	return trace
+
+
+class PipelineOutputs(Testcase):
+	"""
+	What ``pipeline`` writes once it has read a run, called in-process.
+
+	:meth:`~pyTooling.CLI.Pipeline.PipelineHandlers._ReadPipeline` is replaced by a fixture trace, so the testcases
+	run offline and always see the same run.
+	"""
+
+	def _Run(self, *outputs: str) -> str:
+		"""
+		Run ``pipeline`` with the given output options against the fixture trace.
+
+		The program is a singleton, and testcases reporting an error leave it counted, which would make this run exit
+		before writing anything; so the count starts at zero.
+
+		:param outputs: The output options, e.g. ``--trace-file=...``.
+		:returns:       Everything the program printed.
+		"""
+		Application()._errorCount = 0
+		with patch.object(Application, "_ReadPipeline", return_value=_pipelineTrace()):
+			return _run(["pipeline", "--github-repository=owner/name", "--github-pipeline-id=1", *outputs])
+
+	def test_TraceFile(self) -> None:
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "report" / "Pipeline.otlp.json"
+			output = self._Run(f"--trace-file={file}")
+			document = json_loads(file.read_text(encoding="utf-8"))
+
+		spans = document["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		self.assertIn(f"Trace:     {file}", output)
+		self.assertEqual(["Pipeline", "Build", "Compile"], [span["name"] for span in spans])
+
+	def test_TraceFile_Force(self) -> None:
+		"""With '--force', a file that exists is overwritten."""
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "Pipeline.otlp.json"
+			file.write_text("old", encoding="utf-8")
+			output = self._Run(f"--trace-file={file}", "--force")
+			content = file.read_text(encoding="utf-8")
+
+		self.assertIn(f"Trace:     {file}", output)
+		self.assertIn("resourceSpans", content)
+
+	@skipUnless(HAS_MATPLOTLIB, "Needs matplotlib, installed by the extra 'pyTooling[diagram]'.")
+	def test_Gantt(self) -> None:
+		"""Every format writes the file type it names, one row per timespan the CI filter keeps."""
+		for prefix, suffix, magic in (
+			("", "png", b"\x89PNG"),
+			("matplotlib-svg:", "svg", b"<?xml"),
+			("matplotlib-pdf:", "pdf", b"%PDF"),
+		):
+			with self.subTest(format=suffix):
+				with TemporaryDirectory() as directory:
+					file = Path(directory) / f"Pipeline.{suffix}"
+					output = self._Run(f"--gantt={prefix}{file}")
+					content = file.read_bytes()
+
+				self.assertEqual(magic, content[:len(magic)])
+				self.assertIn(f"Gantt:     {file} (2 rows)", output)
+
+	@skipUnless(HAS_MATPLOTLIB, "Needs matplotlib, installed by the extra 'pyTooling[diagram]'.")
+	def test_BothOutputs(self) -> None:
+		"""The trace is read once, and every output is written from it."""
+		with TemporaryDirectory() as directory:
+			trace = Path(directory) / "Pipeline.otlp.json"
+			chart = Path(directory) / "Pipeline.png"
+			output = self._Run(f"--trace-file={trace}", f"--gantt={chart}")
+
+			self.assertTrue(trace.exists())
+			self.assertTrue(chart.exists())
+
+		self.assertIn("Pipeline:  Pipeline", output)
+		self.assertIn("Wall time: 60 s", output)
