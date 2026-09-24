@@ -57,9 +57,11 @@ schema in another language is a second :func:`renderXMLSchema` and a second thre
    :mod:`pyTooling.Documentation.Sphinx`
       |rarr| The extension this belongs to, and what else it brings.
 """
+from __future__                                import annotations
+
 from pathlib                                   import Path
 from types                                     import ModuleType
-from typing                                    import Any, Generator, Iterable
+from typing                                    import TYPE_CHECKING, Any, Generator, Iterable
 
 from docutils                                  import nodes
 from sphinx.ext.graphviz                       import figure_wrapper, graphviz
@@ -69,14 +71,11 @@ from pyTooling.Exceptions                      import MissingDependencyError
 from pyTooling.MetaClasses                     import ExtendedType
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, strip
 
+if TYPE_CHECKING:  # pragma: no cover
+	from xmlschema.validators                  import XsdElement, XsdGroup, XsdType
 
-__all__ = ["XSD_NAMESPACE", "DOT_METACHARACTERS", "GRAPH_ATTRIBUTES"]
 
-#: Namespace prefixing every builtin type's name.
-XSD_NAMESPACE = "{http://www.w3.org/2001/XMLSchema}"
-
-#: Characters a Graphviz record label gives a meaning to, and that a name therefore has to escape.
-DOT_METACHARACTERS = ("\\", "{", "}", "|", "<", ">", '"')
+__all__ = ["GRAPH_ATTRIBUTES"]
 
 #: Attributes every schema graph is drawn with, so two diagrams in one document look alike.
 GRAPH_ATTRIBUTES = (
@@ -95,7 +94,7 @@ def escapeLabel(text: str) -> str:
 	:param text: The text to escape.
 	:returns:    The text, safe to put into a record label.
 	"""
-	for character in DOT_METACHARACTERS:
+	for character in ("\\", "{", "}", "|", "<", ">", '"'):
 		text = text.replace(character, f"\\{character}")
 
 	return text
@@ -111,8 +110,10 @@ def compartment(rows: Iterable[str]) -> str:
 	             which makes the records of a graph differently shaped.
 	"""
 	content = "".join(f"{escapeLabel(row)}\\l" for row in rows)
+	if content == "":
+		return " "
 
-	return content if content else " "
+	return content
 
 
 @export
@@ -228,7 +229,7 @@ def _xmlschema() -> ModuleType:
 
 
 @export
-def typeName(xsdType: Any) -> str:
+def typeName(xsdType: XsdType) -> str:
 	"""
 	Return a readable name for a type.
 
@@ -239,11 +240,14 @@ def typeName(xsdType: Any) -> str:
 	if name is None:
 		return "(anonymous)"
 
-	return f"xsd:{name[len(XSD_NAMESPACE):]}" if name.startswith(XSD_NAMESPACE) else name
+	if (localName := name.removeprefix("{http://www.w3.org/2001/XMLSchema}")) != name:
+		return f"xsd:{localName}"
+
+	return name
 
 
 @export
-def childElements(group: Any) -> Generator[Any, None, None]:
+def childElements(group: XsdGroup) -> Generator[XsdElement, None, None]:
 	"""
 	Yield every element of a content model, flattening the sequences and choices in between.
 
@@ -260,7 +264,7 @@ def childElements(group: Any) -> Generator[Any, None, None]:
 
 
 @export
-def cardinality(element: Any) -> str:
+def cardinality(element: XsdElement) -> str:
 	"""
 	Render an element's occurrence.
 
