@@ -57,6 +57,7 @@ from pyTooling.Attributes.ArgParse.Flag       import LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import LongValuedFlag
 from pyTooling.Tracing                        import Trace
 from pyTooling.Tracing.CI.GitHub              import WorkflowRunReader
+from pyTooling.Tracing.Render                 import GanttLayout, ciSpanFilter
 
 
 @export
@@ -66,6 +67,18 @@ class TraceFormat(StringEnum):
 	OTLPJSON = "otlp-json"  #: OpenTelemetry's OTLP/JSON encoding of a trace.
 
 	DEFAULT = OTLPJSON      #: The format ``--trace-file`` writes when its value names none.
+
+
+@export
+class GanttFormat(StringEnum):
+	"""The formats a Gantt chart can be drawn in, as ``--gantt`` names them: the backend and the file format."""
+
+	MatplotlibPNG = "matplotlib-png"  #: A raster image, drawn by matplotlib.
+	MatplotlibSVG = "matplotlib-svg"  #: A vector image, drawn by matplotlib.
+	MatplotlibPDF = "matplotlib-pdf"  #: A PDF page, drawn by matplotlib.
+
+	DEFAULT = MatplotlibPNG           #: The format ``--gantt`` draws when its value names none.
+
 
 @export
 class PipelineHandlers(metaclass=ExtendedType, mixin=True):
@@ -96,6 +109,10 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 	@LongValuedFlag(
 		"--trace-file", dest="traceFile", metaName="[format:]file", optional=True,
 		help=f"Write the trace. Format: {', '.join(TraceFormat)}. Default: {TraceFormat.DEFAULT}."
+	)
+	@LongValuedFlag(
+		"--gantt", dest="gantt", metaName="[format:]file", optional=True,
+		help=f"Draw a Gantt chart. Format: {', '.join(GanttFormat)}. Default: {GanttFormat.DEFAULT}."
 	)
 	@LongFlag("--force", dest="force", help="Overwrite files that exist.")
 	def HandlePipeline(self, args: Namespace) -> None:
@@ -138,6 +155,11 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 					self.WriteErrorNote(note)
 				continue
 
+			if option == "--gantt" and file.suffix.lower().lstrip(".") != (suffix := fileFormat.partition("-")[2]):
+				self.WriteError(f"Option '--gantt': format '{fileFormat}' writes a '.{suffix}' file.")
+				self.WriteErrorNote(f"Got '{file.name}'. Name the file '.{suffix}', or state the format it is in.")
+				continue
+
 			if file.exists() and not args.force:
 				self.WriteError(f"File '{file}' exists.")
 				self.WriteErrorNote("Use '--force' to overwrite it.")
@@ -158,6 +180,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 		"""
 		return (
 			("--trace-file", args.traceFile, TraceFormat),
+			("--gantt",      args.gantt,     GanttFormat),
 		)
 
 	def _WriteOutputs(self, outputs: list[tuple[str, StringEnum, Path]], trace: Trace) -> None:
@@ -172,6 +195,28 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 				self.WriteVerbose(f"Writing the trace as '{fileFormat}' to '{file}' ...")
 				trace.WriteJSONFile(file)
 				self.WriteNormal(f"Trace:     {file}")
+			elif option == "--gantt":
+				self._WriteGantt(fileFormat, file, trace)
+
+	def _WriteGantt(self, fileFormat: GanttFormat, file: Path, trace: Trace) -> None:
+		"""
+		Lay the trace out as a Gantt chart and draw it with the backend the format names.
+
+		The steps of a job are left out: a pipeline of 57 jobs has more than a thousand steps, and a chart of one row
+		per step is a different picture than a chart of one row per job.
+
+		:param fileFormat:              The format, one of :class:`GanttFormat`.
+		:param file:                    The file to write.
+		:param trace:                   The workflow run as a trace.
+		:raises MissingDependencyError: If *matplotlib* isn't installed. |br|
+		                                :func:`~pyTooling.CLI.main` prints it with the commands installing it.
+		"""
+		from pyTooling.Tracing.Render.Matplotlib import MatplotlibRenderer
+
+		self.WriteVerbose(f"Drawing the Gantt chart as '{fileFormat}' to '{file}' ...")
+		layout = GanttLayout(trace, spanFilter=ciSpanFilter())
+		MatplotlibRenderer(layout).Write(file)
+		self.WriteNormal(f"Gantt:     {file} ({layout.RowCount} rows)")
 
 	def _ReadPipeline(self, args: Namespace) -> Trace:
 		"""

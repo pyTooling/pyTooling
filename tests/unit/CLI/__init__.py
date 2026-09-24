@@ -41,8 +41,9 @@ from typing             import ClassVar, Iterable
 from unittest.mock      import patch
 
 from pyTooling.Attributes.ArgParse import splitFormat
-from pyTooling.CLI                 import Application
-from pyTooling.CLI.Pipeline        import TraceFormat
+from pyTooling.CLI                 import Application, main
+from pyTooling.CLI.Pipeline        import GanttFormat, TraceFormat
+from pyTooling.Exceptions          import MissingDependencyError
 from pyTooling.Testing             import Testcase
 
 
@@ -162,6 +163,7 @@ class PipelineCommand(Testcase):
 		self.assertIn("--github-repository", output)
 		self.assertIn("--github-pipeline-id", output)
 		self.assertIn("--trace-file", output)
+		self.assertIn("--gantt", output)
 		self.assertIn("--force", output)
 
 	def test_Repository_Missing(self) -> None:
@@ -171,14 +173,84 @@ class PipelineCommand(Testcase):
 		with patch.dict(environ, self.NO_WORKFLOW):
 			with self.assertRaises(SystemExit):
 				application.HandlePipeline(Namespace(
-					githubRepository=None, githubPipelineID=None, traceFile=None, force=False
+					githubRepository=None, githubPipelineID=None, traceFile=None, gantt=None, force=False
 				))
 
 	def test_TraceFile_UnsupportedFormat(self) -> None:
 		"""A misspelled format is reported before anything is read."""
 		application = Application()
-		arguments = Namespace(githubRepository=None, githubPipelineID=None, traceFile="json:trace.json", force=False)
+		arguments = Namespace(
+			githubRepository=None, githubPipelineID=None, traceFile="json:trace.json", gantt=None, force=False
+		)
 
 		with patch.dict(environ, self.NO_WORKFLOW):
 			with self.assertRaises(SystemExit):
 				application.HandlePipeline(arguments)
+
+	def test_Gantt_SuffixContradictsTheFormat(self) -> None:
+		application = Application()
+		arguments = Namespace(
+			githubRepository=None, githubPipelineID=None, traceFile=None, gantt="matplotlib-png:chart.svg", force=False
+		)
+
+		with patch.dict(environ, self.NO_WORKFLOW):
+			with self.assertRaises(SystemExit):
+				application.HandlePipeline(arguments)
+
+	def test_Gantt_NoFormat_NotAPNG(self) -> None:
+		"""A value naming no format gets 'matplotlib-png', so an SVG file has to state its format."""
+		application = Application()
+		errors = StringIO()
+		stream = application._stderr
+		arguments = Namespace(
+			githubRepository=None, githubPipelineID=None, traceFile=None, gantt="chart.svg", force=False
+		)
+
+		application._stderr = errors
+		try:
+			with patch.dict(environ, self.NO_WORKFLOW):
+				with self.assertRaises(SystemExit):
+					application.HandlePipeline(arguments)
+		finally:
+			application._stderr = stream
+
+		self.assertIn("Option '--gantt': format 'matplotlib-png' writes a '.png' file.", errors.getvalue())
+
+
+class GanttFormats(Testcase):
+	def test_Default(self) -> None:
+		self.assertIs(GanttFormat.MatplotlibPNG, GanttFormat.DEFAULT)
+
+	def test_EveryFormat(self) -> None:
+		"""A format is the backend and the file format, and the second half is the file's suffix."""
+		for fileFormat in GanttFormat:
+			with self.subTest(format=fileFormat):
+				backend, _, suffix = fileFormat.value.partition("-")
+				self.assertEqual("matplotlib", backend)
+				self.assertIn(suffix, ("png", "svg", "pdf"))
+
+	def test_NoFormat(self) -> None:
+		"""A value naming no format gets the default, whatever the file's suffix says."""
+		self.assertEqual((GanttFormat.MatplotlibPNG, Path("report/Pipeline.svg")),
+		                 splitFormat("report/Pipeline.svg", GanttFormat))
+
+
+class MissingDependency(Testcase):
+	def test_MainPrintsTheInstallCommands(self) -> None:
+		"""An optional package that isn't installed is not a bug, so 'main' hands it to its own printer."""
+		application = Application()
+		errors = StringIO()
+		stream = application._stderr
+		exception = MissingDependencyError(dependency="matplotlib", extra="diagram")
+
+		application._stderr = errors
+		try:
+			with patch.object(Application, "Run", side_effect=exception):
+				with self.assertRaises(SystemExit) as context:
+					main()
+		finally:
+			application._stderr = stream
+
+		self.assertEqual(MissingDependencyError.EXIT_CODE, context.exception.code)
+		self.assertIn("matplotlib", errors.getvalue())
+		self.assertIn("pip install pyTooling[diagram]", errors.getvalue())

@@ -399,6 +399,28 @@ class Matplotlib(Testcase):
 
 			self.assertEqual(b"\x89PNG", file.read_bytes()[:4])
 
+	def test_PDF(self) -> None:
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "Pipeline.pdf"
+			MatplotlibRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50))).Write(file)
+			content = file.read_bytes()
+
+			self.assertEqual(b"%PDF", content[:4])
+			self.assertTrue(content.rstrip().endswith(b"%%EOF"), "The document is complete.")
+
+	def test_EveryFormatIsWritable(self) -> None:
+		"""Every suffix the renderer names in 'FORMATS' is one it really writes."""
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+		renderer = MatplotlibRenderer(layout, dpi=50)
+
+		with TemporaryDirectory() as directory:
+			for suffix in MatplotlibRenderer.FORMATS:
+				with self.subTest(format=suffix):
+					file = Path(directory) / f"Pipeline.{suffix}"
+					renderer.Write(file)
+
+					self.assertGreater(file.stat().st_size, 0)
+
 	def test_Emoji(self) -> None:
 		"""A character no installed font can draw is left out of the label, instead of an empty box and a warning."""
 		trace = Trace("🔁 Pipeline", _at(0), _at(10))
