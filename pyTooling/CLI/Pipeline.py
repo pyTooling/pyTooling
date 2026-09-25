@@ -193,7 +193,7 @@ class PipelineHandlers(metaclass=ExtendedType, mixin=True):
 		for option, fileFormat, file in outputs:
 			if option == "--trace-file":
 				self.WriteVerbose(f"Writing the trace as '{fileFormat}' to '{file}' ...")
-				trace.WriteJSONFile(file)
+				trace.WriteOTLPJSONFile(file)
 				self.WriteNormal(f"Trace:     {file}")
 			elif option == "--gantt":
 				self._WriteGantt(fileFormat, file, trace)
