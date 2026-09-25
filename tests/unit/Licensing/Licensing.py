@@ -39,6 +39,8 @@ from pyTooling.Licensing import LICENSE_TEXT_URLS, LICENSE_URLS
 from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
 from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseReference, LicensingError
 from pyTooling.Licensing import MIT_License
+from pyTooling.Licensing import CC_BY_4_0, CC_BY_NC_4_0, CC_BY_NC_ND_4_0, CC_BY_NC_SA_4_0, CC_BY_ND_4_0, CC_BY_SA_4_0
+from pyTooling.Licensing import LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing import OrLaterOperator, OrOperator
 from pyTooling.Licensing import SPDXLicense
 from pyTooling.Licensing import BaseLicense, Operator, UnaryOperator, WithOperator
@@ -160,14 +162,15 @@ class SPDXIndex(Testcase):
 
 		from trove_classifiers import classifiers
 
-		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
+		for spdxIdentifier in PYTHON_LICENSE_NAMES:
 			with self.subTest(license=spdxIdentifier):
-				self.assertIn(spdxLicense.PythonClassifier, classifiers)
+				self.assertIn(SPDX_INDEX[spdxIdentifier].PythonClassifier, classifiers)
 
 	def test_OSIApprovalMatchesTheClassifier(self) -> None:
 		"""PyPI puts an OSI-approved license under 'OSI Approved ::', so the flag and the string must agree."""
 
-		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
+		for spdxIdentifier in PYTHON_LICENSE_NAMES:
+			spdxLicense = SPDX_INDEX[spdxIdentifier]
 			with self.subTest(license=spdxIdentifier):
 				self.assertEqual(
 					spdxLicense.OSIApproved,
@@ -187,9 +190,17 @@ class SPDXIndex(Testcase):
 		)
 
 	def test_EveryLicenseHasAPythonName(self) -> None:
-		for spdxIdentifier, spdxLicense in SPDX_INDEX.items():
+		for spdxIdentifier in PYTHON_LICENSE_NAMES:
 			with self.subTest(license=spdxIdentifier):
-				self.assertNotEqual("", spdxLicense.PythonLicenseName)
+				self.assertNotEqual("", SPDX_INDEX[spdxIdentifier].PythonLicenseName)
+
+	def test_OnlyTheCreativeCommonsLicensesHaveNoPythonName(self) -> None:
+		"""PyPI has no classifier for them; any other license without one is an entry that was forgotten."""
+		self.assertEqual(set(), set(PYTHON_LICENSE_NAMES) - set(SPDX_INDEX))
+		self.assertEqual(
+			{"CC-BY-4.0", "CC-BY-SA-4.0", "CC-BY-NC-4.0", "CC-BY-ND-4.0", "CC-BY-NC-SA-4.0", "CC-BY-NC-ND-4.0"},
+			set(SPDX_INDEX) - set(PYTHON_LICENSE_NAMES)
+		)
 
 	def test_TheOriginalFourAreUnchanged(self) -> None:
 		"""The licenses that existed before keep their identifiers, names and short names."""
@@ -201,6 +212,61 @@ class SPDXIndex(Testcase):
 		self.assertEqual("MIT", MIT_License.PythonLicenseName)
 		self.assertEqual("GPL-2.0-or-later", GPL_2_0_or_later.PythonLicenseName)
 
+
+
+class CreativeCommonsLicenses(Testcase):
+	"""The six Creative Commons 4.0 licenses: for documentation and media, not for code."""
+
+	_LICENSES = (CC_BY_4_0, CC_BY_SA_4_0, CC_BY_NC_4_0, CC_BY_ND_4_0, CC_BY_NC_SA_4_0, CC_BY_NC_ND_4_0)
+
+	def test_EveryOneIsIndexed(self) -> None:
+		for spdxLicense in self._LICENSES:
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertIs(spdxLicense, SPDX_INDEX[spdxLicense.SPDXIdentifier])
+
+	def test_NoneIsOSIApproved(self) -> None:
+		"""OSI approves software licenses, and Creative Commons advises against using these for software."""
+		for spdxLicense in self._LICENSES:
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				self.assertFalse(spdxLicense.OSIApproved)
+				self.assertIsNone(spdxLicense.OSIURL)
+
+	def test_OnlyTheFreeOnesAreFSFApproved(self) -> None:
+		"""A non-commercial or no-derivatives clause restricts a freedom, so SPDX marks only two as FSF libre."""
+		self.assertEqual(
+			{"CC-BY-4.0", "CC-BY-SA-4.0"},
+			{spdxLicense.SPDXIdentifier for spdxLicense in self._LICENSES if spdxLicense.FSFApproved}
+		)
+
+	def test_ThereIsNoPythonClassifier(self) -> None:
+		"""PyPI's classifier list has none, so asking for one is an error rather than an invented string."""
+		for spdxLicense in self._LICENSES:
+			with self.subTest(license=spdxLicense.SPDXIdentifier):
+				with self.assertRaises(ValueError):
+					_ = spdxLicense.PythonClassifier
+				with self.assertRaises(ValueError):
+					_ = spdxLicense.PythonLicenseName
+
+	def test_TheClassifierIndexSkipsThem(self) -> None:
+		indexed = {spdxLicense for licenses in LICENSES_BY_CLASSIFIER.values() for spdxLicense in licenses}
+
+		self.assertEqual(set(), indexed & set(self._LICENSES))
+
+	def test_ThePublisherURLs(self) -> None:
+		self.assertEqual("https://creativecommons.org/licenses/by/4.0/", CC_BY_4_0.URL)
+		self.assertEqual(
+			"https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.txt",
+			CC_BY_NC_SA_4_0.TextURLs["txt"]
+		)
+
+	def test_AnExpressionNamesThem(self) -> None:
+		"""They are SPDX licenses like any other, so an expression may name them."""
+		expression = LicenseExpression.Parse("CC-BY-4.0 OR CC-BY-SA-4.0")
+
+		self.assertEqual(
+			[CC_BY_4_0, CC_BY_SA_4_0],
+			[term.License for term in expression.IterateExpression() if isinstance(term, SPDXLicense)]
+		)
 
 
 class ParsingExpressions(Testcase):
