@@ -64,6 +64,8 @@ document of every project. This extension declares them once:
     :file:`conf.py` declares under ``pyTooling_dependency_requirements``;
   * :rst:dir:`xsd-graph` - draws an XML schema as a Graphviz graph. It sets up :mod:`sphinx.ext.graphviz`
     itself, and needs :mod:`xmlschema` only in a project that uses it.
+  * :rst:dir:`shields` - renders a project's badges from shields.io, in rows, from the coordinates its options
+    state: the GitHub repository, the PyPI package, the licenses, the workflow and the documentation's URL.
 
 Two classes aren't registered, because they are base-classes for a project's own directives:
 :class:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective` offers typed option access and table construction
@@ -109,6 +111,7 @@ from pyTooling.Documentation.Sphinx.Directives      import stripAndNormalize
 from pyTooling.Documentation.Sphinx.SchemaGraph     import SchemaGraph
 from pyTooling.Documentation.Sphinx.Roles           import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
 from pyTooling.Documentation.Sphinx.Roles           import breakRole, pythonCodeRole, styleRole
+from pyTooling.Documentation.Sphinx.Shields         import Shields
 from pyTooling.Documentation.Sphinx.XSDSchemaGraph  import XSDSchemaGraph
 
 
@@ -193,6 +196,7 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	sphinx.add_directive("condensed-class", CondensedClass)
 	sphinx.add_directive("dependency-table", DependencyTable)
 	sphinx.add_directive("xsd-graph", XSDSchemaGraph)
+	sphinx.add_directive("shields", Shields)
 
 	sphinx.setup_extension("sphinx.ext.graphviz")
 
