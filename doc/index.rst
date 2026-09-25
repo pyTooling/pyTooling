@@ -1131,7 +1131,8 @@ License
    :caption: Documentation
    :hidden:
 
-   Documentation
+   Documentation/index
+   Documentation/Sphinx
 
 .. toctree::
    :caption: Exceptions and Warnings
