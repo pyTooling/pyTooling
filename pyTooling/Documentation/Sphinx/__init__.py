@@ -106,9 +106,10 @@ from pyTooling.Documentation.Sphinx.DependencyTable import CONFIG_VALUES, Depend
 from pyTooling.Documentation.Sphinx.DependencyTable import prepareEntrypoints, reportBuildTime
 from pyTooling.Documentation.Sphinx.Directives      import BaseDirective, SphinxExtensionError, strip
 from pyTooling.Documentation.Sphinx.Directives      import stripAndNormalize
-from pyTooling.Documentation.Sphinx.SchemaGraph     import SchemaGraph, XSDGraph
+from pyTooling.Documentation.Sphinx.SchemaGraph     import SchemaGraph
 from pyTooling.Documentation.Sphinx.Roles           import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
 from pyTooling.Documentation.Sphinx.Roles           import breakRole, pythonCodeRole, styleRole
+from pyTooling.Documentation.Sphinx.XSDSchemaGraph  import XSDSchemaGraph
 
 
 __all__ = ["STYLESHEET", "SUBSTITUTIONS"]
@@ -191,7 +192,7 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 
 	sphinx.add_directive("condensed-class", CondensedClass)
 	sphinx.add_directive("dependency-table", DependencyTable)
-	sphinx.add_directive("xsd-graph", XSDGraph)
+	sphinx.add_directive("xsd-graph", XSDSchemaGraph)
 
 	sphinx.setup_extension("sphinx.ext.graphviz")
 
