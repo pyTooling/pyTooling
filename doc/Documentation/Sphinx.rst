@@ -29,8 +29,8 @@ documentation uses - and any other project's documentation can use. It is enable
 Roles
 *****
 
-The extension registers roles for styling inline text, one for inline Python code, and two for breaks - and a
-stylesheet for the styles, linked into every HTML page.
+The extension registers roles for styling inline text, one for inline Python code, and two for a line break and a
+horizontal rule - and a stylesheet for the styles, linked into every HTML page.
 
 .. _DOC/Sphinx/Roles/Style:
 
@@ -114,15 +114,15 @@ Inline Python code
 
 .. _DOC/Sphinx/Roles/Breaks:
 
-Breaks
-======
+Line break and horizontal rule
+==============================
 
 .. grid:: 2
 
    .. grid-item::
       :columns: 6
 
-      ``|br|`` breaks a line, ``|hr|`` draws a horizontal line - in HTML **and** in LaTeX. They are substitutions,
+      ``|br|`` is a line break, ``|hr|`` a horizontal rule - in HTML **and** in LaTeX. They are substitutions,
       appended to ``rst_prolog``, and delegate to the roles ``:br:`` and ``:hr:``. ``|degree|`` writes a degree sign.
 
    .. grid-item::
