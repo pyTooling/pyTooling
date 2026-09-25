@@ -57,8 +57,8 @@ if sphinxIsSupported:
 	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, formatUnresolvedLicenses
 	from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
-	from pyTooling.Documentation.Sphinx.SchemaGraph     import DotGraph, compartment, escapeLabel
-	from pyTooling.Documentation.Sphinx.XSDSchemaGraph  import cardinality, renderXMLSchema, typeName
+	from pyTooling.Documentation.Sphinx.SchemaGraph     import DotGraph
+	from pyTooling.Documentation.Sphinx.XSDSchemaGraph  import XSDSchemaGraph
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -458,27 +458,27 @@ class RecordLabels(Testcase):
 
 	def test_EveryMetacharacterIsEscaped(self) -> None:
 		"""A name containing record syntax must not be read as record syntax."""
-		self.assertEqual("\\{a\\|b\\}", escapeLabel("{a|b}"))
+		self.assertEqual("\\{a\\|b\\}", DotGraph.EscapeLabel("{a|b}"))
 
 	def test_TheBackslashIsEscapedFirst(self) -> None:
 		"""Escaping the backslash last would escape the backslashes the other characters just gained."""
-		self.assertEqual("\\\\", escapeLabel("\\"))
+		self.assertEqual("\\\\", DotGraph.EscapeLabel("\\"))
 
 	def test_TextWithoutMetacharactersIsUnchanged(self) -> None:
 		"""A type name is text, and the common case must not be rewritten."""
-		self.assertEqual("xsd:string", escapeLabel("xsd:string"))
+		self.assertEqual("xsd:string", DotGraph.EscapeLabel("xsd:string"))
 
 	def test_EveryRowEndsLeftAligned(self) -> None:
 		"""Rows centre themselves without the '\\l', which makes a record's compartments ragged."""
-		self.assertEqual("a\\lb\\l", compartment(("a", "b")))
+		self.assertEqual("a\\lb\\l", DotGraph._Compartment(("a", "b")))
 
 	def test_AnEmptyCompartmentIsASpace(self) -> None:
 		"""An empty compartment collapses, which makes the records of a graph differently shaped."""
-		self.assertEqual(" ", compartment(()))
+		self.assertEqual(" ", DotGraph._Compartment(()))
 
 	def test_ACompartmentEscapesItsRows(self) -> None:
 		"""The rows arrive unescaped, so the compartment is where they are made safe."""
-		self.assertEqual("a\\|b\\l", compartment(("a|b",)))
+		self.assertEqual("a\\|b\\l", DotGraph._Compartment(("a|b",)))
 
 
 @mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
@@ -526,6 +526,48 @@ class Graphs(Testcase):
 		"""Graphviz uses the name as the drawing's identifier."""
 		self.assertTrue(str(DotGraph("other")).startswith("digraph other {"))
 
+	def test_ANameIsRequired(self) -> None:
+		"""A graph without a name can't be written."""
+		with self.assertRaises(ValueError):
+			DotGraph(None)
+
+	def test_ANameIsAString(self) -> None:
+		"""The name is written into the DOT as it is."""
+		with self.assertRaises(TypeError):
+			DotGraph(1)
+
+	def test_ANodeNeedsAnIdentifierAndALabel(self) -> None:
+		"""Neither may be None, and both are written into the DOT as they are."""
+		graph = DotGraph()
+		with self.subTest("identifier"), self.assertRaises(ValueError):
+			graph.AddNode(None, "A")
+		with self.subTest("identifier"), self.assertRaises(TypeError):
+			graph.AddNode(1, "A")
+		with self.subTest("label"), self.assertRaises(ValueError):
+			graph.AddNode("a", None)
+		with self.subTest("label"), self.assertRaises(TypeError):
+			graph.AddNode("a", 1)
+
+	def test_ARecordNeedsATitle(self) -> None:
+		"""The title is escaped, which only a string can be."""
+		graph = DotGraph()
+		with self.subTest("None"), self.assertRaises(ValueError):
+			graph.AddRecord("t", None)
+		with self.subTest("int"), self.assertRaises(TypeError):
+			graph.AddRecord("t", 1)
+
+	def test_AnEdgeNeedsASourceAndATarget(self) -> None:
+		"""Neither may be None, and both are written into the DOT as they are."""
+		graph = DotGraph()
+		with self.subTest("source"), self.assertRaises(ValueError):
+			graph.AddEdge(None, "b")
+		with self.subTest("source"), self.assertRaises(TypeError):
+			graph.AddEdge(1, "b")
+		with self.subTest("target"), self.assertRaises(ValueError):
+			graph.AddEdge("a", None)
+		with self.subTest("target"), self.assertRaises(TypeError):
+			graph.AddEdge("a", 1)
+
 
 @mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
 class XMLSchemaGraphs(Testcase):
@@ -548,47 +590,51 @@ class XMLSchemaGraphs(Testcase):
 
 	def test_EveryComplexTypeIsARecord(self) -> None:
 		"""A complex type is a box; its attributes and simple-typed children are its compartments."""
-		dot = renderXMLSchema(self._Schema())
+		dot = XSDSchemaGraph._RenderGraph(self._Schema())
 
 		for typeIdentifier in ("testreport", "testsuite", "testcase"):
 			self.assertIn(f'"{typeIdentifier}" [label="{{«{typeIdentifier}»|', dot)
 
 	def test_AnAttributeIsNamedWithItsType(self) -> None:
 		"""A builtin type keeps the 'xsd:' prefix its namespace stands for."""
-		self.assertIn("duration : xsd:float", renderXMLSchema(self._Schema()))
+		self.assertIn("duration : xsd:float", XSDSchemaGraph._RenderGraph(self._Schema()))
 
 	def test_ContainmentIsAnEdgeCarryingTheCardinality(self) -> None:
 		"""A complex-typed child is an edge, so containment is structure rather than a repeated type name."""
-		self.assertIn('"testreport" -> "testsuite" [label="Testsuite [0..*]"];', renderXMLSchema(self._Schema()))
+		dot = XSDSchemaGraph._RenderGraph(self._Schema())
+
+		self.assertIn('"testreport" -> "testsuite" [label="Testsuite [0..*]"];', dot)
 
 	def test_ATestSuiteNestsInItself(self) -> None:
 		"""The edge to itself is what the format has over JUnit XML, and what the diagram exists to show."""
-		self.assertIn('"testsuite" -> "testsuite" [label="Testsuite [0..*]"];', renderXMLSchema(self._Schema()))
+		dot = XSDSchemaGraph._RenderGraph(self._Schema())
+
+		self.assertIn('"testsuite" -> "testsuite" [label="Testsuite [0..*]"];', dot)
 
 	def test_TheRootElementIsADoubleCircle(self) -> None:
 		"""A document starts somewhere, and the picture has to say where."""
-		dot = renderXMLSchema(self._Schema())
+		dot = XSDSchemaGraph._RenderGraph(self._Schema())
 
 		self.assertIn('"<TestReport>" [label="TestReport", shape="doublecircle"', dot)
 		self.assertIn('"<TestReport>" -> "testreport" [label="root"];', dot)
 
 	def test_AnEnumerationBecomesItsOwnNode(self) -> None:
 		"""A simple type earns a node only when it has values a type name cannot say."""
-		dot = renderXMLSchema(self._Schema())
+		dot = XSDSchemaGraph._RenderGraph(self._Schema())
 
 		self.assertIn('"status" [label="{«status»|passed\\lfailed\\l', dot)
 		self.assertIn('"testcase" -> "status" [style="dashed"', dot)
 
 	def test_ASimpleTypeThatIsNoEnumerationGetsNoNode(self) -> None:
 		"""'preservingstring' is named in the compartments and drawn nowhere - it has nothing to show."""
-		dot = renderXMLSchema(self._Schema())
+		dot = XSDSchemaGraph._RenderGraph(self._Schema())
 
 		self.assertIn("Description : preservingstring", dot)
 		self.assertNotIn('"preservingstring" [', dot)
 
 	def test_TheSameSchemaAlwaysDrawsTheSameGraph(self) -> None:
 		"""A rebuilt page is only comparable to the one before it when the drawing doesn't reshuffle."""
-		self.assertEqual(renderXMLSchema(self._Schema()), renderXMLSchema(self._Schema()))
+		self.assertEqual(XSDSchemaGraph._RenderGraph(self._Schema()), XSDSchemaGraph._RenderGraph(self._Schema()))
 
 
 @mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
@@ -628,7 +674,7 @@ class XSDSchemaGraphDetails(Testcase):
 		schema = Path(directory) / "Ordering.xsd"
 		schema.write_text(self._SCHEMA, encoding="utf-8")
 
-		return renderXMLSchema(schema)
+		return XSDSchemaGraph._RenderGraph(schema)
 
 	def test_EnumerationsAreDrawnInAStableOrder(self) -> None:
 		"""They are collected in a set, whose iteration order varies between interpreter runs unless it is sorted."""
@@ -661,15 +707,15 @@ class TypeNames(Testcase):
 		"""The namespace it is spelled with is 40 characters that say nothing in a diagram."""
 		builtin = self._Type("{http://www.w3.org/2001/XMLSchema}string")
 
-		self.assertEqual("xsd:string", typeName(builtin))
+		self.assertEqual("xsd:string", XSDSchemaGraph._TypeName(builtin))
 
 	def test_ANamedTypeIsItsName(self) -> None:
 		"""A type declared by the schema is already short."""
-		self.assertEqual("status", typeName(self._Type("status")))
+		self.assertEqual("status", XSDSchemaGraph._TypeName(self._Type("status")))
 
 	def test_AnAnonymousTypeSaysSo(self) -> None:
 		"""An inline type has no name, and an empty label would be read as a missing one."""
-		self.assertEqual("(anonymous)", typeName(self._Type(None)))
+		self.assertEqual("(anonymous)", XSDSchemaGraph._TypeName(self._Type(None)))
 
 
 @mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
@@ -684,8 +730,8 @@ class Cardinalities(Testcase):
 
 	def test_ABoundedOccurrenceIsTwoNumbers(self) -> None:
 		"""The common case, and the one an optional element is spelled with."""
-		self.assertEqual("0..1", cardinality(self._Element(0, 1)))
+		self.assertEqual("0..1", XSDSchemaGraph._Cardinality(self._Element(0, 1)))
 
 	def test_AnUnboundedOccurrenceIsAStar(self) -> None:
 		"""'None' is what 'unbounded' arrives as, and it has no number to print."""
-		self.assertEqual("1..*", cardinality(self._Element(1, None)))
+		self.assertEqual("1..*", XSDSchemaGraph._Cardinality(self._Element(1, None)))

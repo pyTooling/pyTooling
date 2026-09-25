@@ -50,6 +50,7 @@ from typing                                    import Any, Iterable, Sequence
 from docutils                                  import nodes
 from sphinx.ext.graphviz                       import figure_wrapper, graphviz
 
+from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export
 from pyTooling.MetaClasses                     import ExtendedType
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, strip
@@ -64,35 +65,6 @@ GRAPH_ATTRIBUTES = (
 	'node [shape=record, fontname="sans-serif", fontsize=10];',
 	'edge [fontname="sans-serif", fontsize=9];',
 )
-
-
-@export
-def escapeLabel(text: str) -> str:
-	"""
-	Escape the characters a Graphviz record label gives a meaning to.
-
-	:param text: The text to escape.
-	:returns:    The text, safe to put into a record label.
-	"""
-	for character in ("\\", "{", "}", "|", "<", ">", '"'):
-		text = text.replace(character, f"\\{character}")
-
-	return text
-
-
-@export
-def compartment(rows: Sequence[str]) -> str:
-	"""
-	Join the rows of one record compartment, left-aligned.
-
-	:param rows: The rows to join, unescaped.
-	:returns:    The compartment's content, or a single space when there are no rows - an empty compartment collapses,
-	             which makes the records of a graph differently shaped.
-	"""
-	if len(rows) == 0:
-		return " "
-
-	return "".join(f"{escapeLabel(row)}\\l" for row in rows)
 
 
 @export
@@ -112,11 +84,47 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize an empty graph carrying the shared attributes.
 
-		:param name: Optional, the graph's name.
+		:param name:        Optional, the graph's name.
+		:raises ValueError: If parameter 'name' is None.
+		:raises TypeError:  If parameter 'name' is not a string.
 		"""
+		if name is None:
+			raise ValueError("Parameter 'name' is None.")
+		elif not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+
 		self._name = name
 		self._statements = [f"\t{attribute}" for attribute in GRAPH_ATTRIBUTES]
 		self.AddSeparator()
+
+	@staticmethod
+	def EscapeLabel(text: str) -> str:
+		"""
+		Escape the characters a Graphviz record label gives a meaning to.
+
+		:param text: The text to escape.
+		:returns:    The text, safe to put into a record label.
+		"""
+		for character in ("\\", "{", "}", "|", "<", ">", '"'):
+			text = text.replace(character, f"\\{character}")
+
+		return text
+
+	@classmethod
+	def _Compartment(cls, rows: Sequence[str]) -> str:
+		"""
+		Join the rows of one record compartment, left-aligned.
+
+		:param rows: The rows to join, unescaped.
+		:returns:    The compartment's content, or a single space when there are no rows - an empty compartment
+		             collapses, which makes the records of a graph differently shaped.
+		"""
+		if len(rows) == 0:
+			return " "
+
+		return "".join(f"{cls.EscapeLabel(row)}\\l" for row in rows)
 
 	@staticmethod
 	def _Attributes(attributes: dict[str, str]) -> str:
@@ -126,7 +134,7 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 		:param attributes: The attributes to render, keyed by name.
 		:returns:          The attribute list in brackets, or an empty string when there are none.
 		"""
-		if not attributes:
+		if len(attributes) == 0:
 			return ""
 
 		return "[" + ", ".join(f'{name}="{value}"' for name, value in attributes.items()) + "]"
@@ -139,11 +147,29 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 		"""
 		Add a node.
 
-		:param identifier: Identifier of the node, which an edge names it by.
-		:param label:      The node's label, already escaped.
-		:param attributes: Further attributes of the node.
+		:param identifier:  Identifier of the node, which an edge names it by.
+		:param label:       The node's label, already escaped.
+		:param attributes:  Further attributes of the node.
+		:raises ValueError: If parameter 'identifier' or 'label' is None.
+		:raises TypeError:  If parameter 'identifier' or 'label' is not a string.
 		"""
-		self._statements.append(f'\t"{identifier}" {self._Attributes({"label": label, **attributes})};')
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+		if label is None:
+			raise ValueError("Parameter 'label' is None.")
+		elif not isinstance(label, str):
+			ex = TypeError("Parameter 'label' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(label)}'.")
+			raise ex
+
+		nodeAttributes = {"label": label}
+		nodeAttributes.update(attributes)
+
+		self._statements.append(f'\t"{identifier}" {self._Attributes(nodeAttributes)};')
 
 	def AddRecord(
 		self,
@@ -159,8 +185,19 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 		:param title:        The record's title, written in guillemets.
 		:param compartments: Optional, the rows of each compartment below the title.
 		:param attributes:   Further attributes of the node.
+		:raises ValueError:  If parameter 'identifier' or 'title' is None.
+		:raises TypeError:   If parameter 'identifier' or 'title' is not a string.
 		"""
-		label = "|".join((f"«{escapeLabel(title)}»", *(compartment(rows) for rows in compartments)))
+		if title is None:
+			raise ValueError("Parameter 'title' is None.")
+		elif not isinstance(title, str):
+			ex = TypeError("Parameter 'title' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(title)}'.")
+			raise ex
+
+		label = f"«{self.EscapeLabel(title)}»"
+		for rows in compartments:
+			label += f"|{self._Compartment(rows)}"
 
 		self.AddNode(identifier, f"{{{label}}}", **attributes)
 
@@ -170,15 +207,31 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 
 		An attribute's value is quoted but not escaped - :meth:`AddRecord` is the only method escaping what it is
 		given. A label assembled from something a schema *author* wrote, rather than from a name a schema language
-		constrains, has to go through :func:`escapeLabel` first.
+		constrains, has to go through :meth:`EscapeLabel` first.
 
-		:param source:     Identifier of the node the edge starts at.
-		:param target:     Identifier of the node the edge points to.
-		:param attributes: Further attributes of the edge.
+		:param source:      Identifier of the node the edge starts at.
+		:param target:      Identifier of the node the edge points to.
+		:param attributes:  Further attributes of the edge.
+		:raises ValueError: If parameter 'source' or 'target' is None.
+		:raises TypeError:  If parameter 'source' or 'target' is not a string.
 		"""
-		suffix = f" {self._Attributes(attributes)}" if attributes else ""
+		if source is None:
+			raise ValueError("Parameter 'source' is None.")
+		elif not isinstance(source, str):
+			ex = TypeError("Parameter 'source' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
+			raise ex
+		if target is None:
+			raise ValueError("Parameter 'target' is None.")
+		elif not isinstance(target, str):
+			ex = TypeError("Parameter 'target' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(target)}'.")
+			raise ex
 
-		self._statements.append(f'\t"{source}" -> "{target}"{suffix};')
+		if len(attributes) == 0:
+			self._statements.append(f'\t"{source}" -> "{target}";')
+		else:
+			self._statements.append(f'\t"{source}" -> "{target}" {self._Attributes(attributes)};')
 
 	def __str__(self) -> str:
 		"""
@@ -186,7 +239,9 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 
 		:returns: The graph in the DOT language.
 		"""
-		return "\n".join((f"digraph {self._name} {{", *self._statements, "}"))
+		statements = "\n".join(self._statements)
+
+		return f"digraph {self._name} {{\n{statements}\n}}"
 
 
 @export
@@ -243,7 +298,8 @@ class SchemaGraph(BaseDirective):
 
 		return [node]
 
-	def _RenderGraph(self, schemaFile: Path) -> str:
+	@classmethod
+	def _RenderGraph(cls, schemaFile: Path) -> str:
 		"""
 		Render the schema as a graph.
 
@@ -251,4 +307,4 @@ class SchemaGraph(BaseDirective):
 		:returns:                    The graph in the DOT language.
 		:raises NotImplementedError: If a derived class doesn't override it.
 		"""
-		raise NotImplementedError(f"{self.directiveName}: '_RenderGraph' is not implemented.")
+		raise NotImplementedError(f"{cls.directiveName}: '_RenderGraph' is not implemented.")
