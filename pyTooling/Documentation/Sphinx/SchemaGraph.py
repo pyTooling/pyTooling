@@ -159,6 +159,7 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
 			raise ex
+
 		if label is None:
 			raise ValueError("Parameter 'label' is None.")
 		elif not isinstance(label, str):
@@ -221,6 +222,7 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'source' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
 			raise ex
+
 		if target is None:
 			raise ValueError("Parameter 'target' is None.")
 		elif not isinstance(target, str):
