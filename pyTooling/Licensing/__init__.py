@@ -563,12 +563,12 @@ GPL_3_0_or_later =       License("GPL-3.0-or-later",  "GNU General Public Licens
 AGPL_3_0_only =          License("AGPL-3.0-only",     "GNU Affero General Public License v3.0 only",     True, True)
 AGPL_3_0_or_later =      License("AGPL-3.0-or-later", "GNU Affero General Public License v3.0 or later", True, True)
 
-CC_BY_4_0 =    License("CC-BY-4.0",    "Creative Commons Attribution 4.0 International",                False, True)
-CC_BY_SA_4_0 = License("CC-BY-SA-4.0", "Creative Commons Attribution Share Alike 4.0 International",    False, True)
-CC_BY_NC_4_0 = License("CC-BY-NC-4.0", "Creative Commons Attribution Non Commercial 4.0 International", False, False)
-CC_BY_ND_4_0 = License("CC-BY-ND-4.0", "Creative Commons Attribution No Derivatives 4.0 International", False, False)
+CC_BY_4_0 =       License("CC-BY-4.0",    "Creative Commons Attribution 4.0 International",                False, True)
+CC_BY_SA_4_0 =    License("CC-BY-SA-4.0", "Creative Commons Attribution Share Alike 4.0 International",    False, True)
+CC_BY_NC_4_0 =    License("CC-BY-NC-4.0", "Creative Commons Attribution Non Commercial 4.0 International", False, False)
+CC_BY_ND_4_0 =    License("CC-BY-ND-4.0", "Creative Commons Attribution No Derivatives 4.0 International", False, False)
 CC_BY_NC_SA_4_0 = License(
-	"CC-BY-NC-SA-4.0", "Creative Commons Attribution Non Commercial Share Alike 4.0 International", False, False
+	"CC-BY-NC-SA-4.0", "Creative Commons Attribution Non Commercial Share Alike 4.0 International",    False, False
 )
 CC_BY_NC_ND_4_0 = License(
 	"CC-BY-NC-ND-4.0", "Creative Commons Attribution Non Commercial No Derivatives 4.0 International", False, False
