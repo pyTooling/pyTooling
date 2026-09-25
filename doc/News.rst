@@ -191,9 +191,12 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Licensing`
 
-     * **Nineteen more SPDX licenses**, taking ``SPDX_INDEX`` from 4 to 23 - permissive, weak and strong copyleft,
+     * **27 more SPDX licenses**, taking ``SPDX_INDEX`` from 4 to 31 - permissive, weak and strong copyleft,
        and public domain. The ``-only``/``-or-later`` pairs are separate licenses, as SPDX defines them, because
        PyPI has a distinct classifier for each.
+     * The six **Creative Commons 4.0** licenses (``CC-BY-4.0``, ``CC-BY-SA-4.0``, ``CC-BY-NC-4.0``,
+       ``CC-BY-ND-4.0``, ``CC-BY-NC-SA-4.0``, ``CC-BY-NC-ND-4.0``) are among them, for documentation and media. PyPI
+       has no classifier for them, so asking one for its classifier raises a :exc:`ValueError`.
      * ``SPDX_INDEX`` is built from the licenses rather than repeating each identifier, so the two can no longer
        disagree.
      * A :class:`~pyTooling.Licensing.License` is hashable and compares equal to its SPDX identifier as a string,
