@@ -3,10 +3,17 @@
    \part{Introduction}
 
 .. shields::
+   :github:                pyTooling/pyTooling
+   :pypi:                  pyTooling
+   :codacy:                08ef744c0b70490289712b02a7a4cebe
+   :source-license:        github:LICENSE.md
+   :documentation-license: CC-BY-4.0 github:doc/Doc-License.rst
+   :github-action:         Pipeline.yml@main
+   :documentation:         github-pages
 
    github, src-license, ghp-doc, doc-license
    pypi-tag, pypi-status, pypi-python
-   gha-test, lib-status, codacy-quality, codacy-coverage, codecov-coverage
+   github-action, lib-status, codacy-quality, codacy-coverage, codecov-coverage
 
 .. Disabled shields: gitter, lib-dep, lib-rank
 
