@@ -29,7 +29,109 @@ documentation uses - and any other project's documentation can use. It is enable
 Roles
 *****
 
-.. todo:: DOC::Sphinx - document the style roles, the ``:pycode:`` role and the ``|br|``/``|hr|`` substitutions.
+The extension registers roles for styling inline text, one for inline Python code, and two for breaks - and a
+stylesheet for the styles, linked into every HTML page.
+
+.. _DOC/Sphinx/Roles/Style:
+
+Style roles
+===========
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 35 65
+
+         * - Role
+           - Renders
+         * - ``:bolditalic:``
+           - :bolditalic:`bold and italic`
+         * - ``:underline:``
+           - :underline:`underlined`
+         * - ``:strike:``
+           - :strike:`struck through`
+         * - ``:xlarge:``
+           - :xlarge:`extra large`
+         * - ``:red:``
+           - :red:`red`
+         * - ``:green:``
+           - :green:`green`
+         * - ``:blue:``
+           - :blue:`blue`
+         * - ``:purple:``
+           - :purple:`purple`
+         * - ``:deletion:``
+           - :deletion:`deleted`
+         * - ``:addition:``
+           - :addition:`added`
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         A :red:`warning` and a :deletion:`removed` word.
+
+      A style role puts CSS classes on the text; the stylesheet gives them their meaning. ``:deletion:`` and
+      ``:addition:`` are the two a diff needs.
+
+      Every colour and size is a CSS custom property, so a project changes it without replacing the stylesheet - in
+      a stylesheet of its own, listed in ``html_css_files``:
+
+      .. code-block:: CSS
+
+         :root {
+           --pyTooling-color-red: #b00020;
+         }
+
+      The properties are ``--pyTooling-color-red``, ``-green``, ``-blue``, ``-purple`` and
+      ``--pyTooling-xlarge-size``.
+
+
+.. _DOC/Sphinx/Roles/pycode:
+
+Inline Python code
+==================
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      ``:pycode:`` renders inline Python code, syntax-highlighted: :pycode:`isinstance(value, int)`.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         :pycode:`isinstance(value, int)`
+
+
+.. _DOC/Sphinx/Roles/Breaks:
+
+Breaks
+======
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      ``|br|`` breaks a line, ``|hr|`` draws a horizontal line - in HTML **and** in LaTeX. They are substitutions,
+      appended to ``rst_prolog``, and delegate to the roles ``:br:`` and ``:hr:``. ``|degree|`` writes a degree sign.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         :param value: The first line. |br|
+                       The second line.
 
 
 .. _DOC/Sphinx/CondensedClass:
@@ -37,11 +139,63 @@ Roles
 condensed-class
 ***************
 
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      The ``condensed-class`` directive renders a class' **public interface** as a code block: the class line, its
+      class variables, its methods and its properties, each with the signature it is declared with, and ``...`` for
+      a body.
+
+      **The source is parsed, not imported.** Annotations appear as they are written - ``Nullable[str]``, not the
+      ``Optional[str]`` an import resolves it to - members appear in the order of the file, and the file becomes a
+      dependency of the page, so editing the class rebuilds the page.
+
+      Left out is what the surrounding text is for: bodies, doc-strings, private members (one leading underscore),
+      and the annotated fields of a slotted class.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         .. condensed-class:: pyTooling.Stopwatch.Stopwatch
+            :members: Methods, Properties
+
+This is how the example renders:
+
+.. condensed-class:: pyTooling.Stopwatch.Stopwatch
+   :members: Methods, Properties
+
 .. rst:directive:: .. condensed-class:: <dotted name of a class>
 
-   Renders a class' public interface from its source.
+   Renders the interface of the class the argument names. The longest prefix of the name that is a module is
+   the module; the rest is the class, and may name a class nested in a class.
 
-.. todo:: DOC::Sphinx - document the ``condensed-class`` directive: its argument, its options and an example.
+   .. rst:directive:option:: members: <kinds>
+
+      The kinds of member to render, separated by commas, in any case: ``ClassVariables``, ``Dunders``,
+      ``Methods``, ``Properties`` or ``All``. Default: ``All``.
+
+      A property is a method decorated with ``@property``, ``@readonly``, ``@cached_property`` or as a setter or
+      deleter; a dunder is a method named ``__<name>__``.
+
+   .. rst:directive:option:: exclude-members: <names>
+
+      Names of methods not to render, separated by commas.
+
+   .. rst:directive:option:: indent: <columns>
+
+      Width of one indentation level. Default: 2.
+
+   .. rst:directive:option:: width: <columns>
+
+      Column a signature is wrapped at, one parameter per line. Default: 100.
+
+   .. rst:directive:option:: caption: <text>
+
+      A caption for the code block.
 
 
 .. _DOC/Sphinx/DependencyTable:
@@ -49,12 +203,87 @@ condensed-class
 dependency-table
 ****************
 
-.. rst:directive:: .. dependency-table::
+The ``dependency-table`` directive renders a project's dependencies as a table - per package the version
+required, its license and what it requires in turn - from the requirements themselves rather than by hand. The data
+is fetched from the package index while the documentation is built.
 
-   Renders a project's dependencies from its requirements files.
+.. attention::
 
-.. todo:: DOC::Sphinx - document the ``dependency-table`` directive, its options, and the configuration values it
-   reads from :file:`conf.py`.
+   The directive needs the ``pypi`` extra as well: ``pyTooling[sphinx,pypi]``.
+
+.. rubric:: Configuration
+
+A table names an **entrypoint**, which :file:`conf.py` declares:
+
+.. code-block:: Python
+
+   # doc/conf.py
+   pyTooling_Dependency_Requirements = {
+     "package":       {"file":    "../requirements.txt"},
+     "documentation": {"file":    "requirements.txt"},
+     "yaml":          {"package": "pyTooling[yaml]"},
+   }
+
+Each entrypoint states exactly one of:
+
+``file`` / ``files``
+  |rarr| a requirements file, or several, read relative to :file:`conf.py` with their ``-r`` includes followed.
+  They are read while :file:`conf.py` is processed, so a path that doesn't exist ends the build with one message.
+``package`` / ``packages``
+  |rarr| a package, or several, as the package index publishes its **latest release**: ``pyTooling`` for its own
+  requirements, ``pyTooling[yaml]`` for what the extra ``yaml`` adds.
+
+.. list-table:: Configuration values in :file:`conf.py`
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Name
+     - Value
+   * - ``pyTooling_Dependency_Requirements``
+     - The entrypoints, by identifier.
+   * - ``pyTooling_Dependency_PackageOverrides``
+     - Optional, a YAML file stating the license of a package the index can't answer for, relative to
+       :file:`conf.py`.
+   * - ``pyTooling_Dependency_IndexURL``
+     - Optional, the package index. Default: ``https://pypi.org``.
+   * - ``pyTooling_Dependency_APIURL``
+     - Optional, the index's JSON API. Default: ``https://pypi.org/pypi/``.
+
+The tables of a build share one view of the index, so a package several tables require is downloaded once. Each
+table logs what it cost, and the build ends with the total and the packages whose license couldn't be resolved -
+the list the override file answers.
+
+.. rst:directive:: .. dependency-table:: <entrypoint>
+
+   Renders the dependencies of the entrypoint the argument names.
+
+   .. rst:directive:option:: depth: <levels>
+
+      Levels of sub-dependencies to expand. Default: 0, which expands until the tree ends.
+
+   .. rst:directive:option:: simplified-versions: yes | no
+
+      Whether a version constraint is reduced to its lower bound: ``≥9.1`` instead of ``≥9.1, <10``. Default: ``yes``.
+
+   .. rst:directive:option:: version-format: Major | MajorMinor | MajorMinorPatch | All
+
+      How many parts of a version number are printed. Default: ``MajorMinor``.
+
+   .. rst:directive:option:: dependency-format: Package | PackageVersion | PackageLicense | PackageVersionLicense
+
+      What a line of a dependency tree states. Default: ``PackageVersionLicense``.
+
+   .. rst:directive:option:: caption: <text>
+
+      A caption for the table.
+
+.. code-block:: ReST
+
+   .. dependency-table:: package
+      :caption: Mandatory dependencies of the pyTooling package.
+      :depth: 4
+
+:ref:`DEP` shows the tables pyTooling's own documentation renders.
 
 
 .. _DOC/Sphinx/XSDGraph:
@@ -62,12 +291,58 @@ dependency-table
 xsd-graph
 *********
 
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      The ``xsd-graph`` directive draws an XML schema as a Graphviz graph, from the schema file itself:
+
+      * every complex type is a record of its name, its attributes, and its simple-typed child elements with their
+        cardinality;
+      * every complex-typed child element is an edge, labelled with its name and cardinality - so containment and
+        recursion are edges rather than repeated type names;
+      * an enumeration is a node of its own, listing its values;
+      * a root element is a double circle.
+
+      The schema is read with :mod:`xmlschema`, part of the ``sphinx`` extra, and drawn by
+      :mod:`sphinx.ext.graphviz`, which the extension sets up itself. The schema file becomes a dependency of the
+      page.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         .. xsd-graph:: ../../pyTooling/Resources/TestReport-v0.1.xsd
+            :caption: The types of TestReport-v0.1.xsd.
+
 .. rst:directive:: .. xsd-graph:: <path of an XML schema>
 
-   Draws an XML schema as a Graphviz graph.
+   Draws the schema the argument names, relative to the document.
 
-.. todo:: DOC::Sphinx - document the ``xsd-graph`` directive: its argument, its option, what the graph shows, and
-   the base-class :class:`~pyTooling.Documentation.Sphinx.SchemaGraph.SchemaGraph` for another schema language.
+   .. rst:directive:option:: caption: <text>
+
+      A caption under the graph.
+
+:ref:`SCHEMAS` shows the graphs of the schemas pyTooling ships.
+
+.. rubric:: Another schema language
+
+:class:`~pyTooling.Documentation.Sphinx.SchemaGraph.SchemaGraph` is the directive's language-neutral base-class,
+and :class:`~pyTooling.Documentation.Sphinx.SchemaGraph.DotGraph` assembles the graph. A directive for another schema
+language derives from the base-class, names itself, and overrides ``_RenderGraph()``:
+
+.. code-block:: Python
+
+   class JSONSchemaGraph(SchemaGraph):
+     directiveName: str = "json-schema-graph"
+
+     @classmethod
+     def _RenderGraph(cls, schemaFile: Path) -> str:
+       graph = DotGraph()
+       ...
+       return str(graph)
 
 
 .. _DOC/Sphinx/Shields:

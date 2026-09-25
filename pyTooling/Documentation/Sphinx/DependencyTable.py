@@ -42,8 +42,8 @@ when it is BSD-2-Clause.
 .. code-block:: Python
 
    # doc/conf.py
-   pyTooling_dependency_licenses = "dependencies.yml"
-   pyTooling_dependency_requirements = {
+   pyTooling_Dependency_PackageOverrides = "Dependency.PackageOverrides.yaml"
+   pyTooling_Dependency_Requirements = {
      "package":       {"file":    "../requirements.txt"},
      "documentation": {"file":    "requirements.txt"},
      "yaml":          {"package": "pyTooling[yaml]"}
@@ -239,7 +239,7 @@ _COLLECTORS: dict[int, "DependencyCollector"] = {}
 @export
 class Entrypoint(metaclass=ExtendedType, slots=True):
 	"""
-	One entry of ``pyTooling_dependency_requirements``: an identifier and the requirements it stands for.
+	One entry of ``pyTooling_Dependency_Requirements``: an identifier and the requirements it stands for.
 
 	A file entrypoint is read while :file:`conf.py` is being processed and carries its requirements from then on.
 	A package entrypoint can only be resolved by asking the package index, so it carries the package's name and
@@ -530,7 +530,7 @@ class DependencyCollector(metaclass=ExtendedType, slots=True):
 @export
 def readEntrypoints(configuration: Any, confDirectory: Path) -> dict[str, Entrypoint]:
 	"""
-	Turn ``pyTooling_dependency_requirements`` into entrypoints, reading every requirements file it names.
+	Turn ``pyTooling_Dependency_Requirements`` into entrypoints, reading every requirements file it names.
 
 	A requirements file is read here rather than when a table is built, so a path that doesn't exist ends the build
 	with one message naming the identifier instead of an error box in the middle of a page - and so two tables
@@ -724,7 +724,7 @@ class DependencyTable(BaseDirective):
 	"""
 	The ``dependency-table`` directive: an entrypoint's dependencies, rendered from the requirements.
 
-	One argument, the identifier of an entrypoint declared in ``pyTooling_dependency_requirements``. ``:depth:``
+	One argument, the identifier of an entrypoint declared in ``pyTooling_Dependency_Requirements``. ``:depth:``
 	says how many levels of sub-dependencies to expand, ``:simplified-versions:`` whether a constraint is reduced to
 	its lower bound, and ``:caption:`` puts a caption under the table; which package index is queried and which
 	licenses are stated by hand are build-wide and configured in :file:`conf.py`.
