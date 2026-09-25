@@ -57,8 +57,8 @@ if sphinxIsSupported:
 	from pyTooling.Documentation.Sphinx.DependencyTable import VersionFormat, formatUnresolvedLicenses
 	from pyTooling.Documentation.Sphinx.DependencyTable import readEntrypoints
 	from pyTooling.Documentation.Sphinx.Directives      import SphinxExtensionError
-	from pyTooling.Documentation.Sphinx.SchemaGraph     import DotGraph, cardinality, compartment
-	from pyTooling.Documentation.Sphinx.SchemaGraph     import escapeLabel, renderXMLSchema, typeName
+	from pyTooling.Documentation.Sphinx.SchemaGraph     import DotGraph, compartment, escapeLabel
+	from pyTooling.Documentation.Sphinx.XSDSchemaGraph  import cardinality, renderXMLSchema, typeName
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -592,7 +592,7 @@ class XMLSchemaGraphs(Testcase):
 
 
 @mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
-class SchemaGraphDetails(Testcase):
+class XSDSchemaGraphDetails(Testcase):
 	"""The parts of an XML schema graph that the shipped schema doesn't exercise."""
 
 	_SCHEMA = dedent("""\
