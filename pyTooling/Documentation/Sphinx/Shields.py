@@ -88,18 +88,18 @@ from sphinx.addnodes                           import only
 
 from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export, readonly
-from pyTooling.Licensing                       import LicenseExpression, LicenseExpressionError
+from pyTooling.Licensing                       import BaseLicense, LicenseExpression, LicenseExpressionError
 from pyTooling.MetaClasses                     import ExtendedType
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip
 
 
-__all__ = ["SVG_HOST", "RASTER_HOST", "BADGE_HEIGHT", "SHIELDS"]
+__all__ = ["SHIELDS_SERVICE_SVG", "SHIELDS_SERVICE_PNG", "BADGE_HEIGHT", "SHIELDS"]
 
 #: Host serving a badge as SVG, which is what an HTML build embeds.
-SVG_HOST = "https://img.shields.io"
+SHIELDS_SERVICE_SVG = "https://img.shields.io"
 
 #: Host serving the same badge rasterized, which is what a LaTeX build needs - a PDF cannot embed the SVG.
-RASTER_HOST = "https://raster.shields.io"
+SHIELDS_SERVICE_PNG = "https://raster.shields.io"
 
 #: Height every badge is scaled to, in pixels.
 BADGE_HEIGHT = 22
@@ -126,7 +126,7 @@ class Shield(metaclass=ExtendedType, slots=True):
 		alternativeText: str,
 		path: str,
 		target: Nullable[str] = None,
-		options: Iterable[str] = ()
+		options: Nullable[Iterable[str]] = None
 	) -> None:
 		"""
 		Describe a badge.
@@ -158,9 +158,9 @@ class Shield(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._alternativeText = alternativeText
-		self._path = path
-		self._target = target
-		self._options = tuple(options)
+		self._path =            path
+		self._target =          target
+		self._options =         () if options is None else tuple(options)
 
 	@readonly
 	def AlternativeText(self) -> str:
@@ -188,7 +188,7 @@ class Shield(metaclass=ExtendedType, slots=True):
 		:param latex:    Whether the URL is for a LaTeX build, which needs the rasterized badge.
 		:returns:        The complete URL of the badge image.
 		"""
-		host = RASTER_HOST if latex else SVG_HOST
+		host = SHIELDS_SERVICE_PNG if latex else SHIELDS_SERVICE_SVG
 
 		return f"{host}/{self._path.format_map(settings)}"
 
@@ -437,7 +437,7 @@ class Shields(BaseDirective):
 			expression, link = cls._SplitLicense("source-license", sourceLicense)
 			settings["SourceLicenseURL"] = cls._ResolveLink("source-license", link, settings)
 			if expression is not None:
-				settings["SourceLicenseImage"] = f"badge/code-{cls._EscapeBadgeText(expression)}-blue"
+				settings["SourceLicenseImage"] = f"badge/code-{cls._EscapeBadgeText(str(expression))}-blue"
 			elif "PyPI" in settings:
 				settings["SourceLicenseImage"] = f"pypi/l/{settings['PyPI']}"
 			else:
@@ -452,8 +452,9 @@ class Shields(BaseDirective):
 				)
 
 			settings["DocumentationLicenseURL"] = cls._ResolveLink("documentation-license", link, settings)
-			settings["DocumentationLicenseBadge"] = cls._EscapeBadgeText(expression)
-			if expression.startswith("CC"):
+			settings["DocumentationLicenseBadge"] = cls._EscapeBadgeText(str(expression))
+			identifiers = [term.Identifier for term in expression.IterateExpression() if isinstance(term, BaseLicense)]
+			if all(identifier.startswith("CC") for identifier in identifiers):
 				settings["DocumentationLicenseLogo"] = "&logo=CreativeCommons&logoColor=fff"
 			else:
 				settings["DocumentationLicenseLogo"] = ""
@@ -484,24 +485,24 @@ class Shields(BaseDirective):
 		return settings
 
 	@staticmethod
-	def _SplitLicense(option: str, value: str) -> tuple[Nullable[str], str]:
+	def _SplitLicense(option: str, value: str) -> tuple[Nullable[LicenseExpression], str]:
 		"""
 		Split a license option into the license and the link, which is its last word.
 
 		:param option:                The option's name, for the message.
 		:param value:                 The option's value, ``[<SPDX expression> ]<link>``.
-		:returns:                     The license expression as written, or ``None`` if none is stated, and the link.
+		:returns:                     The parsed license expression, or ``None`` if none is stated, and the link.
 		:raises SphinxExtensionError: If the license isn't an SPDX license expression.
 		"""
 		words = value.rsplit(maxsplit=1)
 		if len(words) == 1:
 			return None, words[0]
 
-		expression, link = words
+		text, link = words
 		try:
-			LicenseExpression.Parse(expression)
+			expression = LicenseExpression.Parse(text)
 		except LicenseExpressionError as cause:
-			ex = SphinxExtensionError(f"Option ':{option}:' states '{expression}', which isn't an SPDX license expression.")
+			ex = SphinxExtensionError(f"Option ':{option}:' states '{text}', which isn't an SPDX license expression.")
 			ex.add_note(str(cause))
 			raise ex from cause
 

@@ -831,6 +831,24 @@ class ShieldOptions(Testcase):
 		self.assertEqual("LicenseRef--Company", settings["DocumentationLicenseBadge"])
 		self.assertEqual("", settings["DocumentationLicenseLogo"])
 
+	def test_ALicenseIsWrittenAsParsed(self) -> None:
+		"""The badge shows the expression normalized, with its operators in upper case."""
+		settings = Shields._Settings({"documentation-license": "MIT or Apache-2.0 https://example.org/license"})
+
+		self.assertEqual("MIT%20OR%20Apache--2.0", settings["DocumentationLicenseBadge"])
+
+	def test_TheCreativeCommonsLogoNeedsOnlyCreativeCommonsLicenses(self) -> None:
+		"""Every license of the expression decides, not how its text begins."""
+		for expression, logo in (
+			("CC-BY-4.0 OR CC-BY-SA-4.0", "&logo=CreativeCommons&logoColor=fff"),
+			("CC-BY-4.0 OR MIT", ""),
+			("MIT OR CC-BY-4.0", ""),
+		):
+			with self.subTest(expression=expression):
+				settings = Shields._Settings({"documentation-license": f"{expression} https://example.org/license"})
+
+				self.assertEqual(logo, settings["DocumentationLicenseLogo"])
+
 	def test_TheWorkflowBranchIsOptional(self) -> None:
 		"""Without it, the badge shows the workflow's latest run on any branch."""
 		self.assertEqual("", Shields._Settings({"github-action": "Pipeline.yml"})["WorkflowBranch"])
@@ -947,6 +965,11 @@ class ShieldTable(Testcase):
 			for option in shield.Options:
 				with self.subTest(shield=identifier, option=option):
 					self.assertIn(option, Shields.option_spec)
+
+	def test_AShieldWithoutOptionsNeedsNone(self) -> None:
+		self.assertEqual((), Shield("text", "path").Options)
+		self.assertEqual((), Shield("text", "path", options=None).Options)
+		self.assertEqual(("pypi",), Shield("text", "path", options=["pypi"]).Options)
 
 	def test_AShieldChecksItsParameters(self) -> None:
 		with self.subTest("alternativeText"), self.assertRaises(ValueError):
