@@ -61,7 +61,7 @@ document of every project. This extension declares them once:
 
   * :rst:dir:`condensed-class` - renders a class' public interface from its source;
   * :rst:dir:`dependency-table` - renders a project's dependencies from its requirements files, which
-    :file:`conf.py` declares under ``pyTooling_dependency_requirements``;
+    :file:`conf.py` declares under ``pyTooling_Dependency_Requirements``;
   * :rst:dir:`xsd-graph` - draws an XML schema as a Graphviz graph. It sets up :mod:`sphinx.ext.graphviz`
     itself, and needs :mod:`xmlschema` only in a project that uses it.
   * :rst:dir:`shields` - renders a project's badges from shields.io, in rows, from the coordinates its options
