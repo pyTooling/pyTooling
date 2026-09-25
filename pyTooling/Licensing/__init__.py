@@ -68,6 +68,12 @@ __all__ = [
 	"PSF_2_0_License",
 	"Unlicense",
 	"CC0_1_0",
+	"CC_BY_4_0",
+	"CC_BY_SA_4_0",
+	"CC_BY_NC_4_0",
+	"CC_BY_ND_4_0",
+	"CC_BY_NC_SA_4_0",
+	"CC_BY_NC_ND_4_0",
 	"EPL_1_0_License",
 	"EPL_2_0_License",
 	"LGPL_2_1_only",
@@ -184,6 +190,12 @@ LICENSE_URLS: dict[str, str] = {
 	"PSF-2.0":           "https://docs.python.org/3/license.html",
 	"Unlicense":         "https://unlicense.org/",
 	"CC0-1.0":           "https://creativecommons.org/publicdomain/zero/1.0/",
+	"CC-BY-4.0":         "https://creativecommons.org/licenses/by/4.0/",
+	"CC-BY-SA-4.0":      "https://creativecommons.org/licenses/by-sa/4.0/",
+	"CC-BY-NC-4.0":      "https://creativecommons.org/licenses/by-nc/4.0/",
+	"CC-BY-ND-4.0":      "https://creativecommons.org/licenses/by-nd/4.0/",
+	"CC-BY-NC-SA-4.0":   "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+	"CC-BY-NC-ND-4.0":   "https://creativecommons.org/licenses/by-nc-nd/4.0/",
 	"EPL-1.0":           "https://www.eclipse.org/legal/epl/epl-v10.html",
 	"EPL-2.0":           "https://www.eclipse.org/legal/epl-2.0/",
 	"GPL-2.0-only":      "https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html",
@@ -211,6 +223,12 @@ LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
 	"BSL-1.0":           {"txt": "https://www.boost.org/LICENSE_1_0.txt"},
 	"Unlicense":         {"txt": "https://unlicense.org/UNLICENSE"},
 	"CC0-1.0":           {"txt": "https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt"},
+	"CC-BY-4.0":         {"txt": "https://creativecommons.org/licenses/by/4.0/legalcode.txt"},
+	"CC-BY-SA-4.0":      {"txt": "https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt"},
+	"CC-BY-NC-4.0":      {"txt": "https://creativecommons.org/licenses/by-nc/4.0/legalcode.txt"},
+	"CC-BY-ND-4.0":      {"txt": "https://creativecommons.org/licenses/by-nd/4.0/legalcode.txt"},
+	"CC-BY-NC-SA-4.0":   {"txt": "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.txt"},
+	"CC-BY-NC-ND-4.0":   {"txt": "https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.txt"},
 	"EPL-2.0":           {"txt": "https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.txt"},
 	"GPL-2.0-only":      {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
 	"GPL-2.0-or-later":  {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
@@ -239,7 +257,7 @@ LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
 #: ``Python-2.0``, and OSI has **one** page per license where SPDX has two identifiers - ``GPL-2.0-only`` and
 #: ``GPL-2.0-or-later`` both point at it, because *only* versus *or later* is SPDX's distinction, not OSI's.
 #:
-#: A license OSI hasn't approved has no entry, which is why ``CC0-1.0`` is absent.
+#: A license OSI hasn't approved has no entry, which is why ``CC0-1.0`` and the Creative Commons licenses are absent.
 OSI_LICENSE_URLS: dict[str, str] = {
 	"0BSD":              "https://opensource.org/license/0bsd",
 	"Apache-2.0":        "https://opensource.org/license/apache-2.0",
@@ -545,6 +563,17 @@ GPL_3_0_or_later =       License("GPL-3.0-or-later",  "GNU General Public Licens
 AGPL_3_0_only =          License("AGPL-3.0-only",     "GNU Affero General Public License v3.0 only",     True, True)
 AGPL_3_0_or_later =      License("AGPL-3.0-or-later", "GNU Affero General Public License v3.0 or later", True, True)
 
+CC_BY_4_0 =       License("CC-BY-4.0",    "Creative Commons Attribution 4.0 International",                False, True)
+CC_BY_SA_4_0 =    License("CC-BY-SA-4.0", "Creative Commons Attribution Share Alike 4.0 International",    False, True)
+CC_BY_NC_4_0 =    License("CC-BY-NC-4.0", "Creative Commons Attribution Non Commercial 4.0 International", False, False)
+CC_BY_ND_4_0 =    License("CC-BY-ND-4.0", "Creative Commons Attribution No Derivatives 4.0 International", False, False)
+CC_BY_NC_SA_4_0 = License(
+	"CC-BY-NC-SA-4.0", "Creative Commons Attribution Non Commercial Share Alike 4.0 International",    False, False
+)
+CC_BY_NC_ND_4_0 = License(
+	"CC-BY-NC-ND-4.0", "Creative Commons Attribution Non Commercial No Derivatives 4.0 International", False, False
+)
+
 
 #: All predefined licenses, in the order they are defined above.
 LICENSES: tuple[License, ...] = (
@@ -554,6 +583,7 @@ LICENSES: tuple[License, ...] = (
 	LGPL_2_1_only, LGPL_2_1_or_later, LGPL_3_0_only, LGPL_3_0_or_later,
 	GPL_2_0_only, GPL_2_0_or_later, GPL_3_0_only, GPL_3_0_or_later,
 	AGPL_3_0_only, AGPL_3_0_or_later,
+	CC_BY_4_0, CC_BY_SA_4_0, CC_BY_NC_4_0, CC_BY_ND_4_0, CC_BY_NC_SA_4_0, CC_BY_NC_ND_4_0,
 )
 
 #: Mapping of predefined licenses, indexed by their SPDX identifier.
@@ -577,7 +607,7 @@ def buildClassifierIndex() -> dict[str, tuple[License, ...]]:
 	for spdxLicense in LICENSES:
 		try:
 			classifier = spdxLicense.PythonClassifier
-		except ValueError:  # pragma: no cover
+		except ValueError:
 			continue
 
 		index.setdefault(classifier, []).append(spdxLicense)

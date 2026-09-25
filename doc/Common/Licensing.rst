@@ -82,9 +82,31 @@ Public domain dedications and waivers: :data:`~pyTooling.Licensing.Unlicense` an
 
 .. note::
 
-   :data:`~pyTooling.Licensing.CC0_1_0` is the one predefined license that is **not** OSI-approved, so its
-   classifier is ``License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication`` without the
-   ``OSI Approved ::`` prefix. :attr:`~pyTooling.Licensing.License.OSIApproved` says so.
+   :data:`~pyTooling.Licensing.CC0_1_0` is **not** OSI-approved, so its classifier is
+   ``License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication`` without the ``OSI Approved ::`` prefix.
+   :attr:`~pyTooling.Licensing.License.OSIApproved` says so.
+
+Licenses for documentation and media, the six Creative Commons 4.0 licenses:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30 40
+
+   * - Free
+     - Non-commercial
+     - No derivatives
+   * - | :data:`~pyTooling.Licensing.CC_BY_4_0`
+       | :data:`~pyTooling.Licensing.CC_BY_SA_4_0`
+     - | :data:`~pyTooling.Licensing.CC_BY_NC_4_0`
+       | :data:`~pyTooling.Licensing.CC_BY_NC_SA_4_0`
+     - | :data:`~pyTooling.Licensing.CC_BY_ND_4_0`
+       | :data:`~pyTooling.Licensing.CC_BY_NC_ND_4_0`
+
+.. note::
+
+   None of them is OSI-approved, and only the two free ones are FSF-approved. PyPI has no classifier for any of
+   them, so :attr:`~pyTooling.Licensing.License.PythonClassifier` and
+   :attr:`~pyTooling.Licensing.License.PythonLicenseName` raise a :exc:`ValueError`.
 
 .. hint::
 
