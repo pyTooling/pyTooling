@@ -61,7 +61,7 @@ from __future__                                import annotations
 
 from pathlib                                   import Path
 from types                                     import ModuleType
-from typing                                    import TYPE_CHECKING, Any, Generator, Iterable
+from typing                                    import TYPE_CHECKING, Any, Generator, Iterable, Sequence
 
 from docutils                                  import nodes
 from sphinx.ext.graphviz                       import figure_wrapper, graphviz
@@ -101,7 +101,7 @@ def escapeLabel(text: str) -> str:
 
 
 @export
-def compartment(rows: Iterable[str]) -> str:
+def compartment(rows: Sequence[str]) -> str:
 	"""
 	Join the rows of one record compartment, left-aligned.
 
@@ -109,11 +109,10 @@ def compartment(rows: Iterable[str]) -> str:
 	:returns:    The compartment's content, or a single space when there are no rows - an empty compartment collapses,
 	             which makes the records of a graph differently shaped.
 	"""
-	content = "".join(f"{escapeLabel(row)}\\l" for row in rows)
-	if content == "":
+	if len(rows) == 0:
 		return " "
 
-	return content
+	return "".join(f"{escapeLabel(row)}\\l" for row in rows)
 
 
 @export
@@ -170,7 +169,7 @@ class DotGraph(metaclass=ExtendedType, slots=True):
 		self,
 		identifier: str,
 		title: str,
-		compartments: Iterable[Iterable[str]] = (),
+		compartments: Iterable[Sequence[str]] = (),
 		**attributes: str
 	) -> None:
 		"""
