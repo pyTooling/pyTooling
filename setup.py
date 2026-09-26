@@ -73,7 +73,8 @@ setup(
 		dataFiles={
 			packageName[:-1] + "Common": ["../py.typed"],
 			packageName[:-1] + "Resources": ["*.xsd"],
-			packageName[:-1] + "Resources.Sphinx": ["*.css"]
+			packageName[:-1] + "Resources.Sphinx": ["*.css"],
+			packageName[:-1] + "Resources.Tracing": ["*.css", "*.js"]
 		},
 		pytestPlugins={
 			# The entry point's name is the module's name on purpose, so '-p <module>' finds the plugin already

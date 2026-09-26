@@ -361,3 +361,7 @@ The rows of the kinds in ``collapsedKinds`` start collapsed - jobs by default, s
 as one without them. The script runs where an SVG file is a document: opened in a browser, or embedded by
 ``<object>`` or inline. An SVG file shown as an image - by ``<img>``, in Markdown or in a pipeline's job summary - is
 static and shows every row expanded.
+
+The script and its stylesheet are resource files, :file:`CollapsibleGantt.js` and :file:`CollapsibleGantt.css` in
+:mod:`pyTooling.Resources.Tracing`, whose content is embedded, so the SVG file stays self-contained.
+:func:`~pyTooling.Common.getResourceFile` returns their paths, e.g. to use them in a page of your own.

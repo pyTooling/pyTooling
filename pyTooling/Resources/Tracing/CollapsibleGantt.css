@@ -1,0 +1,2 @@
+/* Style of the markers a collapsible SVG Gantt chart shows in front of the labels of expandable rows. */
+.gantt-marker { fill: #404040; font-family: sans-serif; cursor: pointer; user-select: none; }
