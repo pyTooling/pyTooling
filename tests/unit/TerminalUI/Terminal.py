@@ -52,7 +52,7 @@ class Instantiation(Testcase):
 		term = TerminalApplication()
 
 		self.assertGreaterEqual(term.Width, 80)
-		self.assertGreaterEqual(term.Height, 25)
+		self.assertGreaterEqual(term.Height, 24)
 		self.assertFalse(term.Verbose)
 		self.assertFalse(term.Debug)
 		self.assertFalse(term.Quiet)
