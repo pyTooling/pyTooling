@@ -31,6 +31,8 @@
 """
 Configuration reader for YAML files.
 
+:raises MissingDependencyError: If the 'yaml' extra isn't installed.
+
 .. hint::
 
    See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
@@ -39,7 +41,7 @@ from __future__           import annotations
 
 from pathlib              import Path
 from datetime             import date, datetime
-from typing               import Any, Union, Iterator as typing_Iterator, Self
+from typing               import Any, Union, Iterator as typing_Iterator, Optional as Nullable, Self
 
 from pyTooling.Exceptions import MissingDependencyError
 
@@ -74,7 +76,7 @@ class Node(Abstract_Node):
 	def __init__(
 		self,
 		root:     Configuration,
-		parent:   NodeT,
+		parent:   Nullable[NodeT],
 		key:      KeyT,
 		yamlNode: Union[CommentedMap, CommentedSeq]
 	) -> None:
@@ -82,7 +84,7 @@ class Node(Abstract_Node):
 		Initializes a YAML node.
 
 		:param root:     Reference to the root node.
-		:param parent:   Reference to the parent node.
+		:param parent:   Reference to the parent node, or ``None`` for the root node.
 		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
@@ -209,9 +211,9 @@ class Node(Abstract_Node):
 			elif isinstance(value, (date, datetime)):
 				value = value.isoformat()
 			elif isinstance(value, CommentedMap):
-				value = self.DICT_TYPE(self, self, key, value)
+				value = self.DICT_TYPE(self._root, self, key, value)
 			elif isinstance(value, CommentedSeq):
-				value = self.SEQ_TYPE(self, self, key, value)
+				value = self.SEQ_TYPE(self._root, self, key, value)
 			else:
 				typeName = getFullyQualifiedName(value)
 				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
@@ -288,12 +290,19 @@ class Node(Abstract_Node):
 		:param path:                 Path elements, where ``..`` selects the parent node.
 		:returns:                    The scalar value at that path.
 		:raises KeyNotFoundError:    If a path element doesn't exist.
-		:raises PathExpressionError: If the path resolves to a node instead of a value. Extend the path expression
-		                             to address a scalar value.
+		:raises PathExpressionError: If the path resolves to a node instead of a value - extend the path expression
+		                             to address a scalar value - or if a ``..`` element is applied to the root node,
+		                             which has no parent.
 		"""
 		node = self
 		for p in path:
 			if p == "..":
+				if node._parent is None:
+					pathExpression = ":".join(str(element) for element in path)
+					ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
+					ex.add_note("Element '..' was applied to the root node, which has no parent node.")
+					raise ex
+
 				node = node._parent
 			else:
 				node = node._GetNodeOrValue(p)
@@ -310,13 +319,20 @@ class Node(Abstract_Node):
 		"""
 		Return the node or value the given path refers to.
 
-		:param path:              Path elements, where ``..`` selects the parent node.
-		:returns:                 A node or a scalar value at that path.
-		:raises KeyNotFoundError: If a path element doesn't exist.
+		:param path:                 Path elements, where ``..`` selects the parent node.
+		:returns:                    A node or a scalar value at that path.
+		:raises KeyNotFoundError:    If a path element doesn't exist.
+		:raises PathExpressionError: If a ``..`` element is applied to the root node, which has no parent.
 		"""
 		node = self
 		for p in path:
 			if p == "..":
+				if node._parent is None:
+					pathExpression = ":".join(str(element) for element in path)
+					ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
+					ex.add_note("Element '..' was applied to the root node, which has no parent node.")
+					raise ex
+
 				node = node._parent
 			else:
 				node = node._GetNodeOrValue(p)
@@ -332,7 +348,7 @@ class Dictionary(Node, Abstract_Dict):
 	def __init__(
 		self,
 		root:     Configuration,
-		parent:   NodeT,
+		parent:   Nullable[NodeT],
 		key:      KeyT,
 		yamlNode: CommentedMap
 	) -> None:
@@ -340,7 +356,7 @@ class Dictionary(Node, Abstract_Dict):
 		Initializes a YAML dictionary.
 
 		:param root:     Reference to the root node.
-		:param parent:   Reference to the parent node.
+		:param parent:   Reference to the parent node, or ``None`` for the root node.
 		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
@@ -504,7 +520,7 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		self._yamlConfig = document
 
-		Dictionary.__init__(self, self, self, None, self._yamlConfig)
+		Dictionary.__init__(self, self, None, None, self._yamlConfig)
 		Abstract_Configuration.__init__(self, configFile)
 
 	def __getitem__(self, key: str) -> ValueT:
