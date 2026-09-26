@@ -83,15 +83,16 @@ variable.
 .. rubric:: Example:
 .. code-block:: Python
 
+   from __future__            import annotations
    from typing                import ClassVar
    from pyTooling.MetaClasses import ExtendedType
 
    class Node(metaclass=ExtendedType, slots=True):
      _SEPARATOR: ClassVar[str] = "/"   # class variable
-     _parent:    "Node"                # slot
+     _parent:    Node                  # slot
      _name:      str                   # slot
 
-     def __init__(self, parent: "Node", name: str) -> None:
+     def __init__(self, parent: Node, name: str) -> None:
        self._parent = parent
        self._name =   name
 
@@ -141,28 +142,15 @@ Deriving from :class:`~pyTooling.MetaClasses.SlottedObject` makes a class slotte
 the :deco:`~pyTooling.MetaClasses.slotted` decorator recreates a class as a slotted one. All three spellings declare
 the same class:
 
-.. list-table::
-   :header-rows: 1
-   :widths: 34 33 33
-
-   * - Meta-class
-     - ``SlottedObject``
-     - ``@slotted``
-   * - .. code-block:: Python
-
-          class Node(metaclass=ExtendedType, slots=True):
-            _name: str
-
-     - .. code-block:: Python
-
-          class Node(SlottedObject):
-            _name: str
-
-     - .. code-block:: Python
-
-          @slotted
-          class Node:
-            _name: str
++----------------------------------------+----------------------------------------+----------------------------------------------------------+
+| Deriving from ``SlottedObject``        | Apply ``slotted`` Decorator            | Using meta-class ``ExtendedType``                        |
++========================================+========================================+==========================================================+
+| .. code-block:: Python                 | .. code-block:: Python                 | .. code-block:: Python                                   |
+|                                        |                                        |                                                          |
+|    class MyClass(SlottedObject):       |    @slotted                            |    class MyClass(metaclass=ExtendedType, slots=True):    |
+|      pass                              |    class MyClass:                      |      pass                                                |
+|                                        |      pass                              |                                                          |
++----------------------------------------+----------------------------------------+----------------------------------------------------------+
 
 
 .. _META/Mixin:
@@ -177,24 +165,32 @@ become slots of the slotted class the mixin-class is mixed into.
 .. rubric:: Example:
 .. code-block:: Python
 
+   from __future__            import annotations
    from pyTooling.MetaClasses import ExtendedType
 
-   class ParentMixin(metaclass=ExtendedType, mixin=True):
-     _parent: "Node"
-
-     def IsRoot(self) -> bool:
-       return self._parent is None
-
-   class Node(metaclass=ExtendedType, slots=True):
+   class NamedMixin(metaclass=ExtendedType, mixin=True):
      _name: str
 
-   class Child(Node, ParentMixin):
-     pass
+     def __init__(self, name: str) -> None:
+       self._name = name
 
-   ParentMixin.__slots__               # ()
-   ParentMixin.__mixinSlots__          # ('_parent',)
-   Child.__slots__                     # ('_parent',)
-   Child.__allSlots__                  # {'_name', '_parent'}
+   class BaseNode(metaclass=ExtendedType, slots=True):
+     _parent: Node
+
+     def __init__(self, parent: Node) -> None:
+       self._parent = parent
+
+   class Node(BaseNode, NamedMixin):
+     def __init__(self, parent: Node, name: str) -> None:
+       super().__init__(parent)
+       NamedMixin.__init__(self, name)
+
+   NamedMixin.__slots__                # ()
+   NamedMixin.__mixinSlots__           # ('_name',)
+   Node.__slots__                      # ('_name',)
+   Node.__allSlots__                   # {'_parent', '_name'}
+
+The mixin-class' ``__init__`` sets its own fields; the class it is mixed into calls it after its primary base-class'.
 
 .. rubric:: Rules
 
@@ -236,11 +232,12 @@ put its bookkeeping in, and the slot that would hold it is not created unless it
 .. rubric:: Example:
 .. code-block:: Python
 
+   from __future__            import annotations
    from weakref               import ref
    from pyTooling.MetaClasses import ExtendedType
 
    class Node(metaclass=ExtendedType, slots=True, weakref=True):
-     _parent: "Node"
+     _parent: Node
 
    node = Node()
    reference = ref(node)      # fine
@@ -269,8 +266,10 @@ class the mixin-class is mixed into. That class must not have it already - Pytho
 
 .. code-block:: Python
 
+   from __future__ import annotations
+
    class ParentMixin(metaclass=ExtendedType, mixin=True, weakref=True):
-     _parent: "Node"
+     _parent: Node
 
    class Node(metaclass=ExtendedType, slots=True):
      _name: str
