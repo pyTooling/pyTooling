@@ -491,6 +491,8 @@ class Matplotlib(Testcase):
 		compileStep = spans["Compile"].SpanID
 
 		self.assertIn('<script type="text/ecmascript">', content)
+		self.assertNotIn("/*DATA*/", content, "The script's placeholder is replaced by the rows.")
+		self.assertIn(".gantt-marker", content, "The stylesheet is embedded.")
 		self.assertTrue(rows[build]["collapsed"], "A job starts collapsed.")
 		self.assertFalse(rows[spans["Tests"].SpanID]["collapsed"], "A called workflow starts expanded.")
 		self.assertEqual(build, rows[compileStep]["parent"])
