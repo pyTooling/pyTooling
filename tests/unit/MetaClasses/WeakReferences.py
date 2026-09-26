@@ -114,17 +114,15 @@ class WeakReferences(Testcase):
 		self.assertNotIn("__weakref__", Derived.__slots__, "It is inherited, not repeated.")
 		self.assertIsNotNone(WeakReference(Derived()))
 
-	def test_ItIsNotDeclaredTwiceInAHierarchy(self) -> None:
-		"""Python rejects a second ``__weakref__`` in one hierarchy, so asking again must be a no-op."""
+	def test_AskingTwiceInAHierarchyIsAnError(self) -> None:
+		"""``__weakref__`` is a slot like any other, so a derived class asking again declares a duplicate slot."""
 
 		class Base(metaclass=ExtendedType, slots=True, weakref=True):
 			_field: int
 
-		class Derived(Base, metaclass=ExtendedType, slots=True, weakref=True):
-			_other: int
-
-		self.assertNotIn("__weakref__", Derived.__slots__)
-		self.assertIsNotNone(WeakReference(Derived()))
+		with self.assertRaises(AttributeError):
+			class Derived(Base, weakref=True):
+				_other: int
 
 	def test_AMixinContributesItsFieldsAsUsual(self) -> None:
 		class Mixin(metaclass=ExtendedType, mixin=True):
@@ -154,29 +152,11 @@ class WeakReferences(Testcase):
 		self.assertIn("_fromMixin", Combined.__slots__)
 		self.assertIsNotNone(WeakReference(Combined()))
 
-	def test_AMixinDoesntRepeatIt(self) -> None:
-		"""A mixin-class asking for it on a class that has it already, or a second mixin-class, is a no-op."""
-
+	def test_AMixinOfMixinsPassesItOn(self) -> None:
 		class Mixin1(metaclass=ExtendedType, mixin=True, weakref=True):
 			_fromMixin1: int
 
-		class Mixin2(metaclass=ExtendedType, mixin=True, weakref=True):
-			_fromMixin2: int
-
-		class Application(metaclass=ExtendedType, slots=True, weakref=True):
-			_own: int
-
-		class Combined(Application, Mixin1, Mixin2):
-			pass
-
-		self.assertNotIn("__weakref__", Combined.__slots__)
-		self.assertIsNotNone(WeakReference(Combined()))
-
-	def test_AMixinOfMixinsKeepsIt(self) -> None:
-		class Mixin1(metaclass=ExtendedType, mixin=True, weakref=True):
-			_fromMixin1: int
-
-		class Mixin2(Mixin1, mixin=True, weakref=True):
+		class Mixin2(Mixin1, mixin=True):
 			_fromMixin2: int
 
 		class Application(metaclass=ExtendedType, slots=True):
@@ -185,9 +165,21 @@ class WeakReferences(Testcase):
 		class Combined(Application, Mixin2):
 			pass
 
-		self.assertEqual(1, Mixin2.__mixinSlots__.count("__weakref__"))
 		self.assertEqual(1, Combined.__slots__.count("__weakref__"))
 		self.assertIsNotNone(WeakReference(Combined()))
+
+	def test_AMixinAskingOnAWeakReferenceableClassIsAnError(self) -> None:
+		"""Python rejects the second ``__weakref__`` when the mixin-class' slots are materialized."""
+
+		class Mixin(metaclass=ExtendedType, mixin=True, weakref=True):
+			_fromMixin: int
+
+		class Application(metaclass=ExtendedType, slots=True, weakref=True):
+			_own: int
+
+		with self.assertRaises(TypeError):
+			class Combined(Application, Mixin):
+				pass
 
 
 class AnnotatedWeakref(Testcase):

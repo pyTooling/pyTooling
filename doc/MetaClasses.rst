@@ -82,17 +82,18 @@ the child lives, and a weak reference is how that cycle is avoided.
 
 .. important::
 
-   ``__weakref__`` may appear **once** in an inheritance hierarchy - Python rejects a second one with
-   ``TypeError: __weakref__ slot disallowed``. A derived class therefore inherits the capability rather than
-   repeating it, and asking for it again is a no-op rather than an error:
+   ``__weakref__`` is a slot like any other, and like any other it may appear **once** in an inheritance
+   hierarchy. A derived class inherits the capability; asking for it again declares a duplicate slot:
 
    .. code-block:: Python
 
       class Base(metaclass=ExtendedType, slots=True, weakref=True): ...
       class Derived(Base): ...                       # already weak-referenceable
+      class Again(Base, weakref=True): ...           # AttributeError: slot '__weakref__' already exists
 
 A mixin-class can ask for it too. ``__weakref__`` is then one of the slots it contributes, and it is added to the
-class the mixin-class is mixed into - unless that class has it already:
+class the mixin-class is mixed into. That class must not have it already - Python rejects the second one with
+``TypeError: __weakref__ slot disallowed``:
 
 .. code-block:: Python
 
