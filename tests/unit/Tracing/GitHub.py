@@ -171,7 +171,7 @@ class AttributeKeys(Testcase):
 
 		attributes = {
 			attribute["key"]: attribute["value"]
-			for attribute in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["attributes"]
+			for attribute in trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["attributes"]
 		}
 		self.assertEqual({"stringValue": "pipeline"}, attributes["ci.span.kind"])
 		self.assertEqual({"stringValue": "cancellation"}, attributes["cicd.pipeline.result"])
@@ -383,7 +383,7 @@ class Conversion(Testcase):
 
 	def test_OTLPExport(self) -> None:
 		trace = WorkflowRunTrace.FromJSON(_run(), [_job("Tests / Linux", 1, 4, 10), _job("Build", 1, 1, 5)])
-		spans = trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		spans = trace.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 
 		self.assertEqual(5, len(spans), "The trace, a group, a waiting and a running job, and a job without waiting.")
 
