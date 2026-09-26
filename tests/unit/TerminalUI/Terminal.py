@@ -51,8 +51,8 @@ class Instantiation(Testcase):
 	def test_LineTerminal(self) -> None:
 		term = TerminalApplication()
 
-		self.assertGreater(term.Width, 0)
-		self.assertGreater(term.Height, 0)
+		self.assertGreaterEqual(term.Width, 80)
+		self.assertGreaterEqual(term.Height, 24)
 		self.assertFalse(term.Verbose)
 		self.assertFalse(term.Debug)
 		self.assertFalse(term.Quiet)

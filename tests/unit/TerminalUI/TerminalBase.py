@@ -50,8 +50,8 @@ class Instantiate(Testcase):
 	def test_NoConfigure(self) -> None:
 		term = TerminalBaseApplication()
 
-		self.assertGreater(term.Width, 0)
-		self.assertGreater(term.Height, 0)
+		self.assertGreaterEqual(term.Width, 80)
+		self.assertGreaterEqual(term.Height, 24)
 
 	def test_UninitializeColors(self) -> None:
 		term = TerminalBaseApplication()
