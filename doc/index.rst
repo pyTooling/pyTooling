@@ -926,8 +926,6 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
                      super().__init__(parent)
                      NamedMixin.__init__(self, name)
 
-               assert Node.__slots__ == ("_name", )
-
 
 Packaging
 =========
