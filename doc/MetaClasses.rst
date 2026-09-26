@@ -44,6 +44,86 @@ Mixin
 *****
 
 
+.. _META/WeakReferences:
+
+Weak References
+***************
+
+A class using :term:`__slots__ <slots>` cannot be referenced weakly. There is no ``__dict__`` for :mod:`weakref` to
+put its bookkeeping in, and the slot that would hold it is not created unless it is asked for:
+
+.. code-block:: Python
+
+   class Slotted(metaclass=ExtendedType, slots=True):
+     _field: int
+
+   weakref.ref(Slotted())     # TypeError: cannot create weak reference to 'Slotted' object
+
+``weakref=True`` adds ``__weakref__`` to the class' slots, which is what makes an instance weak-referenceable:
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from weakref               import ref
+   from pyTooling.MetaClasses import ExtendedType
+
+   class Node(metaclass=ExtendedType, slots=True, weakref=True):
+     _parent: "Node"
+
+   node = Node()
+   reference = ref(node)      # fine
+
+   reference()                # -> the node
+   del node
+   reference()                # -> None
+
+The typical reason to want it is a back-reference: a child pointing at its parent keeps the parent alive as long as
+the child lives, and a weak reference is how that cycle is avoided.
+
+.. important::
+
+   ``__weakref__`` is a slot like any other, and like any other it may appear **once** in an inheritance
+   hierarchy. A derived class inherits the capability; asking for it again declares a duplicate slot:
+
+   .. code-block:: Python
+
+      class Base(metaclass=ExtendedType, slots=True, weakref=True): ...
+      class Derived(Base): ...                       # already weak-referenceable
+      class Again(Base, weakref=True): ...           # AttributeError: slot '__weakref__' already exists
+
+A mixin-class can ask for it too. ``__weakref__`` is then one of the slots it contributes, and it is added to the
+class the mixin-class is mixed into. That class must not have it already - Python rejects the second one with
+``TypeError: __weakref__ slot disallowed``:
+
+.. code-block:: Python
+
+   class ParentMixin(metaclass=ExtendedType, mixin=True, weakref=True):
+     _parent: "Node"
+
+   class Node(metaclass=ExtendedType, slots=True):
+     _name: str
+
+   class Child(Node, ParentMixin): ...               # weak-referenceable
+
+.. attention::
+
+   ``weakref=True`` is the only way to ask for it. Annotating ``__weakref__`` as a field raises an
+   :exc:`~pyTooling.MetaClasses.ExtendedTypeError`, as does annotating ``__dict__``: a ``__dict__`` slot accepts any
+   attribute on an instance again and gives up what slots save. A class that needs a ``__dict__`` uses
+   ``slots=False``.
+
+.. note::
+
+   A class **without** slots is weak-referenceable already, because Python adds ``__weakref__`` itself.
+   ``weakref=True`` is therefore only meaningful together with ``slots=True`` or ``mixin=True``.
+
+.. note::
+
+   The restriction is **CPython's**. On PyPy every object is weak-referenceable whether or not the class uses
+   slots, so ``weakref=True`` adds the slot but changes nothing observable there. Code written for both keeps the
+   keyword: it is what makes the class work on CPython.
+
+
 .. _META/ExpectedMembers:
 
 Expected Members
