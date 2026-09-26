@@ -907,18 +907,26 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
             .. code-block:: Python
 
-               class ParentMixin(metaclass=ExtendedType, mixin=True):
-                  _parent: "Node"
+               from __future__ import annotations
 
-               class Node(metaclass=ExtendedType, slots=True):
+               class NamedMixin(metaclass=ExtendedType, mixin=True):
                   _name: str
 
-               class Child(Node, ParentMixin):
-                  def __init__(self, parent: Node, name: str) -> None:
-                     self._parent = parent
+                  def __init__(self, name: str) -> None:
                      self._name = name
 
-               assert Child.__slots__ == ("_parent", )
+               class BaseNode(metaclass=ExtendedType, slots=True):
+                  _parent: Node
+
+                  def __init__(self, parent: Node) -> None:
+                     self._parent = parent
+
+               class Node(BaseNode, NamedMixin):
+                  def __init__(self, parent: Node, name: str) -> None:
+                     super().__init__(parent)
+                     NamedMixin.__init__(self, name)
+
+               assert Node.__slots__ == ("_name", )
 
 
 Packaging
