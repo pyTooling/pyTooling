@@ -96,8 +96,8 @@ Arguments
 
 An argument attribute is written **on the handler method that receives it**, and each one becomes exactly one
 :meth:`~argparse.ArgumentParser.add_argument` call on the parser belonging to that handler. The attribute's
-parameters are the ones :mod:`argparse` already uses - ``dest``, ``help``, ``metaName`` - so nothing new has to be
-learned to say what a parser already knows how to do.
+parameters are the ones :mod:`argparse` already uses - :pycode:`dest`, :pycode:`help`, :pycode:`metaName` - so
+nothing new has to be learned to say what a parser already knows how to do.
 
 They form a hierarchy, and the leaves are what a program writes:
 
@@ -111,18 +111,49 @@ They form a hierarchy, and the leaves are what a program writes:
      - An argument with a **name** - ``--verbose``.
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.ValuedArgument`
      - An argument with a **value**.
-   * - ``NamedAndValuedArgument``
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.NamedAndValuedArgument`
      - Both - ``--quota=5GiB``.
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument`
      - A value with **no** name, identified by its position.
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.DelimiterArgument`
      - The ``--`` that ends option parsing.
 
-The positional leaves are typed, and the type is what :mod:`argparse` converts the string with:
-:class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`,
-:class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`,
-:class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument` and
-:class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`.
+The positional leaves are typed, and the type is what :mod:`argparse` converts the string with - see
+:ref:`ATTR/ArgParse/Positional`.
+
+
+.. _ATTR/ArgParse/Positional:
+
+Positional Arguments
+====================
+
+Each typed variant converts and validates the value before the handler sees it, so a handler never parses a string
+itself:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 42 58
+
+   * - Attribute
+     - ``args.<dest>`` is
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument`
+     - a :class:`str`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.IntegerArgument`
+     - an :class:`int`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.FloatArgument`
+     - a :class:`float`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.PathArgument`
+     - a :class:`~pathlib.Path`
+
+All four take :pycode:`(dest, metaName, optional=False, help="")`, and :pycode:`metaName` is the placeholder
+``--help`` shows in place of the value.
+
+.. code-block:: Python
+
+   @CommandHandler("create", help="Create a new user.")
+   @StringArgument(dest="username", metaName="username", help="Name of the user to create.")
+   def HandleCreate(self, args) -> None:
+     print(f"Creating user '{args.username}'.")
 
 
 .. _ATTR/ArgParse/Flags:
@@ -131,8 +162,9 @@ Flags
 =====
 
 A :class:`~pyTooling.Attributes.ArgParse.Flag.FlagArgument` is a switch: it carries no value, and the handler
-receives :class:`bool` - ``True`` when the switch was given, ``False`` otherwise. The attribute sets
-``action="store_const"`` with ``const=True`` and ``default=False``, which is what makes that boolean appear.
+receives :class:`bool` - :pycode:`True` when the switch was given, :pycode:`False` otherwise. The attribute sets
+:pycode:`action="store_const"` with :pycode:`const=True` and :pycode:`default=False`, which is what makes that
+boolean appear.
 
 .. code-block:: Python
 
@@ -158,7 +190,7 @@ ValuedFlags
 ===========
 
 A :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` is a named argument **followed by a value in the
-same token** - ``--quota=5GiB``. ``metaName`` is what the help page shows in place of the value.
+same token** - ``--quota=5GiB``. :pycode:`metaName` is what the help page shows in place of the value.
 
 .. code-block:: Python
 
@@ -181,18 +213,16 @@ Two variants exist for values that aren't a single string:
 
 .. _ATTR/ArgParse/ValuedTupleFlags:
 
-ValuedTupleFlags
-================
 
 A *tuple* flag is a named argument whose value is a **separate token** - ``--width 100`` rather than
 ``--width=100``, so name and value reach the program as two arguments.
 
 .. attention::
 
-   Only the base-class ``NamedTupledArgument`` exists so far. There is
-   no concrete ``ShortTupleFlag`` / ``LongTupleFlag`` attribute to apply yet, so this form has to be written as a
-   :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` with ``nargs`` passed through to
-   :mod:`argparse` in the meantime.
+   Only the base-class :class:`~pyTooling.Attributes.ArgParse.Argument.NamedTupledArgument` exists so far. There
+   is no concrete :pycode:`ShortTupleFlag` / :pycode:`LongTupleFlag` attribute to apply yet, so this form has to be
+   written as a :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` with :pycode:`nargs` passed through
+   to :mod:`argparse` in the meantime.
 
 
 .. _ATTR/ArgParse/Lists:
@@ -295,6 +325,12 @@ call.
    def ListUserHandler(self, args) -> None:
      ...
 
+.. attention::
+
+   **An argument declared on the default handler is global; an argument declared on a command handler belongs to
+   that command.** ``UserManager.py --verbose create alice`` is therefore right and ``UserManager.py create alice
+   --verbose`` is not - the same rule :program:`git` follows.
+
 The class itself mixes in :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, whose constructor builds all
 the parsers from the attributes it finds.
 :meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin.Run` then parses and dispatches, and
@@ -304,9 +340,9 @@ the parsers from the attributes it finds.
 
 .. hint::
 
-   The mixin passes ``**kwargs`` on to :class:`~argparse.ArgumentParser`, and changes two of its defaults:
-   ``allow_abbrev=False``, so an abbreviated option isn't silently accepted, and ``exit_on_error=False``, so a
-   parse error raises instead of ending the process.
+   The mixin passes :pycode:`**kwargs` on to :class:`~argparse.ArgumentParser`, and changes two of its defaults:
+   :pycode:`allow_abbrev=False`, so an abbreviated option isn't silently accepted, and
+   :pycode:`exit_on_error=False`, so a parse error raises instead of ending the process.
 
 
 .. _ATTR/ArgParse/Grouping:
@@ -358,6 +394,27 @@ program inherits from all of them:
 This is what the *Advantages* list above means by *distributed across multiple classes*, and it is the reason the
 attribute lookup is a class query rather than a scan: the meta-class already collected the annotated methods of
 every base-class by the time the mixin's constructor runs.
+
+
+.. _ATTR/ArgParse/Examples:
+
+A complete program, twice
+*************************
+
+Both programs below offer the same command line. The first is written with :mod:`argparse` directly, the second
+with the attributes of this package:
+
+.. literalinclude:: ../../tests/example/OldStyle.py
+   :language: python
+   :linenos:
+   :caption: tests/example/OldStyle.py
+   :tab-width: 2
+
+.. literalinclude:: ../../tests/example/UserManager.py
+   :language: python
+   :linenos:
+   :caption: tests/example/UserManager.py
+   :tab-width: 2
 
 
 .. _ATTR/ArgParse/Consumers:
