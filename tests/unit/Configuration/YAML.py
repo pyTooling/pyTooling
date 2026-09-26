@@ -35,6 +35,8 @@ raised for a missing key or a wrong type.
 from datetime import date, datetime
 from pathlib  import Path
 
+from pytest                       import raises
+
 from pyTooling.Configuration      import InterpolationError, KeyNotFoundError, PathExpressionError
 from pyTooling.Configuration      import UnsupportedValueTypeError
 from pyTooling.Exceptions         import ConfigurationError
@@ -202,17 +204,29 @@ class Errors(Testcase):
 
 		self.assertIn("Path expression '..:dictionary' navigates beyond the root node.", str(context.exception))
 
+	def test_AboveRootRaisesWhereThePathIsResolved(self) -> None:
+		"""The traceback ends in the method resolving the path, not in a helper it calls."""
+		config = Configuration(self._configFile)
+
+		with raises(PathExpressionError) as value:
+			_ = config["aboveRoot"]
+		self.assertEqual("_GetValueByPathExpression", value.traceback[-1].name)
+
+		with raises(PathExpressionError) as node:
+			_ = config.QueryPath("..:dictionary")
+		self.assertEqual("_GetNodeOrValueByPathExpression", node.traceback[-1].name)
+
 
 class RootNode(Testcase):
-	"""The root node is its own root and its own parent, and every node below it points at that same root."""
+	"""The root node is its own root and has no parent, and every node below it points at that same root."""
 
 	_configFile = Path("tests/data/Configuration/config.yml")
 
-	def test_RootIsItsOwnRootAndParent(self) -> None:
+	def test_RootIsItsOwnRootAndHasNoParent(self) -> None:
 		config = Configuration(self._configFile)
 
 		self.assertIs(config, config._root)
-		self.assertIs(config, config._parent)
+		self.assertIsNone(config._parent)
 
 	def test_NestedNodesReferenceTheRealRoot(self) -> None:
 		config = Configuration(self._configFile)
