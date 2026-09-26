@@ -213,6 +213,8 @@ Two variants exist for values that aren't a single string:
 
 .. _ATTR/ArgParse/ValuedTupleFlags:
 
+ValuedTupleFlags
+================
 
 A *tuple* flag is a named argument whose value is a **separate token** - ``--width 100`` rather than
 ``--width=100``, so name and value reach the program as two arguments.
@@ -398,23 +400,29 @@ every base-class by the time the mixin's constructor runs.
 
 .. _ATTR/ArgParse/Examples:
 
-A complete program, twice
-*************************
+A complete program
+******************
 
-Both programs below offer the same command line. The first is written with :mod:`argparse` directly, the second
-with the attributes of this package:
+Both programs offer the same command line. The first is written with the attributes of this package, the second with
+:mod:`argparse` directly.
 
-.. literalinclude:: ../../tests/example/OldStyle.py
-   :language: python
-   :linenos:
-   :caption: tests/example/OldStyle.py
-   :tab-width: 2
+.. grid:: 2
 
-.. literalinclude:: ../../tests/example/UserManager.py
-   :language: python
-   :linenos:
-   :caption: tests/example/UserManager.py
-   :tab-width: 2
+   .. grid-item:: **pyTooling.Attributes.ArgParse**
+
+      .. literalinclude:: ../../tests/example/UserManager.py
+         :language: python
+         :linenos:
+         :caption: tests/example/UserManager.py
+         :tab-width: 2
+
+   .. grid-item:: **Traditional ArgParse**
+
+      .. literalinclude:: ../../tests/example/OldStyle.py
+         :language: python
+         :linenos:
+         :caption: tests/example/OldStyle.py
+         :tab-width: 2
 
 
 .. _ATTR/ArgParse/Consumers:
