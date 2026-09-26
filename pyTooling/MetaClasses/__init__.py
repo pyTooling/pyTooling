@@ -1228,8 +1228,11 @@ class ExtendedType(type):
 					for annotation in base.__slots__:
 						inheritedSlottedFields[annotation] = base
 
-			# 'weakref=True' requests '__weakref__' like an annotated field, so it's checked and listed like one.
-			fields = (annotations | {"__weakref__": None}) if weakref else annotations
+			if weakref:
+				fields = annotations.copy()
+				fields["__weakref__"] = None
+			else:
+				fields = annotations
 
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
 			for fieldName, typeAnnotation in fields.items():
