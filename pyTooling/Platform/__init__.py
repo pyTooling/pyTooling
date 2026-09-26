@@ -118,7 +118,7 @@ class Platforms(Flag):
 	SEP_WindowsValue = auto()  #: Seperator: Value seperator in variables (e.g. for paths in PATH).
 
 	ENV_Native = auto()        #: Environment: :term:`native`.
-	ENV_WSL =    auto()        #: Environment: :term:`Windows System for Linux <WSL>`.
+	ENV_WSL =    auto()        #: Environment: :term:`Windows Subsystem for Linux <WSL>`.
 	ENV_MSYS2 =  auto()        #: Environment: :term:`MSYS2`.
 	ENV_Cygwin = auto()        #: Environment: :term:`Cygwin`.
 
