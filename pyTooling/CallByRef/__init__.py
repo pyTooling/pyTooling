@@ -145,7 +145,7 @@ class CallByRefBoolParam(CallByRefParam[bool]):
 		elif isinstance(other, CallByRefBoolParam):
 			return self.Value == other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			ex.add_note("Supported types for second operand: bool, CallByRefBoolParam")
 			raise ex
@@ -163,9 +163,9 @@ class CallByRefBoolParam(CallByRefParam[bool]):
 		elif isinstance(other, CallByRefBoolParam):
 			return self.Value != other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: bool, CallByRefBoolParam")
+			ex.add_note("Supported types for second operand: bool, CallByRefBoolParam")
 			raise ex
 
 	# Type conversion operators
@@ -227,9 +227,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value & other
 		else:
-			ex = TypeError(f"Second operand is not supported by and operator.")
+			ex = TypeError("Second operand is not supported by and operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __or__(self, other: Any) -> int:
@@ -243,9 +243,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value | other
 		else:
-			ex = TypeError(f"Second operand is not supported by or operator.")
+			ex = TypeError("Second operand is not supported by or operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __xor__(self, other: Any) -> int:
@@ -259,9 +259,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value ^ other
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	# Binary inplace operators
@@ -277,9 +277,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value &= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by &= operator.")
+			ex = TypeError("Second operand is not supported by &= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __ior__(self, other: Any) -> Self:
@@ -294,9 +294,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value |= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by |= operator.")
+			ex = TypeError("Second operand is not supported by |= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __ixor__(self, other: Any) -> Self:
@@ -311,9 +311,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value ^= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by ^= operator.")
+			ex = TypeError("Second operand is not supported by ^= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	# Binary operators - arithmetic
@@ -328,9 +328,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value + other
 		else:
-			ex = TypeError(f"Second operand is not supported by + operator.")
+			ex = TypeError("Second operand is not supported by + operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __sub__(self, other: Any) -> int:
@@ -344,9 +344,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value - other
 		else:
-			ex = TypeError(f"Second operand is not supported by - operator.")
+			ex = TypeError("Second operand is not supported by - operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __truediv__(self, other: Any) -> int:
@@ -360,9 +360,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value / other
 		else:
-			ex = TypeError(f"Second operand is not supported by / operator.")
+			ex = TypeError("Second operand is not supported by / operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __floordiv__(self, other: Any) -> int:
@@ -376,9 +376,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value // other
 		else:
-			ex = TypeError(f"Second operand is not supported by // operator.")
+			ex = TypeError("Second operand is not supported by // operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __mul__(self, other: Any) -> int:
@@ -392,9 +392,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value * other
 		else:
-			ex = TypeError(f"Second operand is not supported by * operator.")
+			ex = TypeError("Second operand is not supported by * operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __mod__(self, other: Any) -> int:
@@ -408,9 +408,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value % other
 		else:
-			ex = TypeError(f"Second operand is not supported by % operator.")
+			ex = TypeError("Second operand is not supported by % operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __pow__(self, other: Any) -> int:
@@ -424,9 +424,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		if isinstance(other, int):
 			return self.Value ** other
 		else:
-			ex = TypeError(f"Second operand is not supported by ** operator.")
+			ex = TypeError("Second operand is not supported by ** operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	# Binary inplace operators - arithmetic
@@ -442,9 +442,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value += other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __isub__(self, other: Any) -> CallByRefIntParam:
@@ -459,9 +459,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value -= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __idiv__(self, other: Any) -> CallByRefIntParam:
@@ -476,9 +476,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value /= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __ifloordiv__(self, other: Any) -> CallByRefIntParam:
@@ -493,9 +493,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value //= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __imul__(self, other: Any) -> CallByRefIntParam:
@@ -510,9 +510,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value *= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __imod__(self, other: Any) -> CallByRefIntParam:
@@ -527,9 +527,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value %= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	def __ipow__(self, other: Any) -> CallByRefIntParam:
@@ -544,9 +544,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 			self.Value **= other
 			return self
 		else:
-			ex = TypeError(f"Second operand is not supported by xor operator.")
+			ex = TypeError("Second operand is not supported by xor operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int")
+			ex.add_note("Supported types for second operand: int")
 			raise ex
 
 	# Binary operators - comparison
@@ -564,9 +564,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value == other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			ex.add_note("Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -583,9 +583,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value != other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			ex.add_note("Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __lt__(self, other: Any) -> bool:
@@ -602,9 +602,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value < other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			ex.add_note("Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
@@ -621,9 +621,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value <= other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex = TypeError("Second operand is not supported by <= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			ex.add_note("Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __gt__(self, other: Any) -> bool:
@@ -640,9 +640,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value > other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			ex.add_note("Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	def __ge__(self, other: Any) -> bool:
@@ -659,9 +659,9 @@ class CallByRefIntParam(CallByRefParam[int]):
 		elif isinstance(other, CallByRefIntParam):
 			return self.Value >= other.Value
 		else:
-			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
+			ex.add_note("Supported types for second operand: int, float, complex, Decimal, CallByRefIntParam")
 			raise ex
 
 	# Type conversion operators

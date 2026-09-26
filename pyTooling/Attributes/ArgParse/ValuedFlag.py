@@ -43,23 +43,33 @@ class ValuedFlag(NamedAndValuedArgument):
 	"""
 	Defines a switch argument like ``--count=25``.
 
-	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
-	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument
-	is present in the commandline arguments, otherwise ``False``.
+	Some of the named parameters passed to :meth:`~argparse.ArgumentParser.add_argument` are predefined (or
+	overwritten), so the value following the switch is passed to the registered handler method.
 	"""
 
 	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, metaName: Nullable[str] = None, optional: bool = False, help: Nullable[str] = None) -> None:
 		"""
-		The constructor expects positional (``*args``), the destination parameter name ``dest`` and/or named parameters
-		(``**kwargs``) which are passed to :meth:`~ArgumentParser.add_argument`.
+		Initializes a flag argument taking a value.
 
-		To implement a switch argument, the following named parameters are predefined:
+		.. admonition:: ArgParse parameterization
 
-		* ``action="store_const"``
-		* ``const=True``
-		* ``default=False``
+		   :meth:`~argparse.ArgumentParser.add_argument` is called with the option strings from ``short`` and ``long``
+		   as positional parameters, and with these named parameters:
 
-		This implements a boolean parameter passed to the handler method.
+		   * ``dest=dest``
+		   * ``metavar=metaName``
+		   * ``default=None``
+		   * ``help=help``
+		   * ``required=not optional``
+
+		   No ``action`` is set, so argparse's default ``"store"`` applies and the handler method receives the value.
+
+		:param short:    Optional, short option name including the dash, e.g. ``"-o"``. Default: ``None``.
+		:param long:     Optional, long option name including the dashes, e.g. ``"--output"``. Default: ``None``.
+		:param dest:     Optional, name the value is stored under in the :class:`~argparse.Namespace`. Default: ``None``.
+		:param metaName: Optional, name shown for the value in the help page (``metavar``). Default: ``None``.
+		:param optional: Optional, if ``True``, the value may be omitted. Default: ``False``.
+		:param help:     Optional, help text shown for this argument. Default: ``None``.
 		"""
 		args = []
 		if short is not None:

@@ -46,7 +46,7 @@ __author__ =            "Patrick Lehmann"
 __email__ =             "Paebbels@gmail.com"
 __copyright__ =         "2017-2026, Patrick Lehmann"
 __license__ =           "Apache License, Version 2.0"
-__version__ =           "9.0.0"
+__version__ =           "10.0.0"
 __keywords__ =          [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
@@ -59,12 +59,14 @@ __documentation_url__ = "https://pyTooling.github.io/pyTooling"
 __issue_tracker_url__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 from collections         import deque
+from datetime            import datetime, tzinfo
+from enum                import StrEnum
 from importlib.resources import files
 from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
 from types               import ModuleType, TracebackType
-from typing              import TypeVar, Callable, Generator, Hashable
+from typing              import TypeVar, Callable, Generator, Hashable, Self
 from typing              import Any, Union, Mapping, Iterable, Optional as Nullable
 
 from pyTooling.Decorators  import export
@@ -295,7 +297,7 @@ def firstItem(iterable: Iterable[_Element]) -> _Element:
 	try:
 		return next(i)
 	except StopIteration:
-		raise ValueError(f"Iterable contains no items.")
+		raise ValueError("Iterable contains no items.")
 
 
 @export
@@ -311,7 +313,7 @@ def lastItem(iterable: Iterable[_Element]) -> _Element:
 	try:
 		element = next(i)
 	except StopIteration:
-		raise ValueError(f"Iterable contains no items.")
+		raise ValueError("Iterable contains no items.")
 
 	for element in i:
 		pass
@@ -337,7 +339,7 @@ def firstKey(d: dict[_DictKey1, _DictValue1]) -> _DictKey1:
 	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
-		raise ValueError(f"Dictionary is empty.")
+		raise ValueError("Dictionary is empty.")
 
 	return next(iter(d.keys()))
 
@@ -352,7 +354,7 @@ def firstValue(d: dict[_DictKey1, _DictValue1]) -> _DictValue1:
 	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
-		raise ValueError(f"Dictionary is empty.")
+		raise ValueError("Dictionary is empty.")
 
 	return next(iter(d.values()))
 
@@ -367,7 +369,7 @@ def firstPair(d: dict[_DictKey1, _DictValue1]) -> tuple[_DictKey1, _DictValue1]:
 	:raises ValueError: If parameter 'd' is an empty dictionary.
 	"""
 	if len(d) == 0:
-		raise ValueError(f"Dictionary is empty.")
+		raise ValueError("Dictionary is empty.")
 
 	return next(iter(d.items()))
 
@@ -393,7 +395,7 @@ def mergedicts(
 	   `How do I merge two dictionaries in a single expression in Python? <https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-in-python>`__
 	"""
 	if len(dicts) == 0:
-		raise ValueError(f"Called 'mergedicts' without any dictionary parameter.")
+		raise ValueError("Called 'mergedicts' without any dictionary parameter.")
 
 	if filter is None:
 		return {k: v for d in dicts for k, v in d.items()}
@@ -419,10 +421,10 @@ def zipdicts(*dicts: dict[Hashable, Any]) -> Generator[tuple[Any, ...], None, No
 	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
 	"""
 	if len(dicts) == 0:
-		raise ValueError(f"Called 'zipdicts' without any dictionary parameter.")
+		raise ValueError("Called 'zipdicts' without any dictionary parameter.")
 
 	if any(len(d) != len(dicts[0]) for d in dicts):
-		raise ValueError(f"All given dictionaries must have the same length.")
+		raise ValueError("All given dictionaries must have the same length.")
 
 	def gen(ds: tuple[dict[Hashable, Any], ...]) -> Generator[tuple[Any, ...], None, None]:
 		"""
@@ -435,6 +437,124 @@ def zipdicts(*dicts: dict[Hashable, Any]) -> Generator[tuple[Any, ...], None, No
 			yield key, item0, *(d[key] for d in ds[1:])
 
 	return gen(dicts)
+
+
+@export
+def parseISO8601Timestamp(value: Nullable[str], defaultTimeZone: Nullable[tzinfo] = None) -> Nullable[datetime]:
+	"""
+	Parse an ISO 8601 timestamp.
+
+	A timestamp carrying no UTC offset is naive, and a naive timestamp can't be compared with an aware one. Whether
+	that's a defect depends on where the timestamp came from, so the caller decides: a time zone given as
+	``defaultTimeZone`` is attached to such a timestamp, while ``None`` leaves it naive.
+
+	:param value:           The timestamp, e.g. ``'2026-09-15T06:35:24Z'``, or ``None``.
+	:param defaultTimeZone: Optional, time zone to attach to a timestamp that carries no UTC offset.
+	:returns:               The timestamp, or ``None`` if the value is ``None`` or empty.
+	:raises ValueError:     If the value isn't an ISO 8601 timestamp.
+	"""
+	if value is None or value == "":
+		return None
+
+	try:
+		timestamp = datetime.fromisoformat(value)
+	except (TypeError, ValueError) as ex:
+		error = ValueError(f"'{value}' isn't an ISO 8601 timestamp.")
+		error.add_note("An ISO 8601 timestamp reads like '2026-09-15T06:35:24Z'.")
+		raise error from ex
+
+	if defaultTimeZone is not None and timestamp.utcoffset() is None:
+		timestamp = timestamp.replace(tzinfo=defaultTimeZone)
+
+	return timestamp
+
+
+@export
+class StringEnum(StrEnum):
+	"""
+	A :class:`~enum.StrEnum` that converts a string to the member of that value, and says so when it can't.
+
+	Every enumeration whose members come from the outside - a command line, a configuration file, a REST reply -
+	needs the same three answers: what a missing value means, what a value of the wrong type is, and what a value
+	no member carries is. Written per enumeration, those answers drift; written here, an enumeration adds its
+	members and inherits :meth:`Parse`.
+
+	**A missing value is answered by the enumeration itself.** ``DEFAULT`` is an *alias* of the member that stands
+	for "nothing was given" - an alias, so it neither shows up when the enumeration is iterated nor becomes a
+	second member to compare against. An enumeration declaring none answers ``None`` instead, which is what a
+	field that may legitimately be absent wants.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      from pyTooling.Common import StringEnum
+
+	      class GanttFormat(StringEnum):
+	        MatplotlibPNG = "matplotlib-png"
+	        MatplotlibSVG = "matplotlib-svg"
+
+	        DEFAULT = MatplotlibPNG
+
+	      GanttFormat.Parse("matplotlib-svg")  # GanttFormat.MatplotlibSVG
+	      GanttFormat.Parse(None)              # GanttFormat.MatplotlibPNG
+	      GanttFormat.Parse("matplotlib-gif")  # ValueError, listing the values it accepts
+
+	Because it derives from :class:`~enum.StrEnum`, a member *is* its value: it goes into a message, a header or a
+	filename without being unwrapped, and :pycode:`", ".join(GanttFormat)` lists what an option accepts.
+
+	**An enumeration belonging to a domain with its own exception overrides** :meth:`Parse`, catches the
+	:exc:`ValueError` and chains it as the cause. :class:`pyTooling.CI.GitHub.Status` does that, because a value
+	a service sent that pyTooling doesn't know is that service's problem and not a programming error, and the
+	two are reported differently.
+
+	.. admonition:: ``GitHub.py``
+
+	   .. code-block:: python
+
+	      class Status(StringEnum):
+	        Queued = "queued"
+
+	        @classmethod
+	        def Parse(cls, value: Nullable[str]) -> Nullable[Self]:
+	          try:
+	            return super().Parse(value)
+	          except ValueError as ex:
+	            error = GitHubError(f"'{value}' is not a GitHub status.")
+	            error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
+	            raise error from ex
+
+	.. seealso::
+
+	   :class:`enum.StrEnum`
+	      |rarr| The standard library's string enumeration, which this extends.
+	"""
+
+	@classmethod
+	def Parse(cls, value: Nullable[str]) -> Nullable[Self]:
+		"""
+		Convert a string to the member carrying that value.
+
+		:param value:       Optional, the string to convert. ``None`` and the empty string mean *no value was
+		                    given*. Default: ``None``.
+		:returns:           The member carrying that value. If no value was given: ``DEFAULT``, if the enumeration
+		                    declares one, otherwise ``None``.
+		:raises TypeError:  If parameter 'value' is not of type :class:`str`.
+		:raises ValueError: If no member of this enumeration carries that value. |br|
+		                    The note lists the values it accepts.
+		"""
+		if value is None or value == "":
+			return cls.__members__.get("DEFAULT", None)
+		elif not isinstance(value, str):
+			ex = TypeError("Parameter 'value' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+		elif value not in cls._value2member_map_:
+			ex = ValueError(f"'{value}' is not a valid {cls.__name__}.")
+			ex.add_note(f"Allowed values: {', '.join(member.value for member in cls)}.")
+			raise ex
+
+		return cls(value)
 
 
 @export

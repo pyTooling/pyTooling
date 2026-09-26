@@ -67,7 +67,7 @@ class CriticalWarning(BaseException):
 
 	.. tip::
 
-	   Critical warnings must be unhandled within a call hierarchy, otherwise a :exc:`UnhandledCriticalWarningException`
+	   Critical warnings must be unhandled within a call hierarchy, otherwise a :exc:`UnhandledCriticalWarningError`
 	   will be raised.
 	"""
 
@@ -123,7 +123,7 @@ AnyWarning = Union[CriticalWarning, Warning]
 
 
 @export
-class UnhandledCriticalWarningException(ExceptionBase):
+class UnhandledCriticalWarningError(ExceptionBase):
 	"""
 	This exception is raised when a critical warning isn't handled by a :class:`WarningCollector` within the
 	call-hierarchy.
@@ -131,14 +131,14 @@ class UnhandledCriticalWarningException(ExceptionBase):
 
 
 @export
-class UnhandledExceptionException(ExceptionBase):
+class UnhandledExceptionError(ExceptionBase):
 	"""
 	This exception is raised when an exception isn't handled by a :class:`WarningCollector` within the call-hierarchy.
 	"""
 
 
 @export
-class EscalatedWarningException(ExceptionBase):
+class EscalatedWarningError(ExceptionBase):
 	"""
 	This exception is raised when a :class:`WarningCollector` decides a collected warning should not be collected but
 	raised.
@@ -178,12 +178,12 @@ class WarningCollector:
 		if warnings is None:
 			warnings = []
 		elif not isinstance(warnings, list):
-			ex = TypeError(f"Parameter 'warnings' is not a list.")
+			ex = TypeError("Parameter 'warnings' is not a list.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(warnings)}'.")
 			raise ex
 
 		if handler is not None and not isinstance(handler, Callable):
-			ex = TypeError(f"Parameter 'handler' is not callable.")
+			ex = TypeError("Parameter 'handler' is not callable.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(handler)}'.")
 			raise ex
 
@@ -288,7 +288,7 @@ class WarningCollector:
 		if warning is None:
 			raise ValueError("Parameter 'warning' is None.")
 		elif not isinstance(warning, (Warning, CriticalWarning, Exception)):
-			ex = TypeError(f"Parameter 'warning' is not of type 'Warning', 'CriticalWarning' or 'Exception'.")
+			ex = TypeError("Parameter 'warning' is not of type 'Warning', 'CriticalWarning' or 'Exception'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(warning)}'.")
 			raise ex
 
@@ -307,16 +307,16 @@ class WarningCollector:
 		"""
 		Walk the callstack frame by frame upwards and search for the first warning collector.
 
-		:param warning:                            Warning to send upwards in the call stack.
-		:param cause:                              Optional, root cause to be added to the warning.
-		:param notes:                              Optional, a single note or a list of notes to be added to the warning.
-		:raises EscalatedWarningException:         If the warning collector asks for the warning to be raised.
-		:raises UnhandledExceptionException:       If no warning collector was found along the call-hierarchy to collect and
-		                                           handle an exception.
-		:raises UnhandledCriticalWarningException:  If no warning collector was found along the call-hierarchy to collect
-		                                           and handle a critical warning. |br|
-		                                           Add a with-statement using :class:`WarningCollector` somewhere up the
-		                                           call-hierarchy to receive and collect warnings.
+		:param warning:                        Warning to send upwards in the call stack.
+		:param cause:                          Optional, root cause to be added to the warning.
+		:param notes:                          Optional, a single note or a list of notes to be added to the warning.
+		:raises EscalatedWarningError:         If the warning collector asks for the warning to be raised.
+		:raises UnhandledExceptionError:       If no warning collector was found along the call-hierarchy to collect and
+		                                       handle an exception.
+		:raises UnhandledCriticalWarningError: If no warning collector was found along the call-hierarchy to collect
+		                                       and handle a critical warning. |br|
+		                                       Add a with-statement using :class:`WarningCollector` somewhere up the
+		                                       call-hierarchy to receive and collect warnings.
 		"""
 		global _threadLocalData
 
@@ -333,13 +333,13 @@ class WarningCollector:
 		try:
 			warningCollector = _threadLocalData.warningCollector
 			if warningCollector.AddWarning(warning):
-				raise EscalatedWarningException(f"Warning: {warning}") from warning
+				raise EscalatedWarningError(f"Warning: {warning}") from warning
 		except AttributeError:
 			ex = None
 			if isinstance(warning, Exception):
-				ex = UnhandledExceptionException(f"Unhandled Exception: {warning}")
+				ex = UnhandledExceptionError(f"Unhandled Exception: {warning}")
 			elif isinstance(warning, CriticalWarning):
-				ex = UnhandledCriticalWarningException(f"Unhandled Critical Warning: {warning}")
+				ex = UnhandledCriticalWarningError(f"Unhandled Critical Warning: {warning}")
 
 			if ex is not None:
 				ex.add_note(f"Add a 'with'-statement using '{cls.__name__}' somewhere up the call-hierarchy to receive and collect warnings.")
@@ -347,7 +347,7 @@ class WarningCollector:
 
 
 @export
-class SupervisedWarningCollectorException(ExceptionBase):
+class SupervisedWarningCollectorError(ExceptionBase):
 	"""
 	This exception is raised when a supervised warning collector is not the top-most collector in its thread.
 
@@ -403,13 +403,13 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Enter the warning collector context.
 
-		:returns:                                    The warning collector instance.
-		:raises SupervisedWarningCollectorException: If this collector is not the top-most warning collector of its thread.
+		:returns:                                The warning collector instance.
+		:raises SupervisedWarningCollectorError: If this collector is not the top-most warning collector of its thread.
 		"""
 		global _threadLocalData
 
 		if hasattr(_threadLocalData, "warningCollector") and _threadLocalData.warningCollector is not None:
-			raise SupervisedWarningCollectorException("This warning collector is not the top-most warning collector within the current thread.")
+			raise SupervisedWarningCollectorError("This warning collector is not the top-most warning collector within the current thread.")
 
 		_threadLocalData.warningCollector = self
 
@@ -453,7 +453,7 @@ class SupervisedWarningCollector(WarningCollector):
 
 
 @export
-class SupervisedThreadException(ExceptionBase):
+class SupervisedThreadError(ExceptionBase):
 	"""
 	The exception is raise if a supervised thread received an unhandled exception which got collected by
 	:class:`ExceptionCollector`.
@@ -626,13 +626,13 @@ class ThreadSupervisor:
 		"""
 		Re-raise the exceptions collected from the supervised threads in the supervising thread.
 
-		A single exception is re-raised as itself - wrapped in a :exc:`SupervisedThreadException` naming its thread,
+		A single exception is re-raised as itself - wrapped in a :exc:`SupervisedThreadError` naming its thread,
 		unless ``unwrapped`` is set. Several exceptions are raised as an :exc:`ExceptionGroup`, so none of them is lost.
 
-		:param unwrapped:                  Optional, if ``True``, a single exception is raised as it was, without naming its
-		                                   thread.
-		:raises SupervisedThreadException: If exactly one thread failed.
-		:raises ExceptionGroup:            If more than one thread failed.
+		:param unwrapped:              Optional, if ``True``, a single exception is raised as it was, without naming its
+		                               thread.
+		:raises SupervisedThreadError: If exactly one thread failed.
+		:raises ExceptionGroup:        If more than one thread failed.
 		"""
 		with self._lock:
 			if len(self._exceptions) == 0:
@@ -645,7 +645,7 @@ class ThreadSupervisor:
 			if unwrapped:
 				raise ex
 			else:
-				raise SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName) from ex
+				raise SupervisedThreadError(f"Thread '{threadName}' failed.", threadName=threadName) from ex
 
 		elif unwrapped:
 			raise ExceptionGroup(
@@ -656,7 +656,7 @@ class ThreadSupervisor:
 			raise ExceptionGroup(
 				"Multiple threads failed.",
 				[
-					SupervisedThreadException(f"Thread '{threadName}' failed.", threadName=threadName, cause=ex)
+					SupervisedThreadError(f"Thread '{threadName}' failed.", threadName=threadName, cause=ex)
 					for threadName, ex in exceptions
 				]
 			)

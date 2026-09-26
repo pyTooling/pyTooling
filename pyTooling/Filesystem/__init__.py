@@ -70,7 +70,7 @@ _ParentType = TypeVar("_ParentType", bound="Element")
 
 
 @export
-class FilesystemException(ToolingException):
+class FilesystemError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Filesystem`."""
 
 
@@ -165,7 +165,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	@Root.setter
 	def Root(self, value: Root) -> None:
 		if value is None:
-			raise ValueError(f"Parameter 'value' is None.")
+			raise ValueError("Parameter 'value' is None.")
 		elif not isinstance(value, Root):
 			ex = TypeError("Parameter 'value' is not of type 'Root'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -178,11 +178,11 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the element's size in Bytes.
 
-		:returns:                    Size in Bytes.
-		:raises FilesystemException: If size is not computed, yet.
+		:returns:                Size in Bytes.
+		:raises FilesystemError: If size is not computed, yet.
 		"""
 		if self._size is None:
-			raise FilesystemException("Size is not computed, yet.")
+			raise FilesystemError("Size is not computed, yet.")
 
 		return self._size
 
@@ -194,7 +194,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
 		will be stored in the node's key-value store.
 
-		:returns:                    A tree's node referencing this filesystem element.
+		:returns: A tree's node referencing this filesystem element.
 		"""
 		raise NotImplementedError()
 
@@ -230,7 +230,7 @@ class Element(Base, Generic[_ParentType]):
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Directory`.
 		"""
 		if name is None:
-			raise ValueError(f"Parameter 'name' is None.")
+			raise ValueError("Parameter 'name' is None.")
 		elif not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
@@ -266,7 +266,7 @@ class Element(Base, Generic[_ParentType]):
 	@Parent.setter
 	def Parent(self, value: _ParentType) -> None:
 		if value is None:
-			raise ValueError(f"Parameter 'value' is None.")
+			raise ValueError("Parameter 'value' is None.")
 		elif not isinstance(value, Directory):
 			ex = TypeError("Parameter 'value' is not of type 'Directory'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -291,9 +291,9 @@ class Element(Base, Generic[_ParentType]):
 		"""
 		Read-only property to access the element's path.
 
-		:returns:                    Path of the element.
+		:returns: Path of the element.
 		"""
-		raise NotImplementedError(f"Property 'Path' is abstract.")
+		raise NotImplementedError("Property 'Path' is abstract.")
 
 	@readonly
 	def LinkSources(self) -> list[SymbolicLink]:
@@ -398,18 +398,19 @@ class Directory(Element["Directory"]):
 		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
 		the collected statistics are incomplete by exactly that path.
 
-		:raises FilesystemException: If this directory isn't attached to a :class:`Root`, which owns the ID table.
-		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
-		                             symbolic link.
+		:raises FilesystemError: If this directory isn't attached to a :class:`Root`, which owns the ID table.
+		:raises FilesystemError: If the directory contains an element that is neither a directory, a file nor a
+		                         symbolic link.
 		"""
 		if (root := self._root) is None:
-			raise FilesystemException(f"Directory '{self._name}' is not attached to a filesystem root.")
+			raise FilesystemError(f"Directory '{self._name}' is not attached to a filesystem root.")
 
 		with Stopwatch() as sw1:
 			try:
 				items = scandir(directoryPath := self.Path)
 			except PermissionError as ex:
-				return WarningCollector.Raise(PermissionWarning(self.Path), ex)
+				WarningCollector.Raise(PermissionWarning(self.Path), ex)
+				return
 
 			for dirEntry in items:
 				if dirEntry.is_dir(follow_symlinks=False):
@@ -430,7 +431,7 @@ class Directory(Element["Directory"]):
 					target = Path(readlink(directoryPath / dirEntry.name))
 					_ = SymbolicLink(dirEntry.name, target, parent=self)
 				else:
-					raise FilesystemException(f"Unknown directory element.")
+					raise FilesystemError("Unknown directory element.")
 
 		self._scanDuration = sw1.Duration
 
@@ -666,14 +667,14 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the equivalent Path instance for accessing the represented directory.
 
-		:returns:                    Path to the directory.
-		:raises FilesystemException: If no parent is set.
+		:returns:                Path to the directory.
+		:raises FilesystemError: If no parent is set.
 		"""
 		if self._path is not None:
 			return self._path
 
 		if self._parent is None:
-			raise FilesystemException(f"No parent or root set for directory.")
+			raise FilesystemError("No parent or root set for directory.")
 
 		self._path = self._parent.Path / self._name
 		return self._path
@@ -683,11 +684,11 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the time needed to scan a directory structure including all subelements (recursively).
 
-		:returns:                    The scan duration in seconds.
-		:raises FilesystemException: If the directory was not scanned.
+		:returns:                The scan duration in seconds.
+		:raises FilesystemError: If the directory was not scanned.
 		"""
 		if self._scanDuration is None:
-			raise FilesystemException(f"Directory was not scanned, yet.")
+			raise FilesystemError("Directory was not scanned, yet.")
 
 		return self._scanDuration
 
@@ -696,11 +697,11 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the time needed to aggregate the directory's and subelement's properties (recursively).
 
-		:returns:                    The aggregation duration in seconds.
-		:raises FilesystemException: If the directory properties were not aggregated.
+		:returns:                The aggregation duration in seconds.
+		:raises FilesystemError: If the directory properties were not aggregated.
 		"""
 		if self._scanDuration is None:
-			raise FilesystemException(f"Directory properties were not aggregated, yet.")
+			raise FilesystemError("Directory properties were not aggregated, yet.")
 
 		return self._aggregateDuration
 
@@ -979,7 +980,7 @@ class Filename(Element[Directory]):
 		:raises ToolingException: If the filename isn't linked to a file object.
 		"""
 		if self._file is None:
-			raise ToolingException(f"Filename isn't linked to a File object.")
+			raise ToolingException("Filename isn't linked to a File object.")
 
 		return self._file._size
 
@@ -994,7 +995,7 @@ class Filename(Element[Directory]):
 		:raises ToolingException: If the filename has no parent object.
 		"""
 		if self._parent is None:
-			raise ToolingException(f"Filename has no parent object.")
+			raise ToolingException("Filename has no parent object.")
 
 		return self._parent.Path / self._name
 
@@ -1138,7 +1139,7 @@ class SymbolicLink(Element[Directory]):
 		super().__init__(name, None, parent)
 
 		if target is None:
-			raise ValueError(f"Parameter 'target' is None.")
+			raise ValueError("Parameter 'target' is None.")
 		elif not isinstance(target, Path):
 			ex = TypeError("Parameter 'target' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(target)}'.")
@@ -1322,9 +1323,9 @@ class Root(Directory):
 		:raises ToolingException:     If the given path doesn't exist.
 		"""
 		if rootDirectory is None:
-			raise ValueError(f"Parameter 'rootDirectory' is None.")
+			raise ValueError("Parameter 'rootDirectory' is None.")
 		elif not isinstance(rootDirectory, Path):
-			raise TypeError(f"Parameter 'rootDirectory' is not of type 'Path'.")
+			raise TypeError("Parameter 'rootDirectory' is not of type 'Path'.")
 		elif not rootDirectory.exists():
 			raise ToolingException(f"Path '{rootDirectory}' doesn't exist.") from FileNotFoundError(rootDirectory)
 
@@ -1526,7 +1527,7 @@ class File(Base):
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Filename`.
 		"""
 		if id is None:
-			raise ValueError(f"Parameter 'id' is None.")
+			raise ValueError("Parameter 'id' is None.")
 		elif not isinstance(id, int):
 			ex = TypeError("Parameter 'id' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(id)}'.")
@@ -1578,7 +1579,7 @@ class File(Base):
 		:raises ToolingException: If the filename already references another file object.
 		"""
 		if filename is None:
-			raise ValueError(f"Parameter 'filename' is None.")
+			raise ValueError("Parameter 'filename' is None.")
 		elif not isinstance(filename, Filename):
 			ex = TypeError("Parameter 'filename' is not of type 'Filename'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(filename)}'.")

@@ -162,12 +162,12 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 
 
 @export
-class GraphException(ToolingException):
+class GraphError(ToolingException):
 	"""Base exception of all exceptions raised by :mod:`pyTooling.Graph`."""
 
 
 @export
-class InternalError(GraphException):
+class InternalError(GraphError):
 	"""
 	The exception is raised when a data structure corruption is detected.
 
@@ -181,12 +181,12 @@ class InternalError(GraphException):
 
 
 @export
-class NotInSameGraph(GraphException):
+class NotInSameGraph(GraphError):
 	"""The exception is raised when creating an edge between two vertices, but these are not in the same graph."""
 
 
 @export
-class NotInDifferentSubgraphs(GraphException):
+class NotInDifferentSubgraphs(GraphError):
 	"""
 	The exception is raised when creating a link between two vertices, but these are in the same subgraph.
 
@@ -195,7 +195,7 @@ class NotInDifferentSubgraphs(GraphException):
 
 
 @export
-class DuplicateVertexError(GraphException):
+class DuplicateVertexError(GraphError):
 	"""The exception is raised when the vertex already exists in the graph."""
 
 	_vertexID: Nullable[VertexIDType]  #: ID of the vertex that already exists in the graph.
@@ -221,7 +221,7 @@ class DuplicateVertexError(GraphException):
 
 
 @export
-class DuplicateEdgeError(GraphException):
+class DuplicateEdgeError(GraphError):
 	"""The exception is raised when the edge already exists in the graph."""
 
 	_edgeID: Nullable[EdgeIDType]  #: ID of the edge that already exists in the graph.
@@ -247,12 +247,12 @@ class DuplicateEdgeError(GraphException):
 
 
 @export
-class DestinationNotReachable(GraphException):
+class DestinationNotReachable(GraphError):
 	"""The exception is raised when a destination vertex is not reachable."""
 
 
 @export
-class NotATreeError(GraphException):
+class NotATreeError(GraphError):
 	"""
 	The exception is raised when a subgraph is not a tree.
 
@@ -261,7 +261,22 @@ class NotATreeError(GraphException):
 
 
 @export
-class CycleError(GraphException):
+class EdgeNotFoundError(GraphError):
+	"""The exception is raised when no edge matching the given source or destination vertex was found."""
+
+
+@export
+class LinkNotFoundError(GraphError):
+	"""The exception is raised when no link matching the given source or destination vertex was found."""
+
+
+@export
+class SameGraphError(GraphError):
+	"""The exception is raised when a vertex is copied into the graph it already belongs to."""
+
+
+@export
+class CycleError(GraphError):
 	"""The exception is raised when a not permitted cycle is found."""
 
 
@@ -293,7 +308,6 @@ class Base(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Base::del Needs documentation.
-
 		"""
 		try:
 			del self._dict
@@ -537,7 +551,6 @@ class BaseWithVertices(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseWithVertices::del Needs documentation.
-
 		"""
 		try:
 			del self._vertices
@@ -657,7 +670,6 @@ class Vertex(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseEdge::del Needs documentation.
-
 		"""
 		try:
 			del self._views
@@ -912,7 +924,6 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, keyValuePairs)
@@ -939,8 +950,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this subgraph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -979,7 +990,6 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
 			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, keyValuePairs)
@@ -1006,8 +1016,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1052,7 +1062,6 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
@@ -1081,8 +1090,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1127,7 +1136,6 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
@@ -1156,8 +1164,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1197,12 +1205,11 @@ class Vertex(
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
-			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
-			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			ex.add_note("A link can only connect vertices across subgraph boundaries.")
+			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
 			link = Link(self, vertex, linkID, linkValue, linkWeight, keyValuePairs)
@@ -1267,12 +1274,11 @@ class Vertex(
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
 		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
-			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
-			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			ex.add_note("A link can only connect vertices across subgraph boundaries.")
+			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
 			link = Link(vertex, self, linkID, linkValue, linkWeight, keyValuePairs)
@@ -1394,14 +1400,14 @@ class Vertex(
 		"""
 		Delete the outbound edge to the given vertex.
 
-		:param destination:     The vertex the edge points to.
-		:raises GraphException: If no outbound edge to that vertex exists.
+		:param destination:        The vertex the edge points to.
+		:raises EdgeNotFoundError: If no outbound edge to that vertex exists.
 		"""
 		for edge in self._outboundEdges:
 			if edge._destination is destination:
 				break
 		else:
-			raise GraphException(f"No outbound edge found to '{destination!r}'.")
+			raise EdgeNotFoundError(f"No outbound edge found to '{destination!r}'.")
 
 		edge.Delete()
 
@@ -1409,14 +1415,14 @@ class Vertex(
 		"""
 		Delete the inbound edge from the given vertex.
 
-		:param source:          The vertex the edge comes from.
-		:raises GraphException: If no inbound edge from that vertex exists.
+		:param source:             The vertex the edge comes from.
+		:raises EdgeNotFoundError: If no inbound edge from that vertex exists.
 		"""
 		for edge in self._inboundEdges:
 			if edge._source is source:
 				break
 		else:
-			raise GraphException(f"No inbound edge found to '{source!r}'.")
+			raise EdgeNotFoundError(f"No inbound edge found to '{source!r}'.")
 
 		edge.Delete()
 
@@ -1424,14 +1430,14 @@ class Vertex(
 		"""
 		Delete the outbound link to the given vertex.
 
-		:param destination:     The vertex the link points to.
-		:raises GraphException: If no outbound link to that vertex exists.
+		:param destination:        The vertex the link points to.
+		:raises LinkNotFoundError: If no outbound link to that vertex exists.
 		"""
 		for link in self._outboundLinks:
 			if link._destination is destination:
 				break
 		else:
-			raise GraphException(f"No outbound link found to '{destination!r}'.")
+			raise LinkNotFoundError(f"No outbound link found to '{destination!r}'.")
 
 		link.Delete()
 
@@ -1439,14 +1445,14 @@ class Vertex(
 		"""
 		Delete the inbound link from the given vertex.
 
-		:param source:          The vertex the link comes from.
-		:raises GraphException: If no inbound link from that vertex exists.
+		:param source:             The vertex the link comes from.
+		:raises LinkNotFoundError: If no inbound link from that vertex exists.
 		"""
 		for link in self._inboundLinks:
 			if link._source is source:
 				break
 		else:
-			raise GraphException(f"No inbound link found to '{source!r}'.")
+			raise LinkNotFoundError(f"No inbound link found to '{source!r}'.")
 
 		link.Delete()
 
@@ -1464,10 +1470,10 @@ class Vertex(
 		:param linkingKeyFromOriginalVertex: Optional, if not ``None``, add a key-value-pair using this parameter as key
 		                                     from original vertex to the new vertex.
 		:returns:                            The newly created vertex.
-		:raises GraphException:              If source graph and destination graph are the same.
+		:raises SameGraphError:              If source graph and destination graph are the same.
 		"""
 		if graph is self._graph:
-			raise GraphException("Graph to copy this vertex to, is the same graph.")
+			raise SameGraphError("Graph to copy this vertex to, is the same graph.")
 
 		vertex = Vertex(self._id, self._value, self._weight, graph=graph)
 		if copyDict:
@@ -1675,8 +1681,8 @@ class Vertex(
 				edge = next(iteratorStack[-1])
 				nextVertex = edge._destination
 				if nextVertex in visited:
-					ex = CycleError(f"Loop detected.")
-					ex.add_note(f"First loop is:")
+					ex = CycleError("Loop detected.")
+					ex.add_note("First loop is:")
 					for i, vertex in enumerate(vertexStack):
 						ex.add_note(f"  {i}: {vertex!r}")
 					raise ex
@@ -1779,7 +1785,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise DestinationNotReachable(f"Destination is not reachable.")
+				raise DestinationNotReachable("Destination is not reachable.")
 
 		# Reverse order of linked list from destinationNode to startNode
 		currentNode = destinationNode
@@ -1896,7 +1902,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise DestinationNotReachable(f"Destination is not reachable.")
+				raise DestinationNotReachable("Destination is not reachable.")
 
 		# Reverse order of linked-list from destinationNode to startNode
 		currentNode = destinationNode
@@ -1936,9 +1942,9 @@ class Vertex(
 
 		The tree is traversed using depths-first-search.
 
-		:returns:               Root node of the resulting tree, representing this vertex.
-		:raises NotATreeError:  If the graph reachable from this vertex is not a tree, because a vertex has more than one
-		                        parent.
+		:returns:              Root node of the resulting tree, representing this vertex.
+		:raises NotATreeError: If the graph reachable from this vertex is not a tree, because a vertex has more than one
+		                       parent.
 		"""
 		visited: set[Vertex] = set()
 		stack: list[tuple[Node, typing_Iterator[Edge]]] = list()
@@ -1959,7 +1965,7 @@ class Vertex(
 					if len(nextVertex._outboundEdges) != 0:
 						stack.append((node, iter(nextVertex._outboundEdges)))
 				else:
-					raise NotATreeError(f"The directed subgraph is not a tree.")
+					raise NotATreeError("The directed subgraph is not a tree.")
 					# TODO: compute cycle:
 					#       a) branch 1 is described in stack
 					#       b) branch 2 can be found by walking from joint to root in the tree
@@ -2126,7 +2132,7 @@ class Edge(
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
 		if source._graph is not destination._graph:
-			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
+			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
 		super().__init__(source, destination, edgeID, value, weight, keyValuePairs)
 
@@ -2184,8 +2190,8 @@ class Link(
 		self,
 		source: Vertex,
 		destination: Vertex,
-		linkID: LinkIDType = None,
-		value: LinkValueType = None,
+		linkID: Nullable[LinkIDType] = None,
+		value: Nullable[LinkValueType] = None,
 		weight: Nullable[LinkWeightType] = None,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
@@ -2220,7 +2226,7 @@ class Link(
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
 		if source._graph is not destination._graph:
-			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
+			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
 		super().__init__(source, destination, linkID, value, weight, keyValuePairs)
 
@@ -2280,7 +2286,6 @@ class BaseGraph(
 ):
 	"""
 	.. todo:: GRAPH::BaseGraph Needs documentation.
-
 	"""
 
 	_verticesWithID:    dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
@@ -2314,7 +2319,6 @@ class BaseGraph(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseGraph::del Needs documentation.
-
 		"""
 		try:
 			del self._verticesWithoutID
@@ -2457,7 +2461,6 @@ class BaseGraph(
 		:returns:              A generator to iterate all vertices in topological order.
 		:raises CycleError:    If the graph contains a cycle, so no topological order exists.
 		:raises InternalError: If the algorithm's internal state became inconsistent.
-		:except CycleError: Raised if graph is cyclic, thus topological sorting isn't possible.
 		"""
 		outboundEdgeCounts = {}
 		leafVertices = []
@@ -2475,7 +2478,7 @@ class BaseGraph(
 				outboundEdgeCounts[vertex] = count
 
 		if not leafVertices:
-			raise CycleError(f"Graph has no leafs. Thus, no topological sorting exists.")
+			raise CycleError("Graph has no leafs. Thus, no topological sorting exists.")
 
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
@@ -2509,9 +2512,9 @@ class BaseGraph(
 		if overallCount == 0:
 			return
 		elif overallCount > 0:
-			raise CycleError(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
+			raise CycleError("Graph has remaining vertices. Thus, the graph has at least one cycle.")
 
-		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
 	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
@@ -2770,7 +2773,7 @@ class BaseGraph(
 		elif overallCount > 0:
 			return True
 
-		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
 
 @export
@@ -2790,7 +2793,6 @@ class Subgraph(
 ):
 	"""
 	.. todo:: GRAPH::Subgraph Needs documentation.
-
 	"""
 
 	_graph:    Graph  #: Reference to the graph this subgraph is part of.
@@ -2827,7 +2829,6 @@ class Subgraph(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Subgraph::del Needs documentation.
-
 		"""
 		super().__del__()
 
@@ -2868,7 +2869,6 @@ class View(
 ):
 	"""
 	.. todo:: GRAPH::View Needs documentation.
-
 	"""
 
 	def __init__(
@@ -2893,7 +2893,6 @@ class View(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::View::del Needs documentation.
-
 		"""
 		super().__del__()
 
@@ -2925,7 +2924,6 @@ class Component(
 ):
 	"""
 	.. todo:: GRAPH::Component Needs documentation.
-
 	"""
 
 	def __init__(
@@ -2950,7 +2948,6 @@ class Component(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Component::del Needs documentation.
-
 		"""
 		super().__del__()
 
@@ -3010,7 +3007,6 @@ class Graph(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Graph::del Needs documentation.
-
 		"""
 		try:
 			del self._subgraphs
@@ -3114,9 +3110,9 @@ class Graph(
 			if (l := len(self._verticesWithoutID)) == 1:
 				return self._verticesWithoutID[0]
 			elif l == 0:
-				raise KeyError(f"Found no vertex with ID `None`.")
+				raise KeyError("Found no vertex with ID `None`.")
 			else:
-				raise KeyError(f"Found multiple vertices with ID `None`.")
+				raise KeyError("Found multiple vertices with ID `None`.")
 		else:
 			return self._verticesWithID[vertexID]
 
@@ -3237,6 +3233,6 @@ class Graph(
 		:returns: The graph's name, or ``"Unnamed graph"`` if it has none.
 		"""
 		if self._name is None:
-			return f"Graph: unnamed graph"
+			return "Graph: unnamed graph"
 		else:
 			return f"Graph: '{self._name}'"

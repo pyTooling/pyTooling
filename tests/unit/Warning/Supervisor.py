@@ -32,7 +32,7 @@
 Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises when supervised
 threads failed.
 """
-from pyTooling.Warning    import SupervisedThreadException, ThreadSupervisor
+from pyTooling.Warning    import SupervisedThreadError, ThreadSupervisor
 from pyTooling.Testing    import Testcase
 
 
@@ -57,7 +57,7 @@ class ReRaising(Testcase):
 		self._supervisorWith().ReRaise()
 
 	def test_OneExceptionIsWrapped(self) -> None:
-		with self.assertRaises(SupervisedThreadException) as context:
+		with self.assertRaises(SupervisedThreadError) as context:
 			self._supervisorWith("Worker").ReRaise()
 
 		self.assertEqual("Worker", context.exception.ThreadName)
@@ -76,7 +76,7 @@ class ReRaising(Testcase):
 		self.assertEqual(2, len(wrapped))
 		self.assertCountEqual(["Alpha", "Beta"], [exception.ThreadName for exception in wrapped])
 		for exception in wrapped:
-			self.assertIsInstance(exception, SupervisedThreadException)
+			self.assertIsInstance(exception, SupervisedThreadError)
 			self.assertIsInstance(exception.__cause__, ValueError)
 
 	def test_SeveralExceptionsAreGroupedUnwrapped(self) -> None:

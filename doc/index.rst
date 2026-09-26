@@ -1,24 +1,21 @@
-.. include:: shields.inc
-
 .. raw:: latex
 
    \part{Introduction}
 
-.. only:: html
+.. shields::
+   :github:                pyTooling/pyTooling
+   :pypi:                  pyTooling
+   :codacy:                08ef744c0b70490289712b02a7a4cebe
+   :source-license:        github:LICENSE.md
+   :documentation-license: CC-BY-4.0 github:doc/Doc-License.rst
+   :github-action:         Pipeline.yml@main
+   :documentation:         github-pages
 
-   |  |SHIELD:svg:pyTooling-github| |SHIELD:svg:pyTooling-src-license| |SHIELD:svg:pyTooling-ghp-doc| |SHIELD:svg:pyTooling-doc-license|
-   |  |SHIELD:svg:pyTooling-pypi-tag| |SHIELD:svg:pyTooling-pypi-status| |SHIELD:svg:pyTooling-pypi-python|
-   |  |SHIELD:svg:pyTooling-gha-test| |SHIELD:svg:pyTooling-lib-status| |SHIELD:svg:pyTooling-codacy-quality| |SHIELD:svg:pyTooling-codacy-coverage| |SHIELD:svg:pyTooling-codecov-coverage|
+   github, src-license, ghp-doc, doc-license
+   pypi-tag, pypi-status, pypi-python
+   github-action, lib-status, codacy-quality, codacy-coverage, codecov-coverage
 
-.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:svg:pyTooling-lib-dep| |SHIELD:svg:pyTooling-lib-rank|
-
-.. only:: latex
-
-   |SHIELD:png:pyTooling-github| |SHIELD:png:pyTooling-src-license| |SHIELD:png:pyTooling-ghp-doc| |SHIELD:png:pyTooling-doc-license|
-   |SHIELD:png:pyTooling-pypi-tag| |SHIELD:png:pyTooling-pypi-status| |SHIELD:png:pyTooling-pypi-python|
-   |SHIELD:png:pyTooling-gha-test| |SHIELD:png:pyTooling-lib-status| |SHIELD:png:pyTooling-codacy-quality| |SHIELD:png:pyTooling-codacy-coverage| |SHIELD:png:pyTooling-codecov-coverage|
-
-.. Disabled shields: |SHIELD:svg:pyTooling-gitter| |SHIELD:png:pyTooling-lib-dep| |SHIELD:png:pyTooling-lib-rank|
+.. Disabled shields: gitter, lib-dep, lib-rank
 
 --------------------------------------------------------------------------------
 
@@ -160,7 +157,7 @@ ArgParse
       routine. Thus parser and handler code is not separated.
 
       If the command line interface uses many commands, handlers and their arguments can be spread across
-      :ref:`mixin classes <ATTR/ArgParse/MixIn>`. Later, the whole CLI is assembled by using multiple inheritance. In
+      :ref:`mixin classes <ATTR/ArgParse/Mixin>`. Later, the whole CLI is assembled by using multiple inheritance. In
       case handlers use shared argument sets, arguments can be :ref:`grouped <ATTR/ArgParse/Grouping>` and shared by
       defining grouping attributes.
 
@@ -304,6 +301,7 @@ Common Helper Functions
       * :ref:`COMMON/Helper/isnestedclass` checks if a class is nested inside another class.
       * :ref:`COMMON/Helper/mergedicts` merges multiple dictionaries into a new dictionary.
       * :ref:`COMMON/Helper/zipdicts` iterate multiple dictionaries simultaneously.
+      * :ref:`COMMON/Helper/parseISO8601Timestamp` parses an ISO 8601 timestamp.
 
    .. grid-item::
       :columns: 6
@@ -374,6 +372,11 @@ Common Classes
       * :ref:`Call-by-reference parameters <COMMON/CallByRef>`: Python doesn't provide *call-by-reference parameters* for
         simple types. |br|
         This behavior can be emulated with classes provided by the :mod:`pyTooling.CallByRef` module.
+      * :ref:`String enumerations that parse themselves <COMMON/StringEnum>`: An enumeration whose members come from a
+        command line, a configuration file or a REST reply needs to say what a missing value means, what a value of the
+        wrong type is, and what a value no member carries is. |br|
+        :class:`~pyTooling.Common.StringEnum` answers all three, and an enumeration declares the member a missing value
+        stands for as an alias named ``DEFAULT``.
       * :ref:`Unified license names <LICENSING>`: Setuptools, PyPI, and others have a varying understanding of license names. |br|
         The :mod:`pyTooling.Licensing` module provides :ref:`unified license names <LICENSING>` as well as license name
         mappings or translations.
@@ -764,7 +767,7 @@ Decorators
    .. grid-item::
       :columns: 6
 
-      * :ref:`META/Abstract` |br|
+      * :ref:`META/AbstractClass` |br|
         If there is at least one *abstract method* in a class' definition, then the whole class is considered *abstract*
         and this class can't be instantiated.
 
@@ -812,11 +815,11 @@ Decorators
 Exceptions
 ==========
 
-* :exc:`~pyTooling.Exceptions.EnvironmentException` |br|
+* :exc:`~pyTooling.Exceptions.EnvironmentVariableError` |br|
   ... is raised when an expected environment variable is missing.
-* :exc:`~pyTooling.Exceptions.PlatformNotSupportedException` |br|
+* :exc:`~pyTooling.Exceptions.PlatformNotSupportedError` |br|
   ... is raise if the platform is not supported.
-* :exc:`~pyTooling.Exceptions.NotConfiguredException` |br|
+* :exc:`~pyTooling.Exceptions.NotConfiguredError` |br|
   ... is raise if the requested setting is not configured.
 
 
@@ -892,20 +895,36 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
                class Data(metaclass=ExtendedType, slots=True):
                   _x: int
-                  _y: int = 12
+                  _y: int
 
                   def __init__(self, x: int) -> None:
-                    self._x = x
+                     self._x = x
+                     self._y = 12
 
                data = Data(11)
 
-         .. tab-item:: MixIn Class
-
-            .. todo:: Needs example code
+         .. tab-item:: Mixin Class
 
             .. code-block:: Python
 
-               def
+               from __future__ import annotations
+
+               class NamedMixin(metaclass=ExtendedType, mixin=True):
+                  _name: str
+
+                  def __init__(self, name: str) -> None:
+                     self._name = name
+
+               class BaseNode(metaclass=ExtendedType, slots=True):
+                  _parent: Node
+
+                  def __init__(self, parent: Node) -> None:
+                     self._parent = parent
+
+               class Node(BaseNode, NamedMixin):
+                  def __init__(self, parent: Node, name: str) -> None:
+                     super().__init__(parent)
+                     NamedMixin.__init__(self, name)
 
 
 Packaging
@@ -1092,6 +1111,7 @@ License
 
    Common/index
    Common/CallByRef
+   Common/Enumerations
    Common/Licensing
    Common/Filesystem
    Common/Platform
@@ -1122,6 +1142,13 @@ License
    :hidden:
 
    Decorators
+
+.. toctree::
+   :caption: Documentation
+   :hidden:
+
+   Documentation/index
+   Documentation/Sphinx
 
 .. toctree::
    :caption: Exceptions and Warnings
@@ -1155,10 +1182,40 @@ License
    PackageDependencies
 
 .. toctree::
+   :caption: REST APIs
+   :hidden:
+
+   REST
+
+.. toctree::
+   :caption: Continuous Integration
+   :hidden:
+
+   CI/index
+
+.. toctree::
    :caption: Testing
    :hidden:
 
    Testing
+
+.. toctree::
+   :caption: Tracing
+   :hidden:
+
+   Tracing
+
+.. toctree::
+   :caption: Diagrams
+   :hidden:
+
+   Diagram
+
+.. toctree::
+   :caption: Command Line Interface
+   :hidden:
+
+   CLI
 
 .. raw:: latex
 
@@ -1174,6 +1231,7 @@ License
    CodeCoverage
    Doc. Coverage Report <DocCoverage>
    Static Type Check Report ➚ <typing/index>
+   Schemas/index
 
 .. raw:: latex
 

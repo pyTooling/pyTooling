@@ -1182,5 +1182,5 @@ class GraphMLDocument(Base):
 		:param file: Path of the file to write.
 		"""
 		with file.open("w", encoding="utf-8") as f:
-			f.write(f"""<?xml version="1.0" encoding="utf-8"?>""")
+			f.write("""<?xml version="1.0" encoding="utf-8"?>""")
 			f.writelines(self.ToStringLines())

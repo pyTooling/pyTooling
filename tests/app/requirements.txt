@@ -1,0 +1,10 @@
+-r ../../requirements.txt
+
+# Test Runner
+pytest ~= 9.1
+
+# What 'pyTooling[cli]' installs. Installing the wheel doesn't pull an extra in - a wheel path carries no extras
+# marker - so the program's own dependencies are named here. Without colorama the program doesn't start at all,
+# because it is a TerminalApplication.
+colorama ~= 0.4.6
+matplotlib >= 3.10

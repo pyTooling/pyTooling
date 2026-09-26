@@ -3,19 +3,21 @@
 Overview
 ########
 
-The :mod:`pyTooling.Attributes` package offers the base implementation of `.NET-like attributes <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__
-realized with :term:`Python decorators <decorator>`. The annotated and declarative data is stored as instances of
-:class:`~pyTooling.Attributes.Attribute` classes in an additional ``__pyattr__`` field per class, method or function.
+The :mod:`pyTooling.Attributes` package offers the base implementation of `.NET-like attributes
+<https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__ realized with
+:term:`Python decorators <decorator>`. The annotated and declarative data is stored as instances of
+:class:`~pyTooling.Attributes.Attribute` classes in an additional :pycode:`__pyattr__` field per class, method or
+function.
 The annotation syntax allows users to attach any structured data to classes, methods or functions. In many cases, a
-user will derive a custom attribute from :class:`~pyTooling.Attributes.Attribute` and override the ``__init__`` method,
-so user-defined parameters can be accepted when the attribute is constructed.
+user will derive a custom attribute from :class:`~pyTooling.Attributes.Attribute` and override the :pycode:`__init__`
+method, so user-defined parameters can be accepted when the attribute is constructed.
 
 Later, classes, methods or functions can be searched for by querying the attribute class for attribute instance usage
 locations (see 'Function Attributes' example). Another option for class and method attributes is defining a new classes
 using pyTooling’s :ref:`META/ExtendedType` meta-class. Here the class itself offers helper methods for discovering
 annotated methods (see 'Method Attributes' example). While all *user-defined* (and *pre-defined*) attributes offer a
 powerful API derived from :class:`~pyTooling.Attributes.Attribute` class, the full potential can only be experienced
-when using class declarations constructed by the :class:`pyTooling.MetaClass.ExtendedType` meta-class.
+when using class declarations constructed by the :class:`pyTooling.MetaClasses.ExtendedType` meta-class.
 
 Attributes can create a complex class hierarchy. This helps in finding and filtering for annotated data.
 
@@ -85,7 +87,7 @@ Example
 
 
          prog = Program()
-         for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):
+         for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase).items():
            pass
 
 
@@ -120,11 +122,11 @@ Predefined Attributes
 *********************
 
 pyTooling's attributes offers the :class:`~pyTooling.Attributes.Attribute` base-class to derive further attribute
-classes. A derive :class:`~pyTooling.Attributes.SimpleAttribute` is also offered to accept any ``*args, **kwargs``
+classes. A derive :class:`~pyTooling.Attributes.SimpleAttribute` is also offered to accept any :pycode:`*args, **kwargs`
 parameters for annotation of semi-structured meta-data.
 
-It's recommended to derive an own hierarchy of attribute classes with well-defined parameter lists for the ``__init__``
-method. Meta-data stored in attribute should be made accessible via (readonly) properties.
+It's recommended to derive an own hierarchy of attribute classes with well-defined parameter lists for the
+:pycode:`__init__` method. Meta-data stored in attribute should be made accessible via (readonly) properties.
 
 In addition, an :mod:`pyTooling.Attributes.ArgParse` subpackage is provided, which allows users to describe complex
 argparse command line argument parser structures in a declarative way.
@@ -236,24 +238,7 @@ distinguished if they are applied to a class, method or function.
 
 .. rubric:: Condensed definition of class :class:`~pyTooling.Attributes.Attribute`
 
-.. code-block:: Python
-
-   class Attribute:
-      @classmethod
-      def GetFunctions(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
-        ...
-
-      @classmethod
-      def GetClasses(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
-        ...
-
-      @classmethod
-      def GetMethods(cls, scope: Type = None, predicate: TAttributeFilter = None) -> Generator[TAttr, None, None]:
-        ...
-
-      @classmethod
-      def GetAttributes(cls, method: MethodType, includeSubClasses: bool = True) -> Tuple['Attribute', ...]:
-        ...
+.. condensed-class:: pyTooling.Attributes.Attribute
 
 .. rubric:: Planned Features
 
@@ -269,8 +254,8 @@ SimpleAttribute
 ===============
 
 The :class:`~pyTooling.Attributes.SimpleAttribute` class accepts any positional and any keyword arguments as data. That
-data is made available via :attr:`~pyTooling.Attributes.SimpleAttribute.Args` and :attr:`~pyTooling.Attributes.SimpleAttribute.KwArgs`
-properties.
+data is made available via :attr:`~pyTooling.Attributes.SimpleAttribute.Args` and
+:attr:`~pyTooling.Attributes.SimpleAttribute.KwArgs` properties.
 
 .. code-block:: Python
 
@@ -308,26 +293,19 @@ properties.
 User-Defined Attributes
 ***********************
 
-It's recommended to derive user-defined attributes from :class:`~pyTooling.Attributes.Attribute`, so the ``__init__``
-method can be overriden to accept a well defined parameter list including type hints.
+It's recommended to derive user-defined attributes from :class:`~pyTooling.Attributes.Attribute`, so the
+:pycode:`__init__` method can be overriden to accept a well defined parameter list including type hints.
 
-The example defines an ``Annotation`` attribute, which accepts a single string parameter. When the attribute is applied,
-the parameter is stored in an  instance. The inner field is then accessible via readonly ``Annotation`` property.
+The example defines an :pycode:`Annotation` attribute, which accepts a single string parameter. When the attribute is
+applied, the parameter is stored in an instance. The inner field is then accessible via readonly :pycode:`Annotation`
+property.
 
 .. grid:: 2
 
    .. grid-item:: **Find attribute usages of class attributes**
       :columns: 6
 
-      .. code-block:: Python
-
-         class Application(metaclass=ExtendedType):
-           @Annotation("Some annotation data")
-           def AnnotatedMethod(self):
-             pass
-
-         for method in Annotation.GetMethods():
-           pass
+      .. condensed-class:: pyTooling.Attributes.SimpleAttribute
 
    .. grid-item:: **Find attribute usages of class attributes**
       :columns: 6
@@ -354,7 +332,73 @@ the parameter is stored in an  instance. The inner field is then accessible via 
 Searching Attributes
 ********************
 
-.. todo:: Attributes:: Searching Attributes
+An attribute is searched from **either end**: from the entity, to ask what was attached to it, or from the attribute
+class, to ask what it was attached to. The second direction is the one a framework needs, and it is what makes an
+attribute more than a decorator that stores a value.
+
+.. grid:: 2
+
+   .. grid-item:: **From the entity - what is attached here?**
+      :columns: 6
+
+      :meth:`~pyTooling.Attributes.Attribute.GetAttributes` reads the :pycode:`__pyattr__` field of a single method and
+      returns the attributes of this kind attached to it.
+
+      .. code-block:: Python
+
+         from pyTooling.Attributes  import Attribute
+         from pyTooling.MetaClasses import ExtendedType
+
+         class Command(Attribute):
+           pass
+
+         class Program(metaclass=ExtendedType):
+           @Command()
+           def Version(self) -> None:
+             pass
+
+         attributes = Command.GetAttributes(Program.Version)
+
+   .. grid-item:: **From the attribute - where was I used?**
+      :columns: 6
+
+      :meth:`~pyTooling.Attributes.Attribute.GetClasses`,
+      :meth:`~pyTooling.Attributes.Attribute.GetMethods` and
+      :meth:`~pyTooling.Attributes.Attribute.GetFunctions` return generators over every entity the attribute class was
+      attached to - no module has to be imported or walked to find them.
+
+      .. code-block:: Python
+
+         for method in Command.GetMethods():
+           print(method)
+
+**No scan is involved in either direction.** Each attribute class keeps three registries -
+:attr:`~pyTooling.Attributes.Attribute._classes`, :attr:`~pyTooling.Attributes.Attribute._methods` and
+:attr:`~pyTooling.Attributes.Attribute._functions` - and the decorator appends to them while the module is being
+imported, so a query is a list traversal at run time rather than a search. The cost is paid once, at class creation
+time, which is the design goal above.
+
+Every derived attribute class gets **its own** registries.
+:pycode:`__init_subclass__` assigns fresh lists per subclass, so :pycode:`Command.GetMethods()`
+never reports a method that only carries a :pycode:`Flag`, although both derive from
+:class:`~pyTooling.Attributes.Attribute`.
+
+.. attention::
+
+   **A method is only in the method registry if the meta-class put it there.** In a class body, a method is still a
+   plain function when the decorator runs, so the attribute registers it as a *function*. :ref:`META/ExtendedType`
+   moves it to the method registry while it builds the class. A class built without that meta-class therefore
+   answers :meth:`~pyTooling.Attributes.Attribute.GetFunctions`, not
+   :meth:`~pyTooling.Attributes.Attribute.GetMethods` - which is why the example above states it.
+
+.. attention::
+
+   An entity is only registered once its defining module has been **imported**. An attribute query in a plugin
+   architecture therefore answers for the plugins loaded so far, not for the plugins installed.
+
+   A registry holds **one entry per application**, so an entity carrying the attribute twice is yielded twice. Wrap
+   the result in a :class:`set` - or in :func:`dict.fromkeys`, to keep the order - where each entity should be
+   handled once.
 
 
 .. _ATTR/Filtering:
@@ -362,13 +406,59 @@ Searching Attributes
 Filtering Attributes
 ********************
 
-Methods :meth:`~pyTooling.Attributes.Attribute.GetClasses`, :meth:`~pyTooling.Attributes.Attribute.GetMethods`
-:meth:`~pyTooling.Attributes.Attribute.GetFunctions`, :meth:`~pyTooling.Attributes.Attribute.GetAttributes` accept an
-optional ``predicate`` parameter, which needs to be a subclass of :class:`~pyTooling.Attributes.Attribute`.
+**The first filter is the class the query is sent to.** :pycode:`Command.GetMethods()` returns the methods carrying
+a :pycode:`Command`; :pycode:`Attribute.GetMethods()` returns nothing, because the base-class was never attached to
+anything. A hierarchy of attribute classes is therefore a hierarchy of queries, which is the design goal *filter
+attributes based on their class hierarchy*.
 
+Subclasses count as the attribute they derive from - but only in the entity direction.
+:meth:`~pyTooling.Attributes.Attribute.GetAttributes` matches with :func:`isinstance`, so
+:pycode:`Command.GetAttributes(method)` also returns a :pycode:`SpecialCommand` attached to that method. The
+registries behind :meth:`~pyTooling.Attributes.Attribute.GetMethods` are per class, so that query does **not** see
+the subclass.
 
+The remaining filters narrow *where* an entity may be declared:
 
-.. todo:: Attributes:: Filtering Attributes
+.. list-table::
+   :header-rows: 1
+   :widths: 25 25 50
+
+   * - Method
+     - Parameter
+     - Accepts
+   * - :meth:`~pyTooling.Attributes.Attribute.GetClasses`
+     - :pycode:`scope`
+     - A module - the class has to be defined in it - or a class, and then the class has to be **nested** in it.
+   * - :meth:`~pyTooling.Attributes.Attribute.GetClasses`
+     - :pycode:`subclassOf`
+     - A class the annotated class has to derive from.
+   * - :meth:`~pyTooling.Attributes.Attribute.GetMethods`
+     - :pycode:`scope`
+     - The class the method has to be defined in.
+   * - :meth:`~pyTooling.Attributes.Attribute.GetFunctions`
+     - :pycode:`scope`
+     - A module the function has to be defined in.
+
+.. code-block:: Python
+
+   # every annotated class in this module
+   Command.GetClasses(scope=sys.modules[__name__])
+
+   # ... that is also a 'Handler'
+   Command.GetClasses(scope=sys.modules[__name__], subclassOf=Handler)
+
+.. attention::
+
+   :meth:`~pyTooling.Attributes.Attribute.GetFunctions` accepts a **module** as its scope. Passing a class raises
+   :exc:`NotImplementedError` rather than returning an empty generator.
+
+.. hint::
+
+   A class built by the :ref:`META/ExtendedType` meta-class offers the filter the other way round:
+   :pycode:`GetMethodsWithAttributes` asks *one class* which of its methods carry attributes, and its
+   :pycode:`predicate` parameter takes an attribute class, an iterable of attribute classes, or :pycode:`None` for
+   all of them. Use it when the class is known and the attributes are not; use the queries above when the attribute
+   is known and the classes are not.
 
 
 .. _ATTR/Grouping:
@@ -376,7 +466,13 @@ optional ``predicate`` parameter, which needs to be a subclass of :class:`~pyToo
 Grouping Attributes
 *******************
 
-.. todo:: Attributes:: Grouping Attributes
+A set of attributes that always appear together can be applied as **one** attribute. Because every attribute class is
+callable, its :pycode:`__call__` is free to attach more than itself, and
+:meth:`~pyTooling.Attributes.Attribute._AppendAttribute` is what attaches one attribute to an entity without going
+through the decorator syntax.
+
+The group attribute stays a normal attribute: it is registered on the entity like the ones it applies, so the entity
+can afterwards be found through the group **or** through any of its members.
 
 .. code-block:: Python
 
@@ -408,13 +504,51 @@ Grouping Attributes
 Implementation Details
 **********************
 
-.. todo:: Attributes:: Implementation details
+An attribute is stored **twice**, once per direction of the search described above.
 
-:data:`~pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME`
+.. _ATTR/Details/Entity:
 
-The annotated data is stored in an additional ``__dict__`` entry for each
-annotated method. By default the entry is called ``__pyattr__``. Multiple
-attributes can be applied to the same method.
+On the entity
+=============
+
+The annotated data is stored in an additional :pycode:`__dict__` entry on each annotated class, method or function. The
+field is named by :data:`~pyTooling.Attributes.ATTRIBUTES_MEMBER_NAME`, which is :pycode:`__pyattr__`, and it holds a
+**list**, so multiple attributes can be applied to the same entity.
+
+New attributes are inserted at the **front** of that list. Decorators are applied bottom-up, so inserting rather than
+appending gives back the order the decorators were written in:
+
+.. code-block:: Python
+
+   @Command(cmd="version")     # __pyattr__[0]
+   @Flag(param="verbose")      # __pyattr__[1]
+   def Version(self) -> None:
+     pass
+
+.. _ATTR/Details/Registry:
+
+On the attribute class
+======================
+
+The same attribute instance is appended to :attr:`~pyTooling.Attributes.Attribute._classes`,
+:attr:`~pyTooling.Attributes.Attribute._methods` or :attr:`~pyTooling.Attributes.Attribute._functions` of its own
+class, chosen by what the entity is - :class:`~types.MethodType`, :class:`~types.FunctionType` or :class:`type`.
+Anything else raises :exc:`TypeError`; class fields and module variables are not supported.
+
+.. _ATTR/Details/Scope:
+
+Scope
+=====
+
+:class:`~pyTooling.Attributes.AttributeScope` is an :class:`~enum.IntFlag` naming the language entities an attribute
+is meant for - :pycode:`Class`, :pycode:`Method`, :pycode:`Function`, and :pycode:`Any` as their union. A derived
+attribute states it by overriding :attr:`~pyTooling.Attributes.Attribute._scope`, and it is readable through
+:attr:`~pyTooling.Attributes.Attribute.Scope`.
+
+It is what makes attribute **inheritance** possible: when the :ref:`META/ExtendedType` meta-class builds a class, it
+walks the base-classes' :pycode:`__pyattr__` and re-attaches every attribute whose scope contains :pycode:`Class` to the
+derived class. An attribute scoped to methods is not inherited this way, because it was never a statement about the
+class.
 
 
 .. _ATTR/Consumers:

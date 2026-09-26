@@ -37,57 +37,330 @@ Tools for software execution tracing.
       |rarr| A single measurement instead of nested timespans.
    :mod:`pyTooling.Tree`
       |rarr| The tree data structure spans and their sub-spans form.
+
+.. hint::
+
+   See :ref:`high-level help <TRACING>` for explanations and usage examples.
 """
 from __future__            import annotations
 
-from datetime              import datetime
+from base64                import b64encode
+from datetime              import datetime, timedelta
+from enum                  import Enum
+from json                  import dumps as json_dumps
+from math                  import isfinite
+from pathlib               import Path
+from secrets               import randbits
 from time                  import perf_counter_ns
 from threading             import local
 from types                 import TracebackType
-from typing                import Optional as Nullable, Iterator, Self, Iterable, Any
+from typing                import Optional as Nullable, Iterator, Self, Iterable, TypedDict, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.Common      import __version__, getFullyQualifiedName
 
 
-__all__ = ["_threadLocalData"]
+__all__ = ["_threadLocalData", "OTLP_SCOPE_NAME"]
+
+OTLP_SCOPE_NAME = "pyTooling.Tracing"
+"""The instrumentation scope every exported span is reported under."""
 
 _threadLocalData = local()
 """A reference to the thread local data needed by the pyTooling.Tracing classes."""
 
+AttributeValue = Union[
+	bool, int, float, str, bytes,
+	list["AttributeValue"], tuple["AttributeValue", ...], dict[str, "AttributeValue"]
+]
+"""
+A value that can be attached to a trace, a span or an event as an attribute.
+
+These are the types OTLP's ``AnyValue`` can carry, and nothing else - a value of any other type is rejected rather
+than stringified, because a silent ``str(value)`` puts a Python ``repr`` into a document a backend then indexes.
+"""
+
+DurationValue = Union[timedelta, int, float]
+"""
+A recorded duration, given as a :class:`~datetime.timedelta` or as a number of seconds.
+
+An :class:`int` is whole seconds and a :class:`float` is fractional seconds, matching the unit
+:attr:`Span.Duration` reports, so a source stating ``"duration": 98.0`` needs no conversion at the call site.
+"""
+
+_MAXIMUM_IDENTIFIER_ATTEMPTS = 4
+"""Number of attempts to draw a non-zero random identifier before giving up."""
+
+
+def _asTimedelta(duration: DurationValue) -> timedelta:
+	"""
+	Convert a recorded duration to a :class:`~datetime.timedelta`.
+
+	A :class:`bool` is rejected although it is an :class:`int` in Python, because ``True`` would otherwise mean one
+	second. A non-finite :class:`float` is rejected here, because :class:`~datetime.timedelta` answers ``nan`` with its
+	own :exc:`ValueError` and infinity with an :exc:`OverflowError`, neither of which names the parameter.
+
+	:param duration:    Duration as a :class:`~datetime.timedelta`, or as a number of seconds.
+	:returns:           The duration as a :class:`~datetime.timedelta`.
+	:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
+	                    :class:`float`.
+	:raises ValueError: If parameter 'duration' is not a finite number of seconds.
+	:raises ValueError: If parameter 'duration' is negative.
+	"""
+	if isinstance(duration, timedelta):
+		if duration < timedelta(0):
+			ex = ValueError("Parameter 'duration' is negative.")
+			ex.add_note(f"Got duration '{duration}'.")
+			raise ex
+
+		return duration
+	elif isinstance(duration, bool) or not isinstance(duration, (int, float)):
+		ex = TypeError("Parameter 'duration' is not of type 'timedelta', 'int' or 'float'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(duration)}'.")
+		raise ex
+	elif not isfinite(duration):
+		ex = ValueError("Parameter 'duration' is not a finite number of seconds.")
+		ex.add_note(f"Got duration '{duration}'.")
+		raise ex
+	elif duration < 0:
+		ex = ValueError("Parameter 'duration' is negative.")
+		ex.add_note(f"Got duration '{duration}'.")
+		raise ex
+
+	return timedelta(seconds=duration)
+
+
+def _nanoseconds(beginTime: datetime, endTime: datetime) -> int:
+	"""
+	Compute the length of a timespan in nanoseconds.
+
+	The difference is reduced with integer arithmetic, so the result is exact to the microsecond both timestamps hold -
+	a conversion through :class:`float` seconds would not be.
+
+	:param beginTime: Time when the timespan began.
+	:param endTime:   Time when the timespan ended.
+	:returns:         Length of the timespan in nanoseconds.
+	"""
+	difference = endTime - beginTime
+	seconds =    difference.days * 86_400 + difference.seconds
+
+	return seconds * 1_000_000_000 + difference.microseconds * 1_000
+
 
 @export
-class TracingException(ToolingException):
+class TracingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
 
 
 @export
-class Event(metaclass=ExtendedType, slots=True):
-	"""
-	Represents a named event within a timespan (:class:`Span`) used in a software execution trace.
+class SpanState(Enum):
+	"""An enumeration describing which of a timespan's times are filled in."""
 
-	It may contain arbitrary attributes (key-value pairs).
-	"""
-	_name:      str                 #: Name of the event.
-	_parent:    Nullable[Span]      #: Reference to the parent span.
-	_time:      Nullable[datetime]  #: Timestamp of the event.
-	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
+	Empty =    0  #: Neither begin nor end time is set, so the timespan can be timed by a ``with``-statement.
+	Running =  1  #: The begin time is set, but the end time isn't, so the timespan is still running.
+	Complete = 2  #: Begin and end time are both set.
 
-	def __init__(self, name: str, time: Nullable[datetime] = None, parent: Nullable[Span] = None) -> None:
+
+@export
+class OTLPArrayValue(TypedDict):
+	"""OTLP's ``ArrayValue``: a list of values, as it is nested inside an :class:`OTLPAnyValue`."""
+
+	values: list[OTLPAnyValue]  #: The elements of the array.
+
+
+@export
+class OTLPKeyValueList(TypedDict):
+	"""OTLP's ``KeyValueList``: a mapping of values, as it is nested inside an :class:`OTLPAnyValue`."""
+
+	values: list[OTLPAttribute]  #: The entries of the mapping.
+
+
+@export
+class OTLPAnyValue(TypedDict, total=False):
+	"""
+	OTLP's ``AnyValue``: a value of any supported type, carried in a mapping of exactly one key.
+
+	The key names the type of the value. A 64-bit integer travels as a decimal **string**, because a JSON number can't
+	carry 64 bits exactly. That is proto3's JSON mapping rather than a quirk of OTLP.
+	"""
+
+	boolValue:   bool              #: A boolean value.
+	intValue:    str               #: A 64-bit integer, encoded as a decimal string.
+	doubleValue: float             #: A floating-point value.
+	stringValue: str               #: A string value.
+	bytesValue:  str               #: A byte string, encoded as base64 - this field is ``bytes`` in proto3.
+	arrayValue:  OTLPArrayValue    #: A list of values.
+	kvlistValue: OTLPKeyValueList  #: A mapping of values.
+
+
+@export
+class OTLPAttribute(TypedDict):
+	"""OTLP's ``KeyValue``: a single attribute of a resource, a span or an event."""
+
+	key:   str           #: Name of the attribute.
+	value: OTLPAnyValue  #: Value of the attribute.
+
+
+@export
+class OTLPEvent(TypedDict, total=False):
+	"""OTLP's ``Span.Event``: a named point in time within a span."""
+
+	name:         str                  #: Name of the event.
+	timeUnixNano: str                  #: Time of the event in nanoseconds since the Unix epoch, as a decimal string.
+	attributes:   list[OTLPAttribute]  #: Attributes attached to the event.
+
+
+@export
+class OTLPSpan(TypedDict, total=False):
+	"""
+	OTLP's ``Span``: a single timespan of a trace.
+
+	OTLP doesn't nest spans, so the enclosing span is referenced by :attr:`parentSpanId` instead of containing this one.
+	"""
+
+	traceId:           str                  #: Identifier shared by every span of the trace, as 32 hex digits.
+	spanId:            str                  #: Identifier of this span, as 16 hex digits.
+	parentSpanId:      str                  #: Identifier of the enclosing span, absent for the trace's own span.
+	name:              str                  #: Name of the span.
+	kind:              int                  #: Kind of the span - always ``1`` (``SPAN_KIND_INTERNAL``) here.
+	startTimeUnixNano: str                  #: Start in nanoseconds since the Unix epoch, as a decimal string.
+	endTimeUnixNano:   str                  #: End in nanoseconds since the Unix epoch, as a decimal string.
+	attributes:        list[OTLPAttribute]  #: Attributes attached to the span.
+	events:            list[OTLPEvent]      #: Events that happened within the span.
+
+
+@export
+class OTLPScope(TypedDict):
+	"""OTLP's ``InstrumentationScope``: the library the spans were produced by."""
+
+	name:    str  #: Name of the instrumentation scope.
+	version: str  #: Version of the instrumentation scope.
+
+
+@export
+class OTLPScopeSpans(TypedDict):
+	"""OTLP's ``ScopeSpans``: the spans produced by one instrumentation scope."""
+
+	scope: OTLPScope       #: The instrumentation scope the spans were produced by.
+	spans: list[OTLPSpan]  #: The spans, flattened.
+
+
+@export
+class OTLPResource(TypedDict):
+	"""OTLP's ``Resource``: the entity the spans were produced by."""
+
+	attributes: list[OTLPAttribute]  #: Attributes describing the resource, e.g. ``service.name``.
+
+
+@export
+class OTLPResourceSpans(TypedDict):
+	"""OTLP's ``ResourceSpans``: the spans produced by one resource."""
+
+	resource:   OTLPResource          #: The resource the spans were produced by.
+	scopeSpans: list[OTLPScopeSpans]  #: The spans, grouped by instrumentation scope.
+
+
+@export
+class OTLPDocument(TypedDict):
+	"""OTLP's ``TracesData``: the root of an OTLP/JSON document."""
+
+	resourceSpans: list[OTLPResourceSpans]  #: The spans, grouped by resource.
+
+
+def _toAttributeValue(value: AttributeValue) -> OTLPAnyValue:
+	"""
+	Wrap a Python value in OTLP's ``AnyValue`` representation.
+
+	Supported are :class:`bool`, :class:`int`, :class:`float`, :class:`str`, :class:`bytes`, and a :class:`list`,
+	:class:`tuple` or :class:`dict` of these - see :data:`AttributeValue`.
+
+	:param value:         The value to wrap.
+	:returns:             The value, wrapped in the one-key mapping OTLP expects for its type.
+	:raises TracingError: If the value is of a type OTLP's ``AnyValue`` can't carry.
+	"""
+	# a bool is an int in Python, so it has to be recognized first
+	if isinstance(value, bool):
+		return {"boolValue": value}
+	elif isinstance(value, int):
+		return {"intValue": str(value)}
+	elif isinstance(value, float):
+		return {"doubleValue": value}
+	elif isinstance(value, str):
+		return {"stringValue": value}
+	elif isinstance(value, (bytes, bytearray)):
+		return {"bytesValue": b64encode(value).decode("ascii")}
+	elif isinstance(value, (list, tuple)):
+		return {"arrayValue": {"values": [_toAttributeValue(element) for element in value]}}
+	elif isinstance(value, dict):
+		return {"kvlistValue": {"values": _toAttributes(value.items())}}
+
+	ex = TracingError(f"Attribute value of type '{getFullyQualifiedName(value)}' can't be represented in OTLP.")
+	ex.add_note("Supported are: bool, int, float, str, bytes, and a list, tuple or dict of these.")
+	raise ex
+
+
+def _toAttributes(attributes: Iterable[tuple[str, AttributeValue]]) -> list[OTLPAttribute]:
+	"""
+	Convert key-value pairs to OTLP's list of attributes.
+
+	:param attributes:    The key-value pairs to convert.
+	:returns:             One ``{"key": ..., "value": ...}`` mapping per pair.
+	:raises TracingError: If a value is of a type OTLP's ``AnyValue`` can't carry.
+	"""
+	return [{"key": key, "value": _toAttributeValue(value)} for key, value in attributes]
+
+
+def _newIdentifier(bits: int) -> str:
+	"""
+	Generate a random trace or span identifier.
+
+	OTLP/JSON encodes both as **hex** rather than base64, which is where it deviates from proto3's JSON mapping. An
+	all-zero identifier is invalid, so it is drawn again in that case.
+
+	:param bits:          Width of the identifier: 128 for a trace, 64 for a span.
+	:returns:             The identifier as a lower-case hex string.
+	:raises TracingError: If no non-zero identifier was drawn within :data:`_MAXIMUM_IDENTIFIER_ATTEMPTS` attempts.
+	"""
+	for _ in range(_MAXIMUM_IDENTIFIER_ATTEMPTS):
+		if (identifier := randbits(bits)) != 0:
+			return f"{identifier:0{bits // 4}x}"
+	else:
+		ex = TracingError(f"Couldn't draw a non-zero {bits}-bit random identifier.")
+		ex.add_note(f"Tried {_MAXIMUM_IDENTIFIER_ATTEMPTS} times.")
+		raise ex
+
+
+@export
+class TraceElement(metaclass=ExtendedType, slots=True):
+	"""
+	Base-class of a trace's elements: a named thing within a timespan, carrying arbitrary attributes
+	(key-value-pairs).
+
+	It holds what a :class:`Span` and an :class:`Event` have in common - their name, the timespan enclosing them and
+	their attributes - and validates the two parameters every element takes. **It doesn't attach the element to its
+	parent**, because where it goes differs: a sub-span joins :attr:`Span._spans` and an event
+	:attr:`Span._events`, and neither may happen before the derived class has validated the rest of its parameters.
+
+	The attributes are read, written and removed like a dictionary's items.
+	"""
+	_name:   str                        #: Name of the element.
+	_parent: Nullable[Span]             #: Reference to the enclosing timespan (or trace).
+	_dict:   dict[str, AttributeValue]  #: Dictionary of associated attributes.
+
+	def __init__(self, name: str, parent: Nullable[Span] = None) -> None:
 		"""
-		Initializes a named event.
+		Initializes a trace's element, without attaching it to its parent.
 
-		:param name:        The name of the event.
-		:param time:        Optional, time when the event happened.
-		:param parent:      Optional, reference to the parent span.
+		:param name:        Name of the element.
+		:param parent:      Optional, reference to the enclosing timespan.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
 		if isinstance(name, str):
 			if name == "":
-				raise ValueError(f"Parameter 'name' is empty.")
+				raise ValueError("Parameter 'name' is empty.")
 
 			self._name = name
 		else:
@@ -95,66 +368,56 @@ class Event(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 			raise ex
 
-		if time is None:
-			self._time = None
-		elif isinstance(time, datetime):
-			self._time = time
-		else:
-			ex = TypeError("Parameter 'time' is not of type 'datetime'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(time)}'.")
-			raise ex
-
-		if parent is None:
-			self._parent = None
-		elif isinstance(parent, Span):
-			self._parent = parent
-			parent._events.append(self)
-		else:
+		if parent is not None and not isinstance(parent, Span):
 			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
+		self._parent = parent
 		self._dict =   {}
 
 	@readonly
 	def Name(self) -> str:
 		"""
-		Read-only property to access the event's name.
+		Read-only property to access the element's name (:attr:`_name`).
 
-		:returns: Name of the event.
+		:returns: Name of the element.
 		"""
 		return self._name
 
 	@readonly
-	def Time(self) -> datetime:
-		"""
-		Read-only property to access the event's timestamp.
-
-		:returns: Timestamp of the event.
-		"""
-		return self._time
-
-	@readonly
 	def Parent(self) -> Nullable[Span]:
 		"""
-		Read-only property to access the event's parent span.
+		Read-only property to access the timespan enclosing this element (:attr:`_parent`).
 
-		:returns: Parent span.
+		:returns: The enclosing timespan, or ``None`` for a trace and for an element not attached to one.
 		"""
 		return self._parent
 
-	def __getitem__(self, key: str) -> Any:
+	def get(self, key: str, default: Nullable[AttributeValue] = None) -> Nullable[AttributeValue]:
 		"""
-		Read an event's attached attributes (key-value-pairs) by key.
+		Read an attached attribute (key-value-pair) by key, or a default value, if the key doesn't exist.
+
+		This method is spelled the way :meth:`dict.get` is, because that is the behaviour it offers.
+
+		:param key:     The key to look for.
+		:param default: Optional, the value returned if the key isn't an attached attribute. Default: ``None``.
+		:returns:       The value associated to the given key, otherwise the default value.
+		"""
+		return self._dict.get(key, default)
+
+	def __getitem__(self, key: str) -> AttributeValue:
+		"""
+		Read an attached attribute (key-value-pair) by key.
 
 		:param key: The key to look for.
 		:returns:   The value associated to the given key.
 		"""
 		return self._dict[key]
 
-	def __setitem__(self, key: str, value: Any) -> None:
+	def __setitem__(self, key: str, value: AttributeValue) -> None:
 		"""
-		Create or update an event's attached attributes (key-value-pairs) by key.
+		Create or update an attached attribute (key-value-pair) by key.
 
 		If a key doesn't exist yet, a new key-value-pair is created.
 
@@ -165,25 +428,25 @@ class Event(metaclass=ExtendedType, slots=True):
 
 	def __delitem__(self, key: str) -> None:
 		"""
-		Remove an entry from event's attached attributes (key-value-pairs) by key.
+		Remove an attached attribute (key-value-pair) by key.
 
 		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the event's attributes.
+		:raises KeyError: If key doesn't exist in the attributes.
 		"""
 		del self._dict[key]
 
 	def __contains__(self, key: str) -> bool:
 		"""
-		Checks if the key is an attached attribute (key-value-pairs) on this event.
+		Checks if the key is an attached attribute (key-value-pairs).
 
 		:param key: The key to check.
 		:returns:   ``True``, if the key is an attached attribute.
 		"""
 		return key in self._dict
 
-	def __iter__(self) -> Iterator[tuple[str, Any]]:
+	def __iter__(self) -> Iterator[tuple[str, AttributeValue]]:
 		"""
-		Returns an iterator to iterate all associated attributes of this event as :pycode:`(key, value)` tuples.
+		Returns an iterator to iterate all attached attributes as :pycode:`(key, value)` tuples.
 
 		:returns: Iterator to iterate all attributes.
 		"""
@@ -191,11 +454,73 @@ class Event(metaclass=ExtendedType, slots=True):
 
 	def __len__(self) -> int:
 		"""
-		Returns the number of attached attributes (key-value-pairs) on this event.
+		Returns the number of attached attributes (key-value-pairs).
 
 		:returns: Number of attached attributes.
 		"""
 		return len(self._dict)
+
+
+@export
+class Event(TraceElement):
+	"""
+	Represents a named event within a timespan (:class:`Span`) used in a software execution trace.
+
+	It may contain arbitrary attributes (key-value pairs).
+	"""
+	_time:      datetime            #: Timestamp of the event.
+
+	def __init__(self, name: str, time: Nullable[datetime] = None, *, parent: Nullable[Span] = None) -> None:
+		"""
+		Initializes a named event.
+
+		:param name:        The name of the event.
+		:param time:        Optional, time when the event happened. Default: the current system time.
+		:param parent:      Optional, reference to the parent span.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'time' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
+		"""
+		super().__init__(name, parent)
+
+		if time is None:
+			self._time = datetime.now()
+		elif isinstance(time, datetime):
+			self._time = time
+		else:
+			ex = TypeError("Parameter 'time' is not of type 'datetime'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(time)}'.")
+			raise ex
+
+		if parent is not None:
+			parent._events.append(self)
+
+	@readonly
+	def Time(self) -> datetime:
+		"""
+		Read-only property to access the event's timestamp.
+
+		:returns: Timestamp of the event.
+		"""
+		return self._time
+
+	def _ToOTLPJSON(self) -> OTLPEvent:
+		"""
+		Convert this event to its **OTLP/JSON** representation.
+
+		:returns:             The event as an OTLP mapping.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		converted: OTLPEvent = {
+			"name":         self._name,
+			"timeUnixNano": str(int(self._time.timestamp() * 1_000_000_000)),
+		}
+
+		if len(attributes := _toAttributes(self._dict.items())) != 0:
+			converted["attributes"] = attributes
+
+		return converted
 
 	def __str__(self) -> str:
 		"""
@@ -207,14 +532,14 @@ class Event(metaclass=ExtendedType, slots=True):
 
 
 @export
-class Span(metaclass=ExtendedType, slots=True):
+class Span(TraceElement):
 	"""
 	Represents a timespan (span) within another timespan or trace.
 
 	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
-	_name:      str                 #: Name of the timespan
-	_parent:    Nullable[Span]      #: Reference to the parent span (or trace).
+	_trace:     Nullable[Trace]     #: Reference to the trace this timespan belongs to.
+	_spanID:    str                 #: Identifier of this timespan, as 16 hex digits.
 
 	_beginTime: Nullable[datetime]  #: Timestamp when the timespan begins.
 	_endTime:   Nullable[datetime]  #: Timestamp when the timespan ends.
@@ -224,74 +549,144 @@ class Span(metaclass=ExtendedType, slots=True):
 
 	_spans:     list[Span]          #: Sub-timespans
 	_events:    list[Event]         #: Events happened within this timespan
-	_dict:      dict[str, Any]      #: Dictionary of associated attributes.
 
-	def __init__(self, name: str, parent: Nullable[Span] = None) -> None:
+	def __init__(
+		self,
+		name:      str,
+		beginTime: Nullable[datetime] = None,
+		endTime:   Nullable[datetime] = None,
+		duration:  Nullable[DurationValue] = None,
+		*,
+		parent:    Nullable[Span] = None
+	) -> None:
 		"""
 		Initializes a timespan as part of a software execution trace.
 
+		A timespan is timed when it is entered and left by a ``with``-statement. A timespan that was measured elsewhere
+		is constructed with its recorded times instead.
+
+		The end of a recorded timespan is given either as ``endTime`` or as ``duration``, whichever the source reports;
+		a ``duration`` is converted to ``endTime``, so both forms are stored alike.
+
 		:param name:        Name of the timespan.
+		:param beginTime:   Optional, recorded time when the timespan began. Default: the time the timespan is entered.
+		:param endTime:     Optional, recorded time when the timespan ended. Requires ``beginTime``. Default: the time
+		                    the timespan is left, or ``None`` for a recorded timespan, which is still running.
+		:param duration:    Optional, recorded duration of the timespan, as an alternative to ``endTime``. Requires
+		                    ``beginTime``. A :class:`~datetime.timedelta`, or a number of seconds as :class:`int`
+		                    (whole) or :class:`float` (fractional).
 		:param parent:      Optional, reference to a parent span or trace.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
+		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
+		                    :class:`float`.
+		:raises ValueError: If parameter 'duration' is not a finite number of seconds.
+		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
+		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
+		:raises ValueError: If parameter 'duration' is negative.
+		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
+		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
+		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
+		:raises ValueError: If the timespan begins before or ends after its parent.
 		"""
-		if isinstance(name, str):
-			if name == "":
-				raise ValueError(f"Parameter 'name' is empty.")
+		super().__init__(name, parent)
 
-			self._name = name
-		else:
-			ex = TypeError("Parameter 'name' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+		if duration is not None:
+			if beginTime is None:
+				ex = ValueError("Parameter 'duration' is given without parameter 'beginTime'.")
+				ex.add_note(f"Got duration '{duration}'.")
+				raise ex
+			elif endTime is not None:
+				ex = ValueError("Parameters 'endTime' and 'duration' are both given.")
+				ex.add_note(f"Got endTime '{endTime}' and duration '{duration}'.")
+				ex.add_note("Give the end of a recorded timespan either as 'endTime' or as 'duration'.")
+				raise ex
+
+			duration = _asTimedelta(duration)
+		if beginTime is None:
+			if endTime is not None:
+				ex = ValueError("Parameter 'endTime' is given without parameter 'beginTime'.")
+				ex.add_note(f"Got endTime '{endTime}'.")
+				raise ex
+		elif not isinstance(beginTime, datetime):
+			ex = TypeError("Parameter 'beginTime' is not of type 'datetime'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(beginTime)}'.")
 			raise ex
+		elif endTime is not None:
+			if not isinstance(endTime, datetime):
+				ex = TypeError("Parameter 'endTime' is not of type 'datetime'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(endTime)}'.")
+				raise ex
+			elif (beginTime.utcoffset() is None) != (endTime.utcoffset() is None):
+				ex = ValueError("Parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.")
+				ex.add_note(f"Got '{beginTime}' and '{endTime}'.")
+				raise ex
+			elif endTime < beginTime:
+				ex = ValueError("Parameter 'endTime' is before parameter 'beginTime'.")
+				ex.add_note(f"Got '{beginTime}' to '{endTime}'.")
+				raise ex
+
+		if duration is not None:
+			endTime = beginTime + duration
 
 		if parent is None:
-			self._parent = None
-		elif isinstance(parent, Span):
-			self._parent = parent
-			parent._spans.append(self)
+			self._trace = None
 		else:
-			ex = TypeError("Parameter 'parent' is not of type 'Span'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-			raise ex
+			self._CheckParentRange(parent, beginTime, endTime)
 
-		self._beginTime = None
+			self._trace = parent._trace
+			parent._spans.append(self)
+
+		self._spanID =    _newIdentifier(64)
+
+		self._beginTime = beginTime
 		self._startTime = None
-		self._endTime =   None
+		self._endTime =   endTime
 		self._stopTime =  None
-		self._totalTime = None
+		if beginTime is None or endTime is None:
+			self._totalTime = None
+		else:
+			self._totalTime = _nanoseconds(beginTime, endTime)
 
 		self._spans =     []
 		self._events =    []
-		self._dict =      {}
 
 	@readonly
-	def Name(self) -> str:
+	def SpanID(self) -> str:
 		"""
-		Read-only property to access the timespan's name.
+		Read-only property to access the timespan's identifier.
 
-		:returns: Name of the timespan.
+		It is drawn when the timespan is constructed, so it identifies *this* timespan for as long as it exists.
+
+		:returns: Identifier of the timespan, as 16 hex digits.
 		"""
-		return self._name
+		return self._spanID
 
 	@readonly
-	def Parent(self) -> Nullable[Span]:
+	def Trace(self) -> Nullable[Trace]:
 		"""
-		Read-only property to access the span's parent span or trace.
+		Read-only property to access the trace this timespan belongs to.
 
-		:returns: Parent span.
+		:returns: The enclosing trace, or ``None`` while the timespan is not part of one.
 		"""
-		return self._parent
+		return self._trace
 
 	def _AddSpan(self, span: Span) -> Self:
 		"""
 		Append a sub-span to this timespan and set this timespan as its parent.
+
+		The sub-span joins this timespan's trace, because a span entered with a ``with``-statement is constructed
+		before it knows where it belongs.
 
 		:param span: The sub-span to append.
 		:returns:    The appended sub-span.
 		"""
 		self._spans.append(span)
 		span._parent = self
+		span._trace =  self._trace
 
 		return span
 
@@ -354,33 +749,150 @@ class Span(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property accessing the absolute time when the span was started.
 
-		:returns: The time when the span was entered, otherwise None.
+		:returns: The time when the span was entered, or its recorded begin time, otherwise None.
 		"""
 		return self._beginTime
 
-	@readonly
+	@property
 	def StopTime(self) -> Nullable[datetime]:
 		"""
-		Read-only property accessing the absolute time when the span was stopped.
+		Property accessing the absolute time when the span was stopped.
 
-		:returns: The time when the span was exited, otherwise None.
+		The end time of a recorded timespan can be assigned once, for a source that reports the end of a timespan later
+		than its begin. A timespan timed by a ``with``-statement is stopped by leaving that block, so assigning to it
+		raises.
+
+		:returns:             The time when the span was exited, or its recorded end time, otherwise None.
+		:raises TracingError: When the timespan has no begin time yet.
+		:raises TracingError: When the timespan already has an end time.
+		:raises TracingError: When the timespan is timed by a ``with``-statement.
+		:raises TypeError:    When the assigned value is not of type :class:`~datetime.datetime`.
+		:raises ValueError:   When the assigned value and the begin time mix a time zone aware and a naive timestamp.
+		:raises ValueError:   When the assigned value is before the begin time.
 		"""
 		return self._endTime
+
+	@StopTime.setter
+	def StopTime(self, value: datetime) -> None:
+		if self._beginTime is None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' has no begin time and can't be stopped.")
+			ex.add_note("Construct it with a 'beginTime' to record a timespan whose end is reported later.")
+			raise ex
+		elif self._startTime is not None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' is timed by a with-statement.")
+			ex.add_note("It is stopped by leaving that block.")
+			raise ex
+		elif self._endTime is not None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' already has an end time.")
+			ex.add_note(f"Got '{self._endTime}'.")
+			raise ex
+		elif not isinstance(value, datetime):
+			ex = TypeError("Parameter 'value' is not of type 'datetime'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+		elif (self._beginTime.utcoffset() is None) != (value.utcoffset() is None):
+			ex = ValueError("Parameter 'value' and the begin time mix a time zone aware and a naive timestamp.")
+			ex.add_note(f"Got '{self._beginTime}' and '{value}'.")
+			raise ex
+		elif value < self._beginTime:
+			ex = ValueError("Parameter 'value' is before the begin time.")
+			ex.add_note(f"Got '{self._beginTime}' to '{value}'.")
+			raise ex
+
+		self._endTime =   value
+		self._totalTime = _nanoseconds(self._beginTime, value)
+
+	def Stop(self) -> Self:
+		"""
+		Stop a running timespan now.
+
+		A timespan that ended at a time already known is stopped by assigning that time to :attr:`StopTime` instead.
+
+		:returns:             The timespan itself, so the call can be chained.
+		:raises TracingError: When the timespan has no begin time yet. |br|
+		                      Construct it with a 'beginTime' to record a timespan that is stopped later.
+		:raises TracingError: When the timespan already has an end time.
+		:raises TracingError: When the timespan is timed by a ``with``-statement.
+		"""
+		if self._beginTime is None:
+			ex = TracingError(f"{self.__class__.__name__} '{self._name}' has no begin time and can't be stopped.")
+			ex.add_note("Construct it with a 'beginTime' to record a timespan that is stopped later.")
+			raise ex
+
+		self.StopTime = datetime.now(self._beginTime.tzinfo)
+
+		return self
+
+	def _CheckParentRange(self, parent: Span, beginTime: Nullable[datetime], endTime: Nullable[datetime]) -> None:
+		"""
+		Check that a recorded timespan lies within the range of its direct parent.
+
+		Grandparents need no check: containment is transitive, so every ancestor's range holds once each direct
+		parent-child pair is checked.
+
+		:param parent:      The parent span or trace this timespan is attached to.
+		:param beginTime:   The timespan's begin time, or ``None``.
+		:param endTime:     The timespan's end time, or ``None``.
+		:raises ValueError: If the timespan begins before its parent.
+		:raises ValueError: If the timespan ends after its parent.
+		:raises ValueError: If a timespan and its parent mix a time zone aware and a naive timestamp.
+		"""
+		if beginTime is None or parent._beginTime is None:
+			return
+
+		if (beginTime.utcoffset() is None) != (parent._beginTime.utcoffset() is None):
+			ex = ValueError(
+				f"Timespan '{self._name}' and its parent '{parent._name}' mix a time zone aware and a naive timestamp."
+			)
+			ex.add_note(f"Got '{beginTime}' and '{parent._beginTime}'.")
+			raise ex
+		elif beginTime < parent._beginTime:
+			ex = ValueError(f"Timespan '{self._name}' begins before its parent '{parent._name}'.")
+			ex.add_note(f"Got '{beginTime}', while the parent begins at '{parent._beginTime}'.")
+			raise ex
+
+		if endTime is not None and parent._endTime is not None and endTime > parent._endTime:
+			ex = ValueError(f"Timespan '{self._name}' ends after its parent '{parent._name}'.")
+			ex.add_note(f"Got '{endTime}', while the parent ends at '{parent._endTime}'.")
+			raise ex
 
 	@readonly
 	def Duration(self) -> float:
 		"""
 		Read-only property accessing the duration from start operation to stop operation.
 
-		If the span is not yet stopped, the duration from start to now is returned.
+		If the span is not yet stopped, the duration from start to now is returned. For a timespan with recorded times,
+		the duration is the difference of both times, or the time since its recorded begin while it has no end.
 
-		:returns:                 Duration since span was started in seconds.
-		:raises TracingException: When span was never started.
+		:returns:             Duration since span was started in seconds.
+		:raises TracingError: When span was never started.
 		"""
-		if self._startTime is None:
-			raise TracingException(f"{self.__class__.__name__} was never started.")
+		if self._totalTime is not None:
+			return self._totalTime / 1e9
+		elif self._startTime is not None:
+			return (perf_counter_ns() - self._startTime) / 1e9
+		elif self._beginTime is not None:
+			return (datetime.now(self._beginTime.tzinfo) - self._beginTime).total_seconds()
 
-		return ((perf_counter_ns() - self._startTime) if self._stopTime is None else self._totalTime) / 1e9
+		raise TracingError(f"{self.__class__.__name__} was never started.")
+
+	@readonly
+	def State(self) -> SpanState:
+		"""
+		Read-only property accessing which of the timespan's times are filled in.
+
+		The state does not say where the times came from: a timespan timed by a ``with``-statement is
+		:attr:`~SpanState.Running` inside the block and :attr:`~SpanState.Complete` after it, exactly as a recorded one
+		is. Only an :attr:`~SpanState.Empty` timespan can be entered.
+
+		:returns: :attr:`~SpanState.Empty`, :attr:`~SpanState.Running` or :attr:`~SpanState.Complete`.
+		"""
+		if self._beginTime is None:
+			return SpanState.Empty
+		elif self._endTime is None:
+			return SpanState.Running
+		else:
+			return SpanState.Complete
 
 	@classmethod
 	def CurrentSpan(cls) -> Span:
@@ -404,16 +916,24 @@ class Span(metaclass=ExtendedType, slots=True):
 
 		A span will be started.
 
-		:returns:                 The span itself.
-		:raises TracingException: If no trace is active, so the span has nothing to attach to. |br|
-		                          Use a with-statement on :class:`Trace` to set up software execution tracing.
+		:returns:             The span itself.
+		:raises TracingError: If the span is not :attr:`~SpanState.Empty`. |br|
+		                      A timespan that was already timed can't be entered a second time.
+		:raises TracingError: If no trace is active, so the span has nothing to attach to. |br|
+		                      Use a with-statement on :class:`Trace` to set up software execution tracing.
 		"""
 		global _threadLocalData
+
+		if self.State is not SpanState.Empty:
+			ex = TracingError(f"Timespan '{self._name}' is not empty and can't be entered.")
+			ex.add_note(f"Its state is '{self.State.name}'.")
+			ex.add_note("A timespan that was already timed can't be entered a second time.")
+			raise ex
 
 		try:
 			currentSpan =  _threadLocalData.currentSpan
 		except AttributeError:
-			ex = TracingException("Can't setup span. No active trace.")
+			ex = TracingError("Can't setup span. No active trace.")
 			ex.add_note("Use with-statement using 'Trace()' to setup software execution tracing.")
 			raise ex
 
@@ -451,59 +971,53 @@ class Span(metaclass=ExtendedType, slots=True):
 		currentSpan = _threadLocalData.currentSpan
 		_threadLocalData.currentSpan = currentSpan._parent
 
-	def __getitem__(self, key: str) -> Any:
+	def _ToOTLPJSON(self) -> list[OTLPSpan]:
 		"""
-		Read an event's attached attributes (key-value-pairs) by key.
+		Convert this timespan and its sub-spans to their **OTLP/JSON** representation.
 
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
+		OTLP has no nesting: the hierarchy is carried by ``parentSpanId``, so the tree is flattened into one list -
+		this timespan first, then the lists its sub-spans return - and reassembled by whoever reads the document.
+
+		Both identifiers come from the data model: ``spanId`` is this timespan's own, ``traceId`` belongs to the
+		trace it is part of, and ``parentSpanId`` is read off the parent relation. A timespan joins a trace through
+		a ``with``-statement, or through the ``parent`` parameter of its constructor.
+
+		:returns:             This timespan and every timespan below it, flattened.
+		:raises TracingError: If this timespan is not part of a trace.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
 		"""
-		return self._dict[key]
+		if self._trace is None:
+			ex = TracingError(f"Timespan '{self._name}' is not part of a trace.")
+			ex.add_note("A span is added to a trace by a 'with'-statement, or by the 'parent' parameter.")
+			raise ex
 
-	def __setitem__(self, key: str, value: Any) -> None:
-		"""
-		Create or update an event's attached attributes (key-value-pairs) by key.
+		converted: OTLPSpan = {
+			"traceId": self._trace._traceID,
+			"spanId":  self._spanID,
+			"name":    self._name,
+			"kind":    1,                # SPAN_KIND_INTERNAL
+		}
 
-		If a key doesn't exist yet, a new key-value-pair is created.
+		if self._parent is not None:
+			converted["parentSpanId"] = self._parent._spanID
 
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
+		if self.StartTime is not None:
+			startTimeUnixNano = int(self.StartTime.timestamp() * 1_000_000_000)
+			converted["startTimeUnixNano"] = str(startTimeUnixNano)
 
-	def __delitem__(self, key: str) -> None:
-		"""
-		Remove an entry from event's attached attributes (key-value-pairs) by key.
+			# The wall clock has microsecond resolution while the duration comes from a nanosecond performance
+			# counter, so the end is computed from the duration rather than read from a second wall-clock sample.
+			# A finished timespan's total is already in nanoseconds; 'Duration' of a running one is in seconds.
+			totalTime = int(self.Duration * 1_000_000_000) if self._totalTime is None else self._totalTime
+			converted["endTimeUnixNano"] = str(startTimeUnixNano + totalTime)
 
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the event's attributes.
-		"""
-		del self._dict[key]
+		if len(attributes := _toAttributes(self._dict.items())) != 0:
+			converted["attributes"] = attributes
 
-	def __contains__(self, key: str) -> bool:
-		"""
-		Checks if the key is an attached attribute (key-value-pairs) on this event.
+		if len(events := [event._ToOTLPJSON() for event in self._events]) != 0:
+			converted["events"] = events
 
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __iter__(self) -> Iterator[tuple[str, Any]]:
-		"""
-		Returns an iterator to iterate all associated attributes of this timespan as :pycode:`(key, value)` tuples.
-
-		:returns: Iterator to iterate all attributes.
-		"""
-		return iter(self._dict.items())
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) on this event.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
+		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON())]
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
 		"""
@@ -514,7 +1028,7 @@ class Span(metaclass=ExtendedType, slots=True):
 		:returns:          One line per timespan, deepest last.
 		"""
 		result = []
-		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self._totalTime/1e6:8.3f} ms")
+		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self.Duration * 1e3:8.3f} ms")
 		for span in self._spans:
 			result.extend(span.Format(indent + 1, columnSize))
 
@@ -550,22 +1064,73 @@ class Trace(Span):
 
 	A trace may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
+	_traceID: str  #: Identifier shared by every timespan of this trace, as 32 hex digits.
 
-	def __init__(self, name: str) -> None:
+	def __init__(
+		self,
+		name:      str,
+		beginTime: Nullable[datetime] = None,
+		endTime:   Nullable[datetime] = None,
+		duration:  Nullable[DurationValue] = None
+	) -> None:
 		"""
 		Initializes a software execution trace.
 
-		:param name:   Name of the trace.
+		A trace is timed when it is entered and left by a ``with``-statement. A trace that was measured elsewhere is
+		constructed with its recorded times instead, and its timespans are attached with their ``parent`` parameter.
+
+		:param name:        Name of the trace.
+		:param beginTime:   Optional, recorded time when the trace began. Default: the time the trace is entered.
+		:param endTime:     Optional, recorded time when the trace ended. Requires ``beginTime``. Default: the time the
+		                    trace is left, or ``None`` for a recorded trace, which is still running.
+		:param duration:    Optional, recorded duration of the trace, as an alternative to ``endTime``. Requires
+		                    ``beginTime``. A :class:`~datetime.timedelta`, or a number of seconds as :class:`int`
+		                    (whole) or :class:`float` (fractional).
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
+		                    :class:`float`.
+		:raises ValueError: If parameter 'duration' is not a finite number of seconds.
+		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
+		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
+		:raises ValueError: If parameter 'duration' is negative.
+		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
+		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
+		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		"""
-		super().__init__(name)
+		super().__init__(name, beginTime, endTime, duration)
+
+		self._traceID = _newIdentifier(128)
+		self._trace =   self
+
+	@readonly
+	def TraceID(self) -> str:
+		"""
+		Read-only property to access the trace's identifier.
+
+		It is drawn when the trace is constructed, so exporting the same trace twice reports the same ``traceId``.
+
+		:returns: Identifier of the trace, as 32 hex digits.
+		"""
+		return self._traceID
 
 	def __enter__(self) -> Self:
 		"""
 		Start the trace and register it as the current trace and current span of this thread.
 
-		:returns: The trace itself, so it can be named in an ``as`` clause.
+		:returns:             The trace itself, so it can be named in an ``as`` clause.
+		:raises TracingError: If the trace is not :attr:`~SpanState.Empty`. |br|
+		                      A trace that was already timed can't be entered a second time.
 		"""
 		global _threadLocalData
+
+		if self.State is not SpanState.Empty:
+			ex = TracingError(f"Trace '{self._name}' is not empty and can't be entered.")
+			ex.add_note(f"Its state is '{self.State.name}'.")
+			ex.add_note("A trace that was already timed can't be entered a second time.")
+			raise ex
 
 		# TODO: check if a trace is already setup
 		# try:
@@ -620,6 +1185,105 @@ class Trace(Span):
 
 		return currentTrace
 
+	def ToJSON(
+		self,
+		serviceName: Nullable[str] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> OTLPDocument:
+		"""
+		Convert this trace to an **OTLP/JSON** document.
+
+		One format reaches both destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
+		accepted it since v1.35, so nothing has to translate between them.
+
+		Every timespan of the trace carries this trace's ``traceId``, and the tree is flattened into a list whose
+		``parentSpanId`` references carry the structure - which is how OTLP represents a trace.
+
+		:param serviceName:   Optional, the value of the ``service.name`` resource attribute, which is the name a
+		                      backend shows the trace under. Default: the trace's name.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under - the library that
+		                      produced them. Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:returns:             The trace as an OTLP/JSON document, ready for :func:`json.dump`.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		return {
+			"resourceSpans": [{
+				"resource": {
+					"attributes": _toAttributes(
+						{"service.name": self._name if serviceName is None else serviceName}.items()
+					)
+				},
+				"scopeSpans": [{
+					"scope": {"name": scopeName, "version": scopeVersion},
+					"spans": self._ToOTLPJSON(),
+				}],
+			}]
+		}
+
+	def ToJSONString(
+		self,
+		serviceName: Nullable[str] = None,
+		indent: Nullable[int] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> str:
+		"""
+		Convert this trace to an **OTLP/JSON** document and encode it as a string.
+
+		:param serviceName:   Optional, the value of the ``service.name`` resource attribute. Default: the trace's name.
+		:param indent:        Optional, indentation for a human-readable document. Default: ``None``, the compact form
+		                      a collector expects.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under.
+		                      Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:returns:             The OTLP/JSON document, encoded.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		return json_dumps(self.ToJSON(serviceName, scopeName, scopeVersion), indent=indent)
+
+	def WriteJSONFile(
+		self,
+		jsonFile: Path,
+		serviceName: Nullable[str] = None,
+		indent: Nullable[int] = None,
+		scopeName: str = OTLP_SCOPE_NAME,
+		scopeVersion: str = __version__
+	) -> None:
+		"""
+		Write this trace to a file as an **OTLP/JSON** document.
+
+		Missing parent directories are created, because the directory a pipeline collects its artifacts from - usually
+		``report/`` - rarely exists yet when the trace is written.
+
+		:param jsonFile:      Path of the file to write.
+		:param serviceName:   Optional, the value of the ``service.name`` resource attribute. Default: the trace's name.
+		:param indent:        Optional, indentation for a human-readable file. Default: ``None``, the compact form a
+		                      collector expects.
+		:param scopeName:     Optional, the instrumentation scope the spans are reported under.
+		                      Default: :data:`OTLP_SCOPE_NAME`.
+		:param scopeVersion:  Optional, the version of that instrumentation scope. Default: pyTooling's version.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the parent directories couldn't be created.
+		:raises TracingError: If the file couldn't be written.
+		"""
+		if not isinstance(jsonFile, Path):
+			ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
+			raise ex
+
+		try:
+			jsonFile.parent.mkdir(parents=True, exist_ok=True)
+		except OSError as ex:
+			raise TracingError(f"Directory '{jsonFile.parent}' couldn't be created.") from ex
+
+		try:
+			with jsonFile.open("w", encoding="utf-8") as file:
+				file.write(self.ToJSONString(serviceName, indent, scopeName, scopeVersion))
+		except OSError as ex:
+			raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be written.") from ex
+
 	def Format(self, indent: int = 0, columnSize: int = 25) -> Iterable[str]:
 		"""
 		Render this trace and its spans as indented lines.
@@ -629,8 +1293,8 @@ class Trace(Span):
 		:returns:          A headline, followed by one line per timespan.
 		"""
 		result = []
-		result.append(f"{'  ' * indent}Software Execution Trace: {self._totalTime/1e6:8.3f} ms")
-		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self._totalTime/1e6:8.3f} ms")
+		result.append(f"{'  ' * indent}Software Execution Trace: {self.Duration * 1e3:8.3f} ms")
+		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self.Duration * 1e3:8.3f} ms")
 		for span in self._spans:
 			result.extend(span.Format(indent + 1, columnSize - 2))
 

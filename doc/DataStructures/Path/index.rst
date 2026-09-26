@@ -20,50 +20,50 @@ Base
    :members:
    :private-members:
 
-.. _STRUCT/Path/Generic/RootMixIn:
+.. _STRUCT/Path/Generic/RootMixin:
 
-RootMixIn
+RootMixin
 =========
 
-.. todo:: GenericPath:: Needs documentation for RootMixIn
+.. todo:: GenericPath:: Needs documentation for RootMixin
 
-.. #autoclass:: pyTooling.GenericPath.RootMixIn
+.. #autoclass:: pyTooling.GenericPath.RootMixin
    :show-inheritance:
    :members:
    :private-members:
 
-.. _STRUCT/Path/Generic/ElementMixIn:
+.. _STRUCT/Path/Generic/ElementMixin:
 
-ElementMixIn
+ElementMixin
 ============
 
-.. todo:: GenericPath:: Needs documentation for ElementMixIn
+.. todo:: GenericPath:: Needs documentation for ElementMixin
 
-.. #autoclass:: pyTooling.GenericPath.ElementMixIn
+.. #autoclass:: pyTooling.GenericPath.ElementMixin
    :show-inheritance:
    :members:
    :private-members:
 
-.. _STRUCT/Path/Generic/SystemMixIn:
+.. _STRUCT/Path/Generic/SystemMixin:
 
-SystemMixIn
+SystemMixin
 ===========
 
-.. todo:: GenericPath:: Needs documentation for SystemMixIn
+.. todo:: GenericPath:: Needs documentation for SystemMixin
 
-.. #autoclass:: pyTooling.GenericPath.SystemMixIn
+.. #autoclass:: pyTooling.GenericPath.SystemMixin
    :show-inheritance:
    :members:
    :private-members:
 
-.. _STRUCT/Path/Generic/PathMixIn:
+.. _STRUCT/Path/Generic/PathMixin:
 
-PathMixIn
+PathMixin
 =========
 
-.. todo:: GenericPath:: Needs documentation for PathMixIn
+.. todo:: GenericPath:: Needs documentation for PathMixin
 
-.. #autoclass:: pyTooling.GenericPath.PathMixIn
+.. #autoclass:: pyTooling.GenericPath.PathMixin
    :show-inheritance:
    :members:
    :private-members:

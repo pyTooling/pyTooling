@@ -29,8 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for pickling classes created by :class:`pyTooling.MetaClasses.ExtendedType` - including the
-generated ``__getstate__``/``__setstate__`` pair and what happens when the state doesn't match the slots.
+Unit tests for pickling classes created by :class:`pyTooling.MetaClasses.ExtendedType`.
+
+Covered are the generated ``__getstate__``/``__setstate__`` pair and what happens when the state doesn't
+match the slots.
 """
 from pickle                import loads, dumps
 from typing                import Dict, Any

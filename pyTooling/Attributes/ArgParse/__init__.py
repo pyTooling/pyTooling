@@ -44,19 +44,81 @@ the command line's structure is written down once - next to the code implementin
       |rarr| Marks the method implementing a sub-command.
 """
 from argparse              import ArgumentParser, Namespace
-from typing                import Callable, Any, TypeVar
+from pathlib               import Path
+from typing                import Callable, Any, TypeVar, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, expects
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import firstElement, firstPair
+from pyTooling.Common      import firstElement, firstPair, getFullyQualifiedName, StringEnum
 from pyTooling.Attributes  import Attribute
 
 
 M = TypeVar("M", bound=Callable[..., Any])
 
 
+F = TypeVar("F", bound=StringEnum)
+
+
 @export
-class ArgParseException(ToolingException):
+def splitFormat(value: str, formats: type[F]) -> tuple[F, Path]:
+	"""
+	Split an option's value of the form ``[<format>:]<file>`` into the format and the file.
+
+	An option writing a file often accepts more than one format for it, and naming the format in front of the path
+	keeps that to one option instead of two that can disagree - :pycode:`--output=json:report.json` rather than
+	:pycode:`--output=report.json --output-format=json`. The formats are a :class:`~pyTooling.Common.StringEnum`, so a
+	member is the string the command line spells.
+
+	**The format is optional.** A value naming none gets the enumeration's ``DEFAULT``; an enumeration declaring none
+	insists on being told. **A colon alone doesn't make a format** either: a Windows drive letter
+	(``C:\\report\\trace.json``) and a path holding a colon deeper down are paths, because a format is more than one
+	character long and contains no path separator.
+
+	.. admonition:: ``Program.py``
+
+	   .. code-block:: python
+
+	      class ReportFormat(StringEnum):
+	        JSON = "json"
+	        YAML = "yaml"
+
+	        DEFAULT = JSON
+
+	      @CommandHandler("convert", help="Convert the report.")
+	      @LongValuedFlag("--output", dest="output", metaName="[format:]file", help="Write the report.")
+	      def HandleConvert(self, args: Namespace) -> None:
+	        reportFormat, file = splitFormat(args.output, ReportFormat)
+
+	:param value:       The option's value, as the command line spelled it.
+	:param formats:     The formats this option accepts.
+	:returns:           The format, and the file to write.
+	:raises ValueError: If parameter 'value' is ``None``.
+	:raises TypeError:  If parameter 'value' is not of type :class:`str`.
+	:raises ValueError: If the value names a format this option doesn't accept. |br|
+	                    The note lists the formats it accepts.
+	:raises ValueError: If the value names no format, and ``formats`` declares no ``DEFAULT``. |br|
+	                    The note lists the formats it accepts.
+	"""
+	if value is None:
+		raise ValueError("Parameter 'value' is None.")
+	elif not isinstance(value, str):
+		ex = TypeError("Parameter 'value' is not of type 'str'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		raise ex
+
+	prefix, colon, rest = value.partition(":")
+	if colon != "" and len(prefix) >= 2 and "/" not in prefix and "\\" not in prefix:
+		return formats.Parse(prefix), Path(rest)
+	elif (fileFormat := formats.Parse(None)) is None:
+		ex = ValueError(f"'{value}' names no format, and {formats.__name__} has no default.")
+		ex.add_note(f"Write '<format>:{value}' with one of: {', '.join(member.value for member in formats)}.")
+		raise ex
+
+	return fileFormat, Path(value)
+
+
+@export
+class ArgParseError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Attributes.ArgParse`."""
 
 
@@ -125,8 +187,13 @@ class CommandLineArgument(ArgParseAttribute, _HandlerMixin):
 
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		"""
-		The constructor expects positional (``*args``) and/or named parameters (``**kwargs``) which are passed without
-		modification to :meth:`~ArgumentParser.add_argument`.
+		Initializes a command line argument.
+
+		This base-class collects the parameters :meth:`~argparse.ArgumentParser.add_argument` will be called with; the
+		derived classes assemble them from named parameters instead.
+
+		:param args:   Positional parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
+		:param kwargs: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_argument`.
 		"""
 		super().__init__()
 		self._args =   args
@@ -162,7 +229,9 @@ class CommandGroupAttribute(ArgParseAttribute):
 
 	def __init__(self, groupName: str) -> None:
 		"""
-		The constructor expects a 'groupName' which can be used to group sub-commands for better readability.
+		Initializes a command group attribute.
+
+		:param groupName: Name of the group the annotated commands are listed under in the help page.
 		"""
 		super().__init__()
 		self.__groupName = groupName
@@ -235,8 +304,10 @@ class DefaultHandler(ArgParseAttribute, _HandlerMixin):
 
 @export
 class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
-	"""Marks a handler method as responsible for the given 'command'. This constructs
-	a sub-command parser using :meth:`~ArgumentParser.add_subparsers`.
+	"""
+	Marks a handler method as responsible for the given command.
+
+	A sub-command parser is constructed for it with :meth:`~argparse.ArgumentParser.add_subparsers`.
 	"""
 
 	_command: str    #: Name of the sub-command this handler is responsible for.
@@ -246,8 +317,12 @@ class CommandHandler(ArgParseAttribute, _HandlerMixin):  #, _KwArgsMixin):
 	_kwargs:  dict[str, Any]   #: Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
 
 	def __init__(self, command: str, help: str = "", **kwargs: Any) -> None:
-		"""The constructor expects a 'command' and an optional list of named parameters
-		(keyword arguments) which are passed without modification to :meth:`~ArgumentParser.add_subparsers`.
+		"""
+		Initializes a command handler attribute.
+
+		:param command: Name of the sub-command on the command line.
+		:param help:    Optional, help text shown for the sub-command. Default: ``""``.
+		:param kwargs:  Named parameters forwarded to :meth:`~argparse.ArgumentParser.add_subparsers`.
 		"""
 		super().__init__()
 		self._command = command
@@ -318,8 +393,8 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		The mixin-constructor expects an optional list of named parameters which are passed without modification to the
 		:class:`ArgumentParser` constructor.
 
-		:param kwargs:             Named parameters forwarded to the :class:`~argparse.ArgumentParser` constructor.
-		:raises ArgParseException: If more than one method is marked as the default handler.
+		:param kwargs:         Named parameters forwarded to the :class:`~argparse.ArgumentParser` constructor.
+		:raises ArgParseError: If more than one method is marked as the default handler.
 		"""
 		from .Argument import CommandLineArgument
 
@@ -344,7 +419,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 		if (methodCount := len(methods)) == 1:
 			defaultMethod, attributes = firstPair(methods)
 			if len(attributes) > 1:
-				raise ArgParseException("Marked default handler multiple times with 'DefaultAttribute'.")
+				raise ArgParseError("Marked default handler multiple times with 'DefaultAttribute'.")
 
 			# set default handler for the main parser
 			self._mainParser.set_defaults(func=firstElement(attributes).Handler)
@@ -355,7 +430,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				self._mainParser.add_argument(*methodAttribute.Args, **methodAttribute.KWArgs)
 
 		elif methodCount > 1:
-			raise ArgParseException("Marked more then one handler as default handler with 'DefaultAttribute'.")
+			raise ArgParseError("Marked more then one handler as default handler with 'DefaultAttribute'.")
 
 		# Search for 'CommandHandler' marked methods
 		methods: dict[Callable[..., Any], tuple[CommandHandler]] = self.GetMethodsWithAttributes(predicate=CommandHandler)
@@ -364,7 +439,7 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				self._subParser = self._mainParser.add_subparsers(help='sub-command help')
 
 			if len(attributes) > 1:
-				raise ArgParseException("Marked command handler multiple times with 'CommandHandler'.")
+				raise ArgParseError("Marked command handler multiple times with 'CommandHandler'.")
 
 			# Add a sub parser for each command / handler pair
 			attribute = firstElement(attributes)
@@ -383,6 +458,32 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 				subParser.add_argument(*methodAttribute.Args, **methodAttribute.KWArgs)
 
 			self._subParsers[attribute.Command] = subParser
+
+	@expects("WriteWarning", "WriteError")
+	def _PrintHelp(self, command: Nullable[str] = None) -> None:
+		"""
+		Helper method to print the command line parser's help page, or the help page of one sub-command.
+
+		.. attention::
+
+		   This method writes through the ``Write***`` methods of
+		   :class:`~pyTooling.TerminalUI.TerminalApplication`, which this mixin-class does not provide, so the
+		   application class has to derive from **both**.
+
+		:param command:                      Optional, the sub-command to print the help page for. If ``None``, the main
+		                                     parser's help page is printed. Default: ``None``.
+		:raises UnfulfilledExpectationError: If the application class doesn't also derive from
+		                                     :class:`~pyTooling.TerminalUI.TerminalApplication`.
+		"""
+		if command is None:
+			self._mainParser.print_help()
+		elif command == "help":
+			self.WriteWarning("This is a recursion ...")
+		else:
+			try:
+				self._subParsers[command].print_help()
+			except KeyError:
+				self.WriteError(f"Command {command} is unknown.")
 
 	def Run(self, enableAutoComplete: bool = True) -> None:
 		"""
@@ -455,4 +556,3 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 # ValuedFlagList --option=foo --option=bar
 # OptionalValued --option --option=foo
 # ValuedTuple
-
