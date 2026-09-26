@@ -91,10 +91,30 @@ the child lives, and a weak reference is how that cycle is avoided.
       class Base(metaclass=ExtendedType, slots=True, weakref=True): ...
       class Derived(Base): ...                       # already weak-referenceable
 
+A mixin-class can ask for it too. ``__weakref__`` is then one of the slots it contributes, and it is added to the
+class the mixin-class is mixed into - unless that class has it already:
+
+.. code-block:: Python
+
+   class ParentMixin(metaclass=ExtendedType, mixin=True, weakref=True):
+     _parent: "Node"
+
+   class Node(metaclass=ExtendedType, slots=True):
+     _name: str
+
+   class Child(Node, ParentMixin): ...               # weak-referenceable
+
+.. attention::
+
+   ``weakref=True`` is the only way to ask for it. Annotating ``__weakref__`` as a field raises an
+   :exc:`~pyTooling.MetaClasses.ExtendedTypeError`, as does annotating ``__dict__``: a ``__dict__`` slot accepts any
+   attribute on an instance again and gives up what slots save. A class that needs a ``__dict__`` uses
+   ``slots=False``.
+
 .. note::
 
-   A class **without** slots is weak-referenceable already, because it has a ``__dict__``. ``weakref=True`` is
-   therefore only meaningful together with ``slots=True``.
+   A class **without** slots is weak-referenceable already, because Python adds ``__weakref__`` itself.
+   ``weakref=True`` is therefore only meaningful together with ``slots=True`` or ``mixin=True``.
 
 .. note::
 

@@ -33,11 +33,12 @@ Unit tests for the ``weakref`` class keyword argument of :class:`pyTooling.MetaC
 A slotted class cannot be referenced weakly unless ``__weakref__`` is one of its slots.
 """
 from gc      import collect as gc_collect
+from typing  import Any
 from weakref import ref as WeakReference
 
 from pytest                import mark
 
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
 from pyTooling.Platform    import CurrentPlatform
 from pyTooling.Testing     import Testcase
 
@@ -137,3 +138,90 @@ class WeakReferences(Testcase):
 
 		self.assertIn("_fromMixin", Combined.__slots__)
 		self.assertIsNotNone(WeakReference(Combined()))
+
+	def test_AMixinContributesIt(self) -> None:
+		class Mixin(metaclass=ExtendedType, mixin=True, weakref=True):
+			_fromMixin: int
+
+		class Application(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Combined(Application, Mixin):
+			pass
+
+		self.assertIn("__weakref__", Mixin.__mixinSlots__)
+		self.assertIn("__weakref__", Combined.__slots__)
+		self.assertIn("_fromMixin", Combined.__slots__)
+		self.assertIsNotNone(WeakReference(Combined()))
+
+	def test_AMixinDoesntRepeatIt(self) -> None:
+		"""A mixin-class asking for it on a class that has it already, or a second mixin-class, is a no-op."""
+
+		class Mixin1(metaclass=ExtendedType, mixin=True, weakref=True):
+			_fromMixin1: int
+
+		class Mixin2(metaclass=ExtendedType, mixin=True, weakref=True):
+			_fromMixin2: int
+
+		class Application(metaclass=ExtendedType, slots=True, weakref=True):
+			_own: int
+
+		class Combined(Application, Mixin1, Mixin2):
+			pass
+
+		self.assertNotIn("__weakref__", Combined.__slots__)
+		self.assertIsNotNone(WeakReference(Combined()))
+
+	def test_AMixinOfMixinsKeepsIt(self) -> None:
+		class Mixin1(metaclass=ExtendedType, mixin=True, weakref=True):
+			_fromMixin1: int
+
+		class Mixin2(Mixin1, mixin=True, weakref=True):
+			_fromMixin2: int
+
+		class Application(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Combined(Application, Mixin2):
+			pass
+
+		self.assertEqual(1, Mixin2.__mixinSlots__.count("__weakref__"))
+		self.assertEqual(1, Combined.__slots__.count("__weakref__"))
+		self.assertIsNotNone(WeakReference(Combined()))
+
+
+class AnnotatedWeakref(Testcase):
+	"""Annotating ``__weakref__`` is rejected in favour of ``weakref=True``."""
+
+	def test_Slotted(self) -> None:
+		with self.assertRaises(ExtendedTypeError) as context:
+			class Slotted(metaclass=ExtendedType, slots=True):
+				__weakref__: Any
+
+		self.assertIn("weakref=True", "\n".join(context.exception.__notes__))
+
+	def test_Mixin(self) -> None:
+		with self.assertRaises(ExtendedTypeError):
+			class Mixin(metaclass=ExtendedType, mixin=True):
+				__weakref__: Any
+
+	def test_NotSlotted(self) -> None:
+		with self.assertRaises(ExtendedTypeError):
+			class NotSlotted(metaclass=ExtendedType):
+				__weakref__: Any
+
+
+class AnnotatedDict(Testcase):
+	"""Annotating ``__dict__`` is rejected, as it undoes what slots save."""
+
+	def test_Slotted(self) -> None:
+		with self.assertRaises(ExtendedTypeError) as context:
+			class Slotted(metaclass=ExtendedType, slots=True):
+				__dict__: Any
+
+		self.assertIn("slots=False", "\n".join(context.exception.__notes__))
+
+	def test_Mixin(self) -> None:
+		with self.assertRaises(ExtendedTypeError):
+			class Mixin(metaclass=ExtendedType, mixin=True):
+				__dict__: Any
