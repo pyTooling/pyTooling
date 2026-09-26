@@ -647,12 +647,12 @@ class ExtendedType(type):
 	An updates meta-class to construct new classes with an extended feature set.
 
 	.. todo:: META::ExtendedType Needs documentation.
-	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
 
 	.. rubric:: Features:
 
 	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
 
+	  * Let instances be referenced weakly (``weakref=True``), which a slotted class otherwise cannot be.
 	  * Implement ``__slots__`` only on primary inheritance line.
 	  * Collect class variables on secondary inheritance lines (mixin-classes) and defer implementation as ``__slots__``.
 	  * Handle object state exporting and importing for slots (:mod:`pickle` support) via ``__getstate__``/``__setstate__``.
@@ -730,6 +730,7 @@ class ExtendedType(type):
 		members: dict[str, Any],
 		slots: bool = False,
 		mixin: bool = False,
+		weakref: bool = False,
 		singleton: bool = False,
 		expects: Iterable[str] = (),
 		**kwargs: Any
@@ -745,6 +746,9 @@ class ExtendedType(type):
 		:param mixin:           Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
 		                        ``slots``
 		                        is true. If ``None``, preserve behavior of primary base-class.
+		:param weakref:         Optional, if ``True``, let instances of a slotted class be referenced weakly by adding
+		                        ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on to the class it
+		                        is mixed into.
 		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
 		:param expects:         Optional, names of members this class needs from whichever class it is mixed into. |br|
 		                        See :attr:`__expectedMembers__`.
@@ -763,7 +767,7 @@ class ExtendedType(type):
 				slots = primaryBaseClass.__slotted__
 
 		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
-		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin)
+		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin, weakref)
 
 		# Compute abstract methods
 		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
@@ -1145,7 +1149,8 @@ class ExtendedType(type):
 		baseClasses: tuple[type],
 		members:     dict[str, Any],
 		slots:       bool,
-		mixin:       bool
+		mixin:       bool,
+		weakref:     bool
 	) -> tuple[dict[str, Any], dict[str, Any]]:
 		"""
 		Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
@@ -1159,7 +1164,11 @@ class ExtendedType(type):
 		:param members:                     Dictionary of class members.
 		:param slots:                       Optional, ``True``, if the class should setup ``__slots__``.
 		:param mixin:                       Optional, ``True``, if the class should behave as a mixin-class.
+		:param weakref:                     Optional, ``True``, if instances should be referenced weakly.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
+		:raises ExtendedTypeError:          If a class annotates ``__weakref__`` instead of passing ``weakref=True``.
+		                                    A class derived from a weak-referenceable class inherits ``__weakref__``.
+		:raises ExtendedTypeError:          If a class annotates ``__dict__``.
 		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved. |br|
 		                                    An assignment without a type annotation creates a class attribute, which
 		                                    hides the slot's descriptor: reading the field works, but assigning it on an
@@ -1182,6 +1191,18 @@ class ExtendedType(type):
 		classFields =   {}
 		objectFields =  {}
 		annotations: dict[str, Any] = self._getAnnotations(members)
+		if "__weakref__" in annotations:
+			ex = ExtendedTypeError(f"Class '{className}' annotates '__weakref__' as a field.")
+			ex.add_note(f"Set 'weakref=True' instead: 'class {className}(..., weakref=True)'.")
+			ex.add_note("A class derived from a weak-referenceable class inherits '__weakref__' and doesn't ask again.")
+			raise ex
+
+		if "__dict__" in annotations:
+			ex = ExtendedTypeError(f"Class '{className}' annotates '__dict__' as a field.")
+			ex.add_note("A '__dict__' slot accepts any attribute on an instance again and gives up what slots save.")
+			ex.add_note(f"Set 'slots=False' instead, if instances of '{className}' need a '__dict__'.")
+			raise ex
+
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
@@ -1207,8 +1228,14 @@ class ExtendedType(type):
 					for annotation in base.__slots__:
 						inheritedSlottedFields[annotation] = base
 
+			if weakref:
+				fields = annotations.copy()
+				fields["__weakref__"] = None
+			else:
+				fields = annotations
+
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
-			for fieldName, typeAnnotation in annotations.items():
+			for fieldName, typeAnnotation in fields.items():
 				if fieldName in inheritedSlottedFields:
 					cls = inheritedSlottedFields[fieldName]
 					raise AttributeError(f"Slot '{fieldName}' declared in class '{className}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
