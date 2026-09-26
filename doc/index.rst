@@ -767,7 +767,7 @@ Decorators
    .. grid-item::
       :columns: 6
 
-      * :ref:`META/Abstract` |br|
+      * :ref:`META/AbstractClass` |br|
         If there is at least one *abstract method* in a class' definition, then the whole class is considered *abstract*
         and this class can't be instantiated.
 
@@ -895,20 +895,30 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
                class Data(metaclass=ExtendedType, slots=True):
                   _x: int
-                  _y: int = 12
+                  _y: int
 
                   def __init__(self, x: int) -> None:
-                    self._x = x
+                     self._x = x
+                     self._y = 12
 
                data = Data(11)
 
          .. tab-item:: Mixin Class
 
-            .. todo:: Needs example code
-
             .. code-block:: Python
 
-               def
+               class ParentMixin(metaclass=ExtendedType, mixin=True):
+                  _parent: "Node"
+
+               class Node(metaclass=ExtendedType, slots=True):
+                  _name: str
+
+               class Child(Node, ParentMixin):
+                  def __init__(self, parent: Node, name: str) -> None:
+                     self._parent = parent
+                     self._name = name
+
+               assert Child.__slots__ == ("_parent", )
 
 
 Packaging
