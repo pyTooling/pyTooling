@@ -750,7 +750,8 @@ class ExtendedType(type):
 		                        is true. If ``None``, preserve behavior of primary base-class.
 		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
 		:param weakref:         Optional, if ``True``, let instances of a slotted class be referenced weakly by adding
-		                        ``__weakref__`` to :term:`__slots__ <slots>`.
+		                        ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on to the class it
+		                        is mixed into.
 		:param expects:         Optional, names of members this class needs from whichever class it is mixed into. |br|
 		                        See :attr:`__expectedMembers__`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
@@ -1165,7 +1166,10 @@ class ExtendedType(type):
 		:param members:                     Dictionary of class members.
 		:param slots:                       Optional, ``True``, if the class should setup ``__slots__``.
 		:param mixin:                       Optional, ``True``, if the class should behave as a mixin-class.
+		:param weakref:                     Optional, ``True``, if instances should be referenced weakly.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
+		:raises ExtendedTypeError:          If a class annotates ``__weakref__`` instead of passing ``weakref=True``.
+		:raises ExtendedTypeError:          If a class annotates ``__dict__``.
 		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved. |br|
 		                                    An assignment without a type annotation creates a class attribute, which
 		                                    hides the slot's descriptor: reading the field works, but assigning it on an
@@ -1188,6 +1192,18 @@ class ExtendedType(type):
 		classFields =   {}
 		objectFields =  {}
 		annotations: dict[str, Any] = self._getAnnotations(members)
+		if "__weakref__" in annotations:
+			ex = ExtendedTypeError(f"Class '{className}' annotates '__weakref__' as a field.")
+			ex.add_note(f"Set 'weakref=True' instead: 'class {className}(..., weakref=True)'.")
+			ex.add_note("'weakref=True' adds '__weakref__' only if no base-class provides it yet, as it may exist once only.")
+			raise ex
+
+		if "__dict__" in annotations:
+			ex = ExtendedTypeError(f"Class '{className}' annotates '__dict__' as a field.")
+			ex.add_note("A '__dict__' slot accepts any attribute on an instance again and gives up what slots save.")
+			ex.add_note(f"Set 'slots=False' instead, if instances of '{className}' need a '__dict__'.")
+			raise ex
+
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
 			for baseClass in self._iterateBaseClasses(baseClasses):
@@ -1276,13 +1292,18 @@ class ExtendedType(type):
 
 		if mixin:
 			mixinSlots.extend(slottedFields)
+			if weakref and "__weakref__" not in mixinSlots:
+				mixinSlots.append("__weakref__")
+
 			members["__slotted__"] = True
 			members["__slots__"] = tuple()
 			members["__allSlots__"] = set()
 			members["__isMixin__"] = True
 			members["__mixinSlots__"] = tuple(mixinSlots)
 		elif slots:
-			slottedFields.extend(mixinSlots)
+			# A mixin-class requests '__weakref__' like any other slot, but it may be listed once only in a hierarchy.
+			weakref = weakref or "__weakref__" in mixinSlots
+			slottedFields.extend(fieldName for fieldName in mixinSlots if fieldName != "__weakref__")
 
 			# '__weakref__' may be listed once in a hierarchy; if a base-class already provides it, instances can
 			# already be referenced weakly and listing it again is a TypeError.
