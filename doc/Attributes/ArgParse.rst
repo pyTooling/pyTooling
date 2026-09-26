@@ -111,7 +111,7 @@ They form a hierarchy, and the leaves are what a program writes:
      - An argument with a **name** - ``--verbose``.
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.ValuedArgument`
      - An argument with a **value**.
-   * - :pycode:`NamedAndValuedArgument`
+   * - :class:`~pyTooling.Attributes.ArgParse.Argument.NamedAndValuedArgument`
      - Both - ``--quota=5GiB``.
    * - :class:`~pyTooling.Attributes.ArgParse.Argument.PositionalArgument`
      - A value with **no** name, identified by its position.
@@ -219,10 +219,10 @@ A *tuple* flag is a named argument whose value is a **separate token** - ``--wid
 
 .. attention::
 
-   Only the base-class :pycode:`NamedTupledArgument` exists so far. There is no concrete
-   :pycode:`ShortTupleFlag` / :pycode:`LongTupleFlag` attribute to apply yet, so this form has to be written as a
-   :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` with :pycode:`nargs` passed through to
-   :mod:`argparse` in the meantime.
+   Only the base-class :class:`~pyTooling.Attributes.ArgParse.Argument.NamedTupledArgument` exists so far. There
+   is no concrete :pycode:`ShortTupleFlag` / :pycode:`LongTupleFlag` attribute to apply yet, so this form has to be
+   written as a :class:`~pyTooling.Attributes.ArgParse.ValuedFlag.ValuedFlag` with :pycode:`nargs` passed through
+   to :mod:`argparse` in the meantime.
 
 
 .. _ATTR/ArgParse/Lists:
