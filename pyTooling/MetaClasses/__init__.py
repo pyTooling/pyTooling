@@ -646,8 +646,6 @@ class ExtendedType(type):
 	"""
 	An updates meta-class to construct new classes with an extended feature set.
 
-	.. todo:: META::ExtendedType Needs documentation.
-
 	.. rubric:: Features:
 
 	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
@@ -717,6 +715,11 @@ class ExtendedType(type):
 
 	If a method is abstract, its marked with ``__abstract__``. |br|
 	If a method is must override, its marked with ``__mustOverride__``.
+
+	.. seealso::
+
+	   :ref:`META/ExtendedType`
+	      |rarr| Every class keyword argument, its rules and the exceptions it raises.
 	"""
 
 	# @classmethod
