@@ -127,9 +127,14 @@ Glossary
      it. It is the scheme a rolling distribution or a dated dataset uses, where "what changed" has no single answer.
 
      :class:`~pyTooling.Versioning.CalendarVersion` parses one, in the variants
-     :ref:`VERSIONING/CalVerVariants` lists. See :term:`semantic version` for the other scheme.
+     :ref:`VERSIONING/CalVerVariants` lists.
 
-     `calver.org <https://calver.org/>`__
+     .. seealso::
+
+        :term:`Semantic Version`
+           |rarr| The other scheme: numbering a release by what changed in it.
+
+     Website: `calver.org <https://calver.org/>`__
 
    Child
      *Children* are all direct successors of a :term:`node`.
@@ -294,6 +299,20 @@ Glossary
      :ref:`Attributes <ATTR>` are decorators too.
 
      Wikipedia: :wiki:`Decorator <Python_syntax_and_semantics#Decorators>`
+
+   Dependency
+     A *dependency* is what a package needs of another one to be installed or to run: package ``A`` depends on
+     package ``B``, in the versions a :term:`requirement` accepts. As dependencies have dependencies of their own,
+     they form a graph.
+
+     :mod:`pyTooling.Dependency` models it: a :class:`~pyTooling.Dependency.PackageVersion` depends on versions of
+     other packages, and :class:`~pyTooling.Dependency.PackageDependencyGraph` collects the packages of one or more
+     storages. See :ref:`DEPENDENCIES`.
+
+     .. seealso::
+
+        :term:`Requirement`
+           |rarr| How a requirements file states a dependency.
 
    Depth-First
      *Depth-first* follows one branch of a :term:`graph` or :term:`tree` to its end before taking the next. It is
@@ -542,12 +561,18 @@ Glossary
      It is to JSON what an :term:`XSD` is to :term:`XML`.
 
    JUnit
-     *JUnit XML* is the test report format every CI service reads, although no standard defines it - it grew out of
-     the Java testing framework of that name and every writer adds its own dialect.
+     *JUnit XML* is the test report format most CI services read, although nobody ever specified it. JUnit didn't
+     define it: Apache Ant's ``junit`` task wrote these files when it ran JUnit 4 tests, so it is rather an
+     *Ant + JUnit* format. Ant published no XML schema either, so every ``*Unit`` framework writing the format and
+     every service reading it grew its own dialect.
 
      pyTooling writes it, and writes its own format beside it, because JUnit XML cannot express two things a marked
      test suite has: suites **nest**, where JUnit flattens them into a dotted ``classname``, and every item carries
      four names rather than one - see :ref:`TESTING/ReportFormat`.
+
+     `pyEDAA.Reports <https://edaa-org.github.io/pyEDAA.Reports/>`__ reads the dialects into one data model and
+     converts between them - see its
+     `Ant and JUnit 4 XML <https://edaa-org.github.io/pyEDAA.Reports/Unittesting/index.html#ant-and-junit-4-xml>`__.
 
      Wikipedia: :wiki:`JUnit <JUnit>`
 
@@ -582,6 +607,9 @@ Glossary
      :class:`~pyTooling.Licensing.AndOperator`, :class:`~pyTooling.Licensing.OrOperator`,
      :class:`~pyTooling.Licensing.WithOperator` and :class:`~pyTooling.Licensing.OrLaterOperator` - so the licenses
      in an expression are one comprehension away. See :ref:`LICENSING`.
+
+     Specification: `SPDX license expressions
+     <https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/>`__
 
    Matrix
      A *matrix* is a :term:`job` written once and run several times, once per combination of the values it is
@@ -900,6 +928,11 @@ Glossary
      with the nearer statement winning, and a cycle raises rather than being read twice. See
      :ref:`DEPENDENCIES/Python`.
 
+     .. seealso::
+
+        :term:`Dependency`
+           |rarr| What a requirement states, and the graph the dependencies form.
+
    REST
    REST-API
      *Representational State Transfer* is an architectural style for web APIs: a resource is addressed by a
@@ -972,13 +1005,19 @@ Glossary
         xmllint --schema TestReport-v0.1.xsd --noout TestReport.xml
 
    Semantic Version
-     A `semantic version <https://semver.org/>`__ numbers a release by what changed in it: ``major.minor.patch``,
+     A *semantic version* numbers a release by what changed in it: ``major.minor.patch``,
      where the major part is raised for a breaking change, the minor for a compatible feature and the patch for a
      fix. A consumer can therefore state what it accepts.
 
      :class:`~pyTooling.Versioning.SemanticVersion` parses one, in the variants :ref:`VERSIONING/SemVerVariants`
-     lists, and :term:`version range` states what a requirement accepts. See :term:`calendar version` for the
-     other scheme.
+     lists, and :term:`version range` states what a requirement accepts.
+
+     .. seealso::
+
+        :term:`Calendar Version`
+           |rarr| The other scheme: numbering a release by the date it was made.
+
+     Website: `semver.org <https://semver.org/>`__
 
      Wikipedia: :wiki:`Software versioning <Software_versioning#Semantic_versioning>`
 
@@ -1052,7 +1091,7 @@ Glossary
      or constructed with times recorded elsewhere - see :ref:`TRACING/Recorded`.
 
    SPDX
-     The `System Package Data Exchange <https://spdx.dev/>`__ is the standard for stating what a work is licensed
+     The `Software Package Data Exchange <https://spdx.dev/>`__ is the standard for stating what a work is licensed
      under: an identifier per license (``Apache-2.0``, ``MIT-0``), an exception list, and a syntax for combining
      them - a :term:`license expression`.
 
