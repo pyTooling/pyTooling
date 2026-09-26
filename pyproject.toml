@@ -52,6 +52,7 @@ ignore-setters = true
 branch = true
 relative_files = true
 patch = ["subprocess"]
+include = ["pyTooling/*"]
 omit = [
 	"*site-packages*",
 	"setup.py",
