@@ -291,7 +291,8 @@ Version 10.x (2026)
      * A trace **renders as a Gantt chart**: :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans
        in rows independently of a drawing library, and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it
        arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
-       PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
+       PDF, and :class:`~pyTooling.Tracing.Render.Plotly.PlotlyRenderer` as an interactive HTML page; matplotlib and
+       plotly are installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
        the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
      * A Gantt chart written as SVG can be **collapsible**: a click on a called workflow or a job hides or shows the
        rows below it.

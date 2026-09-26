@@ -77,13 +77,15 @@ When installed as ``pyTooling[yaml]``:
 When installed as ``pyTooling[diagram]``:
 
 .. The extra isn't on PyPI yet, which 'dependency-table' reads extras from. Replace this table by
-   '.. dependency-table:: matplotlib' and an entry in 'conf.py' once a release contains the extra.
+   '.. dependency-table:: diagram' and an entry in 'conf.py' once a release contains the extra.
 
 +------------+---------+------------------------------+----------------------------------------------------------+
 | Package    | Version | License                      | Dependencies                                             |
 +============+=========+==============================+==========================================================+
 | matplotlib | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
 |            |         |                              | packaging, pillow, pyparsing, python-dateutil            |
++------------+---------+------------------------------+----------------------------------------------------------+
+| plotly     | ≥6.0    | MIT                          | narwhals, packaging                                      |
 +------------+---------+------------------------------+----------------------------------------------------------+
 
 
@@ -100,6 +102,8 @@ When installed as ``pyTooling[cli]``, which is what the :program:`pyTooling` pro
 +------------+---------+------------------------------+----------------------------------------------------------+
 | matplotlib | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
 |            |         |                              | packaging, pillow, pyparsing, python-dateutil            |
++------------+---------+------------------------------+----------------------------------------------------------+
+| plotly     | ≥6.0    | MIT                          | narwhals, packaging                                      |
 +------------+---------+------------------------------+----------------------------------------------------------+
 
 
