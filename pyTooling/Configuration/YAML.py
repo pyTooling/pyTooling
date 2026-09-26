@@ -41,7 +41,7 @@ from __future__           import annotations
 
 from pathlib              import Path
 from datetime             import date, datetime
-from typing               import Any, Union, Iterator as typing_Iterator, Self
+from typing               import Any, Union, Iterator as typing_Iterator, Optional as Nullable, Self
 
 from pyTooling.Exceptions import MissingDependencyError
 
@@ -76,7 +76,7 @@ class Node(Abstract_Node):
 	def __init__(
 		self,
 		root:     Configuration,
-		parent:   NodeT,
+		parent:   Nullable[NodeT],
 		key:      KeyT,
 		yamlNode: Union[CommentedMap, CommentedSeq]
 	) -> None:
@@ -84,7 +84,7 @@ class Node(Abstract_Node):
 		Initializes a YAML node.
 
 		:param root:     Reference to the root node.
-		:param parent:   Reference to the parent node.
+		:param parent:   Reference to the parent node, or ``None`` for the root node.
 		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
@@ -297,7 +297,13 @@ class Node(Abstract_Node):
 		node = self
 		for p in path:
 			if p == "..":
-				node = node._GetParentNode(path)
+				if node._parent is None:
+					pathExpression = ":".join(str(element) for element in path)
+					ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
+					ex.add_note("Element '..' was applied to the root node, which has no parent node.")
+					raise ex
+
+				node = node._parent
 			else:
 				node = node._GetNodeOrValue(p)
 
@@ -321,7 +327,13 @@ class Node(Abstract_Node):
 		node = self
 		for p in path:
 			if p == "..":
-				node = node._GetParentNode(path)
+				if node._parent is None:
+					pathExpression = ":".join(str(element) for element in path)
+					ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
+					ex.add_note("Element '..' was applied to the root node, which has no parent node.")
+					raise ex
+
+				node = node._parent
 			else:
 				node = node._GetNodeOrValue(p)
 
@@ -336,7 +348,7 @@ class Dictionary(Node, Abstract_Dict):
 	def __init__(
 		self,
 		root:     Configuration,
-		parent:   NodeT,
+		parent:   Nullable[NodeT],
 		key:      KeyT,
 		yamlNode: CommentedMap
 	) -> None:
@@ -344,7 +356,7 @@ class Dictionary(Node, Abstract_Dict):
 		Initializes a YAML dictionary.
 
 		:param root:     Reference to the root node.
-		:param parent:   Reference to the parent node.
+		:param parent:   Reference to the parent node, or ``None`` for the root node.
 		:param key:      Key of the node within its parent.
 		:param yamlNode: Reference to the YAML node.
 		"""
@@ -508,7 +520,7 @@ class Configuration(Dictionary, Abstract_Configuration):
 
 		self._yamlConfig = document
 
-		Dictionary.__init__(self, self, self, None, self._yamlConfig)
+		Dictionary.__init__(self, self, None, None, self._yamlConfig)
 		Abstract_Configuration.__init__(self, configFile)
 
 	def __getitem__(self, key: str) -> ValueT:

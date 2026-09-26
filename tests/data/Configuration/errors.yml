@@ -4,10 +4,10 @@ dictionary:
 sequence:
   - item_0
   - item_1
-emptyDictionary: {}
-emptySequence: []
-nullValue: null
-unclosedVariable: "${unclosed"
-danglingDollar: "prefix$"
+emptyDictionary:     {}
+emptySequence:       []
+nullValue:           null
+unclosedVariable:    "${unclosed"
+danglingDollar:      "prefix$"
 dictionaryReference: "${dictionary}"
 aboveRoot:           "${..:dictionary}"

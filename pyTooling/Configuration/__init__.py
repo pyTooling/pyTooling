@@ -100,15 +100,15 @@ class Node(metaclass=ExtendedType, slots=True):
 
 	DICT_TYPE: ClassVar[type[Dictionary]]  #: Type reference used when instantiating new dictionaries
 	SEQ_TYPE:  ClassVar[type[Sequence]]    #: Type reference used when instantiating new sequences
-	_root:     Configuration               #: Reference to the root node.
-	_parent:   Dictionary                  #: Reference to a parent node.
+	_root:     Configuration               #: Reference to the root node; the root node refers to itself.
+	_parent:   Nullable[Dictionary]        #: Reference to a parent node; ``None`` for the root node.
 
 	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a node.
 
 		:param root:   Optional, reference to the root node.
-		:param parent: Optional, reference to the parent node.
+		:param parent: Optional, reference to the parent node, or ``None`` for the root node.
 		"""
 		self._root = root
 		self._parent = parent
@@ -165,22 +165,6 @@ class Node(metaclass=ExtendedType, slots=True):
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
 		raise NotImplementedError("Renaming a key isn't supported by a configuration.")
-
-	def _GetParentNode(self, path: list[KeyT]) -> NodeT:
-		"""
-		Return this node's parent node, as ``..`` in a path expression selects it.
-
-		:param path:                 Path elements of the expression being resolved, used to describe the error.
-		:returns:                    The parent node.
-		:raises PathExpressionError: If this node is the root node, which has no parent to navigate to.
-		"""
-		if self._parent is self:
-			pathExpression = ":".join(str(element) for element in path)
-			ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
-			ex.add_note("Element '..' was applied to the root node, which has no parent node.")
-			raise ex
-
-		return self._parent
 
 	@abstractmethod
 	def QueryPath(self, query: str) -> ValueT:  # type: ignore[empty-body]
@@ -372,13 +356,14 @@ class Configuration(Node):
 
 	def __init__(self, configFile: Path) -> None:
 		"""
-		Initializes the configuration's file reference.
+		Initializes a configuration, the root node of the tree.
 
-		A deriving class has already initialized the node itself, so this constructor initializes only the field this
-		mixin adds.
+		The root node refers to itself as the root and has no parent.
 
 		:param configFile: Configuration file.
 		"""
+		Node.__init__(self, self, None)
+
 		self._configFile = configFile
 
 	@readonly
