@@ -100,15 +100,15 @@ class Node(metaclass=ExtendedType, slots=True):
 
 	DICT_TYPE: ClassVar[type[Dictionary]]  #: Type reference used when instantiating new dictionaries
 	SEQ_TYPE:  ClassVar[type[Sequence]]    #: Type reference used when instantiating new sequences
-	_root:     Configuration               #: Reference to the root node.
-	_parent:   Dictionary                  #: Reference to a parent node.
+	_root:     Configuration               #: Reference to the root node; the root node refers to itself.
+	_parent:   Nullable[Dictionary]        #: Reference to a parent node; ``None`` for the root node.
 
 	def __init__(self, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
 		"""
 		Initializes a node.
 
 		:param root:   Optional, reference to the root node.
-		:param parent: Optional, reference to the parent node.
+		:param parent: Optional, reference to the parent node, or ``None`` for the root node.
 		"""
 		self._root = root
 		self._parent = parent
@@ -354,15 +354,16 @@ class Configuration(Node):
 
 	_configFile: Path  #: Path to the configuration file.
 
-	def __init__(self, configFile: Path, root: Nullable[Configuration] = None, parent: Nullable[NodeT] = None) -> None:
+	def __init__(self, configFile: Path) -> None:
 		"""
-		Initializes a configuration.
+		Initializes a configuration, the root node of the tree.
+
+		The root node refers to itself as the root and has no parent.
 
 		:param configFile: Configuration file.
-		:param root:       Optional, reference to the root node.
-		:param parent:     Optional, reference to the parent node.
 		"""
-		Node.__init__(self, root, parent)
+		Node.__init__(self, self, None)
+
 		self._configFile = configFile
 
 	@readonly
