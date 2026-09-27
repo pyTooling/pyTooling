@@ -34,12 +34,14 @@ Unit tests for :mod:`pyTooling.CI.Workflow`.
 from pathlib               import Path
 from tempfile              import TemporaryDirectory
 from textwrap              import dedent, indent
+from typing                import Any
 
 from pyTooling.CI.Workflow import AccessLevel, InputType, Workflow, WorkflowError, WorkflowResolver
 from pyTooling.CI.Workflow import Input, Job, Matrix, Permission, UsesReference
 from pyTooling.CI.Workflow import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow, DefinedPipeline
 from pyTooling.CI.Workflow import DefinedWorkflow
-from pyTooling.CI.Pipeline import Pipeline as CIPipeline
+from pyTooling.CI.GitHub   import Pipeline as GitHubPipeline
+from pyTooling.CI.Pipeline import Matrix as CIMatrix, Pipeline as CIPipeline
 from pyTooling.Graph       import Graph
 from pyTooling.Testing     import Testcase
 
@@ -793,6 +795,124 @@ class ToPipeline(Fixture):
 			[("A", "B"), ("A", "C"), ("B", "D"), ("C", "D")],
 			[(edge.Source.Value.Name, edge.Destination.Value.Name) for edge in pipeline.ToGraph().IterateEdges()]
 		)
+
+
+def _job(name: str, conclusion: str = "success") -> dict[str, Any]:
+	"""
+	Build a job of a run, as the GitHub REST API lists it.
+
+	:param name:       The job's name, including any calling workflows' prefixes.
+	:param conclusion: Optional, how the job ended. Default: ``'success'``.
+	:returns:          The job.
+	"""
+	return {
+		"id": 1, "name": name, "status": "completed", "conclusion": conclusion,
+		"created_at": "2026-09-17T10:00:00Z", "started_at": "2026-09-17T10:00:10Z",
+		"completed_at": "2026-09-17T10:01:00Z", "steps": []
+	}
+
+
+class ApplyNeeds(Fixture):
+	def _run(self, *names: tuple[str, str]) -> GitHubPipeline:
+		"""
+		Build a run of :data:`CALLER` reporting the given jobs.
+
+		:param names: The jobs' names and conclusions.
+		:returns:     The run.
+		"""
+		run = {"id": 4711, "name": "Pipeline", "status": "completed", "conclusion": "success", "head_sha": "0123abcd"}
+
+		return GitHubPipeline.FromJSON(run, [_job(name, conclusion) for name, conclusion in names])
+
+	def test_Calls(self) -> None:
+		"""The jobs of the run and of its called workflows get the dependencies of the workflow files."""
+		self._write("Package.yml", CALLABLE)
+		self._write("Prepare.yml", PREPARE)
+		resolver = WorkflowResolver({"owner/repo": self._path})
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+		run = self._run(
+			("Prepare / Prepare", "success"),
+			("Package / Parameters", "success"),
+			("Package / Build (ubuntu-26.04, 3.14)", "success"),
+			("Package / Static (ubuntu, 3.13)", "success"),
+			("Package / Static (ubuntu, 3.14)", "success"),
+			("Package / Static (windows, 3.14)", "success"),
+			("Local / Parameters", "success"),
+			("Local / Build", "skipped"),
+			("Foreign / Publish", "success")
+		)
+
+		missing = workflow.ApplyNeeds(run, resolver)
+
+		self.assertEqual([run["Prepare"]], run["Package"].Needs)
+		self.assertEqual([run["Prepare"], run["Package"]], run["Local"].Needs)
+		self.assertEqual([run["Prepare"], run["Package"], run["Local"]], run["Foreign"].Needs)
+
+		package = run["Package"]
+		self.assertIsInstance(package["Build"], CIMatrix)
+		self.assertEqual([package["Parameters"]], package["Build"].Needs)
+		self.assertEqual([package["Parameters"], package["Build"]], package["Static"].Needs)
+
+		local = run["Local"]
+		self.assertEqual([local["Parameters"]], local["Build"].Needs)
+
+		self.assertEqual([resolver.Load(self._path / "Package.yml").Jobs["Static"]], missing)
+		self.assertEqual([], run["Foreign"]["Publish"].Needs)
+
+	def test_WithoutResolver(self) -> None:
+		"""Without a resolver, only the jobs of the run's own workflow get dependencies."""
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+		run = self._run(
+			("Prepare / Prepare", "success"), ("Package / Parameters", "success"), ("Package / Build", "success")
+		)
+
+		missing = workflow.ApplyNeeds(run)
+
+		self.assertEqual([run["Prepare"]], run["Package"].Needs)
+		self.assertEqual([], run["Package"]["Build"].Needs)
+		self.assertEqual([workflow.Jobs["Local"], workflow.Jobs["Foreign"]], missing)
+
+	def test_Twice(self) -> None:
+		"""Applying the dependencies again adds nothing."""
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+		run = self._run(("Prepare / Prepare", "success"), ("Package / Parameters", "success"))
+
+		workflow.ApplyNeeds(run)
+		workflow.ApplyNeeds(run)
+
+		self.assertEqual([run["Prepare"]], run["Package"].Needs)
+
+	def test_Expression(self) -> None:
+		"""A job named by an expression can't be looked up, and isn't reported."""
+		workflow = Workflow.FromFile(self._write("A.yml", dedent("""\
+			on: push
+			jobs:
+			  Prepare: {runs-on: x, steps: []}
+			  Test:
+			    name: ${{ matrix.os }} Tests
+			    runs-on: x
+			    needs: Prepare
+			    steps: []
+		""")))
+		run = self._run(("Prepare", "success"), ("ubuntu Tests", "success"))
+
+		self.assertEqual([], workflow.ApplyNeeds(run))
+		self.assertEqual([], run["ubuntu Tests"].Needs)
+
+	def test_Parameters(self) -> None:
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+
+		with self.assertRaises(ValueError) as context:
+			_ = workflow.ApplyNeeds(None)
+		self.assertEqual("Parameter 'pipeline' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = workflow.ApplyNeeds(workflow)
+		self.assertEqual("Parameter 'pipeline' is not of type 'Workflow'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = workflow.ApplyNeeds(self._run(), {})
+		self.assertEqual("Parameter 'resolver' is not of type 'WorkflowResolver'.", str(context.exception))
 
 
 class Resolver(Fixture):

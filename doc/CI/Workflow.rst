@@ -188,3 +188,31 @@ reads them and ``depth`` allows:
   ``Test (ubuntu, 3.14)``. A **dynamic** matrix - ``include: ${{ fromJson(...) }}`` - is a
   :class:`~pyTooling.CI.Workflow.DefinedMatrix` without instances, since its combinations are known at run time only.
 * A workflow calling itself, directly or through others, raises :exc:`~pyTooling.CI.Workflow.WorkflowError`.
+
+
+.. _CI/Workflow/Run:
+
+Linking a Run
+*************
+
+A run read from the GitHub REST API (:ref:`CI/GitHub`) has no ``needs``: the API doesn't report them.
+:meth:`~pyTooling.CI.Workflow.Workflow.ApplyNeeds` gives a run the dependencies its workflow file - named by
+:attr:`Pipeline.Path <pyTooling.CI.GitHub.Pipeline.Path>` - declares:
+
+.. code-block:: python
+
+   run =      Pipeline.FromJSON(runJSON, jobsJSON)
+   workflow = resolver.Load(Path(run.Path))
+
+   for job in workflow.ApplyNeeds(run, resolver):
+     print(f"{job.Location}: job '{job.Name}' isn't in the run")
+
+   graph = run.ToGraph()
+
+* A job is looked up in the run by its display name - its ``name`` -, or else by its key: :pycode:`group[name]`.
+  A matrix is found as the :class:`~pyTooling.CI.Pipeline.Matrix` its instances were grouped into.
+* A job calling a reusable workflow is followed into the run's called workflow, and a matrix of calls into each
+  instance, as far as the resolver reads the called file.
+* A job named by an expression - ``${{ matrix.os }} Tests`` - can't be looked up and is skipped. A job with a
+  condition may have been skipped in the run, so it isn't reported when it's missing. Every other job missing in the
+  run is returned.
