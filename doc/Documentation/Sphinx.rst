@@ -366,14 +366,15 @@ gha:pipeline-graph
       * a job is a node labelled with its name and the file of the reusable workflow it calls;
       * a job running steps is a grey box with square corners;
       * a job with an ``if`` condition is dashed, and in HTML its tooltip is the condition;
-      * a job with a ``strategy.matrix`` has a double border;
+      * a job with a ``strategy.matrix`` has a double border, and is one node whatever instances it has;
       * a reusable workflow of another repository is a white leaf naming that repository and ref;
       * a reusable workflow of the documented repository is expanded into a cluster of its jobs, as many levels deep
         as ``:depth:`` says;
       * the ``needs`` are the edges, without those a longer path implies.
 
-      The workflow is read with :mod:`pyTooling.CI.Workflow`, which needs the ``yaml`` extra, and drawn by
-      :mod:`sphinx.ext.graphviz`. Every workflow file drawn becomes a dependency of the page.
+      The workflow is read with :mod:`pyTooling.CI.Workflow`, which needs the ``yaml`` extra, converted into a
+      :mod:`pyTooling.CI.Pipeline` model and its :class:`~pyTooling.Graph.Graph` (:ref:`CI/Workflow/Pipeline`), and
+      drawn by :mod:`sphinx.ext.graphviz`. Every workflow file drawn becomes a dependency of the page.
 
    .. grid-item::
       :columns: 6

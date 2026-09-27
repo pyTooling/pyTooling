@@ -400,6 +400,54 @@ class Clusters(Testcase):
 		self.assertIn('\t"Build" -> "Test/Unit" [lhead="cluster_Test"];', code)
 		self.assertIn('\t"Test/Report" -> "Publish" [ltail="cluster_Test"];', code)
 
+	def test_Matrix(self) -> None:
+		"""A matrix is one node, although the pipeline holds an instance per combination."""
+		with TemporaryDirectory() as directory:
+			(code, ), _ = build(directory, ":depth: 1")
+
+		self.assertIn(
+			'\t"Build" [label=<Build<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">matrix: python, system</FONT>>, '
+			'style="filled", fillcolor="#f2f2f2", peripheries="2"];',
+			code
+		)
+		self.assertNotIn("cluster_Build", code)
+
+	def test_Matrix_Calls(self) -> None:
+		"""A matrix calling a template is one node too; its instances aren't expanded."""
+		with TemporaryDirectory() as directory:
+			(Path(directory) / "Test.yml").write_text(TEST, encoding="utf-8")
+			(Path(directory) / "Matrix.yml").write_text(dedent("""\
+				on: push
+				jobs:
+				  Tests:
+				    uses: ./.github/workflows/Test.yml
+				    strategy:
+				      matrix:
+				        python: ['3.13', '3.14']
+			"""), encoding="utf-8")
+			code = str(PipelineDotGraph(Workflow.FromFile(Path(directory) / "Matrix.yml"), depth=1))
+
+		self.assertNotIn("subgraph", code)
+		self.assertIn('style="rounded,filled", peripheries="2", tooltip="uses: ./.github/workflows/Test.yml"', code)
+
+	def test_Drawn(self) -> None:
+		"""The jobs and workflows drawn are listed once each."""
+		with TemporaryDirectory() as directory:
+			workflows = Path(directory)
+			(workflows / "Pipeline.yml").write_text(PIPELINE, encoding="utf-8")
+			(workflows / "Prepare.yml").write_text(PREPARE, encoding="utf-8")
+			(workflows / "Test.yml").write_text(TEST, encoding="utf-8")
+			resolver = WorkflowResolver({"Owner/Repo": workflows})
+			graph = PipelineDotGraph(resolver.Load(workflows / "Pipeline.yml"), resolver, depth=1)
+
+		self.assertEqual(["Pipeline", "Prepare", "Test"], [workflow.Name for workflow in graph.Workflows])
+		self.assertEqual(
+			["Prepare", "Prepare", "Build", "Test", "Unit", "Lint", "Report", "Publish", "Local"],
+			[job.Name for job in graph.Jobs]
+		)
+		self.assertEqual("Pipeline.yml:7", graph.Jobs[0].Location)
+		self.assertEqual("Prepare.yml:7", graph.Jobs[1].Location)
+
 	@mark.skipif(which("dot") is None, reason="Graphviz isn't installed.")
 	def test_Syntax(self) -> None:
 		"""Graphviz accepts the graph."""

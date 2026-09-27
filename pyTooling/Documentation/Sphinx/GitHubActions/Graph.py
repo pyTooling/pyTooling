@@ -47,6 +47,8 @@ HTML, a node links to the page documenting its reusable workflow, if the ``gha``
 
    :mod:`pyTooling.CI.Workflow`
       |rarr| The model of a workflow file the graph is drawn from.
+   :mod:`pyTooling.CI.Pipeline`
+      |rarr| The service-independent model of a pipeline, which a workflow file is converted into.
    :mod:`pyTooling.Documentation.Sphinx.SchemaGraph`
       |rarr| The other graph directives of the extension.
 """
@@ -64,8 +66,10 @@ from sphinx.errors                             import ExtensionError
 from sphinx.ext.graphviz                       import align_spec, figure_wrapper, graphviz
 from sphinx.util.logging                       import getLogger
 
+from pyTooling.CI.Pipeline                     import Base as CIBase, Matrix as CIMatrix, Workflow as CIWorkflow
 from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export, readonly
+from pyTooling.Graph                           import Vertex
 from pyTooling.MetaClasses                     import ExtendedType
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip, stripAndNormalize
 
@@ -103,7 +107,12 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 	"""
 	The pipeline of a workflow in the DOT language: its jobs as nodes, their ``needs`` as edges.
 
-	The kind of a job is its node's shape and style:
+	The workflow is converted by :meth:`Workflow.ToPipeline <pyTooling.CI.Workflow.Workflow.ToPipeline>` into a
+	:mod:`pyTooling.CI.Pipeline` model, and that by :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` into a
+	:class:`~pyTooling.Graph.Graph`, which is drawn: a vertex is a node, an edge an edge, and a called workflow with a
+	:class:`~pyTooling.Graph.Subgraph` a cluster of the vertices it links to.
+
+	The kind of an element is its node's shape and style:
 
 	* a job calling a reusable workflow is a rounded box, labelled with the job's name and the workflow's file;
 	* a job calling a reusable workflow of another repository is a white rounded box, and its label also names that
@@ -111,7 +120,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 	* a job running steps is a grey box with square corners;
 	* a job with an ``if`` condition is dashed, and its tooltip is the condition;
 	* a job with a ``strategy.matrix`` has a double border, and its label names the matrix' dimensions, if they are
-	  known before the workflow runs.
+	  known before the workflow runs. A matrix is one node, whatever instances it holds.
 
 	A job calling a reusable workflow that :class:`~pyTooling.CI.Workflow.WorkflowResolver` finds locally is drawn as
 	a cluster of that workflow's jobs instead, until the depth is used up. An edge to or from such a job ends at the
@@ -121,7 +130,6 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 	"""
 
 	_resolver:   WorkflowResolver  #: Resolver reading the reusable workflows the jobs call.
-	_reduce:     bool              #: Whether an edge a longer path implies is dropped.
 	_link:       bool              #: Whether a job calling a reusable workflow of the documented repository is linked.
 	_statements: list[str]         #: The statements written so far, one per line, already indented.
 	_jobs:       list[Job]         #: The jobs drawn, each once, in the order they were drawn.
@@ -200,13 +208,13 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._resolver =   resolver
-		self._reduce =     reduce
 		self._link =       link
 		self._statements = [f"\trankdir={direction};", *(f"\t{attribute}" for attribute in GRAPH_ATTRIBUTES), ""]
 		self._jobs =       []
-		self._workflows =  []
+		self._workflows =  [workflow]
 
-		self._DrawWorkflow(workflow, "", depth, "\t")
+		graph = workflow.ToPipeline(resolver, depth).ToGraph(reduce=reduce)
+		self._DrawVertices(list(graph.IterateVertices()), "", "\t")
 
 	@readonly
 	def Jobs(self) -> list[Job]:
@@ -264,57 +272,57 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		"""
 		return uses.IsLocal or (uses.Repository is not None and uses.Repository.lower() in self._resolver.Repositories)
 
-	def _Describe(self, job: Job) -> tuple[list[str], list[str], str]:
+	def _Describe(self, element: CIBase) -> tuple[list[str], list[str], str]:
 		"""
-		Describe a job: the lines of its label, the parts of its style, and its tooltip.
+		Describe an element of the pipeline: the lines of its label, the parts of its style, and its tooltip.
 
-		:param job: The job to describe.
-		:returns:   The label's lines below the job's name, the style's parts, and the tooltip - the reusable workflow
-		            called and the condition, one per line, or an empty string.
+		:param element: The job, matrix or called workflow to describe.
+		:returns:       The label's lines below the element's name, the style's parts, and the tooltip - the reusable
+		                workflow called and the condition, one per line, or an empty string.
 		"""
 		lines = []
 		style = []
 		tooltip = []
 
-		if (uses := job.Uses) is not None:
+		if (uses := element.Definition.Uses) is not None:
 			lines.append(uses.FileName)
 			if not self._IsDocumented(uses):
 				lines.append(f"{uses.Repository}@{uses.Ref}")
 			tooltip.append(f"uses: {uses}")
 
-		if (matrix := job.Matrix) is not None:
-			if matrix.IsDynamic or len(matrix.Dimensions) == 0:
+		if isinstance(element, CIMatrix):
+			if (matrix := element.Definition.Matrix).IsDynamic or len(matrix.Dimensions) == 0:
 				lines.append("matrix")
 			else:
 				lines.append(f"matrix: {', '.join(matrix.Dimensions)}")
 
-		if (condition := job.Condition) is not None:
+		if (condition := element.Condition) is not None:
 			style.append("dashed")
 			tooltip.append(f"if: {condition}")
 
 		return lines, style, "\n".join(tooltip)
 
-	def _DrawJob(self, job: Job, identifier: str, indent: str) -> None:
+	def _DrawNode(self, element: CIBase, identifier: str, indent: str) -> None:
 		"""
-		Draw a job as a node.
+		Draw a job, a matrix or a called workflow that isn't expanded as a node.
 
-		:param job:        The job to draw.
+		:param element:    The element to draw.
 		:param identifier: Identifier of the node.
 		:param indent:     Indentation of the node's statement.
 		"""
-		lines, style, tooltip = self._Describe(job)
+		lines, style, tooltip = self._Describe(element)
 
-		if (uses := job.Uses) is None:
+		if (uses := element.Definition.Uses) is None:
 			attributes = {"style": ",".join(("filled", *style)), "fillcolor": "#f2f2f2"}
 		elif self._IsDocumented(uses):
 			attributes = {"style": ",".join(("rounded", "filled", *style))}
 		else:
 			attributes = {"style": ",".join(("rounded", "filled", *style)), "fillcolor": "#ffffff"}
 
-		if job.Matrix is not None:
+		if isinstance(element, CIMatrix):
 			attributes["peripheries"] = "2"
 
-		statement = f"{indent}{self._Quote(identifier)} [label={self._Label(job.Name, lines)}"
+		statement = f"{indent}{self._Quote(identifier)} [label={self._Label(element.Name, lines)}"
 		for name, value in attributes.items():
 			statement += f", {name}={self._Quote(value)}"
 
@@ -326,37 +334,36 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 
 		self._statements.append(f"{statement}];")
 
-	def _DrawWorkflow(self, workflow: Workflow, prefix: str, depth: int, indent: str) -> tuple[str, str]:
+	def _DrawVertices(self, vertices: list[Vertex], prefix: str, indent: str) -> tuple[str, str]:
 		"""
-		Draw the jobs of a workflow and the edges between them.
+		Draw the vertices of one level of the graph - the graph itself, or a called workflow's subgraph - and their edges.
 
-		:param workflow:       The workflow to draw.
-		:param prefix:         Prefix of the identifiers of its nodes: the path of the jobs calling it.
-		:param depth:          Levels of reusable workflows still to expand.
-		:param indent:         Indentation of its statements.
-		:returns:              Identifiers of the node an edge into the workflow ends at - the first job needing none -
-		                       and of the node an edge out of it starts at - the last job no job needs.
-		:raises WorkflowError: If a reusable workflow to expand doesn't exist, or is not a well-formed workflow.
+		:param vertices: The vertices, in file order.
+		:param prefix:   Prefix of the identifiers of their nodes: the path of the jobs calling their workflow.
+		:param indent:   Indentation of their statements.
+		:returns:        Identifiers of the node an edge into the level ends at - the first vertex without an inbound
+		                 edge - and of the node an edge out of it starts at - the last vertex without an outbound edge.
 		"""
-		if workflow not in self._workflows:
-			self._workflows.append(workflow)
+		# per vertex: the node an edge into it ends at, the node an edge out of it starts at, and its cluster
+		anchors: dict[Vertex, tuple[str, str, Nullable[str]]] = {}
+		for vertex in vertices:
+			element = vertex.Value
+			if element.Definition not in self._jobs:
+				self._jobs.append(element.Definition)
 
-		# per job: the node an edge into it ends at, the node an edge out of it starts at, and its cluster
-		anchors: dict[str, tuple[str, str, Nullable[str]]] = {}
-		for job in workflow:
-			if job not in self._jobs:
-				self._jobs.append(job)
-
-			identifier = f"{prefix}{job.Name}"
-			if depth == 0 or job.Uses is None or (called := self._resolver.Resolve(job.Uses)) is None:
-				self._DrawJob(job, identifier, indent)
-				anchors[job.Name] = (identifier, identifier, None)
+			identifier = f"{prefix}{element.Name}"
+			if not isinstance(element, CIWorkflow) or vertex.OutboundLinkCount == 0:
+				self._DrawNode(element, identifier, indent)
+				anchors[vertex] = (identifier, identifier, None)
 				continue
 
-			lines, style, tooltip = self._Describe(job)
+			if element.CalledWorkflow not in self._workflows:
+				self._workflows.append(element.CalledWorkflow)
+
+			lines, style, tooltip = self._Describe(element)
 			cluster = f"cluster_{identifier}"
 			self._statements.append(f"{indent}subgraph {self._Quote(cluster)} {{")
-			self._statements.append(f"{indent}\tlabel={self._Label(job.Name, lines)};")
+			self._statements.append(f"{indent}\tlabel={self._Label(element.Name, lines)};")
 			self._statements.append(f'{indent}\tlabeljust="l";')
 			self._statements.append(f"{indent}\tstyle={self._Quote(','.join(('rounded', 'filled', *style)))};")
 			self._statements.append(f'{indent}\tcolor="#8a9bb2";')
@@ -364,40 +371,43 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 			if tooltip != "":
 				self._statements.append(f"{indent}\ttooltip={self._Quote(tooltip)};")
 			if self._link:
-				self._statements.append(f"{indent}\t/*gha-link:{job.Uses.Stem}*/")
+				self._statements.append(f"{indent}\t/*gha-link:{element.Definition.Uses.Stem}*/")
 
-			entryNode, exitNode = self._DrawWorkflow(called, f"{identifier}/", depth - 1, f"{indent}\t")
+			entryNode, exitNode = self._DrawVertices(
+				[link.Destination for link in vertex.OutboundLinks], f"{identifier}/", f"{indent}\t"
+			)
 			self._statements.append(f"{indent}}}")
-			anchors[job.Name] = (entryNode, exitNode, cluster)
+			anchors[vertex] = (entryNode, exitNode, cluster)
 
-		# the jobs needing none start together: in the first rank of the graph, or side by side in their cluster
-		roots = [self._Quote(anchors[job.Name][0]) for job in workflow if len(job.NeedNames) == 0]
+		# the vertices without an inbound edge start together: in the first rank of the graph, or side by side in their
+		# cluster
+		roots = [self._Quote(anchors[vertex][0]) for vertex in vertices if vertex.InboundEdgeCount == 0]
 		if prefix == "":
 			self._statements.append(f"{indent}{{rank=min; {'; '.join(roots)};}}")
 		elif len(roots) > 1:
 			self._statements.append(f"{indent}{{rank=same; {'; '.join(roots)};}}")
 
-		for need, job in workflow.ReducedEdges if self._reduce else workflow.Edges:
-			_, tail, tailCluster = anchors[need.Name]
-			head, _, headCluster = anchors[job.Name]
+		for vertex in vertices:
+			for edge in vertex.InboundEdges:
+				_, tail, tailCluster = anchors[edge.Source]
+				head, _, headCluster = anchors[vertex]
 
-			attributes = []
-			if tailCluster is not None:
-				attributes.append(f"ltail={self._Quote(tailCluster)}")
-			if headCluster is not None:
-				attributes.append(f"lhead={self._Quote(headCluster)}")
+				attributes = []
+				if tailCluster is not None:
+					attributes.append(f"ltail={self._Quote(tailCluster)}")
+				if headCluster is not None:
+					attributes.append(f"lhead={self._Quote(headCluster)}")
 
-			statement = f"{indent}{self._Quote(tail)} -> {self._Quote(head)}"
-			if len(attributes) > 0:
-				statement += f" [{', '.join(attributes)}]"
+				statement = f"{indent}{self._Quote(tail)} -> {self._Quote(head)}"
+				if len(attributes) > 0:
+					statement += f" [{', '.join(attributes)}]"
 
-			self._statements.append(f"{statement};")
+				self._statements.append(f"{statement};")
 
-		needed = {need.Name for need, _ in workflow.Edges}
-		first = next(job for job in workflow if len(job.NeedNames) == 0)
-		last = [job for job in workflow if job.Name not in needed][-1]
+		first = next(vertex for vertex in vertices if vertex.InboundEdgeCount == 0)
+		last = [vertex for vertex in vertices if vertex.OutboundEdgeCount == 0][-1]
 
-		return anchors[first.Name][0], anchors[last.Name][1]
+		return anchors[first][0], anchors[last][1]
 
 	def __str__(self) -> str:
 		"""
