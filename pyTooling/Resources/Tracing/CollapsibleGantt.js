@@ -1,3 +1,5 @@
+// Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany
+// SPDX-License-Identifier: Apache-2.0
 // Collapses and expands the rows of an SVG Gantt chart written by pyTooling.Tracing.Render.Matplotlib.
 // '/*DATA*/null' is replaced by the rows ({id, parent, collapsed}) and the distance between two rows (pitch).
 (function () {

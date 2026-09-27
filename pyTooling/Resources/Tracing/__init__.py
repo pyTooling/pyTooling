@@ -31,9 +31,6 @@
 """
 Resources shipped for :mod:`pyTooling.Tracing`.
 
-They live here rather than beside the renderer because :mod:`pyTooling.Resources` is *"one package for the whole
-library rather than one per sub-package"* - a consumer looking for a data file has one place to look.
-
 Scripts and stylesheets of a collapsible SVG Gantt chart
 (:class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` with ``collapsible=True``), embedded into the SVG
 file:
