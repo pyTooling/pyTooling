@@ -71,7 +71,8 @@ PACKAGE = dedent("""\
 	        type: string
 	      system_list:
 	        required: false
-	        default: 'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw64 ucrt64 clang64 mingw32 ucrt32 msys'
+	        default: 'ubuntu ubuntu-arm windows windows-arm macos macos-arm mingw64 ucrt64 clang64 mingw32 ucrt32 msys
+	          ubuntu-24.04 windows-2025 macos-26'
 	        type: string
 	      dry_run:
 	        required: false
@@ -197,13 +198,13 @@ class ParameterTables(Project):
 		self.assertIn("<span class=\"pre\">false</span>", rows[4])
 
 	def test_ShortDefault(self) -> None:
-		"""A multi-line default is shortened to its first line, a long default to 80 characters."""
+		"""A multi-line default is shortened to its first line, a long default to 120 characters."""
 		self._workflow("Package", PACKAGE)
 		self._build({"Package": self.PAGE})
 
 		table = self._table(self._html("Package"), "inputs")
 		self.assertIn("<span class=\"pre\">'default-branch…'</span>", table)
-		self.assertIn("<span class=\"pre\">clang64</span> <span class=\"pre\">min…'</span>", table)
+		self.assertIn("<span class=\"pre\">ubuntu-24.04</span> <span class=\"pre\">windows-20…'</span>", table)
 
 	def test_Secrets(self) -> None:
 		self._workflow("Package", PACKAGE)
@@ -236,12 +237,13 @@ class ParameterTables(Project):
 
 	def test_Kinds(self) -> None:
 		self._workflow("Package", PACKAGE)
-		self._build({"Package": self.PAGE.replace("parameter-table::\n", "parameter-table::\n   :kinds: outputs, inputs\n")})
+		kinds = "parameter-table::\n   :kinds: outputs, inputs outputs\n"
+		self._build({"Package": self.PAGE.replace("parameter-table::\n", kinds)})
 
 		html = self._html("Package")
 		self.assertEqual([], self._warningLines())
-		self.assertIn("gha-inputs", html)
-		self.assertIn("gha-outputs", html)
+		self.assertEqual(1, html.count("gha-outputs"))
+		self.assertLess(html.index("gha-outputs"), html.index("gha-inputs"))
 		self.assertNotIn("gha-secrets", html)
 
 	def test_KindsWithoutParameters(self) -> None:
@@ -365,7 +367,7 @@ class Interfaces(Project):
 		self._workflow("Package", PACKAGE)
 		self._build({"Package": self.PAGE})
 
-		self.assertIn(" - job <em>Build</em> (Package.yml:45)", self._field(self._html("Package"), "Permissions"))
+		self.assertIn(" - job <em>Build</em> (Package.yml:46)", self._field(self._html("Package"), "Permissions"))
 		self.assertEqual(
 			["src/Package.rst:6: WARNING: gha:interface: Workflow 'Tag.yml' doesn't exist in 'workflows'. [gha.workflow]"],
 			self._warningLines()
@@ -401,18 +403,18 @@ class YAMLExcerpts(Project):
 
 		html = self._html("Package")
 		self.assertEqual([], self._warningLines())
-		self.assertIn("Package.yml, lines 34-39", html)
+		self.assertIn("Package.yml, lines 35-40", html)
 		code = self._code(html)
-		self.assertTrue(code.startswith("34secrets:\n35  PYPI_TOKEN:\n"), code)
-		self.assertTrue(code.endswith("39    required: false\n"), code)
+		self.assertTrue(code.startswith("35secrets:\n36  PYPI_TOKEN:\n"), code)
+		self.assertTrue(code.endswith("40    required: false\n"), code)
 
 	def test_Jobs(self) -> None:
 		self._workflow("Package", PACKAGE)
 		self._build({"Package": self._page("   :section: jobs\n")})
 
 		code = self._code(self._html("Package"))
-		self.assertTrue(code.startswith("41jobs:\n"), code)
-		self.assertTrue(code.endswith("65      - Release\n"), code)
+		self.assertTrue(code.startswith("42jobs:\n"), code)
+		self.assertTrue(code.endswith("66      - Release\n"), code)
 
 	def test_Job(self) -> None:
 		"""A comment at the start of a line inside the job is kept; a comment before the next job is not."""
@@ -420,11 +422,11 @@ class YAMLExcerpts(Project):
 		self._build({"Package": self._page("   :job: Build\n")})
 
 		html = self._html("Package")
-		self.assertIn("Package.yml, lines 42-54", html)
+		self.assertIn("Package.yml, lines 43-55", html)
 		code = self._code(html)
-		self.assertTrue(code.startswith("42Build:\n43  runs-on: ubuntu-26.04\n"), code)
-		self.assertIn("52# a comment at the start of a line, inside job 'Build'\n", code)
-		self.assertTrue(code.endswith("54    - uses: ./.github/actions/Local\n"), code)
+		self.assertTrue(code.startswith("43Build:\n44  runs-on: ubuntu-26.04\n"), code)
+		self.assertIn("53# a comment at the start of a line, inside job 'Build'\n", code)
+		self.assertTrue(code.endswith("55    - uses: ./.github/actions/Local\n"), code)
 
 	def test_File(self) -> None:
 		self._workflow("Package", PACKAGE)
@@ -432,14 +434,14 @@ class YAMLExcerpts(Project):
 
 		code = self._code(self._html("Package"))
 		self.assertTrue(code.startswith(" 1name: Package\n"), code)
-		self.assertTrue(code.endswith("65      - Release\n"), code)
+		self.assertTrue(code.endswith("66      - Release\n"), code)
 
 	def test_Link(self) -> None:
 		self._workflow("Package", PACKAGE)
 		self._build({"Package": self._page("   :job: Build\n")}, gha_ref="r1")
 
 		self.assertIn(
-			'href="https://github.com/owner/repo/blob/r1/.github/workflows/Package.yml#L42-L54">Package.yml, lines 42-54</a>',
+			'href="https://github.com/owner/repo/blob/r1/.github/workflows/Package.yml#L43-L55">Package.yml, lines 43-55</a>',
 			self._html("Package")
 		)
 

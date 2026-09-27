@@ -84,7 +84,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 __all__ = ["KINDS", "SECTIONS", "MAX_DEFAULT_LENGTH"]
 
-#: The kinds of parameters ``gha:parameter-table`` summarizes, in the order it shows them: kind |rarr| the columns.
+#: The kinds of parameters ``gha:parameter-table`` summarizes, in the order it shows them by default: kind |rarr| the
+#: columns.
 KINDS = {
 	"inputs":  ("Parameter Name", "Required", "Type", "Default"),
 	"secrets": ("Token Name",     "Required", "Type", "Default"),
@@ -95,7 +96,7 @@ KINDS = {
 SECTIONS = ("inputs", "outputs", "secrets", "jobs")
 
 #: The length a default is shortened to in a summary table; a multi-line default is shortened to its first line.
-MAX_DEFAULT_LENGTH = 80
+MAX_DEFAULT_LENGTH = 120
 
 _logger = getLogger(__name__)
 
@@ -180,7 +181,8 @@ class ParameterTable(WorkflowReferenceDirective):
 	   .. gha:parameter-table::
 	      :kinds: inputs secrets
 
-	A table per kind, in the order of :data:`KINDS`: the parameters in file order, each name linked to its entry. An
+	A table per kind, in the order written - by default the order of :data:`KINDS` -: the parameters in file order, each
+	name linked to its entry. An
 	input's or a secret's row states whether it is required, its type and its default - a long or multi-line default
 	is shortened, the entry shows it in full. An output's row states its description from the workflow file.
 
@@ -215,9 +217,9 @@ class ParameterTable(WorkflowReferenceDirective):
 
 		workflowName = self.env.ref_context["gha:workflow"]
 		tables = []
-		for kind in KINDS:
+		for kind in kinds:
 			parameters = getattr(workflow, kind.capitalize())
-			if kind not in kinds or (len(parameters) == 0 and "kinds" not in self.options):
+			if len(parameters) == 0 and "kinds" not in self.options:
 				continue
 
 			columns = KINDS[kind]
@@ -253,13 +255,14 @@ class ParameterTable(WorkflowReferenceDirective):
 		"""
 		Read option ``:kinds:``, a list of kinds separated by spaces or commas.
 
-		:returns:                     The kinds named, or every kind of :data:`KINDS` without the option.
+		:returns:                     The kinds named, in the order written and each once, or every kind of :data:`KINDS`
+		                              without the option.
 		:raises SphinxExtensionError: If a kind is not one of :data:`KINDS`.
 		"""
 		if "kinds" not in self.options:
 			return tuple(KINDS)
 
-		kinds = tuple(self.options["kinds"].replace(",", " ").split())
+		kinds = tuple(dict.fromkeys(self.options["kinds"].replace(",", " ").split()))
 		for kind in kinds:
 			if kind not in KINDS:
 				raise SphinxExtensionError(
@@ -461,7 +464,9 @@ class Interface(WorkflowReferenceDirective):
 			try:
 				called = self.env.get_domain("gha").Resolver.Resolve(uses)
 			except WorkflowError as ex:
-				_logger.warning(f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow")
+				_logger.warning(
+					f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
+				)
 				called = None
 
 			if called is not None and id(called) not in visited:

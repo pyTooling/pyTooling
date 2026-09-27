@@ -173,7 +173,7 @@ Parameter Tables
       * **secrets** - *Token Name*, *Required*, *Type* and *Default*;
       * **outputs** - *Result Name* and the ``description`` of the workflow file.
 
-      A default longer than 80 characters, or of several lines, is shortened in the table and followed by ``…``; the
+      A default longer than 120 characters, or of several lines, is shortened in the table and followed by ``…``; the
       entry shows it in full.
 
    .. grid-item::
@@ -199,9 +199,9 @@ Parameter Tables
    .. rst:directive:option:: kinds: <kind> ...
 
       The kinds of parameters to summarize, from ``inputs``, ``secrets`` and ``outputs``, separated by spaces or
-      commas. The tables are rendered in this order, whatever the order written. Without the option, a table is
-      rendered for every kind the workflow has parameters of. A kind named here, of which the workflow has none, is a
-      table saying so.
+      commas. The tables are rendered in the order written. Without the option, a table is rendered for every kind the
+      workflow has parameters of, in the order inputs, secrets, outputs. A kind named here, of which the workflow has
+      none, is a table saying so.
 
 
 .. _DOC/Sphinx/GHA/Interface:
