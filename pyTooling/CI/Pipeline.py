@@ -966,21 +966,21 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		Convert the workflow into a graph of the elements it contains and their dependencies.
 
 		Every element one level below the workflow becomes a :class:`~pyTooling.Graph.Vertex` of the graph, with the
-		element as its :attr:`~pyTooling.Graph.Vertex.Value` and its :attr:`~QualifiedNameMixin.QualifiedName` as its
-		:attr:`~pyTooling.Graph.Vertex.ID`. Every dependency becomes an :class:`~pyTooling.Graph.Edge` from the needed
-		element to the one needing it.
+		element as its :attr:`~pyTooling.Graph.Vertex.ID` and its :attr:`~pyTooling.Graph.Vertex.Value`, so
+		:meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds an element's vertex. A vertex has no
+		name; a consumer labels it by :pycode:`vertex.Value.QualifiedName`. Every dependency becomes an
+		:class:`~pyTooling.Graph.Edge` from the needed element to the one needing it.
 
 		A called workflow or a matrix holding elements is expanded into a :class:`~pyTooling.Graph.Subgraph` named by
 		its qualified name, whose vertices and edges are built the same way. The group's vertex has a
 		:class:`~pyTooling.Graph.Link` to each vertex of its subgraph. The graph's own vertices and edges don't
 		include those of its subgraphs, since :mod:`pyTooling.Graph` registers them on the subgraph.
 
-		:param depth:                 Optional, how many levels of nested groups to expand; ``0`` expands none, ``None``
-		                              every level. Default: ``None``.
-		:returns:                     The graph, named like the workflow.
-		:raises TypeError:            If parameter 'depth' is not of type :class:`int`.
-		:raises ValueError:           If parameter 'depth' is negative.
-		:raises DuplicateVertexError: If two elements of one group share a name, and therefore a qualified name.
+		:param depth:       Optional, how many levels of nested groups to expand; ``0`` expands none, ``None`` every
+		                    level. Default: ``None``.
+		:returns:           The graph, named like the workflow.
+		:raises TypeError:  If parameter 'depth' is not of type :class:`int`.
+		:raises ValueError: If parameter 'depth' is negative.
 
 		.. seealso::
 
@@ -1014,7 +1014,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			"""
 			vertices: dict[Base, Vertex] = {}
 			for element in group:
-				vertex = Vertex(vertexID=element.QualifiedName, value=element, graph=graph, subgraph=subgraph)
+				vertex = Vertex(vertexID=element, value=element, graph=graph, subgraph=subgraph)
 				vertices[element] = vertex
 				if groupVertex is not None:
 					groupVertex.LinkToVertex(vertex)

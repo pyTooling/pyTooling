@@ -116,8 +116,9 @@ Conversion to a Graph
 :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts a pipeline or a called workflow into a
 :class:`pyTooling.Graph.Graph`:
 
-* Every element one level below becomes a **vertex**. Its :attr:`~pyTooling.Graph.Vertex.Value` is the element and
-  its :attr:`~pyTooling.Graph.Vertex.ID` the element's qualified name.
+* Every element one level below becomes a **vertex**. Its :attr:`~pyTooling.Graph.Vertex.ID` and its
+  :attr:`~pyTooling.Graph.Vertex.Value` are the element, so :pycode:`graph.GetVertexByID(job)` finds a job's vertex.
+  A vertex has no name; label it by :pycode:`vertex.Value.QualifiedName`.
 * Every dependency becomes an **edge** from the needed element to the element needing it - the direction the
   pipeline runs in.
 * A called workflow or a matrix holding elements is expanded into a :class:`~pyTooling.Graph.Subgraph`, named by its
@@ -137,13 +138,12 @@ already implies:
      subgraph.RemoveTransitiveEdges()
 
    for vertex in graph.IterateTopologically():
-     print(f"{vertex.ID}: {type(vertex.Value).__name__}")
+     print(f"{vertex.Value.QualifiedName}: {type(vertex.Value).__name__}")
 
 .. note::
 
    :mod:`pyTooling.Graph` registers a subgraph's vertices and edges on the subgraph, so the graph's own
-   :attr:`~pyTooling.Graph.BaseGraph.VertexCount` counts the top level only. Two siblings sharing a name share a
-   qualified name, which raises :exc:`~pyTooling.Graph.DuplicateVertexError`.
+   :attr:`~pyTooling.Graph.BaseGraph.VertexCount` counts the top level only.
 
 
 .. _CI/Pipeline/Services:
