@@ -151,7 +151,7 @@ reads them and ``depth`` allows:
 .. code-block:: python
 
    pipeline = workflow.ToPipeline(resolver, depth=1)
-   graph =    pipeline.ToGraph()                       # reduced to the transitive reduction
+   graph =    pipeline.ToGraph()                       # transitively reduced
 
    for vertex in graph.IterateTopologically():
      element = vertex.Value
