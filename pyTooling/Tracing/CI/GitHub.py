@@ -134,8 +134,8 @@ class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		Return the CI/CD result of an element of the model.
 
-		The model's :class:`~pyTooling.CI.Pipeline.Outcome` spells its members as the conventions do, so the result
-		is the member of the same value - GitHub's conclusion is mapped once, by
+		The result is the member of the same value as the element's :attr:`~pyTooling.CI.Pipeline.Base.Outcome`. A
+		GitHub conclusion is mapped onto an outcome by
 		:meth:`Conclusion.ToOutcome <pyTooling.CI.GitHub.Conclusion.ToOutcome>`.
 
 		:param element: The workflow run, job or step.

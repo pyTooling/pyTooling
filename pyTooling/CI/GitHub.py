@@ -59,7 +59,7 @@ trace, a graph or a report is a consumer of this model.
 from __future__            import annotations
 
 from datetime              import datetime, timezone
-from typing                import Optional as Nullable, ClassVar, Iterable, Iterator, Self, Union
+from typing                import Optional as Nullable, ClassVar, Iterable, Self, Union
 
 from pyTooling.CI          import JSONObject
 from pyTooling.CI.Pipeline import Base, JobGroup, Matrix, MatrixInstanceMixin, MatrixWorkflow, Outcome
@@ -275,7 +275,6 @@ def _splitMatrixJobName(name: str) -> tuple[str, Nullable[list[str]]]:
 		return name, None
 
 	return base, [value.strip() for value in values.split(",")]
-
 
 
 @export
