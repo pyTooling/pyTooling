@@ -216,7 +216,8 @@ class WorkflowDirective(BaseDirective):
 		Read the workflow file, make it the current one, and warn about inputs that are required and have a default.
 
 		A file that isn't a well-formed workflow is reported as a warning at the place in the file, and the document
-		has no current workflow model then.
+		has no current workflow model then. A workflow read is added to the document's list ``gha:workflows`` of
+		(name, path, location of the directive), which is checked when the document was read.
 
 		:param domain: The domain.
 		:param name:   The workflow's name, as given as argument.
@@ -244,6 +245,7 @@ class WorkflowDirective(BaseDirective):
 			)
 
 		self.env.current_document["gha:workflow-file"] = path
+		self.env.current_document.setdefault("gha:workflows", []).append((name, path, self.get_location()))
 
 		for parameter in workflow.Inputs.values():
 			if parameter.Required and parameter.Default is not None:
@@ -300,33 +302,19 @@ class ParameterDirective(BaseDirective):
 					location=self.get_location(), type=WARNING_TYPE, subtype="drift"
 				)
 
-		fullName = f"{workflowName}.{name}"
-		nodeID = make_id(self.env, self.state.document, f"gha-{self.OBJECT_TYPE}", fullName)
-		section = nodes.section("", nodes.title(name, name), ids=[nodeID])
-		if (titleID := nodes.make_id(name)) not in self.state.document.ids:
-			section["ids"].append(titleID)
-
-		# The label's anchor comes last: docutils links a name to a node's last anchor, so a link keeps its target.
-		if (prefix := self.config.gha_label_prefix) is not None:
-			label = f"{prefix}/{workflowName}/{self.LABEL_KIND}/{name}"
-			section["ids"].append(nodes.make_id(label))
-			section["names"].append(fully_normalize_name(label))
-
-		self.set_source_info(section)
-		self.state.document.note_explicit_target(section)
-
 		content = self.parse_content_to_nodes()
 		handwritten = []
 		if len(content) > 0 and isinstance(content[0], nodes.field_list):
 			handwritten = list(content[0].children)
 			content = content[1:]
 
-		fields = [] if parameter is None else self._FactFields(parameter)
+		fields = []
 		for field in handwritten:
 			fieldName = field[0].astext().strip()
 			if fieldName in self.FACT_FIELDS:
 				_logger.warning(
-					f"{self.directiveName} '{fullName}': field '{fieldName}' is taken from the workflow file; remove it.",
+					f"{self.directiveName} '{workflowName}.{name}': field '{fieldName}' is taken from the workflow file; "
+					f"remove it.",
 					location=field, type=WARNING_TYPE, subtype="drift"
 				)
 				if parameter is not None:
@@ -334,19 +322,70 @@ class ParameterDirective(BaseDirective):
 
 			fields.append(field)
 
+		source, line = self.get_source_info()
+		return self.CreateEntry(self.env, self.state.document, workflowName, name, parameter, fields, content, source, line)
+
+	@classmethod
+	def CreateEntry(
+		cls,
+		env:          BuildEnvironment,
+		document:     nodes.document,
+		workflowName: str,
+		name:         str,
+		parameter:    Nullable[Parameter],
+		fields:       list[nodes.field],
+		content:      list[Node],
+		source:       str,
+		line:         Nullable[int]
+	) -> list[Node]:
+		"""
+		Create a parameter's entry and register it in the domain.
+
+		:param env:          The build environment.
+		:param document:     The document the entry is placed in.
+		:param workflowName: The workflow's name.
+		:param name:         The parameter's name.
+		:param parameter:    The parameter, as read from the workflow file, or ``None`` if the workflow file wasn't read or
+		                     hasn't this parameter.
+		:param fields:       The hand-written fields, without those repeating a fact of the workflow file.
+		:param content:      The nodes following the field list.
+		:param source:       The source file the entry is reported at.
+		:param line:         The line the entry is reported at, or ``None``.
+		:returns:            An index node and the entry's section.
+		"""
+		fullName = f"{workflowName}.{name}"
+		nodeID = make_id(env, document, f"gha-{cls.OBJECT_TYPE}", fullName)
+		section = nodes.section("", nodes.title(name, name), ids=[nodeID])
+		if (titleID := nodes.make_id(name)) not in document.ids:
+			section["ids"].append(titleID)
+
+		# The label's anchor comes last: docutils links a name to a node's last anchor, so a link keeps its target.
+		if (prefix := env.config.gha_label_prefix) is not None:
+			label = f"{prefix}/{workflowName}/{cls.LABEL_KIND}/{name}"
+			section["ids"].append(nodes.make_id(label))
+			section["names"].append(fully_normalize_name(label))
+
+		section.source = source
+		section.line = line
+		document.note_explicit_target(section)
+
+		if parameter is not None:
+			fields = [*cls._FactFields(parameter), *fields]
+
 		fieldNames = [field[0].astext().strip() for field in fields]
 		if "Description" not in fieldNames and parameter is not None and parameter.Description:
 			leading = [index + 1 for index, fieldName in enumerate(fieldNames) if fieldName in LEADING_FIELDS]
 			position = max(leading, default=0)
-			fields.insert(position, self._TextField("Description", parameter.Description.strip()))
+			fields.insert(position, cls._TextField("Description", parameter.Description.strip()))
 
 		if len(fields) > 0:
 			section += nodes.field_list("", *fields)
 		section.extend(content)
 
-		domain.NoteObject(self.OBJECT_TYPE, fullName, nodeID, section)
+		domain: GitHubActionsDomain = env.get_domain("gha")
+		domain.NoteObject(cls.OBJECT_TYPE, fullName, nodeID, section)
 		index = addnodes.index(
-			entries=[("single", f"{name} ({self.OBJECT_TYPE} of {workflowName})", nodeID, "", None)]
+			entries=[("single", f"{name} ({cls.OBJECT_TYPE} of {workflowName})", nodeID, "", None)]
 		)
 
 		return [index, section]
@@ -391,7 +430,8 @@ class ParameterDirective(BaseDirective):
 		text = formatValue(value)
 		return cls._Field("Default Value", nodes.paragraph("", "", nodes.literal(text, text)))
 
-	def _FactFields(self, parameter: Parameter) -> list[nodes.field]:
+	@classmethod
+	def _FactFields(cls, parameter: Parameter) -> list[nodes.field]:
 		"""
 		Create the fields taken from the workflow file.
 
@@ -416,7 +456,8 @@ class InputDirective(ParameterDirective):
 	COLLECTION =  "Inputs"                               #: The workflow's property holding the parameters.
 	FACT_FIELDS = ("Type", "Required", "Default Value")  #: The fields taken from the workflow file.
 
-	def _FactFields(self, parameter: Input) -> list[nodes.field]:
+	@classmethod
+	def _FactFields(cls, parameter: Input) -> list[nodes.field]:
 		"""
 		Create the fields *Type*, *Required* and *Default Value*.
 
@@ -424,9 +465,9 @@ class InputDirective(ParameterDirective):
 		:returns:         The fields.
 		"""
 		return [
-			self._TextField("Type", parameter.Type.value),
-			self._TextField("Required", "yes" if parameter.Required else "no"),
-			self._DefaultField(parameter.Default)
+			cls._TextField("Type", parameter.Type.value),
+			cls._TextField("Required", "yes" if parameter.Required else "no"),
+			cls._DefaultField(parameter.Default)
 		]
 
 
@@ -446,7 +487,8 @@ class SecretDirective(ParameterDirective):
 	COLLECTION =  "Secrets"                              #: The workflow's property holding the parameters.
 	FACT_FIELDS = ("Type", "Required", "Default Value")  #: The fields taken from the workflow file.
 
-	def _FactFields(self, parameter: Secret) -> list[nodes.field]:
+	@classmethod
+	def _FactFields(cls, parameter: Secret) -> list[nodes.field]:
 		"""
 		Create the fields *Type*, *Required* and *Default Value*.
 
@@ -454,9 +496,9 @@ class SecretDirective(ParameterDirective):
 		:returns:         The fields.
 		"""
 		return [
-			self._TextField("Type", "string"),
-			self._TextField("Required", "yes" if parameter.Required else "no"),
-			self._DefaultField(None)
+			cls._TextField("Type", "string"),
+			cls._TextField("Required", "yes" if parameter.Required else "no"),
+			cls._DefaultField(None)
 		]
 
 
