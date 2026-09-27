@@ -615,16 +615,15 @@ class ToGraph(Testcase):
 	def test_Edges(self) -> None:
 		graph = self._Pipeline().ToGraph()
 
+		reduced = {("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}
+
 		edges = {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
-		self.assertSetEqual(
-			{("Prepare", "Test"), ("Prepare", "Package"), ("Prepare", "Release"), ("Test", "Release"), ("Package", "Release")},
-			edges
-		)
+		self.assertSetEqual(reduced | {("Prepare", "Release")}, edges)
 
 		graph.RemoveTransitiveEdges()
 
 		edges = {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
-		self.assertSetEqual({("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}, edges)
+		self.assertSetEqual(reduced, edges)
 
 	def test_Subgraphs(self) -> None:
 		pipeline = self._Pipeline()
@@ -651,7 +650,8 @@ class ToGraph(Testcase):
 		inner = Workflow("Inner", parent=outer)
 		Job("Deep", parent=inner)
 
-		for depth, names in ((None, {"Outer", "Outer / Inner"}), (0, set()), (1, {"Outer"}), (2, {"Outer", "Outer / Inner"})):
+		both = {"Outer", "Outer / Inner"}
+		for depth, names in ((None, both), (0, set()), (1, {"Outer"}), (2, both)):
 			with self.subTest(depth=depth):
 				graph = pipeline.ToGraph(depth)
 				self.assertSetEqual(names, {subgraph.Name for subgraph in graph.Subgraphs})
