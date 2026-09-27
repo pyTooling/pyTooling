@@ -129,16 +129,15 @@ Conversion to a Graph
   its subgraph. ``depth`` limits how many levels are expanded; ``0`` expands none.
 
 Dependencies only link siblings, so every edge lies within one graph or subgraph, and the graph algorithms of
-:mod:`pyTooling.Graph` apply to each of them - e.g. the transitive reduction, which drops a dependency a longer path
-already implies:
+:mod:`pyTooling.Graph` apply to each of them. ``reduce`` - on by default - applies the transitive reduction
+(:meth:`~pyTooling.Graph.BaseGraph.RemoveTransitiveEdges`) to the graph and every subgraph: a dependency a longer path
+already implies - ``Release`` needing ``Prepare`` although it needs ``Test``, which needs ``Prepare`` - has no edge.
+The model itself keeps every dependency; ``reduce=False`` gives each of them an edge.
 
 .. code-block:: python
 
-   graph = pipeline.ToGraph(depth=1)
-
-   graph.RemoveTransitiveEdges()
-   for subgraph in graph.Subgraphs:
-     subgraph.RemoveTransitiveEdges()
+   graph = pipeline.ToGraph(depth=1)                 # reduced
+   every = pipeline.ToGraph(depth=1, reduce=False)   # an edge per dependency
 
    for vertex in graph.IterateTopologically():
      print(f"{vertex.Value.QualifiedName}: {type(vertex.Value).__name__}")

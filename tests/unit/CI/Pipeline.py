@@ -37,7 +37,7 @@ from pyTooling.CI.Pipeline import Base, PipelineGroup, Pipeline, Workflow, Matri
 from pyTooling.CI.Pipeline import JobGroup, Step
 from pyTooling.CI.Pipeline import Outcome, PipelineError, NeedError, NeedCycleError
 from pyTooling.CI.Pipeline import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
-from pyTooling.Graph       import Graph, Subgraph, Vertex
+from pyTooling.Graph       import BaseGraph, Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Tracing.CI  import Result
 from pyTooling.Testing     import Testcase
@@ -630,18 +630,56 @@ class ToGraph(Testcase):
 
 		self.assertListEqual(["Prepare", "Test", "Package", "Release"], [self._Name(v) for v in graph.IterateVertices()])
 
+	def _Edges(self, graph: BaseGraph) -> set[tuple[str, str]]:
+		"""
+		Return the edges of a graph or subgraph by the qualified names of their vertices.
+
+		:param graph: The graph or subgraph.
+		:returns:     The pairs of the needed element's and the dependent element's name.
+		"""
+		return {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
+
 	def test_Edges(self) -> None:
+		"""With 'reduce' off, every dependency is an edge."""
+		graph = self._Pipeline().ToGraph(reduce=False)
+
+		edges = {("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}
+		self.assertSetEqual(edges | {("Prepare", "Release")}, self._Edges(graph))
+
+	def test_Reduce(self) -> None:
+		"""By default, a dependency a longer path implies has no edge."""
 		graph = self._Pipeline().ToGraph()
 
-		reduced = {("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}
+		self.assertSetEqual(
+			{("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}, self._Edges(graph)
+		)
 
-		edges = {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
-		self.assertSetEqual(reduced | {("Prepare", "Release")}, edges)
+	def test_Reduce_Subgraph(self) -> None:
+		"""A subgraph is reduced as well, unless 'reduce' is off."""
+		pipeline = Pipeline("Pipeline")
+		package = Workflow("Package", parent=pipeline)
+		build, test, upload = (Job(name, parent=package) for name in ("Build", "Test", "Upload"))
+		test.AddNeed(build)
+		upload.AddNeed(test)
+		upload.AddNeed(build)
 
-		graph.RemoveTransitiveEdges()
+		for reduce, edges in (
+			(True,  {("Package / Build", "Package / Test"), ("Package / Test", "Package / Upload")}),
+			(False, {("Package / Build", "Package / Test"), ("Package / Test", "Package / Upload"),
+			         ("Package / Build", "Package / Upload")}),
+		):
+			with self.subTest(reduce=reduce):
+				graph = pipeline.ToGraph(reduce=reduce)
+				subgraph = next(iter(graph.Subgraphs))
 
-		edges = {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
-		self.assertSetEqual(reduced, edges)
+				self.assertSetEqual(edges, self._Edges(subgraph))
+				self.assertListEqual([test, build], upload.Needs, "The model keeps every dependency.")
+
+	def test_Reduce_Type(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Pipeline("Pipeline").ToGraph(reduce=1)
+
+		self.assertEqual("Parameter 'reduce' is not of type 'bool'.", str(context.exception))
 
 	def test_Subgraphs(self) -> None:
 		pipeline = self._Pipeline()
