@@ -325,6 +325,24 @@ class Hierarchy(Testcase):
 
 		self.assertNotIn("Release", pipeline)
 
+	def test_GetItem(self) -> None:
+		"""An element is looked up by its name, as a reader resolving a definition's names does."""
+		pipeline = Pipeline("Pipeline")
+		workflow = Workflow("Called", parent=pipeline)
+		matrix = Matrix("Test", parent=pipeline)
+		instance = MatrixJob("Test", ["3.14"], parent=matrix)
+		job = Job("Build", parent=pipeline)
+
+		self.assertIs(workflow, pipeline["Called"])
+		self.assertIs(matrix, pipeline["Test"])
+		self.assertIs(job, pipeline["Build"])
+		self.assertIs(instance, matrix["Test (3.14)"])
+
+		with self.assertRaises(KeyError) as context:
+			_ = pipeline["Release"]
+
+		self.assertEqual("\"Group 'Pipeline' contains no element 'Release'.\"", str(context.exception))
+
 	def test_Contents_ByCreation(self) -> None:
 		"""A group iterates what it holds in the order it was created; unknown times keep their order at the end."""
 		pipeline = Pipeline("Pipeline")
