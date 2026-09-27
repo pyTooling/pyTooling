@@ -193,6 +193,9 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes an element of a pipeline.
 
+		The element is added to its parent's elements last, so a class deriving from this one checks its own parameters
+		before it calls this initializer.
+
 		:param name:        Name of the element.
 		:param createdAt:   Optional, time the element was created. Default: ``None``.
 		:param startedAt:   Optional, time the element started running. Default: ``None``.
@@ -208,9 +211,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'outcome' is not of type :class:`Outcome`.
 		:raises TypeError:  If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
 		:raises TypeError:  If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
-
-		The element is added to its parent's elements last, so a class deriving from this one checks its own parameters
-		before it calls this initializer.
 		"""
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
@@ -234,7 +234,7 @@ class Base(metaclass=ExtendedType, slots=True):
 
 		if parent is not None:
 			if self._PARENT_TYPE is None:
-				ex = TypeError(f"A '{self.__class__.__name__}' has no parent.")
+				ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 				raise ex
 			elif not isinstance(parent, self._PARENT_TYPE):
