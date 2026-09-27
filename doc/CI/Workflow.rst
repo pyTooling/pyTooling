@@ -74,7 +74,8 @@ The Tree
 Source Lines
 ************
 
-Every element knows the line it starts at, so a message can say where a finding comes from:
+Every element knows the file it was read from - a workflow's or an action's - and the line it starts at, so a message
+can say where a finding comes from:
 
 .. code-block:: python
 
