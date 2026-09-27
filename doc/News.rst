@@ -293,6 +293,8 @@ Version 10.x (2026)
        arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
        PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
        the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
+     * A Gantt chart written as SVG can be **collapsible**: a click on a called workflow or a job hides or shows the
+       rows below it.
 
    * :mod:`pyTooling.Packaging`
 
