@@ -235,6 +235,32 @@ class Workflows(Project):
 		self.assertIn('id="gha-workflow-Package"', html)
 		self.assertIn('id="jobtmpl-package"', html)
 
+	def test_Target_Parameters(self) -> None:
+		self._workflow("Package")
+		domain = self._build({"Package": PAGE}).env.get_domain("gha")
+
+		for arguments, exceptionType, message in (
+			((None, ), ValueError, "Parameter 'name' is None."),
+			((1, ),    TypeError,  "Parameter 'name' is not of type 'str'.")
+		):
+			with self.subTest(method="ResolveWorkflow", message=message):
+				with self.assertRaises(exceptionType) as context:
+					domain.ResolveWorkflow(*arguments)
+
+				self.assertEqual(message, str(context.exception))
+
+		for arguments, exceptionType, message in (
+			((None, "Package.x", "id"),               ValueError, "Parameter 'objectType' is None."),
+			(("input", 1, "id"),                      TypeError,  "Parameter 'name' is not of type 'str'."),
+			(("input", "Package.x", None),            ValueError, "Parameter 'nodeID' is None."),
+			(("input", "Package.x", "id", "section"), TypeError,  "Parameter 'location' is not of type 'Node'.")
+		):
+			with self.subTest(method="NoteObject", message=message):
+				with self.assertRaises(exceptionType) as context:
+					domain.NoteObject(*arguments)
+
+				self.assertEqual(message, str(context.exception))
+
 	def test_Index(self) -> None:
 		self._workflow("Package")
 		self._build({"Package": PAGE})

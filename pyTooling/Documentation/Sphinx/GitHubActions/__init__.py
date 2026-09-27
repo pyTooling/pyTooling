@@ -77,6 +77,7 @@ from sphinx.util.docutils                      import SphinxDirective
 from sphinx.util.logging                       import getLogger
 from sphinx.util.nodes                         import make_id, make_refnode
 
+from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export, readonly
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -140,46 +141,6 @@ def formatValue(value: ValueT) -> str:
 		return f"'{escaped}'"
 
 	return str(value)
-
-
-def _field(name: str, *body: Node) -> nodes.field:
-	"""
-	Create a field of a field list.
-
-	:param name: Name of the field, as ``Type``.
-	:param body: The nodes of the field's body.
-	:returns:    The field.
-	"""
-	return nodes.field("", nodes.field_name(name, name), nodes.field_body("", *body))
-
-
-def _textField(name: str, text: str) -> nodes.field:
-	"""
-	Create a field of a field list, whose body is a line of text.
-
-	:param name: Name of the field, as ``Required``.
-	:param text: Text of the field's body.
-	:returns:    The field.
-	"""
-	return _field(name, nodes.paragraph(text, text))
-
-
-def _defaultField(value: ValueT) -> nodes.field:
-	"""
-	Create the field *Default Value*.
-
-	A multi-line string becomes a literal block, keeping its line breaks; no default becomes :data:`NO_DEFAULT`.
-
-	:param value: The default value.
-	:returns:     The field.
-	"""
-	if value is None:
-		return _textField("Default Value", NO_DEFAULT)
-	elif isinstance(value, str) and "\n" in value:
-		return _field("Default Value", nodes.literal_block(value, value, language="text"))
-
-	text = formatValue(value)
-	return _field("Default Value", nodes.paragraph("", "", nodes.literal(text, text)))
 
 
 @export
@@ -377,7 +338,7 @@ class ParameterDirective(SphinxDirective):
 		if "Description" not in fieldNames and parameter is not None and parameter.Description:
 			leading = [index + 1 for index, fieldName in enumerate(fieldNames) if fieldName in LEADING_FIELDS]
 			position = max(leading, default=0)
-			fields.insert(position, _textField("Description", parameter.Description.strip()))
+			fields.insert(position, self._TextField("Description", parameter.Description.strip()))
 
 		if len(fields) > 0:
 			section += nodes.field_list("", *fields)
@@ -389,6 +350,46 @@ class ParameterDirective(SphinxDirective):
 		)
 
 		return [index, section]
+
+	@staticmethod
+	def _Field(name: str, *body: Node) -> nodes.field:
+		"""
+		Create a field of a field list.
+
+		:param name: Name of the field, as ``Type``.
+		:param body: The nodes of the field's body.
+		:returns:    The field.
+		"""
+		return nodes.field("", nodes.field_name(name, name), nodes.field_body("", *body))
+
+	@classmethod
+	def _TextField(cls, name: str, text: str) -> nodes.field:
+		"""
+		Create a field of a field list, whose body is a line of text.
+
+		:param name: Name of the field, as ``Required``.
+		:param text: Text of the field's body.
+		:returns:    The field.
+		"""
+		return cls._Field(name, nodes.paragraph(text, text))
+
+	@classmethod
+	def _DefaultField(cls, value: ValueT) -> nodes.field:
+		"""
+		Create the field *Default Value*.
+
+		A multi-line string becomes a literal block, keeping its line breaks; no default becomes :data:`NO_DEFAULT`.
+
+		:param value: The default value.
+		:returns:     The field.
+		"""
+		if value is None:
+			return cls._TextField("Default Value", NO_DEFAULT)
+		elif isinstance(value, str) and "\n" in value:
+			return cls._Field("Default Value", nodes.literal_block(value, value, language="text"))
+
+		text = formatValue(value)
+		return cls._Field("Default Value", nodes.paragraph("", "", nodes.literal(text, text)))
 
 	def _FactFields(self, parameter: Parameter) -> list[nodes.field]:
 		"""
@@ -421,9 +422,9 @@ class InputDirective(ParameterDirective):
 		:returns:         The fields.
 		"""
 		return [
-			_textField("Type", parameter.Type.value),
-			_textField("Required", "yes" if parameter.Required else "no"),
-			_defaultField(parameter.Default)
+			self._TextField("Type", parameter.Type.value),
+			self._TextField("Required", "yes" if parameter.Required else "no"),
+			self._DefaultField(parameter.Default)
 		]
 
 
@@ -449,9 +450,9 @@ class SecretDirective(ParameterDirective):
 		:returns:         The fields.
 		"""
 		return [
-			_textField("Type", "string"),
-			_textField("Required", "yes" if parameter.Required else "no"),
-			_defaultField(None)
+			self._TextField("Type", "string"),
+			self._TextField("Required", "yes" if parameter.Required else "no"),
+			self._DefaultField(None)
 		]
 
 
@@ -617,20 +618,49 @@ class GitHubActionsDomain(Domain):
 		"""
 		Return where a workflow is documented.
 
-		:param name: The workflow's name, its file's stem.
-		:returns:    The document and the anchor of its ``gha:workflow``, or ``None`` if it isn't documented.
+		:param name:        The workflow's name, its file's stem.
+		:returns:           The document and the anchor of its ``gha:workflow``, or ``None`` if it isn't documented.
+		:raises ValueError: If parameter 'name' is ``None``.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		"""
+		if name is None:
+			raise ValueError("Parameter 'name' is None.")
+		elif not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+
 		return self.data["objects"].get(("workflow", name), None)
 
 	def NoteObject(self, objectType: str, name: str, nodeID: str, location: Nullable[Node] = None) -> None:
 		"""
 		Register a documented object.
 
-		:param objectType: The object type, as ``input``.
-		:param name:       The object's name, as ``Parameters.package_name``.
-		:param nodeID:     The anchor of the object's node.
-		:param location:   Optional, the node a duplicate is reported at. Default: ``None``.
+		:param objectType:  The object type, as ``input``.
+		:param name:        The object's name, as ``Parameters.package_name``.
+		:param nodeID:      The anchor of the object's node.
+		:param location:    Optional, the node a duplicate is reported at. Default: ``None``.
+		:raises ValueError: If parameter 'objectType' is ``None``.
+		:raises TypeError:  If parameter 'objectType' is not of type :class:`str`.
+		:raises ValueError: If parameter 'name' is ``None``.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
+		:raises ValueError: If parameter 'nodeID' is ``None``.
+		:raises TypeError:  If parameter 'nodeID' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'location' is not of type :class:`~docutils.nodes.Node`.
 		"""
+		for parameterName, value in (("objectType", objectType), ("name", name), ("nodeID", nodeID)):
+			if value is None:
+				raise ValueError(f"Parameter '{parameterName}' is None.")
+			elif not isinstance(value, str):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
+
+		if location is not None and not isinstance(location, Node):
+			ex = TypeError("Parameter 'location' is not of type 'Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(location)}'.")
+			raise ex
+
 		objects = self.data["objects"]
 		if (known := objects.get((objectType, name), None)) is not None:
 			_logger.warning(
