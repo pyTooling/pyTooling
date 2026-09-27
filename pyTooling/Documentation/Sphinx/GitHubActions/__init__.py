@@ -76,6 +76,8 @@ The workflow files are read with ``ruamel.yaml`` when a directive runs, not when
 
    :mod:`pyTooling.CI.GitHub.WorkflowFile`
       |rarr| The model of a workflow file the domain reads.
+   :mod:`pyTooling.Documentation.Sphinx.GitHubActions.Graph`
+      |rarr| The ``gha:pipeline-graph`` directive, drawing a workflow's jobs and their ``needs``.
 """
 from __future__                                import annotations
 

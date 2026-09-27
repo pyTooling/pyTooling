@@ -1,0 +1,21 @@
+name: Test
+
+on:
+  workflow_call:
+
+jobs:
+  UnitTesting:
+    runs-on: ${{ matrix.system }}
+    strategy:
+      matrix:
+        system: [ubuntu-24.04, windows-2025]
+        python: ['3.13', '3.14']
+    steps:
+      - run: pytest tests/unit
+
+  Report:
+    runs-on: ubuntu-24.04
+    needs:
+      - UnitTesting
+    steps:
+      - run: echo "Reporting ..."

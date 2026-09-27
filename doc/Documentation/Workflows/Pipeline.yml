@@ -1,0 +1,31 @@
+name: Pipeline
+
+on:
+  push:
+
+jobs:
+  Prepare:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+  Package:
+    uses: pyTooling/Actions/.github/workflows/Package.yml@r8
+    needs:
+      - Prepare
+    with:
+      package_name: myPackage
+
+  Test:
+    uses: ./.github/workflows/Test.yml
+    needs:
+      - Prepare
+
+  Publish:
+    runs-on: ubuntu-24.04
+    needs:
+      - Package
+      - Test
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - run: echo "Publishing ..."
