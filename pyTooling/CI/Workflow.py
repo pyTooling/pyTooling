@@ -54,7 +54,8 @@ name the place a finding comes from, as ``CompletePipeline.yml:552``.
 
 The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow *run* as the REST API reports it.
 :meth:`Workflow.ToPipeline` builds the pipeline a workflow defines as a :mod:`pyTooling.CI.Pipeline` model, whose
-elements link back to the jobs they were built from.
+elements link back to the jobs they were built from, and :meth:`Workflow.ApplyNeeds` gives a run the dependencies
+its workflow file declares.
 
 :raises MissingDependencyError: If the 'yaml' extra isn't installed.
 """
@@ -1785,6 +1786,87 @@ class Workflow(Base):
 		addElements(self, pipeline, 0, (self, ))
 
 		return pipeline
+
+	def ApplyNeeds(self, pipeline: CIWorkflow, resolver: Nullable[WorkflowResolver] = None) -> list[Job]:
+		"""
+		Give a run of this workflow the dependencies its jobs declare with ``needs``.
+
+		A run read from a service's API, as :class:`pyTooling.CI.GitHub.Pipeline`, knows no ``needs``. Each job of this
+		workflow is looked up in the run by its display name, or else by its key, and gets as
+		:attr:`~pyTooling.CI.Pipeline.DependencyMixin.Needs` the elements the jobs it needs were found as. A job calling
+		a reusable workflow is followed into the called workflow of the run - into each instance, if it is a matrix -,
+		as far as the resolver reads the called file. A dependency the run's element has already is kept once.
+
+		A job whose display name is an expression, as ``${{ matrix.os }} Tests``, can't be looked up, and is skipped. A
+		job with a condition may have been skipped in the run, so it isn't reported when it is missing.
+
+		:param pipeline:       The run, or a called workflow of a run.
+		:param resolver:       Optional, the resolver reading the workflows the jobs call. Without it, called workflows
+		                       are not followed. Default: ``None``.
+		:returns:              The jobs of this workflow, and of the workflows followed, missing in the run, in the order
+		                       they were looked up.
+		:raises ValueError:    If parameter 'pipeline' is ``None``.
+		:raises TypeError:     If parameter 'pipeline' is not of type :class:`pyTooling.CI.Pipeline.Workflow`.
+		:raises TypeError:     If parameter 'resolver' is not of type :class:`WorkflowResolver`.
+		:raises WorkflowError: If a workflow to follow doesn't exist, or is not a well-formed workflow.
+		"""
+		if pipeline is None:
+			raise ValueError("Parameter 'pipeline' is None.")
+		elif not isinstance(pipeline, CIWorkflow):
+			ex = TypeError("Parameter 'pipeline' is not of type 'Workflow'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(pipeline)}'.")
+			raise ex
+
+		if resolver is not None and not isinstance(resolver, WorkflowResolver):
+			ex = TypeError("Parameter 'resolver' is not of type 'WorkflowResolver'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(resolver)}'.")
+			raise ex
+
+		missing: list[Job] = []
+
+		def apply(workflow: Workflow, group: CIWorkflow) -> None:
+			"""
+			Nested function for recursion.
+
+			:param workflow: The workflow whose jobs are looked up.
+			:param group:    The group of the run the jobs are looked up in.
+			"""
+			elements: dict[str, DependencyMixin] = {}
+			for job in workflow._jobs.values():
+				if job._displayName is None:
+					names = (job._name, )
+				elif "${{" in job._displayName:
+					continue
+				else:
+					names = (job._displayName, job._name)
+
+				if (name := next((name for name in names if name in group), None)) is None:
+					if job._condition is None:
+						missing.append(job)
+					continue
+
+				element = group[name]
+				elements[job._name] = element
+				if job._uses is None or resolver is None or (called := resolver.Resolve(job._uses)) is None:
+					continue
+				elif isinstance(element, CIWorkflow):
+					apply(called, element)
+				elif isinstance(element, CIMatrix):
+					for instance in element.Instances:
+						if isinstance(instance, CIWorkflow):
+							apply(called, instance)
+
+			for job in workflow._jobs.values():
+				if (element := elements.get(job._name, None)) is None:
+					continue
+
+				for need in job.Needs:
+					if (needed := elements.get(need._name, None)) is not None and needed not in element._needs:
+						element.AddNeed(needed)
+
+		apply(self, pipeline)
+
+		return missing
 
 	def IterateActions(self) -> Iterator[UsesReference]:
 		"""
