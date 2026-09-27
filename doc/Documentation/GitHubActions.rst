@@ -8,8 +8,8 @@ outputs and secrets are the interface a caller uses. What the workflow file stat
 required, its default - is read from the file with :mod:`pyTooling.CI.Workflow`, so a page doesn't copy it and can't
 drift from it. What the file can't say stays hand-written, as the content of a directive.
 
-The domain is part of the :ref:`extension <DOC/Sphinx>`, and reads the files with ``ruamel.yaml``, so a project using
-it needs the ``yaml`` extra as well: ``pyTooling[sphinx,yaml]``.
+The domain is part of the :ref:`extension <DOC/Sphinx>`, and reads the files with ``ruamel.yaml``, which the
+``sphinx`` extra installs: ``pyTooling[sphinx]``.
 
 .. contents:: Contents of this page
    :local:
@@ -158,7 +158,7 @@ Roles
 Labels of Existing Pages
 ************************
 
-Beside its target, each directive registers the ``:ref:`` label a page would have declared by hand, so existing
+Besides its target, each directive registers the ``:ref:`` label a page would have declared by hand, so existing
 references keep working when a page is converted - :confval:`gha_label_prefix` is their root:
 
 .. code-block:: text
@@ -169,7 +169,7 @@ references keep working when a page is converted - :confval:`gha_label_prefix` i
    JOBTMPL/PublishOnPyPI/Secret/PYPI_TOKEN     .. gha:secret:: PYPI_TOKEN
 
 A parameter's section carries the anchor of its label, and the anchor docutils derives from its title, so a link into
-today's page lands on the same entry. A label still declared by hand next to the directive is a duplicate.
+the hand-written page lands on the same entry. A label still declared by hand next to the directive is a duplicate.
 
 
 .. _DOC/Sphinx/GHA/Warnings:
