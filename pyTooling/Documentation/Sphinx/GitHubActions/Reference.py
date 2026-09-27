@@ -74,7 +74,6 @@ from docutils                                     import nodes
 from docutils.parsers.rst                         import directives
 from sphinx                                       import addnodes
 from sphinx.application                           import Sphinx
-from sphinx.config                                import Config
 from sphinx.directives.code                       import container_wrapper
 from sphinx.transforms                            import SphinxTransform
 from sphinx.util.logging                          import getLogger
@@ -106,58 +105,46 @@ MAX_DEFAULT_LENGTH = 120
 _logger = getLogger(__name__)
 
 
-def _indentation(line: str) -> int:
-	"""
-	Return the indentation of a line of a YAML file.
-
-	:param line: The line.
-	:returns:    The number of spaces the line starts with.
-	"""
-	return len(line) - len(line.lstrip(" "))
-
-
-def _reference(objectType: str, target: str, text: str) -> addnodes.pending_xref:
-	"""
-	Create a reference to an object of the domain, shown as literal text if the object isn't documented.
-
-	:param objectType: The object type, as ``input``.
-	:param target:     The object's name, as ``Package.package_name``.
-	:param text:       The text of the reference.
-	:returns:          The pending reference.
-	"""
-	return addnodes.pending_xref(
-		"", nodes.literal(text, text), refdomain="gha", reftype=objectType, reftarget=target, refexplicit=True,
-		refwarn=False
-	)
-
-
-def _gitHubURL(config: Config, fileName: str, first: Nullable[int] = None, last: Nullable[int] = None) -> Nullable[str]:
-	"""
-	Return the URL of a workflow file of the documented repository on GitHub, at the documented ref.
-
-	:param config:   The Sphinx configuration, with ``gha_repository`` and ``gha_ref``.
-	:param fileName: The workflow file's name, as ``Package.yml``.
-	:param first:    Optional, the first line to mark. Default: ``None``.
-	:param last:     Optional, the last line to mark. Default: ``None``.
-	:returns:        The URL, or ``None`` if ``gha_repository`` or ``gha_ref`` isn't configured.
-	"""
-	if config.gha_repository is None or config.gha_ref is None:
-		return None
-
-	url = f"https://github.com/{config.gha_repository}/blob/{config.gha_ref}/.github/workflows/{fileName}"
-	if first is None:
-		return url
-	elif last is None or last == first:
-		return f"{url}#L{first}"
-
-	return f"{url}#L{first}-L{last}"
-
-
 @export
 class WorkflowReferenceDirective(BaseDirective):
 	"""
 	Base-class of the directives summarizing the current workflow, as set by the preceding ``gha:workflow``.
 	"""
+
+	@staticmethod
+	def _Reference(objectType: str, target: str, text: str) -> addnodes.pending_xref:
+		"""
+		Create a reference to an object of the domain, shown as literal text if the object isn't documented.
+
+		:param objectType: The object type, as ``input``.
+		:param target:     The object's name, as ``Package.package_name``.
+		:param text:       The text of the reference.
+		:returns:          The pending reference.
+		"""
+		return addnodes.pending_xref(
+			"", nodes.literal(text, text), refdomain="gha", reftype=objectType, reftarget=target, refexplicit=True,
+			refwarn=False
+		)
+
+	def _GitHubURL(self, fileName: str, first: Nullable[int] = None, last: Nullable[int] = None) -> Nullable[str]:
+		"""
+		Return the URL of a workflow file of the documented repository on GitHub, at the documented ref.
+
+		:param fileName: The workflow file's name, as ``Package.yml``.
+		:param first:    Optional, the first line to mark. Default: ``None``.
+		:param last:     Optional, the last line to mark. Default: ``None``.
+		:returns:        The URL, or ``None`` if ``gha_repository`` or ``gha_ref`` isn't configured.
+		"""
+		if self.config.gha_repository is None or self.config.gha_ref is None:
+			return None
+
+		url = f"https://github.com/{self.config.gha_repository}/blob/{self.config.gha_ref}/.github/workflows/{fileName}"
+		if first is None:
+			return url
+		elif last is None or last == first:
+			return f"{url}#L{first}"
+
+		return f"{url}#L{first}-L{last}"
 
 	def _CurrentWorkflow(self) -> Nullable[Workflow]:
 		"""
@@ -186,10 +173,10 @@ class ParameterTable(WorkflowReferenceDirective):
 	   .. gha:parameter-table::
 	      :kinds: inputs secrets
 
-	A table per kind, in the order written - by default the order of :data:`KINDS` -: the parameters in file order, each
-	name linked to its entry. An
-	input's or a secret's row states whether it is required, its type and its default - a long or multi-line default
-	is shortened, the entry shows it in full. An output's row states its description from the workflow file.
+	A table per kind, in the order ``:kinds:`` names them, by default the order of :data:`KINDS`. A table lists the
+	parameters in file order, each name linked to its entry. An input's or a secret's row states whether it is
+	required, its type and its default - a long or multi-line default is shortened, the entry shows it in full. An
+	output's row states its description from the workflow file.
 
 	Without ``:kinds:``, a table is shown for every kind the workflow has parameters of. A kind named explicitly, of
 	which the workflow has none, is a table with a single row saying so.
@@ -241,7 +228,7 @@ class ParameterTable(WorkflowReferenceDirective):
 
 			for name, parameter in parameters.items():
 				row = nodes.row()
-				row += nodes.entry("", nodes.paragraph("", "", _reference(kind[:-1], f"{workflowName}.{name}", name)))
+				row += nodes.entry("", nodes.paragraph("", "", self._Reference(kind[:-1], f"{workflowName}.{name}", name)))
 				if kind == "outputs":
 					description = "" if parameter.Description is None else parameter.Description.strip()
 					row += nodes.entry("", nodes.paragraph(description, description))
@@ -345,18 +332,18 @@ class Interface(WorkflowReferenceDirective):
 
 		fieldList = nodes.field_list(classes=["gha-interface"])
 		fieldList += self._Field("Required Inputs", [
-			[_reference("input", f"{workflowName}.{name}", name)]
+			[self._Reference("input", f"{workflowName}.{name}", name)]
 			for name, parameter in workflow.Inputs.items() if parameter.Required
 		])
 		secrets = []
 		for name, secret in workflow.Secrets.items():
-			secrets.append([_reference("secret", f"{workflowName}.{name}", name)])
+			secrets.append([self._Reference("secret", f"{workflowName}.{name}", name)])
 			if secret.Required:
 				secrets[-1].append(nodes.Text(" (required)"))
 
 		fieldList += self._Field("Secrets", secrets)
 		fieldList += self._Field("Outputs", [
-			[_reference("output", f"{workflowName}.{name}", name)] for name in workflow.Outputs
+			[self._Reference("output", f"{workflowName}.{name}", name)] for name in workflow.Outputs
 		])
 
 		try:
@@ -378,7 +365,7 @@ class Interface(WorkflowReferenceDirective):
 
 			location = permission.Location
 			item.append(nodes.Text(" ("))
-			if (url := _gitHubURL(self.config, permission.Workflow.Path.name, permission.Line)) is None:
+			if (url := self._GitHubURL(permission.Workflow.Path.name, permission.Line)) is None:
 				item.append(nodes.Text(location))
 			else:
 				item.append(nodes.reference(location, location, refuri=url))
@@ -512,7 +499,7 @@ class Dependencies(WorkflowReferenceDirective):
 		repositories = self.env.get_domain("gha").Resolver.Repositories
 		literal = nodes.literal(text, text)
 		if uses.IsWorkflow and (uses.IsLocal or (uses.Repository is not None and uses.Repository.lower() in repositories)):
-			return self._Item(nodes.paragraph("", "", _reference("workflow", uses.Stem, text)), keys)
+			return self._Item(nodes.paragraph("", "", self._Reference("workflow", uses.Stem, text)), keys)
 		elif uses.IsLocal and self.config.gha_repository is not None and self.config.gha_ref is not None:
 			url = f"https://github.com/{self.config.gha_repository}/tree/{self.config.gha_ref}/{uses.Path}"
 		elif uses.Repository is None:
@@ -721,8 +708,8 @@ class YAMLExcerpt(WorkflowReferenceDirective):
 		else:
 			first, last = 1, len(lines)
 
-		indentation = _indentation(lines[first - 1])
-		excerpt = [line[min(indentation, _indentation(line)):] for line in lines[first - 1:last]]
+		indentation = self._Indentation(lines[first - 1])
+		excerpt = [line[min(indentation, self._Indentation(line)):] for line in lines[first - 1:last]]
 
 		text = "\n".join(excerpt)
 		literal = nodes.literal_block(text, text, language="yaml", linenos=True)
@@ -733,10 +720,10 @@ class YAMLExcerpt(WorkflowReferenceDirective):
 			fileName = workflow.Path.name
 			if (first, last) == (1, len(lines)):
 				caption = fileName
-				url = _gitHubURL(self.config, fileName)
+				url = self._GitHubURL(fileName)
 			else:
 				caption = f"{fileName}, lines {first}-{last}"
-				url = _gitHubURL(self.config, fileName, first, last)
+				url = self._GitHubURL(fileName, first, last)
 
 			if url is not None:
 				caption = f"`{caption} <{url}>`__"
@@ -745,6 +732,16 @@ class YAMLExcerpt(WorkflowReferenceDirective):
 		self.add_name(container)
 
 		return [container]
+
+	@staticmethod
+	def _Indentation(line: str) -> int:
+		"""
+		Return the indentation of a line of a YAML file.
+
+		:param line: The line.
+		:returns:    The number of spaces the line starts with.
+		"""
+		return len(line) - len(line.lstrip(" "))
 
 	@staticmethod
 	def _IsBlank(line: str) -> bool:
@@ -766,10 +763,10 @@ class YAMLExcerpt(WorkflowReferenceDirective):
 		:param line:  The nested line, starting at 1.
 		:returns:     The nearest line above it that is indented less, starting at 1, or ``1``.
 		"""
-		indentation = _indentation(lines[line - 1])
+		indentation = cls._Indentation(lines[line - 1])
 		for index in range(line - 2, -1, -1):
 			text = lines[index]
-			if not cls._IsBlank(text) and _indentation(text) < indentation:
+			if not cls._IsBlank(text) and cls._Indentation(text) < indentation:
 				return index + 1
 
 		return 1
@@ -786,13 +783,13 @@ class YAMLExcerpt(WorkflowReferenceDirective):
 		:param line:  The key's line, starting at 1.
 		:returns:     The first and the last line of the block, starting at 1.
 		"""
-		indentation = _indentation(lines[line - 1])
+		indentation = cls._Indentation(lines[line - 1])
 		last = line
 		for index in range(line, len(lines)):
 			text = lines[index]
 			if text.strip() == "":
 				continue
-			elif _indentation(text) > indentation:
+			elif cls._Indentation(text) > indentation:
 				last = index + 1
 			elif not cls._IsBlank(text):
 				break

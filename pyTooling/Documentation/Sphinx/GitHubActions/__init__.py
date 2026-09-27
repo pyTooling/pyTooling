@@ -316,7 +316,7 @@ class ParameterDirective(BaseDirective):
 			if fieldName in self.FACT_FIELDS:
 				_logger.warning(
 					f"{self.directiveName} '{workflowName}.{name}': field '{fieldName}' is taken from the workflow file; "
-					f"remove it.",
+					"remove it.",
 					location=field, type=WARNING_TYPE, subtype="drift"
 				)
 				if parameter is not None:
