@@ -180,7 +180,7 @@ GitHub Actions
    * - ``if:``
      - :attr:`~pyTooling.CI.Pipeline.Base.Condition`
    * - ``conclusion``
-     - :attr:`~pyTooling.CI.Pipeline.Base.Outcome` (e.g. ``timed_out`` |rarr| ``TimedOut``, ``startup_failure``
+     - :attr:`~pyTooling.CI.Pipeline.Base.Outcome` (e.g. ``timed_out`` |rarr| ``Timeout``, ``startup_failure``
        |rarr| ``Error``)
 
 .. _CI/Pipeline/GitLab:
@@ -221,5 +221,5 @@ GitLab CI
    * - ``rules:if``
      - :attr:`~pyTooling.CI.Pipeline.Base.Condition`
    * - Job ``status``
-     - :attr:`~pyTooling.CI.Pipeline.Base.Outcome` (e.g. ``canceled`` |rarr| ``Cancelled``); ``manual`` and
+     - :attr:`~pyTooling.CI.Pipeline.Base.Outcome` (e.g. ``canceled`` |rarr| ``Cancellation``); ``manual`` and
        ``created`` haven't ended

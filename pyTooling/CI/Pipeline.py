@@ -87,15 +87,17 @@ class Outcome(StringEnum):
 	"""
 	How an element of a pipeline ended, in terms every CI service has.
 
-	A service's model maps its own values onto these, e.g. GitHub's ``startup_failure`` onto :attr:`Error`.
+	The members and values are those of OpenTelemetry's semantic conventions for CI/CD
+	(:class:`pyTooling.Tracing.CI.Result`). A service's model maps its own values onto these, e.g. GitHub's
+	``startup_failure`` onto :attr:`Error`.
 	"""
 
-	Success =   "success"    #: Succeeded.
-	Failure =   "failure"    #: Failed.
-	TimedOut =  "timed_out"  #: Stopped by a timeout.
-	Cancelled = "cancelled"  #: Cancelled before it finished.
-	Skipped =   "skipped"    #: Not run, because a condition excluded it.
-	Error =     "error"      #: Ended for another reason, e.g. the service couldn't start it.
+	Success =      "success"       #: It succeeded.
+	Failure =      "failure"       #: It failed.
+	Timeout =      "timeout"       #: It was stopped by a timeout.
+	Skip =         "skip"          #: It was skipped, because a condition excluded it.
+	Cancellation = "cancellation"  #: It was cancelled before it finished.
+	Error =        "error"         #: It ended for another reason, e.g. the service couldn't start it.
 
 	@classmethod
 	def Combine(cls, outcomes: Iterable[Nullable[Outcome]]) -> Nullable[Outcome]:
@@ -106,11 +108,11 @@ class Outcome(StringEnum):
 		skipped is skipped; a skipped element beside a successful one doesn't change the success. The order is:
 
 		#. :attr:`Failure`
-		#. :attr:`TimedOut`
+		#. :attr:`Timeout`
 		#. :attr:`Error`
-		#. :attr:`Cancelled`
+		#. :attr:`Cancellation`
 		#. :attr:`Success`
-		#. :attr:`Skipped`
+		#. :attr:`Skip`
 
 		:param outcomes: The elements' outcomes.
 		:returns:        The combined outcome, or ``None`` if there is none, or one of them is ``None``.
@@ -122,7 +124,7 @@ class Outcome(StringEnum):
 
 			found.add(outcome)
 
-		for outcome in (cls.Failure, cls.TimedOut, cls.Error, cls.Cancelled, cls.Success, cls.Skipped):
+		for outcome in (cls.Failure, cls.Timeout, cls.Error, cls.Cancellation, cls.Success, cls.Skip):
 			if outcome in found:
 				return outcome
 
