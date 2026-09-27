@@ -172,17 +172,6 @@ CONFIGURATION = dedent("""\
 	gha_repository = "Owner/Repo"
 	""")
 
-#: A configuration without the domain, registering the directive under a plain name.
-CONFIGURATION_WITHOUT_DOMAIN = dedent("""\
-	from pyTooling.Documentation.Sphinx.GitHubActions.Graph import PipelineGraph, resolveLinks
-
-	def setup(app):
-	    app.add_directive("pipeline-graph", PipelineGraph)
-	    app.connect("doctree-resolved", resolveLinks)
-
-	extensions = ["sphinx.ext.graphviz"]
-	""")
-
 #: A configuration loading pyTooling's extension, which registers the real 'gha' domain and the directive.
 CONFIGURATION_EXTENSION = dedent("""\
 	extensions = ["pyTooling.Documentation.Sphinx"]
@@ -192,12 +181,12 @@ CONFIGURATION_EXTENSION = dedent("""\
 
 
 def build(
-	directory: str,
-	options: str = "",
+	directory:     str,
+	options:       str = "",
 	configuration: str = CONFIGURATION,
-	directive: str = "gha:pipeline-graph",
-	path: str = "../.github/workflows/Pipeline.yml",
-	templates: str = "Templates\n#########\n"
+	path:          str = "../.github/workflows/Pipeline.yml",
+	templates:     str = "Templates\n#########\n",
+	builder:       str = "html"
 ) -> tuple[list[str], list[str]]:
 	"""
 	Build a project drawing :data:`PIPELINE`, and return the DOT of its graphs and the build's warnings.
@@ -205,9 +194,9 @@ def build(
 	:param directory:     Directory to create the project in.
 	:param options:       Optional, lines of options of the directive, unindented. Default: none.
 	:param configuration: Optional, content of :file:`conf.py`. Default: :data:`CONFIGURATION`.
-	:param directive:     Optional, name of the directive. Default: ``gha:pipeline-graph``.
 	:param path:          Optional, argument of the directive. Default: the path of :data:`PIPELINE`.
 	:param templates:     Optional, content of the page :file:`templates.rst`. Default: a title only.
+	:param builder:       Optional, name of the builder. Default: ``html``.
 	:returns:             The DOT of every pipeline graph after its links are resolved, and the warnings without
 	                      colours, one per line.
 	"""
@@ -224,7 +213,8 @@ def build(
 	(source / "templates.rst").write_text(templates, encoding="utf-8")
 	indentedOptions = "".join(f"   {line}\n" for line in dedent(options).splitlines())
 	(source / "index.rst").write_text(
-		f"Pipeline\n########\n\n.. toctree::\n   :hidden:\n\n   templates\n\n.. {directive}:: {path}\n{indentedOptions}",
+		f"Pipeline\n########\n\n.. toctree::\n   :hidden:\n\n   templates\n\n"
+		f".. gha:pipeline-graph:: {path}\n{indentedOptions}",
 		encoding="utf-8"
 	)
 
@@ -243,7 +233,7 @@ def build(
 	warnings = StringIO()
 	with docutils_namespace():
 		application = Sphinx(
-			str(source), str(source), str(root / "build"), str(root / "doctrees"), "html",
+			str(source), str(source), str(root / "build"), str(root / "doctrees"), builder,
 			status=None, warning=warnings, freshenv=True
 		)
 		application.connect("doctree-resolved", capture, priority=900)
@@ -286,14 +276,12 @@ class Nodes(Testcase):
 		)
 
 	def test_Steps(self) -> None:
-		"""A job running steps is a grey box with square corners; a matrix doubles the border and names its dimensions."""
+		"""A job running steps - here an instance of a matrix - is a grey box with square corners."""
 		with TemporaryDirectory() as directory:
 			(code, ), _ = build(directory)
 
 		self.assertIn(
-			'"Build" [label=<Build<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">matrix: python, system</FONT>>, '
-			'style="filled", fillcolor="#f2f2f2", peripheries="2"];',
-			code
+			'\t\t"Build/Build (3.13, ubuntu)" [label=<Build (3.13, ubuntu)>, style="filled", fillcolor="#f2f2f2"];', code
 		)
 
 	def test_Conditional(self) -> None:
@@ -337,8 +325,8 @@ class Edges(Testcase):
 		with TemporaryDirectory() as directory:
 			(code, ), _ = build(directory)
 
-		self.assertIn('\t"Prepare" -> "Build";', code)
-		self.assertIn('\t"Build" -> "Test";', code)
+		self.assertIn('\t"Prepare" -> "Build/Build (3.13, ubuntu)" [lhead="cluster_Build"];', code)
+		self.assertIn('\t"Build/Build (3.14, windows)" -> "Test" [ltail="cluster_Build"];', code)
 		self.assertIn('\t"Test" -> "Publish";', code)
 		self.assertNotIn('"Prepare" -> "Test"', code)
 
@@ -372,11 +360,11 @@ class Clusters(Testcase):
 	"""':depth:' expands the templates of the documented repository into clusters of their jobs."""
 
 	def test_Depth0(self) -> None:
-		"""By default, nothing is expanded."""
+		"""By default, no template is expanded; only the matrix is a cluster."""
 		with TemporaryDirectory() as directory:
 			(code, ), _ = build(directory)
 
-		self.assertNotIn("subgraph", code)
+		self.assertEqual(['\tsubgraph "cluster_Build" {'], [line for line in code.splitlines() if "subgraph" in line])
 
 	def test_Depth1(self) -> None:
 		"""A template is a cluster of its jobs; the local reference is expanded, the foreign one is not."""
@@ -396,24 +384,56 @@ class Clusters(Testcase):
 		with TemporaryDirectory() as directory:
 			(code, ), _ = build(directory, ":depth: 1")
 
-		self.assertIn('\t"Prepare/Prepare" -> "Build" [ltail="cluster_Prepare"];', code)
-		self.assertIn('\t"Build" -> "Test/Unit" [lhead="cluster_Test"];', code)
+		self.assertIn(
+			'\t"Prepare/Prepare" -> "Build/Build (3.13, ubuntu)" [ltail="cluster_Prepare", lhead="cluster_Build"];', code
+		)
+		self.assertIn('\t"Build/Build (3.14, windows)" -> "Test/Unit" [ltail="cluster_Build", lhead="cluster_Test"];', code)
 		self.assertIn('\t"Test/Report" -> "Publish" [ltail="cluster_Test"];', code)
 
 	def test_Matrix(self) -> None:
-		"""A matrix is one node, although the pipeline holds an instance per combination."""
+		"""A matrix is a cluster of its instances, labelled with its dimensions; the instances start side by side."""
 		with TemporaryDirectory() as directory:
-			(code, ), _ = build(directory, ":depth: 1")
+			(code, ), _ = build(directory)
 
+		lines = code.splitlines()
+		start = lines.index('\tsubgraph "cluster_Build" {')
+		self.assertEqual(
+			'\t\tlabel=<Build<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">matrix: python, system</FONT>>;', lines[start + 1]
+		)
+		instances = [line.split('"')[1] for line in lines[start + 1:] if line.startswith('\t\t"Build/')]
+		self.assertEqual(
+			["Build/Build (3.13, ubuntu)", "Build/Build (3.13, windows)", "Build/Build (3.14, ubuntu)",
+			 "Build/Build (3.14, windows)"],
+			instances
+		)
+		self.assertIn(f"\t\t{{rank=same; {'; '.join(f'{chr(34)}{name}{chr(34)}' for name in instances)};}}", code)
+		self.assertNotIn("peripheries", code)
+
+	def test_Matrix_Dynamic(self) -> None:
+		"""A matrix whose combinations are known at run time only is one node with a double border."""
+		with TemporaryDirectory() as directory:
+			(Path(directory) / "Dynamic.yml").write_text(dedent("""\
+				on: push
+				jobs:
+				  Build:
+				    runs-on: ubuntu-24.04
+				    strategy:
+				      matrix:
+				        include: ${{ fromJson(needs.Prepare.outputs.jobs) }}
+				    steps:
+				      - run: make
+			"""), encoding="utf-8")
+			code = str(PipelineDotGraph(Workflow.FromFile(Path(directory) / "Dynamic.yml")))
+
+		self.assertNotIn("subgraph", code)
 		self.assertIn(
-			'\t"Build" [label=<Build<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">matrix: python, system</FONT>>, '
-			'style="filled", fillcolor="#f2f2f2", peripheries="2"];',
+			'\t"Build" [label=<Build<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">matrix</FONT>>, style="filled", '
+			'fillcolor="#f2f2f2", peripheries="2"];',
 			code
 		)
-		self.assertNotIn("cluster_Build", code)
 
 	def test_Matrix_Calls(self) -> None:
-		"""A matrix calling a template is one node too; its instances aren't expanded."""
+		"""A matrix calling a template is a cluster of its instances, each drawn as a job calling the template."""
 		with TemporaryDirectory() as directory:
 			(Path(directory) / "Test.yml").write_text(TEST, encoding="utf-8")
 			(Path(directory) / "Matrix.yml").write_text(dedent("""\
@@ -425,10 +445,20 @@ class Clusters(Testcase):
 				      matrix:
 				        python: ['3.13', '3.14']
 			"""), encoding="utf-8")
-			code = str(PipelineDotGraph(Workflow.FromFile(Path(directory) / "Matrix.yml"), depth=1))
+			workflow = Workflow.FromFile(Path(directory) / "Matrix.yml")
+			code0 = str(PipelineDotGraph(workflow, depth=0))
+			code1 = str(PipelineDotGraph(workflow, depth=1))
 
-		self.assertNotIn("subgraph", code)
-		self.assertIn('style="rounded,filled", peripheries="2", tooltip="uses: ./.github/workflows/Test.yml"', code)
+		self.assertEqual(['\tsubgraph "cluster_Tests" {'], [line for line in code0.splitlines() if "subgraph" in line])
+		self.assertIn(
+			'\t\t"Tests/Tests (3.13)" [label=<Tests (3.13)<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">Test.yml</FONT>>, '
+			'style="rounded,filled", tooltip="uses: ./.github/workflows/Test.yml" /*gha-link:Test*/];',
+			code0
+		)
+
+		self.assertIn('\t\tsubgraph "cluster_Tests/Tests (3.13)" {', code1)
+		self.assertIn('\t\tsubgraph "cluster_Tests/Tests (3.14)" {', code1)
+		self.assertIn('\t\t\t"Tests/Tests (3.14)/Unit" -> "Tests/Tests (3.14)/Report";', code1)
 
 	def test_Drawn(self) -> None:
 		"""The jobs and workflows drawn are listed once each."""
@@ -489,10 +519,10 @@ class Links(Testcase):
 
 		self.assertNotIn("URL=", code)
 
-	def test_WithoutDomain(self) -> None:
-		"""Without the 'gha' domain, nothing is linked, and nothing of the marker remains."""
+	def test_NotHTML(self) -> None:
+		"""In a format other than HTML, nothing is linked, and nothing of the marker remains."""
 		with TemporaryDirectory() as directory:
-			(code, ), warnings = build(directory, configuration=CONFIGURATION_WITHOUT_DOMAIN, directive="pipeline-graph")
+			(code, ), warnings = build(directory, builder="text")
 
 		self.assertNotIn("URL=", code)
 		self.assertNotIn("gha-link", code)

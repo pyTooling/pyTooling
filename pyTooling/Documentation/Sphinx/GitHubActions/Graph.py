@@ -62,7 +62,6 @@ from typing                                    import TYPE_CHECKING, Any, Option
 from docutils                                  import nodes
 from docutils.parsers.rst                      import directives
 from sphinx.application                        import Sphinx
-from sphinx.errors                             import ExtensionError
 from sphinx.ext.graphviz                       import align_spec, figure_wrapper, graphviz
 from sphinx.util.logging                       import getLogger
 
@@ -74,7 +73,7 @@ from pyTooling.MetaClasses                     import ExtendedType
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip, stripAndNormalize
 
 if TYPE_CHECKING:  # pragma: no cover
-	from pyTooling.CI.Workflow                   import Job, UsesReference, Workflow, WorkflowResolver
+	from pyTooling.CI.Workflow                   import Job, Workflow, WorkflowResolver
 
 
 __all__ = ["GRAPH_ATTRIBUTES", "CSS_CLASS", "LINK_MARKER"]
@@ -119,12 +118,16 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 	  repository and ref - it is never expanded;
 	* a job running steps is a grey box with square corners;
 	* a job with an ``if`` condition is dashed, and its tooltip is the condition;
-	* a job with a ``strategy.matrix`` has a double border, and its label names the matrix' dimensions, if they are
-	  known before the workflow runs. A matrix is one node, whatever instances it holds.
+	* a job with a ``strategy.matrix`` is a cluster of its instances, and its label names the matrix' dimensions: an
+	  instance of a job running steps is a job's node, an instance calling a reusable workflow is drawn as a job calling
+	  it. A dynamic matrix - its combinations known only at run time - is one node with a double border.
 
 	A job calling a reusable workflow that :class:`~pyTooling.CI.Workflow.WorkflowResolver` finds locally is drawn as
-	a cluster of that workflow's jobs instead, until the depth is used up. An edge to or from such a job ends at the
-	cluster's border.
+	a cluster of that workflow's jobs instead, until the depth is used up - an instance of a matrix as well. An edge to
+	or from a job drawn as a cluster ends at the cluster's border.
+
+	The graph's edges read *needs*; an arrow is drawn the other way round, from the needed job to the job needing it,
+	in the direction the pipeline runs.
 
 	The graph is drawn in file order, so the same workflow is always drawn as the same DOT.
 	"""
@@ -137,12 +140,12 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 
 	def __init__(
 		self,
-		workflow: Workflow,
-		resolver: Nullable[WorkflowResolver] = None,
-		direction: str = "LR",
-		depth: int = 0,
-		reduce: bool = True,
-		link: bool = True
+		workflow:  Workflow,
+		resolver:  Nullable[WorkflowResolver] = None,
+		direction: str                        = "LR",
+		depth:     int                        = 0,
+		reduce:    bool                       = True,
+		link:      bool                       = True
 	) -> None:
 		"""
 		Initializes the graph by drawing a workflow.
@@ -280,15 +283,6 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 
 		return f"<{label}>"
 
-	def _IsDocumented(self, uses: UsesReference) -> bool:
-		"""
-		Return whether a reference names a reusable workflow of the documented repository.
-
-		:param uses: The reference, as :attr:`Job.Uses <pyTooling.CI.Workflow.Job.Uses>`.
-		:returns:    ``True``, if the reference is local, or its repository is mapped by the resolver.
-		"""
-		return uses.IsLocal or (uses.Repository is not None and uses.Repository.lower() in self._resolver.Repositories)
-
 	def _Describe(self, element: CIBase) -> tuple[list[str], list[str], str]:
 		"""
 		Describe an element of the pipeline: the lines of its label, the parts of its style, and its tooltip.
@@ -303,7 +297,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 
 		if (uses := element.Definition.Uses) is not None:
 			lines.append(uses.FileName)
-			if not self._IsDocumented(uses):
+			if not self._resolver.CanResolve(uses):
 				lines.append(f"{uses.Repository}@{uses.Ref}")
 			tooltip.append(f"uses: {uses}")
 
@@ -331,7 +325,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 
 		if (uses := element.Definition.Uses) is None:
 			attributes = {"style": ",".join(("filled", *style)), "fillcolor": "#f2f2f2"}
-		elif self._IsDocumented(uses):
+		elif self._resolver.CanResolve(uses):
 			attributes = {"style": ",".join(("rounded", "filled", *style))}
 		else:
 			attributes = {"style": ",".join(("rounded", "filled", *style)), "fillcolor": "#ffffff"}
@@ -339,56 +333,70 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		if isinstance(element, CIMatrix):
 			attributes["peripheries"] = "2"
 
-		statement = f"{indent}{self._Quote(identifier)} [label={self._Label(element.Name, lines)}"
+		statement = f"{indent}{self._Quote(identifier)} [label={self._Label(str(element), lines)}"
 		for name, value in attributes.items():
 			statement += f", {name}={self._Quote(value)}"
 
 		if tooltip != "":
 			statement += f", tooltip={self._Quote(tooltip)}"
 
-		if self._link and uses is not None and self._IsDocumented(uses):
+		if self._link and uses is not None and self._resolver.CanResolve(uses):
 			statement += f" /*gha-link:{uses.Stem}*/"
 
 		self._statements.append(f"{statement}];")
 
+	def _OpenCluster(self, element: CIBase, cluster: str, indent: str) -> None:
+		"""
+		Open a cluster drawing a called workflow or a matrix: write its ``subgraph`` statement and its attributes.
+
+		:param element: The called workflow or the matrix.
+		:param cluster: Identifier of the cluster.
+		:param indent:  Indentation of the cluster's statement.
+		"""
+		lines, style, tooltip = self._Describe(element)
+		self._statements.append(f"{indent}subgraph {self._Quote(cluster)} {{")
+		self._statements.append(f"{indent}\tlabel={self._Label(str(element), lines)};")
+		self._statements.append(f'{indent}\tlabeljust="l";')
+		self._statements.append(f"{indent}\tstyle={self._Quote(','.join(('rounded', 'filled', *style)))};")
+		self._statements.append(f'{indent}\tcolor="#8a9bb2";')
+		self._statements.append(f'{indent}\tfillcolor="#f6f8fb";')
+		if tooltip != "":
+			self._statements.append(f"{indent}\ttooltip={self._Quote(tooltip)};")
+
 	def _DrawVertices(self, vertices: list[Vertex], prefix: str, indent: str) -> tuple[str, str]:
 		"""
-		Draw the vertices of one level of the graph - the graph itself, or a called workflow's subgraph - and their edges.
+		Draw the vertices of one level of the graph - the graph itself, or the subgraph of a called workflow or of a
+		matrix - and their edges.
+
+		An edge of the graph goes from the element needing to the element it needs; its arrow is drawn the other way
+		round.
 
 		:param vertices: The vertices, in file order.
 		:param prefix:   Prefix of the identifiers of their nodes: the path of the jobs calling their workflow.
 		:param indent:   Indentation of their statements.
-		:returns:        Identifiers of the node an edge into the level ends at - the first vertex without an inbound
-		                 edge - and of the node an edge out of it starts at - the last vertex without an outbound edge.
+		:returns:        Identifiers of the node an arrow into the level ends at - the first vertex needing nothing - and
+		                 of the node an arrow out of it starts at - the last vertex nothing needs.
 		"""
-		# per vertex: the node an edge into it ends at, the node an edge out of it starts at, and its cluster
+		# per vertex: the node an arrow into it ends at, the node an arrow out of it starts at, and its cluster
 		anchors: dict[Vertex, tuple[str, str, Nullable[str]]] = {}
 		for vertex in vertices:
 			element = vertex.Value
 			if element.Definition not in self._jobs:
 				self._jobs.append(element.Definition)
 
-			identifier = f"{prefix}{element.Name}"
-			if not isinstance(element, CIWorkflow) or vertex.OutboundLinkCount == 0:
+			identifier = f"{prefix}{element}"
+			if not isinstance(element, (CIWorkflow, CIMatrix)) or vertex.OutboundLinkCount == 0:
 				self._DrawNode(element, identifier, indent)
 				anchors[vertex] = (identifier, identifier, None)
 				continue
 
-			if element.CalledWorkflow not in self._workflows:
-				self._workflows.append(element.CalledWorkflow)
-
-			lines, style, tooltip = self._Describe(element)
 			cluster = f"cluster_{identifier}"
-			self._statements.append(f"{indent}subgraph {self._Quote(cluster)} {{")
-			self._statements.append(f"{indent}\tlabel={self._Label(element.Name, lines)};")
-			self._statements.append(f'{indent}\tlabeljust="l";')
-			self._statements.append(f"{indent}\tstyle={self._Quote(','.join(('rounded', 'filled', *style)))};")
-			self._statements.append(f'{indent}\tcolor="#8a9bb2";')
-			self._statements.append(f'{indent}\tfillcolor="#f6f8fb";')
-			if tooltip != "":
-				self._statements.append(f"{indent}\ttooltip={self._Quote(tooltip)};")
-			if self._link:
-				self._statements.append(f"{indent}\t/*gha-link:{element.Definition.Uses.Stem}*/")
+			self._OpenCluster(element, cluster, indent)
+			if isinstance(element, CIWorkflow):
+				if element.CalledWorkflow not in self._workflows:
+					self._workflows.append(element.CalledWorkflow)
+				if self._link:
+					self._statements.append(f"{indent}\t/*gha-link:{element.Definition.Uses.Stem}*/")
 
 			entryNode, exitNode = self._DrawVertices(
 				[link.Destination for link in vertex.OutboundLinks], f"{identifier}/", f"{indent}\t"
@@ -396,17 +404,16 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 			self._statements.append(f"{indent}}}")
 			anchors[vertex] = (entryNode, exitNode, cluster)
 
-		# the vertices without an inbound edge start together: in the first rank of the graph, or side by side in their
-		# cluster
-		roots = [self._Quote(anchors[vertex][0]) for vertex in vertices if vertex.InboundEdgeCount == 0]
+		# the vertices needing nothing start together: in the first rank of the graph, or side by side in their cluster
+		roots = [self._Quote(anchors[vertex][0]) for vertex in vertices if vertex.OutboundEdgeCount == 0]
 		if prefix == "":
 			self._statements.append(f"{indent}{{rank=min; {'; '.join(roots)};}}")
 		elif len(roots) > 1:
 			self._statements.append(f"{indent}{{rank=same; {'; '.join(roots)};}}")
 
 		for vertex in vertices:
-			for edge in vertex.InboundEdges:
-				_, tail, tailCluster = anchors[edge.Source]
+			for edge in vertex.OutboundEdges:
+				_, tail, tailCluster = anchors[edge.Destination]
 				head, _, headCluster = anchors[vertex]
 
 				attributes = []
@@ -421,8 +428,8 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 
 				self._statements.append(f"{statement};")
 
-		first = next(vertex for vertex in vertices if vertex.InboundEdgeCount == 0)
-		last = [vertex for vertex in vertices if vertex.OutboundEdgeCount == 0][-1]
+		first = next(vertex for vertex in vertices if vertex.OutboundEdgeCount == 0)
+		last = [vertex for vertex in vertices if vertex.InboundEdgeCount == 0][-1]
 
 		return anchors[first][0], anchors[last][1]
 
@@ -448,6 +455,9 @@ class PipelineGraph(BaseDirective):
 	and ``gha_workflow_directory`` - relative to the source directory, and by default the directory of the drawn
 	workflow file. A job calling a reusable workflow of that repository is expanded, while ``:depth:`` allows, and
 	checked against the ref ``gha_ref``, if that is configured.
+
+	The workflow files are read by the resolver of the ``gha`` domain, which reads every file once per build. Without
+	``gha_workflow_directory``, a resolver of its own maps ``gha_repository`` to the drawn file's directory.
 	"""
 
 	directiveName: str = "gha:pipeline-graph"  #: Name the directive is invoked by.
@@ -486,9 +496,8 @@ class PipelineGraph(BaseDirective):
 
 		from pyTooling.CI.Workflow import WorkflowError, WorkflowResolver
 
-		repository = getattr(self.config, "gha_repository", None)
-		directory = getattr(self.config, "gha_workflow_directory", None)
-		ref = getattr(self.config, "gha_ref", None)
+		repository = self.config.gha_repository
+		ref =        self.config.gha_ref
 
 		try:
 			direction = self._ParseStringOption("direction", "LR", "(?i)(LR|TB)$").upper()
@@ -497,15 +506,12 @@ class PipelineGraph(BaseDirective):
 		except SphinxExtensionError as ex:
 			return [self.state.document.reporter.error(str(ex), line=self.lineno)]
 
-		if repository is None:
-			repositories = {}
-		elif directory is None:
-			repositories = {repository: workflowFile.parent}
-		else:
-			repositories = {repository: Path(self.env.srcdir) / directory}
-
 		try:
-			resolver = WorkflowResolver(repositories)
+			if repository is not None and self.config.gha_workflow_directory is None:
+				resolver = WorkflowResolver({repository: workflowFile.parent})
+			else:
+				resolver = self.env.get_domain("gha").Resolver
+
 			graph = PipelineDotGraph(
 				resolver.Load(workflowFile), resolver, direction, self.options.get("depth", 0), reduce, link
 			)
@@ -556,17 +562,21 @@ def resolveLinks(sphinx: Sphinx, doctree: nodes.document, docname: str) -> None:
 	Call-back for Sphinx' ``doctree-resolved`` event, linking the jobs of a pipeline graph to their reusable workflows.
 
 	A job calling a reusable workflow of the documented repository links to the page documenting that workflow, as the
-	``gha`` domain resolves the workflow's file stem with ``ResolveWorkflow``. Without the domain, without a page for
-	the workflow, or in a format other than HTML, the job has no link.
+	``gha`` domain resolves the workflow's file stem with ``ResolveWorkflow``. Without a page for the workflow, or in a
+	format other than HTML, the job has no link.
 
 	:param sphinx:  The Sphinx application.
 	:param doctree: The resolved document.
 	:param docname: Name of the document.
 	"""
-	try:
-		domain = sphinx.env.get_domain("gha")
-	except ExtensionError:
-		domain = None
+	if sphinx.builder.format != "html":
+		for node in doctree.findall(graphviz):
+			if CSS_CLASS in node["classes"]:
+				node["code"] = LINK_MARKER.sub("", node["code"])
+
+		return
+
+	domain = sphinx.env.get_domain("gha")
 
 	def link(match: Match[str]) -> str:
 		"""
@@ -576,9 +586,7 @@ def resolveLinks(sphinx: Sphinx, doctree: nodes.document, docname: str) -> None:
 		:returns:     The whitespace before the marker and the attributes ``URL`` and ``target``, or an empty string
 		              when there is nothing to link to.
 		"""
-		if domain is None or sphinx.builder.format != "html":
-			return ""
-		elif (target := domain.ResolveWorkflow(match["stem"])) is None:
+		if (target := domain.ResolveWorkflow(match["stem"])) is None:
 			return ""
 
 		targetDocname, anchor = target
