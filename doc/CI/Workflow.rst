@@ -151,11 +151,11 @@ reads them and ``depth`` allows:
 .. code-block:: python
 
    pipeline = workflow.ToPipeline(resolver, depth=1)
-   graph =    pipeline.ToGraph()                       # transitively reduced
 
-   for vertex in graph.IterateTopologically():
-     element = vertex.Value
+   for element in pipeline.Elements:                   # in file order
      print(f"{element.QualifiedName}  {element.Definition.Location}")
+
+   graph = pipeline.ToGraph()                          # transitively reduced
 
 .. list-table::
    :header-rows: 1
@@ -204,8 +204,8 @@ A run read from the GitHub REST API (:ref:`CI/GitHub`) has no ``needs``: the API
    run =      Pipeline.FromJSON(runJSON, jobsJSON)
    workflow = resolver.Load(Path(run.Path))
 
-   for job in workflow.ApplyNeeds(run, resolver):
-     print(f"{job.Location}: job '{job.Name}' isn't in the run")
+   for name in workflow.ApplyNeeds(run, resolver):
+     print(f"Job '{name}' isn't in the run.")
 
    graph = run.ToGraph()
 
@@ -215,4 +215,5 @@ A run read from the GitHub REST API (:ref:`CI/GitHub`) has no ``needs``: the API
   instance, as far as the resolver reads the called file.
 * A job named by an expression - ``${{ matrix.os }} Tests`` - can't be looked up and is skipped. A job with a
   condition may have been skipped in the run, so it isn't reported when it's missing. Every other job missing in the
-  run is returned.
+  run is returned by its qualified name, as the run would name it: ``Local / Static`` for the job ``Static`` of the
+  workflow the job ``Local`` calls.

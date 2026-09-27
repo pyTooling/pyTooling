@@ -133,7 +133,8 @@ Version 10.x (2026)
        their :attr:`~pyTooling.CI.Workflow.DefinitionMixin.Definition`, and which
        :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts into a graph.
      * :meth:`~pyTooling.CI.Workflow.Workflow.ApplyNeeds` gives a run read by :mod:`pyTooling.CI.GitHub` the
-       dependencies its workflow file declares, and returns the jobs it didn't find in the run.
+       dependencies its workflow file declares, and returns the qualified names of the jobs it didn't find in the
+       run.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
