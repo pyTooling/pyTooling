@@ -113,7 +113,8 @@ from pyTooling.Documentation.Sphinx.Directives              import BaseDirective
 from pyTooling.Documentation.Sphinx.Directives              import stripAndNormalize
 from pyTooling.Documentation.Sphinx.GitHubActions           import GitHubActionsDomain
 from pyTooling.Documentation.Sphinx.GitHubActions.Graph     import PipelineGraph, resolveLinks
-from pyTooling.Documentation.Sphinx.GitHubActions.Reference import AutoInputs, Interface, ParameterTable, YAMLExcerpt
+from pyTooling.Documentation.Sphinx.GitHubActions.Reference import AutoInputs, Dependencies, Interface, ParameterTable
+from pyTooling.Documentation.Sphinx.GitHubActions.Reference import YAMLExcerpt
 from pyTooling.Documentation.Sphinx.GitHubActions.Reference import checkUndocumentedInputs
 from pyTooling.Documentation.Sphinx.SchemaGraph             import SchemaGraph
 from pyTooling.Documentation.Sphinx.Roles                   import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
@@ -209,6 +210,7 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	sphinx.add_directive_to_domain("gha", "pipeline-graph", PipelineGraph)
 	sphinx.add_directive_to_domain("gha", "parameter-table", ParameterTable)
 	sphinx.add_directive_to_domain("gha", "interface", Interface)
+	sphinx.add_directive_to_domain("gha", "dependencies", Dependencies)
 	sphinx.add_directive_to_domain("gha", "yaml", YAMLExcerpt)
 	sphinx.add_directive_to_domain("gha", "autoinputs", AutoInputs)
 

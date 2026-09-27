@@ -34,7 +34,9 @@ Unit tests for :mod:`pyTooling.Documentation.Sphinx.GitHubActions.Reference`, th
 Every testcase builds a small Sphinx project in a temporary directory - see
 :class:`~tests.unit.SphinxExtension.GitHubActionsDomain.Project` - and checks the HTML and the warnings.
 """
-from textwrap              import dedent
+from html                  import unescape
+from re                    import findall
+from textwrap              import dedent, indent
 
 from .GitHubActionsDomain  import Project
 
@@ -316,7 +318,6 @@ class Interfaces(Project):
 		html = self._html("Package")
 		for name in ("Required Inputs", "Secrets", "Outputs", "Permissions"):
 			self.assertIn("<em>none</em>", self._field(html, name))
-		self.assertNotIn(">Templates<", html)
 
 	def test_Permissions(self) -> None:
 		"""The highest access per scope is listed, with the job asking for it, through called templates."""
@@ -341,26 +342,15 @@ class Interfaces(Project):
 			self._field(self._html("Package"), "Permissions")
 		)
 
-	def test_Templates(self) -> None:
-		self._workflow("Package", PACKAGE)
-		self._workflow("Tag", TAG)
-		self._build({"Package": self.PAGE, "Tag": ".. gha:workflow:: Tag\n\nTag\n###\n"})
-
-		templates = self._field(self._html("Package"), "Templates")
-		self.assertIn('href="Tag.html#gha-workflow-Tag"', templates)
-		self.assertIn("owner/repo/.github/workflows/Tag.yml&#64;r1", templates)
-		self.assertIn('href="https://github.com/actions/github-script"', templates)
-		self.assertIn('href="https://github.com/other/tools/blob/v2/.github/workflows/Notify.yml"', templates)
-
-	def test_Actions(self) -> None:
+	def test_Contract(self) -> None:
+		"""The templates and actions are left to gha:dependencies."""
 		self._workflow("Package", PACKAGE)
 		self._workflow("Tag", TAG)
 		self._build({"Package": self.PAGE})
 
-		actions = self._field(self._html("Package"), "Actions").split("<li>")[1:]
-		self.assertEqual(2, len(actions))
-		self.assertIn('href="https://github.com/actions/checkout"', actions[0])
-		self.assertIn("<span class=\"pre\">./.github/actions/Local</span>", actions[1])
+		html = self._html("Package")
+		self.assertNotIn(">Templates<", html)
+		self.assertNotIn(">Actions<", html)
 
 	def test_MissingTemplate(self) -> None:
 		"""A missing template is reported once, and the workflow's own permissions are listed."""
@@ -370,6 +360,216 @@ class Interfaces(Project):
 		self.assertIn(" - job <em>Build</em> (Package.yml:46)", self._field(self._html("Package"), "Permissions"))
 		self.assertEqual(
 			["src/Package.rst:6: WARNING: gha:interface: Workflow 'Tag.yml' doesn't exist in 'workflows'. [gha.workflow]"],
+			self._warningLines()
+		)
+
+
+#: A pipeline calling a template of the documented repository once, another twice, and one of another repository.
+PIPELINE = dedent("""\
+	on:
+	  workflow_call:
+
+	jobs:
+	  Build:
+	    uses: owner/repo/.github/workflows/Build.yml@r1
+
+	  Cleanup:
+	    uses: owner/repo/.github/workflows/Cleanup.yml@r1
+	    needs: Build
+
+	  FinalCleanup:
+	    uses: owner/repo/.github/workflows/Cleanup.yml@r1
+	    needs: Cleanup
+
+	  Notify:
+	    uses: other/tools/.github/workflows/Notify.yml@v2
+""")
+
+#: A template running in a container, with a service, a local composite action and an action of another repository.
+BUILD = dedent("""\
+	on:
+	  workflow_call:
+
+	jobs:
+	  Build:
+	    runs-on: ubuntu-26.04
+	    container:
+	      image: ${{ inputs.image }}
+	    services:
+	      database:
+	        image: postgres:18
+	    steps:
+	      - uses: actions/checkout@v6
+	      - uses: ./.github/actions/Composite
+	      - uses: actions/checkout@v6
+""")
+
+#: A template running one action.
+CLEANUP = dedent("""\
+	on:
+	  workflow_call:
+
+	jobs:
+	  Cleanup:
+	    runs-on: ubuntu-26.04
+	    steps:
+	      - uses: geekyeggo/delete-artifact@v6
+""")
+
+#: A composite action, running a Docker action of the repository, an action of another repository and an image.
+COMPOSITE = dedent("""\
+	runs:
+	  using: composite
+	  steps:
+	    - uses: owner/repo/.github/actions/Docker@r1
+	    - uses: pyTooling/upload-artifact@v7
+	    - uses: docker://alpine:3.22
+""")
+
+#: A Docker action.
+DOCKER = "runs:\n  using: docker\n  image: Dockerfile\n"
+
+
+class DependencyLists(Project):
+	def _repository(self) -> None:
+		"""Write a repository's workflows and actions into ``.github``."""
+		github = self._path / ".github"
+		(github / "workflows").mkdir(parents=True)
+		for name, content in (("Pipeline", PIPELINE), ("Build", BUILD), ("Cleanup", CLEANUP)):
+			(github / "workflows" / f"{name}.yml").write_text(content, encoding="utf-8")
+		for name, content in (("Composite", COMPOSITE), ("Docker", DOCKER)):
+			(github / "actions" / name).mkdir(parents=True)
+			(github / "actions" / name / "action.yml").write_text(content, encoding="utf-8")
+
+	def _items(self, content: str = "", **config: str) -> list[str]:
+		"""
+		Build a page with ``gha:dependencies`` for workflow 'Pipeline', and return the list as indented lines of text.
+
+		:param content: The directive's content.
+		:param config:  Configuration values overriding the defaults.
+		:returns:       One line per list item, indented by two spaces per level.
+		"""
+		self._repository()
+		page = f".. gha:workflow:: Pipeline\n\nPipeline\n########\n\n.. gha:dependencies::\n\n{indent(content, '   ')}"
+		self._build({"Pipeline": page}, gha_workflow_directory="../.github/workflows", **config)
+
+		html = self._html("Pipeline")
+		start = html.rindex("<ul", 0, html.index("gha-dependencies"))
+		lines = []
+		level = 0
+		for tag, text in findall(r"<(/?\w+)[^>]*>|([^<]+)", html[start:]):
+			if tag == "ul":
+				level += 1
+			elif tag == "/ul":
+				level -= 1
+				if level == 0:
+					break
+			elif tag == "li":
+				lines.append("  " * (level - 1))
+			elif len(lines) > 0:
+				lines[-1] += unescape(text)
+
+		return [line[:len(line) - len(line.lstrip())] + " ".join(line.split()) for line in lines]
+
+	def test_Derived(self) -> None:
+		self.assertEqual(
+			[
+				"owner/repo/.github/workflows/Build.yml@r1",
+				"  actions/checkout@v6",
+				"  ./.github/actions/Composite",
+				"    owner/repo/.github/actions/Docker@r1",
+				"      image Dockerfile",
+				"    pyTooling/upload-artifact@v7",
+				"    docker://alpine:3.22",
+				"  container ${{ inputs.image }}",
+				"  service database: postgres:18",
+				"owner/repo/.github/workflows/Cleanup.yml@r1 (called by 2 jobs: Cleanup, FinalCleanup)",
+				"  geekyeggo/delete-artifact@v6",
+				"other/tools/.github/workflows/Notify.yml@v2",
+			],
+			self._items()
+		)
+		self.assertEqual([], self._warningLines())
+
+	def test_Links(self) -> None:
+		self._items(gha_ref="r1")
+
+		html = self._html("Pipeline")
+		self.assertIn('href="https://github.com/actions/checkout"', html)
+		self.assertIn('href="https://github.com/owner/repo/tree/r1/.github/actions/Composite"', html)
+		self.assertIn('href="https://github.com/owner/repo/tree/r1/.github/actions/Docker"', html)
+		self.assertIn('href="https://github.com/other/tools/blob/v2/.github/workflows/Notify.yml"', html)
+
+	def test_Merge(self) -> None:
+		"""Hand-written items join the derived ones they name, at every level; the others are appended."""
+		content = dedent("""\
+			* Build.yml
+
+			  * ./.github/actions/Composite
+
+			    * pyTooling/upload-artifact
+
+			      * ``actions/upload-artifact``
+
+			  * container
+
+			    * provides ``latexmk``
+
+			  * apt: ``make``
+
+			* pip
+
+			  * ``wheel``
+
+			* owner/repo/.github/workflows/Cleanup.yml@r1
+
+			  * ``gh``
+
+			Packages are installed in every job.
+		""")
+		self.assertEqual(
+			[
+				"owner/repo/.github/workflows/Build.yml@r1",
+				"  actions/checkout@v6",
+				"  ./.github/actions/Composite",
+				"    owner/repo/.github/actions/Docker@r1",
+				"      image Dockerfile",
+				"    pyTooling/upload-artifact@v7",
+				"      actions/upload-artifact",
+				"    docker://alpine:3.22",
+				"  container ${{ inputs.image }}",
+				"    provides latexmk",
+				"  service database: postgres:18",
+				"  apt: make",
+				"owner/repo/.github/workflows/Cleanup.yml@r1 (called by 2 jobs: Cleanup, FinalCleanup)",
+				"  geekyeggo/delete-artifact@v6",
+				"  gh",
+				"other/tools/.github/workflows/Notify.yml@v2",
+				"pip",
+				"  wheel",
+			],
+			self._items(content)
+		)
+		self.assertIn("<p>Packages are installed in every job.</p>", self._html("Pipeline"))
+
+	def test_None(self) -> None:
+		self._workflow("Package", MINIMAL)
+		self._build({"Package": f"{HEADER}.. gha:dependencies::\n\n.. gha:autoinputs::\n"})
+
+		self.assertEqual([], self._warningLines())
+		self.assertIn("<p><em>none</em></p>", self._html("Package"))
+
+	def test_MissingAction(self) -> None:
+		self._repository()
+		(self._path / ".github" / "actions" / "Docker" / "action.yml").unlink()
+		page = ".. gha:workflow:: Pipeline\n\nPipeline\n########\n\n.. gha:dependencies::\n"
+		self._build({"Pipeline": page}, gha_workflow_directory="../.github/workflows")
+
+		self.assertEqual(
+			[
+				"src/Pipeline.rst:6: WARNING: gha:dependencies: Action '.github/actions/Docker' has no 'action.yml' in "
+				"'.github/actions/Docker'. [gha.workflow]"
+			],
 			self._warningLines()
 		)
 

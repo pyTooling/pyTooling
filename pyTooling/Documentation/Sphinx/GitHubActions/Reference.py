@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Directives of the ``gha`` domain summarizing the current workflow: its parameters, its interface and its YAML.
+Directives of the ``gha`` domain summarizing the current workflow: its parameters, interface, dependencies and YAML.
 
 Each of them reads the workflow of the preceding ``gha:workflow``:
 
@@ -42,14 +42,19 @@ Each of them reads the workflow of the preceding ``gha:workflow``:
 
    .. gha:interface::
 
+   .. gha:dependencies::
+
+      * pip
+
    .. gha:yaml::
       :job: Package
 
    .. gha:autoinputs::
 
 * ``gha:parameter-table`` - the summary tables of the inputs, secrets and outputs;
-* ``gha:interface`` - what a caller has to know: the required inputs, the secrets, the outputs, the permissions to
-  grant, and the templates and actions used;
+* ``gha:interface`` - the contract with a caller: the required inputs, the secrets, the outputs, the permissions to
+  grant;
+* ``gha:dependencies`` - the templates, actions and container images used, merged with hand-written ones;
 * ``gha:yaml`` - the workflow file or a part of it, as a code block linked to the file on GitHub;
 * ``gha:autoinputs`` - an entry for every input the document has no ``gha:input`` for.
 
@@ -63,7 +68,7 @@ When a document was read, an input of its workflow without an entry is a ``gha.d
 """
 from __future__                                   import annotations
 
-from typing                                       import TYPE_CHECKING, Any, Optional as Nullable
+from typing                                       import TYPE_CHECKING, Any, Iterable, Optional as Nullable
 
 from docutils                                     import nodes
 from docutils.parsers.rst                         import directives
@@ -299,7 +304,7 @@ class ParameterTable(WorkflowReferenceDirective):
 @export
 class Interface(WorkflowReferenceDirective):
 	"""
-	The directive ``gha:interface``: what a caller of the current workflow has to know, as a field list.
+	The directive ``gha:interface``: the contract of the current workflow with its caller, as a field list.
 
 	.. code-block:: ReST
 
@@ -310,11 +315,8 @@ class Interface(WorkflowReferenceDirective):
 	* *Permissions* - the permissions a caller has to grant the ``GITHUB_TOKEN``: what the workflow's jobs and the
 	  jobs of the workflows they call declare, the highest access per scope, each with the job and the place in the
 	  workflow file asking for it.
-	* *Templates* - the reusable workflows the jobs call, each with the templates and actions it uses in turn, as far
-	  as its file is known.
-	* *Actions* - the actions the workflow's steps run.
 
-	Templates and actions are listed only if the workflow uses some.
+	The templates and actions the workflow uses are listed by :class:`Dependencies`.
 	"""
 
 	directiveName: str = "gha:interface"  #: Name the directive is invoked by.
@@ -328,6 +330,9 @@ class Interface(WorkflowReferenceDirective):
 	def run(self) -> list[nodes.Node]:
 		"""
 		Create the field list.
+
+		A called workflow whose file is missing or malformed is reported, and the permissions are then those of the
+		current workflow alone.
 
 		:returns: The field list, or nothing without a current workflow.
 		"""
@@ -354,12 +359,12 @@ class Interface(WorkflowReferenceDirective):
 			[_reference("output", f"{workflowName}.{name}", name)] for name in workflow.Outputs
 		])
 
-		# listing the templates reports a template whose file is missing or malformed, which then excludes the
-		# templates from the permissions
-		templates = self._Templates(workflow, {id(workflow)})
 		try:
 			permissions = workflow.CollectPermissions(self.env.get_domain("gha").Resolver)
-		except WorkflowError:
+		except WorkflowError as ex:
+			_logger.warning(
+				f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
+			)
 			permissions = workflow.CollectPermissions()
 
 		items = []
@@ -381,11 +386,6 @@ class Interface(WorkflowReferenceDirective):
 			items.append(item)
 
 		fieldList += self._Field("Permissions", items, bullets=True)
-
-		if len(templates) > 0:
-			fieldList += nodes.field("", nodes.field_name(text="Templates"), nodes.field_body("", templates))
-		if len(actions := self._Actions(workflow)) > 0:
-			fieldList += nodes.field("", nodes.field_name(text="Actions"), nodes.field_body("", actions))
 
 		return [fieldList]
 
@@ -412,55 +412,163 @@ class Interface(WorkflowReferenceDirective):
 
 		return nodes.field("", nodes.field_name(text=name), nodes.field_body("", body))
 
-	def _Uses(self, uses: UsesReference) -> nodes.paragraph:
+
+@export
+class Dependencies(WorkflowReferenceDirective):
+	"""
+	The directive ``gha:dependencies``: what the current workflow uses, as a nested bullet list.
+
+	.. code-block:: ReST
+
+	   .. gha:dependencies::
+
+	      * UnitTesting.yml
+
+	        * pip
+
+	          * Python packages given by :gha:input:`UnitTesting.requirements`.
+
+	From the workflow file, and the files of the templates and actions it uses, as far as they are known locally:
+
+	* the templates the jobs call, each once - with the jobs calling it, if several do -, each with its own
+	  dependencies;
+	* the actions the steps run, each once; a composite action with the actions its steps run, a Docker action with its
+	  image;
+	* the images of the containers and service containers the jobs run in.
+
+	The content is a bullet list of what a file can't tell, like packages installed by a step. It is merged into the
+	derived list: an item whose text is the name of a derived item - a template as ``UnitTesting.yml``, an action as
+	``actions/checkout``, a container as ``container``, each also as written in the file - adds its nested list to
+	that item, recursively. Any other item is appended to the list it is in. Content after the bullet list follows the
+	list.
+	"""
+
+	directiveName: str = "gha:dependencies"  #: Name the directive is invoked by.
+
+	has_content =               True   #: The hand-written dependencies.
+	required_arguments =        0      #: Number of required directive arguments.
+	optional_arguments =        0      #: Number of optional arguments after the required ones.
+	final_argument_whitespace = False  #: A boolean; ``True`` if the last argument may contain spaces.
+	option_spec: dict[str, Any] = {}  #: Mapping of option names to validator functions.
+
+	_keys: dict[int, tuple[set[str], nodes.list_item]]  #: Names of each derived item, by the item's identity.
+
+	def run(self) -> list[nodes.Node]:
 		"""
-		Create the paragraph naming a template or an action.
+		Create the list: the derived dependencies, merged with the hand-written ones.
+
+		:returns: The list and the content following it, a paragraph saying *none* if there are no dependencies, or
+		          nothing without a current workflow.
+		"""
+		if (workflow := self._CurrentWorkflow()) is None:
+			return []
+
+		self._keys = {}
+		dependencies = self._WorkflowItems(workflow, {id(workflow)})
+		dependencies["classes"].append("gha-dependencies")
+
+		others = []
+		for node in self.parse_content_to_nodes():
+			if isinstance(node, nodes.bullet_list):
+				self._Merge(dependencies, node)
+			else:
+				others.append(node)
+
+		if len(dependencies) == 0:
+			return [nodes.paragraph("", "", nodes.emphasis(text="none")), *others]
+
+		return [dependencies, *others]
+
+	def _Item(self, paragraph: nodes.paragraph, keys: set[str]) -> nodes.list_item:
+		"""
+		Create a derived item, known by the names a hand-written item may refer to it by.
+
+		:param paragraph: The item's text.
+		:param keys:      The names of the item.
+		:returns:         The item.
+		"""
+		item = nodes.list_item("", paragraph)
+		self._keys[id(item)] = (keys, item)
+
+		return item
+
+	def _UsesItem(self, uses: UsesReference) -> nodes.list_item:
+		"""
+		Create the item of a template or an action.
 
 		A template of the documented repository links to its ``gha:workflow``, if that is documented; one of another
-		repository and an action link to GitHub.
+		repository and an action link to GitHub, as does a local action when ``gha_repository`` and ``gha_ref`` are
+		configured.
 
 		:param uses: The reference, as written in the workflow file.
-		:returns:    The paragraph.
+		:returns:    The item, known by the reference as written, without its ref, and by a template's file name and
+		             stem.
 		"""
 		text = str(uses)
+		keys = {text, text.partition("@")[0]}
+		if uses.IsWorkflow:
+			keys.update((uses.FileName, uses.Stem))
+
 		repositories = self.env.get_domain("gha").Resolver.Repositories
+		literal = nodes.literal(text, text)
 		if uses.IsWorkflow and (uses.IsLocal or (uses.Repository is not None and uses.Repository.lower() in repositories)):
-			return nodes.paragraph("", "", _reference("workflow", uses.Stem, text))
+			return self._Item(nodes.paragraph("", "", _reference("workflow", uses.Stem, text)), keys)
+		elif uses.IsLocal and self.config.gha_repository is not None and self.config.gha_ref is not None:
+			url = f"https://github.com/{self.config.gha_repository}/tree/{self.config.gha_ref}/{uses.Path}"
 		elif uses.Repository is None:
-			return nodes.paragraph("", "", nodes.literal(text, text))
+			return self._Item(nodes.paragraph("", "", literal), keys)
+		else:
+			url = f"https://github.com/{uses.Repository}"
+			if uses.Path != "":
+				url += f"/{'blob' if uses.IsWorkflow else 'tree'}/{uses.Ref}/{uses.Path}"
 
-		url = f"https://github.com/{uses.Repository}"
-		if uses.Path != "":
-			url += f"/{'blob' if uses.IsWorkflow else 'tree'}/{uses.Ref}/{uses.Path}"
+		return self._Item(nodes.paragraph("", "", nodes.reference(text, "", literal, refuri=url)), keys)
 
-		return nodes.paragraph("", "", nodes.reference(text, "", nodes.literal(text, text), refuri=url))
-
-	def _Actions(self, workflow: Workflow) -> nodes.bullet_list:
+	def _ImageItem(self, kind: str, image: str, name: str = "") -> nodes.list_item:
 		"""
-		List the actions a workflow's steps run, each once.
+		Create the item of a container's image.
+
+		:param kind:  The kind of container, as ``container``, ``service`` or ``image``.
+		:param image: The image, as written.
+		:param name:  Optional, the service's name. Default: ``""``.
+		:returns:     The item, known by the kind - followed by the service's name -, the service's name and the image.
+		"""
+		paragraph = nodes.paragraph("", f"{kind} ")
+		keys = {kind, image}
+		if name != "":
+			paragraph += (nodes.literal(name, name), nodes.Text(": "))
+			keys.update((f"{kind} {name}", name))
+		paragraph += nodes.literal(image, image)
+
+		return self._Item(paragraph, keys)
+
+	def _WorkflowItems(self, workflow: Workflow, visited: set[int]) -> nodes.bullet_list:
+		"""
+		List a workflow's dependencies: its templates, actions and container images.
 
 		:param workflow: The workflow.
-		:returns:        A bullet list, empty if the workflow runs no action.
-		"""
-		actions = {str(uses): uses for uses in workflow.IterateActions()}
-
-		return nodes.bullet_list("", *(nodes.list_item("", self._Uses(uses)) for uses in actions.values()))
-
-	def _Templates(self, workflow: Workflow, visited: set[int]) -> nodes.bullet_list:
-		"""
-		List the templates a workflow's jobs call, each once, with the templates and actions each uses in turn.
-
-		:param workflow: The workflow.
-		:param visited:  The identities of the workflows listed on the path to this one, which aren't expanded again.
-		:returns:        A bullet list, empty if no job calls a template.
+		:param visited:  The identities of the workflows and actions on the path to this one, which aren't expanded again.
+		:returns:        A bullet list, empty if the workflow uses nothing.
 		"""
 		from pyTooling.CI.Workflow import WorkflowError
 
-		templates = {str(job.Uses): job.Uses for job in workflow if job.Uses is not None and job.Uses.IsWorkflow}
+		templates: dict[str, tuple[UsesReference, list[str]]] = {}
+		containers: dict[str, None] = {}
+		services: dict[tuple[str, str], None] = {}
+		for job in workflow:
+			if job.Uses is not None and job.Uses.IsWorkflow:
+				templates.setdefault(str(job.Uses), (job.Uses, []))[1].append(job.Name)
+			if job.Container is not None:
+				containers[job.Container] = None
+			for serviceName, image in job.Services.items():
+				services[(serviceName, image)] = None
 
 		bulletList = nodes.bullet_list()
-		for uses in templates.values():
-			item = nodes.list_item("", self._Uses(uses))
+		for uses, jobNames in templates.values():
+			item = self._UsesItem(uses)
+			if len(jobNames) > 1:
+				item[0] += nodes.Text(f" (called by {len(jobNames)} jobs: {', '.join(jobNames)})")
+
 			try:
 				called = self.env.get_domain("gha").Resolver.Resolve(uses)
 			except WorkflowError as ex:
@@ -470,14 +578,75 @@ class Interface(WorkflowReferenceDirective):
 				called = None
 
 			if called is not None and id(called) not in visited:
-				nested = self._Templates(called, visited | {id(called)})
-				nested.extend(self._Actions(called).children)
-				if len(nested) > 0:
+				if len(nested := self._WorkflowItems(called, visited | {id(called)})) > 0:
 					item += nested
 
 			bulletList += item
 
+		bulletList.extend(self._ActionItems(workflow.IterateActions(), visited))
+		bulletList.extend(self._ImageItem("container", image) for image in containers)
+		bulletList.extend(self._ImageItem("service", image, name) for name, image in services)
+
 		return bulletList
+
+	def _ActionItems(self, references: Iterable[UsesReference], visited: set[int]) -> list[nodes.list_item]:
+		"""
+		List actions, each once; a composite action with the actions its steps run, a Docker action with its image.
+
+		:param references: The references to the actions, in file order.
+		:param visited:    The identities of the workflows and actions on the path, which aren't expanded again.
+		:returns:          The items.
+		"""
+		from pyTooling.CI.Workflow import WorkflowError
+
+		items = []
+		for uses in {str(uses): uses for uses in references}.values():
+			item = self._UsesItem(uses)
+			try:
+				action = self.env.get_domain("gha").Resolver.ResolveAction(uses)
+			except WorkflowError as ex:
+				_logger.warning(
+					f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
+				)
+				action = None
+
+			if action is not None and id(action) not in visited:
+				nested = nodes.bullet_list("", *self._ActionItems(action.IterateActions(), visited | {id(action)}))
+				if action.Image is not None:
+					nested += self._ImageItem("image", action.Image)
+				if len(nested) > 0:
+					item += nested
+
+			items.append(item)
+
+		return items
+
+	def _Merge(self, derived: nodes.bullet_list, handwritten: nodes.bullet_list) -> None:
+		"""
+		Merge a hand-written list into a derived one.
+
+		A hand-written item whose text is a name of a derived item of this list adds its nested lists to that item,
+		merged recursively; any other item is appended.
+
+		:param derived:     The derived list.
+		:param handwritten: The hand-written list.
+		"""
+		for item in list(handwritten.children):
+			text = item[0].astext().strip() if len(item) > 0 and isinstance(item[0], nodes.paragraph) else None
+			match = next(
+				(child for child in derived.children if text is not None and text in self._keys.get(id(child), ((), None))[0]),
+				None
+			)
+			if match is None:
+				derived += item
+				continue
+
+			for node in item.children[1:]:
+				nested = next((child for child in match.children if isinstance(child, nodes.bullet_list)), None)
+				if isinstance(node, nodes.bullet_list) and nested is not None:
+					self._Merge(nested, node)
+				else:
+					match += node
 
 
 @export
