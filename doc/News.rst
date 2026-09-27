@@ -120,6 +120,13 @@ Version 10.x (2026)
        :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` names a dimension by its position,
        ``{"0": "ubuntu-26.04", "1": "3.14"}``, because a job's name carries no dimension names.
 
+   * :mod:`pyTooling.CI.Workflow` reads a GitHub Actions workflow **file** into a tree of
+     :class:`~pyTooling.CI.Workflow.Workflow`, :class:`~pyTooling.CI.Workflow.Input`,
+     :class:`~pyTooling.CI.Workflow.Job`, :class:`~pyTooling.CI.Workflow.Step` and further objects, each knowing the
+     line it is written at. :class:`~pyTooling.CI.Workflow.WorkflowResolver` reads the reusable workflows a job calls
+     from a local directory, and a workflow reports the transitive reduction of its jobs' ``needs`` and the
+     permissions it and the workflows it calls ask for. It needs the ``yaml`` extra.
+
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
 
