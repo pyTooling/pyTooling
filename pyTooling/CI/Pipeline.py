@@ -977,7 +977,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		"""
 		return self._matrices
 
-	def ToGraph(self, depth: Nullable[int] = None) -> Graph:
+	def ToGraph(self, depth: Nullable[int] = None, reduce: bool = True) -> Graph:
 		"""
 		Convert the workflow into a graph of the elements it contains and their dependencies.
 
@@ -992,11 +992,18 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:class:`~pyTooling.Graph.Link` to each vertex of its subgraph. The graph's own vertices and edges don't
 		include those of its subgraphs, since :mod:`pyTooling.Graph` registers them on the subgraph.
 
+		By default, the graph and every subgraph are reduced to their transitive reduction: a dependency a longer path
+		already implies - ``C`` needing ``A`` although it needs ``B``, which needs ``A`` - has no edge. With ``reduce``
+		set to ``False``, every dependency has one.
+
 		:param depth:       Optional, how many levels of nested groups to expand; ``0`` expands none, ``None`` every
 		                    level. Default: ``None``.
+		:param reduce:      Optional, ``True``, if the edges a longer path already implies are removed. Default:
+		                    ``True``.
 		:returns:           The graph, named like the workflow.
 		:raises TypeError:  If parameter 'depth' is not of type :class:`int`.
 		:raises ValueError: If parameter 'depth' is negative.
+		:raises TypeError:  If parameter 'reduce' is not of type :class:`bool`.
 
 		.. seealso::
 
@@ -1010,6 +1017,11 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		elif depth is not None and depth < 0:
 			ex = ValueError("Parameter 'depth' is negative.")
 			ex.add_note(f"Got value '{depth}'.")
+			raise ex
+
+		if not isinstance(reduce, bool):
+			ex = TypeError("Parameter 'reduce' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(reduce)}'.")
 			raise ex
 
 		graph = Graph(name=self._name)
@@ -1047,6 +1059,11 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 					addContents(element, Subgraph(graph, name=element.QualifiedName), vertex, level + 1)
 
 		addContents(self, None, None, 0)
+
+		if reduce:
+			graph.RemoveTransitiveEdges()
+			for subgraph in graph.Subgraphs:
+				subgraph.RemoveTransitiveEdges()
 
 		return graph
 

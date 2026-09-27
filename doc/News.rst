@@ -92,7 +92,8 @@ Version 10.x (2026)
        with :exc:`~pyTooling.CI.Pipeline.NeedCycleError`, which names the cycle.
      * :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts a pipeline into a :class:`~pyTooling.Graph.Graph`:
        an element is a vertex whose ID and value are the element, a dependency an edge, a called workflow or a
-       matrix a subgraph linked from the group's vertex.
+       matrix a subgraph linked from the group's vertex. By default the graph and its subgraphs are reduced to their
+       transitive reduction; ``reduce=False`` keeps an edge per dependency.
      * A group keeps its elements of every kind in one sequence, in the order they were added, so a definition
        iterates in file order. A matrix produces jobs or - :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` - called
        workflows.
