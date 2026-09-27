@@ -258,7 +258,8 @@ builds the same classes:
 Every timespan also carries the attributes of OpenTelemetry's semantic conventions for CI/CD, which
 :class:`~pyTooling.Tracing.CI.OTLP` names as a namespace nested the way the keys are - so
 :attr:`OTLP.CICD.Pipeline.Task.Run.ID <pyTooling.Tracing.CI.OTLP>` spells ``cicd.pipeline.task.run.id`` and the path
-can be read to check the key. The values a result may take are :class:`~pyTooling.Tracing.CI.Result`. What only GitHub
+can be read to check the key. The values a result may take are :class:`~pyTooling.Tracing.CI.Result`, which are
+those of the model's :class:`~pyTooling.CI.Pipeline.Outcome`, so a result is the element's outcome. What only GitHub
 reports is named the same way by :class:`~pyTooling.Tracing.CI.GitHub.GitHub`, e.g.
 ``github.conclusion`` beside the result it was mapped to. A job's timespan names its runner and the labels it was
 requested by, so a renderer can group waiting times per operating system, and a matrix instance additionally lists the
