@@ -73,12 +73,12 @@ class PipelineError(ToolingException):
 
 
 @export
-class NeedError(PipelineError):
+class NeedDependencyError(PipelineError):
 	"""The exception raised for a need - a dependency - two elements of a pipeline can't have."""
 
 
 @export
-class NeedCycleError(NeedError):
+class NeedDependencyCycleError(NeedDependencyError):
 	"""The exception raised for a need which would close a cycle of dependencies."""
 
 
@@ -448,14 +448,14 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 		"""
 		Add an element this element needs, and this element as its dependent.
 
-		:param need:            The element this element needs.
-		:raises ValueError:     If parameter 'need' is ``None``.
-		:raises TypeError:      If parameter 'need' is not of type :class:`DependencyMixin`.
-		:raises NeedCycleError: If parameter 'need' is this element.
-		:raises NeedError:      If parameter 'need' isn't contained in the same group as this element.
-		:raises NeedError:      If this element needs parameter 'need' already.
-		:raises NeedCycleError: If parameter 'need' needs this element already, directly or through others. |br|
-		                        The note names the cycle.
+		:param need:                      The element this element needs.
+		:raises ValueError:               If parameter 'need' is ``None``.
+		:raises TypeError:                If parameter 'need' is not of type :class:`DependencyMixin`.
+		:raises NeedDependencyCycleError: If parameter 'need' is this element.
+		:raises NeedDependencyError:      If parameter 'need' isn't contained in the same group as this element.
+		:raises NeedDependencyError:      If this element needs parameter 'need' already.
+		:raises NeedDependencyCycleError: If parameter 'need' needs this element already, directly or through others. |br|
+		                                  The note names the cycle.
 		"""
 		if need is None:
 			raise ValueError("Parameter 'need' is None.")
@@ -464,13 +464,13 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 			ex.add_note(f"Got type '{getFullyQualifiedName(need)}'.")
 			raise ex
 		elif need is self:
-			raise NeedCycleError(f"'{self}' can't need itself.")
+			raise NeedDependencyCycleError(f"'{self}' can't need itself.")
 		elif self._parent is None or need._parent is not self._parent:
-			ex = NeedError(f"'{self}' can't need '{need}', which isn't contained in the same group.")
+			ex = NeedDependencyError(f"'{self}' can't need '{need}', which isn't contained in the same group.")
 			ex.add_note(f"'{self}' is contained in '{self._parent}', '{need}' in '{need._parent}'.")
 			raise ex
 		elif need in self._needs:
-			raise NeedError(f"'{self}' needs '{need}' already.")
+			raise NeedDependencyError(f"'{self}' needs '{need}' already.")
 
 		# Depth-first search from the need along the needs: reaching this element means the new need closes a cycle.
 		predecessors: dict[DependencyMixin, DependencyMixin] = {need: need}
@@ -483,7 +483,7 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 					element = predecessors[element]
 					cycle.append(element)
 
-				ex = NeedCycleError(f"'{self}' can't need '{need}', because '{need}' needs '{self}' already.")
+				ex = NeedDependencyCycleError(f"'{self}' can't need '{need}', because '{need}' needs '{self}' already.")
 				ex.add_note(f"Cycle: {' -> '.join(str(item) for item in [self, *reversed(cycle)])}.")
 				raise ex
 
