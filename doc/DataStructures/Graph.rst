@@ -72,6 +72,7 @@ Features
 * A graph, vertex and an edge can store key-value-pairs via dictionary syntax.
 * A vertex knows its inbound and outbound edges.
 * An edge can have a weight.
+* A directed acyclic graph can be reduced to its transitive reduction.
 
 
 .. _STRUCT/Graph/MissingFeatures:
@@ -192,6 +193,34 @@ Graph Reference
 ===============
 
 .. todo:: GRAPH: reference to the graph
+
+
+.. _STRUCT/Graph/TransitiveReduction:
+
+Transitive Reduction
+====================
+
+An edge from ``A`` to ``C`` is *implied*, if ``C`` is reachable from ``A`` through another vertex as well - e.g. by the
+edges ``A → B`` and ``B → C``. :meth:`~pyTooling.Graph.BaseGraph.IterateTransitiveEdges` yields every implied edge,
+and :meth:`~pyTooling.Graph.BaseGraph.RemoveTransitiveEdges` removes them. What remains is the graph's *transitive
+reduction*: every vertex stays reachable from every vertex it was reachable from before, by the fewest edges. A graph
+with a cycle has no unique reduction and raises :exc:`~pyTooling.Graph.CycleError`.
+
+Only the edges of the graph it is called on are considered. A subgraph's edges are registered on the subgraph, so a
+subgraph is reduced by calling the method on it.
+
+.. code-block:: python
+
+   graph = Graph()
+   a, b, c = (Vertex(vertexID=name, graph=graph) for name in "ABC")
+   a.EdgeToVertex(b)
+   b.EdgeToVertex(c)
+   a.EdgeToVertex(c)                    # implied by A -> B -> C
+
+   graph.RemoveTransitiveEdges()
+
+   for subgraph in graph.Subgraphs:
+     subgraph.RemoveTransitiveEdges()
 
 
 .. _STRUCT/Graph/Competitors:

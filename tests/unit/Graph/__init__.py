@@ -1320,6 +1320,93 @@ class GraphOperations(Iterate):
 			self.assertTrue(v4.Value % 2 == 1)
 			self.assertEqual(0, len(v4))
 
+	def test_TransitiveEdges(self) -> None:
+		g = Graph()
+		vList = [Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
+
+		for u, v, w in self._graph0.Edges:
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
+
+		self.assertSetEqual({(4, 3), (5, 9)}, {(e.Source.Value, e.Destination.Value) for e in g.IterateTransitiveEdges()})
+		self.assertEqual(self._graph0.EdgeCount, g.EdgeCount)
+
+		g.RemoveTransitiveEdges()
+
+		self.assertEqual(self._graph0.EdgeCount - 2, g.EdgeCount)
+		self.assertEqual(0, len(list(g.IterateTransitiveEdges())))
+		self.assertFalse(vList[4].HasEdgeToDestination(vList[3]))
+		self.assertFalse(vList[5].HasEdgeToDestination(vList[9]))
+		self.assertTrue(vList[4].HasEdgeToDestination(vList[0]))
+
+	def test_TransitiveEdges_Chain(self) -> None:
+		"""Every edge skipping a vertex of a chain is implied."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		c.EdgeToVertex(d)
+		a.EdgeToVertex(c)
+		a.EdgeToVertex(d)
+		b.EdgeToVertex(d)
+
+		g.RemoveTransitiveEdges()
+
+		edges = {(edge.Source.ID, edge.Destination.ID) for edge in g.IterateEdges()}
+		self.assertSetEqual({("A", "B"), ("B", "C"), ("C", "D")}, edges)
+
+	def test_TransitiveEdges_Parallel(self) -> None:
+		"""A second edge between the same vertices is implied by the first."""
+		g = Graph()
+		a = Vertex(vertexID="A", graph=g)
+		b = Vertex(vertexID="B", graph=g)
+		first = a.EdgeToVertex(b, edgeID=1)
+		second = a.EdgeToVertex(b, edgeID=2)
+
+		self.assertListEqual([second], list(g.IterateTransitiveEdges()))
+
+		g.RemoveTransitiveEdges()
+
+		self.assertListEqual([first], list(g.IterateEdges()))
+
+	def test_TransitiveEdges_Empty(self) -> None:
+		g = Graph()
+
+		self.assertListEqual([], list(g.IterateTransitiveEdges()))
+
+	def test_TransitiveEdges_Cycle(self) -> None:
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(0, self._graph1.VertexCount)]
+
+		for u, v, w in self._graph1.Edges:
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
+
+		with self.assertRaises(CycleError):
+			list(g.IterateTransitiveEdges())
+
+		with self.assertRaises(CycleError):
+			g.RemoveTransitiveEdges()
+
+		self.assertEqual(self._graph1.EdgeCount, g.EdgeCount)
+
+	def test_TransitiveEdges_Subgraph(self) -> None:
+		"""A subgraph is reduced on its own; the graph's reduction doesn't touch it."""
+		g = Graph()
+		subgraph = Subgraph(g, name="sub")
+		a, b, c = (Vertex(vertexID=name, subgraph=subgraph) for name in "ABC")
+		x, y, z = (Vertex(vertexID=name, graph=g) for name in "XYZ")
+		for u, v in ((a, b), (b, c), (a, c), (x, y), (y, z), (x, z)):
+			u.EdgeToVertex(v)
+
+		g.RemoveTransitiveEdges()
+
+		self.assertEqual(2, g.EdgeCount)
+		self.assertEqual(3, subgraph.EdgeCount)
+
+		subgraph.RemoveTransitiveEdges()
+
+		self.assertEqual(2, subgraph.EdgeCount)
+		self.assertFalse(a.HasEdgeToDestination(c))
+
 
 class VertexOperations(Iterate):
 	def test_CopyIntoSameGraph(self) -> None:
