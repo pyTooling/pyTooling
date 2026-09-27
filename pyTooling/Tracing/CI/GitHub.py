@@ -336,7 +336,7 @@ class GitHubGroupMixin(metaclass=ExtendedType, mixin=True):
 		:returns:      The group's timespan.
 		"""
 		begin, end = cls._Timespan(group.CreatedAt, group.StartedAt, group.CompletedAt)
-		span = cls(group.Name, begin, end, parent=parent)
+		span = cls(str(group), begin, end, parent=parent)
 		cls._AddContents(group, span)
 
 		return span

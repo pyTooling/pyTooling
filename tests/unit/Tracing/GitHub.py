@@ -45,6 +45,7 @@ from pyTooling.Tracing           import Span, Trace
 from pyTooling.Tracing.CI        import CI, JobSpan, OTLP, PipelineTrace, Result, SpanKind, StepSpan
 from pyTooling.Tracing.CI        import TaskSpan, WorkflowSpan
 from pyTooling.Tracing.CI.GitHub import GitHub, WorkflowRunReader, WorkflowRunTrace
+from pyTooling.Tracing.Render    import GanttLayout, ciSpanFilter
 from pyTooling.Testing           import Testcase
 
 
@@ -816,6 +817,34 @@ class Matrices(Testcase):
 		instance = _children(matrix)["Unit Tests (ubuntu-26.04)"]
 
 		self.assertEqual("UnitTesting / Unit Tests (ubuntu-26.04)", instance["cicd.pipeline.task.name"])
+
+	def test_AMatrixOfCalledWorkflows(self) -> None:
+		"""A matrix calling a reusable workflow is a matrix span holding a workflow span per combination."""
+		jobs = [_job("Params", 0, 5, 20)]
+		for position, version in enumerate(("22.04", "24.04")):
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Build", 20, 30 + position, 300 + position))
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Test", 300, 310, 600 + position))
+		trace = WorkflowRunTrace.FromJSON(_run(), jobs)
+
+		matrix = _children(trace)["Ubuntu-fast"]
+		self.assertEqual("matrix", matrix[CI.Span.Kind])
+
+		workflow = _children(matrix)["Ubuntu-fast (mcode, 24.04)"]
+		self.assertEqual("workflow", workflow[CI.Span.Kind])
+		self.assertEqual("Ubuntu-fast (mcode, 24.04) / Test", _children(workflow)["Test"]["cicd.pipeline.task.name"])
+
+		layout = GanttLayout(trace, spanFilter=ciSpanFilter())
+		self.assertListEqual([
+			("Pipeline",                   0, "pipeline"),
+			("Params",                     1, "job"),
+			("Ubuntu-fast",                1, "matrix"),
+			("Ubuntu-fast (mcode, 22.04)", 2, "workflow"),
+			("Build",                      3, "job"),
+			("Test",                       3, "job"),
+			("Ubuntu-fast (mcode, 24.04)", 2, "workflow"),
+			("Build",                      3, "job"),
+			("Test",                       3, "job"),
+		], [(row.Name, row.Depth, row.Kind) for row in layout.IterateRows()])
 
 	def test_AMatrixInsideACalledWorkflow(self) -> None:
 		trace = WorkflowRunTrace.FromJSON(_run(), [_job("Docs / Sphinx (html)", 10, 12, 60)])

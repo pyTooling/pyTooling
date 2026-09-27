@@ -35,6 +35,7 @@ from datetime            import datetime, timezone
 from typing              import Any, Optional as Nullable
 
 from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
+from pyTooling.CI.GitHub import MatrixWorkflow
 from pyTooling.CI.GitHub import Status, Conclusion, Event, GitHubError, QualifiedNameMixin, StatusMixin
 from pyTooling.CI        import Pipeline as CIPipeline
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
@@ -1197,3 +1198,59 @@ class GenericModel(Testcase):
 		])
 
 		self.assertListEqual(["Caller", "Test", "Prepare"], [element.Name for element in pipeline.Elements])
+
+
+class MatrixOfCalledWorkflows(Testcase):
+	"""A job with ``strategy.matrix`` and ``uses:`` calls a workflow per combination, e.g. GHDL's ``Ubuntu-fast``."""
+
+	def _Pipeline(self) -> Pipeline:
+		"""
+		Read a run whose matrix called a reusable workflow three times, beside a plain job.
+
+		:returns: The workflow run.
+		"""
+		jobs = [_job("Params", 0, 5, 20)]
+		for position, version in enumerate(("22.04", "24.04", "26.04")):
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Build", 20, 30 + position, 300 + position))
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Test", 300, 310, 600 + position))
+
+		return Pipeline.FromJSON(_run(), jobs)
+
+	def test_Structure(self) -> None:
+		pipeline = self._Pipeline()
+
+		self.assertListEqual(["Params", "Ubuntu-fast"], [element.Name for element in pipeline.Elements])
+		self.assertDictEqual({}, pipeline.Workflows)
+
+		matrix = pipeline.Matrices["Ubuntu-fast"]
+		self.assertListEqual(
+			["Ubuntu-fast (mcode, 22.04)", "Ubuntu-fast (mcode, 24.04)", "Ubuntu-fast (mcode, 26.04)"],
+			[str(instance) for instance in matrix.Instances]
+		)
+		for instance in matrix.Instances:
+			with self.subTest(instance=str(instance)):
+				self.assertIsInstance(instance, MatrixWorkflow)
+				self.assertEqual("Ubuntu-fast", instance.Name)
+				self.assertListEqual(["Build", "Test"], [job.Name for job in instance.Jobs])
+
+	def test_QualifiedName(self) -> None:
+		"""A job is named the way GitHub reports it, although a matrix sits between the run and its workflow."""
+		pipeline = self._Pipeline()
+		job = pipeline.Matrices["Ubuntu-fast"]["Ubuntu-fast (mcode, 24.04)"]["Test"]
+
+		self.assertEqual("Ubuntu-fast (mcode, 24.04) / Test", job.QualifiedName)
+		self.assertEqual(7, len(list(pipeline.IterateJobs())))
+
+	def test_Times(self) -> None:
+		matrix = self._Pipeline().Matrices["Ubuntu-fast"]
+
+		self.assertEqual(_time(20), matrix.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(602), matrix.CompletedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+	def test_MatrixJobsInside(self) -> None:
+		"""A matrix inside a called workflow of a matrix still becomes a matrix of jobs."""
+		pipeline = Pipeline.FromJSON(_run(), [_job("Tests (3.14) / Unit (ubuntu-26.04)", 20, 30, 300)])
+		instance = pipeline.Matrices["Tests"]["Tests (3.14)"]
+
+		self.assertIsInstance(instance, MatrixWorkflow)
+		self.assertIsInstance(instance.Matrices["Unit"].Instances[0], MatrixJob)

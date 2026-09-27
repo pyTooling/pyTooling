@@ -84,6 +84,9 @@ answers it without a search:
 * **A called workflow and a matrix are not elements GitHub reports.** It encodes both in a job's name -
   ``Caller / Job`` for a called workflow, ``Job (ubuntu-26.04, 3.14)`` for a matrix instance -
   and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads the name back into the tree.
+* **A matrix may call a reusable workflow**, once per combination. Its jobs are named ``Tests (3.14) / Unit``, and
+  the prefix becomes a :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` ``Tests (3.14)`` below a
+  :class:`~pyTooling.CI.Pipeline.Matrix` ``Tests``, beside the other combinations.
 * :attr:`~pyTooling.CI.GitHub.Pipeline.Path` names the workflow's YAML file and
   :attr:`~pyTooling.CI.GitHub.Pipeline.WorkflowID` the workflow it belongs to, so a run can be traced back to the
   file that started it.
@@ -120,7 +123,8 @@ answers it without a search:
   :class:`~pyTooling.CI.Pipeline.Matrix` are named that way.
 * The bracketed suffix is a convention of GitHub's own interface rather than a field, so a job genuinely named
   ``Build (fast)`` and produced by no matrix is indistinguishable from one that was - it becomes a matrix of one
-  instance. A job whose workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.
+  instance, and so does a calling job named that way. A job whose workflow sets its own ``name:`` carries no values
+  at all, and its matrix stays invisible.
 
 
 .. _CI/GitHub/Strings:
