@@ -37,8 +37,9 @@ A service-independent data model of a CI pipeline, with the dependencies between
    +-- Pipeline             a pipeline
        +-- Workflow         a called workflow or a child pipeline, grouping the elements it contains
        |   +-- ...          the same elements a pipeline contains
-       +-- Matrix           a matrix, grouping the job instances it produced
-       |   +-- MatrixJob    one instance
+       +-- Matrix           a matrix, grouping the instances it produced
+       |   +-- MatrixJob        one job instance
+       |   +-- MatrixWorkflow   one instance of a called workflow
        +-- Job              a job
            +-- Step         a step of that job
 
@@ -57,7 +58,6 @@ values, the interface of a reusable workflow.
 from __future__            import annotations
 
 from datetime              import datetime
-from itertools             import chain
 from typing                import ClassVar, Iterable, Iterator, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
@@ -208,6 +208,9 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'outcome' is not of type :class:`Outcome`.
 		:raises TypeError:  If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
 		:raises TypeError:  If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
+
+		The element is added to its parent's elements last, so a class deriving from this one checks its own parameters
+		before it calls this initializer.
 		"""
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
@@ -246,6 +249,9 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._startedAt =   startedAt
 		self._completedAt = completedAt
 		self._outcome =     outcome
+
+		if parent is not None:
+			parent._AddElement(self)
 
 	@readonly
 	def Name(self) -> str:
@@ -348,10 +354,9 @@ class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",
 		"""
 		Read-only property to return the element's name, prefixed by the names of the workflows containing it.
 
-		The element itself is named by :func:`str`, so a :class:`MatrixJob` carries the dimension values it was
-		produced for. The walk ends at the :class:`Pipeline`, and passes through a :class:`Matrix` without naming it -
-		its instances carry its name already. The name is unique among an element's siblings as long as their names
-		are, and is the ID of the element's vertex in :meth:`Workflow.ToGraph`.
+		Every element is named by :func:`str`, so a :class:`MatrixJob` or a :class:`MatrixWorkflow` carries the
+		dimension values it was produced for. The walk ends at the :class:`Pipeline`, and passes through a
+		:class:`Matrix` without naming it - its instances carry its name already.
 
 		:returns: The name, with every calling workflow in front of it, separated by ``' / '``.
 		"""
@@ -359,7 +364,7 @@ class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",
 		element = self
 		while (element := element._parent) is not None and not isinstance(element, Pipeline):
 			if isinstance(element, Workflow):
-				names.append(element._name)
+				names.append(str(element))
 
 		return " / ".join(reversed(names))
 
@@ -566,6 +571,14 @@ class PipelineGroup(Base):
 			self._pipelines.append(pipeline)
 			pipeline._parent = self
 
+	def _AddElement(self, pipeline: Pipeline) -> None:
+		"""
+		Add a pipeline, which names the group as its parent.
+
+		:param pipeline: The pipeline.
+		"""
+		self._pipelines.append(pipeline)
+
 	@readonly
 	def Pipelines(self) -> list[Pipeline]:
 		"""
@@ -659,7 +672,7 @@ class JobGroup(Base):
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = None  #: Declared by the groups deriving from this class.
 
-	_jobs: list[Job]  #: Jobs of this group.
+	_elements: list[Base]  #: Elements of this group - jobs, matrices, workflows - in the order they were added.
 
 	def __init__(
 		self,
@@ -685,16 +698,45 @@ class JobGroup(Base):
 			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
 
-		self._jobs = []
+		self._elements = []
+
+	def _AddElement(self, element: Base) -> None:
+		"""
+		Add an element, which names the group as its parent.
+
+		:param element: The element.
+		"""
+		self._elements.append(element)
+
+	@readonly
+	def Elements(self) -> list[Base]:
+		"""
+		Read-only property to access the elements of this group (:attr:`_elements`).
+
+		:returns: The jobs, matrices and workflows one level below the group, in the order they were added.
+		"""
+		return self._elements
 
 	@readonly
 	def Jobs(self) -> list[Job]:
 		"""
-		Read-only property to access the jobs of this group (:attr:`_jobs`).
+		Read-only property to return the jobs of this group.
 
-		:returns: The jobs, not including those of nested groups.
+		:returns: The jobs one level below the group, in the order they were added.
 		"""
-		return self._jobs
+		return [element for element in self._elements if isinstance(element, Job)]
+
+	def IterateJobs(self) -> Iterator[Job]:
+		"""
+		Iterate every job below this group, including those of the groups it contains.
+
+		:returns: An iterator over the jobs, in the order their elements were added.
+		"""
+		for element in self._elements:
+			if isinstance(element, Job):
+				yield element
+			else:
+				yield from element.IterateJobs()
 
 	@readonly
 	def CreatedAt(self) -> Nullable[datetime]:
@@ -739,7 +781,7 @@ class JobGroup(Base):
 
 		:returns: The time, or ``None`` if no element below the group reports one.
 		"""
-		return _earliest(element.CreatedAt for element in self._Contents)
+		return _earliest(element.CreatedAt for element in self._elements)
 
 	@readonly
 	def ContentsStartedAt(self) -> Nullable[datetime]:
@@ -748,7 +790,7 @@ class JobGroup(Base):
 
 		:returns: The time, or ``None`` if no element below the group has started.
 		"""
-		return _earliest(element.StartedAt for element in self._Contents)
+		return _earliest(element.StartedAt for element in self._elements)
 
 	@readonly
 	def ContentsCompletedAt(self) -> Nullable[datetime]:
@@ -757,7 +799,7 @@ class JobGroup(Base):
 
 		:returns: The time, or ``None`` while an element below the group hasn't completed, or while it holds none.
 		"""
-		return _latest(element.CompletedAt for element in self._Contents)
+		return _latest(element.CompletedAt for element in self._elements)
 
 	@readonly
 	def ContentsOutcome(self) -> Nullable[Outcome]:
@@ -767,45 +809,34 @@ class JobGroup(Base):
 		:returns: The combined outcome (see :meth:`Outcome.Combine`), or ``None`` while an element below the group
 		          hasn't ended, or while it holds none.
 		"""
-		return Outcome.Combine(element.Outcome for element in self._Contents)
+		return Outcome.Combine(element.Outcome for element in self._elements)
 
 	def __len__(self) -> int:
 		"""
-		Return the number of jobs of this group.
+		Return the number of elements of this group.
 
-		:returns: Number of jobs.
+		:returns: Number of elements one level below the group.
 		"""
-		return len(self._jobs)
+		return len(self._elements)
 
 	def __contains__(self, name: str) -> bool:
 		"""
-		Check whether a job of that name belongs to this group.
+		Check whether an element of that name belongs to this group.
 
-		A job is named the way :func:`str` names it, so an instance of a :class:`Matrix` is asked for with its
+		An element is named the way :func:`str` names it, so an instance of a :class:`Matrix` is asked for with its
 		dimension values: ``"Unit Tests (ubuntu-26.04, 3.14)"``.
 
-		:param name: Name of the job to check for.
-		:returns:    ``True``, if a job of that name belongs to this group.
+		:param name: Name of the job, matrix or workflow to check for.
+		:returns:    ``True``, if an element of that name belongs to this group.
 		"""
-		return any(str(job) == name for job in self._jobs)
-
-	@readonly
-	def _Contents(self) -> Iterable[Base]:
-		"""
-		Read-only property to access what this group holds, its jobs (:attr:`_jobs`).
-
-		A :class:`Workflow` holds further groups and says so by overriding this.
-
-		:returns: The elements one level below this group.
-		"""
-		return self._jobs
+		return any(str(element) == name for element in self._elements)
 
 	def __iter__(self) -> Iterator[Base]:
 		"""
 		Iterate what this group holds, ordered by the time it was created.
 
 		The order is stable, so elements reporting no time - e.g. the elements of a definition - keep the order they
-		were added in.
+		were added in, which for a definition is the order of its file.
 
 		:returns: An iterator over the contained elements.
 		"""
@@ -818,7 +849,7 @@ class JobGroup(Base):
 			"""
 			return (element.CreatedAt is None, element.CreatedAt if element.CreatedAt is not None else datetime.min)
 
-		return iter(sorted(self._Contents, key=createdAt))
+		return iter(sorted(self._elements, key=createdAt))
 
 
 @export
@@ -870,22 +901,36 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			ex.add_note(f"Got type '{getFullyQualifiedName(reference)}'.")
 			raise ex
 
+		self._reference = reference
+		self._workflows = {}
+		self._matrices =  {}
+
 		ConditionMixin.__init__(self, condition)
 		super().__init__(
 			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
 		DependencyMixin.__init__(self)
 
-		if isinstance(parent, Workflow) and name in parent._workflows:
-			raise PipelineError(f"Workflow '{parent._name}' calls a workflow '{name}' already.")
+	def _AddElement(self, element: Base) -> None:
+		"""
+		Add an element, which names the workflow as its parent, and index a called workflow or a matrix by its name.
 
-		self._reference = reference
-		self._workflows = {}
-		self._matrices =  {}
+		:param element:        The element.
+		:raises PipelineError: If the workflow calls a workflow of that name already.
+		:raises PipelineError: If the workflow contains a matrix of that name already.
+		"""
+		if isinstance(element, Workflow):
+			if element._name in self._workflows:
+				raise PipelineError(f"Workflow '{self._name}' calls a workflow '{element._name}' already.")
 
-		# A pipeline's parent is a pipeline group, which the pipeline registers at itself.
-		if isinstance(parent, Workflow):
-			parent._workflows[name] = self
+			self._workflows[element._name] = element
+		elif isinstance(element, Matrix):
+			if element._name in self._matrices:
+				raise PipelineError(f"Workflow '{self._name}' contains a matrix '{element._name}' already.")
+
+			self._matrices[element._name] = element
+
+		super()._AddElement(element)
 
 	@readonly
 	def Reference(self) -> Nullable[str]:
@@ -901,33 +946,20 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 	@readonly
 	def Workflows(self) -> dict[str, Workflow]:
 		"""
-		Read-only property to access the workflows this workflow calls (:attr:`_workflows`).
+		Read-only property to access the workflows this workflow calls, by name (:attr:`_workflows`).
 
-		:returns: The called workflows, by name.
+		:returns: The called workflows, in the order they were added.
 		"""
 		return self._workflows
 
 	@readonly
 	def Matrices(self) -> dict[str, Matrix]:
 		"""
-		Read-only property to access the matrices of this workflow (:attr:`_matrices`).
+		Read-only property to access the matrices of this workflow, by the name their instances share (:attr:`_matrices`).
 
-		:returns: The matrices, by the name their jobs share.
+		:returns: The matrices, in the order they were added.
 		"""
 		return self._matrices
-
-	def IterateJobs(self) -> Iterator[Job]:
-		"""
-		Iterate every job below this workflow, including those of its matrices and of the workflows it calls.
-
-		:returns: An iterator over the jobs.
-		"""
-		yield from self._jobs
-		for matrix in self._matrices.values():
-			yield from matrix._jobs
-
-		for workflow in self._workflows.values():
-			yield from workflow.IterateJobs()
 
 	def ToGraph(self, depth: Nullable[int] = None) -> Graph:
 		"""
@@ -1002,32 +1034,6 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 
 		return graph
 
-	def __len__(self) -> int:
-		"""
-		Return the number of elements this workflow contains: its jobs, its matrices and the workflows it calls.
-
-		:returns: Number of contained elements.
-		"""
-		return len(self._jobs) + len(self._matrices) + len(self._workflows)
-
-	def __contains__(self, name: str) -> bool:
-		"""
-		Check whether an element of that name is contained in this workflow.
-
-		:param name: Name of the called workflow, matrix or job to check for.
-		:returns:    ``True``, if an element of that name is contained in this workflow.
-		"""
-		return name in self._workflows or name in self._matrices or super().__contains__(name)
-
-	@readonly
-	def _Contents(self) -> Iterable[Base]:
-		"""
-		Read-only property to return what this workflow holds: its jobs, its matrices and the workflows it calls.
-
-		:returns: The elements one level below this workflow.
-		"""
-		return chain(self._jobs, self._matrices.values(), self._workflows.values())
-
 
 @export
 class Pipeline(Workflow):
@@ -1068,14 +1074,11 @@ class Pipeline(Workflow):
 
 		self._pipeline = self
 
-		if parent is not None:
-			parent._pipelines.append(self)
-
 
 @export
 class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 	"""
-	A matrix, grouping the job instances it produced.
+	A matrix, grouping the instances it produced: jobs, or called workflows.
 
 	The matrix is an element of its workflow, so it can need and be needed by its siblings. A service doesn't report a
 	matrix as an element of its own, so it has no times of its own and spans its instances.
@@ -1088,7 +1091,7 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		Initializes a matrix.
 
 		:param name:           Name of the matrix, which its instances share.
-		:param condition:      Optional, condition under which the matrix' jobs run, as written. Default: ``None``.
+		:param condition:      Optional, condition under which the instances run, as written. Default: ``None``.
 		:param parent:         Optional, reference to the workflow containing the matrix. Default: ``None``.
 		:raises PipelineError: If the workflow contains a matrix of that name already.
 		"""
@@ -1096,20 +1099,67 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		super().__init__(name, parent=parent)
 		DependencyMixin.__init__(self)
 
-		if parent is not None:
-			if name in parent._matrices:
-				raise PipelineError(f"Workflow '{parent._name}' contains a matrix '{name}' already.")
-
-			parent._matrices[name] = self
-
 	@readonly
-	def Instances(self) -> list[MatrixJob]:
+	def Instances(self) -> list[Base]:
 		"""
-		Read-only property to access the job instances this matrix produced (:attr:`_jobs`).
+		Read-only property to access the instances this matrix produced (:attr:`_elements`).
 
-		:returns: The instances, in the order they were added.
+		:returns: The :class:`MatrixJob` or :class:`MatrixWorkflow` instances, in the order they were added.
 		"""
-		return self._jobs
+		return self._elements
+
+
+@export
+class MatrixWorkflow(Workflow, MatrixInstanceMixin):
+	"""
+	One instance of a called workflow produced by a matrix, e.g. a GitHub job with ``strategy.matrix`` and ``uses:``.
+	"""
+
+	_PARENT_TYPE: ClassVar[Nullable[type]] = Matrix  #: A matrix instance is contained in a matrix.
+
+	def __init__(
+		self,
+		name:            str,
+		dimensionValues: Nullable[Iterable[str]] = None,
+		*,
+		reference:       Nullable[str]      = None,
+		condition:       Nullable[str]      = None,
+		createdAt:       Nullable[datetime] = None,
+		startedAt:       Nullable[datetime] = None,
+		completedAt:     Nullable[datetime] = None,
+		outcome:         Nullable[Outcome]  = None,
+		parent:          Nullable[Matrix]   = None
+	) -> None:
+		"""
+		Initializes one instance of a called workflow produced by a matrix.
+
+		:param name:            Name of the workflow, without the dimension values.
+		:param dimensionValues: Optional, values of the matrix' dimensions this instance ran with. Default: ``None``.
+		:param reference:       Optional, what the workflow calls, as written. Default: ``None``.
+		:param condition:       Optional, condition under which the workflow is called, as written. Default: ``None``.
+		:param createdAt:       Optional, time the workflow was created, if the service reports it. Default: ``None``.
+		:param startedAt:       Optional, time the workflow started, if the service reports it. Default: ``None``.
+		:param completedAt:     Optional, time the workflow completed, if the service reports it. Default: ``None``.
+		:param outcome:         Optional, how the workflow ended, if the service reports it. Default: ``None``.
+		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
+		"""
+		MatrixInstanceMixin.__init__(self, dimensionValues)
+
+		super().__init__(
+			name, reference=reference, condition=condition, createdAt=createdAt, startedAt=startedAt,
+			completedAt=completedAt, outcome=outcome, parent=parent
+		)
+
+	def __str__(self) -> str:
+		"""
+		Return a string representation of the matrix instance.
+
+		:returns: The workflow's name, followed by its dimension values in brackets, if it has any.
+		"""
+		if len(self._dimensionValues) == 0:
+			return self._name
+
+		return f"{self._name} ({', '.join(self._dimensionValues)})"
 
 
 @export
@@ -1142,16 +1192,21 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:param outcome:     Optional, how the job ended. Default: ``None``.
 		:param parent:      Optional, reference to the group containing the job. Default: ``None``.
 		"""
+		self._steps = []
+
 		ConditionMixin.__init__(self, condition)
 		super().__init__(
 			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
 		DependencyMixin.__init__(self)
 
-		self._steps = []
+	def _AddElement(self, step: Step) -> None:
+		"""
+		Add a step, which names the job as its parent.
 
-		if parent is not None:
-			parent._jobs.append(self)
+		:param step: The step.
+		"""
+		self._steps.append(step)
 
 	@readonly
 	def Steps(self) -> list[Step]:
@@ -1265,6 +1320,3 @@ class Step(Base, ConditionMixin):
 		"""
 		ConditionMixin.__init__(self, condition)
 		super().__init__(name, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent)
-
-		if parent is not None:
-			parent._steps.append(self)

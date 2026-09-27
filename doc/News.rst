@@ -93,6 +93,9 @@ Version 10.x (2026)
      * :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts a pipeline into a :class:`~pyTooling.Graph.Graph`:
        an element is a vertex carrying the element as value and its qualified name as ID, a dependency an edge, a
        called workflow or a matrix a subgraph linked from the group's vertex.
+     * A group keeps its elements of every kind in one sequence, in the order they were added, so a definition
+       iterates in file order. A matrix produces jobs or - :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` - called
+       workflows.
      * GitHub Actions and GitLab CI - stages, ``needs:``, child and multi-project pipelines, ``parallel`` - map onto
        it, see :ref:`CI/Pipeline/Services`.
 

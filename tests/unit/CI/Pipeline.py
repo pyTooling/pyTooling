@@ -33,7 +33,8 @@ Unit tests for :mod:`pyTooling.CI.Pipeline`.
 """
 from datetime              import datetime, timedelta, timezone
 
-from pyTooling.CI.Pipeline import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
+from pyTooling.CI.Pipeline import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
+from pyTooling.CI.Pipeline import JobGroup, Step
 from pyTooling.CI.Pipeline import Outcome, PipelineError, DependencyError, DependencyCycleError
 from pyTooling.CI.Pipeline import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
 from pyTooling.Graph       import DuplicateVertexError, Graph, Subgraph
@@ -158,6 +159,23 @@ class Instantiation(Testcase):
 			_ = Matrix("Unit Tests", parent=pipeline)
 
 		self.assertEqual("Workflow 'Pipeline' contains a matrix 'Unit Tests' already.", str(context.exception))
+
+	def test_MatrixWorkflow(self) -> None:
+		"""A matrix may produce instances of a called workflow."""
+		pipeline = Pipeline("Pipeline")
+		matrix = Matrix("Tests", parent=pipeline)
+		instance = MatrixWorkflow("Tests", ["3.14"], reference="./.github/workflows/Tests.yml", parent=matrix)
+		job = Job("Unit", parent=instance)
+
+		self.assertListEqual([instance], matrix.Instances)
+		self.assertListEqual([], matrix.Jobs)
+		self.assertEqual("Tests (3.14)", str(instance))
+		self.assertEqual("Tests (3.14)", instance.QualifiedName)
+		self.assertEqual("Tests (3.14) / Unit", job.QualifiedName)
+		self.assertListEqual([job], list(pipeline.IterateJobs()))
+		self.assertIs(Matrix, MatrixWorkflow._PARENT_TYPE)
+		self.assertTrue(issubclass(MatrixWorkflow, MatrixInstanceMixin))
+		self.assertFalse(hasattr(instance, "__dict__"))
 
 	def test_MatrixJob_NoValues(self) -> None:
 		self.assertEqual("Build", str(MatrixJob("Build")))
@@ -288,18 +306,24 @@ class Hierarchy(Testcase):
 		self.assertListEqual([plain, instance, deep], list(group.IterateJobs()))
 
 	def test_Contents(self) -> None:
+		"""A group iterates its elements in the order they were added, whatever their kind."""
 		pipeline = Pipeline("Pipeline")
 		workflow = Workflow("Called", parent=pipeline)
 		matrix = Matrix("Test", parent=pipeline)
 		job = Job("Build", parent=pipeline)
+		other = Job("Deploy", parent=pipeline)
 
-		self.assertEqual(3, len(pipeline))
-		self.assertListEqual([job, matrix, workflow], list(pipeline))
+		self.assertEqual(4, len(pipeline))
+		self.assertListEqual([workflow, matrix, job, other], list(pipeline))
+		self.assertListEqual([workflow, matrix, job, other], pipeline.Elements)
+		self.assertListEqual([job, other], pipeline.Jobs)
+		self.assertDictEqual({"Called": workflow}, pipeline.Workflows)
+		self.assertDictEqual({"Test": matrix}, pipeline.Matrices)
 		for name in ("Called", "Test", "Build"):
 			with self.subTest(name=name):
 				self.assertIn(name, pipeline)
 
-		self.assertNotIn("Deploy", pipeline)
+		self.assertNotIn("Release", pipeline)
 
 	def test_Contents_ByCreation(self) -> None:
 		"""A group iterates what it holds in the order it was created; unknown times keep their order at the end."""
