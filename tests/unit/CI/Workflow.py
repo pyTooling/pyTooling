@@ -33,10 +33,14 @@ Unit tests for :mod:`pyTooling.CI.Workflow`.
 """
 from pathlib               import Path
 from tempfile              import TemporaryDirectory
-from textwrap              import dedent
+from textwrap              import dedent, indent
 
 from pyTooling.CI.Workflow import AccessLevel, InputType, Workflow, WorkflowError, WorkflowResolver
-from pyTooling.CI.Workflow import Input, Job, Permission, UsesReference
+from pyTooling.CI.Workflow import Input, Job, Matrix, Permission, UsesReference
+from pyTooling.CI.Workflow import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow, DefinedPipeline
+from pyTooling.CI.Workflow import DefinedWorkflow
+from pyTooling.CI.Pipeline import Pipeline as CIPipeline
+from pyTooling.Graph       import Graph
 from pyTooling.Testing     import Testcase
 
 
@@ -500,40 +504,294 @@ class Jobs(Fixture):
 		self.assertTrue(local.Uses.IsLocal)
 
 
-class Graph(Fixture):
-	def test_Edges(self) -> None:
+class Combinations(Fixture):
+	def _matrix(self, matrix: str) -> Matrix:
+		"""
+		Read a workflow whose only job has the given matrix.
+
+		:param matrix: The matrix' YAML, indented as the value of 'matrix'.
+		:returns:      The matrix.
+		"""
+		workflow = Workflow.FromFile(self._write("A.yml", "on: push\njobs:\n  Job:\n    runs-on: x\n    strategy:\n"
+			f"      matrix:\n{indent(dedent(matrix), '        ')}    steps: []\n"))
+
+		return workflow.Jobs["Job"].Matrix
+
+	def test_Product(self) -> None:
+		"""The last dimension varies fastest; 'exclude' matches an entry's pairs only."""
+		matrix = self._matrix("""\
+			system: [ubuntu, windows]
+			python: ['3.13', '3.14']
+			exclude:
+			  - system: windows
+			    python: '3.13'
+		""")
+
+		self.assertEqual(
+			[
+				{"system": "ubuntu", "python": "3.13"},
+				{"system": "ubuntu", "python": "3.14"},
+				{"system": "windows", "python": "3.14"}
+			],
+			matrix.Combinations
+		)
+
+	def test_Include(self) -> None:
+		"""GitHub's example: an entry extends what it doesn't change, or becomes a combination of its own."""
+		matrix = self._matrix("""\
+			fruit: [apple, pear]
+			animal: [cat, dog]
+			include:
+			  - color: green
+			  - color: pink
+			    animal: cat
+			  - fruit: apple
+			    shape: circle
+			  - fruit: banana
+			  - fruit: banana
+			    animal: cat
+		""")
+
+		self.assertEqual(
+			[
+				{"fruit": "apple", "animal": "cat", "color": "pink", "shape": "circle"},
+				{"fruit": "apple", "animal": "dog", "color": "green", "shape": "circle"},
+				{"fruit": "pear", "animal": "cat", "color": "pink"},
+				{"fruit": "pear", "animal": "dog", "color": "green"},
+				{"fruit": "banana"},
+				{"fruit": "banana", "animal": "cat"}
+			],
+			matrix.Combinations
+		)
+
+	def test_IncludeOnly(self) -> None:
+		matrix = self._matrix("""\
+			include:
+			  - {os: ubuntu, shell: bash}
+			  - {os: windows, shell: pwsh}
+		""")
+
+		self.assertEqual([{"os": "ubuntu", "shell": "bash"}, {"os": "windows", "shell": "pwsh"}], matrix.Combinations)
+
+	def test_Dynamic(self) -> None:
+		matrix = self._matrix("include: ${{ fromJson(inputs.jobs) }}\n")
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = matrix.Combinations
+
+		self.assertEqual("Matrix is dynamic; its combinations are known at run time only.", str(context.exception))
+		self.assertEqual(6, context.exception.Line)
+
+	def test_NoMappings(self) -> None:
+		matrix = self._matrix("os: [ubuntu]\ninclude: [ubuntu]\n")
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = matrix.Combinations
+
+		self.assertEqual("Key 'include' of the matrix is not a list of mappings.", str(context.exception))
+
+
+class ToPipeline(Fixture):
+	def _resolver(self) -> WorkflowResolver:
+		"""
+		Write the caller and the workflows it calls, and map ``owner/repo`` to their directory.
+
+		:returns: The resolver.
+		"""
+		self._write("Pipeline.yml", CALLER)
+		self._write("Package.yml", CALLABLE)
+		self._write("Prepare.yml", PREPARE)
+
+		return WorkflowResolver({"owner/repo": self._path})
+
+	def test_Elements(self) -> None:
+		"""A job running steps is a job, a job with a matrix a matrix; each links to its definition."""
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		pipeline = workflow.ToPipeline()
+
+		self.assertIsInstance(pipeline, DefinedPipeline)
+		self.assertIsInstance(pipeline, CIPipeline)
+		self.assertEqual("Package", pipeline.Name)
+		self.assertIs(workflow, pipeline.Definition)
+		self.assertEqual(["Params", "Build", "Static"], [element.Name for element in pipeline.Elements])
+
+		params = pipeline["Params"]
+		self.assertIsInstance(params, DefinedJob)
+		self.assertIs(workflow.Jobs["Params"], params.Definition)
+		self.assertEqual(["Compute"], [str(step) for step in params.Steps])
+		self.assertIs(workflow.Jobs["Params"].Steps[0], params.Steps[0].Definition)
+
+		build = pipeline["Build"]
+		self.assertIsInstance(build, DefinedMatrix)
+		self.assertEqual("inputs.dry_run == false", build.Condition)
+		self.assertEqual(0, len(build))
+
+		static = pipeline["Static"]
+		self.assertEqual(
+			["Static (ubuntu, 3.13)", "Static (ubuntu, 3.14)", "Static (windows, 3.14)"], [str(job) for job in static]
+		)
+		self.assertIsInstance(static["Static (ubuntu, 3.14)"], DefinedMatrixJob)
+		self.assertEqual(["Run docker://alpine:3.22"], [str(step) for step in static["Static (ubuntu, 3.14)"].Steps])
+
+	def test_Steps(self) -> None:
+		"""A step without a name is named as GitHub displays it."""
+		workflow = Workflow.FromFile(self._write("A.yml", dedent("""\
+			on: push
+			jobs:
+			  Job:
+			    runs-on: x
+			    steps:
+			      - name: Checkout
+			        uses: actions/checkout@v6
+			      - uses: actions/setup-python@v6
+			      - run: |
+			          echo "one"
+			          echo "two"
+			        if: success()
+		""")))
+		steps = workflow.ToPipeline()["Job"].Steps
+
+		self.assertEqual(["Checkout", "Run actions/setup-python@v6", 'Run echo "one"'], [str(step) for step in steps])
+		self.assertEqual("success()", steps[2].Condition)
+
+	def test_Needs(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		pipeline = workflow.ToPipeline()
+
+		self.assertEqual([pipeline["Params"]], pipeline["Build"].Needs)
+		self.assertEqual([pipeline["Params"], pipeline["Build"]], pipeline["Static"].Needs)
+		self.assertEqual([pipeline["Build"], pipeline["Static"]], pipeline["Params"].Dependents)
+
+	def test_Calls(self) -> None:
+		"""A called workflow is expanded, if the resolver reads it; a foreign one stays empty."""
+		resolver = self._resolver()
+		pipeline = resolver.Load(self._path / "Pipeline.yml").ToPipeline(resolver)
+
+		package = pipeline["Package"]
+		self.assertIsInstance(package, DefinedWorkflow)
+		self.assertEqual("owner/repo/.github/workflows/Package.yml@dev", package.Reference)
+		self.assertIs(resolver.Load(self._path / "Package.yml"), package.CalledWorkflow)
+		self.assertEqual(["Params", "Build", "Static"], [element.Name for element in package.Elements])
+		self.assertEqual("Package / Params", package["Params"].QualifiedName)
+		self.assertEqual([package["Params"]], package["Build"].Needs)
+
+		local = pipeline["Local"]
+		self.assertEqual(3, len(local))
+		self.assertIsNot(package["Params"], local["Params"])
+		self.assertEqual(["Prepare"], [element.Name for element in pipeline["Prepare"].Elements])
+
+		foreign = pipeline["Foreign"]
+		self.assertEqual("other/repo/.github/workflows/Package.yml@v1", foreign.Reference)
+		self.assertIsNone(foreign.CalledWorkflow)
+		self.assertEqual(0, len(foreign))
+
+	def test_Calls_Depth(self) -> None:
+		"""A depth of 0 expands no call."""
+		resolver = self._resolver()
+		pipeline = resolver.Load(self._path / "Pipeline.yml").ToPipeline(resolver, depth=0)
+
+		self.assertEqual([0, 0, 0, 0], [len(element) for element in pipeline])
+		self.assertIsNone(pipeline["Package"].CalledWorkflow)
+
+	def test_Calls_WithoutResolver(self) -> None:
+		pipeline = Workflow.FromFile(self._write("Pipeline.yml", CALLER)).ToPipeline()
+
+		self.assertEqual([0, 0, 0, 0], [len(element) for element in pipeline])
+
+	def test_Calls_Matrix(self) -> None:
+		"""A matrix calling a workflow is a matrix of called workflows, each expanded."""
+		self._write("Prepare.yml", PREPARE)
+		workflow = Workflow.FromFile(self._write("A.yml", dedent("""\
+			on: push
+			jobs:
+			  Tests:
+			    uses: ./.github/workflows/Prepare.yml
+			    strategy:
+			      matrix:
+			        python: ['3.13', '3.14']
+		""")))
+		tests = workflow.ToPipeline(WorkflowResolver())["Tests"]
+
+		self.assertIsInstance(tests, DefinedMatrix)
+		self.assertEqual(["Tests (3.13)", "Tests (3.14)"], [str(instance) for instance in tests])
+		self.assertIsInstance(tests["Tests (3.14)"], DefinedMatrixWorkflow)
+		self.assertEqual("Tests (3.14) / Prepare", tests["Tests (3.14)"]["Prepare"].QualifiedName)
+
+	def test_Recursion(self) -> None:
+		workflow = Workflow.FromFile(self._write("Self.yml", dedent("""\
+			on: workflow_call
+			jobs:
+			  Again:
+			    uses: ./.github/workflows/Self.yml
+		""")))
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = workflow.ToPipeline(WorkflowResolver())
+
+		self.assertEqual("Workflow 'Self' calls itself.", str(context.exception))
+		self.assertIn("Calls: Self -> Self.", context.exception.__notes__)
+
+	def test_Parameters(self) -> None:
 		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
 
+		with self.assertRaises(TypeError) as context:
+			_ = workflow.ToPipeline({})
+		self.assertEqual("Parameter 'resolver' is not of type 'WorkflowResolver'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = workflow.ToPipeline(depth="1")
+		self.assertEqual("Parameter 'depth' is not of type 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = workflow.ToPipeline(depth=-1)
+		self.assertEqual("Parameter 'depth' is negative.", str(context.exception))
+
+	def test_Definition(self) -> None:
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+
+		with self.assertRaises(ValueError) as context:
+			_ = DefinedJob(None)
+		self.assertEqual("Parameter 'definition' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = DefinedJob(workflow)
+		self.assertEqual("Parameter 'definition' is not of type 'Job'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = DefinedMatrix(workflow.Jobs["Package"])
+		self.assertEqual("Parameter 'definition' declares no matrix.", str(context.exception))
+
+	def test_ToGraph(self) -> None:
+		"""The graph of the pipeline drops a dependency a longer path implies."""
+		pipeline = Workflow.FromFile(self._write("Pipeline.yml", CALLER)).ToPipeline()
+
+		def edges(graph: Graph) -> list[tuple[str, str]]:
+			"""Nested function returning the edges of a graph by the names of the elements they connect."""
+			return [(edge.Source.Value.Name, edge.Destination.Value.Name) for edge in graph.IterateEdges()]
+
+		self.assertEqual([("Prepare", "Package"), ("Package", "Local"), ("Local", "Foreign")], edges(pipeline.ToGraph()))
 		self.assertEqual(
 			[
 				("Prepare", "Package"),
 				("Prepare", "Local"), ("Package", "Local"),
 				("Prepare", "Foreign"), ("Package", "Foreign"), ("Local", "Foreign")
 			],
-			[(need.Name, job.Name) for need, job in workflow.Edges]
+			edges(pipeline.ToGraph(reduce=False))
 		)
 
-	def test_ReducedEdges(self) -> None:
-		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
-
-		self.assertEqual(
-			[("Prepare", "Package"), ("Package", "Local"), ("Local", "Foreign")],
-			[(need.Name, job.Name) for need, job in workflow.ReducedEdges]
-		)
-
-	def test_ReducedEdges_Diamond(self) -> None:
-		workflow = Workflow.FromFile(self._write("Diamond.yml", dedent("""\
+	def test_ToGraph_Diamond(self) -> None:
+		pipeline = Workflow.FromFile(self._write("Diamond.yml", dedent("""\
 			on: push
 			jobs:
 			  A: {runs-on: x, steps: []}
 			  B: {runs-on: x, steps: [], needs: A}
 			  C: {runs-on: x, steps: [], needs: A}
 			  D: {runs-on: x, steps: [], needs: [A, B, C]}
-		""")))
+		"""))).ToPipeline()
 
 		self.assertEqual(
 			[("A", "B"), ("A", "C"), ("B", "D"), ("C", "D")],
-			[(need.Name, job.Name) for need, job in workflow.ReducedEdges]
+			[(edge.Source.Value.Name, edge.Destination.Value.Name) for edge in pipeline.ToGraph().IterateEdges()]
 		)
 
 
