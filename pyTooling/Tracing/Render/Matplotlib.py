@@ -72,7 +72,7 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="matplotlib", extra="diagram") from ex
 
 
-__all__ = ["COLLAPSE_SCRIPT", "COLLAPSE_STYLESHEET", "FONT_FAMILIES", "MONOSPACE_FONT_FAMILY"]
+__all__ = ["FONT_FAMILIES", "MONOSPACE_FONT_FAMILY", "COLLAPSE_SCRIPT", "COLLAPSE_STYLESHEET"]
 
 FONT_FAMILIES = ("DejaVu Sans", "Noto Emoji", "Symbola")
 """The font families tried in order for a character - a later emoji font supplies the emoji of job names."""
