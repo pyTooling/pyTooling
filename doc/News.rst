@@ -91,8 +91,8 @@ Version 10.x (2026)
        rejects a need outside the group with :exc:`~pyTooling.CI.Pipeline.DependencyError` and one closing a cycle
        with :exc:`~pyTooling.CI.Pipeline.DependencyCycleError`, which names the cycle.
      * :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts a pipeline into a :class:`~pyTooling.Graph.Graph`:
-       an element is a vertex carrying the element as value and its qualified name as ID, a dependency an edge, a
-       called workflow or a matrix a subgraph linked from the group's vertex.
+       an element is a vertex whose ID and value are the element, a dependency an edge, a called workflow or a
+       matrix a subgraph linked from the group's vertex.
      * A group keeps its elements of every kind in one sequence, in the order they were added, so a definition
        iterates in file order. A matrix produces jobs or - :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` - called
        workflows.

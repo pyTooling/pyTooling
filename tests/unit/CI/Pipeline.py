@@ -37,7 +37,7 @@ from pyTooling.CI.Pipeline import Base, PipelineGroup, Pipeline, Workflow, Matri
 from pyTooling.CI.Pipeline import JobGroup, Step
 from pyTooling.CI.Pipeline import Outcome, PipelineError, DependencyError, DependencyCycleError
 from pyTooling.CI.Pipeline import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
-from pyTooling.Graph       import DuplicateVertexError, Graph, Subgraph
+from pyTooling.Graph       import Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Tracing.CI  import Result
 from pyTooling.Testing     import Testcase
@@ -586,6 +586,16 @@ class ToGraph(Testcase):
 
 		return pipeline
 
+	@staticmethod
+	def _Name(vertex: Vertex) -> str:
+		"""
+		Return the name a consumer labels a vertex with.
+
+		:param vertex: The vertex.
+		:returns:      The qualified name of the element it carries.
+		"""
+		return vertex.Value.QualifiedName
+
 	def test_Vertices(self) -> None:
 		pipeline = self._Pipeline()
 
@@ -594,18 +604,18 @@ class ToGraph(Testcase):
 		self.assertIsInstance(graph, Graph)
 		self.assertEqual("Pipeline", graph.Name)
 		self.assertEqual(4, graph.VertexCount)
-		for name in ("Prepare", "Test", "Package", "Release"):
-			with self.subTest(vertex=name):
-				vertex = graph.GetVertexByID(name)
-				self.assertIs(pipeline.Pipeline, vertex.Value.Pipeline)
-				self.assertEqual(name, vertex.Value.QualifiedName)
+		for element in pipeline:
+			with self.subTest(element=str(element)):
+				vertex = graph.GetVertexByID(element)
+				self.assertIs(element, vertex.ID)
+				self.assertIs(element, vertex.Value)
 
-		self.assertIs(pipeline.Workflows["Package"], graph.GetVertexByID("Package").Value)
+		self.assertListEqual(["Prepare", "Test", "Package", "Release"], [self._Name(v) for v in graph.IterateVertices()])
 
 	def test_Edges(self) -> None:
 		graph = self._Pipeline().ToGraph()
 
-		edges = {(edge.Source.ID, edge.Destination.ID) for edge in graph.IterateEdges()}
+		edges = {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
 		self.assertSetEqual(
 			{("Prepare", "Test"), ("Prepare", "Package"), ("Prepare", "Release"), ("Test", "Release"), ("Package", "Release")},
 			edges
@@ -613,26 +623,27 @@ class ToGraph(Testcase):
 
 		graph.RemoveTransitiveEdges()
 
-		edges = {(edge.Source.ID, edge.Destination.ID) for edge in graph.IterateEdges()}
+		edges = {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
 		self.assertSetEqual({("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}, edges)
 
 	def test_Subgraphs(self) -> None:
-		graph = self._Pipeline().ToGraph()
+		pipeline = self._Pipeline()
+		graph = pipeline.ToGraph()
 
 		subgraphs = {subgraph.Name: subgraph for subgraph in graph.Subgraphs}
 		self.assertSetEqual({"Test", "Package"}, set(subgraphs))
 
 		package = subgraphs["Package"]
 		self.assertIsInstance(package, Subgraph)
-		self.assertSetEqual({"Package / Build", "Package / Upload"}, {vertex.ID for vertex in package.IterateVertices()})
+		self.assertSetEqual({"Package / Build", "Package / Upload"}, {self._Name(v) for v in package.IterateVertices()})
 		self.assertEqual(1, package.EdgeCount)
-		self.assertSetEqual({"Test (3.13)", "Test (3.14)"}, {vertex.ID for vertex in subgraphs["Test"].IterateVertices()})
+		self.assertSetEqual({"Test (3.13)", "Test (3.14)"}, {self._Name(v) for v in subgraphs["Test"].IterateVertices()})
 
-		groupVertex = graph.GetVertexByID("Package")
-		self.assertSetEqual(
-			{"Package / Build", "Package / Upload"}, {link.Destination.ID for link in groupVertex.OutboundLinks}
+		groupVertex = graph.GetVertexByID(pipeline.Workflows["Package"])
+		self.assertListEqual(
+			pipeline.Workflows["Package"].Jobs, [link.Destination.Value for link in groupVertex.OutboundLinks]
 		)
-		self.assertEqual(0, len(graph.GetVertexByID("Prepare").OutboundLinks))
+		self.assertEqual(0, len(graph.GetVertexByID(pipeline.Jobs[0]).OutboundLinks))
 
 	def test_Depth(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -668,16 +679,30 @@ class ToGraph(Testcase):
 		self.assertEqual(0, graph.SubgraphCount)
 
 	def test_DuplicateName(self) -> None:
+		"""Two elements of one name are two vertices, because the element is the vertex' ID."""
 		pipeline = Pipeline("Pipeline")
 		Job("Build", parent=pipeline)
 		Job("Build", parent=pipeline)
 
-		with self.assertRaises(DuplicateVertexError):
-			_ = pipeline.ToGraph()
+		graph = pipeline.ToGraph()
+
+		self.assertEqual(2, graph.VertexCount)
+
+	def test_MatrixWorkflow(self) -> None:
+		pipeline = Pipeline("Pipeline")
+		matrix = Matrix("Tests", parent=pipeline)
+		for version in ("3.13", "3.14"):
+			Job("Unit", parent=MatrixWorkflow("Tests", [version], parent=matrix))
+
+		graph = pipeline.ToGraph()
+
+		self.assertSetEqual(
+			{"Tests", "Tests (3.13)", "Tests (3.14)"}, {subgraph.Name for subgraph in graph.Subgraphs}
+		)
 
 	def test_Topologically(self) -> None:
 		graph = self._Pipeline().ToGraph()
 
-		order = [vertex.ID for vertex in graph.IterateTopologically()]
+		order = [self._Name(vertex) for vertex in graph.IterateTopologically()]
 		self.assertEqual("Release", order[0])
 		self.assertEqual("Prepare", order[-1])
