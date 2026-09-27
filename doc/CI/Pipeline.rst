@@ -54,7 +54,7 @@ kind from it. Every element knows its :attr:`~pyTooling.CI.Pipeline.Base.Parent`
 
 Iterating a group yields what it holds one level down, ordered by creation time; elements without a time keep the
 order they were added in. :meth:`~pyTooling.CI.Pipeline.JobGroup.IterateJobs` reaches every job below a group.
-An element is asked for and looked up by the name :func:`str` gives it - :pycode:`"Build" in pipeline`,
+An element is asked for and looked up by its name, :pycode:`str(element)` - :pycode:`"Build" in pipeline`,
 :pycode:`pipeline["Build"]`, :pycode:`matrix["Test (3.14)"]` - which is how a reader resolves the names a definition
 refers to.
 
