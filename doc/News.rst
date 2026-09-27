@@ -140,7 +140,7 @@ Version 10.x (2026)
    * The Sphinx extension registers a domain ``gha`` documenting GitHub Actions workflows - see
      :ref:`DOC/Sphinx/GHA`. ``gha:input``, ``gha:output`` and ``gha:secret`` take an input's type, requirement and
      default from the workflow file and add the hand-written fields; a page and its workflow file drifting apart is a
-     ``gha.drift`` warning. The directives also register the ``JOBTMPL/...`` labels of today's pages, so existing
+     ``gha.drift`` warning. The directives also register the ``JOBTMPL/...`` labels of converted pages, so existing
      references keep working. The ``sphinx`` extra installs ``ruamel.yaml`` for the domain.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
