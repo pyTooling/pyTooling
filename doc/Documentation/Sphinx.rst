@@ -27,6 +27,8 @@ documentation uses - and any other project's documentation can use. It is enable
 
    :ref:`DOC/Sphinx/GHA`
       |rarr| The domain ``gha``, documenting GitHub Actions workflows from their YAML files.
+   :ref:`DOC/Sphinx/GHA/PipelineGraph`
+      |rarr| The directive ``gha:pipeline-graph``, drawing the pipeline of a GitHub Actions workflow.
 
 
 .. _DOC/Sphinx/Roles:
@@ -348,108 +350,6 @@ language derives from the base-class, names itself, and overrides ``_RenderGraph
        graph = DotGraph()
        ...
        return str(graph)
-
-
-.. _DOC/Sphinx/PipelineGraph:
-
-gha:pipeline-graph
-******************
-
-.. grid:: 2
-
-   .. grid-item::
-      :columns: 6
-
-      The ``gha:pipeline-graph`` directive draws the pipeline of a GitHub Actions workflow - its jobs and their
-      ``needs`` - from the workflow file itself:
-
-      * a job is a node labelled with its name and the file of the reusable workflow it calls;
-      * a job running steps is a grey box with square corners;
-      * a job with an ``if`` condition is dashed, and in HTML its tooltip is the condition;
-      * a job with a ``strategy.matrix`` has a double border, and is one node whatever instances it has;
-      * a reusable workflow of another repository is a white leaf naming that repository and ref;
-      * a reusable workflow of the documented repository is expanded into a cluster of its jobs, as many levels deep
-        as ``:depth:`` says;
-      * the ``needs`` are the edges, without those a longer path implies.
-
-      The workflow is read with :mod:`pyTooling.CI.Workflow`, which needs the ``yaml`` extra, converted into a
-      :mod:`pyTooling.CI.Pipeline` model and its :class:`~pyTooling.Graph.Graph` (:ref:`CI/Workflow/Pipeline`), and
-      drawn by :mod:`sphinx.ext.graphviz`. Every workflow file drawn becomes a dependency of the page.
-
-   .. grid-item::
-      :columns: 6
-
-      .. code-block:: ReST
-
-         .. gha:pipeline-graph:: Workflows/Pipeline.yml
-            :depth: 1
-            :caption: The pipeline of Pipeline.yml.
-
-This is how the example renders, drawn from :download:`Workflows/Pipeline.yml` and
-:download:`Workflows/Test.yml`:
-
-.. gha:pipeline-graph:: Workflows/Pipeline.yml
-   :depth: 1
-   :caption: The pipeline of Pipeline.yml.
-
-.. rst:directive:: .. gha:pipeline-graph:: <path of a workflow file>
-
-   Draws the workflow the argument names, relative to the document.
-
-   .. rst:directive:option:: depth: <levels>
-
-      Levels of reusable workflows of the documented repository to expand into clusters. Default: 0.
-
-   .. rst:directive:option:: direction: LR | TB
-
-      Whether the pipeline flows from left to right or from top to bottom. Default: ``LR``.
-
-   .. rst:directive:option:: reduce: yes | no
-
-      Whether an edge a longer path implies is dropped. Default: ``yes``.
-
-   .. rst:directive:option:: link: yes | no
-
-      Whether a job links to the page documenting its reusable workflow, in HTML. Default: ``yes``.
-
-   .. rst:directive:option:: caption: <text>
-
-      A caption under the graph.
-
-   .. rst:directive:option:: name: <label>
-
-      A label to reference the graph by.
-
-   .. rst:directive:option:: align: left | center | right
-
-      The graph's horizontal alignment.
-
-   .. rst:directive:option:: alt: <text>
-
-      The graph's alternative text. Default: ``Pipeline of <file name>``.
-
-.. rubric:: The documented repository
-
-A reusable workflow is called by a reference like ``pyTooling/Actions/.github/workflows/Package.yml@r8``.
-:file:`conf.py` says which repository the documentation describes, where its workflow files are, and at which ref:
-
-.. code-block:: Python
-
-   # doc/conf.py
-   gha_repository =         "pyTooling/Actions"
-   gha_workflow_directory = "../.github/workflows"
-   gha_ref =                "r8"
-
-The graph reads the configuration values of the ``gha`` domain (:ref:`DOC/Sphinx/GHA/Config`):
-
-* The reusable workflows of :confval:`gha_repository` are expanded and linked, whatever the ref they are called at.
-  Without it, only local references like ``./.github/workflows/Test.yml`` are.
-* Without :confval:`gha_workflow_directory`, they are read from the directory of the drawn workflow file.
-* A job calling a reusable workflow of the documented repository at another ref than :confval:`gha_ref` is a warning
-  of type ``gha.ref``. Without it, refs aren't checked.
-
-A job links to the page the ``gha`` domain documents its reusable workflow on. Without such a page, and in a format
-other than HTML, the job has no link.
 
 
 .. _DOC/Sphinx/Shields:
