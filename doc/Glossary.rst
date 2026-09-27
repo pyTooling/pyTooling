@@ -615,7 +615,7 @@ Glossary
      A *matrix* is a :term:`job` written once and run several times, once per combination of the values it is
      given - three Python versions on two operating systems are six jobs.
 
-     :class:`pyTooling.CI.GitHub.Matrix` groups the instances a matrix produced, and each
+     :class:`pyTooling.CI.Pipeline.Matrix` groups the instances a matrix produced, and each
      :class:`~pyTooling.CI.GitHub.MatrixJob` carries the values it was produced for. GitHub reports no matrix as
      such - the instances are recognized by the bracketed values in a job's name - see :ref:`CI/GitHub/Strings`.
 
@@ -1200,7 +1200,7 @@ Glossary
      A *workflow* is an automation file a CI service runs - and, below a :term:`pipeline`, a **called** workflow:
      one workflow started by another, whose :term:`jobs <job>` belong to the caller's run.
 
-     :class:`pyTooling.CI.GitHub.Workflow` groups them, nested as deeply as they are called. GitHub reports no
+     :class:`pyTooling.CI.Pipeline.Workflow` groups them, nested as deeply as they are called. GitHub reports no
      nesting as such - a called workflow is recognized by the ``Caller / Job`` shape of a job's name, see
      :ref:`CI/GitHub/Strings`.
 
