@@ -62,7 +62,8 @@ from datetime              import datetime, timezone
 from typing                import Optional as Nullable, ClassVar, Iterable, Iterator, Self, Union
 
 from pyTooling.CI          import JSONObject
-from pyTooling.CI.Pipeline import Base, JobGroup, Matrix, MatrixInstanceMixin, Outcome, QualifiedNameMixin, Workflow
+from pyTooling.CI.Pipeline import Base, JobGroup, Matrix, MatrixInstanceMixin, MatrixWorkflow, Outcome
+from pyTooling.CI.Pipeline import QualifiedNameMixin, Workflow
 from pyTooling.CI.Pipeline import Job as CIJob, Pipeline as CIPipeline, PipelineGroup as CIPipelineGroup
 from pyTooling.CI.Pipeline import Step as CIStep
 from pyTooling.Common      import getFullyQualifiedName, parseISO8601Timestamp, StringEnum
@@ -703,7 +704,9 @@ class Pipeline(CIPipeline, StatusMixin):
 
 		A job's name says where it sits, and is read back into the tree: ``Docs / Sphinx / HTML`` nests below a
 		:class:`~pyTooling.CI.Pipeline.Workflow` per prefix, and ``Unit Tests (ubuntu-26.04, 3.14)`` becomes a
-		:class:`MatrixJob` below a :class:`~pyTooling.CI.Pipeline.Matrix` named ``Unit Tests``.
+		:class:`MatrixJob` below a :class:`~pyTooling.CI.Pipeline.Matrix` named ``Unit Tests``. A prefix carrying
+		dimension values - ``Tests (3.14) / Unit``, a matrix of calls of a reusable workflow - becomes a
+		:class:`~pyTooling.CI.Pipeline.MatrixWorkflow` below a :class:`~pyTooling.CI.Pipeline.Matrix` named ``Tests``.
 
 		:param run:          The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
 		:param jobs:         Optional, the run's jobs, as listed by ``GET .../actions/runs/{run_id}/jobs``.
@@ -761,7 +764,17 @@ class Pipeline(CIPipeline, StatusMixin):
 			group: Workflow = pipeline
 			for caller in callers:
 				if (calledWorkflow := group.Workflows.get(caller, None)) is None:
-					calledWorkflow = Workflow(caller, parent=group)
+					callerName, callerValues = _splitMatrixJobName(caller)
+					if callerValues is None:
+						calledWorkflow = Workflow(caller, parent=group)
+					else:
+						if (matrix := group.Matrices.get(callerName, None)) is None:
+							matrix = Matrix(callerName, parent=group)
+
+						if caller in matrix:
+							calledWorkflow = matrix[caller]
+						else:
+							calledWorkflow = MatrixWorkflow(callerName, callerValues, parent=matrix)
 
 				group = calledWorkflow
 

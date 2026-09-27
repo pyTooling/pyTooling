@@ -104,6 +104,9 @@ Version 10.x (2026)
        :class:`~pyTooling.CI.GitHub.StatusMixin`, a conclusion is also an :class:`~pyTooling.CI.Pipeline.Outcome`, a
        matrix has a qualified name, every group has ``Contents*At``, and a group's elements are in the order GitHub
        listed them.
+     * A matrix calling a reusable workflow - jobs named ``Tests (3.14) / Unit`` - is read as a
+       :class:`~pyTooling.CI.Pipeline.Matrix` of :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` instances instead of
+       one called workflow per combination, so a trace groups them below a ``matrix`` timespan.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.

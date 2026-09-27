@@ -246,7 +246,8 @@ builds the same classes:
 +--------------+------------------------------------------------------------------------------------------------------+
 | ``workflow`` | A called workflow: the jobs named ``Caller / Job`` are grouped below a timespan ``Caller``.          |
 +--------------+------------------------------------------------------------------------------------------------------+
-| ``matrix``   | A matrix: the jobs named ``Job (ubuntu-26.04, 3.14)`` are grouped below a timespan ``Job``.          |
+| ``matrix``   | A matrix: the jobs named ``Job (ubuntu-26.04, 3.14)`` are grouped below a timespan ``Job``, and the  |
+|              | called workflows of ``Caller (3.14) / Job`` - a ``workflow`` each - below a timespan ``Caller``.     |
 +--------------+------------------------------------------------------------------------------------------------------+
 | ``queued``   | ``<job> (queued)``, the time a job waited for a runner, in front of the job.                         |
 +--------------+------------------------------------------------------------------------------------------------------+
