@@ -122,8 +122,8 @@ Conversion to a Graph
 * Every element one level below becomes a **vertex**. Its :attr:`~pyTooling.Graph.Vertex.ID` and its
   :attr:`~pyTooling.Graph.Vertex.Value` are the element, so :pycode:`graph.GetVertexByID(job)` finds a job's vertex.
   A vertex has no name; label it by :pycode:`vertex.Value.QualifiedName`.
-* Every dependency becomes an **edge** from the needed element to the element needing it - the direction the
-  pipeline runs in.
+* Every dependency becomes an **edge** from the element needing to the element it needs: an edge reads *needs*.
+  :meth:`~pyTooling.Graph.BaseGraph.IterateTopologically` therefore yields the elements in an order they can run in.
 * A called workflow or a matrix holding elements is expanded into a :class:`~pyTooling.Graph.Subgraph`, named by its
   qualified name and built the same way. The group's vertex has a :class:`~pyTooling.Graph.Link` to each vertex of
   its subgraph. ``depth`` limits how many levels are expanded; ``0`` expands none.

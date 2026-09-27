@@ -645,7 +645,7 @@ class ToGraph(Testcase):
 		Return the edges of a graph or subgraph by the qualified names of their vertices.
 
 		:param graph: The graph or subgraph.
-		:returns:     The pairs of the needed element's and the dependent element's name.
+		:returns:     The pairs of the needing element's and the needed element's name.
 		"""
 		return {(self._Name(edge.Source), self._Name(edge.Destination)) for edge in graph.IterateEdges()}
 
@@ -653,15 +653,15 @@ class ToGraph(Testcase):
 		"""With 'reduce' off, every dependency is an edge."""
 		graph = self._Pipeline().ToGraph(reduce=False)
 
-		edges = {("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}
-		self.assertSetEqual(edges | {("Prepare", "Release")}, self._Edges(graph))
+		edges = {("Test", "Prepare"), ("Package", "Prepare"), ("Release", "Test"), ("Release", "Package")}
+		self.assertSetEqual(edges | {("Release", "Prepare")}, self._Edges(graph))
 
 	def test_Reduce(self) -> None:
 		"""By default, a dependency a longer path implies has no edge."""
 		graph = self._Pipeline().ToGraph()
 
 		self.assertSetEqual(
-			{("Prepare", "Test"), ("Prepare", "Package"), ("Test", "Release"), ("Package", "Release")}, self._Edges(graph)
+			{("Test", "Prepare"), ("Package", "Prepare"), ("Release", "Test"), ("Release", "Package")}, self._Edges(graph)
 		)
 
 	def test_Reduce_Subgraph(self) -> None:
@@ -674,9 +674,9 @@ class ToGraph(Testcase):
 		upload.AddNeed(build)
 
 		for reduce, edges in (
-			(True,  {("Package / Build", "Package / Test"), ("Package / Test", "Package / Upload")}),
-			(False, {("Package / Build", "Package / Test"), ("Package / Test", "Package / Upload"),
-			         ("Package / Build", "Package / Upload")}),
+			(True,  {("Package / Test", "Package / Build"), ("Package / Upload", "Package / Test")}),
+			(False, {("Package / Test", "Package / Build"), ("Package / Upload", "Package / Test"),
+			         ("Package / Upload", "Package / Build")}),
 		):
 			with self.subTest(reduce=reduce):
 				graph = pipeline.ToGraph(reduce=reduce)
@@ -773,8 +773,9 @@ class ToGraph(Testcase):
 		)
 
 	def test_Topologically(self) -> None:
+		"""The elements are yielded in an order they can run in: an element after every element it needs."""
 		graph = self._Pipeline().ToGraph()
 
 		order = [self._Name(vertex) for vertex in graph.IterateTopologically()]
-		self.assertEqual("Release", order[0])
-		self.assertEqual("Prepare", order[-1])
+		self.assertEqual("Prepare", order[0])
+		self.assertEqual("Release", order[-1])
