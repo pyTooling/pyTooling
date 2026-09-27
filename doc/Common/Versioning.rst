@@ -261,6 +261,12 @@ Variants
             * 3.13.0a4
             * 3.13.0b2
             * 3.13.0rc2
+            * 10.0.0.dev0
+
+            :meth:`~pyTooling.Versioning.PythonVersion.Parse` also accepts the spellings :pep:`440` normalizes:
+            ``10.0.0-rc1`` and ``10.0.0-pre1`` are ``10.0.0rc1`` - as are ``c1`` and ``preview1`` - and
+            ``10.0.0-dev`` is ``10.0.0.dev0``. :class:`~pyTooling.Versioning.SemanticVersion` keeps its own meaning:
+            ``-dev`` is a release level, and ``c`` is *gamma*.
 
          .. grid-item::
             :columns: 6
@@ -271,6 +277,10 @@ Variants
 
                @export
                class PythonVersion(SemanticVersion):
+                 @classmethod
+                 def Parse(cls, versionString, validator=None) -> "PythonVersion":
+                   pass
+
                  @classmethod
                  def FromSysVersionInfo(cls) -> "PythonVersion":
                    pass

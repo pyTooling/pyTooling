@@ -46,7 +46,7 @@ from __future__            import annotations
 
 from collections.abc       import Iterable as abc_Iterable
 from enum                  import Flag, Enum
-from re                    import compile as re_compile, escape as re_escape, Pattern
+from re                    import compile as re_compile, escape as re_escape, Pattern, IGNORECASE
 from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable
 from typing                import Iterator, Self
 
@@ -1606,6 +1606,41 @@ class PythonVersion(SemanticVersion):
 
 	#: :pep:`440` writes an epoch ``v2!1.2.3``, where Debian and the default write ``2:1.2.3``.
 	_EPOCH_SEPARATOR: ClassVar[str] = "!"
+
+	#: :pep:`440`'s alternative spellings of a release candidate: ``c``, ``pre`` and ``preview`` are ``rc``.
+	_RELEASE_CANDIDATE_SPELLING: ClassVar[Pattern] = re_compile(
+		r"(?<=\d)(?P<delimiter>[-_.]?)(?:c|pre|preview)(?=\d)",
+		IGNORECASE
+	)
+	#: :pep:`440`'s development release without a number: ``-dev`` is ``.dev0``.
+	_DEVELOPMENT_WITHOUT_NUMBER: ClassVar[Pattern] = re_compile(r"(?<=\d)[-_.]?dev(?=$|\+)", IGNORECASE)
+
+	@classmethod
+	def Parse(
+		cls,
+		versionString: Nullable[str],
+		validator:     Nullable[Callable[[SemanticVersion], bool]] = None
+	) -> PythonVersion:
+		"""
+		Parse a version string and return a :class:`PythonVersion` instance.
+
+		In addition to :meth:`SemanticVersion.Parse`, the alternative spellings :pep:`440` normalizes are accepted:
+		``1.0c1``, ``1.0-pre1`` and ``1.0-preview1`` are the release candidate ``1.0rc1``, and ``1.0-dev`` is the
+		development release ``1.0.dev0``.
+
+		:param versionString:          The version string to parse.
+		:param validator:              Optional, a validation function.
+		:returns:                      An object representing a Python version.
+		:raises TypeError:             When parameter ``versionString`` is not a string.
+		:raises ValueError:            When parameter ``versionString`` is None or empty.
+		:raises ValueError:            When parameter ``versionString`` isn't a version number.
+		:raises VersionValidatorError: When the parsed version is rejected by ``validator``.
+		"""
+		if isinstance(versionString, str):
+			versionString = cls._RELEASE_CANDIDATE_SPELLING.sub(r"\g<delimiter>rc", versionString)
+			versionString = cls._DEVELOPMENT_WITHOUT_NUMBER.sub(".dev0", versionString)
+
+		return super().Parse(versionString, validator)
 
 	@classmethod
 	def FromSysVersionInfo(cls) -> PythonVersion:
