@@ -79,18 +79,28 @@ class Spellings(Testcase):
 		self.assertEqual("", preview.Normalize().ReleaseLevelSpelling)
 
 	def test_DevelopmentWithoutNumber(self) -> None:
-		version = PythonVersion.Parse("10.0.0-dev")
+		for spelling in ("10.0.0-dev", "10.0.0.dev", "10.0.0dev"):
+			with self.subTest(spelling=spelling):
+				version = PythonVersion.Parse(spelling)
 
-		self.assertEqual("10.0.0-dev", str(version))
-		self.assertIs(ReleaseLevel.Development, version.ReleaseLevel)
-		self.assertEqual(PythonVersion.Parse("10.0.0.dev0"), version)
-		self.assertEqual(hash(PythonVersion.Parse("10.0.0.dev0")), hash(version))
-		self.assertNotEqual(PythonVersion.Parse("10.0.0"), version)
+				self.assertEqual("10.0.0-dev", str(version))
+				self.assertIs(ReleaseLevel.Development, version.ReleaseLevel)
+				self.assertEqual(PythonVersion.Parse("10.0.0.dev0"), version)
+				self.assertEqual(hash(PythonVersion.Parse("10.0.0.dev0")), hash(version))
+				self.assertNotEqual(PythonVersion.Parse("10.0.0"), version)
 
-		normalized = version.Normalize()
-		self.assertEqual("10.0.0.dev0", str(normalized))
-		self.assertIs(ReleaseLevel.Final, normalized.ReleaseLevel)
-		self.assertEqual(0, normalized.Dev)
+				normalized = version.Normalize()
+				self.assertEqual("10.0.0.dev0", str(normalized))
+				self.assertIs(ReleaseLevel.Final, normalized.ReleaseLevel)
+				self.assertEqual(0, normalized.Dev)
+
+	def test_UpperCaseIsNoReleaseLevel(self) -> None:
+		for spelling in ("10.0.0-PRE1", "10.0.0-DEV"):
+			with self.subTest(spelling=spelling):
+				version = PythonVersion.Parse(spelling)
+
+				self.assertIs(ReleaseLevel.Final, version.ReleaseLevel)
+				self.assertEqual(spelling[7:], version.Postfix)
 
 	def test_DevelopmentWithLocalVersion(self) -> None:
 		version = PythonVersion.Parse("1.0-dev+local")
