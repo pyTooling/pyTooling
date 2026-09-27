@@ -50,10 +50,12 @@ HTML, a node links to the page documenting its reusable workflow, if the ``gha``
    :mod:`pyTooling.Documentation.Sphinx.SchemaGraph`
       |rarr| The other graph directives of the extension.
 """
+from __future__                                import annotations
+
 from html                                      import escape as html_escape
 from pathlib                                   import Path, PurePosixPath
 from re                                        import Match, compile as re_compile
-from typing                                    import Any, Optional as Nullable
+from typing                                    import TYPE_CHECKING, Any, Optional as Nullable
 
 from docutils                                  import nodes
 from docutils.parsers.rst                      import directives
@@ -65,11 +67,13 @@ from sphinx.util.logging                       import getLogger
 from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export, readonly
 from pyTooling.MetaClasses                     import ExtendedType
-from pyTooling.CI.Workflow                     import Job, UsesReference, Workflow, WorkflowError, WorkflowResolver
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip, stripAndNormalize
 
+if TYPE_CHECKING:  # pragma: no cover
+	from pyTooling.CI.Workflow                   import Job, UsesReference, Workflow, WorkflowResolver
 
-__all__ = ["GRAPH_ATTRIBUTES", "CSS_CLASS", "LINK_MARKER", "CONFIG_VALUES"]
+
+__all__ = ["GRAPH_ATTRIBUTES", "CSS_CLASS", "LINK_MARKER"]
 
 #: Attributes every pipeline graph is drawn with, so two pipelines in one document look alike.
 GRAPH_ATTRIBUTES = (
@@ -90,14 +94,6 @@ CSS_CLASS = "gha-pipeline-graph"
 #: A DOT comment, and the whitespace before it, standing where a job's link belongs, until :func:`resolveLinks`
 #: replaces it by the link or removes it.
 LINK_MARKER = re_compile(r"(?P<space>\s*)/\*gha-link:(?P<stem>[^*]*)\*/")
-
-#: Configuration values of the directive, as ``name: (default, rebuild, types)``.
-#:
-#: ``gha_ref`` is the ref - a branch or tag - of the documented repository the documentation describes. A job calling
-#: a reusable workflow of that repository at another ref is reported. Without it, refs aren't checked.
-CONFIG_VALUES: dict[str, tuple[Any, str, Any]] = {
-	"gha_ref": (None, "env", (str, )),
-}
 
 _logger = getLogger(__name__)
 
@@ -163,6 +159,8 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		:raises TypeError:     If parameter 'link' is not of type :class:`bool`.
 		:raises WorkflowError: If a reusable workflow to expand doesn't exist, or is not a well-formed workflow.
 		"""
+		from pyTooling.CI.Workflow import Workflow, WorkflowResolver
+
 		if workflow is None:
 			raise ValueError("Parameter 'workflow' is None.")
 		elif not isinstance(workflow, Workflow):
@@ -458,6 +456,8 @@ class PipelineGraph(BaseDirective):
 		relativePath, absolutePath = self.env.relfn2path(self.arguments[0])
 		self.env.note_dependency(relativePath)
 		workflowFile = Path(absolutePath)
+
+		from pyTooling.CI.Workflow import WorkflowError, WorkflowResolver
 
 		repository = getattr(self.config, "gha_repository", None)
 		directory = getattr(self.config, "gha_workflow_directory", None)

@@ -439,22 +439,13 @@ A reusable workflow is called by a reference like ``pyTooling/Actions/.github/wo
    gha_workflow_directory = "../.github/workflows"
    gha_ref =                "r8"
 
-.. list-table:: Configuration values in :file:`conf.py`
-   :header-rows: 1
-   :widths: 40 60
+The graph reads the configuration values of the ``gha`` domain (:ref:`DOC/Sphinx/GHA/Config`):
 
-   * - Name
-     - Value
-   * - ``gha_repository``
-     - Optional, the documented repository as ``owner/repo``. Its reusable workflows are expanded and linked,
-       whatever the ref they are called at. Without it, only local references like
-       ``./.github/workflows/Test.yml`` are.
-   * - ``gha_workflow_directory``
-     - Optional, the directory of the documented repository's workflow files, relative to the source directory.
-       Default: the directory of the drawn workflow file.
-   * - ``gha_ref``
-     - Optional, the branch or tag the documentation describes. A job calling a reusable workflow of the documented
-       repository at another ref is a warning of type ``gha.ref``. Without it, refs aren't checked.
+* The reusable workflows of :confval:`gha_repository` are expanded and linked, whatever the ref they are called at.
+  Without it, only local references like ``./.github/workflows/Test.yml`` are.
+* Without :confval:`gha_workflow_directory`, they are read from the directory of the drawn workflow file.
+* A job calling a reusable workflow of the documented repository at another ref than :confval:`gha_ref` is a warning
+  of type ``gha.ref``. Without it, refs aren't checked.
 
 A job links to the page the ``gha`` domain documents its reusable workflow on. Without such a page, and in a format
 other than HTML, the job has no link.

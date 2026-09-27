@@ -151,7 +151,7 @@ TEST = dedent("""\
 CONFIGURATION = dedent("""\
 	from sphinx.domains import Domain
 
-	from pyTooling.Documentation.Sphinx.GitHubActions.Graph import CONFIG_VALUES, PipelineGraph, resolveLinks
+	from pyTooling.Documentation.Sphinx.GitHubActions.Graph import PipelineGraph, resolveLinks
 
 	class GitHubActionsDomain(Domain):
 	    name = "gha"
@@ -165,8 +165,7 @@ CONFIGURATION = dedent("""\
 	    app.add_domain(GitHubActionsDomain)
 	    app.add_config_value("gha_repository", None, "env")
 	    app.add_config_value("gha_workflow_directory", None, "env")
-	    for name, (default, rebuild, types) in CONFIG_VALUES.items():
-	        app.add_config_value(name, default, rebuild, types)
+	    app.add_config_value("gha_ref", None, "env")
 	    app.connect("doctree-resolved", resolveLinks)
 
 	extensions = ["sphinx.ext.graphviz"]
@@ -184,13 +183,21 @@ CONFIGURATION_WITHOUT_DOMAIN = dedent("""\
 	extensions = ["sphinx.ext.graphviz"]
 	""")
 
+#: A configuration loading pyTooling's extension, which registers the real 'gha' domain and the directive.
+CONFIGURATION_EXTENSION = dedent("""\
+	extensions = ["pyTooling.Documentation.Sphinx"]
+	gha_repository = "Owner/Repo"
+	gha_workflow_directory = "../.github/workflows"
+	""")
+
 
 def build(
 	directory: str,
 	options: str = "",
 	configuration: str = CONFIGURATION,
 	directive: str = "gha:pipeline-graph",
-	path: str = "../.github/workflows/Pipeline.yml"
+	path: str = "../.github/workflows/Pipeline.yml",
+	templates: str = "Templates\n#########\n"
 ) -> tuple[list[str], list[str]]:
 	"""
 	Build a project drawing :data:`PIPELINE`, and return the DOT of its graphs and the build's warnings.
@@ -200,6 +207,7 @@ def build(
 	:param configuration: Optional, content of :file:`conf.py`. Default: :data:`CONFIGURATION`.
 	:param directive:     Optional, name of the directive. Default: ``gha:pipeline-graph``.
 	:param path:          Optional, argument of the directive. Default: the path of :data:`PIPELINE`.
+	:param templates:     Optional, content of the page :file:`templates.rst`. Default: a title only.
 	:returns:             The DOT of every pipeline graph after its links are resolved, and the warnings without
 	                      colours, one per line.
 	"""
@@ -213,7 +221,7 @@ def build(
 	source = root / "doc"
 	source.mkdir()
 	(source / "conf.py").write_text(configuration, encoding="utf-8")
-	(source / "templates.rst").write_text("Templates\n#########\n", encoding="utf-8")
+	(source / "templates.rst").write_text(templates, encoding="utf-8")
 	indentedOptions = "".join(f"   {line}\n" for line in dedent(options).splitlines())
 	(source / "index.rst").write_text(
 		f"Pipeline\n########\n\n.. toctree::\n   :hidden:\n\n   templates\n\n.. {directive}:: {path}\n{indentedOptions}",
@@ -441,6 +449,22 @@ class Links(Testcase):
 		self.assertNotIn("URL=", code)
 		self.assertNotIn("gha-link", code)
 		self.assertEqual([], [warning for warning in warnings if "pipeline-graph" in warning])
+
+	def test_Extension(self) -> None:
+		"""With pyTooling's extension, a job links to the page a 'gha:workflow' directive documents its template on."""
+		with TemporaryDirectory() as directory:
+			(code, ), warnings = build(
+				directory,
+				configuration=CONFIGURATION_EXTENSION,
+				templates=".. gha:workflow:: Test\n\nTemplates\n#########\n"
+			)
+
+		test = next(line for line in code.splitlines() if line.startswith('\t"Test" ['))
+		prepare = next(line for line in code.splitlines() if line.startswith('\t"Prepare" ['))
+		self.assertIn(' URL="templates.html#', test)
+		self.assertNotIn("URL=", prepare)
+		self.assertNotIn("gha-link", code)
+		self.assertEqual([], [warning for warning in warnings if "gha" in warning])
 
 
 @mark.skipif(not sphinxIsSupported, reason="Sphinx 9.1 needs Python 3.12 or newer.")
