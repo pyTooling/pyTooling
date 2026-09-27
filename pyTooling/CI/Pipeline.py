@@ -831,6 +831,22 @@ class JobGroup(Base):
 		"""
 		return any(str(element) == name for element in self._elements)
 
+	def __getitem__(self, name: str) -> Base:
+		"""
+		Return the element of that name.
+
+		An element is named the way :func:`str` names it, as for :meth:`__contains__`.
+
+		:param name:      Name of the job, matrix or workflow to return.
+		:returns:         The first element of that name, in the order they were added.
+		:raises KeyError: If no element of that name belongs to this group.
+		"""
+		for element in self._elements:
+			if str(element) == name:
+				return element
+
+		raise KeyError(f"Group '{self._name}' contains no element '{name}'.")
+
 	def __iter__(self) -> Iterator[Base]:
 		"""
 		Iterate what this group holds, ordered by the time it was created.
