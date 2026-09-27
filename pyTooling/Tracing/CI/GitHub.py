@@ -52,8 +52,8 @@ from datetime              import datetime
 from typing                import Any, ClassVar, Iterable, Optional as Nullable, Self, Union
 
 from pyTooling.CI              import JSONObject
-from pyTooling.CI.GitHub       import Conclusion, GitHubError, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
-from pyTooling.CI.Pipeline     import Base
+from pyTooling.CI.GitHub       import Conclusion, GitHubError, Job, MatrixJob, Pipeline, Step
+from pyTooling.CI.Pipeline     import Base, JobGroup, Matrix
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, readonly
 from pyTooling.GenericPath.URL import URL
