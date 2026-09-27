@@ -53,8 +53,7 @@ hand-written, as the content of a directive:
 * the roles ``:gha:workflow:``, ``:gha:input:``, ``:gha:output:`` and ``:gha:secret:``;
 * the configuration values in :data:`CONFIG_VALUES`.
 
-The workflow files are read with ``ruamel.yaml`` when a directive runs, not when this module is imported, so a
-project not using the domain doesn't need the ``yaml`` extra.
+The workflow files are read with ``ruamel.yaml`` when a directive runs, not when this module is imported.
 
 .. seealso::
 
@@ -85,9 +84,9 @@ if TYPE_CHECKING:  # pragma: no cover
 	from pyTooling.CI.Workflow                   import WorkflowResolver
 
 
-__all__ = ["CONFIG_VALUES", "NO_DEFAULT", "LEADING_FIELDS", "WARNING_TYPE"]
+__all__ = ["CONFIG_VALUES", "NO_DEFAULT", "WARNING_TYPE", "LEADING_FIELDS"]
 
-#: Configuration values of the domain: name |rarr| (default, rebuild, types).
+#: The configuration values this domain adds to :file:`conf.py`, as ``name: (default, rebuild, types)``.
 #:
 #: ``gha_repository``
 #:    The documented repository, as ``owner/repo``. A ``uses`` naming it is read from ``gha_workflow_directory``,
@@ -99,7 +98,7 @@ __all__ = ["CONFIG_VALUES", "NO_DEFAULT", "LEADING_FIELDS", "WARNING_TYPE"]
 #:    The ref - a branch or tag - of the documented repository the documentation describes, as ``r8``, or ``None``.
 #:    A directive may warn about a ``uses`` of the documented repository at another ref.
 #: ``gha_label_prefix``
-#:    The root of the ``:ref:`` labels the directives register beside their domain targets, as
+#:    The root of the ``:ref:`` labels the directives register besides their domain targets, as
 #:    ``JOBTMPL/Parameters/Input/package_name``, or ``None`` for none.
 CONFIG_VALUES = {
 	"gha_repository":         (None,      "env", (str, type(None))),
@@ -115,7 +114,7 @@ NO_DEFAULT = "— — — —"
 #: ``suppress_warnings = ["gha.drift"]`` silences them.
 WARNING_TYPE = "gha"
 
-#: The fields a *Description* taken from the workflow file follows, as today's pages order them.
+#: The fields a *Description* taken from the workflow file follows.
 LEADING_FIELDS = ("Type", "Required", "Default Value", "Possible Values")
 
 _logger = getLogger(__name__)
@@ -249,9 +248,7 @@ class WorkflowDirective(SphinxDirective):
 		self.state.document.note_explicit_target(target)
 		domain.NoteObject("workflow", name, nodeID, target)
 
-		index = addnodes.index(entries=[("single", f"GitHub Actions workflow; {name}", nodeID, "", None)])
-
-		return [index, target]
+		return [addnodes.index(entries=[("single", f"GitHub Actions workflow; {name}", nodeID, "", None)]), target]
 
 	def _Load(self, domain: GitHubActionsDomain, name: str, path: Path) -> None:
 		"""
@@ -308,7 +305,7 @@ class ParameterDirective(SphinxDirective):
 	A hand-written field repeating a fact of the file is a warning, and the file's value is shown.
 
 	Besides its anchor ``gha-<type>-<Workflow>.<name>``, the section carries the anchor of its label and - unless the
-	document uses it already - the anchor docutils derives from a title, so links into today's pages keep working.
+	document uses it already - the anchor docutils derives from a title, as a hand-written section has.
 	"""
 
 	OBJECT_TYPE: ClassVar[str]              #: The domain's object type, as ``input``.
@@ -484,11 +481,11 @@ class GitHubActionsXRefRole(XRefRole):
 
 	def process_link(
 		self,
-		env:              BuildEnvironment,
-		refnode:          Element,
+		env:                BuildEnvironment,
+		refnode:            Element,
 		has_explicit_title: bool,
-		title:            str,
-		target:           str
+		title:              str,
+		target:             str
 	) -> tuple[str, str]:
 		"""
 		Remember the current workflow on the reference, and shorten the title for a leading ``~``.

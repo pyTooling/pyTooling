@@ -29,8 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for the directives of :mod:`pyTooling.Documentation.Sphinx`, each built in a small Sphinx project.
+Unit tests for the Sphinx extension :mod:`pyTooling.Documentation.Sphinx`, each built in a small Sphinx project.
 
 The package itself declares no code; its members are tested per module, e.g. in
-:mod:`tests.unit.SphinxExtension.PipelineGraph`.
+:mod:`tests.unit.SphinxExtension.GitHubActionsDomain`.
 """

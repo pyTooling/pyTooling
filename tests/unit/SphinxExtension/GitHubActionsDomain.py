@@ -146,6 +146,7 @@ class Project(Testcase):
 
 	_directory: TemporaryDirectory
 	_path:      Path
+	_warnings:  StringIO
 
 	def setUp(self) -> None:
 		self._directory = TemporaryDirectory()
