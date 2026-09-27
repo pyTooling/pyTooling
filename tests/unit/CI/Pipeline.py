@@ -35,7 +35,7 @@ from datetime              import datetime, timedelta, timezone
 
 from pyTooling.CI.Pipeline import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
 from pyTooling.CI.Pipeline import Outcome, PipelineError, DependencyError, DependencyCycleError
-from pyTooling.CI.Pipeline import DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
+from pyTooling.CI.Pipeline import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
 from pyTooling.Graph       import DuplicateVertexError, Graph, Subgraph
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Tracing.CI  import Result
@@ -216,6 +216,24 @@ class Instantiation(Testcase):
 					_ = Job("Build", **{parameterName: value})
 
 				self.assertIn(f"Parameter '{parameterName}' is not of type", str(context.exception))
+
+	def test_Condition(self) -> None:
+		"""Only an element a definition can give a condition has one."""
+		for cls in (Workflow, Pipeline, Matrix, Job, MatrixJob, Step):
+			with self.subTest(cls=cls.__name__):
+				self.assertTrue(issubclass(cls, ConditionMixin))
+				self.assertEqual("always()", cls("x", condition="always()").Condition)
+
+		self.assertFalse(issubclass(PipelineGroup, ConditionMixin))
+		self.assertFalse(hasattr(PipelineGroup("x"), "Condition"))
+
+	def test_Condition_Type(self) -> None:
+		for cls in (Workflow, Matrix, Job, Step):
+			with self.subTest(cls=cls.__name__):
+				with self.assertRaises(TypeError) as context:
+					_ = cls("x", condition=42)
+
+				self.assertEqual("Parameter 'condition' is not of type 'str'.", str(context.exception))
 
 	def test_Parent_Type(self) -> None:
 		pipeline = Pipeline("Pipeline")

@@ -166,8 +166,8 @@ class Base(metaclass=ExtendedType, slots=True):
 	"""
 	Common behaviour of every element of a pipeline.
 
-	Every element has a name and a position in the tree. From the definition, it may have a condition; from a run,
-	the times a service reports and an :class:`Outcome`.
+	Every element has a name and a position in the tree, and from a run the times a service reports and an
+	:class:`Outcome`.
 	"""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = None  #: Type a parent must have, or ``None`` when it has no parent.
@@ -175,7 +175,6 @@ class Base(metaclass=ExtendedType, slots=True):
 	_name:        str                 #: Name of the element.
 	_parent:      Nullable[Base]      #: Reference to the containing element.
 	_pipeline:    Nullable[Pipeline]  #: Reference to the pipeline this element belongs to.
-	_condition:   Nullable[str]       #: Condition under which the element runs, as written.
 	_createdAt:   Nullable[datetime]  #: Time the element was created.
 	_startedAt:   Nullable[datetime]  #: Time the element started running.
 	_completedAt: Nullable[datetime]  #: Time the element completed.
@@ -185,7 +184,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		self,
 		name:        str,
 		*,
-		condition:   Nullable[str]      = None,
 		createdAt:   Nullable[datetime] = None,
 		startedAt:   Nullable[datetime] = None,
 		completedAt: Nullable[datetime] = None,
@@ -196,7 +194,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		Initializes an element of a pipeline.
 
 		:param name:        Name of the element.
-		:param condition:   Optional, condition under which the element runs, as written. Default: ``None``.
 		:param createdAt:   Optional, time the element was created. Default: ``None``.
 		:param startedAt:   Optional, time the element started running. Default: ``None``.
 		:param completedAt: Optional, time the element completed. Default: ``None``.
@@ -205,7 +202,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'name' is ``None``.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
-		:raises TypeError:  If parameter 'condition' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'createdAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:  If parameter 'startedAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:  If parameter 'completedAt' is not of type :class:`~datetime.datetime`.
@@ -221,11 +217,6 @@ class Base(metaclass=ExtendedType, slots=True):
 			raise ex
 		elif name == "":
 			raise ValueError("Parameter 'name' is empty.")
-
-		if condition is not None and not isinstance(condition, str):
-			ex = TypeError("Parameter 'condition' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(condition)}'.")
-			raise ex
 
 		for parameterName, timestamp in (("createdAt", createdAt), ("startedAt", startedAt), ("completedAt", completedAt)):
 			if timestamp is not None and not isinstance(timestamp, datetime):
@@ -251,7 +242,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._name =        name
 		self._parent =      parent
 		self._pipeline =    None if parent is None else parent._pipeline
-		self._condition =   condition
 		self._createdAt =   createdAt
 		self._startedAt =   startedAt
 		self._completedAt = completedAt
@@ -283,17 +273,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		:returns: The pipeline, or ``None`` for an element outside one.
 		"""
 		return self._pipeline
-
-	@readonly
-	def Condition(self) -> Nullable[str]:
-		"""
-		Read-only property to access the condition under which the element runs (:attr:`_condition`).
-
-		The condition is kept as written - a GitHub ``if:`` expression or a GitLab ``rules:if`` - and not evaluated.
-
-		:returns: The condition, or ``None`` if the element has none, or it isn't known.
-		"""
-		return self._condition
 
 	@readonly
 	def CreatedAt(self) -> Nullable[datetime]:
@@ -383,6 +362,40 @@ class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",
 				names.append(element._name)
 
 		return " / ".join(reversed(names))
+
+
+@export
+class ConditionMixin(metaclass=ExtendedType, mixin=True):
+	"""
+	Mixin-class for elements a definition can give a condition: workflows, matrices, jobs and steps.
+
+	The condition is kept as written - a GitHub ``if:`` expression or a GitLab ``rules:if`` - and not evaluated.
+	"""
+
+	_condition: Nullable[str]  #: Condition under which the element runs, as written.
+
+	def __init__(self, condition: Nullable[str] = None) -> None:
+		"""
+		Initializes the condition of an element.
+
+		:param condition:  Optional, condition under which the element runs, as written. Default: ``None``.
+		:raises TypeError: If parameter 'condition' is not of type :class:`str`.
+		"""
+		if condition is not None and not isinstance(condition, str):
+			ex = TypeError("Parameter 'condition' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(condition)}'.")
+			raise ex
+
+		self._condition = condition
+
+	@readonly
+	def Condition(self) -> Nullable[str]:
+		"""
+		Read-only property to access the condition under which the element runs (:attr:`_condition`).
+
+		:returns: The condition, or ``None`` if the element has none, or it isn't known.
+		"""
+		return self._condition
 
 
 @export
@@ -652,7 +665,6 @@ class JobGroup(Base):
 		self,
 		name:        str,
 		*,
-		condition:   Nullable[str]      = None,
 		createdAt:   Nullable[datetime] = None,
 		startedAt:   Nullable[datetime] = None,
 		completedAt: Nullable[datetime] = None,
@@ -663,7 +675,6 @@ class JobGroup(Base):
 		Initializes a group of jobs.
 
 		:param name:        Name of the group.
-		:param condition:   Optional, condition under which the group runs, as written. Default: ``None``.
 		:param createdAt:   Optional, time the group was created, if the service reports it. Default: ``None``.
 		:param startedAt:   Optional, time the group started, if the service reports it. Default: ``None``.
 		:param completedAt: Optional, time the group completed, if the service reports it. Default: ``None``.
@@ -671,8 +682,7 @@ class JobGroup(Base):
 		:param parent:      Optional, reference to the element containing the group. Default: ``None``.
 		"""
 		super().__init__(
-			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
-			parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
 
 		self._jobs = []
@@ -812,7 +822,7 @@ class JobGroup(Base):
 
 
 @export
-class Workflow(JobGroup, QualifiedNameMixin, DependencyMixin):
+class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 	"""
 	A called workflow or a child pipeline, grouping the elements it contains.
 
@@ -860,9 +870,9 @@ class Workflow(JobGroup, QualifiedNameMixin, DependencyMixin):
 			ex.add_note(f"Got type '{getFullyQualifiedName(reference)}'.")
 			raise ex
 
+		ConditionMixin.__init__(self, condition)
 		super().__init__(
-			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
-			parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
 		DependencyMixin.__init__(self)
 
@@ -1063,7 +1073,7 @@ class Pipeline(Workflow):
 
 
 @export
-class Matrix(JobGroup, QualifiedNameMixin, DependencyMixin):
+class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 	"""
 	A matrix, grouping the job instances it produced.
 
@@ -1082,7 +1092,8 @@ class Matrix(JobGroup, QualifiedNameMixin, DependencyMixin):
 		:param parent:         Optional, reference to the workflow containing the matrix. Default: ``None``.
 		:raises PipelineError: If the workflow contains a matrix of that name already.
 		"""
-		super().__init__(name, condition=condition, parent=parent)
+		ConditionMixin.__init__(self, condition)
+		super().__init__(name, parent=parent)
 		DependencyMixin.__init__(self)
 
 		if parent is not None:
@@ -1102,7 +1113,7 @@ class Matrix(JobGroup, QualifiedNameMixin, DependencyMixin):
 
 
 @export
-class Job(Base, QualifiedNameMixin, DependencyMixin):
+class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 	"""A job, which runs its steps on a worker."""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = JobGroup  #: A job is contained in a job group.
@@ -1131,9 +1142,9 @@ class Job(Base, QualifiedNameMixin, DependencyMixin):
 		:param outcome:     Optional, how the job ended. Default: ``None``.
 		:param parent:      Optional, reference to the group containing the job. Default: ``None``.
 		"""
+		ConditionMixin.__init__(self, condition)
 		super().__init__(
-			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
-			parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
 		DependencyMixin.__init__(self)
 
@@ -1227,7 +1238,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 
 
 @export
-class Step(Base):
+class Step(Base, ConditionMixin):
 	"""A step within a job."""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = Job  #: A step is contained in a job.
@@ -1252,9 +1263,8 @@ class Step(Base):
 		:param outcome:     Optional, how the step ended. Default: ``None``.
 		:param parent:      Optional, reference to the job containing the step. Default: ``None``.
 		"""
-		super().__init__(
-			name, condition=condition, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
-		)
+		ConditionMixin.__init__(self, condition)
+		super().__init__(name, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent)
 
 		if parent is not None:
 			parent._steps.append(self)
