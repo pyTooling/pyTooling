@@ -34,13 +34,27 @@ The Tree
        +-- Job              a job that ran on a runner
            +-- Step         a step of that job
 
-Every element knows its :attr:`~pyTooling.CI.GitHub.Base.Parent`, and holds a reference to the workflow run it
-belongs to in :attr:`~pyTooling.CI.GitHub.Base.Pipeline` - so reaching the run from any depth costs no walk.
+The tree is :mod:`pyTooling.CI.Pipeline`'s (see :ref:`CI/Pipeline`): a called workflow, a matrix and their
+base-class are that model's :class:`~pyTooling.CI.Pipeline.Workflow`, :class:`~pyTooling.CI.Pipeline.Matrix` and
+:class:`~pyTooling.CI.Pipeline.JobGroup`, which this module imports, and the pipeline group, the run, a job, a matrix
+instance and a step derive from that model's classes. :class:`~pyTooling.CI.GitHub.StatusMixin` adds what GitHub
+reports about a run, a job and a step - :class:`~pyTooling.CI.GitHub.Status`, :class:`~pyTooling.CI.GitHub.Conclusion`
+and the URL - and the conclusion is reported as the model's :attr:`~pyTooling.CI.Pipeline.Base.Outcome` too
+(:meth:`Conclusion.ToOutcome <pyTooling.CI.GitHub.Conclusion.ToOutcome>`).
+
+Every element knows its :attr:`~pyTooling.CI.Pipeline.Base.Parent`, and holds a reference to the workflow run it
+belongs to in :attr:`~pyTooling.CI.Pipeline.Base.Pipeline` - so reaching the run from any depth costs no walk.
+
+.. note::
+
+   **The REST API reports no dependencies.** A run's jobs, matrices and called workflows have no
+   :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Needs` until they are added - from the ``needs:`` of the workflow
+   file :attr:`~pyTooling.CI.GitHub.Pipeline.Path` names - with :meth:`~pyTooling.CI.Pipeline.DependencyMixin.AddNeed`.
 
 Iterating an element yields what it contains one level down: a workflow yields its jobs, its matrices and the
 workflows it calls, a matrix its instances, and a job its steps. To reach every job below a workflow at once - those
 of its matrices and of the workflows it calls included - use
-:meth:`~pyTooling.CI.GitHub.Workflow.IterateJobs`:
+:meth:`~pyTooling.CI.Pipeline.JobGroup.IterateJobs`:
 
 .. code-block:: python
 
@@ -51,8 +65,8 @@ of its matrices and of the workflows it calls included - use
      print(job.QualifiedName)
 
 An element is placed in its group **under its own name** - a called workflow and a matrix as that key of
-:attr:`~pyTooling.CI.GitHub.Workflow.Workflows` respectively :attr:`~pyTooling.CI.GitHub.Workflow.Matrices`, a job by
-the name it reports - so ``in`` is asked for that name:
+:attr:`~pyTooling.CI.Pipeline.Workflow.Workflows` respectively :attr:`~pyTooling.CI.Pipeline.Workflow.Matrices`, a
+job by the name it reports - so ``in`` is asked for that name:
 
 .. code-block:: python
 
@@ -60,7 +74,7 @@ the name it reports - so ``in`` is asked for that name:
    "Unit Tests (ubuntu-26.04)" in matrix   # an instance carries the values telling it from its siblings
    "Checkout" in job                  # a step
 
-Which container an element really sits in is a different question, and :attr:`~pyTooling.CI.GitHub.Base.Parent`
+Which container an element really sits in is a different question, and :attr:`~pyTooling.CI.Pipeline.Base.Parent`
 answers it without a search:
 
 .. code-block:: python
@@ -87,23 +101,23 @@ answers it without a search:
   deeply as the chain is long - to GitHub's limit of four levels and beyond, should it ever be raised. A level is
   shared rather than repeated: ``A / B / C / Deep`` and ``A / B / Other`` put ``Other`` beside ``C`` below the same
   ``B``.
-* Neither level reports times, so :class:`~pyTooling.CI.GitHub.JobGroup` derives them: a group begins with its
+* Neither level reports times, so :class:`~pyTooling.CI.Pipeline.JobGroup` derives them: a group begins with its
   earliest job and ends with its latest, and has no end while a job below it is still running.
 * **A job's times contain its steps.** GitHub reports both in whole seconds and independently, so a step is
   sometimes reported as starting before, or completing after, the job holding it. The job is the timespan that
   stretches - the step really did run when it says it did - and a group's times follow, so a consumer building a
-  tree never has a child outside its parent. :attr:`~pyTooling.CI.GitHub.Base.CreatedAt`,
-  :attr:`~pyTooling.CI.GitHub.Base.StartedAt` and :attr:`~pyTooling.CI.GitHub.Base.CompletedAt` report the
+  tree never has a child outside its parent. :attr:`~pyTooling.CI.Pipeline.Base.CreatedAt`,
+  :attr:`~pyTooling.CI.Pipeline.Base.StartedAt` and :attr:`~pyTooling.CI.Pipeline.Base.CompletedAt` report the
   widened times; a job that hasn't completed still reports no completion, however far its steps got.
 * **A group iterates what it holds in the order it was queued** - jobs and nested groups alike, so a called
   workflow takes the place its first job was queued at rather than a place behind every job. The sort is stable,
   so elements reporting no time keep the order GitHub listed them in.
-* Because the name is taken apart, :class:`~pyTooling.CI.GitHub.QualifiedNameMixin` puts it back together - a job
+* Because the name is taken apart, :class:`~pyTooling.CI.Pipeline.QualifiedNameMixin` puts it back together - a job
   below ``Caller`` reports ``Caller / Build (ubuntu-26.04)`` as its
-  :attr:`~pyTooling.CI.GitHub.QualifiedNameMixin.QualifiedName` while :attr:`~pyTooling.CI.GitHub.Base.Name` stays
-  ``Build``, so a report can name a job the way the service does without walking the tree itself. A
-  :class:`~pyTooling.CI.GitHub.Job` and a :class:`~pyTooling.CI.GitHub.Workflow` are named that way; a
-  :class:`~pyTooling.CI.GitHub.Matrix` isn't, since GitHub reports no name for it.
+  :attr:`~pyTooling.CI.Pipeline.QualifiedNameMixin.QualifiedName` while :attr:`~pyTooling.CI.Pipeline.Base.Name`
+  stays ``Build``, so a report can name a job the way the service does without walking the tree itself. A
+  :class:`~pyTooling.CI.GitHub.Job`, a :class:`~pyTooling.CI.Pipeline.Workflow` and a
+  :class:`~pyTooling.CI.Pipeline.Matrix` are named that way.
 * The bracketed suffix is a convention of GitHub's own interface rather than a field, so a job genuinely named
   ``Build (fast)`` and produced by no matrix is indistinguishable from one that was - it becomes a matrix of one
   instance. A job whose workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.

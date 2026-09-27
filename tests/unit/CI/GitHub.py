@@ -35,7 +35,8 @@ from datetime            import datetime, timezone
 from typing              import Any, Optional as Nullable
 
 from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
-from pyTooling.CI.GitHub import Status, Conclusion, Event, GitHubError, QualifiedNameMixin
+from pyTooling.CI.GitHub import Status, Conclusion, Event, GitHubError, QualifiedNameMixin, StatusMixin
+from pyTooling.CI        import Pipeline as CIPipeline
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Testing   import Testcase
 
@@ -523,7 +524,8 @@ class Times(Testcase):
 		workflow = Pipeline.FromJSON(_run(), [_job("Caller / Build", 60, 70, 300)]).Workflows["Caller"]
 
 		self.assertEqual(_time(60), workflow.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
-		self.assertFalse(hasattr(workflow, "ContentsCreatedAt"), "Only a run has two sets of times.")
+		self.assertEqual(workflow.ContentsCreatedAt, workflow.CreatedAt)
+		self.assertEqual(workflow.ContentsCompletedAt, workflow.CompletedAt)
 
 
 class Ordering(Testcase):
@@ -760,11 +762,11 @@ class QualifiedNames(Testcase):
 		self.assertEqual("Caller", pipeline.QualifiedName)
 		self.assertEqual("A / Deep", pipeline.Workflows["A"].Jobs[0].QualifiedName)
 
-	def test_OnlyAJobAndAWorkflowAreNamedThatWay(self) -> None:
-		"""GitHub reports no name for a matrix, and a step's name carries no prefix."""
+	def test_OnlyAJobAWorkflowAndAMatrixAreNamedThatWay(self) -> None:
+		"""A step's name carries no prefix."""
 		self.assertTrue(issubclass(Job, QualifiedNameMixin))
 		self.assertTrue(issubclass(Workflow, QualifiedNameMixin))
-		self.assertFalse(issubclass(Matrix, QualifiedNameMixin))
+		self.assertTrue(issubclass(Matrix, QualifiedNameMixin))
 		self.assertFalse(issubclass(Step, QualifiedNameMixin))
 
 	def test_TheMixinExpectsTheFieldItWalks(self) -> None:
@@ -1114,3 +1116,84 @@ class BottomUpConstruction(Testcase):
 		self.assertEqual(["Set up job"], [step.Name for step in job])
 		self.assertIs(job, job.Steps[0].Parent)
 		self.assertIs(pipeline, job.Steps[0].Pipeline)
+
+
+class GenericModel(Testcase):
+	"""The run model derives from :mod:`pyTooling.CI.Pipeline`."""
+
+	def test_Classes(self) -> None:
+		for cls, generic in (
+			(PipelineGroup, CIPipeline.PipelineGroup), (Pipeline, CIPipeline.Pipeline), (Job, CIPipeline.Job),
+			(MatrixJob, CIPipeline.MatrixInstanceMixin), (Step, CIPipeline.Step)
+		):
+			with self.subTest(cls=cls.__name__):
+				self.assertTrue(issubclass(cls, generic))
+
+		for cls in (Base, JobGroup, Workflow, Matrix, QualifiedNameMixin):
+			with self.subTest(cls=cls.__name__):
+				self.assertIs(getattr(CIPipeline, cls.__name__), cls)
+
+	def test_StatusMixin(self) -> None:
+		for cls in (Pipeline, Job, MatrixJob, Step):
+			with self.subTest(cls=cls.__name__):
+				self.assertTrue(issubclass(cls, StatusMixin))
+				self.assertEqual(tuple(), cls.__missingMembers__)
+				self.assertFalse(hasattr(cls("x"), "__dict__"))
+
+		for cls in (PipelineGroup, Workflow, Matrix):
+			with self.subTest(cls=cls.__name__):
+				self.assertFalse(issubclass(cls, StatusMixin))
+
+	def test_ToOutcome(self) -> None:
+		for conclusion, outcome in (
+			(Conclusion.Success,        CIPipeline.Outcome.Success),
+			(Conclusion.Failure,        CIPipeline.Outcome.Failure),
+			(Conclusion.TimedOut,       CIPipeline.Outcome.Timeout),
+			(Conclusion.Skipped,        CIPipeline.Outcome.Skip),
+			(Conclusion.Cancelled,      CIPipeline.Outcome.Cancellation),
+			(Conclusion.StartupFailure, CIPipeline.Outcome.Error),
+			(Conclusion.Neutral,        CIPipeline.Outcome.Error),
+		):
+			with self.subTest(conclusion=conclusion.name):
+				self.assertIs(outcome, conclusion.ToOutcome())
+
+	def test_Outcome(self) -> None:
+		"""Every reported element carries the outcome its conclusion maps to; a group combines its elements'."""
+		steps = [{"name": "Test", "number": 1, "status": "completed", "conclusion": "failure"}]
+		pipeline = Pipeline.FromJSON(_run(conclusion="failure"), [
+			_job("Caller / Build", 60, 70, 300),
+			_job("Caller / Test", 60, 70, 300, conclusion="failure", steps=steps),
+			_job("Deploy", 60, None, None, status="completed", conclusion="skipped"),
+		])
+		caller = pipeline.Workflows["Caller"]
+
+		self.assertIs(CIPipeline.Outcome.Failure, pipeline.Outcome)
+		self.assertIs(CIPipeline.Outcome.Failure, caller.Outcome)
+		self.assertIs(CIPipeline.Outcome.Failure, caller.Jobs[1].Steps[0].Outcome)
+		self.assertIs(CIPipeline.Outcome.Skip, pipeline.Jobs[0].Outcome)
+		self.assertIsNone(Pipeline.FromJSON(_run(status="in_progress", conclusion=None)).Outcome)
+
+	def test_Needs(self) -> None:
+		"""The REST API reports no dependencies; they are added to the run's elements."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Prepare", 0, 10, 20), _job("Caller / Build", 60, 70, 300), _job("Test (3.14)", 60, 70, 300)
+		])
+		prepare = pipeline.Jobs[0]
+		caller =  pipeline.Workflows["Caller"]
+		test =    pipeline.Matrices["Test"]
+		caller.AddNeed(prepare)
+		test.AddNeed(caller)
+
+		self.assertListEqual([caller], prepare.Dependents)
+		graph = pipeline.ToGraph(depth=0)
+		self.assertEqual(3, graph.VertexCount)
+		self.assertEqual(2, graph.EdgeCount)
+
+	def test_Order(self) -> None:
+		"""A workflow's elements are in the order GitHub listed their first job, whatever their kind."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Caller / Build", 60, 70, 300, created_at=None), _job("Test (3.14)", 60, 70, 300, created_at=None),
+			_job("Prepare", 0, 10, 20, created_at=None)
+		])
+
+		self.assertListEqual(["Caller", "Test", "Prepare"], [element.Name for element in pipeline.Elements])

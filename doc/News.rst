@@ -42,12 +42,12 @@ Version 10.x (2026)
    * :mod:`pyTooling.CI` is a new package holding data models of continuous integration services.
 
      * :mod:`pyTooling.CI.GitHub` reads a GitHub Actions workflow run into a tree of
-       :class:`~pyTooling.CI.GitHub.Pipeline`, :class:`~pyTooling.CI.GitHub.Workflow`,
-       :class:`~pyTooling.CI.GitHub.Matrix`, :class:`~pyTooling.CI.GitHub.Job` and
+       :class:`~pyTooling.CI.GitHub.Pipeline`, :class:`~pyTooling.CI.Pipeline.Workflow`,
+       :class:`~pyTooling.CI.Pipeline.Matrix`, :class:`~pyTooling.CI.GitHub.Job` and
        :class:`~pyTooling.CI.GitHub.Step` objects, each knowing its parent and the run it belongs to.
      * A called workflow and a matrix are encoded in a job's name - ``Caller / Job`` and
        ``Job (ubuntu-26.04, 3.14)`` - and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads them back into the
-       tree. Neither level reports times, so :class:`~pyTooling.CI.GitHub.JobGroup` spans the jobs below it.
+       tree. Neither level reports times, so :class:`~pyTooling.CI.Pipeline.JobGroup` spans the jobs below it.
      * A job's times **contain its steps**. GitHub reports both in whole seconds and independently, so a step is
        sometimes reported as starting before, or completing after, the job holding it - and a consumer building a
        tree then has a child outside its parent. The job is the timespan that stretches, because the step really
@@ -55,8 +55,8 @@ Version 10.x (2026)
      * A group iterates what it holds **in the order it was queued**, jobs and nested groups alike, rather than
        jobs first and called workflows last. The sort is stable, so elements reporting no time keep the order
        GitHub listed them in.
-     * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.GitHub.Workflow` the matrices
-       and called workflows below it as well. :class:`~pyTooling.CI.GitHub.Workflow` needed three overrides to say
+     * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.Pipeline.Workflow` the matrices
+       and called workflows below it as well. :class:`~pyTooling.CI.Pipeline.Workflow` needed three overrides to say
        that and has none now.
      * A :class:`~pyTooling.CI.GitHub.Pipeline` is the one group reporting times of its own, so it is the one with
        two sets: :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsCreatedAt`,
@@ -69,14 +69,14 @@ Version 10.x (2026)
      * :class:`~pyTooling.CI.GitHub.PipelineGroup` holds every run of one commit, and
        :meth:`~pyTooling.CI.GitHub.PipelineGroup.ByGitReference` separates a commit's checks from the run at its tag,
        which the API reports under the same commit.
-     * :class:`~pyTooling.CI.GitHub.QualifiedNameMixin` reports an element's name the way GitHub does -
+     * :class:`~pyTooling.CI.Pipeline.QualifiedNameMixin` reports an element's name the way GitHub does -
        ``Caller / Build (ubuntu-26.04)`` - so the name :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` took apart can
-       be put back together. :class:`~pyTooling.CI.GitHub.Job` and :class:`~pyTooling.CI.GitHub.Workflow` are named
+       be put back together. :class:`~pyTooling.CI.GitHub.Job` and :class:`~pyTooling.CI.Pipeline.Workflow` are named
        that way; the mixin ``expects`` the field it walks, so mixing it into a class without ``_parent`` is reported
        instead of failing with an :exc:`AttributeError` later.
-     * Iterating a :class:`~pyTooling.CI.GitHub.Workflow` yields its jobs, its matrices **and** the workflows it
+     * Iterating a :class:`~pyTooling.CI.Pipeline.Workflow` yields its jobs, its matrices **and** the workflows it
        calls, so the containers one level below it are reachable without asking for each kind separately.
-       :meth:`~pyTooling.CI.GitHub.Workflow.IterateJobs` remains the way to reach every job below it. Because an
+       :meth:`~pyTooling.CI.Pipeline.JobGroup.IterateJobs` remains the way to reach every job below it. Because an
        element is placed in its group under its own name, every ``in`` of this module takes that name:
        :pycode:`"UnitTesting" in pipeline`.
 
@@ -98,6 +98,11 @@ Version 10.x (2026)
        workflows.
      * GitHub Actions and GitLab CI - stages, ``needs:``, child and multi-project pipelines, ``parallel`` - map onto
        it, see :ref:`CI/Pipeline/Services`.
+     * :mod:`pyTooling.CI.GitHub` derives from it: ``Workflow``, ``Matrix``, ``JobGroup``, ``Base`` and
+       ``QualifiedNameMixin`` are the generic classes, GitHub's status, conclusion and URL moved into
+       :class:`~pyTooling.CI.GitHub.StatusMixin`, a conclusion is also an :class:`~pyTooling.CI.Pipeline.Outcome`, a
+       matrix has a qualified name, every group has ``Contents*At``, and a group's elements are in the order GitHub
+       listed them.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
