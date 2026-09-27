@@ -386,11 +386,10 @@ class ParameterDirective(BaseDirective):
 
 		domain: GitHubActionsDomain = env.get_domain("gha")
 		domain.NoteObject(cls.OBJECT_TYPE, fullName, nodeID, section)
-		index = addnodes.index(
-			entries=[("single", f"{name} ({cls.OBJECT_TYPE} of {workflowName})", nodeID, "", None)]
-		)
-
-		return [index, section]
+		return [
+			addnodes.index(entries=[("single", f"{name} ({cls.OBJECT_TYPE} of {workflowName})", nodeID, "", None)]),
+			section
+		]
 
 	@staticmethod
 	def _Field(name: str, *body: Node) -> nodes.field:

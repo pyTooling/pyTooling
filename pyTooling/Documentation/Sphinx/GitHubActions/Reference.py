@@ -68,7 +68,8 @@ When a document was read, an input of its workflow without an entry is a ``gha.d
 """
 from __future__                                   import annotations
 
-from typing                                       import TYPE_CHECKING, Any, Iterable, Optional as Nullable
+from typing                                       import TYPE_CHECKING, Any, Callable, Iterable, Optional as Nullable
+from typing                                       import TypeVar
 
 from docutils                                     import nodes
 from docutils.parsers.rst                         import directives
@@ -103,6 +104,8 @@ SECTIONS = ("inputs", "outputs", "secrets", "jobs")
 MAX_DEFAULT_LENGTH = 120
 
 _logger = getLogger(__name__)
+
+_ResultType = TypeVar("_ResultType")
 
 
 @export
@@ -161,6 +164,25 @@ class WorkflowReferenceDirective(BaseDirective):
 			return None
 
 		return self.env.get_domain("gha").GetCurrentWorkflow()
+
+	def _ResolveOrWarn(self, resolve: Callable[[], _ResultType], fallback: Callable[[], _ResultType]) -> _ResultType:
+		"""
+		Read what a workflow calls or uses, and report a file that is missing or malformed as a warning.
+
+		:param resolve:  The operation reading the called or used files, as :meth:`WorkflowResolver.Resolve
+		                 <pyTooling.CI.Workflow.WorkflowResolver.Resolve>`.
+		:param fallback: The operation giving the result, when a file couldn't be read.
+		:returns:        The result of ``resolve``, or of ``fallback`` after a warning.
+		"""
+		from pyTooling.CI.Workflow import WorkflowError
+
+		try:
+			return resolve()
+		except WorkflowError as ex:
+			_logger.warning(
+				f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
+			)
+			return fallback()
 
 
 @export
@@ -323,8 +345,6 @@ class Interface(WorkflowReferenceDirective):
 
 		:returns: The field list, or nothing without a current workflow.
 		"""
-		from pyTooling.CI.Workflow import WorkflowError
-
 		if (workflow := self._CurrentWorkflow()) is None:
 			return []
 
@@ -346,13 +366,8 @@ class Interface(WorkflowReferenceDirective):
 			[self._Reference("output", f"{workflowName}.{name}", name)] for name in workflow.Outputs
 		])
 
-		try:
-			permissions = workflow.CollectPermissions(self.env.get_domain("gha").Resolver)
-		except WorkflowError as ex:
-			_logger.warning(
-				f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
-			)
-			permissions = workflow.CollectPermissions()
+		resolver = self.env.get_domain("gha").Resolver
+		permissions = self._ResolveOrWarn(lambda: workflow.CollectPermissions(resolver), workflow.CollectPermissions)
 
 		items = []
 		for permission in permissions.values():
@@ -496,9 +511,8 @@ class Dependencies(WorkflowReferenceDirective):
 		if uses.IsWorkflow:
 			keys.update((uses.FileName, uses.Stem))
 
-		repositories = self.env.get_domain("gha").Resolver.Repositories
 		literal = nodes.literal(text, text)
-		if uses.IsWorkflow and (uses.IsLocal or (uses.Repository is not None and uses.Repository.lower() in repositories)):
+		if uses.IsWorkflow and self.env.get_domain("gha").Resolver.CanResolve(uses):
 			return self._Item(nodes.paragraph("", "", self._Reference("workflow", uses.Stem, text)), keys)
 		elif uses.IsLocal and self.config.gha_repository is not None and self.config.gha_ref is not None:
 			url = f"https://github.com/{self.config.gha_repository}/tree/{self.config.gha_ref}/{uses.Path}"
@@ -537,8 +551,6 @@ class Dependencies(WorkflowReferenceDirective):
 		:param visited:  The identities of the workflows and actions on the path to this one, which aren't expanded again.
 		:returns:        A bullet list, empty if the workflow uses nothing.
 		"""
-		from pyTooling.CI.Workflow import WorkflowError
-
 		templates: dict[str, tuple[UsesReference, list[str]]] = {}
 		containers: dict[str, None] = {}
 		services: dict[tuple[str, str], None] = {}
@@ -556,14 +568,7 @@ class Dependencies(WorkflowReferenceDirective):
 			if len(jobNames) > 1:
 				item[0] += nodes.Text(f" (called by {len(jobNames)} jobs: {', '.join(jobNames)})")
 
-			try:
-				called = self.env.get_domain("gha").Resolver.Resolve(uses)
-			except WorkflowError as ex:
-				_logger.warning(
-					f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
-				)
-				called = None
-
+			called = self._ResolveOrWarn(lambda: self.env.get_domain("gha").Resolver.Resolve(uses), lambda: None)
 			if called is not None and id(called) not in visited:
 				if len(nested := self._WorkflowItems(called, visited | {id(called)})) > 0:
 					item += nested
@@ -584,19 +589,10 @@ class Dependencies(WorkflowReferenceDirective):
 		:param visited:    The identities of the workflows and actions on the path, which aren't expanded again.
 		:returns:          The items.
 		"""
-		from pyTooling.CI.Workflow import WorkflowError
-
 		items = []
 		for uses in {str(uses): uses for uses in references}.values():
 			item = self._UsesItem(uses)
-			try:
-				action = self.env.get_domain("gha").Resolver.ResolveAction(uses)
-			except WorkflowError as ex:
-				_logger.warning(
-					f"{self.directiveName}: {ex}", location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
-				)
-				action = None
-
+			action = self._ResolveOrWarn(lambda: self.env.get_domain("gha").Resolver.ResolveAction(uses), lambda: None)
 			if action is not None and id(action) not in visited:
 				nested = nodes.bullet_list("", *self._ActionItems(action.IterateActions(), visited | {id(action)}))
 				if action.Image is not None:
