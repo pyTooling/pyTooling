@@ -152,8 +152,8 @@ Inputs, Outputs and Secrets
 Summaries
 *********
 
-Four directives summarize the current workflow. Like the entries, they read the workflow file, so they can't drift
-from it.
+The directives below summarize the current workflow. Like the entries, they read the workflow file, so they can't
+drift from it.
 
 
 .. _DOC/Sphinx/GHA/ParameterTable:
