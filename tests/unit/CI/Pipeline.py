@@ -38,6 +38,7 @@ from pyTooling.CI.Pipeline import Outcome, PipelineError, DependencyError, Depen
 from pyTooling.CI.Pipeline import DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
 from pyTooling.Graph       import DuplicateVertexError, Graph, Subgraph
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
+from pyTooling.Tracing.CI  import Result
 from pyTooling.Testing     import Testcase
 
 
@@ -347,31 +348,36 @@ class Times(Testcase):
 class Outcomes(Testcase):
 	def test_Combine(self) -> None:
 		for outcomes, expected in (
-			((Outcome.Success, Outcome.Failure, Outcome.Cancelled), Outcome.Failure),
-			((Outcome.Cancelled, Outcome.TimedOut),                 Outcome.TimedOut),
-			((Outcome.Error, Outcome.Cancelled),                    Outcome.Error),
-			((Outcome.Success, Outcome.Skipped),                    Outcome.Success),
-			((Outcome.Skipped, Outcome.Skipped),                    Outcome.Skipped),
-			((Outcome.Success, None),                               None),
-			((),                                                    None),
+			((Outcome.Success, Outcome.Failure, Outcome.Cancellation), Outcome.Failure),
+			((Outcome.Cancellation, Outcome.Timeout),                  Outcome.Timeout),
+			((Outcome.Error, Outcome.Cancellation),                    Outcome.Error),
+			((Outcome.Success, Outcome.Skip),                          Outcome.Success),
+			((Outcome.Skip, Outcome.Skip),                             Outcome.Skip),
+			((Outcome.Success, None),                                  None),
+			((),                                                       None),
 		):
 			with self.subTest(outcomes=outcomes):
 				self.assertIs(expected, Outcome.Combine(outcomes))
 
 	def test_Group(self) -> None:
 		group = PipelineGroup("0123abcd")
-		pipeline = Pipeline("Pipeline", createdAt=_time(0), outcome=Outcome.Cancelled, parent=group)
+		pipeline = Pipeline("Pipeline", createdAt=_time(0), outcome=Outcome.Cancellation, parent=group)
 		workflow = Workflow("Called", parent=pipeline)
 		Job("A", outcome=Outcome.Success, parent=workflow)
 		Job("B", outcome=Outcome.Failure, parent=workflow)
 
 		self.assertIs(Outcome.Failure, workflow.Outcome)
 		self.assertIs(Outcome.Failure, pipeline.ContentsOutcome)
-		self.assertIs(Outcome.Cancelled, pipeline.Outcome, "A pipeline keeps the outcome it was given.")
-		self.assertIs(Outcome.Cancelled, group.Outcome)
+		self.assertIs(Outcome.Cancellation, pipeline.Outcome, "A pipeline keeps the outcome it was given.")
+		self.assertIs(Outcome.Cancellation, group.Outcome)
 
 	def test_Parse(self) -> None:
-		self.assertIs(Outcome.TimedOut, Outcome.Parse("timed_out"))
+		self.assertIs(Outcome.Timeout, Outcome.Parse("timeout"))
+
+	def test_OpenTelemetry(self) -> None:
+		"""The members and values are those of the conventions, so a trace maps one onto the other."""
+		members = {member.name: member.value for member in Outcome}
+		self.assertDictEqual({member.name: member.value for member in Result}, members)
 
 
 class Dependencies(Testcase):
