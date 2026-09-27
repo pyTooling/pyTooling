@@ -92,32 +92,34 @@ argument, leaving only the reading of that schema to a derived class.
    :mod:`pyTooling.Documentation`
       |rarr| The doc-string helpers, which need no Sphinx.
 """
-from hashlib                                            import md5
-from pathlib                                            import Path
-from typing                                             import Any
+from hashlib                                                import md5
+from pathlib                                                import Path
+from typing                                                 import Any
 
-from pyTooling.Common                                   import __version__, readResourceFile
-from pyTooling.Decorators                               import export
-from pyTooling.Exceptions                               import MissingDependencyError
-from pyTooling.Resources                                import Sphinx as SphinxResources
+from pyTooling.Common                                       import __version__, readResourceFile
+from pyTooling.Decorators                                   import export
+from pyTooling.Exceptions                                   import MissingDependencyError
+from pyTooling.Resources                                    import Sphinx as SphinxResources
 
 try:
-	from sphinx.application                               import Sphinx
+	from sphinx.application                                   import Sphinx
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="sphinx", extra="sphinx") from ex
 
-from pyTooling.Documentation.Sphinx.CondensedClass      import CondensedClass
-from pyTooling.Documentation.Sphinx.DependencyTable     import CONFIG_VALUES, DependencyTable
-from pyTooling.Documentation.Sphinx.DependencyTable     import prepareEntrypoints, reportBuildTime
-from pyTooling.Documentation.Sphinx.Directives          import BaseDirective, SphinxExtensionError, strip
-from pyTooling.Documentation.Sphinx.Directives          import stripAndNormalize
-from pyTooling.Documentation.Sphinx.GitHubActions       import GitHubActionsDomain
-from pyTooling.Documentation.Sphinx.GitHubActions.Graph import PipelineGraph, resolveLinks
-from pyTooling.Documentation.Sphinx.SchemaGraph         import SchemaGraph
-from pyTooling.Documentation.Sphinx.Roles               import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
-from pyTooling.Documentation.Sphinx.Roles               import breakRole, pythonCodeRole, styleRole
-from pyTooling.Documentation.Sphinx.Shields             import Shields
-from pyTooling.Documentation.Sphinx.XSDSchemaGraph      import XSDSchemaGraph
+from pyTooling.Documentation.Sphinx.CondensedClass          import CondensedClass
+from pyTooling.Documentation.Sphinx.DependencyTable         import CONFIG_VALUES, DependencyTable
+from pyTooling.Documentation.Sphinx.DependencyTable         import prepareEntrypoints, reportBuildTime
+from pyTooling.Documentation.Sphinx.Directives              import BaseDirective, SphinxExtensionError, strip
+from pyTooling.Documentation.Sphinx.Directives              import stripAndNormalize
+from pyTooling.Documentation.Sphinx.GitHubActions           import GitHubActionsDomain
+from pyTooling.Documentation.Sphinx.GitHubActions.Graph     import PipelineGraph, resolveLinks
+from pyTooling.Documentation.Sphinx.GitHubActions.Reference import AutoInputs, Interface, ParameterTable, YAMLExcerpt
+from pyTooling.Documentation.Sphinx.GitHubActions.Reference import checkUndocumentedInputs
+from pyTooling.Documentation.Sphinx.SchemaGraph             import SchemaGraph
+from pyTooling.Documentation.Sphinx.Roles                   import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
+from pyTooling.Documentation.Sphinx.Roles                   import breakRole, pythonCodeRole, styleRole
+from pyTooling.Documentation.Sphinx.Shields                 import Shields
+from pyTooling.Documentation.Sphinx.XSDSchemaGraph          import XSDSchemaGraph
 
 
 __all__ = ["STYLESHEET", "SUBSTITUTIONS"]
@@ -205,6 +207,10 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 
 	sphinx.add_domain(GitHubActionsDomain)
 	sphinx.add_directive_to_domain("gha", "pipeline-graph", PipelineGraph)
+	sphinx.add_directive_to_domain("gha", "parameter-table", ParameterTable)
+	sphinx.add_directive_to_domain("gha", "interface", Interface)
+	sphinx.add_directive_to_domain("gha", "yaml", YAMLExcerpt)
+	sphinx.add_directive_to_domain("gha", "autoinputs", AutoInputs)
 
 	sphinx.setup_extension("sphinx.ext.graphviz")
 
@@ -219,6 +225,7 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	# that doesn't exist should end the build here rather than in the middle of a page
 	sphinx.connect("config-inited", prepareEntrypoints)
 	sphinx.connect("build-finished", reportBuildTime)
+	sphinx.connect("doctree-read", checkUndocumentedInputs)
 	sphinx.connect("doctree-resolved", resolveLinks)
 	sphinx.connect("builder-inited", installStylesheet)
 

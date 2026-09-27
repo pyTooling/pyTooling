@@ -129,6 +129,166 @@ Inputs, Outputs and Secrets
 
    Documents the input, output or secret ``<name>`` of the current workflow. Its target is ``<Workflow>.<name>``.
 
+.. rst:directive:: .. gha:autoinputs::
+
+   Documents every input of the current workflow the document has no ``gha:input`` for - also those whose
+   ``gha:input`` follows later in the document. An entry is what a ``gha:input`` without content creates: *Type*,
+   *Required*, *Default Value* and the ``description`` of the workflow file.
+
+   .. code-block:: ReST
+
+      Input Parameters
+      ****************
+
+      .. gha:input:: package_name
+
+         :Possible Values: Any valid Python package name.
+
+      .. gha:autoinputs::
+
+
+.. _DOC/Sphinx/GHA/Summaries:
+
+Summaries
+*********
+
+Three directives summarize the current workflow. Like the entries, they read the workflow file, so they can't drift
+from it.
+
+
+.. _DOC/Sphinx/GHA/ParameterTable:
+
+Parameter Tables
+================
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      ``gha:parameter-table`` renders the summary tables of the current workflow's parameters - one per kind, the
+      parameters in file order, each name linked to its entry:
+
+      * **inputs** - *Parameter Name*, *Required*, *Type* and *Default*;
+      * **secrets** - *Token Name*, *Required*, *Type* and *Default*;
+      * **outputs** - *Result Name* and the ``description`` of the workflow file.
+
+      A default longer than 80 characters, or of several lines, is shortened in the table and followed by ``…``; the
+      entry shows it in full.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         Parameter Summary
+         *****************
+
+         .. rubric:: Inputs
+
+         .. gha:parameter-table::
+            :kinds: inputs
+
+         .. rubric:: Secrets
+
+         .. gha:parameter-table::
+            :kinds: secrets
+
+.. rst:directive:: .. gha:parameter-table::
+
+   .. rst:directive:option:: kinds: <kind> ...
+
+      The kinds of parameters to summarize, from ``inputs``, ``secrets`` and ``outputs``, separated by spaces or
+      commas. The tables are rendered in this order, whatever the order written. Without the option, a table is
+      rendered for every kind the workflow has parameters of. A kind named here, of which the workflow has none, is a
+      table saying so.
+
+
+.. _DOC/Sphinx/GHA/Interface:
+
+Interface
+=========
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      ``gha:interface`` renders what a caller of the current workflow has to know, as a field list:
+
+      * **Required Inputs**, **Secrets** - a secret the caller has to pass is marked *required* - and **Outputs**,
+        each linked to its entry;
+      * **Permissions** - the permissions a caller has to grant the ``GITHUB_TOKEN``. A called workflow can keep or
+        reduce them, never raise them, so these are the permissions the workflow's jobs and the jobs of the workflows
+        they call declare - per scope the highest access, with the job and the line asking for it, linked to GitHub
+        when :confval:`gha_ref` is configured;
+      * **Templates** - the reusable workflows the jobs call, each with the templates and actions it uses in turn, as
+        far as its file is in :confval:`gha_workflow_directory`. A template of the documented repository links to its
+        page, one of another repository to GitHub;
+      * **Actions** - the actions the workflow's own steps run, linked to GitHub.
+
+      *Templates* and *Actions* are left out, when the workflow uses none.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         .. topic:: Interface and Dependencies
+
+            .. gha:interface::
+
+.. rst:directive:: .. gha:interface::
+
+   Summarizes the interface and the dependencies of the current workflow.
+
+
+.. _DOC/Sphinx/GHA/YAML:
+
+YAML Excerpts
+=============
+
+.. grid:: 2
+
+   .. grid-item::
+      :columns: 6
+
+      ``gha:yaml`` renders the current workflow's file, or a part of it, as a YAML code block. The lines are numbered
+      as in the file, and the part is shifted left by the indentation of its first line.
+
+      The caption names the file and the lines. When :confval:`gha_repository` and :confval:`gha_ref` are
+      configured, it links to these lines on GitHub:
+      ``https://github.com/<repository>/blob/<ref>/.github/workflows/<file>#L<first>-L<last>``.
+
+   .. grid-item::
+      :columns: 6
+
+      .. code-block:: ReST
+
+         .. gha:yaml::
+            :section: inputs
+
+         .. gha:yaml::
+            :job: Package
+
+.. rst:directive:: .. gha:yaml::
+
+   .. rst:directive:option:: section: inputs | outputs | secrets | jobs
+
+      The ``inputs``, ``outputs`` or ``secrets`` of ``on.workflow_call``, or the ``jobs``.
+
+   .. rst:directive:option:: job: <name>
+
+      One job. Excludes ``:section:``. Without either option, the whole file is shown.
+
+   .. rst:directive:option:: caption: <text>
+
+      A caption replacing the file name and the lines.
+
+   .. rst:directive:option:: name: <label>
+
+      A label to reference the code block by.
+
 
 .. _DOC/Sphinx/GHA/Roles:
 
@@ -290,9 +450,12 @@ in the file, the warning names the place in the file, as ``Package.yml:8``.
 * A ``gha:input``, ``gha:output`` or ``gha:secret`` names a parameter the workflow doesn't have.
 * A hand-written *Type*, *Required* or *Default Value* of an input or a secret repeats a fact of the workflow file.
   It is not shown; the file's value is.
+* An input has no entry in the document - neither a ``gha:input`` nor a ``gha:autoinputs`` - reported at the
+  ``gha:workflow`` when the whole document was read.
+* A ``gha:yaml`` names a job the workflow doesn't have, or a section the workflow has nothing in.
 
-A workflow file that can't be found or read is a warning of type ``gha.workflow``, as is a ``gha:input`` without a
-preceding ``gha:workflow``.
+A workflow file that can't be found or read is a warning of type ``gha.workflow``, as is a ``gha:input`` or a summary
+directive without a preceding ``gha:workflow``.
 
 
 .. _DOC/Sphinx/GHA/API:
@@ -308,7 +471,9 @@ A directive of another module reaches the domain with ``self.env.get_domain("gha
 * :attr:`~pyTooling.Documentation.Sphinx.GitHubActions.GitHubActionsDomain.Resolver` reads the workflows a job calls,
   every file once;
 * :meth:`~pyTooling.Documentation.Sphinx.GitHubActions.GitHubActionsDomain.ResolveWorkflow` says where a workflow is
-  documented.
+  documented;
+* :meth:`ParameterDirective.CreateEntry <pyTooling.Documentation.Sphinx.GitHubActions.ParameterDirective.CreateEntry>`
+  creates a parameter's entry and registers it, as ``gha:autoinputs`` does.
 
 A directive is added to the domain with
 :meth:`Sphinx.add_directive_to_domain <sphinx.application.Sphinx.add_directive_to_domain>`.

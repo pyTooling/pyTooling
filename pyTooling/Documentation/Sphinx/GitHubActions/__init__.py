@@ -78,6 +78,8 @@ The workflow files are read with ``ruamel.yaml`` when a directive runs, not when
       |rarr| The model of a workflow file the domain reads.
    :mod:`pyTooling.Documentation.Sphinx.GitHubActions.Graph`
       |rarr| The ``gha:pipeline-graph`` directive, drawing a workflow's jobs and their ``needs``.
+   :mod:`pyTooling.Documentation.Sphinx.GitHubActions.Reference`
+      |rarr| The directives summarizing a workflow: its parameters, its interface, its YAML.
 """
 from __future__                                import annotations
 
