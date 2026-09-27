@@ -80,6 +80,22 @@ Version 10.x (2026)
        element is placed in its group under its own name, every ``in`` of this module takes that name:
        :pycode:`"UnitTesting" in pipeline`.
 
+   * :mod:`pyTooling.CI.Pipeline` models a CI pipeline independently of the service running it: a
+     :class:`~pyTooling.CI.Pipeline.PipelineGroup` of :class:`~pyTooling.CI.Pipeline.Pipeline`\ s holding called
+     :class:`~pyTooling.CI.Pipeline.Workflow`\ s, :class:`~pyTooling.CI.Pipeline.Matrix`\ es,
+     :class:`~pyTooling.CI.Pipeline.Job`\ s and :class:`~pyTooling.CI.Pipeline.Step`\ s, with a condition, the times
+     and an :class:`~pyTooling.CI.Pipeline.Outcome` on every element.
+
+     * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.Pipeline.DependencyMixin.AddNeed` links
+       two siblings, records the reverse link in :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Dependents`, and
+       rejects a need outside the group with :exc:`~pyTooling.CI.Pipeline.DependencyError` and one closing a cycle
+       with :exc:`~pyTooling.CI.Pipeline.DependencyCycleError`, which names the cycle.
+     * :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts a pipeline into a :class:`~pyTooling.Graph.Graph`:
+       an element is a vertex carrying the element as value and its qualified name as ID, a dependency an edge, a
+       called workflow or a matrix a subgraph linked from the group's vertex.
+     * GitHub Actions and GitLab CI - stages, ``needs:``, child and multi-project pipelines, ``parallel`` - map onto
+       it, see :ref:`CI/Pipeline/Services`.
+
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
 

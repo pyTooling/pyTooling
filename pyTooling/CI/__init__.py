@@ -37,6 +37,8 @@ what is done with them - rendering, tracing or reporting are consumers of a mode
 
 .. seealso::
 
+   :mod:`pyTooling.CI.Pipeline`
+      |rarr| The service-independent model of a pipeline and its dependencies.
    :mod:`pyTooling.CI.GitHub`
       |rarr| The model of a GitHub Actions workflow run.
    :mod:`pyTooling.REST`
