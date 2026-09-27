@@ -46,7 +46,7 @@ from pytest                  import mark
 
 from pyTooling.Testing       import Testcase
 
-# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - see tests/unit/Documentation.py. No signature
+# 'pyTooling[sphinx]' requires Sphinx 9.1, which requires Python 3.12 - see 'tests/unit/Documentation.py'. No signature
 # below may name one of these imports.
 sphinxIsSupported = version_info >= (3, 12)
 
@@ -595,8 +595,20 @@ class Parameters(Testcase):
 		self.assertEqual("Parameter 'resolver' is not of type 'WorkflowResolver'.", str(context.exception))
 
 		with self.assertRaises(ValueError) as context:
+			PipelineDotGraph(workflow, direction=None)
+		self.assertEqual("Parameter 'direction' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			PipelineDotGraph(workflow, direction=1)
+		self.assertEqual("Parameter 'direction' is not of type 'str'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
 			PipelineDotGraph(workflow, direction="RL")
 		self.assertEqual("Parameter 'direction' is neither 'LR' nor 'TB'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			PipelineDotGraph(workflow, depth=None)
+		self.assertEqual("Parameter 'depth' is None.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			PipelineDotGraph(workflow, depth="1")
@@ -606,9 +618,17 @@ class Parameters(Testcase):
 			PipelineDotGraph(workflow, depth=-1)
 		self.assertEqual("Parameter 'depth' is negative.", str(context.exception))
 
+		with self.assertRaises(ValueError) as context:
+			PipelineDotGraph(workflow, reduce=None)
+		self.assertEqual("Parameter 'reduce' is None.", str(context.exception))
+
 		with self.assertRaises(TypeError) as context:
 			PipelineDotGraph(workflow, reduce="yes")
 		self.assertEqual("Parameter 'reduce' is not of type 'bool'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			PipelineDotGraph(workflow, link=None)
+		self.assertEqual("Parameter 'link' is None.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			PipelineDotGraph(workflow, link=1)

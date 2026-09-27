@@ -32,7 +32,7 @@
 A Sphinx directive drawing the pipeline of a GitHub Actions workflow as a Graphviz graph.
 
 The jobs of a workflow and the ``needs`` between them are its pipeline. This directive draws it at build time from the
-workflow file, so the picture cannot drift from the file:
+workflow file:
 
 .. code-block:: ReST
 
@@ -79,7 +79,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 __all__ = ["GRAPH_ATTRIBUTES", "CSS_CLASS", "LINK_MARKER"]
 
-#: Attributes every pipeline graph is drawn with, so two pipelines in one document look alike.
+#: Attributes every pipeline graph is drawn with.
 GRAPH_ATTRIBUTES = (
 	"compound=true;",
 	"newrank=true;",
@@ -160,10 +160,15 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		:raises ValueError:    If parameter 'workflow' is None.
 		:raises TypeError:     If parameter 'workflow' is not of type :class:`~pyTooling.CI.Workflow.Workflow`.
 		:raises TypeError:     If parameter 'resolver' is not of type :class:`~pyTooling.CI.Workflow.WorkflowResolver`.
+		:raises ValueError:    If parameter 'direction' is None.
+		:raises TypeError:     If parameter 'direction' is not of type :class:`str`.
 		:raises ValueError:    If parameter 'direction' is neither ``LR`` nor ``TB``.
+		:raises ValueError:    If parameter 'depth' is None.
 		:raises TypeError:     If parameter 'depth' is not of type :class:`int`.
 		:raises ValueError:    If parameter 'depth' is negative.
+		:raises ValueError:    If parameter 'reduce' is None.
 		:raises TypeError:     If parameter 'reduce' is not of type :class:`bool`.
+		:raises ValueError:    If parameter 'link' is None.
 		:raises TypeError:     If parameter 'link' is not of type :class:`bool`.
 		:raises WorkflowError: If a reusable workflow to expand doesn't exist, or is not a well-formed workflow.
 		"""
@@ -183,12 +188,20 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(resolver)}'.")
 			raise ex
 
-		if direction not in ("LR", "TB"):
+		if direction is None:
+			raise ValueError("Parameter 'direction' is None.")
+		elif not isinstance(direction, str):
+			ex = TypeError("Parameter 'direction' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
+			raise ex
+		elif direction not in ("LR", "TB"):
 			ex = ValueError("Parameter 'direction' is neither 'LR' nor 'TB'.")
-			ex.add_note(f"Got '{direction}'.")
+			ex.add_note(f"Got value '{direction}'.")
 			raise ex
 
-		if not isinstance(depth, int) or isinstance(depth, bool):
+		if depth is None:
+			raise ValueError("Parameter 'depth' is None.")
+		elif not isinstance(depth, int) or isinstance(depth, bool):
 			ex = TypeError("Parameter 'depth' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(depth)}'.")
 			raise ex
@@ -197,12 +210,16 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{depth}'.")
 			raise ex
 
-		if not isinstance(reduce, bool):
+		if reduce is None:
+			raise ValueError("Parameter 'reduce' is None.")
+		elif not isinstance(reduce, bool):
 			ex = TypeError("Parameter 'reduce' is not of type 'bool'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(reduce)}'.")
 			raise ex
 
-		if not isinstance(link, bool):
+		if link is None:
+			raise ValueError("Parameter 'link' is None.")
+		elif not isinstance(link, bool):
 			ex = TypeError("Parameter 'link' is not of type 'bool'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(link)}'.")
 			raise ex
