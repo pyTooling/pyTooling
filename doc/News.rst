@@ -83,8 +83,8 @@ Version 10.x (2026)
    * :mod:`pyTooling.CI.Pipeline` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.Pipeline.PipelineGroup` of :class:`~pyTooling.CI.Pipeline.Pipeline`\ s holding called
      :class:`~pyTooling.CI.Pipeline.Workflow`\ s, :class:`~pyTooling.CI.Pipeline.Matrix`\ es,
-     :class:`~pyTooling.CI.Pipeline.Job`\ s and :class:`~pyTooling.CI.Pipeline.Step`\ s, with a condition, the times
-     and an :class:`~pyTooling.CI.Pipeline.Outcome` on every element.
+     :class:`~pyTooling.CI.Pipeline.Job`\ s and :class:`~pyTooling.CI.Pipeline.Step`\ s, with the times and an
+     :class:`~pyTooling.CI.Pipeline.Outcome` on every element, and a condition on those a definition can give one.
 
      * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.Pipeline.DependencyMixin.AddNeed` links
        two siblings, records the reverse link in :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Dependents`, and

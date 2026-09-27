@@ -63,8 +63,8 @@ Definition and Run
 
 The model holds what a pipeline's **definition** says and what a **run** reports, as far as every service has it:
 
-* :attr:`~pyTooling.CI.Pipeline.Base.Condition` - the condition under which an element runs, as written (GitHub
-  ``if:``, GitLab ``rules:if``). It is not evaluated.
+* :attr:`~pyTooling.CI.Pipeline.ConditionMixin.Condition` - the condition under which a workflow, a matrix, a job or
+  a step runs, as written (GitHub ``if:``, GitLab ``rules:if``). It is not evaluated.
 * :attr:`~pyTooling.CI.Pipeline.Workflow.Reference` - what a called workflow calls, as written.
 * :attr:`~pyTooling.CI.Pipeline.Base.CreatedAt`, :attr:`~pyTooling.CI.Pipeline.Base.StartedAt`,
   :attr:`~pyTooling.CI.Pipeline.Base.CompletedAt` and :attr:`~pyTooling.CI.Pipeline.Base.Outcome` - the times and the
@@ -178,7 +178,7 @@ GitHub Actions
    * - ``needs:``
      - :meth:`~pyTooling.CI.Pipeline.DependencyMixin.AddNeed`; needing a matrix job or a calling job needs the group
    * - ``if:``
-     - :attr:`~pyTooling.CI.Pipeline.Base.Condition`
+     - :attr:`~pyTooling.CI.Pipeline.ConditionMixin.Condition`
    * - ``conclusion``
      - :attr:`~pyTooling.CI.Pipeline.Base.Outcome` (e.g. ``timed_out`` |rarr| ``Timeout``, ``startup_failure``
        |rarr| ``Error``)
@@ -219,7 +219,7 @@ GitLab CI
    * - ``parallel: N``
      - :class:`~pyTooling.CI.Pipeline.Matrix` with *N* instances (``test 1/3``)
    * - ``rules:if``
-     - :attr:`~pyTooling.CI.Pipeline.Base.Condition`
+     - :attr:`~pyTooling.CI.Pipeline.ConditionMixin.Condition`
    * - Job ``status``
      - :attr:`~pyTooling.CI.Pipeline.Base.Outcome` (e.g. ``canceled`` |rarr| ``Cancellation``); ``manual`` and
        ``created`` haven't ended
