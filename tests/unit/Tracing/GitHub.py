@@ -286,6 +286,38 @@ class Conversion(Testcase):
 		self.assertListEqual(["Build (queued)"], [span.Name for span in spans])
 		self.assertIsNone(spans[0].StopTime)
 
+	def test_Results(self) -> None:
+		"""Every conclusion GitHub documents becomes the result it did before the model's outcome was used."""
+		for conclusion, result in (
+			("success",         "success"),
+			("failure",         "failure"),
+			("timed_out",       "timeout"),
+			("skipped",         "skip"),
+			("cancelled",       "cancellation"),
+			("action_required", "error"),
+			("neutral",         "error"),
+			("stale",           "error"),
+			("startup_failure", "error"),
+		):
+			with self.subTest(conclusion=conclusion):
+				steps = [{"name": "Test", "number": 1, "status": "completed", "conclusion": conclusion,
+				          "started_at": _time(5), "completed_at": _time(9)}]
+				trace = WorkflowRunTrace.FromJSON(
+					_run(conclusion=conclusion), [_job("Build", 1, 4, 10, conclusion=conclusion, steps=steps)]
+				)
+				job = _children(trace)["Build"]
+
+				self.assertEqual(result, trace["cicd.pipeline.result"])
+				self.assertEqual(result, job["cicd.pipeline.task.run.result"])
+				self.assertEqual(result, _children(job)["Test"]["cicd.pipeline.task.run.result"])
+				self.assertEqual(conclusion, job["github.conclusion"])
+
+	def test_Results_NoCreationTime(self) -> None:
+		"""A run reporting no creation time still reports its own result, not its jobs'."""
+		trace = WorkflowRunTrace.FromJSON(_run(conclusion="failure", created_at=None), [_job("Build", 1, 4, 10)])
+
+		self.assertEqual("failure", trace["cicd.pipeline.result"])
+
 	def test_Job_Running(self) -> None:
 		trace = WorkflowRunTrace.FromJSON(_run(), [_job("Build", 1, 4, None)])
 		job = _children(trace)["Build"]
