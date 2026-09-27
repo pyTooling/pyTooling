@@ -867,7 +867,7 @@ class ApplyNeeds(Fixture):
 		local = run["Local"]
 		self.assertEqual([local["Parameters"]], local["Build"].Needs)
 
-		self.assertEqual([resolver.Load(self._path / "Package.yml").Jobs["Static"]], missing)
+		self.assertEqual(["Local / Static"], missing)
 		self.assertEqual([], run["Foreign"]["Publish"].Needs)
 
 	def test_WithoutResolver(self) -> None:
@@ -881,7 +881,7 @@ class ApplyNeeds(Fixture):
 
 		self.assertEqual([run["Prepare"]], run["Package"].Needs)
 		self.assertEqual([], run["Package"]["Build"].Needs)
-		self.assertEqual([workflow.Jobs["Local"], workflow.Jobs["Foreign"]], missing)
+		self.assertEqual(["Local", "Foreign"], missing)
 
 	def test_Twice(self) -> None:
 		"""Applying the dependencies again adds nothing."""
@@ -971,6 +971,30 @@ class Resolver(Fixture):
 		self.assertEqual(f"Workflow 'Prepare.yml' doesn't exist in '{self._path}'.", str(context.exception))
 		self.assertEqual(9, context.exception.Line)
 		self.assertEqual(self._path / "Pipeline.yml", context.exception.Path)
+
+	def test_CanResolve(self) -> None:
+		resolver = WorkflowResolver({"Owner/Repo": self._path})
+
+		for text, expected in (
+			("./.github/workflows/Package.yml",             True),
+			("owner/repo/.github/workflows/Package.yml@r1", True),
+			("OWNER/REPO/.github/workflows/Package.yml@r1", True),
+			("other/repo/.github/workflows/Package.yml@r1", False),
+			("actions/checkout@v6",                         False),
+			("docker://alpine:3.22",                        False)
+		):
+			with self.subTest(uses=text):
+				self.assertIs(expected, resolver.CanResolve(UsesReference(text, 1)))
+
+		with self.assertRaises(ValueError) as context:
+			_ = resolver.CanResolve(None)
+
+		self.assertEqual("Parameter 'uses' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = resolver.CanResolve("./.github/workflows/Package.yml")
+
+		self.assertEqual("Parameter 'uses' is not of type 'UsesReference'.", str(context.exception))
 
 	def test_CollectPermissions(self) -> None:
 		resolver = self._resolver()

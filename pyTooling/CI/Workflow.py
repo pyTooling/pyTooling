@@ -630,7 +630,7 @@ class Parameter(Base):
 		self,
 		name:        str,
 		line:        int,
-		description: Nullable[str] = None,
+		description: Nullable[str]      = None,
 		*,
 		parent:      Nullable[Workflow] = None
 	) -> None:
@@ -711,9 +711,9 @@ class Input(Parameter):
 		name:        str,
 		line:        int,
 		inputType:   InputType,
-		required:    bool = False,
-		default:     ValueT = None,
-		description: Nullable[str] = None,
+		required:    bool               = False,
+		default:     ValueT             = None,
+		description: Nullable[str]      = None,
 		*,
 		parent:      Nullable[Workflow] = None
 	) -> None:
@@ -794,7 +794,7 @@ class Output(Parameter):
 		name:        str,
 		line:        int,
 		value:       str,
-		description: Nullable[str] = None,
+		description: Nullable[str]      = None,
 		*,
 		parent:      Nullable[Workflow] = None
 	) -> None:
@@ -843,8 +843,8 @@ class Secret(Parameter):
 		self,
 		name:        str,
 		line:        int,
-		required:    bool = False,
-		description: Nullable[str] = None,
+		required:    bool               = False,
+		description: Nullable[str]      = None,
 		*,
 		parent:      Nullable[Workflow] = None
 	) -> None:
@@ -898,11 +898,11 @@ class Matrix(Base):
 		self,
 		line:       int,
 		dimensions: Nullable[Mapping[str, ValueT]] = None,
-		include:    ValueT = None,
-		exclude:    ValueT = None,
-		expression: Nullable[str] = None,
+		include:    ValueT                         = None,
+		exclude:    ValueT                         = None,
+		expression: Nullable[str]                  = None,
 		*,
-		parent:     Nullable[Job] = None
+		parent:     Nullable[Job]                  = None
 	) -> None:
 		"""
 		Initializes a job's matrix.
@@ -1174,16 +1174,16 @@ class Job(Base):
 		self,
 		name:            str,
 		line:            int,
-		displayName:     Nullable[str] = None,
-		needs:           Iterable[str] = (),
-		condition:       Nullable[str] = None,
-		runsOn:          Iterable[str] = (),
+		displayName:     Nullable[str]                  = None,
+		needs:           Iterable[str]                  = (),
+		condition:       Nullable[str]                  = None,
+		runsOn:          Iterable[str]                  = (),
 		withInputs:      Nullable[Mapping[str, ValueT]] = None,
-		secrets:         Nullable[Mapping[str, str]] = None,
-		inheritsSecrets: bool = False,
-		outputs:         Nullable[Mapping[str, str]] = None,
+		secrets:         Nullable[Mapping[str, str]]    = None,
+		inheritsSecrets: bool                           = False,
+		outputs:         Nullable[Mapping[str, str]]    = None,
 		*,
-		parent:          Nullable[Workflow] = None
+		parent:          Nullable[Workflow]             = None
 	) -> None:
 		"""
 		Initializes a job of a workflow.
@@ -1793,7 +1793,7 @@ class Workflow(Base):
 
 		return pipeline
 
-	def ApplyNeeds(self, pipeline: CIWorkflow, resolver: Nullable[WorkflowResolver] = None) -> list[Job]:
+	def ApplyNeeds(self, pipeline: CIWorkflow, resolver: Nullable[WorkflowResolver] = None) -> list[str]:
 		"""
 		Give a run of this workflow the dependencies its jobs declare with ``needs``.
 
@@ -1809,8 +1809,8 @@ class Workflow(Base):
 		:param pipeline:       The run, or a called workflow of a run.
 		:param resolver:       Optional, the resolver reading the workflows the jobs call. Without it, called workflows
 		                       are not followed. Default: ``None``.
-		:returns:              The jobs of this workflow, and of the workflows followed, missing in the run, in the order
-		                       they were looked up.
+		:returns:              The qualified names of the jobs of this workflow, and of the workflows followed, missing in
+		                       the run - as the run would name them -, in the order they were looked up.
 		:raises ValueError:    If parameter 'pipeline' is ``None``.
 		:raises TypeError:     If parameter 'pipeline' is not of type :class:`pyTooling.CI.Pipeline.Workflow`.
 		:raises TypeError:     If parameter 'resolver' is not of type :class:`WorkflowResolver`.
@@ -1828,7 +1828,7 @@ class Workflow(Base):
 			ex.add_note(f"Got type '{getFullyQualifiedName(resolver)}'.")
 			raise ex
 
-		missing: list[Job] = []
+		missing: list[str] = []
 
 		def apply(workflow: Workflow, group: CIWorkflow) -> None:
 			"""
@@ -1848,7 +1848,7 @@ class Workflow(Base):
 
 				if (name := next((name for name in names if name in group), None)) is None:
 					if job._condition is None:
-						missing.append(job)
+						missing.append(names[0] if isinstance(group, CIPipeline) else f"{group.QualifiedName} / {names[0]}")
 					continue
 
 				element = group[name]
@@ -2172,6 +2172,24 @@ class WorkflowResolver(metaclass=ExtendedType, slots=True):
 		"""
 		return self._repositories
 
+	def CanResolve(self, uses: UsesReference) -> bool:
+		"""
+		Return whether a reference names a file the resolver reads: a local one, or one of a mapped repository.
+
+		:param uses:        The reference, as :attr:`Job.Uses`.
+		:returns:           ``True``, if the reference is local, or its repository is in :attr:`Repositories`.
+		:raises ValueError: If parameter 'uses' is ``None``.
+		:raises TypeError:  If parameter 'uses' is not of type :class:`UsesReference`.
+		"""
+		if uses is None:
+			raise ValueError("Parameter 'uses' is None.")
+		elif not isinstance(uses, UsesReference):
+			ex = TypeError("Parameter 'uses' is not of type 'UsesReference'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(uses)}'.")
+			raise ex
+
+		return uses._isLocal or (uses._repository is not None and uses._repository.lower() in self._repositories)
+
 	def Load(self, path: Path) -> Workflow:
 		"""
 		Read a workflow file, or return it if it was read before.
@@ -2250,9 +2268,6 @@ class DefinitionMixin(metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_
 
 	:meth:`Workflow.ToPipeline` builds the elements, so a consumer of the generic model still reaches the facts only
 	the file has: the line an element is written at, the reference a job calls, its permissions.
-
-	The mixin checks the definition against the type its host class declares, so the ``expects`` contract requires
-	:attr:`_DEFINITION_TYPE` from whichever class it ends up in.
 	"""
 
 	_definition: Union[Workflow, Job, Step]  #: The element of the workflow file this element was built from.
