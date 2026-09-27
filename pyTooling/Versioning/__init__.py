@@ -770,7 +770,9 @@ class Version(metaclass=ExtendedType, slots=True):
 			(left._micro == right._micro) and
 			(left._releaseLevel == right._releaseLevel) and
 			(left._releaseNumber == right._releaseNumber) and
+			((Parts.Post in left._parts) == (Parts.Post in right._parts)) and
 			(left._post == right._post) and
+			((Parts.Dev in left._parts) == (Parts.Dev in right._parts)) and
 			(left._dev == right._dev) and
 			(left._build == right._build) and
 			(left._postfix == right._postfix)
@@ -816,12 +818,20 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif left._releaseNumber > right._releaseNumber:
 			return False
 
-		if left._post < right._post:
+		leftPost =  Parts.Post in left._parts
+		rightPost = Parts.Post in right._parts
+		if leftPost != rightPost:
+			return rightPost
+		elif left._post < right._post:
 			return True
 		elif left._post > right._post:
 			return False
 
-		if left._dev < right._dev:
+		leftDev =  Parts.Dev in left._parts
+		rightDev = Parts.Dev in right._parts
+		if leftDev != rightDev:
+			return leftDev
+		elif left._dev < right._dev:
 			return True
 		elif left._dev > right._dev:
 			return False
@@ -1189,7 +1199,7 @@ class SemanticVersion(Version):
 		r"(?:"
 			r"(?:\.(?P<build>\d+))"
 		r"|"
-			r"(?:[-](?P<release>dev|final))"
+			r"(?:[\.\-]?(?P<release>dev|final))"
 		r"|"
 			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc|pl)(?P<number>\d+))"
 		r")?"
