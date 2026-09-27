@@ -378,6 +378,15 @@ class Times(Testcase):
 		self.assertEqual(_time(70), pipeline.ContentsStartedAt)
 		self.assertEqual(_time(200), pipeline.ContentsCompletedAt)
 
+	def test_ReportedWithoutCreationTime(self) -> None:
+		"""A group given only an outcome is reported, so it keeps that outcome and reports no times."""
+		pipeline = Pipeline("Pipeline", outcome=Outcome.Cancellation)
+		Job("A", createdAt=_time(60), startedAt=_time(70), completedAt=_time(200), outcome=Outcome.Success, parent=pipeline)
+
+		self.assertIs(Outcome.Cancellation, pipeline.Outcome)
+		self.assertIsNone(pipeline.CreatedAt)
+		self.assertIs(Outcome.Success, pipeline.ContentsOutcome)
+
 	def test_RunningElement(self) -> None:
 		workflow = Workflow("Called")
 		Job("Done", createdAt=_time(60), startedAt=_time(70), completedAt=_time(100), parent=workflow)

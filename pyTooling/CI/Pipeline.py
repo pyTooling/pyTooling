@@ -665,8 +665,8 @@ class JobGroup(Base):
 	"""
 	A group of jobs: the shared behaviour of a :class:`Workflow` and a :class:`Matrix`.
 
-	A group the service reports as an element of its own - one that was given a creation time - keeps the times and
-	the outcome it was given. A group the service doesn't report, as GitHub doesn't report a called workflow or a
+	A group the service reports as an element of its own - one that was given a time or an outcome - keeps the times
+	and the outcome it was given. A group the service doesn't report, as GitHub doesn't report a called workflow or a
 	matrix, derives them from what it holds.
 	"""
 
@@ -739,13 +739,22 @@ class JobGroup(Base):
 				yield from element.IterateJobs()
 
 	@readonly
+	def _IsReported(self) -> bool:
+		"""
+		Read-only property to return whether the service reported the group as an element of its own.
+
+		:returns: ``True``, if the group was given a time or an outcome.
+		"""
+		return any(fact is not None for fact in (self._createdAt, self._startedAt, self._completedAt, self._outcome))
+
+	@readonly
 	def CreatedAt(self) -> Nullable[datetime]:
 		"""
 		Read-only property to return when the group was created.
 
 		:returns: The time the service reported, or - for a group it doesn't report - :attr:`ContentsCreatedAt`.
 		"""
-		return self.ContentsCreatedAt if self._createdAt is None else self._createdAt
+		return self._createdAt if self._IsReported else self.ContentsCreatedAt
 
 	@readonly
 	def StartedAt(self) -> Nullable[datetime]:
@@ -754,7 +763,7 @@ class JobGroup(Base):
 
 		:returns: The time the service reported, or - for a group it doesn't report - :attr:`ContentsStartedAt`.
 		"""
-		return self.ContentsStartedAt if self._createdAt is None else self._startedAt
+		return self._startedAt if self._IsReported else self.ContentsStartedAt
 
 	@readonly
 	def CompletedAt(self) -> Nullable[datetime]:
@@ -763,7 +772,7 @@ class JobGroup(Base):
 
 		:returns: The time the service reported, or - for a group it doesn't report - :attr:`ContentsCompletedAt`.
 		"""
-		return self.ContentsCompletedAt if self._createdAt is None else self._completedAt
+		return self._completedAt if self._IsReported else self.ContentsCompletedAt
 
 	@readonly
 	def Outcome(self) -> Nullable[Outcome]:
@@ -772,7 +781,7 @@ class JobGroup(Base):
 
 		:returns: The outcome the service reported, or - for a group it doesn't report - :attr:`ContentsOutcome`.
 		"""
-		return self.ContentsOutcome if self._createdAt is None else self._outcome
+		return self._outcome if self._IsReported else self.ContentsOutcome
 
 	@readonly
 	def ContentsCreatedAt(self) -> Nullable[datetime]:

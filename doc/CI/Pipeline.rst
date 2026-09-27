@@ -76,9 +76,10 @@ The model holds what a pipeline's **definition** says and what a **run** reports
   :attr:`~pyTooling.CI.Pipeline.Base.CompletedAt` and :attr:`~pyTooling.CI.Pipeline.Base.Outcome` - the times and the
   :class:`~pyTooling.CI.Pipeline.Outcome` of a run.
 
-A group the service reports as an element of its own - a pipeline, a GitLab child pipeline - keeps the times it was
-given. A group it doesn't report - a GitHub called workflow, a matrix - spans what it holds: it begins with its
-earliest element and ends with its latest, and has no end while an element below it is still running. The span is
+A group the service reports as an element of its own - a pipeline, a GitLab child pipeline; one given a time or an
+outcome - keeps the times and the outcome it was given. A group it doesn't report - a GitHub called workflow, a
+matrix - spans what it holds: it begins with its earliest element and ends with its latest, and has no end while an
+element below it is still running. The span is
 available for every group as :attr:`~pyTooling.CI.Pipeline.JobGroup.ContentsCreatedAt`,
 :attr:`~pyTooling.CI.Pipeline.JobGroup.ContentsStartedAt`, :attr:`~pyTooling.CI.Pipeline.JobGroup.ContentsCompletedAt`
 and :attr:`~pyTooling.CI.Pipeline.JobGroup.ContentsOutcome`; :meth:`Outcome.Combine
