@@ -39,6 +39,10 @@ The Tree
        +-- Step             a step of the job
            +-- UsesReference    the action the step runs
 
+   Action                   an action's file, 'action.yml'
+   +-- Step                 a step of a composite action
+       +-- UsesReference    the action the step runs
+
 * A workflow is named by its file's stem - ``CompletePipeline`` - because a caller names it that way in ``uses``.
   The ``name`` key is :attr:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.DisplayName`.
 * An input keeps the type its default is written with - ``'3.14'`` is a string, ``false`` a boolean - and a
@@ -56,6 +60,11 @@ The Tree
 
 * :attr:`Matrix.IsDynamic <pyTooling.CI.GitHub.WorkflowFile.Matrix.IsDynamic>` says whether a matrix' instances are
   known at run time only, as for ``include: ${{ fromJson(inputs.jobs) }}``.
+* A job's :attr:`~pyTooling.CI.GitHub.WorkflowFile.Job.Container` and
+  :attr:`~pyTooling.CI.GitHub.WorkflowFile.Job.Services` are the images of the containers it runs in.
+* An action is named by its directory - ``ComputeRequirements`` for ``.github/actions/ComputeRequirements/action.yml``.
+  Of a composite action, the steps are read; of a Docker action, the
+  :attr:`~pyTooling.CI.GitHub.WorkflowFile.Action.Image`.
 * Expressions - ``if``, ``runs-on: ${{ matrix.runs-on }}``, an output's ``value`` - are kept as written and are
   not evaluated.
 
@@ -118,6 +127,14 @@ repository, whatever the ref:
 * A local reference - ``./.github/workflows/Package.yml`` - is read from the directory of the calling workflow.
 * A repository without a directory answers ``None``: its files are not fetched.
 * Every file is read once; resolving it again returns the same :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`.
+
+:meth:`~pyTooling.CI.GitHub.Workflow.WorkflowResolver.ResolveAction` reads the action a step runs the same way, from its
+``action.yml``, so the actions a composite action runs in turn are known:
+
+* An action of a mapped repository - ``pyTooling/Actions/.github/actions/ComputeRequirements@r8`` - is read from the
+  repository's root, the directory holding the ``.github`` directory the mapped directory is in.
+* A local action - ``./.github/actions/ComputeRequirements`` - is read from the root of the repository of the calling
+  workflow or action.
 
 
 .. _CI/Workflow/Permissions:
