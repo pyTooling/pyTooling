@@ -35,7 +35,7 @@ Every testcase builds a small Sphinx project in a temporary directory - see
 :class:`~tests.unit.SphinxExtension.GitHubActionsDomain.Project` - and checks the HTML and the warnings.
 """
 from html                  import unescape
-from re                    import findall
+from re                    import findall, sub
 from textwrap              import dedent, indent
 
 from .GitHubActionsDomain  import Project
@@ -168,7 +168,7 @@ ENTRIES = dedent("""\
 
 
 class ParameterTables(Project):
-	PAGE = ".. gha:workflow:: Package\n\nPackage\n#######\n\n.. gha:parameter-table::\n\n.. gha:autoinputs::\n"
+	PAGE = f"{HEADER}.. gha:parameter-table::\n\n.. gha:autoinputs::\n"
 
 	def _table(self, html: str, kind: str) -> str:
 		"""
@@ -283,7 +283,7 @@ class ParameterTables(Project):
 
 
 class Interfaces(Project):
-	PAGE = ".. gha:workflow:: Package\n\nPackage\n#######\n\n.. gha:interface::\n\n.. gha:autoinputs::\n"
+	PAGE = f"{HEADER}.. gha:interface::\n\n.. gha:autoinputs::\n"
 
 	def _field(self, html: str, name: str) -> str:
 		"""
@@ -582,9 +582,6 @@ class YAMLExcerpts(Project):
 		:param html: The page's HTML.
 		:returns:    The code block's text.
 		"""
-		from html import unescape
-		from re   import sub
-
 		start = html.index('<div class="highlight-yaml')
 		return unescape(sub(r"<[^>]+>", "", html[start:html.index("</pre>", start)]))
 
@@ -595,7 +592,7 @@ class YAMLExcerpts(Project):
 		:param options: The options of ``gha:yaml``, one per line, indented.
 		:returns:       The page.
 		"""
-		return f".. gha:workflow:: Package\n\nPackage\n#######\n\n.. gha:yaml::\n{options}\n.. gha:autoinputs::\n"
+		return f"{HEADER}.. gha:yaml::\n{options}\n.. gha:autoinputs::\n"
 
 	def test_Section(self) -> None:
 		self._workflow("Package", PACKAGE)
@@ -707,7 +704,7 @@ class AutoInputs(Project):
 	def test_Entry(self) -> None:
 		"""An entry has the facts and the description of the workflow file, the anchors and the index entry."""
 		self._workflow("Package", PACKAGE)
-		self._build({"Package": ".. gha:workflow:: Package\n\nPackage\n#######\n\n.. gha:autoinputs::\n"})
+		self._build({"Package": f"{HEADER}.. gha:autoinputs::\n"})
 
 		html = self._html("Package")
 		entry = html[html.index('id="gha-input-Package.python_version"'):html.index('id="gha-input-Package.pages_on"')]
@@ -721,7 +718,7 @@ class AutoInputs(Project):
 	def test_Label(self) -> None:
 		self._workflow("Package", PACKAGE)
 		self._build({
-			"Package": ".. gha:workflow:: Package\n\nPackage\n#######\n\n.. gha:autoinputs::\n",
+			"Package": f"{HEADER}.. gha:autoinputs::\n",
 			"index": "Index\n#####\n\n:ref:`JOBTMPL/Package/Input/dry_run`\n"
 		})
 
@@ -731,7 +728,7 @@ class AutoInputs(Project):
 	def test_Parallel(self) -> None:
 		self._workflow("Package", PACKAGE)
 		documents = {
-			"Package": ".. gha:workflow:: Package\n\nPackage\n#######\n\n.. gha:autoinputs::\n",
+			"Package": f"{HEADER}.. gha:autoinputs::\n",
 			"index": "Index\n#####\n\n:gha:input:`Package.dry_run`\n",
 			"A": "A\n#\n", "B": "B\n#\n", "C": "C\n#\n",
 		}
@@ -754,7 +751,7 @@ class AutoInputs(Project):
 class Drift(Project):
 	def test_Undocumented(self) -> None:
 		self._workflow("Package", PACKAGE)
-		self._build({"Package": f".. gha:workflow:: Package\n\nPackage\n#######\n\n{ENTRIES}"})
+		self._build({"Package": f"{HEADER}{ENTRIES}"})
 
 		self.assertEqual(
 			[
@@ -784,7 +781,7 @@ class Drift(Project):
 	def test_OtherDocument(self) -> None:
 		"""An input documented only in another document has no entry in this one."""
 		self._workflow("Package", PACKAGE)
-		page = f".. gha:workflow:: Package\n\nPackage\n#######\n\n{ENTRIES}"
+		page = f"{HEADER}{ENTRIES}"
 		other = ".. gha:workflow:: Package\n\nOther\n#####\n\n.. gha:input:: dry_run\n"
 		self._build({"Package": page, "Other": other}, suppress_warnings=["gha.duplicate"])
 
