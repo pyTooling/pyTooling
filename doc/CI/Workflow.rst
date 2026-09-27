@@ -84,14 +84,14 @@ Dependencies Between Jobs
 
 :attr:`Job.Needs <pyTooling.CI.Workflow.Job.Needs>` resolves the names of ``needs`` to the jobs. The pipeline they
 form is built by :meth:`~pyTooling.CI.Workflow.Workflow.ToPipeline` (see :ref:`CI/Workflow/Pipeline`) and converted
-into a :class:`~pyTooling.Graph.Graph` by :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph`, which by default drops a
-dependency a longer path already implies:
+into a :class:`~pyTooling.Graph.Graph` by :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph`, whose edges read *needs*,
+and which by default drops a dependency a longer path already implies:
 
 .. code-block:: text
 
-   Package  needs Prepare               Prepare --> Package --> Local
+   Package  needs Prepare               Local --> Package --> Prepare
    Local    needs Prepare, Package
-                                        (Prepare --> Local is implied)
+                                        (Local --> Prepare is implied)
 
 
 .. _CI/Workflow/Resolver:
@@ -151,11 +151,11 @@ reads them and ``depth`` allows:
 .. code-block:: python
 
    pipeline = workflow.ToPipeline(resolver, depth=1)
+   graph =    pipeline.ToGraph()                       # transitively reduced
 
-   for element in pipeline.Elements:                   # in file order
+   for vertex in graph.IterateTopologically():         # in an order the jobs can run in
+     element = vertex.Value
      print(f"{element.QualifiedName}  {element.Definition.Location}")
-
-   graph = pipeline.ToGraph()                          # transitively reduced
 
 .. list-table::
    :header-rows: 1
