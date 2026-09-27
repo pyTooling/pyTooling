@@ -26,6 +26,7 @@ Configuration
    # doc/conf.py
    gha_repository =         "pyTooling/Actions"      # the documented repository
    gha_workflow_directory = "../.github/workflows"   # relative to the Sphinx source directory
+   gha_ref =                "r8"                     # the ref the documentation describes
 
 .. confval:: gha_workflow_directory
 
@@ -36,6 +37,11 @@ Configuration
 
    The documented repository, as ``owner/repo``. A job calling ``owner/repo/.github/workflows/X.yml@<ref>`` is resolved
    to ``X.yml`` in :confval:`gha_workflow_directory`, whatever the ref. Default: ``None``.
+
+.. confval:: gha_ref
+
+   The ref - a branch or tag - of the documented repository the documentation describes, as ``r8``. A job calling a
+   workflow of the documented repository at another ref is a warning. ``None`` checks nothing. Default: ``None``.
 
 .. confval:: gha_label_prefix
 

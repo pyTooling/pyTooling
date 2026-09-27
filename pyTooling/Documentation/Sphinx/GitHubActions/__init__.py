@@ -95,12 +95,16 @@ __all__ = ["CONFIG_VALUES", "NO_DEFAULT", "LEADING_FIELDS", "WARNING_TYPE"]
 #: ``gha_workflow_directory``
 #:    The directory holding the workflow files, relative to the Sphinx source directory, as
 #:    ``../.github/workflows``. A ``gha:workflow`` without ``:file:`` reads ``<name>.yml`` from it.
+#: ``gha_ref``
+#:    The ref - a branch or tag - of the documented repository the documentation describes, as ``r8``, or ``None``.
+#:    A directive may warn about a ``uses`` of the documented repository at another ref.
 #: ``gha_label_prefix``
 #:    The root of the ``:ref:`` labels the directives register beside their domain targets, as
 #:    ``JOBTMPL/Parameters/Input/package_name``, or ``None`` for none.
 CONFIG_VALUES = {
 	"gha_repository":         (None,      "env", (str, type(None))),
 	"gha_workflow_directory": (None,      "env", (str, type(None))),
+	"gha_ref":                (None,      "env", (str, type(None))),
 	"gha_label_prefix":       ("JOBTMPL", "env", (str, type(None))),
 }
 

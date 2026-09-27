@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.Documentation.Sphinx.GitHubActions`.
+Unit tests for the directives of :mod:`pyTooling.Documentation.Sphinx`, each built in a small Sphinx project.
 
-The testcases build small Sphinx projects in a temporary directory, e.g. in :mod:`tests.unit.GitHubActions.Domain`.
+The package itself declares no code; its members are tested per module, e.g. in
+:mod:`tests.unit.SphinxExtension.PipelineGraph`.
 """

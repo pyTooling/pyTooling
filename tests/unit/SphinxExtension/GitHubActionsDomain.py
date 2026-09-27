@@ -307,6 +307,17 @@ class Workflows(Project):
 			self._warningLines()
 		)
 
+	def test_Config(self) -> None:
+		self._workflow("Package")
+		app = self._build({"Package": PAGE})
+
+		self.assertIsNone(app.config.gha_ref)
+		self.assertEqual("JOBTMPL", app.config.gha_label_prefix)
+
+		app = self._build({"Package": PAGE}, gha_ref="r8")
+
+		self.assertEqual("r8", app.config.gha_ref)
+
 	def test_LabelPrefix(self) -> None:
 		self._workflow("Package")
 		self._build({"Package": PAGE}, gha_label_prefix=None)
