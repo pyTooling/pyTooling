@@ -691,6 +691,12 @@ class ToGraph(Testcase):
 
 		self.assertEqual("Parameter 'reduce' is not of type 'bool'.", str(context.exception))
 
+	def test_Reduce_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Pipeline("Pipeline").ToGraph(reduce=None)
+
+		self.assertEqual("Parameter 'reduce' is None.", str(context.exception))
+
 	def test_Subgraphs(self) -> None:
 		pipeline = self._Pipeline()
 		graph = pipeline.ToGraph()

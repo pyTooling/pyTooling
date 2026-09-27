@@ -1012,6 +1012,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:returns:           The graph, named like the workflow.
 		:raises TypeError:  If parameter 'depth' is not of type :class:`int`.
 		:raises ValueError: If parameter 'depth' is negative.
+		:raises ValueError: If parameter 'reduce' is None.
 		:raises TypeError:  If parameter 'reduce' is not of type :class:`bool`.
 
 		.. seealso::
@@ -1028,7 +1029,9 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			ex.add_note(f"Got value '{depth}'.")
 			raise ex
 
-		if not isinstance(reduce, bool):
+		if reduce is None:
+			raise ValueError("Parameter 'reduce' is None.")
+		elif not isinstance(reduce, bool):
 			ex = TypeError("Parameter 'reduce' is not of type 'bool'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(reduce)}'.")
 			raise ex
