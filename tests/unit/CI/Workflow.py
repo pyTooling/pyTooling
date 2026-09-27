@@ -782,12 +782,12 @@ class ToPipeline(Fixture):
 			"""
 			return [(edge.Source.Value.Name, edge.Destination.Value.Name) for edge in graph.IterateEdges()]
 
-		self.assertEqual([("Prepare", "Package"), ("Package", "Local"), ("Local", "Foreign")], edges(pipeline.ToGraph()))
+		self.assertEqual([("Package", "Prepare"), ("Local", "Package"), ("Foreign", "Local")], edges(pipeline.ToGraph()))
 		self.assertEqual(
 			[
-				("Prepare", "Package"),
-				("Prepare", "Local"), ("Package", "Local"),
-				("Prepare", "Foreign"), ("Package", "Foreign"), ("Local", "Foreign")
+				("Package", "Prepare"),
+				("Local", "Prepare"), ("Local", "Package"),
+				("Foreign", "Prepare"), ("Foreign", "Package"), ("Foreign", "Local")
 			],
 			edges(pipeline.ToGraph(reduce=False))
 		)
@@ -803,7 +803,7 @@ class ToPipeline(Fixture):
 		"""))).ToPipeline()
 
 		self.assertEqual(
-			[("A", "B"), ("A", "C"), ("B", "D"), ("C", "D")],
+			[("B", "A"), ("C", "A"), ("D", "B"), ("D", "C")],
 			[(edge.Source.Value.Name, edge.Destination.Value.Name) for edge in pipeline.ToGraph().IterateEdges()]
 		)
 
