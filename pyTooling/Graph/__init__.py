@@ -2775,6 +2775,68 @@ class BaseGraph(
 
 		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
+	def IterateTransitiveEdges(self) -> Generator[Edge, None, None]:
+		"""
+		Iterate the edges a longer path already implies.
+
+		An edge from ``A`` to ``C`` is implied, if ``C`` is also reachable from ``A`` through another vertex, e.g. by the
+		edges ``A → B`` and ``B → C``. A second edge between the same two vertices is implied by the first. Removing every
+		implied edge leaves the graph's *transitive reduction*: every vertex stays reachable from every vertex it was
+		reachable from before, by the fewest edges. See :meth:`RemoveTransitiveEdges`.
+
+		Only the edges of this graph are taken into account, not its links, and for a :class:`Graph` not the vertices of
+		its subgraphs. A :class:`Subgraph` is reduced by calling the method on it.
+
+		:returns:           A generator to iterate the implied edges.
+		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`RemoveTransitiveEdges`
+		      |rarr| Remove the edges a longer path already implies.
+		   :meth:`IterateTopologically`
+		      |rarr| Iterate all or selected vertices in topological order.
+		"""
+		if self.VertexCount == 0:
+			return
+
+		descendants: dict[Vertex, set[Vertex]] = {}
+		transitiveEdges = []
+
+		# A vertex is yielded after every vertex it has an edge to, so its successors' descendants are known already.
+		for vertex in self.IterateTopologically():
+			successors = set()
+			indirect =   set()
+			for edge in vertex._outboundEdges:
+				indirect |= descendants[edge._destination]
+
+			for edge in vertex._outboundEdges:
+				if edge._destination in indirect or edge._destination in successors:
+					transitiveEdges.append(edge)
+				else:
+					successors.add(edge._destination)
+
+			descendants[vertex] = successors | indirect
+
+		yield from transitiveEdges
+
+	def RemoveTransitiveEdges(self) -> None:
+		"""
+		Remove the edges a longer path already implies, which leaves the graph's *transitive reduction*.
+
+		Reachability is preserved: every vertex stays reachable from every vertex it was reachable from before. The edges
+		removed are those :meth:`IterateTransitiveEdges` yields.
+
+		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`IterateTransitiveEdges`
+		      |rarr| Iterate the edges a longer path already implies.
+		"""
+		for edge in list(self.IterateTransitiveEdges()):
+			edge.Delete()
+
 
 @export
 class Subgraph(

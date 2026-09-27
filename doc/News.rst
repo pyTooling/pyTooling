@@ -332,6 +332,9 @@ Version 10.x (2026)
 
      * Neither module raises its own base exception any more. ``LinkedList`` gained five specific errors and
        ``Graph`` three, so 20 raise sites name what went wrong.
+     * :meth:`Graph.IterateTransitiveEdges <pyTooling.Graph.BaseGraph.IterateTransitiveEdges>` names the edges a
+       longer path already implies, and :meth:`~pyTooling.Graph.BaseGraph.RemoveTransitiveEdges` removes them, which
+       leaves the graph's **transitive reduction**. A graph and each of its subgraphs are reduced separately.
 
    .. rubric:: Breaking Changes
 
