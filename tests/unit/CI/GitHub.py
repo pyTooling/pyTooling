@@ -34,12 +34,12 @@ Unit tests for :mod:`pyTooling.CI.GitHub`.
 from datetime            import datetime, timezone
 from typing              import Any, Optional as Nullable
 
-from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
-from pyTooling.CI.GitHub import MatrixWorkflow
-from pyTooling.CI.GitHub import Status, Conclusion, Event, GitHubError, QualifiedNameMixin, StatusMixin
-from pyTooling.CI        import Pipeline as CIPipeline
+from pyTooling.CI.GitHub   import PipelineGroup, Pipeline, MatrixJob, Job, Step
+from pyTooling.CI.GitHub   import Status, Conclusion, Event, GitHubError, StatusMixin
+from pyTooling.CI.Pipeline import Base, JobGroup, Matrix, MatrixWorkflow, QualifiedNameMixin, Workflow
+from pyTooling.CI          import Pipeline as CIPipeline
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
-from pyTooling.Testing   import Testcase
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -1030,6 +1030,18 @@ class ParameterChecks(Testcase):
 			_ = Pipeline("Pipeline", parent="group")
 
 		self.assertEqual("Parameter 'parent' is not of type 'PipelineGroup'.", str(context.exception))
+
+	def test_PipelineGroupSHA(self) -> None:
+		for sha, exceptionType, message in (
+			(None,     ValueError, "Parameter 'sha' is None."),
+			(0x41364c, TypeError,  "Parameter 'sha' is not of type 'str'."),
+			("",       ValueError, "Parameter 'sha' is empty.")
+		):
+			with self.subTest(sha=sha):
+				with self.assertRaises(exceptionType) as context:
+					_ = PipelineGroup(sha)
+
+				self.assertEqual(message, str(context.exception))
 
 	def test_PipelineGroupElementType(self) -> None:
 		with self.assertRaises(TypeError) as context:

@@ -62,10 +62,10 @@ from datetime              import datetime, timezone
 from typing                import Optional as Nullable, ClassVar, Iterable, Self, Union
 
 from pyTooling.CI          import JSONObject
-from pyTooling.CI.Pipeline import Base, JobGroup, Matrix, MatrixInstanceMixin, MatrixWorkflow, Outcome
-from pyTooling.CI.Pipeline import QualifiedNameMixin, Workflow
-from pyTooling.CI.Pipeline import Job as CIJob, Pipeline as CIPipeline, PipelineGroup as CIPipelineGroup
-from pyTooling.CI.Pipeline import Step as CIStep
+from pyTooling.CI.Pipeline import MatrixInstanceMixin, Outcome
+from pyTooling.CI.Pipeline import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
+from pyTooling.CI.Pipeline import MatrixWorkflow as CIMatrixWorkflow, Pipeline as CIPipeline
+from pyTooling.CI.Pipeline import PipelineGroup as CIPipelineGroup, Step as CIStep, Workflow as CIWorkflow
 from pyTooling.Common      import getFullyQualifiedName, parseISO8601Timestamp, StringEnum
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -384,9 +384,22 @@ class PipelineGroup(CIPipelineGroup):
 		"""
 		Initializes a group of pipelines started for one commit.
 
-		:param sha:       Commit every pipeline of the group was started on.
-		:param pipelines: Optional, the pipelines, which are attached to the group. Default: ``None``.
+		:param sha:         Commit every pipeline of the group was started on.
+		:param pipelines:   Optional, the pipelines, which are attached to the group. Default: ``None``.
+		:raises ValueError: If parameter 'sha' is ``None``.
+		:raises TypeError:  If parameter 'sha' is not of type :class:`str`.
+		:raises ValueError: If parameter 'sha' is empty.
+		:raises TypeError:  If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
 		"""
+		if sha is None:
+			raise ValueError("Parameter 'sha' is None.")
+		elif not isinstance(sha, str):
+			ex = TypeError("Parameter 'sha' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(sha)}'.")
+			raise ex
+		elif sha == "":
+			raise ValueError("Parameter 'sha' is empty.")
+
 		super().__init__(sha, pipelines)
 
 	@readonly
@@ -760,20 +773,20 @@ class Pipeline(CIPipeline, StatusMixin):
 
 			*callers, leaf = fullName.split(" / ")
 
-			group: Workflow = pipeline
+			group: CIWorkflow = pipeline
 			for caller in callers:
 				if (calledWorkflow := group.Workflows.get(caller, None)) is None:
 					callerName, callerValues = _splitMatrixJobName(caller)
 					if callerValues is None:
-						calledWorkflow = Workflow(caller, parent=group)
+						calledWorkflow = CIWorkflow(caller, parent=group)
 					else:
 						if (matrix := group.Matrices.get(callerName, None)) is None:
-							matrix = Matrix(callerName, parent=group)
+							matrix = CIMatrix(callerName, parent=group)
 
 						if caller in matrix:
 							calledWorkflow = matrix[caller]
 						else:
-							calledWorkflow = MatrixWorkflow(callerName, callerValues, parent=matrix)
+							calledWorkflow = CIMatrixWorkflow(callerName, callerValues, parent=matrix)
 
 				group = calledWorkflow
 
@@ -782,7 +795,7 @@ class Pipeline(CIPipeline, StatusMixin):
 				Job.FromJSON(job, path, parent=group)
 			else:
 				if (matrix := group.Matrices.get(jobName, None)) is None:
-					matrix = Matrix(jobName, parent=group)
+					matrix = CIMatrix(jobName, parent=group)
 
 				MatrixJob.FromJSON(job, path, jobName, dimensionValues, parent=matrix)
 
@@ -801,19 +814,19 @@ class Job(CIJob, StatusMixin):
 	def __init__(
 		self,
 		name:            str,
-		identifier:      Nullable[int]           = None,
-		status:          Nullable[Status]        = None,
-		conclusion:      Nullable[Conclusion]    = None,
-		createdAt:       Nullable[datetime]      = None,
-		startedAt:       Nullable[datetime]      = None,
-		completedAt:     Nullable[datetime]      = None,
-		url:             Nullable[URL]           = None,
-		labels:          Nullable[Iterable[str]] = None,
-		runnerName:      Nullable[str]           = None,
-		runnerGroupName: Nullable[str]           = None,
+		identifier:      Nullable[int]            = None,
+		status:          Nullable[Status]         = None,
+		conclusion:      Nullable[Conclusion]     = None,
+		createdAt:       Nullable[datetime]       = None,
+		startedAt:       Nullable[datetime]       = None,
+		completedAt:     Nullable[datetime]       = None,
+		url:             Nullable[URL]            = None,
+		labels:          Nullable[Iterable[str]]  = None,
+		runnerName:      Nullable[str]            = None,
+		runnerGroupName: Nullable[str]            = None,
 		steps:           Nullable[Iterable[Step]] = None,
 		*,
-		parent:          Nullable[JobGroup] = None
+		parent:          Nullable[CIJobGroup]     = None
 	) -> None:
 		"""
 		Initializes a job of a workflow run.
@@ -986,7 +999,7 @@ class Job(CIJob, StatusMixin):
 		return (self._startedAt - self._createdAt).total_seconds()
 
 	@classmethod
-	def FromJSON(cls, json: JSONObject, path: str = "job", *, parent: Nullable[JobGroup] = None) -> Self:
+	def FromJSON(cls, json: JSONObject, path: str = "job", *, parent: Nullable[CIJobGroup] = None) -> Self:
 		"""
 		Build a job and its steps from the JSON object the GitHub REST API answers with.
 
@@ -1044,25 +1057,25 @@ class MatrixJob(Job, MatrixInstanceMixin):
 	dimensions.
 	"""
 
-	_PARENT_TYPE: ClassVar[Nullable[type]] = Matrix  #: A matrix instance is contained in a matrix.
+	_PARENT_TYPE: ClassVar[Nullable[type]] = CIMatrix  #: A matrix instance is contained in a matrix.
 
 	def __init__(
 		self,
 		name:            str,
-		dimensionValues: Nullable[Iterable[str]] = None,
-		identifier:      Nullable[int]           = None,
-		status:          Nullable[Status]        = None,
-		conclusion:      Nullable[Conclusion]    = None,
-		createdAt:       Nullable[datetime]      = None,
-		startedAt:       Nullable[datetime]      = None,
-		completedAt:     Nullable[datetime]      = None,
-		url:             Nullable[URL]           = None,
-		labels:          Nullable[Iterable[str]] = None,
-		runnerName:      Nullable[str]           = None,
-		runnerGroupName: Nullable[str]           = None,
+		dimensionValues: Nullable[Iterable[str]]  = None,
+		identifier:      Nullable[int]            = None,
+		status:          Nullable[Status]         = None,
+		conclusion:      Nullable[Conclusion]     = None,
+		createdAt:       Nullable[datetime]       = None,
+		startedAt:       Nullable[datetime]       = None,
+		completedAt:     Nullable[datetime]       = None,
+		url:             Nullable[URL]            = None,
+		labels:          Nullable[Iterable[str]]  = None,
+		runnerName:      Nullable[str]            = None,
+		runnerGroupName: Nullable[str]            = None,
 		steps:           Nullable[Iterable[Step]] = None,
 		*,
-		parent:          Nullable[Matrix] = None
+		parent:          Nullable[CIMatrix]       = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
@@ -1108,7 +1121,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		name:            Nullable[str]           = None,
 		dimensionValues: Nullable[Iterable[str]] = None,
 		*,
-		parent:          Nullable[Matrix] = None
+		parent:          Nullable[CIMatrix]      = None
 	) -> Self:
 		"""
 		Build a matrix instance and its steps from the JSON object the GitHub REST API answers with.

@@ -131,35 +131,6 @@ class Outcome(StringEnum):
 		return None
 
 
-def _earliest(times: Iterable[Nullable[datetime]]) -> Nullable[datetime]:
-	"""
-	Return the earliest of the times that are known.
-
-	:param times: The times, of which some may be unknown.
-	:returns:     The earliest time, or ``None`` if none is known.
-	"""
-	known = [time for time in times if time is not None]
-
-	return min(known) if len(known) > 0 else None
-
-
-def _latest(times: Iterable[Nullable[datetime]]) -> Nullable[datetime]:
-	"""
-	Return the latest of the times, once all of them are known.
-
-	:param times: The times, of which some may be unknown.
-	:returns:     The latest time, or ``None`` if one of them is unknown, or there is none.
-	"""
-	known = []
-	for time in times:
-		if time is None:
-			return None
-
-		known.append(time)
-
-	return max(known) if len(known) > 0 else None
-
-
 @export
 @abstractclass
 class Base(metaclass=ExtendedType, slots=True):
@@ -330,6 +301,35 @@ class Base(metaclass=ExtendedType, slots=True):
 			return None
 
 		return (self.CompletedAt - self.StartedAt).total_seconds()
+
+	@staticmethod
+	def _Earliest(times: Iterable[Nullable[datetime]]) -> Nullable[datetime]:
+		"""
+		Return the earliest of the times that are known.
+
+		:param times: The times, of which some may be unknown.
+		:returns:     The earliest time, or ``None`` if none is known.
+		"""
+		known = [time for time in times if time is not None]
+
+		return min(known) if len(known) > 0 else None
+
+	@staticmethod
+	def _Latest(times: Iterable[Nullable[datetime]]) -> Nullable[datetime]:
+		"""
+		Return the latest of the times, once all of them are known.
+
+		:param times: The times, of which some may be unknown.
+		:returns:     The latest time, or ``None`` if one of them is unknown, or there is none.
+		"""
+		known = []
+		for time in times:
+			if time is None:
+				return None
+
+			known.append(time)
+
+		return max(known) if len(known) > 0 else None
 
 	def __str__(self) -> str:
 		"""
@@ -595,7 +595,7 @@ class PipelineGroup(Base):
 
 		:returns: The time, or ``None`` if no pipeline of the group reports one.
 		"""
-		return _earliest(pipeline.CreatedAt for pipeline in self._pipelines)
+		return self._Earliest(pipeline.CreatedAt for pipeline in self._pipelines)
 
 	@readonly
 	def StartedAt(self) -> Nullable[datetime]:
@@ -604,7 +604,7 @@ class PipelineGroup(Base):
 
 		:returns: The time, or ``None`` if no pipeline of the group has started.
 		"""
-		return _earliest(pipeline.StartedAt for pipeline in self._pipelines)
+		return self._Earliest(pipeline.StartedAt for pipeline in self._pipelines)
 
 	@readonly
 	def CompletedAt(self) -> Nullable[datetime]:
@@ -613,7 +613,7 @@ class PipelineGroup(Base):
 
 		:returns: The time, or ``None`` while a pipeline of the group hasn't completed, or while it holds none.
 		"""
-		return _latest(pipeline.CompletedAt for pipeline in self._pipelines)
+		return self._Latest(pipeline.CompletedAt for pipeline in self._pipelines)
 
 	@readonly
 	def Outcome(self) -> Nullable[Outcome]:
@@ -790,7 +790,7 @@ class JobGroup(Base):
 
 		:returns: The time, or ``None`` if no element below the group reports one.
 		"""
-		return _earliest(element.CreatedAt for element in self._elements)
+		return self._Earliest(element.CreatedAt for element in self._elements)
 
 	@readonly
 	def ContentsStartedAt(self) -> Nullable[datetime]:
@@ -799,7 +799,7 @@ class JobGroup(Base):
 
 		:returns: The time, or ``None`` if no element below the group has started.
 		"""
-		return _earliest(element.StartedAt for element in self._elements)
+		return self._Earliest(element.StartedAt for element in self._elements)
 
 	@readonly
 	def ContentsCompletedAt(self) -> Nullable[datetime]:
@@ -808,7 +808,7 @@ class JobGroup(Base):
 
 		:returns: The time, or ``None`` while an element below the group hasn't completed, or while it holds none.
 		"""
-		return _latest(element.CompletedAt for element in self._elements)
+		return self._Latest(element.CompletedAt for element in self._elements)
 
 	@readonly
 	def ContentsOutcome(self) -> Nullable[Outcome]:
@@ -1167,13 +1167,13 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 		name:            str,
 		dimensionValues: Nullable[Iterable[str]] = None,
 		*,
-		reference:       Nullable[str]      = None,
-		condition:       Nullable[str]      = None,
-		createdAt:       Nullable[datetime] = None,
-		startedAt:       Nullable[datetime] = None,
-		completedAt:     Nullable[datetime] = None,
-		outcome:         Nullable[Outcome]  = None,
-		parent:          Nullable[Matrix]   = None
+		reference:       Nullable[str]           = None,
+		condition:       Nullable[str]           = None,
+		createdAt:       Nullable[datetime]      = None,
+		startedAt:       Nullable[datetime]      = None,
+		completedAt:     Nullable[datetime]      = None,
+		outcome:         Nullable[Outcome]       = None,
+		parent:          Nullable[Matrix]        = None
 	) -> None:
 		"""
 		Initializes one instance of a called workflow produced by a matrix.
@@ -1299,12 +1299,12 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		name:            str,
 		dimensionValues: Nullable[Iterable[str]] = None,
 		*,
-		condition:       Nullable[str]      = None,
-		createdAt:       Nullable[datetime] = None,
-		startedAt:       Nullable[datetime] = None,
-		completedAt:     Nullable[datetime] = None,
-		outcome:         Nullable[Outcome]  = None,
-		parent:          Nullable[Matrix]   = None
+		condition:       Nullable[str]           = None,
+		createdAt:       Nullable[datetime]      = None,
+		startedAt:       Nullable[datetime]      = None,
+		completedAt:     Nullable[datetime]      = None,
+		outcome:         Nullable[Outcome]       = None,
+		parent:          Nullable[Matrix]        = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
