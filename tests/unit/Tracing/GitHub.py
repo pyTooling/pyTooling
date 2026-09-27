@@ -288,7 +288,7 @@ class Conversion(Testcase):
 		self.assertIsNone(spans[0].StopTime)
 
 	def test_Results(self) -> None:
-		"""Every conclusion GitHub documents becomes the result it did before the model's outcome was used."""
+		"""Every conclusion GitHub documents becomes a CI/CD result; one without a counterpart is an error."""
 		for conclusion, result in (
 			("success",         "success"),
 			("failure",         "failure"),
