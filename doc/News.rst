@@ -124,8 +124,14 @@ Version 10.x (2026)
      :class:`~pyTooling.CI.Workflow.Workflow`, :class:`~pyTooling.CI.Workflow.Input`,
      :class:`~pyTooling.CI.Workflow.Job`, :class:`~pyTooling.CI.Workflow.Step` and further objects, each knowing the
      line it is written at. :class:`~pyTooling.CI.Workflow.WorkflowResolver` reads the reusable workflows a job calls
-     from a local directory, and a workflow reports the transitive reduction of its jobs' ``needs`` and the
-     permissions it and the workflows it calls ask for. It needs the ``yaml`` extra.
+     from a local directory, and a workflow reports the permissions it and the workflows it calls ask for. It needs
+     the ``yaml`` extra.
+
+     * :meth:`~pyTooling.CI.Workflow.Workflow.ToPipeline` builds the pipeline a workflow defines as a
+       :mod:`pyTooling.CI.Pipeline` model - jobs, called workflows expanded through the resolver, and a matrix'
+       instances as :attr:`~pyTooling.CI.Workflow.Matrix.Combinations` computes them -, whose elements link back to
+       their :attr:`~pyTooling.CI.Workflow.DefinitionMixin.Definition`, and which
+       :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts into a graph.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.

@@ -82,12 +82,10 @@ and names both in a note.
 Dependencies Between Jobs
 *************************
 
-:attr:`Job.Needs <pyTooling.CI.Workflow.Job.Needs>` resolves the names of ``needs`` to the jobs, and
-:attr:`Workflow.Edges <pyTooling.CI.Workflow.Workflow.Edges>` lists every dependency as a pair, the needed job first.
-
-:attr:`Workflow.ReducedEdges <pyTooling.CI.Workflow.Workflow.ReducedEdges>` is their transitive reduction: a
-dependency is dropped, if a longer path already implies it. A pipeline graph drawn from it shows each job once below
-the last job it waits for, instead of an edge from every job it waits for:
+:attr:`Job.Needs <pyTooling.CI.Workflow.Job.Needs>` resolves the names of ``needs`` to the jobs. The pipeline they
+form is built by :meth:`~pyTooling.CI.Workflow.Workflow.ToPipeline` (see :ref:`CI/Workflow/Pipeline`) and converted
+into a :class:`~pyTooling.Graph.Graph` by :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph`, which by default drops a
+dependency a longer path already implies:
 
 .. code-block:: text
 
@@ -139,3 +137,54 @@ permissions a workflow and its jobs declare, and - given a resolver - those of t
 
 When several elements declare a scope, the permission granting the most access is returned, so its location names
 where that access is asked for.
+
+
+.. _CI/Workflow/Pipeline:
+
+Building a Pipeline
+*******************
+
+:meth:`~pyTooling.CI.Workflow.Workflow.ToPipeline` builds the pipeline a workflow defines as a
+:mod:`pyTooling.CI.Pipeline` model (:ref:`CI/Pipeline`), expanding the workflows its jobs call as far as a resolver
+reads them and ``depth`` allows:
+
+.. code-block:: python
+
+   pipeline = workflow.ToPipeline(resolver, depth=1)
+   graph =    pipeline.ToGraph()                       # reduced to the transitive reduction
+
+   for vertex in graph.IterateTopologically():
+     element = vertex.Value
+     print(f"{element.QualifiedName}  {element.Definition.Location}")
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Job in the workflow file
+     - Element of the pipeline
+   * - with ``steps``
+     - :class:`~pyTooling.CI.Workflow.DefinedJob`, its steps as :class:`~pyTooling.CI.Workflow.DefinedStep`
+   * - with ``uses``
+     - :class:`~pyTooling.CI.Workflow.DefinedWorkflow`, the ``uses`` text as
+       :attr:`~pyTooling.CI.Pipeline.Workflow.Reference`, holding the elements of the called workflow - or none, if
+       the call isn't expanded
+   * - with ``strategy.matrix``
+     - :class:`~pyTooling.CI.Workflow.DefinedMatrix`, holding a :class:`~pyTooling.CI.Workflow.DefinedMatrixJob` - or a
+       :class:`~pyTooling.CI.Workflow.DefinedMatrixWorkflow` for a job with ``uses`` - per combination
+   * - ``needs``
+     - :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Needs` between the elements
+   * - ``if``
+     - :attr:`~pyTooling.CI.Pipeline.ConditionMixin.Condition`
+
+* An element is named by its job's key, as the file names it in ``needs``. A step is named as GitHub displays it:
+  by its ``name``, or ``Run`` followed by its action or the first line of its script.
+* Every element links to what it was built from: :attr:`~pyTooling.CI.Workflow.DefinitionMixin.Definition` is the
+  :class:`~pyTooling.CI.Workflow.Job` - with its line, its ``uses`` reference and its permissions - or the
+  :class:`~pyTooling.CI.Workflow.Step`, and for the pipeline the :class:`~pyTooling.CI.Workflow.Workflow`. A called
+  workflow's :attr:`~pyTooling.CI.Workflow.CallMixin.CalledWorkflow` is the file it was expanded from.
+* A matrix yields its combinations as GitHub computes them from its dimensions, ``exclude`` and ``include`` -
+  :attr:`Matrix.Combinations <pyTooling.CI.Workflow.Matrix.Combinations>` -, and an instance is named by its values:
+  ``Test (ubuntu, 3.14)``. A **dynamic** matrix - ``include: ${{ fromJson(...) }}`` - is a
+  :class:`~pyTooling.CI.Workflow.DefinedMatrix` without instances, since its combinations are known at run time only.
+* A workflow calling itself, directly or through others, raises :exc:`~pyTooling.CI.Workflow.WorkflowError`.
