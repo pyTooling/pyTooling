@@ -35,7 +35,7 @@ from datetime              import datetime, timedelta, timezone
 
 from pyTooling.CI.Pipeline import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
 from pyTooling.CI.Pipeline import JobGroup, Step
-from pyTooling.CI.Pipeline import Outcome, PipelineError, DependencyError, DependencyCycleError
+from pyTooling.CI.Pipeline import Outcome, PipelineError, NeedError, NeedCycleError
 from pyTooling.CI.Pipeline import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
 from pyTooling.Graph       import Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
@@ -470,7 +470,7 @@ class Dependencies(Testcase):
 		prepare = Job("Prepare", parent=pipeline)
 		deep = Job("Deep", parent=Workflow("Called", parent=pipeline))
 
-		with self.assertRaises(DependencyError) as context:
+		with self.assertRaises(NeedError) as context:
 			deep.AddNeed(prepare)
 
 		self.assertEqual("'Deep' can't need 'Prepare', which isn't contained in the same group.", str(context.exception))
@@ -480,7 +480,7 @@ class Dependencies(Testcase):
 
 	def test_AddNeed_Unplaced(self) -> None:
 		"""Elements without a parent aren't siblings."""
-		with self.assertRaises(DependencyError):
+		with self.assertRaises(NeedError):
 			Job("A").AddNeed(Job("B"))
 
 	def test_AddNeed_Twice(self) -> None:
@@ -489,7 +489,7 @@ class Dependencies(Testcase):
 		build = Job("Build", parent=pipeline)
 		build.AddNeed(prepare)
 
-		with self.assertRaises(DependencyError) as context:
+		with self.assertRaises(NeedError) as context:
 			build.AddNeed(prepare)
 
 		self.assertEqual("'Build' needs 'Prepare' already.", str(context.exception))
@@ -498,7 +498,7 @@ class Dependencies(Testcase):
 	def test_AddNeed_Itself(self) -> None:
 		job = Job("Build", parent=Pipeline("Pipeline"))
 
-		with self.assertRaises(DependencyCycleError) as context:
+		with self.assertRaises(NeedCycleError) as context:
 			job.AddNeed(job)
 
 		self.assertEqual("'Build' can't need itself.", str(context.exception))
@@ -511,7 +511,7 @@ class Dependencies(Testcase):
 		d.AddNeed(c)
 		c.AddNeed(a)
 
-		with self.assertRaises(DependencyCycleError) as context:
+		with self.assertRaises(NeedCycleError) as context:
 			a.AddNeed(d)
 
 		self.assertEqual("'A' can't need 'D', because 'D' needs 'A' already.", str(context.exception))
@@ -525,14 +525,14 @@ class Dependencies(Testcase):
 		b = Matrix("B", parent=pipeline)
 		b.AddNeed(a)
 
-		with self.assertRaises(DependencyCycleError) as context:
+		with self.assertRaises(NeedCycleError) as context:
 			a.AddNeed(b)
 
 		self.assertListEqual(["Cycle: A -> B -> A."], context.exception.__notes__)
 
 	def test_Exceptions(self) -> None:
-		self.assertTrue(issubclass(DependencyCycleError, DependencyError))
-		self.assertTrue(issubclass(DependencyError, PipelineError))
+		self.assertTrue(issubclass(NeedCycleError, NeedError))
+		self.assertTrue(issubclass(NeedError, PipelineError))
 
 	def test_Mixins(self) -> None:
 		for mixin in (DependencyMixin, QualifiedNameMixin):

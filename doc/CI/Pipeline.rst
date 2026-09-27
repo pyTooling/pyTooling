@@ -102,8 +102,8 @@ reverse link, so :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Needs` and
 A group needing another group needs everything that group contains. The links are checked when they are added:
 
 * **A need is a sibling** - an element of the same group. A job can't need a job inside a called workflow; it needs
-  the workflow. Anything else raises :exc:`~pyTooling.CI.Pipeline.DependencyError`.
-* **A dependency closing a cycle is rejected** with :exc:`~pyTooling.CI.Pipeline.DependencyCycleError`, whose note
+  the workflow. Anything else raises :exc:`~pyTooling.CI.Pipeline.NeedError`.
+* **A dependency closing a cycle is rejected** with :exc:`~pyTooling.CI.Pipeline.NeedCycleError`, whose note
   names the cycle - ``Cycle: A -> D -> C -> A.`` The dependencies of a group therefore always form a directed acyclic
   graph, and a reader reports a cycle at the dependency that closes it.
 
