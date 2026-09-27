@@ -344,9 +344,6 @@ class Base(metaclass=ExtendedType, slots=True):
 class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 	"""
 	Mixin-class for elements named by the workflows containing them.
-
-	The mixin walks the tree :class:`Base` builds upwards, so the ``expects`` contract requires :attr:`Base._parent`
-	from whichever class it ends up in.
 	"""
 
 	@readonly
