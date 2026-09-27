@@ -38,19 +38,22 @@ The Tree
        +-- Workflow         a called workflow or a child pipeline
        |   +-- ...          the same elements a pipeline contains
        +-- Matrix           a matrix
-       |   +-- MatrixJob    one instance it produced
+       |   +-- MatrixJob        one job instance it produced
+       |   +-- MatrixWorkflow   one instance of a called workflow it produced
        +-- Job              a job
            +-- Step         a step of that job
 
-An element is created with its parent, which places it in the parent's container:
-:attr:`~pyTooling.CI.Pipeline.JobGroup.Jobs`, :attr:`~pyTooling.CI.Pipeline.Workflow.Matrices`,
-:attr:`~pyTooling.CI.Pipeline.Workflow.Workflows`, :attr:`~pyTooling.CI.Pipeline.Job.Steps` or
-:attr:`~pyTooling.CI.Pipeline.PipelineGroup.Pipelines`. Every element knows its
-:attr:`~pyTooling.CI.Pipeline.Base.Parent` and the :attr:`~pyTooling.CI.Pipeline.Base.Pipeline` it belongs to. A
-wrong parent - a step below a workflow - is a :exc:`TypeError`.
+An element is created with its parent, which adds it to its elements: a group's
+:attr:`~pyTooling.CI.Pipeline.JobGroup.Elements`, a job's :attr:`~pyTooling.CI.Pipeline.Job.Steps` or a pipeline
+group's :attr:`~pyTooling.CI.Pipeline.PipelineGroup.Pipelines`. A group keeps one sequence of elements of every kind,
+in the order they were added - for a definition, the order of its file. :attr:`~pyTooling.CI.Pipeline.JobGroup.Jobs`,
+:attr:`~pyTooling.CI.Pipeline.Workflow.Workflows` and :attr:`~pyTooling.CI.Pipeline.Workflow.Matrices` select one
+kind from it. Every element knows its :attr:`~pyTooling.CI.Pipeline.Base.Parent` and the
+:attr:`~pyTooling.CI.Pipeline.Base.Pipeline` it belongs to. A wrong parent - a step below a workflow - is a
+:exc:`TypeError`.
 
 Iterating a group yields what it holds one level down, ordered by creation time; elements without a time keep the
-order they were added in. :meth:`~pyTooling.CI.Pipeline.Workflow.IterateJobs` reaches every job below a workflow.
+order they were added in. :meth:`~pyTooling.CI.Pipeline.JobGroup.IterateJobs` reaches every job below a group.
 
 :attr:`~pyTooling.CI.Pipeline.QualifiedNameMixin.QualifiedName` names an element by the workflows containing it -
 ``Package / Build``, or ``Test (3.14)`` for a matrix instance, whose name carries its matrix' name already.
@@ -150,7 +153,8 @@ Services
 
 A service's model derives its classes from these and adds what only the service reports. Its matrix instance
 derives from its own job class and mixes in :class:`~pyTooling.CI.Pipeline.MatrixInstanceMixin`, which carries the
-dimension values - as :class:`~pyTooling.CI.Pipeline.MatrixJob` does with :class:`~pyTooling.CI.Pipeline.Job`.
+dimension values - as :class:`~pyTooling.CI.Pipeline.MatrixJob` does with :class:`~pyTooling.CI.Pipeline.Job`, and
+:class:`~pyTooling.CI.Pipeline.MatrixWorkflow` with :class:`~pyTooling.CI.Pipeline.Workflow`.
 
 .. _CI/Pipeline/GitHub:
 
@@ -172,7 +176,8 @@ GitHub Actions
        without contents, if the called file isn't read
    * - Job with ``strategy.matrix``
      - :class:`~pyTooling.CI.Pipeline.Matrix`, an instance per combination as
-       :class:`~pyTooling.CI.Pipeline.MatrixJob`
+       :class:`~pyTooling.CI.Pipeline.MatrixJob` - or :class:`~pyTooling.CI.Pipeline.MatrixWorkflow`, if the job
+       calls a reusable workflow
    * - Job with ``steps:``
      - :class:`~pyTooling.CI.Pipeline.Job`, its steps as :class:`~pyTooling.CI.Pipeline.Step`
    * - ``needs:``
@@ -215,7 +220,8 @@ GitLab CI
      - :class:`~pyTooling.CI.Pipeline.Workflow` with the project as
        :attr:`~pyTooling.CI.Pipeline.Workflow.Reference` and no contents
    * - ``parallel:matrix``
-     - :class:`~pyTooling.CI.Pipeline.Matrix`, an instance per combination (``test: [3.14, linux]``)
+     - :class:`~pyTooling.CI.Pipeline.Matrix`, an instance per combination (``test: [3.14, linux]``);
+       :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` instances for a trigger job
    * - ``parallel: N``
      - :class:`~pyTooling.CI.Pipeline.Matrix` with *N* instances (``test 1/3``)
    * - ``rules:if``
