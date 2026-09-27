@@ -257,11 +257,11 @@ def _parsePermissions(
 		scopeLine = _keyLine(mapping, scope)
 		try:
 			accessLevel = AccessLevel(level)
-		except ValueError as ex:
-			error = WorkflowError(f"Permission '{scope}' is not an access level.", path, scopeLine)
-			error.add_note(f"Got '{level}'.")
-			error.add_note(f"Allowed values: {', '.join(member.value for member in AccessLevel)}.")
-			raise error from ex
+		except ValueError as cause:
+			ex = WorkflowError(f"Permission '{scope}' is not an access level.", path, scopeLine)
+			ex.add_note(f"Got '{level}'.")
+			ex.add_note(f"Allowed values: {', '.join(member.value for member in AccessLevel)}.")
+			raise ex from cause
 
 		permissions[str(scope)] = Permission(str(scope), accessLevel, scopeLine, parent=parent)
 
@@ -405,11 +405,11 @@ class UsesReference(Base):
 		elif text == "":
 			raise ValueError("Parameter 'text' is empty.")
 
-		self._text = text
-		self._isLocal = False
-		self._isDocker = False
+		self._text =       text
+		self._isLocal =    False
+		self._isDocker =   False
 		self._repository = None
-		self._ref = None
+		self._ref =        None
 
 		if text.startswith("docker://"):
 			self._isDocker = True
@@ -1073,7 +1073,10 @@ class Step(Base):
 		:param condition:  Optional, condition under which the step runs. Default: ``None``.
 		:param run:        Optional, the script the step runs. Default: ``None``.
 		:param parent:     Optional, reference to the job containing the step. Default: ``None``.
-		:raises TypeError: If parameter 'name', 'identifier', 'condition' or 'run' is not of type :class:`str`.
+		:raises TypeError: If parameter 'name' is not of type :class:`str`.
+		:raises TypeError: If parameter 'identifier' is not of type :class:`str`.
+		:raises TypeError: If parameter 'condition' is not of type :class:`str`.
+		:raises TypeError: If parameter 'run' is not of type :class:`str`.
 		:raises TypeError: If parameter 'parent' is not of type :class:`Job`.
 		"""
 		if parent is not None and not isinstance(parent, Job):
@@ -1202,7 +1205,8 @@ class Job(Base):
 		:raises ValueError:     If parameter 'name' is ``None``.
 		:raises TypeError:      If parameter 'name' is not of type :class:`str`.
 		:raises ValueError:     If parameter 'name' is empty.
-		:raises TypeError:      If parameter 'displayName' or 'condition' is not of type :class:`str`.
+		:raises TypeError:      If parameter 'displayName' is not of type :class:`str`.
+		:raises TypeError:      If parameter 'condition' is not of type :class:`str`.
 		:raises TypeError:      If parameter 'inheritsSecrets' is not of type :class:`bool`.
 		:raises TypeError:      If parameter 'parent' is not of type :class:`Workflow`.
 		"""
@@ -1480,8 +1484,10 @@ class Job(Base):
 		if (uses := mapping.get("uses", None)) is not None:
 			try:
 				job._uses = UsesReference(str(uses), _keyLine(mapping, "uses"), parent=job)
-			except ValueError as ex:
-				raise WorkflowError(f"Key 'uses' of job '{name}' is not a reference.", path, _keyLine(mapping, "uses")) from ex
+			except ValueError as cause:
+				raise WorkflowError(
+					f"Key 'uses' of job '{name}' is not a reference.", path, _keyLine(mapping, "uses")
+				) from cause
 
 		if "permissions" in mapping:
 			job._permissions = _parsePermissions(mapping["permissions"], path, _keyLine(mapping, "permissions"), job)
@@ -1527,10 +1533,10 @@ class Job(Base):
 				if (uses := step.get("uses", None)) is not None:
 					try:
 						stepObject._uses = UsesReference(str(uses), _keyLine(step, "uses"), parent=stepObject)
-					except ValueError as ex:
+					except ValueError as cause:
 						raise WorkflowError(
 							f"Key 'uses' of step {position + 1} of job '{name}' is not a reference.", path, _keyLine(step, "uses")
-						) from ex
+						) from cause
 
 		return job
 
@@ -1992,10 +1998,10 @@ class Workflow(Base):
 
 		try:
 			document = YAML(typ="rt").load(path.read_text(encoding="utf-8"))
-		except YAMLError as ex:
-			mark = getattr(ex, "problem_mark", None)
+		except YAMLError as cause:
+			mark = getattr(cause, "problem_mark", None)
 			line = None if mark is None else mark.line + 1
-			raise WorkflowError("Workflow file is not a YAML document.", path, line) from ex
+			raise WorkflowError("Workflow file is not a YAML document.", path, line) from cause
 
 		if document is None:
 			raise WorkflowError("Workflow file is empty.", path)
@@ -2044,11 +2050,11 @@ class Workflow(Base):
 
 						try:
 							inputType = InputType.Parse(str(inputType))
-						except ValueError as ex:
-							error = WorkflowError(f"Key 'type' of input '{name}' is not an input type.", path, line)
-							error.add_note(f"Got '{inputType}'.")
-							error.add_note(f"Allowed values: {', '.join(member.value for member in InputType)}.")
-							raise error from ex
+						except ValueError as cause:
+							ex = WorkflowError(f"Key 'type' of input '{name}' is not an input type.", path, line)
+							ex.add_note(f"Got '{inputType}'.")
+							ex.add_note(f"Allowed values: {', '.join(member.value for member in InputType)}.")
+							raise ex from cause
 
 						default = _toPython(declaration.get("default", None))
 						Input(str(name), line, inputType, required, default, description, parent=workflow)
