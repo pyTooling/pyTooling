@@ -738,14 +738,17 @@ class ToPipeline(Fixture):
 
 		with self.assertRaises(TypeError) as context:
 			_ = workflow.ToPipeline({})
+
 		self.assertEqual("Parameter 'resolver' is not of type 'WorkflowResolver'.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			_ = workflow.ToPipeline(depth="1")
+
 		self.assertEqual("Parameter 'depth' is not of type 'int'.", str(context.exception))
 
 		with self.assertRaises(ValueError) as context:
 			_ = workflow.ToPipeline(depth=-1)
+
 		self.assertEqual("Parameter 'depth' is negative.", str(context.exception))
 
 	def test_Definition(self) -> None:
@@ -753,14 +756,17 @@ class ToPipeline(Fixture):
 
 		with self.assertRaises(ValueError) as context:
 			_ = DefinedJob(None)
+
 		self.assertEqual("Parameter 'definition' is None.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			_ = DefinedJob(workflow)
+
 		self.assertEqual("Parameter 'definition' is not of type 'Job'.", str(context.exception))
 
 		with self.assertRaises(ValueError) as context:
 			_ = DefinedMatrix(workflow.Jobs["Package"])
+
 		self.assertEqual("Parameter 'definition' declares no matrix.", str(context.exception))
 
 	def test_ToGraph(self) -> None:
@@ -768,7 +774,12 @@ class ToPipeline(Fixture):
 		pipeline = Workflow.FromFile(self._write("Pipeline.yml", CALLER)).ToPipeline()
 
 		def edges(graph: Graph) -> list[tuple[str, str]]:
-			"""Nested function returning the edges of a graph by the names of the elements they connect."""
+			"""
+			Nested function returning the edges of a graph by the names of the elements they connect.
+
+			:param graph: The graph.
+			:returns:     The edges, as pairs of the source's and the destination's name.
+			"""
 			return [(edge.Source.Value.Name, edge.Destination.Value.Name) for edge in graph.IterateEdges()]
 
 		self.assertEqual([("Prepare", "Package"), ("Package", "Local"), ("Local", "Foreign")], edges(pipeline.ToGraph()))
@@ -904,14 +915,17 @@ class ApplyNeeds(Fixture):
 
 		with self.assertRaises(ValueError) as context:
 			_ = workflow.ApplyNeeds(None)
+
 		self.assertEqual("Parameter 'pipeline' is None.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			_ = workflow.ApplyNeeds(workflow)
+
 		self.assertEqual("Parameter 'pipeline' is not of type 'Workflow'.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			_ = workflow.ApplyNeeds(self._run(), {})
+
 		self.assertEqual("Parameter 'resolver' is not of type 'WorkflowResolver'.", str(context.exception))
 
 
