@@ -994,7 +994,9 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		element as its :attr:`~pyTooling.Graph.Vertex.ID` and its :attr:`~pyTooling.Graph.Vertex.Value`, so
 		:meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds an element's vertex. A vertex has no
 		name; a consumer labels it by :pycode:`vertex.Value.QualifiedName`. Every dependency becomes an
-		:class:`~pyTooling.Graph.Edge` from the needed element to the one needing it.
+		:class:`~pyTooling.Graph.Edge` from the element needing to the element it needs, so an edge reads *needs*, and
+		:meth:`Graph.IterateTopologically <pyTooling.Graph.BaseGraph.IterateTopologically>` yields the elements in an order
+		they can run in.
 
 		A called workflow or a matrix holding elements is expanded into a :class:`~pyTooling.Graph.Subgraph` named by
 		its qualified name, whose vertices and edges are built the same way. The group's vertex has a
@@ -1061,7 +1063,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 
 			for element, vertex in vertices.items():
 				for need in element._needs:
-					vertices[need].EdgeToVertex(vertex)
+					vertex.EdgeToVertex(vertices[need])
 
 			if depth is not None and level >= depth:
 				return
