@@ -246,7 +246,9 @@ jobs:
       - AppTesting
       - PublishToGitHubPages
     with:
-      tag: ${{ needs.Prepare.outputs.version }}
+      tag:        ${{ needs.Prepare.outputs.version }}
+      prerelease: ${{ needs.Prepare.outputs.is_prerelease == 'true' }}
+      latest:     ${{ needs.Prepare.outputs.is_prerelease != 'true' }}
     secrets: inherit
 
   PublishOnPyPI:
