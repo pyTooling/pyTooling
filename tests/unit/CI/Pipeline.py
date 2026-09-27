@@ -355,7 +355,8 @@ class Hierarchy(Testcase):
 
 
 class Times(Testcase):
-	def test_UnreportedGroupSpansItsContents(self) -> None:
+	def test_UnreportedGroup(self) -> None:
+		"""A group the service doesn't report spans its contents."""
 		pipeline = Pipeline("Pipeline", createdAt=_time(0), startedAt=_time(10), completedAt=_time(600))
 		workflow = Workflow("Called", parent=pipeline)
 		Job("A", createdAt=_time(60), startedAt=_time(70), completedAt=_time(200), parent=workflow)
@@ -366,7 +367,7 @@ class Times(Testcase):
 		self.assertEqual(_time(300), workflow.CompletedAt)
 		self.assertEqual(230.0, workflow.Duration)
 
-	def test_ReportedGroupKeepsItsTimes(self) -> None:
+	def test_ReportedGroup(self) -> None:
 		"""A pipeline, or a child pipeline a service reports, keeps its own times beside the span of its contents."""
 		pipeline = Pipeline("Pipeline", createdAt=_time(0), startedAt=_time(10))
 		Job("A", createdAt=_time(60), startedAt=_time(70), completedAt=_time(200), parent=pipeline)
@@ -378,7 +379,7 @@ class Times(Testcase):
 		self.assertEqual(_time(70), pipeline.ContentsStartedAt)
 		self.assertEqual(_time(200), pipeline.ContentsCompletedAt)
 
-	def test_ReportedWithoutCreationTime(self) -> None:
+	def test_ReportedGroup_OutcomeOnly(self) -> None:
 		"""A group given only an outcome is reported, so it keeps that outcome and reports no times."""
 		pipeline = Pipeline("Pipeline", outcome=Outcome.Cancellation)
 		Job("A", createdAt=_time(60), startedAt=_time(70), completedAt=_time(200), outcome=Outcome.Success, parent=pipeline)
