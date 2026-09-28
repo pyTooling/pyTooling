@@ -532,6 +532,7 @@ class BaseWithVertices(
 
 	_graph:    Graph[
 								GraphDictKeyType, GraphDictValueType,
+								Any, Any, Any, Any, Any, Any,
 								VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
 								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
 								LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
@@ -625,14 +626,14 @@ class Vertex(
 	A **vertex** can have a unique ID, a value and attached meta information as key-value-pairs. A vertex has references
 	to inbound and outbound edges, thus a graph can be traversed in reverse.
 	"""
-	_graph:     BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]  #: Field storing a reference to the graph.
-	_subgraph:  Subgraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]   #: Field storing a reference to the subgraph.
-	_component: Component                                                                                                                                                                                                                #: Field storing a reference to the component this vertex belongs to.
-	_views:     dict[Hashable, View]                                                                                                                                                                                                     #: Field storing the views this vertex is part of, by view name.
-	_inboundEdges:   list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of inbound edges.
-	_outboundEdges:  list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of outbound edges.
-	_inboundLinks:   list[Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of inbound links.
-	_outboundLinks:  list[Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of outbound links.
+	_graph:     BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]  #: Field storing a reference to the graph.
+	_subgraph:  Subgraph[Any, Any, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]                               #: Field storing a reference to the subgraph.
+	_component: Component                                                                                                                                                                                                                                                                                               #: Field storing a reference to the component this vertex belongs to.
+	_views:     dict[Hashable, View]                                                                                                                                                                                                                                                                                    #: Field storing the views this vertex is part of, by view name.
+	_inboundEdges:   list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                          #: Field storing a list of inbound edges.
+	_outboundEdges:  list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                          #: Field storing a list of outbound edges.
+	_inboundLinks:   list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]]                                                                                                                                                                                                          #: Field storing a list of inbound links.
+	_outboundLinks:  list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]]                                                                                                                                                                                                          #: Field storing a list of outbound links.
 
 	def __init__(
 		self,
@@ -2363,10 +2364,10 @@ class BaseGraph(
 
 	_verticesWithID:    dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
 	_verticesWithoutID: list[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices without an ID, in insertion order.
-	_edgesWithID:       dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
-	_edgesWithoutID:    list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
-	_linksWithID:       dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
-	_linksWithoutID:    list[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
+	_edgesWithID:       dict[EdgeIDType, Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
+	_edgesWithoutID:    list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
+	_linksWithID:       dict[LinkIDType, Link[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
+	_linksWithoutID:    list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
 
 	def __init__(
 		self,
@@ -2591,7 +2592,7 @@ class BaseGraph(
 
 		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
-	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected edges of a graph.
 
@@ -2613,7 +2614,7 @@ class BaseGraph(
 				if predicate(edge):
 					yield edge
 
-	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected links of a graph.
 
