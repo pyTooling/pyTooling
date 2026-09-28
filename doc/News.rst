@@ -344,9 +344,9 @@ Version 10.x (2026)
        ``Default`` unless ``edgeKind`` / ``linkKind`` is given when they are created. A kind may be a member of an
        enumeration of the user's own.
      * The kind is a type parameter: :data:`~pyTooling.Graph.EdgeKindType` / :data:`~pyTooling.Graph.LinkKindType`, so
-       ``Edge[..., MyKind]`` types :attr:`~pyTooling.Graph.BaseEdge.Kind` as ``MyKind``. The field annotations name
-       the type parameters of ``Edge``, ``Link``, ``BaseGraph``, ``Subgraph`` and ``Graph`` in their declared order;
-       value and weight were swapped, and some were missing.
+       ``Edge[..., MyKind, ...]`` - after ID, value and weight - types :attr:`~pyTooling.Graph.BaseEdge.Kind` as
+       ``MyKind``. The field annotations name the type parameters of ``Edge``, ``Link``, ``BaseGraph``, ``Subgraph``
+       and ``Graph`` in their declared order; value and weight were swapped, and some were missing.
 
    .. rubric:: Breaking Changes
 
