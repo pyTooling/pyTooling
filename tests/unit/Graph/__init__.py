@@ -33,10 +33,11 @@ Unit tests for :mod:`pyTooling.Graph`: construction, subgraphs, the element attr
 weight, key-value-pairs), the iteration methods, and the conversion of a graph into a tree.
 """
 from enum     import Enum
-from typing   import Any, Optional as Nullable, List, Tuple, Callable
+from typing   import Any, Optional as Nullable, List, Tuple, Callable, get_type_hints
 
 from pyTooling.Decorators import readonly
-from pyTooling.Graph      import Graph, Vertex, Edge, EdgeKind, Link, LinkKind, Subgraph, View, CycleError
+from pyTooling.Graph      import Graph, BaseGraph, Subgraph, View, Vertex, BaseEdge, Edge, Link
+from pyTooling.Graph      import EdgeKind, EdgeKindType, LinkKind, LinkKindType, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
@@ -2034,4 +2035,20 @@ class Reversing(Testcase):
 		self.assertEqual(1, len(first.InboundLinks))
 		self.assertEqual(1, len(second.OutboundLinks))
 		self.assertEqual(0, len(second.InboundLinks))
+
+
+class TypeHints(Testcase):
+	def test_FieldAnnotations(self) -> None:
+		"""The field annotations name every type parameter of the classes they use."""
+		import pyTooling.Graph
+
+		for cls in (Vertex, Edge, Link, BaseGraph, Subgraph, Graph):
+			with self.subTest(cls=cls.__name__):
+				get_type_hints(cls, vars(pyTooling.Graph))
+
+	def test_Kind(self) -> None:
+		"""An edge's and a link's kind is a type parameter of its class."""
+		self.assertIs(EdgeKindType, Edge.__parameters__[-1])
+		self.assertIs(LinkKindType, Link.__parameters__[-1])
+		self.assertIs(EdgeKindType, get_type_hints(BaseEdge.Kind.fget)["return"])
 
