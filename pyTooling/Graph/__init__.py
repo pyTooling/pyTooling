@@ -2789,6 +2789,9 @@ class BaseGraph(
 		Only the edges of this graph are taken into account, not its links, and for a :class:`Graph` not the vertices of
 		its subgraphs. A :class:`Subgraph` is reduced by calling the method on it.
 
+		An edge is yielded as soon as it is found, and may be removed while iterating. In a graph with a cycle, edges of its
+		acyclic part may be yielded before :exc:`CycleError` is raised.
+
 		:returns:           A generator to iterate the implied edges.
 		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
 
@@ -2803,31 +2806,29 @@ class BaseGraph(
 			return
 
 		descendants: dict[Vertex, set[Vertex]] = {}
-		transitiveEdges = []
 
 		# A vertex is yielded after every vertex it has an edge to, so its successors' descendants are known already.
 		for vertex in self.IterateTopologically():
-			successors = set()
-			indirect =   set()
-			for edge in vertex._outboundEdges:
+			successors =    set()
+			indirect =      set()
+			outboundEdges = tuple(vertex._outboundEdges)
+			for edge in outboundEdges:
 				indirect |= descendants[edge._destination]
 
-			for edge in vertex._outboundEdges:
+			for edge in outboundEdges:
 				if edge._destination in indirect or edge._destination in successors:
-					transitiveEdges.append(edge)
+					yield edge
 				else:
 					successors.add(edge._destination)
 
 			descendants[vertex] = successors | indirect
-
-		yield from transitiveEdges
 
 	def RemoveTransitiveEdges(self) -> None:
 		"""
 		Remove the edges a longer path already implies, which leaves the graph's *transitive reduction*.
 
 		Reachability is preserved: every vertex stays reachable from every vertex it was reachable from before. The edges
-		removed are those :meth:`IterateTransitiveEdges` yields.
+		removed are those :meth:`IterateTransitiveEdges` yields. A graph with a cycle is left unchanged.
 
 		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
 
@@ -2836,7 +2837,10 @@ class BaseGraph(
 		   :meth:`IterateTransitiveEdges`
 		      |rarr| Iterate the edges a longer path already implies.
 		"""
-		for edge in list(self.IterateTransitiveEdges()):
+		if self.HasCycle():
+			raise CycleError("Graph has a cycle. Thus, no unique transitive reduction exists.")
+
+		for edge in self.IterateTransitiveEdges():
 			edge.Delete()
 
 

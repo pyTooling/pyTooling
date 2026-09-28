@@ -1388,6 +1388,39 @@ class GraphOperations(Iterate):
 
 		self.assertEqual(self._graph1.EdgeCount, g.EdgeCount)
 
+	def test_TransitiveEdges_Lazy(self) -> None:
+		"""An edge is yielded as soon as it is found, and can be removed while iterating."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		for u, v in ((a, b), (b, c), (c, d), (a, c), (a, d), (b, d)):
+			u.EdgeToVertex(v)
+
+		iterator = g.IterateTransitiveEdges()
+		first = next(iterator)
+		self.assertIn((first.Source.ID, first.Destination.ID), {("A", "C"), ("A", "D"), ("B", "D")})
+
+		first.Delete()
+		for edge in iterator:
+			edge.Delete()
+
+		edges = {(edge.Source.ID, edge.Destination.ID) for edge in g.IterateEdges()}
+		self.assertSetEqual({("A", "B"), ("B", "C"), ("C", "D")}, edges)
+
+	def test_TransitiveEdges_CycleBesideAcyclicPart(self) -> None:
+		"""A cycle beside an acyclic part: edges may be yielded before the error, but nothing is removed."""
+		g = Graph()
+		a, b, c, d, e = (Vertex(vertexID=name, graph=g) for name in "ABCDE")
+		for u, v in ((a, b), (b, c), (a, c), (d, e), (e, d), (e, a)):
+			u.EdgeToVertex(v)
+
+		with self.assertRaises(CycleError):
+			list(g.IterateTransitiveEdges())
+
+		with self.assertRaises(CycleError):
+			g.RemoveTransitiveEdges()
+
+		self.assertEqual(6, g.EdgeCount)
+
 	def test_TransitiveEdges_Subgraph(self) -> None:
 		"""A subgraph is reduced on its own; the graph's reduction doesn't touch it."""
 		g = Graph()
