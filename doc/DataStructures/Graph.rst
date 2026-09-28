@@ -226,24 +226,26 @@ subgraph is reduced by calling the method on it.
 while iterating.
 
 Instead of removing them, :meth:`~pyTooling.Graph.BaseGraph.AnnotateTransitiveEdges` marks the edges: every edge's
-:attr:`~pyTooling.Graph.Edge.Kind` becomes :attr:`EdgeKind.Direct <pyTooling.Graph.EdgeKind.Direct>` or
-:attr:`EdgeKind.Transitive <pyTooling.Graph.EdgeKind.Transitive>`, and a transitive edge's
-:attr:`~pyTooling.Graph.Edge.TransitivePath` holds the vertices of the path implying it, from its source to its
-destination, along direct edges. The graph keeps every edge, and a consumer - e.g. a renderer drawing implied edges
-dashed - tells them apart.
+:attr:`~pyTooling.Graph.BaseEdge.Kind` becomes :attr:`EdgeKind.Direct <pyTooling.Graph.EdgeKind.Direct>` or
+:attr:`EdgeKind.Transitive <pyTooling.Graph.EdgeKind.Transitive>`. The graph keeps every edge, and a consumer - e.g. a
+renderer drawing implied edges dashed - tells them apart. With ``keyName``, a transitive edge also gets the path
+implying it as a key-value-pair: the vertices from its source to its destination, along direct edges. The key
+``"transitive.path"`` is a good choice; without ``keyName``, no path is computed.
 
 .. code-block:: python
 
-   graph.AnnotateTransitiveEdges()
+   graph.AnnotateTransitiveEdges(keyName="transitive.path")
 
    for edge in graph.IterateEdges():
      if edge.Kind is EdgeKind.Transitive:
-       print(edge.Source.ID, edge.Destination.ID, [vertex.ID for vertex in edge.TransitivePath])   # A C ['A', 'B', 'C']
+       path = [vertex.ID for vertex in edge["transitive.path"]]
+       print(edge.Source.ID, edge.Destination.ID, path)   # A C ['A', 'B', 'C']
 
-The kinds are :class:`~pyTooling.Graph.EdgeKind`'s by default. An application with an enumeration of its own passes
-its members: ``graph.AnnotateTransitiveEdges(directKind=Dependency.Needed, transitiveKind=Dependency.Implied)``. An
-edge's kind and path can also be given when it is created, e.g. ``a.EdgeToVertex(c, edgeKind=Dependency.Implied,
-edgeTransitivePath=(a, b, c))``.
+An edge's kind is given when it is created - :attr:`EdgeKind.Default <pyTooling.Graph.EdgeKind.Default>`, unless
+``edgeKind`` states another one - and a link's likewise with ``linkKind`` and
+:class:`~pyTooling.Graph.LinkKind`. A kind may be a member of an enumeration of the user's own, e.g.
+``a.EdgeToVertex(c, edgeKind=Dependency.Implied)`` or ``graph.AnnotateTransitiveEdges(directKind=Dependency.Needed,
+transitiveKind=Dependency.Implied)``.
 
 
 .. _STRUCT/Graph/Competitors:
