@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Graph`: construction, subgraphs, the element attributes (name, ID, value,
 weight, key-value-pairs), the iteration methods, and the conversion of a graph into a tree.
 """
+from enum     import Enum
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
 
 from pyTooling.Decorators import readonly
@@ -1494,6 +1495,60 @@ class GraphOperations(Iterate):
 		subgraph.AnnotateTransitiveEdges()
 		self.assertIs(EdgeKind.Transitive, ac.Kind)
 		self.assertTupleEqual((a, b, c), ac.TransitivePath)
+
+	def test_AnnotateTransitiveEdges_OwnKinds(self) -> None:
+		"""A user's own enumeration marks the edges."""
+		class Dependency(Enum):
+			Needed =  "needed"
+			Implied = "implied"
+
+		g = Graph()
+		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
+		ab = a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		ac = a.EdgeToVertex(c)
+
+		g.AnnotateTransitiveEdges(directKind=Dependency.Needed, transitiveKind=Dependency.Implied)
+
+		self.assertIs(Dependency.Needed, ab.Kind)
+		self.assertIs(Dependency.Implied, ac.Kind)
+		self.assertTupleEqual((a, b, c), ac.TransitivePath)
+
+		with self.assertRaises(ValueError):
+			g.AnnotateTransitiveEdges(directKind=None)
+		with self.assertRaises(TypeError):
+			g.AnnotateTransitiveEdges(transitiveKind="implied")
+
+	def test_EdgeKindParameters(self) -> None:
+		"""A kind and a path can be given when an edge is created."""
+		class Dependency(Enum):
+			Needed =  "needed"
+			Implied = "implied"
+
+		g = Graph()
+		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
+		ab = a.EdgeToVertex(b, edgeKind=Dependency.Needed)
+		bc = c.EdgeFromVertex(b, edgeKind=Dependency.Needed)
+		ac = a.EdgeToVertex(c, edgeKind=Dependency.Implied, edgeTransitivePath=(a, b, c))
+		ad = a.EdgeToNewVertex(vertexID="D")
+		ed = ad.Destination.EdgeFromNewVertex(vertexID="E", edgeKind=EdgeKind.Transitive)
+
+		self.assertIs(Dependency.Needed, ab.Kind)
+		self.assertIs(Dependency.Needed, bc.Kind)
+		self.assertIs(Dependency.Implied, ac.Kind)
+		self.assertTupleEqual((a, b, c), ac.TransitivePath)
+		self.assertIs(EdgeKind.Direct, ad.Kind)
+		self.assertIsNone(ad.TransitivePath)
+		self.assertIs(EdgeKind.Transitive, ed.Kind)
+
+		with self.assertRaises(ValueError):
+			Edge(a, b, kind=None)
+		with self.assertRaises(TypeError):
+			Edge(a, b, kind="direct")
+		with self.assertRaises(TypeError):
+			Edge(a, b, transitivePath=[a, b])
+		with self.assertRaises(TypeError):
+			Edge(a, b, transitivePath=(a, "B"))
 
 	def test_AnnotateTransitiveEdges_Cycle(self) -> None:
 		"""A graph with a cycle is left unchanged."""

@@ -240,6 +240,11 @@ dashed - tells them apart.
      if edge.Kind is EdgeKind.Transitive:
        print(edge.Source.ID, edge.Destination.ID, [vertex.ID for vertex in edge.TransitivePath])   # A C ['A', 'B', 'C']
 
+The kinds are :class:`~pyTooling.Graph.EdgeKind`'s by default. An application with an enumeration of its own passes
+its members: ``graph.AnnotateTransitiveEdges(directKind=Dependency.Needed, transitiveKind=Dependency.Implied)``. An
+edge's kind and path can also be given when it is created, e.g. ``a.EdgeToVertex(c, edgeKind=Dependency.Implied,
+edgeTransitivePath=(a, b, c))``.
+
 
 .. _STRUCT/Graph/Competitors:
 
