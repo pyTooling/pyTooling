@@ -1806,15 +1806,17 @@ class Workflow(Base):
 		A job whose display name is an expression, as ``${{ matrix.os }} Tests``, can't be looked up, and is skipped. A
 		job with a condition may have been skipped in the run, so it isn't reported when it is missing.
 
-		:param pipeline:       The run, or a called workflow of a run.
-		:param resolver:       Optional, the resolver reading the workflows the jobs call. Without it, called workflows
-		                       are not followed. Default: ``None``.
-		:returns:              The qualified names of the jobs of this workflow, and of the workflows followed, missing in
-		                       the run - as the run would name them -, in the order they were looked up.
-		:raises ValueError:    If parameter 'pipeline' is ``None``.
-		:raises TypeError:     If parameter 'pipeline' is not of type :class:`pyTooling.CI.Pipeline.Workflow`.
-		:raises TypeError:     If parameter 'resolver' is not of type :class:`WorkflowResolver`.
-		:raises WorkflowError: If a workflow to follow doesn't exist, or is not a well-formed workflow.
+		:param pipeline:                  The run, or a called workflow of a run.
+		:param resolver:                  Optional, the resolver reading the workflows the jobs call. Without it, called
+		                                  workflows are not followed. Default: ``None``.
+		:returns:                         The qualified names of the jobs of this workflow, and of the workflows followed,
+		                                  missing in the run - as the run would name them -, in the order they were looked
+		                                  up.
+		:raises ValueError:               If parameter 'pipeline' is ``None``.
+		:raises TypeError:                If parameter 'pipeline' is not of type :class:`pyTooling.CI.Pipeline.Workflow`.
+		:raises TypeError:                If parameter 'resolver' is not of type :class:`WorkflowResolver`.
+		:raises WorkflowError:            If a workflow to follow doesn't exist, or is not a well-formed workflow.
+		:raises NeedDependencyCycleError: If the needs of the run, with the needs added, form a cycle.
 		"""
 		if pipeline is None:
 			raise ValueError("Parameter 'pipeline' is None.")
@@ -1871,6 +1873,7 @@ class Workflow(Base):
 						element.AddNeed(needed)
 
 		apply(self, pipeline)
+		pipeline.Validate()
 
 		return missing
 
@@ -2272,22 +2275,32 @@ class DefinitionMixin(metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_
 
 	_definition: Union[Workflow, Job, Step]  #: The element of the workflow file this element was built from.
 
-	def __init__(self, definition: Union[Workflow, Job, Step]) -> None:
+	@classmethod
+	def _CheckDefinition(cls, definition: Union[Workflow, Job, Step]) -> None:
 		"""
-		Initializes the link of an element to its definition.
+		Check a definition before the element is built from it.
 
-		:param definition:  The element of the workflow file this element is built from.
+		The host class names the element by its definition, so it checks the definition before calling
+		``super().__init__()``.
+
+		:param definition:  The element of the workflow file the element is built from.
 		:raises ValueError: If parameter 'definition' is ``None``.
 		:raises TypeError:  If parameter 'definition' is not of the type the host class declares in
 		                    :attr:`_DEFINITION_TYPE`.
 		"""
 		if definition is None:
 			raise ValueError("Parameter 'definition' is None.")
-		elif not isinstance(definition, self._DEFINITION_TYPE):
-			ex = TypeError(f"Parameter 'definition' is not of type '{self._DEFINITION_TYPE.__name__}'.")
+		elif not isinstance(definition, cls._DEFINITION_TYPE):
+			ex = TypeError(f"Parameter 'definition' is not of type '{cls._DEFINITION_TYPE.__name__}'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(definition)}'.")
 			raise ex
 
+	def __init__(self, definition: Union[Workflow, Job, Step]) -> None:
+		"""
+		Initializes the link of an element to its definition, which :meth:`_CheckDefinition` checked.
+
+		:param definition: The element of the workflow file this element is built from.
+		"""
 		self._definition = definition
 
 	@readonly
@@ -2345,9 +2358,10 @@ class DefinedPipeline(CIPipeline, DefinitionMixin):
 
 		:param definition: The workflow file.
 		"""
-		DefinitionMixin.__init__(self, definition)
+		self._CheckDefinition(definition)
 
 		super().__init__(definition._name)
+		DefinitionMixin.__init__(self, definition)
 
 
 @export
@@ -2375,8 +2389,7 @@ class DefinedWorkflow(CIWorkflow, CallMixin, DefinitionMixin):
 		:param parent:         Optional, reference to the workflow containing the call. Default: ``None``.
 		:raises ValueError:    If parameter 'definition' calls no workflow.
 		"""
-		DefinitionMixin.__init__(self, definition)
-		CallMixin.__init__(self, calledWorkflow)
+		self._CheckDefinition(definition)
 
 		if definition._uses is None:
 			ex = ValueError("Parameter 'definition' calls no workflow.")
@@ -2384,6 +2397,8 @@ class DefinedWorkflow(CIWorkflow, CallMixin, DefinitionMixin):
 			raise ex
 
 		super().__init__(definition._name, reference=str(definition._uses), condition=definition._condition, parent=parent)
+		DefinitionMixin.__init__(self, definition)
+		CallMixin.__init__(self, calledWorkflow)
 
 
 @export
@@ -2405,7 +2420,7 @@ class DefinedMatrix(CIMatrix, DefinitionMixin):
 		:param parent:      Optional, reference to the workflow containing the matrix. Default: ``None``.
 		:raises ValueError: If parameter 'definition' declares no matrix.
 		"""
-		DefinitionMixin.__init__(self, definition)
+		self._CheckDefinition(definition)
 
 		if definition._matrix is None:
 			ex = ValueError("Parameter 'definition' declares no matrix.")
@@ -2413,6 +2428,7 @@ class DefinedMatrix(CIMatrix, DefinitionMixin):
 			raise ex
 
 		super().__init__(definition._name, condition=definition._condition, parent=parent)
+		DefinitionMixin.__init__(self, definition)
 
 
 @export
@@ -2439,8 +2455,7 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
 		:raises ValueError:     If parameter 'definition' calls no workflow.
 		"""
-		DefinitionMixin.__init__(self, definition)
-		CallMixin.__init__(self, calledWorkflow)
+		self._CheckDefinition(definition)
 
 		if definition._uses is None:
 			ex = ValueError("Parameter 'definition' calls no workflow.")
@@ -2451,6 +2466,8 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 			definition._name, dimensionValues, reference=str(definition._uses), condition=definition._condition,
 			parent=parent
 		)
+		DefinitionMixin.__init__(self, definition)
+		CallMixin.__init__(self, calledWorkflow)
 
 
 @export
@@ -2466,9 +2483,10 @@ class DefinedJob(CIJob, DefinitionMixin):
 		:param definition: The job.
 		:param parent:     Optional, reference to the group containing the job. Default: ``None``.
 		"""
-		DefinitionMixin.__init__(self, definition)
+		self._CheckDefinition(definition)
 
 		super().__init__(definition._name, condition=definition._condition, parent=parent)
+		DefinitionMixin.__init__(self, definition)
 
 
 @export
@@ -2485,9 +2503,10 @@ class DefinedMatrixJob(CIMatrixJob, DefinitionMixin):
 		:param dimensionValues: The values of the matrix' combination this instance runs with.
 		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
 		"""
-		DefinitionMixin.__init__(self, definition)
+		self._CheckDefinition(definition)
 
 		super().__init__(definition._name, dimensionValues, condition=definition._condition, parent=parent)
+		DefinitionMixin.__init__(self, definition)
 
 
 @export
@@ -2506,7 +2525,7 @@ class DefinedStep(CIStep, DefinitionMixin):
 		:param definition: The step.
 		:param parent:     Optional, reference to the job containing the step. Default: ``None``.
 		"""
-		DefinitionMixin.__init__(self, definition)
+		self._CheckDefinition(definition)
 
 		if definition._name is not None:
 			name = definition._name
@@ -2519,3 +2538,4 @@ class DefinedStep(CIStep, DefinitionMixin):
 			name = f"Step at line {definition._line}"
 
 		super().__init__(name, condition=definition._condition, parent=parent)
+		DefinitionMixin.__init__(self, definition)
