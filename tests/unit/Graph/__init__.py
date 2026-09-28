@@ -2047,8 +2047,8 @@ class TypeHints(Testcase):
 				get_type_hints(cls, vars(pyTooling.Graph))
 
 	def test_Kind(self) -> None:
-		"""An edge's and a link's kind is a type parameter of its class."""
-		self.assertIs(EdgeKindType, Edge.__parameters__[-1])
-		self.assertIs(LinkKindType, Link.__parameters__[-1])
+		"""An edge's and a link's kind is a type parameter of its class, before the dictionary's types."""
+		self.assertIs(EdgeKindType, Edge.__parameters__[3])
+		self.assertIs(LinkKindType, Link.__parameters__[3])
 		self.assertIs(EdgeKindType, get_type_hints(BaseEdge.Kind.fget)["return"])
 
