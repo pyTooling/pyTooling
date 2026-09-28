@@ -1585,7 +1585,9 @@ class GraphOperations(Iterate):
 		self.assertIs(EdgeKind.Direct, ad.Kind)
 		self.assertIs(Dependency.Needed, ed.Kind)
 		self.assertIs(EdgeKind.Direct, Edge(a, b, edgeKind=EdgeKind.Direct).Kind)
-		self.assertIs(EdgeKind.Direct, a.EdgeToVertex(b, "AB", EdgeKind.Direct).Kind)
+
+		positional = a.EdgeToVertex(b, "AB", 5, "value", EdgeKind.Direct)
+		self.assertTupleEqual((5, "value", EdgeKind.Direct), (positional.Weight, positional.Value, positional.Kind))
 
 		with self.assertRaises(ValueError):
 			Edge(a, b, edgeKind=None)
@@ -1612,7 +1614,9 @@ class GraphOperations(Iterate):
 		self.assertIs(LinkKind.Default, ab.Kind)
 		self.assertIs(Relation.Calls, ca.Kind)
 		self.assertIs(Relation.Calls, Link(a, c, linkKind=Relation.Calls).Kind)
-		self.assertIs(Relation.Calls, b.LinkToVertex(a, "BA", Relation.Calls).Kind)
+
+		positional = b.LinkToVertex(a, "BA", 3, "value", Relation.Calls)
+		self.assertTupleEqual((3, "value", Relation.Calls), (positional.Weight, positional.Value, positional.Kind))
 
 		with self.assertRaises(ValueError):
 			Link(a, b, linkKind=None)
