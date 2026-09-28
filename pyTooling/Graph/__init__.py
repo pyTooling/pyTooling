@@ -65,6 +65,7 @@ from __future__            import annotations
 
 import heapq
 from collections           import deque
+from enum                  import Enum
 from itertools             import chain
 from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable
 from typing                import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
@@ -159,6 +160,15 @@ GraphDictKeyType = TypeVar("GraphDictKeyType", bound=Hashable)
 
 GraphDictValueType = TypeVar("GraphDictValueType")
 """A type variable for a graph's dictionary values."""
+
+
+@export
+class EdgeKind(Enum):
+	"""
+	Kind of an edge in respect to the paths of its graph, as :meth:`BaseGraph.AnnotateTransitiveEdges` determines it.
+	"""
+	Direct =     0  #: No longer path connects the edge's source with its destination.
+	Transitive = 1  #: A longer path connects the edge's source with its destination, so the edge is implied by it.
 
 
 @export
@@ -2090,7 +2100,12 @@ class Edge(
 	"""
 	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
 	directed.
+
+	:meth:`BaseGraph.AnnotateTransitiveEdges` marks an edge as :attr:`EdgeKind.Transitive`, if a longer path implies it,
+	and records that path.
 	"""
+	_kind:           EdgeKind                      #: Kind of the edge in respect to the paths of its graph.
+	_transitivePath: Nullable[tuple[Vertex, ...]]  #: Path implying a transitive edge, from its source to its destination.
 
 	def __init__(
 		self,
@@ -2135,6 +2150,33 @@ class Edge(
 			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
 		super().__init__(source, destination, edgeID, value, weight, keyValuePairs)
+
+		self._kind =           EdgeKind.Direct
+		self._transitivePath = None
+
+	@readonly
+	def Kind(self) -> EdgeKind:
+		"""
+		Read-only property to get the kind (:attr:`_kind`) of an edge.
+
+		An edge is :attr:`EdgeKind.Direct`, until :meth:`BaseGraph.AnnotateTransitiveEdges` finds a longer path implying
+		it. The kind isn't updated when the graph changes afterwards.
+
+		:returns: The kind of the edge.
+		"""
+		return self._kind
+
+	@readonly
+	def TransitivePath(self) -> Nullable[tuple[Vertex, ...]]:
+		"""
+		Read-only property to get the path implying a transitive edge (:attr:`_transitivePath`).
+
+		The path starts at the edge's source, ends at its destination, and follows direct edges only, e.g. ``(A, B, C)``
+		for the transitive edge ``A → C``.
+
+		:returns: The vertices of the path, or ``None`` for a direct edge.
+		"""
+		return self._transitivePath
 
 	def Delete(self) -> None:
 		"""
@@ -2802,26 +2844,58 @@ class BaseGraph(
 		   :meth:`IterateTopologically`
 		      |rarr| Iterate all or selected vertices in topological order.
 		"""
+		for edge, _ in self._IterateTransitiveEdges(False):
+			yield edge
+
+	def _IterateTransitiveEdges(self, withPath: bool) -> Generator[tuple[Edge, Nullable[tuple[Vertex, ...]]], None, None]:
+		"""
+		Iterate the edges a longer path already implies, and optionally that path.
+
+		For every vertex, the vertices reachable from it are mapped to the direct successor they are reached through, so a
+		path follows direct edges only.
+
+		:param withPath:    If ``True``, the path from the edge's source to its destination is computed.
+		:returns:           A generator to iterate the implied edges, each with its path or ``None``.
+		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+		"""
 		if self.VertexCount == 0:
 			return
 
-		descendants: dict[Vertex, set[Vertex]] = {}
+		reachable: dict[Vertex, dict[Vertex, Vertex]] = {}
 
-		# A vertex is yielded after every vertex it has an edge to, so its successors' descendants are known already.
+		# A vertex is yielded after every vertex it has an edge to, so its successors' reachable vertices are known already.
 		for vertex in self.IterateTopologically():
-			successors =    set()
-			indirect =      set()
 			outboundEdges = tuple(vertex._outboundEdges)
+			indirect =      set()
 			for edge in outboundEdges:
-				indirect |= descendants[edge._destination]
+				indirect.update(reachable[edge._destination])
 
+			successors =      []
+			transitiveEdges = []
 			for edge in outboundEdges:
 				if edge._destination in indirect or edge._destination in successors:
-					yield edge
+					transitiveEdges.append(edge)
 				else:
-					successors.add(edge._destination)
+					successors.append(edge._destination)
 
-			descendants[vertex] = successors | indirect
+			via = {}
+			for successor in successors:
+				via.setdefault(successor, successor)
+				for descendant in reachable[successor]:
+					via.setdefault(descendant, successor)
+			reachable[vertex] = via
+
+			for edge in transitiveEdges:
+				if withPath:
+					path =    [vertex]
+					current = vertex
+					while current is not edge._destination:
+						current = reachable[current][edge._destination]
+						path.append(current)
+
+					yield edge, tuple(path)
+				else:
+					yield edge, None
 
 	def RemoveTransitiveEdges(self) -> None:
 		"""
@@ -2842,6 +2916,33 @@ class BaseGraph(
 
 		for edge in self.IterateTransitiveEdges():
 			edge.Delete()
+
+	def AnnotateTransitiveEdges(self) -> None:
+		"""
+		Mark every edge as :attr:`EdgeKind.Direct` or :attr:`EdgeKind.Transitive`, and record the path implying a
+		transitive edge.
+
+		The edges marked transitive are those :meth:`IterateTransitiveEdges` yields; :attr:`Edge.TransitivePath` follows
+		direct edges only. Nothing is removed, so the graph keeps every dependency and a consumer can still tell the
+		implied ones apart. A graph with a cycle is left unchanged.
+
+		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`RemoveTransitiveEdges`
+		      |rarr| Remove the edges a longer path already implies.
+		"""
+		if self.HasCycle():
+			raise CycleError("Graph has a cycle. Thus, no unique transitive reduction exists.")
+
+		for edge in chain(self._edgesWithoutID, self._edgesWithID.values()):
+			edge._kind =           EdgeKind.Direct
+			edge._transitivePath = None
+
+		for edge, path in self._IterateTransitiveEdges(True):
+			edge._kind =           EdgeKind.Transitive
+			edge._transitivePath = path
 
 
 @export

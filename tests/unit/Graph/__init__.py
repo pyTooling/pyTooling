@@ -35,7 +35,7 @@ weight, key-value-pairs), the iteration methods, and the conversion of a graph i
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
 
 from pyTooling.Decorators import readonly
-from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, CycleError
+from pyTooling.Graph      import Graph, Vertex, Edge, EdgeKind, Link, Subgraph, View, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
@@ -1420,6 +1420,94 @@ class GraphOperations(Iterate):
 			g.RemoveTransitiveEdges()
 
 		self.assertEqual(6, g.EdgeCount)
+
+	def test_AnnotateTransitiveEdges(self) -> None:
+		"""Every edge gets a kind; a transitive edge gets the path of direct edges implying it."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		ab = a.EdgeToVertex(b)
+		bc = b.EdgeToVertex(c)
+		cd = c.EdgeToVertex(d)
+		ac = a.EdgeToVertex(c)
+		ad = a.EdgeToVertex(d)
+
+		self.assertIs(EdgeKind.Direct, ad.Kind)
+		self.assertIsNone(ad.TransitivePath)
+
+		g.AnnotateTransitiveEdges()
+
+		self.assertEqual(5, g.EdgeCount)
+		for edge in (ab, bc, cd):
+			with self.subTest(edge=(edge.Source.ID, edge.Destination.ID)):
+				self.assertIs(EdgeKind.Direct, edge.Kind)
+				self.assertIsNone(edge.TransitivePath)
+
+		self.assertIs(EdgeKind.Transitive, ac.Kind)
+		self.assertTupleEqual((a, b, c), ac.TransitivePath)
+		self.assertIs(EdgeKind.Transitive, ad.Kind)
+		self.assertTupleEqual((a, b, c, d), ad.TransitivePath)
+
+	def test_AnnotateTransitiveEdges_Parallel(self) -> None:
+		"""A second edge between the same vertices is implied by the first, which is its path."""
+		g = Graph()
+		a = Vertex(vertexID="A", graph=g)
+		b = Vertex(vertexID="B", graph=g)
+		first = a.EdgeToVertex(b, edgeID=1)
+		second = a.EdgeToVertex(b, edgeID=2)
+
+		g.AnnotateTransitiveEdges()
+
+		self.assertIs(EdgeKind.Direct, first.Kind)
+		self.assertIs(EdgeKind.Transitive, second.Kind)
+		self.assertTupleEqual((a, b), second.TransitivePath)
+
+	def test_AnnotateTransitiveEdges_Again(self) -> None:
+		"""Annotating again reflects the graph's current edges."""
+		g = Graph()
+		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
+		ab = a.EdgeToVertex(b)
+		bc = b.EdgeToVertex(c)
+		ac = a.EdgeToVertex(c)
+
+		g.AnnotateTransitiveEdges()
+		self.assertIs(EdgeKind.Transitive, ac.Kind)
+
+		bc.Delete()
+		g.AnnotateTransitiveEdges()
+
+		self.assertIs(EdgeKind.Direct, ab.Kind)
+		self.assertIs(EdgeKind.Direct, ac.Kind)
+		self.assertIsNone(ac.TransitivePath)
+
+	def test_AnnotateTransitiveEdges_Subgraph(self) -> None:
+		"""A subgraph is annotated on its own."""
+		g = Graph()
+		subgraph = Subgraph(g, name="sub")
+		a, b, c = (Vertex(vertexID=name, subgraph=subgraph) for name in "ABC")
+		a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		ac = a.EdgeToVertex(c)
+
+		g.AnnotateTransitiveEdges()
+		self.assertIs(EdgeKind.Direct, ac.Kind)
+
+		subgraph.AnnotateTransitiveEdges()
+		self.assertIs(EdgeKind.Transitive, ac.Kind)
+		self.assertTupleEqual((a, b, c), ac.TransitivePath)
+
+	def test_AnnotateTransitiveEdges_Cycle(self) -> None:
+		"""A graph with a cycle is left unchanged."""
+		g = Graph()
+		a, b, c, d, e = (Vertex(vertexID=name, graph=g) for name in "ABCDE")
+		for u, v in ((a, b), (b, c), (d, e), (e, d), (e, a)):
+			u.EdgeToVertex(v)
+		ac = a.EdgeToVertex(c)
+
+		with self.assertRaises(CycleError):
+			g.AnnotateTransitiveEdges()
+
+		self.assertIs(EdgeKind.Direct, ac.Kind)
+		self.assertIsNone(ac.TransitivePath)
 
 	def test_TransitiveEdges_Subgraph(self) -> None:
 		"""A subgraph is reduced on its own; the graph's reduction doesn't touch it."""
