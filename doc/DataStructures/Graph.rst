@@ -222,6 +222,24 @@ subgraph is reduced by calling the method on it.
    for subgraph in graph.Subgraphs:
      subgraph.RemoveTransitiveEdges()
 
+:meth:`~pyTooling.Graph.BaseGraph.IterateTransitiveEdges` yields an edge as soon as it is found, so it can be removed
+while iterating.
+
+Instead of removing them, :meth:`~pyTooling.Graph.BaseGraph.AnnotateTransitiveEdges` marks the edges: every edge's
+:attr:`~pyTooling.Graph.Edge.Kind` becomes :attr:`EdgeKind.Direct <pyTooling.Graph.EdgeKind.Direct>` or
+:attr:`EdgeKind.Transitive <pyTooling.Graph.EdgeKind.Transitive>`, and a transitive edge's
+:attr:`~pyTooling.Graph.Edge.TransitivePath` holds the vertices of the path implying it, from its source to its
+destination, along direct edges. The graph keeps every edge, and a consumer - e.g. a renderer drawing implied edges
+dashed - tells them apart.
+
+.. code-block:: python
+
+   graph.AnnotateTransitiveEdges()
+
+   for edge in graph.IterateEdges():
+     if edge.Kind is EdgeKind.Transitive:
+       print(edge.Source.ID, edge.Destination.ID, [vertex.ID for vertex in edge.TransitivePath])   # A C ['A', 'B', 'C']
+
 
 .. _STRUCT/Graph/Competitors:
 

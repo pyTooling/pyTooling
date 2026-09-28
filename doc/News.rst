@@ -335,6 +335,9 @@ Version 10.x (2026)
      * :meth:`Graph.IterateTransitiveEdges <pyTooling.Graph.BaseGraph.IterateTransitiveEdges>` names the edges a
        longer path already implies, and :meth:`~pyTooling.Graph.BaseGraph.RemoveTransitiveEdges` removes them, which
        leaves the graph's **transitive reduction**. A graph and each of its subgraphs are reduced separately.
+       :meth:`~pyTooling.Graph.BaseGraph.AnnotateTransitiveEdges` marks them instead: an edge's
+       :attr:`~pyTooling.Graph.Edge.Kind` is :class:`~pyTooling.Graph.EdgeKind` ``Direct`` or ``Transitive``, and
+       :attr:`~pyTooling.Graph.Edge.TransitivePath` names the path implying a transitive edge.
 
    .. rubric:: Breaking Changes
 
