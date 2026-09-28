@@ -117,14 +117,8 @@ class Outcome(StringEnum):
 		:param outcomes: The elements' outcomes.
 		:returns:        The combined outcome, or ``None`` if there is none, or one of them is ``None``.
 		"""
-		found = set()
-		for outcome in outcomes:
-			if outcome is None:
-				return None
-
-			found.add(outcome)
-
-		for outcome in (cls.Failure, cls.Timeout, cls.Error, cls.Cancellation, cls.Success, cls.Skip):
+		found = set(outcomes)
+		for outcome in (None, cls.Failure, cls.Timeout, cls.Error, cls.Cancellation, cls.Success, cls.Skip):
 			if outcome in found:
 				return outcome
 
@@ -405,9 +399,9 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 	"""
 	Mixin-class for elements that can need their siblings: jobs, matrices and called workflows.
 
-	An element needing another one starts after it. A need is always a **sibling** - an element of the same group -
-	and a need that would close a cycle is rejected when it is added, so the dependencies of a group always form a
-	directed acyclic graph. A group needing another group needs everything that group contains.
+	An element needing another one starts after it. A need is always a **sibling** - an element of the same group. A
+	group needing another group needs everything that group contains. Whether the needs of a pipeline form cycles is
+	checked once it is completely built, by :meth:`JobGroup.Validate` or :meth:`PipelineGroup.Validate`.
 
 	The mixin compares the elements' parents, so the ``expects`` contract requires :attr:`Base._parent` from whichever
 	class it ends up in.
@@ -416,12 +410,47 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 	_needs:      list[DependencyMixin]  #: Elements this element needs, in the order they were added.
 	_dependents: list[DependencyMixin]  #: Elements needing this element, in the order they were added.
 
-	def __init__(self) -> None:
+	def __init__(
+		self,
+		needs:      Nullable[Iterable[DependencyMixin]] = None,
+		dependents: Nullable[Iterable[DependencyMixin]] = None
+	) -> None:
 		"""
-		Initializes an element without dependencies.
+		Initializes an element's dependencies.
+
+		The element must be contained in its group already, as a need is a sibling.
+
+		:param needs:                Optional, siblings this element needs. Default: ``None``.
+		:param dependents:           Optional, siblings needing this element. Default: ``None``.
+		:raises TypeError:           If parameter 'needs' or 'dependents' is not iterable.
+		:raises ValueError:          If an element of parameter 'needs' or 'dependents' is ``None``.
+		:raises TypeError:           If an element of parameter 'needs' or 'dependents' is not of type
+		                             :class:`DependencyMixin`.
+		:raises NeedDependencyError: If an element of parameter 'needs' or 'dependents' isn't contained in the same
+		                             group.
 		"""
+		for name, elements in (("needs", needs), ("dependents", dependents)):
+			if elements is not None and not isinstance(elements, Iterable):
+				ex = TypeError(f"Parameter '{name}' is not iterable.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(elements)}'.")
+				raise ex
+
 		self._needs =      []
 		self._dependents = []
+
+		if needs is not None:
+			for need in needs:
+				self.AddNeed(need)
+		if dependents is not None:
+			for dependent in dependents:
+				if dependent is None:
+					raise ValueError("An element of parameter 'dependents' is None.")
+				elif not isinstance(dependent, DependencyMixin):
+					ex = TypeError("An element of parameter 'dependents' is not of type 'DependencyMixin'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(dependent)}'.")
+					raise ex
+
+				dependent.AddNeed(self)
 
 	@readonly
 	def Needs(self) -> list[DependencyMixin]:
@@ -451,8 +480,6 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 		:raises NeedDependencyCycleError: If parameter 'need' is this element.
 		:raises NeedDependencyError:      If parameter 'need' isn't contained in the same group as this element.
 		:raises NeedDependencyError:      If this element needs parameter 'need' already.
-		:raises NeedDependencyCycleError: If parameter 'need' needs this element already, directly or through others. |br|
-		                                  The note names the cycle.
 		"""
 		if need is None:
 			raise ValueError("Parameter 'need' is None.")
@@ -469,28 +496,44 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 		elif need in self._needs:
 			raise NeedDependencyError(f"'{self}' needs '{need}' already.")
 
-		# Depth-first search from the need along the needs: reaching this element means the new need closes a cycle.
-		predecessors: dict[DependencyMixin, DependencyMixin] = {need: need}
-		stack = [need]
-		while len(stack) > 0:
-			element = stack.pop()
-			if element is self:
-				cycle = [self]
-				while element is not need:
-					element = predecessors[element]
-					cycle.append(element)
-
-				ex = NeedDependencyCycleError(f"'{self}' can't need '{need}', because '{need}' needs '{self}' already.")
-				ex.add_note(f"Cycle: {' -> '.join(str(item) for item in [self, *reversed(cycle)])}.")
-				raise ex
-
-			for item in element._needs:
-				if item not in predecessors:
-					predecessors[item] = element
-					stack.append(item)
-
 		self._needs.append(need)
 		need._dependents.append(self)
+
+	@staticmethod
+	def _FindCycle(elements: Iterable[DependencyMixin]) -> Nullable[list[DependencyMixin]]:
+		"""
+		Find a cycle in the needs of sibling elements.
+
+		The elements are searched depth-first along their needs; an element reached again while it is on the current
+		path closes a cycle. Every element and need is visited once.
+
+		:param elements: The elements of one group.
+		:returns:        The cycle from its first element back to it, e.g. ``[A, D, C, A]``, or ``None``.
+		"""
+		onPath =   set()
+		finished = set()
+		for start in elements:
+			if start in finished:
+				continue
+
+			path =  [start]
+			stack = [iter(start._needs)]
+			onPath.add(start)
+			while len(stack) > 0:
+				need = next(stack[-1], None)
+				if need is None:
+					element = path.pop()
+					stack.pop()
+					onPath.discard(element)
+					finished.add(element)
+				elif need in onPath:
+					return path[path.index(need):] + [need]
+				elif need not in finished:
+					path.append(need)
+					stack.append(iter(need._needs))
+					onPath.add(need)
+
+		return None
 
 
 @export
@@ -630,6 +673,21 @@ class PipelineGroup(Base):
 		for pipeline in self._pipelines:
 			yield from pipeline.IterateJobs()
 
+	def Validate(self) -> None:
+		"""
+		Check that the needs of the group's pipelines, and of every group they contain, form no cycle.
+
+		:raises NeedDependencyCycleError: If the needs of the pipelines or of a group form a cycle. |br|
+		                                  The note names the cycle.
+		"""
+		if (cycle := DependencyMixin._FindCycle(self._pipelines)) is not None:
+			ex = NeedDependencyCycleError(f"The needs of the pipelines of '{self}' form a cycle.")
+			ex.add_note(f"Cycle: {' -> '.join(str(pipeline) for pipeline in cycle)}.")
+			raise ex
+
+		for pipeline in self._pipelines:
+			pipeline.Validate()
+
 	def __len__(self) -> int:
 		"""
 		Return the number of pipelines of the group.
@@ -735,10 +793,32 @@ class JobGroup(Base):
 			else:
 				yield from element.IterateJobs()
 
-	@readonly
-	def _IsReported(self) -> bool:
+	def Validate(self) -> None:
 		"""
-		Read-only property to return whether the service reported the group as an element of its own.
+		Check that the needs of this group and of every group it contains form no cycle.
+
+		A pipeline is validated once it is completely built: each group is searched once, along every need.
+
+		:raises NeedDependencyCycleError: If the needs of a group form a cycle. |br|
+		                                  The note names the cycle.
+		"""
+		groups = [self]
+		while len(groups) > 0:
+			group = groups.pop()
+			elements = (element for element in group._elements if isinstance(element, DependencyMixin))
+			if (cycle := DependencyMixin._FindCycle(elements)) is not None:
+				ex = NeedDependencyCycleError(f"The needs of the elements of '{group}' form a cycle.")
+				ex.add_note(f"Cycle: {' -> '.join(str(element) for element in cycle)}.")
+				raise ex
+
+			groups.extend(element for element in group._elements if isinstance(element, JobGroup))
+
+	@readonly
+	def IsReported(self) -> bool:
+		"""
+		Check if the service reported the group as an element of its own.
+
+		A reported group keeps its own times and outcome; otherwise they span its contents.
 
 		:returns: ``True``, if the group was given a time or an outcome.
 		"""
@@ -751,7 +831,7 @@ class JobGroup(Base):
 
 		:returns: The time the service reported, or - for a group it doesn't report - :attr:`ContentsCreatedAt`.
 		"""
-		return self._createdAt if self._IsReported else self.ContentsCreatedAt
+		return self._createdAt if self.IsReported else self.ContentsCreatedAt
 
 	@readonly
 	def StartedAt(self) -> Nullable[datetime]:
@@ -760,7 +840,7 @@ class JobGroup(Base):
 
 		:returns: The time the service reported, or - for a group it doesn't report - :attr:`ContentsStartedAt`.
 		"""
-		return self._startedAt if self._IsReported else self.ContentsStartedAt
+		return self._startedAt if self.IsReported else self.ContentsStartedAt
 
 	@readonly
 	def CompletedAt(self) -> Nullable[datetime]:
@@ -769,7 +849,7 @@ class JobGroup(Base):
 
 		:returns: The time the service reported, or - for a group it doesn't report - :attr:`ContentsCompletedAt`.
 		"""
-		return self._completedAt if self._IsReported else self.ContentsCompletedAt
+		return self._completedAt if self.IsReported else self.ContentsCompletedAt
 
 	@readonly
 	def Outcome(self) -> Nullable[Outcome]:
@@ -778,7 +858,7 @@ class JobGroup(Base):
 
 		:returns: The outcome the service reported, or - for a group it doesn't report - :attr:`ContentsOutcome`.
 		"""
-		return self._outcome if self._IsReported else self.ContentsOutcome
+		return self._outcome if self.IsReported else self.ContentsOutcome
 
 	@readonly
 	def ContentsCreatedAt(self) -> Nullable[datetime]:
@@ -896,13 +976,15 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		self,
 		name:        str,
 		*,
-		reference:   Nullable[str]      = None,
-		condition:   Nullable[str]      = None,
-		createdAt:   Nullable[datetime] = None,
-		startedAt:   Nullable[datetime] = None,
-		completedAt: Nullable[datetime] = None,
-		outcome:     Nullable[Outcome]  = None,
-		parent:      Nullable[Workflow] = None
+		reference:   Nullable[str]                       = None,
+		condition:   Nullable[str]                       = None,
+		createdAt:   Nullable[datetime]                  = None,
+		startedAt:   Nullable[datetime]                  = None,
+		completedAt: Nullable[datetime]                  = None,
+		outcome:     Nullable[Outcome]                   = None,
+		parent:      Nullable[Workflow]                  = None,
+		needs:       Nullable[Iterable[DependencyMixin]] = None,
+		dependents:  Nullable[Iterable[DependencyMixin]] = None
 	) -> None:
 		"""
 		Initializes a called workflow.
@@ -915,6 +997,8 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:param completedAt:    Optional, time the workflow completed, if the service reports it. Default: ``None``.
 		:param outcome:        Optional, how the workflow ended, if the service reports it. Default: ``None``.
 		:param parent:         Optional, reference to the workflow calling this one. Default: ``None``.
+		:param needs:          Optional, siblings this workflow needs. Default: ``None``.
+		:param dependents:     Optional, siblings needing this workflow. Default: ``None``.
 		:raises TypeError:     If parameter 'reference' is not of type :class:`str`.
 		:raises PipelineError: If the calling workflow calls a workflow of that name already.
 		"""
@@ -923,15 +1007,15 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			ex.add_note(f"Got type '{getFullyQualifiedName(reference)}'.")
 			raise ex
 
-		self._reference = reference
-		self._workflows = {}
-		self._matrices =  {}
-
-		ConditionMixin.__init__(self, condition)
 		super().__init__(
 			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
-		DependencyMixin.__init__(self)
+		ConditionMixin.__init__(self, condition)
+		DependencyMixin.__init__(self, needs, dependents)
+
+		self._reference = reference
+		self._workflows = {}
+		self._matrices =  {}
 
 	def _AddElement(self, element: Base) -> None:
 		"""
@@ -1019,14 +1103,15 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		   :meth:`Graph.RemoveTransitiveEdges <pyTooling.Graph.BaseGraph.RemoveTransitiveEdges>`
 		      |rarr| Remove the edges a longer path already implies.
 		"""
-		if depth is not None and (not isinstance(depth, int) or isinstance(depth, bool)):
-			ex = TypeError("Parameter 'depth' is not of type 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(depth)}'.")
-			raise ex
-		elif depth is not None and depth < 0:
-			ex = ValueError("Parameter 'depth' is negative.")
-			ex.add_note(f"Got value '{depth}'.")
-			raise ex
+		if depth is not None:
+			if not isinstance(depth, int) or isinstance(depth, bool):
+				ex = TypeError("Parameter 'depth' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(depth)}'.")
+				raise ex
+			elif depth < 0:
+				ex = ValueError("Parameter 'depth' is negative.")
+				ex.add_note(f"Got value '{depth}'.")
+				raise ex
 
 		if reduce is None:
 			raise ValueError("Parameter 'reduce' is None.")
@@ -1093,12 +1178,14 @@ class Pipeline(Workflow):
 		self,
 		name:        str,
 		*,
-		condition:   Nullable[str]           = None,
-		createdAt:   Nullable[datetime]      = None,
-		startedAt:   Nullable[datetime]      = None,
-		completedAt: Nullable[datetime]      = None,
-		outcome:     Nullable[Outcome]       = None,
-		parent:      Nullable[PipelineGroup] = None
+		condition:   Nullable[str]                       = None,
+		createdAt:   Nullable[datetime]                  = None,
+		startedAt:   Nullable[datetime]                  = None,
+		completedAt: Nullable[datetime]                  = None,
+		outcome:     Nullable[Outcome]                   = None,
+		parent:      Nullable[PipelineGroup]             = None,
+		needs:       Nullable[Iterable[DependencyMixin]] = None,
+		dependents:  Nullable[Iterable[DependencyMixin]] = None
 	) -> None:
 		"""
 		Initializes a pipeline.
@@ -1110,13 +1197,16 @@ class Pipeline(Workflow):
 		:param completedAt: Optional, time the pipeline completed. Default: ``None``.
 		:param outcome:     Optional, how the pipeline ended. Default: ``None``.
 		:param parent:      Optional, reference to the group of pipelines. Default: ``None``.
+		:param needs:       Optional, siblings this pipeline needs. Default: ``None``.
+		:param dependents:  Optional, siblings needing this pipeline. Default: ``None``.
 		"""
 		super().__init__(
 			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
-			parent=parent
+			parent=parent, needs=needs, dependents=dependents
 		)
 
 		self._pipeline = self
+
 
 
 @export
@@ -1130,18 +1220,28 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = Workflow  #: A matrix is contained in a workflow.
 
-	def __init__(self, name: str, *, condition: Nullable[str] = None, parent: Nullable[Workflow] = None) -> None:
+	def __init__(
+		self,
+		name:       str,
+		*,
+		condition:  Nullable[str]                       = None,
+		parent:     Nullable[Workflow]                  = None,
+		needs:      Nullable[Iterable[DependencyMixin]] = None,
+		dependents: Nullable[Iterable[DependencyMixin]] = None
+	) -> None:
 		"""
 		Initializes a matrix.
 
 		:param name:           Name of the matrix, which its instances share.
 		:param condition:      Optional, condition under which the instances run, as written. Default: ``None``.
 		:param parent:         Optional, reference to the workflow containing the matrix. Default: ``None``.
+		:param needs:          Optional, siblings this matrix needs. Default: ``None``.
+		:param dependents:     Optional, siblings needing this matrix. Default: ``None``.
 		:raises PipelineError: If the workflow contains a matrix of that name already.
 		"""
-		ConditionMixin.__init__(self, condition)
 		super().__init__(name, parent=parent)
-		DependencyMixin.__init__(self)
+		ConditionMixin.__init__(self, condition)
+		DependencyMixin.__init__(self, needs, dependents)
 
 	@readonly
 	def Instances(self) -> list[Base]:
@@ -1164,15 +1264,17 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 	def __init__(
 		self,
 		name:            str,
-		dimensionValues: Nullable[Iterable[str]] = None,
+		dimensionValues: Nullable[Iterable[str]]             = None,
 		*,
-		reference:       Nullable[str]           = None,
-		condition:       Nullable[str]           = None,
-		createdAt:       Nullable[datetime]      = None,
-		startedAt:       Nullable[datetime]      = None,
-		completedAt:     Nullable[datetime]      = None,
-		outcome:         Nullable[Outcome]       = None,
-		parent:          Nullable[Matrix]        = None
+		reference:       Nullable[str]                       = None,
+		condition:       Nullable[str]                       = None,
+		createdAt:       Nullable[datetime]                  = None,
+		startedAt:       Nullable[datetime]                  = None,
+		completedAt:     Nullable[datetime]                  = None,
+		outcome:         Nullable[Outcome]                   = None,
+		parent:          Nullable[Matrix]                    = None,
+		needs:           Nullable[Iterable[DependencyMixin]] = None,
+		dependents:      Nullable[Iterable[DependencyMixin]] = None
 	) -> None:
 		"""
 		Initializes one instance of a called workflow produced by a matrix.
@@ -1186,13 +1288,15 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 		:param completedAt:     Optional, time the workflow completed, if the service reports it. Default: ``None``.
 		:param outcome:         Optional, how the workflow ended, if the service reports it. Default: ``None``.
 		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param needs:           Optional, siblings this instance needs. Default: ``None``.
+		:param dependents:      Optional, siblings needing this instance. Default: ``None``.
 		"""
-		MatrixInstanceMixin.__init__(self, dimensionValues)
-
 		super().__init__(
 			name, reference=reference, condition=condition, createdAt=createdAt, startedAt=startedAt,
 			completedAt=completedAt, outcome=outcome, parent=parent
 		)
+		MatrixInstanceMixin.__init__(self, dimensionValues)
+		DependencyMixin.__init__(self, needs, dependents)
 
 	def __str__(self) -> str:
 		"""
@@ -1218,12 +1322,14 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		self,
 		name:        str,
 		*,
-		condition:   Nullable[str]      = None,
-		createdAt:   Nullable[datetime] = None,
-		startedAt:   Nullable[datetime] = None,
-		completedAt: Nullable[datetime] = None,
-		outcome:     Nullable[Outcome]  = None,
-		parent:      Nullable[JobGroup] = None
+		condition:   Nullable[str]                       = None,
+		createdAt:   Nullable[datetime]                  = None,
+		startedAt:   Nullable[datetime]                  = None,
+		completedAt: Nullable[datetime]                  = None,
+		outcome:     Nullable[Outcome]                   = None,
+		parent:      Nullable[JobGroup]                  = None,
+		needs:       Nullable[Iterable[DependencyMixin]] = None,
+		dependents:  Nullable[Iterable[DependencyMixin]] = None
 	) -> None:
 		"""
 		Initializes a job.
@@ -1235,14 +1341,16 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:param completedAt: Optional, time the job completed. Default: ``None``.
 		:param outcome:     Optional, how the job ended. Default: ``None``.
 		:param parent:      Optional, reference to the group containing the job. Default: ``None``.
+		:param needs:       Optional, siblings this job needs. Default: ``None``.
+		:param dependents:  Optional, siblings needing this job. Default: ``None``.
 		"""
-		self._steps = []
-
-		ConditionMixin.__init__(self, condition)
 		super().__init__(
 			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
 		)
-		DependencyMixin.__init__(self)
+		ConditionMixin.__init__(self, condition)
+		DependencyMixin.__init__(self, needs, dependents)
+
+		self._steps = []
 
 	def _AddElement(self, step: Step) -> None:
 		"""
@@ -1296,14 +1404,16 @@ class MatrixJob(Job, MatrixInstanceMixin):
 	def __init__(
 		self,
 		name:            str,
-		dimensionValues: Nullable[Iterable[str]] = None,
+		dimensionValues: Nullable[Iterable[str]]             = None,
 		*,
-		condition:       Nullable[str]           = None,
-		createdAt:       Nullable[datetime]      = None,
-		startedAt:       Nullable[datetime]      = None,
-		completedAt:     Nullable[datetime]      = None,
-		outcome:         Nullable[Outcome]       = None,
-		parent:          Nullable[Matrix]        = None
+		condition:       Nullable[str]                       = None,
+		createdAt:       Nullable[datetime]                  = None,
+		startedAt:       Nullable[datetime]                  = None,
+		completedAt:     Nullable[datetime]                  = None,
+		outcome:         Nullable[Outcome]                   = None,
+		parent:          Nullable[Matrix]                    = None,
+		needs:           Nullable[Iterable[DependencyMixin]] = None,
+		dependents:      Nullable[Iterable[DependencyMixin]] = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
@@ -1316,13 +1426,15 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		:param completedAt:     Optional, time the job completed. Default: ``None``.
 		:param outcome:         Optional, how the job ended. Default: ``None``.
 		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param needs:           Optional, siblings this instance needs. Default: ``None``.
+		:param dependents:      Optional, siblings needing this instance. Default: ``None``.
 		"""
-		MatrixInstanceMixin.__init__(self, dimensionValues)
-
 		super().__init__(
 			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
 			parent=parent
 		)
+		MatrixInstanceMixin.__init__(self, dimensionValues)
+		DependencyMixin.__init__(self, needs, dependents)
 
 	def __str__(self) -> str:
 		"""
@@ -1362,5 +1474,5 @@ class Step(Base, ConditionMixin):
 		:param outcome:     Optional, how the step ended. Default: ``None``.
 		:param parent:      Optional, reference to the job containing the step. Default: ``None``.
 		"""
-		ConditionMixin.__init__(self, condition)
 		super().__init__(name, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent)
+		ConditionMixin.__init__(self, condition)

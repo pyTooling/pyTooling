@@ -102,13 +102,16 @@ reverse link, so :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Needs` and
    package in release.Needs          # True
    release in package.Dependents     # True
 
-A group needing another group needs everything that group contains. The links are checked when they are added:
+Needs and dependents can also be given when an element is created, e.g. ``Job("Release", parent=pipeline,
+needs=[package])``. A group needing another group needs everything that group contains.
 
 * **A need is a sibling** - an element of the same group. A job can't need a job inside a called workflow; it needs
-  the workflow. Anything else raises :exc:`~pyTooling.CI.Pipeline.NeedDependencyError`.
-* **A dependency closing a cycle is rejected** with :exc:`~pyTooling.CI.Pipeline.NeedDependencyCycleError`, whose note
-  names the cycle - ``Cycle: A -> D -> C -> A.`` The dependencies of a group therefore always form a directed acyclic
-  graph, and a reader reports a cycle at the dependency that closes it.
+  the workflow. Anything else raises :exc:`~pyTooling.CI.Pipeline.NeedDependencyError` when the need is added.
+* **Cycles are found once the pipeline is complete.**
+  :meth:`JobGroup.Validate <pyTooling.CI.Pipeline.JobGroup.Validate>` searches a group and every group it contains,
+  :meth:`PipelineGroup.Validate <pyTooling.CI.Pipeline.PipelineGroup.Validate>` also the pipelines of a group, each
+  element and need once. A cycle raises :exc:`~pyTooling.CI.Pipeline.NeedDependencyCycleError`, whose note names it -
+  ``Cycle: A -> D -> C -> A.``
 
 
 .. _CI/Pipeline/Graph:
