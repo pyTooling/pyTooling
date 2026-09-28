@@ -3009,23 +3009,25 @@ class BaseGraph(
 				ex = TypeError(f"Parameter '{name}' is not an enumeration member.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 				raise ex
-		if keyName is not None and not isinstance(keyName, str):
-			ex = TypeError("Parameter 'keyName' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(keyName)}'.")
-			raise ex
 
 		if self.HasCycle():
 			raise CycleError("Graph has a cycle. Thus, no unique transitive reduction exists.")
 
-		for edge in chain(self._edgesWithoutID, self._edgesWithID.values()):
-			edge._kind = directKind
-			if keyName is not None:
-				edge._dict.pop(keyName, None)
-
 		if keyName is None:
+			for edge in chain(self._edgesWithoutID, self._edgesWithID.values()):
+				edge._kind = directKind
+
 			for edge in self.IterateTransitiveEdges():
 				edge._kind = transitiveKind
+		elif not isinstance(keyName, str):
+			ex = TypeError("Parameter 'keyName' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(keyName)}'.")
+			raise ex
 		else:
+			for edge in chain(self._edgesWithoutID, self._edgesWithID.values()):
+				edge._kind = directKind
+				edge._dict.pop(keyName, None)
+
 			for edge, path in self.IterateTransitiveEdgesWithPath():
 				edge._kind =          transitiveKind
 				edge._dict[keyName] = path
