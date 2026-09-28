@@ -337,7 +337,9 @@ Version 10.x (2026)
        leaves the graph's **transitive reduction**. A graph and each of its subgraphs are reduced separately.
        :meth:`~pyTooling.Graph.BaseGraph.AnnotateTransitiveEdges` marks them instead: an edge's
        :attr:`~pyTooling.Graph.Edge.Kind` is :class:`~pyTooling.Graph.EdgeKind` ``Direct`` or ``Transitive``, and
-       :attr:`~pyTooling.Graph.Edge.TransitivePath` names the path implying a transitive edge.
+       :attr:`~pyTooling.Graph.Edge.TransitivePath` names the path implying a transitive edge. The kinds may be members
+       of an enumeration of the user's own, and an edge's kind and path can be given when it is created
+       (``edgeKind``, ``edgeTransitivePath``).
 
    .. rubric:: Breaking Changes
 
