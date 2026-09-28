@@ -41,7 +41,7 @@ from pyTooling.CI.Workflow import Input, Job, Matrix, Permission, UsesReference
 from pyTooling.CI.Workflow import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow, DefinedPipeline
 from pyTooling.CI.Workflow import DefinedWorkflow
 from pyTooling.CI.GitHub   import Pipeline as GitHubPipeline
-from pyTooling.CI.Pipeline import Matrix as CIMatrix, Pipeline as CIPipeline
+from pyTooling.CI.Pipeline import Matrix as CIMatrix, NeedDependencyCycleError, Pipeline as CIPipeline
 from pyTooling.Graph       import Graph
 from pyTooling.Testing     import Testcase
 
@@ -869,6 +869,17 @@ class ApplyNeeds(Fixture):
 
 		self.assertEqual(["Local / Static"], missing)
 		self.assertEqual([], run["Foreign"]["Publish"].Needs)
+
+	def test_Cycle(self) -> None:
+		"""A need the run had already, which closes a cycle with the needs of the file, is found by validating the run."""
+		self._write("Package.yml", CALLABLE)
+		self._write("Prepare.yml", PREPARE)
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+		run = self._run(("Prepare / Prepare", "success"), ("Package / Parameters", "success"))
+		run["Prepare"].AddNeed(run["Package"])
+
+		with self.assertRaises(NeedDependencyCycleError):
+			workflow.ApplyNeeds(run)
 
 	def test_WithoutResolver(self) -> None:
 		"""Without a resolver, only the jobs of the run's own workflow get dependencies."""
