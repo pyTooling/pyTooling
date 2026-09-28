@@ -165,7 +165,12 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 @export
 class EdgeKind(Enum):
 	"""
-	Kind of an edge, e.g. as :meth:`BaseGraph.AnnotateTransitiveEdges` determines it in respect to the paths of its graph.
+	Kind of an edge.
+
+	.. seealso::
+
+	   :meth:`BaseGraph.AnnotateTransitiveEdges`
+	      |rarr| Mark every edge as direct or transitive.
 	"""
 	Default =    0  #: The edge wasn't classified.
 	Direct =     1  #: No longer path connects the edge's source with its destination.
@@ -175,7 +180,7 @@ class EdgeKind(Enum):
 @export
 class LinkKind(Enum):
 	"""
-	Kind of a link.
+	Kind of a link between subgraphs.
 	"""
 	Default = 0  #: The link wasn't classified.
 
@@ -913,20 +918,20 @@ class Vertex(
 		self,
 		vertex: Vertex,
 		edgeID: Nullable[EdgeIDType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		edgeKind: Enum = EdgeKind.Default
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
 		Create an outbound edge from this vertex to the referenced vertex.
 
 		:param vertex:              The vertex to be linked to.
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
 		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the new edge object.
-		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:returns:                   The edge object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -947,7 +952,7 @@ class Vertex(
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 		"""
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, keyValuePairs, edgeKind)
+			edge = Edge(self, vertex, edgeID, edgeKind, edgeValue, edgeWeight, keyValuePairs)
 
 			self._outboundEdges.append(edge)
 			vertex._inboundEdges.append(edge)
@@ -981,20 +986,20 @@ class Vertex(
 		self,
 		vertex: Vertex,
 		edgeID: Nullable[EdgeIDType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		edgeKind: Enum = EdgeKind.Default
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
 		Create an inbound edge from the referenced vertex to this vertex.
 
 		:param vertex:              The vertex to be linked from.
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
 		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the new edge object.
-		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:returns:                   The edge object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -1015,7 +1020,7 @@ class Vertex(
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
 		"""
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, keyValuePairs, edgeKind)
+			edge = Edge(vertex, self, edgeID, edgeKind, edgeValue, edgeWeight, keyValuePairs)
 
 			vertex._outboundEdges.append(edge)
 			self._inboundEdges.append(edge)
@@ -1052,10 +1057,10 @@ class Vertex(
 		vertexWeight: Nullable[VertexWeightType] = None,
 		vertexKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
 		edgeID: Nullable[EdgeIDType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
-		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		edgeKind: Enum = EdgeKind.Default
+		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
 		Create a new vertex and link that vertex by an outbound edge from this vertex.
@@ -1065,10 +1070,10 @@ class Vertex(
 		:param vertexWeight:        Optional, the new vertex' optional weight.
 		:param vertexKeyValuePairs: Optional, mapping (dictionary) of key-value-pairs for the new vertex.
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
 		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
-		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -1091,7 +1096,7 @@ class Vertex(
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, edgeKeyValuePairs, edgeKind)
+			edge = Edge(self, vertex, edgeID, edgeKind, edgeValue, edgeWeight, edgeKeyValuePairs)
 
 			self._outboundEdges.append(edge)
 			vertex._inboundEdges.append(edge)
@@ -1128,10 +1133,10 @@ class Vertex(
 		vertexWeight: Nullable[VertexWeightType] = None,
 		vertexKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
 		edgeID: Nullable[EdgeIDType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
-		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		edgeKind: Enum = EdgeKind.Default
+		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
 		Create a new vertex and link that vertex by an inbound edge to this vertex.
@@ -1141,10 +1146,10 @@ class Vertex(
 		:param vertexWeight:        Optional, the new vertex' optional weight.
 		:param vertexKeyValuePairs: Optional, mapping (dictionary) of key-value-pairs for the new vertex.
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
 		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
-		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -1167,7 +1172,7 @@ class Vertex(
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, edgeKeyValuePairs, edgeKind)
+			edge = Edge(vertex, self, edgeID, edgeKind, edgeValue, edgeWeight, edgeKeyValuePairs)
 
 			vertex._outboundEdges.append(edge)
 			self._inboundEdges.append(edge)
@@ -1201,20 +1206,20 @@ class Vertex(
 		self,
 		vertex: Vertex,
 		linkID: Nullable[EdgeIDType] = None,
+		linkKind: Enum = LinkKind.Default,
 		linkWeight: Nullable[EdgeWeightType] = None,
 		linkValue: Nullable[VertexValueType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		linkKind: Enum = LinkKind.Default
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Link:
 		"""
 		Create an outbound link from this vertex to the referenced vertex.
 
 		:param vertex:                   The vertex to be linked to.
 		:param linkID:                   Optional, the link's optional ID for the new link object.
+		:param linkKind:                 Optional, the kind of the new link object. Default: :attr:`LinkKind.Default`.
 		:param linkWeight:               Optional, the link's optional weight for the new link object.
 		:param linkValue:                Optional, the link's optional value for the new link object.
 		:param keyValuePairs:            Optional, mapping (dictionary) of key-value-pairs for the new link object.
-		:param linkKind:                 Optional, the kind of the new link object. Default: :attr:`LinkKind.Default`.
 		:returns:                        The link object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
 		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph - a link connects vertices *across*
@@ -1241,7 +1246,7 @@ class Vertex(
 			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
-			link = Link(self, vertex, linkID, linkValue, linkWeight, keyValuePairs, linkKind)
+			link = Link(self, vertex, linkID, linkKind, linkValue, linkWeight, keyValuePairs)
 
 			self._outboundLinks.append(link)
 			vertex._inboundLinks.append(link)
@@ -1272,20 +1277,20 @@ class Vertex(
 		self,
 		vertex: Vertex,
 		linkID: Nullable[EdgeIDType] = None,
+		linkKind: Enum = LinkKind.Default,
 		linkWeight: Nullable[EdgeWeightType] = None,
 		linkValue: Nullable[VertexValueType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		linkKind: Enum = LinkKind.Default
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Link:
 		"""
 		Create an inbound link from the referenced vertex to this vertex.
 
 		:param vertex:                   The vertex to be linked from.
 		:param linkID:                   Optional, the link's optional ID for the new link object.
+		:param linkKind:                 Optional, the kind of the new link object. Default: :attr:`LinkKind.Default`.
 		:param linkWeight:               Optional, the link's optional weight for the new link object.
 		:param linkValue:                Optional, the link's optional value for the new link object.
 		:param keyValuePairs:            Optional, mapping (dictionary) of key-value-pairs for the new link object.
-		:param linkKind:                 Optional, the kind of the new link object. Default: :attr:`LinkKind.Default`.
 		:returns:                        The link object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
 		:raises NotInDifferentSubgraphs: If both vertices are in the same subgraph - a link connects vertices *across*
@@ -1312,7 +1317,7 @@ class Vertex(
 			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
-			link = Link(vertex, self, linkID, linkValue, linkWeight, keyValuePairs, linkKind)
+			link = Link(vertex, self, linkID, linkKind, linkValue, linkWeight, keyValuePairs)
 
 			vertex._outboundLinks.append(link)
 			self._inboundLinks.append(link)
@@ -2048,8 +2053,8 @@ class BaseEdge(
 	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
 ):
 	"""
-	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
-	directed.
+	An **edge** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
+	edges are directed.
 	"""
 	_source:      Vertex  #: Vertex the edge starts at.
 	_destination: Vertex  #: Vertex the edge ends at.
@@ -2060,10 +2065,10 @@ class BaseEdge(
 		source: Vertex,
 		destination: Vertex,
 		edgeID: Nullable[EdgeIDType] = None,
+		kind: Nullable[Enum] = None,
 		value: Nullable[EdgeValueType] = None,
 		weight: Nullable[EdgeWeightType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		kind: Nullable[Enum] = None
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
 		Initialize an edge between a source and a destination vertex.
@@ -2071,21 +2076,21 @@ class BaseEdge(
 		:param source:        The source of the new edge.
 		:param destination:   The destination of the new edge.
 		:param edgeID:        Optional, unique ID for the new edge.
+		:param kind:          The kind of the new edge, a member of an enumeration.
 		:param value:         Optional, value for the new edge.
 		:param weight:        Optional, weight for the new edge.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
-		:param kind:          The kind of the new edge, a member of an enumeration.
 		:raises ValueError:   If parameter 'kind' is None.
 		:raises TypeError:    If parameter 'kind' is not an enumeration member.
 		"""
+		super().__init__(edgeID, value, weight, keyValuePairs)
+
 		if kind is None:
 			raise ValueError("Parameter 'kind' is None.")
 		elif not isinstance(kind, Enum):
 			ex = TypeError("Parameter 'kind' is not an enumeration member.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 			raise ex
-
-		super().__init__(edgeID, value, weight, keyValuePairs)
 
 		self._source = source
 		self._destination = destination
@@ -2122,11 +2127,10 @@ class BaseEdge(
 	@readonly
 	def Kind(self) -> Enum:
 		"""
-		Read-only property to get the kind (:attr:`_kind`) of an edge.
+		Read-only property to access the kind (:attr:`_kind`) of an edge.
 
 		The kind is given when the edge is created - :attr:`EdgeKind.Default` or :attr:`LinkKind.Default`, unless stated
-		otherwise. :meth:`BaseGraph.AnnotateTransitiveEdges` sets an edge's kind; it isn't updated when the graph changes
-		afterwards.
+		otherwise.
 
 		:returns: The kind of the edge.
 		"""
@@ -2145,10 +2149,10 @@ class Edge(
 	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
 ):
 	"""
-	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
-	directed.
+	An **edge** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
+	edges are directed.
 
-	:meth:`BaseGraph.AnnotateTransitiveEdges` marks an edge as :attr:`EdgeKind.Direct` or :attr:`EdgeKind.Transitive`.
+	The kind of an edge might be modified by graph algorithms like :meth:`BaseGraph.AnnotateTransitiveEdges`.
 	"""
 
 	def __init__(
@@ -2156,10 +2160,10 @@ class Edge(
 		source: Vertex,
 		destination: Vertex,
 		edgeID: Nullable[EdgeIDType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		value: Nullable[EdgeValueType] = None,
 		weight: Nullable[EdgeWeightType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		edgeKind: Enum = EdgeKind.Default
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
 		Initialize an edge between two vertices of the same graph or subgraph.
@@ -2167,11 +2171,11 @@ class Edge(
 		:param source:          The source of the new edge.
 		:param destination:     The destination of the new edge.
 		:param edgeID:          Optional, unique ID for the new edge.
+		:param edgeKind:        Optional, kind of the new edge - a member of :class:`EdgeKind` or of an enumeration of the
+		                        user's own. Default: :attr:`EdgeKind.Default`.
 		:param value:           Optional, value for the new edge.
 		:param weight:          Optional, weight for the new edge.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
-		:param edgeKind:        Optional, kind of the new edge - a member of :class:`EdgeKind` or of an enumeration of the
-		                        user's own. Default: :attr:`EdgeKind.Default`.
 		:raises TypeError:      If parameter 'weight' is not of the graph's edge weight type.
 		:raises ValueError:     If parameter 'edgeKind' is None.
 		:raises TypeError:      If parameter 'edgeKind' is not an enumeration member.
@@ -2195,12 +2199,10 @@ class Edge(
 			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
-		if edgeKind is None:
-			raise ValueError("Parameter 'edgeKind' is None.")
 		if source._graph is not destination._graph:
 			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, edgeID, value, weight, keyValuePairs, edgeKind)
+		super().__init__(source, destination, edgeID, edgeKind, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
 		"""
@@ -2248,8 +2250,8 @@ class Link(
 	Generic[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]
 ):
 	"""
-	A **link** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All links are
-	directed.
+	A **link** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
+	links are directed.
 	"""
 
 	def __init__(
@@ -2257,10 +2259,10 @@ class Link(
 		source: Vertex,
 		destination: Vertex,
 		linkID: Nullable[LinkIDType] = None,
+		linkKind: Enum = LinkKind.Default,
 		value: Nullable[LinkValueType] = None,
 		weight: Nullable[LinkWeightType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		linkKind: Enum = LinkKind.Default
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
 		Initialize a link between two vertices of different subgraphs.
@@ -2268,11 +2270,11 @@ class Link(
 		:param source:          The source of the new link.
 		:param destination:     The destination of the new link.
 		:param linkID:          Optional, unique ID for the new link.
+		:param linkKind:        Optional, kind of the new link - a member of :class:`LinkKind` or of an enumeration of the
+		                        user's own. Default: :attr:`LinkKind.Default`.
 		:param value:           Optional, value for the new v.
 		:param weight:          Optional, weight for the new link.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
-		:param linkKind:        Optional, kind of the new link - a member of :class:`LinkKind` or of an enumeration of the
-		                        user's own. Default: :attr:`LinkKind.Default`.
 		:raises TypeError:      If parameter 'weight' is not of the graph's link weight type.
 		:raises ValueError:     If parameter 'linkKind' is None.
 		:raises TypeError:      If parameter 'linkKind' is not an enumeration member.
@@ -2296,12 +2298,10 @@ class Link(
 			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
-		if linkKind is None:
-			raise ValueError("Parameter 'linkKind' is None.")
 		if source._graph is not destination._graph:
 			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, linkID, value, weight, keyValuePairs, linkKind)
+		super().__init__(source, destination, linkID, linkKind, value, weight, keyValuePairs)
 
 	def Delete(self) -> None:
 		"""
@@ -2870,31 +2870,56 @@ class BaseGraph(
 
 		.. seealso::
 
+		   :meth:`IterateTransitiveEdgesWithPath`
+		      |rarr| Iterate the edges a longer path already implies, each with that path.
 		   :meth:`RemoveTransitiveEdges`
 		      |rarr| Remove the edges a longer path already implies.
 		   :meth:`IterateTopologically`
 		      |rarr| Iterate all or selected vertices in topological order.
 		"""
-		for edge, _ in self._IterateTransitiveEdges(False):
-			yield edge
+		if self.VertexCount == 0:
+			return
 
-	def _IterateTransitiveEdges(self, withPath: bool) -> Generator[tuple[Edge, Nullable[tuple[Vertex, ...]]], None, None]:
+		descendants: dict[Vertex, set[Vertex]] = {}
+
+		# A vertex is yielded after every vertex it has an edge to, so its successors' descendants are known already.
+		for vertex in self.IterateTopologically():
+			successors =    set()
+			indirect =      set()
+			outboundEdges = tuple(vertex._outboundEdges)
+			for edge in outboundEdges:
+				indirect |= descendants[edge._destination]
+
+			for edge in outboundEdges:
+				if edge._destination in indirect or edge._destination in successors:
+					yield edge
+				else:
+					successors.add(edge._destination)
+
+			descendants[vertex] = successors | indirect
+
+	def IterateTransitiveEdgesWithPath(self) -> Generator[tuple[Edge, tuple[Vertex, ...]], None, None]:
 		"""
-		Iterate the edges a longer path already implies, and optionally that path.
+		Iterate the edges a longer path already implies, each with that path.
 
-		For every vertex, the vertices reachable from it are mapped to the direct successor they are reached through, so a
-		path follows direct edges only.
+		The edges are those :meth:`IterateTransitiveEdges` yields. An edge's path is a tuple of vertices from its source to
+		its destination along direct edges, e.g. ``(A, B, C)`` for the edge ``A → C``. An edge is yielded as soon as it is
+		found, and may be removed while iterating.
 
-		:param withPath:    If ``True``, the path from the edge's source to its destination is computed.
-		:returns:           A generator to iterate the implied edges, each with its path or ``None``.
+		:returns:           A generator to iterate the implied edges, each with its path.
 		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`IterateTransitiveEdges`
+		      |rarr| Iterate the edges a longer path already implies.
 		"""
 		if self.VertexCount == 0:
 			return
 
+		# For every vertex, the vertices reachable from it are mapped to the direct successor they are reached through.
 		reachable: dict[Vertex, dict[Vertex, Vertex]] = {}
 
-		# A vertex is yielded after every vertex it has an edge to, so its successors' reachable vertices are known already.
 		for vertex in self.IterateTopologically():
 			outboundEdges = tuple(vertex._outboundEdges)
 			indirect =      set()
@@ -2917,16 +2942,13 @@ class BaseGraph(
 			reachable[vertex] = via
 
 			for edge in transitiveEdges:
-				if withPath:
-					path =    [vertex]
-					current = vertex
-					while current is not edge._destination:
-						current = reachable[current][edge._destination]
-						path.append(current)
+				path =    [vertex]
+				current = vertex
+				while current is not edge._destination:
+					current = reachable[current][edge._destination]
+					path.append(current)
 
-					yield edge, tuple(path)
-				else:
-					yield edge, None
+				yield edge, tuple(path)
 
 	def RemoveTransitiveEdges(self) -> None:
 		"""
@@ -2952,7 +2974,7 @@ class BaseGraph(
 		self,
 		directKind: Enum = EdgeKind.Direct,
 		transitiveKind: Enum = EdgeKind.Transitive,
-		keyName: Nullable[DictKeyType] = None
+		keyName: Nullable[str] = None
 	) -> None:
 		"""
 		Mark every edge as direct or transitive, and optionally record the path implying a transitive edge.
@@ -2972,6 +2994,7 @@ class BaseGraph(
 		                       computed.
 		:raises ValueError:    If parameter 'directKind' or 'transitiveKind' is None.
 		:raises TypeError:     If parameter 'directKind' or 'transitiveKind' is not an enumeration member.
+		:raises TypeError:     If parameter 'keyName' is not a string.
 		:raises CycleError:    If the graph contains a cycle, which has no unique transitive reduction.
 
 		.. seealso::
@@ -2986,6 +3009,10 @@ class BaseGraph(
 				ex = TypeError(f"Parameter '{name}' is not an enumeration member.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 				raise ex
+		if keyName is not None and not isinstance(keyName, str):
+			ex = TypeError("Parameter 'keyName' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(keyName)}'.")
+			raise ex
 
 		if self.HasCycle():
 			raise CycleError("Graph has a cycle. Thus, no unique transitive reduction exists.")
@@ -2995,9 +3022,12 @@ class BaseGraph(
 			if keyName is not None:
 				edge._dict.pop(keyName, None)
 
-		for edge, path in self._IterateTransitiveEdges(keyName is not None):
-			edge._kind = transitiveKind
-			if keyName is not None:
+		if keyName is None:
+			for edge in self.IterateTransitiveEdges():
+				edge._kind = transitiveKind
+		else:
+			for edge, path in self.IterateTransitiveEdgesWithPath():
+				edge._kind =          transitiveKind
 				edge._dict[keyName] = path
 
 

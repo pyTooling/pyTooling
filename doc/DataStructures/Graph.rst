@@ -223,7 +223,8 @@ subgraph is reduced by calling the method on it.
      subgraph.RemoveTransitiveEdges()
 
 :meth:`~pyTooling.Graph.BaseGraph.IterateTransitiveEdges` yields an edge as soon as it is found, so it can be removed
-while iterating.
+while iterating. :meth:`~pyTooling.Graph.BaseGraph.IterateTransitiveEdgesWithPath` yields each edge with the path
+implying it, a tuple of vertices along direct edges.
 
 Instead of removing them, :meth:`~pyTooling.Graph.BaseGraph.AnnotateTransitiveEdges` marks the edges: every edge's
 :attr:`~pyTooling.Graph.BaseEdge.Kind` becomes :attr:`EdgeKind.Direct <pyTooling.Graph.EdgeKind.Direct>` or

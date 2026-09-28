@@ -1422,6 +1422,24 @@ class GraphOperations(Iterate):
 
 		self.assertEqual(6, g.EdgeCount)
 
+	def test_TransitiveEdgesWithPath(self) -> None:
+		"""Every implied edge comes with the path of direct edges implying it."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		for u, v in ((a, b), (b, c), (c, d), (a, c), (a, d), (b, d)):
+			u.EdgeToVertex(v)
+
+		paths = {
+			(edge.Source.ID, edge.Destination.ID): tuple(vertex.ID for vertex in path)
+			for edge, path in g.IterateTransitiveEdgesWithPath()
+		}
+
+		self.assertDictEqual(
+			{("A", "C"): ("A", "B", "C"), ("A", "D"): ("A", "B", "C", "D"), ("B", "D"): ("B", "C", "D")},
+			paths
+		)
+		self.assertSetEqual(set(paths), {(edge.Source.ID, edge.Destination.ID) for edge in g.IterateTransitiveEdges()})
+
 	def test_AnnotateTransitiveEdges(self) -> None:
 		"""Every edge becomes direct or transitive; without a key name, no path is recorded."""
 		g = Graph()
@@ -1531,6 +1549,8 @@ class GraphOperations(Iterate):
 			g.AnnotateTransitiveEdges(directKind=None)
 		with self.assertRaises(TypeError):
 			g.AnnotateTransitiveEdges(transitiveKind="implied")
+		with self.assertRaises(TypeError):
+			g.AnnotateTransitiveEdges(keyName=1)
 
 	def test_AnnotateTransitiveEdges_Cycle(self) -> None:
 		"""A graph with a cycle is left unchanged."""
@@ -1565,6 +1585,7 @@ class GraphOperations(Iterate):
 		self.assertIs(EdgeKind.Direct, ad.Kind)
 		self.assertIs(Dependency.Needed, ed.Kind)
 		self.assertIs(EdgeKind.Direct, Edge(a, b, edgeKind=EdgeKind.Direct).Kind)
+		self.assertIs(EdgeKind.Direct, a.EdgeToVertex(b, "AB", EdgeKind.Direct).Kind)
 
 		with self.assertRaises(ValueError):
 			Edge(a, b, edgeKind=None)
@@ -1591,6 +1612,7 @@ class GraphOperations(Iterate):
 		self.assertIs(LinkKind.Default, ab.Kind)
 		self.assertIs(Relation.Calls, ca.Kind)
 		self.assertIs(Relation.Calls, Link(a, c, linkKind=Relation.Calls).Kind)
+		self.assertIs(Relation.Calls, b.LinkToVertex(a, "BA", Relation.Calls).Kind)
 
 		with self.assertRaises(ValueError):
 			Link(a, b, linkKind=None)
