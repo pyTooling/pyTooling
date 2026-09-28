@@ -2455,6 +2455,8 @@ class BaseGraph(
 		"""
 		Iterate all or selected vertices in topological order.
 
+		An edge from ``A`` to ``B`` reads as *A depends on B*, and a vertex is yielded after every vertex it depends on.
+
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
 		:param predicate:      Optional, filter function accepting any vertex and returning a boolean.
