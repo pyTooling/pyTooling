@@ -1059,8 +1059,8 @@ class Vertex(
 		edgeID: Nullable[EdgeIDType] = None,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
-		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		edgeKind: Enum = EdgeKind.Default
+		edgeKind: Enum = EdgeKind.Default,
+		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
 		Create a new vertex and link that vertex by an outbound edge from this vertex.
@@ -1072,8 +1072,8 @@ class Vertex(
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
-		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
+		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -1135,8 +1135,8 @@ class Vertex(
 		edgeID: Nullable[EdgeIDType] = None,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
-		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
-		edgeKind: Enum = EdgeKind.Default
+		edgeKind: Enum = EdgeKind.Default,
+		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
 		Create a new vertex and link that vertex by an inbound edge to this vertex.
@@ -1148,8 +1148,8 @@ class Vertex(
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
-		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
+		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
 		:raises NotInSameGraph:     If both vertices are not in the same graph or subgraph. |br|
@@ -2162,7 +2162,7 @@ class Edge(
 		edgeID: Nullable[EdgeIDType] = None,
 		value: Nullable[EdgeValueType] = None,
 		weight: Nullable[EdgeWeightType] = None,
-		edgeKind: Enum = EdgeKind.Default,
+		kind: Enum = EdgeKind.Default,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
@@ -2173,12 +2173,12 @@ class Edge(
 		:param edgeID:          Optional, unique ID for the new edge.
 		:param value:           Optional, value for the new edge.
 		:param weight:          Optional, weight for the new edge.
-		:param edgeKind:        Optional, kind of the new edge - a member of :class:`EdgeKind` or of an enumeration of the
+		:param kind:            Optional, kind of the new edge - a member of :class:`EdgeKind` or of an enumeration of the
 		                        user's own. Default: :attr:`EdgeKind.Default`.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:      If parameter 'weight' is not of the graph's edge weight type.
-		:raises ValueError:     If parameter 'edgeKind' is None.
-		:raises TypeError:      If parameter 'edgeKind' is not an enumeration member.
+		:raises ValueError:     If parameter 'kind' is None.
+		:raises TypeError:      If parameter 'kind' is not an enumeration member.
 		:raises NotInSameGraph: If source and destination vertex are not in the same graph or subgraph.
 		"""
 		if not isinstance(source, Vertex):
@@ -2202,7 +2202,7 @@ class Edge(
 		if source._graph is not destination._graph:
 			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, edgeID, value, weight, edgeKind, keyValuePairs)
+		super().__init__(source, destination, edgeID, value, weight, kind, keyValuePairs)
 
 	def Delete(self) -> None:
 		"""
@@ -2261,7 +2261,7 @@ class Link(
 		linkID: Nullable[LinkIDType] = None,
 		value: Nullable[LinkValueType] = None,
 		weight: Nullable[LinkWeightType] = None,
-		linkKind: Enum = LinkKind.Default,
+		kind: Enum = LinkKind.Default,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
@@ -2272,12 +2272,12 @@ class Link(
 		:param linkID:          Optional, unique ID for the new link.
 		:param value:           Optional, value for the new v.
 		:param weight:          Optional, weight for the new link.
-		:param linkKind:        Optional, kind of the new link - a member of :class:`LinkKind` or of an enumeration of the
+		:param kind:            Optional, kind of the new link - a member of :class:`LinkKind` or of an enumeration of the
 		                        user's own. Default: :attr:`LinkKind.Default`.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:      If parameter 'weight' is not of the graph's link weight type.
-		:raises ValueError:     If parameter 'linkKind' is None.
-		:raises TypeError:      If parameter 'linkKind' is not an enumeration member.
+		:raises ValueError:     If parameter 'kind' is None.
+		:raises TypeError:      If parameter 'kind' is not an enumeration member.
 		:raises NotInSameGraph: If source and destination vertex are in the same subgraph, where an edge is to be used.
 		"""
 		if not isinstance(source, Vertex):
@@ -2301,7 +2301,7 @@ class Link(
 		if source._graph is not destination._graph:
 			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, linkID, value, weight, linkKind, keyValuePairs)
+		super().__init__(source, destination, linkID, value, weight, kind, keyValuePairs)
 
 	def Delete(self) -> None:
 		"""
