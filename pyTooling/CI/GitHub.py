@@ -56,21 +56,21 @@ is an error rather than a comparison that never matches. A conclusion is reporte
 The model carries no dependency on what is done with it. Converting a :class:`Pipeline` into a software execution
 trace, a graph or a report is a consumer of this model.
 """
-from __future__            import annotations
+from __future__                import annotations
 
-from datetime              import datetime, timezone
-from typing                import Optional as Nullable, ClassVar, Iterable, Self, Union
+from datetime                  import datetime, timezone
+from typing                    import Optional as Nullable, ClassVar, Iterable, Self, Union
 
-from pyTooling.CI          import JSONObject
-from pyTooling.CI.Pipeline import MatrixInstanceMixin, Outcome
-from pyTooling.CI.Pipeline import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
-from pyTooling.CI.Pipeline import MatrixWorkflow as CIMatrixWorkflow, Pipeline as CIPipeline
-from pyTooling.CI.Pipeline import PipelineGroup as CIPipelineGroup, Step as CIStep, Workflow as CIWorkflow
-from pyTooling.Common      import getFullyQualifiedName, parseISO8601Timestamp, StringEnum
-from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.CI              import JSONObject
+from pyTooling.CI.Pipeline     import MatrixInstanceMixin, Outcome
+from pyTooling.CI.Pipeline     import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
+from pyTooling.CI.Pipeline     import MatrixWorkflow as CIMatrixWorkflow, Pipeline as CIPipeline
+from pyTooling.CI.Pipeline     import PipelineGroup as CIPipelineGroup, Step as CIStep, Workflow as CIWorkflow
+from pyTooling.Common          import getFullyQualifiedName, parseISO8601Timestamp, StringEnum
+from pyTooling.Decorators      import export, readonly
+from pyTooling.Exceptions      import ToolingException
 from pyTooling.GenericPath.URL import URL
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses     import ExtendedType
 
 
 @export
@@ -278,12 +278,13 @@ def _splitMatrixJobName(name: str) -> tuple[str, Nullable[list[str]]]:
 
 
 @export
-class StatusMixin(metaclass=ExtendedType, mixin=True):
+class StatusMixin(metaclass=ExtendedType, mixin=True, expects=("_outcome",)):
 	"""
 	Mixin-class for the elements GitHub reports: a workflow run, a job and a step.
 
 	GitHub reports a :class:`Status` and, once completed, a :class:`Conclusion` for each of them, and a URL on
-	github.com for a run and a job. A called workflow and a matrix aren't reported, so they have none of it.
+	github.com for a run and a job. A called workflow and a matrix aren't reported, so they have none of it. The
+	conclusion is also the element's generic :attr:`~pyTooling.CI.Pipeline.Base.Outcome`.
 	"""
 
 	_status:     Nullable[Status]      #: State the element is in.
@@ -324,6 +325,8 @@ class StatusMixin(metaclass=ExtendedType, mixin=True):
 		self._status =     status
 		self._conclusion = conclusion
 		self._url =        url
+		if conclusion is not None:
+			self._outcome = conclusion.ToOutcome()
 
 	@readonly
 	def Status(self) -> Nullable[Status]:
@@ -606,6 +609,9 @@ class Pipeline(CIPipeline, StatusMixin):
 				ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
 				raise ex
 
+		super().__init__(
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent
+		)
 		StatusMixin.__init__(self, status, conclusion, url)
 
 		self._id =           identifier
@@ -616,11 +622,6 @@ class Pipeline(CIPipeline, StatusMixin):
 		self._event =        event
 		self._gitReference = gitReference
 		self._sha =          sha
-
-		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt,
-			outcome=None if conclusion is None else conclusion.ToOutcome(), parent=parent
-		)
 
 	@readonly
 	def ID(self) -> Nullable[int]:
@@ -881,16 +882,14 @@ class Job(CIJob, StatusMixin):
 
 				stepList.append(step)
 
+		super().__init__(
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent
+		)
 		StatusMixin.__init__(self, status, conclusion, url)
 
 		self._id =              identifier
 		self._runnerName =      runnerName
 		self._runnerGroupName = runnerGroupName
-
-		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt,
-			outcome=None if conclusion is None else conclusion.ToOutcome(), parent=parent
-		)
 
 		for step in stepList:
 			step._parent =   self
@@ -1095,12 +1094,11 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
 		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
 		"""
-		MatrixInstanceMixin.__init__(self, dimensionValues)
-
 		super().__init__(
 			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels, runnerName,
 			runnerGroupName, steps, parent=parent
 		)
+		MatrixInstanceMixin.__init__(self, dimensionValues)
 
 	def __str__(self) -> str:
 		"""
@@ -1210,14 +1208,12 @@ class Step(CIStep, StatusMixin):
 			ex.add_note(f"Got value '{number}'.")
 			raise ex
 
+		super().__init__(
+			name, startedAt=startedAt, completedAt=completedAt, parent=parent
+		)
 		StatusMixin.__init__(self, status, conclusion)
 
 		self._number = number
-
-		super().__init__(
-			name, startedAt=startedAt, completedAt=completedAt,
-			outcome=None if conclusion is None else conclusion.ToOutcome(), parent=parent
-		)
 
 	@readonly
 	def Number(self) -> Nullable[int]:

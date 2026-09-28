@@ -424,6 +424,7 @@ class Outcomes(Testcase):
 			((Outcome.Success, Outcome.Skip),                          Outcome.Success),
 			((Outcome.Skip, Outcome.Skip),                             Outcome.Skip),
 			((Outcome.Success, None),                                  None),
+			((None, Outcome.Failure),                                  None),
 			((),                                                       None),
 		):
 			with self.subTest(outcomes=outcomes):
@@ -532,31 +533,97 @@ class Dependencies(Testcase):
 		self.assertEqual("'Build' can't need itself.", str(context.exception))
 
 	def test_AddNeed_Cycle(self) -> None:
+		"""Adding a need doesn't search for cycles; validating the completed pipeline does."""
 		pipeline = Pipeline("Pipeline")
 		a, b, c, d = (Job(name, parent=pipeline) for name in "ABCD")
 		b.AddNeed(a)
 		c.AddNeed(b)
 		d.AddNeed(c)
 		c.AddNeed(a)
+		a.AddNeed(d)
+
+		self.assertListEqual([d], a.Needs)
 
 		with self.assertRaises(NeedDependencyCycleError) as context:
-			a.AddNeed(d)
+			pipeline.Validate()
 
-		self.assertEqual("'A' can't need 'D', because 'D' needs 'A' already.", str(context.exception))
-		self.assertListEqual(["Cycle: A -> D -> C -> A."], context.exception.__notes__)
-		self.assertListEqual([], a.Needs)
-		self.assertListEqual([], d.Dependents)
+		self.assertEqual("The needs of the elements of 'Pipeline' form a cycle.", str(context.exception))
+		self.assertListEqual(["Cycle: A -> D -> C -> B -> A."], context.exception.__notes__)
 
-	def test_AddNeed_DirectCycle(self) -> None:
+	def test_Validate_DirectCycle(self) -> None:
 		pipeline = Pipeline("Pipeline")
 		a = Job("A", parent=pipeline)
 		b = Matrix("B", parent=pipeline)
 		b.AddNeed(a)
+		a.AddNeed(b)
 
 		with self.assertRaises(NeedDependencyCycleError) as context:
-			a.AddNeed(b)
+			pipeline.Validate()
 
 		self.assertListEqual(["Cycle: A -> B -> A."], context.exception.__notes__)
+
+	def test_Validate_Acyclic(self) -> None:
+		"""A diamond has two paths to one element, but no cycle."""
+		pipeline = Pipeline("Pipeline")
+		a, b, c, d = (Job(name, parent=pipeline) for name in "ABCD")
+		b.AddNeed(a)
+		c.AddNeed(a)
+		d.AddNeed(b)
+		d.AddNeed(c)
+
+		pipeline.Validate()
+
+	def test_Validate_NestedGroup(self) -> None:
+		"""A cycle in a called workflow is found from the pipeline."""
+		pipeline = Pipeline("Pipeline")
+		workflow = Workflow("Called", parent=pipeline)
+		a, b = (Job(name, parent=workflow) for name in "AB")
+		a.AddNeed(b)
+		b.AddNeed(a)
+
+		with self.assertRaises(NeedDependencyCycleError) as context:
+			pipeline.Validate()
+
+		self.assertEqual("The needs of the elements of 'Called' form a cycle.", str(context.exception))
+
+	def test_Validate_PipelineGroup(self) -> None:
+		group = PipelineGroup("0123abcd")
+		first = Pipeline("First", parent=group)
+		second = Pipeline("Second", parent=group)
+		first.AddNeed(second)
+		second.AddNeed(first)
+
+		with self.assertRaises(NeedDependencyCycleError) as context:
+			group.Validate()
+
+		self.assertListEqual(["Cycle: First -> Second -> First."], context.exception.__notes__)
+
+	def test_Constructor(self) -> None:
+		"""Needs and dependents can be given when an element is created."""
+		pipeline = Pipeline("Pipeline")
+		a = Job("A", parent=pipeline)
+		d = Job("D", parent=pipeline)
+		b = Matrix("B", parent=pipeline, needs=[a])
+		c = Workflow("C", parent=pipeline, needs=(a, b), dependents=[d])
+
+		self.assertListEqual([a], b.Needs)
+		self.assertListEqual([a, b], c.Needs)
+		self.assertListEqual([b, c], a.Dependents)
+		self.assertListEqual([c], d.Needs)
+
+	def test_Constructor_Errors(self) -> None:
+		pipeline = Pipeline("Pipeline")
+		a = Job("A", parent=pipeline)
+		other = Job("Other", parent=Pipeline("Other"))
+
+		with self.assertRaises(TypeError):
+			Job("B", parent=pipeline, needs=42)
+		with self.assertRaises(ValueError):
+			Job("C", parent=pipeline, dependents=[None])
+		with self.assertRaises(TypeError):
+			Job("D", parent=pipeline, dependents=["A"])
+		with self.assertRaises(NeedDependencyError):
+			Job("E", parent=pipeline, needs=[other])
 
 	def test_Exceptions(self) -> None:
 		self.assertTrue(issubclass(NeedDependencyCycleError, NeedDependencyError))

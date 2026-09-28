@@ -88,8 +88,9 @@ Version 10.x (2026)
 
      * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.Pipeline.DependencyMixin.AddNeed` links
        two siblings, records the reverse link in :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Dependents`, and
-       rejects a need outside the group with :exc:`~pyTooling.CI.Pipeline.NeedDependencyError` and one closing a cycle
-       with :exc:`~pyTooling.CI.Pipeline.NeedDependencyCycleError`, which names the cycle.
+       rejects a need outside the group with :exc:`~pyTooling.CI.Pipeline.NeedDependencyError`; needs and dependents
+       can also be given when an element is created. :meth:`~pyTooling.CI.Pipeline.JobGroup.Validate` checks a
+       completed pipeline for cycles and names one with :exc:`~pyTooling.CI.Pipeline.NeedDependencyCycleError`.
      * :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts a pipeline into a :class:`~pyTooling.Graph.Graph`:
        an element is a vertex whose ID and value are the element, a dependency an edge, a called workflow or a
        matrix a subgraph linked from the group's vertex. By default the graph and its subgraphs are reduced to their
