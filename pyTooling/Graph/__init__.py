@@ -122,6 +122,9 @@ EdgeDictKeyType = TypeVar("EdgeDictKeyType", bound=Hashable)
 EdgeDictValueType = TypeVar("EdgeDictValueType")
 """A type variable for an edge's dictionary values."""
 
+EdgeKindType = TypeVar("EdgeKindType", bound=Enum)
+"""A type variable for an edge's kind, e.g. :class:`EdgeKind`."""
+
 LinkIDType = TypeVar("LinkIDType", bound=Hashable)
 """A type variable for an link's ID."""
 
@@ -136,6 +139,9 @@ LinkDictKeyType = TypeVar("LinkDictKeyType", bound=Hashable)
 
 LinkDictValueType = TypeVar("LinkDictValueType")
 """A type variable for an link's dictionary values."""
+
+LinkKindType = TypeVar("LinkKindType", bound=Enum)
+"""A type variable for a link's kind, e.g. :class:`LinkKind`."""
 
 ComponentDictKeyType = TypeVar("ComponentDictKeyType", bound=Hashable)
 """A type variable for a component's dictionary keys."""
@@ -524,23 +530,24 @@ class BaseWithVertices(
 		DictKeyType, DictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""Base-class for named graph elements owning a set of vertices - a subgraph, a view or a component."""
 
 	_graph:    Graph[
 								GraphDictKeyType, GraphDictValueType,
+								Any, Any, Any, Any, Any, Any,
 								VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-								LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+								LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 							]   #: Field storing a reference to the graph.
 	_vertices: set[Vertex[
 								GraphDictKeyType, GraphDictValueType,
 								VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-								LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+								LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 							]]  #: Field storing a set of vertices.
 
 	def __init__(
@@ -617,22 +624,22 @@ class Vertex(
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
 	A **vertex** can have a unique ID, a value and attached meta information as key-value-pairs. A vertex has references
 	to inbound and outbound edges, thus a graph can be traversed in reverse.
 	"""
-	_graph:     BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]  #: Field storing a reference to the graph.
-	_subgraph:  Subgraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]   #: Field storing a reference to the subgraph.
-	_component: Component                                                                                                                                                                                                                #: Field storing a reference to the component this vertex belongs to.
-	_views:     dict[Hashable, View]                                                                                                                                                                                                     #: Field storing the views this vertex is part of, by view name.
-	_inboundEdges:   list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of inbound edges.
-	_outboundEdges:  list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of outbound edges.
-	_inboundLinks:   list[Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of inbound links.
-	_outboundLinks:  list[Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of outbound links.
+	_graph:         BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]  #: Field storing a reference to the graph.
+	_subgraph:      Subgraph[Any, Any, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]                               #: Field storing a reference to the subgraph.
+	_component:     Component                                                                                                                                                                                                                                                                                                                           #: Field storing a reference to the component this vertex belongs to.
+	_views:         dict[Hashable, View]                                                                                                                                                                                                                                                                                                                #: Field storing the views this vertex is part of, by view name.
+	_inboundEdges:  list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of inbound edges.
+	_outboundEdges: list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of outbound edges.
+	_inboundLinks:  list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of inbound links.
+	_outboundLinks: list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of outbound links.
 
 	def __init__(
 		self,
@@ -2050,15 +2057,15 @@ class Vertex(
 @export
 class BaseEdge(
 	BaseWithIDValueAndWeight[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
-	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
+	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]
 ):
 	"""
 	An **edge** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
 	edges are directed.
 	"""
-	_source:      Vertex  #: Vertex the edge starts at.
-	_destination: Vertex  #: Vertex the edge ends at.
-	_kind:        Enum    #: Kind of the edge, e.g. an :class:`EdgeKind` or a :class:`LinkKind` member.
+	_source:      Vertex        #: Vertex the edge starts at.
+	_destination: Vertex        #: Vertex the edge ends at.
+	_kind:        EdgeKindType  #: Kind of the edge, e.g. an :class:`EdgeKind` or a :class:`LinkKind` member.
 
 	def __init__(
 		self,
@@ -2067,7 +2074,7 @@ class BaseEdge(
 		edgeID: Nullable[EdgeIDType] = None,
 		value: Nullable[EdgeValueType] = None,
 		weight: Nullable[EdgeWeightType] = None,
-		kind: Nullable[Enum] = None,
+		kind: Nullable[EdgeKindType] = None,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
@@ -2125,7 +2132,7 @@ class BaseEdge(
 		return self._destination
 
 	@readonly
-	def Kind(self) -> Enum:
+	def Kind(self) -> EdgeKindType:
 		"""
 		Read-only property to access the kind (:attr:`_kind`) of an edge.
 
@@ -2145,8 +2152,8 @@ class BaseEdge(
 
 @export
 class Edge(
-	BaseEdge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
-	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
+	BaseEdge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType],
+	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]
 ):
 	"""
 	An **edge** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
@@ -2246,8 +2253,8 @@ class Edge(
 
 @export
 class Link(
-	BaseEdge[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType],
-	Generic[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]
+	BaseEdge[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType],
+	Generic[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]
 ):
 	"""
 	A **link** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
@@ -2353,20 +2360,20 @@ class BaseGraph(
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
 	.. todo:: GRAPH::BaseGraph Needs documentation.
 	"""
 
-	_verticesWithID:    dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
-	_verticesWithoutID: list[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices without an ID, in insertion order.
-	_edgesWithID:       dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
-	_edgesWithoutID:    list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
-	_linksWithID:       dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
-	_linksWithoutID:    list[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
+	_verticesWithID:    dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
+	_verticesWithoutID: list[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Vertices without an ID, in insertion order.
+	_edgesWithID:       dict[EdgeIDType, Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
+	_edgesWithoutID:    list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
+	_linksWithID:       dict[LinkIDType, Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
+	_linksWithoutID:    list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
 
 	def __init__(
 		self,
@@ -2426,7 +2433,7 @@ class BaseGraph(
 		:returns: The number of links in this graph."""
 		return len(self._linksWithoutID) + len(self._linksWithID)
 
-	def IterateVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices of a graph.
 
@@ -2448,7 +2455,7 @@ class BaseGraph(
 				if predicate(vertex):
 					yield vertex
 
-	def IterateRoots(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateRoots(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected roots (vertices without inbound edges / without predecessors) of a graph.
 
@@ -2483,7 +2490,7 @@ class BaseGraph(
 				if len(vertex._inboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	def IterateLeafs(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateLeafs(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected leafs (vertices without outbound edges / without successors) of a graph.
 
@@ -2518,13 +2525,13 @@ class BaseGraph(
 				if len(vertex._outboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	# def IterateBFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	# def IterateBFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 	# 	raise NotImplementedError()
 	#
-	# def IterateDFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	# def IterateDFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 	# 	raise NotImplementedError()
 
-	def IterateTopologically(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateTopologically(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices in topological order.
 
@@ -2591,7 +2598,7 @@ class BaseGraph(
 
 		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
-	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected edges of a graph.
 
@@ -2613,7 +2620,7 @@ class BaseGraph(
 				if predicate(edge):
 					yield edge
 
-	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected links of a graph.
 
@@ -3038,14 +3045,14 @@ class Subgraph(
 	BaseGraph[
 		SubgraphDictKeyType, SubgraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		SubgraphDictKeyType, SubgraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
@@ -3113,15 +3120,15 @@ class View(
 		ViewDictKeyType, ViewDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		ViewDictKeyType, ViewDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
@@ -3168,15 +3175,15 @@ class Component(
 		ComponentDictKeyType, ComponentDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		ComponentDictKeyType, ComponentDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
@@ -3222,8 +3229,8 @@ class Graph(
 	BaseGraph[
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
@@ -3231,8 +3238,8 @@ class Graph(
 		SubgraphDictKeyType, SubgraphDictValueType,
 		ViewDictKeyType, ViewDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
@@ -3240,9 +3247,9 @@ class Graph(
 	all nodes. Nodes are instances of :class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
 	made of :class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
-	_subgraphs:         set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]                                           #: Subgraphs of this graph.
-	_views:             set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]                 #: Views defined on this graph.
-	_components:        set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Connected components of this graph.
+	_subgraphs:         set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                                           #: Subgraphs of this graph.
+	_views:             set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                 #: Views defined on this graph.
+	_components:        set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Connected components of this graph.
 
 	def __init__(
 		self,
@@ -3316,7 +3323,7 @@ class Graph(
 		:returns: The number of components in this graph."""
 		return len(self._components)
 
-	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]:
+	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]:
 		"""
 		Iterate all vertices of this graph.
 
