@@ -36,7 +36,7 @@ from enum     import Enum
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
 
 from pyTooling.Decorators import readonly
-from pyTooling.Graph      import Graph, Vertex, Edge, EdgeKind, Link, Subgraph, View, CycleError
+from pyTooling.Graph      import Graph, Vertex, Edge, EdgeKind, Link, LinkKind, Subgraph, View, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
@@ -1423,7 +1423,7 @@ class GraphOperations(Iterate):
 		self.assertEqual(6, g.EdgeCount)
 
 	def test_AnnotateTransitiveEdges(self) -> None:
-		"""Every edge gets a kind; a transitive edge gets the path of direct edges implying it."""
+		"""Every edge becomes direct or transitive; without a key name, no path is recorded."""
 		g = Graph()
 		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
 		ab = a.EdgeToVertex(b)
@@ -1432,8 +1432,7 @@ class GraphOperations(Iterate):
 		ac = a.EdgeToVertex(c)
 		ad = a.EdgeToVertex(d)
 
-		self.assertIs(EdgeKind.Direct, ad.Kind)
-		self.assertIsNone(ad.TransitivePath)
+		self.assertIs(EdgeKind.Default, ad.Kind)
 
 		g.AnnotateTransitiveEdges()
 
@@ -1441,12 +1440,27 @@ class GraphOperations(Iterate):
 		for edge in (ab, bc, cd):
 			with self.subTest(edge=(edge.Source.ID, edge.Destination.ID)):
 				self.assertIs(EdgeKind.Direct, edge.Kind)
-				self.assertIsNone(edge.TransitivePath)
 
-		self.assertIs(EdgeKind.Transitive, ac.Kind)
-		self.assertTupleEqual((a, b, c), ac.TransitivePath)
-		self.assertIs(EdgeKind.Transitive, ad.Kind)
-		self.assertTupleEqual((a, b, c, d), ad.TransitivePath)
+		for edge in (ac, ad):
+			with self.subTest(edge=(edge.Source.ID, edge.Destination.ID)):
+				self.assertIs(EdgeKind.Transitive, edge.Kind)
+				self.assertNotIn("transitive.path", edge)
+
+	def test_AnnotateTransitiveEdges_Path(self) -> None:
+		"""With a key name, a transitive edge gets the path of direct edges implying it."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		ab = a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		c.EdgeToVertex(d)
+		ac = a.EdgeToVertex(c)
+		ad = a.EdgeToVertex(d)
+
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
+
+		self.assertNotIn("transitive.path", ab)
+		self.assertTupleEqual((a, b, c), ac["transitive.path"])
+		self.assertTupleEqual((a, b, c, d), ad["transitive.path"])
 
 	def test_AnnotateTransitiveEdges_Parallel(self) -> None:
 		"""A second edge between the same vertices is implied by the first, which is its path."""
@@ -1456,29 +1470,29 @@ class GraphOperations(Iterate):
 		first = a.EdgeToVertex(b, edgeID=1)
 		second = a.EdgeToVertex(b, edgeID=2)
 
-		g.AnnotateTransitiveEdges()
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
 
 		self.assertIs(EdgeKind.Direct, first.Kind)
 		self.assertIs(EdgeKind.Transitive, second.Kind)
-		self.assertTupleEqual((a, b), second.TransitivePath)
+		self.assertTupleEqual((a, b), second["transitive.path"])
 
 	def test_AnnotateTransitiveEdges_Again(self) -> None:
-		"""Annotating again reflects the graph's current edges."""
+		"""Annotating again reflects the graph's current edges, and removes a path that no longer applies."""
 		g = Graph()
 		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
 		ab = a.EdgeToVertex(b)
 		bc = b.EdgeToVertex(c)
 		ac = a.EdgeToVertex(c)
 
-		g.AnnotateTransitiveEdges()
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
 		self.assertIs(EdgeKind.Transitive, ac.Kind)
 
 		bc.Delete()
-		g.AnnotateTransitiveEdges()
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
 
 		self.assertIs(EdgeKind.Direct, ab.Kind)
 		self.assertIs(EdgeKind.Direct, ac.Kind)
-		self.assertIsNone(ac.TransitivePath)
+		self.assertNotIn("transitive.path", ac)
 
 	def test_AnnotateTransitiveEdges_Subgraph(self) -> None:
 		"""A subgraph is annotated on its own."""
@@ -1490,11 +1504,11 @@ class GraphOperations(Iterate):
 		ac = a.EdgeToVertex(c)
 
 		g.AnnotateTransitiveEdges()
-		self.assertIs(EdgeKind.Direct, ac.Kind)
+		self.assertIs(EdgeKind.Default, ac.Kind)
 
-		subgraph.AnnotateTransitiveEdges()
+		subgraph.AnnotateTransitiveEdges(keyName="transitive.path")
 		self.assertIs(EdgeKind.Transitive, ac.Kind)
-		self.assertTupleEqual((a, b, c), ac.TransitivePath)
+		self.assertTupleEqual((a, b, c), ac["transitive.path"])
 
 	def test_AnnotateTransitiveEdges_OwnKinds(self) -> None:
 		"""A user's own enumeration marks the edges."""
@@ -1512,43 +1526,11 @@ class GraphOperations(Iterate):
 
 		self.assertIs(Dependency.Needed, ab.Kind)
 		self.assertIs(Dependency.Implied, ac.Kind)
-		self.assertTupleEqual((a, b, c), ac.TransitivePath)
 
 		with self.assertRaises(ValueError):
 			g.AnnotateTransitiveEdges(directKind=None)
 		with self.assertRaises(TypeError):
 			g.AnnotateTransitiveEdges(transitiveKind="implied")
-
-	def test_EdgeKindParameters(self) -> None:
-		"""A kind and a path can be given when an edge is created."""
-		class Dependency(Enum):
-			Needed =  "needed"
-			Implied = "implied"
-
-		g = Graph()
-		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
-		ab = a.EdgeToVertex(b, edgeKind=Dependency.Needed)
-		bc = c.EdgeFromVertex(b, edgeKind=Dependency.Needed)
-		ac = a.EdgeToVertex(c, edgeKind=Dependency.Implied, edgeTransitivePath=(a, b, c))
-		ad = a.EdgeToNewVertex(vertexID="D")
-		ed = ad.Destination.EdgeFromNewVertex(vertexID="E", edgeKind=EdgeKind.Transitive)
-
-		self.assertIs(Dependency.Needed, ab.Kind)
-		self.assertIs(Dependency.Needed, bc.Kind)
-		self.assertIs(Dependency.Implied, ac.Kind)
-		self.assertTupleEqual((a, b, c), ac.TransitivePath)
-		self.assertIs(EdgeKind.Direct, ad.Kind)
-		self.assertIsNone(ad.TransitivePath)
-		self.assertIs(EdgeKind.Transitive, ed.Kind)
-
-		with self.assertRaises(ValueError):
-			Edge(a, b, kind=None)
-		with self.assertRaises(TypeError):
-			Edge(a, b, kind="direct")
-		with self.assertRaises(TypeError):
-			Edge(a, b, transitivePath=[a, b])
-		with self.assertRaises(TypeError):
-			Edge(a, b, transitivePath=(a, "B"))
 
 	def test_AnnotateTransitiveEdges_Cycle(self) -> None:
 		"""A graph with a cycle is left unchanged."""
@@ -1559,10 +1541,61 @@ class GraphOperations(Iterate):
 		ac = a.EdgeToVertex(c)
 
 		with self.assertRaises(CycleError):
-			g.AnnotateTransitiveEdges()
+			g.AnnotateTransitiveEdges(keyName="transitive.path")
 
-		self.assertIs(EdgeKind.Direct, ac.Kind)
-		self.assertIsNone(ac.TransitivePath)
+		self.assertIs(EdgeKind.Default, ac.Kind)
+		self.assertNotIn("transitive.path", ac)
+
+	def test_EdgeKind(self) -> None:
+		"""An edge's kind is given when it is created."""
+		class Dependency(Enum):
+			Needed = "needed"
+
+		g = Graph()
+		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
+		ab = a.EdgeToVertex(b)
+		bc = c.EdgeFromVertex(b, edgeKind=Dependency.Needed)
+		ac = a.EdgeToVertex(c, edgeKind=EdgeKind.Transitive)
+		ad = a.EdgeToNewVertex(vertexID="D", edgeKind=EdgeKind.Direct)
+		ed = ad.Destination.EdgeFromNewVertex(vertexID="E", edgeKind=Dependency.Needed)
+
+		self.assertIs(EdgeKind.Default, ab.Kind)
+		self.assertIs(Dependency.Needed, bc.Kind)
+		self.assertIs(EdgeKind.Transitive, ac.Kind)
+		self.assertIs(EdgeKind.Direct, ad.Kind)
+		self.assertIs(Dependency.Needed, ed.Kind)
+		self.assertIs(EdgeKind.Direct, Edge(a, b, edgeKind=EdgeKind.Direct).Kind)
+
+		with self.assertRaises(ValueError):
+			Edge(a, b, edgeKind=None)
+		with self.assertRaises(TypeError):
+			Edge(a, b, edgeKind="direct")
+		with self.assertRaises(ValueError):
+			a.EdgeToVertex(b, edgeKind=None)
+
+	def test_LinkKind(self) -> None:
+		"""A link's kind is given when it is created."""
+		class Relation(Enum):
+			Calls = "calls"
+
+		g = Graph()
+		subgraph1 = Subgraph(g, name="sub1")
+		subgraph2 = Subgraph(g, name="sub2")
+		a = Vertex(vertexID="A", subgraph=subgraph1)
+		b = Vertex(vertexID="B", subgraph=subgraph2)
+		c = Vertex(vertexID="C", subgraph=subgraph2)
+
+		ab = a.LinkToVertex(b)
+		ca = a.LinkFromVertex(c, linkKind=Relation.Calls)
+
+		self.assertIs(LinkKind.Default, ab.Kind)
+		self.assertIs(Relation.Calls, ca.Kind)
+		self.assertIs(Relation.Calls, Link(a, c, linkKind=Relation.Calls).Kind)
+
+		with self.assertRaises(ValueError):
+			Link(a, b, linkKind=None)
+		with self.assertRaises(TypeError):
+			Link(a, b, linkKind="calls")
 
 	def test_TransitiveEdges_Subgraph(self) -> None:
 		"""A subgraph is reduced on its own; the graph's reduction doesn't touch it."""
