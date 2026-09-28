@@ -32,10 +32,11 @@
 Unit tests for :mod:`pyTooling.Graph`: construction, subgraphs, the element attributes (name, ID, value,
 weight, key-value-pairs), the iteration methods, and the conversion of a graph into a tree.
 """
+from enum     import Enum
 from typing   import Any, Optional as Nullable, List, Tuple, Callable
 
 from pyTooling.Decorators import readonly
-from pyTooling.Graph      import Graph, Vertex, Edge, Link, Subgraph, View, CycleError
+from pyTooling.Graph      import Graph, Vertex, Edge, EdgeKind, Link, LinkKind, Subgraph, View, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs
@@ -1319,6 +1320,327 @@ class GraphOperations(Iterate):
 		for v4 in g4.IterateVertices():
 			self.assertTrue(v4.Value % 2 == 1)
 			self.assertEqual(0, len(v4))
+
+	def test_TransitiveEdges(self) -> None:
+		g = Graph()
+		vList = [Vertex(vertexID=i, value=i, graph=g) for i in range(0, self._graph0.VertexCount)]
+
+		for u, v, w in self._graph0.Edges:
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
+
+		self.assertSetEqual({(4, 3), (5, 9)}, {(e.Source.Value, e.Destination.Value) for e in g.IterateTransitiveEdges()})
+		self.assertEqual(self._graph0.EdgeCount, g.EdgeCount)
+
+		g.RemoveTransitiveEdges()
+
+		self.assertEqual(self._graph0.EdgeCount - 2, g.EdgeCount)
+		self.assertEqual(0, len(list(g.IterateTransitiveEdges())))
+		self.assertFalse(vList[4].HasEdgeToDestination(vList[3]))
+		self.assertFalse(vList[5].HasEdgeToDestination(vList[9]))
+		self.assertTrue(vList[4].HasEdgeToDestination(vList[0]))
+
+	def test_TransitiveEdges_Chain(self) -> None:
+		"""Every edge skipping a vertex of a chain is implied."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		c.EdgeToVertex(d)
+		a.EdgeToVertex(c)
+		a.EdgeToVertex(d)
+		b.EdgeToVertex(d)
+
+		g.RemoveTransitiveEdges()
+
+		edges = {(edge.Source.ID, edge.Destination.ID) for edge in g.IterateEdges()}
+		self.assertSetEqual({("A", "B"), ("B", "C"), ("C", "D")}, edges)
+
+	def test_TransitiveEdges_Parallel(self) -> None:
+		"""A second edge between the same vertices is implied by the first."""
+		g = Graph()
+		a = Vertex(vertexID="A", graph=g)
+		b = Vertex(vertexID="B", graph=g)
+		first = a.EdgeToVertex(b, edgeID=1)
+		second = a.EdgeToVertex(b, edgeID=2)
+
+		self.assertListEqual([second], list(g.IterateTransitiveEdges()))
+
+		g.RemoveTransitiveEdges()
+
+		self.assertListEqual([first], list(g.IterateEdges()))
+
+	def test_TransitiveEdges_Empty(self) -> None:
+		g = Graph()
+
+		self.assertListEqual([], list(g.IterateTransitiveEdges()))
+
+	def test_TransitiveEdges_Cycle(self) -> None:
+		g = Graph()
+		vList = [Vertex(vertexID=i, graph=g) for i in range(0, self._graph1.VertexCount)]
+
+		for u, v, w in self._graph1.Edges:
+			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
+
+		with self.assertRaises(CycleError):
+			list(g.IterateTransitiveEdges())
+
+		with self.assertRaises(CycleError):
+			g.RemoveTransitiveEdges()
+
+		self.assertEqual(self._graph1.EdgeCount, g.EdgeCount)
+
+	def test_TransitiveEdges_Lazy(self) -> None:
+		"""An edge is yielded as soon as it is found, and can be removed while iterating."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		for u, v in ((a, b), (b, c), (c, d), (a, c), (a, d), (b, d)):
+			u.EdgeToVertex(v)
+
+		iterator = g.IterateTransitiveEdges()
+		first = next(iterator)
+		self.assertIn((first.Source.ID, first.Destination.ID), {("A", "C"), ("A", "D"), ("B", "D")})
+
+		first.Delete()
+		for edge in iterator:
+			edge.Delete()
+
+		edges = {(edge.Source.ID, edge.Destination.ID) for edge in g.IterateEdges()}
+		self.assertSetEqual({("A", "B"), ("B", "C"), ("C", "D")}, edges)
+
+	def test_TransitiveEdges_CycleBesideAcyclicPart(self) -> None:
+		"""A cycle beside an acyclic part: edges may be yielded before the error, but nothing is removed."""
+		g = Graph()
+		a, b, c, d, e = (Vertex(vertexID=name, graph=g) for name in "ABCDE")
+		for u, v in ((a, b), (b, c), (a, c), (d, e), (e, d), (e, a)):
+			u.EdgeToVertex(v)
+
+		with self.assertRaises(CycleError):
+			list(g.IterateTransitiveEdges())
+
+		with self.assertRaises(CycleError):
+			g.RemoveTransitiveEdges()
+
+		self.assertEqual(6, g.EdgeCount)
+
+	def test_TransitiveEdgesWithPath(self) -> None:
+		"""Every implied edge comes with the path of direct edges implying it."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		for u, v in ((a, b), (b, c), (c, d), (a, c), (a, d), (b, d)):
+			u.EdgeToVertex(v)
+
+		paths = {
+			(edge.Source.ID, edge.Destination.ID): tuple(vertex.ID for vertex in path)
+			for edge, path in g.IterateTransitiveEdgesWithPath()
+		}
+
+		self.assertDictEqual(
+			{("A", "C"): ("A", "B", "C"), ("A", "D"): ("A", "B", "C", "D"), ("B", "D"): ("B", "C", "D")},
+			paths
+		)
+		self.assertSetEqual(set(paths), {(edge.Source.ID, edge.Destination.ID) for edge in g.IterateTransitiveEdges()})
+
+	def test_AnnotateTransitiveEdges(self) -> None:
+		"""Every edge becomes direct or transitive; without a key name, no path is recorded."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		ab = a.EdgeToVertex(b)
+		bc = b.EdgeToVertex(c)
+		cd = c.EdgeToVertex(d)
+		ac = a.EdgeToVertex(c)
+		ad = a.EdgeToVertex(d)
+
+		self.assertIs(EdgeKind.Default, ad.Kind)
+
+		g.AnnotateTransitiveEdges()
+
+		self.assertEqual(5, g.EdgeCount)
+		for edge in (ab, bc, cd):
+			with self.subTest(edge=(edge.Source.ID, edge.Destination.ID)):
+				self.assertIs(EdgeKind.Direct, edge.Kind)
+
+		for edge in (ac, ad):
+			with self.subTest(edge=(edge.Source.ID, edge.Destination.ID)):
+				self.assertIs(EdgeKind.Transitive, edge.Kind)
+				self.assertNotIn("transitive.path", edge)
+
+	def test_AnnotateTransitiveEdges_Path(self) -> None:
+		"""With a key name, a transitive edge gets the path of direct edges implying it."""
+		g = Graph()
+		a, b, c, d = (Vertex(vertexID=name, graph=g) for name in "ABCD")
+		ab = a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		c.EdgeToVertex(d)
+		ac = a.EdgeToVertex(c)
+		ad = a.EdgeToVertex(d)
+
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
+
+		self.assertNotIn("transitive.path", ab)
+		self.assertTupleEqual((a, b, c), ac["transitive.path"])
+		self.assertTupleEqual((a, b, c, d), ad["transitive.path"])
+
+	def test_AnnotateTransitiveEdges_Parallel(self) -> None:
+		"""A second edge between the same vertices is implied by the first, which is its path."""
+		g = Graph()
+		a = Vertex(vertexID="A", graph=g)
+		b = Vertex(vertexID="B", graph=g)
+		first = a.EdgeToVertex(b, edgeID=1)
+		second = a.EdgeToVertex(b, edgeID=2)
+
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
+
+		self.assertIs(EdgeKind.Direct, first.Kind)
+		self.assertIs(EdgeKind.Transitive, second.Kind)
+		self.assertTupleEqual((a, b), second["transitive.path"])
+
+	def test_AnnotateTransitiveEdges_Again(self) -> None:
+		"""Annotating again reflects the graph's current edges, and removes a path that no longer applies."""
+		g = Graph()
+		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
+		ab = a.EdgeToVertex(b)
+		bc = b.EdgeToVertex(c)
+		ac = a.EdgeToVertex(c)
+
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
+		self.assertIs(EdgeKind.Transitive, ac.Kind)
+
+		bc.Delete()
+		g.AnnotateTransitiveEdges(keyName="transitive.path")
+
+		self.assertIs(EdgeKind.Direct, ab.Kind)
+		self.assertIs(EdgeKind.Direct, ac.Kind)
+		self.assertNotIn("transitive.path", ac)
+
+	def test_AnnotateTransitiveEdges_Subgraph(self) -> None:
+		"""A subgraph is annotated on its own."""
+		g = Graph()
+		subgraph = Subgraph(g, name="sub")
+		a, b, c = (Vertex(vertexID=name, subgraph=subgraph) for name in "ABC")
+		a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		ac = a.EdgeToVertex(c)
+
+		g.AnnotateTransitiveEdges()
+		self.assertIs(EdgeKind.Default, ac.Kind)
+
+		subgraph.AnnotateTransitiveEdges(keyName="transitive.path")
+		self.assertIs(EdgeKind.Transitive, ac.Kind)
+		self.assertTupleEqual((a, b, c), ac["transitive.path"])
+
+	def test_AnnotateTransitiveEdges_OwnKinds(self) -> None:
+		"""A user's own enumeration marks the edges."""
+		class Dependency(Enum):
+			Needed =  "needed"
+			Implied = "implied"
+
+		g = Graph()
+		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
+		ab = a.EdgeToVertex(b)
+		b.EdgeToVertex(c)
+		ac = a.EdgeToVertex(c)
+
+		g.AnnotateTransitiveEdges(directKind=Dependency.Needed, transitiveKind=Dependency.Implied)
+
+		self.assertIs(Dependency.Needed, ab.Kind)
+		self.assertIs(Dependency.Implied, ac.Kind)
+
+		with self.assertRaises(ValueError):
+			g.AnnotateTransitiveEdges(directKind=None)
+		with self.assertRaises(TypeError):
+			g.AnnotateTransitiveEdges(transitiveKind="implied")
+		with self.assertRaises(TypeError):
+			g.AnnotateTransitiveEdges(keyName=1)
+
+	def test_AnnotateTransitiveEdges_Cycle(self) -> None:
+		"""A graph with a cycle is left unchanged."""
+		g = Graph()
+		a, b, c, d, e = (Vertex(vertexID=name, graph=g) for name in "ABCDE")
+		for u, v in ((a, b), (b, c), (d, e), (e, d), (e, a)):
+			u.EdgeToVertex(v)
+		ac = a.EdgeToVertex(c)
+
+		with self.assertRaises(CycleError):
+			g.AnnotateTransitiveEdges(keyName="transitive.path")
+
+		self.assertIs(EdgeKind.Default, ac.Kind)
+		self.assertNotIn("transitive.path", ac)
+
+	def test_EdgeKind(self) -> None:
+		"""An edge's kind is given when it is created."""
+		class Dependency(Enum):
+			Needed = "needed"
+
+		g = Graph()
+		a, b, c = (Vertex(vertexID=name, graph=g) for name in "ABC")
+		ab = a.EdgeToVertex(b)
+		bc = c.EdgeFromVertex(b, edgeKind=Dependency.Needed)
+		ac = a.EdgeToVertex(c, edgeKind=EdgeKind.Transitive)
+		ad = a.EdgeToNewVertex(vertexID="D", edgeKind=EdgeKind.Direct)
+		ed = ad.Destination.EdgeFromNewVertex(vertexID="E", edgeKind=Dependency.Needed)
+
+		self.assertIs(EdgeKind.Default, ab.Kind)
+		self.assertIs(Dependency.Needed, bc.Kind)
+		self.assertIs(EdgeKind.Transitive, ac.Kind)
+		self.assertIs(EdgeKind.Direct, ad.Kind)
+		self.assertIs(Dependency.Needed, ed.Kind)
+		self.assertIs(EdgeKind.Direct, Edge(a, b, edgeKind=EdgeKind.Direct).Kind)
+
+		positional = a.EdgeToVertex(b, "AB", 5, "value", EdgeKind.Direct)
+		self.assertTupleEqual((5, "value", EdgeKind.Direct), (positional.Weight, positional.Value, positional.Kind))
+
+		with self.assertRaises(ValueError):
+			Edge(a, b, edgeKind=None)
+		with self.assertRaises(TypeError):
+			Edge(a, b, edgeKind="direct")
+		with self.assertRaises(ValueError):
+			a.EdgeToVertex(b, edgeKind=None)
+
+	def test_LinkKind(self) -> None:
+		"""A link's kind is given when it is created."""
+		class Relation(Enum):
+			Calls = "calls"
+
+		g = Graph()
+		subgraph1 = Subgraph(g, name="sub1")
+		subgraph2 = Subgraph(g, name="sub2")
+		a = Vertex(vertexID="A", subgraph=subgraph1)
+		b = Vertex(vertexID="B", subgraph=subgraph2)
+		c = Vertex(vertexID="C", subgraph=subgraph2)
+
+		ab = a.LinkToVertex(b)
+		ca = a.LinkFromVertex(c, linkKind=Relation.Calls)
+
+		self.assertIs(LinkKind.Default, ab.Kind)
+		self.assertIs(Relation.Calls, ca.Kind)
+		self.assertIs(Relation.Calls, Link(a, c, linkKind=Relation.Calls).Kind)
+
+		positional = b.LinkToVertex(a, "BA", 3, "value", Relation.Calls)
+		self.assertTupleEqual((3, "value", Relation.Calls), (positional.Weight, positional.Value, positional.Kind))
+
+		with self.assertRaises(ValueError):
+			Link(a, b, linkKind=None)
+		with self.assertRaises(TypeError):
+			Link(a, b, linkKind="calls")
+
+	def test_TransitiveEdges_Subgraph(self) -> None:
+		"""A subgraph is reduced on its own; the graph's reduction doesn't touch it."""
+		g = Graph()
+		subgraph = Subgraph(g, name="sub")
+		a, b, c = (Vertex(vertexID=name, subgraph=subgraph) for name in "ABC")
+		x, y, z = (Vertex(vertexID=name, graph=g) for name in "XYZ")
+		for u, v in ((a, b), (b, c), (a, c), (x, y), (y, z), (x, z)):
+			u.EdgeToVertex(v)
+
+		g.RemoveTransitiveEdges()
+
+		self.assertEqual(2, g.EdgeCount)
+		self.assertEqual(3, subgraph.EdgeCount)
+
+		subgraph.RemoveTransitiveEdges()
+
+		self.assertEqual(2, subgraph.EdgeCount)
+		self.assertFalse(a.HasEdgeToDestination(c))
 
 
 class VertexOperations(Iterate):
