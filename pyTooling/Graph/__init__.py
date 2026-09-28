@@ -745,7 +745,7 @@ class Vertex(
 	@readonly
 	def InboundEdges(self) -> tuple[Edge, ...]:
 		"""
-		Read-only property to get a tuple of inbound edges (:attr:`_inboundEdges`).
+		Read-only property to return the inbound edges (:attr:`_inboundEdges`) as a tuple.
 
 		:returns: Tuple of inbound edges.
 		"""
@@ -754,7 +754,7 @@ class Vertex(
 	@readonly
 	def OutboundEdges(self) -> tuple[Edge, ...]:
 		"""
-		Read-only property to get a tuple of outbound edges (:attr:`_outboundEdges`).
+		Read-only property to return the outbound edges (:attr:`_outboundEdges`) as a tuple.
 
 		:returns: Tuple of outbound edges.
 		"""
@@ -763,7 +763,7 @@ class Vertex(
 	@readonly
 	def InboundLinks(self) -> tuple[Link, ...]:
 		"""
-		Read-only property to get a tuple of inbound links (:attr:`_inboundLinks`).
+		Read-only property to return the inbound links (:attr:`_inboundLinks`) as a tuple.
 
 		:returns: Tuple of inbound links.
 		"""
@@ -772,7 +772,7 @@ class Vertex(
 	@readonly
 	def OutboundLinks(self) -> tuple[Link, ...]:
 		"""
-		Read-only property to get a tuple of outbound links (:attr:`_outboundLinks`).
+		Read-only property to return the outbound links (:attr:`_outboundLinks`) as a tuple.
 
 		:returns: Tuple of outbound links.
 		"""
@@ -781,7 +781,7 @@ class Vertex(
 	@readonly
 	def EdgeCount(self) -> int:
 		"""
-		Read-only property to get the number of all edges (inbound and outbound).
+		Read-only property to return the number of all edges (:attr:`_inboundEdges` and :attr:`_outboundEdges`).
 
 		:returns: Number of inbound and outbound edges.
 		"""
@@ -790,7 +790,7 @@ class Vertex(
 	@readonly
 	def InboundEdgeCount(self) -> int:
 		"""
-		Read-only property to get the number of inbound edges.
+		Read-only property to return the number of inbound edges (:attr:`_inboundEdges`).
 
 		:returns: Number of inbound edges.
 		"""
@@ -799,7 +799,7 @@ class Vertex(
 	@readonly
 	def OutboundEdgeCount(self) -> int:
 		"""
-		Read-only property to get the number of outbound edges.
+		Read-only property to return the number of outbound edges (:attr:`_outboundEdges`).
 
 		:returns: Number of outbound edges.
 		"""
@@ -808,7 +808,7 @@ class Vertex(
 	@readonly
 	def LinkCount(self) -> int:
 		"""
-		Read-only property to get the number of all links (inbound and outbound).
+		Read-only property to return the number of all links (:attr:`_inboundLinks` and :attr:`_outboundLinks`).
 
 		:returns: Number of inbound and outbound links.
 		"""
@@ -817,7 +817,7 @@ class Vertex(
 	@readonly
 	def InboundLinkCount(self) -> int:
 		"""
-		Read-only property to get the number of inbound links.
+		Read-only property to return the number of inbound links (:attr:`_inboundLinks`).
 
 		:returns: Number of inbound links.
 		"""
@@ -826,7 +826,7 @@ class Vertex(
 	@readonly
 	def OutboundLinkCount(self) -> int:
 		"""
-		Read-only property to get the number of outbound links.
+		Read-only property to return the number of outbound links (:attr:`_outboundLinks`).
 
 		:returns: Number of outbound links.
 		"""
@@ -875,7 +875,7 @@ class Vertex(
 	@readonly
 	def Predecessors(self) -> tuple[Vertex, ...]:
 		"""
-		Read-only property to get a tuple of predecessor vertices.
+		Read-only property to return the predecessor vertices, the sources of :attr:`_inboundEdges`.
 
 		:returns: Tuple of predecessor vertices.
 		"""
@@ -884,7 +884,7 @@ class Vertex(
 	@readonly
 	def Successors(self) -> tuple[Vertex, ...]:
 		"""
-		Read-only property to get a tuple of successor vertices.
+		Read-only property to return the successor vertices, the destinations of :attr:`_outboundEdges`.
 
 		:returns: Tuple of successor vertices.
 		"""
@@ -2060,7 +2060,7 @@ class BaseEdge(
 	@readonly
 	def Source(self) -> Vertex:
 		"""
-		Read-only property to get the source (:attr:`_source`) of an edge.
+		Read-only property to access the source (:attr:`_source`) of an edge.
 
 		:returns: The source of an edge.
 		"""
@@ -2069,7 +2069,7 @@ class BaseEdge(
 	@readonly
 	def Destination(self) -> Vertex:
 		"""
-		Read-only property to get the destination (:attr:`_destination`) of an edge.
+		Read-only property to access the destination (:attr:`_destination`) of an edge.
 
 		:returns: The destination of an edge.
 		"""
