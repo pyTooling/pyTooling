@@ -1584,15 +1584,15 @@ class GraphOperations(Iterate):
 		self.assertIs(EdgeKind.Transitive, ac.Kind)
 		self.assertIs(EdgeKind.Direct, ad.Kind)
 		self.assertIs(Dependency.Needed, ed.Kind)
-		self.assertIs(EdgeKind.Direct, Edge(a, b, edgeKind=EdgeKind.Direct).Kind)
+		self.assertIs(EdgeKind.Direct, Edge(a, b, kind=EdgeKind.Direct).Kind)
 
 		positional = a.EdgeToVertex(b, "AB", 5, "value", EdgeKind.Direct)
 		self.assertTupleEqual((5, "value", EdgeKind.Direct), (positional.Weight, positional.Value, positional.Kind))
 
 		with self.assertRaises(ValueError):
-			Edge(a, b, edgeKind=None)
+			Edge(a, b, kind=None)
 		with self.assertRaises(TypeError):
-			Edge(a, b, edgeKind="direct")
+			Edge(a, b, kind="direct")
 		with self.assertRaises(ValueError):
 			a.EdgeToVertex(b, edgeKind=None)
 
@@ -1613,15 +1613,15 @@ class GraphOperations(Iterate):
 
 		self.assertIs(LinkKind.Default, ab.Kind)
 		self.assertIs(Relation.Calls, ca.Kind)
-		self.assertIs(Relation.Calls, Link(a, c, linkKind=Relation.Calls).Kind)
+		self.assertIs(Relation.Calls, Link(a, c, kind=Relation.Calls).Kind)
 
 		positional = b.LinkToVertex(a, "BA", 3, "value", Relation.Calls)
 		self.assertTupleEqual((3, "value", Relation.Calls), (positional.Weight, positional.Value, positional.Kind))
 
 		with self.assertRaises(ValueError):
-			Link(a, b, linkKind=None)
+			Link(a, b, kind=None)
 		with self.assertRaises(TypeError):
-			Link(a, b, linkKind="calls")
+			Link(a, b, kind="calls")
 
 	def test_TransitiveEdges_Subgraph(self) -> None:
 		"""A subgraph is reduced on its own; the graph's reduction doesn't touch it."""
