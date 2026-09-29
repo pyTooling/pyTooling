@@ -242,6 +242,7 @@ prefix, a postfix or a build number.
              pass
 
 .. _VERSIONING/SemVerVariants:
+
 Variants
 ========
 
