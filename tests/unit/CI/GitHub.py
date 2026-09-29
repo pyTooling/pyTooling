@@ -831,11 +831,11 @@ class ContainedElements(Testcase):
 		a = pipeline.Workflows["A"]
 		for element in a:
 			with self.subTest(element=str(element)):
-				self.assertTrue(a.HasElement(str(element)))
+				self.assertTrue(a.ContainsElement(str(element)))
 
 		# a job one level further down belongs to 'B', not to 'A'
-		self.assertFalse(a.HasElement("Deep"))
-		self.assertTrue(pipeline.HasElement("A"))
+		self.assertFalse(a.ContainsElement("Deep"))
+		self.assertTrue(pipeline.ContainsElement("A"))
 
 	def test_ContainmentTakesAName(self) -> None:
 		"""An element is placed in its group under its own name, so containment is asked for that name."""
@@ -846,13 +846,13 @@ class ContainedElements(Testcase):
 		])
 
 		a = pipeline.Workflows["A"]
-		self.assertTrue(a.HasElement("B"))        # a called workflow
-		self.assertTrue(a.HasElement("Plain"))    # a job
-		self.assertFalse(a.HasElement("Top"))   # a job of the run, not of this workflow
-		self.assertFalse(a.HasElement("Deep"))  # a job of the workflow below
+		self.assertTrue(a.ContainsElement("B"))      # a called workflow
+		self.assertTrue(a.ContainsElement("Plain"))  # a job
+		self.assertFalse(a.ContainsElement("Top"))   # a job of the run, not of this workflow
+		self.assertFalse(a.ContainsElement("Deep"))  # a job of the workflow below
 
-		self.assertTrue(pipeline.HasElement("Top"))
-		self.assertTrue(pipeline.HasElement("A"))
+		self.assertTrue(pipeline.ContainsElement("Top"))
+		self.assertTrue(pipeline.ContainsElement("A"))
 
 	def test_MatrixInstancesAreAskedForWithTheirValues(self) -> None:
 		"""Every instance of a matrix shares the matrix' name, so a job is named by 'str' rather than 'Name'."""
@@ -863,11 +863,11 @@ class ContainedElements(Testcase):
 
 		matrix = pipeline.Matrices["Matrixed"]
 		self.assertEqual(["Matrixed", "Matrixed"], [instance.Name for instance in matrix.Instances])
-		self.assertTrue(matrix.HasElement("Matrixed (x)"))
-		self.assertFalse(matrix.HasElement("Matrixed (z)"))
-		self.assertFalse(matrix.HasElement("Matrixed"))  # that is the matrix' own name, not one of its instances'
+		self.assertTrue(matrix.ContainsElement("Matrixed (x)"))
+		self.assertFalse(matrix.ContainsElement("Matrixed (z)"))
+		self.assertFalse(matrix.ContainsElement("Matrixed"))  # that is the matrix' own name, not one of its instances'
 
-		self.assertTrue(pipeline.HasElement("Matrixed"))   # the matrix, one level up
+		self.assertTrue(pipeline.ContainsElement("Matrixed"))  # the matrix, one level up
 
 	def test_AJobIsAskedForItsSteps(self) -> None:
 		steps = [
@@ -876,7 +876,7 @@ class ContainedElements(Testcase):
 		]
 		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 60, 120, 240, steps=steps)])
 
-		self.assertTrue(pipeline.Jobs[0].HasStep("Checkout"))
+		self.assertTrue(pipeline.Jobs[0].ContainsStep("Checkout"))
 		self.assertNotIn("Upload", pipeline.Jobs[0])
 
 	def test_IdentityIsAnsweredByTheParent(self) -> None:

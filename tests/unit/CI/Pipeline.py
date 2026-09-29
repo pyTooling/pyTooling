@@ -80,7 +80,7 @@ class Instantiation(Testcase):
 		self.assertListEqual([pipeline], group.Pipelines)
 		self.assertIs(group, pipeline.Parent)
 		self.assertEqual(1, group.PipelineCount)
-		self.assertTrue(group.HasPipeline("Pipeline"))
+		self.assertTrue(group.ContainsPipeline("Pipeline"))
 		self.assertListEqual([pipeline], list(group.IteratePipelines()))
 
 	def test_PipelineGroup_Type(self) -> None:
@@ -149,8 +149,8 @@ class Instantiation(Testcase):
 		self.assertListEqual([instance], matrix.Jobs)
 		self.assertEqual("Unit Tests (ubuntu-26.04, 3.14)", str(instance))
 		self.assertDictEqual({"os": "ubuntu-26.04", "python": "3.14"}, instance.Dimensions)
-		self.assertTrue(matrix.HasElement("Unit Tests (ubuntu-26.04, 3.14)"))
-		self.assertTrue(pipeline.HasElement("Unit Tests"))
+		self.assertTrue(matrix.ContainsElement("Unit Tests (ubuntu-26.04, 3.14)"))
+		self.assertTrue(pipeline.ContainsElement("Unit Tests"))
 
 	def test_Matrix_Duplicate(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -228,7 +228,7 @@ class Instantiation(Testcase):
 		self.assertIsNone(step.CreatedAt)
 		self.assertEqual("always()", step.Condition)
 		self.assertEqual(1, job.StepCount)
-		self.assertTrue(job.HasStep("Checkout"))
+		self.assertTrue(job.ContainsStep("Checkout"))
 		self.assertListEqual([step], list(job.IterateSteps()))
 
 	def test_Name(self) -> None:
@@ -339,9 +339,9 @@ class Hierarchy(Testcase):
 		self.assertDictEqual({"Test": matrix}, pipeline.Matrices)
 		for name in ("Called", "Test", "Build"):
 			with self.subTest(name=name):
-				self.assertTrue(pipeline.HasElement(name))
+				self.assertTrue(pipeline.ContainsElement(name))
 
-		self.assertFalse(pipeline.HasElement("Release"))
+		self.assertFalse(pipeline.ContainsElement("Release"))
 
 	def test_GetItem(self) -> None:
 		"""An element is looked up by its name, as a reader resolving a definition's names does."""
@@ -436,7 +436,7 @@ class KeyValuePairs(Testcase):
 		_ =        Job("Build", parent=pipeline)
 		pipeline["Build"] = "attribute"
 
-		self.assertTrue(pipeline.HasElement("Build"))
+		self.assertTrue(pipeline.ContainsElement("Build"))
 		self.assertIn("Build", pipeline)
 		self.assertEqual(1, pipeline.ElementCount)
 		self.assertEqual(1, len(pipeline))

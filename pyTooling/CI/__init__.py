@@ -790,7 +790,7 @@ class PipelineGroup(Base):
 		"""
 		return len(self._pipelines)
 
-	def HasPipeline(self, name: str) -> bool:
+	def ContainsPipeline(self, name: str) -> bool:
 		"""
 		Check whether a pipeline of that name belongs to the group.
 
@@ -1003,7 +1003,7 @@ class JobGroup(Base):
 		"""
 		return len(self._elements)
 
-	def HasElement(self, name: str) -> bool:
+	def ContainsElement(self, name: str) -> bool:
 		"""
 		Check whether an element of that name belongs to this group.
 
@@ -1019,7 +1019,7 @@ class JobGroup(Base):
 		"""
 		Return the element of that name.
 
-		An element is named the way :func:`str` names it, as for :meth:`HasElement`.
+		An element is named the way :func:`str` names it, as for :meth:`ContainsElement`.
 
 		:param name:      Name of the job, matrix or workflow to return.
 		:returns:         The first element of that name, in the order they were added.
@@ -1488,7 +1488,7 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		"""
 		return len(self._steps)
 
-	def HasStep(self, name: str) -> bool:
+	def ContainsStep(self, name: str) -> bool:
 		"""
 		Check whether a step of that name belongs to the job.
 
