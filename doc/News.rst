@@ -144,10 +144,10 @@ Version 10.x (2026)
      references keep working. The ``sphinx`` extra installs ``ruamel.yaml`` for the domain.
 
    * The ``gha:pipeline-graph`` directive draws the jobs of a GitHub Actions workflow and their ``needs`` from the
-     workflow file, with a matrix as a cluster of its instances, and the reusable workflows of the documented
-     repository expanded into clusters and linked to their pages. A job calling such a workflow at another ref than
-     ``gha_ref`` is a warning. The graph is drawn from the file's :meth:`~pyTooling.CI.Workflow.Workflow.ToPipeline`
-     and its :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph`. See :ref:`DOC/Sphinx/GHA/PipelineGraph`.
+     workflow file, with a matrix as a cluster of its instances, and the reusable workflows of the documented repository
+     expanded into clusters and linked to their pages. A job calling such a workflow at another ref than ``gha_ref`` is
+     a warning. The graph is drawn from the file's :meth:`~pyTooling.CI.GitHub.Workflow.Workflow.ToPipeline` and its
+     :meth:`~pyTooling.CI.Workflow.ToGraph`. See :ref:`DOC/Sphinx/GHA/PipelineGraph`.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.

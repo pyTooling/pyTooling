@@ -45,9 +45,9 @@ HTML, a node links to the page documenting its reusable workflow, if the ``gha``
 
 .. seealso::
 
-   :mod:`pyTooling.CI.Workflow`
+   :mod:`pyTooling.CI.GitHub.Workflow`
       |rarr| The model of a workflow file the graph is drawn from.
-   :mod:`pyTooling.CI.Pipeline`
+   :mod:`pyTooling.CI`
       |rarr| The service-independent model of a pipeline, which a workflow file is converted into.
    :mod:`pyTooling.Documentation.Sphinx.SchemaGraph`
       |rarr| The other graph directives of the extension.
@@ -65,7 +65,7 @@ from sphinx.application                        import Sphinx
 from sphinx.ext.graphviz                       import align_spec, figure_wrapper, graphviz
 from sphinx.util.logging                       import getLogger
 
-from pyTooling.CI.Pipeline                     import Base as CIBase, Matrix as CIMatrix, Workflow as CIWorkflow
+from pyTooling.CI                              import Base as CIBase, Matrix as CIMatrix, Workflow as CIWorkflow
 from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export, readonly
 from pyTooling.Graph                           import Vertex
@@ -73,7 +73,7 @@ from pyTooling.MetaClasses                     import ExtendedType
 from pyTooling.Documentation.Sphinx.Directives import BaseDirective, SphinxExtensionError, strip, stripAndNormalize
 
 if TYPE_CHECKING:  # pragma: no cover
-	from pyTooling.CI.Workflow                   import Job, Workflow, WorkflowResolver
+	from pyTooling.CI.GitHub.Workflow            import Job, Workflow, WorkflowResolver
 
 
 __all__ = ["GRAPH_ATTRIBUTES", "CSS_CLASS", "LINK_MARKER"]
@@ -106,8 +106,8 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 	"""
 	The pipeline of a workflow in the DOT language: its jobs as nodes, their ``needs`` as edges.
 
-	The workflow is converted by :meth:`Workflow.ToPipeline <pyTooling.CI.Workflow.Workflow.ToPipeline>` into a
-	:mod:`pyTooling.CI.Pipeline` model, and that by :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` into a
+	The workflow is converted by :meth:`Workflow.ToPipeline <pyTooling.CI.GitHub.Workflow.Workflow.ToPipeline>` into a
+	:mod:`pyTooling.CI` model, and that by :meth:`~pyTooling.CI.Workflow.ToGraph` into a
 	:class:`~pyTooling.Graph.Graph`, which is drawn: a vertex is a node, an edge an edge, and a called workflow with a
 	:class:`~pyTooling.Graph.Subgraph` a cluster of the vertices it links to.
 
@@ -122,9 +122,9 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 	  instance of a job running steps is a job's node, an instance calling a reusable workflow is drawn as a job calling
 	  it. A dynamic matrix - its combinations known only at run time - is one node with a double border.
 
-	A job calling a reusable workflow that :class:`~pyTooling.CI.Workflow.WorkflowResolver` finds locally is drawn as
-	a cluster of that workflow's jobs instead, until the depth is used up - an instance of a matrix as well. An edge to
-	or from a job drawn as a cluster ends at the cluster's border.
+	A job calling a reusable workflow that :class:`~pyTooling.CI.GitHub.Workflow.WorkflowResolver` finds locally is drawn
+	as a cluster of that workflow's jobs instead, until the depth is used up - an instance of a matrix as well. An edge
+	to or from a job drawn as a cluster ends at the cluster's border.
 
 	The graph's edges read *needs*; an arrow is drawn the other way round, from the needed job to the job needing it,
 	in the direction the pipeline runs.
@@ -161,8 +161,9 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		:param link:           Optional, mark a job calling a reusable workflow of the documented repository for
 		                       :func:`resolveLinks`. Default: ``True``.
 		:raises ValueError:    If parameter 'workflow' is None.
-		:raises TypeError:     If parameter 'workflow' is not of type :class:`~pyTooling.CI.Workflow.Workflow`.
-		:raises TypeError:     If parameter 'resolver' is not of type :class:`~pyTooling.CI.Workflow.WorkflowResolver`.
+		:raises TypeError:     If parameter 'workflow' is not of type :class:`~pyTooling.CI.GitHub.Workflow.Workflow`.
+		:raises TypeError:     If parameter 'resolver' is not of type
+		                       :class:`~pyTooling.CI.GitHub.Workflow.WorkflowResolver`.
 		:raises ValueError:    If parameter 'direction' is None.
 		:raises TypeError:     If parameter 'direction' is not of type :class:`str`.
 		:raises ValueError:    If parameter 'direction' is neither ``LR`` nor ``TB``.
@@ -175,7 +176,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		:raises TypeError:     If parameter 'link' is not of type :class:`bool`.
 		:raises WorkflowError: If a reusable workflow to expand doesn't exist, or is not a well-formed workflow.
 		"""
-		from pyTooling.CI.Workflow import Workflow, WorkflowResolver
+		from pyTooling.CI.GitHub.Workflow import Workflow, WorkflowResolver
 
 		if workflow is None:
 			raise ValueError("Parameter 'workflow' is None.")
@@ -494,7 +495,7 @@ class PipelineGraph(BaseDirective):
 		self.env.note_dependency(relativePath)
 		workflowFile = Path(absolutePath)
 
-		from pyTooling.CI.Workflow import WorkflowError, WorkflowResolver
+		from pyTooling.CI.GitHub.Workflow import WorkflowError, WorkflowResolver
 
 		repository = self.config.gha_repository
 		ref =        self.config.gha_ref
