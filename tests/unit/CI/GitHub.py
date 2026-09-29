@@ -31,13 +31,13 @@
 """
 Unit tests for :mod:`pyTooling.CI.GitHub`.
 """
-from datetime            import datetime, timezone
-from typing              import Any, Optional as Nullable
+from datetime              import datetime, timezone
+from typing                import Any, Optional as Nullable
 
+from pyTooling             import CI
 from pyTooling.CI.GitHub   import PipelineGroup, Pipeline, MatrixJob, Job, Step
 from pyTooling.CI.GitHub   import Status, Conclusion, Event, GitHubError, StatusMixin
-from pyTooling.CI.Pipeline import Base, JobGroup, Matrix, MatrixWorkflow, QualifiedNameMixin, Workflow
-from pyTooling.CI          import Pipeline as CIPipeline
+from pyTooling.CI          import Base, JobGroup, Matrix, MatrixWorkflow, QualifiedNameMixin, Workflow
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Testing     import Testcase
 
@@ -1134,19 +1134,19 @@ class BottomUpConstruction(Testcase):
 
 
 class GenericModel(Testcase):
-	"""The run model derives from :mod:`pyTooling.CI.Pipeline`."""
+	"""The run model derives from :mod:`pyTooling.CI`."""
 
 	def test_Classes(self) -> None:
 		for cls, generic in (
-			(PipelineGroup, CIPipeline.PipelineGroup), (Pipeline, CIPipeline.Pipeline), (Job, CIPipeline.Job),
-			(MatrixJob, CIPipeline.MatrixInstanceMixin), (Step, CIPipeline.Step)
+			(PipelineGroup, CI.PipelineGroup), (Pipeline, CI.Pipeline), (Job, CI.Job),
+			(MatrixJob, CI.MatrixInstanceMixin), (Step, CI.Step)
 		):
 			with self.subTest(cls=cls.__name__):
 				self.assertTrue(issubclass(cls, generic))
 
 		for cls in (Base, JobGroup, Workflow, Matrix, QualifiedNameMixin):
 			with self.subTest(cls=cls.__name__):
-				self.assertIs(getattr(CIPipeline, cls.__name__), cls)
+				self.assertIs(getattr(CI, cls.__name__), cls)
 
 	def test_StatusMixin(self) -> None:
 		for cls in (Pipeline, Job, MatrixJob, Step):
@@ -1161,13 +1161,13 @@ class GenericModel(Testcase):
 
 	def test_ToOutcome(self) -> None:
 		for conclusion, outcome in (
-			(Conclusion.Success,        CIPipeline.Outcome.Success),
-			(Conclusion.Failure,        CIPipeline.Outcome.Failure),
-			(Conclusion.TimedOut,       CIPipeline.Outcome.Timeout),
-			(Conclusion.Skipped,        CIPipeline.Outcome.Skip),
-			(Conclusion.Cancelled,      CIPipeline.Outcome.Cancellation),
-			(Conclusion.StartupFailure, CIPipeline.Outcome.Error),
-			(Conclusion.Neutral,        CIPipeline.Outcome.Error),
+			(Conclusion.Success,        CI.Outcome.Success),
+			(Conclusion.Failure,        CI.Outcome.Failure),
+			(Conclusion.TimedOut,       CI.Outcome.Timeout),
+			(Conclusion.Skipped,        CI.Outcome.Skip),
+			(Conclusion.Cancelled,      CI.Outcome.Cancellation),
+			(Conclusion.StartupFailure, CI.Outcome.Error),
+			(Conclusion.Neutral,        CI.Outcome.Error),
 		):
 			with self.subTest(conclusion=conclusion.name):
 				self.assertIs(outcome, conclusion.ToOutcome())
@@ -1182,10 +1182,10 @@ class GenericModel(Testcase):
 		])
 		caller = pipeline.Workflows["Caller"]
 
-		self.assertIs(CIPipeline.Outcome.Failure, pipeline.Outcome)
-		self.assertIs(CIPipeline.Outcome.Failure, caller.Outcome)
-		self.assertIs(CIPipeline.Outcome.Failure, caller.Jobs[1].Steps[0].Outcome)
-		self.assertIs(CIPipeline.Outcome.Skip, pipeline.Jobs[0].Outcome)
+		self.assertIs(CI.Outcome.Failure, pipeline.Outcome)
+		self.assertIs(CI.Outcome.Failure, caller.Outcome)
+		self.assertIs(CI.Outcome.Failure, caller.Jobs[1].Steps[0].Outcome)
+		self.assertIs(CI.Outcome.Skip, pipeline.Jobs[0].Outcome)
 		self.assertIsNone(Pipeline.FromJSON(_run(status="in_progress", conclusion=None)).Outcome)
 
 	def test_Needs(self) -> None:

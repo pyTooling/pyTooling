@@ -9,8 +9,9 @@ with named attributes and typed enumerations instead of nested dictionaries and 
 A model carries no dependency on what is done with it. Converting a pipeline into a software execution trace, a
 graph or a report is a consumer of the model, not part of it.
 
-:mod:`pyTooling.CI.Pipeline` is the service-independent structure - pipelines, called workflows, matrices, jobs and
-steps, and the dependencies between them - which a service's model derives from.
+The package itself holds the service-independent structure - pipelines, called workflows, matrices, jobs and steps,
+and the dependencies between them - which a service's model, e.g. :mod:`pyTooling.CI.GitHub`, derives from. Their
+exceptions derive from :exc:`~pyTooling.CI.CIError`.
 
 .. toctree::
    :caption: Models
