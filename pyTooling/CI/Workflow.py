@@ -66,7 +66,7 @@ from json                  import dumps as json_dumps
 from pathlib               import Path, PurePosixPath
 from typing                import Any, ClassVar, Iterable, Iterator, Mapping, Optional as Nullable, Self, Union
 
-from pyTooling.CI.Pipeline import DependencyMixin, JobGroup, Matrix as CIMatrix
+from pyTooling.CI.Pipeline import DependencyMixin, JobGroup, Matrix as CIMatrix, MatrixInstanceMixin
 from pyTooling.CI.Pipeline import MatrixJob as CIMatrixJob, MatrixWorkflow as CIMatrixWorkflow
 from pyTooling.CI.Pipeline import Job as CIJob, Pipeline as CIPipeline, Step as CIStep, Workflow as CIWorkflow
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
@@ -221,6 +221,21 @@ def _expectMapping(value: Any, what: str, path: Path, line: int) -> CommentedMap
 		raise ex
 
 	return value
+
+
+def _formatCombination(combination: Mapping[str, ValueT]) -> dict[str, str]:
+	"""
+	Format the values of a matrix' combination as GitHub prints them in the name of a matrix instance.
+
+	A string is printed as it is, any other value as JSON: ``true``, ``3``, ``{"os": "ubuntu"}``.
+
+	:param combination: The combination, as :attr:`Matrix.Combinations` returns it.
+	:returns:           The combination's names and formatted values, in the combination's order.
+	"""
+	return {
+		name: value if isinstance(value, str) else json_dumps(value, separators=(", ", ": "))
+		for name, value in combination.items()
+	}
 
 
 def _parsePermissions(
@@ -1761,16 +1776,13 @@ class Workflow(Base):
 					element = DefinedMatrix(job, parent=group)
 					if not job._matrix.IsDynamic:
 						for combination in job._matrix.Combinations:
-							values = [
-								value if isinstance(value, str) else json_dumps(value, separators=(", ", ": "))
-								for value in combination.values()
-							]
+							dimensions = _formatCombination(combination)
 							if job._uses is None:
-								instance = DefinedMatrixJob(job, values, parent=element)
+								instance = DefinedMatrixJob(job, dimensions, parent=element)
 								for step in job._steps:
 									DefinedStep(step, parent=instance)
 							else:
-								instance = DefinedMatrixWorkflow(job, values, calledWorkflow=called, parent=element)
+								instance = DefinedMatrixWorkflow(job, dimensions, calledWorkflow=called, parent=element)
 								if called is not None:
 									addElements(called, instance, level + 1, (*callers, called))
 				elif job._uses is not None:
@@ -1806,6 +1818,11 @@ class Workflow(Base):
 		A job whose display name is an expression, as ``${{ matrix.os }} Tests``, can't be looked up, and is skipped. A
 		job with a condition may have been skipped in the run, so it isn't reported when it is missing.
 
+		A run names a matrix instance's dimensions by position, as ``{"0": "ubuntu-26.04", "1": "3.14"}``. If the job
+		declares a static matrix, an instance whose values are those of one of :attr:`Matrix.Combinations` gets that
+		combination's names, ``{"os": "ubuntu-26.04", "python": "3.14"}``. The instances of a dynamic matrix, and an
+		instance matching no combination, keep the positions.
+
 		:param pipeline:                  The run, or a called workflow of a run.
 		:param resolver:                  Optional, the resolver reading the workflows the jobs call. Without it, called
 		                                  workflows are not followed. Default: ``None``.
@@ -1816,6 +1833,7 @@ class Workflow(Base):
 		:raises TypeError:                If parameter 'pipeline' is not of type :class:`pyTooling.CI.Pipeline.Workflow`.
 		:raises TypeError:                If parameter 'resolver' is not of type :class:`WorkflowResolver`.
 		:raises WorkflowError:            If a workflow to follow doesn't exist, or is not a well-formed workflow.
+		:raises WorkflowError:            If ``include`` or ``exclude`` of a matrix is not a list of mappings.
 		:raises NeedDependencyCycleError: If the needs of the run, with the needs added, form a cycle.
 		"""
 		if pipeline is None:
@@ -1855,6 +1873,16 @@ class Workflow(Base):
 
 				element = group[name]
 				elements[job._name] = element
+				if job._matrix is not None and not job._matrix.IsDynamic and isinstance(element, CIMatrix):
+					combinations = [_formatCombination(combination) for combination in job._matrix.Combinations]
+					for instance in element.Instances:
+						if not isinstance(instance, MatrixInstanceMixin):
+							continue
+
+						values = [str(value) for value in instance._dimensions.values()]
+						if (names := next((c for c in combinations if list(c.values()) == values), None)) is not None:
+							instance._dimensions = dict(zip(names, instance._dimensions.values()))
+
 				if job._uses is None or resolver is None or (called := resolver.Resolve(job._uses)) is None:
 					continue
 				elif isinstance(element, CIWorkflow):
@@ -2439,21 +2467,22 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 
 	def __init__(
 		self,
-		definition:      Job,
-		dimensionValues: Iterable[str],
+		definition:     Job,
+		dimensions:     Mapping[str, Any],
 		*,
-		calledWorkflow:  Nullable[Workflow] = None,
-		parent:          Nullable[CIMatrix] = None
+		calledWorkflow: Nullable[Workflow] = None,
+		parent:         Nullable[CIMatrix] = None
 	) -> None:
 		"""
 		Initializes one instance of a matrix calling a reusable workflow, named by the job's key.
 
-		:param definition:      The job declaring the matrix.
-		:param dimensionValues: The values of the matrix' combination this instance is called with.
-		:param calledWorkflow:  Optional, the workflow file the called workflow's elements are built from. Default:
-		                        ``None``.
-		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
-		:raises ValueError:     If parameter 'definition' calls no workflow.
+		:param definition:     The job declaring the matrix.
+		:param dimensions:     The matrix' combination this instance is called with, the values as GitHub prints them.
+		:param calledWorkflow: Optional, the workflow file the called workflow's elements are built from. Default:
+		                       ``None``.
+		:param parent:         Optional, reference to the matrix containing the instance. Default: ``None``.
+		:raises ValueError:    If parameter 'definition' calls no workflow.
+		:raises ValueError:    If parameter 'dimensions' is ``None``.
 		"""
 		self._CheckDefinition(definition)
 
@@ -2461,9 +2490,11 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 			ex = ValueError("Parameter 'definition' calls no workflow.")
 			ex.add_note(f"Got job '{definition._name}'.")
 			raise ex
+		elif dimensions is None:
+			raise ValueError("Parameter 'dimensions' is None.")
 
 		super().__init__(
-			definition._name, dimensionValues, reference=str(definition._uses), condition=definition._condition,
+			definition._name, dimensions, reference=str(definition._uses), condition=definition._condition,
 			parent=parent
 		)
 		DefinitionMixin.__init__(self, definition)
@@ -2495,17 +2526,21 @@ class DefinedMatrixJob(CIMatrixJob, DefinitionMixin):
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A matrix instance is built from the job declaring the matrix.
 
-	def __init__(self, definition: Job, dimensionValues: Iterable[str], *, parent: Nullable[CIMatrix] = None) -> None:
+	def __init__(self, definition: Job, dimensions: Mapping[str, Any], *, parent: Nullable[CIMatrix] = None) -> None:
 		"""
 		Initializes one instance of a matrix running steps, named by the job's key.
 
-		:param definition:      The job declaring the matrix.
-		:param dimensionValues: The values of the matrix' combination this instance runs with.
-		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param definition:  The job declaring the matrix.
+		:param dimensions:  The matrix' combination this instance runs with, the values as GitHub prints them.
+		:param parent:      Optional, reference to the matrix containing the instance. Default: ``None``.
+		:raises ValueError: If parameter 'dimensions' is ``None``.
 		"""
 		self._CheckDefinition(definition)
 
-		super().__init__(definition._name, dimensionValues, condition=definition._condition, parent=parent)
+		if dimensions is None:
+			raise ValueError("Parameter 'dimensions' is None.")
+
+		super().__init__(definition._name, dimensions, condition=definition._condition, parent=parent)
 		DefinitionMixin.__init__(self, definition)
 
 

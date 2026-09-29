@@ -633,6 +633,7 @@ class ToPipeline(Fixture):
 			["Static (ubuntu, 3.13)", "Static (ubuntu, 3.14)", "Static (windows, 3.14)"], [str(job) for job in static]
 		)
 		self.assertIsInstance(static["Static (ubuntu, 3.14)"], DefinedMatrixJob)
+		self.assertDictEqual({"system": "ubuntu", "python": "3.14"}, static["Static (ubuntu, 3.14)"].Dimensions)
 		self.assertEqual(["Run docker://alpine:3.22"], [str(step) for step in static["Static (ubuntu, 3.14)"].Steps])
 
 	def test_Steps(self) -> None:
@@ -717,6 +718,7 @@ class ToPipeline(Fixture):
 		self.assertIsInstance(tests, DefinedMatrix)
 		self.assertEqual(["Tests (3.13)", "Tests (3.14)"], [str(instance) for instance in tests])
 		self.assertIsInstance(tests["Tests (3.14)"], DefinedMatrixWorkflow)
+		self.assertDictEqual({"python": "3.14"}, tests["Tests (3.14)"].Dimensions)
 		self.assertEqual("Tests (3.14) / Prepare", tests["Tests (3.14)"]["Prepare"].QualifiedName)
 
 	def test_Recursion(self) -> None:
@@ -768,6 +770,13 @@ class ToPipeline(Fixture):
 			_ = DefinedMatrix(workflow.Jobs["Package"])
 
 		self.assertEqual("Parameter 'definition' declares no matrix.", str(context.exception))
+
+		for cls in (DefinedMatrixJob, DefinedMatrixWorkflow):
+			with self.subTest(cls=cls.__name__):
+				with self.assertRaises(ValueError) as context:
+					_ = cls(workflow.Jobs["Package"], None)
+
+				self.assertEqual("Parameter 'dimensions' is None.", str(context.exception))
 
 	def test_ToGraph(self) -> None:
 		"""The graph of the pipeline drops a dependency a longer path implies."""
@@ -903,6 +912,70 @@ class ApplyNeeds(Fixture):
 		workflow.ApplyNeeds(run)
 
 		self.assertEqual([run["Prepare"]], run["Package"].Needs)
+
+	def test_Matrix(self) -> None:
+		"""An instance of a static matrix gets the names of the combination its values are those of."""
+		workflow = Workflow.FromFile(self._write("A.yml", dedent("""\
+			on: push
+			jobs:
+			  Test:
+			    runs-on: x
+			    strategy:
+			      matrix:
+			        os: [ubuntu, windows]
+			        python: ['3.14']
+			        include:
+			          - os: macos
+			            python: '3.13'
+			            experimental: true
+			          - os: ubuntu
+			            coverage: true
+			    steps: []
+			  Calls:
+			    uses: ./.github/workflows/Prepare.yml
+			    strategy:
+			      matrix:
+			        python: ['3.13']
+		""")))
+		run = self._run(
+			("Test (ubuntu, 3.14, true)", "success"),
+			("Test (windows, 3.14)", "success"),
+			("Test (macos, 3.13, true)", "success"),
+			("Test (linux, 3.12)", "success"),
+			("Calls (3.13) / Prepare", "success")
+		)
+
+		workflow.ApplyNeeds(run)
+
+		test = run["Test"]
+		self.assertDictEqual(
+			{"os": "ubuntu", "python": "3.14", "coverage": "true"}, test["Test (ubuntu, 3.14, true)"].Dimensions
+		)
+		self.assertDictEqual({"os": "windows", "python": "3.14"}, test["Test (windows, 3.14)"].Dimensions)
+		self.assertDictEqual(
+			{"os": "macos", "python": "3.13", "experimental": "true"}, test["Test (macos, 3.13, true)"].Dimensions
+		)
+		self.assertDictEqual({"0": "linux", "1": "3.12"}, test["Test (linux, 3.12)"].Dimensions)
+		self.assertDictEqual({"python": "3.13"}, run["Calls"]["Calls (3.13)"].Dimensions)
+		self.assertEqual("Test (ubuntu, 3.14, true)", str(test["Test (ubuntu, 3.14, true)"]))
+
+	def test_Matrix_Dynamic(self) -> None:
+		"""An instance of a dynamic matrix keeps the positions as names."""
+		workflow = Workflow.FromFile(self._write("A.yml", dedent("""\
+			on: push
+			jobs:
+			  Test:
+			    runs-on: x
+			    strategy:
+			      matrix:
+			        include: ${{ fromJson(inputs.jobs) }}
+			    steps: []
+		""")))
+		run = self._run(("Test (ubuntu, 3.14)", "success"))
+
+		workflow.ApplyNeeds(run)
+
+		self.assertDictEqual({"0": "ubuntu", "1": "3.14"}, run["Test"]["Test (ubuntu, 3.14)"].Dimensions)
 
 	def test_Expression(self) -> None:
 		"""A job named by an expression can't be looked up, and isn't reported."""

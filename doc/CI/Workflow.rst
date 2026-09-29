@@ -185,8 +185,10 @@ reads them and ``depth`` allows:
   workflow's :attr:`~pyTooling.CI.Workflow.CallMixin.CalledWorkflow` is the file it was expanded from.
 * A matrix yields its combinations as GitHub computes them from its dimensions, ``exclude`` and ``include`` -
   :attr:`Matrix.Combinations <pyTooling.CI.Workflow.Matrix.Combinations>` -, and an instance is named by its values:
-  ``Test (ubuntu, 3.14)``. A **dynamic** matrix - ``include: ${{ fromJson(...) }}`` - is a
-  :class:`~pyTooling.CI.Workflow.DefinedMatrix` without instances, since its combinations are known at run time only.
+  ``Test (ubuntu, 3.14)``. Its :attr:`~pyTooling.CI.Pipeline.MatrixInstanceMixin.Dimensions` are the combination,
+  the values formatted as GitHub prints them: ``{"os": "ubuntu", "python": "3.14"}``. A **dynamic** matrix -
+  ``include: ${{ fromJson(...) }}`` - is a :class:`~pyTooling.CI.Workflow.DefinedMatrix` without instances, since its
+  combinations are known at run time only.
 * A workflow calling itself, directly or through others, raises :exc:`~pyTooling.CI.Workflow.WorkflowError`.
 
 
@@ -213,6 +215,10 @@ A run read from the GitHub REST API (:ref:`CI/GitHub`) has no ``needs``: the API
   A matrix is found as the :class:`~pyTooling.CI.Pipeline.Matrix` its instances were grouped into.
 * A job calling a reusable workflow is followed into the run's called workflow, and a matrix of calls into each
   instance, as far as the resolver reads the called file.
+* A run names an instance's dimensions by position - ``{"0": "ubuntu", "1": "3.14"}`` -, since a job's name carries
+  the values only. For a static matrix, an instance whose values are those of a combination gets the combination's
+  names: ``{"os": "ubuntu", "python": "3.14"}``. The instances of a dynamic matrix, and one matching no combination,
+  keep the positions.
 * A job named by an expression - ``${{ matrix.os }} Tests`` - can't be looked up and is skipped. A job with a
   condition may have been skipped in the run, so it isn't reported when it's missing. Every other job missing in the
   run is returned by its qualified name, as the run would name it: ``Local / Static`` for the job ``Static`` of the
