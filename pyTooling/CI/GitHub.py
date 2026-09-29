@@ -73,6 +73,9 @@ from pyTooling.GenericPath.URL import URL
 from pyTooling.MetaClasses     import ExtendedType
 
 
+__all__ = ["CONCLUSION_TO_OUTCOME"]
+
+
 @export
 class GitHubError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.CI.GitHub`."""
@@ -144,12 +147,23 @@ class Conclusion(StringEnum):
 		"""
 		Return the service-independent outcome this conclusion corresponds to.
 
-		:attr:`TimedOut`, :attr:`Skipped` and :attr:`Cancelled` have a counterpart of their own; a conclusion without
-		one, e.g. :attr:`StartupFailure` or :attr:`Neutral`, is an :attr:`~pyTooling.CI.Pipeline.Outcome.Error`.
+		The conclusions with a counterpart of their own - e.g. :attr:`TimedOut`, :attr:`Skipped`, :attr:`Cancelled` - are
+		listed in :data:`CONCLUSION_TO_OUTCOME`; any other, e.g. :attr:`StartupFailure` or :attr:`Neutral`, is an
+		:attr:`~pyTooling.CI.Pipeline.Outcome.Error`.
 
 		:returns: The outcome.
 		"""
-		return _CONCLUSION_TO_OUTCOME.get(self, Outcome.Error)
+		return CONCLUSION_TO_OUTCOME.get(self, Outcome.Error)
+
+
+CONCLUSION_TO_OUTCOME = {
+	Conclusion.Success:   Outcome.Success,
+	Conclusion.Failure:   Outcome.Failure,
+	Conclusion.TimedOut:  Outcome.Timeout,
+	Conclusion.Skipped:   Outcome.Skip,
+	Conclusion.Cancelled: Outcome.Cancellation,
+}
+"""GitHub's conclusions with a service-independent outcome of their own."""
 
 
 @export
@@ -207,16 +221,6 @@ class Event(StringEnum):
 			error = GitHubError(f"'{value}' is not a GitHub event.")
 			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
 			raise error from ex
-
-
-_CONCLUSION_TO_OUTCOME = {
-	Conclusion.Success:   Outcome.Success,
-	Conclusion.Failure:   Outcome.Failure,
-	Conclusion.TimedOut:  Outcome.Timeout,
-	Conclusion.Skipped:   Outcome.Skip,
-	Conclusion.Cancelled: Outcome.Cancellation,
-}
-"""GitHub's conclusions with a service-independent outcome of their own."""
 
 
 def _parseISO8601Timestamp(value: Nullable[str], field: str) -> Nullable[datetime]:
