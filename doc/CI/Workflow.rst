@@ -13,8 +13,8 @@ GitHub Actions Workflow Files
 
    workflow = Workflow.FromFile(Path(".github/workflows/CompletePipeline.yml"))
 
-   print(f"{workflow.Name}: {len(workflow.Inputs)} inputs, {len(workflow)} jobs")
-   for job in workflow:
+   print(f"{workflow.Name}: {len(workflow.Inputs)} inputs, {workflow.JobCount} jobs")
+   for job in workflow.IterateJobs():
      print(f"  {job.Name:<24} {job.Uses or job.RunsOn}  needs {', '.join(job.NeedNames)}")
 
 The file is read with ``ruamel.yaml``, so the module needs the ``yaml`` extra - see :ref:`DEP`.
@@ -110,9 +110,9 @@ repository, whatever the ref:
    resolver = WorkflowResolver({"pyTooling/Actions": Path(".github/workflows")})
    pipeline = resolver.Load(Path(".github/workflows/CompletePipeline.yml"))
 
-   for job in pipeline:
+   for job in pipeline.IterateJobs():
      if job.Uses is not None and (called := resolver.Resolve(job.Uses)) is not None:
-       print(f"{job.Name} calls {called.Name} with {len(called)} jobs")
+       print(f"{job.Name} calls {called.Name} with {called.JobCount} jobs")
 
 * A local reference - ``./.github/workflows/Package.yml`` - is read from the directory of the calling workflow.
 * A repository without a directory answers ``None``: its files are not fetched.

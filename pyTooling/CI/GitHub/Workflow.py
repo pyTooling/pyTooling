@@ -1405,15 +1405,16 @@ class Job(Base):
 		"""
 		return self._outputs
 
-	def __len__(self) -> int:
+	@readonly
+	def StepCount(self) -> int:
 		"""
-		Return the number of steps of the job.
+		Read-only property to return the number of steps of the job.
 
 		:returns: Number of steps.
 		"""
 		return len(self._steps)
 
-	def __iter__(self) -> Iterator[Step]:
+	def IterateSteps(self) -> Iterator[Step]:
 		"""
 		Iterate the job's steps.
 
@@ -1969,15 +1970,16 @@ class Workflow(Base):
 
 		return collected
 
-	def __len__(self) -> int:
+	@readonly
+	def JobCount(self) -> int:
 		"""
-		Return the number of jobs of the workflow.
+		Read-only property to return the number of jobs of the workflow.
 
 		:returns: Number of jobs.
 		"""
 		return len(self._jobs)
 
-	def __contains__(self, name: str) -> bool:
+	def ContainsJob(self, name: str) -> bool:
 		"""
 		Check whether the workflow has a job of that name.
 
@@ -1986,7 +1988,7 @@ class Workflow(Base):
 		"""
 		return name in self._jobs
 
-	def __iter__(self) -> Iterator[Job]:
+	def IterateJobs(self) -> Iterator[Job]:
 		"""
 		Iterate the workflow's jobs.
 

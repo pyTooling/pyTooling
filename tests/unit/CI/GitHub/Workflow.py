@@ -392,10 +392,10 @@ class Jobs(Fixture):
 	def test_Order(self) -> None:
 		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
 
-		self.assertEqual(3, len(workflow))
-		self.assertEqual(["Params", "Build", "Static"], [job.Name for job in workflow])
-		self.assertIn("Build", workflow)
-		self.assertNotIn("Unknown", workflow)
+		self.assertEqual(3, workflow.JobCount)
+		self.assertEqual(["Params", "Build", "Static"], [job.Name for job in workflow.IterateJobs()])
+		self.assertTrue(workflow.ContainsJob("Build"))
+		self.assertFalse(workflow.ContainsJob("Unknown"))
 
 	def test_Steps(self) -> None:
 		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
@@ -407,15 +407,15 @@ class Jobs(Fixture):
 		self.assertIsNone(params.Condition)
 		self.assertIsNone(params.Permissions)
 		self.assertEqual({"jobs": "${{ steps.params.outputs.jobs }}"}, params.Outputs)
-		self.assertEqual(1, len(params))
+		self.assertEqual(1, params.StepCount)
 		self.assertEqual("Compute", params.Steps[0].Name)
 		self.assertEqual("params", params.Steps[0].ID)
 		self.assertIn("GITHUB_OUTPUT", params.Steps[0].Run)
 		self.assertEqual("Package.yml:40", params.Location)
 
 		build = workflow.Jobs["Build"]
-		self.assertEqual(3, len(build))
-		steps = list(build)
+		self.assertEqual(3, build.StepCount)
+		steps = list(build.IterateSteps())
 		self.assertEqual("actions/checkout@v6", str(steps[0].Uses))
 		self.assertIs(steps[0], steps[0].Uses.Parent)
 		self.assertIs(workflow, steps[0].Uses.Workflow)
@@ -433,7 +433,7 @@ class Jobs(Fixture):
 
 	def test_Needs(self) -> None:
 		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
-		params, build, static = workflow
+		params, build, static = workflow.IterateJobs()
 
 		self.assertEqual((), params.Needs)
 		self.assertEqual(("Params", ), build.NeedNames)
@@ -495,7 +495,7 @@ class Jobs(Fixture):
 		self.assertEqual("dev", package.Uses.Ref)
 		self.assertEqual("Pipeline.yml:12", package.Uses.Location)
 		self.assertEqual((), package.RunsOn)
-		self.assertEqual(0, len(package))
+		self.assertEqual(0, package.StepCount)
 		self.assertEqual({"package_name": "myPackage", "delay": 10}, package.With)
 		self.assertEqual({"PYPI_TOKEN": "${{ secrets.PYPI_TOKEN }}"}, package.Secrets)
 		self.assertFalse(package.InheritsSecrets)
