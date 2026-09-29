@@ -554,7 +554,7 @@ class Dependencies(WorkflowReferenceDirective):
 		templates: dict[str, tuple[UsesReference, list[str]]] = {}
 		containers: dict[str, None] = {}
 		services: dict[tuple[str, str], None] = {}
-		for job in workflow:
+		for job in workflow.IterateJobs():
 			if job.Uses is not None and job.Uses.IsWorkflow:
 				templates.setdefault(str(job.Uses), (job.Uses, []))[1].append(job.Name)
 			if job.Container is not None:
