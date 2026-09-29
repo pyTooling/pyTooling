@@ -32,7 +32,7 @@
 A Sphinx domain ``gha`` documenting GitHub Actions workflows from their YAML files.
 
 The facts of a reusable workflow - an input's type, whether it is required, its default - are read from the workflow
-file by :mod:`pyTooling.CI.Workflow`, so a page states them without copying them. What the file can't say stays
+file by :mod:`pyTooling.CI.GitHub.Workflow`, so a page states them without copying them. What the file can't say stays
 hand-written, as the content of a directive:
 
 .. code-block:: rst
@@ -57,7 +57,7 @@ The workflow files are read with ``ruamel.yaml`` when a directive runs, not when
 
 .. seealso::
 
-   :mod:`pyTooling.CI.Workflow`
+   :mod:`pyTooling.CI.GitHub.Workflow`
       |rarr| The model of a workflow file the domain reads.
 """
 from __future__                                import annotations
@@ -81,8 +81,8 @@ from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export, readonly
 
 if TYPE_CHECKING:  # pragma: no cover
-	from pyTooling.CI.Workflow                   import Input, Output, Parameter, Secret, ValueT, Workflow
-	from pyTooling.CI.Workflow                   import WorkflowResolver
+	from pyTooling.CI.GitHub.Workflow            import Input, Output, Parameter, Secret, ValueT, Workflow
+	from pyTooling.CI.GitHub.Workflow            import WorkflowResolver
 
 
 __all__ = ["CONFIG_VALUES", "NO_DEFAULT", "WARNING_TYPE", "LEADING_FIELDS"]
@@ -129,7 +129,7 @@ def formatValue(value: ValueT) -> str:
 	A string is quoted as YAML quotes it - ``'3.14'`` -, a boolean is ``true`` or ``false``, and a number is written as
 	it is.
 
-	:param value: The value, as :attr:`Input.Default <pyTooling.CI.Workflow.Input.Default>`.
+	:param value: The value, as :attr:`Input.Default <pyTooling.CI.GitHub.Workflow.Input.Default>`.
 	:returns:     The value as text, or :data:`NO_DEFAULT` for ``None``.
 	"""
 	if value is None:
@@ -222,7 +222,7 @@ class WorkflowDirective(SphinxDirective):
 		:param name:   The workflow's name, as given as argument.
 		:param path:   Path to the workflow file.
 		"""
-		from pyTooling.CI.Workflow import WorkflowError
+		from pyTooling.CI.GitHub.Workflow import WorkflowError
 
 		try:
 			workflow = domain.Resolver.Load(path)
@@ -591,7 +591,7 @@ class GitHubActionsDomain(Domain):
 		:raises MissingDependencyError: If the ``yaml`` extra isn't installed.
 		"""
 		if self._resolver is None:
-			from pyTooling.CI.Workflow import WorkflowResolver
+			from pyTooling.CI.GitHub.Workflow import WorkflowResolver
 
 			repositories = {}
 			repository = self.env.config.gha_repository
