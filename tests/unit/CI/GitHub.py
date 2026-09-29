@@ -31,13 +31,15 @@
 """
 Unit tests for :mod:`pyTooling.CI.GitHub`.
 """
-from datetime            import datetime, timezone
-from typing              import Any, Optional as Nullable
+from datetime              import datetime, timezone
+from typing                import Any, Optional as Nullable
 
-from pyTooling.CI.GitHub import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, Job, JobGroup, Step
-from pyTooling.CI.GitHub import Status, Conclusion, Event, GitHubError, QualifiedNameMixin
+from pyTooling             import CI
+from pyTooling.CI.GitHub   import PipelineGroup, Pipeline, MatrixJob, Job, Step
+from pyTooling.CI.GitHub   import Status, Conclusion, Event, GitHubError, StatusMixin
+from pyTooling.CI          import Base, JobGroup, Matrix, MatrixWorkflow, QualifiedNameMixin, Workflow
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
-from pyTooling.Testing   import Testcase
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -354,7 +356,7 @@ class Matrices(Testcase):
 
 		self.assertIsInstance(instance, MatrixJob)
 		self.assertEqual("Unit Tests", instance.Name)
-		self.assertEqual(["ubuntu-26.04", "3.14"], instance.DimensionValues)
+		self.assertDictEqual({"0": "ubuntu-26.04", "1": "3.14"}, instance.Dimensions)
 		self.assertEqual("Unit Tests (ubuntu-26.04, 3.14)", str(instance))
 
 	def test_MatrixDimensionsOfEveryInstance(self) -> None:
@@ -364,8 +366,8 @@ class Matrices(Testcase):
 		])
 
 		self.assertEqual(
-			[["ubuntu-26.04", "3.14"], ["windows-2025", "3.11"]],
-			[instance.DimensionValues for instance in pipeline.Matrices["Unit Tests"].Instances]
+			[{"0": "ubuntu-26.04", "1": "3.14"}, {"0": "windows-2025", "1": "3.11"}],
+			[instance.Dimensions for instance in pipeline.Matrices["Unit Tests"].Instances]
 		)
 
 	def test_MatrixSpansItsInstances(self) -> None:
@@ -418,7 +420,7 @@ class Matrices(Testcase):
 
 		self.assertEqual(1, len(pipeline.Matrices))
 		self.assertEqual("Build", pipeline.Matrices["Build"].Name)
-		self.assertEqual(["fast"], pipeline.Matrices["Build"].Instances[0].DimensionValues)
+		self.assertEqual({"0": "fast"}, pipeline.Matrices["Build"].Instances[0].Dimensions)
 
 
 class Hierarchy(Testcase):
@@ -523,7 +525,8 @@ class Times(Testcase):
 		workflow = Pipeline.FromJSON(_run(), [_job("Caller / Build", 60, 70, 300)]).Workflows["Caller"]
 
 		self.assertEqual(_time(60), workflow.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
-		self.assertFalse(hasattr(workflow, "ContentsCreatedAt"), "Only a run has two sets of times.")
+		self.assertEqual(workflow.ContentsCreatedAt, workflow.CreatedAt)
+		self.assertEqual(workflow.ContentsCompletedAt, workflow.CompletedAt)
 
 
 class Ordering(Testcase):
@@ -706,7 +709,9 @@ class Groups(Testcase):
 
 		self.assertEqual("Matrixed", matrix.Name)
 		self.assertEqual(2, len(matrix.Instances))
-		self.assertEqual([["x", "1"], ["y", "2"]], [instance.DimensionValues for instance in matrix.Instances])
+		self.assertEqual(
+			[{"0": "x", "1": "1"}, {"0": "y", "1": "2"}], [instance.Dimensions for instance in matrix.Instances]
+		)
 
 	def test_OuterLevelsSpanEveryJobBelowThem(self) -> None:
 		pipeline = Pipeline.FromJSON(_run(), [
@@ -760,11 +765,11 @@ class QualifiedNames(Testcase):
 		self.assertEqual("Caller", pipeline.QualifiedName)
 		self.assertEqual("A / Deep", pipeline.Workflows["A"].Jobs[0].QualifiedName)
 
-	def test_OnlyAJobAndAWorkflowAreNamedThatWay(self) -> None:
-		"""GitHub reports no name for a matrix, and a step's name carries no prefix."""
+	def test_OnlyAJobAWorkflowAndAMatrixAreNamedThatWay(self) -> None:
+		"""A step's name carries no prefix."""
 		self.assertTrue(issubclass(Job, QualifiedNameMixin))
 		self.assertTrue(issubclass(Workflow, QualifiedNameMixin))
-		self.assertFalse(issubclass(Matrix, QualifiedNameMixin))
+		self.assertTrue(issubclass(Matrix, QualifiedNameMixin))
 		self.assertFalse(issubclass(Step, QualifiedNameMixin))
 
 	def test_TheMixinExpectsTheFieldItWalks(self) -> None:
@@ -1028,17 +1033,29 @@ class ParameterChecks(Testcase):
 
 		self.assertEqual("Parameter 'parent' is not of type 'PipelineGroup'.", str(context.exception))
 
+	def test_PipelineGroupSHA(self) -> None:
+		for sha, exceptionType, message in (
+			(None,     ValueError, "Parameter 'sha' is None."),
+			(0x41364c, TypeError,  "Parameter 'sha' is not of type 'str'."),
+			("",       ValueError, "Parameter 'sha' is empty.")
+		):
+			with self.subTest(sha=sha):
+				with self.assertRaises(exceptionType) as context:
+					_ = PipelineGroup(sha)
+
+				self.assertEqual(message, str(context.exception))
+
 	def test_PipelineGroupElementType(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = PipelineGroup("41364cfc", ["pipeline"])
 
 		self.assertEqual("An element of parameter 'pipelines' is not of type 'Pipeline'.", str(context.exception))
 
-	def test_MatrixJobDimensionValuesElementType(self) -> None:
+	def test_MatrixJobDimensionsType(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = MatrixJob("Unit Tests", ["ubuntu-26.04", 314])
+			_ = MatrixJob("Unit Tests", ["ubuntu-26.04", "3.14"])
 
-		self.assertEqual("An element of parameter 'dimensionValues' is not of type 'str'.", str(context.exception))
+		self.assertEqual("Parameter 'dimensions' is not a mapping ('dict', ...).", str(context.exception))
 
 	def test_UnknownEvent(self) -> None:
 		with self.assertRaises(GitHubError) as context:
@@ -1098,7 +1115,7 @@ class BottomUpConstruction(Testcase):
 		self.assertIs(pipeline, job.Steps[0].Pipeline)
 
 	def test_MatrixJobTakesStepsToo(self) -> None:
-		instance = MatrixJob("Unit Tests", ["ubuntu-26.04"], steps=[Step("Compile", 1)])
+		instance = MatrixJob("Unit Tests", {"os": "ubuntu-26.04"}, steps=[Step("Compile", 1)])
 
 		self.assertEqual(1, len(instance))
 		self.assertIs(instance, instance.Steps[0].Parent)
@@ -1114,3 +1131,141 @@ class BottomUpConstruction(Testcase):
 		self.assertEqual(["Set up job"], [step.Name for step in job])
 		self.assertIs(job, job.Steps[0].Parent)
 		self.assertIs(pipeline, job.Steps[0].Pipeline)
+
+
+class GenericModel(Testcase):
+	"""The run model derives from :mod:`pyTooling.CI`."""
+
+	def test_Classes(self) -> None:
+		for cls, generic in (
+			(PipelineGroup, CI.PipelineGroup), (Pipeline, CI.Pipeline), (Job, CI.Job),
+			(MatrixJob, CI.MatrixInstanceMixin), (Step, CI.Step)
+		):
+			with self.subTest(cls=cls.__name__):
+				self.assertTrue(issubclass(cls, generic))
+
+		for cls in (Base, JobGroup, Workflow, Matrix, QualifiedNameMixin):
+			with self.subTest(cls=cls.__name__):
+				self.assertIs(getattr(CI, cls.__name__), cls)
+
+	def test_StatusMixin(self) -> None:
+		for cls in (Pipeline, Job, MatrixJob, Step):
+			with self.subTest(cls=cls.__name__):
+				self.assertTrue(issubclass(cls, StatusMixin))
+				self.assertEqual(tuple(), cls.__missingMembers__)
+				self.assertFalse(hasattr(cls("x"), "__dict__"))
+
+		for cls in (PipelineGroup, Workflow, Matrix):
+			with self.subTest(cls=cls.__name__):
+				self.assertFalse(issubclass(cls, StatusMixin))
+
+	def test_ToOutcome(self) -> None:
+		for conclusion, outcome in (
+			(Conclusion.Success,        CI.Outcome.Success),
+			(Conclusion.Failure,        CI.Outcome.Failure),
+			(Conclusion.TimedOut,       CI.Outcome.Timeout),
+			(Conclusion.Skipped,        CI.Outcome.Skip),
+			(Conclusion.Cancelled,      CI.Outcome.Cancellation),
+			(Conclusion.StartupFailure, CI.Outcome.Error),
+			(Conclusion.Neutral,        CI.Outcome.Error),
+		):
+			with self.subTest(conclusion=conclusion.name):
+				self.assertIs(outcome, conclusion.ToOutcome())
+
+	def test_Outcome(self) -> None:
+		"""Every reported element carries the outcome its conclusion maps to; a group combines its elements'."""
+		steps = [{"name": "Test", "number": 1, "status": "completed", "conclusion": "failure"}]
+		pipeline = Pipeline.FromJSON(_run(conclusion="failure"), [
+			_job("Caller / Build", 60, 70, 300),
+			_job("Caller / Test", 60, 70, 300, conclusion="failure", steps=steps),
+			_job("Deploy", 60, None, None, status="completed", conclusion="skipped"),
+		])
+		caller = pipeline.Workflows["Caller"]
+
+		self.assertIs(CI.Outcome.Failure, pipeline.Outcome)
+		self.assertIs(CI.Outcome.Failure, caller.Outcome)
+		self.assertIs(CI.Outcome.Failure, caller.Jobs[1].Steps[0].Outcome)
+		self.assertIs(CI.Outcome.Skip, pipeline.Jobs[0].Outcome)
+		self.assertIsNone(Pipeline.FromJSON(_run(status="in_progress", conclusion=None)).Outcome)
+
+	def test_Needs(self) -> None:
+		"""The REST API reports no dependencies; they are added to the run's elements."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Prepare", 0, 10, 20), _job("Caller / Build", 60, 70, 300), _job("Test (3.14)", 60, 70, 300)
+		])
+		prepare = pipeline.Jobs[0]
+		caller =  pipeline.Workflows["Caller"]
+		test =    pipeline.Matrices["Test"]
+		caller.AddNeed(prepare)
+		test.AddNeed(caller)
+
+		self.assertListEqual([caller], prepare.Dependents)
+		graph = pipeline.ToGraph(depth=0)
+		self.assertEqual(3, graph.VertexCount)
+		self.assertEqual(2, graph.EdgeCount)
+
+	def test_Order(self) -> None:
+		"""A workflow's elements are in the order GitHub listed their first job, whatever their kind."""
+		pipeline = Pipeline.FromJSON(_run(), [
+			_job("Caller / Build", 60, 70, 300, created_at=None), _job("Test (3.14)", 60, 70, 300, created_at=None),
+			_job("Prepare", 0, 10, 20, created_at=None)
+		])
+
+		self.assertListEqual(["Caller", "Test", "Prepare"], [element.Name for element in pipeline.Elements])
+
+
+class MatrixOfCalledWorkflows(Testcase):
+	"""A job with ``strategy.matrix`` and ``uses:`` calls a workflow per combination, e.g. GHDL's ``Ubuntu-fast``."""
+
+	def _Pipeline(self) -> Pipeline:
+		"""
+		Read a run whose matrix called a reusable workflow three times, beside a plain job.
+
+		:returns: The workflow run.
+		"""
+		jobs = [_job("Params", 0, 5, 20)]
+		for position, version in enumerate(("22.04", "24.04", "26.04")):
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Build", 20, 30 + position, 300 + position))
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Test", 300, 310, 600 + position))
+
+		return Pipeline.FromJSON(_run(), jobs)
+
+	def test_Structure(self) -> None:
+		pipeline = self._Pipeline()
+
+		self.assertListEqual(["Params", "Ubuntu-fast"], [element.Name for element in pipeline.Elements])
+		self.assertDictEqual({}, pipeline.Workflows)
+
+		matrix = pipeline.Matrices["Ubuntu-fast"]
+		self.assertListEqual(
+			["Ubuntu-fast (mcode, 22.04)", "Ubuntu-fast (mcode, 24.04)", "Ubuntu-fast (mcode, 26.04)"],
+			[str(instance) for instance in matrix.Instances]
+		)
+		for instance in matrix.Instances:
+			with self.subTest(instance=str(instance)):
+				self.assertIsInstance(instance, MatrixWorkflow)
+				self.assertEqual("Ubuntu-fast", instance.Name)
+				self.assertListEqual(["0", "1"], list(instance.Dimensions))
+				self.assertListEqual(["Build", "Test"], [job.Name for job in instance.Jobs])
+
+	def test_QualifiedName(self) -> None:
+		"""A job is named the way GitHub reports it, although a matrix sits between the run and its workflow."""
+		pipeline = self._Pipeline()
+		job = pipeline.Matrices["Ubuntu-fast"]["Ubuntu-fast (mcode, 24.04)"]["Test"]
+
+		self.assertEqual("Ubuntu-fast (mcode, 24.04) / Test", job.QualifiedName)
+		self.assertEqual(7, len(list(pipeline.IterateJobs())))
+
+	def test_Times(self) -> None:
+		matrix = self._Pipeline().Matrices["Ubuntu-fast"]
+
+		self.assertEqual(_time(20), matrix.CreatedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+		self.assertEqual(_time(602), matrix.CompletedAt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+	def test_MatrixJobsInside(self) -> None:
+		"""A matrix inside a called workflow of a matrix still becomes a matrix of jobs."""
+		pipeline = Pipeline.FromJSON(_run(), [_job("Tests (3.14) / Unit (ubuntu-26.04)", 20, 30, 300)])
+		instance = pipeline.Matrices["Tests"]["Tests (3.14)"]
+
+		self.assertIsInstance(instance, MatrixWorkflow)
+		self.assertIsInstance(instance.Matrices["Unit"].Instances[0], MatrixJob)
