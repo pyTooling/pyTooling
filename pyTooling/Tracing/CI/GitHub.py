@@ -48,12 +48,11 @@ sub-span per step. The time a job waited for a runner is a separate timespan in 
 
    See :ref:`high-level help <TRACING/CI>` for explanations and usage examples.
 """
-from datetime              import datetime
-from typing                import Any, ClassVar, Iterable, Optional as Nullable, Self, Union
+from datetime                  import datetime
+from typing                    import Any, ClassVar, Iterable, Optional as Nullable, Self, Union
 
-from pyTooling.CI              import JSONObject
+from pyTooling.CI              import Base, JobGroup, JSONObject, Matrix
 from pyTooling.CI.GitHub       import Conclusion, GitHubError, Job, MatrixJob, Pipeline, Step
-from pyTooling.CI.Pipeline     import Base, JobGroup, Matrix
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, readonly
 from pyTooling.GenericPath.URL import URL
@@ -134,7 +133,7 @@ class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		Return the CI/CD result of an element of the model.
 
-		The result is the member of the same value as the element's :attr:`~pyTooling.CI.Pipeline.Base.Outcome`. A
+		The result is the member of the same value as the element's :attr:`~pyTooling.CI.Base.Outcome`. A
 		GitHub conclusion is mapped onto an outcome by
 		:meth:`Conclusion.ToOutcome <pyTooling.CI.GitHub.Conclusion.ToOutcome>`.
 

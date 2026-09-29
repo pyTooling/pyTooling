@@ -47,11 +47,11 @@ The GitHub REST API answers with nested JSON objects whose fields are strings - 
        +-- Job              a job that ran on a runner
            +-- Step         a step of that job
 
-The classes derive from the service-independent model :mod:`pyTooling.CI.Pipeline`, which a called workflow, a
+The classes derive from the service-independent model :mod:`pyTooling.CI`, which a called workflow, a
 matrix and their base-class are taken from unchanged. Every element knows its parent and the pipeline it belongs to,
 and the string fields become :class:`Status`, :class:`Conclusion` and :class:`Event` members, so an undocumented value
 is an error rather than a comparison that never matches. A conclusion is reported as the model's
-:class:`~pyTooling.CI.Pipeline.Outcome` as well.
+:class:`~pyTooling.CI.Outcome` as well.
 
 The model carries no dependency on what is done with it. Converting a :class:`Pipeline` into a software execution
 trace, a graph or a report is a consumer of this model.
@@ -61,14 +61,12 @@ from __future__                import annotations
 from datetime                  import datetime, timezone
 from typing                    import Optional as Nullable, Any, ClassVar, Iterable, Mapping, Self, Union
 
-from pyTooling.CI              import JSONObject
-from pyTooling.CI.Pipeline     import MatrixInstanceMixin, Outcome
-from pyTooling.CI.Pipeline     import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
-from pyTooling.CI.Pipeline     import MatrixWorkflow as CIMatrixWorkflow, Pipeline as CIPipeline
-from pyTooling.CI.Pipeline     import PipelineGroup as CIPipelineGroup, Step as CIStep, Workflow as CIWorkflow
+from pyTooling.CI              import CIError, JSONObject, MatrixInstanceMixin, Outcome
+from pyTooling.CI              import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
+from pyTooling.CI              import MatrixWorkflow as CIMatrixWorkflow, Pipeline as CIPipeline
+from pyTooling.CI              import PipelineGroup as CIPipelineGroup, Step as CIStep, Workflow as CIWorkflow
 from pyTooling.Common          import getFullyQualifiedName, parseISO8601Timestamp, StringEnum
 from pyTooling.Decorators      import export, readonly
-from pyTooling.Exceptions      import ToolingException
 from pyTooling.GenericPath.URL import URL
 from pyTooling.MetaClasses     import ExtendedType
 
@@ -77,7 +75,7 @@ __all__ = ["CONCLUSION_TO_OUTCOME"]
 
 
 @export
-class GitHubError(ToolingException):
+class GitHubError(CIError):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.CI.GitHub`."""
 
 
@@ -149,7 +147,7 @@ class Conclusion(StringEnum):
 
 		The conclusions with a counterpart of their own - e.g. :attr:`TimedOut`, :attr:`Skipped`, :attr:`Cancelled` - are
 		listed in :data:`CONCLUSION_TO_OUTCOME`; any other, e.g. :attr:`StartupFailure` or :attr:`Neutral`, is an
-		:attr:`~pyTooling.CI.Pipeline.Outcome.Error`.
+		:attr:`~pyTooling.CI.Outcome.Error`.
 
 		:returns: The outcome.
 		"""
@@ -290,7 +288,7 @@ class StatusMixin(metaclass=ExtendedType, mixin=True, expects=("_outcome",)):
 
 	GitHub reports a :class:`Status` and, once completed, a :class:`Conclusion` for each of them, and a URL on
 	github.com for a run and a job. A called workflow and a matrix aren't reported, so they have none of it. The
-	conclusion is also the element's generic :attr:`~pyTooling.CI.Pipeline.Base.Outcome`.
+	conclusion is also the element's generic :attr:`~pyTooling.CI.Base.Outcome`.
 	"""
 
 	_status:     Nullable[Status]      #: State the element is in.
@@ -348,7 +346,7 @@ class StatusMixin(metaclass=ExtendedType, mixin=True, expects=("_outcome",)):
 		"""
 		Read-only property to access how the element ended (:attr:`_conclusion`).
 
-		The service-independent :attr:`~pyTooling.CI.Pipeline.Base.Outcome` is derived from it by
+		The service-independent :attr:`~pyTooling.CI.Base.Outcome` is derived from it by
 		:meth:`Conclusion.ToOutcome`.
 
 		:returns: The conclusion, or ``None`` while the element hasn't concluded.
@@ -531,8 +529,8 @@ class Pipeline(CIPipeline, StatusMixin):
 	"""
 	A workflow run.
 
-	A run contains its own jobs, a :class:`~pyTooling.CI.Pipeline.Matrix` for every matrix, and a
-	:class:`~pyTooling.CI.Pipeline.Workflow` for every workflow it called. Unlike a called workflow, a run reports its
+	A run contains its own jobs, a :class:`~pyTooling.CI.Matrix` for every matrix, and a
+	:class:`~pyTooling.CI.Workflow` for every workflow it called. Unlike a called workflow, a run reports its
 	own status, conclusion and times. Several runs of one commit are held by a :class:`PipelineGroup`, which is the
 	top of the tree.
 	"""
@@ -722,10 +720,10 @@ class Pipeline(CIPipeline, StatusMixin):
 		Build a workflow run and its tree from the JSON objects the GitHub REST API answers with.
 
 		A job's name says where it sits, and is read back into the tree: ``Docs / Sphinx / HTML`` nests below a
-		:class:`~pyTooling.CI.Pipeline.Workflow` per prefix, and ``Unit Tests (ubuntu-26.04, 3.14)`` becomes a
-		:class:`MatrixJob` below a :class:`~pyTooling.CI.Pipeline.Matrix` named ``Unit Tests``. A prefix carrying
+		:class:`~pyTooling.CI.Workflow` per prefix, and ``Unit Tests (ubuntu-26.04, 3.14)`` becomes a
+		:class:`MatrixJob` below a :class:`~pyTooling.CI.Matrix` named ``Unit Tests``. A prefix carrying
 		dimension values - ``Tests (3.14) / Unit``, a matrix of calls of a reusable workflow - becomes a
-		:class:`~pyTooling.CI.Pipeline.MatrixWorkflow` below a :class:`~pyTooling.CI.Pipeline.Matrix` named ``Tests``.
+		:class:`~pyTooling.CI.MatrixWorkflow` below a :class:`~pyTooling.CI.Matrix` named ``Tests``.
 
 		:param run:          The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
 		:param jobs:         Optional, the run's jobs, as listed by ``GET .../actions/runs/{run_id}/jobs``.
@@ -1057,7 +1055,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 
 	GitHub reports a matrix instance as an ordinary job whose name carries the dimensions' values in brackets, e.g.
 	``Unit Tests (ubuntu-26.04, 3.14)``. :meth:`Pipeline.FromJSON` reads those back into :attr:`Dimensions` and groups
-	the instances below a :class:`~pyTooling.CI.Pipeline.Matrix`. The values are in the order GitHub prints them. The
+	the instances below a :class:`~pyTooling.CI.Matrix`. The values are in the order GitHub prints them. The
 	job's payload names no dimension - only the workflow file does -, so a dimension's name is the position of its
 	value, ``{"0": "ubuntu-26.04", "1": "3.14"}``, until the names are known.
 	"""

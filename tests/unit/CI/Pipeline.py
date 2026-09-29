@@ -29,14 +29,15 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.CI.Pipeline`.
+Unit tests for :mod:`pyTooling.CI`.
 """
 from datetime              import datetime, timedelta, timezone
 
-from pyTooling.CI.Pipeline import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
-from pyTooling.CI.Pipeline import JobGroup, Step
-from pyTooling.CI.Pipeline import Outcome, PipelineError, NeedDependencyError, NeedDependencyCycleError
-from pyTooling.CI.Pipeline import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
+from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
+from pyTooling.CI          import JobGroup, Step
+from pyTooling.CI          import Outcome, CIError, PipelineError, NeedDependencyError, NeedDependencyCycleError
+from pyTooling.CI.GitHub   import GitHubError
+from pyTooling.CI          import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
 from pyTooling.Graph       import BaseGraph, Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Tracing.CI  import Result
@@ -645,6 +646,8 @@ class Dependencies(Testcase):
 	def test_Exceptions(self) -> None:
 		self.assertTrue(issubclass(NeedDependencyCycleError, NeedDependencyError))
 		self.assertTrue(issubclass(NeedDependencyError, PipelineError))
+		self.assertTrue(issubclass(PipelineError, CIError))
+		self.assertTrue(issubclass(GitHubError, CIError))
 
 	def test_Mixins(self) -> None:
 		for mixin in (DependencyMixin, QualifiedNameMixin):

@@ -42,12 +42,12 @@ Version 10.x (2026)
    * :mod:`pyTooling.CI` is a new package holding data models of continuous integration services.
 
      * :mod:`pyTooling.CI.GitHub` reads a GitHub Actions workflow run into a tree of
-       :class:`~pyTooling.CI.GitHub.Pipeline`, :class:`~pyTooling.CI.Pipeline.Workflow`,
-       :class:`~pyTooling.CI.Pipeline.Matrix`, :class:`~pyTooling.CI.GitHub.Job` and
+       :class:`~pyTooling.CI.GitHub.Pipeline`, :class:`~pyTooling.CI.Workflow`,
+       :class:`~pyTooling.CI.Matrix`, :class:`~pyTooling.CI.GitHub.Job` and
        :class:`~pyTooling.CI.GitHub.Step` objects, each knowing its parent and the run it belongs to.
      * A called workflow and a matrix are encoded in a job's name - ``Caller / Job`` and
        ``Job (ubuntu-26.04, 3.14)`` - and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads them back into the
-       tree. Neither level reports times, so :class:`~pyTooling.CI.Pipeline.JobGroup` spans the jobs below it.
+       tree. Neither level reports times, so :class:`~pyTooling.CI.JobGroup` spans the jobs below it.
      * A job's times **contain its steps**. GitHub reports both in whole seconds and independently, so a step is
        sometimes reported as starting before, or completing after, the job holding it - and a consumer building a
        tree then has a child outside its parent. The job is the timespan that stretches, because the step really
@@ -55,8 +55,8 @@ Version 10.x (2026)
      * A group iterates what it holds **in the order it was queued**, jobs and nested groups alike, rather than
        jobs first and called workflows last. The sort is stable, so elements reporting no time keep the order
        GitHub listed them in.
-     * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.Pipeline.Workflow` the matrices
-       and called workflows below it as well. :class:`~pyTooling.CI.Pipeline.Workflow` needed three overrides to say
+     * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.Workflow` the matrices
+       and called workflows below it as well. :class:`~pyTooling.CI.Workflow` needed three overrides to say
        that and has none now.
      * A :class:`~pyTooling.CI.GitHub.Pipeline` is the one group reporting times of its own, so it is the one with
        two sets: :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsCreatedAt`,
@@ -69,46 +69,47 @@ Version 10.x (2026)
      * :class:`~pyTooling.CI.GitHub.PipelineGroup` holds every run of one commit, and
        :meth:`~pyTooling.CI.GitHub.PipelineGroup.ByGitReference` separates a commit's checks from the run at its tag,
        which the API reports under the same commit.
-     * :class:`~pyTooling.CI.Pipeline.QualifiedNameMixin` reports an element's name the way GitHub does -
+     * :class:`~pyTooling.CI.QualifiedNameMixin` reports an element's name the way GitHub does -
        ``Caller / Build (ubuntu-26.04)`` - so the name :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` took apart can
-       be put back together. :class:`~pyTooling.CI.GitHub.Job` and :class:`~pyTooling.CI.Pipeline.Workflow` are named
+       be put back together. :class:`~pyTooling.CI.GitHub.Job` and :class:`~pyTooling.CI.Workflow` are named
        that way; the mixin ``expects`` the field it walks, so mixing it into a class without ``_parent`` is reported
        instead of failing with an :exc:`AttributeError` later.
-     * Iterating a :class:`~pyTooling.CI.Pipeline.Workflow` yields its jobs, its matrices **and** the workflows it
+     * Iterating a :class:`~pyTooling.CI.Workflow` yields its jobs, its matrices **and** the workflows it
        calls, so the containers one level below it are reachable without asking for each kind separately.
-       :meth:`~pyTooling.CI.Pipeline.JobGroup.IterateJobs` remains the way to reach every job below it. Because an
+       :meth:`~pyTooling.CI.JobGroup.IterateJobs` remains the way to reach every job below it. Because an
        element is placed in its group under its own name, every ``in`` of this module takes that name:
        :pycode:`"UnitTesting" in pipeline`.
 
-   * :mod:`pyTooling.CI.Pipeline` models a CI pipeline independently of the service running it: a
-     :class:`~pyTooling.CI.Pipeline.PipelineGroup` of :class:`~pyTooling.CI.Pipeline.Pipeline`\ s holding called
-     :class:`~pyTooling.CI.Pipeline.Workflow`\ s, :class:`~pyTooling.CI.Pipeline.Matrix`\ es,
-     :class:`~pyTooling.CI.Pipeline.Job`\ s and :class:`~pyTooling.CI.Pipeline.Step`\ s, with the times and an
-     :class:`~pyTooling.CI.Pipeline.Outcome` on every element, and a condition on those a definition can give one.
+   * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
+     :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
+     :class:`~pyTooling.CI.Workflow`\ s, :class:`~pyTooling.CI.Matrix`\ es,
+     :class:`~pyTooling.CI.Job`\ s and :class:`~pyTooling.CI.Step`\ s, with the times and an
+     :class:`~pyTooling.CI.Outcome` on every element, and a condition on those a definition can give one. Its
+     exceptions and those of :mod:`pyTooling.CI.GitHub` derive from :exc:`~pyTooling.CI.CIError`.
 
-     * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.Pipeline.DependencyMixin.AddNeed` links
-       two siblings, records the reverse link in :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Dependents`, and
-       rejects a need outside the group with :exc:`~pyTooling.CI.Pipeline.NeedDependencyError`; needs and dependents
-       can also be given when an element is created. :meth:`~pyTooling.CI.Pipeline.JobGroup.Validate` checks a
-       completed pipeline for cycles and names one with :exc:`~pyTooling.CI.Pipeline.NeedDependencyCycleError`.
-     * :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts a pipeline into a :class:`~pyTooling.Graph.Graph`:
+     * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.DependencyMixin.AddNeed` links
+       two siblings, records the reverse link in :attr:`~pyTooling.CI.DependencyMixin.Dependents`, and
+       rejects a need outside the group with :exc:`~pyTooling.CI.NeedDependencyError`; needs and dependents
+       can also be given when an element is created. :meth:`~pyTooling.CI.JobGroup.Validate` checks a
+       completed pipeline for cycles and names one with :exc:`~pyTooling.CI.NeedDependencyCycleError`.
+     * :meth:`~pyTooling.CI.Workflow.ToGraph` converts a pipeline into a :class:`~pyTooling.Graph.Graph`:
        an element is a vertex whose ID and value are the element, a dependency an edge, a called workflow or a
        matrix a subgraph linked from the group's vertex. By default the graph and its subgraphs are reduced to their
        transitive reduction; ``reduce=False`` keeps an edge per dependency.
      * A group keeps its elements of every kind in one sequence, in the order they were added, so a definition
-       iterates in file order. A matrix produces jobs or - :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` - called
+       iterates in file order. A matrix produces jobs or - :class:`~pyTooling.CI.MatrixWorkflow` - called
        workflows.
      * GitHub Actions and GitLab CI - stages, ``needs:``, child and multi-project pipelines, ``parallel`` - map onto
        it, see :ref:`CI/Pipeline/Services`.
      * :mod:`pyTooling.CI.GitHub` derives from it: ``Workflow``, ``Matrix``, ``JobGroup``, ``Base`` and
        ``QualifiedNameMixin`` are the generic classes, GitHub's status, conclusion and URL moved into
-       :class:`~pyTooling.CI.GitHub.StatusMixin`, a conclusion is also an :class:`~pyTooling.CI.Pipeline.Outcome`, a
+       :class:`~pyTooling.CI.GitHub.StatusMixin`, a conclusion is also an :class:`~pyTooling.CI.Outcome`, a
        matrix has a qualified name, every group has ``Contents*At``, and a group's elements are in the order GitHub
        listed them.
      * A matrix calling a reusable workflow - jobs named ``Tests (3.14) / Unit`` - is read as a
-       :class:`~pyTooling.CI.Pipeline.Matrix` of :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` instances instead of
+       :class:`~pyTooling.CI.Matrix` of :class:`~pyTooling.CI.MatrixWorkflow` instances instead of
        one called workflow per combination, so a trace groups them below a ``matrix`` timespan.
-     * A matrix instance's :attr:`~pyTooling.CI.Pipeline.MatrixInstanceMixin.Dimensions` maps each dimension's name
+     * A matrix instance's :attr:`~pyTooling.CI.MatrixInstanceMixin.Dimensions` maps each dimension's name
        to its value, in the matrix' order; :func:`str` prints the values only - ``Test (ubuntu-26.04, 3.14)``.
        :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` names a dimension by its position,
        ``{"0": "ubuntu-26.04", "1": "3.14"}``, because a job's name carries no dimension names.
