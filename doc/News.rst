@@ -78,7 +78,7 @@ Version 10.x (2026)
        its matrices **and** the workflows it calls, so the containers one level below it are reachable without
        asking for each kind separately. :meth:`~pyTooling.CI.JobGroup.IterateJobs` remains the way to reach every
        job below it. Because an element is placed in its group under its own name, it is asked for by that name:
-       :pycode:`pipeline.HasElement("UnitTesting")`.
+       :pycode:`pipeline.ContainsElement("UnitTesting")`.
 
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
@@ -104,9 +104,9 @@ Version 10.x (2026)
      * Every element carries **arbitrary key-value-pairs**, like the elements of :mod:`pyTooling.Graph`: given as
        ``keyValuePairs`` when it is created, and accessed with the element's dictionary operators -
        :pycode:`job["runner.os"]`, ``in``, ``del``, :func:`len` and iteration over the keys. What an element contains
-       is counted, checked, looked up and iterated by named methods: ``ElementCount``, ``HasElement``, ``GetElement``
-       and ``IterateElements`` for a group, ``StepCount``, ``HasStep`` and ``IterateSteps`` for a job,
-       ``PipelineCount``, ``HasPipeline`` and ``IteratePipelines`` for a pipeline group.
+       is counted, checked, looked up and iterated by named methods: ``ElementCount``, ``ContainsElement``,
+       ``GetElement`` and ``IterateElements`` for a group, ``StepCount``, ``ContainsStep`` and ``IterateSteps`` for a
+       job, ``PipelineCount``, ``ContainsPipeline`` and ``IteratePipelines`` for a pipeline group.
      * :mod:`pyTooling.CI.GitHub` derives from it: ``Workflow``, ``Matrix``, ``JobGroup``, ``Base`` and
        ``QualifiedNameMixin`` are the generic classes, GitHub's status, conclusion and URL moved into
        :class:`~pyTooling.CI.GitHub.StatusMixin`, a conclusion is also an :class:`~pyTooling.CI.Outcome`, a

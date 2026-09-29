@@ -798,7 +798,7 @@ class Pipeline(CIPipeline, StatusMixin):
 						if (matrix := group.Matrices.get(callerName, None)) is None:
 							matrix = CIMatrix(callerName, parent=group)
 
-						if matrix.HasElement(caller):
+						if matrix.ContainsElement(caller):
 							calledWorkflow = matrix.GetElement(caller)
 						else:
 							calledWorkflow = CIMatrixWorkflow(callerName, callerDimensions, parent=matrix)

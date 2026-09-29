@@ -70,9 +70,9 @@ job by the name it reports - so an element is asked for by that name:
 
 .. code-block:: python
 
-   pipeline.HasElement("UnitTesting")             # a called workflow, a matrix or a job of the run
-   matrix.HasElement("Unit Tests (ubuntu-26.04)")  # an instance carries the values telling it from its siblings
-   job.HasStep("Checkout")                        # a step
+   pipeline.ContainsElement("UnitTesting")             # a called workflow, a matrix or a job of the run
+   matrix.ContainsElement("Unit Tests (ubuntu-26.04)")  # an instance carries the values telling it from its siblings
+   job.ContainsStep("Checkout")                        # a step
 
 Which container an element really sits in is a different question, and :attr:`~pyTooling.CI.Base.Parent`
 answers it without a search:

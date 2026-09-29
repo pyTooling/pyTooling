@@ -55,7 +55,7 @@ kind from it. Every element knows its :attr:`~pyTooling.CI.Base.Parent` and the
 :meth:`~pyTooling.CI.JobGroup.IterateElements` yields what a group holds one level down, ordered by creation
 time; elements without a time keep the order they were added in. :meth:`~pyTooling.CI.JobGroup.IterateJobs`
 reaches every job below a group. An element is asked for and looked up by its name, :pycode:`str(element)` -
-:pycode:`pipeline.HasElement("Build")`, :pycode:`pipeline.GetElement("Build")`,
+:pycode:`pipeline.ContainsElement("Build")`, :pycode:`pipeline.GetElement("Build")`,
 :pycode:`matrix.GetElement("Test (3.14)")` - which is how a reader resolves the names a definition refers to. A job
 offers the same for its steps, a pipeline group for its pipelines:
 
@@ -69,17 +69,17 @@ offers the same for its steps, a pipeline group for its pipelines:
      - Iterate
    * - :class:`~pyTooling.CI.PipelineGroup`
      - :attr:`~pyTooling.CI.PipelineGroup.PipelineCount`
-     - :meth:`~pyTooling.CI.PipelineGroup.HasPipeline`
+     - :meth:`~pyTooling.CI.PipelineGroup.ContainsPipeline`
      -
      - :meth:`~pyTooling.CI.PipelineGroup.IteratePipelines`
    * - :class:`~pyTooling.CI.JobGroup`
      - :attr:`~pyTooling.CI.JobGroup.ElementCount`
-     - :meth:`~pyTooling.CI.JobGroup.HasElement`
+     - :meth:`~pyTooling.CI.JobGroup.ContainsElement`
      - :meth:`~pyTooling.CI.JobGroup.GetElement`
      - :meth:`~pyTooling.CI.JobGroup.IterateElements`
    * - :class:`~pyTooling.CI.Job`
      - :attr:`~pyTooling.CI.Job.StepCount`
-     - :meth:`~pyTooling.CI.Job.HasStep`
+     - :meth:`~pyTooling.CI.Job.ContainsStep`
      -
      - :meth:`~pyTooling.CI.Job.IterateSteps`
 
@@ -133,7 +133,7 @@ operators:
    list(job)                    # ["runner.os", "runner.arch"]
    del job["runner.arch"]
 
-The operators address the key-value-pairs only. What an element contains is reached by name - ``HasElement``,
+The operators address the key-value-pairs only. What an element contains is reached by name - ``ContainsElement``,
 ``GetElement``, ``IterateElements`` - see :ref:`CI/Pipeline/Tree`.
 
 
