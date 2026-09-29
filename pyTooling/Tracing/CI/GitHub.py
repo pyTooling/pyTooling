@@ -189,7 +189,7 @@ class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 		:param group:  The group - a workflow run, a called workflow or a matrix.
 		:param parent: The timespan the group's contents are added to.
 		"""
-		for item in group:
+		for item in group.IterateElements():
 			if isinstance(item, Job):
 				JobSpan.FromJob(item, parent)
 			elif isinstance(item, Matrix):

@@ -59,7 +59,7 @@ trace, a graph or a report is a consumer of this model.
 from __future__                import annotations
 
 from datetime                  import datetime, timezone
-from typing                    import Optional as Nullable, Any, ClassVar, Iterable, Mapping, Self, Union
+from typing                    import Optional as Nullable, Any, ClassVar, Hashable, Iterable, Mapping, Self, Union
 
 from pyTooling.CI              import CIError, JSONObject, MatrixInstanceMixin, Outcome
 from pyTooling.CI              import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
@@ -387,16 +387,23 @@ class PipelineGroup(CIPipelineGroup):
 	is wider than the time the commit's checks took.
 	"""
 
-	def __init__(self, sha: str, pipelines: Nullable[Iterable[Pipeline]] = None) -> None:
+	def __init__(
+		self,
+		sha:           str,
+		pipelines:     Nullable[Iterable[Pipeline]]     = None,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> None:
 		"""
 		Initializes a group of pipelines started for one commit.
 
-		:param sha:         Commit every pipeline of the group was started on.
-		:param pipelines:   Optional, the pipelines, which are attached to the group. Default: ``None``.
-		:raises ValueError: If parameter 'sha' is ``None``.
-		:raises TypeError:  If parameter 'sha' is not of type :class:`str`.
-		:raises ValueError: If parameter 'sha' is empty.
-		:raises TypeError:  If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
+		:param sha:           Commit every pipeline of the group was started on.
+		:param pipelines:     Optional, the pipelines, which are attached to the group. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises ValueError:   If parameter 'sha' is ``None``.
+		:raises TypeError:    If parameter 'sha' is not of type :class:`str`.
+		:raises ValueError:   If parameter 'sha' is empty.
+		:raises TypeError:    If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
 		"""
 		if sha is None:
 			raise ValueError("Parameter 'sha' is None.")
@@ -407,7 +414,7 @@ class PipelineGroup(CIPipelineGroup):
 		elif sha == "":
 			raise ValueError("Parameter 'sha' is empty.")
 
-		super().__init__(sha, pipelines)
+		super().__init__(sha, pipelines, keyValuePairs=keyValuePairs)
 
 	@readonly
 	def SHA(self) -> str:
@@ -548,51 +555,53 @@ class Pipeline(CIPipeline, StatusMixin):
 
 	def __init__(
 		self,
-		name:         str,
-		identifier:   Nullable[int]        = None,
-		status:       Nullable[Status]     = None,
-		conclusion:   Nullable[Conclusion] = None,
-		createdAt:    Nullable[datetime]   = None,
-		startedAt:    Nullable[datetime]   = None,
-		completedAt:  Nullable[datetime]   = None,
-		url:          Nullable[URL]        = None,
-		workflowID:   Nullable[int]        = None,
-		path:         Nullable[str]        = None,
-		runNumber:    Nullable[int]        = None,
-		runAttempt:   Nullable[int]        = None,
-		event:        Nullable[Event]      = None,
-		gitReference: Nullable[str]        = None,
-		sha:          Nullable[str]        = None,
+		name:          str,
+		identifier:    Nullable[int]                    = None,
+		status:        Nullable[Status]                 = None,
+		conclusion:    Nullable[Conclusion]             = None,
+		createdAt:     Nullable[datetime]               = None,
+		startedAt:     Nullable[datetime]               = None,
+		completedAt:   Nullable[datetime]               = None,
+		url:           Nullable[URL]                    = None,
+		workflowID:    Nullable[int]                    = None,
+		path:          Nullable[str]                    = None,
+		runNumber:     Nullable[int]                    = None,
+		runAttempt:    Nullable[int]                    = None,
+		event:         Nullable[Event]                  = None,
+		gitReference:  Nullable[str]                    = None,
+		sha:           Nullable[str]                    = None,
 		*,
-		parent:       Nullable[PipelineGroup] = None
+		parent:        Nullable[PipelineGroup]          = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a workflow run.
 
-		:param name:         Name of the workflow.
-		:param identifier:   Optional, GitHub's identifier of the run. Default: ``None``.
-		:param status:       Optional, state the run is in. Default: ``None``.
-		:param conclusion:   Optional, how the run ended. Default: ``None``.
-		:param createdAt:    Optional, time the run was created. Default: ``None``.
-		:param startedAt:    Optional, time the run started. Default: ``None``.
-		:param completedAt:  Optional, time the run was last updated, once completed. Default: ``None``.
-		:param url:          Optional, URL of the run on github.com. Default: ``None``.
-		:param workflowID:   Optional, GitHub's identifier of the workflow the run belongs to. Default: ``None``.
-		:param path:         Optional, path of the workflow's YAML file in the repository. Default: ``None``.
-		:param runNumber:    Optional, number of the run within its workflow. Default: ``None``.
-		:param runAttempt:   Optional, attempt of the run, starting at 1. Default: ``None``.
-		:param event:        Optional, event that triggered the run. Default: ``None``.
-		:param gitReference: Optional, branch or tag the run was started on. Default: ``None``.
-		:param sha:          Optional, commit the run was started on. Default: ``None``.
-		:param parent:       Optional, reference to the group of the commit's runs. Default: ``None``.
-		:raises TypeError:   If parameter 'identifier' is not of type :class:`int`.
-		:raises TypeError:   If parameter 'workflowID' is not of type :class:`int`.
-		:raises TypeError:   If parameter 'path' is not of type :class:`str`.
-		:raises TypeError:   If parameter 'runNumber' is not of type :class:`int`.
-		:raises TypeError:   If parameter 'runAttempt' is not of type :class:`int`.
-		:raises TypeError:   If parameter 'event' is not of type :class:`Event`.
-		:raises TypeError:   If parameter 'gitReference' is not of type :class:`str`.
-		:raises TypeError:   If parameter 'sha' is not of type :class:`str`.
+		:param name:          Name of the workflow.
+		:param identifier:    Optional, GitHub's identifier of the run. Default: ``None``.
+		:param status:        Optional, state the run is in. Default: ``None``.
+		:param conclusion:    Optional, how the run ended. Default: ``None``.
+		:param createdAt:     Optional, time the run was created. Default: ``None``.
+		:param startedAt:     Optional, time the run started. Default: ``None``.
+		:param completedAt:   Optional, time the run was last updated, once completed. Default: ``None``.
+		:param url:           Optional, URL of the run on github.com. Default: ``None``.
+		:param workflowID:    Optional, GitHub's identifier of the workflow the run belongs to. Default: ``None``.
+		:param path:          Optional, path of the workflow's YAML file in the repository. Default: ``None``.
+		:param runNumber:     Optional, number of the run within its workflow. Default: ``None``.
+		:param runAttempt:    Optional, attempt of the run, starting at 1. Default: ``None``.
+		:param event:         Optional, event that triggered the run. Default: ``None``.
+		:param gitReference:  Optional, branch or tag the run was started on. Default: ``None``.
+		:param sha:           Optional, commit the run was started on. Default: ``None``.
+		:param parent:        Optional, reference to the group of the commit's runs. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises TypeError:    If parameter 'identifier' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'workflowID' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'path' is not of type :class:`str`.
+		:raises TypeError:    If parameter 'runNumber' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'runAttempt' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'event' is not of type :class:`Event`.
+		:raises TypeError:    If parameter 'gitReference' is not of type :class:`str`.
+		:raises TypeError:    If parameter 'sha' is not of type :class:`str`.
 		"""
 		for parameterName, number in (
 			("identifier", identifier), ("workflowID", workflowID), ("runNumber", runNumber), ("runAttempt", runAttempt)
@@ -614,7 +623,8 @@ class Pipeline(CIPipeline, StatusMixin):
 				raise ex
 
 		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent,
+			keyValuePairs=keyValuePairs
 		)
 		StatusMixin.__init__(self, status, conclusion, url)
 
@@ -788,8 +798,8 @@ class Pipeline(CIPipeline, StatusMixin):
 						if (matrix := group.Matrices.get(callerName, None)) is None:
 							matrix = CIMatrix(callerName, parent=group)
 
-						if caller in matrix:
-							calledWorkflow = matrix[caller]
+						if matrix.HasElement(caller):
+							calledWorkflow = matrix.GetElement(caller)
 						else:
 							calledWorkflow = CIMatrixWorkflow(callerName, callerDimensions, parent=matrix)
 
@@ -819,19 +829,20 @@ class Job(CIJob, StatusMixin):
 	def __init__(
 		self,
 		name:            str,
-		identifier:      Nullable[int]            = None,
-		status:          Nullable[Status]         = None,
-		conclusion:      Nullable[Conclusion]     = None,
-		createdAt:       Nullable[datetime]       = None,
-		startedAt:       Nullable[datetime]       = None,
-		completedAt:     Nullable[datetime]       = None,
-		url:             Nullable[URL]            = None,
-		labels:          Nullable[Iterable[str]]  = None,
-		runnerName:      Nullable[str]            = None,
-		runnerGroupName: Nullable[str]            = None,
-		steps:           Nullable[Iterable[Step]] = None,
+		identifier:      Nullable[int]                    = None,
+		status:          Nullable[Status]                 = None,
+		conclusion:      Nullable[Conclusion]             = None,
+		createdAt:       Nullable[datetime]               = None,
+		startedAt:       Nullable[datetime]               = None,
+		completedAt:     Nullable[datetime]               = None,
+		url:             Nullable[URL]                    = None,
+		labels:          Nullable[Iterable[str]]          = None,
+		runnerName:      Nullable[str]                    = None,
+		runnerGroupName: Nullable[str]                    = None,
+		steps:           Nullable[Iterable[Step]]         = None,
 		*,
-		parent:          Nullable[CIJobGroup]     = None
+		parent:          Nullable[CIJobGroup]             = None,
+		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a job of a workflow run.
@@ -849,6 +860,7 @@ class Job(CIJob, StatusMixin):
 		:param runnerGroupName: Optional, name of the runner group the runner belongs to. Default: ``None``.
 		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
 		:param parent:          Optional, reference to the group containing the job. Default: ``None``.
+		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:raises TypeError:      If parameter 'identifier' is not of type :class:`int`.
 		:raises TypeError:      If an element of parameter 'steps' is not of type :class:`Step`.
 		:raises TypeError:      If an element of parameter 'labels' is not of type :class:`str`.
@@ -887,7 +899,8 @@ class Job(CIJob, StatusMixin):
 				stepList.append(step)
 
 		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent,
+			keyValuePairs=keyValuePairs
 		)
 		StatusMixin.__init__(self, status, conclusion, url)
 
@@ -1065,20 +1078,21 @@ class MatrixJob(Job, MatrixInstanceMixin):
 	def __init__(
 		self,
 		name:            str,
-		dimensions:      Nullable[Mapping[str, Any]] = None,
-		identifier:      Nullable[int]               = None,
-		status:          Nullable[Status]            = None,
-		conclusion:      Nullable[Conclusion]        = None,
-		createdAt:       Nullable[datetime]          = None,
-		startedAt:       Nullable[datetime]          = None,
-		completedAt:     Nullable[datetime]          = None,
-		url:             Nullable[URL]               = None,
-		labels:          Nullable[Iterable[str]]     = None,
-		runnerName:      Nullable[str]               = None,
-		runnerGroupName: Nullable[str]               = None,
-		steps:           Nullable[Iterable[Step]]    = None,
+		dimensions:      Nullable[Mapping[str, Any]]      = None,
+		identifier:      Nullable[int]                    = None,
+		status:          Nullable[Status]                 = None,
+		conclusion:      Nullable[Conclusion]             = None,
+		createdAt:       Nullable[datetime]               = None,
+		startedAt:       Nullable[datetime]               = None,
+		completedAt:     Nullable[datetime]               = None,
+		url:             Nullable[URL]                    = None,
+		labels:          Nullable[Iterable[str]]          = None,
+		runnerName:      Nullable[str]                    = None,
+		runnerGroupName: Nullable[str]                    = None,
+		steps:           Nullable[Iterable[Step]]         = None,
 		*,
-		parent:          Nullable[CIMatrix]          = None
+		parent:          Nullable[CIMatrix]               = None,
+		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
@@ -1097,10 +1111,11 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		:param runnerGroupName: Optional, name of the runner group the runner belongs to. Default: ``None``.
 		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
 		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
 		super().__init__(
 			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels, runnerName,
-			runnerGroupName, steps, parent=parent
+			runnerGroupName, steps, parent=parent, keyValuePairs=keyValuePairs
 		)
 		MatrixInstanceMixin.__init__(self, dimensions)
 
@@ -1181,27 +1196,29 @@ class Step(CIStep, StatusMixin):
 
 	def __init__(
 		self,
-		name:        str,
-		number:      Nullable[int]        = None,
-		status:      Nullable[Status]     = None,
-		conclusion:  Nullable[Conclusion] = None,
-		startedAt:   Nullable[datetime]   = None,
-		completedAt: Nullable[datetime]   = None,
+		name:          str,
+		number:        Nullable[int]                    = None,
+		status:        Nullable[Status]                 = None,
+		conclusion:    Nullable[Conclusion]             = None,
+		startedAt:     Nullable[datetime]               = None,
+		completedAt:   Nullable[datetime]               = None,
 		*,
-		parent:      Nullable[Job] = None
+		parent:        Nullable[Job]                    = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a step within a job.
 
-		:param name:        Name of the step.
-		:param number:      Optional, position of the step within its job, starting at 1. Default: ``None``.
-		:param status:      Optional, state the step is in. Default: ``None``.
-		:param conclusion:  Optional, how the step ended. Default: ``None``.
-		:param startedAt:   Optional, time the step started running. Default: ``None``.
-		:param completedAt: Optional, time the step completed. Default: ``None``.
-		:param parent:      Optional, reference to the job containing the step. Default: ``None``.
-		:raises TypeError:  If parameter 'number' is not of type :class:`int`.
-		:raises ValueError: If parameter 'number' is not positive.
+		:param name:          Name of the step.
+		:param number:        Optional, position of the step within its job, starting at 1. Default: ``None``.
+		:param status:        Optional, state the step is in. Default: ``None``.
+		:param conclusion:    Optional, how the step ended. Default: ``None``.
+		:param startedAt:     Optional, time the step started running. Default: ``None``.
+		:param completedAt:   Optional, time the step completed. Default: ``None``.
+		:param parent:        Optional, reference to the job containing the step. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises TypeError:    If parameter 'number' is not of type :class:`int`.
+		:raises ValueError:   If parameter 'number' is not positive.
 		"""
 		if number is not None and not isinstance(number, int):
 			ex = TypeError("Parameter 'number' is not of type 'int'.")
@@ -1213,7 +1230,7 @@ class Step(CIStep, StatusMixin):
 			raise ex
 
 		super().__init__(
-			name, startedAt=startedAt, completedAt=completedAt, parent=parent
+			name, startedAt=startedAt, completedAt=completedAt, parent=parent, keyValuePairs=keyValuePairs
 		)
 		StatusMixin.__init__(self, status, conclusion)
 

@@ -71,7 +71,7 @@ values, the interface of a reusable workflow.
 from __future__            import annotations
 
 from datetime              import datetime
-from typing                import Any, ClassVar, Iterable, Iterator, Mapping, Optional as Nullable
+from typing                import Any, ClassVar, Hashable, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
 from pyTooling.Decorators  import export, readonly
@@ -151,28 +151,32 @@ class Base(metaclass=ExtendedType, slots=True):
 	Common behaviour of every element of a pipeline.
 
 	Every element has a name and a position in the tree, and from a run the times a service reports and an
-	:class:`Outcome`.
+	:class:`Outcome`. Every element carries a dictionary of arbitrary key-value-pairs as well, which a consumer
+	attaches its own information to, like the elements of :mod:`pyTooling.Graph`. It is accessed like a dictionary:
+	:pycode:`job["runner.os"] = "Linux"`.
 	"""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = None  #: Type a parent must have, or ``None`` when it has no parent.
 
-	_name:        str                 #: Name of the element.
-	_parent:      Nullable[Base]      #: Reference to the containing element.
-	_pipeline:    Nullable[Pipeline]  #: Reference to the pipeline this element belongs to.
-	_createdAt:   Nullable[datetime]  #: Time the element was created.
-	_startedAt:   Nullable[datetime]  #: Time the element started running.
-	_completedAt: Nullable[datetime]  #: Time the element completed.
-	_outcome:     Nullable[Outcome]   #: How the element ended.
+	_name:        str                  #: Name of the element.
+	_parent:      Nullable[Base]       #: Reference to the containing element.
+	_pipeline:    Nullable[Pipeline]   #: Reference to the pipeline this element belongs to.
+	_createdAt:   Nullable[datetime]   #: Time the element was created.
+	_startedAt:   Nullable[datetime]   #: Time the element started running.
+	_completedAt: Nullable[datetime]   #: Time the element completed.
+	_outcome:     Nullable[Outcome]    #: How the element ended.
+	_dict:        dict[Hashable, Any]  #: A dictionary to store arbitrary key-value-pairs.
 
 	def __init__(
 		self,
-		name:        str,
+		name:          str,
 		*,
-		createdAt:   Nullable[datetime] = None,
-		startedAt:   Nullable[datetime] = None,
-		completedAt: Nullable[datetime] = None,
-		outcome:     Nullable[Outcome]  = None,
-		parent:      Nullable[Base]     = None
+		createdAt:     Nullable[datetime]               = None,
+		startedAt:     Nullable[datetime]               = None,
+		completedAt:   Nullable[datetime]               = None,
+		outcome:       Nullable[Outcome]                = None,
+		parent:        Nullable[Base]                   = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes an element of a pipeline.
@@ -180,21 +184,22 @@ class Base(metaclass=ExtendedType, slots=True):
 		The element is added to its parent's elements last, so a class deriving from this one checks its own parameters
 		before it calls this initializer.
 
-		:param name:        Name of the element.
-		:param createdAt:   Optional, time the element was created. Default: ``None``.
-		:param startedAt:   Optional, time the element started running. Default: ``None``.
-		:param completedAt: Optional, time the element completed. Default: ``None``.
-		:param outcome:     Optional, how the element ended. Default: ``None``.
-		:param parent:      Optional, reference to the containing element. Default: ``None``.
-		:raises ValueError: If parameter 'name' is ``None``.
-		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
-		:raises ValueError: If parameter 'name' is empty.
-		:raises TypeError:  If parameter 'createdAt' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'startedAt' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'completedAt' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'outcome' is not of type :class:`Outcome`.
-		:raises TypeError:  If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
-		:raises TypeError:  If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
+		:param name:          Name of the element.
+		:param createdAt:     Optional, time the element was created. Default: ``None``.
+		:param startedAt:     Optional, time the element started running. Default: ``None``.
+		:param completedAt:   Optional, time the element completed. Default: ``None``.
+		:param outcome:       Optional, how the element ended. Default: ``None``.
+		:param parent:        Optional, reference to the containing element. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises ValueError:   If parameter 'name' is ``None``.
+		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
+		:raises ValueError:   If parameter 'name' is empty.
+		:raises TypeError:    If parameter 'createdAt' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:    If parameter 'startedAt' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:    If parameter 'completedAt' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:    If parameter 'outcome' is not of type :class:`Outcome`.
+		:raises TypeError:    If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
+		:raises TypeError:    If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
@@ -233,6 +238,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._startedAt =   startedAt
 		self._completedAt = completedAt
 		self._outcome =     outcome
+		self._dict =        {} if keyValuePairs is None else {key: value for key, value in keyValuePairs.items()}
 
 		if parent is not None:
 			parent._AddElement(self)
@@ -343,6 +349,61 @@ class Base(metaclass=ExtendedType, slots=True):
 			known.append(time)
 
 		return max(known) if len(known) > 0 else None
+
+	def __getitem__(self, key: Hashable) -> Any:
+		"""
+		Read an element's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to look for.
+		:returns:         The value associated to the given key.
+		:raises KeyError: If key doesn't exist in the element's attributes.
+		"""
+		return self._dict[key]
+
+	def __setitem__(self, key: Hashable, value: Any) -> None:
+		"""
+		Create or update an element's attached attributes (key-value-pairs) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key:   The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
+		self._dict[key] = value
+
+	def __delitem__(self, key: Hashable) -> None:
+		"""
+		Remove an entry from an element's attached attributes (key-value-pairs) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If key doesn't exist in the element's attributes.
+		"""
+		del self._dict[key]
+
+	def __contains__(self, key: Hashable) -> bool:
+		"""
+		Check if the key is an attached attribute (key-value-pairs) on this element.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
+	def __len__(self) -> int:
+		"""
+		Return the number of attached attributes (key-value-pairs) on this element.
+
+		:returns: Number of attached attributes.
+		"""
+		return len(self._dict)
+
+	def __iter__(self) -> Iterator[Hashable]:
+		"""
+		Iterate the keys of the attached attributes (key-value-pairs) on this element.
+
+		:returns: An iterator over the keys, in the order they were added.
+		"""
+		return iter(self._dict)
 
 	def __str__(self) -> str:
 		"""
@@ -613,15 +674,22 @@ class PipelineGroup(Base):
 
 	_pipelines: list[Pipeline]  #: Pipelines of the group.
 
-	def __init__(self, name: str, pipelines: Nullable[Iterable[Pipeline]] = None) -> None:
+	def __init__(
+		self,
+		name:          str,
+		pipelines:     Nullable[Iterable[Pipeline]]     = None,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> None:
 		"""
 		Initializes a group of pipelines.
 
-		:param name:       Name of the group, e.g. the commit every pipeline of the group was started on.
-		:param pipelines:  Optional, the pipelines, which are attached to the group. Default: ``None``.
-		:raises TypeError: If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
+		:param name:          Name of the group, e.g. the commit every pipeline of the group was started on.
+		:param pipelines:     Optional, the pipelines, which are attached to the group. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises TypeError:    If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
 		"""
-		super().__init__(name)
+		super().__init__(name, keyValuePairs=keyValuePairs)
 
 		self._pipelines = []
 		if pipelines is None:
@@ -713,15 +781,16 @@ class PipelineGroup(Base):
 		for pipeline in self._pipelines:
 			pipeline.Validate()
 
-	def __len__(self) -> int:
+	@readonly
+	def PipelineCount(self) -> int:
 		"""
-		Return the number of pipelines of the group.
+		Read-only property to return the number of pipelines of the group.
 
 		:returns: Number of pipelines.
 		"""
 		return len(self._pipelines)
 
-	def __contains__(self, name: str) -> bool:
+	def HasPipeline(self, name: str) -> bool:
 		"""
 		Check whether a pipeline of that name belongs to the group.
 
@@ -730,11 +799,11 @@ class PipelineGroup(Base):
 		"""
 		return any(str(pipeline) == name for pipeline in self._pipelines)
 
-	def __iter__(self) -> Iterator[Pipeline]:
+	def IteratePipelines(self) -> Iterator[Pipeline]:
 		"""
 		Iterate the pipelines of the group.
 
-		:returns: An iterator over the pipelines.
+		:returns: An iterator over the pipelines, in the order they were added.
 		"""
 		return iter(self._pipelines)
 
@@ -756,26 +825,29 @@ class JobGroup(Base):
 
 	def __init__(
 		self,
-		name:        str,
+		name:          str,
 		*,
-		createdAt:   Nullable[datetime] = None,
-		startedAt:   Nullable[datetime] = None,
-		completedAt: Nullable[datetime] = None,
-		outcome:     Nullable[Outcome]  = None,
-		parent:      Nullable[Base]     = None
+		createdAt:     Nullable[datetime]               = None,
+		startedAt:     Nullable[datetime]               = None,
+		completedAt:   Nullable[datetime]               = None,
+		outcome:       Nullable[Outcome]                = None,
+		parent:        Nullable[Base]                   = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a group of jobs.
 
-		:param name:        Name of the group.
-		:param createdAt:   Optional, time the group was created, if the service reports it. Default: ``None``.
-		:param startedAt:   Optional, time the group started, if the service reports it. Default: ``None``.
-		:param completedAt: Optional, time the group completed, if the service reports it. Default: ``None``.
-		:param outcome:     Optional, how the group ended, if the service reports it. Default: ``None``.
-		:param parent:      Optional, reference to the element containing the group. Default: ``None``.
+		:param name:          Name of the group.
+		:param createdAt:     Optional, time the group was created, if the service reports it. Default: ``None``.
+		:param startedAt:     Optional, time the group started, if the service reports it. Default: ``None``.
+		:param completedAt:   Optional, time the group completed, if the service reports it. Default: ``None``.
+		:param outcome:       Optional, how the group ended, if the service reports it. Default: ``None``.
+		:param parent:        Optional, reference to the element containing the group. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
 		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent,
+			keyValuePairs=keyValuePairs
 		)
 
 		self._elements = []
@@ -922,15 +994,16 @@ class JobGroup(Base):
 		"""
 		return Outcome.Combine(element.Outcome for element in self._elements)
 
-	def __len__(self) -> int:
+	@readonly
+	def ElementCount(self) -> int:
 		"""
-		Return the number of elements of this group.
+		Read-only property to return the number of elements of this group.
 
 		:returns: Number of elements one level below the group.
 		"""
 		return len(self._elements)
 
-	def __contains__(self, name: str) -> bool:
+	def HasElement(self, name: str) -> bool:
 		"""
 		Check whether an element of that name belongs to this group.
 
@@ -942,11 +1015,11 @@ class JobGroup(Base):
 		"""
 		return any(str(element) == name for element in self._elements)
 
-	def __getitem__(self, name: str) -> Base:
+	def GetElement(self, name: str) -> Base:
 		"""
 		Return the element of that name.
 
-		An element is named the way :func:`str` names it, as for :meth:`__contains__`.
+		An element is named the way :func:`str` names it, as for :meth:`HasElement`.
 
 		:param name:      Name of the job, matrix or workflow to return.
 		:returns:         The first element of that name, in the order they were added.
@@ -958,7 +1031,7 @@ class JobGroup(Base):
 
 		raise KeyError(f"Group '{self._name}' contains no element '{name}'.")
 
-	def __iter__(self) -> Iterator[Base]:
+	def IterateElements(self) -> Iterator[Base]:
 		"""
 		Iterate what this group holds, ordered by the time it was created.
 
@@ -999,17 +1072,18 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 
 	def __init__(
 		self,
-		name:        str,
+		name:          str,
 		*,
-		reference:   Nullable[str]                       = None,
-		condition:   Nullable[str]                       = None,
-		createdAt:   Nullable[datetime]                  = None,
-		startedAt:   Nullable[datetime]                  = None,
-		completedAt: Nullable[datetime]                  = None,
-		outcome:     Nullable[Outcome]                   = None,
-		parent:      Nullable[Workflow]                  = None,
-		needs:       Nullable[Iterable[DependencyMixin]] = None,
-		dependents:  Nullable[Iterable[DependencyMixin]] = None
+		reference:     Nullable[str]                       = None,
+		condition:     Nullable[str]                       = None,
+		createdAt:     Nullable[datetime]                  = None,
+		startedAt:     Nullable[datetime]                  = None,
+		completedAt:   Nullable[datetime]                  = None,
+		outcome:       Nullable[Outcome]                   = None,
+		parent:        Nullable[Workflow]                  = None,
+		needs:         Nullable[Iterable[DependencyMixin]] = None,
+		dependents:    Nullable[Iterable[DependencyMixin]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]]    = None
 	) -> None:
 		"""
 		Initializes a called workflow.
@@ -1024,6 +1098,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:param parent:         Optional, reference to the workflow calling this one. Default: ``None``.
 		:param needs:          Optional, siblings this workflow needs. Default: ``None``.
 		:param dependents:     Optional, siblings needing this workflow. Default: ``None``.
+		:param keyValuePairs:  Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:raises TypeError:     If parameter 'reference' is not of type :class:`str`.
 		:raises PipelineError: If the calling workflow calls a workflow of that name already.
 		"""
@@ -1033,7 +1108,8 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			raise ex
 
 		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent,
+			keyValuePairs=keyValuePairs
 		)
 		ConditionMixin.__init__(self, condition)
 		DependencyMixin.__init__(self, needs, dependents)
@@ -1162,7 +1238,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			:param level:       How many levels of nested groups are expanded above this one.
 			"""
 			vertices: dict[Base, Vertex] = {}
-			for element in group:
+			for element in group.IterateElements():
 				vertex = Vertex(vertexID=element, value=element, graph=graph, subgraph=subgraph)
 				vertices[element] = vertex
 				if groupVertex is not None:
@@ -1176,7 +1252,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 				return
 
 			for element, vertex in vertices.items():
-				if isinstance(element, JobGroup) and len(element) > 0:
+				if isinstance(element, JobGroup) and element.ElementCount > 0:
 					addContents(element, Subgraph(graph, name=element.QualifiedName), vertex, level + 1)
 
 		addContents(self, None, None, 0)
@@ -1201,33 +1277,35 @@ class Pipeline(Workflow):
 
 	def __init__(
 		self,
-		name:        str,
+		name:          str,
 		*,
-		condition:   Nullable[str]                       = None,
-		createdAt:   Nullable[datetime]                  = None,
-		startedAt:   Nullable[datetime]                  = None,
-		completedAt: Nullable[datetime]                  = None,
-		outcome:     Nullable[Outcome]                   = None,
-		parent:      Nullable[PipelineGroup]             = None,
-		needs:       Nullable[Iterable[DependencyMixin]] = None,
-		dependents:  Nullable[Iterable[DependencyMixin]] = None
+		condition:     Nullable[str]                       = None,
+		createdAt:     Nullable[datetime]                  = None,
+		startedAt:     Nullable[datetime]                  = None,
+		completedAt:   Nullable[datetime]                  = None,
+		outcome:       Nullable[Outcome]                   = None,
+		parent:        Nullable[PipelineGroup]             = None,
+		needs:         Nullable[Iterable[DependencyMixin]] = None,
+		dependents:    Nullable[Iterable[DependencyMixin]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]]    = None
 	) -> None:
 		"""
 		Initializes a pipeline.
 
-		:param name:        Name of the pipeline.
-		:param condition:   Optional, condition under which the pipeline runs, as written. Default: ``None``.
-		:param createdAt:   Optional, time the pipeline was created. Default: ``None``.
-		:param startedAt:   Optional, time the pipeline started. Default: ``None``.
-		:param completedAt: Optional, time the pipeline completed. Default: ``None``.
-		:param outcome:     Optional, how the pipeline ended. Default: ``None``.
-		:param parent:      Optional, reference to the group of pipelines. Default: ``None``.
-		:param needs:       Optional, siblings this pipeline needs. Default: ``None``.
-		:param dependents:  Optional, siblings needing this pipeline. Default: ``None``.
+		:param name:          Name of the pipeline.
+		:param condition:     Optional, condition under which the pipeline runs, as written. Default: ``None``.
+		:param createdAt:     Optional, time the pipeline was created. Default: ``None``.
+		:param startedAt:     Optional, time the pipeline started. Default: ``None``.
+		:param completedAt:   Optional, time the pipeline completed. Default: ``None``.
+		:param outcome:       Optional, how the pipeline ended. Default: ``None``.
+		:param parent:        Optional, reference to the group of pipelines. Default: ``None``.
+		:param needs:         Optional, siblings this pipeline needs. Default: ``None``.
+		:param dependents:    Optional, siblings needing this pipeline. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
 		super().__init__(
 			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
-			parent=parent, needs=needs, dependents=dependents
+			parent=parent, needs=needs, dependents=dependents, keyValuePairs=keyValuePairs
 		)
 
 		self._pipeline = self
@@ -1247,12 +1325,13 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 
 	def __init__(
 		self,
-		name:       str,
+		name:          str,
 		*,
-		condition:  Nullable[str]                       = None,
-		parent:     Nullable[Workflow]                  = None,
-		needs:      Nullable[Iterable[DependencyMixin]] = None,
-		dependents: Nullable[Iterable[DependencyMixin]] = None
+		condition:     Nullable[str]                       = None,
+		parent:        Nullable[Workflow]                  = None,
+		needs:         Nullable[Iterable[DependencyMixin]] = None,
+		dependents:    Nullable[Iterable[DependencyMixin]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]]    = None
 	) -> None:
 		"""
 		Initializes a matrix.
@@ -1262,9 +1341,10 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:param parent:         Optional, reference to the workflow containing the matrix. Default: ``None``.
 		:param needs:          Optional, siblings this matrix needs. Default: ``None``.
 		:param dependents:     Optional, siblings needing this matrix. Default: ``None``.
+		:param keyValuePairs:  Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:raises PipelineError: If the workflow contains a matrix of that name already.
 		"""
-		super().__init__(name, parent=parent)
+		super().__init__(name, parent=parent, keyValuePairs=keyValuePairs)
 		ConditionMixin.__init__(self, condition)
 		DependencyMixin.__init__(self, needs, dependents)
 
@@ -1288,37 +1368,39 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 
 	def __init__(
 		self,
-		name:        str,
-		dimensions:  Nullable[Mapping[str, Any]]         = None,
+		name:          str,
+		dimensions:    Nullable[Mapping[str, Any]]         = None,
 		*,
-		reference:   Nullable[str]                       = None,
-		condition:   Nullable[str]                       = None,
-		createdAt:   Nullable[datetime]                  = None,
-		startedAt:   Nullable[datetime]                  = None,
-		completedAt: Nullable[datetime]                  = None,
-		outcome:     Nullable[Outcome]                   = None,
-		parent:      Nullable[Matrix]                    = None,
-		needs:       Nullable[Iterable[DependencyMixin]] = None,
-		dependents:  Nullable[Iterable[DependencyMixin]] = None
+		reference:     Nullable[str]                       = None,
+		condition:     Nullable[str]                       = None,
+		createdAt:     Nullable[datetime]                  = None,
+		startedAt:     Nullable[datetime]                  = None,
+		completedAt:   Nullable[datetime]                  = None,
+		outcome:       Nullable[Outcome]                   = None,
+		parent:        Nullable[Matrix]                    = None,
+		needs:         Nullable[Iterable[DependencyMixin]] = None,
+		dependents:    Nullable[Iterable[DependencyMixin]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]]    = None
 	) -> None:
 		"""
 		Initializes one instance of a called workflow produced by a matrix.
 
-		:param name:        Name of the workflow, without the dimensions' values.
-		:param dimensions:  Optional, the dimensions' names and values this instance ran with. Default: ``None``.
-		:param reference:   Optional, what the workflow calls, as written. Default: ``None``.
-		:param condition:   Optional, condition under which the workflow is called, as written. Default: ``None``.
-		:param createdAt:   Optional, time the workflow was created, if the service reports it. Default: ``None``.
-		:param startedAt:   Optional, time the workflow started, if the service reports it. Default: ``None``.
-		:param completedAt: Optional, time the workflow completed, if the service reports it. Default: ``None``.
-		:param outcome:     Optional, how the workflow ended, if the service reports it. Default: ``None``.
-		:param parent:      Optional, reference to the matrix containing the instance. Default: ``None``.
-		:param needs:       Optional, siblings this instance needs. Default: ``None``.
-		:param dependents:  Optional, siblings needing this instance. Default: ``None``.
+		:param name:          Name of the workflow, without the dimensions' values.
+		:param dimensions:    Optional, the dimensions' names and values this instance ran with. Default: ``None``.
+		:param reference:     Optional, what the workflow calls, as written. Default: ``None``.
+		:param condition:     Optional, condition under which the workflow is called, as written. Default: ``None``.
+		:param createdAt:     Optional, time the workflow was created, if the service reports it. Default: ``None``.
+		:param startedAt:     Optional, time the workflow started, if the service reports it. Default: ``None``.
+		:param completedAt:   Optional, time the workflow completed, if the service reports it. Default: ``None``.
+		:param outcome:       Optional, how the workflow ended, if the service reports it. Default: ``None``.
+		:param parent:        Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param needs:         Optional, siblings this instance needs. Default: ``None``.
+		:param dependents:    Optional, siblings needing this instance. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
 		super().__init__(
 			name, reference=reference, condition=condition, createdAt=createdAt, startedAt=startedAt,
-			completedAt=completedAt, outcome=outcome, parent=parent
+			completedAt=completedAt, outcome=outcome, parent=parent, keyValuePairs=keyValuePairs
 		)
 		MatrixInstanceMixin.__init__(self, dimensions)
 		DependencyMixin.__init__(self, needs, dependents)
@@ -1345,32 +1427,35 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 
 	def __init__(
 		self,
-		name:        str,
+		name:          str,
 		*,
-		condition:   Nullable[str]                       = None,
-		createdAt:   Nullable[datetime]                  = None,
-		startedAt:   Nullable[datetime]                  = None,
-		completedAt: Nullable[datetime]                  = None,
-		outcome:     Nullable[Outcome]                   = None,
-		parent:      Nullable[JobGroup]                  = None,
-		needs:       Nullable[Iterable[DependencyMixin]] = None,
-		dependents:  Nullable[Iterable[DependencyMixin]] = None
+		condition:     Nullable[str]                       = None,
+		createdAt:     Nullable[datetime]                  = None,
+		startedAt:     Nullable[datetime]                  = None,
+		completedAt:   Nullable[datetime]                  = None,
+		outcome:       Nullable[Outcome]                   = None,
+		parent:        Nullable[JobGroup]                  = None,
+		needs:         Nullable[Iterable[DependencyMixin]] = None,
+		dependents:    Nullable[Iterable[DependencyMixin]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]]    = None
 	) -> None:
 		"""
 		Initializes a job.
 
-		:param name:        Name of the job.
-		:param condition:   Optional, condition under which the job runs, as written. Default: ``None``.
-		:param createdAt:   Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
-		:param startedAt:   Optional, time the job started running on a worker. Default: ``None``.
-		:param completedAt: Optional, time the job completed. Default: ``None``.
-		:param outcome:     Optional, how the job ended. Default: ``None``.
-		:param parent:      Optional, reference to the group containing the job. Default: ``None``.
-		:param needs:       Optional, siblings this job needs. Default: ``None``.
-		:param dependents:  Optional, siblings needing this job. Default: ``None``.
+		:param name:          Name of the job.
+		:param condition:     Optional, condition under which the job runs, as written. Default: ``None``.
+		:param createdAt:     Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
+		:param startedAt:     Optional, time the job started running on a worker. Default: ``None``.
+		:param completedAt:   Optional, time the job completed. Default: ``None``.
+		:param outcome:       Optional, how the job ended. Default: ``None``.
+		:param parent:        Optional, reference to the group containing the job. Default: ``None``.
+		:param needs:         Optional, siblings this job needs. Default: ``None``.
+		:param dependents:    Optional, siblings needing this job. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
 		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent,
+			keyValuePairs=keyValuePairs
 		)
 		ConditionMixin.__init__(self, condition)
 		DependencyMixin.__init__(self, needs, dependents)
@@ -1394,15 +1479,16 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		"""
 		return self._steps
 
-	def __len__(self) -> int:
+	@readonly
+	def StepCount(self) -> int:
 		"""
-		Return the number of steps of the job.
+		Read-only property to return the number of steps of the job.
 
 		:returns: Number of steps.
 		"""
 		return len(self._steps)
 
-	def __contains__(self, name: str) -> bool:
+	def HasStep(self, name: str) -> bool:
 		"""
 		Check whether a step of that name belongs to the job.
 
@@ -1411,11 +1497,11 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		"""
 		return any(str(step) == name for step in self._steps)
 
-	def __iter__(self) -> Iterator[Step]:
+	def IterateSteps(self) -> Iterator[Step]:
 		"""
 		Iterate the job's steps.
 
-		:returns: An iterator over the steps.
+		:returns: An iterator over the steps, in the order they were added.
 		"""
 		return iter(self._steps)
 
@@ -1428,35 +1514,37 @@ class MatrixJob(Job, MatrixInstanceMixin):
 
 	def __init__(
 		self,
-		name:        str,
-		dimensions:  Nullable[Mapping[str, Any]]         = None,
+		name:          str,
+		dimensions:    Nullable[Mapping[str, Any]]         = None,
 		*,
-		condition:   Nullable[str]                       = None,
-		createdAt:   Nullable[datetime]                  = None,
-		startedAt:   Nullable[datetime]                  = None,
-		completedAt: Nullable[datetime]                  = None,
-		outcome:     Nullable[Outcome]                   = None,
-		parent:      Nullable[Matrix]                    = None,
-		needs:       Nullable[Iterable[DependencyMixin]] = None,
-		dependents:  Nullable[Iterable[DependencyMixin]] = None
+		condition:     Nullable[str]                       = None,
+		createdAt:     Nullable[datetime]                  = None,
+		startedAt:     Nullable[datetime]                  = None,
+		completedAt:   Nullable[datetime]                  = None,
+		outcome:       Nullable[Outcome]                   = None,
+		parent:        Nullable[Matrix]                    = None,
+		needs:         Nullable[Iterable[DependencyMixin]] = None,
+		dependents:    Nullable[Iterable[DependencyMixin]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]]    = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
 
-		:param name:        Name of the job, without the dimensions' values.
-		:param dimensions:  Optional, the dimensions' names and values this instance ran with. Default: ``None``.
-		:param condition:   Optional, condition under which the job runs, as written. Default: ``None``.
-		:param createdAt:   Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
-		:param startedAt:   Optional, time the job started running on a worker. Default: ``None``.
-		:param completedAt: Optional, time the job completed. Default: ``None``.
-		:param outcome:     Optional, how the job ended. Default: ``None``.
-		:param parent:      Optional, reference to the matrix containing the instance. Default: ``None``.
-		:param needs:       Optional, siblings this instance needs. Default: ``None``.
-		:param dependents:  Optional, siblings needing this instance. Default: ``None``.
+		:param name:          Name of the job, without the dimensions' values.
+		:param dimensions:    Optional, the dimensions' names and values this instance ran with. Default: ``None``.
+		:param condition:     Optional, condition under which the job runs, as written. Default: ``None``.
+		:param createdAt:     Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
+		:param startedAt:     Optional, time the job started running on a worker. Default: ``None``.
+		:param completedAt:   Optional, time the job completed. Default: ``None``.
+		:param outcome:       Optional, how the job ended. Default: ``None``.
+		:param parent:        Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param needs:         Optional, siblings this instance needs. Default: ``None``.
+		:param dependents:    Optional, siblings needing this instance. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
 		super().__init__(
 			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
-			parent=parent
+			parent=parent, keyValuePairs=keyValuePairs
 		)
 		MatrixInstanceMixin.__init__(self, dimensions)
 		DependencyMixin.__init__(self, needs, dependents)
@@ -1481,23 +1569,27 @@ class Step(Base, ConditionMixin):
 
 	def __init__(
 		self,
-		name:        str,
+		name:          str,
 		*,
-		condition:   Nullable[str]      = None,
-		startedAt:   Nullable[datetime] = None,
-		completedAt: Nullable[datetime] = None,
-		outcome:     Nullable[Outcome]  = None,
-		parent:      Nullable[Job]      = None
+		condition:     Nullable[str]                    = None,
+		startedAt:     Nullable[datetime]               = None,
+		completedAt:   Nullable[datetime]               = None,
+		outcome:       Nullable[Outcome]                = None,
+		parent:        Nullable[Job]                    = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a step within a job.
 
-		:param name:        Name of the step.
-		:param condition:   Optional, condition under which the step runs, as written. Default: ``None``.
-		:param startedAt:   Optional, time the step started running. Default: ``None``.
-		:param completedAt: Optional, time the step completed. Default: ``None``.
-		:param outcome:     Optional, how the step ended. Default: ``None``.
-		:param parent:      Optional, reference to the job containing the step. Default: ``None``.
+		:param name:          Name of the step.
+		:param condition:     Optional, condition under which the step runs, as written. Default: ``None``.
+		:param startedAt:     Optional, time the step started running. Default: ``None``.
+		:param completedAt:   Optional, time the step completed. Default: ``None``.
+		:param outcome:       Optional, how the step ended. Default: ``None``.
+		:param parent:        Optional, reference to the job containing the step. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
-		super().__init__(name, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent)
+		super().__init__(
+			name, startedAt=startedAt, completedAt=completedAt, outcome=outcome, parent=parent, keyValuePairs=keyValuePairs
+		)
 		ConditionMixin.__init__(self, condition)
