@@ -45,6 +45,7 @@ from pyTooling.Tracing           import Span, Trace
 from pyTooling.Tracing.CI        import CI, JobSpan, OTLP, PipelineTrace, Result, SpanKind, StepSpan
 from pyTooling.Tracing.CI        import TaskSpan, WorkflowSpan
 from pyTooling.Tracing.CI.GitHub import GitHub, WorkflowRunReader, WorkflowRunTrace
+from pyTooling.Tracing.Render    import GanttLayout, ciSpanFilter
 from pyTooling.Testing           import Testcase
 
 
@@ -285,6 +286,38 @@ class Conversion(Testcase):
 
 		self.assertListEqual(["Build (queued)"], [span.Name for span in spans])
 		self.assertIsNone(spans[0].StopTime)
+
+	def test_Results(self) -> None:
+		"""Every conclusion GitHub documents becomes a CI/CD result; one without a counterpart is an error."""
+		for conclusion, result in (
+			("success",         "success"),
+			("failure",         "failure"),
+			("timed_out",       "timeout"),
+			("skipped",         "skip"),
+			("cancelled",       "cancellation"),
+			("action_required", "error"),
+			("neutral",         "error"),
+			("stale",           "error"),
+			("startup_failure", "error"),
+		):
+			with self.subTest(conclusion=conclusion):
+				steps = [{"name": "Test", "number": 1, "status": "completed", "conclusion": conclusion,
+				          "started_at": _time(5), "completed_at": _time(9)}]
+				trace = WorkflowRunTrace.FromJSON(
+					_run(conclusion=conclusion), [_job("Build", 1, 4, 10, conclusion=conclusion, steps=steps)]
+				)
+				job = _children(trace)["Build"]
+
+				self.assertEqual(result, trace["cicd.pipeline.result"])
+				self.assertEqual(result, job["cicd.pipeline.task.run.result"])
+				self.assertEqual(result, _children(job)["Test"]["cicd.pipeline.task.run.result"])
+				self.assertEqual(conclusion, job["github.conclusion"])
+
+	def test_Results_NoCreationTime(self) -> None:
+		"""A run reporting no creation time still reports its own result, not its jobs'."""
+		trace = WorkflowRunTrace.FromJSON(_run(conclusion="failure", created_at=None), [_job("Build", 1, 4, 10)])
+
+		self.assertEqual("failure", trace["cicd.pipeline.result"])
 
 	def test_Job_Running(self) -> None:
 		trace = WorkflowRunTrace.FromJSON(_run(), [_job("Build", 1, 4, None)])
@@ -784,6 +817,34 @@ class Matrices(Testcase):
 		instance = _children(matrix)["Unit Tests (ubuntu-26.04)"]
 
 		self.assertEqual("UnitTesting / Unit Tests (ubuntu-26.04)", instance["cicd.pipeline.task.name"])
+
+	def test_AMatrixOfCalledWorkflows(self) -> None:
+		"""A matrix calling a reusable workflow is a matrix span holding a workflow span per combination."""
+		jobs = [_job("Params", 0, 5, 20)]
+		for position, version in enumerate(("22.04", "24.04")):
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Build", 20, 30 + position, 300 + position))
+			jobs.append(_job(f"Ubuntu-fast (mcode, {version}) / Test", 300, 310, 600 + position))
+		trace = WorkflowRunTrace.FromJSON(_run(), jobs)
+
+		matrix = _children(trace)["Ubuntu-fast"]
+		self.assertEqual("matrix", matrix[CI.Span.Kind])
+
+		workflow = _children(matrix)["Ubuntu-fast (mcode, 24.04)"]
+		self.assertEqual("workflow", workflow[CI.Span.Kind])
+		self.assertEqual("Ubuntu-fast (mcode, 24.04) / Test", _children(workflow)["Test"]["cicd.pipeline.task.name"])
+
+		layout = GanttLayout(trace, spanFilter=ciSpanFilter())
+		self.assertListEqual([
+			("Pipeline",                   0, "pipeline"),
+			("Params",                     1, "job"),
+			("Ubuntu-fast",                1, "matrix"),
+			("Ubuntu-fast (mcode, 22.04)", 2, "workflow"),
+			("Build",                      3, "job"),
+			("Test",                       3, "job"),
+			("Ubuntu-fast (mcode, 24.04)", 2, "workflow"),
+			("Build",                      3, "job"),
+			("Test",                       3, "job"),
+		], [(row.Name, row.Depth, row.Kind) for row in layout.IterateRows()])
 
 	def test_AMatrixInsideACalledWorkflow(self) -> None:
 		trace = WorkflowRunTrace.FromJSON(_run(), [_job("Docs / Sphinx (html)", 10, 12, 60)])

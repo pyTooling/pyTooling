@@ -48,11 +48,11 @@ sub-span per step. The time a job waited for a runner is a separate timespan in 
 
    See :ref:`high-level help <TRACING/CI>` for explanations and usage examples.
 """
-from datetime              import datetime
-from typing                import Any, ClassVar, Iterable, Optional as Nullable, Self, Union
+from datetime                  import datetime
+from typing                    import Any, ClassVar, Iterable, Optional as Nullable, Self, Union
 
-from pyTooling.CI              import JSONObject
-from pyTooling.CI.GitHub       import Conclusion, GitHubError, Job, JobGroup, Matrix, MatrixJob, Pipeline, Step
+from pyTooling.CI              import Base, JobGroup, JSONObject, Matrix
+from pyTooling.CI.GitHub       import Conclusion, GitHubError, Job, MatrixJob, Pipeline, Step
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, readonly
 from pyTooling.GenericPath.URL import URL
@@ -118,38 +118,32 @@ class GitHub(metaclass=ExtendedType, slots=True):
 		Number: ClassVar[str] = "github.step.number"  #: The step's position in its job, counted from one.
 
 
-_CONCLUSION_TO_RESULT = {
-	Conclusion.Success:   Result.Success,
-	Conclusion.Failure:   Result.Failure,
-	Conclusion.TimedOut:  Result.Timeout,
-	Conclusion.Skipped:   Result.Skip,
-	Conclusion.Cancelled: Result.Cancellation,
-}
-"""GitHub's conclusions and the CI/CD results they correspond to. Any other conclusion is an error."""
-
-
 @export
 class GitHubTimespanMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	Mixin-class for a timespan built from :mod:`pyTooling.CI.GitHub`'s model of a workflow run.
 
-	It holds what every flavour needs to read that model: GitHub's conclusions, and the span a group's contents
-	have. Everything else the model answers itself - the order its elements are in, and the times of a job, which
+	It holds what every flavour needs to read that model: the result an element's outcome is, and the span a group's
+	contents have. Everything else the model answers itself - the order its elements are in, and the times of a job, which
 	are wider than the ones GitHub reports because a step may run outside the job containing it.
 	"""
 
 	@staticmethod
-	def _Result(conclusion: Nullable[Conclusion]) -> Nullable[Result]:
+	def _Result(element: Base) -> Nullable[Result]:
 		"""
-		Map a GitHub conclusion to a CI/CD result.
+		Return the CI/CD result of an element of the model.
 
-		:param conclusion: Optional, the conclusion, or ``None`` while it hasn't concluded. Default: ``None``.
-		:returns:          The CI/CD result, or ``None`` if there is no conclusion yet.
+		The result is the member of the same value as the element's :attr:`~pyTooling.CI.Base.Outcome`. A
+		GitHub conclusion is mapped onto an outcome by
+		:meth:`Conclusion.ToOutcome <pyTooling.CI.GitHub.Conclusion.ToOutcome>`.
+
+		:param element: The workflow run, job or step.
+		:returns:       The CI/CD result, or ``None`` while the element hasn't ended.
 		"""
-		if conclusion is None:
+		if element.Outcome is None:
 			return None
 
-		return _CONCLUSION_TO_RESULT.get(conclusion, Result.Error)
+		return Result(element.Outcome.value)
 
 	@staticmethod
 	def _NotBefore(end: Nullable[datetime], begin: datetime) -> Nullable[datetime]:
@@ -227,7 +221,7 @@ class StepSpan(CIStepSpan, GitHubTimespanMixin):
 			step.StartedAt,
 			cls._NotBefore(step.CompletedAt, step.StartedAt),
 			parent=parent,
-			result=cls._Result(step.Conclusion),
+			result=cls._Result(step),
 			attributes={
 				GitHub.Step.Number: step.Number,
 				GitHub.Conclusion:  None if step.Conclusion is None else step.Conclusion.value
@@ -300,7 +294,7 @@ class JobSpan(CIJobSpan, GitHubTimespanMixin):
 			GitHub.Runner.Labels: list(job.Labels)
 		}
 		if isinstance(job, MatrixJob):
-			attributes[GitHub.Matrix.Dimensions] = list(job.DimensionValues)
+			attributes[GitHub.Matrix.Dimensions] = list(job.Dimensions.values())
 
 		jobSpan = cls(
 			displayName,
@@ -310,7 +304,7 @@ class JobSpan(CIJobSpan, GitHubTimespanMixin):
 			taskName=job.QualifiedName,
 			runID=None if job.ID is None else str(job.ID),
 			runURL=None if job.URL is None else str(job.URL),
-			result=cls._Result(job.Conclusion),
+			result=cls._Result(job),
 			workerName=job.RunnerName,
 			attributes=attributes
 		)
@@ -341,7 +335,7 @@ class GitHubGroupMixin(metaclass=ExtendedType, mixin=True):
 		:returns:      The group's timespan.
 		"""
 		begin, end = cls._Timespan(group.CreatedAt, group.StartedAt, group.CompletedAt)
-		span = cls(group.Name, begin, end, parent=parent)
+		span = cls(str(group), begin, end, parent=parent)
 		cls._AddContents(group, span)
 
 		return span
@@ -420,7 +414,7 @@ class WorkflowRunTrace(CIPipelineTrace, GitHubTimespanMixin):
 			endTime,
 			runID=None if pipeline.ID is None else str(pipeline.ID),
 			runURL=None if pipeline.URL is None else str(pipeline.URL),
-			result=cls._Result(pipeline.Conclusion),
+			result=cls._Result(pipeline),
 			reference=pipeline.GitReference,
 			revision=pipeline.SHA,
 			attributes={

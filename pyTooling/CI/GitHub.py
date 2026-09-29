@@ -47,29 +47,35 @@ The GitHub REST API answers with nested JSON objects whose fields are strings - 
        +-- Job              a job that ran on a runner
            +-- Step         a step of that job
 
-Every element knows its parent and the pipeline it belongs to, and the string fields become :class:`Status`,
-:class:`Conclusion` and :class:`Event` members, so an undocumented value is an error rather than a comparison that
-never matches.
+The classes derive from the service-independent model :mod:`pyTooling.CI`, which a called workflow, a
+matrix and their base-class are taken from unchanged. Every element knows its parent and the pipeline it belongs to,
+and the string fields become :class:`Status`, :class:`Conclusion` and :class:`Event` members, so an undocumented value
+is an error rather than a comparison that never matches. A conclusion is reported as the model's
+:class:`~pyTooling.CI.Outcome` as well.
 
 The model carries no dependency on what is done with it. Converting a :class:`Pipeline` into a software execution
 trace, a graph or a report is a consumer of this model.
 """
-from __future__            import annotations
+from __future__                import annotations
 
-from datetime              import datetime, timezone
-from itertools             import chain
-from typing                import Optional as Nullable, Any, ClassVar, Iterable, Iterator, Self, Union
+from datetime                  import datetime, timezone
+from typing                    import Optional as Nullable, Any, ClassVar, Iterable, Mapping, Self, Union
 
-from pyTooling.CI          import JSONObject
-from pyTooling.Common      import __version__, getFullyQualifiedName, parseISO8601Timestamp, StringEnum
-from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.CI              import CIError, JSONObject, MatrixInstanceMixin, Outcome
+from pyTooling.CI              import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
+from pyTooling.CI              import MatrixWorkflow as CIMatrixWorkflow, Pipeline as CIPipeline
+from pyTooling.CI              import PipelineGroup as CIPipelineGroup, Step as CIStep, Workflow as CIWorkflow
+from pyTooling.Common          import getFullyQualifiedName, parseISO8601Timestamp, StringEnum
+from pyTooling.Decorators      import export, readonly
 from pyTooling.GenericPath.URL import URL
-from pyTooling.MetaClasses import ExtendedType, ThisClass, abstractclass
+from pyTooling.MetaClasses     import ExtendedType
+
+
+__all__ = ["CONCLUSION_TO_OUTCOME"]
 
 
 @export
-class GitHubError(ToolingException):
+class GitHubError(CIError):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.CI.GitHub`."""
 
 
@@ -134,6 +140,28 @@ class Conclusion(StringEnum):
 			error = GitHubError(f"'{value}' is not a GitHub conclusion.")
 			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
 			raise error from ex
+
+	def ToOutcome(self) -> Outcome:
+		"""
+		Return the service-independent outcome this conclusion corresponds to.
+
+		The conclusions with a counterpart of their own - e.g. :attr:`TimedOut`, :attr:`Skipped`, :attr:`Cancelled` - are
+		listed in :data:`CONCLUSION_TO_OUTCOME`; any other, e.g. :attr:`StartupFailure` or :attr:`Neutral`, is an
+		:attr:`~pyTooling.CI.Outcome.Error`.
+
+		:returns: The outcome.
+		"""
+		return CONCLUSION_TO_OUTCOME.get(self, Outcome.Error)
+
+
+CONCLUSION_TO_OUTCOME = {
+	Conclusion.Success:   Outcome.Success,
+	Conclusion.Failure:   Outcome.Failure,
+	Conclusion.TimedOut:  Outcome.Timeout,
+	Conclusion.Skipped:   Outcome.Skip,
+	Conclusion.Cancelled: Outcome.Cancellation,
+}
+"""GitHub's conclusions with a service-independent outcome of their own."""
 
 
 @export
@@ -228,17 +256,19 @@ def _parseURL(value: Nullable[str], field: str) -> Nullable[URL]:
 	return URL.Parse(value)
 
 
-def _splitMatrixJobName(name: str) -> tuple[str, Nullable[list[str]]]:
+def _splitMatrixJobName(name: str) -> tuple[str, Nullable[dict[str, str]]]:
 	"""
-	Split a job's name into the matrix' name and the dimension values, if it carries any.
+	Split a job's name into the matrix' name and the dimensions, if it carries any.
 
-	GitHub appends the dimension values of a matrix instance to the job's name, as ``Unit Tests (ubuntu-26.04, 3.14)``.
-	That bracketed suffix is a naming convention of GitHub's own interface, not a field of the payload, so a job
-	genuinely named ``Build (fast)`` and produced by no matrix is indistinguishable from one that was. A job whose
-	workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.
+	GitHub appends the dimensions' values of a matrix instance to the job's name, as
+	``Unit Tests (ubuntu-26.04, 3.14)``. That bracketed suffix is a naming convention of GitHub's own interface, not a
+	field of the payload, so a job genuinely named ``Build (fast)`` and produced by no matrix is indistinguishable from
+	one that was. A job whose workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.
+
+	The suffix carries no dimension names, so a dimension is named by the position of its value: ``"0"``, ``"1"``, ...
 
 	:param name: The job's name, without any calling workflows' prefixes.
-	:returns:    The name without the suffix and the dimension values, or the name and ``None`` if it carries none.
+	:returns:    The name without the suffix and the dimensions, or the name and ``None`` if it carries none.
 	"""
 	if not name.endswith(")") or "(" not in name:
 		return name, None
@@ -248,75 +278,39 @@ def _splitMatrixJobName(name: str) -> tuple[str, Nullable[list[str]]]:
 	if base == "":
 		return name, None
 
-	return base, [value.strip() for value in values.split(",")]
+	return base, {str(position): value.strip() for position, value in enumerate(values.split(","))}
 
 
 @export
-@abstractclass
-class Base(metaclass=ExtendedType, slots=True):
+class StatusMixin(metaclass=ExtendedType, mixin=True, expects=("_outcome",)):
 	"""
-	Common behaviour of every element of a workflow run.
+	Mixin-class for the elements GitHub reports: a workflow run, a job and a step.
 
-	Every element has a name, a position in the tree, a :class:`Status` and - once completed - a :class:`Conclusion`,
-	and the timestamps GitHub reports for it.
+	GitHub reports a :class:`Status` and, once completed, a :class:`Conclusion` for each of them, and a URL on
+	github.com for a run and a job. A called workflow and a matrix aren't reported, so they have none of it. The
+	conclusion is also the element's generic :attr:`~pyTooling.CI.Base.Outcome`.
 	"""
 
-	_PARENT_TYPE: ClassVar[Nullable[type]] = None  #: Type a parent must have, or ``None`` when it has no parent.
-
-	_name:        str                   #: Name of the element.
-	_parent:      Nullable[Base]        #: Reference to the containing element.
-	_pipeline:    Nullable[Pipeline]    #: Reference to the workflow run this element belongs to.
-	_status:      Nullable[Status]      #: State the element is in.
-	_conclusion:  Nullable[Conclusion]  #: How the element ended.
-	_createdAt:   Nullable[datetime]    #: Time the element was created.
-	_startedAt:   Nullable[datetime]    #: Time the element started running.
-	_completedAt: Nullable[datetime]    #: Time the element completed.
-	_url:         Nullable[URL]         #: URL of the element on github.com.
+	_status:     Nullable[Status]      #: State the element is in.
+	_conclusion: Nullable[Conclusion]  #: How the element ended.
+	_url:        Nullable[URL]         #: URL of the element on github.com.
 
 	def __init__(
 		self,
-		name:        str,
-		status:      Nullable[Status]     = None,
-		conclusion:  Nullable[Conclusion] = None,
-		createdAt:   Nullable[datetime]   = None,
-		startedAt:   Nullable[datetime]   = None,
-		completedAt: Nullable[datetime]   = None,
-		url:         Nullable[URL]        = None,
-		*,
-		parent:      Nullable[Base] = None
+		status:     Nullable[Status]     = None,
+		conclusion: Nullable[Conclusion] = None,
+		url:        Nullable[URL]        = None
 	) -> None:
 		"""
-		Initializes an element of a workflow run.
+		Initializes what GitHub reports about an element.
 
-		:param name:        Name of the element.
-		:param status:      Optional, state the element is in. Default: ``None``.
-		:param conclusion:  Optional, how the element ended. Default: ``None``.
-		:param createdAt:   Optional, time the element was created. Default: ``None``.
-		:param startedAt:   Optional, time the element started running. Default: ``None``.
-		:param completedAt: Optional, time the element completed. Default: ``None``.
-		:param url:         Optional, URL of the element on github.com. Default: ``None``.
-		:param parent:      Optional, reference to the containing element. Default: ``None``.
-		:raises ValueError: If parameter 'name' is ``None``.
-		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
-		:raises ValueError: If parameter 'name' is empty.
-		:raises TypeError:  If parameter 'status' is not of type :class:`Status`.
-		:raises TypeError:  If parameter 'conclusion' is not of type :class:`Conclusion`.
-		:raises TypeError:  If parameter 'createdAt' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'startedAt' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'completedAt' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'url' is not of type :class:`~pyTooling.GenericPath.URL.URL`.
-		:raises TypeError:  If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
-		:raises TypeError:  If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
+		:param status:     Optional, state the element is in. Default: ``None``.
+		:param conclusion: Optional, how the element ended. Default: ``None``.
+		:param url:        Optional, URL of the element on github.com. Default: ``None``.
+		:raises TypeError: If parameter 'status' is not of type :class:`Status`.
+		:raises TypeError: If parameter 'conclusion' is not of type :class:`Conclusion`.
+		:raises TypeError: If parameter 'url' is not of type :class:`~pyTooling.GenericPath.URL.URL`.
 		"""
-		if name is None:
-			raise ValueError("Parameter 'name' is None.")
-		elif not isinstance(name, str):
-			ex = TypeError("Parameter 'name' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
-			raise ex
-		elif name == "":
-			raise ValueError("Parameter 'name' is empty.")
-
 		if status is not None and not isinstance(status, Status):
 			ex = TypeError("Parameter 'status' is not of type 'Status'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(status)}'.")
@@ -327,63 +321,16 @@ class Base(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(conclusion)}'.")
 			raise ex
 
-		for parameterName, timestamp in (("createdAt", createdAt), ("startedAt", startedAt), ("completedAt", completedAt)):
-			if timestamp is not None and not isinstance(timestamp, datetime):
-				ex = TypeError(f"Parameter '{parameterName}' is not of type 'datetime'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(timestamp)}'.")
-				raise ex
-
 		if url is not None and not isinstance(url, URL):
 			ex = TypeError("Parameter 'url' is not of type 'URL'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
 			raise ex
 
-		if parent is not None:
-			if self._PARENT_TYPE is None:
-				ex = TypeError(f"A '{self.__class__.__name__}' has no parent.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-			elif not isinstance(parent, self._PARENT_TYPE):
-				ex = TypeError(f"Parameter 'parent' is not of type '{self._PARENT_TYPE.__name__}'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-
-		self._name =        name
-		self._parent =      parent
-		self._pipeline =    None if parent is None else parent._pipeline
-		self._status =      status
-		self._conclusion =  conclusion
-		self._createdAt =   createdAt
-		self._startedAt =   startedAt
-		self._completedAt = completedAt
-		self._url =         url
-
-	@readonly
-	def Name(self) -> str:
-		"""
-		Read-only property to access the element's name (:attr:`_name`).
-
-		:returns: Name of the element.
-		"""
-		return self._name
-
-	@readonly
-	def Parent(self) -> Nullable[Base]:
-		"""
-		Read-only property to access the containing element (:attr:`_parent`).
-
-		:returns: The containing element, or ``None`` for a :class:`PipelineGroup`.
-		"""
-		return self._parent
-
-	@readonly
-	def Pipeline(self) -> Nullable[Pipeline]:
-		"""
-		Read-only property to access the workflow run this element belongs to (:attr:`_pipeline`).
-
-		:returns: The workflow run, or ``None`` for an element outside one.
-		"""
-		return self._pipeline
+		self._status =     status
+		self._conclusion = conclusion
+		self._url =        url
+		if conclusion is not None:
+			self._outcome = conclusion.ToOutcome()
 
 	@readonly
 	def Status(self) -> Nullable[Status]:
@@ -399,36 +346,12 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access how the element ended (:attr:`_conclusion`).
 
+		The service-independent :attr:`~pyTooling.CI.Base.Outcome` is derived from it by
+		:meth:`Conclusion.ToOutcome`.
+
 		:returns: The conclusion, or ``None`` while the element hasn't concluded.
 		"""
 		return self._conclusion
-
-	@readonly
-	def CreatedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to access the time the element was created (:attr:`_createdAt`).
-
-		:returns: The time, or ``None`` if GitHub reported none.
-		"""
-		return self._createdAt
-
-	@readonly
-	def StartedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to access the time the element started running (:attr:`_startedAt`).
-
-		:returns: The time, or ``None`` while it hasn't started.
-		"""
-		return self._startedAt
-
-	@readonly
-	def CompletedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to access the time the element completed (:attr:`_completedAt`).
-
-		:returns: The time, or ``None`` while it hasn't completed.
-		"""
-		return self._completedAt
 
 	@readonly
 	def URL(self) -> Nullable[URL]:
@@ -439,66 +362,9 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		return self._url
 
-	@readonly
-	def Duration(self) -> Nullable[float]:
-		"""
-		Read-only property to return how long the element ran.
-
-		The times are read through :attr:`StartedAt` and :attr:`CompletedAt`, so a :class:`JobGroup` - which has no
-		times of its own and derives them from its jobs - reports a duration too.
-
-		:returns: Seconds from starting to completing, or ``None`` while either time is unknown.
-		"""
-		if self.StartedAt is None or self.CompletedAt is None:
-			return None
-
-		return (self.CompletedAt - self.StartedAt).total_seconds()
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of the element.
-
-		:returns: The element's name.
-		"""
-		return self._name
-
 
 @export
-class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
-	"""
-	Mixin-class for elements GitHub names by the workflows containing them.
-
-	:meth:`Pipeline.FromJSON` takes such a name apart - ``Caller / Build (ubuntu-26.04)`` becomes a job ``Build``
-	below a :class:`Workflow` ``Caller``, with the dimension values on a :class:`MatrixJob` - and this mixin puts it
-	back together, so a report can name an element the way the service does.
-
-	It is mixed into elements of the tree :class:`Base` builds and walks it upwards, so the ``expects`` contract
-	requires :attr:`Base._parent` from whichever class it ends up in. The element itself is named by :func:`str`,
-	which every class has; a containing workflow is read as a :class:`Workflow`, which this module declares.
-	"""
-
-	@readonly
-	def QualifiedName(self) -> str:
-		"""
-		Read-only property to return the element's name, prefixed by the names of the workflows containing it.
-
-		The element itself is named by :func:`str`, so a :class:`MatrixJob` carries the dimension values it was
-		produced for. The walk ends at the :class:`Pipeline`, which is a run rather than a called workflow, and passes
-		through a :class:`Matrix` without naming it - a matrix shares its name with the jobs it produced.
-
-		:returns: The name, with every calling workflow in front of it, separated by ``' / '``.
-		"""
-		names =   [str(self)]
-		element = self
-		while (element := element._parent) is not None and not isinstance(element, Pipeline):
-			if isinstance(element, Workflow):
-				names.append(element._name)
-
-		return " / ".join(reversed(names))
-
-
-@export
-class PipelineGroup(Base):
+class PipelineGroup(CIPipelineGroup):
 	"""
 	Every workflow run GitHub started for one commit, and the top of the tree.
 
@@ -521,34 +387,27 @@ class PipelineGroup(Base):
 	is wider than the time the commit's checks took.
 	"""
 
-	_PARENT_TYPE: ClassVar[Nullable[type]] = None  #: A pipeline group is the top of the tree and has no parent.
-
-	_pipelines: list[Pipeline]  #: Pipelines started for the commit.
-
 	def __init__(self, sha: str, pipelines: Nullable[Iterable[Pipeline]] = None) -> None:
 		"""
 		Initializes a group of pipelines started for one commit.
 
 		:param sha:         Commit every pipeline of the group was started on.
-		:param pipelines:   Optional, the pipelines. Default: ``None``.
+		:param pipelines:   Optional, the pipelines, which are attached to the group. Default: ``None``.
+		:raises ValueError: If parameter 'sha' is ``None``.
 		:raises TypeError:  If parameter 'sha' is not of type :class:`str`.
 		:raises ValueError: If parameter 'sha' is empty.
 		:raises TypeError:  If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
 		"""
-		super().__init__(sha)
+		if sha is None:
+			raise ValueError("Parameter 'sha' is None.")
+		elif not isinstance(sha, str):
+			ex = TypeError("Parameter 'sha' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(sha)}'.")
+			raise ex
+		elif sha == "":
+			raise ValueError("Parameter 'sha' is empty.")
 
-		self._pipelines = []
-		if pipelines is None:
-			return
-
-		for pipeline in pipelines:
-			if not isinstance(pipeline, Pipeline):
-				ex = TypeError("An element of parameter 'pipelines' is not of type 'Pipeline'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(pipeline)}'.")
-				raise ex
-
-			self._pipelines.append(pipeline)
-			pipeline._parent = self
+		super().__init__(sha, pipelines)
 
 	@readonly
 	def SHA(self) -> str:
@@ -558,56 +417,6 @@ class PipelineGroup(Base):
 		:returns: The commit's hash.
 		"""
 		return self._name
-
-	@readonly
-	def Pipelines(self) -> list[Pipeline]:
-		"""
-		Read-only property to access the pipelines started for the commit (:attr:`_pipelines`).
-
-		:returns: The pipelines, in the order they were reported.
-		"""
-		return self._pipelines
-
-	@readonly
-	def CreatedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first pipeline of the group was created.
-
-		:returns: The time, or ``None`` if no pipeline of the group reports one.
-		"""
-		times = [pipeline.CreatedAt for pipeline in self._pipelines if pipeline.CreatedAt is not None]
-
-		return min(times) if len(times) > 0 else None
-
-	@readonly
-	def StartedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first pipeline of the group started.
-
-		:returns: The time, or ``None`` if no pipeline of the group has started.
-		"""
-		times = [pipeline.StartedAt for pipeline in self._pipelines if pipeline.StartedAt is not None]
-
-		return min(times) if len(times) > 0 else None
-
-	@readonly
-	def CompletedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the last pipeline of the group completed.
-
-		:returns: The time, or ``None`` while a pipeline of the group hasn't completed.
-		"""
-		if len(self._pipelines) == 0:
-			return None
-
-		times = []
-		for pipeline in self._pipelines:
-			if pipeline.CompletedAt is None:
-				return None
-
-			times.append(pipeline.CompletedAt)
-
-		return max(times)
 
 	@readonly
 	def Conclusion(self) -> Nullable[Conclusion]:
@@ -667,40 +476,6 @@ class PipelineGroup(Base):
 
 		return byReference
 
-	def IterateJobs(self) -> Iterator[Job]:
-		"""
-		Iterate every job of every pipeline of the group.
-
-		:returns: An iterator over the jobs.
-		"""
-		for pipeline in self._pipelines:
-			yield from pipeline.IterateJobs()
-
-	def __len__(self) -> int:
-		"""
-		Return the number of pipelines started for the commit.
-
-		:returns: Number of pipelines.
-		"""
-		return len(self._pipelines)
-
-	def __contains__(self, name: str) -> bool:
-		"""
-		Check whether a pipeline of that name was started for the commit.
-
-		:param name: Name of the pipeline to check for.
-		:returns:    ``True``, if a pipeline of that name belongs to the group.
-		"""
-		return any(str(pipeline) == name for pipeline in self._pipelines)
-
-	def __iter__(self) -> Iterator[Pipeline]:
-		"""
-		Iterate the pipelines started for the commit.
-
-		:returns: An iterator over the pipelines.
-		"""
-		return iter(self._pipelines)
-
 	@classmethod
 	def FromJSON(
 		cls,
@@ -750,251 +525,17 @@ class PipelineGroup(Base):
 
 
 @export
-@abstractclass
-class JobGroup(Base):
-	"""
-	A group of jobs, which has no times of its own and derives them from the jobs it contains.
-
-	It is the shared behaviour of a :class:`Matrix` and a :class:`Workflow` - GitHub reports neither as an element, so
-	neither has a status, a conclusion or timestamps of its own.
-	"""
-
-	_PARENT_TYPE: ClassVar[Nullable[type]] = None  #: Declared by the groups deriving from this class.
-
-	_jobs: list[Job]  #: Jobs of this group.
-
-	def __init__(self, name: str, *, parent: Nullable[Base] = None) -> None:
-		"""
-		Initializes a group of jobs.
-
-		:param name:   Name of the group.
-		:param parent: Optional, reference to the element containing the group. Default: ``None``.
-		"""
-		super().__init__(name, parent=parent)
-
-		self._jobs = []
-
-	@readonly
-	def Jobs(self) -> list[Job]:
-		"""
-		Read-only property to access the jobs of this group (:attr:`_jobs`).
-
-		:returns: The jobs, not including those of nested groups.
-		"""
-		return self._jobs
-
-	@readonly
-	def CreatedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first element below this group was created.
-
-		A group reports no time of its own, so it spans what it holds - its jobs, and for a :class:`Workflow` the
-		matrices and called workflows below it as well.
-
-		:returns: The time, or ``None`` if no element below the group reports one.
-		"""
-		times = [element.CreatedAt for element in self if element.CreatedAt is not None]
-
-		return min(times) if len(times) > 0 else None
-
-	@readonly
-	def StartedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first element below this group started.
-
-		:returns: The time, or ``None`` if no element below the group has started.
-		"""
-		times = [element.StartedAt for element in self if element.StartedAt is not None]
-
-		return min(times) if len(times) > 0 else None
-
-	@readonly
-	def CompletedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the last element below this group completed.
-
-		:returns: The time, or ``None`` while an element below the group hasn't completed, or while it holds none.
-		"""
-		times = []
-		for element in self:
-			if element.CompletedAt is None:
-				return None
-
-			times.append(element.CompletedAt)
-
-		return max(times) if len(times) > 0 else None
-
-	def __len__(self) -> int:
-		"""
-		Return the number of jobs of this group.
-
-		:returns: Number of jobs.
-		"""
-		return len(self._jobs)
-
-	def __contains__(self, name: str) -> bool:
-		"""
-		Check whether a job of that name belongs to this group.
-
-		A job is named the way :func:`str` names it, so an instance of a :class:`Matrix` - which carries the matrix'
-		name - is asked for with its dimension values: ``"Unit Tests (ubuntu-26.04, 3.14)"``.
-
-		:param name: Name of the job to check for.
-		:returns:    ``True``, if a job of that name belongs to this group.
-		"""
-		return any(str(job) == name for job in self._jobs)
-
-	@readonly
-	def _Contents(self) -> Iterable[Base]:
-		"""
-		Return what this group holds, in the order GitHub listed it.
-
-		A group holds its jobs; a :class:`Workflow` holds further groups and says so by overriding this.
-
-		:returns: The elements one level below this group.
-		"""
-		return self._jobs
-
-	def __iter__(self) -> Iterator[Base]:
-		"""
-		Iterate what this group holds, ordered by the time it was queued.
-
-		The order is stable, so elements reporting no time keep the order GitHub listed them in.
-
-		:returns: An iterator over the contained elements.
-		"""
-		def queuedAt(element: Base) -> tuple[bool, datetime]:
-			"""
-			Nested function sorting an element without a creation time behind every element that has one.
-
-			:param element: The element.
-			:returns:       The sort key.
-			"""
-			return (element.CreatedAt is None, element.CreatedAt if element.CreatedAt is not None else datetime.min)
-
-		return iter(sorted(self._Contents, key=queuedAt))
-
-
-@export
-class Workflow(JobGroup, QualifiedNameMixin):
-	"""
-	A called (reusable) workflow, grouping the jobs it contains.
-
-	GitHub doesn't report a called workflow as an element of its own - it prefixes the names of the jobs it contains,
-	as ``Caller / Job``. :meth:`Pipeline.FromJSON` reads those prefixes back into this level, so the tree shows which
-	workflow a job came from. A workflow may call another, and the tree nests as deeply as the caller chain is long.
-
-	.. caution::
-
-	   **A called workflow carries less information than a run.** Its name is the only thing GitHub reports about it,
-	   recovered from the prefix of a job's name, so this class has no counterpart to
-	   :attr:`Pipeline.Path` (the workflow's YAML file), :attr:`Pipeline.WorkflowID`, or the ``@ref`` the caller
-	   pinned it at - and it has no status, conclusion or timestamps of its own either, which is why
-	   :class:`JobGroup` derives them from the jobs below it.
-
-	   Neither the runs nor the jobs payload holds any of it. Filling these in means reading the caller's workflow
-	   file and resolving its ``uses:`` entries, which is a different source than this model reads. See
-	   `issue #408 <https://github.com/pyTooling/pyTooling/issues/408>`__.
-	"""
-
-	_PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass  #: A workflow is contained in a workflow.
-
-	_workflows: dict[str, Workflow]  #: Workflows called by this workflow, by name.
-	_matrices:  dict[str, Matrix]    #: Matrices of this workflow, by the name their jobs share.
-
-	def __init__(self, name: str, *, parent: Nullable[Workflow] = None) -> None:
-		"""
-		Initializes a called workflow.
-
-		:param name:   Name of the workflow, as it prefixes its jobs' names.
-		:param parent: Optional, reference to the workflow calling this one. Default: ``None``.
-		"""
-		super().__init__(name, parent=parent)
-
-		self._workflows = {}
-		self._matrices =  {}
-
-		if parent is not None:
-			parent._workflows[name] = self
-
-	@readonly
-	def Workflows(self) -> dict[str, Workflow]:
-		"""
-		Read-only property to access the workflows this workflow calls (:attr:`_workflows`).
-
-		:returns: The called workflows, by name.
-		"""
-		return self._workflows
-
-	@readonly
-	def Matrices(self) -> dict[str, Matrix]:
-		"""
-		Read-only property to access the matrices of this workflow (:attr:`_matrices`).
-
-		:returns: The matrices, by the name their jobs share.
-		"""
-		return self._matrices
-
-	def IterateJobs(self) -> Iterator[Job]:
-		"""
-		Iterate every job below this workflow, including those of its matrices and of the workflows it calls.
-
-		:returns: An iterator over the jobs.
-		"""
-		yield from self._jobs
-		for matrix in self._matrices.values():
-			yield from matrix._jobs
-
-		for workflow in self._workflows.values():
-			yield from workflow.IterateJobs()
-
-	def __len__(self) -> int:
-		"""
-		Return the number of elements this workflow contains: its jobs, its matrices and the workflows it calls.
-
-		Unlike :meth:`IterateJobs`, this counts the elements one level below the workflow, not the jobs below all of
-		them.
-
-		:returns: Number of contained elements.
-		"""
-		return len(self._jobs) + len(self._matrices) + len(self._workflows)
-
-	def __contains__(self, name: str) -> bool:
-		"""
-		Check whether an element of that name is contained in this workflow.
-
-		The name is looked for among the workflows this one calls, its matrices and its jobs - the elements one level
-		below it, the same :meth:`__iter__` yields.
-
-		:param name: Name of the called workflow, matrix or job to check for.
-		:returns:    ``True``, if an element of that name is contained in this workflow.
-		"""
-		return name in self._workflows or name in self._matrices or super().__contains__(name)
-
-	@readonly
-	def _Contents(self) -> Iterable[Base]:
-		"""
-		Return what this workflow holds: its jobs, its matrices and the workflows it calls.
-
-		A :class:`JobGroup` holds jobs, but a workflow holds further groups, so :meth:`~JobGroup.__iter__` yields
-		everything one level below it. Use :meth:`IterateJobs` to reach the jobs below those groups as well.
-
-		:returns: The elements one level below this workflow.
-		"""
-		return chain(self._jobs, self._matrices.values(), self._workflows.values())
-
-
-@export
-class Pipeline(Workflow):
+class Pipeline(CIPipeline, StatusMixin):
 	"""
 	A workflow run.
 
-	A run contains its own jobs, a :class:`Matrix` for every matrix, and a :class:`Workflow` for every workflow it
-	called. Unlike a called workflow, a run reports its own status, conclusion and times. Several runs of one commit
-	are held by a :class:`PipelineGroup`, which is the top of the tree.
+	A run contains its own jobs, a :class:`~pyTooling.CI.Matrix` for every matrix, and a
+	:class:`~pyTooling.CI.Workflow` for every workflow it called. Unlike a called workflow, a run reports its
+	own status, conclusion and times. Several runs of one commit are held by a :class:`PipelineGroup`, which is the
+	top of the tree.
 	"""
 
-	_PARENT_TYPE: ClassVar[Nullable[type]] = PipelineGroup  #: A pipeline is contained in a pipeline group.
+	_PARENT_TYPE: ClassVar[Nullable[type]] = PipelineGroup  #: A workflow run is contained in a pipeline group.
 
 	_id:           Nullable[int]    #: GitHub's identifier of the run.
 	_workflowID:   Nullable[int]    #: GitHub's identifier of the workflow the run belongs to.
@@ -1052,10 +593,7 @@ class Pipeline(Workflow):
 		:raises TypeError:   If parameter 'event' is not of type :class:`Event`.
 		:raises TypeError:   If parameter 'gitReference' is not of type :class:`str`.
 		:raises TypeError:   If parameter 'sha' is not of type :class:`str`.
-		:raises TypeError:   If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
-		super().__init__(name)
-
 		for parameterName, number in (
 			("identifier", identifier), ("workflowID", workflowID), ("runNumber", runNumber), ("runAttempt", runAttempt)
 		):
@@ -1075,24 +613,10 @@ class Pipeline(Workflow):
 				ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
 				raise ex
 
-		if parent is not None:
-			if self._PARENT_TYPE is None:
-				ex = TypeError(f"A '{self.__class__.__name__}' has no parent.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-			elif not isinstance(parent, self._PARENT_TYPE):
-				ex = TypeError(f"Parameter 'parent' is not of type '{self._PARENT_TYPE.__name__}'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-
-		self._parent =      parent
-		self._pipeline =    self
-		self._status =      status
-		self._conclusion =  conclusion
-		self._createdAt =   createdAt
-		self._startedAt =   startedAt
-		self._completedAt = completedAt
-		self._url =         url
+		super().__init__(
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent
+		)
+		StatusMixin.__init__(self, status, conclusion, url)
 
 		self._id =           identifier
 		self._workflowID =   workflowID
@@ -1102,9 +626,6 @@ class Pipeline(Workflow):
 		self._event =        event
 		self._gitReference = gitReference
 		self._sha =          sha
-
-		if parent is not None:
-			parent._pipelines.append(self)
 
 	@readonly
 	def ID(self) -> Nullable[int]:
@@ -1187,66 +708,6 @@ class Pipeline(Workflow):
 		"""
 		return self._sha
 
-	@readonly
-	def CreatedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to access the time the run was created (:attr:`_createdAt`).
-
-		Unlike a :class:`JobGroup`, a run reports its own times.
-
-		:returns: The time, or ``None`` if GitHub reported none.
-		"""
-		return self._createdAt
-
-	@readonly
-	def StartedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to access the time the run started (:attr:`_startedAt`).
-
-		:returns: The time, or ``None`` if GitHub reported none.
-		"""
-		return self._startedAt
-
-	@readonly
-	def CompletedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to access the time the run was last updated, once completed (:attr:`_completedAt`).
-
-		:returns: The time, or ``None`` while the run isn't completed.
-		"""
-		return self._completedAt
-
-	@readonly
-	def ContentsCreatedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first element below the run was created.
-
-		A run is the one group that reports times of its own, so it is the one that has two: what GitHub says about
-		the run, and the span of what the run holds. They differ - a job may be queued before the run reports itself
-		created, because GitHub reports both in whole seconds.
-
-		:returns: The time, or ``None`` if no element below the run reports one.
-		"""
-		return super().CreatedAt
-
-	@readonly
-	def ContentsStartedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the first element below the run started.
-
-		:returns: The time, or ``None`` if no element below the run has started.
-		"""
-		return super().StartedAt
-
-	@readonly
-	def ContentsCompletedAt(self) -> Nullable[datetime]:
-		"""
-		Read-only property to return when the last element below the run completed.
-
-		:returns: The time, or ``None`` while an element below the run hasn't completed, or while it holds none.
-		"""
-		return super().CompletedAt
-
 	@classmethod
 	def FromJSON(
 		cls,
@@ -1259,8 +720,10 @@ class Pipeline(Workflow):
 		Build a workflow run and its tree from the JSON objects the GitHub REST API answers with.
 
 		A job's name says where it sits, and is read back into the tree: ``Docs / Sphinx / HTML`` nests below a
-		:class:`Workflow` per prefix, and ``Unit Tests (ubuntu-26.04, 3.14)`` becomes a :class:`MatrixJob` below a
-		:class:`Matrix` named ``Unit Tests``.
+		:class:`~pyTooling.CI.Workflow` per prefix, and ``Unit Tests (ubuntu-26.04, 3.14)`` becomes a
+		:class:`MatrixJob` below a :class:`~pyTooling.CI.Matrix` named ``Unit Tests``. A prefix carrying
+		dimension values - ``Tests (3.14) / Unit``, a matrix of calls of a reusable workflow - becomes a
+		:class:`~pyTooling.CI.MatrixWorkflow` below a :class:`~pyTooling.CI.Matrix` named ``Tests``.
 
 		:param run:          The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
 		:param jobs:         Optional, the run's jobs, as listed by ``GET .../actions/runs/{run_id}/jobs``.
@@ -1315,76 +778,60 @@ class Pipeline(Workflow):
 
 			*callers, leaf = fullName.split(" / ")
 
-			group: Workflow = pipeline
+			group: CIWorkflow = pipeline
 			for caller in callers:
-				if (calledWorkflow := group._workflows.get(caller, None)) is None:
-					calledWorkflow = Workflow(caller, parent=group)
+				if (calledWorkflow := group.Workflows.get(caller, None)) is None:
+					callerName, callerDimensions = _splitMatrixJobName(caller)
+					if callerDimensions is None:
+						calledWorkflow = CIWorkflow(caller, parent=group)
+					else:
+						if (matrix := group.Matrices.get(callerName, None)) is None:
+							matrix = CIMatrix(callerName, parent=group)
+
+						if caller in matrix:
+							calledWorkflow = matrix[caller]
+						else:
+							calledWorkflow = CIMatrixWorkflow(callerName, callerDimensions, parent=matrix)
 
 				group = calledWorkflow
 
-			jobName, dimensionValues = _splitMatrixJobName(leaf)
-			if dimensionValues is None:
+			jobName, dimensions = _splitMatrixJobName(leaf)
+			if dimensions is None:
 				Job.FromJSON(job, path, parent=group)
 			else:
-				if (matrix := group._matrices.get(jobName, None)) is None:
-					matrix = Matrix(jobName, parent=group)
-					group._matrices[jobName] = matrix
+				if (matrix := group.Matrices.get(jobName, None)) is None:
+					matrix = CIMatrix(jobName, parent=group)
 
-				MatrixJob.FromJSON(job, path, jobName, dimensionValues, parent=matrix)
+				MatrixJob.FromJSON(job, path, jobName, dimensions, parent=matrix)
 
 		return pipeline
 
 
 @export
-class Matrix(JobGroup):
-	"""
-	A matrix, grouping the job instances it produced.
-
-	GitHub doesn't report a matrix as an element of its own - it appends the dimension values to the names of the jobs
-	it produced, as ``Unit Tests (ubuntu-26.04, 3.14)``. :meth:`Pipeline.FromJSON` reads those back into this level, so
-	the tree shows the jobs of one matrix together, and the matrix' times span all of them.
-	"""
-
-	_PARENT_TYPE: ClassVar[Nullable[type]] = Workflow  #: A matrix is contained in a workflow.
-
-	@readonly
-	def Instances(self) -> list[MatrixJob]:
-		"""
-		Read-only property to access the job instances this matrix produced (:attr:`_jobs`).
-
-		:returns: The instances, in the order GitHub reported them.
-		"""
-		return self._jobs
-
-
-@export
-class Job(Base, QualifiedNameMixin):
+class Job(CIJob, StatusMixin):
 	"""A job of a workflow run, which ran on a runner and contains steps."""
 
-	_PARENT_TYPE: ClassVar[Nullable[type]] = JobGroup  #: A job is contained in a job group.
-
-	_id:              Nullable[int]    #: GitHub's identifier of the job.
-	_labels:          list[str]        #: Labels the job requested its runner by, i.e. its ``runs-on``.
-	_runnerName:      Nullable[str]    #: Name of the runner the job ran on.
-	_runnerGroupName: Nullable[str]    #: Name of the runner group the runner belongs to.
-	_steps:           list[Step]       #: Steps of the job.
+	_id:              Nullable[int]  #: GitHub's identifier of the job.
+	_labels:          list[str]      #: Labels the job requested its runner by, i.e. its ``runs-on``.
+	_runnerName:      Nullable[str]  #: Name of the runner the job ran on.
+	_runnerGroupName: Nullable[str]  #: Name of the runner group the runner belongs to.
 
 	def __init__(
 		self,
 		name:            str,
-		identifier:      Nullable[int]           = None,
-		status:          Nullable[Status]        = None,
-		conclusion:      Nullable[Conclusion]    = None,
-		createdAt:       Nullable[datetime]      = None,
-		startedAt:       Nullable[datetime]      = None,
-		completedAt:     Nullable[datetime]      = None,
-		url:             Nullable[URL]           = None,
-		labels:          Nullable[Iterable[str]] = None,
-		runnerName:      Nullable[str]           = None,
-		runnerGroupName: Nullable[str]           = None,
+		identifier:      Nullable[int]            = None,
+		status:          Nullable[Status]         = None,
+		conclusion:      Nullable[Conclusion]     = None,
+		createdAt:       Nullable[datetime]       = None,
+		startedAt:       Nullable[datetime]       = None,
+		completedAt:     Nullable[datetime]       = None,
+		url:             Nullable[URL]            = None,
+		labels:          Nullable[Iterable[str]]  = None,
+		runnerName:      Nullable[str]            = None,
+		runnerGroupName: Nullable[str]            = None,
 		steps:           Nullable[Iterable[Step]] = None,
 		*,
-		parent:          Nullable[Base] = None
+		parent:          Nullable[CIJobGroup]     = None
 	) -> None:
 		"""
 		Initializes a job of a workflow run.
@@ -1419,9 +866,6 @@ class Job(Base, QualifiedNameMixin):
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 
-		super().__init__(name, status, conclusion, createdAt, startedAt, completedAt, url, parent=parent)
-
-		self._id =     identifier
 		self._labels = []
 		if labels is not None:
 			for label in labels:
@@ -1432,9 +876,7 @@ class Job(Base, QualifiedNameMixin):
 
 				self._labels.append(label)
 
-		self._runnerName =      runnerName
-		self._runnerGroupName = runnerGroupName
-		self._steps =           []
+		stepList = []
 		if steps is not None:
 			for step in steps:
 				if not isinstance(step, Step):
@@ -1442,12 +884,21 @@ class Job(Base, QualifiedNameMixin):
 					ex.add_note(f"Got type '{getFullyQualifiedName(step)}'.")
 					raise ex
 
-				step._parent =   self
-				step._pipeline = self._pipeline
-				self._steps.append(step)
+				stepList.append(step)
 
-		if parent is not None:
-			parent._jobs.append(self)
+		super().__init__(
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent
+		)
+		StatusMixin.__init__(self, status, conclusion, url)
+
+		self._id =              identifier
+		self._runnerName =      runnerName
+		self._runnerGroupName = runnerGroupName
+
+		for step in stepList:
+			step._parent =   self
+			step._pipeline = self._pipeline
+			self._steps.append(step)
 
 	@readonly
 	def ID(self) -> Nullable[int]:
@@ -1487,15 +938,6 @@ class Job(Base, QualifiedNameMixin):
 		:returns: The group's name, or ``None`` if GitHub reported none.
 		"""
 		return self._runnerGroupName
-
-	@readonly
-	def Steps(self) -> list[Step]:
-		"""
-		Read-only property to access the job's steps (:attr:`_steps`).
-
-		:returns: The steps, in the order GitHub reported them.
-		"""
-		return self._steps
 
 	@readonly
 	def CreatedAt(self) -> Nullable[datetime]:
@@ -1559,33 +1001,8 @@ class Job(Base, QualifiedNameMixin):
 
 		return (self._startedAt - self._createdAt).total_seconds()
 
-	def __len__(self) -> int:
-		"""
-		Return the number of steps of the job.
-
-		:returns: Number of steps.
-		"""
-		return len(self._steps)
-
-	def __contains__(self, name: str) -> bool:
-		"""
-		Check whether a step of that name belongs to the job.
-
-		:param name: Name of the step to check for.
-		:returns:    ``True``, if a step of that name belongs to the job.
-		"""
-		return any(str(step) == name for step in self._steps)
-
-	def __iter__(self) -> Iterator[Step]:
-		"""
-		Iterate the job's steps.
-
-		:returns: An iterator over the steps.
-		"""
-		return iter(self._steps)
-
 	@classmethod
-	def FromJSON(cls, json: JSONObject, path: str = "job", *, parent: Nullable[Base] = None) -> Self:
+	def FromJSON(cls, json: JSONObject, path: str = "job", *, parent: Nullable[CIJobGroup] = None) -> Self:
 		"""
 		Build a job and its steps from the JSON object the GitHub REST API answers with.
 
@@ -1632,42 +1049,42 @@ class Job(Base, QualifiedNameMixin):
 
 
 @export
-class MatrixJob(Job):
+class MatrixJob(Job, MatrixInstanceMixin):
 	"""
 	One instance of a job produced by a matrix.
 
-	GitHub reports a matrix instance as an ordinary job whose name carries the dimension values in brackets, e.g.
-	``Unit Tests (ubuntu-26.04, 3.14)``. :meth:`Pipeline.FromJSON` reads those back into :attr:`DimensionValues` and
-	groups the instances below a :class:`Matrix`.
+	GitHub reports a matrix instance as an ordinary job whose name carries the dimensions' values in brackets, e.g.
+	``Unit Tests (ubuntu-26.04, 3.14)``. :meth:`Pipeline.FromJSON` reads those back into :attr:`Dimensions` and groups
+	the instances below a :class:`~pyTooling.CI.Matrix`. The values are in the order GitHub prints them. The
+	job's payload names no dimension - only the workflow file does -, so a dimension's name is the position of its
+	value, ``{"0": "ubuntu-26.04", "1": "3.14"}``, until the names are known.
 	"""
 
-	_PARENT_TYPE: ClassVar[Nullable[type]] = Matrix  #: A matrix instance is contained in a matrix.
-
-	_dimensionValues: list[str]  #: Values of the matrix' dimensions this instance ran with.
+	_PARENT_TYPE: ClassVar[Nullable[type]] = CIMatrix  #: A matrix instance is contained in a matrix.
 
 	def __init__(
 		self,
 		name:            str,
-		dimensionValues: Nullable[Iterable[str]] = None,
-		identifier:      Nullable[int]           = None,
-		status:          Nullable[Status]        = None,
-		conclusion:      Nullable[Conclusion]    = None,
-		createdAt:       Nullable[datetime]      = None,
-		startedAt:       Nullable[datetime]      = None,
-		completedAt:     Nullable[datetime]      = None,
-		url:             Nullable[URL]           = None,
-		labels:          Nullable[Iterable[str]] = None,
-		runnerName:      Nullable[str]           = None,
-		runnerGroupName: Nullable[str]           = None,
-		steps:           Nullable[Iterable[Step]] = None,
+		dimensions:      Nullable[Mapping[str, Any]] = None,
+		identifier:      Nullable[int]               = None,
+		status:          Nullable[Status]            = None,
+		conclusion:      Nullable[Conclusion]        = None,
+		createdAt:       Nullable[datetime]          = None,
+		startedAt:       Nullable[datetime]          = None,
+		completedAt:     Nullable[datetime]          = None,
+		url:             Nullable[URL]               = None,
+		labels:          Nullable[Iterable[str]]     = None,
+		runnerName:      Nullable[str]               = None,
+		runnerGroupName: Nullable[str]               = None,
+		steps:           Nullable[Iterable[Step]]    = None,
 		*,
-		parent:          Nullable[Matrix] = None
+		parent:          Nullable[CIMatrix]          = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
 
-		:param name:            Name of the job, without the dimension values.
-		:param dimensionValues: Optional, values of the matrix' dimensions this instance ran with. Default: ``None``.
+		:param name:            Name of the job, without the dimensions' values.
+		:param dimensions:      Optional, the dimensions' names and values this instance ran with. Default: ``None``.
 		:param identifier:      Optional, GitHub's identifier of the job. Default: ``None``.
 		:param status:          Optional, state the job is in. Default: ``None``.
 		:param conclusion:      Optional, how the job ended. Default: ``None``.
@@ -1680,69 +1097,46 @@ class MatrixJob(Job):
 		:param runnerGroupName: Optional, name of the runner group the runner belongs to. Default: ``None``.
 		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
 		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
-		:raises TypeError:      If an element of parameter 'dimensionValues' is not of type :class:`str`.
 		"""
 		super().__init__(
 			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels, runnerName,
 			runnerGroupName, steps, parent=parent
 		)
-
-		self._dimensionValues = []
-		if dimensionValues is not None:
-			for value in dimensionValues:
-				if not isinstance(value, str):
-					ex = TypeError("An element of parameter 'dimensionValues' is not of type 'str'.")
-					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
-					raise ex
-
-				self._dimensionValues.append(value)
-
-	@readonly
-	def DimensionValues(self) -> list[str]:
-		"""
-		Read-only property to access the values this instance's dimensions had (:attr:`_dimensionValues`).
-
-		The values are in the order GitHub prints them and carry no dimension names: ``['ubuntu-26.04', '3.14']`` says
-		nothing about which is the operating system and which the Python version, because the job's payload doesn't
-		either - only the workflow file names the dimensions.
-
-		:returns: The dimension values.
-		"""
-		return self._dimensionValues
+		MatrixInstanceMixin.__init__(self, dimensions)
 
 	def __str__(self) -> str:
 		"""
 		Return a string representation of the matrix instance.
 
-		:returns: The job's name with its dimension values, as GitHub prints it.
+		:returns: The job's name with its dimensions' values, as GitHub prints it.
 		"""
-		if len(self._dimensionValues) == 0:
+		if len(self._dimensions) == 0:
 			return self._name
 
-		return f"{self._name} ({', '.join(self._dimensionValues)})"
+		return f"{self._name} ({', '.join(str(value) for value in self._dimensions.values())})"
 
 	@classmethod
 	def FromJSON(
 		cls,
-		json:            JSONObject,
-		path:            str                     = "job",
-		name:            Nullable[str]           = None,
-		dimensionValues: Nullable[Iterable[str]] = None,
+		json:       JSONObject,
+		path:       str                         = "job",
+		name:       Nullable[str]               = None,
+		dimensions: Nullable[Mapping[str, Any]] = None,
 		*,
-		parent:          Nullable[Matrix] = None
+		parent:     Nullable[CIMatrix]          = None
 	) -> Self:
 		"""
 		Build a matrix instance and its steps from the JSON object the GitHub REST API answers with.
 
-		:param json:            The job, as listed by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs``.
-		:param path:            Optional, position of the job, for an exception's message. Default: ``'job'``.
-		:param name:            Optional, the job's name without the dimension values. Default: read from the payload.
-		:param dimensionValues: Optional, the dimension values. Default: read from the payload.
-		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
-		:returns:               The matrix instance, with its steps attached.
-		:raises TypeError:      If parameter 'json' is not of type :class:`dict`.
-		:raises GitHubError:    If field ``name`` is missing.
-		:raises GitHubError:    If a field holds a value GitHub doesn't document.
+		:param json:         The job, as listed by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs``.
+		:param path:         Optional, position of the job, for an exception's message. Default: ``'job'``.
+		:param name:         Optional, the job's name without the dimensions' values. Default: read from the payload.
+		:param dimensions:   Optional, the dimensions' names and values. Default: read from the payload.
+		:param parent:       Optional, reference to the matrix containing the instance. Default: ``None``.
+		:returns:            The matrix instance, with its steps attached.
+		:raises TypeError:   If parameter 'json' is not of type :class:`dict`.
+		:raises GitHubError: If field ``name`` is missing.
+		:raises GitHubError: If a field holds a value GitHub doesn't document.
 		"""
 		if not isinstance(json, dict):
 			ex = TypeError("Parameter 'json' is not of type 'dict'.")
@@ -1753,7 +1147,7 @@ class MatrixJob(Job):
 			raise GitHubError(f"Field '{path}.name' is missing.")
 
 		if name is None:
-			name, dimensionValues = _splitMatrixJobName(fullName.rsplit(" / ", 1)[-1])
+			name, dimensions = _splitMatrixJobName(fullName.rsplit(" / ", 1)[-1])
 
 		identifier =      json.get("id", None)
 		status =          Status.Parse(json.get("status", None))
@@ -1772,16 +1166,16 @@ class MatrixJob(Job):
 			steps = [Step.FromJSON(step, f"{path}.steps[{pos}]") for pos, step in enumerate(jsonSteps)]
 
 		return cls(
-			name, dimensionValues, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels,
+			name, dimensions, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels,
 			runnerName, runnerGroupName, steps, parent=parent
 		)
 
 
 @export
-class Step(Base):
+class Step(CIStep, StatusMixin):
 	"""A step within a job."""
 
-	_PARENT_TYPE: ClassVar[Nullable[type]] = Job  #: A step is contained in a job.
+	_PARENT_TYPE: ClassVar[Nullable[type]] = Job  #: A step is contained in a job of a workflow run.
 
 	_number: Nullable[int]  #: Position of the step within its job, starting at 1.
 
@@ -1809,8 +1203,6 @@ class Step(Base):
 		:raises TypeError:  If parameter 'number' is not of type :class:`int`.
 		:raises ValueError: If parameter 'number' is not positive.
 		"""
-		super().__init__(name, status, conclusion, None, startedAt, completedAt, parent=parent)
-
 		if number is not None and not isinstance(number, int):
 			ex = TypeError("Parameter 'number' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(number)}'.")
@@ -1820,10 +1212,12 @@ class Step(Base):
 			ex.add_note(f"Got value '{number}'.")
 			raise ex
 
-		self._number = number
+		super().__init__(
+			name, startedAt=startedAt, completedAt=completedAt, parent=parent
+		)
+		StatusMixin.__init__(self, status, conclusion)
 
-		if parent is not None:
-			parent._steps.append(self)
+		self._number = number
 
 	@readonly
 	def Number(self) -> Nullable[int]:
@@ -1862,4 +1256,3 @@ class Step(Base):
 		completedAt = _parseISO8601Timestamp(json.get("completed_at", None), f"{path}.completed_at")
 
 		return cls(name, number, status, conclusion, startedAt, completedAt, parent=parent)
-
