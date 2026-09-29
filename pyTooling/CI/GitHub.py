@@ -571,8 +571,8 @@ class Pipeline(CIPipeline, StatusMixin):
 		gitReference:  Nullable[str]                    = None,
 		sha:           Nullable[str]                    = None,
 		*,
-		parent:        Nullable[PipelineGroup]          = None,
-		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[PipelineGroup]          = None
 	) -> None:
 		"""
 		Initializes a workflow run.
@@ -592,8 +592,8 @@ class Pipeline(CIPipeline, StatusMixin):
 		:param event:         Optional, event that triggered the run. Default: ``None``.
 		:param gitReference:  Optional, branch or tag the run was started on. Default: ``None``.
 		:param sha:           Optional, commit the run was started on. Default: ``None``.
-		:param parent:        Optional, reference to the group of the commit's runs. Default: ``None``.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the group of the commit's runs. Default: ``None``.
 		:raises TypeError:    If parameter 'identifier' is not of type :class:`int`.
 		:raises TypeError:    If parameter 'workflowID' is not of type :class:`int`.
 		:raises TypeError:    If parameter 'path' is not of type :class:`str`.
@@ -623,8 +623,8 @@ class Pipeline(CIPipeline, StatusMixin):
 				raise ex
 
 		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent,
-			keyValuePairs=keyValuePairs
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, keyValuePairs=keyValuePairs,
+			parent=parent
 		)
 		StatusMixin.__init__(self, status, conclusion, url)
 
@@ -841,8 +841,8 @@ class Job(CIJob, StatusMixin):
 		runnerGroupName: Nullable[str]                    = None,
 		steps:           Nullable[Iterable[Step]]         = None,
 		*,
-		parent:          Nullable[CIJobGroup]             = None,
-		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None
+		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None,
+		parent:          Nullable[CIJobGroup]             = None
 	) -> None:
 		"""
 		Initializes a job of a workflow run.
@@ -859,8 +859,8 @@ class Job(CIJob, StatusMixin):
 		:param runnerName:      Optional, name of the runner the job ran on. Default: ``None``.
 		:param runnerGroupName: Optional, name of the runner group the runner belongs to. Default: ``None``.
 		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
-		:param parent:          Optional, reference to the group containing the job. Default: ``None``.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:          Optional, reference to the group containing the job. Default: ``None``.
 		:raises TypeError:      If parameter 'identifier' is not of type :class:`int`.
 		:raises TypeError:      If an element of parameter 'steps' is not of type :class:`Step`.
 		:raises TypeError:      If an element of parameter 'labels' is not of type :class:`str`.
@@ -899,8 +899,8 @@ class Job(CIJob, StatusMixin):
 				stepList.append(step)
 
 		super().__init__(
-			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, parent=parent,
-			keyValuePairs=keyValuePairs
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, keyValuePairs=keyValuePairs,
+			parent=parent
 		)
 		StatusMixin.__init__(self, status, conclusion, url)
 
@@ -1091,8 +1091,8 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		runnerGroupName: Nullable[str]                    = None,
 		steps:           Nullable[Iterable[Step]]         = None,
 		*,
-		parent:          Nullable[CIMatrix]               = None,
-		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None
+		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None,
+		parent:          Nullable[CIMatrix]               = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
@@ -1110,12 +1110,12 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		:param runnerName:      Optional, name of the runner the job ran on. Default: ``None``.
 		:param runnerGroupName: Optional, name of the runner group the runner belongs to. Default: ``None``.
 		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
-		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
 		"""
 		super().__init__(
 			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels, runnerName,
-			runnerGroupName, steps, parent=parent, keyValuePairs=keyValuePairs
+			runnerGroupName, steps, keyValuePairs=keyValuePairs, parent=parent
 		)
 		MatrixInstanceMixin.__init__(self, dimensions)
 
@@ -1203,8 +1203,8 @@ class Step(CIStep, StatusMixin):
 		startedAt:     Nullable[datetime]               = None,
 		completedAt:   Nullable[datetime]               = None,
 		*,
-		parent:        Nullable[Job]                    = None,
-		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Job]                    = None
 	) -> None:
 		"""
 		Initializes a step within a job.
@@ -1215,8 +1215,8 @@ class Step(CIStep, StatusMixin):
 		:param conclusion:    Optional, how the step ended. Default: ``None``.
 		:param startedAt:     Optional, time the step started running. Default: ``None``.
 		:param completedAt:   Optional, time the step completed. Default: ``None``.
-		:param parent:        Optional, reference to the job containing the step. Default: ``None``.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the job containing the step. Default: ``None``.
 		:raises TypeError:    If parameter 'number' is not of type :class:`int`.
 		:raises ValueError:   If parameter 'number' is not positive.
 		"""
@@ -1230,7 +1230,7 @@ class Step(CIStep, StatusMixin):
 			raise ex
 
 		super().__init__(
-			name, startedAt=startedAt, completedAt=completedAt, parent=parent, keyValuePairs=keyValuePairs
+			name, startedAt=startedAt, completedAt=completedAt, keyValuePairs=keyValuePairs, parent=parent
 		)
 		StatusMixin.__init__(self, status, conclusion)
 
