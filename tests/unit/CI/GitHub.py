@@ -356,7 +356,7 @@ class Matrices(Testcase):
 
 		self.assertIsInstance(instance, MatrixJob)
 		self.assertEqual("Unit Tests", instance.Name)
-		self.assertEqual(["ubuntu-26.04", "3.14"], instance.DimensionValues)
+		self.assertDictEqual({"0": "ubuntu-26.04", "1": "3.14"}, instance.Dimensions)
 		self.assertEqual("Unit Tests (ubuntu-26.04, 3.14)", str(instance))
 
 	def test_MatrixDimensionsOfEveryInstance(self) -> None:
@@ -366,8 +366,8 @@ class Matrices(Testcase):
 		])
 
 		self.assertEqual(
-			[["ubuntu-26.04", "3.14"], ["windows-2025", "3.11"]],
-			[instance.DimensionValues for instance in pipeline.Matrices["Unit Tests"].Instances]
+			[{"0": "ubuntu-26.04", "1": "3.14"}, {"0": "windows-2025", "1": "3.11"}],
+			[instance.Dimensions for instance in pipeline.Matrices["Unit Tests"].Instances]
 		)
 
 	def test_MatrixSpansItsInstances(self) -> None:
@@ -420,7 +420,7 @@ class Matrices(Testcase):
 
 		self.assertEqual(1, len(pipeline.Matrices))
 		self.assertEqual("Build", pipeline.Matrices["Build"].Name)
-		self.assertEqual(["fast"], pipeline.Matrices["Build"].Instances[0].DimensionValues)
+		self.assertEqual({"0": "fast"}, pipeline.Matrices["Build"].Instances[0].Dimensions)
 
 
 class Hierarchy(Testcase):
@@ -709,7 +709,9 @@ class Groups(Testcase):
 
 		self.assertEqual("Matrixed", matrix.Name)
 		self.assertEqual(2, len(matrix.Instances))
-		self.assertEqual([["x", "1"], ["y", "2"]], [instance.DimensionValues for instance in matrix.Instances])
+		self.assertEqual(
+			[{"0": "x", "1": "1"}, {"0": "y", "1": "2"}], [instance.Dimensions for instance in matrix.Instances]
+		)
 
 	def test_OuterLevelsSpanEveryJobBelowThem(self) -> None:
 		pipeline = Pipeline.FromJSON(_run(), [
@@ -1049,11 +1051,11 @@ class ParameterChecks(Testcase):
 
 		self.assertEqual("An element of parameter 'pipelines' is not of type 'Pipeline'.", str(context.exception))
 
-	def test_MatrixJobDimensionValuesElementType(self) -> None:
+	def test_MatrixJobDimensionsType(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = MatrixJob("Unit Tests", ["ubuntu-26.04", 314])
+			_ = MatrixJob("Unit Tests", ["ubuntu-26.04", "3.14"])
 
-		self.assertEqual("An element of parameter 'dimensionValues' is not of type 'str'.", str(context.exception))
+		self.assertEqual("Parameter 'dimensions' is not a mapping ('dict', ...).", str(context.exception))
 
 	def test_UnknownEvent(self) -> None:
 		with self.assertRaises(GitHubError) as context:
@@ -1113,7 +1115,7 @@ class BottomUpConstruction(Testcase):
 		self.assertIs(pipeline, job.Steps[0].Pipeline)
 
 	def test_MatrixJobTakesStepsToo(self) -> None:
-		instance = MatrixJob("Unit Tests", ["ubuntu-26.04"], steps=[Step("Compile", 1)])
+		instance = MatrixJob("Unit Tests", {"os": "ubuntu-26.04"}, steps=[Step("Compile", 1)])
 
 		self.assertEqual(1, len(instance))
 		self.assertIs(instance, instance.Steps[0].Parent)
@@ -1243,6 +1245,7 @@ class MatrixOfCalledWorkflows(Testcase):
 			with self.subTest(instance=str(instance)):
 				self.assertIsInstance(instance, MatrixWorkflow)
 				self.assertEqual("Ubuntu-fast", instance.Name)
+				self.assertListEqual(["0", "1"], list(instance.Dimensions))
 				self.assertListEqual(["Build", "Test"], [job.Name for job in instance.Jobs])
 
 	def test_QualifiedName(self) -> None:

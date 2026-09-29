@@ -58,7 +58,7 @@ values, the interface of a reusable workflow.
 from __future__            import annotations
 
 from datetime              import datetime
-from typing                import ClassVar, Iterable, Iterator, Optional as Nullable
+from typing                import Any, ClassVar, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
 from pyTooling.Decorators  import export, readonly
@@ -346,7 +346,7 @@ class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",
 		Read-only property to return the element's name, prefixed by the names of the workflows containing it.
 
 		Every element is named by :func:`str`, so a :class:`MatrixJob` or a :class:`MatrixWorkflow` carries the
-		dimension values it was produced for. The walk ends at the :class:`Pipeline`, and passes through a
+		values of the dimensions it was produced for. The walk ends at the :class:`Pipeline`, and passes through a
 		:class:`Matrix` without naming it - its instances carry its name already.
 
 		:returns: The name, with every calling workflow in front of it, separated by ``' / '``.
@@ -539,41 +539,47 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 @export
 class MatrixInstanceMixin(metaclass=ExtendedType, mixin=True):
 	"""
-	Mixin-class for a job a matrix produced, carrying the values of the matrix' dimensions it ran with.
+	Mixin-class for a job a matrix produced, carrying the matrix' dimensions it ran with.
 
-	A service's matrix instance derives from that service's job class and mixes this in, as :class:`MatrixJob` does
-	with :class:`Job`.
+	A dimension is a variable of the matrix; the instance carries its name and the value it had for this instance. A
+	service's matrix instance derives from that service's job class and mixes this in, as :class:`MatrixJob` does with
+	:class:`Job`.
 	"""
 
-	_dimensionValues: list[str]  #: Values of the matrix' dimensions this instance ran with.
+	_dimensions: dict[str, Any]  #: The matrix' dimensions this instance ran with, as name and value.
 
-	def __init__(self, dimensionValues: Nullable[Iterable[str]] = None) -> None:
+	def __init__(self, dimensions: Nullable[Mapping[str, Any]] = None) -> None:
 		"""
-		Initializes the dimension values of a matrix instance.
+		Initializes the dimensions of a matrix instance.
 
-		:param dimensionValues: Optional, values of the matrix' dimensions this instance ran with. Default: ``None``.
-		:raises TypeError:      If an element of parameter 'dimensionValues' is not of type :class:`str`.
+		:param dimensions: Optional, the dimensions' names and values this instance ran with. Default: ``None``.
+		:raises TypeError: If parameter 'dimensions' is not a mapping.
+		:raises TypeError: If a key of parameter 'dimensions' is not of type :class:`str`.
 		"""
-		self._dimensionValues = []
-		if dimensionValues is None:
+		self._dimensions = {}
+		if dimensions is None:
 			return
+		elif not isinstance(dimensions, Mapping):
+			ex = TypeError("Parameter 'dimensions' is not a mapping ('dict', ...).")
+			ex.add_note(f"Got type '{getFullyQualifiedName(dimensions)}'.")
+			raise ex
 
-		for value in dimensionValues:
-			if not isinstance(value, str):
-				ex = TypeError("An element of parameter 'dimensionValues' is not of type 'str'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		for name, value in dimensions.items():
+			if not isinstance(name, str):
+				ex = TypeError("A key of parameter 'dimensions' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 				raise ex
 
-			self._dimensionValues.append(value)
+			self._dimensions[name] = value
 
 	@readonly
-	def DimensionValues(self) -> list[str]:
+	def Dimensions(self) -> dict[str, Any]:
 		"""
-		Read-only property to access the values this instance's dimensions had (:attr:`_dimensionValues`).
+		Read-only property to access the dimensions this instance ran with (:attr:`_dimensions`).
 
-		:returns: The dimension values, in the order the service names them.
+		:returns: The dimensions' names and values, in the matrix' order.
 		"""
-		return self._dimensionValues
+		return self._dimensions
 
 
 @export
@@ -910,7 +916,7 @@ class JobGroup(Base):
 		Check whether an element of that name belongs to this group.
 
 		An element is named the way :func:`str` names it, so an instance of a :class:`Matrix` is asked for with its
-		dimension values: ``"Unit Tests (ubuntu-26.04, 3.14)"``.
+		dimensions' values: ``"Unit Tests (ubuntu-26.04, 3.14)"``.
 
 		:param name: Name of the job, matrix or workflow to check for.
 		:returns:    ``True``, if an element of that name belongs to this group.
@@ -1263,51 +1269,51 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 
 	def __init__(
 		self,
-		name:            str,
-		dimensionValues: Nullable[Iterable[str]]             = None,
+		name:        str,
+		dimensions:  Nullable[Mapping[str, Any]]         = None,
 		*,
-		reference:       Nullable[str]                       = None,
-		condition:       Nullable[str]                       = None,
-		createdAt:       Nullable[datetime]                  = None,
-		startedAt:       Nullable[datetime]                  = None,
-		completedAt:     Nullable[datetime]                  = None,
-		outcome:         Nullable[Outcome]                   = None,
-		parent:          Nullable[Matrix]                    = None,
-		needs:           Nullable[Iterable[DependencyMixin]] = None,
-		dependents:      Nullable[Iterable[DependencyMixin]] = None
+		reference:   Nullable[str]                       = None,
+		condition:   Nullable[str]                       = None,
+		createdAt:   Nullable[datetime]                  = None,
+		startedAt:   Nullable[datetime]                  = None,
+		completedAt: Nullable[datetime]                  = None,
+		outcome:     Nullable[Outcome]                   = None,
+		parent:      Nullable[Matrix]                    = None,
+		needs:       Nullable[Iterable[DependencyMixin]] = None,
+		dependents:  Nullable[Iterable[DependencyMixin]] = None
 	) -> None:
 		"""
 		Initializes one instance of a called workflow produced by a matrix.
 
-		:param name:            Name of the workflow, without the dimension values.
-		:param dimensionValues: Optional, values of the matrix' dimensions this instance ran with. Default: ``None``.
-		:param reference:       Optional, what the workflow calls, as written. Default: ``None``.
-		:param condition:       Optional, condition under which the workflow is called, as written. Default: ``None``.
-		:param createdAt:       Optional, time the workflow was created, if the service reports it. Default: ``None``.
-		:param startedAt:       Optional, time the workflow started, if the service reports it. Default: ``None``.
-		:param completedAt:     Optional, time the workflow completed, if the service reports it. Default: ``None``.
-		:param outcome:         Optional, how the workflow ended, if the service reports it. Default: ``None``.
-		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
-		:param needs:           Optional, siblings this instance needs. Default: ``None``.
-		:param dependents:      Optional, siblings needing this instance. Default: ``None``.
+		:param name:        Name of the workflow, without the dimensions' values.
+		:param dimensions:  Optional, the dimensions' names and values this instance ran with. Default: ``None``.
+		:param reference:   Optional, what the workflow calls, as written. Default: ``None``.
+		:param condition:   Optional, condition under which the workflow is called, as written. Default: ``None``.
+		:param createdAt:   Optional, time the workflow was created, if the service reports it. Default: ``None``.
+		:param startedAt:   Optional, time the workflow started, if the service reports it. Default: ``None``.
+		:param completedAt: Optional, time the workflow completed, if the service reports it. Default: ``None``.
+		:param outcome:     Optional, how the workflow ended, if the service reports it. Default: ``None``.
+		:param parent:      Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param needs:       Optional, siblings this instance needs. Default: ``None``.
+		:param dependents:  Optional, siblings needing this instance. Default: ``None``.
 		"""
 		super().__init__(
 			name, reference=reference, condition=condition, createdAt=createdAt, startedAt=startedAt,
 			completedAt=completedAt, outcome=outcome, parent=parent
 		)
-		MatrixInstanceMixin.__init__(self, dimensionValues)
+		MatrixInstanceMixin.__init__(self, dimensions)
 		DependencyMixin.__init__(self, needs, dependents)
 
 	def __str__(self) -> str:
 		"""
 		Return a string representation of the matrix instance.
 
-		:returns: The workflow's name, followed by its dimension values in brackets, if it has any.
+		:returns: The workflow's name, followed by its dimensions' values in brackets, if it has any.
 		"""
-		if len(self._dimensionValues) == 0:
+		if len(self._dimensions) == 0:
 			return self._name
 
-		return f"{self._name} ({', '.join(self._dimensionValues)})"
+		return f"{self._name} ({', '.join(str(value) for value in self._dimensions.values())})"
 
 
 @export
@@ -1403,49 +1409,49 @@ class MatrixJob(Job, MatrixInstanceMixin):
 
 	def __init__(
 		self,
-		name:            str,
-		dimensionValues: Nullable[Iterable[str]]             = None,
+		name:        str,
+		dimensions:  Nullable[Mapping[str, Any]]         = None,
 		*,
-		condition:       Nullable[str]                       = None,
-		createdAt:       Nullable[datetime]                  = None,
-		startedAt:       Nullable[datetime]                  = None,
-		completedAt:     Nullable[datetime]                  = None,
-		outcome:         Nullable[Outcome]                   = None,
-		parent:          Nullable[Matrix]                    = None,
-		needs:           Nullable[Iterable[DependencyMixin]] = None,
-		dependents:      Nullable[Iterable[DependencyMixin]] = None
+		condition:   Nullable[str]                       = None,
+		createdAt:   Nullable[datetime]                  = None,
+		startedAt:   Nullable[datetime]                  = None,
+		completedAt: Nullable[datetime]                  = None,
+		outcome:     Nullable[Outcome]                   = None,
+		parent:      Nullable[Matrix]                    = None,
+		needs:       Nullable[Iterable[DependencyMixin]] = None,
+		dependents:  Nullable[Iterable[DependencyMixin]] = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
 
-		:param name:            Name of the job, without the dimension values.
-		:param dimensionValues: Optional, values of the matrix' dimensions this instance ran with. Default: ``None``.
-		:param condition:       Optional, condition under which the job runs, as written. Default: ``None``.
-		:param createdAt:       Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
-		:param startedAt:       Optional, time the job started running on a worker. Default: ``None``.
-		:param completedAt:     Optional, time the job completed. Default: ``None``.
-		:param outcome:         Optional, how the job ended. Default: ``None``.
-		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
-		:param needs:           Optional, siblings this instance needs. Default: ``None``.
-		:param dependents:      Optional, siblings needing this instance. Default: ``None``.
+		:param name:        Name of the job, without the dimensions' values.
+		:param dimensions:  Optional, the dimensions' names and values this instance ran with. Default: ``None``.
+		:param condition:   Optional, condition under which the job runs, as written. Default: ``None``.
+		:param createdAt:   Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
+		:param startedAt:   Optional, time the job started running on a worker. Default: ``None``.
+		:param completedAt: Optional, time the job completed. Default: ``None``.
+		:param outcome:     Optional, how the job ended. Default: ``None``.
+		:param parent:      Optional, reference to the matrix containing the instance. Default: ``None``.
+		:param needs:       Optional, siblings this instance needs. Default: ``None``.
+		:param dependents:  Optional, siblings needing this instance. Default: ``None``.
 		"""
 		super().__init__(
 			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
 			parent=parent
 		)
-		MatrixInstanceMixin.__init__(self, dimensionValues)
+		MatrixInstanceMixin.__init__(self, dimensions)
 		DependencyMixin.__init__(self, needs, dependents)
 
 	def __str__(self) -> str:
 		"""
 		Return a string representation of the matrix instance.
 
-		:returns: The job's name, followed by its dimension values in brackets, if it has any.
+		:returns: The job's name, followed by its dimensions' values in brackets, if it has any.
 		"""
-		if len(self._dimensionValues) == 0:
+		if len(self._dimensions) == 0:
 			return self._name
 
-		return f"{self._name} ({', '.join(self._dimensionValues)})"
+		return f"{self._name} ({', '.join(str(value) for value in self._dimensions.values())})"
 
 
 @export

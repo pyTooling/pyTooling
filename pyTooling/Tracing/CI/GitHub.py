@@ -295,7 +295,7 @@ class JobSpan(CIJobSpan, GitHubTimespanMixin):
 			GitHub.Runner.Labels: list(job.Labels)
 		}
 		if isinstance(job, MatrixJob):
-			attributes[GitHub.Matrix.Dimensions] = list(job.DimensionValues)
+			attributes[GitHub.Matrix.Dimensions] = list(job.Dimensions.values())
 
 		jobSpan = cls(
 			displayName,

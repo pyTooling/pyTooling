@@ -87,6 +87,9 @@ answers it without a search:
 * **A matrix may call a reusable workflow**, once per combination. Its jobs are named ``Tests (3.14) / Unit``, and
   the prefix becomes a :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` ``Tests (3.14)`` below a
   :class:`~pyTooling.CI.Pipeline.Matrix` ``Tests``, beside the other combinations.
+* **A matrix instance's dimensions are named by position.** A job's name carries the values, not the dimensions'
+  names - only the workflow file names them. So :attr:`~pyTooling.CI.Pipeline.MatrixInstanceMixin.Dimensions` of
+  ``Unit Tests (ubuntu-26.04, 3.14)`` is ``{"0": "ubuntu-26.04", "1": "3.14"}``, until the names are known.
 * :attr:`~pyTooling.CI.GitHub.Pipeline.Path` names the workflow's YAML file and
   :attr:`~pyTooling.CI.GitHub.Pipeline.WorkflowID` the workflow it belongs to, so a run can be traced back to the
   file that started it.

@@ -59,7 +59,7 @@ trace, a graph or a report is a consumer of this model.
 from __future__                import annotations
 
 from datetime                  import datetime, timezone
-from typing                    import Optional as Nullable, ClassVar, Iterable, Self, Union
+from typing                    import Optional as Nullable, Any, ClassVar, Iterable, Mapping, Self, Union
 
 from pyTooling.CI              import JSONObject
 from pyTooling.CI.Pipeline     import MatrixInstanceMixin, Outcome
@@ -254,17 +254,19 @@ def _parseURL(value: Nullable[str], field: str) -> Nullable[URL]:
 	return URL.Parse(value)
 
 
-def _splitMatrixJobName(name: str) -> tuple[str, Nullable[list[str]]]:
+def _splitMatrixJobName(name: str) -> tuple[str, Nullable[dict[str, str]]]:
 	"""
-	Split a job's name into the matrix' name and the dimension values, if it carries any.
+	Split a job's name into the matrix' name and the dimensions, if it carries any.
 
-	GitHub appends the dimension values of a matrix instance to the job's name, as ``Unit Tests (ubuntu-26.04, 3.14)``.
-	That bracketed suffix is a naming convention of GitHub's own interface, not a field of the payload, so a job
-	genuinely named ``Build (fast)`` and produced by no matrix is indistinguishable from one that was. A job whose
-	workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.
+	GitHub appends the dimensions' values of a matrix instance to the job's name, as
+	``Unit Tests (ubuntu-26.04, 3.14)``. That bracketed suffix is a naming convention of GitHub's own interface, not a
+	field of the payload, so a job genuinely named ``Build (fast)`` and produced by no matrix is indistinguishable from
+	one that was. A job whose workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.
+
+	The suffix carries no dimension names, so a dimension is named by the position of its value: ``"0"``, ``"1"``, ...
 
 	:param name: The job's name, without any calling workflows' prefixes.
-	:returns:    The name without the suffix and the dimension values, or the name and ``None`` if it carries none.
+	:returns:    The name without the suffix and the dimensions, or the name and ``None`` if it carries none.
 	"""
 	if not name.endswith(")") or "(" not in name:
 		return name, None
@@ -274,7 +276,7 @@ def _splitMatrixJobName(name: str) -> tuple[str, Nullable[list[str]]]:
 	if base == "":
 		return name, None
 
-	return base, [value.strip() for value in values.split(",")]
+	return base, {str(position): value.strip() for position, value in enumerate(values.split(","))}
 
 
 @export
@@ -777,8 +779,8 @@ class Pipeline(CIPipeline, StatusMixin):
 			group: CIWorkflow = pipeline
 			for caller in callers:
 				if (calledWorkflow := group.Workflows.get(caller, None)) is None:
-					callerName, callerValues = _splitMatrixJobName(caller)
-					if callerValues is None:
+					callerName, callerDimensions = _splitMatrixJobName(caller)
+					if callerDimensions is None:
 						calledWorkflow = CIWorkflow(caller, parent=group)
 					else:
 						if (matrix := group.Matrices.get(callerName, None)) is None:
@@ -787,18 +789,18 @@ class Pipeline(CIPipeline, StatusMixin):
 						if caller in matrix:
 							calledWorkflow = matrix[caller]
 						else:
-							calledWorkflow = CIMatrixWorkflow(callerName, callerValues, parent=matrix)
+							calledWorkflow = CIMatrixWorkflow(callerName, callerDimensions, parent=matrix)
 
 				group = calledWorkflow
 
-			jobName, dimensionValues = _splitMatrixJobName(leaf)
-			if dimensionValues is None:
+			jobName, dimensions = _splitMatrixJobName(leaf)
+			if dimensions is None:
 				Job.FromJSON(job, path, parent=group)
 			else:
 				if (matrix := group.Matrices.get(jobName, None)) is None:
 					matrix = CIMatrix(jobName, parent=group)
 
-				MatrixJob.FromJSON(job, path, jobName, dimensionValues, parent=matrix)
+				MatrixJob.FromJSON(job, path, jobName, dimensions, parent=matrix)
 
 		return pipeline
 
@@ -1049,11 +1051,11 @@ class MatrixJob(Job, MatrixInstanceMixin):
 	"""
 	One instance of a job produced by a matrix.
 
-	GitHub reports a matrix instance as an ordinary job whose name carries the dimension values in brackets, e.g.
-	``Unit Tests (ubuntu-26.04, 3.14)``. :meth:`Pipeline.FromJSON` reads those back into :attr:`DimensionValues` and
-	groups the instances below a :class:`~pyTooling.CI.Pipeline.Matrix`. The values are in the order GitHub prints
-	them and carry no dimension names, because the job's payload doesn't either - only the workflow file names the
-	dimensions.
+	GitHub reports a matrix instance as an ordinary job whose name carries the dimensions' values in brackets, e.g.
+	``Unit Tests (ubuntu-26.04, 3.14)``. :meth:`Pipeline.FromJSON` reads those back into :attr:`Dimensions` and groups
+	the instances below a :class:`~pyTooling.CI.Pipeline.Matrix`. The values are in the order GitHub prints them. The
+	job's payload names no dimension - only the workflow file does -, so a dimension's name is the position of its
+	value, ``{"0": "ubuntu-26.04", "1": "3.14"}``, until the names are known.
 	"""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = CIMatrix  #: A matrix instance is contained in a matrix.
@@ -1061,26 +1063,26 @@ class MatrixJob(Job, MatrixInstanceMixin):
 	def __init__(
 		self,
 		name:            str,
-		dimensionValues: Nullable[Iterable[str]]  = None,
-		identifier:      Nullable[int]            = None,
-		status:          Nullable[Status]         = None,
-		conclusion:      Nullable[Conclusion]     = None,
-		createdAt:       Nullable[datetime]       = None,
-		startedAt:       Nullable[datetime]       = None,
-		completedAt:     Nullable[datetime]       = None,
-		url:             Nullable[URL]            = None,
-		labels:          Nullable[Iterable[str]]  = None,
-		runnerName:      Nullable[str]            = None,
-		runnerGroupName: Nullable[str]            = None,
-		steps:           Nullable[Iterable[Step]] = None,
+		dimensions:      Nullable[Mapping[str, Any]] = None,
+		identifier:      Nullable[int]               = None,
+		status:          Nullable[Status]            = None,
+		conclusion:      Nullable[Conclusion]        = None,
+		createdAt:       Nullable[datetime]          = None,
+		startedAt:       Nullable[datetime]          = None,
+		completedAt:     Nullable[datetime]          = None,
+		url:             Nullable[URL]               = None,
+		labels:          Nullable[Iterable[str]]     = None,
+		runnerName:      Nullable[str]               = None,
+		runnerGroupName: Nullable[str]               = None,
+		steps:           Nullable[Iterable[Step]]    = None,
 		*,
-		parent:          Nullable[CIMatrix]       = None
+		parent:          Nullable[CIMatrix]          = None
 	) -> None:
 		"""
 		Initializes one instance of a job produced by a matrix.
 
-		:param name:            Name of the job, without the dimension values.
-		:param dimensionValues: Optional, values of the matrix' dimensions this instance ran with. Default: ``None``.
+		:param name:            Name of the job, without the dimensions' values.
+		:param dimensions:      Optional, the dimensions' names and values this instance ran with. Default: ``None``.
 		:param identifier:      Optional, GitHub's identifier of the job. Default: ``None``.
 		:param status:          Optional, state the job is in. Default: ``None``.
 		:param conclusion:      Optional, how the job ended. Default: ``None``.
@@ -1098,41 +1100,41 @@ class MatrixJob(Job, MatrixInstanceMixin):
 			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels, runnerName,
 			runnerGroupName, steps, parent=parent
 		)
-		MatrixInstanceMixin.__init__(self, dimensionValues)
+		MatrixInstanceMixin.__init__(self, dimensions)
 
 	def __str__(self) -> str:
 		"""
 		Return a string representation of the matrix instance.
 
-		:returns: The job's name with its dimension values, as GitHub prints it.
+		:returns: The job's name with its dimensions' values, as GitHub prints it.
 		"""
-		if len(self._dimensionValues) == 0:
+		if len(self._dimensions) == 0:
 			return self._name
 
-		return f"{self._name} ({', '.join(self._dimensionValues)})"
+		return f"{self._name} ({', '.join(str(value) for value in self._dimensions.values())})"
 
 	@classmethod
 	def FromJSON(
 		cls,
-		json:            JSONObject,
-		path:            str                     = "job",
-		name:            Nullable[str]           = None,
-		dimensionValues: Nullable[Iterable[str]] = None,
+		json:       JSONObject,
+		path:       str                         = "job",
+		name:       Nullable[str]               = None,
+		dimensions: Nullable[Mapping[str, Any]] = None,
 		*,
-		parent:          Nullable[CIMatrix]      = None
+		parent:     Nullable[CIMatrix]          = None
 	) -> Self:
 		"""
 		Build a matrix instance and its steps from the JSON object the GitHub REST API answers with.
 
-		:param json:            The job, as listed by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs``.
-		:param path:            Optional, position of the job, for an exception's message. Default: ``'job'``.
-		:param name:            Optional, the job's name without the dimension values. Default: read from the payload.
-		:param dimensionValues: Optional, the dimension values. Default: read from the payload.
-		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
-		:returns:               The matrix instance, with its steps attached.
-		:raises TypeError:      If parameter 'json' is not of type :class:`dict`.
-		:raises GitHubError:    If field ``name`` is missing.
-		:raises GitHubError:    If a field holds a value GitHub doesn't document.
+		:param json:         The job, as listed by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs``.
+		:param path:         Optional, position of the job, for an exception's message. Default: ``'job'``.
+		:param name:         Optional, the job's name without the dimensions' values. Default: read from the payload.
+		:param dimensions:   Optional, the dimensions' names and values. Default: read from the payload.
+		:param parent:       Optional, reference to the matrix containing the instance. Default: ``None``.
+		:returns:            The matrix instance, with its steps attached.
+		:raises TypeError:   If parameter 'json' is not of type :class:`dict`.
+		:raises GitHubError: If field ``name`` is missing.
+		:raises GitHubError: If a field holds a value GitHub doesn't document.
 		"""
 		if not isinstance(json, dict):
 			ex = TypeError("Parameter 'json' is not of type 'dict'.")
@@ -1143,7 +1145,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 			raise GitHubError(f"Field '{path}.name' is missing.")
 
 		if name is None:
-			name, dimensionValues = _splitMatrixJobName(fullName.rsplit(" / ", 1)[-1])
+			name, dimensions = _splitMatrixJobName(fullName.rsplit(" / ", 1)[-1])
 
 		identifier =      json.get("id", None)
 		status =          Status.Parse(json.get("status", None))
@@ -1162,7 +1164,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 			steps = [Step.FromJSON(step, f"{path}.steps[{pos}]") for pos, step in enumerate(jsonSteps)]
 
 		return cls(
-			name, dimensionValues, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels,
+			name, dimensions, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels,
 			runnerName, runnerGroupName, steps, parent=parent
 		)
 
