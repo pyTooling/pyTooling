@@ -79,9 +79,9 @@ class Instantiation(Testcase):
 		self.assertIsNone(group.Pipeline)
 		self.assertListEqual([pipeline], group.Pipelines)
 		self.assertIs(group, pipeline.Parent)
-		self.assertEqual(1, len(group))
-		self.assertIn("Pipeline", group)
-		self.assertListEqual([pipeline], list(group))
+		self.assertEqual(1, group.PipelineCount)
+		self.assertTrue(group.HasPipeline("Pipeline"))
+		self.assertListEqual([pipeline], list(group.IteratePipelines()))
 
 	def test_PipelineGroup_Type(self) -> None:
 		with self.assertRaises(TypeError) as context:
@@ -109,7 +109,7 @@ class Instantiation(Testcase):
 		self.assertEqual(590.0, pipeline.Duration)
 		self.assertIs(Outcome.Success, pipeline.Outcome)
 		self.assertIsNone(pipeline.Reference)
-		self.assertEqual(0, len(pipeline))
+		self.assertEqual(0, pipeline.ElementCount)
 
 	def test_Workflow(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -149,8 +149,8 @@ class Instantiation(Testcase):
 		self.assertListEqual([instance], matrix.Jobs)
 		self.assertEqual("Unit Tests (ubuntu-26.04, 3.14)", str(instance))
 		self.assertDictEqual({"os": "ubuntu-26.04", "python": "3.14"}, instance.Dimensions)
-		self.assertIn("Unit Tests (ubuntu-26.04, 3.14)", matrix)
-		self.assertIn("Unit Tests", pipeline)
+		self.assertTrue(matrix.HasElement("Unit Tests (ubuntu-26.04, 3.14)"))
+		self.assertTrue(pipeline.HasElement("Unit Tests"))
 
 	def test_Matrix_Duplicate(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -227,9 +227,9 @@ class Instantiation(Testcase):
 		self.assertIs(pipeline, step.Pipeline)
 		self.assertIsNone(step.CreatedAt)
 		self.assertEqual("always()", step.Condition)
-		self.assertEqual(1, len(job))
-		self.assertIn("Checkout", job)
-		self.assertListEqual([step], list(job))
+		self.assertEqual(1, job.StepCount)
+		self.assertTrue(job.HasStep("Checkout"))
+		self.assertListEqual([step], list(job.IterateSteps()))
 
 	def test_Name(self) -> None:
 		for name, exception, message in (
@@ -331,17 +331,17 @@ class Hierarchy(Testcase):
 		job = Job("Build", parent=pipeline)
 		other = Job("Deploy", parent=pipeline)
 
-		self.assertEqual(4, len(pipeline))
-		self.assertListEqual([workflow, matrix, job, other], list(pipeline))
+		self.assertEqual(4, pipeline.ElementCount)
+		self.assertListEqual([workflow, matrix, job, other], list(pipeline.IterateElements()))
 		self.assertListEqual([workflow, matrix, job, other], pipeline.Elements)
 		self.assertListEqual([job, other], pipeline.Jobs)
 		self.assertDictEqual({"Called": workflow}, pipeline.Workflows)
 		self.assertDictEqual({"Test": matrix}, pipeline.Matrices)
 		for name in ("Called", "Test", "Build"):
 			with self.subTest(name=name):
-				self.assertIn(name, pipeline)
+				self.assertTrue(pipeline.HasElement(name))
 
-		self.assertNotIn("Release", pipeline)
+		self.assertFalse(pipeline.HasElement("Release"))
 
 	def test_GetItem(self) -> None:
 		"""An element is looked up by its name, as a reader resolving a definition's names does."""
@@ -351,13 +351,13 @@ class Hierarchy(Testcase):
 		instance = MatrixJob("Test", {"python": "3.14"}, parent=matrix)
 		job = Job("Build", parent=pipeline)
 
-		self.assertIs(workflow, pipeline["Called"])
-		self.assertIs(matrix, pipeline["Test"])
-		self.assertIs(job, pipeline["Build"])
-		self.assertIs(instance, matrix["Test (3.14)"])
+		self.assertIs(workflow, pipeline.GetElement("Called"))
+		self.assertIs(matrix, pipeline.GetElement("Test"))
+		self.assertIs(job, pipeline.GetElement("Build"))
+		self.assertIs(instance, matrix.GetElement("Test (3.14)"))
 
 		with self.assertRaises(KeyError) as context:
-			_ = pipeline["Release"]
+			_ = pipeline.GetElement("Release")
 
 		self.assertEqual("\"Group 'Pipeline' contains no element 'Release'.\"", str(context.exception))
 
@@ -369,7 +369,79 @@ class Hierarchy(Testcase):
 		unknown = Job("Unknown", parent=pipeline)
 		matrix = MatrixJob("Test", {"python": "x"}, createdAt=_time(60), parent=Matrix("Test", parent=pipeline)).Parent
 
-		self.assertListEqual([early, matrix, late, unknown], list(pipeline))
+		self.assertListEqual([early, matrix, late, unknown], list(pipeline.IterateElements()))
+
+
+class KeyValuePairs(Testcase):
+	def test_Empty(self) -> None:
+		job = Job("Build")
+
+		self.assertEqual(0, len(job))
+		self.assertListEqual([], list(job))
+		self.assertNotIn("runner.os", job)
+
+	def test_Initialization(self) -> None:
+		pairs =          {"runner.os": "Linux", 42: ("a", "b")}
+		group =          PipelineGroup("0123abcd", keyValuePairs=pairs)
+		pipeline =       Pipeline("Pipeline", parent=group, keyValuePairs=pairs)
+		workflow =       Workflow("Called", parent=pipeline, keyValuePairs=pairs)
+		matrix =         Matrix("Test", parent=pipeline, keyValuePairs=pairs)
+		matrixJob =      MatrixJob("Test", {"python": "3.14"}, parent=matrix, keyValuePairs=pairs)
+		matrixWorkflow = MatrixWorkflow("Test", {"python": "3.13"}, parent=matrix, keyValuePairs=pairs)
+		job =            Job("Build", parent=pipeline, keyValuePairs=pairs)
+		step =           Step("Checkout", parent=job, keyValuePairs=pairs)
+
+		for element in (group, pipeline, workflow, matrix, matrixJob, matrixWorkflow, job, step):
+			with self.subTest(cls=type(element).__name__):
+				self.assertEqual(2, len(element))
+				self.assertListEqual(["runner.os", 42], list(element))
+				self.assertEqual("Linux", element["runner.os"])
+				self.assertTupleEqual(("a", "b"), element[42])
+
+	def test_InitializationCopies(self) -> None:
+		pairs = {"runner.os": "Linux"}
+		job =   Job("Build", keyValuePairs=pairs)
+		job["runner.os"] = "Windows"
+
+		self.assertEqual("Linux", pairs["runner.os"])
+
+	def test_SetGetDelete(self) -> None:
+		job = Job("Build")
+		job["runner.os"] = "Linux"
+		job["runner.arch"] = "x64"
+
+		self.assertIn("runner.os", job)
+		self.assertEqual("Linux", job["runner.os"])
+		self.assertEqual(2, len(job))
+
+		job["runner.os"] = "Windows"
+		self.assertEqual("Windows", job["runner.os"])
+		self.assertEqual(2, len(job))
+
+		del job["runner.os"]
+		self.assertNotIn("runner.os", job)
+		self.assertListEqual(["runner.arch"], list(job))
+
+	def test_MissingKey(self) -> None:
+		job = Job("Build")
+
+		with self.assertRaises(KeyError):
+			_ = job["runner.os"]
+
+		with self.assertRaises(KeyError):
+			del job["runner.os"]
+
+	def test_KeysAreNotElements(self) -> None:
+		pipeline = Pipeline("Pipeline")
+		_ =        Job("Build", parent=pipeline)
+		pipeline["Build"] = "attribute"
+
+		self.assertTrue(pipeline.HasElement("Build"))
+		self.assertIn("Build", pipeline)
+		self.assertEqual(1, pipeline.ElementCount)
+		self.assertEqual(1, len(pipeline))
+		self.assertIsInstance(pipeline.GetElement("Build"), Job)
+		self.assertEqual("attribute", pipeline["Build"])
 
 
 class Times(Testcase):

@@ -52,11 +52,36 @@ kind from it. Every element knows its :attr:`~pyTooling.CI.Base.Parent` and the
 :attr:`~pyTooling.CI.Base.Pipeline` it belongs to. A wrong parent - a step below a workflow - is a
 :exc:`TypeError`.
 
-Iterating a group yields what it holds one level down, ordered by creation time; elements without a time keep the
-order they were added in. :meth:`~pyTooling.CI.JobGroup.IterateJobs` reaches every job below a group.
-An element is asked for and looked up by its name, :pycode:`str(element)` - :pycode:`"Build" in pipeline`,
-:pycode:`pipeline["Build"]`, :pycode:`matrix["Test (3.14)"]` - which is how a reader resolves the names a definition
-refers to.
+:meth:`~pyTooling.CI.JobGroup.IterateElements` yields what a group holds one level down, ordered by creation
+time; elements without a time keep the order they were added in. :meth:`~pyTooling.CI.JobGroup.IterateJobs`
+reaches every job below a group. An element is asked for and looked up by its name, :pycode:`str(element)` -
+:pycode:`pipeline.HasElement("Build")`, :pycode:`pipeline.GetElement("Build")`,
+:pycode:`matrix.GetElement("Test (3.14)")` - which is how a reader resolves the names a definition refers to. A job
+offers the same for its steps, a pipeline group for its pipelines:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Class
+     - Count
+     - Check
+     - Look up
+     - Iterate
+   * - :class:`~pyTooling.CI.PipelineGroup`
+     - :attr:`~pyTooling.CI.PipelineGroup.PipelineCount`
+     - :meth:`~pyTooling.CI.PipelineGroup.HasPipeline`
+     -
+     - :meth:`~pyTooling.CI.PipelineGroup.IteratePipelines`
+   * - :class:`~pyTooling.CI.JobGroup`
+     - :attr:`~pyTooling.CI.JobGroup.ElementCount`
+     - :meth:`~pyTooling.CI.JobGroup.HasElement`
+     - :meth:`~pyTooling.CI.JobGroup.GetElement`
+     - :meth:`~pyTooling.CI.JobGroup.IterateElements`
+   * - :class:`~pyTooling.CI.Job`
+     - :attr:`~pyTooling.CI.Job.StepCount`
+     - :meth:`~pyTooling.CI.Job.HasStep`
+     -
+     - :meth:`~pyTooling.CI.Job.IterateSteps`
 
 :attr:`~pyTooling.CI.QualifiedNameMixin.QualifiedName` names an element by the workflows containing it -
 ``Package / Build``, or ``Test (3.14)`` for a matrix instance, whose name carries its matrix' name already.
@@ -83,6 +108,33 @@ element below it is still running. The span is available for every group as
 :attr:`~pyTooling.CI.JobGroup.ContentsCreatedAt`, :attr:`~pyTooling.CI.JobGroup.ContentsStartedAt`,
 :attr:`~pyTooling.CI.JobGroup.ContentsCompletedAt` and :attr:`~pyTooling.CI.JobGroup.ContentsOutcome`;
 :meth:`Outcome.Combine <pyTooling.CI.Outcome.Combine>` lets the worst outcome win.
+
+
+.. _CI/Pipeline/KeyValuePairs:
+
+Key-Value Pairs
+***************
+
+Every element - a pipeline group included - carries a dictionary of **arbitrary key-value-pairs**, like the elements
+of :mod:`pyTooling.Graph`. A consumer attaches what the model has no field for, without deriving its own classes. The
+pairs are given when an element is created, with ``keyValuePairs``, and accessed with the element's dictionary
+operators:
+
+.. code-block:: python
+
+   from pyTooling.CI import Job
+
+   job = Job("Build", keyValuePairs={"runner.os": "Linux"})
+   job["runner.arch"] = "x64"
+
+   "runner.os" in job           # True
+   job["runner.os"]             # "Linux"
+   len(job)                     # 2
+   list(job)                    # ["runner.os", "runner.arch"]
+   del job["runner.arch"]
+
+The operators address the key-value-pairs only. What an element contains is reached by name - ``HasElement``,
+``GetElement``, ``IterateElements`` - see :ref:`CI/Pipeline/Tree`.
 
 
 .. _CI/Pipeline/Dependencies:
