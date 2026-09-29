@@ -186,6 +186,20 @@ class Construction(Testcase):
 		self.assertEqual([step], job.Steps)
 
 
+	def test_KeyValuePairs(self) -> None:
+		pairs =     {"runner.os": "Linux"}
+		group =     PipelineGroup("0123abcd", keyValuePairs=pairs)
+		pipeline =  Pipeline("Pipeline", parent=group, keyValuePairs=pairs)
+		job =       Job("Build", parent=pipeline, keyValuePairs=pairs)
+		matrix =    Matrix("Test", parent=pipeline)
+		matrixJob = MatrixJob("Test", {"python": "3.14"}, parent=matrix, keyValuePairs=pairs)
+		step =      Step("Compile", 1, parent=job, keyValuePairs=pairs)
+
+		for element in (group, pipeline, job, matrixJob, step):
+			with self.subTest(cls=type(element).__name__):
+				self.assertEqual("Linux", element["runner.os"])
+
+
 class Conversion(Testcase):
 	def test_Run(self) -> None:
 		pipeline = Pipeline.FromJSON(_run())
@@ -262,8 +276,8 @@ class Conversion(Testcase):
 		job =      pipeline.Jobs[0]
 
 		self.assertEqual(2, len(job.Steps))
-		self.assertEqual(["Set up job", "Compile"], [step.Name for step in job])
-		self.assertEqual([1, 2], [step.Number for step in job])
+		self.assertEqual(["Set up job", "Compile"], [step.Name for step in job.IterateSteps()])
+		self.assertEqual([1, 2], [step.Number for step in job.IterateSteps()])
 		self.assertIs(Conclusion.Failure, job.Steps[1].Conclusion)
 		self.assertIs(job, job.Steps[1].Parent)
 		self.assertIs(pipeline, job.Steps[1].Pipeline)
@@ -537,7 +551,7 @@ class Ordering(Testcase):
 			_job("Third", 300, 310, 400), _job("First", 60, 70, 100), _job("Second", 120, 130, 200)
 		])
 
-		self.assertEqual(["First", "Second", "Third"], [str(job) for job in pipeline])
+		self.assertEqual(["First", "Second", "Third"], [str(job) for job in pipeline.IterateElements()])
 
 	def test_AGroupSortsBesideTheJobs(self) -> None:
 		"""A called workflow takes the place its first job was queued at, not a place after every job."""
@@ -545,7 +559,7 @@ class Ordering(Testcase):
 			_job("Late", 300, 310, 400), _job("Caller / Early", 60, 70, 100)
 		])
 
-		self.assertEqual(["Caller", "Late"], [str(element) for element in pipeline])
+		self.assertEqual(["Caller", "Late"], [str(element) for element in pipeline.IterateElements()])
 
 	def test_AnElementWithoutATimeSortsLast(self) -> None:
 		"""It also keeps the order GitHub listed them in, because the sort is stable."""
@@ -554,7 +568,7 @@ class Ordering(Testcase):
 			_job("Unknown B", 0, None, None, created_at=None)
 		])
 
-		self.assertEqual(["Timed", "Unknown A", "Unknown B"], [str(job) for job in pipeline])
+		self.assertEqual(["Timed", "Unknown A", "Unknown B"], [str(job) for job in pipeline.IterateElements()])
 
 
 class Groups(Testcase):
@@ -576,14 +590,16 @@ class Groups(Testcase):
 		group = PipelineGroup.FromJSON(self._Runs("success", "failure", "success"))
 
 		self.assertEqual("41364cfc", group.SHA)
-		self.assertEqual(3, len(group))
-		self.assertEqual(["Workflow 0", "Workflow 1", "Workflow 2"], [pipeline.Name for pipeline in group])
+		self.assertEqual(3, group.PipelineCount)
+		self.assertEqual(
+			["Workflow 0", "Workflow 1", "Workflow 2"], [pipeline.Name for pipeline in group.IteratePipelines()]
+		)
 		self.assertIs(group, group.Pipelines[0].Parent)
 
 	def test_AcceptsTheWorkflowRunsArrayDirectly(self) -> None:
 		group = PipelineGroup.FromJSON(self._Runs("success")["workflow_runs"])
 
-		self.assertEqual(1, len(group))
+		self.assertEqual(1, group.PipelineCount)
 
 	def test_OneFailureMakesTheCommitFail(self) -> None:
 		self.assertIs(Conclusion.Failure, PipelineGroup.FromJSON(self._Runs("success", "failure")).Conclusion)
@@ -650,7 +666,7 @@ class Groups(Testcase):
 		]
 		group = PipelineGroup.FromJSON(runs)
 
-		self.assertEqual(2, len(group))
+		self.assertEqual(2, group.PipelineCount)
 
 		byRef = group.ByGitReference()
 		self.assertEqual({"main", "v1.6.0"}, set(byRef))
@@ -801,9 +817,9 @@ class ContainedElements(Testcase):
 		])
 
 		a = pipeline.Workflows["A"]
-		self.assertEqual(3, len(a))
-		self.assertListEqual(["Plain", "Matrixed", "B"], [str(element) for element in a])
-		self.assertListEqual([Job, Matrix, Workflow], [type(element) for element in a])
+		self.assertEqual(3, a.ElementCount)
+		self.assertListEqual(["Plain", "Matrixed", "B"], [str(element) for element in a.IterateElements()])
+		self.assertListEqual([Job, Matrix, Workflow], [type(element) for element in a.IterateElements()])
 
 	def test_AWorkflowContainsWhatItIterates(self) -> None:
 		pipeline = Pipeline.FromJSON(_run(), [
@@ -815,11 +831,11 @@ class ContainedElements(Testcase):
 		a = pipeline.Workflows["A"]
 		for element in a:
 			with self.subTest(element=str(element)):
-				self.assertIn(str(element), a)
+				self.assertTrue(a.ContainsElement(str(element)))
 
 		# a job one level further down belongs to 'B', not to 'A'
-		self.assertNotIn("Deep", a)
-		self.assertIn("A", pipeline)
+		self.assertFalse(a.ContainsElement("Deep"))
+		self.assertTrue(pipeline.ContainsElement("A"))
 
 	def test_ContainmentTakesAName(self) -> None:
 		"""An element is placed in its group under its own name, so containment is asked for that name."""
@@ -830,13 +846,13 @@ class ContainedElements(Testcase):
 		])
 
 		a = pipeline.Workflows["A"]
-		self.assertIn("B", a)        # a called workflow
-		self.assertIn("Plain", a)    # a job
-		self.assertNotIn("Top", a)   # a job of the run, not of this workflow
-		self.assertNotIn("Deep", a)  # a job of the workflow below
+		self.assertTrue(a.ContainsElement("B"))      # a called workflow
+		self.assertTrue(a.ContainsElement("Plain"))  # a job
+		self.assertFalse(a.ContainsElement("Top"))   # a job of the run, not of this workflow
+		self.assertFalse(a.ContainsElement("Deep"))  # a job of the workflow below
 
-		self.assertIn("Top", pipeline)
-		self.assertIn("A", pipeline)
+		self.assertTrue(pipeline.ContainsElement("Top"))
+		self.assertTrue(pipeline.ContainsElement("A"))
 
 	def test_MatrixInstancesAreAskedForWithTheirValues(self) -> None:
 		"""Every instance of a matrix shares the matrix' name, so a job is named by 'str' rather than 'Name'."""
@@ -847,11 +863,11 @@ class ContainedElements(Testcase):
 
 		matrix = pipeline.Matrices["Matrixed"]
 		self.assertEqual(["Matrixed", "Matrixed"], [instance.Name for instance in matrix.Instances])
-		self.assertIn("Matrixed (x)", matrix)
-		self.assertNotIn("Matrixed (z)", matrix)
-		self.assertNotIn("Matrixed", matrix)  # that is the matrix' own name, not one of its instances'
+		self.assertTrue(matrix.ContainsElement("Matrixed (x)"))
+		self.assertFalse(matrix.ContainsElement("Matrixed (z)"))
+		self.assertFalse(matrix.ContainsElement("Matrixed"))  # that is the matrix' own name, not one of its instances'
 
-		self.assertIn("Matrixed", pipeline)   # the matrix, one level up
+		self.assertTrue(pipeline.ContainsElement("Matrixed"))  # the matrix, one level up
 
 	def test_AJobIsAskedForItsSteps(self) -> None:
 		steps = [
@@ -860,7 +876,7 @@ class ContainedElements(Testcase):
 		]
 		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 60, 120, 240, steps=steps)])
 
-		self.assertIn("Checkout", pipeline.Jobs[0])
+		self.assertTrue(pipeline.Jobs[0].ContainsStep("Checkout"))
 		self.assertNotIn("Upload", pipeline.Jobs[0])
 
 	def test_IdentityIsAnsweredByTheParent(self) -> None:
@@ -884,8 +900,8 @@ class ContainedElements(Testcase):
 		])
 
 		matrix = pipeline.Matrices["Matrixed"]
-		self.assertEqual(2, len(matrix))
-		self.assertListEqual(["Matrixed (x)", "Matrixed (y)"], [str(instance) for instance in matrix])
+		self.assertEqual(2, matrix.ElementCount)
+		self.assertListEqual(["Matrixed (x)", "Matrixed (y)"], [str(instance) for instance in matrix.IterateElements()])
 
 	def test_IterateJobsStillReachesEveryJob(self) -> None:
 		"""Iterating a workflow is one level deep; 'IterateJobs' is the whole subtree."""
@@ -896,7 +912,7 @@ class ContainedElements(Testcase):
 		])
 
 		a = pipeline.Workflows["A"]
-		self.assertEqual(3, len(a))
+		self.assertEqual(3, a.ElementCount)
 		self.assertListEqual(["Plain", "Matrixed", "Deep"], [job.Name for job in a.IterateJobs()])
 
 
@@ -1098,7 +1114,7 @@ class BottomUpConstruction(Testcase):
 		job =   Job("Build", steps=steps)
 
 		self.assertEqual(steps, job.Steps)
-		self.assertEqual(2, len(job))
+		self.assertEqual(2, job.StepCount)
 		for step in steps:
 			self.assertIs(job, step.Parent)
 
@@ -1117,7 +1133,7 @@ class BottomUpConstruction(Testcase):
 	def test_MatrixJobTakesStepsToo(self) -> None:
 		instance = MatrixJob("Unit Tests", {"os": "ubuntu-26.04"}, steps=[Step("Compile", 1)])
 
-		self.assertEqual(1, len(instance))
+		self.assertEqual(1, instance.StepCount)
 		self.assertIs(instance, instance.Steps[0].Parent)
 
 	def test_FromJSONStillAttachesThem(self) -> None:
@@ -1128,7 +1144,7 @@ class BottomUpConstruction(Testcase):
 		pipeline = Pipeline.FromJSON(_run(), [_job("Build", 10, 20, 80, steps=steps)])
 		job =      pipeline.Jobs[0]
 
-		self.assertEqual(["Set up job"], [step.Name for step in job])
+		self.assertEqual(["Set up job"], [step.Name for step in job.IterateSteps()])
 		self.assertIs(job, job.Steps[0].Parent)
 		self.assertIs(pipeline, job.Steps[0].Pipeline)
 
@@ -1251,7 +1267,7 @@ class MatrixOfCalledWorkflows(Testcase):
 	def test_QualifiedName(self) -> None:
 		"""A job is named the way GitHub reports it, although a matrix sits between the run and its workflow."""
 		pipeline = self._Pipeline()
-		job = pipeline.Matrices["Ubuntu-fast"]["Ubuntu-fast (mcode, 24.04)"]["Test"]
+		job = pipeline.Matrices["Ubuntu-fast"].GetElement("Ubuntu-fast (mcode, 24.04)").GetElement("Test")
 
 		self.assertEqual("Ubuntu-fast (mcode, 24.04) / Test", job.QualifiedName)
 		self.assertEqual(7, len(list(pipeline.IterateJobs())))
@@ -1265,7 +1281,7 @@ class MatrixOfCalledWorkflows(Testcase):
 	def test_MatrixJobsInside(self) -> None:
 		"""A matrix inside a called workflow of a matrix still becomes a matrix of jobs."""
 		pipeline = Pipeline.FromJSON(_run(), [_job("Tests (3.14) / Unit (ubuntu-26.04)", 20, 30, 300)])
-		instance = pipeline.Matrices["Tests"]["Tests (3.14)"]
+		instance = pipeline.Matrices["Tests"].GetElement("Tests (3.14)")
 
 		self.assertIsInstance(instance, MatrixWorkflow)
 		self.assertIsInstance(instance.Matrices["Unit"].Instances[0], MatrixJob)

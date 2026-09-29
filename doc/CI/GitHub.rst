@@ -51,28 +51,28 @@ belongs to in :attr:`~pyTooling.CI.Base.Pipeline` - so reaching the run from any
    :attr:`~pyTooling.CI.DependencyMixin.Needs` until they are added - from the ``needs:`` of the workflow
    file :attr:`~pyTooling.CI.GitHub.Pipeline.Path` names - with :meth:`~pyTooling.CI.DependencyMixin.AddNeed`.
 
-Iterating an element yields what it contains one level down: a workflow yields its jobs, its matrices and the
-workflows it calls, a matrix its instances, and a job its steps. To reach every job below a workflow at once - those
-of its matrices and of the workflows it calls included - use
-:meth:`~pyTooling.CI.JobGroup.IterateJobs`:
+:meth:`~pyTooling.CI.JobGroup.IterateElements` yields what a group contains one level down: a workflow its
+jobs, its matrices and the workflows it calls, a matrix its instances; :meth:`~pyTooling.CI.Job.IterateSteps`
+yields a job's steps. To reach every job below a workflow at once - those of its matrices and of the workflows it
+calls included - use :meth:`~pyTooling.CI.JobGroup.IterateJobs`:
 
 .. code-block:: python
 
-   for element in pipeline:           # one level: jobs, matrices, called workflows
+   for element in pipeline.IterateElements():  # one level: jobs, matrices, called workflows
      print(f"{type(element).__name__}: {element}")
 
-   for job in pipeline.IterateJobs():  # every job below the run, at any depth
+   for job in pipeline.IterateJobs():          # every job below the run, at any depth
      print(job.QualifiedName)
 
 An element is placed in its group **under its own name** - a called workflow and a matrix as that key of
 :attr:`~pyTooling.CI.Workflow.Workflows` respectively :attr:`~pyTooling.CI.Workflow.Matrices`, a
-job by the name it reports - so ``in`` is asked for that name:
+job by the name it reports - so an element is asked for by that name:
 
 .. code-block:: python
 
-   "UnitTesting" in pipeline          # a called workflow, a matrix or a job of the run
-   "Unit Tests (ubuntu-26.04)" in matrix   # an instance carries the values telling it from its siblings
-   "Checkout" in job                  # a step
+   pipeline.ContainsElement("UnitTesting")             # a called workflow, a matrix or a job of the run
+   matrix.ContainsElement("Unit Tests (ubuntu-26.04)")  # an instance carries the values telling it from its siblings
+   job.ContainsStep("Checkout")                        # a step
 
 Which container an element really sits in is a different question, and :attr:`~pyTooling.CI.Base.Parent`
 answers it without a search:
