@@ -108,6 +108,10 @@ Version 10.x (2026)
      * A matrix calling a reusable workflow - jobs named ``Tests (3.14) / Unit`` - is read as a
        :class:`~pyTooling.CI.Pipeline.Matrix` of :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` instances instead of
        one called workflow per combination, so a trace groups them below a ``matrix`` timespan.
+     * A matrix instance's :attr:`~pyTooling.CI.Pipeline.MatrixInstanceMixin.Dimensions` maps each dimension's name
+       to its value, in the matrix' order; :func:`str` prints the values only - ``Test (ubuntu-26.04, 3.14)``.
+       :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` names a dimension by its position,
+       ``{"0": "ubuntu-26.04", "1": "3.14"}``, because a job's name carries no dimension names.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.

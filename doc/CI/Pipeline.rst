@@ -15,7 +15,7 @@ workflows, matrices, jobs and steps, and the **dependencies** between them:
    test =     Matrix("Test", parent=pipeline)
    package =  Workflow("Package", reference="./.github/workflows/Package.yml", parent=pipeline)
    for version in ("3.13", "3.14"):
-     MatrixJob("Test", [version], parent=test)
+     MatrixJob("Test", {"python": version}, parent=test)
 
    test.AddNeed(prepare)
    package.AddNeed(test)
@@ -158,8 +158,13 @@ Services
 
 A service's model derives its classes from these and adds what only the service reports. Its matrix instance
 derives from its own job class and mixes in :class:`~pyTooling.CI.Pipeline.MatrixInstanceMixin`, which carries the
-dimension values - as :class:`~pyTooling.CI.Pipeline.MatrixJob` does with :class:`~pyTooling.CI.Pipeline.Job`, and
+dimensions - as :class:`~pyTooling.CI.Pipeline.MatrixJob` does with :class:`~pyTooling.CI.Pipeline.Job`, and
 :class:`~pyTooling.CI.Pipeline.MatrixWorkflow` with :class:`~pyTooling.CI.Pipeline.Workflow`.
+
+A matrix instance is one combination of the matrix' variables: its
+:attr:`~pyTooling.CI.Pipeline.MatrixInstanceMixin.Dimensions` maps each dimension's name to the value it ran with,
+in the matrix' order - ``{"os": "ubuntu-26.04", "python": "3.14"}``. Its name prints the values only, as a service
+does: ``Test (ubuntu-26.04, 3.14)``.
 
 .. _CI/Pipeline/GitHub:
 

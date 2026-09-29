@@ -140,14 +140,14 @@ class Instantiation(Testcase):
 	def test_Matrix(self) -> None:
 		pipeline = Pipeline("Pipeline")
 		matrix = Matrix("Unit Tests", condition="inputs.unittest", parent=pipeline)
-		instance = MatrixJob("Unit Tests", ["ubuntu-26.04", "3.14"], parent=matrix)
+		instance = MatrixJob("Unit Tests", {"os": "ubuntu-26.04", "python": "3.14"}, parent=matrix)
 
 		self.assertEqual("inputs.unittest", matrix.Condition)
 		self.assertDictEqual({"Unit Tests": matrix}, pipeline.Matrices)
 		self.assertListEqual([instance], matrix.Instances)
 		self.assertListEqual([instance], matrix.Jobs)
 		self.assertEqual("Unit Tests (ubuntu-26.04, 3.14)", str(instance))
-		self.assertListEqual(["ubuntu-26.04", "3.14"], instance.DimensionValues)
+		self.assertDictEqual({"os": "ubuntu-26.04", "python": "3.14"}, instance.Dimensions)
 		self.assertIn("Unit Tests (ubuntu-26.04, 3.14)", matrix)
 		self.assertIn("Unit Tests", pipeline)
 
@@ -164,7 +164,9 @@ class Instantiation(Testcase):
 		"""A matrix may produce instances of a called workflow."""
 		pipeline = Pipeline("Pipeline")
 		matrix = Matrix("Tests", parent=pipeline)
-		instance = MatrixWorkflow("Tests", ["3.14"], reference="./.github/workflows/Tests.yml", parent=matrix)
+		instance = MatrixWorkflow(
+			"Tests", {"python": "3.14"}, reference="./.github/workflows/Tests.yml", parent=matrix
+		)
 		job = Job("Unit", parent=instance)
 
 		self.assertListEqual([instance], matrix.Instances)
@@ -179,18 +181,33 @@ class Instantiation(Testcase):
 
 	def test_MatrixJob_NoValues(self) -> None:
 		self.assertEqual("Build", str(MatrixJob("Build")))
+		self.assertEqual("Build", str(MatrixJob("Build", {})))
+		self.assertDictEqual({}, MatrixJob("Build").Dimensions)
 
 	def test_MatrixJob_Mixin(self) -> None:
-		"""The dimension values come from a mixin, which a service's job class can mix in as well."""
+		"""The dimensions come from a mixin, which a service's job class can mix in as well."""
 		self.assertTrue(issubclass(MatrixJob, MatrixInstanceMixin))
 		self.assertFalse(issubclass(Job, MatrixInstanceMixin))
-		self.assertFalse(hasattr(MatrixJob("Build", ["3.14"]), "__dict__"))
+		self.assertFalse(hasattr(MatrixJob("Build", {"python": "3.14"}), "__dict__"))
 
-	def test_MatrixJob_ValueType(self) -> None:
+	def test_MatrixJob_Dimensions(self) -> None:
+		"""The dimensions keep the matrix' order; a value that isn't a string is printed by :func:`str`."""
+		instance = MatrixJob("Build", {"python": "3.14", "shard": 2, "debug": False})
+
+		self.assertListEqual(["python", "shard", "debug"], list(instance.Dimensions))
+		self.assertEqual("Build (3.14, 2, False)", str(instance))
+
+	def test_MatrixJob_DimensionsType(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = MatrixJob("Build", ["3.14", 3.13])
+			_ = MatrixJob("Build", ["3.14"])
 
-		self.assertEqual("An element of parameter 'dimensionValues' is not of type 'str'.", str(context.exception))
+		self.assertEqual("Parameter 'dimensions' is not a mapping ('dict', ...).", str(context.exception))
+
+	def test_MatrixJob_DimensionNameType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = MatrixJob("Build", {"python": "3.14", 0: "x"})
+
+		self.assertEqual("A key of parameter 'dimensions' is not of type 'str'.", str(context.exception))
 
 	def test_Job(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -287,7 +304,7 @@ class Hierarchy(Testcase):
 		caller = Workflow("Caller", parent=pipeline)
 		called = Workflow("Called", parent=caller)
 		matrix = Matrix("Test", parent=called)
-		instance = MatrixJob("Test", ["3.14"], parent=matrix)
+		instance = MatrixJob("Test", {"python": "3.14"}, parent=matrix)
 		job = Job("Build", parent=pipeline)
 
 		self.assertEqual("Build", job.QualifiedName)
@@ -299,7 +316,7 @@ class Hierarchy(Testcase):
 		group = PipelineGroup("0123abcd")
 		pipeline = Pipeline("Pipeline", parent=group)
 		plain = Job("Plain", parent=pipeline)
-		instance = MatrixJob("Test", ["3.14"], parent=Matrix("Test", parent=pipeline))
+		instance = MatrixJob("Test", {"python": "3.14"}, parent=Matrix("Test", parent=pipeline))
 		deep = Job("Deep", parent=Workflow("Called", parent=pipeline))
 
 		self.assertListEqual([plain, instance, deep], list(pipeline.IterateJobs()))
@@ -330,7 +347,7 @@ class Hierarchy(Testcase):
 		pipeline = Pipeline("Pipeline")
 		workflow = Workflow("Called", parent=pipeline)
 		matrix = Matrix("Test", parent=pipeline)
-		instance = MatrixJob("Test", ["3.14"], parent=matrix)
+		instance = MatrixJob("Test", {"python": "3.14"}, parent=matrix)
 		job = Job("Build", parent=pipeline)
 
 		self.assertIs(workflow, pipeline["Called"])
@@ -349,7 +366,7 @@ class Hierarchy(Testcase):
 		late = Job("Late", createdAt=_time(90), parent=pipeline)
 		early = Job("Early", createdAt=_time(30), parent=pipeline)
 		unknown = Job("Unknown", parent=pipeline)
-		matrix = MatrixJob("Test", ["x"], createdAt=_time(60), parent=Matrix("Test", parent=pipeline)).Parent
+		matrix = MatrixJob("Test", {"python": "x"}, createdAt=_time(60), parent=Matrix("Test", parent=pipeline)).Parent
 
 		self.assertListEqual([early, matrix, late, unknown], list(pipeline))
 
@@ -667,7 +684,7 @@ class ToGraph(Testcase):
 		prepare = Job("Prepare", parent=pipeline)
 		matrix = Matrix("Test", parent=pipeline)
 		for version in ("3.13", "3.14"):
-			MatrixJob("Test", [version], parent=matrix)
+			MatrixJob("Test", {"python": version}, parent=matrix)
 		package = Workflow("Package", reference="./.github/workflows/Package.yml", parent=pipeline)
 		build = Job("Build", parent=package)
 		Job("Upload", parent=package).AddNeed(build)
@@ -831,7 +848,7 @@ class ToGraph(Testcase):
 		pipeline = Pipeline("Pipeline")
 		matrix = Matrix("Tests", parent=pipeline)
 		for version in ("3.13", "3.14"):
-			Job("Unit", parent=MatrixWorkflow("Tests", [version], parent=matrix))
+			Job("Unit", parent=MatrixWorkflow("Tests", {"python": version}, parent=matrix))
 
 		graph = pipeline.ToGraph()
 
