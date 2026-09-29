@@ -134,7 +134,8 @@ Version 10.x (2026)
        :meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts into a graph.
      * :meth:`~pyTooling.CI.Workflow.Workflow.ApplyNeeds` gives a run read by :mod:`pyTooling.CI.GitHub` the
        dependencies its workflow file declares, and returns the qualified names of the jobs it didn't find in the
-       run.
+       run. An instance of a static matrix gets the dimensions' names of its combination instead of the positions
+       the run names them by.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
