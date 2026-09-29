@@ -53,7 +53,7 @@ name the place a finding comes from, as ``CompletePipeline.yml:552``.
 :class:`WorkflowResolver` reads the reusable workflows a job calls, as far as they are in a local directory.
 
 The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow *run* as the REST API reports it.
-:meth:`Workflow.ToPipeline` builds the pipeline a workflow defines as a :mod:`pyTooling.CI.Pipeline` model, whose
+:meth:`Workflow.ToPipeline` builds the pipeline a workflow defines as a :mod:`pyTooling.CI` model, whose
 elements link back to the jobs they were built from, and :meth:`Workflow.ApplyNeeds` gives a run the dependencies
 its workflow file declares.
 
@@ -64,14 +64,15 @@ from __future__            import annotations
 from itertools             import product
 from json                  import dumps as json_dumps
 from pathlib               import Path, PurePosixPath
-from typing                import Any, ClassVar, Iterable, Iterator, Mapping, Optional as Nullable, Self, Union
+from typing                import Any, ClassVar, Hashable, Iterable, Iterator, Mapping, Optional as Nullable, Self
+from typing                import Union
 
-from pyTooling.CI.Pipeline import DependencyMixin, JobGroup, Matrix as CIMatrix, MatrixInstanceMixin
-from pyTooling.CI.Pipeline import MatrixJob as CIMatrixJob, MatrixWorkflow as CIMatrixWorkflow
-from pyTooling.CI.Pipeline import Job as CIJob, Pipeline as CIPipeline, Step as CIStep, Workflow as CIWorkflow
+from pyTooling.CI          import CIError, DependencyMixin, JobGroup, Matrix as CIMatrix, MatrixInstanceMixin
+from pyTooling.CI          import MatrixJob as CIMatrixJob, MatrixWorkflow as CIMatrixWorkflow
+from pyTooling.CI          import Job as CIJob, Pipeline as CIPipeline, Step as CIStep, Workflow as CIWorkflow
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import MissingDependencyError, ToolingException
+from pyTooling.Exceptions  import MissingDependencyError
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 
 try:
@@ -89,9 +90,9 @@ ValueT = Union[str, bool, int, float, None, list["ValueT"], dict[str, "ValueT"]]
 
 
 @export
-class WorkflowError(ToolingException):
+class WorkflowError(CIError):
 	"""
-	Base-exception of all exceptions raised by :mod:`pyTooling.CI.Workflow`.
+	Base-exception of all exceptions raised by :mod:`pyTooling.CI.GitHub.Workflow`.
 
 	The exception is raised for a workflow file that is not a well-formed workflow. It carries the file and the line
 	the problem was found at in :attr:`Path` and :attr:`Line`, and names both in a note.
@@ -1713,7 +1714,7 @@ class Workflow(Base):
 		"""
 		Build the service-independent model of the pipeline this workflow defines.
 
-		Every job becomes an element of :mod:`pyTooling.CI.Pipeline`, named by its key and linked to the job by
+		Every job becomes an element of :mod:`pyTooling.CI`, named by its key and linked to the job by
 		:attr:`~DefinitionMixin.Definition`:
 
 		* a job running steps becomes a :class:`DefinedJob`, its steps :class:`DefinedStep`\\ s;
@@ -1723,8 +1724,8 @@ class Workflow(Base):
 		  :class:`DefinedMatrixWorkflow` per combination of :attr:`Matrix.Combinations`. A dynamic matrix holds no
 		  instances, because its combinations are known at run time only.
 
-		The ``needs`` of the jobs become the elements' :attr:`~pyTooling.CI.Pipeline.DependencyMixin.Needs`, so
-		:meth:`~pyTooling.CI.Pipeline.Workflow.ToGraph` converts the result into a graph.
+		The ``needs`` of the jobs become the elements' :attr:`~pyTooling.CI.DependencyMixin.Needs`, so
+		:meth:`~pyTooling.CI.Workflow.ToGraph` converts the result into a graph.
 
 		:param resolver:       Optional, the resolver reading the workflows the jobs call. Without it, called workflows
 		                       are not expanded. Default: ``None``.
@@ -1811,7 +1812,7 @@ class Workflow(Base):
 
 		A run read from a service's API, as :class:`pyTooling.CI.GitHub.Pipeline`, knows no ``needs``. Each job of this
 		workflow is looked up in the run by its display name, or else by its key, and gets as
-		:attr:`~pyTooling.CI.Pipeline.DependencyMixin.Needs` the elements the jobs it needs were found as. A job calling
+		:attr:`~pyTooling.CI.DependencyMixin.Needs` the elements the jobs it needs were found as. A job calling
 		a reusable workflow is followed into the called workflow of the run - into each instance, if it is a matrix -,
 		as far as the resolver reads the called file. A dependency the run's element has already is kept once.
 
@@ -1830,7 +1831,7 @@ class Workflow(Base):
 		                                  missing in the run - as the run would name them -, in the order they were looked
 		                                  up.
 		:raises ValueError:               If parameter 'pipeline' is ``None``.
-		:raises TypeError:                If parameter 'pipeline' is not of type :class:`pyTooling.CI.Pipeline.Workflow`.
+		:raises TypeError:                If parameter 'pipeline' is not of type :class:`pyTooling.CI.Workflow`.
 		:raises TypeError:                If parameter 'resolver' is not of type :class:`WorkflowResolver`.
 		:raises WorkflowError:            If a workflow to follow doesn't exist, or is not a well-formed workflow.
 		:raises WorkflowError:            If ``include`` or ``exclude`` of a matrix is not a list of mappings.
@@ -1866,12 +1867,12 @@ class Workflow(Base):
 				else:
 					names = (job._displayName, job._name)
 
-				if (name := next((name for name in names if name in group), None)) is None:
+				if (name := next((name for name in names if group.ContainsElement(name)), None)) is None:
 					if job._condition is None:
 						missing.append(names[0] if isinstance(group, CIPipeline) else f"{group.QualifiedName} / {names[0]}")
 					continue
 
-				element = group[name]
+				element = group.GetElement(name)
 				elements[job._name] = element
 				if job._matrix is not None and not job._matrix.IsDynamic and isinstance(element, CIMatrix):
 					combinations = [Matrix._FormatCombination(combination) for combination in job._matrix.Combinations]
@@ -2295,7 +2296,7 @@ class WorkflowResolver(metaclass=ExtendedType, slots=True):
 @export
 class DefinitionMixin(metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_TYPE",)):
 	"""
-	Mixin-class for an element of :mod:`pyTooling.CI.Pipeline` built from a workflow file, linking it to its definition.
+	Mixin-class for an element of :mod:`pyTooling.CI` built from a workflow file, linking it to its definition.
 
 	:meth:`Workflow.ToPipeline` builds the elements, so a consumer of the generic model still reaches the facts only
 	the file has: the line an element is written at, the reference a job calls, its permissions.
@@ -2380,15 +2381,21 @@ class DefinedPipeline(CIPipeline, DefinitionMixin):
 
 	_DEFINITION_TYPE: ClassVar[type] = Workflow  #: A pipeline is built from a workflow file.
 
-	def __init__(self, definition: Workflow) -> None:
+	def __init__(
+		self,
+		definition:    Workflow,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> None:
 		"""
 		Initializes a pipeline built from a workflow file, named by the file's stem.
 
-		:param definition: The workflow file.
+		:param definition:    The workflow file.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		"""
 		self._CheckDefinition(definition)
 
-		super().__init__(definition._name)
+		super().__init__(definition._name, keyValuePairs=keyValuePairs)
 		DefinitionMixin.__init__(self, definition)
 
 
@@ -2402,18 +2409,20 @@ class DefinedWorkflow(CIWorkflow, CallMixin, DefinitionMixin):
 		self,
 		definition:     Job,
 		*,
-		calledWorkflow: Nullable[Workflow]   = None,
-		parent:         Nullable[CIWorkflow] = None
+		calledWorkflow: Nullable[Workflow]               = None,
+		keyValuePairs:  Nullable[Mapping[Hashable, Any]] = None,
+		parent:         Nullable[CIWorkflow]             = None
 	) -> None:
 		"""
 		Initializes a called workflow built from the job calling it, named by the job's key.
 
-		The job's ``uses`` is the workflow's :attr:`~pyTooling.CI.Pipeline.Workflow.Reference`, its ``if`` the
-		workflow's :attr:`~pyTooling.CI.Pipeline.ConditionMixin.Condition`.
+		The job's ``uses`` is the workflow's :attr:`~pyTooling.CI.Workflow.Reference`, its ``if`` the
+		workflow's :attr:`~pyTooling.CI.ConditionMixin.Condition`.
 
 		:param definition:     The job calling the workflow.
 		:param calledWorkflow: Optional, the workflow file the called workflow's elements are built from. Default:
 		                       ``None``.
+		:param keyValuePairs:  Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:         Optional, reference to the workflow containing the call. Default: ``None``.
 		:raises ValueError:    If parameter 'definition' calls no workflow.
 		"""
@@ -2424,7 +2433,10 @@ class DefinedWorkflow(CIWorkflow, CallMixin, DefinitionMixin):
 			ex.add_note(f"Got job '{definition._name}'.")
 			raise ex
 
-		super().__init__(definition._name, reference=str(definition._uses), condition=definition._condition, parent=parent)
+		super().__init__(
+			definition._name, reference=str(definition._uses), condition=definition._condition, keyValuePairs=keyValuePairs,
+			parent=parent
+		)
 		DefinitionMixin.__init__(self, definition)
 		CallMixin.__init__(self, calledWorkflow)
 
@@ -2440,13 +2452,20 @@ class DefinedMatrix(CIMatrix, DefinitionMixin):
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A matrix is built from the job declaring it.
 
-	def __init__(self, definition: Job, *, parent: Nullable[CIWorkflow] = None) -> None:
+	def __init__(
+		self,
+		definition:    Job,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[CIWorkflow]             = None
+	) -> None:
 		"""
 		Initializes a matrix built from the job declaring it, named by the job's key.
 
-		:param definition:  The job declaring the matrix.
-		:param parent:      Optional, reference to the workflow containing the matrix. Default: ``None``.
-		:raises ValueError: If parameter 'definition' declares no matrix.
+		:param definition:    The job declaring the matrix.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the workflow containing the matrix. Default: ``None``.
+		:raises ValueError:   If parameter 'definition' declares no matrix.
 		"""
 		self._CheckDefinition(definition)
 
@@ -2455,7 +2474,7 @@ class DefinedMatrix(CIMatrix, DefinitionMixin):
 			ex.add_note(f"Got job '{definition._name}'.")
 			raise ex
 
-		super().__init__(definition._name, condition=definition._condition, parent=parent)
+		super().__init__(definition._name, condition=definition._condition, keyValuePairs=keyValuePairs, parent=parent)
 		DefinitionMixin.__init__(self, definition)
 
 
@@ -2470,8 +2489,9 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 		definition:     Job,
 		dimensions:     Mapping[str, Any],
 		*,
-		calledWorkflow: Nullable[Workflow] = None,
-		parent:         Nullable[CIMatrix] = None
+		calledWorkflow: Nullable[Workflow]               = None,
+		keyValuePairs:  Nullable[Mapping[Hashable, Any]] = None,
+		parent:         Nullable[CIMatrix]               = None
 	) -> None:
 		"""
 		Initializes one instance of a matrix calling a reusable workflow, named by the job's key.
@@ -2480,6 +2500,7 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 		:param dimensions:     The matrix' combination this instance is called with, the values as GitHub prints them.
 		:param calledWorkflow: Optional, the workflow file the called workflow's elements are built from. Default:
 		                       ``None``.
+		:param keyValuePairs:  Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:         Optional, reference to the matrix containing the instance. Default: ``None``.
 		:raises ValueError:    If parameter 'definition' calls no workflow.
 		:raises ValueError:    If parameter 'dimensions' is ``None``.
@@ -2495,7 +2516,7 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 
 		super().__init__(
 			definition._name, dimensions, reference=str(definition._uses), condition=definition._condition,
-			parent=parent
+			keyValuePairs=keyValuePairs, parent=parent
 		)
 		DefinitionMixin.__init__(self, definition)
 		CallMixin.__init__(self, calledWorkflow)
@@ -2507,16 +2528,23 @@ class DefinedJob(CIJob, DefinitionMixin):
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A job is built from its job in the workflow file.
 
-	def __init__(self, definition: Job, *, parent: Nullable[JobGroup] = None) -> None:
+	def __init__(
+		self,
+		definition:    Job,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[JobGroup]               = None
+	) -> None:
 		"""
 		Initializes a job built from its job in the workflow file, named by the job's key.
 
-		:param definition: The job.
-		:param parent:     Optional, reference to the group containing the job. Default: ``None``.
+		:param definition:    The job.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the group containing the job. Default: ``None``.
 		"""
 		self._CheckDefinition(definition)
 
-		super().__init__(definition._name, condition=definition._condition, parent=parent)
+		super().__init__(definition._name, condition=definition._condition, keyValuePairs=keyValuePairs, parent=parent)
 		DefinitionMixin.__init__(self, definition)
 
 
@@ -2526,21 +2554,31 @@ class DefinedMatrixJob(CIMatrixJob, DefinitionMixin):
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A matrix instance is built from the job declaring the matrix.
 
-	def __init__(self, definition: Job, dimensions: Mapping[str, Any], *, parent: Nullable[CIMatrix] = None) -> None:
+	def __init__(
+		self,
+		definition:    Job,
+		dimensions:    Mapping[str, Any],
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[CIMatrix]               = None
+	) -> None:
 		"""
 		Initializes one instance of a matrix running steps, named by the job's key.
 
-		:param definition:  The job declaring the matrix.
-		:param dimensions:  The matrix' combination this instance runs with, the values as GitHub prints them.
-		:param parent:      Optional, reference to the matrix containing the instance. Default: ``None``.
-		:raises ValueError: If parameter 'dimensions' is ``None``.
+		:param definition:    The job declaring the matrix.
+		:param dimensions:    The matrix' combination this instance runs with, the values as GitHub prints them.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the matrix containing the instance. Default: ``None``.
+		:raises ValueError:   If parameter 'dimensions' is ``None``.
 		"""
 		self._CheckDefinition(definition)
 
 		if dimensions is None:
 			raise ValueError("Parameter 'dimensions' is None.")
 
-		super().__init__(definition._name, dimensions, condition=definition._condition, parent=parent)
+		super().__init__(
+			definition._name, dimensions, condition=definition._condition, keyValuePairs=keyValuePairs, parent=parent
+		)
 		DefinitionMixin.__init__(self, definition)
 
 
@@ -2550,15 +2588,22 @@ class DefinedStep(CIStep, DefinitionMixin):
 
 	_DEFINITION_TYPE: ClassVar[type] = Step  #: A step is built from its step in the workflow file.
 
-	def __init__(self, definition: Step, *, parent: Nullable[CIJob] = None) -> None:
+	def __init__(
+		self,
+		definition:    Step,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[CIJob]                  = None
+	) -> None:
 		"""
 		Initializes a step built from its step in the workflow file.
 
 		The step is named as GitHub displays it: by its ``name``, or else ``Run`` followed by the action it runs or the
 		first line of its script.
 
-		:param definition: The step.
-		:param parent:     Optional, reference to the job containing the step. Default: ``None``.
+		:param definition:    The step.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the job containing the step. Default: ``None``.
 		"""
 		self._CheckDefinition(definition)
 
@@ -2572,5 +2617,5 @@ class DefinedStep(CIStep, DefinitionMixin):
 		else:
 			name = f"Step at line {definition._line}"
 
-		super().__init__(name, condition=definition._condition, parent=parent)
+		super().__init__(name, condition=definition._condition, keyValuePairs=keyValuePairs, parent=parent)
 		DefinitionMixin.__init__(self, definition)
