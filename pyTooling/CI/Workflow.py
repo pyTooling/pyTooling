@@ -223,21 +223,6 @@ def _expectMapping(value: Any, what: str, path: Path, line: int) -> CommentedMap
 	return value
 
 
-def _formatCombination(combination: Mapping[str, ValueT]) -> dict[str, str]:
-	"""
-	Format the values of a matrix' combination as GitHub prints them in the name of a matrix instance.
-
-	A string is printed as it is, any other value as JSON: ``true``, ``3``, ``{"os": "ubuntu"}``.
-
-	:param combination: The combination, as :attr:`Matrix.Combinations` returns it.
-	:returns:           The combination's names and formatted values, in the combination's order.
-	"""
-	return {
-		name: value if isinstance(value, str) else json_dumps(value, separators=(", ", ": "))
-		for name, value in combination.items()
-	}
-
-
 def _parsePermissions(
 	value:  Any,
 	path:   Path,
@@ -1056,6 +1041,21 @@ class Matrix(Base):
 
 		return combinations
 
+	@staticmethod
+	def _FormatCombination(combination: Mapping[str, ValueT]) -> dict[str, str]:
+		"""
+		Format the values of a matrix' combination as GitHub prints them in the name of a matrix instance.
+
+		A string is printed as it is, any other value as JSON: ``true``, ``3``, ``{"os": "ubuntu"}``.
+
+		:param combination: The combination, as :attr:`Matrix.Combinations` returns it.
+		:returns:           The combination's names and formatted values, in the combination's order.
+		"""
+		return {
+			name: value if isinstance(value, str) else json_dumps(value, separators=(", ", ": "))
+			for name, value in combination.items()
+		}
+
 
 @export
 class Step(Base):
@@ -1776,7 +1776,7 @@ class Workflow(Base):
 					element = DefinedMatrix(job, parent=group)
 					if not job._matrix.IsDynamic:
 						for combination in job._matrix.Combinations:
-							dimensions = _formatCombination(combination)
+							dimensions = Matrix._FormatCombination(combination)
 							if job._uses is None:
 								instance = DefinedMatrixJob(job, dimensions, parent=element)
 								for step in job._steps:
@@ -1874,7 +1874,7 @@ class Workflow(Base):
 				element = group[name]
 				elements[job._name] = element
 				if job._matrix is not None and not job._matrix.IsDynamic and isinstance(element, CIMatrix):
-					combinations = [_formatCombination(combination) for combination in job._matrix.Combinations]
+					combinations = [Matrix._FormatCombination(combination) for combination in job._matrix.Combinations]
 					for instance in element.Instances:
 						if not isinstance(instance, MatrixInstanceMixin):
 							continue
