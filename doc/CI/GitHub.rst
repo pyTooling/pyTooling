@@ -48,9 +48,8 @@ belongs to in :attr:`~pyTooling.CI.Base.Pipeline` - so reaching the run from any
 .. note::
 
    **The REST API reports no dependencies.** A run's jobs, matrices and called workflows have no
-   :attr:`~pyTooling.CI.DependencyMixin.Needs` until they are added - from the ``needs:`` of the workflow file
-   :attr:`~pyTooling.CI.GitHub.Pipeline.Path` names - with :meth:`~pyTooling.CI.DependencyMixin.AddNeed`, or all at once
-   with :meth:`Workflow.ApplyNeeds <pyTooling.CI.GitHub.WorkflowFile.Workflow.ApplyNeeds>` (:ref:`CI/Workflow/Run`).
+   :attr:`~pyTooling.CI.DependencyMixin.Needs` until they are added - from the ``needs:`` of the workflow
+   file :attr:`~pyTooling.CI.GitHub.Pipeline.Path` names - with :meth:`~pyTooling.CI.DependencyMixin.AddNeed`.
 
 :meth:`~pyTooling.CI.JobGroup.IterateElements` yields what a group contains one level down: a workflow its
 jobs, its matrices and the workflows it calls, a matrix its instances; :meth:`~pyTooling.CI.Job.IterateSteps`
