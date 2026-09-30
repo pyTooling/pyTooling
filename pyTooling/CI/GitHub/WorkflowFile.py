@@ -57,7 +57,7 @@ The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow 
 elements link back to the jobs they were built from, and :meth:`Workflow.ApplyNeeds` gives a run the dependencies
 its workflow file declares.
 
-:raises MissingDependencyError: If the 'yaml' extra isn't installed.
+:raises MissingDependencyError: If the 'github' extra isn't installed.
 """
 from __future__            import annotations
 
@@ -80,7 +80,7 @@ try:
 	from ruamel.yaml.comments   import CommentedMap, CommentedSeq
 	from ruamel.yaml.scalarbool import ScalarBoolean
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
+	raise MissingDependencyError(dependency="ruamel.yaml", extra="github") from ex
 
 
 __all__ = ["ValueT"]

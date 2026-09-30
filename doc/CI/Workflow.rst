@@ -17,7 +17,7 @@ GitHub Actions Workflow Files
    for job in workflow.IterateJobs():
      print(f"  {job.Name:<24} {job.Uses or job.RunsOn}  needs {', '.join(job.NeedNames)}")
 
-The file is read with ``ruamel.yaml``, so the module needs the ``yaml`` extra - see :ref:`DEP`.
+The file is read with ``ruamel.yaml``, so the module needs the ``github`` extra - see :ref:`DEP`.
 
 
 .. _CI/Workflow/Tree:
