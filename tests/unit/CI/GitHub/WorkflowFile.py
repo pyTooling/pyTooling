@@ -736,7 +736,8 @@ class Jobs(Testcase):
 	def test_Matrix_NotAMapping(self) -> None:
 		error = self._error("runs-on: x\nstrategy:\n  matrix: [a]\n")
 
-		self.assertEqual("Key 'strategy.matrix' of job 'A' is not a mapping.", str(error))
+		self.assertEqual("Key 'strategy.matrix' is not a mapping.", str(error))
+		self.assertEqual(5, error.Line)
 
 	def test_Name(self) -> None:
 		with self.assertRaises(ValueError) as context:

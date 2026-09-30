@@ -1206,7 +1206,7 @@ class Matrix(Base):
 		if isinstance(value, str):
 			return cls(line, expression=str(value), parent=parent)
 		elif not isinstance(value, CommentedMap):
-			ex = WorkflowError(f"Key 'strategy.matrix' of job '{parent._name}' is not a mapping.", path, line)
+			ex = WorkflowError("Key 'strategy.matrix' is not a mapping.", path, line)
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
