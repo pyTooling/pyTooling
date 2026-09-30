@@ -125,7 +125,7 @@ Version 10.x (2026)
      :class:`~pyTooling.CI.GitHub.WorkflowFile.Job`, :class:`~pyTooling.CI.GitHub.WorkflowFile.Step` and further
      objects, each knowing the line it is written at. :class:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowResolver` reads
      the reusable workflows a job calls from a local directory, and a workflow reports the permissions it and the
-     workflows it calls ask for. It needs the ``yaml`` extra.
+     workflows it calls ask for. It needs the ``github`` extra.
 
      * :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` builds the pipeline a workflow defines as a
        :mod:`pyTooling.CI` model - jobs, called workflows expanded through the resolver, and a matrix' instances as
