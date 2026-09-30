@@ -770,7 +770,9 @@ class Version(metaclass=ExtendedType, slots=True):
 			(left._micro == right._micro) and
 			(left._releaseLevel == right._releaseLevel) and
 			(left._releaseNumber == right._releaseNumber) and
+			((Parts.Post in left._parts) == (Parts.Post in right._parts)) and
 			(left._post == right._post) and
+			((Parts.Dev in left._parts) == (Parts.Dev in right._parts)) and
 			(left._dev == right._dev) and
 			(left._build == right._build) and
 			(left._postfix == right._postfix)
@@ -816,12 +818,20 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif left._releaseNumber > right._releaseNumber:
 			return False
 
-		if left._post < right._post:
+		leftPost =  Parts.Post in left._parts
+		rightPost = Parts.Post in right._parts
+		if leftPost != rightPost:
+			return rightPost
+		elif left._post < right._post:
 			return True
 		elif left._post > right._post:
 			return False
 
-		if left._dev < right._dev:
+		leftDev =  Parts.Dev in left._parts
+		rightDev = Parts.Dev in right._parts
+		if leftDev != rightDev:
+			return leftDev
+		elif left._dev < right._dev:
 			return True
 		elif left._dev > right._dev:
 			return False
@@ -1189,15 +1199,25 @@ class SemanticVersion(Version):
 		r"(?:"
 			r"(?:\.(?P<build>\d+))"
 		r"|"
-			r"(?:[-](?P<release>dev|final))"
+			r"(?:[\.\-]?(?P<release>dev|final))"
 		r"|"
-			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|a|b|c|rc|pl)(?P<number>\d+))"
+			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc|pl)(?P<number>\d+))"
 		r")?"
 		r"(?:(?P<delim2>[\.\-]post)(?P<post>\d+))?"
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
 		r"(?:(?P<delim4>[\.\-\+])(?P<postfix>\w+))?"
 		r"$"
 	)  #: Regular expression to parse a semantic version from a string.
+
+	#: Spellings of a release level, e.g. ``pre`` and ``preview`` for a release candidate.
+	_RELEASE_LEVEL_SPELLINGS: ClassVar[dict[ReleaseLevel, tuple[str, ...]]] = {
+		ReleaseLevel.Alpha:            ("a", "alpha"),
+		ReleaseLevel.Beta:             ("b", "beta"),
+		ReleaseLevel.Gamma:            ("c", "gamma"),
+		ReleaseLevel.ReleaseCandidate: ("rc", "pre", "preview")
+	}
+
+	_releaseLevelSpelling: str  #: Spelling of the release level as parsed, or ``""`` for the class' own spelling.
 # QUESTION: was this how many commits a version is ahead of the last tagged version?
 #	ahead:    int = 0
 
@@ -1223,20 +1243,21 @@ class SemanticVersion(Version):
 
 	def __init__(
 		self,
-		major:   int,
-		minor:   Nullable[int] = None,
-		micro:   Nullable[int] = None,
-		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
-		number:  Nullable[int] = None,
-		post:    Nullable[int] = None,
-		dev:     Nullable[int] = None,
+		major:    int,
+		minor:    Nullable[int] = None,
+		micro:    Nullable[int] = None,
+		level:    Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:   Nullable[int] = None,
+		post:     Nullable[int] = None,
+		dev:      Nullable[int] = None,
 		*,
-		epoch:   Nullable[int] = None,
-		build:   Nullable[int] = None,
-		postfix: Nullable[str] = None,
-		prefix:  Nullable[str] = None,
-		hash:    Nullable[str] = None,
-		flags:   Flags = Flags.NoVCS
+		epoch:    Nullable[int] = None,
+		build:    Nullable[int] = None,
+		postfix:  Nullable[str] = None,
+		prefix:   Nullable[str] = None,
+		hash:     Nullable[str] = None,
+		flags:    Flags = Flags.NoVCS,
+		spelling: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a semantic version number representation.
@@ -1254,6 +1275,7 @@ class SemanticVersion(Version):
 		:param prefix:      Optional, the version number's prefix.
 		:param hash:        Optional, hash of the version control system's commit this version was built from.
 		:param flags:       Optional, the version number's flags.
+		:param spelling:    Optional, the release level's spelling, e.g. ``pre`` for a release candidate.
 		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type integer.
@@ -1270,9 +1292,27 @@ class SemanticVersion(Version):
 		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises TypeError:  If parameter 'spelling' is not of type string.
+		:raises ValueError: If parameter 'spelling' isn't a spelling of the release level.
 		"""
 		super().__init__(major, minor, micro, level, number, post, dev, epoch=epoch, build=build, postfix=postfix,
 		                 prefix=prefix, hash=hash, flags=flags)
+
+		if spelling is None:
+			self._releaseLevelSpelling = ""
+		elif not isinstance(spelling, str):
+			ex = TypeError("Parameter 'spelling' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(spelling)}'.")
+			raise ex
+		elif spelling not in (spellings := self._RELEASE_LEVEL_SPELLINGS.get(self._releaseLevel, ())):
+			ex = ValueError(f"Parameter 'spelling' is '{spelling}', which isn't a spelling of the release level.")
+			if len(spellings) == 0:
+				ex.add_note(f"Release level '{self._releaseLevel}' has no spelling.")
+			else:
+				ex.add_note(f"Release level '{self._releaseLevel}' is spelled: {', '.join(spellings)}")
+			raise ex
+		else:
+			self._releaseLevelSpelling = spelling
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> SemanticVersion:
@@ -1348,7 +1388,7 @@ class SemanticVersion(Version):
 					releaseLevel = ReleaseLevel.Beta
 				elif level == "c" or level == "gamma":
 					releaseLevel = ReleaseLevel.Gamma
-				elif level == "rc":
+				elif level == "rc" or level == "pre" or level == "preview":
 					releaseLevel = ReleaseLevel.ReleaseCandidate
 				else:  # pragma: no cover
 					raise ValueError(f"Unknown release level '{level}' in version number '{versionString}'.")
@@ -1368,7 +1408,8 @@ class SemanticVersion(Version):
 			postfix=match["postfix"],
 			prefix=prefix if prefix != "" else None,
 			# hash=match["hash"],
-			flags=Flags.Clean
+			flags=Flags.Clean,
+			spelling=match["level"]
 		)
 
 		if validator is not None and not validator(version):
@@ -1386,6 +1427,15 @@ class SemanticVersion(Version):
 		:returns: The patch number.
 		"""
 		return self._micro
+
+	@readonly
+	def ReleaseLevelSpelling(self) -> str:
+		"""
+		Read-only property to access the release level's spelling.
+
+		:returns: The spelling as parsed, e.g. ``pre`` for a release candidate, or ``""`` for the class' own spelling.
+		"""
+		return self._releaseLevelSpelling
 
 	def _equal(self, left: SemanticVersion, right: SemanticVersion) -> Nullable[bool]:
 		"""
@@ -1584,13 +1634,13 @@ class SemanticVersion(Version):
 		if self._releaseLevel is ReleaseLevel.Development:
 			result += "-dev"
 		elif self._releaseLevel is ReleaseLevel.Alpha:
-			result += f".alpha{self._releaseNumber}"
+			result += f".{self._releaseLevelSpelling or 'alpha'}{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Beta:
-			result += f".beta{self._releaseNumber}"
+			result += f".{self._releaseLevelSpelling or 'beta'}{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Gamma:
-			result += f".gamma{self._releaseNumber}"
+			result += f".{self._releaseLevelSpelling or 'gamma'}{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.ReleaseCandidate:
-			result += f".rc{self._releaseNumber}"
+			result += f".{self._releaseLevelSpelling or 'rc'}{self._releaseNumber}"
 		result += f".post{self._post}" if Parts.Post in self._parts else ""
 		result += f".dev{self._dev}" if Parts.Dev in self._parts else ""
 		result += f"+{self._postfix}" if Parts.Postfix in self._parts else ""
@@ -1606,6 +1656,39 @@ class PythonVersion(SemanticVersion):
 
 	#: :pep:`440` writes an epoch ``v2!1.2.3``, where Debian and the default write ``2:1.2.3``.
 	_EPOCH_SEPARATOR: ClassVar[str] = "!"
+
+	@classmethod
+	def Parse(
+		cls,
+		versionString: Nullable[str],
+		validator:     Nullable[Callable[[SemanticVersion], bool]] = None,
+		*,
+		normalize:     bool = False
+	) -> PythonVersion:
+		"""
+		Parse a version string and return a :class:`PythonVersion` instance.
+
+		The version keeps the spelling it was parsed from, e.g. ``1.0-pre1`` or ``1.0-dev``, and compares equal to its
+		:pep:`440` normalized form ``1.0rc1`` or ``1.0.dev0``. With ``normalize``, the version is normalized as by
+		:meth:`Normalize`.
+
+		:param versionString:          The version string to parse.
+		:param validator:              Optional, a validation function.
+		:param normalize:              Optional, normalize the parsed version according to :pep:`440`.
+		:returns:                      An object representing a Python version.
+		:raises TypeError:             When parameter ``versionString`` is not a string.
+		:raises ValueError:            When parameter ``versionString`` is None or empty.
+		:raises ValueError:            When parameter ``versionString`` isn't a version number.
+		:raises VersionValidatorError: When the parsed version is rejected by ``validator``.
+		"""
+		version = super().Parse(versionString)
+		if normalize:
+			version = version.Normalize()
+
+		if validator is not None and not validator(version):
+			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
+
+		return version
 
 	@classmethod
 	def FromSysVersionInfo(cls) -> PythonVersion:
@@ -1634,16 +1717,113 @@ class PythonVersion(SemanticVersion):
 
 		return cls(version_info.major, version_info.minor, version_info.micro, level=rl, number=number)
 
+	def Normalize(self) -> PythonVersion:
+		"""
+		Return this version in :pep:`440`'s normalized form.
+
+		The release candidate's spellings ``c``, ``pre`` and ``preview`` become ``rc``, a development release ``-dev``
+		becomes ``.dev0``, and the prefix is dropped: ``v1.0-pre1`` becomes ``1.0rc1``.
+
+		:returns: A new version in normalized form.
+		"""
+		level =  self._releaseLevel
+		number = self._releaseNumber
+		dev =    self._dev if Parts.Dev in self._parts else None
+		if level is ReleaseLevel.Development:
+			level =  ReleaseLevel.Final
+			dev =    0
+		elif level is ReleaseLevel.Gamma:
+			level =  ReleaseLevel.ReleaseCandidate
+
+		return self.__class__(
+			major=self._major,
+			minor=self._minor if Parts.Minor in self._parts else None,
+			micro=self._micro if Parts.Micro in self._parts else None,
+			level=level,
+			number=number if level is not ReleaseLevel.Final else None,
+			post=self._post if Parts.Post in self._parts else None,
+			dev=dev,
+			epoch=self._epoch if Parts.Epoch in self._parts else None,
+			build=self._build if Parts.Build in self._parts else None,
+			postfix=self._postfix if Parts.Postfix in self._parts else None,
+			hash=self._hash if Parts.Hash in self._parts else None,
+			flags=self._flags
+		)
+
+	def _key(self, version: Version) -> tuple[Any, ...]:
+		"""
+		Private helper method to compute a version's :pep:`440` sort key.
+
+		A release candidate's spellings are one release level, ``-dev`` is ``.dev0``, and a development release of a
+		final release sorts before its pre-releases: ``1.0.dev0 < 1.0a1 < 1.0``.
+
+		:param version: The version to compute the key for.
+		:returns:       Tuple of the version's parts in comparison order.
+		"""
+		level =  version._releaseLevel
+		number = version._releaseNumber
+		hasDev = Parts.Dev in version._parts or level is ReleaseLevel.Development
+		if level is ReleaseLevel.Development:
+			level =  ReleaseLevel.Final
+			number = 0
+		elif level is ReleaseLevel.Gamma:
+			level =  ReleaseLevel.ReleaseCandidate
+
+		post = version._post if Parts.Post in version._parts else -1
+		if level is ReleaseLevel.Final and hasDev and post == -1:
+			release = (ReleaseLevel.Alpha.value - 1, 0)
+		else:
+			release = (level.value, number)
+
+		return (
+			version._epoch,
+			version._major,
+			version._minor,
+			version._micro,
+			release,
+			post,
+			(0, version._dev) if hasDev else (1, 0),
+			version._build
+		)
+
+	def _equal(self, left: Version, right: Version) -> Nullable[bool]:
+		"""
+		Private helper method to compute the equality of two versions according to :pep:`440`.
+
+		:param left:  Left operand.
+		:param right: Right operand.
+		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
+		"""
+		return self._key(left) == self._key(right) and left._postfix == right._postfix
+
+	def _compare(self, left: Version, right: Version) -> Nullable[bool]:
+		"""
+		Private helper method to compare two versions according to :pep:`440`.
+
+		:param left:  Left operand.
+		:param right: Right operand.
+		:returns:     ``True``, if ``left`` is smaller than ``right``. |br|
+		              False if ``left`` is greater than ``right``. |br|
+		              Otherwise it's None (both operands are equal).
+		"""
+		leftKey =  self._key(left)
+		rightKey = self._key(right)
+		if leftKey < rightKey:
+			return True
+		elif leftKey > rightKey:
+			return False
+
+		return None
+
 	def __hash__(self) -> int:
 		"""
 		Compute a hash for this version number.
 
-		The derived class re-implements :meth:`__eq__`, so Python would otherwise drop the inherited hash and make the
-		version unhashable.
+		Versions comparing equal have equal hashes, so the hash is computed from what :meth:`_equal` compares.
 
 		:returns: Hash of this version number.
 		"""
-		return super().__hash__()
+		return hash((self._key(self), self._postfix))
 
 	def __str__(self) -> str:
 		"""
@@ -1656,14 +1836,16 @@ class PythonVersion(SemanticVersion):
 		result += f"{self._major}"  # major is always present
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 		result += f".{self._micro}" if Parts.Micro in self._parts else ""
-		if self._releaseLevel is ReleaseLevel.Alpha:
-			result += f"a{self._releaseNumber}"
+		if self._releaseLevel is ReleaseLevel.Development:
+			result += "-dev"
+		elif self._releaseLevel is ReleaseLevel.Alpha:
+			result += f"{self._releaseLevelSpelling or 'a'}{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Beta:
-			result += f"b{self._releaseNumber}"
+			result += f"{self._releaseLevelSpelling or 'b'}{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.Gamma:
-			result += f"c{self._releaseNumber}"
+			result += f"{self._releaseLevelSpelling or 'c'}{self._releaseNumber}"
 		elif self._releaseLevel is ReleaseLevel.ReleaseCandidate:
-			result += f"rc{self._releaseNumber}"
+			result += f"{self._releaseLevelSpelling or 'rc'}{self._releaseNumber}"
 		result += f".post{self._post}" if Parts.Post in self._parts else ""
 		result += f".dev{self._dev}" if Parts.Dev in self._parts else ""
 		result += f"+{self._postfix}" if Parts.Postfix in self._parts else ""

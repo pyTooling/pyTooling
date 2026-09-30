@@ -152,7 +152,7 @@ prefix, a postfix or a build number.
          class SemanticVersion(Version):
 
            @classmethod
-           def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["SemanticVersion"], bool]] = None) -> "Version":
+           def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> Version:
              pass
 
            @readonly
@@ -188,6 +188,10 @@ prefix, a postfix or a build number.
              pass
 
            @readonly
+           def ReleaseLevelSpelling(self) -> str:
+             pass
+
+           @readonly
            def Post(self) -> int:
              pass
 
@@ -211,25 +215,25 @@ prefix, a postfix or a build number.
            def Flags(self) -> Flags:
              pass
 
-           def __eq__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+           def __eq__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
              pass
 
-           def __ne__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+           def __ne__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
              pass
 
-           def __lt__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+           def __lt__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
              pass
 
-           def __le__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+           def __le__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
              pass
 
-           def __gt__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+           def __gt__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
              pass
 
-           def __ge__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+           def __ge__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
              pass
 
-           def __imod__(self, other: Union["SemanticVersion", str, int, None]) -> bool:
+           def __imod__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
              pass
 
            def __format__(self, formatSpec: str) -> str:
@@ -261,6 +265,52 @@ Variants
             * 3.13.0a4
             * 3.13.0b2
             * 3.13.0rc2
+            * 10.0.0.dev0
+
+            :meth:`~pyTooling.Versioning.PythonVersion.Parse` also accepts the spellings :pep:`440` normalizes. A
+            parsed version keeps its spelling and compares equal to its normalized form, which
+            :meth:`~pyTooling.Versioning.PythonVersion.Normalize` returns, as does ``Parse(..., normalize=True)``:
+
+            .. list-table::
+               :header-rows: 1
+               :widths: 30 30 25 15
+
+               * - Parsed
+                 - Written
+                 - Normalized
+                 - Release level
+               * - ``10.0.0-rc1``
+                 - ``10.0.0rc1``
+                 - ``10.0.0rc1``
+                 - rc
+               * - ``10.0.0-pre1``
+                 - ``10.0.0pre1``
+                 - ``10.0.0rc1``
+                 - rc
+               * - ``10.0.0-preview1``
+                 - ``10.0.0preview1``
+                 - ``10.0.0rc1``
+                 - rc
+               * - ``10.0.0c1``
+                 - ``10.0.0c1``
+                 - ``10.0.0rc1``
+                 - gamma |rarr| rc
+               * - ``10.0.0-dev``
+                 - ``10.0.0-dev``
+                 - ``10.0.0.dev0``
+                 - dev |rarr| final
+               * - ``10.0.0.dev``
+                 - ``10.0.0-dev``
+                 - ``10.0.0.dev0``
+                 - dev |rarr| final
+               * - ``v10.0.0-rc1``
+                 - ``v10.0.0rc1``
+                 - ``10.0.0rc1``
+                 - rc
+
+            :class:`~pyTooling.Versioning.SemanticVersion` reads ``pre`` and ``preview`` as a release candidate, too,
+            but keeps its own meaning of ``c`` (*gamma*) and ``-dev`` (a release level): there, ``10.0.0c1`` isn't
+            ``10.0.0rc1``.
 
          .. grid-item::
             :columns: 6
@@ -272,7 +322,20 @@ Variants
                @export
                class PythonVersion(SemanticVersion):
                  @classmethod
-                 def FromSysVersionInfo(cls) -> "PythonVersion":
+                 def Parse(
+                   cls,
+                   versionString: Nullable[str],
+                   validator:     Nullable[Callable[[SemanticVersion], bool]] = None,
+                   *,
+                   normalize:     bool = False
+                 ) -> PythonVersion:
+                   pass
+
+                 def Normalize(self) -> PythonVersion:
+                   pass
+
+                 @classmethod
+                 def FromSysVersionInfo(cls) -> PythonVersion:
                    pass
 
 
@@ -354,7 +417,7 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
          @export
          class CalendarVersion(Version):
            @classmethod
-           def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["CalendarVersion"], bool]] = None) -> "CalendarVersion":
+           def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[CalendarVersion], bool]] = None) -> CalendarVersion:
              pass
 
            @readonly
@@ -393,25 +456,25 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
            def Postfix(self) -> str:
              pass
 
-           def __eq__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+           def __eq__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
              pass
 
-           def __ne__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+           def __ne__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
              pass
 
-           def __lt__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+           def __lt__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
              pass
 
-           def __le__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+           def __le__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
              pass
 
-           def __gt__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+           def __gt__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
              pass
 
-           def __ge__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+           def __ge__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
              pass
 
-           def __imod__(self, other: Union["CalendarVersion", str, int, None]) -> bool:
+           def __imod__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
              pass
 
            def __format__(self, formatSpec: str) -> str:
@@ -487,7 +550,7 @@ Variants
                @export
                class YearMonthVersion(CalendarVersion):
                  @classmethod
-                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["YearMonthVersion"], bool]] = None) -> "YearMonthVersion":
+                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[YearMonthVersion], bool]] = None) -> YearMonthVersion:
                    pass
 
                  @readonly
@@ -540,7 +603,7 @@ Variants
                @export
                class YearWeekVersion(CalendarVersion):
                  @classmethod
-                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["YearWeekVersion"], bool]] = None) -> "YearWeekVersion":
+                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[YearWeekVersion], bool]] = None) -> YearWeekVersion:
                    pass
 
                  @readonly
@@ -593,7 +656,7 @@ Variants
                @export
                class YearReleaseVersion(CalendarVersion):
                  @classmethod
-                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["YearReleaseVersion"], bool]] = None) -> "YearReleaseVersion":
+                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[YearReleaseVersion], bool]] = None) -> YearReleaseVersion:
                    pass
 
                  @readonly
@@ -646,7 +709,7 @@ Variants
                @export
                class YearMonthDayVersion(CalendarVersion):
                  @classmethod
-                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[["YearMonthDayVersion"], bool]] = None) -> "YearMonthDayVersion":
+                 def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[YearMonthDayVersion], bool]] = None) -> YearMonthDayVersion:
                    pass
 
                  @readonly
