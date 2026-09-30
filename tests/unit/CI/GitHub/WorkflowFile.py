@@ -39,7 +39,8 @@ from typing                           import Any
 from pyTooling.CI                     import Matrix as CIMatrix, NeedDependencyCycleError, Pipeline as CIPipeline
 from pyTooling.CI.GitHub              import Pipeline as GitHubPipeline
 from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, WorkflowResolver
-from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Permission, PermissionScope, UsesReference
+from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Output, Permission, PermissionScope, Secret
+from pyTooling.CI.GitHub.WorkflowFile import UsesReference
 from pyTooling.CI.GitHub.WorkflowFile import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow
 from pyTooling.CI.GitHub.WorkflowFile import DefinedPipeline, DefinedWorkflow
 from pyTooling.Graph                  import Graph
@@ -191,33 +192,6 @@ PREPARE = dedent("""\
 """)
 
 
-class Fixture(Testcase):
-	"""Writes workflow files into a temporary directory, removed after each test."""
-
-	_directory: TemporaryDirectory
-	_path:      Path
-
-	def setUp(self) -> None:
-		self._directory = TemporaryDirectory()
-		self._path = Path(self._directory.name)
-
-	def tearDown(self) -> None:
-		self._directory.cleanup()
-
-	def _write(self, name: str, content: str) -> Path:
-		"""
-		Write a workflow file.
-
-		:param name:    Name of the file.
-		:param content: Content of the file.
-		:returns:       Path to the file.
-		"""
-		path = self._path / name
-		path.write_text(content, encoding="utf-8")
-
-		return path
-
-
 class ToPython(Testcase):
 	"""The round-trip loader's own types become plain Python types."""
 
@@ -246,40 +220,6 @@ class ToPython(Testcase):
 			with self.subTest(key=key):
 				self.assertIs(valueType, type(values[key]))
 				self.assertEqual(value, values[key])
-
-
-class Parsers(Testcase):
-	"""A class reads its own part of a workflow file."""
-
-	def test_Permission(self) -> None:
-		mapping = YAML(typ="rt").load("contents: read\nid-token: write\n")
-		permissions = Permission._FromYAML(mapping, Path("A.yml"), 1, None)
-
-		self.assertEqual([PermissionScope.Contents, PermissionScope.IDToken], list(permissions))
-		self.assertIs(AccessLevel.Write, permissions[PermissionScope.IDToken].Level)
-		self.assertEqual(2, permissions[PermissionScope.IDToken].Line)
-
-	def test_Permission_All(self) -> None:
-		permissions = Permission._FromYAML("write-all", Path("A.yml"), 7, None)
-
-		self.assertEqual("write-all", str(permissions[PermissionScope.All]))
-		self.assertEqual(7, permissions[PermissionScope.All].Line)
-
-	def test_Input(self) -> None:
-		declaration = YAML(typ="rt").load("type: number\ndefault: 0x10\nrequired: true\n")
-		parameter = Input._FromYAML("count", declaration, Path("A.yml"), 4, None)
-
-		self.assertIs(InputType.Number, parameter.Type)
-		self.assertIs(int, type(parameter.Default))
-		self.assertEqual(16, parameter.Default)
-		self.assertTrue(parameter.Required)
-
-	def test_Input_NotAMapping(self) -> None:
-		with self.assertRaises(WorkflowError) as context:
-			_ = Input._FromYAML("count", "number", Path("A.yml"), 4, None)
-
-		self.assertEqual("Declaration of 'count' is not a mapping.", str(context.exception))
-		self.assertEqual(4, context.exception.Line)
 
 
 class References(Testcase):
@@ -364,226 +304,234 @@ class References(Testcase):
 		with self.assertRaises(TypeError):
 			_ = UsesReference("actions/checkout@v6", "1")
 
+class Permissions(Testcase):
+	"""A ``permissions`` key, read by :meth:`Permission._FromYAML`."""
 
-class Parameters(Fixture):
-	def test_Workflow(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+	def _error(self, value: Any) -> WorkflowError:
+		"""
+		Read a malformed ``permissions`` key written at line 2.
 
-		self.assertEqual("Package", workflow.Name)
-		self.assertEqual("Package", str(workflow))
-		self.assertEqual("Build Package", workflow.DisplayName)
-		self.assertEqual(self._path / "Package.yml", workflow.Path)
-		self.assertEqual(("workflow_call", ), workflow.Triggers)
-		self.assertTrue(workflow.IsCallable)
-		self.assertIsNone(workflow.Parent)
-		self.assertIs(workflow, workflow.Workflow)
-		self.assertEqual("Package.yml:1", workflow.Location)
+		:param value: The key's value.
+		:returns:     The exception reading it raised.
+		"""
+		with self.assertRaises(WorkflowError) as context:
+			_ = Permission._FromYAML(value, Path("A.yml"), 2, None)
+
+		self.assertEqual(Path("A.yml"), context.exception.Path)
+
+		return context.exception
+
+	def test_Mapping(self) -> None:
+		mapping = YAML(typ="rt").load("contents: read\nid-token: write\n")
+		permissions = Permission._FromYAML(mapping, Path("A.yml"), 1, None)
+
+		self.assertEqual([PermissionScope.Contents, PermissionScope.IDToken], list(permissions))
+		self.assertEqual(["contents", "id-token"], list(permissions))
+		self.assertIs(AccessLevel.Write, permissions["id-token"].Level)
+		self.assertEqual("contents: read", str(permissions["contents"]))
+		self.assertEqual(2, permissions["id-token"].Line)
+		self.assertEqual("line 2", permissions["id-token"].Location)
+
+	def test_ShortForm(self) -> None:
+		for value, level in (("read-all", AccessLevel.Read), ("write-all", AccessLevel.Write)):
+			with self.subTest(value=value):
+				permission = Permission._FromYAML(value, Path("A.yml"), 7, None)[PermissionScope.All]
+
+				self.assertIs(level, permission.Level)
+				self.assertEqual(value, str(permission))
+				self.assertEqual(7, permission.Line)
+
+	def test_Scope(self) -> None:
+		error = self._error(YAML(typ="rt").load("everything: read\n"))
+
+		self.assertEqual("Key 'everything' of 'permissions' is not a permission scope.", str(error))
+		self.assertEqual(1, error.Line)
+		self.assertIn("contents", error.__notes__[-1])
+		self.assertNotIn("*", error.__notes__[-1])
+
+	def test_Level(self) -> None:
+		error = self._error(YAML(typ="rt").load("contents: all\n"))
+
+		self.assertEqual("Permission 'contents' is not an access level.", str(error))
+		self.assertEqual(1, error.Line)
+
+	def test_ShortForm_Unknown(self) -> None:
+		error = self._error("all")
+
+		self.assertEqual("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", str(error))
+		self.assertEqual(2, error.Line)
+		self.assertIn("Got 'all'.", error.__notes__)
+
+	def test_NotAMapping(self) -> None:
+		error = self._error(YAML(typ="rt").load("[contents]\n"))
+
+		self.assertEqual("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", str(error))
+
+	def test_Construction(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Permission("contents", AccessLevel.Read, 1)
+
+		with self.assertRaises(TypeError):
+			_ = Permission(PermissionScope.Contents, "read", 1)
+
+		permission = Permission(PermissionScope.Contents, AccessLevel.Read, 1)
+		self.assertIs(PermissionScope.Contents, permission.Scope)
+		self.assertEqual("contents: read", str(permission))
+
+	def test_AccessLevel(self) -> None:
+		self.assertLess(AccessLevel.NoAccess.Rank(), AccessLevel.Read.Rank())
+		self.assertLess(AccessLevel.Read.Rank(), AccessLevel.Write.Rank())
+
+
+class Parameters(Testcase):
+	"""The parameters of ``on.workflow_call``, each read by its class' ``_FromYAML()``."""
+
+	def _read(self, section: str, parameterClass: type) -> dict[str, Any]:
+		"""
+		Read one section of the parameters of :data:`CALLABLE`.
+
+		:param section:        ``inputs``, ``outputs`` or ``secrets``.
+		:param parameterClass: The class reading a declaration.
+		:returns:              The parameters, by name.
+		"""
+		parameters = YAML(typ="rt").load(CALLABLE)["on"]["workflow_call"][section]
+
+		return {
+			name: parameterClass._FromYAML(name, declaration, Path("Package.yml"), Base._KeyLine(parameters, name), None)
+			for name, declaration in parameters.items()
+		}
+
+	def _error(self, parameterClass: type, declaration: str) -> WorkflowError:
+		"""
+		Read a malformed declaration of a parameter ``a`` written at line 4.
+
+		:param parameterClass: The class reading the declaration.
+		:param declaration:    The declaration's YAML.
+		:returns:              The exception reading it raised.
+		"""
+		with self.assertRaises(WorkflowError) as context:
+			_ = parameterClass._FromYAML("a", YAML(typ="rt").load(declaration), Path("A.yml"), 4, None)
+
+		self.assertEqual(4, context.exception.Line)
+
+		return context.exception
 
 	def test_Inputs(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		inputs = self._read("inputs", Input)
 
-		self.assertEqual(["package_name", "python_version", "dry_run", "pages_on"], list(workflow.Inputs))
+		self.assertEqual(["package_name", "python_version", "dry_run", "pages_on"], list(inputs))
 
-		packageName = workflow.Inputs["package_name"]
-		self.assertIsInstance(packageName, Input)
+		packageName = inputs["package_name"]
 		self.assertEqual("package_name", packageName.Name)
 		self.assertIs(InputType.String, packageName.Type)
 		self.assertTrue(packageName.Required)
 		self.assertIsNone(packageName.Default)
 		self.assertEqual("Name of the package.", packageName.Description)
-		self.assertEqual("Package.yml:6", packageName.Location)
-		self.assertIs(workflow, packageName.Parent)
+		self.assertEqual("line 6", packageName.Location)
 
-		pythonVersion = workflow.Inputs["python_version"]
+		pythonVersion = inputs["python_version"]
 		self.assertFalse(pythonVersion.Required)
 		self.assertEqual("3.14", pythonVersion.Default)
 		self.assertIs(str, type(pythonVersion.Default))
 
-		dryRun = workflow.Inputs["dry_run"]
+		dryRun = inputs["dry_run"]
 		self.assertIs(InputType.Boolean, dryRun.Type)
 		self.assertIs(False, dryRun.Default)
 		self.assertIsNone(dryRun.Description)
 
-		self.assertEqual("default-branch\nrelease-tag\n", workflow.Inputs["pages_on"].Default)
+		self.assertEqual("default-branch\nrelease-tag\n", inputs["pages_on"].Default)
+
+	def test_Input_Number(self) -> None:
+		declaration = YAML(typ="rt").load("type: number\ndefault: 0x10\nrequired: true\n")
+		parameter = Input._FromYAML("count", declaration, Path("A.yml"), 4, None)
+
+		self.assertIs(InputType.Number, parameter.Type)
+		self.assertIs(int, type(parameter.Default))
+		self.assertEqual(16, parameter.Default)
+		self.assertTrue(parameter.Required)
 
 	def test_Outputs(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		version = self._read("outputs", Output)["version"]
 
-		version = workflow.Outputs["version"]
 		self.assertEqual("Version of the package.", version.Description)
 		self.assertEqual("${{ jobs.Build.outputs.version }}", version.Value)
 		self.assertEqual(27, version.Line)
 
 	def test_Secrets(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		secrets = self._read("secrets", Secret)
 
-		self.assertEqual(["PYPI_TOKEN", "CODECOV_TOKEN"], list(workflow.Secrets))
-		self.assertTrue(workflow.Secrets["PYPI_TOKEN"].Required)
-		self.assertEqual("Token for PyPI.", workflow.Secrets["PYPI_TOKEN"].Description)
-		self.assertFalse(workflow.Secrets["CODECOV_TOKEN"].Required)
-		self.assertIsNone(workflow.Secrets["CODECOV_TOKEN"].Description)
+		self.assertEqual(["PYPI_TOKEN", "CODECOV_TOKEN"], list(secrets))
+		self.assertTrue(secrets["PYPI_TOKEN"].Required)
+		self.assertEqual("Token for PyPI.", secrets["PYPI_TOKEN"].Description)
+		self.assertFalse(secrets["CODECOV_TOKEN"].Required)
+		self.assertIsNone(secrets["CODECOV_TOKEN"].Description)
 
-	def test_Permissions(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+	def test_InputWithoutType(self) -> None:
+		self.assertEqual("Input 'a' has no 'type' key.", str(self._error(Input, "required: true\n")))
 
-		self.assertEqual(["contents"], list(workflow.Permissions))
-		self.assertIs(AccessLevel.Read, workflow.Permissions["contents"].Level)
-		self.assertEqual("contents: read", str(workflow.Permissions["contents"]))
+	def test_InputType(self) -> None:
+		error = self._error(Input, "type: text\n")
 
-	def test_Triggers(self) -> None:
-		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+		self.assertEqual("Key 'type' of input 'a' is not an input type.", str(error))
+		self.assertIn("Allowed values: string, boolean, number.", error.__notes__)
 
-		self.assertEqual(("push", "workflow_dispatch"), workflow.Triggers)
-		self.assertFalse(workflow.IsCallable)
-		self.assertEqual({}, workflow.Inputs)
-		self.assertIsNone(workflow.Permissions)
+	def test_OutputWithoutValue(self) -> None:
+		self.assertEqual("Output 'a' has no 'value' key.", str(self._error(Output, "description: x\n")))
 
-	def test_Triggers_Forms(self) -> None:
-		jobs = "jobs:\n  Job:\n    runs-on: ubuntu-26.04\n    steps: []\n"
+	def test_Required(self) -> None:
+		self.assertEqual("Key 'required' of 'a' is not a boolean.", str(self._error(Secret, "required: 'yes'\n")))
 
-		self.assertEqual(("push", ), Workflow.FromFile(self._write("A.yml", f"on: push\n{jobs}")).Triggers)
-		workflow = Workflow.FromFile(self._write("B.yml", f"on: [push, workflow_call]\n{jobs}"))
-		self.assertEqual(("push", "workflow_call"), workflow.Triggers)
-		self.assertTrue(Workflow.FromFile(self._write("C.yml", f"on:\n  workflow_call:\n{jobs}")).IsCallable)
+	def test_NotAMapping(self) -> None:
+		self.assertEqual("Declaration of 'a' is not a mapping.", str(self._error(Input, "number\n")))
 
-	def test_PermissionsShortForm(self) -> None:
-		workflow = Workflow.FromFile(self._write("Prepare.yml", PREPARE))
+	def test_Input_Type(self) -> None:
+		with self.assertRaises(ValueError):
+			_ = Input("a", 1, None)
 
-		permission = workflow.Permissions[PermissionScope.All]
-		self.assertIs(AccessLevel.Read, permission.Level)
-		self.assertEqual("read-all", str(permission))
+		with self.assertRaises(TypeError):
+			_ = Input("a", 1, "string")
 
 
-class Jobs(Fixture):
-	def test_Order(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+class Matrices(Testcase):
+	"""A job's ``strategy.matrix``, read by :meth:`Matrix._FromYAML`, and the combinations it produces."""
 
-		self.assertEqual(3, workflow.JobCount)
-		self.assertEqual(["Params", "Build", "Static"], [job.Name for job in workflow.IterateJobs()])
-		self.assertTrue(workflow.ContainsJob("Build"))
-		self.assertFalse(workflow.ContainsJob("Unknown"))
-
-	def test_Steps(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
-		params = workflow.Jobs["Params"]
-
-		self.assertEqual("Parameters", params.DisplayName)
-		self.assertEqual(("ubuntu-26.04", ), params.RunsOn)
-		self.assertIsNone(params.Uses)
-		self.assertIsNone(params.Condition)
-		self.assertIsNone(params.Permissions)
-		self.assertEqual({"jobs": "${{ steps.params.outputs.jobs }}"}, params.Outputs)
-		self.assertEqual(1, params.StepCount)
-		self.assertEqual("Compute", params.Steps[0].Name)
-		self.assertEqual("params", params.Steps[0].ID)
-		self.assertIn("GITHUB_OUTPUT", params.Steps[0].Run)
-		self.assertEqual("Package.yml:40", params.Location)
-
-		build = workflow.Jobs["Build"]
-		self.assertEqual(3, build.StepCount)
-		steps = list(build.IterateSteps())
-		self.assertEqual("actions/checkout@v6", str(steps[0].Uses))
-		self.assertIs(steps[0], steps[0].Uses.Parent)
-		self.assertIs(workflow, steps[0].Uses.Workflow)
-		self.assertIsNone(steps[1].Name)
-		self.assertEqual("success()", steps[2].Condition)
-		self.assertEqual("Package.yml:69", steps[2].Location)
-
-	def test_Actions(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
-
-		self.assertEqual(
-			["actions/checkout@v6", "actions/setup-python@v6", "docker://alpine:3.22"],
-			[str(action) for action in workflow.IterateActions()]
-		)
-
-	def test_Needs(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
-		params, build, static = workflow.IterateJobs()
-
-		self.assertEqual((), params.Needs)
-		self.assertEqual(("Params", ), build.NeedNames)
-		self.assertEqual((params, ), build.Needs)
-		self.assertEqual((params, build), static.Needs)
-
-	def test_Condition(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
-
-		self.assertEqual("inputs.dry_run == false", workflow.Jobs["Build"].Condition)
-
-	def test_Permissions(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
-		permissions = workflow.Jobs["Build"].Permissions
-
-		self.assertEqual(["contents", "id-token"], list(permissions))
-		self.assertIs(AccessLevel.Write, permissions["id-token"].Level)
-		self.assertIs(workflow.Jobs["Build"], permissions["id-token"].Parent)
-		self.assertEqual("Package.yml:56", permissions["id-token"].Location)
-
-	def test_Matrix(self) -> None:
-		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
-
-		dynamic = workflow.Jobs["Build"].Matrix
-		self.assertTrue(dynamic.IsDynamic)
-		self.assertEqual("${{ fromJson(needs.Params.outputs.jobs) }}", dynamic.Include)
-		self.assertEqual({}, dynamic.Dimensions)
-		self.assertEqual("Package.yml:59", dynamic.Location)
-
-		static = workflow.Jobs["Static"].Matrix
-		self.assertFalse(static.IsDynamic)
-		self.assertEqual({"system": ["ubuntu", "windows"], "python": ["3.13", "3.14"]}, static.Dimensions)
-		self.assertEqual([{"system": "windows", "python": "3.13"}], static.Exclude)
-		self.assertIsNone(static.Include)
-		self.assertIsNone(static.Expression)
-		self.assertEqual(("self-hosted", "linux"), workflow.Jobs["Static"].RunsOn)
-
-		self.assertIsNone(workflow.Jobs["Params"].Matrix)
-
-	def test_Matrix_Expression(self) -> None:
-		workflow = Workflow.FromFile(self._write("A.yml", dedent("""\
-			on: push
-			jobs:
-			  Job:
-			    runs-on: ubuntu-26.04
-			    strategy:
-			      matrix: ${{ fromJson(inputs.matrix) }}
-			    steps: []
-		""")))
-
-		self.assertTrue(workflow.Jobs["Job"].Matrix.IsDynamic)
-		self.assertEqual("${{ fromJson(inputs.matrix) }}", workflow.Jobs["Job"].Matrix.Expression)
-
-	def test_Calls(self) -> None:
-		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
-		package = workflow.Jobs["Package"]
-
-		self.assertEqual("owner/repo", package.Uses.Repository)
-		self.assertEqual("dev", package.Uses.Ref)
-		self.assertEqual("Pipeline.yml:12", package.Uses.Location)
-		self.assertEqual((), package.RunsOn)
-		self.assertEqual(0, package.StepCount)
-		self.assertEqual({"package_name": "myPackage", "delay": 10}, package.With)
-		self.assertEqual({"PYPI_TOKEN": "${{ secrets.PYPI_TOKEN }}"}, package.Secrets)
-		self.assertFalse(package.InheritsSecrets)
-
-		local = workflow.Jobs["Local"]
-		self.assertTrue(local.InheritsSecrets)
-		self.assertEqual({}, local.Secrets)
-		self.assertTrue(local.Uses.IsLocal)
-
-
-class Combinations(Fixture):
 	def _matrix(self, matrix: str) -> Matrix:
 		"""
-		Read a workflow whose only job has the given matrix.
+		Read a matrix written at line 6.
 
-		:param matrix: The matrix' YAML, indented as the value of 'matrix'.
+		:param matrix: The matrix' YAML.
 		:returns:      The matrix.
 		"""
-		workflow = Workflow.FromFile(self._write("A.yml", "on: push\njobs:\n  Job:\n    runs-on: x\n    strategy:\n"
-			f"      matrix:\n{indent(dedent(matrix), '        ')}    steps: []\n"))
+		return Matrix._FromYAML(YAML(typ="rt").load(dedent(matrix)), Path("A.yml"), 6, None)
 
-		return workflow.Jobs["Job"].Matrix
+	def test_Static(self) -> None:
+		matrix = self._matrix("""\
+			system: [ubuntu, windows]
+			python: ['3.13', '3.14']
+			exclude:
+			  - system: windows
+			    python: '3.13'
+		""")
+
+		self.assertFalse(matrix.IsDynamic)
+		self.assertEqual({"system": ["ubuntu", "windows"], "python": ["3.13", "3.14"]}, matrix.Dimensions)
+		self.assertEqual([{"system": "windows", "python": "3.13"}], matrix.Exclude)
+		self.assertIsNone(matrix.Include)
+		self.assertIsNone(matrix.Expression)
+		self.assertEqual("line 6", matrix.Location)
+
+	def test_DynamicInclude(self) -> None:
+		matrix = self._matrix("include: ${{ fromJson(needs.Params.outputs.jobs) }}\n")
+
+		self.assertTrue(matrix.IsDynamic)
+		self.assertEqual("${{ fromJson(needs.Params.outputs.jobs) }}", matrix.Include)
+		self.assertEqual({}, matrix.Dimensions)
+
+	def test_Expression(self) -> None:
+		matrix = Matrix._FromYAML("${{ fromJson(inputs.matrix) }}", Path("A.yml"), 6, None)
+
+		self.assertTrue(matrix.IsDynamic)
+		self.assertEqual("${{ fromJson(inputs.matrix) }}", matrix.Expression)
 
 	def test_Product(self) -> None:
 		"""The last dimension varies fastest; 'exclude' matches an entry's pairs only."""
@@ -657,6 +605,442 @@ class Combinations(Fixture):
 			_ = matrix.Combinations
 
 		self.assertEqual("Key 'include' of the matrix is not a list of mappings.", str(context.exception))
+
+
+class Jobs(Testcase):
+	"""A job and the elements it contains, read by :meth:`Job._FromYAML`."""
+
+	def _jobs(self, document: str) -> dict[str, Job]:
+		"""
+		Read the jobs of a workflow's YAML, without the workflow.
+
+		:param document: The workflow's YAML.
+		:returns:        The jobs, by name.
+		"""
+		jobs = YAML(typ="rt").load(document)["jobs"]
+
+		return {
+			name: Job._FromYAML(name, mapping, Path("Package.yml"), Base._KeyLine(jobs, name), None)
+			for name, mapping in jobs.items()
+		}
+
+	def _error(self, job: str) -> WorkflowError:
+		"""
+		Read a malformed job ``A`` written at line 2.
+
+		:param job: The job's YAML, indented as the value of ``A``.
+		:returns:   The exception reading it raised.
+		"""
+		with self.assertRaises(WorkflowError) as context:
+			_ = self._jobs(f"jobs:\n  A:\n{indent(dedent(job), '    ')}")
+
+		self.assertEqual(Path("Package.yml"), context.exception.Path)
+
+		return context.exception
+
+	def test_Steps(self) -> None:
+		jobs = self._jobs(CALLABLE)
+		params = jobs["Params"]
+
+		self.assertEqual("Params", params.Name)
+		self.assertEqual("Parameters", params.DisplayName)
+		self.assertEqual(("ubuntu-26.04", ), params.RunsOn)
+		self.assertIsNone(params.Uses)
+		self.assertIsNone(params.Condition)
+		self.assertIsNone(params.Permissions)
+		self.assertEqual({"jobs": "${{ steps.params.outputs.jobs }}"}, params.Outputs)
+		self.assertEqual(1, params.StepCount)
+		self.assertEqual("Compute", params.Steps[0].Name)
+		self.assertEqual("params", params.Steps[0].ID)
+		self.assertIn("GITHUB_OUTPUT", params.Steps[0].Run)
+		self.assertEqual("line 40", params.Location)
+
+		build = jobs["Build"]
+		self.assertEqual(3, build.StepCount)
+		steps = list(build.IterateSteps())
+		self.assertEqual("actions/checkout@v6", str(steps[0].Uses))
+		self.assertIs(steps[0], steps[0].Uses.Parent)
+		self.assertIs(build, steps[0].Parent)
+		self.assertIsNone(steps[1].Name)
+		self.assertEqual("success()", steps[2].Condition)
+		self.assertEqual("line 69", steps[2].Location)
+
+	def test_NeedNames(self) -> None:
+		jobs = self._jobs(CALLABLE)
+
+		self.assertEqual((), jobs["Params"].NeedNames)
+		self.assertEqual(("Params", ), jobs["Build"].NeedNames)
+		self.assertEqual(("Params", "Build"), jobs["Static"].NeedNames)
+
+	def test_Condition(self) -> None:
+		self.assertEqual("inputs.dry_run == false", self._jobs(CALLABLE)["Build"].Condition)
+
+	def test_Permissions(self) -> None:
+		build = self._jobs(CALLABLE)["Build"]
+		permissions = build.Permissions
+
+		self.assertEqual(["contents", "id-token"], list(permissions))
+		self.assertIs(AccessLevel.Write, permissions["id-token"].Level)
+		self.assertIs(build, permissions["id-token"].Parent)
+		self.assertEqual("line 56", permissions["id-token"].Location)
+
+	def test_Matrix(self) -> None:
+		jobs = self._jobs(CALLABLE)
+
+		self.assertTrue(jobs["Build"].Matrix.IsDynamic)
+		self.assertIs(jobs["Build"], jobs["Build"].Matrix.Parent)
+		self.assertEqual("line 59", jobs["Build"].Matrix.Location)
+		self.assertFalse(jobs["Static"].Matrix.IsDynamic)
+		self.assertEqual(("self-hosted", "linux"), jobs["Static"].RunsOn)
+		self.assertIsNone(jobs["Params"].Matrix)
+
+	def test_Calls(self) -> None:
+		jobs = self._jobs(CALLER)
+		package = jobs["Package"]
+
+		self.assertEqual("owner/repo", package.Uses.Repository)
+		self.assertEqual("dev", package.Uses.Ref)
+		self.assertEqual("line 12", package.Uses.Location)
+		self.assertEqual((), package.RunsOn)
+		self.assertEqual(0, package.StepCount)
+		self.assertEqual({"package_name": "myPackage", "delay": 10}, package.With)
+		self.assertEqual({"PYPI_TOKEN": "${{ secrets.PYPI_TOKEN }}"}, package.Secrets)
+		self.assertFalse(package.InheritsSecrets)
+
+		local = jobs["Local"]
+		self.assertTrue(local.InheritsSecrets)
+		self.assertEqual({}, local.Secrets)
+		self.assertTrue(local.Uses.IsLocal)
+
+	def test_RunsOnAndUses(self) -> None:
+		error = self._error("steps: []\n")
+
+		self.assertEqual("Job 'A' needs either 'runs-on' or 'uses'.", str(error))
+		self.assertEqual(2, error.Line)
+
+	def test_Uses(self) -> None:
+		error = self._error("uses: owner/repo/.github/workflows/A.yml\n")
+
+		self.assertEqual("Key 'uses' of job 'A' is not a reference.", str(error))
+		self.assertEqual(3, error.Line)
+
+	def test_Steps_NotAList(self) -> None:
+		self.assertEqual("Key 'steps' of job 'A' is not a list.", str(self._error("runs-on: x\nsteps: run\n")))
+
+	def test_Step_NotAMapping(self) -> None:
+		error = self._error("runs-on: x\nsteps:\n  - run\n")
+
+		self.assertEqual("Step 1 of job 'A' is not a mapping.", str(error))
+		self.assertEqual(5, error.Line)
+
+	def test_Matrix_NotAMapping(self) -> None:
+		error = self._error("runs-on: x\nstrategy:\n  matrix: [a]\n")
+
+		self.assertEqual("Key 'strategy.matrix' of job 'A' is not a mapping.", str(error))
+
+	def test_Name(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Job(None, 1)
+
+		self.assertEqual("Parameter 'name' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError):
+			_ = Job(1, 1)
+
+		with self.assertRaises(ValueError):
+			_ = Job("", 1)
+
+
+class Fixture(Testcase):
+	"""Writes workflow files into a temporary directory, removed after each test."""
+
+	_directory: TemporaryDirectory
+	_path:      Path
+
+	def setUp(self) -> None:
+		self._directory = TemporaryDirectory()
+		self._path = Path(self._directory.name)
+
+	def tearDown(self) -> None:
+		self._directory.cleanup()
+
+	def _write(self, name: str, content: str) -> Path:
+		"""
+		Write a workflow file.
+
+		:param name:    Name of the file.
+		:param content: Content of the file.
+		:returns:       Path to the file.
+		"""
+		path = self._path / name
+		path.write_text(content, encoding="utf-8")
+
+		return path
+
+class WorkflowFile(Fixture):
+	"""A workflow file, read by :meth:`Workflow.FromFile`."""
+
+	def test_Workflow(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual("Package", workflow.Name)
+		self.assertEqual("Package", str(workflow))
+		self.assertEqual("Build Package", workflow.DisplayName)
+		self.assertEqual(self._path / "Package.yml", workflow.Path)
+		self.assertEqual(("workflow_call", ), workflow.Triggers)
+		self.assertTrue(workflow.IsCallable)
+		self.assertIsNone(workflow.Parent)
+		self.assertIs(workflow, workflow.Workflow)
+		self.assertEqual("Package.yml:1", workflow.Location)
+
+	def test_Parameters(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(["package_name", "python_version", "dry_run", "pages_on"], list(workflow.Inputs))
+		self.assertEqual(["version"], list(workflow.Outputs))
+		self.assertEqual(["PYPI_TOKEN", "CODECOV_TOKEN"], list(workflow.Secrets))
+
+		packageName = workflow.Inputs["package_name"]
+		self.assertIs(workflow, packageName.Parent)
+		self.assertIs(workflow, packageName.Workflow)
+		self.assertEqual("Package.yml:6", packageName.Location)
+
+	def test_Permissions(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(["contents"], list(workflow.Permissions))
+		self.assertIs(workflow, workflow.Permissions["contents"].Parent)
+		self.assertEqual("Package.yml:37", workflow.Permissions["contents"].Location)
+
+	def test_PermissionsShortForm(self) -> None:
+		workflow = Workflow.FromFile(self._write("Prepare.yml", PREPARE))
+
+		self.assertEqual("read-all", str(workflow.Permissions[PermissionScope.All]))
+
+	def test_Triggers(self) -> None:
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+
+		self.assertEqual(("push", "workflow_dispatch"), workflow.Triggers)
+		self.assertFalse(workflow.IsCallable)
+		self.assertEqual({}, workflow.Inputs)
+		self.assertIsNone(workflow.Permissions)
+
+	def test_Triggers_Forms(self) -> None:
+		jobs = "jobs:\n  Job:\n    runs-on: ubuntu-26.04\n    steps: []\n"
+
+		self.assertEqual(("push", ), Workflow.FromFile(self._write("A.yml", f"on: push\n{jobs}")).Triggers)
+		workflow = Workflow.FromFile(self._write("B.yml", f"on: [push, workflow_call]\n{jobs}"))
+		self.assertEqual(("push", "workflow_call"), workflow.Triggers)
+		self.assertTrue(Workflow.FromFile(self._write("C.yml", f"on:\n  workflow_call:\n{jobs}")).IsCallable)
+
+	def test_Jobs(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(3, workflow.JobCount)
+		self.assertEqual(["Params", "Build", "Static"], [job.Name for job in workflow.IterateJobs()])
+		self.assertTrue(workflow.ContainsJob("Build"))
+		self.assertFalse(workflow.ContainsJob("Unknown"))
+
+		build = workflow.Jobs["Build"]
+		self.assertIs(workflow, build.Parent)
+		self.assertEqual("Package.yml:50", build.Location)
+		self.assertIs(workflow, build.Steps[0].Uses.Workflow)
+		self.assertEqual("Package.yml:69", build.Steps[2].Location)
+		self.assertEqual("Package.yml:56", build.Permissions["id-token"].Location)
+
+	def test_Needs(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		params, build, static = workflow.IterateJobs()
+
+		self.assertEqual((), params.Needs)
+		self.assertEqual((params, ), build.Needs)
+		self.assertEqual((params, build), static.Needs)
+
+	def test_Actions(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(
+			["actions/checkout@v6", "actions/setup-python@v6", "docker://alpine:3.22"],
+			[str(action) for action in workflow.IterateActions()]
+		)
+
+	def test_Construction(self) -> None:
+		workflow = Workflow(Path("Pipeline.yml"), "Pipeline", ("push", ))
+		job = Job("Build", 3, runsOn=("ubuntu-26.04", ), needs=("Prepare", ), parent=workflow)
+
+		self.assertIs(job, workflow.Jobs["Build"])
+		self.assertEqual((), job.Needs)
+		self.assertEqual("Pipeline.yml:3", job.Location)
+
+	def test_Input_Parent(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Input("a", 1, InputType.String, parent=Job("Build", 1))
+
+		self.assertEqual("Parameter 'parent' is not of type 'Workflow'.", str(context.exception))
+
+
+class Errors(Fixture):
+	"""A malformed workflow file names itself and the line."""
+
+	def _error(self, content: str) -> WorkflowError:
+		"""
+		Read a malformed workflow file.
+
+		:param content: Content of the file.
+		:returns:       The exception reading it raised.
+		"""
+		path = self._write("Broken.yml", content)
+		with self.assertRaises(WorkflowError) as context:
+			_ = Workflow.FromFile(path)
+
+		self.assertEqual(path, context.exception.Path)
+
+		return context.exception
+
+	def test_NotYAML(self) -> None:
+		self.assertEqual("Workflow file is not a YAML document.", str(self._error("on: push\njobs: [\n")))
+
+	def test_Empty(self) -> None:
+		self.assertEqual("Workflow file is empty.", str(self._error("")))
+
+	def test_NoJobs(self) -> None:
+		self.assertEqual("Workflow file has no 'jobs' key.", str(self._error("on: push\n")))
+
+	def test_NoOn(self) -> None:
+		self.assertEqual("Workflow file has no 'on' key.", str(self._error("jobs: {}\n")))
+
+	def test_UnknownNeed(self) -> None:
+		error = self._error("on: push\njobs:\n  A:\n    runs-on: x\n    needs: B\n")
+
+		self.assertEqual("Job 'A' needs job 'B', which the workflow doesn't have.", str(error))
+		self.assertEqual(3, error.Line)
+		self.assertEqual([f"In '{self._path / 'Broken.yml'}:3'.", "Jobs: A."], error.__notes__)
+
+	def test_Cycle(self) -> None:
+		error = self._error(dedent("""\
+			on: push
+			jobs:
+			  A: {runs-on: x, needs: C}
+			  B: {runs-on: x, needs: A}
+			  C: {runs-on: x, needs: B}
+		"""))
+
+		self.assertEqual("Jobs need each other in a cycle: A -> C -> B -> A.", str(error))
+
+	def test_Job(self) -> None:
+		error = self._error("on: push\njobs:\n  A: x\n")
+
+		self.assertEqual("Job 'A' is not a mapping.", str(error))
+		self.assertEqual([f"In '{self._path / 'Broken.yml'}:3'.", "Got type 'str'."], error.__notes__)
+
+	def test_Nested(self) -> None:
+		"""An element reading its own part names the file too."""
+		error = self._error("on: push\npermissions:\n  contents: all\njobs: {}\n")
+
+		self.assertEqual("Permission 'contents' is not an access level.", str(error))
+		self.assertEqual(3, error.Line)
+
+	def test_Path(self) -> None:
+		with self.assertRaises(ValueError):
+			_ = Workflow.FromFile(None)
+
+		with self.assertRaises(TypeError):
+			_ = Workflow.FromFile("Pipeline.yml")
+
+		with self.assertRaises(FileNotFoundError):
+			_ = Workflow.FromFile(self._path / "Missing.yml")
+
+
+class Resolver(Fixture):
+	def _resolver(self) -> WorkflowResolver:
+		"""
+		Write the caller and the workflows it calls, and map ``owner/repo`` to their directory.
+
+		:returns: The resolver.
+		"""
+		self._write("Pipeline.yml", CALLER)
+		self._write("Package.yml", CALLABLE)
+		self._write("Prepare.yml", PREPARE)
+
+		return WorkflowResolver({"owner/repo": self._path})
+
+	def test_Resolve(self) -> None:
+		resolver = self._resolver()
+		pipeline = resolver.Load(self._path / "Pipeline.yml")
+
+		prepare = resolver.Resolve(pipeline.Jobs["Prepare"].Uses)
+		package = resolver.Resolve(pipeline.Jobs["Package"].Uses)
+		self.assertEqual("Prepare", prepare.Name)
+		self.assertEqual("Package", package.Name)
+		self.assertIs(package, resolver.Resolve(pipeline.Jobs["Local"].Uses))
+		self.assertIs(package, resolver.Load(self._path / "Package.yml"))
+		self.assertIsNone(resolver.Resolve(pipeline.Jobs["Foreign"].Uses))
+
+	def test_Resolve_Action(self) -> None:
+		resolver = self._resolver()
+		package = resolver.Load(self._path / "Package.yml")
+
+		self.assertIsNone(resolver.Resolve(package.Jobs["Build"].Steps[0].Uses))
+
+	def test_Resolve_Missing(self) -> None:
+		self._write("Pipeline.yml", CALLER)
+		resolver = WorkflowResolver({"owner/repo": self._path})
+		pipeline = resolver.Load(self._path / "Pipeline.yml")
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = resolver.Resolve(pipeline.Jobs["Prepare"].Uses)
+
+		self.assertEqual(f"Workflow 'Prepare.yml' doesn't exist in '{self._path}'.", str(context.exception))
+		self.assertEqual(9, context.exception.Line)
+		self.assertEqual(self._path / "Pipeline.yml", context.exception.Path)
+
+	def test_CanResolve(self) -> None:
+		resolver = WorkflowResolver({"Owner/Repo": self._path})
+
+		for text, expected in (
+			("./.github/workflows/Package.yml",             True),
+			("owner/repo/.github/workflows/Package.yml@r1", True),
+			("OWNER/REPO/.github/workflows/Package.yml@r1", True),
+			("other/repo/.github/workflows/Package.yml@r1", False),
+			("actions/checkout@v6",                         False),
+			("docker://alpine:3.22",                        False)
+		):
+			with self.subTest(uses=text):
+				self.assertIs(expected, resolver.CanResolve(UsesReference(text, 1)))
+
+		with self.assertRaises(ValueError) as context:
+			_ = resolver.CanResolve(None)
+
+		self.assertEqual("Parameter 'uses' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = resolver.CanResolve("./.github/workflows/Package.yml")
+
+		self.assertEqual("Parameter 'uses' is not of type 'UsesReference'.", str(context.exception))
+
+	def test_CollectPermissions(self) -> None:
+		resolver = self._resolver()
+		pipeline = resolver.Load(self._path / "Pipeline.yml")
+
+		self.assertEqual(["contents", "actions"], list(pipeline.CollectPermissions()))
+
+		permissions = pipeline.CollectPermissions(resolver)
+		self.assertEqual(["contents", "actions", PermissionScope.All, "id-token"], list(permissions))
+		self.assertEqual("Package.yml:55", permissions["contents"].Location)
+		self.assertIs(AccessLevel.Write, permissions["contents"].Level)
+		self.assertEqual("Pipeline.yml:17", permissions["actions"].Location)
+		self.assertEqual("Prepare.yml:4", permissions[PermissionScope.All].Location)
+
+	def test_Repositories(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = WorkflowResolver({"owner": Path(".")})
+
+		self.assertEqual("Key of parameter 'repositories' is not of the form 'owner/repo'.", str(context.exception))
+
+		with self.assertRaises(TypeError):
+			_ = WorkflowResolver({"owner/repo": "."})
+
+		self.assertEqual({"owner/repo": Path(".")}, WorkflowResolver({"Owner/Repo": Path(".")}).Repositories)
 
 
 class ToPipeline(Fixture):
@@ -1088,268 +1472,3 @@ class ApplyNeeds(Fixture):
 			_ = workflow.ApplyNeeds(self._run(), {})
 
 		self.assertEqual("Parameter 'resolver' is not of type 'WorkflowResolver'.", str(context.exception))
-
-
-class Resolver(Fixture):
-	def _resolver(self) -> WorkflowResolver:
-		"""
-		Write the caller and the workflows it calls, and map ``owner/repo`` to their directory.
-
-		:returns: The resolver.
-		"""
-		self._write("Pipeline.yml", CALLER)
-		self._write("Package.yml", CALLABLE)
-		self._write("Prepare.yml", PREPARE)
-
-		return WorkflowResolver({"owner/repo": self._path})
-
-	def test_Resolve(self) -> None:
-		resolver = self._resolver()
-		pipeline = resolver.Load(self._path / "Pipeline.yml")
-
-		prepare = resolver.Resolve(pipeline.Jobs["Prepare"].Uses)
-		package = resolver.Resolve(pipeline.Jobs["Package"].Uses)
-		self.assertEqual("Prepare", prepare.Name)
-		self.assertEqual("Package", package.Name)
-		self.assertIs(package, resolver.Resolve(pipeline.Jobs["Local"].Uses))
-		self.assertIs(package, resolver.Load(self._path / "Package.yml"))
-		self.assertIsNone(resolver.Resolve(pipeline.Jobs["Foreign"].Uses))
-
-	def test_Resolve_Action(self) -> None:
-		resolver = self._resolver()
-		package = resolver.Load(self._path / "Package.yml")
-
-		self.assertIsNone(resolver.Resolve(package.Jobs["Build"].Steps[0].Uses))
-
-	def test_Resolve_Missing(self) -> None:
-		self._write("Pipeline.yml", CALLER)
-		resolver = WorkflowResolver({"owner/repo": self._path})
-		pipeline = resolver.Load(self._path / "Pipeline.yml")
-
-		with self.assertRaises(WorkflowError) as context:
-			_ = resolver.Resolve(pipeline.Jobs["Prepare"].Uses)
-
-		self.assertEqual(f"Workflow 'Prepare.yml' doesn't exist in '{self._path}'.", str(context.exception))
-		self.assertEqual(9, context.exception.Line)
-		self.assertEqual(self._path / "Pipeline.yml", context.exception.Path)
-
-	def test_CanResolve(self) -> None:
-		resolver = WorkflowResolver({"Owner/Repo": self._path})
-
-		for text, expected in (
-			("./.github/workflows/Package.yml",             True),
-			("owner/repo/.github/workflows/Package.yml@r1", True),
-			("OWNER/REPO/.github/workflows/Package.yml@r1", True),
-			("other/repo/.github/workflows/Package.yml@r1", False),
-			("actions/checkout@v6",                         False),
-			("docker://alpine:3.22",                        False)
-		):
-			with self.subTest(uses=text):
-				self.assertIs(expected, resolver.CanResolve(UsesReference(text, 1)))
-
-		with self.assertRaises(ValueError) as context:
-			_ = resolver.CanResolve(None)
-
-		self.assertEqual("Parameter 'uses' is None.", str(context.exception))
-
-		with self.assertRaises(TypeError) as context:
-			_ = resolver.CanResolve("./.github/workflows/Package.yml")
-
-		self.assertEqual("Parameter 'uses' is not of type 'UsesReference'.", str(context.exception))
-
-	def test_CollectPermissions(self) -> None:
-		resolver = self._resolver()
-		pipeline = resolver.Load(self._path / "Pipeline.yml")
-
-		self.assertEqual(["contents", "actions"], list(pipeline.CollectPermissions()))
-
-		permissions = pipeline.CollectPermissions(resolver)
-		self.assertEqual(["contents", "actions", PermissionScope.All, "id-token"], list(permissions))
-		self.assertEqual("Package.yml:55", permissions["contents"].Location)
-		self.assertIs(AccessLevel.Write, permissions["contents"].Level)
-		self.assertEqual("Pipeline.yml:17", permissions["actions"].Location)
-		self.assertEqual("Prepare.yml:4", permissions[PermissionScope.All].Location)
-
-	def test_Repositories(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			_ = WorkflowResolver({"owner": Path(".")})
-
-		self.assertEqual("Key of parameter 'repositories' is not of the form 'owner/repo'.", str(context.exception))
-
-		with self.assertRaises(TypeError):
-			_ = WorkflowResolver({"owner/repo": "."})
-
-		self.assertEqual({"owner/repo": Path(".")}, WorkflowResolver({"Owner/Repo": Path(".")}).Repositories)
-
-
-class Errors(Fixture):
-	def _error(self, content: str) -> WorkflowError:
-		"""
-		Read a malformed workflow file.
-
-		:param content: Content of the file.
-		:returns:       The exception reading it raised.
-		"""
-		path = self._write("Broken.yml", content)
-		with self.assertRaises(WorkflowError) as context:
-			_ = Workflow.FromFile(path)
-
-		self.assertEqual(path, context.exception.Path)
-
-		return context.exception
-
-	def test_NotYAML(self) -> None:
-		error = self._error("on: push\njobs: [\n")
-
-		self.assertEqual("Workflow file is not a YAML document.", str(error))
-
-	def test_Empty(self) -> None:
-		self.assertEqual("Workflow file is empty.", str(self._error("")))
-
-	def test_NoJobs(self) -> None:
-		self.assertEqual("Workflow file has no 'jobs' key.", str(self._error("on: push\n")))
-
-	def test_NoOn(self) -> None:
-		self.assertEqual("Workflow file has no 'on' key.", str(self._error("jobs: {}\n")))
-
-	def test_UnknownNeed(self) -> None:
-		error = self._error("on: push\njobs:\n  A:\n    runs-on: x\n    needs: B\n")
-
-		self.assertEqual("Job 'A' needs job 'B', which the workflow doesn't have.", str(error))
-		self.assertEqual(3, error.Line)
-		self.assertEqual([f"In '{self._path / 'Broken.yml'}:3'.", "Jobs: A."], error.__notes__)
-
-	def test_Cycle(self) -> None:
-		error = self._error(dedent("""\
-			on: push
-			jobs:
-			  A: {runs-on: x, needs: C}
-			  B: {runs-on: x, needs: A}
-			  C: {runs-on: x, needs: B}
-		"""))
-
-		self.assertEqual("Jobs need each other in a cycle: A -> C -> B -> A.", str(error))
-
-	def test_RunsOnAndUses(self) -> None:
-		error = self._error("on: push\njobs:\n  A:\n    steps: []\n")
-
-		self.assertEqual("Job 'A' needs either 'runs-on' or 'uses'.", str(error))
-		self.assertEqual(3, error.Line)
-
-	def test_InputWithoutType(self) -> None:
-		error = self._error("on:\n  workflow_call:\n    inputs:\n      a:\n        required: true\njobs: {}\n")
-
-		self.assertEqual("Input 'a' has no 'type' key.", str(error))
-		self.assertEqual(4, error.Line)
-
-	def test_InputType(self) -> None:
-		error = self._error("on:\n  workflow_call:\n    inputs:\n      a:\n        type: text\njobs: {}\n")
-
-		self.assertEqual("Key 'type' of input 'a' is not an input type.", str(error))
-		self.assertIn("Allowed values: string, boolean, number.", error.__notes__)
-
-	def test_OutputWithoutValue(self) -> None:
-		error = self._error("on:\n  workflow_call:\n    outputs:\n      a:\n        description: x\njobs: {}\n")
-
-		self.assertEqual("Output 'a' has no 'value' key.", str(error))
-
-	def test_Required(self) -> None:
-		error = self._error("on:\n  workflow_call:\n    secrets:\n      a:\n        required: 'yes'\njobs: {}\n")
-
-		self.assertEqual("Key 'required' of 'a' is not a boolean.", str(error))
-
-	def test_PermissionScope(self) -> None:
-		error = self._error("on: push\npermissions:\n  everything: read\njobs: {}\n")
-
-		self.assertEqual("Key 'everything' of 'permissions' is not a permission scope.", str(error))
-		self.assertEqual(3, error.Line)
-		self.assertIn("contents", error.__notes__[-1])
-		self.assertNotIn("*", error.__notes__[-1])
-
-	def test_PermissionLevel(self) -> None:
-		error = self._error("on: push\npermissions:\n  contents: all\njobs: {}\n")
-
-		self.assertEqual("Permission 'contents' is not an access level.", str(error))
-		self.assertEqual(3, error.Line)
-
-	def test_PermissionShortForm(self) -> None:
-		error = self._error("on: push\npermissions: all\njobs: {}\n")
-
-		self.assertEqual("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", str(error))
-
-	def test_Uses(self) -> None:
-		error = self._error("on: push\njobs:\n  A:\n    uses: owner/repo/.github/workflows/A.yml\n")
-
-		self.assertEqual("Key 'uses' of job 'A' is not a reference.", str(error))
-		self.assertEqual(4, error.Line)
-
-	def test_Steps(self) -> None:
-		error = self._error("on: push\njobs:\n  A:\n    runs-on: x\n    steps: run\n")
-
-		self.assertEqual("Key 'steps' of job 'A' is not a list.", str(error))
-
-	def test_Job(self) -> None:
-		error = self._error("on: push\njobs:\n  A: x\n")
-
-		self.assertEqual("Job 'A' is not a mapping.", str(error))
-		self.assertEqual([f"In '{self._path / 'Broken.yml'}:3'.", "Got type 'str'."], error.__notes__)
-
-	def test_Path(self) -> None:
-		with self.assertRaises(ValueError):
-			_ = Workflow.FromFile(None)
-
-		with self.assertRaises(TypeError):
-			_ = Workflow.FromFile("Pipeline.yml")
-
-		with self.assertRaises(FileNotFoundError):
-			_ = Workflow.FromFile(self._path / "Missing.yml")
-
-
-class Construction(Testcase):
-	def test_Workflow(self) -> None:
-		workflow = Workflow(Path("Pipeline.yml"), "Pipeline", ("push", ))
-		job = Job("Build", 3, runsOn=("ubuntu-26.04", ), needs=("Prepare", ), parent=workflow)
-
-		self.assertIs(job, workflow.Jobs["Build"])
-		self.assertEqual((), job.Needs)
-		self.assertEqual("Pipeline.yml:3", job.Location)
-
-	def test_Job_Name(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			_ = Job(None, 1)
-
-		self.assertEqual("Parameter 'name' is None.", str(context.exception))
-
-		with self.assertRaises(TypeError):
-			_ = Job(1, 1)
-
-		with self.assertRaises(ValueError):
-			_ = Job("", 1)
-
-	def test_Input_Parent(self) -> None:
-		with self.assertRaises(TypeError) as context:
-			_ = Input("a", 1, InputType.String, parent=Job("Build", 1))
-
-		self.assertEqual("Parameter 'parent' is not of type 'Workflow'.", str(context.exception))
-
-	def test_Input_Type(self) -> None:
-		with self.assertRaises(ValueError):
-			_ = Input("a", 1, None)
-
-		with self.assertRaises(TypeError):
-			_ = Input("a", 1, "string")
-
-	def test_Permission(self) -> None:
-		with self.assertRaises(TypeError):
-			_ = Permission("contents", AccessLevel.Read, 1)
-
-		with self.assertRaises(TypeError):
-			_ = Permission(PermissionScope.Contents, "read", 1)
-
-		permission = Permission(PermissionScope.Contents, AccessLevel.Read, 1)
-		self.assertIs(PermissionScope.Contents, permission.Scope)
-		self.assertEqual("contents: read", str(permission))
-
-	def test_AccessLevel(self) -> None:
-		self.assertLess(AccessLevel.NoAccess.Rank(), AccessLevel.Read.Rank())
-		self.assertLess(AccessLevel.Read.Rank(), AccessLevel.Write.Rank())
