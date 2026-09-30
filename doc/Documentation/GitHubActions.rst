@@ -5,8 +5,8 @@ GitHub Actions Domain
 
 The Sphinx domain ``gha`` documents **GitHub Actions workflows** - above all reusable workflows, whose inputs, outputs
 and secrets are the interface a caller uses. What the workflow file states - an input's type, whether it is required,
-its default - is read from the file with :mod:`pyTooling.CI.GitHub.Workflow`, so a page doesn't copy it and can't drift
-from it. What the file can't say stays hand-written, as the content of a directive.
+its default - is read from the file with :mod:`pyTooling.CI.GitHub.WorkflowFile`, so a page doesn't copy it and can't
+drift from it. What the file can't say stays hand-written, as the content of a directive.
 
 The domain is part of the :ref:`extension <DOC/Sphinx>`, and reads the files with ``ruamel.yaml``, which the
 ``sphinx`` extra installs: ``pyTooling[sphinx]``.
@@ -199,7 +199,7 @@ A directive of another module reaches the domain with ``self.env.get_domain("gha
 :class:`~pyTooling.Documentation.Sphinx.GitHubActions.GitHubActionsDomain`:
 
 * :meth:`~pyTooling.Documentation.Sphinx.GitHubActions.GitHubActionsDomain.GetCurrentWorkflow` returns the model of
-  the document's current workflow, a :class:`pyTooling.CI.GitHub.Workflow.Workflow`;
+  the document's current workflow, a :class:`pyTooling.CI.GitHub.WorkflowFile.Workflow`;
 * :attr:`~pyTooling.Documentation.Sphinx.GitHubActions.GitHubActionsDomain.Resolver` reads the workflows a job calls,
   every file once;
 * :meth:`~pyTooling.Documentation.Sphinx.GitHubActions.GitHubActionsDomain.ResolveWorkflow` says where a workflow is
