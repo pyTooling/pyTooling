@@ -177,7 +177,7 @@ Pipeline Graph
         as ``:depth:`` says - the one an instance of a matrix calls as well;
       * the ``needs`` are the edges, without those a longer path implies.
 
-      The workflow is read with :mod:`pyTooling.CI.GitHub.Workflow`, converted into a :mod:`pyTooling.CI` model
+      The workflow is read with :mod:`pyTooling.CI.GitHub.WorkflowFile`, converted into a :mod:`pyTooling.CI` model
       and its :class:`~pyTooling.Graph.Graph` (:ref:`CI/Workflow/Pipeline`), and drawn by :mod:`sphinx.ext.graphviz`.
       Every workflow file drawn becomes a dependency of the page.
 
