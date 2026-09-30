@@ -32,5 +32,5 @@
 Unit tests for :mod:`pyTooling.CI.GitHub`.
 
 The model of a workflow run is tested in :mod:`tests.unit.CI.GitHub.Run`, the model of a workflow file in
-:mod:`tests.unit.CI.GitHub.Workflow`.
+:mod:`tests.unit.CI.GitHub.WorkflowFile`.
 """

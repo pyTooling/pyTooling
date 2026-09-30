@@ -3,13 +3,13 @@
 GitHub Actions Workflow Files
 #############################
 
-:mod:`pyTooling.CI.GitHub.Workflow` models a **GitHub Actions workflow file** - the YAML file below
+:mod:`pyTooling.CI.GitHub.WorkflowFile` models a **GitHub Actions workflow file** - the YAML file below
 :file:`.github/workflows`, not a run of it (that's :ref:`CI/GitHub`):
 
 .. code-block:: python
 
    from pathlib import Path
-   from pyTooling.CI.GitHub.Workflow import Workflow
+   from pyTooling.CI.GitHub.WorkflowFile import Workflow
 
    workflow = Workflow.FromFile(Path(".github/workflows/CompletePipeline.yml"))
 
@@ -40,21 +40,22 @@ The Tree
            +-- UsesReference    the action the step runs
 
 * A workflow is named by its file's stem - ``CompletePipeline`` - because a caller names it that way in ``uses``.
-  The ``name`` key is :attr:`~pyTooling.CI.GitHub.Workflow.Workflow.DisplayName`.
+  The ``name`` key is :attr:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.DisplayName`.
 * An input keeps the type its default is written with - ``'3.14'`` is a string, ``false`` a boolean - and a
   multi-line default keeps its line breaks.
-* A job either runs steps on :attr:`~pyTooling.CI.GitHub.Workflow.Job.RunsOn`, or calls the reusable workflow in
-  :attr:`~pyTooling.CI.GitHub.Workflow.Job.Uses`. :class:`~pyTooling.CI.GitHub.Workflow.UsesReference` takes a reference
-  apart into :attr:`~pyTooling.CI.GitHub.Workflow.UsesReference.Repository`,
-  :attr:`~pyTooling.CI.GitHub.Workflow.UsesReference.Path` and :attr:`~pyTooling.CI.GitHub.Workflow.UsesReference.Ref`:
+* A job either runs steps on :attr:`~pyTooling.CI.GitHub.WorkflowFile.Job.RunsOn`, or calls the reusable workflow in
+  :attr:`~pyTooling.CI.GitHub.WorkflowFile.Job.Uses`. :class:`~pyTooling.CI.GitHub.WorkflowFile.UsesReference` takes a
+  reference apart into :attr:`~pyTooling.CI.GitHub.WorkflowFile.UsesReference.Repository`,
+  :attr:`~pyTooling.CI.GitHub.WorkflowFile.UsesReference.Path` and
+  :attr:`~pyTooling.CI.GitHub.WorkflowFile.UsesReference.Ref`:
 
   .. code-block:: text
 
      pyTooling/Actions/.github/workflows/Package.yml@r8   repository, path and ref
      ./.github/workflows/Package.yml                       a file of the same repository and commit
 
-* :attr:`Matrix.IsDynamic <pyTooling.CI.GitHub.Workflow.Matrix.IsDynamic>` says whether a matrix' instances are known at
-  run time only, as for ``include: ${{ fromJson(inputs.jobs) }}``.
+* :attr:`Matrix.IsDynamic <pyTooling.CI.GitHub.WorkflowFile.Matrix.IsDynamic>` says whether a matrix' instances are
+  known at run time only, as for ``include: ${{ fromJson(inputs.jobs) }}``.
 * Expressions - ``if``, ``runs-on: ${{ matrix.runs-on }}``, an output's ``value`` - are kept as written and are
   not evaluated.
 
@@ -72,9 +73,9 @@ Every element knows the line it starts at, so a message can say where a finding 
    print(f"{job.Location}: job '{job.Name}' has a condition")   # CompletePipeline.yml:532: ...
 
 A file that is not a well-formed workflow - a job needing a job the workflow doesn't have, jobs needing each other in a
-cycle, an input without ``type`` - raises :exc:`~pyTooling.CI.GitHub.Workflow.WorkflowError`. It carries the file and
-the line in :attr:`~pyTooling.CI.GitHub.Workflow.WorkflowError.Path` and
-:attr:`~pyTooling.CI.GitHub.Workflow.WorkflowError.Line`, and names both in a note.
+cycle, an input without ``type`` - raises :exc:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowError`. It carries the file
+and the line in :attr:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowError.Path` and
+:attr:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowError.Line`, and names both in a note.
 
 
 .. _CI/Workflow/Graph:
@@ -82,10 +83,10 @@ the line in :attr:`~pyTooling.CI.GitHub.Workflow.WorkflowError.Path` and
 Dependencies Between Jobs
 *************************
 
-:attr:`Job.Needs <pyTooling.CI.GitHub.Workflow.Job.Needs>` resolves the names of ``needs`` to the jobs. The pipeline
-they form is built by :meth:`~pyTooling.CI.GitHub.Workflow.Workflow.ToPipeline` (see :ref:`CI/Workflow/Pipeline`) and
-converted into a :class:`~pyTooling.Graph.Graph` by :meth:`~pyTooling.CI.Workflow.ToGraph`, whose edges read *needs*,
-and which by default drops a dependency a longer path already implies:
+:attr:`Job.Needs <pyTooling.CI.GitHub.WorkflowFile.Job.Needs>` resolves the names of ``needs`` to the jobs. The pipeline
+they form is built by :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` (see :ref:`CI/Workflow/Pipeline`)
+and converted into a :class:`~pyTooling.Graph.Graph` by :meth:`~pyTooling.CI.Workflow.ToGraph`, whose edges read
+*needs*, and which by default drops a dependency a longer path already implies:
 
 .. code-block:: text
 
@@ -100,12 +101,12 @@ Called Workflows
 ****************
 
 A job calling a reusable workflow names it by repository, path and ref.
-:class:`~pyTooling.CI.GitHub.Workflow.WorkflowResolver` reads the called file from a local directory, mapped per
+:class:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowResolver` reads the called file from a local directory, mapped per
 repository, whatever the ref:
 
 .. code-block:: python
 
-   from pyTooling.CI.GitHub.Workflow import WorkflowResolver
+   from pyTooling.CI.GitHub.WorkflowFile import WorkflowResolver
 
    resolver = WorkflowResolver({"pyTooling/Actions": Path(".github/workflows")})
    pipeline = resolver.Load(Path(".github/workflows/CompletePipeline.yml"))
@@ -116,7 +117,7 @@ repository, whatever the ref:
 
 * A local reference - ``./.github/workflows/Package.yml`` - is read from the directory of the calling workflow.
 * A repository without a directory answers ``None``: its files are not fetched.
-* Every file is read once; resolving it again returns the same :class:`~pyTooling.CI.GitHub.Workflow.Workflow`.
+* Every file is read once; resolving it again returns the same :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`.
 
 
 .. _CI/Workflow/Permissions:
@@ -124,8 +125,8 @@ repository, whatever the ref:
 Permissions
 ***********
 
-A called workflow can keep or reduce the permissions of the ``GITHUB_TOKEN``, never raise them, so what its jobs
-declare is what a caller has to grant. :meth:`~pyTooling.CI.GitHub.Workflow.Workflow.CollectPermissions` collects the
+A called workflow can keep or reduce the permissions of the ``GITHUB_TOKEN``, never raise them, so what its jobs declare
+is what a caller has to grant. :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.CollectPermissions` collects the
 permissions a workflow and its jobs declare, and - given a resolver - those of the workflows they call:
 
 .. code-block:: python
@@ -145,7 +146,7 @@ where that access is asked for.
 Building a Pipeline
 *******************
 
-:meth:`~pyTooling.CI.GitHub.Workflow.Workflow.ToPipeline` builds the pipeline a workflow defines as a
+:meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` builds the pipeline a workflow defines as a
 :mod:`pyTooling.CI` model (:ref:`CI/Pipeline`), expanding the workflows its jobs call as far as a resolver
 reads them and ``depth`` allows:
 
@@ -165,16 +166,16 @@ reads them and ``depth`` allows:
    * - Job in the workflow file
      - Element of the pipeline
    * - with ``steps``
-     - :class:`~pyTooling.CI.GitHub.Workflow.DefinedJob`, its steps as
-       :class:`~pyTooling.CI.GitHub.Workflow.DefinedStep`
+     - :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedJob`, its steps as
+       :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedStep`
    * - with ``uses``
-     - :class:`~pyTooling.CI.GitHub.Workflow.DefinedWorkflow`, the ``uses`` text as
+     - :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedWorkflow`, the ``uses`` text as
        :attr:`~pyTooling.CI.Workflow.Reference`, holding the elements of the called workflow - or none, if
        the call isn't expanded
    * - with ``strategy.matrix``
-     - :class:`~pyTooling.CI.GitHub.Workflow.DefinedMatrix`, holding a
-       :class:`~pyTooling.CI.GitHub.Workflow.DefinedMatrixJob` - or a
-       :class:`~pyTooling.CI.GitHub.Workflow.DefinedMatrixWorkflow` for a job with ``uses`` - per combination
+     - :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrix`, holding a
+       :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrixJob` - or a
+       :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrixWorkflow` for a job with ``uses`` - per combination
    * - ``needs``
      - :attr:`~pyTooling.CI.DependencyMixin.Needs` between the elements
    * - ``if``
@@ -182,17 +183,18 @@ reads them and ``depth`` allows:
 
 * An element is named by its job's key, as the file names it in ``needs``. A step is named as GitHub displays it:
   by its ``name``, or ``Run`` followed by its action or the first line of its script.
-* Every element links to what it was built from: :attr:`~pyTooling.CI.GitHub.Workflow.DefinitionMixin.Definition` is the
-  :class:`~pyTooling.CI.GitHub.Workflow.Job` - with its line, its ``uses`` reference and its permissions - or the
-  :class:`~pyTooling.CI.GitHub.Workflow.Step`, and for the pipeline the :class:`~pyTooling.CI.GitHub.Workflow.Workflow`.
-  A called workflow's :attr:`~pyTooling.CI.GitHub.Workflow.CallMixin.CalledWorkflow` is the file it was expanded from.
+* Every element links to what it was built from: :attr:`~pyTooling.CI.GitHub.WorkflowFile.DefinitionMixin.Definition` is
+  the :class:`~pyTooling.CI.GitHub.WorkflowFile.Job` - with its line, its ``uses`` reference and its permissions - or
+  the :class:`~pyTooling.CI.GitHub.WorkflowFile.Step`, and for the pipeline the
+  :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`. A called workflow's
+  :attr:`~pyTooling.CI.GitHub.WorkflowFile.CallMixin.CalledWorkflow` is the file it was expanded from.
 * A matrix yields its combinations as GitHub computes them from its dimensions, ``exclude`` and ``include`` -
-  :attr:`Matrix.Combinations <pyTooling.CI.GitHub.Workflow.Matrix.Combinations>` -, and an instance is named by its
+  :attr:`Matrix.Combinations <pyTooling.CI.GitHub.WorkflowFile.Matrix.Combinations>` -, and an instance is named by its
   values: ``Test (ubuntu, 3.14)``. Its :attr:`~pyTooling.CI.MatrixInstanceMixin.Dimensions` are the combination, the
   values formatted as GitHub prints them: ``{"os": "ubuntu", "python": "3.14"}``. A **dynamic** matrix -
-  ``include: ${{ fromJson(...) }}`` - is a :class:`~pyTooling.CI.GitHub.Workflow.DefinedMatrix` without instances, since
-  its combinations are known at run time only.
-* A workflow calling itself, directly or through others, raises :exc:`~pyTooling.CI.GitHub.Workflow.WorkflowError`.
+  ``include: ${{ fromJson(...) }}`` - is a :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrix` without instances,
+  since its combinations are known at run time only.
+* A workflow calling itself, directly or through others, raises :exc:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowError`.
 
 
 .. _CI/Workflow/Run:
@@ -201,7 +203,7 @@ Linking a Run
 *************
 
 A run read from the GitHub REST API (:ref:`CI/GitHub`) has no ``needs``: the API doesn't report them.
-:meth:`~pyTooling.CI.GitHub.Workflow.Workflow.ApplyNeeds` gives a run the dependencies its workflow file - named by
+:meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ApplyNeeds` gives a run the dependencies its workflow file - named by
 :attr:`Pipeline.Path <pyTooling.CI.GitHub.Pipeline.Path>` - declares:
 
 .. code-block:: python

@@ -29,21 +29,21 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.CI.GitHub.Workflow`.
+Unit tests for :mod:`pyTooling.CI.GitHub.WorkflowFile`.
 """
-from pathlib                      import Path
-from tempfile                     import TemporaryDirectory
-from textwrap                     import dedent, indent
-from typing                       import Any
+from pathlib                          import Path
+from tempfile                         import TemporaryDirectory
+from textwrap                         import dedent, indent
+from typing                           import Any
 
-from pyTooling.CI                 import Matrix as CIMatrix, NeedDependencyCycleError, Pipeline as CIPipeline
-from pyTooling.CI.GitHub          import Pipeline as GitHubPipeline
-from pyTooling.CI.GitHub.Workflow import AccessLevel, InputType, Workflow, WorkflowError, WorkflowResolver
-from pyTooling.CI.GitHub.Workflow import Input, Job, Matrix, Permission, UsesReference
-from pyTooling.CI.GitHub.Workflow import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow
-from pyTooling.CI.GitHub.Workflow import DefinedPipeline, DefinedWorkflow
-from pyTooling.Graph              import Graph
-from pyTooling.Testing            import Testcase
+from pyTooling.CI                     import Matrix as CIMatrix, NeedDependencyCycleError, Pipeline as CIPipeline
+from pyTooling.CI.GitHub              import Pipeline as GitHubPipeline
+from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, InputType, Workflow, WorkflowError, WorkflowResolver
+from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Permission, UsesReference
+from pyTooling.CI.GitHub.WorkflowFile import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow
+from pyTooling.CI.GitHub.WorkflowFile import DefinedPipeline, DefinedWorkflow
+from pyTooling.Graph                  import Graph
+from pyTooling.Testing                import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -120,19 +120,19 @@ Version 10.x (2026)
        :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` names a dimension by its position,
        ``{"0": "ubuntu-26.04", "1": "3.14"}``, because a job's name carries no dimension names.
 
-   * :mod:`pyTooling.CI.GitHub.Workflow` reads a GitHub Actions workflow **file** into a tree of
-     :class:`~pyTooling.CI.GitHub.Workflow.Workflow`, :class:`~pyTooling.CI.GitHub.Workflow.Input`,
-     :class:`~pyTooling.CI.GitHub.Workflow.Job`, :class:`~pyTooling.CI.GitHub.Workflow.Step` and further objects, each
-     knowing the line it is written at. :class:`~pyTooling.CI.GitHub.Workflow.WorkflowResolver` reads the reusable
-     workflows a job calls from a local directory, and a workflow reports the permissions it and the workflows it calls
-     ask for. It needs the ``yaml`` extra.
+   * :mod:`pyTooling.CI.GitHub.WorkflowFile` reads a GitHub Actions workflow **file** into a tree of
+     :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`, :class:`~pyTooling.CI.GitHub.WorkflowFile.Input`,
+     :class:`~pyTooling.CI.GitHub.WorkflowFile.Job`, :class:`~pyTooling.CI.GitHub.WorkflowFile.Step` and further
+     objects, each knowing the line it is written at. :class:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowResolver` reads
+     the reusable workflows a job calls from a local directory, and a workflow reports the permissions it and the
+     workflows it calls ask for. It needs the ``yaml`` extra.
 
-     * :meth:`~pyTooling.CI.GitHub.Workflow.Workflow.ToPipeline` builds the pipeline a workflow defines as a
+     * :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` builds the pipeline a workflow defines as a
        :mod:`pyTooling.CI` model - jobs, called workflows expanded through the resolver, and a matrix' instances as
-       :attr:`~pyTooling.CI.GitHub.Workflow.Matrix.Combinations` computes them -, whose elements link back to their
-       :attr:`~pyTooling.CI.GitHub.Workflow.DefinitionMixin.Definition`, and which
+       :attr:`~pyTooling.CI.GitHub.WorkflowFile.Matrix.Combinations` computes them -, whose elements link back to their
+       :attr:`~pyTooling.CI.GitHub.WorkflowFile.DefinitionMixin.Definition`, and which
        :meth:`~pyTooling.CI.Workflow.ToGraph` converts into a graph.
-     * :meth:`~pyTooling.CI.GitHub.Workflow.Workflow.ApplyNeeds` gives a run read by :mod:`pyTooling.CI.GitHub` the
+     * :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ApplyNeeds` gives a run read by :mod:`pyTooling.CI.GitHub` the
        dependencies its workflow file declares, and returns the qualified names of the jobs it didn't find in the
        run. An instance of a static matrix gets the dimensions' names of its combination instead of the positions
        the run names them by.

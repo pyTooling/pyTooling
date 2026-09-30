@@ -92,7 +92,7 @@ ValueT = Union[str, bool, int, float, None, list["ValueT"], dict[str, "ValueT"]]
 @export
 class WorkflowError(CIError):
 	"""
-	Base-exception of all exceptions raised by :mod:`pyTooling.CI.GitHub.Workflow`.
+	Base-exception of all exceptions raised by :mod:`pyTooling.CI.GitHub.WorkflowFile`.
 
 	The exception is raised for a workflow file that is not a well-formed workflow. It carries the file and the line
 	the problem was found at in :attr:`Path` and :attr:`Line`, and names both in a note.
