@@ -38,12 +38,14 @@ from typing                           import Any
 
 from pyTooling.CI                     import Matrix as CIMatrix, NeedDependencyCycleError, Pipeline as CIPipeline
 from pyTooling.CI.GitHub              import Pipeline as GitHubPipeline
-from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, InputType, Workflow, WorkflowError, WorkflowResolver
+from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, WorkflowResolver
 from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Permission, PermissionScope, UsesReference
 from pyTooling.CI.GitHub.WorkflowFile import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow
 from pyTooling.CI.GitHub.WorkflowFile import DefinedPipeline, DefinedWorkflow
 from pyTooling.Graph                  import Graph
 from pyTooling.Testing                import Testcase
+
+from ruamel.yaml                      import YAML
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -214,6 +216,70 @@ class Fixture(Testcase):
 		path.write_text(content, encoding="utf-8")
 
 		return path
+
+
+class ToPython(Testcase):
+	"""The round-trip loader's own types become plain Python types."""
+
+	def test_Types(self) -> None:
+		document = YAML(typ="rt").load(dedent("""\
+			mapping: {a: 1}
+			list:    [1, 2]
+			anchor:  &flag false
+			alias:   *flag
+			hex:     0x1F
+			float:   1.50
+			block: |
+			  one
+			  two
+			plain:   text
+			none:    null
+		"""))
+		values = {key: Base._ToPython(value) for key, value in document.items()}
+
+		expected = {
+			"mapping": (dict, {"a": 1}), "list": (list, [1, 2]), "anchor": (bool, False), "alias": (bool, False),
+			"hex": (int, 31), "float": (float, 1.5), "block": (str, "one\ntwo\n"), "plain": (str, "text"),
+			"none": (type(None), None)
+		}
+		for key, (valueType, value) in expected.items():
+			with self.subTest(key=key):
+				self.assertIs(valueType, type(values[key]))
+				self.assertEqual(value, values[key])
+
+
+class Parsers(Testcase):
+	"""A class reads its own part of a workflow file."""
+
+	def test_Permission(self) -> None:
+		mapping = YAML(typ="rt").load("contents: read\nid-token: write\n")
+		permissions = Permission._FromYAML(mapping, Path("A.yml"), 1, None)
+
+		self.assertEqual([PermissionScope.Contents, PermissionScope.IDToken], list(permissions))
+		self.assertIs(AccessLevel.Write, permissions[PermissionScope.IDToken].Level)
+		self.assertEqual(2, permissions[PermissionScope.IDToken].Line)
+
+	def test_Permission_All(self) -> None:
+		permissions = Permission._FromYAML("write-all", Path("A.yml"), 7, None)
+
+		self.assertEqual("write-all", str(permissions[PermissionScope.All]))
+		self.assertEqual(7, permissions[PermissionScope.All].Line)
+
+	def test_Input(self) -> None:
+		declaration = YAML(typ="rt").load("type: number\ndefault: 0x10\nrequired: true\n")
+		parameter = Input._FromYAML("count", declaration, Path("A.yml"), 4, None)
+
+		self.assertIs(InputType.Number, parameter.Type)
+		self.assertIs(int, type(parameter.Default))
+		self.assertEqual(16, parameter.Default)
+		self.assertTrue(parameter.Required)
+
+	def test_Input_NotAMapping(self) -> None:
+		with self.assertRaises(WorkflowError) as context:
+			_ = Input._FromYAML("count", "number", Path("A.yml"), 4, None)
+
+		self.assertEqual("Declaration of 'count' is not a mapping.", str(context.exception))
+		self.assertEqual(4, context.exception.Line)
 
 
 class References(Testcase):

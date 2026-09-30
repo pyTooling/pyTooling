@@ -76,9 +76,12 @@ from pyTooling.Exceptions  import MissingDependencyError
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 
 try:
-	from ruamel.yaml            import YAML, YAMLError
-	from ruamel.yaml.comments   import CommentedMap, CommentedSeq
-	from ruamel.yaml.scalarbool import ScalarBoolean
+	from ruamel.yaml              import YAML, YAMLError
+	from ruamel.yaml.comments     import CommentedMap, CommentedSeq
+	from ruamel.yaml.scalarbool   import ScalarBoolean
+	from ruamel.yaml.scalarfloat  import ScalarFloat
+	from ruamel.yaml.scalarint    import ScalarInt
+	from ruamel.yaml.scalarstring import ScalarString
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="ruamel.yaml", extra="github") from ex
 
@@ -193,119 +196,6 @@ class InputType(StringEnum):
 	Number =  "number"   #: A number.
 
 
-def _toPython(value: Any) -> ValueT:
-	"""
-	Convert a value read by ``ruamel.yaml`` into plain Python types.
-
-	The round-trip loader returns its own types - :class:`~ruamel.yaml.comments.CommentedMap`, scalar strings keeping
-	their quoting style, and booleans derived from :class:`int`. A consumer compares and prints plain values.
-
-	:param value: The value read from the workflow file.
-	:returns:     The value as :class:`dict`, :class:`list`, :class:`str`, :class:`bool`, :class:`int`,
-	              :class:`float` or ``None``.
-	"""
-	if isinstance(value, dict):
-		return {str(key): _toPython(item) for key, item in value.items()}
-	elif isinstance(value, list):
-		return [_toPython(item) for item in value]
-	elif isinstance(value, (bool, ScalarBoolean)):
-		return bool(value)
-	elif isinstance(value, str):
-		return str(value)
-	elif isinstance(value, int):
-		return int(value)
-	elif isinstance(value, float):
-		return float(value)
-
-	return value
-
-
-def _keyLine(mapping: CommentedMap, key: str) -> int:
-	"""
-	Return the line a key of a mapping is written at.
-
-	:param mapping: The mapping read from the workflow file.
-	:param key:     The key.
-	:returns:       The line, starting at 1.
-	"""
-	return mapping.lc.key(key)[0] + 1
-
-
-def _expectMapping(value: Any, what: str, path: Path, line: int) -> CommentedMap:
-	"""
-	Check that a value read from the workflow file is a mapping.
-
-	:param value:          The value read from the workflow file.
-	:param what:           The name of the value, for the exception's message.
-	:param path:           Path to the workflow file.
-	:param line:           Line the value is written at, starting at 1.
-	:returns:              The value.
-	:raises WorkflowError: If the value is not a mapping. |br|
-	                       The note reports the type that was read.
-	"""
-	if not isinstance(value, CommentedMap):
-		ex = WorkflowError(f"{what} is not a mapping.", path, line)
-		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
-		raise ex
-
-	return value
-
-
-def _parsePermissions(
-	value:  Any,
-	path:   Path,
-	line:   int,
-	parent: Union[Workflow, Job]
-) -> dict[PermissionScope, Permission]:
-	"""
-	Read a ``permissions`` key into permissions attached to a workflow or job.
-
-	:param value:          The value of the ``permissions`` key.
-	:param path:           Path to the workflow file.
-	:param line:           Line the key is written at, starting at 1.
-	:param parent:         Reference to the workflow or job declaring the permissions.
-	:returns:              The permissions, by scope.
-	:raises WorkflowError: If the value is neither ``read-all``, ``write-all`` nor a mapping.
-	:raises WorkflowError: If a key is not a permission scope. |br|
-	                       The note lists the allowed values.
-	:raises WorkflowError: If a scope's value is not an access level. |br|
-	                       The note lists the allowed values.
-	"""
-	if isinstance(value, str):
-		if value == "read-all":
-			return {PermissionScope.All: Permission(PermissionScope.All, AccessLevel.Read, line, parent=parent)}
-		elif value == "write-all":
-			return {PermissionScope.All: Permission(PermissionScope.All, AccessLevel.Write, line, parent=parent)}
-
-		ex = WorkflowError("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", path, line)
-		ex.add_note(f"Got '{value}'.")
-		raise ex
-
-	mapping = _expectMapping(value, "Key 'permissions'", path, line)
-	permissions = {}
-	for scope, level in mapping.items():
-		scopeLine = _keyLine(mapping, scope)
-		try:
-			permissionScope = PermissionScope(scope)
-		except ValueError as cause:
-			ex = WorkflowError(f"Key '{scope}' of 'permissions' is not a permission scope.", path, scopeLine)
-			scopes = (member.value for member in PermissionScope if member is not PermissionScope.All)
-			ex.add_note(f"Allowed values: {', '.join(scopes)}.")
-			raise ex from cause
-
-		try:
-			accessLevel = AccessLevel(level)
-		except ValueError as cause:
-			ex = WorkflowError(f"Permission '{scope}' is not an access level.", path, scopeLine)
-			ex.add_note(f"Got '{level}'.")
-			ex.add_note(f"Allowed values: {', '.join(member.value for member in AccessLevel)}.")
-			raise ex from cause
-
-		permissions[permissionScope] = Permission(permissionScope, accessLevel, scopeLine, parent=parent)
-
-	return permissions
-
-
 @export
 @abstractclass
 class Base(metaclass=ExtendedType, slots=True):
@@ -389,6 +279,45 @@ class Base(metaclass=ExtendedType, slots=True):
 			return f"line {self._line}"
 
 		return f"{self._workflow._path.name}:{self._line}"
+
+	@staticmethod
+	def _KeyLine(mapping: CommentedMap, key: str) -> int:
+		"""
+		Return the line a key of a mapping is written at.
+
+		:param mapping: The mapping read from the file.
+		:param key:     The key.
+		:returns:       The line, starting at 1.
+		"""
+		return mapping.lc.key(key)[0] + 1
+
+	@staticmethod
+	def _ToPython(value: Any) -> ValueT:
+		"""
+		Convert a value read by ``ruamel.yaml`` into plain Python types.
+
+		The round-trip loader returns its own types for mappings, lists, block scalars, anchored booleans, and numbers
+		written in another notation than a plain decimal. They derive from the Python types, but keep what they were
+		read with - an anchored boolean even prints as ``0`` or ``1``. Every other value is a Python type already.
+
+		:param value: The value read from the file.
+		:returns:     The value as :class:`dict`, :class:`list`, :class:`str`, :class:`bool`, :class:`int`,
+		              :class:`float` or ``None``.
+		"""
+		if isinstance(value, CommentedMap):
+			return {str(key): Base._ToPython(item) for key, item in value.items()}
+		elif isinstance(value, CommentedSeq):
+			return [Base._ToPython(item) for item in value]
+		elif isinstance(value, ScalarBoolean):
+			return bool(value)
+		elif isinstance(value, ScalarInt):
+			return int(value)
+		elif isinstance(value, ScalarFloat):
+			return float(value)
+		elif isinstance(value, ScalarString):
+			return str(value)
+
+		return value
 
 
 @export
@@ -560,6 +489,24 @@ class UsesReference(Base):
 		"""
 		return self._text
 
+	@classmethod
+	def _FromYAML(cls, mapping: CommentedMap, what: str, path: Path, parent: Union[Job, Step]) -> Self:
+		"""
+		Read the ``uses`` key of a job or step.
+
+		:param mapping:        The mapping of the job or step, which has a ``uses`` key.
+		:param what:           The job or step, for the exception's message, as ``job 'Build'``.
+		:param path:           Path to the workflow file.
+		:param parent:         Reference to the job or step.
+		:returns:              The reference.
+		:raises WorkflowError: If the value is not a reference.
+		"""
+		line = Base._KeyLine(mapping, "uses")
+		try:
+			return cls(str(mapping["uses"]), line, parent=parent)
+		except ValueError as cause:
+			raise WorkflowError(f"Key 'uses' of {what} is not a reference.", path, line) from cause
+
 
 @export
 class Permission(Base):
@@ -646,6 +593,54 @@ class Permission(Base):
 			return f"{self._level.value}-all"
 
 		return f"{self._scope}: {self._level.value}"
+
+	@classmethod
+	def _FromYAML(cls, value: Any, path: Path, line: int, parent: Union[Workflow, Job]) -> dict[PermissionScope, Self]:
+		"""
+		Read the value of a ``permissions`` key into the permissions a workflow or job declares.
+
+		:param value:          The value of the ``permissions`` key.
+		:param path:           Path to the workflow file.
+		:param line:           Line the key is written at, starting at 1.
+		:param parent:         Reference to the workflow or job declaring the permissions.
+		:returns:              The permissions, by scope.
+		:raises WorkflowError: If the value is neither ``read-all``, ``write-all`` nor a mapping.
+		:raises WorkflowError: If a key is not a permission scope. |br|
+		                       The note lists the allowed values.
+		:raises WorkflowError: If a scope's value is not an access level. |br|
+		                       The note lists the allowed values.
+		"""
+		if value == "read-all":
+			return {PermissionScope.All: cls(PermissionScope.All, AccessLevel.Read, line, parent=parent)}
+		elif value == "write-all":
+			return {PermissionScope.All: cls(PermissionScope.All, AccessLevel.Write, line, parent=parent)}
+		elif not isinstance(value, CommentedMap):
+			ex = WorkflowError("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", path, line)
+			ex.add_note(f"Got '{value}'." if isinstance(value, str) else f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		permissions = {}
+		for scope, level in value.items():
+			scopeLine = Base._KeyLine(value, scope)
+			try:
+				permissionScope = PermissionScope(scope)
+			except ValueError as cause:
+				ex = WorkflowError(f"Key '{scope}' of 'permissions' is not a permission scope.", path, scopeLine)
+				scopes = (member.value for member in PermissionScope if member is not PermissionScope.All)
+				ex.add_note(f"Allowed values: {', '.join(scopes)}.")
+				raise ex from cause
+
+			try:
+				accessLevel = AccessLevel(level)
+			except ValueError as cause:
+				ex = WorkflowError(f"Permission '{scope}' is not an access level.", path, scopeLine)
+				ex.add_note(f"Got '{level}'.")
+				ex.add_note(f"Allowed values: {', '.join(member.value for member in AccessLevel)}.")
+				raise ex from cause
+
+			permissions[permissionScope] = cls(permissionScope, accessLevel, scopeLine, parent=parent)
+
+		return permissions
 
 
 @export
@@ -816,6 +811,54 @@ class Input(Parameter):
 		"""
 		return self._default
 
+	@classmethod
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int, parent: Workflow) -> Self:
+		"""
+		Read an input's declaration below ``on.workflow_call.inputs``.
+
+		:param name:           Name of the input.
+		:param declaration:    The declaration.
+		:param path:           Path to the workflow file.
+		:param line:           Line the input's name is written at, starting at 1.
+		:param parent:         Reference to the workflow declaring the input.
+		:returns:              The input.
+		:raises WorkflowError: If the declaration is not a mapping.
+		:raises WorkflowError: If key ``required`` is not a boolean.
+		:raises WorkflowError: If the declaration has no ``type`` key.
+		:raises WorkflowError: If key ``type`` is not an input type. |br|
+		                       The note lists the allowed values.
+		"""
+		if declaration is None:
+			declaration = CommentedMap()
+		elif not isinstance(declaration, CommentedMap):
+			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
+			raise ex
+
+		description = declaration.get("description", None)
+		required = Base._ToPython(declaration.get("required", False))
+		if not isinstance(required, bool):
+			ex = WorkflowError(f"Key 'required' of '{name}' is not a boolean.", path, line)
+			ex.add_note(f"Got '{required}'.")
+			raise ex
+
+		if (inputType := declaration.get("type", None)) is None:
+			raise WorkflowError(f"Input '{name}' has no 'type' key.", path, line)
+
+		try:
+			inputType = InputType.Parse(str(inputType))
+		except ValueError as cause:
+			ex = WorkflowError(f"Key 'type' of input '{name}' is not an input type.", path, line)
+			ex.add_note(f"Got '{inputType}'.")
+			ex.add_note(f"Allowed values: {', '.join(member.value for member in InputType)}.")
+			raise ex from cause
+
+		default = Base._ToPython(declaration.get("default", None))
+
+		return cls(
+			name, line, inputType, required, default, None if description is None else str(description), parent=parent
+		)
+
 
 @export
 class Output(Parameter):
@@ -866,6 +909,34 @@ class Output(Parameter):
 		"""
 		return self._value
 
+	@classmethod
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int, parent: Workflow) -> Self:
+		"""
+		Read an output's declaration below ``on.workflow_call.outputs``.
+
+		:param name:           Name of the output.
+		:param declaration:    The declaration.
+		:param path:           Path to the workflow file.
+		:param line:           Line the output's name is written at, starting at 1.
+		:param parent:         Reference to the workflow declaring the output.
+		:returns:              The output.
+		:raises WorkflowError: If the declaration is not a mapping.
+		:raises WorkflowError: If the declaration has no ``value`` key.
+		"""
+		if declaration is None:
+			declaration = CommentedMap()
+		elif not isinstance(declaration, CommentedMap):
+			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
+			raise ex
+
+		description = declaration.get("description", None)
+
+		if (value := declaration.get("value", None)) is None:
+			raise WorkflowError(f"Output '{name}' has no 'value' key.", path, line)
+
+		return cls(name, line, str(value), None if description is None else str(description), parent=parent)
+
 
 @export
 class Secret(Parameter):
@@ -912,6 +983,36 @@ class Secret(Parameter):
 		:returns: ``True``, if the secret is required.
 		"""
 		return self._required
+
+	@classmethod
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int, parent: Workflow) -> Self:
+		"""
+		Read a secret's declaration below ``on.workflow_call.secrets``.
+
+		:param name:           Name of the secret.
+		:param declaration:    The declaration.
+		:param path:           Path to the workflow file.
+		:param line:           Line the secret's name is written at, starting at 1.
+		:param parent:         Reference to the workflow declaring the secret.
+		:returns:              The secret.
+		:raises WorkflowError: If the declaration is not a mapping.
+		:raises WorkflowError: If key ``required`` is not a boolean.
+		"""
+		if declaration is None:
+			declaration = CommentedMap()
+		elif not isinstance(declaration, CommentedMap):
+			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
+			raise ex
+
+		description = declaration.get("description", None)
+		required = Base._ToPython(declaration.get("required", False))
+		if not isinstance(required, bool):
+			ex = WorkflowError(f"Key 'required' of '{name}' is not a boolean.", path, line)
+			ex.add_note(f"Got '{required}'.")
+			raise ex
+
+		return cls(name, line, required, None if description is None else str(description), parent=parent)
 
 
 @export
@@ -1090,6 +1191,33 @@ class Matrix(Base):
 			for name, value in combination.items()
 		}
 
+	@classmethod
+	def _FromYAML(cls, value: Any, path: Path, line: int, parent: Job) -> Self:
+		"""
+		Read the value of a job's ``strategy.matrix`` key.
+
+		:param value:          The value of the ``matrix`` key: a mapping, or an expression.
+		:param path:           Path to the workflow file.
+		:param line:           Line the key is written at, starting at 1.
+		:param parent:         Reference to the job declaring the matrix.
+		:returns:              The matrix.
+		:raises WorkflowError: If the value is neither a mapping nor an expression.
+		"""
+		if isinstance(value, str):
+			return cls(line, expression=str(value), parent=parent)
+		elif not isinstance(value, CommentedMap):
+			ex = WorkflowError(f"Key 'strategy.matrix' of job '{parent._name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		return cls(
+			line,
+			dimensions={key: Base._ToPython(item) for key, item in value.items() if key not in ("include", "exclude")},
+			include=Base._ToPython(value.get("include", None)),
+			exclude=Base._ToPython(value.get("exclude", None)),
+			parent=parent
+		)
+
 
 @export
 class Step(Base):
@@ -1194,6 +1322,42 @@ class Step(Base):
 		:returns: The script, or ``None`` for a step running an action.
 		"""
 		return self._run
+
+	@classmethod
+	def _FromYAML(cls, mapping: Any, position: int, path: Path, line: int, parent: Job) -> Self:
+		"""
+		Read a step from the ``steps`` list of a job.
+
+		:param mapping:        The step's mapping.
+		:param position:       Position of the step in its job, starting at 0.
+		:param path:           Path to the workflow file.
+		:param line:           Line the step starts at, starting at 1.
+		:param parent:         Reference to the job containing the step.
+		:returns:              The step.
+		:raises WorkflowError: If the step is not a mapping.
+		:raises WorkflowError: If the step's ``uses`` is not a reference.
+		"""
+		if not isinstance(mapping, CommentedMap):
+			ex = WorkflowError(f"Step {position + 1} of job '{parent._name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(mapping)}'.")
+			raise ex
+
+		name =       mapping.get("name", None)
+		identifier = mapping.get("id", None)
+		condition =  mapping.get("if", None)
+		run =        mapping.get("run", None)
+		step = cls(
+			line,
+			name=None if name is None else str(name),
+			identifier=None if identifier is None else str(identifier),
+			condition=None if condition is None else str(condition),
+			run=None if run is None else str(run),
+			parent=parent
+		)
+		if "uses" in mapping:
+			step._uses = UsesReference._FromYAML(mapping, f"step {position + 1} of job '{parent._name}'", path, step)
+
+		return step
 
 
 @export
@@ -1485,7 +1649,7 @@ class Job(Base):
 			needs = (needs, )
 		elif not isinstance(needs, (list, tuple)):
 			ex = WorkflowError(
-				f"Key 'needs' of job '{name}' is neither a job name nor a list.", path, _keyLine(mapping, "needs")
+				f"Key 'needs' of job '{name}' is neither a job name nor a list.", path, Base._KeyLine(mapping, "needs")
 			)
 			ex.add_note(f"Got type '{getFullyQualifiedName(needs)}'.")
 			raise ex
@@ -1503,18 +1667,28 @@ class Job(Base):
 		if inheritsSecrets:
 			secrets = None
 		elif secrets is not None:
-			secrets = _expectMapping(secrets, f"Key 'secrets' of job '{name}'", path, _keyLine(mapping, "secrets"))
+			if not isinstance(secrets, CommentedMap):
+				ex = WorkflowError(f"Key 'secrets' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "secrets"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(secrets)}'.")
+				raise ex
+
 			secrets = {str(key): str(value) for key, value in secrets.items()}
 
-		outputs = mapping.get("outputs", None)
-		if outputs is not None:
-			outputs = _expectMapping(outputs, f"Key 'outputs' of job '{name}'", path, _keyLine(mapping, "outputs"))
+		if (outputs := mapping.get("outputs", None)) is not None:
+			if not isinstance(outputs, CommentedMap):
+				ex = WorkflowError(f"Key 'outputs' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "outputs"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(outputs)}'.")
+				raise ex
+
 			outputs = {str(key): str(value) for key, value in outputs.items()}
 
-		withValues = mapping.get("with", None)
-		if withValues is not None:
-			withValues = _expectMapping(withValues, f"Key 'with' of job '{name}'", path, _keyLine(mapping, "with"))
-			withValues = _toPython(withValues)
+		if (withValues := mapping.get("with", None)) is not None:
+			if not isinstance(withValues, CommentedMap):
+				ex = WorkflowError(f"Key 'with' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "with"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(withValues)}'.")
+				raise ex
+
+			withValues = Base._ToPython(withValues)
 
 		displayName = mapping.get("name", None)
 
@@ -1531,62 +1705,31 @@ class Job(Base):
 			parent=parent
 		)
 
-		if (uses := mapping.get("uses", None)) is not None:
-			try:
-				job._uses = UsesReference(str(uses), _keyLine(mapping, "uses"), parent=job)
-			except ValueError as cause:
-				raise WorkflowError(
-					f"Key 'uses' of job '{name}' is not a reference.", path, _keyLine(mapping, "uses")
-				) from cause
+		if "uses" in mapping:
+			job._uses = UsesReference._FromYAML(mapping, f"job '{name}'", path, job)
 
 		if "permissions" in mapping:
-			job._permissions = _parsePermissions(mapping["permissions"], path, _keyLine(mapping, "permissions"), job)
+			job._permissions = Permission._FromYAML(mapping["permissions"], path, Base._KeyLine(mapping, "permissions"), job)
 
 		if (strategy := mapping.get("strategy", None)) is not None:
-			strategy = _expectMapping(strategy, f"Key 'strategy' of job '{name}'", path, _keyLine(mapping, "strategy"))
+			if not isinstance(strategy, CommentedMap):
+				ex = WorkflowError(
+					f"Key 'strategy' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "strategy")
+				)
+				ex.add_note(f"Got type '{getFullyQualifiedName(strategy)}'.")
+				raise ex
+
 			if "matrix" in strategy:
-				matrixLine = _keyLine(strategy, "matrix")
-				matrix = strategy["matrix"]
-				if isinstance(matrix, str):
-					job._matrix = Matrix(matrixLine, expression=str(matrix), parent=job)
-				else:
-					matrix = _expectMapping(matrix, f"Key 'strategy.matrix' of job '{name}'", path, matrixLine)
-					job._matrix = Matrix(
-						matrixLine,
-						dimensions={key: _toPython(value) for key, value in matrix.items() if key not in ("include", "exclude")},
-						include=_toPython(matrix.get("include", None)),
-						exclude=_toPython(matrix.get("exclude", None)),
-						parent=job
-					)
+				job._matrix = Matrix._FromYAML(strategy["matrix"], path, Base._KeyLine(strategy, "matrix"), job)
 
 		if (steps := mapping.get("steps", None)) is not None:
 			if not isinstance(steps, CommentedSeq):
-				ex = WorkflowError(f"Key 'steps' of job '{name}' is not a list.", path, _keyLine(mapping, "steps"))
+				ex = WorkflowError(f"Key 'steps' of job '{name}' is not a list.", path, Base._KeyLine(mapping, "steps"))
 				ex.add_note(f"Got type '{getFullyQualifiedName(steps)}'.")
 				raise ex
 
 			for position, step in enumerate(steps):
-				stepLine = steps.lc.item(position)[0] + 1
-				step = _expectMapping(step, f"Step {position + 1} of job '{name}'", path, stepLine)
-				stepName =   step.get("name", None)
-				identifier = step.get("id", None)
-				condition =  step.get("if", None)
-				run =        step.get("run", None)
-				stepObject = Step(
-					stepLine,
-					name=None if stepName is None else str(stepName),
-					identifier=None if identifier is None else str(identifier),
-					condition=None if condition is None else str(condition),
-					run=None if run is None else str(run),
-					parent=job
-				)
-				if (uses := step.get("uses", None)) is not None:
-					try:
-						stepObject._uses = UsesReference(str(uses), _keyLine(step, "uses"), parent=stepObject)
-					except ValueError as cause:
-						raise WorkflowError(
-							f"Key 'uses' of step {position + 1} of job '{name}' is not a reference.", path, _keyLine(step, "uses")
-						) from cause
+				Step._FromYAML(step, position, path, steps.lc.item(position)[0] + 1, job)
 
 		return job
 
@@ -2073,74 +2216,64 @@ class Workflow(Base):
 		if document is None:
 			raise WorkflowError("Workflow file is empty.", path)
 
-		document = _expectMapping(document, "Workflow file", path, 1)
-		if "on" not in document:
+		elif not isinstance(document, CommentedMap):
+			ex = WorkflowError("Workflow file is not a mapping.", path, 1)
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}'.")
+			raise ex
+		elif "on" not in document:
 			raise WorkflowError("Workflow file has no 'on' key.", path)
 		elif "jobs" not in document:
 			raise WorkflowError("Workflow file has no 'jobs' key.", path)
 
 		on = document["on"]
-		onLine = _keyLine(document, "on")
 		if isinstance(on, str):
 			triggers = (on, )
-		elif isinstance(on, list):
+		elif isinstance(on, (CommentedSeq, CommentedMap)):
 			triggers = tuple(str(trigger) for trigger in on)
 		else:
-			triggers = tuple(str(trigger) for trigger in _expectMapping(on, "Key 'on'", path, onLine))
+			ex = WorkflowError("Key 'on' is neither an event, a list nor a mapping.", path, Base._KeyLine(document, "on"))
+			ex.add_note(f"Got type '{getFullyQualifiedName(on)}'.")
+			raise ex
 
 		displayName = document.get("name", None)
 		workflow = cls(path, None if displayName is None else str(displayName), triggers)
 
 		if isinstance(on, CommentedMap) and (call := on.get("workflow_call", None)) is not None:
-			call = _expectMapping(call, "Key 'on.workflow_call'", path, _keyLine(on, "workflow_call"))
+			if not isinstance(call, CommentedMap):
+				ex = WorkflowError("Key 'on.workflow_call' is not a mapping.", path, Base._KeyLine(on, "workflow_call"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(call)}'.")
+				raise ex
 
-			for section in ("inputs", "outputs", "secrets"):
+			for section, parameterClass in (("inputs", Input), ("outputs", Output), ("secrets", Secret)):
 				if (parameters := call.get(section, None)) is None:
 					continue
+				elif not isinstance(parameters, CommentedMap):
+					ex = WorkflowError(f"Key 'on.workflow_call.{section}' is not a mapping.", path, Base._KeyLine(call, section))
+					ex.add_note(f"Got type '{getFullyQualifiedName(parameters)}'.")
+					raise ex
 
-				parameters = _expectMapping(parameters, f"Key 'on.workflow_call.{section}'", path, _keyLine(call, section))
 				for name, declaration in parameters.items():
-					line = _keyLine(parameters, name)
-					declaration = CommentedMap() if declaration is None else declaration
-					declaration = _expectMapping(declaration, f"Declaration of '{name}'", path, line)
-					description = declaration.get("description", None)
-					description = None if description is None else str(description)
-					required = _toPython(declaration.get("required", False))
-					if not isinstance(required, bool):
-						ex = WorkflowError(f"Key 'required' of '{name}' is not a boolean.", path, line)
-						ex.add_note(f"Got '{required}'.")
-						raise ex
-
-					if section == "inputs":
-						if (inputType := declaration.get("type", None)) is None:
-							raise WorkflowError(f"Input '{name}' has no 'type' key.", path, line)
-
-						try:
-							inputType = InputType.Parse(str(inputType))
-						except ValueError as cause:
-							ex = WorkflowError(f"Key 'type' of input '{name}' is not an input type.", path, line)
-							ex.add_note(f"Got '{inputType}'.")
-							ex.add_note(f"Allowed values: {', '.join(member.value for member in InputType)}.")
-							raise ex from cause
-
-						default = _toPython(declaration.get("default", None))
-						Input(str(name), line, inputType, required, default, description, parent=workflow)
-					elif section == "outputs":
-						if (value := declaration.get("value", None)) is None:
-							raise WorkflowError(f"Output '{name}' has no 'value' key.", path, line)
-
-						Output(str(name), line, str(value), description, parent=workflow)
-					else:
-						Secret(str(name), line, required, description, parent=workflow)
+					parameterClass._FromYAML(str(name), declaration, path, Base._KeyLine(parameters, name), workflow)
 
 		if "permissions" in document:
-			permissionsLine = _keyLine(document, "permissions")
-			workflow._permissions = _parsePermissions(document["permissions"], path, permissionsLine, workflow)
+			workflow._permissions = Permission._FromYAML(
+				document["permissions"], path, Base._KeyLine(document, "permissions"), workflow
+			)
 
-		jobs = _expectMapping(document["jobs"], "Key 'jobs'", path, _keyLine(document, "jobs"))
+		jobs = document["jobs"]
+		if not isinstance(jobs, CommentedMap):
+			ex = WorkflowError("Key 'jobs' is not a mapping.", path, Base._KeyLine(document, "jobs"))
+			ex.add_note(f"Got type '{getFullyQualifiedName(jobs)}'.")
+			raise ex
+
 		for name, job in jobs.items():
-			line = _keyLine(jobs, name)
-			Job._FromYAML(str(name), _expectMapping(job, f"Job '{name}'", path, line), path, line, workflow)
+			line = Base._KeyLine(jobs, name)
+			if not isinstance(job, CommentedMap):
+				ex = WorkflowError(f"Job '{name}' is not a mapping.", path, line)
+				ex.add_note(f"Got type '{getFullyQualifiedName(job)}'.")
+				raise ex
+
+			Job._FromYAML(str(name), job, path, line, workflow)
 
 		for job in workflow._jobs.values():
 			for need in job._needNames:
