@@ -39,7 +39,7 @@ from typing                           import Any
 from pyTooling.CI                     import Matrix as CIMatrix, NeedDependencyCycleError, Pipeline as CIPipeline
 from pyTooling.CI.GitHub              import Pipeline as GitHubPipeline
 from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, InputType, Workflow, WorkflowError, WorkflowResolver
-from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Permission, UsesReference
+from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Permission, PermissionScope, UsesReference
 from pyTooling.CI.GitHub.WorkflowFile import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow
 from pyTooling.CI.GitHub.WorkflowFile import DefinedPipeline, DefinedWorkflow
 from pyTooling.Graph                  import Graph
@@ -383,7 +383,7 @@ class Parameters(Fixture):
 	def test_PermissionsShortForm(self) -> None:
 		workflow = Workflow.FromFile(self._write("Prepare.yml", PREPARE))
 
-		permission = workflow.Permissions[Permission.ALL_SCOPES]
+		permission = workflow.Permissions[PermissionScope.All]
 		self.assertIs(AccessLevel.Read, permission.Level)
 		self.assertEqual("read-all", str(permission))
 
@@ -1098,11 +1098,11 @@ class Resolver(Fixture):
 		self.assertEqual(["contents", "actions"], list(pipeline.CollectPermissions()))
 
 		permissions = pipeline.CollectPermissions(resolver)
-		self.assertEqual(["contents", "actions", Permission.ALL_SCOPES, "id-token"], list(permissions))
+		self.assertEqual(["contents", "actions", PermissionScope.All, "id-token"], list(permissions))
 		self.assertEqual("Package.yml:55", permissions["contents"].Location)
 		self.assertIs(AccessLevel.Write, permissions["contents"].Level)
 		self.assertEqual("Pipeline.yml:17", permissions["actions"].Location)
-		self.assertEqual("Prepare.yml:4", permissions[Permission.ALL_SCOPES].Location)
+		self.assertEqual("Prepare.yml:4", permissions[PermissionScope.All].Location)
 
 	def test_Repositories(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -1192,6 +1192,14 @@ class Errors(Fixture):
 
 		self.assertEqual("Key 'required' of 'a' is not a boolean.", str(error))
 
+	def test_PermissionScope(self) -> None:
+		error = self._error("on: push\npermissions:\n  everything: read\njobs: {}\n")
+
+		self.assertEqual("Key 'everything' of 'permissions' is not a permission scope.", str(error))
+		self.assertEqual(3, error.Line)
+		self.assertIn("contents", error.__notes__[-1])
+		self.assertNotIn("*", error.__notes__[-1])
+
 	def test_PermissionLevel(self) -> None:
 		error = self._error("on: push\npermissions:\n  contents: all\njobs: {}\n")
 
@@ -1267,7 +1275,14 @@ class Construction(Testcase):
 
 	def test_Permission(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Permission("contents", "read", 1)
+			_ = Permission("contents", AccessLevel.Read, 1)
+
+		with self.assertRaises(TypeError):
+			_ = Permission(PermissionScope.Contents, "read", 1)
+
+		permission = Permission(PermissionScope.Contents, AccessLevel.Read, 1)
+		self.assertIs(PermissionScope.Contents, permission.Scope)
+		self.assertEqual("contents: read", str(permission))
 
 	def test_AccessLevel(self) -> None:
 		self.assertLess(AccessLevel.NoAccess.Rank(), AccessLevel.Read.Rank())

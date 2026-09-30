@@ -158,6 +158,33 @@ class AccessLevel(StringEnum):
 
 
 @export
+class PermissionScope(StringEnum):
+	"""
+	The scope a permission grants the ``GITHUB_TOKEN`` access to, as a key of ``permissions``.
+
+	:attr:`All` stands for every scope at once, as ``read-all`` and ``write-all`` grant it.
+	"""
+
+	All =                 "*"                     #: Every scope, from ``read-all`` or ``write-all``.
+	Actions =             "actions"               #: Workflows, runs and artifacts.
+	ArtifactMetadata =    "artifact-metadata"     #: Storage records of artifacts.
+	Attestations =        "attestations"          #: Artifact attestations.
+	Checks =              "checks"                #: Check runs and check suites.
+	CodeQuality =         "code-quality"          #: Code quality findings.
+	Contents =            "contents"              #: Repository contents, commits, branches, tags and releases.
+	Deployments =         "deployments"           #: Deployments.
+	Discussions =         "discussions"           #: GitHub Discussions.
+	IDToken =             "id-token"              #: An OpenID Connect token.
+	Issues =              "issues"                #: Issues and their comments.
+	Packages =            "packages"              #: GitHub Packages.
+	Pages =               "pages"                 #: GitHub Pages builds.
+	PullRequests =        "pull-requests"         #: Pull requests.
+	SecurityEvents =      "security-events"       #: Code scanning alerts.
+	Statuses =            "statuses"              #: Commit statuses.
+	VulnerabilityAlerts = "vulnerability-alerts"  #: Dependabot alerts.
+
+
+@export
 class InputType(StringEnum):
 	"""The type of an input of a reusable workflow."""
 
@@ -229,7 +256,7 @@ def _parsePermissions(
 	path:   Path,
 	line:   int,
 	parent: Union[Workflow, Job]
-) -> dict[str, Permission]:
+) -> dict[PermissionScope, Permission]:
 	"""
 	Read a ``permissions`` key into permissions attached to a workflow or job.
 
@@ -239,14 +266,16 @@ def _parsePermissions(
 	:param parent:         Reference to the workflow or job declaring the permissions.
 	:returns:              The permissions, by scope.
 	:raises WorkflowError: If the value is neither ``read-all``, ``write-all`` nor a mapping.
+	:raises WorkflowError: If a key is not a permission scope. |br|
+	                       The note lists the allowed values.
 	:raises WorkflowError: If a scope's value is not an access level. |br|
 	                       The note lists the allowed values.
 	"""
 	if isinstance(value, str):
 		if value == "read-all":
-			return {Permission.ALL_SCOPES: Permission(Permission.ALL_SCOPES, AccessLevel.Read, line, parent=parent)}
+			return {PermissionScope.All: Permission(PermissionScope.All, AccessLevel.Read, line, parent=parent)}
 		elif value == "write-all":
-			return {Permission.ALL_SCOPES: Permission(Permission.ALL_SCOPES, AccessLevel.Write, line, parent=parent)}
+			return {PermissionScope.All: Permission(PermissionScope.All, AccessLevel.Write, line, parent=parent)}
 
 		ex = WorkflowError("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", path, line)
 		ex.add_note(f"Got '{value}'.")
@@ -257,6 +286,14 @@ def _parsePermissions(
 	for scope, level in mapping.items():
 		scopeLine = _keyLine(mapping, scope)
 		try:
+			permissionScope = PermissionScope(scope)
+		except ValueError as cause:
+			ex = WorkflowError(f"Key '{scope}' of 'permissions' is not a permission scope.", path, scopeLine)
+			scopes = (member.value for member in PermissionScope if member is not PermissionScope.All)
+			ex.add_note(f"Allowed values: {', '.join(scopes)}.")
+			raise ex from cause
+
+		try:
 			accessLevel = AccessLevel(level)
 		except ValueError as cause:
 			ex = WorkflowError(f"Permission '{scope}' is not an access level.", path, scopeLine)
@@ -264,7 +301,7 @@ def _parsePermissions(
 			ex.add_note(f"Allowed values: {', '.join(member.value for member in AccessLevel)}.")
 			raise ex from cause
 
-		permissions[str(scope)] = Permission(str(scope), accessLevel, scopeLine, parent=parent)
+		permissions[permissionScope] = Permission(permissionScope, accessLevel, scopeLine, parent=parent)
 
 	return permissions
 
@@ -529,17 +566,15 @@ class Permission(Base):
 	"""
 	A permission a workflow or job declares for the ``GITHUB_TOKEN``, as ``contents: write``.
 
-	The short forms ``read-all`` and ``write-all`` are read as one permission of scope :attr:`ALL_SCOPES`.
+	The short forms ``read-all`` and ``write-all`` are read as one permission of scope :attr:`PermissionScope.All`.
 	"""
 
-	ALL_SCOPES: ClassVar[str] = "*"  #: Scope of a permission read from ``read-all`` or ``write-all``.
-
-	_scope: str          #: The scope, as ``contents``.
-	_level: AccessLevel  #: The access granted.
+	_scope: PermissionScope  #: The scope, as ``contents``.
+	_level: AccessLevel      #: The access granted.
 
 	def __init__(
 		self,
-		scope:  str,
+		scope:  PermissionScope,
 		level:  AccessLevel,
 		line:   int,
 		*,
@@ -553,8 +588,7 @@ class Permission(Base):
 		:param line:        Line the permission is written at, starting at 1.
 		:param parent:      Optional, reference to the workflow or job declaring it. Default: ``None``.
 		:raises ValueError: If parameter 'scope' is ``None``.
-		:raises TypeError:  If parameter 'scope' is not of type :class:`str`.
-		:raises ValueError: If parameter 'scope' is empty.
+		:raises TypeError:  If parameter 'scope' is not of type :class:`PermissionScope`.
 		:raises ValueError: If parameter 'level' is ``None``.
 		:raises TypeError:  If parameter 'level' is not of type :class:`AccessLevel`.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Workflow` or :class:`Job`.
@@ -568,12 +602,10 @@ class Permission(Base):
 
 		if scope is None:
 			raise ValueError("Parameter 'scope' is None.")
-		elif not isinstance(scope, str):
-			ex = TypeError("Parameter 'scope' is not of type 'str'.")
+		elif not isinstance(scope, PermissionScope):
+			ex = TypeError("Parameter 'scope' is not of type 'PermissionScope'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(scope)}'.")
 			raise ex
-		elif scope == "":
-			raise ValueError("Parameter 'scope' is empty.")
 
 		if level is None:
 			raise ValueError("Parameter 'level' is None.")
@@ -586,11 +618,12 @@ class Permission(Base):
 		self._level = level
 
 	@readonly
-	def Scope(self) -> str:
+	def Scope(self) -> PermissionScope:
 		"""
 		Read-only property to access the scope (:attr:`_scope`).
 
-		:returns: The scope, as ``contents``, or :attr:`ALL_SCOPES` for ``read-all`` and ``write-all``.
+		:returns: The scope, as :attr:`PermissionScope.Contents`, or :attr:`PermissionScope.All` for ``read-all`` and
+		          ``write-all``.
 		"""
 		return self._scope
 
@@ -607,9 +640,9 @@ class Permission(Base):
 		"""
 		Return the permission, as written in a workflow file.
 
-		:returns: The permission, as ``contents: write``, or ``read-all`` for scope :attr:`ALL_SCOPES`.
+		:returns: The permission, as ``contents: write``, or ``read-all`` for scope :attr:`PermissionScope.All`.
 		"""
-		if self._scope == self.ALL_SCOPES:
+		if self._scope is PermissionScope.All:
 			return f"{self._level.value}-all"
 
 		return f"{self._scope}: {self._level.value}"
@@ -1172,19 +1205,19 @@ class Job(Base):
 	:attr:`Uses`.
 	"""
 
-	_name:            str                              #: Name of the job, the key it is declared under.
-	_displayName:     Nullable[str]                    #: Name of the job, as GitHub displays it.
-	_needNames:       tuple[str, ...]                  #: Names of the jobs this job needs.
-	_condition:       Nullable[str]                    #: Condition under which the job runs.
-	_permissions:     Nullable[dict[str, Permission]]  #: Permissions the job declares, by scope.
-	_runsOn:          tuple[str, ...]                  #: Labels selecting the runner.
-	_uses:            Nullable[UsesReference]          #: The reusable workflow the job calls.
-	_with:            dict[str, ValueT]                #: Inputs passed to the called workflow, by name.
-	_secrets:         dict[str, str]                   #: Secrets passed to the called workflow, by name.
-	_inheritsSecrets: bool                             #: ``True``, if the called workflow inherits every secret.
-	_matrix:          Nullable[Matrix]                 #: The job's matrix.
-	_steps:           list[Step]                       #: Steps of the job.
-	_outputs:         dict[str, str]                   #: Outputs of the job, by name.
+	_name:            str                                          #: Name of the job, the key it is declared under.
+	_displayName:     Nullable[str]                                #: Name of the job, as GitHub displays it.
+	_needNames:       tuple[str, ...]                              #: Names of the jobs this job needs.
+	_condition:       Nullable[str]                                #: Condition under which the job runs.
+	_permissions:     Nullable[dict[PermissionScope, Permission]]  #: Permissions the job declares, by scope.
+	_runsOn:          tuple[str, ...]                              #: Labels selecting the runner.
+	_uses:            Nullable[UsesReference]                      #: The reusable workflow the job calls.
+	_with:            dict[str, ValueT]                            #: Inputs passed to the called workflow, by name.
+	_secrets:         dict[str, str]                               #: Secrets passed to the called workflow, by name.
+	_inheritsSecrets: bool                                         #: ``True``, if secrets are inherited.
+	_matrix:          Nullable[Matrix]                             #: The job's matrix.
+	_steps:           list[Step]                                   #: Steps of the job.
+	_outputs:         dict[str, str]                               #: Outputs of the job, by name.
 
 	def __init__(
 		self,
@@ -1325,7 +1358,7 @@ class Job(Base):
 		return self._condition
 
 	@readonly
-	def Permissions(self) -> Nullable[dict[str, Permission]]:
+	def Permissions(self) -> Nullable[dict[PermissionScope, Permission]]:
 		"""
 		Read-only property to access the permissions the job declares (:attr:`_permissions`).
 
@@ -1567,15 +1600,15 @@ class Workflow(Base):
 	a caller names it in ``uses``; the ``name`` key is kept as :attr:`DisplayName`.
 	"""
 
-	_path:        Path                             #: Path to the workflow file.
-	_name:        str                              #: Name of the workflow, the file's stem.
-	_displayName: Nullable[str]                    #: Name of the workflow, as GitHub displays it.
-	_triggers:    tuple[str, ...]                  #: Events triggering the workflow.
-	_inputs:      dict[str, Input]                 #: Inputs of ``on.workflow_call``, by name.
-	_outputs:     dict[str, Output]                #: Outputs of ``on.workflow_call``, by name.
-	_secrets:     dict[str, Secret]                #: Secrets of ``on.workflow_call``, by name.
-	_permissions: Nullable[dict[str, Permission]]  #: Permissions the workflow declares, by scope.
-	_jobs:        dict[str, Job]                   #: Jobs of the workflow, by name, in file order.
+	_path:        Path                                         #: Path to the workflow file.
+	_name:        str                                          #: Name of the workflow, the file's stem.
+	_displayName: Nullable[str]                                #: Name of the workflow, as GitHub displays it.
+	_triggers:    tuple[str, ...]                              #: Events triggering the workflow.
+	_inputs:      dict[str, Input]                             #: Inputs of ``on.workflow_call``, by name.
+	_outputs:     dict[str, Output]                            #: Outputs of ``on.workflow_call``, by name.
+	_secrets:     dict[str, Secret]                            #: Secrets of ``on.workflow_call``, by name.
+	_permissions: Nullable[dict[PermissionScope, Permission]]  #: Permissions the workflow declares, by scope.
+	_jobs:        dict[str, Job]                               #: Jobs of the workflow, by name, in file order.
 
 	def __init__(
 		self,
@@ -1694,7 +1727,7 @@ class Workflow(Base):
 		return self._secrets
 
 	@readonly
-	def Permissions(self) -> Nullable[dict[str, Permission]]:
+	def Permissions(self) -> Nullable[dict[PermissionScope, Permission]]:
 		"""
 		Read-only property to access the permissions the workflow declares for all its jobs (:attr:`_permissions`).
 
@@ -1920,7 +1953,7 @@ class Workflow(Base):
 				if step._uses is not None:
 					yield step._uses
 
-	def CollectPermissions(self, resolver: Nullable[WorkflowResolver] = None) -> dict[str, Permission]:
+	def CollectPermissions(self, resolver: Nullable[WorkflowResolver] = None) -> dict[PermissionScope, Permission]:
 		"""
 		Collect the permissions the workflow and its jobs declare, and those of the workflows its jobs call.
 
@@ -1938,7 +1971,7 @@ class Workflow(Base):
 			ex.add_note(f"Got type '{getFullyQualifiedName(resolver)}'.")
 			raise ex
 
-		collected: dict[str, Permission] = {}
+		collected: dict[PermissionScope, Permission] = {}
 		visited:   set[int] = set()
 
 		def collect(workflow: Workflow) -> None:
