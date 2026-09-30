@@ -129,8 +129,8 @@ repository, whatever the ref:
 * A repository without a directory answers ``None``: its files are not fetched.
 * Every file is read once; resolving it again returns the same :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`.
 
-:meth:`~pyTooling.CI.GitHub.Workflow.WorkflowResolver.ResolveAction` reads the action a step runs the same way, from its
-``action.yml``, so the actions a composite action runs in turn are known:
+:meth:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowResolver.ResolveAction` reads the action a step runs the same way, from
+its ``action.yml``, so the actions a composite action runs in turn are known:
 
 * An action of a mapped repository - ``pyTooling/Actions/.github/actions/ComputeRequirements@r8`` - is read from the
   repository's root, the directory holding the ``.github`` directory the mapped directory is in.

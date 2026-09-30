@@ -84,7 +84,7 @@ from pyTooling.Documentation.Sphinx.Directives    import BaseDirective, SphinxEx
 from pyTooling.Documentation.Sphinx.GitHubActions import NO_DEFAULT, WARNING_TYPE, InputDirective, formatValue
 
 if TYPE_CHECKING:  # pragma: no cover
-	from pyTooling.CI.Workflow                      import UsesReference, ValueT, Workflow
+	from pyTooling.CI.GitHub.WorkflowFile           import UsesReference, ValueT, Workflow
 
 
 __all__ = ["KINDS", "SECTIONS", "MAX_DEFAULT_LENGTH"]
@@ -170,11 +170,11 @@ class WorkflowReferenceDirective(BaseDirective):
 		Read what a workflow calls or uses, and report a file that is missing or malformed as a warning.
 
 		:param resolve:  The operation reading the called or used files, as :meth:`WorkflowResolver.Resolve
-		                 <pyTooling.CI.Workflow.WorkflowResolver.Resolve>`.
+		                 <pyTooling.CI.GitHub.WorkflowFile.WorkflowResolver.Resolve>`.
 		:param fallback: The operation giving the result, when a file couldn't be read.
 		:returns:        The result of ``resolve``, or of ``fallback`` after a warning.
 		"""
-		from pyTooling.CI.Workflow import WorkflowError
+		from pyTooling.CI.GitHub.WorkflowFile import WorkflowError
 
 		try:
 			return resolve()
@@ -293,7 +293,7 @@ class ParameterTable(WorkflowReferenceDirective):
 		A multi-line string is shortened to its first line, and a longer text to :data:`MAX_DEFAULT_LENGTH` characters,
 		each followed by ``…``.
 
-		:param value: The default, as :attr:`Input.Default <pyTooling.CI.Workflow.Input.Default>`.
+		:param value: The default, as :attr:`Input.Default <pyTooling.CI.GitHub.WorkflowFile.Input.Default>`.
 		:returns:     The paragraph, holding :data:`~pyTooling.Documentation.Sphinx.GitHubActions.NO_DEFAULT` for
 		              ``None``, or the default as literal text.
 		"""
