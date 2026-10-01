@@ -31,18 +31,26 @@
 """
 A data model of a GitHub Actions workflow file.
 
-Each element knows the element containing it and the line it starts at, and reads its part of the file with a
-``_FromYAML()`` class-method:
+A workflow file is read once into objects:
 
-* :class:`Permission` - a permission for the ``GITHUB_TOKEN``, from a ``permissions`` key.
-* :class:`UsesReference` - the value of a ``uses`` key: a reusable workflow a job calls, or an action a step runs.
+.. code-block:: text
+
+   Workflow                 a workflow file, e.g. '.github/workflows/CompletePipeline.yml'
+   +-- Permission           a permission the workflow declares
+       +-- Permission       a permission the job declares
+
+Every element knows its parent, the workflow it belongs to, and the line it starts at in the file, so a consumer can
+name the place a finding comes from, as ``CompletePipeline.yml:552``.
+
+The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow *run* as the REST API reports it.
 
 :raises MissingDependencyError: If the 'github' extra isn't installed.
 """
 from __future__            import annotations
 
-from pathlib               import Path, PurePosixPath
-from typing                import Any, Optional as Nullable, Self, Union
+from functools             import cached_property
+from pathlib               import Path
+from typing                import Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, TypeVar, Union
 
 from pyTooling.CI          import CIError
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
@@ -51,6 +59,7 @@ from pyTooling.Exceptions  import MissingDependencyError
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 
 try:
+	from ruamel.yaml              import YAML, YAMLError
 	from ruamel.yaml.comments     import CommentedMap, CommentedSeq
 	from ruamel.yaml.scalarbool   import ScalarBoolean
 	from ruamel.yaml.scalarfloat  import ScalarFloat
@@ -64,6 +73,12 @@ __all__ = ["ValueT"]
 
 ValueT = Union[str, bool, int, float, None, list["ValueT"], dict[str, "ValueT"]]
 """A value read from a workflow file, converted to plain Python types."""
+
+ParentType = TypeVar("ParentType", bound="Base")
+"""A type variable for the type of an element's parent."""
+
+ParentTypes = Nullable[Union[type, tuple[type, ...]]]
+"""The type of :attr:`Base._PARENT_TYPE`: ``None``, a class, or a tuple of classes."""
 
 
 @export
@@ -125,9 +140,12 @@ class AccessLevel(StringEnum):
 	Read =     "read"   #: Read access.
 	Write =    "write"  #: Read and write access.
 
+	@cached_property
 	def Rank(self) -> int:
 		"""
-		Return the member's position in the order of access, so levels can be compared.
+		Read-only property to return the member's position in the order of access, so levels can be compared.
+
+		It is computed once per member.
 
 		:returns: ``0`` for :attr:`NoAccess`, ``1`` for :attr:`Read`, ``2`` for :attr:`Write`.
 		"""
@@ -163,17 +181,20 @@ class PermissionScope(StringEnum):
 
 @export
 @abstractclass
-class Base(metaclass=ExtendedType, slots=True):
+class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 	"""
 	Common behaviour of every element of a workflow file.
 
-	Every element knows the element containing it, and the line it starts at.
+	Every element knows the element containing it, the workflow it belongs to, and the line it starts at.
 	"""
 
-	_parent: Nullable[Base]  #: Reference to the containing element.
-	_line:   int             #: Line the element starts at in the workflow file, starting at 1.
+	_PARENT_TYPE: ClassVar[ParentTypes] = None  #: Type a parent must have, or ``None`` when the element has no parent.
 
-	def __init__(self, line: int, *, parent: Nullable[Base] = None) -> None:
+	_parent:   Nullable[ParentType]  #: Reference to the containing element.
+	_workflow: Nullable[Workflow]    #: Reference to the workflow this element belongs to.
+	_line:     int                   #: Line the element starts at in the workflow file, starting at 1.
+
+	def __init__(self, line: int, *, parent: Nullable[ParentType] = None) -> None:
 		"""
 		Initializes an element of a workflow file.
 
@@ -182,7 +203,8 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'line' is ``None``.
 		:raises TypeError:  If parameter 'line' is not of type :class:`int`.
 		:raises ValueError: If parameter 'line' is not positive.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Base`.
+		:raises TypeError:  If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
+		:raises TypeError:  If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		if line is None:
 			raise ValueError("Parameter 'line' is None.")
@@ -195,23 +217,38 @@ class Base(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{line}'.")
 			raise ex
 
-		if parent is not None and not isinstance(parent, Base):
-			ex = TypeError("Parameter 'parent' is not of type 'Base'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-			raise ex
+		if parent is not None:
+			if self._PARENT_TYPE is None:
+				ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+				raise ex
+			elif not isinstance(parent, self._PARENT_TYPE):
+				parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
+				ex = TypeError(f"Parameter 'parent' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+				raise ex
 
-		self._parent = parent
-		self._line =   line
+		self._parent =   parent
+		self._workflow = None if parent is None else parent._workflow
+		self._line =     line
 
 	@readonly
-	def Parent(self) -> Nullable[Base]:
+	def Parent(self) -> Nullable[ParentType]:
 		"""
 		Read-only property to access the containing element (:attr:`_parent`).
 
-		:returns: The containing element, or ``None``.
+		:returns: The containing element, or ``None`` for a :class:`Workflow`.
 		"""
 		return self._parent
 
+	@readonly
+	def Workflow(self) -> Nullable[Workflow]:
+		"""
+		Read-only property to access the workflow this element belongs to (:attr:`_workflow`).
+
+		:returns: The workflow, or ``None`` for an element outside one.
+		"""
+		return self._workflow
 
 	@readonly
 	def Line(self) -> int:
@@ -227,9 +264,13 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to return the place the element is written at, for a message.
 
-		:returns: The line, as ``line 552``.
+		:returns: The workflow file's name and the line, as ``CompletePipeline.yml:552``, or ``line 552`` for an element
+		          outside a workflow.
 		"""
-		return f"line {self._line}"
+		if self._workflow is None:
+			return f"line {self._line}"
+
+		return f"{self._workflow._path.name}:{self._line}"
 
 	@staticmethod
 	def _KeyLine(mapping: CommentedMap, key: str) -> int:
@@ -272,194 +313,191 @@ class Base(metaclass=ExtendedType, slots=True):
 
 
 @export
-class UsesReference(Base):
+class Workflow(Base[None]):
 	"""
-	The value of a ``uses`` key: a reusable workflow called by a job, or an action run by a step.
+	A GitHub Actions workflow file.
 
-	The forms GitHub accepts are read into their parts:
-
-	.. code-block:: text
-
-	   pyTooling/Actions/.github/workflows/Package.yml@r8   repository, path and ref
-	   actions/checkout@v6                                   an action in a repository's root
-	   ./.github/workflows/Package.yml                       a file of the same repository and commit
-	   docker://alpine:3.22                                  a Docker image
+	The workflow is named by its file's stem - ``CompletePipeline`` for ``CompletePipeline.yml`` - because that is how
+	a caller names it in ``uses``; the ``name`` key is kept as :attr:`DisplayName`.
 	"""
 
-	_text:       str            #: The reference, as written.
-	_repository: Nullable[str]  #: The repository, as ``owner/repo``.
-	_path:       str            #: The path within the repository.
-	_ref:        Nullable[str]  #: The branch, tag or commit.
-	_isLocal:    bool           #: ``True``, if the reference names a file of the same repository.
-	_isDocker:   bool           #: ``True``, if the reference names a Docker image.
+	_path:        Path                                         #: Path to the workflow file.
+	_name:        str                                          #: Name of the workflow, the file's stem.
+	_displayName: Nullable[str]                                #: Name of the workflow, as GitHub displays it.
+	_triggers:    tuple[str, ...]                              #: Events triggering the workflow.
+	_permissions: Nullable[dict[PermissionScope, Permission]]  #: Permissions the workflow declares, by scope.
 
-	def __init__(self, text: str, line: int, *, parent: Nullable[Base] = None) -> None:
+	def __init__(
+		self,
+		path:        Path,
+		displayName: Nullable[str] = None,
+		triggers:    Iterable[str] = ()
+	) -> None:
 		"""
-		Initializes a ``uses`` reference by reading it into its parts.
+		Initializes a workflow.
 
-		:param text:        The reference, as written.
-		:param line:        Line the reference is written at, starting at 1.
-		:param parent:      Optional, reference to the containing element. Default: ``None``.
-		:raises ValueError: If parameter 'text' is ``None``.
-		:raises TypeError:  If parameter 'text' is not of type :class:`str`.
-		:raises ValueError: If parameter 'text' is empty.
-		:raises ValueError: If parameter 'text' names a repository without a ref.
-		:raises ValueError: If parameter 'text' names no repository as ``owner/repo``.
+		Use :meth:`FromFile` to read a workflow file.
+
+		:param path:        Path to the workflow file.
+		:param displayName: Optional, name of the workflow, as GitHub displays it. Default: ``None``.
+		:param triggers:    Optional, events triggering the workflow, as ``workflow_call``. Default: ``()``.
+		:raises ValueError: If parameter 'path' is ``None``.
+		:raises TypeError:  If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises TypeError:  If parameter 'displayName' is not of type :class:`str`.
 		"""
-		super().__init__(line, parent=parent)
+		super().__init__(1)
 
-		if text is None:
-			raise ValueError("Parameter 'text' is None.")
-		elif not isinstance(text, str):
-			ex = TypeError("Parameter 'text' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
-		elif text == "":
-			raise ValueError("Parameter 'text' is empty.")
 
-		self._text =       text
-		self._isLocal =    False
-		self._isDocker =   False
-		self._repository = None
-		self._ref =        None
+		if displayName is not None and not isinstance(displayName, str):
+			ex = TypeError("Parameter 'displayName' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(displayName)}'.")
+			raise ex
 
-		if text.startswith("docker://"):
-			self._isDocker = True
-			self._path = text[len("docker://"):]
-		elif text.startswith("./"):
-			self._isLocal = True
-			self._path = text[len("./"):]
-		else:
-			location, separator, ref = text.partition("@")
-			if separator == "" or ref == "":
-				ex = ValueError("Parameter 'text' names a repository without a ref.")
-				ex.add_note(f"Got '{text}'.")
-				raise ex
-
-			owner, _, remainder = location.partition("/")
-			repository, _, path = remainder.partition("/")
-			if owner == "" or repository == "":
-				ex = ValueError("Parameter 'text' names no repository as 'owner/repo'.")
-				ex.add_note(f"Got '{text}'.")
-				raise ex
-
-			self._repository = f"{owner}/{repository}"
-			self._path =       path
-			self._ref =        ref
+		self._workflow =    self
+		self._path =        path
+		self._name =        path.stem
+		self._displayName = displayName
+		self._triggers =    tuple(triggers)
+		self._permissions = None
 
 	@readonly
-	def Repository(self) -> Nullable[str]:
+	def Path(self) -> Path:
 		"""
-		Read-only property to access the repository (:attr:`_repository`).
+		Read-only property to access the path to the workflow file (:attr:`_path`).
 
-		:returns: The repository, as ``owner/repo``, or ``None`` for a local reference and a Docker image.
-		"""
-		return self._repository
-
-	@readonly
-	def Path(self) -> str:
-		"""
-		Read-only property to access the path within the repository (:attr:`_path`).
-
-		:returns: The path, as ``.github/workflows/Package.yml``, without the leading ``./`` of a local reference. It
-		          is empty for an action in a repository's root, and the image for a Docker image.
+		:returns: The path.
 		"""
 		return self._path
 
 	@readonly
-	def Ref(self) -> Nullable[str]:
+	def Name(self) -> str:
 		"""
-		Read-only property to access the branch, tag or commit (:attr:`_ref`).
+		Read-only property to access the workflow's name, its file's stem (:attr:`_name`).
 
-		:returns: The ref, as ``r8``, or ``None`` for a local reference and a Docker image.
+		:returns: Name of the workflow, as ``CompletePipeline``.
 		"""
-		return self._ref
-
-	@readonly
-	def IsLocal(self) -> bool:
-		"""
-		Read-only property to access whether the reference names a file of the same repository (:attr:`_isLocal`).
-
-		:returns: ``True``, if the reference starts with ``./``.
-		"""
-		return self._isLocal
+		return self._name
 
 	@readonly
-	def IsDocker(self) -> bool:
+	def DisplayName(self) -> Nullable[str]:
 		"""
-		Read-only property to access whether the reference names a Docker image (:attr:`_isDocker`).
+		Read-only property to access the workflow's name, as GitHub displays it (:attr:`_displayName`).
 
-		:returns: ``True``, if the reference starts with ``docker://``.
+		:returns: The ``name`` key, as written, or ``None`` if the workflow gives none.
 		"""
-		return self._isDocker
-
-	@readonly
-	def IsWorkflow(self) -> bool:
-		"""
-		Read-only property to return whether the reference names a reusable workflow rather than an action.
-
-		:returns: ``True``, if the path names a ``.yml`` or ``.yaml`` file in ``.github/workflows``.
-		"""
-		path = PurePosixPath(self._path)
-		return (
-			not self._isDocker and path.parent == PurePosixPath(".github/workflows") and path.suffix in (".yml", ".yaml")
-		)
+		return self._displayName
 
 	@readonly
-	def FileName(self) -> str:
+	def Triggers(self) -> tuple[str, ...]:
 		"""
-		Read-only property to return the last element of the path.
+		Read-only property to access the events triggering the workflow (:attr:`_triggers`).
 
-		:returns: The file name, as ``Package.yml`` for a reusable workflow, or ``""`` for an action in a repository's
-		          root.
+		:returns: The events, as ``workflow_call`` or ``push``, in the order the ``on`` key lists them.
 		"""
-		return PurePosixPath(self._path).name if not self._isDocker else ""
+		return self._triggers
 
 	@readonly
-	def Stem(self) -> str:
+	def IsCallable(self) -> bool:
 		"""
-		Read-only property to return the file name without its extension.
+		Read-only property to return whether the workflow is a reusable workflow.
 
-		For a reusable workflow, it is the name a workflow is given, e.g. ``Package``.
-
-		:returns: The file name without its extension, or ``""`` for an action in a repository's root.
+		:returns: ``True``, if the workflow is triggered by ``workflow_call``.
 		"""
-		return PurePosixPath(self._path).stem if not self._isDocker else ""
+		return "workflow_call" in self._triggers
+
+
+	@readonly
+	def Permissions(self) -> Nullable[dict[PermissionScope, Permission]]:
+		"""
+		Read-only property to access the permissions the workflow declares for all its jobs (:attr:`_permissions`).
+
+		:returns: The permissions, by scope, or ``None`` if the workflow has no ``permissions`` key.
+		"""
+		return self._permissions
+
 
 	def __str__(self) -> str:
 		"""
-		Return the reference, as written.
+		Return the workflow's name.
 
-		:returns: The reference.
+		:returns: Name of the workflow, the file's stem.
 		"""
-		return self._text
+		return self._name
 
 	@classmethod
-	def _FromYAML(cls, mapping: CommentedMap, what: str, path: Path, parent: Base) -> Self:
+	def FromFile(cls, path: Path) -> Self:
 		"""
-		Read the ``uses`` key of a job or step.
+		Read a workflow file.
 
-		:param mapping:        The mapping of the job or step, which has a ``uses`` key.
-		:param what:           The job or step, for the exception's message, as ``job 'Build'``.
-		:param path:           Path to the workflow file.
-		:param parent:         Reference to the job or step.
-		:returns:              The reference.
-		:raises WorkflowError: If the value is not a reference.
+		:param path:               Path to the workflow file.
+		:returns:                  The workflow, with its permissions attached.
+		:raises ValueError:        If parameter 'path' is ``None``.
+		:raises TypeError:         If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises FileNotFoundError: If the file doesn't exist.
+		:raises WorkflowError:     If the file is not a YAML document.
+		:raises WorkflowError:     If the document is not a mapping, or has no ``on`` or ``jobs`` key.
 		"""
-		line = Base._KeyLine(mapping, "uses")
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
 		try:
-			return cls(str(mapping["uses"]), line, parent=parent)
-		except ValueError as cause:
-			raise WorkflowError(f"Key 'uses' of {what} is not a reference.", path, line) from cause
+			document = YAML(typ="rt").load(path.read_text(encoding="utf-8"))
+		except YAMLError as cause:
+			mark = getattr(cause, "problem_mark", None)
+			line = None if mark is None else mark.line + 1
+			raise WorkflowError("Workflow file is not a YAML document.", path, line) from cause
+
+		if document is None:
+			raise WorkflowError("Workflow file is empty.", path)
+		elif not isinstance(document, CommentedMap):
+			ex = WorkflowError("Workflow file is not a mapping.", path, 1)
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}'.")
+			raise ex
+		elif "on" not in document:
+			raise WorkflowError("Workflow file has no 'on' key.", path)
+		elif "jobs" not in document:
+			raise WorkflowError("Workflow file has no 'jobs' key.", path)
+
+		on = document["on"]
+		if isinstance(on, str):
+			triggers = (on, )
+		elif isinstance(on, (CommentedSeq, CommentedMap)):
+			triggers = tuple(str(trigger) for trigger in on)
+		else:
+			ex = WorkflowError("Key 'on' is neither an event, a list nor a mapping.", path, Base._KeyLine(document, "on"))
+			ex.add_note(f"Got type '{getFullyQualifiedName(on)}'.")
+			raise ex
+
+		displayName = document.get("name", None)
+		workflow = cls(path, None if displayName is None else str(displayName), triggers)
+
+		if "permissions" in document:
+			workflow._permissions = Permission._FromYAML(
+				document["permissions"], path, Base._KeyLine(document, "permissions"), workflow
+			)
+
+		return workflow
 
 
 @export
-class Permission(Base):
+class Permission(Base[Workflow]):
 	"""
 	A permission a workflow or job declares for the ``GITHUB_TOKEN``, as ``contents: write``.
 
 	The short forms ``read-all`` and ``write-all`` are read as one permission of scope :attr:`PermissionScope.All`.
 	"""
+
+	_PARENT_TYPE: ClassVar[ParentTypes] = Workflow  #: A permission is declared by a workflow.
 
 	_scope: PermissionScope  #: The scope, as ``contents``.
 	_level: AccessLevel      #: The access granted.
@@ -470,7 +508,7 @@ class Permission(Base):
 		level:  AccessLevel,
 		line:   int,
 		*,
-		parent: Nullable[Base] = None
+		parent: Nullable[Workflow]             = None
 	) -> None:
 		"""
 		Initializes a permission.
@@ -478,7 +516,7 @@ class Permission(Base):
 		:param scope:       The scope, as ``contents``.
 		:param level:       The access granted.
 		:param line:        Line the permission is written at, starting at 1.
-		:param parent:      Optional, reference to the containing element. Default: ``None``.
+		:param parent:      Optional, reference to the workflow or job declaring it. Default: ``None``.
 		:raises ValueError: If parameter 'scope' is ``None``.
 		:raises TypeError:  If parameter 'scope' is not of type :class:`PermissionScope`.
 		:raises ValueError: If parameter 'level' is ``None``.
@@ -534,7 +572,7 @@ class Permission(Base):
 		return f"{self._scope}: {self._level.value}"
 
 	@classmethod
-	def _FromYAML(cls, value: Any, path: Path, line: int, parent: Base) -> dict[PermissionScope, Self]:
+	def _FromYAML(cls, value: Any, path: Path, line: int, parent: Workflow) -> dict[PermissionScope, Self]:
 		"""
 		Read the value of a ``permissions`` key into the permissions a workflow or job declares.
 

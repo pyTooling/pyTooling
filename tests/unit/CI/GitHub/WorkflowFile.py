@@ -32,11 +32,12 @@
 Unit tests for :mod:`pyTooling.CI.GitHub.WorkflowFile`.
 """
 from pathlib                          import Path
+from tempfile                         import TemporaryDirectory
 from textwrap                         import dedent
 from typing                           import Any
 
-from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, WorkflowError, Permission, PermissionScope
-from pyTooling.CI.GitHub.WorkflowFile import UsesReference
+from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, Workflow, WorkflowError, Permission
+from pyTooling.CI.GitHub.WorkflowFile import PermissionScope
 from pyTooling.Testing                import Testcase
 
 from ruamel.yaml                      import YAML
@@ -185,6 +186,33 @@ PREPARE = dedent("""\
 """)
 
 
+class Fixture(Testcase):
+	"""Writes workflow files into a temporary directory, removed after each test."""
+
+	_directory: TemporaryDirectory
+	_path:      Path
+
+	def setUp(self) -> None:
+		self._directory = TemporaryDirectory()
+		self._path = Path(self._directory.name)
+
+	def tearDown(self) -> None:
+		self._directory.cleanup()
+
+	def _write(self, name: str, content: str) -> Path:
+		"""
+		Write a workflow file.
+
+		:param name:    Name of the file.
+		:param content: Content of the file.
+		:returns:       Path to the file.
+		"""
+		path = self._path / name
+		path.write_text(content, encoding="utf-8")
+
+		return path
+
+
 class ToPython(Testcase):
 	"""The round-trip loader's own types become plain Python types."""
 
@@ -213,89 +241,6 @@ class ToPython(Testcase):
 			with self.subTest(key=key):
 				self.assertIs(valueType, type(values[key]))
 				self.assertEqual(value, values[key])
-
-
-class References(Testcase):
-	def test_Workflow(self) -> None:
-		uses = UsesReference("pyTooling/Actions/.github/workflows/Package.yml@r8", 12)
-
-		self.assertEqual("pyTooling/Actions", uses.Repository)
-		self.assertEqual(".github/workflows/Package.yml", uses.Path)
-		self.assertEqual("r8", uses.Ref)
-		self.assertEqual("Package.yml", uses.FileName)
-		self.assertEqual("Package", uses.Stem)
-		self.assertTrue(uses.IsWorkflow)
-		self.assertFalse(uses.IsLocal)
-		self.assertFalse(uses.IsDocker)
-		self.assertEqual("pyTooling/Actions/.github/workflows/Package.yml@r8", str(uses))
-		self.assertEqual(12, uses.Line)
-		self.assertEqual("line 12", uses.Location)
-
-	def test_Action(self) -> None:
-		uses = UsesReference("actions/checkout@v6", 1)
-
-		self.assertEqual("actions/checkout", uses.Repository)
-		self.assertEqual("", uses.Path)
-		self.assertEqual("v6", uses.Ref)
-		self.assertEqual("", uses.FileName)
-		self.assertFalse(uses.IsWorkflow)
-
-	def test_Action_Path(self) -> None:
-		uses = UsesReference("pyTooling/Actions/.github/actions/ComputeRequirements@dev", 1)
-
-		self.assertEqual("pyTooling/Actions", uses.Repository)
-		self.assertEqual(".github/actions/ComputeRequirements", uses.Path)
-		self.assertFalse(uses.IsWorkflow)
-
-	def test_Local(self) -> None:
-		uses = UsesReference("./.github/workflows/Package.yaml", 1)
-
-		self.assertIsNone(uses.Repository)
-		self.assertIsNone(uses.Ref)
-		self.assertEqual(".github/workflows/Package.yaml", uses.Path)
-		self.assertTrue(uses.IsLocal)
-		self.assertTrue(uses.IsWorkflow)
-
-	def test_Docker(self) -> None:
-		uses = UsesReference("docker://alpine:3.22", 1)
-
-		self.assertIsNone(uses.Repository)
-		self.assertEqual("alpine:3.22", uses.Path)
-		self.assertTrue(uses.IsDocker)
-		self.assertFalse(uses.IsWorkflow)
-		self.assertEqual("", uses.Stem)
-
-	def test_NoRef(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			_ = UsesReference("actions/checkout", 1)
-
-		self.assertEqual("Parameter 'text' names a repository without a ref.", str(context.exception))
-		self.assertEqual(["Got 'actions/checkout'."], context.exception.__notes__)
-
-	def test_NoRepository(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			_ = UsesReference("checkout@v6", 1)
-
-		self.assertEqual("Parameter 'text' names no repository as 'owner/repo'.", str(context.exception))
-
-	def test_Empty(self) -> None:
-		with self.assertRaises(ValueError):
-			_ = UsesReference("", 1)
-
-	def test_None(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			_ = UsesReference(None, 1)
-
-		self.assertEqual("Parameter 'text' is None.", str(context.exception))
-
-	def test_Line(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			_ = UsesReference("actions/checkout@v6", 0)
-
-		self.assertEqual("Parameter 'line' is not positive.", str(context.exception))
-
-		with self.assertRaises(TypeError):
-			_ = UsesReference("actions/checkout@v6", "1")
 
 
 class Permissions(Testcase):
@@ -373,5 +318,105 @@ class Permissions(Testcase):
 		self.assertEqual("contents: read", str(permission))
 
 	def test_AccessLevel(self) -> None:
-		self.assertLess(AccessLevel.NoAccess.Rank(), AccessLevel.Read.Rank())
-		self.assertLess(AccessLevel.Read.Rank(), AccessLevel.Write.Rank())
+		self.assertLess(AccessLevel.NoAccess.Rank, AccessLevel.Read.Rank)
+		self.assertLess(AccessLevel.Read.Rank, AccessLevel.Write.Rank)
+		self.assertEqual(2, AccessLevel.Write.Rank)
+		self.assertIn("Rank", vars(AccessLevel.Write), "The rank is computed once per member.")
+
+	def test_Parent(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Permission(
+				PermissionScope.Contents, AccessLevel.Read, 1, parent=Permission(PermissionScope.Actions, AccessLevel.Read, 1)
+			)
+
+
+class WorkflowFile(Fixture):
+	"""A workflow file, read by :meth:`Workflow.FromFile`."""
+
+	def test_Workflow(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual("Package", workflow.Name)
+		self.assertEqual("Package", str(workflow))
+		self.assertEqual("Build Package", workflow.DisplayName)
+		self.assertEqual(self._path / "Package.yml", workflow.Path)
+		self.assertEqual(("workflow_call", ), workflow.Triggers)
+		self.assertTrue(workflow.IsCallable)
+		self.assertIsNone(workflow.Parent)
+		self.assertIs(workflow, workflow.Workflow)
+		self.assertEqual("Package.yml:1", workflow.Location)
+
+	def test_Permissions(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(["contents"], list(workflow.Permissions))
+		self.assertIs(workflow, workflow.Permissions["contents"].Parent)
+		self.assertEqual("Package.yml:37", workflow.Permissions["contents"].Location)
+
+	def test_PermissionsShortForm(self) -> None:
+		workflow = Workflow.FromFile(self._write("Prepare.yml", PREPARE))
+
+		self.assertEqual("read-all", str(workflow.Permissions[PermissionScope.All]))
+
+	def test_Triggers(self) -> None:
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+
+		self.assertEqual(("push", "workflow_dispatch"), workflow.Triggers)
+		self.assertFalse(workflow.IsCallable)
+		self.assertIsNone(workflow.Permissions)
+
+	def test_Triggers_Forms(self) -> None:
+		jobs = "jobs:\n  Job:\n    runs-on: ubuntu-26.04\n    steps: []\n"
+
+		self.assertEqual(("push", ), Workflow.FromFile(self._write("A.yml", f"on: push\n{jobs}")).Triggers)
+		workflow = Workflow.FromFile(self._write("B.yml", f"on: [push, workflow_call]\n{jobs}"))
+		self.assertEqual(("push", "workflow_call"), workflow.Triggers)
+		self.assertTrue(Workflow.FromFile(self._write("C.yml", f"on:\n  workflow_call:\n{jobs}")).IsCallable)
+
+
+class Errors(Fixture):
+	"""A malformed workflow file names itself and the line."""
+
+	def _error(self, content: str) -> WorkflowError:
+		"""
+		Read a malformed workflow file.
+
+		:param content: Content of the file.
+		:returns:       The exception reading it raised.
+		"""
+		path = self._write("Broken.yml", content)
+		with self.assertRaises(WorkflowError) as context:
+			_ = Workflow.FromFile(path)
+
+		self.assertEqual(path, context.exception.Path)
+
+		return context.exception
+
+	def test_NotYAML(self) -> None:
+		self.assertEqual("Workflow file is not a YAML document.", str(self._error("on: push\njobs: [\n")))
+
+	def test_Empty(self) -> None:
+		self.assertEqual("Workflow file is empty.", str(self._error("")))
+
+	def test_NoJobs(self) -> None:
+		self.assertEqual("Workflow file has no 'jobs' key.", str(self._error("on: push\n")))
+
+	def test_NoOn(self) -> None:
+		self.assertEqual("Workflow file has no 'on' key.", str(self._error("jobs: {}\n")))
+
+	def test_Nested(self) -> None:
+		"""An element reading its own part names the file too."""
+		error = self._error("on: push\npermissions:\n  contents: all\njobs: {}\n")
+
+		self.assertEqual("Permission 'contents' is not an access level.", str(error))
+		self.assertEqual(3, error.Line)
+
+	def test_Path(self) -> None:
+		with self.assertRaises(ValueError):
+			_ = Workflow.FromFile(None)
+
+		with self.assertRaises(TypeError):
+			_ = Workflow.FromFile("Pipeline.yml")
+
+		with self.assertRaises(FileNotFoundError):
+			_ = Workflow.FromFile(self._path / "Missing.yml")
