@@ -299,7 +299,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		if (uses := element.Definition.Uses) is not None:
 			lines.append(uses.FileName)
 			if not self._resolver.CanResolve(uses):
-				lines.append(f"{uses.Repository}@{uses.Ref}")
+				lines.append(f"{uses.Repository}@{uses.Reference}")
 			tooltip.append(f"uses: {uses}")
 
 		if isinstance(element, CIMatrix):
@@ -530,10 +530,10 @@ class PipelineGraph(BaseDirective):
 			for job in graph.Jobs:
 				if (
 					(uses := job.Uses) is not None and uses.Repository is not None and
-					uses.Repository.lower() == repository.lower() and uses.Ref != ref
+					uses.Repository.lower() == repository.lower() and uses.Reference != ref
 				):
 					_logger.warning(
-						f"{self.directiveName}: Job '{job.Name}' calls '{uses.FileName}' at ref '{uses.Ref}', but the "
+						f"{self.directiveName}: Job '{job.Name}' calls '{uses.FileName}' at ref '{uses.Reference}', but the "
 						f"documentation describes ref '{ref}' ({uses.Location}).",
 						location=(self.env.docname, self.lineno),
 						type="gha",
