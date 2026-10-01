@@ -441,8 +441,18 @@ class Errors(Fixture):
 		with self.assertRaises(TypeError):
 			_ = Workflow.FromFile("Pipeline.yml")
 
-		with self.assertRaises(FileNotFoundError):
+		with self.assertRaises(WorkflowError) as context:
 			_ = Workflow.FromFile(self._path / "Missing.yml")
+
+		self.assertEqual("Workflow file doesn't exist.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, FileNotFoundError)
+
+	def test_Unreadable(self) -> None:
+		with self.assertRaises(WorkflowError) as context:
+			_ = Workflow.FromFile(self._path)
+
+		self.assertEqual("Workflow file can't be read.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, OSError)
 
 
 class Parameters(Fixture):
@@ -631,7 +641,7 @@ class References(Testcase):
 
 		self.assertEqual("pyTooling/Actions", uses.Repository)
 		self.assertEqual(".github/workflows/Package.yml", uses.Path)
-		self.assertEqual("r8", uses.Ref)
+		self.assertEqual("r8", uses.Reference)
 		self.assertEqual("Package.yml", uses.FileName)
 		self.assertEqual("Package", uses.Stem)
 		self.assertTrue(uses.IsWorkflow)
@@ -646,7 +656,7 @@ class References(Testcase):
 
 		self.assertEqual("actions/checkout", uses.Repository)
 		self.assertEqual("", uses.Path)
-		self.assertEqual("v6", uses.Ref)
+		self.assertEqual("v6", uses.Reference)
 		self.assertEqual("", uses.FileName)
 		self.assertFalse(uses.IsWorkflow)
 
@@ -661,7 +671,7 @@ class References(Testcase):
 		uses = UsesReference("./.github/workflows/Package.yaml", 1)
 
 		self.assertIsNone(uses.Repository)
-		self.assertIsNone(uses.Ref)
+		self.assertIsNone(uses.Reference)
 		self.assertEqual(".github/workflows/Package.yaml", uses.Path)
 		self.assertTrue(uses.IsLocal)
 		self.assertTrue(uses.IsWorkflow)
@@ -679,14 +689,14 @@ class References(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = UsesReference("actions/checkout", 1)
 
-		self.assertEqual("Parameter 'text' names a repository without a ref.", str(context.exception))
+		self.assertEqual("Parameter 'rawReference' names a repository without a ref.", str(context.exception))
 		self.assertEqual(["Got 'actions/checkout'."], context.exception.__notes__)
 
 	def test_NoRepository(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = UsesReference("checkout@v6", 1)
 
-		self.assertEqual("Parameter 'text' names no repository as 'owner/repo'.", str(context.exception))
+		self.assertEqual("Parameter 'rawReference' names no repository as 'owner/repo'.", str(context.exception))
 
 	def test_Empty(self) -> None:
 		with self.assertRaises(ValueError):
@@ -696,7 +706,7 @@ class References(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = UsesReference(None, 1)
 
-		self.assertEqual("Parameter 'text' is None.", str(context.exception))
+		self.assertEqual("Parameter 'rawReference' is None.", str(context.exception))
 
 	def test_Line(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -718,7 +728,7 @@ def _readJobs(document: str) -> dict[str, Job]:
 	jobs = YAML(typ="rt").load(document)["jobs"]
 
 	return {
-		name: Job._FromYAML(name, mapping, Path("Package.yml"), Base._KeyLine(jobs, name), None)
+		name: Job._FromYAML(name, mapping, Path("Package.yml"), Base._KeyLine(jobs, name))
 		for name, mapping in jobs.items()
 	}
 
@@ -777,7 +787,7 @@ class Jobs(Testcase):
 		package = jobs["Package"]
 
 		self.assertEqual("owner/repo", package.Uses.Repository)
-		self.assertEqual("dev", package.Uses.Ref)
+		self.assertEqual("dev", package.Uses.Reference)
 		self.assertEqual("line 12", package.Uses.Location)
 		self.assertEqual((), package.RunsOn)
 		self.assertEqual({"package_name": "myPackage", "delay": 10}, package.With)
@@ -860,6 +870,71 @@ class JobsInFile(Fixture):
 		self.assertIs(job, workflow.Jobs["Build"])
 		self.assertEqual((), job.Needs)
 		self.assertEqual("Pipeline.yml:3", job.Location)
+
+	def test_Construction_Jobs(self) -> None:
+		prepare = Job("Prepare", 3, runsOn=("ubuntu-26.04", ))
+		build =   Job("Build", 5, runsOn=("ubuntu-26.04", ), needs=("Prepare", ))
+		uses =    UsesReference("./.github/workflows/Package.yml", 6, parent=build)
+
+		self.assertIsNone(build.Workflow)
+		self.assertEqual("line 6", uses.Location)
+
+		workflow = Workflow(Path("Pipeline.yml"), "Pipeline", ("push", ), jobs=(prepare, build))
+
+		self.assertEqual(["Prepare", "Build"], list(workflow.Jobs))
+		self.assertIs(workflow, build.Parent)
+		self.assertEqual((prepare, ), build.Needs)
+		self.assertIs(workflow, uses.Workflow)
+		self.assertEqual("Pipeline.yml:6", uses.Location)
+
+	def test_Construction_Elements(self) -> None:
+		uses =       UsesReference("pyTooling/Actions/.github/workflows/Package.yml@r8", 4)
+		permission = Permission(PermissionScope.Contents, AccessLevel.Write, 6)
+		job =        Job("Package", 3, uses=uses, permissions=(permission, ))
+		workflow =   Workflow(Path("Pipeline.yml"), jobs=(job, ))
+
+		self.assertIs(uses, job.Uses)
+		self.assertIs(job, uses.Parent)
+		self.assertEqual(["contents"], list(job.Permissions))
+		self.assertIs(job, permission.Parent)
+		self.assertIs(workflow, permission.Workflow)
+		self.assertIsNone(Job("Build", 3).Permissions)
+
+		called =    Job("Called", 7)
+		reference = UsesReference("./.github/workflows/Package.yml", 8, parent=called)
+		self.assertIs(reference, called.Uses)
+
+		for arguments, message in (
+			({"uses":        "./Package.yml"}, "Parameter 'uses' is not of type 'UsesReference'."),
+			({"permissions": ("contents", )},  "An element of parameter 'permissions' is not of type 'Permission'.")
+		):
+			with self.subTest(message):
+				with self.assertRaises(TypeError) as context:
+					_ = Job("Build", 3, **arguments)
+
+				self.assertEqual(message, str(context.exception))
+
+	def test_Construction_Defaults(self) -> None:
+		job = Job("Build", 3)
+
+		self.assertEqual((), job.NeedNames)
+		self.assertEqual((), job.RunsOn)
+
+	def test_Construction_ElementTypes(self) -> None:
+		for arguments, message in (
+			({"needs":  ("A", 1)}, "An element of parameter 'needs' is not of type 'str'."),
+			({"runsOn": (None, )}, "An element of parameter 'runsOn' is not of type 'str'.")
+		):
+			with self.subTest(message):
+				with self.assertRaises(TypeError) as context:
+					_ = Job("Build", 3, **arguments)
+
+				self.assertEqual(message, str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = Workflow(Path("Pipeline.yml"), jobs=("Build", ))
+
+		self.assertEqual("An element of parameter 'jobs' is not of type 'Job'.", str(context.exception))
 
 	def test_UnknownNeed(self) -> None:
 		error = self._error("on: push\njobs:\n  A:\n    runs-on: x\n    needs: B\n")
