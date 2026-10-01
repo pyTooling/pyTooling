@@ -345,17 +345,18 @@ class Workflow(Base[None]):
 	def __init__(
 		self,
 		path:        Path,
-		displayName: Nullable[str]              = None,
-		triggers:    Nullable[Iterable[str]]    = None,
-		inputs:      Nullable[Iterable[Input]]  = None,
-		outputs:     Nullable[Iterable[Output]] = None,
-		secrets:     Nullable[Iterable[Secret]] = None
+		displayName: Nullable[str]                  = None,
+		triggers:    Nullable[Iterable[str]]        = None,
+		inputs:      Nullable[Iterable[Input]]      = None,
+		outputs:     Nullable[Iterable[Output]]     = None,
+		secrets:     Nullable[Iterable[Secret]]     = None,
+		permissions: Nullable[Iterable[Permission]] = None
 	) -> None:
 		"""
 		Initializes a workflow.
 
-		An input, output or secret is attached by passing it, or by constructing it with the workflow as parent. Use
-		:meth:`FromFile` to read a workflow file.
+		An input, output, secret or permission is attached by passing it, or by constructing it with the workflow as
+		parent. Use :meth:`FromFile` to read a workflow file.
 
 		:param path:        Path to the workflow file.
 		:param displayName: Optional, name of the workflow, as GitHub displays it. Default: ``None``.
@@ -365,6 +366,8 @@ class Workflow(Base[None]):
 		                    ``None``.
 		:param secrets:     Optional, secrets of ``on.workflow_call``, which are attached to the workflow. Default:
 		                    ``None``.
+		:param permissions: Optional, permissions the workflow declares for all its jobs, which are attached to the
+		                    workflow. Default: ``None``, for a workflow without a ``permissions`` key.
 		:raises ValueError: If parameter 'path' is ``None``.
 		:raises TypeError:  If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:  If parameter 'displayName' is not of type :class:`str`.
@@ -372,6 +375,7 @@ class Workflow(Base[None]):
 		:raises TypeError:  If an element of parameter 'inputs' is not of type :class:`Input`.
 		:raises TypeError:  If an element of parameter 'outputs' is not of type :class:`Output`.
 		:raises TypeError:  If an element of parameter 'secrets' is not of type :class:`Secret`.
+		:raises TypeError:  If an element of parameter 'permissions' is not of type :class:`Permission`.
 		"""
 		super().__init__(1)
 
@@ -422,6 +426,18 @@ class Workflow(Base[None]):
 				container[parameter._name] = parameter
 				parameter._parent =   self
 				parameter._workflow = self
+
+		if permissions is not None:
+			self._permissions = {}
+			for permission in permissions:
+				if not isinstance(permission, Permission):
+					ex = TypeError("An element of parameter 'permissions' is not of type 'Permission'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(permission)}'.")
+					raise ex
+
+				self._permissions[permission._scope] = permission
+				permission._parent =   self
+				permission._workflow = self
 
 	@readonly
 	def Path(self) -> Path:
@@ -584,22 +600,20 @@ class Workflow(Base[None]):
 					for name, declaration in declarations.items()
 				]
 
+		permissions = None
+		if "permissions" in document:
+			permissions = Permission._FromYAML(document["permissions"], path, Base._KeyLine(document, "permissions"))
+
 		displayName = document.get("name", None)
-		workflow = cls(
+		return cls(
 			path,
 			None if displayName is None else str(displayName),
 			triggers,
 			parameters["inputs"],
 			parameters["outputs"],
-			parameters["secrets"]
+			parameters["secrets"],
+			permissions
 		)
-
-		if "permissions" in document:
-			workflow._permissions = Permission._FromYAML(
-				document["permissions"], path, Base._KeyLine(document, "permissions"), workflow
-			)
-
-		return workflow
 
 
 @export
@@ -629,7 +643,8 @@ class Permission(Base[Workflow]):
 		:param scope:       The scope, as ``contents``.
 		:param level:       The access granted.
 		:param line:        Line the permission is written at, starting at 1.
-		:param parent:      Optional, reference to the workflow or job declaring it. Default: ``None``.
+		:param parent:      Optional, reference to the workflow or job declaring it, which the permission is attached to.
+		                    Default: ``None``.
 		:raises ValueError: If parameter 'scope' is ``None``.
 		:raises TypeError:  If parameter 'scope' is not of type :class:`PermissionScope`.
 		:raises ValueError: If parameter 'level' is ``None``.
@@ -653,6 +668,12 @@ class Permission(Base[Workflow]):
 
 		self._scope = scope
 		self._level = level
+
+		if parent is not None:
+			if parent._permissions is None:
+				parent._permissions = {}
+
+			parent._permissions[scope] = self
 
 	@readonly
 	def Scope(self) -> PermissionScope:
@@ -685,15 +706,14 @@ class Permission(Base[Workflow]):
 		return f"{self._scope}: {self._level.value}"
 
 	@classmethod
-	def _FromYAML(cls, value: Any, path: Path, line: int, parent: Workflow) -> dict[PermissionScope, Self]:
+	def _FromYAML(cls, value: Any, path: Path, line: int) -> list[Self]:
 		"""
 		Read the value of a ``permissions`` key into the permissions a workflow or job declares.
 
 		:param value:          The value of the ``permissions`` key.
 		:param path:           Path to the workflow file.
 		:param line:           Line the key is written at, starting at 1.
-		:param parent:         Reference to the workflow or job declaring the permissions.
-		:returns:              The permissions, by scope.
+		:returns:              The permissions, in file order.
 		:raises WorkflowError: If the value is neither ``read-all``, ``write-all`` nor a mapping.
 		:raises WorkflowError: If a key is not a permission scope. |br|
 		                       The note lists the allowed values.
@@ -701,15 +721,15 @@ class Permission(Base[Workflow]):
 		                       The note lists the allowed values.
 		"""
 		if value == "read-all":
-			return {PermissionScope.All: cls(PermissionScope.All, AccessLevel.Read, line, parent=parent)}
+			return [cls(PermissionScope.All, AccessLevel.Read, line)]
 		elif value == "write-all":
-			return {PermissionScope.All: cls(PermissionScope.All, AccessLevel.Write, line, parent=parent)}
+			return [cls(PermissionScope.All, AccessLevel.Write, line)]
 		elif not isinstance(value, CommentedMap):
 			ex = WorkflowError("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", path, line)
 			ex.add_note(f"Got '{value}'." if isinstance(value, str) else f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
-		permissions = {}
+		permissions = []
 		for scope, level in value.items():
 			scopeLine = Base._KeyLine(value, scope)
 			try:
@@ -728,7 +748,7 @@ class Permission(Base[Workflow]):
 				ex.add_note(f"Allowed values: {', '.join(member.value for member in AccessLevel)}.")
 				raise ex from cause
 
-			permissions[permissionScope] = cls(permissionScope, accessLevel, scopeLine, parent=parent)
+			permissions.append(cls(permissionScope, accessLevel, scopeLine))
 
 		return permissions
 

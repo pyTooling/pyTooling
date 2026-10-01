@@ -254,7 +254,7 @@ class Permissions(Testcase):
 		:returns:     The exception reading it raised.
 		"""
 		with self.assertRaises(WorkflowError) as context:
-			_ = Permission._FromYAML(value, Path("A.yml"), 2, None)
+			_ = Permission._FromYAML(value, Path("A.yml"), 2)
 
 		self.assertEqual(Path("A.yml"), context.exception.Path)
 
@@ -262,19 +262,20 @@ class Permissions(Testcase):
 
 	def test_Mapping(self) -> None:
 		mapping = YAML(typ="rt").load("contents: read\nid-token: write\n")
-		permissions = Permission._FromYAML(mapping, Path("A.yml"), 1, None)
+		contents, idToken = Permission._FromYAML(mapping, Path("A.yml"), 1)
 
-		self.assertEqual([PermissionScope.Contents, PermissionScope.IDToken], list(permissions))
-		self.assertEqual(["contents", "id-token"], list(permissions))
-		self.assertIs(AccessLevel.Write, permissions["id-token"].Level)
-		self.assertEqual("contents: read", str(permissions["contents"]))
-		self.assertEqual(2, permissions["id-token"].Line)
-		self.assertEqual("line 2", permissions["id-token"].Location)
+		self.assertIs(PermissionScope.Contents, contents.Scope)
+		self.assertIs(PermissionScope.IDToken, idToken.Scope)
+		self.assertIs(AccessLevel.Write, idToken.Level)
+		self.assertEqual("contents: read", str(contents))
+		self.assertEqual(2, idToken.Line)
+		self.assertEqual("line 2", idToken.Location)
+		self.assertIsNone(idToken.Parent)
 
 	def test_ShortForm(self) -> None:
 		for value, level in (("read-all", AccessLevel.Read), ("write-all", AccessLevel.Write)):
 			with self.subTest(value=value):
-				permission = Permission._FromYAML(value, Path("A.yml"), 7, None)[PermissionScope.All]
+				permission, = Permission._FromYAML(value, Path("A.yml"), 7)
 
 				self.assertIs(level, permission.Level)
 				self.assertEqual(value, str(permission))
@@ -328,6 +329,28 @@ class Permissions(Testcase):
 			_ = Permission(
 				PermissionScope.Contents, AccessLevel.Read, 1, parent=Permission(PermissionScope.Actions, AccessLevel.Read, 1)
 			)
+
+		workflow = Workflow(Path("Package.yml"))
+		permission = Permission(PermissionScope.Contents, AccessLevel.Read, 3, parent=workflow)
+
+		self.assertIs(permission, workflow.Permissions["contents"])
+
+	def test_Workflow_Permissions(self) -> None:
+		self.assertIsNone(Workflow(Path("Package.yml")).Permissions)
+		self.assertEqual({}, Workflow(Path("Package.yml"), permissions=()).Permissions)
+
+		contents = Permission(PermissionScope.Contents, AccessLevel.Read, 3)
+		pages =    Permission(PermissionScope.Pages, AccessLevel.Write, 4)
+		workflow = Workflow(Path("Package.yml"), permissions=[contents, pages])
+
+		self.assertEqual(["contents", "pages"], list(workflow.Permissions))
+		self.assertIs(workflow, pages.Parent)
+		self.assertEqual("Package.yml:4", pages.Location)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Workflow(Path("Package.yml"), permissions=["contents"])
+
+		self.assertEqual("An element of parameter 'permissions' is not of type 'Permission'.", str(context.exception))
 
 
 class WorkflowFile(Fixture):
