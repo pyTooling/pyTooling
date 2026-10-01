@@ -36,8 +36,8 @@ from tempfile                         import TemporaryDirectory
 from textwrap                         import dedent
 from typing                           import Any
 
-from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, Workflow, WorkflowError, Permission
-from pyTooling.CI.GitHub.WorkflowFile import PermissionScope
+from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, Input, Output
+from pyTooling.CI.GitHub.WorkflowFile import Permission, PermissionScope, Secret
 from pyTooling.Testing                import Testcase
 
 from ruamel.yaml                      import YAML
@@ -420,3 +420,137 @@ class Errors(Fixture):
 
 		with self.assertRaises(FileNotFoundError):
 			_ = Workflow.FromFile(self._path / "Missing.yml")
+
+
+class Parameters(Fixture):
+	"""The parameters of ``on.workflow_call``, each read by its class' ``_FromYAML()``."""
+
+	def _read(self, section: str, parameterClass: type) -> dict[str, Any]:
+		"""
+		Read one section of the parameters of :data:`CALLABLE`.
+
+		:param section:        ``inputs``, ``outputs`` or ``secrets``.
+		:param parameterClass: The class reading a declaration.
+		:returns:              The parameters, by name.
+		"""
+		parameters = YAML(typ="rt").load(CALLABLE)["on"]["workflow_call"][section]
+
+		return {
+			name: parameterClass._FromYAML(name, declaration, Path("Package.yml"), Base._KeyLine(parameters, name), None)
+			for name, declaration in parameters.items()
+		}
+
+	def _error(self, parameterClass: type, declaration: str) -> WorkflowError:
+		"""
+		Read a malformed declaration of a parameter ``a`` written at line 4.
+
+		:param parameterClass: The class reading the declaration.
+		:param declaration:    The declaration's YAML.
+		:returns:              The exception reading it raised.
+		"""
+		with self.assertRaises(WorkflowError) as context:
+			_ = parameterClass._FromYAML("a", YAML(typ="rt").load(declaration), Path("A.yml"), 4, None)
+
+		self.assertEqual(4, context.exception.Line)
+
+		return context.exception
+
+	def test_Inputs(self) -> None:
+		inputs = self._read("inputs", Input)
+
+		self.assertEqual(["package_name", "python_version", "dry_run", "pages_on"], list(inputs))
+
+		packageName = inputs["package_name"]
+		self.assertEqual("package_name", packageName.Name)
+		self.assertIs(InputType.String, packageName.Type)
+		self.assertTrue(packageName.Required)
+		self.assertIsNone(packageName.Default)
+		self.assertEqual("Name of the package.", packageName.Description)
+		self.assertEqual("line 6", packageName.Location)
+
+		pythonVersion = inputs["python_version"]
+		self.assertFalse(pythonVersion.Required)
+		self.assertEqual("3.14", pythonVersion.Default)
+		self.assertIs(str, type(pythonVersion.Default))
+
+		dryRun = inputs["dry_run"]
+		self.assertIs(InputType.Boolean, dryRun.Type)
+		self.assertIs(False, dryRun.Default)
+		self.assertIsNone(dryRun.Description)
+
+		self.assertEqual("default-branch\nrelease-tag\n", inputs["pages_on"].Default)
+
+	def test_Input_Number(self) -> None:
+		declaration = YAML(typ="rt").load("type: number\ndefault: 0x10\nrequired: true\n")
+		parameter = Input._FromYAML("count", declaration, Path("A.yml"), 4, None)
+
+		self.assertIs(InputType.Number, parameter.Type)
+		self.assertIs(int, type(parameter.Default))
+		self.assertEqual(16, parameter.Default)
+		self.assertTrue(parameter.Required)
+
+	def test_Outputs(self) -> None:
+		version = self._read("outputs", Output)["version"]
+
+		self.assertEqual("Version of the package.", version.Description)
+		self.assertEqual("${{ jobs.Build.outputs.version }}", version.Value)
+		self.assertEqual(27, version.Line)
+
+	def test_Secrets(self) -> None:
+		secrets = self._read("secrets", Secret)
+
+		self.assertEqual(["PYPI_TOKEN", "CODECOV_TOKEN"], list(secrets))
+		self.assertTrue(secrets["PYPI_TOKEN"].Required)
+		self.assertEqual("Token for PyPI.", secrets["PYPI_TOKEN"].Description)
+		self.assertFalse(secrets["CODECOV_TOKEN"].Required)
+		self.assertIsNone(secrets["CODECOV_TOKEN"].Description)
+
+	def test_InputWithoutType(self) -> None:
+		self.assertEqual("Input 'a' has no 'type' key.", str(self._error(Input, "required: true\n")))
+
+	def test_InputType(self) -> None:
+		error = self._error(Input, "type: text\n")
+
+		self.assertEqual("Key 'type' of input 'a' is not an input type.", str(error))
+		self.assertIn("Allowed values: string, boolean, number.", error.__notes__)
+
+	def test_OutputWithoutValue(self) -> None:
+		self.assertEqual("Output 'a' has no 'value' key.", str(self._error(Output, "description: x\n")))
+
+	def test_Required(self) -> None:
+		self.assertEqual("Key 'required' of 'a' is not a boolean.", str(self._error(Secret, "required: 'yes'\n")))
+
+	def test_NotAMapping(self) -> None:
+		self.assertEqual("Declaration of 'a' is not a mapping.", str(self._error(Input, "number\n")))
+
+	def test_Input_Type(self) -> None:
+		with self.assertRaises(ValueError):
+			_ = Input("a", 1, None)
+
+		with self.assertRaises(TypeError):
+			_ = Input("a", 1, "string")
+
+	def test_FromFile(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(["package_name", "python_version", "dry_run", "pages_on"], list(workflow.Inputs))
+		self.assertEqual(["version"], list(workflow.Outputs))
+		self.assertEqual(["PYPI_TOKEN", "CODECOV_TOKEN"], list(workflow.Secrets))
+
+		packageName = workflow.Inputs["package_name"]
+		self.assertIs(workflow, packageName.Parent)
+		self.assertIs(workflow, packageName.Workflow)
+		self.assertEqual("Package.yml:6", packageName.Location)
+
+	def test_NoParameters(self) -> None:
+		workflow = Workflow.FromFile(self._write("Pipeline.yml", CALLER))
+
+		self.assertEqual({}, workflow.Inputs)
+		self.assertEqual({}, workflow.Outputs)
+		self.assertEqual({}, workflow.Secrets)
+
+	def test_Input_Parent(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Input("a", 1, InputType.String, parent=Permission(PermissionScope.Contents, AccessLevel.Read, 1))
+
+		self.assertEqual("Parameter 'parent' is not of type 'Workflow'.", str(context.exception))
