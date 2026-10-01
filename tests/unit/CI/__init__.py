@@ -31,5 +31,6 @@
 """
 Unit tests for :mod:`pyTooling.CI`.
 
-The package itself declares no code; its members are tested per module, e.g. in :mod:`tests.unit.CI.GitHub`.
+The service-independent pipeline model is tested in :mod:`tests.unit.CI.Pipeline`, the models of GitHub Actions in
+:mod:`tests.unit.CI.GitHub`.
 """
