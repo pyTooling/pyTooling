@@ -521,7 +521,7 @@ class Dependencies(WorkflowReferenceDirective):
 		else:
 			url = f"https://github.com/{uses.Repository}"
 			if uses.Path != "":
-				url += f"/{'blob' if uses.IsWorkflow else 'tree'}/{uses.Ref}/{uses.Path}"
+				url += f"/{'blob' if uses.IsWorkflow else 'tree'}/{uses.Reference}/{uses.Path}"
 
 		return self._Item(nodes.paragraph("", "", nodes.reference(text, "", literal, refuri=url)), keys)
 
