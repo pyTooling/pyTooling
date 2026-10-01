@@ -40,9 +40,8 @@ from pyTooling.CI                     import Matrix as CIMatrix, NeedDependencyC
 from pyTooling.CI.GitHub              import Pipeline as GitHubPipeline
 from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, WorkflowResolver
 from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Output, Permission, PermissionScope, Secret
-from pyTooling.CI.GitHub.WorkflowFile import Step, UsesReference
-from pyTooling.CI.GitHub.WorkflowFile import DefinedJob, DefinedMatrix, DefinedMatrixJob, DefinedMatrixWorkflow
-from pyTooling.CI.GitHub.WorkflowFile import DefinedPipeline, DefinedWorkflow
+from pyTooling.CI.GitHub.WorkflowFile import UsesReference, DefinedJob, DefinedMatrix, DefinedMatrixJob
+from pyTooling.CI.GitHub.WorkflowFile import DefinedMatrixWorkflow, DefinedPipeline, DefinedWorkflow, Action, Step
 from pyTooling.Graph                  import Graph
 from pyTooling.Testing                import Testcase
 
@@ -373,6 +372,7 @@ class WorkflowFile(Fixture):
 		self.assertTrue(workflow.IsCallable)
 		self.assertIsNone(workflow.Parent)
 		self.assertIs(workflow, workflow.Workflow)
+		self.assertEqual(self._path / "Package.yml", workflow.File)
 		self.assertEqual("Package.yml:1", workflow.Location)
 
 	def test_Permissions(self) -> None:
@@ -1739,3 +1739,212 @@ class ApplyNeeds(Fixture):
 			_ = workflow.ApplyNeeds(self._run(), {})
 
 		self.assertEqual("Parameter 'resolver' is not of type 'WorkflowResolver'.", str(context.exception))
+
+
+#: A workflow of a repository, running a local action, an action of the repository and a job in containers.
+REPOSITORY_WORKFLOW = dedent("""\
+	on:
+	  workflow_call:
+
+	jobs:
+	  Build:
+	    runs-on: ubuntu-26.04
+	    container:
+	      image: ${{ inputs.image }}
+	    services:
+	      database:
+	        image: postgres:18
+	      cache: redis:8
+	    steps:
+	      - uses: ./.github/actions/Composite
+	      - uses: owner/repo/.github/actions/Docker@r1
+	      - uses: other/repo@v1
+	      - uses: ./.github/actions/Missing
+""")
+
+#: A composite action, running a local action, an action of another repository and a Docker image.
+COMPOSITE = dedent("""\
+	name: Composite Action
+	runs:
+	  using: composite
+	  steps:
+	    - name: Nested
+	      uses: ./.github/actions/Docker
+	    - uses: actions/checkout@v6
+	    - run: echo
+	      shell: bash
+	    - uses: docker://alpine:3.22
+""")
+
+#: A Docker action.
+DOCKER = dedent("""\
+	runs:
+	  using: docker
+	  image: Dockerfile
+""")
+
+
+class Actions(Fixture):
+	def _repository(self) -> tuple[WorkflowResolver, Workflow]:
+		"""
+		Write a repository with a workflow and two actions, and map ``owner/repo`` to its workflow directory.
+
+		:returns: The resolver and the workflow.
+		"""
+		workflows = self._path / ".github" / "workflows"
+		workflows.mkdir(parents=True)
+		for name, content in (("Composite", COMPOSITE), ("Docker", DOCKER)):
+			(self._path / ".github" / "actions" / name).mkdir(parents=True)
+			(self._path / ".github" / "actions" / name / "action.yml").write_text(content, encoding="utf-8")
+		(workflows / "Build.yml").write_text(REPOSITORY_WORKFLOW, encoding="utf-8")
+
+		resolver = WorkflowResolver({"owner/repo": workflows})
+		return resolver, resolver.Load(workflows / "Build.yml")
+
+	def test_Composite(self) -> None:
+		self._repository()
+		action = Action.FromFile(self._path / ".github" / "actions" / "Composite" / "action.yml")
+
+		self.assertEqual("Composite", action.Name)
+		self.assertEqual("Composite Action", action.DisplayName)
+		self.assertEqual("composite", action.Using)
+		self.assertTrue(action.IsComposite)
+		self.assertIsNone(action.Image)
+		self.assertEqual(4, action.StepCount)
+		self.assertEqual("Nested", action.Steps[0].Name)
+		self.assertIs(action, action.Steps[0].Parent)
+		self.assertEqual(
+			["./.github/actions/Docker", "actions/checkout@v6", "docker://alpine:3.22"],
+			[str(uses) for uses in action.IterateActions()]
+		)
+		self.assertEqual(6, action.Steps[0].Uses.Line)
+
+	def test_Composite_Location(self) -> None:
+		"""An element inside an action is located in the action's file."""
+		self._repository()
+		path = self._path / ".github" / "actions" / "Composite" / "action.yml"
+		action = Action.FromFile(path)
+
+		self.assertEqual(path, action.File)
+		self.assertEqual("action.yml:1", action.Location)
+		self.assertEqual(path, action.Steps[0].File)
+		self.assertIsNone(action.Steps[0].Workflow)
+		self.assertEqual(f"action.yml:{action.Steps[0].Line}", action.Steps[0].Location)
+		self.assertEqual("action.yml:6", action.Steps[0].Uses.Location)
+
+	def test_Docker(self) -> None:
+		self._repository()
+		action = Action.FromFile(self._path / ".github" / "actions" / "Docker" / "action.yml")
+
+		self.assertEqual("docker", action.Using)
+		self.assertFalse(action.IsComposite)
+		self.assertEqual("Dockerfile", action.Image)
+		self.assertEqual([], action.Steps)
+
+	def test_Errors(self) -> None:
+		path = self._write("action.yml", "name: Nothing\n")
+		with self.assertRaises(WorkflowError) as context:
+			_ = Action.FromFile(path)
+
+		self.assertEqual("Action file has no 'runs' key.", str(context.exception).splitlines()[0])
+
+		self._write("action.yml", "runs:\n  steps: []\n")
+		with self.assertRaises(WorkflowError) as context:
+			_ = Action.FromFile(path)
+
+		self.assertEqual("Key 'runs' has no 'using' key.", str(context.exception).splitlines()[0])
+		self.assertEqual(1, context.exception.Line)
+
+		with self.assertRaises(ValueError):
+			_ = Action(None, "composite")
+
+		with self.assertRaises(ValueError):
+			_ = Action(path, None)
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = Action.FromFile(self._path / "Missing" / "action.yml")
+
+		self.assertEqual("Action file doesn't exist.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, FileNotFoundError)
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = Action.FromFile(self._path)
+
+		self.assertEqual("Action file can't be read.", str(context.exception))
+
+	def test_Construction(self) -> None:
+		path =   Path("Setup") / "action.yml"
+		step =   Step(4, run="make")
+		action = Action(path, "composite", steps=(step, ))
+
+		self.assertEqual([step], action.Steps)
+		self.assertIs(action, step.Parent)
+		self.assertEqual(path, step.File)
+		self.assertEqual("action.yml:4", step.Location)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Action(path, "composite", steps=("make", ))
+
+		self.assertEqual("An element of parameter 'steps' is not of type 'Step'.", str(context.exception))
+
+	def test_Step_Parent(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Step(1, parent=Workflow(Path("Build.yml")))
+
+		self.assertEqual("Parameter 'parent' is not of type 'Job' or 'Action'.", str(context.exception))
+
+	def test_Containers(self) -> None:
+		_, workflow = self._repository()
+		job = workflow.Jobs["Build"]
+
+		self.assertEqual("${{ inputs.image }}", job.Container)
+		self.assertEqual({"database": "postgres:18", "cache": "redis:8"}, job.Services)
+		self.assertIsNone(Job("Test", 1).Container)
+		self.assertEqual({}, Job("Test", 1).Services)
+
+		job = Job("Test", 1, container="python:3.14", services={"cache": "redis:8"})
+		self.assertEqual("python:3.14", job.Container)
+		self.assertEqual({"cache": "redis:8"}, job.Services)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Job("Test", 1, container=3.14)
+
+		self.assertEqual("Parameter 'container' is not of type 'str'.", str(context.exception))
+
+	def test_ResolveAction(self) -> None:
+		"""A local action, an action of a mapped repository, and a local action called by an action are read."""
+		resolver, workflow = self._repository()
+		steps = workflow.Jobs["Build"].Steps
+
+		composite = resolver.ResolveAction(steps[0].Uses)
+		docker = resolver.ResolveAction(steps[1].Uses)
+		self.assertEqual("Composite", composite.Name)
+		self.assertEqual("Docker", docker.Name)
+		self.assertIs(docker, resolver.ResolveAction(composite.Steps[0].Uses))
+		self.assertIsNone(resolver.ResolveAction(steps[2].Uses))
+		self.assertIsNone(resolver.ResolveAction(composite.Steps[3].Uses))
+
+	def test_ResolveAction_Workflow(self) -> None:
+		resolver = WorkflowResolver()
+
+		self.assertIsNone(resolver.ResolveAction(UsesReference("owner/repo/.github/workflows/Build.yml@r1", 1)))
+		self.assertIsNone(resolver.ResolveAction(UsesReference("./.github/actions/Composite", 1)))
+
+	def test_ResolveAction_Outside(self) -> None:
+		"""A mapped directory outside a '.github' directory has no repository root to find actions in."""
+		resolver = WorkflowResolver({"owner/repo": self._path})
+
+		self.assertIsNone(resolver.ResolveAction(UsesReference("owner/repo/.github/actions/Composite@r1", 1)))
+
+	def test_ResolveAction_Missing(self) -> None:
+		resolver, workflow = self._repository()
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = resolver.ResolveAction(workflow.Jobs["Build"].Steps[3].Uses)
+
+		directory = self._path / ".github" / "actions" / "Missing"
+		self.assertEqual(
+			f"Action '.github/actions/Missing' has no 'action.yml' in '{directory}'.", str(context.exception).splitlines()[0]
+		)
+		self.assertEqual(17, context.exception.Line)
+		self.assertEqual(self._path / ".github" / "workflows" / "Build.yml", context.exception.Path)

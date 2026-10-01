@@ -47,10 +47,15 @@ A workflow file is read once into objects:
        +-- Step             a step of the job
            +-- UsesReference    the action the step runs
 
-Every element knows its parent, the workflow it belongs to, and the line it starts at in the file, so a consumer can
-name the place a finding comes from, as ``CompletePipeline.yml:552``.
+   Action                   an action's file, e.g. '.github/actions/ComputeRequirements/action.yml'
+   +-- Step                 a step of a composite action
+       +-- UsesReference    the action the step runs
 
-:class:`WorkflowResolver` reads the reusable workflows a job calls, as far as they are in a local directory.
+Every element knows its parent, the workflow it belongs to, the file it was read from - a workflow's or an action's -
+and the line it starts at, so a consumer can name the place a finding comes from, as ``CompletePipeline.yml:552``.
+
+:class:`WorkflowResolver` reads the reusable workflows a job calls and the actions a step runs, as far as they are in a
+local directory.
 
 The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow *run* as the REST API reports it.
 :meth:`Workflow.ToPipeline` builds the pipeline a workflow defines as a :mod:`pyTooling.CI` model, whose
@@ -213,16 +218,18 @@ class InputType(StringEnum):
 @abstractclass
 class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 	"""
-	Common behaviour of every element of a workflow file.
+	Common behaviour of every element of a workflow file or an action's file.
 
-	Every element knows the element containing it, the workflow it belongs to, and the line it starts at.
+	Every element knows the element containing it, the workflow it belongs to, the file it was read from, and the line
+	it starts at.
 	"""
 
 	_PARENT_TYPE: ClassVar[ParentTypes] = None  #: Type a parent must have, or ``None`` when the element has no parent.
 
 	_parent:   Nullable[ParentType]  #: Reference to the containing element.
 	_workflow: Nullable[Workflow]    #: Reference to the workflow this element belongs to.
-	_line:     int                   #: Line the element starts at in the workflow file, starting at 1.
+	_file:     Nullable[Path]        #: Path to the file the element was read from: a workflow's or an action's file.
+	_line:     int                   #: Line the element starts at in its file, starting at 1.
 
 	def __init__(self, line: int, *, parent: Nullable[ParentType] = None) -> None:
 		"""
@@ -254,6 +261,7 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 
 		self._parent =   parent
 		self._workflow = None if parent is None else parent._workflow
+		self._file =     None if parent is None else parent._file
 		self._line =     line
 
 	@property
@@ -261,8 +269,8 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the containing element (:attr:`_parent`).
 
-		Assigning a parent attaches an element constructed before it: the element takes the parent's workflow, and so do
-		the elements it contains.
+		Assigning a parent attaches an element constructed before it: the element takes the parent's workflow and file,
+		and so do the elements it contains.
 
 		:returns:           The containing element, or ``None`` for a :class:`Workflow`.
 		:raises ValueError: If ``None`` is assigned.
@@ -283,6 +291,7 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 
 		self._parent =   value
 		self._workflow = value._workflow
+		self._file =     value._file
 
 	@readonly
 	def Workflow(self) -> Nullable[Workflow]:
@@ -294,9 +303,18 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 		return self._workflow
 
 	@readonly
+	def File(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the file the element was read from (:attr:`_file`).
+
+		:returns: Path to the workflow's or the action's file, or ``None`` for an element outside both.
+		"""
+		return self._file
+
+	@readonly
 	def Line(self) -> int:
 		"""
-		Read-only property to access the line the element starts at in the workflow file (:attr:`_line`).
+		Read-only property to access the line the element starts at in its file (:attr:`_line`).
 
 		:returns: The line, starting at 1.
 		"""
@@ -307,13 +325,13 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to return the place the element is written at, for a message.
 
-		:returns: The workflow file's name and the line, as ``CompletePipeline.yml:552``, or ``line 552`` for an element
-		          outside a workflow.
+		:returns: The file's name and the line, as ``CompletePipeline.yml:552`` or ``action.yml:12``, or ``line 552`` for
+		          an element outside a file.
 		"""
-		if self._workflow is None:
+		if self._file is None:
 			return f"line {self._line}"
 
-		return f"{self._workflow._path.name}:{self._line}"
+		return f"{self._file.name}:{self._line}"
 
 	@staticmethod
 	def _KeyLine(mapping: CommentedMap, key: str) -> int:
@@ -427,6 +445,7 @@ class Workflow(Base[None]):
 			raise ex
 
 		self._workflow =    self
+		self._file =        path
 		self._path =        path
 		self._name =        path.stem
 		self._displayName = displayName
@@ -1080,6 +1099,8 @@ class Job(Base[Workflow]):
 	_matrix:          Nullable[Matrix]                             #: The job's matrix.
 	_steps:           list[Step]                                   #: Steps of the job.
 	_outputs:         dict[str, str]                               #: Outputs of the job, by name.
+	_container:       Nullable[str]                                #: Image of the container the job's steps run in.
+	_services:        dict[str, str]                               #: Images of the service containers, by service name.
 
 	def __init__(
 		self,
@@ -1089,6 +1110,8 @@ class Job(Base[Workflow]):
 		needs:           Nullable[Iterable[str]]        = None,
 		condition:       Nullable[str]                  = None,
 		runsOn:          Nullable[Iterable[str]]        = None,
+		container:       Nullable[str]                  = None,
+		services:        Nullable[Mapping[str, str]]    = None,
 		uses:            Nullable[UsesReference]        = None,
 		withInputs:      Nullable[Mapping[str, ValueT]] = None,
 		secrets:         Nullable[Mapping[str, str]]    = None,
@@ -1113,6 +1136,8 @@ class Job(Base[Workflow]):
 		:param needs:           Optional, names of the jobs this job needs. Default: ``None``.
 		:param condition:       Optional, condition under which the job runs. Default: ``None``.
 		:param runsOn:          Optional, labels selecting the runner. Default: ``None``.
+		:param container:       Optional, image of the container the job's steps run in. Default: ``None``.
+		:param services:        Optional, images of the service containers, by service name. Default: ``None``.
 		:param uses:            Optional, the reusable workflow the job calls, which is attached to the job. Default:
 		                        ``None``.
 		:param withInputs:      Optional, inputs passed to the called workflow, by name. Default: ``None``.
@@ -1129,6 +1154,7 @@ class Job(Base[Workflow]):
 		:raises ValueError:     If parameter 'name' is empty.
 		:raises TypeError:      If parameter 'displayName' is not of type :class:`str`.
 		:raises TypeError:      If parameter 'condition' is not of type :class:`str`.
+		:raises TypeError:      If parameter 'container' is not of type :class:`str`.
 		:raises TypeError:      If an element of parameter 'needs' is not of type :class:`str`.
 		:raises TypeError:      If an element of parameter 'runsOn' is not of type :class:`str`.
 		:raises TypeError:      If parameter 'uses' is not of type :class:`UsesReference`.
@@ -1148,7 +1174,7 @@ class Job(Base[Workflow]):
 		elif name == "":
 			raise ValueError("Parameter 'name' is empty.")
 
-		for parameterName, value in (("displayName", displayName), ("condition", condition)):
+		for parameterName, value in (("displayName", displayName), ("condition", condition), ("container", container)):
 			if value is not None and not isinstance(value, str):
 				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -1188,6 +1214,8 @@ class Job(Base[Workflow]):
 		self._matrix =          matrix
 		self._steps =           []
 		self._outputs =         {} if outputs is None else dict(outputs)
+		self._container =       container
+		self._services =        {} if services is None else dict(services)
 
 		if uses is not None:
 			uses.Parent = self
@@ -1372,6 +1400,25 @@ class Job(Base[Workflow]):
 		return self._outputs
 
 	@readonly
+	def Container(self) -> Nullable[str]:
+		"""
+		Read-only property to access the image of the container the job's steps run in (:attr:`_container`).
+
+		:returns: The image, as written - e.g. ``pytooling/miktex:sphinx`` or an expression -, or ``None`` if the job has no
+		          ``container``.
+		"""
+		return self._container
+
+	@readonly
+	def Services(self) -> dict[str, str]:
+		"""
+		Read-only property to access the images of the job's service containers (:attr:`_services`).
+
+		:returns: The images, as written, by service name.
+		"""
+		return self._services
+
+	@readonly
 	def StepCount(self) -> int:
 		"""
 		Read-only property to return the number of steps of the job.
@@ -1478,6 +1525,26 @@ class Job(Base[Workflow]):
 			if "matrix" in strategy:
 				matrix = Matrix._FromYAML(strategy["matrix"], path, Base._KeyLine(strategy, "matrix"))
 
+		container = mapping.get("container", None)
+		if isinstance(container, CommentedMap):
+			container = container.get("image", None)
+
+		services = None
+		if (serviceMap := mapping.get("services", None)) is not None:
+			if not isinstance(serviceMap, CommentedMap):
+				ex = WorkflowError(
+					f"Key 'services' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "services")
+				)
+				ex.add_note(f"Got type '{getFullyQualifiedName(serviceMap)}'.")
+				raise ex
+
+			services = {}
+			for serviceName, service in serviceMap.items():
+				if isinstance(service, CommentedMap):
+					service = service.get("image", None)
+				if service is not None:
+					services[str(serviceName)] = str(service)
+
 		steps = None
 		if (stepList := mapping.get("steps", None)) is not None:
 			if not isinstance(stepList, CommentedSeq):
@@ -1498,6 +1565,8 @@ class Job(Base[Workflow]):
 			needs=(str(need) for need in needs),
 			condition=None if condition is None else str(condition),
 			runsOn=(str(label) for label in runsOn),
+			container=None if container is None else str(container),
+			services=services,
 			uses=uses,
 			withInputs=withValues,
 			secrets=secrets,
@@ -1510,10 +1579,278 @@ class Job(Base[Workflow]):
 
 
 @export
-class Step(Base[Job]):
-	"""A step of a job."""
+class Action(Base[None]):
+	"""
+	An action's file, ``action.yml``.
 
-	_PARENT_TYPE: ClassVar[ParentTypes] = Job  #: A step is contained in a job.
+	The action is named by its directory - ``ComputeRequirements`` for ``.github/actions/ComputeRequirements/action.yml``
+	- because that is how a step names it in ``uses``; the ``name`` key is kept as :attr:`DisplayName`. Of a composite
+	action, the steps are read, so the actions it runs in turn are known.
+	"""
+
+	_path:        Path           #: Path to the action's file.
+	_name:        str            #: Name of the action, its directory's name.
+	_displayName: Nullable[str]  #: Name of the action, as GitHub displays it.
+	_using:       str            #: How the action runs, as ``composite``, ``docker`` or ``node24``.
+	_image:       Nullable[str]  #: The image a Docker action runs, as ``Dockerfile`` or ``docker://alpine:3.22``.
+	_steps:       list[Step]     #: Steps of a composite action.
+
+	def __init__(
+		self,
+		path:        Path,
+		using:       str,
+		displayName: Nullable[str]            = None,
+		image:       Nullable[str]            = None,
+		steps:       Nullable[Iterable[Step]] = None
+	) -> None:
+		"""
+		Initializes an action.
+
+		The steps of a composite action are attached by passing them, or by constructing them with the action as parent.
+		Use :meth:`FromFile` to read an action's file.
+
+		:param path:        Path to the action's file.
+		:param using:       How the action runs, as ``composite``.
+		:param displayName: Optional, name of the action, as GitHub displays it. Default: ``None``.
+		:param image:       Optional, the image a Docker action runs. Default: ``None``.
+		:param steps:       Optional, the steps of a composite action, which are attached to the action. Default:
+		                    ``None``.
+		:raises ValueError: If parameter 'path' is ``None``.
+		:raises TypeError:  If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises ValueError: If parameter 'using' is ``None``.
+		:raises TypeError:  If parameter 'using' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'displayName' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'image' is not of type :class:`str`.
+		:raises TypeError:  If an element of parameter 'steps' is not of type :class:`Step`.
+		"""
+		super().__init__(1)
+
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		if using is None:
+			raise ValueError("Parameter 'using' is None.")
+
+		for parameterName, value in (("using", using), ("displayName", displayName), ("image", image)):
+			if value is not None and not isinstance(value, str):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
+
+		self._file =        path
+		self._path =        path
+		self._name =        path.parent.name
+		self._displayName = displayName
+		self._using =       using
+		self._image =       image
+		self._steps =       []
+
+		if steps is not None:
+			for step in steps:
+				if not isinstance(step, Step):
+					ex = TypeError("An element of parameter 'steps' is not of type 'Step'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(step)}'.")
+					raise ex
+
+				self._steps.append(step)
+				step.Parent = self
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access the path to the action's file (:attr:`_path`).
+
+		:returns: Path to the action's file.
+		"""
+		return self._path
+
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to access the action's name, its directory's name (:attr:`_name`).
+
+		:returns: Name of the action.
+		"""
+		return self._name
+
+	@readonly
+	def DisplayName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the action's name, as GitHub displays it (:attr:`_displayName`).
+
+		:returns: The ``name`` key, or ``None`` if the file has none.
+		"""
+		return self._displayName
+
+	@readonly
+	def Using(self) -> str:
+		"""
+		Read-only property to access how the action runs (:attr:`_using`).
+
+		:returns: The ``runs.using`` key, as ``composite``, ``docker`` or ``node24``.
+		"""
+		return self._using
+
+	@readonly
+	def IsComposite(self) -> bool:
+		"""
+		Read-only property to return whether the action is a composite action, running steps.
+
+		:returns: ``True``, if ``runs.using`` is ``composite``.
+		"""
+		return self._using == "composite"
+
+	@readonly
+	def Image(self) -> Nullable[str]:
+		"""
+		Read-only property to access the image a Docker action runs (:attr:`_image`).
+
+		:returns: The ``runs.image`` key, as ``Dockerfile`` or ``docker://alpine:3.22``, or ``None`` for another action.
+		"""
+		return self._image
+
+	@readonly
+	def Steps(self) -> list[Step]:
+		"""
+		Read-only property to access the steps of a composite action (:attr:`_steps`).
+
+		:returns: The steps, in file order, or an empty list for another action.
+		"""
+		return self._steps
+
+	def IterateActions(self) -> Iterator[UsesReference]:
+		"""
+		Iterate the actions the steps of a composite action run.
+
+		:returns: An iterator over the actions, in file order.
+		"""
+		for step in self._steps:
+			if step._uses is not None:
+				yield step._uses
+
+	@readonly
+	def StepCount(self) -> int:
+		"""
+		Read-only property to return the number of steps of the action.
+
+		:returns: Number of steps.
+		"""
+		return len(self._steps)
+
+	def IterateSteps(self) -> Iterator[Step]:
+		"""
+		Iterate the action's steps.
+
+		:returns: An iterator over the steps, in file order.
+		"""
+		return iter(self._steps)
+
+	def __str__(self) -> str:
+		"""
+		Return the action's name.
+
+		:returns: Name of the action, its directory's name.
+		"""
+		return self._name
+
+	@classmethod
+	def FromFile(cls, path: Path) -> Self:
+		"""
+		Read an action's file.
+
+		:param path:           Path to the action's file.
+		:returns:              The action, with the steps of a composite action attached.
+		:raises ValueError:    If parameter 'path' is ``None``.
+		:raises TypeError:     If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises WorkflowError: If the file doesn't exist.
+		:raises WorkflowError: If the file can't be read.
+		:raises WorkflowError: If the file is not a YAML document.
+		:raises WorkflowError: If the document is not a mapping, or has no ``runs`` key.
+		:raises WorkflowError: If ``runs`` is not a mapping or has no ``using`` key, or a step is malformed.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+		elif not path.exists():
+			raise WorkflowError("Action file doesn't exist.", path) from FileNotFoundError(path)
+
+		try:
+			content = path.read_text(encoding="utf-8")
+		except OSError as cause:
+			raise WorkflowError("Action file can't be read.", path) from cause
+
+		try:
+			document = YAML(typ="rt").load(content)
+		except YAMLError as cause:
+			mark = getattr(cause, "problem_mark", None)
+			line = None if mark is None else mark.line + 1
+			raise WorkflowError("Action file is not a YAML document.", path, line) from cause
+
+		if document is None:
+			raise WorkflowError("Action file is empty.", path)
+		elif not isinstance(document, CommentedMap):
+			ex = WorkflowError("Action file is not a mapping.", path, 1)
+			ex.add_note(f"Got type '{getFullyQualifiedName(document)}'.")
+			raise ex
+		elif "runs" not in document:
+			raise WorkflowError("Action file has no 'runs' key.", path)
+
+		return cls._Parse(document, path)
+
+	@classmethod
+	def _Parse(cls, document: CommentedMap, path: Path) -> Self:
+		"""
+		Build an action and the steps it contains from the document read from its file.
+
+		:param document:       The document, a mapping with a ``runs`` key.
+		:param path:           Path to the action's file.
+		:returns:              The action, with the steps of a composite action attached.
+		:raises WorkflowError: If key ``runs`` is not a mapping, or has no ``using`` key.
+		:raises WorkflowError: If key ``runs.steps`` is not a list, or a step is malformed.
+		"""
+		runs = document["runs"]
+		if not isinstance(runs, CommentedMap):
+			ex = WorkflowError("Key 'runs' is not a mapping.", path, Base._KeyLine(document, "runs"))
+			ex.add_note(f"Got type '{getFullyQualifiedName(runs)}'.")
+			raise ex
+		elif "using" not in runs:
+			raise WorkflowError("Key 'runs' has no 'using' key.", path, Base._KeyLine(document, "runs"))
+
+		steps = None
+		if (stepList := runs.get("steps", None)) is not None:
+			if not isinstance(stepList, CommentedSeq):
+				ex = WorkflowError("Key 'runs.steps' is not a list.", path, Base._KeyLine(runs, "steps"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(stepList)}'.")
+				raise ex
+
+			steps = [
+				Step._FromYAML(step, position, f"action '{path.parent.name}'", path, stepList.lc.item(position)[0] + 1)
+				for position, step in enumerate(stepList)
+			]
+
+		displayName = document.get("name", None)
+		image = runs.get("image", None)
+		return cls(
+			path,
+			str(runs["using"]),
+			displayName=None if displayName is None else str(displayName),
+			image=None if image is None else str(image),
+			steps=steps
+		)
+
+
+@export
+class Step(Base[Union[Job, Action]]):
+	"""A step of a job or of a composite action."""
+
+	_PARENT_TYPE: ClassVar[ParentTypes] = (Job, Action)  #: A step is contained in a job or an action.
 
 	_name:       Nullable[str]            #: Name of the step.
 	_identifier: Nullable[str]            #: Identifier of the step, as referenced by ``steps.<id>``.
@@ -1524,16 +1861,16 @@ class Step(Base[Job]):
 	def __init__(
 		self,
 		line:       int,
-		name:       Nullable[str]           = None,
-		identifier: Nullable[str]           = None,
-		condition:  Nullable[str]           = None,
-		run:        Nullable[str]           = None,
-		uses:       Nullable[UsesReference] = None,
+		name:       Nullable[str]                = None,
+		identifier: Nullable[str]                = None,
+		condition:  Nullable[str]                = None,
+		run:        Nullable[str]                = None,
+		uses:       Nullable[UsesReference]      = None,
 		*,
-		parent:     Nullable[Job]           = None
+		parent:     Nullable[Union[Job, Action]] = None
 	) -> None:
 		"""
-		Initializes a step of a job.
+		Initializes a step of a job or of a composite action.
 
 		The action a step runs is attached by passing it, or by constructing a :class:`UsesReference` with the step as
 		parent.
@@ -1544,8 +1881,8 @@ class Step(Base[Job]):
 		:param condition:  Optional, condition under which the step runs. Default: ``None``.
 		:param run:        Optional, the script the step runs. Default: ``None``.
 		:param uses:       Optional, the action the step runs, which is attached to the step. Default: ``None``.
-		:param parent:     Optional, reference to the job containing the step, which the step is attached to. Default:
-		                   ``None``.
+		:param parent:     Optional, reference to the job or the composite action containing the step, which the step is
+		                   attached to. Default: ``None``.
 		:raises TypeError: If parameter 'name' is not of type :class:`str`.
 		:raises TypeError: If parameter 'identifier' is not of type :class:`str`.
 		:raises TypeError: If parameter 'condition' is not of type :class:`str`.
@@ -1637,12 +1974,13 @@ class Step(Base[Job]):
 	@classmethod
 	def _FromYAML(cls, mapping: Any, position: int, what: str, path: Path, line: int) -> Self:
 		"""
-		Read a step from the ``steps`` list of a job.
+		Read a step from the ``steps`` list of a job or of a composite action.
 
 		:param mapping:        The step's mapping.
-		:param position:       Position of the step in its job, starting at 0.
-		:param what:           The job containing the step, for the exception's message, as ``job 'Build'``.
-		:param path:           Path to the workflow file.
+		:param position:       Position of the step in its list, starting at 0.
+		:param what:           The job or action containing the step, for the exception's message, as ``job 'Build'`` or
+		                       ``action 'Setup'``.
+		:param path:           Path to the file, for a message.
 		:param line:           Line the step starts at, starting at 1.
 		:returns:              The step.
 		:raises WorkflowError: If the step is not a mapping.
@@ -1794,7 +2132,7 @@ class Matrix(Base[Job]):
 		:raises WorkflowError: If the matrix is dynamic, so its combinations are known at run time only.
 		:raises WorkflowError: If ``include`` or ``exclude`` is not a list of mappings.
 		"""
-		path = None if self._workflow is None else self._workflow._path
+		path = self._file
 		if self.IsDynamic:
 			raise WorkflowError("Matrix is dynamic; its combinations are known at run time only.", path, self._line)
 
@@ -2569,17 +2907,23 @@ class Secret(Parameter):
 @export
 class WorkflowResolver(metaclass=ExtendedType, slots=True):
 	"""
-	Reads the reusable workflows jobs call, as far as they are in a local directory.
+	Reads the reusable workflows jobs call, and the actions steps run, as far as they are in a local directory.
 
 	A repository is mapped to the directory holding its workflow files, so a reference like
 	``pyTooling/Actions/.github/workflows/Package.yml@r8`` reads ``Package.yml`` from that directory, whatever its ref.
 	A local reference like ``./.github/workflows/Package.yml`` reads the file next to the calling workflow's file.
 
-	Every file is read once; asking for it again returns the same :class:`Workflow`.
+	An action of a mapped repository, like ``pyTooling/Actions/.github/actions/ComputeRequirements@r8``, is read from
+	the repository's root - the directory holding the ``.github`` directory the mapped directory is in. A local action,
+	like ``./.github/actions/ComputeRequirements``, is read from the root of the calling workflow's or action's
+	repository.
+
+	Every file is read once; asking for it again returns the same :class:`Workflow` or :class:`Action`.
 	"""
 
 	_repositories: dict[str, Path]       #: Directories holding the workflow files, by repository in lower case.
 	_workflows:    dict[Path, Workflow]  #: Workflows already read, by resolved path.
+	_actions:      dict[Path, Action]    #: Actions already read, by resolved path.
 
 	def __init__(self, repositories: Nullable[Mapping[str, Path]] = None) -> None:
 		"""
@@ -2594,6 +2938,7 @@ class WorkflowResolver(metaclass=ExtendedType, slots=True):
 		"""
 		self._repositories = {}
 		self._workflows =    {}
+		self._actions =      {}
 
 		if repositories is None:
 			return
@@ -2706,13 +3051,82 @@ class WorkflowResolver(metaclass=ExtendedType, slots=True):
 		if not path.exists():
 			ex = WorkflowError(
 				f"Workflow '{uses.FileName}' doesn't exist in '{directory}'.",
-				None if uses._workflow is None else uses._workflow._path,
+				uses._file,
 				uses._line
 			)
 			ex.add_note(f"Called as '{uses}'.")
 			raise ex
 
 		return self.Load(path)
+
+	def LoadAction(self, path: Path) -> Action:
+		"""
+		Read an action's file, or return it if it was read before.
+
+		:param path:           Path to the action's file.
+		:returns:              The action.
+		:raises ValueError:    If parameter 'path' is ``None``.
+		:raises TypeError:     If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises WorkflowError: If the file doesn't exist, can't be read, or is not a well-formed action.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		key = path.resolve()
+		if (action := self._actions.get(key, None)) is None:
+			action = Action.FromFile(path)
+			self._actions[key] = action
+
+		return action
+
+	def ResolveAction(self, uses: UsesReference) -> Nullable[Action]:
+		"""
+		Return the action a step's reference names, if its file is in a local directory.
+
+		:param uses:           The reference, as :attr:`Step.Uses`.
+		:returns:              The action, or ``None`` if the reference names a reusable workflow, a Docker image, a
+		                       repository without a directory, or a local action outside a repository's ``.github``
+		                       directory.
+		:raises ValueError:    If parameter 'uses' is ``None``.
+		:raises TypeError:     If parameter 'uses' is not of type :class:`UsesReference`.
+		:raises WorkflowError: If the directory has neither an ``action.yml`` nor an ``action.yaml``. |br|
+		                       The note names the reference's location.
+		:raises WorkflowError: If the file is not a well-formed action.
+		"""
+		if uses is None:
+			raise ValueError("Parameter 'uses' is None.")
+		elif not isinstance(uses, UsesReference):
+			ex = TypeError("Parameter 'uses' is not of type 'UsesReference'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(uses)}'.")
+			raise ex
+
+		if uses.IsWorkflow or uses._isDocker:
+			return None
+
+		if uses._isLocal:
+			if uses._file is None:
+				return None
+
+			base = uses._file.parent
+		elif (base := self._repositories.get(uses._repository.lower(), None)) is None:
+			return None
+
+		root = next((directory.parent for directory in (base, *base.parents) if directory.name == ".github"), None)
+		if root is None:
+			return None
+
+		directory = root / uses._path
+		for fileName in ("action.yml", "action.yaml"):
+			if (path := directory / fileName).exists():
+				return self.LoadAction(path)
+
+		ex = WorkflowError(f"Action '{uses._path}' has no 'action.yml' in '{directory}'.", uses._file, uses._line)
+		ex.add_note(f"Called as '{uses}'.")
+		raise ex
 
 
 @export
