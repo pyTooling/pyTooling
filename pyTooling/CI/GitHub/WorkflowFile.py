@@ -345,21 +345,33 @@ class Workflow(Base[None]):
 	def __init__(
 		self,
 		path:        Path,
-		displayName: Nullable[str] = None,
-		triggers:    Iterable[str] = ()
+		displayName: Nullable[str]              = None,
+		triggers:    Nullable[Iterable[str]]    = None,
+		inputs:      Nullable[Iterable[Input]]  = None,
+		outputs:     Nullable[Iterable[Output]] = None,
+		secrets:     Nullable[Iterable[Secret]] = None
 	) -> None:
 		"""
 		Initializes a workflow.
 
-		The inputs, outputs and secrets are attached by constructing them with the workflow as parent.
-		Use :meth:`FromFile` to read a workflow file.
+		An input, output or secret is attached by passing it, or by constructing it with the workflow as parent. Use
+		:meth:`FromFile` to read a workflow file.
 
 		:param path:        Path to the workflow file.
 		:param displayName: Optional, name of the workflow, as GitHub displays it. Default: ``None``.
-		:param triggers:    Optional, events triggering the workflow, as ``workflow_call``. Default: ``()``.
+		:param triggers:    Optional, events triggering the workflow, as ``workflow_call``. Default: ``None``.
+		:param inputs:      Optional, inputs of ``on.workflow_call``, which are attached to the workflow. Default: ``None``.
+		:param outputs:     Optional, outputs of ``on.workflow_call``, which are attached to the workflow. Default:
+		                    ``None``.
+		:param secrets:     Optional, secrets of ``on.workflow_call``, which are attached to the workflow. Default:
+		                    ``None``.
 		:raises ValueError: If parameter 'path' is ``None``.
 		:raises TypeError:  If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:  If parameter 'displayName' is not of type :class:`str`.
+		:raises TypeError:  If an element of parameter 'triggers' is not of type :class:`str`.
+		:raises TypeError:  If an element of parameter 'inputs' is not of type :class:`Input`.
+		:raises TypeError:  If an element of parameter 'outputs' is not of type :class:`Output`.
+		:raises TypeError:  If an element of parameter 'secrets' is not of type :class:`Secret`.
 		"""
 		super().__init__(1)
 
@@ -379,11 +391,37 @@ class Workflow(Base[None]):
 		self._path =        path
 		self._name =        path.stem
 		self._displayName = displayName
-		self._triggers =    tuple(triggers)
+		self._triggers =    ()
 		self._inputs =      {}
 		self._outputs =     {}
 		self._secrets =     {}
 		self._permissions = None
+
+		if triggers is not None:
+			self._triggers = tuple(triggers)
+			for trigger in self._triggers:
+				if not isinstance(trigger, str):
+					ex = TypeError("An element of parameter 'triggers' is not of type 'str'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(trigger)}'.")
+					raise ex
+
+		for parameterName, parameters, parameterClass, container in (
+			("inputs",  inputs,  Input,  self._inputs),
+			("outputs", outputs, Output, self._outputs),
+			("secrets", secrets, Secret, self._secrets)
+		):
+			if parameters is None:
+				continue
+
+			for parameter in parameters:
+				if not isinstance(parameter, parameterClass):
+					ex = TypeError(f"An element of parameter '{parameterName}' is not of type '{parameterClass.__name__}'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(parameter)}'.")
+					raise ex
+
+				container[parameter._name] = parameter
+				parameter._parent =   self
+				parameter._workflow = self
 
 	@readonly
 	def Path(self) -> Path:
@@ -526,9 +564,7 @@ class Workflow(Base[None]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(on)}'.")
 			raise ex
 
-		displayName = document.get("name", None)
-		workflow = cls(path, None if displayName is None else str(displayName), triggers)
-
+		parameters: dict[str, list[Parameter]] = {"inputs": [], "outputs": [], "secrets": []}
 		if isinstance(on, CommentedMap) and (call := on.get("workflow_call", None)) is not None:
 			if not isinstance(call, CommentedMap):
 				ex = WorkflowError("Key 'on.workflow_call' is not a mapping.", path, Base._KeyLine(on, "workflow_call"))
@@ -536,15 +572,27 @@ class Workflow(Base[None]):
 				raise ex
 
 			for section, parameterClass in (("inputs", Input), ("outputs", Output), ("secrets", Secret)):
-				if (parameters := call.get(section, None)) is None:
+				if (declarations := call.get(section, None)) is None:
 					continue
-				elif not isinstance(parameters, CommentedMap):
+				elif not isinstance(declarations, CommentedMap):
 					ex = WorkflowError(f"Key 'on.workflow_call.{section}' is not a mapping.", path, Base._KeyLine(call, section))
-					ex.add_note(f"Got type '{getFullyQualifiedName(parameters)}'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(declarations)}'.")
 					raise ex
 
-				for name, declaration in parameters.items():
-					parameterClass._FromYAML(str(name), declaration, path, Base._KeyLine(parameters, name), workflow)
+				parameters[section] = [
+					parameterClass._FromYAML(str(name), declaration, path, Base._KeyLine(declarations, name))
+					for name, declaration in declarations.items()
+				]
+
+		displayName = document.get("name", None)
+		workflow = cls(
+			path,
+			None if displayName is None else str(displayName),
+			triggers,
+			parameters["inputs"],
+			parameters["outputs"],
+			parameters["secrets"]
+		)
 
 		if "permissions" in document:
 			workflow._permissions = Permission._FromYAML(
@@ -850,15 +898,15 @@ class Input(Parameter):
 		return self._default
 
 	@classmethod
-	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int, parent: Workflow) -> Self:
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int) -> Self:
 		"""
 		Read an input's declaration below ``on.workflow_call.inputs``.
+
 
 		:param name:           Name of the input.
 		:param declaration:    The declaration.
 		:param path:           Path to the workflow file.
 		:param line:           Line the input's name is written at, starting at 1.
-		:param parent:         Reference to the workflow declaring the input.
 		:returns:              The input.
 		:raises WorkflowError: If the declaration is not a mapping.
 		:raises WorkflowError: If key ``required`` is not a boolean.
@@ -867,7 +915,7 @@ class Input(Parameter):
 		                       The note lists the allowed values.
 		"""
 		if declaration is None:
-			declaration = CommentedMap()
+			raise WorkflowError(f"Input '{name}' has no 'type' key.", path, line)
 		elif not isinstance(declaration, CommentedMap):
 			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
 			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
@@ -893,9 +941,7 @@ class Input(Parameter):
 
 		default = Base._ToPython(declaration.get("default", None))
 
-		return cls(
-			name, line, inputType, required, default, None if description is None else str(description), parent=parent
-		)
+		return cls(name, line, inputType, required, default, None if description is None else str(description))
 
 
 @export
@@ -948,21 +994,21 @@ class Output(Parameter):
 		return self._value
 
 	@classmethod
-	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int, parent: Workflow) -> Self:
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int) -> Self:
 		"""
 		Read an output's declaration below ``on.workflow_call.outputs``.
+
 
 		:param name:           Name of the output.
 		:param declaration:    The declaration.
 		:param path:           Path to the workflow file.
 		:param line:           Line the output's name is written at, starting at 1.
-		:param parent:         Reference to the workflow declaring the output.
 		:returns:              The output.
 		:raises WorkflowError: If the declaration is not a mapping.
 		:raises WorkflowError: If the declaration has no ``value`` key.
 		"""
 		if declaration is None:
-			declaration = CommentedMap()
+			raise WorkflowError(f"Output '{name}' has no 'value' key.", path, line)
 		elif not isinstance(declaration, CommentedMap):
 			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
 			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
@@ -973,7 +1019,7 @@ class Output(Parameter):
 		if (value := declaration.get("value", None)) is None:
 			raise WorkflowError(f"Output '{name}' has no 'value' key.", path, line)
 
-		return cls(name, line, str(value), None if description is None else str(description), parent=parent)
+		return cls(name, line, str(value), None if description is None else str(description))
 
 
 @export
@@ -1023,21 +1069,21 @@ class Secret(Parameter):
 		return self._required
 
 	@classmethod
-	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int, parent: Workflow) -> Self:
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int) -> Self:
 		"""
 		Read a secret's declaration below ``on.workflow_call.secrets``.
+
 
 		:param name:           Name of the secret.
 		:param declaration:    The declaration.
 		:param path:           Path to the workflow file.
 		:param line:           Line the secret's name is written at, starting at 1.
-		:param parent:         Reference to the workflow declaring the secret.
 		:returns:              The secret.
 		:raises WorkflowError: If the declaration is not a mapping.
 		:raises WorkflowError: If key ``required`` is not a boolean.
 		"""
 		if declaration is None:
-			declaration = CommentedMap()
+			return cls(name, line)
 		elif not isinstance(declaration, CommentedMap):
 			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
 			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
@@ -1050,6 +1096,6 @@ class Secret(Parameter):
 			ex.add_note(f"Got '{required}'.")
 			raise ex
 
-		return cls(name, line, required, None if description is None else str(description), parent=parent)
+		return cls(name, line, required, None if description is None else str(description))
 
 

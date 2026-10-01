@@ -436,7 +436,7 @@ class Parameters(Fixture):
 		parameters = YAML(typ="rt").load(CALLABLE)["on"]["workflow_call"][section]
 
 		return {
-			name: parameterClass._FromYAML(name, declaration, Path("Package.yml"), Base._KeyLine(parameters, name), None)
+			name: parameterClass._FromYAML(name, declaration, Path("Package.yml"), Base._KeyLine(parameters, name))
 			for name, declaration in parameters.items()
 		}
 
@@ -449,7 +449,7 @@ class Parameters(Fixture):
 		:returns:              The exception reading it raised.
 		"""
 		with self.assertRaises(WorkflowError) as context:
-			_ = parameterClass._FromYAML("a", YAML(typ="rt").load(declaration), Path("A.yml"), 4, None)
+			_ = parameterClass._FromYAML("a", YAML(typ="rt").load(declaration), Path("A.yml"), 4)
 
 		self.assertEqual(4, context.exception.Line)
 
@@ -482,7 +482,7 @@ class Parameters(Fixture):
 
 	def test_Input_Number(self) -> None:
 		declaration = YAML(typ="rt").load("type: number\ndefault: 0x10\nrequired: true\n")
-		parameter = Input._FromYAML("count", declaration, Path("A.yml"), 4, None)
+		parameter = Input._FromYAML("count", declaration, Path("A.yml"), 4)
 
 		self.assertIs(InputType.Number, parameter.Type)
 		self.assertIs(int, type(parameter.Default))
@@ -507,6 +507,7 @@ class Parameters(Fixture):
 
 	def test_InputWithoutType(self) -> None:
 		self.assertEqual("Input 'a' has no 'type' key.", str(self._error(Input, "required: true\n")))
+		self.assertEqual("Input 'a' has no 'type' key.", str(self._error(Input, "")))
 
 	def test_InputType(self) -> None:
 		error = self._error(Input, "type: text\n")
@@ -516,6 +517,14 @@ class Parameters(Fixture):
 
 	def test_OutputWithoutValue(self) -> None:
 		self.assertEqual("Output 'a' has no 'value' key.", str(self._error(Output, "description: x\n")))
+		self.assertEqual("Output 'a' has no 'value' key.", str(self._error(Output, "")))
+
+	def test_SecretWithoutDeclaration(self) -> None:
+		secret = Secret._FromYAML("a", None, Path("A.yml"), 4)
+
+		self.assertFalse(secret.Required)
+		self.assertIsNone(secret.Description)
+		self.assertIsNone(secret.Parent)
 
 	def test_Required(self) -> None:
 		self.assertEqual("Key 'required' of 'a' is not a boolean.", str(self._error(Secret, "required: 'yes'\n")))
@@ -548,6 +557,43 @@ class Parameters(Fixture):
 		self.assertEqual({}, workflow.Inputs)
 		self.assertEqual({}, workflow.Outputs)
 		self.assertEqual({}, workflow.Secrets)
+
+	def test_Workflow_Parameters(self) -> None:
+		inputs =  [Input("a", 2, InputType.String), Input("b", 3, InputType.Number)]
+		outputs = [Output("c", 4, "${{ jobs.Build.outputs.c }}")]
+		secrets = [Secret("d", 5)]
+		workflow = Workflow(Path("Package.yml"), None, ("workflow_call", ), inputs, outputs, secrets)
+
+		self.assertEqual(["a", "b"], list(workflow.Inputs))
+		self.assertEqual(["c"], list(workflow.Outputs))
+		self.assertEqual(["d"], list(workflow.Secrets))
+		for parameter in (*inputs, *outputs, *secrets):
+			self.assertIs(workflow, parameter.Parent)
+			self.assertIs(workflow, parameter.Workflow)
+
+		self.assertEqual("Package.yml:2", inputs[0].Location)
+
+	def test_Workflow_Defaults(self) -> None:
+		workflow = Workflow(Path("Package.yml"))
+
+		self.assertEqual((), workflow.Triggers)
+		self.assertEqual({}, workflow.Inputs)
+		self.assertEqual({}, workflow.Outputs)
+		self.assertEqual({}, workflow.Secrets)
+
+	def test_Workflow_ElementTypes(self) -> None:
+		path = Path("Package.yml")
+		for arguments, message in (
+			({"triggers": ("push", 42)},                      "An element of parameter 'triggers' is not of type 'str'."),
+			({"inputs":   [Secret("a", 2)]},                  "An element of parameter 'inputs' is not of type 'Input'."),
+			({"outputs":  [Input("a", 2, InputType.String)]}, "An element of parameter 'outputs' is not of type 'Output'."),
+			({"secrets":  ["a"]},                             "An element of parameter 'secrets' is not of type 'Secret'.")
+		):
+			with self.subTest(message):
+				with self.assertRaises(TypeError) as context:
+					_ = Workflow(path, **arguments)
+
+				self.assertEqual(message, str(context.exception))
 
 	def test_Input_Parent(self) -> None:
 		with self.assertRaises(TypeError) as context:
