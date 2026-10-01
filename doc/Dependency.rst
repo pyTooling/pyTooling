@@ -74,17 +74,31 @@ When installed as ``pyTooling[yaml]``:
    :depth: 4
 
 
+When installed as ``pyTooling[github]``, which :mod:`pyTooling.CI.GitHub.WorkflowFile` needs to read a workflow file:
+
+.. The extra isn't on PyPI yet, which 'dependency-table' reads extras from. Replace this table by
+   '.. dependency-table:: github' and an entry in 'conf.py' once a release contains the extra.
+
++-------------+---------+------------------------------+----------------------------------------------------------+
+| Package     | Version | License                      | Dependencies                                             |
++=============+=========+==============================+==========================================================+
+| ruamel.yaml | ~0.19   | MIT                          | *None*                                                   |
++-------------+---------+------------------------------+----------------------------------------------------------+
+
+
 When installed as ``pyTooling[diagram]``:
 
 .. The extra isn't on PyPI yet, which 'dependency-table' reads extras from. Replace this table by
    '.. dependency-table:: matplotlib' and an entry in 'conf.py' once a release contains the extra.
 
-+------------+---------+------------------------------+----------------------------------------------------------+
-| Package    | Version | License                      | Dependencies                                             |
-+============+=========+==============================+==========================================================+
-| matplotlib | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
-|            |         |                              | packaging, pillow, pyparsing, python-dateutil            |
-+------------+---------+------------------------------+----------------------------------------------------------+
++-------------+---------+------------------------------+----------------------------------------------------------+
+| Package     | Version | License                      | Dependencies                                             |
++=============+=========+==============================+==========================================================+
+| matplotlib  | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
+|             |         |                              | packaging, pillow, pyparsing, python-dateutil            |
++-------------+---------+------------------------------+----------------------------------------------------------+
+| ruamel.yaml | ~0.19   | MIT                          | *None*                                                   |
++-------------+---------+------------------------------+----------------------------------------------------------+
 
 
 When installed as ``pyTooling[cli]``, which is what the :program:`pyTooling` program needs to run - see
@@ -93,14 +107,16 @@ When installed as ``pyTooling[cli]``, which is what the :program:`pyTooling` pro
 .. The extra isn't on PyPI yet, which 'dependency-table' reads extras from. Replace this table by
    '.. dependency-table:: cli' and an entry in 'conf.py' once a release contains the extra.
 
-+------------+---------+------------------------------+----------------------------------------------------------+
-| Package    | Version | License                      | Dependencies                                             |
-+============+=========+==============================+==========================================================+
-| colorama   | ~0.4.6  | BSD-3-Clause                 | *None*                                                   |
-+------------+---------+------------------------------+----------------------------------------------------------+
-| matplotlib | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
-|            |         |                              | packaging, pillow, pyparsing, python-dateutil            |
-+------------+---------+------------------------------+----------------------------------------------------------+
++-------------+---------+------------------------------+----------------------------------------------------------+
+| Package     | Version | License                      | Dependencies                                             |
++=============+=========+==============================+==========================================================+
+| colorama    | ~0.4.6  | BSD-3-Clause                 | *None*                                                   |
++-------------+---------+------------------------------+----------------------------------------------------------+
+| matplotlib  | ≥3.10   | PSF-2.0 (matplotlib license) | contourpy, cycler, fonttools, kiwisolver, numpy,         |
+|             |         |                              | packaging, pillow, pyparsing, python-dateutil            |
++-------------+---------+------------------------------+----------------------------------------------------------+
+| ruamel.yaml | ~0.19   | MIT                          | *None*                                                   |
++-------------+---------+------------------------------+----------------------------------------------------------+
 
 
 .. _DEP/testing:

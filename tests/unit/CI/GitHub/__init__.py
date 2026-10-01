@@ -29,8 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.CI`.
+Unit tests for :mod:`pyTooling.CI.GitHub`.
 
-The service-independent pipeline model is tested in :mod:`tests.unit.CI.Pipeline`, the models of GitHub Actions in
-:mod:`tests.unit.CI.GitHub`.
+The model of a workflow run is tested in :mod:`tests.unit.CI.GitHub.Run`, the model of a workflow file in
+:mod:`tests.unit.CI.GitHub.WorkflowFile`.
 """
