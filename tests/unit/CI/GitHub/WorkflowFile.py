@@ -33,11 +33,11 @@ Unit tests for :mod:`pyTooling.CI.GitHub.WorkflowFile`.
 """
 from pathlib                          import Path
 from tempfile                         import TemporaryDirectory
-from textwrap                         import dedent
+from textwrap                         import dedent, indent
 from typing                           import Any
 
-from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, Input, Output
-from pyTooling.CI.GitHub.WorkflowFile import Permission, PermissionScope, Secret
+from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, Input, Job, Output
+from pyTooling.CI.GitHub.WorkflowFile import Permission, PermissionScope, Secret, UsesReference
 from pyTooling.Testing                import Testcase
 
 from ruamel.yaml                      import YAML
@@ -623,3 +623,264 @@ class Parameters(Fixture):
 			_ = Input("a", 1, InputType.String, parent=Permission(PermissionScope.Contents, AccessLevel.Read, 1))
 
 		self.assertEqual("Parameter 'parent' is not of type 'Workflow'.", str(context.exception))
+
+
+class References(Testcase):
+	def test_Workflow(self) -> None:
+		uses = UsesReference("pyTooling/Actions/.github/workflows/Package.yml@r8", 12)
+
+		self.assertEqual("pyTooling/Actions", uses.Repository)
+		self.assertEqual(".github/workflows/Package.yml", uses.Path)
+		self.assertEqual("r8", uses.Ref)
+		self.assertEqual("Package.yml", uses.FileName)
+		self.assertEqual("Package", uses.Stem)
+		self.assertTrue(uses.IsWorkflow)
+		self.assertFalse(uses.IsLocal)
+		self.assertFalse(uses.IsDocker)
+		self.assertEqual("pyTooling/Actions/.github/workflows/Package.yml@r8", str(uses))
+		self.assertEqual(12, uses.Line)
+		self.assertEqual("line 12", uses.Location)
+
+	def test_Action(self) -> None:
+		uses = UsesReference("actions/checkout@v6", 1)
+
+		self.assertEqual("actions/checkout", uses.Repository)
+		self.assertEqual("", uses.Path)
+		self.assertEqual("v6", uses.Ref)
+		self.assertEqual("", uses.FileName)
+		self.assertFalse(uses.IsWorkflow)
+
+	def test_Action_Path(self) -> None:
+		uses = UsesReference("pyTooling/Actions/.github/actions/ComputeRequirements@dev", 1)
+
+		self.assertEqual("pyTooling/Actions", uses.Repository)
+		self.assertEqual(".github/actions/ComputeRequirements", uses.Path)
+		self.assertFalse(uses.IsWorkflow)
+
+	def test_Local(self) -> None:
+		uses = UsesReference("./.github/workflows/Package.yaml", 1)
+
+		self.assertIsNone(uses.Repository)
+		self.assertIsNone(uses.Ref)
+		self.assertEqual(".github/workflows/Package.yaml", uses.Path)
+		self.assertTrue(uses.IsLocal)
+		self.assertTrue(uses.IsWorkflow)
+
+	def test_Docker(self) -> None:
+		uses = UsesReference("docker://alpine:3.22", 1)
+
+		self.assertIsNone(uses.Repository)
+		self.assertEqual("alpine:3.22", uses.Path)
+		self.assertTrue(uses.IsDocker)
+		self.assertFalse(uses.IsWorkflow)
+		self.assertEqual("", uses.Stem)
+
+	def test_NoRef(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = UsesReference("actions/checkout", 1)
+
+		self.assertEqual("Parameter 'text' names a repository without a ref.", str(context.exception))
+		self.assertEqual(["Got 'actions/checkout'."], context.exception.__notes__)
+
+	def test_NoRepository(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = UsesReference("checkout@v6", 1)
+
+		self.assertEqual("Parameter 'text' names no repository as 'owner/repo'.", str(context.exception))
+
+	def test_Empty(self) -> None:
+		with self.assertRaises(ValueError):
+			_ = UsesReference("", 1)
+
+	def test_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = UsesReference(None, 1)
+
+		self.assertEqual("Parameter 'text' is None.", str(context.exception))
+
+	def test_Line(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = UsesReference("actions/checkout@v6", 0)
+
+		self.assertEqual("Parameter 'line' is not positive.", str(context.exception))
+
+		with self.assertRaises(TypeError):
+			_ = UsesReference("actions/checkout@v6", "1")
+
+
+def _readJobs(document: str) -> dict[str, Job]:
+	"""
+	Read the jobs of a workflow's YAML with :meth:`Job._FromYAML`, without the workflow.
+
+	:param document: The workflow's YAML.
+	:returns:        The jobs, by name.
+	"""
+	jobs = YAML(typ="rt").load(document)["jobs"]
+
+	return {
+		name: Job._FromYAML(name, mapping, Path("Package.yml"), Base._KeyLine(jobs, name), None)
+		for name, mapping in jobs.items()
+	}
+
+
+class Jobs(Testcase):
+	"""A job, read by :meth:`Job._FromYAML`."""
+
+	def _error(self, job: str) -> WorkflowError:
+		"""
+		Read a malformed job ``A`` written at line 2.
+
+		:param job: The job's YAML, indented as the value of ``A``.
+		:returns:   The exception reading it raised.
+		"""
+		with self.assertRaises(WorkflowError) as context:
+			_ = _readJobs(f"jobs:\n  A:\n{indent(dedent(job), '    ')}")
+
+		self.assertEqual(Path("Package.yml"), context.exception.Path)
+
+		return context.exception
+
+	def test_Job(self) -> None:
+		jobs = _readJobs(CALLABLE)
+		params = jobs["Params"]
+
+		self.assertEqual("Params", params.Name)
+		self.assertEqual("Parameters", params.DisplayName)
+		self.assertEqual(("ubuntu-26.04", ), params.RunsOn)
+		self.assertIsNone(params.Uses)
+		self.assertIsNone(params.Condition)
+		self.assertIsNone(params.Permissions)
+		self.assertEqual({"jobs": "${{ steps.params.outputs.jobs }}"}, params.Outputs)
+		self.assertEqual("line 40", params.Location)
+
+	def test_NeedNames(self) -> None:
+		jobs = _readJobs(CALLABLE)
+
+		self.assertEqual((), jobs["Params"].NeedNames)
+		self.assertEqual(("Params", ), jobs["Build"].NeedNames)
+		self.assertEqual(("Params", "Build"), jobs["Static"].NeedNames)
+
+	def test_Condition(self) -> None:
+		self.assertEqual("inputs.dry_run == false", _readJobs(CALLABLE)["Build"].Condition)
+
+	def test_Permissions(self) -> None:
+		build = _readJobs(CALLABLE)["Build"]
+		permissions = build.Permissions
+
+		self.assertEqual(["contents", "id-token"], list(permissions))
+		self.assertIs(AccessLevel.Write, permissions["id-token"].Level)
+		self.assertIs(build, permissions["id-token"].Parent)
+		self.assertEqual("line 56", permissions["id-token"].Location)
+
+	def test_Calls(self) -> None:
+		jobs = _readJobs(CALLER)
+		package = jobs["Package"]
+
+		self.assertEqual("owner/repo", package.Uses.Repository)
+		self.assertEqual("dev", package.Uses.Ref)
+		self.assertEqual("line 12", package.Uses.Location)
+		self.assertEqual((), package.RunsOn)
+		self.assertEqual({"package_name": "myPackage", "delay": 10}, package.With)
+		self.assertEqual({"PYPI_TOKEN": "${{ secrets.PYPI_TOKEN }}"}, package.Secrets)
+		self.assertFalse(package.InheritsSecrets)
+
+		local = jobs["Local"]
+		self.assertTrue(local.InheritsSecrets)
+		self.assertEqual({}, local.Secrets)
+		self.assertTrue(local.Uses.IsLocal)
+
+	def test_RunsOnAndUses(self) -> None:
+		error = self._error("steps: []\n")
+
+		self.assertEqual("Job 'A' needs either 'runs-on' or 'uses'.", str(error))
+		self.assertEqual(2, error.Line)
+
+	def test_Uses(self) -> None:
+		error = self._error("uses: owner/repo/.github/workflows/A.yml\n")
+
+		self.assertEqual("Key 'uses' of job 'A' is not a reference.", str(error))
+		self.assertEqual(3, error.Line)
+
+	def test_Name(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Job(None, 1)
+
+		self.assertEqual("Parameter 'name' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError):
+			_ = Job(1, 1)
+
+		with self.assertRaises(ValueError):
+			_ = Job("", 1)
+
+
+class JobsInFile(Fixture):
+	"""The jobs of a workflow file, read by :meth:`Workflow.FromFile`."""
+
+	def _error(self, content: str) -> WorkflowError:
+		"""
+		Read a malformed workflow file.
+
+		:param content: Content of the file.
+		:returns:       The exception reading it raised.
+		"""
+		path = self._write("Broken.yml", content)
+		with self.assertRaises(WorkflowError) as context:
+			_ = Workflow.FromFile(path)
+
+		self.assertEqual(path, context.exception.Path)
+
+		return context.exception
+
+	def test_FromFile(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(3, workflow.JobCount)
+		self.assertEqual(["Params", "Build", "Static"], [job.Name for job in workflow.IterateJobs()])
+		self.assertTrue(workflow.ContainsJob("Build"))
+		self.assertFalse(workflow.ContainsJob("Unknown"))
+
+		build = workflow.Jobs["Build"]
+		self.assertIs(workflow, build.Parent)
+		self.assertEqual("Package.yml:50", build.Location)
+		self.assertEqual("Package.yml:56", build.Permissions["id-token"].Location)
+
+	def test_Needs(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		params, build, static = workflow.IterateJobs()
+
+		self.assertEqual((), params.Needs)
+		self.assertEqual((params, ), build.Needs)
+		self.assertEqual((params, build), static.Needs)
+
+	def test_Construction(self) -> None:
+		workflow = Workflow(Path("Pipeline.yml"), "Pipeline", ("push", ))
+		job = Job("Build", 3, runsOn=("ubuntu-26.04", ), needs=("Prepare", ), parent=workflow)
+
+		self.assertIs(job, workflow.Jobs["Build"])
+		self.assertEqual((), job.Needs)
+		self.assertEqual("Pipeline.yml:3", job.Location)
+
+	def test_UnknownNeed(self) -> None:
+		error = self._error("on: push\njobs:\n  A:\n    runs-on: x\n    needs: B\n")
+
+		self.assertEqual("Job 'A' needs job 'B', which the workflow doesn't have.", str(error))
+		self.assertEqual(3, error.Line)
+		self.assertEqual([f"In '{self._path / 'Broken.yml'}:3'.", "Jobs: A."], error.__notes__)
+
+	def test_Cycle(self) -> None:
+		error = self._error(dedent("""\
+			on: push
+			jobs:
+			  A: {runs-on: x, needs: C}
+			  B: {runs-on: x, needs: A}
+			  C: {runs-on: x, needs: B}
+		"""))
+
+		self.assertEqual("Jobs need each other in a cycle: A -> C -> B -> A.", str(error))
+
+	def test_NotAMapping(self) -> None:
+		error = self._error("on: push\njobs:\n  A: x\n")
+
+		self.assertEqual("Job 'A' is not a mapping.", str(error))
+		self.assertEqual([f"In '{self._path / 'Broken.yml'}:3'.", "Got type 'str'."], error.__notes__)
