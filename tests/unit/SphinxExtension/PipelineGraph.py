@@ -57,7 +57,7 @@ if sphinxIsSupported:
 	from sphinx.util.console                                import strip_escape_sequences
 	from sphinx.util.docutils                               import docutils_namespace
 
-	from pyTooling.CI.GitHub.Workflow                       import Workflow, WorkflowResolver
+	from pyTooling.CI.GitHub.WorkflowFile                   import Workflow, WorkflowResolver
 	from pyTooling.Documentation.Sphinx.GitHubActions.Graph import CSS_CLASS, PipelineDotGraph
 
 
