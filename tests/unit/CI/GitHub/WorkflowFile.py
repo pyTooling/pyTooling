@@ -36,8 +36,9 @@ from tempfile                         import TemporaryDirectory
 from textwrap                         import dedent, indent
 from typing                           import Any
 
-from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, Input, Job, Output
-from pyTooling.CI.GitHub.WorkflowFile import Permission, PermissionScope, Secret, UsesReference
+from pyTooling.CI.GitHub.WorkflowFile import AccessLevel, Base, InputType, Workflow, WorkflowError, WorkflowResolver
+from pyTooling.CI.GitHub.WorkflowFile import Input, Job, Matrix, Output, Permission, PermissionScope, Secret
+from pyTooling.CI.GitHub.WorkflowFile import Step, UsesReference
 from pyTooling.Testing                import Testcase
 
 from ruamel.yaml                      import YAML
@@ -980,3 +981,325 @@ class JobsInFile(Fixture):
 
 		self.assertEqual("Job 'A' is not a mapping.", str(error))
 		self.assertEqual([f"In '{self._path / 'Broken.yml'}:3'.", "Got type 'str'."], error.__notes__)
+
+
+class Steps(Fixture):
+	"""The steps of a job."""
+
+	def _jobError(self, job: str) -> WorkflowError:
+		"""
+		Read a malformed job ``A`` written at line 2.
+
+		:param job: The job's YAML, indented as the value of ``A``.
+		:returns:   The exception reading it raised.
+		"""
+		with self.assertRaises(WorkflowError) as context:
+			_ = _readJobs(f"jobs:\n  A:\n{indent(dedent(job), '    ')}")
+
+		self.assertEqual(Path("Package.yml"), context.exception.Path)
+
+		return context.exception
+
+	def test_Steps(self) -> None:
+		jobs = _readJobs(CALLABLE)
+		params = jobs["Params"]
+
+		self.assertEqual(1, params.StepCount)
+		self.assertEqual("Compute", params.Steps[0].Name)
+		self.assertEqual("params", params.Steps[0].ID)
+		self.assertIn("GITHUB_OUTPUT", params.Steps[0].Run)
+		self.assertEqual(0, _readJobs(CALLER)["Package"].StepCount)
+
+		build = jobs["Build"]
+		self.assertEqual(3, build.StepCount)
+		steps = list(build.IterateSteps())
+		self.assertEqual("actions/checkout@v6", str(steps[0].Uses))
+		self.assertIs(steps[0], steps[0].Uses.Parent)
+		self.assertIs(build, steps[0].Parent)
+		self.assertIsNone(steps[1].Name)
+		self.assertEqual("success()", steps[2].Condition)
+		self.assertEqual("line 69", steps[2].Location)
+
+	def test_FromFile(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+		build = workflow.Jobs["Build"]
+
+		self.assertIs(workflow, build.Steps[0].Uses.Workflow)
+		self.assertEqual("Package.yml:69", build.Steps[2].Location)
+
+	def test_Actions(self) -> None:
+		workflow = Workflow.FromFile(self._write("Package.yml", CALLABLE))
+
+		self.assertEqual(
+			["actions/checkout@v6", "actions/setup-python@v6", "docker://alpine:3.22"],
+			[str(action) for action in workflow.IterateActions()]
+		)
+
+	def test_Construction(self) -> None:
+		uses =     UsesReference("actions/checkout@v6", 5)
+		checkout = Step(4, uses=uses)
+		test =     Step(6, name="Test", run="pytest")
+		matrix =   Matrix(3, {"python": ["3.13", "3.14"]})
+		job =      Job("Build", 2, runsOn=("ubuntu-26.04", ), matrix=matrix, steps=(checkout, test))
+
+		self.assertEqual([checkout, test], job.Steps)
+		self.assertIs(job, test.Parent)
+		self.assertIs(checkout, uses.Parent)
+		self.assertIs(matrix, job.Matrix)
+		self.assertIs(job, matrix.Parent)
+
+		workflow = Workflow(Path("Package.yml"), jobs=(job, ))
+		for element in (job, matrix, checkout, uses):
+			self.assertIs(workflow, element.Workflow)
+
+		attached = Step(8, run="make", parent=job)
+		self.assertIs(attached, job.Steps[-1])
+		self.assertIs(Matrix(9, parent=job), job.Matrix)
+
+		for arguments, message in (
+			({"matrix": {"python": ["3.14"]}}, "Parameter 'matrix' is not of type 'Matrix'."),
+			({"steps":  ("run", )},            "An element of parameter 'steps' is not of type 'Step'.")
+		):
+			with self.subTest(message):
+				with self.assertRaises(TypeError) as context:
+					_ = Job("Build", 2, **arguments)
+
+				self.assertEqual(message, str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = Step(4, uses="actions/checkout@v6")
+
+		self.assertEqual("Parameter 'uses' is not of type 'UsesReference'.", str(context.exception))
+
+	def test_Steps_NotAList(self) -> None:
+		self.assertEqual("Key 'steps' of job 'A' is not a list.", str(self._jobError("runs-on: x\nsteps: run\n")))
+
+	def test_Step_NotAMapping(self) -> None:
+		error = self._jobError("runs-on: x\nsteps:\n  - run\n")
+
+		self.assertEqual("Step 1 of job 'A' is not a mapping.", str(error))
+		self.assertEqual(5, error.Line)
+
+
+class Matrices(Testcase):
+	"""A job's ``strategy.matrix``, read by :meth:`Matrix._FromYAML`, and the combinations it produces."""
+
+	def _matrix(self, matrix: str) -> Matrix:
+		"""
+		Read a matrix written at line 6.
+
+		:param matrix: The matrix' YAML.
+		:returns:      The matrix.
+		"""
+		return Matrix._FromYAML(YAML(typ="rt").load(dedent(matrix)), Path("A.yml"), 6)
+
+	def test_Static(self) -> None:
+		matrix = self._matrix("""\
+			system: [ubuntu, windows]
+			python: ['3.13', '3.14']
+			exclude:
+			  - system: windows
+			    python: '3.13'
+		""")
+
+		self.assertFalse(matrix.IsDynamic)
+		self.assertEqual({"system": ["ubuntu", "windows"], "python": ["3.13", "3.14"]}, matrix.Dimensions)
+		self.assertEqual([{"system": "windows", "python": "3.13"}], matrix.Exclude)
+		self.assertIsNone(matrix.Include)
+		self.assertIsNone(matrix.Expression)
+		self.assertEqual("line 6", matrix.Location)
+
+	def test_DynamicInclude(self) -> None:
+		matrix = self._matrix("include: ${{ fromJson(needs.Params.outputs.jobs) }}\n")
+
+		self.assertTrue(matrix.IsDynamic)
+		self.assertEqual("${{ fromJson(needs.Params.outputs.jobs) }}", matrix.Include)
+		self.assertEqual({}, matrix.Dimensions)
+
+	def test_Expression(self) -> None:
+		matrix = Matrix._FromYAML("${{ fromJson(inputs.matrix) }}", Path("A.yml"), 6)
+
+		self.assertTrue(matrix.IsDynamic)
+		self.assertEqual("${{ fromJson(inputs.matrix) }}", matrix.Expression)
+
+	def test_Product(self) -> None:
+		"""The last dimension varies fastest; 'exclude' matches an entry's pairs only."""
+		matrix = self._matrix("""\
+			system: [ubuntu, windows]
+			python: ['3.13', '3.14']
+			exclude:
+			  - system: windows
+			    python: '3.13'
+		""")
+
+		self.assertEqual(
+			[
+				{"system": "ubuntu", "python": "3.13"},
+				{"system": "ubuntu", "python": "3.14"},
+				{"system": "windows", "python": "3.14"}
+			],
+			matrix.Combinations
+		)
+
+	def test_Include(self) -> None:
+		"""GitHub's example: an entry extends what it doesn't change, or becomes a combination of its own."""
+		matrix = self._matrix("""\
+			fruit: [apple, pear]
+			animal: [cat, dog]
+			include:
+			  - color: green
+			  - color: pink
+			    animal: cat
+			  - fruit: apple
+			    shape: circle
+			  - fruit: banana
+			  - fruit: banana
+			    animal: cat
+		""")
+
+		self.assertEqual(
+			[
+				{"fruit": "apple", "animal": "cat", "color": "pink", "shape": "circle"},
+				{"fruit": "apple", "animal": "dog", "color": "green", "shape": "circle"},
+				{"fruit": "pear", "animal": "cat", "color": "pink"},
+				{"fruit": "pear", "animal": "dog", "color": "green"},
+				{"fruit": "banana"},
+				{"fruit": "banana", "animal": "cat"}
+			],
+			matrix.Combinations
+		)
+
+	def test_IncludeOnly(self) -> None:
+		matrix = self._matrix("""\
+			include:
+			  - {os: ubuntu, shell: bash}
+			  - {os: windows, shell: pwsh}
+		""")
+
+		self.assertEqual([{"os": "ubuntu", "shell": "bash"}, {"os": "windows", "shell": "pwsh"}], matrix.Combinations)
+
+	def test_Dynamic(self) -> None:
+		matrix = self._matrix("include: ${{ fromJson(inputs.jobs) }}\n")
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = matrix.Combinations
+
+		self.assertEqual("Matrix is dynamic; its combinations are known at run time only.", str(context.exception))
+		self.assertEqual(6, context.exception.Line)
+
+	def test_NoMappings(self) -> None:
+		matrix = self._matrix("os: [ubuntu]\ninclude: [ubuntu]\n")
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = matrix.Combinations
+
+		self.assertEqual("Key 'include' of the matrix is not a list of mappings.", str(context.exception))
+
+	def test_Job(self) -> None:
+		jobs = _readJobs(CALLABLE)
+
+		self.assertTrue(jobs["Build"].Matrix.IsDynamic)
+		self.assertIs(jobs["Build"], jobs["Build"].Matrix.Parent)
+		self.assertEqual("line 59", jobs["Build"].Matrix.Location)
+		self.assertFalse(jobs["Static"].Matrix.IsDynamic)
+		self.assertEqual(("self-hosted", "linux"), jobs["Static"].RunsOn)
+		self.assertIsNone(jobs["Params"].Matrix)
+
+	def test_NotAMapping(self) -> None:
+		with self.assertRaises(WorkflowError) as context:
+			_ = _readJobs("jobs:\n  A:\n    runs-on: x\n    strategy:\n      matrix: [a]\n")
+
+		self.assertEqual("Key 'strategy.matrix' is not a mapping.", str(context.exception))
+		self.assertEqual(5, context.exception.Line)
+
+
+class Resolver(Fixture):
+	def _resolver(self) -> WorkflowResolver:
+		"""
+		Write the caller and the workflows it calls, and map ``owner/repo`` to their directory.
+
+		:returns: The resolver.
+		"""
+		self._write("Pipeline.yml", CALLER)
+		self._write("Package.yml", CALLABLE)
+		self._write("Prepare.yml", PREPARE)
+
+		return WorkflowResolver({"owner/repo": self._path})
+
+	def test_Resolve(self) -> None:
+		resolver = self._resolver()
+		pipeline = resolver.Load(self._path / "Pipeline.yml")
+
+		prepare = resolver.Resolve(pipeline.Jobs["Prepare"].Uses)
+		package = resolver.Resolve(pipeline.Jobs["Package"].Uses)
+		self.assertEqual("Prepare", prepare.Name)
+		self.assertEqual("Package", package.Name)
+		self.assertIs(package, resolver.Resolve(pipeline.Jobs["Local"].Uses))
+		self.assertIs(package, resolver.Load(self._path / "Package.yml"))
+		self.assertIsNone(resolver.Resolve(pipeline.Jobs["Foreign"].Uses))
+
+	def test_Resolve_Action(self) -> None:
+		resolver = self._resolver()
+		package = resolver.Load(self._path / "Package.yml")
+
+		self.assertIsNone(resolver.Resolve(package.Jobs["Build"].Steps[0].Uses))
+
+	def test_Resolve_Missing(self) -> None:
+		self._write("Pipeline.yml", CALLER)
+		resolver = WorkflowResolver({"owner/repo": self._path})
+		pipeline = resolver.Load(self._path / "Pipeline.yml")
+
+		with self.assertRaises(WorkflowError) as context:
+			_ = resolver.Resolve(pipeline.Jobs["Prepare"].Uses)
+
+		self.assertEqual(f"Workflow 'Prepare.yml' doesn't exist in '{self._path}'.", str(context.exception))
+		self.assertEqual(9, context.exception.Line)
+		self.assertEqual(self._path / "Pipeline.yml", context.exception.Path)
+
+	def test_CanResolve(self) -> None:
+		resolver = WorkflowResolver({"Owner/Repo": self._path})
+
+		for text, expected in (
+			("./.github/workflows/Package.yml",             True),
+			("owner/repo/.github/workflows/Package.yml@r1", True),
+			("OWNER/REPO/.github/workflows/Package.yml@r1", True),
+			("other/repo/.github/workflows/Package.yml@r1", False),
+			("actions/checkout@v6",                         False),
+			("docker://alpine:3.22",                        False)
+		):
+			with self.subTest(uses=text):
+				self.assertIs(expected, resolver.CanResolve(UsesReference(text, 1)))
+
+		with self.assertRaises(ValueError) as context:
+			_ = resolver.CanResolve(None)
+
+		self.assertEqual("Parameter 'uses' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = resolver.CanResolve("./.github/workflows/Package.yml")
+
+		self.assertEqual("Parameter 'uses' is not of type 'UsesReference'.", str(context.exception))
+
+	def test_CollectPermissions(self) -> None:
+		resolver = self._resolver()
+		pipeline = resolver.Load(self._path / "Pipeline.yml")
+
+		self.assertEqual(["contents", "actions"], list(pipeline.CollectPermissions()))
+
+		permissions = pipeline.CollectPermissions(resolver)
+		self.assertEqual(["contents", "actions", PermissionScope.All, "id-token"], list(permissions))
+		self.assertEqual("Package.yml:55", permissions["contents"].Location)
+		self.assertIs(AccessLevel.Write, permissions["contents"].Level)
+		self.assertEqual("Pipeline.yml:17", permissions["actions"].Location)
+		self.assertEqual("Prepare.yml:4", permissions[PermissionScope.All].Location)
+
+	def test_Repositories(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = WorkflowResolver({"owner": Path(".")})
+
+		self.assertEqual("Key of parameter 'repositories' is not of the form 'owner/repo'.", str(context.exception))
+
+		with self.assertRaises(TypeError):
+			_ = WorkflowResolver({"owner/repo": "."})
+
+		self.assertEqual({"owner/repo": Path(".")}, WorkflowResolver({"Owner/Repo": Path(".")}).Repositories)
