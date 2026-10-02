@@ -90,12 +90,12 @@ from sphinx.builders                           import Builder
 from sphinx.domains                            import Domain, ObjType
 from sphinx.environment                        import BuildEnvironment
 from sphinx.roles                              import XRefRole
-from sphinx.util.docutils                      import SphinxDirective
 from sphinx.util.logging                       import getLogger
 from sphinx.util.nodes                         import make_id, make_refnode
 
 from pyTooling.Common                          import getFullyQualifiedName
 from pyTooling.Decorators                      import export, readonly
+from pyTooling.Documentation.Sphinx.Directives import BaseDirective
 
 if TYPE_CHECKING:  # pragma: no cover
 	from pyTooling.CI.GitHub.WorkflowFile        import Input, Output, Parameter, Secret, ValueT, Workflow
@@ -140,7 +140,7 @@ def formatValue(value: ValueT) -> str:
 
 
 @export
-class WorkflowDirective(SphinxDirective):
+class WorkflowDirective(BaseDirective):
 	"""
 	The directive ``gha:workflow``: a workflow's target, its index entry, and the current workflow of the document.
 
@@ -155,6 +155,8 @@ class WorkflowDirective(SphinxDirective):
 
 	The directive writes no visible output. Placed above a page's title, its target is the title, as a label is.
 	"""
+
+	directiveName: str = "gha:workflow"  #: Name the directive is invoked by.
 
 	has_content =        False                                   #: The directive has no content.
 	required_arguments = 1                                       #: The workflow's name.
@@ -180,12 +182,12 @@ class WorkflowDirective(SphinxDirective):
 
 		if path is None:
 			_logger.warning(
-				f"gha:workflow '{name}' has no file: give option ':file:' or set 'gha_workflow_directory'.",
+				f"{self.directiveName} '{name}' has no file: give option ':file:' or set 'gha_workflow_directory'.",
 				location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
 			)
 		elif not path.exists():
 			_logger.warning(
-				f"gha:workflow '{name}': file '{path}' doesn't exist.",
+				f"{self.directiveName} '{name}': file '{path}' doesn't exist.",
 				location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
 			)
 		else:
@@ -230,12 +232,12 @@ class WorkflowDirective(SphinxDirective):
 			else:
 				location = f"{ex.Path}:{ex.Line}"
 
-			_logger.warning(f"gha:workflow '{name}': {ex}", location=location, type=WARNING_TYPE, subtype="workflow")
+			_logger.warning(f"{self.directiveName} '{name}': {ex}", location=location, type=WARNING_TYPE, subtype="workflow")
 			return
 
 		if workflow.Name != name:
 			_logger.warning(
-				f"gha:workflow '{name}' reads file '{path.name}', which names workflow '{workflow.Name}'.",
+				f"{self.directiveName} '{name}' reads file '{path.name}', which names workflow '{workflow.Name}'.",
 				location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
 			)
 
@@ -250,7 +252,7 @@ class WorkflowDirective(SphinxDirective):
 
 
 @export
-class ParameterDirective(SphinxDirective):
+class ParameterDirective(BaseDirective):
 	"""
 	Base-class of the directives documenting one parameter of the current workflow.
 
@@ -282,7 +284,7 @@ class ParameterDirective(SphinxDirective):
 		name = self.arguments[0].strip()
 		if (workflowName := self.env.ref_context.get("gha:workflow", None)) is None:
 			_logger.warning(
-				f"gha:{self.OBJECT_TYPE} '{name}' is not preceded by a gha:workflow.",
+				f"{self.directiveName} '{name}' is not preceded by a gha:workflow.",
 				location=self.get_location(), type=WARNING_TYPE, subtype="workflow"
 			)
 			return []
@@ -322,7 +324,7 @@ class ParameterDirective(SphinxDirective):
 			fieldName = field[0].astext().strip()
 			if fieldName in self.FACT_FIELDS:
 				_logger.warning(
-					f"gha:{self.OBJECT_TYPE} '{fullName}': field '{fieldName}' is taken from the workflow file; remove it.",
+					f"{self.directiveName} '{fullName}': field '{fieldName}' is taken from the workflow file; remove it.",
 					location=field, type=WARNING_TYPE, subtype="drift"
 				)
 				if parameter is not None:
@@ -405,6 +407,8 @@ class InputDirective(ParameterDirective):
 	The fields *Type*, *Required* and *Default Value* are taken from the workflow file.
 	"""
 
+	directiveName: str = "gha:input"  #: Name the directive is invoked by.
+
 	OBJECT_TYPE = "input"                                #: The domain's object type.
 	LABEL_KIND =  "Input"                                #: The kind in a label.
 	COLLECTION =  "Inputs"                               #: The workflow's property holding the parameters.
@@ -433,6 +437,8 @@ class SecretDirective(ParameterDirective):
 	workflow file.
 	"""
 
+	directiveName: str = "gha:secret"  #: Name the directive is invoked by.
+
 	OBJECT_TYPE = "secret"                               #: The domain's object type.
 	LABEL_KIND =  "Secret"                               #: The kind in a label.
 	COLLECTION =  "Secrets"                              #: The workflow's property holding the parameters.
@@ -460,6 +466,8 @@ class OutputDirective(ParameterDirective):
 	A workflow file states no type and no default for an output, so every field is hand-written; only the
 	*Description* falls back to the file's ``description``.
 	"""
+
+	directiveName: str = "gha:output"  #: Name the directive is invoked by.
 
 	OBJECT_TYPE = "output"   #: The domain's object type.
 	LABEL_KIND =  "Output"   #: The kind in a label.
