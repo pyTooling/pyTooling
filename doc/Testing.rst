@@ -445,6 +445,9 @@ ID, the test runner, or the report format. pyTooling's markers collect a test wi
 node ID, and write the names into pytest's JUnit XML report and, optionally, a report format with nested test
 suites.
 
+The idea is known from Java: JUnit's ``@DisplayName`` gives a test class or method a name of its own beside its
+identifier, and ``@Nested`` classes form a hierarchy of test suites.
+
 .. _TESTING/Competitors/Allure:
 
 Allure
@@ -516,15 +519,3 @@ Source: the standard library's :mod:`unittest`.
 
 * :meth:`~unittest.TestCase.shortDescription` returns the first line of a test's doc-string, which the text runner
   prints in verbose mode. pytest doesn't report it, and there is no name for a class or a module.
-
-.. _TESTING/Competitors/JUnit:
-
-JUnit
-=====
-
-Source: the `JUnit documentation <https://docs.junit.org/>`__ (Java, JUnit 5 and later).
-
-.. rubric:: Standoff
-
-* ``@DisplayName`` gives a test class or method a name of its own beside its identifier, and ``@Nested`` classes
-  form a hierarchy of test suites - comparable to the markers and the nested report format in Python.
