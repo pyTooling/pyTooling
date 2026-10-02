@@ -433,3 +433,98 @@ The levels are the node ID's own parts: the module path, then each class between
 
    :ref:`TESTING/Markers`
       |rarr| Where the titles, summaries and descriptions come from.
+
+
+.. _TESTING/Competitors:
+
+Competing Solutions
+###################
+
+The packages below give a test a readable name or a hierarchy, but each changes something pyTooling keeps: the node
+ID, the test runner, or the report format. pyTooling's markers collect a test without a naming convention, keep its
+node ID, and write the names into pytest's JUnit XML report and, optionally, a report format with nested test
+suites.
+
+.. _TESTING/Competitors/Allure:
+
+Allure
+======
+
+Source: :gh:`allure-python <allure-framework/allure-python>`, on PyPI as
+`allure-pytest <https://pypi.org/project/allure-pytest/>`__.
+
+.. rubric:: Disadvantages
+
+* The names are written into Allure's own result files, which Allure Report reads, not into the JUnit XML report.
+* A test is still collected by its name; the decorators add names, they don't mark what is a test.
+* The hierarchy (``@allure.parent_suite``, ``@allure.suite``, ``@allure.sub_suite``, or ``@allure.epic`` /
+  ``feature`` / ``story``) is stated per test, not taken from the packages and modules the tests live in.
+
+.. rubric:: Advantages
+
+* ``@allure.title`` may refer to a test's parameters, e.g. ``"Login as {login}"``, and every decorator has a runtime
+  form (``allure.dynamic.title()``).
+* ``@allure.description`` takes Markdown, and the report attaches steps, screenshots and logs to a test.
+
+.. _TESTING/Competitors/Ward:
+
+Ward
+====
+
+Source: `ward <https://pypi.org/project/ward/>`__, last released as 0.68.0b0 in 2023.
+
+.. rubric:: Disadvantages
+
+* A test runner of its own, not a pytest plugin, so pytest's plugins and fixtures don't apply.
+* Still a beta release, and not released since December 2023.
+
+.. rubric:: Standoff
+
+* ``@test("description")`` collects a function by its decorator, whatever it is named - as
+  :deco:`~pyTooling.Testing.testcase` does.
+
+.. rubric:: Advantages
+
+* The description is a format string, filled with the test's parameters and fixtures.
+
+.. _TESTING/Competitors/pytest-plugins:
+
+pytest-testdox and pytest-describe
+==================================
+
+Source: :gh:`pytest-testdox <renanivo/pytest-testdox>`, :gh:`pytest-describe <pytest-dev/pytest-describe>`.
+
+.. rubric:: Disadvantages
+
+* pytest-testdox derives a sentence from a test's name, or takes one from ``@pytest.mark.it``, but only for the
+  terminal: the report and the collection stay as they are.
+* pytest-describe nests tests in ``describe_*`` functions; with ``describe_docstrings``, a block is named by its
+  doc-string's first line, which then replaces the function name in the node ID.
+
+.. rubric:: Advantages
+
+* pytest-describe collects the functions inside a block whatever they are named, and its nesting needs no classes.
+
+.. _TESTING/Competitors/unittest:
+
+unittest
+========
+
+Source: the standard library's :mod:`unittest`.
+
+.. rubric:: Disadvantages
+
+* :meth:`~unittest.TestCase.shortDescription` returns the first line of a test's doc-string, which the text runner
+  prints in verbose mode. pytest doesn't report it, and there is no name for a class or a module.
+
+.. _TESTING/Competitors/JUnit:
+
+JUnit
+=====
+
+Source: the `JUnit documentation <https://docs.junit.org/>`__ (Java, JUnit 5 and later).
+
+.. rubric:: Standoff
+
+* ``@DisplayName`` gives a test class or method a name of its own beside its identifier, and ``@Nested`` classes
+  form a hierarchy of test suites - comparable to the markers and the nested report format in Python.
