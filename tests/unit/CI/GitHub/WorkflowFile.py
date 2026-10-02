@@ -1887,6 +1887,11 @@ class Actions(Fixture):
 
 		self.assertEqual("An element of parameter 'steps' is not of type 'Step'.", str(context.exception))
 
+		with self.assertRaises(TypeError) as context:
+			action.Parent = Job("Build", 2)
+
+		self.assertEqual("A 'pyTooling.CI.GitHub.WorkflowFile.Action' has no parent.", str(context.exception))
+
 	def test_Step_Parent(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Step(1, parent=Workflow(Path("Build.yml")))

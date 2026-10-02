@@ -274,7 +274,7 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 
 		:returns:           The containing element, or ``None`` for a :class:`Workflow`.
 		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If a parent is assigned to a :class:`Workflow`, which has no parent.
+		:raises TypeError:  If a parent is assigned to a :class:`Workflow` or an :class:`Action`, which have no parent.
 		:raises TypeError:  If an assigned value is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		return self._parent
@@ -1658,6 +1658,12 @@ class Action(Base[None]):
 
 				self._steps.append(step)
 				step.Parent = self
+
+	@Base.Parent.setter
+	def Parent(self, value: None) -> None:
+		ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		raise ex
 
 	@readonly
 	def Path(self) -> Path:
