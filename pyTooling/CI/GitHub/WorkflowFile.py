@@ -40,7 +40,10 @@ A workflow file is read once into objects:
    +-- Output               an output of 'on.workflow_call'
    +-- Secret               a secret of 'on.workflow_call'
    +-- Permission           a permission the workflow declares
+   +-- Job                  a job, in file order
+       +-- UsesReference    the reusable workflow the job calls
        +-- Permission       a permission the job declares
+           +-- UsesReference    the action the step runs
 
 Every element knows its parent, the workflow it belongs to, and the line it starts at in the file, so a consumer can
 name the place a finding comes from, as ``CompletePipeline.yml:552``.
@@ -52,8 +55,9 @@ The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow 
 from __future__            import annotations
 
 from functools             import cached_property
-from pathlib               import Path
-from typing                import Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, TypeVar, Union
+from pathlib               import Path, PurePosixPath
+from typing                import Any, ClassVar, Generic, Iterable, Iterator, Mapping, Optional as Nullable, Self
+from typing                import TypeVar, Union
 
 from pyTooling.CI          import CIError
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
@@ -215,7 +219,6 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'line' is ``None``.
 		:raises TypeError:  If parameter 'line' is not of type :class:`int`.
 		:raises ValueError: If parameter 'line' is not positive.
-		:raises TypeError:  If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
 		:raises TypeError:  If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		if line is None:
@@ -229,29 +232,43 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{line}'.")
 			raise ex
 
-		if parent is not None:
-			if self._PARENT_TYPE is None:
-				ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-			elif not isinstance(parent, self._PARENT_TYPE):
-				parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
-				ex = TypeError(f"Parameter 'parent' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
+		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
+			parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
+			ex = TypeError(f"Parameter 'parent' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 
 		self._parent =   parent
 		self._workflow = None if parent is None else parent._workflow
 		self._line =     line
 
-	@readonly
+	@property
 	def Parent(self) -> Nullable[ParentType]:
 		"""
-		Read-only property to access the containing element (:attr:`_parent`).
+		Property to access the containing element (:attr:`_parent`).
 
-		:returns: The containing element, or ``None`` for a :class:`Workflow`.
+		Assigning a parent attaches an element constructed before it: the element takes the parent's workflow, and so do
+		the elements it contains.
+
+		:returns:           The containing element, or ``None`` for a :class:`Workflow`.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If a parent is assigned to a :class:`Workflow`, which has no parent.
+		:raises TypeError:  If an assigned value is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		return self._parent
+
+	@Parent.setter
+	def Parent(self, value: ParentType) -> None:
+		if value is None:
+			raise ValueError("Parameter 'value' is None.")
+		elif not isinstance(value, self._PARENT_TYPE):
+			parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
+			ex = TypeError(f"Parameter 'value' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		self._parent =   value
+		self._workflow = value._workflow
 
 	@readonly
 	def Workflow(self) -> Nullable[Workflow]:
@@ -341,6 +358,7 @@ class Workflow(Base[None]):
 	_outputs:     dict[str, Output]                            #: Outputs of ``on.workflow_call``, by name.
 	_secrets:     dict[str, Secret]                            #: Secrets of ``on.workflow_call``, by name.
 	_permissions: Nullable[dict[PermissionScope, Permission]]  #: Permissions the workflow declares, by scope.
+	_jobs:        dict[str, Job]                               #: Jobs of the workflow, by name, in file order.
 
 	def __init__(
 		self,
@@ -350,12 +368,13 @@ class Workflow(Base[None]):
 		inputs:      Nullable[Iterable[Input]]      = None,
 		outputs:     Nullable[Iterable[Output]]     = None,
 		secrets:     Nullable[Iterable[Secret]]     = None,
-		permissions: Nullable[Iterable[Permission]] = None
+		permissions: Nullable[Iterable[Permission]] = None,
+		jobs:        Nullable[Iterable[Job]]        = None
 	) -> None:
 		"""
 		Initializes a workflow.
 
-		An input, output, secret or permission is attached by passing it, or by constructing it with the workflow as
+		An input, output, secret, permission or job is attached by passing it, or by constructing it with the workflow as
 		parent. Use :meth:`FromFile` to read a workflow file.
 
 		:param path:        Path to the workflow file.
@@ -368,6 +387,7 @@ class Workflow(Base[None]):
 		                    ``None``.
 		:param permissions: Optional, permissions the workflow declares for all its jobs, which are attached to the
 		                    workflow. Default: ``None``, for a workflow without a ``permissions`` key.
+		:param jobs:        Optional, jobs, which are attached to the workflow. Default: ``None``.
 		:raises ValueError: If parameter 'path' is ``None``.
 		:raises TypeError:  If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:  If parameter 'displayName' is not of type :class:`str`.
@@ -376,6 +396,7 @@ class Workflow(Base[None]):
 		:raises TypeError:  If an element of parameter 'outputs' is not of type :class:`Output`.
 		:raises TypeError:  If an element of parameter 'secrets' is not of type :class:`Secret`.
 		:raises TypeError:  If an element of parameter 'permissions' is not of type :class:`Permission`.
+		:raises TypeError:  If an element of parameter 'jobs' is not of type :class:`Job`.
 		"""
 		super().__init__(1)
 
@@ -400,6 +421,7 @@ class Workflow(Base[None]):
 		self._outputs =     {}
 		self._secrets =     {}
 		self._permissions = None
+		self._jobs =        {}
 
 		if triggers is not None:
 			self._triggers = tuple(triggers)
@@ -409,23 +431,23 @@ class Workflow(Base[None]):
 					ex.add_note(f"Got type '{getFullyQualifiedName(trigger)}'.")
 					raise ex
 
-		for parameterName, parameters, parameterClass, container in (
+		for parameterName, elements, elementClass, container in (
 			("inputs",  inputs,  Input,  self._inputs),
 			("outputs", outputs, Output, self._outputs),
-			("secrets", secrets, Secret, self._secrets)
+			("secrets", secrets, Secret, self._secrets),
+			("jobs",    jobs,    Job,    self._jobs)
 		):
-			if parameters is None:
+			if elements is None:
 				continue
 
-			for parameter in parameters:
-				if not isinstance(parameter, parameterClass):
-					ex = TypeError(f"An element of parameter '{parameterName}' is not of type '{parameterClass.__name__}'.")
-					ex.add_note(f"Got type '{getFullyQualifiedName(parameter)}'.")
+			for element in elements:
+				if not isinstance(element, elementClass):
+					ex = TypeError(f"An element of parameter '{parameterName}' is not of type '{elementClass.__name__}'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
 					raise ex
 
-				container[parameter._name] = parameter
-				parameter._parent =   self
-				parameter._workflow = self
+				container[element._name] = element
+				element.Parent = self
 
 		if permissions is not None:
 			self._permissions = {}
@@ -436,8 +458,13 @@ class Workflow(Base[None]):
 					raise ex
 
 				self._permissions[permission._scope] = permission
-				permission._parent =   self
-				permission._workflow = self
+				permission.Parent = self
+
+	@Base.Parent.setter
+	def Parent(self, value: None) -> None:
+		ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		raise ex
 
 	@readonly
 	def Path(self) -> Path:
@@ -520,6 +547,41 @@ class Workflow(Base[None]):
 		"""
 		return self._permissions
 
+	@readonly
+	def Jobs(self) -> dict[str, Job]:
+		"""
+		Read-only property to access the workflow's jobs (:attr:`_jobs`).
+
+		:returns: The jobs, by name, in file order.
+		"""
+		return self._jobs
+
+
+	@readonly
+	def JobCount(self) -> int:
+		"""
+		Read-only property to return the number of jobs of the workflow.
+
+		:returns: Number of jobs.
+		"""
+		return len(self._jobs)
+
+	def ContainsJob(self, name: str) -> bool:
+		"""
+		Check whether the workflow has a job of that name.
+
+		:param name: Name of the job, the key it is declared under.
+		:returns:    ``True``, if the workflow has a job of that name.
+		"""
+		return name in self._jobs
+
+	def IterateJobs(self) -> Iterator[Job]:
+		"""
+		Iterate the workflow's jobs.
+
+		:returns: An iterator over the jobs, in file order.
+		"""
+		return iter(self._jobs.values())
 
 	def __str__(self) -> str:
 		"""
@@ -534,16 +596,20 @@ class Workflow(Base[None]):
 		"""
 		Read a workflow file.
 
-		:param path:               Path to the workflow file.
-		:returns:                  The workflow, with its parameters and permissions attached.
-		:raises ValueError:        If parameter 'path' is ``None``.
-		:raises TypeError:         If parameter 'path' is not of type :class:`~pathlib.Path`.
-		:raises FileNotFoundError: If the file doesn't exist.
-		:raises WorkflowError:     If the file is not a YAML document.
-		:raises WorkflowError:     If the document is not a mapping, or has no ``on`` or ``jobs`` key.
-		:raises WorkflowError:     If a parameter of ``on.workflow_call`` lacks a key GitHub requires, or has a value of
-		                           the wrong kind. |br|
-		                           For an unknown input type, the note lists the allowed values.
+		:param path:           Path to the workflow file.
+		:returns:              The workflow, with its parameters, permissions and jobs attached.
+		:raises ValueError:    If parameter 'path' is ``None``.
+		:raises TypeError:     If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises WorkflowError: If the file doesn't exist.
+		:raises WorkflowError: If the file can't be read.
+		:raises WorkflowError: If the file is not a YAML document.
+		:raises WorkflowError: If the document is not a mapping, or has no ``on`` or ``jobs`` key.
+		:raises WorkflowError: If a parameter of ``on.workflow_call`` lacks a key GitHub requires, or has a value of the
+		                       wrong kind. |br|
+		                       For an unknown input type, the note lists the allowed values.
+		:raises WorkflowError: If a job is malformed, needs a job the workflow doesn't have, or the jobs need each other in
+		                       a cycle. |br|
+		                       For an unknown job, the note lists the workflow's jobs.
 		"""
 		if path is None:
 			raise ValueError("Parameter 'path' is None.")
@@ -551,9 +617,16 @@ class Workflow(Base[None]):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
+		elif not path.exists():
+			raise WorkflowError("Workflow file doesn't exist.", path) from FileNotFoundError(path)
 
 		try:
-			document = YAML(typ="rt").load(path.read_text(encoding="utf-8"))
+			content = path.read_text(encoding="utf-8")
+		except OSError as cause:
+			raise WorkflowError("Workflow file can't be read.", path) from cause
+
+		try:
+			document = YAML(typ="rt").load(content)
 		except YAMLError as cause:
 			mark = getattr(cause, "problem_mark", None)
 			line = None if mark is None else mark.line + 1
@@ -570,6 +643,25 @@ class Workflow(Base[None]):
 		elif "jobs" not in document:
 			raise WorkflowError("Workflow file has no 'jobs' key.", path)
 
+		workflow = cls._Parse(document, path)
+		workflow._Validate()
+
+		return workflow
+
+	@classmethod
+	def _Parse(cls, document: CommentedMap, path: Path) -> Self:
+		"""
+		Build a workflow and the elements it contains from the document read from its file.
+
+		:param document:       The document, a mapping with an ``on`` and a ``jobs`` key.
+		:param path:           Path to the workflow file.
+		:returns:              The workflow, with its parameters, permissions and jobs attached.
+		:raises WorkflowError: If key ``on`` is neither an event, a list nor a mapping.
+		:raises WorkflowError: If a parameter of ``on.workflow_call`` lacks a key GitHub requires, or has a value of the
+		                       wrong kind. |br|
+		                       For an unknown input type, the note lists the allowed values.
+		:raises WorkflowError: If key ``jobs`` or a job is not a mapping, or a job is malformed.
+		"""
 		on = document["on"]
 		if isinstance(on, str):
 			triggers = (on, )
@@ -600,6 +692,22 @@ class Workflow(Base[None]):
 					for name, declaration in declarations.items()
 				]
 
+		jobs = document["jobs"]
+		if not isinstance(jobs, CommentedMap):
+			ex = WorkflowError("Key 'jobs' is not a mapping.", path, Base._KeyLine(document, "jobs"))
+			ex.add_note(f"Got type '{getFullyQualifiedName(jobs)}'.")
+			raise ex
+
+		jobList = []
+		for name, job in jobs.items():
+			line = Base._KeyLine(jobs, name)
+			if not isinstance(job, CommentedMap):
+				ex = WorkflowError(f"Job '{name}' is not a mapping.", path, line)
+				ex.add_note(f"Got type '{getFullyQualifiedName(job)}'.")
+				raise ex
+
+			jobList.append(Job._FromYAML(str(name), job, path, line))
+
 		permissions = None
 		if "permissions" in document:
 			permissions = Permission._FromYAML(document["permissions"], path, Base._KeyLine(document, "permissions"))
@@ -612,19 +720,626 @@ class Workflow(Base[None]):
 			parameters["inputs"],
 			parameters["outputs"],
 			parameters["secrets"],
-			permissions
+			permissions,
+			jobList
+		)
+
+	def _Validate(self) -> None:
+		"""
+		Validate the workflow read from a file.
+
+		:raises WorkflowError: If a job needs a job the workflow doesn't have. |br|
+		                       The note lists the workflow's jobs.
+		:raises WorkflowError: If the jobs need each other in a cycle.
+		"""
+		self._ValidateNeeds()
+		self._ValidateAcyclic()
+
+	def _ValidateNeeds(self) -> None:
+		"""
+		Validate that every job names only jobs of the workflow in its ``needs`` key.
+
+		:raises WorkflowError: If a job needs a job the workflow doesn't have. |br|
+		                       The note lists the workflow's jobs.
+		"""
+		for job in self._jobs.values():
+			for need in job._needNames:
+				if need not in self._jobs:
+					ex = WorkflowError(
+						f"Job '{job._name}' needs job '{need}', which the workflow doesn't have.", self._path, job._line
+					)
+					ex.add_note(f"Jobs: {', '.join(self._jobs)}.")
+					raise ex
+
+	def _ValidateAcyclic(self) -> None:
+		"""
+		Validate that the jobs don't need each other in a cycle.
+
+		:raises WorkflowError: If the jobs need each other in a cycle.
+		"""
+		# Depth-first search: a job still on the stack when it is reached again closes a cycle.
+		finished: set[str] = set()
+		stack:    list[str] = []
+
+		def visit(job: Job) -> None:
+			"""
+			Nested function for recursion.
+
+			:param job:            The job whose needs are followed.
+			:raises WorkflowError: If the job is reached again while its needs are followed.
+			"""
+			if job._name in finished:
+				return
+			elif job._name in stack:
+				cycle = stack[stack.index(job._name):] + [job._name]
+				raise WorkflowError(f"Jobs need each other in a cycle: {' -> '.join(cycle)}.", self._path, job._line)
+
+			stack.append(job._name)
+			for need in job.Needs:
+				visit(need)
+			stack.pop()
+			finished.add(job._name)
+
+		for job in self._jobs.values():
+			visit(job)
+
+
+@export
+class Job(Base[Workflow]):
+	"""
+	A job of a workflow.
+
+	A job either runs steps on a runner selected by :attr:`RunsOn`, or calls the reusable workflow named by
+	:attr:`Uses`.
+	"""
+
+	_PARENT_TYPE: ClassVar[ParentTypes] = Workflow  #: A job is contained in a workflow.
+
+	_name:            str                                          #: Name of the job, the key it is declared under.
+	_displayName:     Nullable[str]                                #: Name of the job, as GitHub displays it.
+	_needNames:       tuple[str, ...]                              #: Names of the jobs this job needs.
+	_condition:       Nullable[str]                                #: Condition under which the job runs.
+	_permissions:     Nullable[dict[PermissionScope, Permission]]  #: Permissions the job declares, by scope.
+	_runsOn:          tuple[str, ...]                              #: Labels selecting the runner.
+	_uses:            Nullable[UsesReference]                      #: The reusable workflow the job calls.
+	_with:            dict[str, ValueT]                            #: Inputs passed to the called workflow, by name.
+	_secrets:         dict[str, str]                               #: Secrets passed to the called workflow, by name.
+	_inheritsSecrets: bool                                         #: ``True``, if secrets are inherited.
+	_outputs:         dict[str, str]                               #: Outputs of the job, by name.
+
+	def __init__(
+		self,
+		name:            str,
+		line:            int,
+		displayName:     Nullable[str]                  = None,
+		needs:           Nullable[Iterable[str]]        = None,
+		condition:       Nullable[str]                  = None,
+		runsOn:          Nullable[Iterable[str]]        = None,
+		uses:            Nullable[UsesReference]        = None,
+		withInputs:      Nullable[Mapping[str, ValueT]] = None,
+		secrets:         Nullable[Mapping[str, str]]    = None,
+		inheritsSecrets: bool                           = False,
+		outputs:         Nullable[Mapping[str, str]]    = None,
+		permissions:     Nullable[Iterable[Permission]] = None,
+		*,
+		parent:          Nullable[Workflow]             = None
+	) -> None:
+		"""
+		Initializes a job of a workflow.
+
+		The reusable workflow a job calls and its permissions are attached by passing them, or by constructing a
+		:class:`UsesReference` or a :class:`Permission` with the job as parent.
+
+		:param name:            Name of the job, the key it is declared under.
+		:param line:            Line the job's name is written at, starting at 1.
+		:param displayName:     Optional, name of the job, as GitHub displays it. Default: ``None``.
+		:param needs:           Optional, names of the jobs this job needs. Default: ``None``.
+		:param condition:       Optional, condition under which the job runs. Default: ``None``.
+		:param runsOn:          Optional, labels selecting the runner. Default: ``None``.
+		:param uses:            Optional, the reusable workflow the job calls, which is attached to the job. Default:
+		                        ``None``.
+		:param withInputs:      Optional, inputs passed to the called workflow, by name. Default: ``None``.
+		:param secrets:         Optional, secrets passed to the called workflow, by name. Default: ``None``.
+		:param inheritsSecrets: Optional, ``True``, if the called workflow inherits every secret. Default: ``False``.
+		:param outputs:         Optional, outputs of the job, by name. Default: ``None``.
+		:param permissions:     Optional, permissions the job declares, which are attached to the job. Default: ``None``,
+		                        for a job without a ``permissions`` key.
+		:param parent:          Optional, reference to the workflow containing the job. Default: ``None``.
+		:raises ValueError:     If parameter 'name' is ``None``.
+		:raises TypeError:      If parameter 'name' is not of type :class:`str`.
+		:raises ValueError:     If parameter 'name' is empty.
+		:raises TypeError:      If parameter 'displayName' is not of type :class:`str`.
+		:raises TypeError:      If parameter 'condition' is not of type :class:`str`.
+		:raises TypeError:      If an element of parameter 'needs' is not of type :class:`str`.
+		:raises TypeError:      If an element of parameter 'runsOn' is not of type :class:`str`.
+		:raises TypeError:      If parameter 'uses' is not of type :class:`UsesReference`.
+		:raises TypeError:      If parameter 'inheritsSecrets' is not of type :class:`bool`.
+		:raises TypeError:      If an element of parameter 'permissions' is not of type :class:`Permission`.
+		"""
+		super().__init__(line, parent=parent)
+
+		if name is None:
+			raise ValueError("Parameter 'name' is None.")
+		elif not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+		elif name == "":
+			raise ValueError("Parameter 'name' is empty.")
+
+		for parameterName, value in (("displayName", displayName), ("condition", condition)):
+			if value is not None and not isinstance(value, str):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
+
+		self._needNames = () if needs is None else tuple(needs)
+		self._runsOn =    () if runsOn is None else tuple(runsOn)
+		for parameterName, values in (("needs", self._needNames), ("runsOn", self._runsOn)):
+			for value in values:
+				if not isinstance(value, str):
+					ex = TypeError(f"An element of parameter '{parameterName}' is not of type 'str'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+					raise ex
+
+		if uses is not None and not isinstance(uses, UsesReference):
+			ex = TypeError("Parameter 'uses' is not of type 'UsesReference'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(uses)}'.")
+			raise ex
+
+		if not isinstance(inheritsSecrets, bool):
+			ex = TypeError("Parameter 'inheritsSecrets' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(inheritsSecrets)}'.")
+			raise ex
+
+		self._name =            name
+		self._displayName =     displayName
+		self._condition =       condition
+		self._permissions =     None
+		self._uses =            uses
+		self._with =            {} if withInputs is None else dict(withInputs)
+		self._secrets =         {} if secrets is None else dict(secrets)
+		self._inheritsSecrets = inheritsSecrets
+		self._outputs =         {} if outputs is None else dict(outputs)
+
+		if uses is not None:
+			uses.Parent = self
+
+		if permissions is not None:
+			self._permissions = {}
+			for permission in permissions:
+				if not isinstance(permission, Permission):
+					ex = TypeError("An element of parameter 'permissions' is not of type 'Permission'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(permission)}'.")
+					raise ex
+
+				self._permissions[permission._scope] = permission
+				permission.Parent = self
+
+		if parent is not None:
+			parent._jobs[name] = self
+
+	@Base.Parent.setter
+	def Parent(self, value: Workflow) -> None:
+		Base.Parent.fset(self, value)
+
+		if self._uses is not None:
+			self._uses.Parent = self
+
+		if self._permissions is not None:
+			for permission in self._permissions.values():
+				permission.Parent = self
+
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to access the job's name, the key it is declared under (:attr:`_name`).
+
+		:returns: Name of the job.
+		"""
+		return self._name
+
+	@readonly
+	def DisplayName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the job's name, as GitHub displays it (:attr:`_displayName`).
+
+		:returns: The ``name`` key, as written, or ``None`` if the workflow gives none.
+		"""
+		return self._displayName
+
+	@readonly
+	def NeedNames(self) -> tuple[str, ...]:
+		"""
+		Read-only property to access the names of the jobs this job needs (:attr:`_needNames`).
+
+		:returns: The names, in the order the ``needs`` key lists them.
+		"""
+		return self._needNames
+
+	@readonly
+	def Needs(self) -> tuple[Job, ...]:
+		"""
+		Read-only property to return the jobs this job needs.
+
+		The names in :attr:`NeedNames` are looked up in the workflow containing the job. :meth:`Workflow.FromFile`
+		rejects a name naming no job, so for a workflow read from a file every name is resolved.
+
+		:returns: The jobs, in the order the ``needs`` key lists them, skipping names naming no job of the workflow.
+		"""
+		if self._workflow is None:
+			return ()
+
+		jobs = self._workflow._jobs
+		return tuple(jobs[name] for name in self._needNames if name in jobs)
+
+	@readonly
+	def Condition(self) -> Nullable[str]:
+		"""
+		Read-only property to access the condition under which the job runs (:attr:`_condition`).
+
+		The expression is not evaluated.
+
+		:returns: The ``if`` expression, as written, or ``None`` if the job has no condition.
+		"""
+		return self._condition
+
+	@readonly
+	def Permissions(self) -> Nullable[dict[PermissionScope, Permission]]:
+		"""
+		Read-only property to access the permissions the job declares (:attr:`_permissions`).
+
+		:returns: The permissions, by scope, or ``None`` if the job has no ``permissions`` key and inherits them.
+		"""
+		return self._permissions
+
+	@readonly
+	def RunsOn(self) -> tuple[str, ...]:
+		"""
+		Read-only property to access the labels selecting the runner (:attr:`_runsOn`).
+
+		:returns: The labels, as written - an expression is not evaluated -, or ``()`` for a job calling a workflow.
+		"""
+		return self._runsOn
+
+	@readonly
+	def Uses(self) -> Nullable[UsesReference]:
+		"""
+		Read-only property to access the reusable workflow the job calls (:attr:`_uses`).
+
+		:returns: The reference, or ``None`` for a job running steps.
+		"""
+		return self._uses
+
+	@readonly
+	def With(self) -> dict[str, ValueT]:
+		"""
+		Read-only property to access the inputs passed to the called workflow (:attr:`_with`).
+
+		:returns: The inputs, by name.
+		"""
+		return self._with
+
+	@readonly
+	def Secrets(self) -> dict[str, str]:
+		"""
+		Read-only property to access the secrets passed to the called workflow (:attr:`_secrets`).
+
+		:returns: The secrets, by name, or an empty dictionary if the job passes none or :attr:`InheritsSecrets`.
+		"""
+		return self._secrets
+
+	@readonly
+	def InheritsSecrets(self) -> bool:
+		"""
+		Read-only property to access whether the called workflow inherits every secret (:attr:`_inheritsSecrets`).
+
+		:returns: ``True``, if the job says ``secrets: inherit``.
+		"""
+		return self._inheritsSecrets
+
+
+	@readonly
+	def Outputs(self) -> dict[str, str]:
+		"""
+		Read-only property to access the job's outputs (:attr:`_outputs`).
+
+		:returns: The expressions the outputs are taken from, by name.
+		"""
+		return self._outputs
+
+
+	def __str__(self) -> str:
+		"""
+		Return the job's name.
+
+		:returns: Name of the job.
+		"""
+		return self._name
+
+	@classmethod
+	def _FromYAML(cls, name: str, mapping: CommentedMap, path: Path, line: int) -> Self:
+		"""
+		Build a job and the elements it contains from its mapping in the workflow file.
+
+		:param name:           Name of the job.
+		:param mapping:        The job's mapping.
+		:param path:           Path to the workflow file.
+		:param line:           Line the job's name is written at, starting at 1.
+		:returns:              The job.
+		:raises WorkflowError: If the job has neither ``runs-on`` nor ``uses``, or both.
+		:raises WorkflowError: If a key of the job holds a value of the wrong kind.
+		"""
+		if ("runs-on" in mapping) == ("uses" in mapping):
+			raise WorkflowError(f"Job '{name}' needs either 'runs-on' or 'uses'.", path, line)
+
+		needs = mapping.get("needs", ())
+		if isinstance(needs, str):
+			needs = (needs, )
+		elif not isinstance(needs, (list, tuple)):
+			ex = WorkflowError(
+				f"Key 'needs' of job '{name}' is neither a job name nor a list.", path, Base._KeyLine(mapping, "needs")
+			)
+			ex.add_note(f"Got type '{getFullyQualifiedName(needs)}'.")
+			raise ex
+
+		runsOn = mapping.get("runs-on", ())
+		if isinstance(runsOn, dict):
+			runsOn = runsOn.get("labels", ())
+		if isinstance(runsOn, str):
+			runsOn = (runsOn, )
+
+		condition = mapping.get("if", None)
+
+		secrets = mapping.get("secrets", None)
+		inheritsSecrets = secrets == "inherit"
+		if inheritsSecrets:
+			secrets = None
+		elif secrets is not None:
+			if not isinstance(secrets, CommentedMap):
+				ex = WorkflowError(f"Key 'secrets' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "secrets"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(secrets)}'.")
+				raise ex
+
+			secrets = {str(key): str(value) for key, value in secrets.items()}
+
+		if (outputs := mapping.get("outputs", None)) is not None:
+			if not isinstance(outputs, CommentedMap):
+				ex = WorkflowError(f"Key 'outputs' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "outputs"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(outputs)}'.")
+				raise ex
+
+			outputs = {str(key): str(value) for key, value in outputs.items()}
+
+		if (withValues := mapping.get("with", None)) is not None:
+			if not isinstance(withValues, CommentedMap):
+				ex = WorkflowError(f"Key 'with' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "with"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(withValues)}'.")
+				raise ex
+
+			withValues = Base._ToPython(withValues)
+
+		uses = None
+		if "uses" in mapping:
+			uses = UsesReference._FromYAML(mapping, f"job '{name}'", path)
+
+		permissions = None
+		if "permissions" in mapping:
+			permissions = Permission._FromYAML(mapping["permissions"], path, Base._KeyLine(mapping, "permissions"))
+
+		displayName = mapping.get("name", None)
+
+		return cls(
+			name, line,
+			displayName=None if displayName is None else str(displayName),
+			needs=(str(need) for need in needs),
+			condition=None if condition is None else str(condition),
+			runsOn=(str(label) for label in runsOn),
+			uses=uses,
+			withInputs=withValues,
+			secrets=secrets,
+			inheritsSecrets=inheritsSecrets,
+			outputs=outputs,
+			permissions=permissions
 		)
 
 
 @export
-class Permission(Base[Workflow]):
+class UsesReference(Base[Job]):
+	"""
+	The value of a ``uses`` key: a reusable workflow called by a job, or an action run by a step.
+
+	The forms GitHub accepts are read into their parts:
+
+	.. code-block:: text
+
+	   pyTooling/Actions/.github/workflows/Package.yml@r8   repository, path and ref
+	   actions/checkout@v6                                   an action in a repository's root
+	   ./.github/workflows/Package.yml                       a file of the same repository and commit
+	   docker://alpine:3.22                                  a Docker image
+	"""
+
+	_PARENT_TYPE: ClassVar[ParentTypes] = Job  #: A reference is contained in a job.
+
+	_rawReference: str            #: The reference, as written.
+	_repository:   Nullable[str]  #: The repository, as ``owner/repo``.
+	_path:         str            #: The path within the repository.
+	_reference:    Nullable[str]  #: The branch, tag or commit.
+	_isLocal:      bool           #: ``True``, if the reference names a file of the same repository.
+	_isDocker:     bool           #: ``True``, if the reference names a Docker image.
+
+	def __init__(self, rawReference: str, line: int, *, parent: Nullable[Job] = None) -> None:
+		"""
+		Initializes a ``uses`` reference by reading it into its parts.
+
+		:param rawReference: The reference, as written.
+		:param line:         Line the reference is written at, starting at 1.
+		:param parent:       Optional, reference to the job containing it, which the reference is attached to. Default:
+		                     ``None``.
+		:raises ValueError:  If parameter 'rawReference' is ``None``.
+		:raises TypeError:   If parameter 'rawReference' is not of type :class:`str`.
+		:raises ValueError:  If parameter 'rawReference' is empty.
+		:raises ValueError:  If parameter 'rawReference' names a repository without a ref.
+		:raises ValueError:  If parameter 'rawReference' names no repository as ``owner/repo``.
+		"""
+		super().__init__(line, parent=parent)
+
+		if rawReference is None:
+			raise ValueError("Parameter 'rawReference' is None.")
+		elif not isinstance(rawReference, str):
+			ex = TypeError("Parameter 'rawReference' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(rawReference)}'.")
+			raise ex
+		elif rawReference == "":
+			raise ValueError("Parameter 'rawReference' is empty.")
+
+		self._rawReference = rawReference
+		self._isLocal =      False
+		self._isDocker =     False
+		self._repository =   None
+		self._reference =    None
+
+		if rawReference.startswith("docker://"):
+			self._isDocker = True
+			self._path =     rawReference[len("docker://"):]
+		elif rawReference.startswith("./"):
+			self._isLocal = True
+			self._path =    rawReference[len("./"):]
+		else:
+			location, separator, reference = rawReference.partition("@")
+			if separator == "" or reference == "":
+				ex = ValueError("Parameter 'rawReference' names a repository without a ref.")
+				ex.add_note(f"Got '{rawReference}'.")
+				raise ex
+
+			owner, _, remainder = location.partition("/")
+			repository, _, path = remainder.partition("/")
+			if owner == "" or repository == "":
+				ex = ValueError("Parameter 'rawReference' names no repository as 'owner/repo'.")
+				ex.add_note(f"Got '{rawReference}'.")
+				raise ex
+
+			self._repository = f"{owner}/{repository}"
+			self._path =       path
+			self._reference =  reference
+
+		if parent is not None:
+			parent._uses = self
+
+	@readonly
+	def Repository(self) -> Nullable[str]:
+		"""
+		Read-only property to access the repository (:attr:`_repository`).
+
+		:returns: The repository, as ``owner/repo``, or ``None`` for a local reference and a Docker image.
+		"""
+		return self._repository
+
+	@readonly
+	def Path(self) -> str:
+		"""
+		Read-only property to access the path within the repository (:attr:`_path`).
+
+		:returns: The path, as ``.github/workflows/Package.yml``, without the leading ``./`` of a local reference. It
+		          is empty for an action in a repository's root, and the image for a Docker image.
+		"""
+		return self._path
+
+	@readonly
+	def Reference(self) -> Nullable[str]:
+		"""
+		Read-only property to access the branch, tag or commit (:attr:`_reference`).
+
+		:returns: The branch, tag or commit, as ``r8``, or ``None`` for a local reference and a Docker image.
+		"""
+		return self._reference
+
+	@readonly
+	def IsLocal(self) -> bool:
+		"""
+		Read-only property to access whether the reference names a file of the same repository (:attr:`_isLocal`).
+
+		:returns: ``True``, if the reference starts with ``./``.
+		"""
+		return self._isLocal
+
+	@readonly
+	def IsDocker(self) -> bool:
+		"""
+		Read-only property to access whether the reference names a Docker image (:attr:`_isDocker`).
+
+		:returns: ``True``, if the reference starts with ``docker://``.
+		"""
+		return self._isDocker
+
+	@readonly
+	def IsWorkflow(self) -> bool:
+		"""
+		Read-only property to return whether the reference names a reusable workflow rather than an action.
+
+		:returns: ``True``, if the path names a ``.yml`` or ``.yaml`` file in ``.github/workflows``.
+		"""
+		path = PurePosixPath(self._path)
+		return (
+			not self._isDocker and path.parent == PurePosixPath(".github/workflows") and path.suffix in (".yml", ".yaml")
+		)
+
+	@readonly
+	def FileName(self) -> str:
+		"""
+		Read-only property to return the last element of the path.
+
+		:returns: The file name, as ``Package.yml`` for a reusable workflow, or ``""`` for an action in a repository's
+		          root.
+		"""
+		return PurePosixPath(self._path).name if not self._isDocker else ""
+
+	@readonly
+	def Stem(self) -> str:
+		"""
+		Read-only property to return the file name without its extension.
+
+		For a reusable workflow, it is the name :class:`Workflow` gives the file it reads, e.g. ``Package``.
+
+		:returns: The file name without its extension, or ``""`` for an action in a repository's root.
+		"""
+		return PurePosixPath(self._path).stem if not self._isDocker else ""
+
+	def __str__(self) -> str:
+		"""
+		Return the reference, as written.
+
+		:returns: The reference.
+		"""
+		return self._rawReference
+
+	@classmethod
+	def _FromYAML(cls, mapping: CommentedMap, what: str, path: Path) -> Self:
+		"""
+		Read the ``uses`` key of a job or step.
+
+		:param mapping:        The mapping of the job or step, which has a ``uses`` key.
+		:param what:           The job or step, for the exception's message, as ``job 'Build'``.
+		:param path:           Path to the workflow file.
+		:returns:              The reference.
+		:raises WorkflowError: If the value is not a reference.
+		"""
+		line = Base._KeyLine(mapping, "uses")
+		try:
+			return cls(str(mapping["uses"]), line)
+		except ValueError as cause:
+			raise WorkflowError(f"Key 'uses' of {what} is not a reference.", path, line) from cause
+
+
+@export
+class Permission(Base[Union[Workflow, Job]]):
 	"""
 	A permission a workflow or job declares for the ``GITHUB_TOKEN``, as ``contents: write``.
 
 	The short forms ``read-all`` and ``write-all`` are read as one permission of scope :attr:`PermissionScope.All`.
 	"""
 
-	_PARENT_TYPE: ClassVar[ParentTypes] = Workflow  #: A permission is declared by a workflow.
+	_PARENT_TYPE: ClassVar[ParentTypes] = (Workflow, Job)  #: A permission is declared by a workflow or a job.
 
 	_scope: PermissionScope  #: The scope, as ``contents``.
 	_level: AccessLevel      #: The access granted.
@@ -635,7 +1350,7 @@ class Permission(Base[Workflow]):
 		level:  AccessLevel,
 		line:   int,
 		*,
-		parent: Nullable[Workflow]             = None
+		parent: Nullable[Union[Workflow, Job]] = None
 	) -> None:
 		"""
 		Initializes a permission.
