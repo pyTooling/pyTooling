@@ -327,3 +327,79 @@ The following examples demonstrates the usage with setuptools in a ``setup.py``.
         classifiers=classifiers,
         # ...
       )
+
+
+.. _LICENSING/Competitors:
+
+Competing Solutions
+*******************
+
+:mod:`pyTooling.Licensing` knows a selection of licenses - :data:`~pyTooling.Licensing.SPDX_INDEX` holds 31 - with
+their names, URLs, approvals and Python classifiers, and parses SPDX license expressions into a tree. It doesn't
+simplify or compare expressions, and checking whether licenses are compatible is not implemented: the comparison
+operators of :class:`~pyTooling.Licensing.License` raise :exc:`NotImplementedError`.
+
+.. _LICENSING/license-expression:
+
+license-expression
+==================
+
+Source: :gh:`license-expression <aboutcode-org/license-expression>`, on PyPI as
+`license-expression <https://pypi.org/project/license-expression/>`__.
+
+.. rubric:: Disadvantages
+
+* It knows a license by its key only: there is no Python classifier, no OSI or FSF approval and no URL of a
+  license's text.
+* It depends on ``boolean.py``.
+
+.. rubric:: Standoff
+
+* Both parse an SPDX license expression into a tree of operators and licenses. pyTooling rejects an unknown license
+  always, license-expression when asked to validate.
+
+.. rubric:: Advantages
+
+* It bundles the whole SPDX license list and the ScanCode license database, so every published license is known.
+* It simplifies and normalizes an expression, and tests two expressions for equality, containment and equivalence.
+
+.. _LICENSING/spdx-tools:
+
+spdx-tools
+==========
+
+Source: :gh:`tools-python <spdx/tools-python>`, on PyPI as `spdx-tools <https://pypi.org/project/spdx-tools/>`__.
+
+.. rubric:: Disadvantages
+
+* It has nine direct dependencies, among them ``rdflib`` and ``license-expression``.
+
+.. rubric:: Standoff
+
+* A different purpose: it reads, writes, converts and validates SPDX **documents** - a software bill of materials
+  in Tag/Value, RDF, JSON, YAML or XML - and handles their license expressions with ``license-expression``.
+
+.. _LICENSING/Reports:
+
+pip-licenses and licensecheck
+=============================
+
+Source: :gh:`pip-licenses <raimon49/pip-licenses>`, :gh:`licensecheck <FHPythonUtils/LicenseCheck>`, on PyPI as
+`pip-licenses <https://pypi.org/project/pip-licenses/>`__ and `licensecheck <https://pypi.org/project/licensecheck/>`__.
+
+.. rubric:: Disadvantages
+
+* pip-licenses is a command line tool; it lists the licenses of the *installed* packages, taken from their
+  classifiers or metadata.
+* licensecheck has eleven direct dependencies, among them ``pydantic``, ``rich`` and ``requests``.
+
+.. rubric:: Standoff
+
+* Both report the licenses of a project's dependencies, as :mod:`pyTooling.Dependency` reads a package version's
+  license into a :class:`~pyTooling.Licensing.LicenseExpression` from PyPI.
+
+.. rubric:: Advantages
+
+* pip-licenses writes its list in many formats and fails a build on a forbidden license (``--fail-on``,
+  ``--allow-only``).
+* licensecheck checks whether the dependencies' licenses are compatible with the project's license.
