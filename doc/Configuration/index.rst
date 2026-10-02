@@ -430,3 +430,104 @@ Follow these steps to derive a concrete implementation of the abstract configura
           Dictionary.__init__(self, self, self, None, self._config)
 
         # Implement mandatory methods and properties
+
+
+.. _CONFIG/Competitors:
+
+Competing Solutions
+*******************
+
+:mod:`pyTooling.Configuration` reads a JSON or YAML file into one read-only tree of nodes, addressed by path
+expressions with ``${...}`` references between values. The packages below manage the settings of an application -
+layering, merging, overriding, validating and writing them - which this package doesn't.
+
+.. _CONFIG/OmegaConf:
+
+OmegaConf
+=========
+
+Source: :gh:`omegaconf <omry/omegaconf>`, on PyPI as `omegaconf <https://pypi.org/project/omegaconf/>`__.
+
+.. rubric:: Disadvantages
+
+* Files are read and written as YAML only.
+* Depends on ``PyYAML`` and on the ANTLR runtime, pinned to version 4.9.
+
+.. rubric:: Standoff
+
+* Both resolve ``${...}`` references to other values. OmegaConf resolves ``${a.b}`` from the root and ``${..b}``
+  from the parent; pyTooling resolves every reference from the node holding the value, ``${..:b}`` from its parent.
+
+.. rubric:: Advantages
+
+* Configurations are merged, can be changed and set read-only on demand, and are saved back to a file.
+* A configuration can be typed by a :mod:`dataclass <dataclasses>` ("structured config"), and created from
+  ``key=value`` arguments of a command line.
+* A scalar keeps its type; pyTooling returns a number as :class:`str`.
+
+.. _CONFIG/Hydra:
+
+Hydra
+=====
+
+Source: :gh:`hydra <facebookresearch/hydra>`, on PyPI as `hydra-core <https://pypi.org/project/hydra-core/>`__.
+
+.. rubric:: Disadvantages
+
+* A framework around an application's ``main`` function, built on OmegaConf, rather than a reader for a document.
+
+.. rubric:: Advantages
+
+* Composes a configuration from groups of files, overrides any value from the command line, and runs an application
+  once per combination of values.
+
+.. _CONFIG/Dynaconf:
+
+Dynaconf
+========
+
+Source: :gh:`dynaconf <dynaconf/dynaconf>`, on PyPI as `dynaconf <https://pypi.org/project/dynaconf/>`__.
+
+.. rubric:: Disadvantages
+
+* It manages the settings of an application - files and sources merged into one settings object - rather than
+  reading a given document as a tree.
+
+.. rubric:: Advantages
+
+* Reads TOML, YAML, JSON, INI and Python files, and lets environment variables override every value.
+* Switches between environments, e.g. ``development`` and ``production``, validates settings, and loads them from
+  Vault or Redis.
+* Has no third-party dependency.
+
+.. _CONFIG/Box:
+
+python-box
+==========
+
+Source: :gh:`Box <cdgriffith/Box>`, on PyPI as `python-box <https://pypi.org/project/python-box/>`__.
+
+.. rubric:: Standoff
+
+* A dictionary with attribute access - ``box.a.b`` - rather than a configuration reader. With ``box_dots``, a dotted
+  key ``box["a.b"]`` is a path.
+
+.. rubric:: Advantages
+
+* Converts from and to JSON, YAML and TOML, and can be frozen to stay unchanged.
+
+.. _CONFIG/Confuse:
+
+Confuse
+=======
+
+Source: :gh:`confuse <beetbox/confuse>`, on PyPI as `confuse <https://pypi.org/project/confuse/>`__.
+
+.. rubric:: Disadvantages
+
+* Reads YAML only.
+
+.. rubric:: Advantages
+
+* Layers a default file, the user's file from the platform's configuration directory, environment variables and
+  command-line arguments, and checks a value's type when it is read.
