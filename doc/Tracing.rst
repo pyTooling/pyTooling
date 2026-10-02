@@ -367,3 +367,111 @@ static and shows every row expanded.
 The script and its stylesheet are resource files, :file:`CollapsibleGantt.js` and :file:`CollapsibleGantt.css` in
 :mod:`pyTooling.Resources.Tracing`, whose content is embedded, so the SVG file stays self-contained.
 :func:`~pyTooling.Common.getResourceFile` returns their paths, e.g. to use them in a page of your own.
+
+
+.. _TRACING/Competitors:
+
+Competing Solutions
+###################
+
+:mod:`pyTooling.Tracing` is no replacement for OpenTelemetry's SDK: it records the timespans a program states itself
+and writes them as an OTLP document, which OpenTelemetry's backends read. The packages below are compared for the
+three things this package does - recording a trace, reading a CI pipeline into one, and drawing it as a Gantt chart.
+
+.. _TRACING/Competitors/OpenTelemetry:
+
+OpenTelemetry SDK
+=================
+
+Source: :gh:`opentelemetry-python <open-telemetry/opentelemetry-python>`, on PyPI as
+`opentelemetry-sdk <https://pypi.org/project/opentelemetry-sdk/>`__ and the OTLP exporters.
+
+.. rubric:: Disadvantages
+
+* The SDK and its OTLP/HTTP exporter install about a dozen packages, among them ``protobuf``.
+* OTLP/JSON is written by a separate exporter, which is still a beta release
+  (`opentelemetry-exporter-otlp-json-http <https://pypi.org/project/opentelemetry-exporter-otlp-json-http/>`__).
+* There is no rendering of a trace; a backend - Jaeger, Grafana Tempo - shows it.
+
+.. rubric:: Standoff
+
+* Both write OTLP, so a trace of this package and a trace of the SDK reach the same collector and viewers.
+* Both accept times measured elsewhere: the SDK takes a ``start_time`` and an ``end_time`` for a span.
+
+.. rubric:: Advantages
+
+* The standard of the CNCF, with instrumentation for many libraries and frameworks.
+* Context propagation between processes, sampling, batching, and exporters for gRPC and many backends.
+
+.. _TRACING/Competitors/otlp-json:
+
+otlp-json
+=========
+
+Source: `otlp-json <https://pypi.org/project/otlp-json/>`__.
+
+.. rubric:: Disadvantages
+
+* It encodes the spans of OpenTelemetry's SDK, so the SDK records them.
+
+.. rubric:: Advantages
+
+* Writes OTLP/JSON without any dependency of its own.
+
+.. _TRACING/Competitors/Profilers:
+
+Profilers
+=========
+
+Source: :gh:`VizTracer <gaogaotiantian/viztracer>`, :gh:`pyinstrument <joerick/pyinstrument>`.
+
+.. rubric:: Disadvantages
+
+* They record every function call - or samples of them - not the timespans a program names, and they don't write OTLP.
+
+.. rubric:: Advantages
+
+* Nothing in the code has to be changed, and each comes with a viewer for its own format.
+
+.. _TRACING/Competitors/CI:
+
+CI Pipelines as Traces
+======================
+
+Source: the GitHub receiver of the OpenTelemetry Collector
+(:gh:`githubreceiver <open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/githubreceiver>`), and the
+GitHub Action :gh:`otel-export-trace-action <inception-health/otel-export-trace-action>`.
+
+.. rubric:: Disadvantages
+
+* Neither is a Python library. The receiver is a component of a running collector, fed by GitHub's webhooks, and is
+  of stability *alpha*; the action exports a run to an OTLP endpoint.
+* The trace goes to a backend; there is no chart of it as a file, e.g. for a pipeline's job summary.
+
+.. rubric:: Standoff
+
+* Both build a trace of a run's workflow, jobs and steps, and the receiver adds a span for the time a job was queued.
+
+.. rubric:: Advantages
+
+* The receiver traces runs as they happen. Its span identifiers are derived from the run, so a step can add spans of
+  its own below its span.
+
+.. _TRACING/Competitors/Gantt:
+
+Gantt Charts
+============
+
+Source: :gh:`plotly <plotly/plotly.py>` (``plotly.express.timeline``), :gh:`matplotlib <matplotlib/matplotlib>`
+(``Axes.broken_barh``), and the trace views of :gh:`Jaeger <jaegertracing/jaeger>` and
+:gh:`Perfetto <google/perfetto>`.
+
+.. rubric:: Disadvantages
+
+* A timeline of plotly or matplotlib draws the bars it is given: the rows, their order and indentation, the waiting
+  bars, the colors per category and the statistics of the legend are left to the caller.
+* A trace viewer shows a trace interactively, but writes no chart for a report.
+
+.. rubric:: Advantages
+
+* plotly's chart is interactive in a browser; a trace viewer searches and compares many traces.
