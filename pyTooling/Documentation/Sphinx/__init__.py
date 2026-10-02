@@ -102,7 +102,7 @@ from pyTooling.Exceptions                               import MissingDependency
 from pyTooling.Resources                                import Sphinx as SphinxResources
 
 try:
-	from sphinx.application                              import Sphinx
+	from sphinx.application                               import Sphinx
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="sphinx", extra="sphinx") from ex
 

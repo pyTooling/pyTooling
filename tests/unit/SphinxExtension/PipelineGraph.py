@@ -270,7 +270,7 @@ class Nodes(Testcase):
 			(code, ), _ = build(directory)
 
 		self.assertIn(
-			'"Prepare" [label=<Prepare<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">Prepare.yml</FONT>>, '
+			'"Prepare" [label=<Prepare<br/><font point-size="8" color="#3d4652">Prepare.yml</font>>, '
 			'style="rounded,filled", tooltip="uses: Owner/Repo/.github/workflows/Prepare.yml@r1"];',
 			code
 		)
@@ -301,8 +301,8 @@ class Nodes(Testcase):
 			(code, ), _ = build(directory, ":depth: 3")
 
 		publish = next(line for line in code.splitlines() if line.startswith('\t"Publish" ['))
-		self.assertIn("Publish.yml</FONT>", publish)
-		self.assertIn("Other/Tools@v2</FONT>", publish)
+		self.assertIn("Publish.yml</font>", publish)
+		self.assertIn("Other/Tools@v2</font>", publish)
 		self.assertIn('fillcolor="#ffffff"', publish)
 		self.assertNotIn("URL=", publish)
 		self.assertNotIn("cluster_Publish", code)
@@ -398,7 +398,7 @@ class Clusters(Testcase):
 		lines = code.splitlines()
 		start = lines.index('\tsubgraph "cluster_Build" {')
 		self.assertEqual(
-			'\t\tlabel=<Build<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">matrix: python, system</FONT>>;', lines[start + 1]
+			'\t\tlabel=<Build<br/><font point-size="8" color="#3d4652">matrix: python, system</font>>;', lines[start + 1]
 		)
 		instances = [line.split('"')[1] for line in lines[start + 1:] if line.startswith('\t\t"Build/')]
 		self.assertEqual(
@@ -427,7 +427,7 @@ class Clusters(Testcase):
 
 		self.assertNotIn("subgraph", code)
 		self.assertIn(
-			'\t"Build" [label=<Build<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">matrix</FONT>>, style="filled", '
+			'\t"Build" [label=<Build<br/><font point-size="8" color="#3d4652">matrix</font>>, style="filled", '
 			'fillcolor="#f2f2f2", peripheries="2"];',
 			code
 		)
@@ -451,7 +451,7 @@ class Clusters(Testcase):
 
 		self.assertEqual(['\tsubgraph "cluster_Tests" {'], [line for line in code0.splitlines() if "subgraph" in line])
 		self.assertIn(
-			'\t\t"Tests/Tests (3.13)" [label=<Tests (3.13)<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">Test.yml</FONT>>, '
+			'\t\t"Tests/Tests (3.13)" [label=<Tests (3.13)<br/><font point-size="8" color="#3d4652">Test.yml</font>>, '
 			'style="rounded,filled", tooltip="uses: ./.github/workflows/Test.yml" /*gha-link:Test*/];',
 			code0
 		)
@@ -673,4 +673,4 @@ class Parameters(Testcase):
 
 		self.assertIn('subgraph "cluster_Local"', code)
 		self.assertNotIn('subgraph "cluster_Test"', code)
-		self.assertIn("Owner/Repo@dev</FONT>", code)
+		self.assertIn("Owner/Repo@dev</font>", code)

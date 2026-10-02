@@ -280,7 +280,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		"""
 		label = html_escape(title, quote=False)
 		for line in lines:
-			label += f'<BR/><FONT POINT-SIZE="8" COLOR="#3d4652">{html_escape(line, quote=False)}</FONT>'
+			label += f'<br/><font point-size="8" color="#3d4652">{html_escape(line, quote=False)}</font>'
 
 		return f"<{label}>"
 
@@ -292,8 +292,8 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 		:returns:       The label's lines below the element's name, the style's parts, and the tooltip - the reusable
 		                workflow called and the condition, one per line, or an empty string.
 		"""
-		lines = []
-		style = []
+		lines =   []
+		style =   []
 		tooltip = []
 
 		if (uses := element.Definition.Uses) is not None:
