@@ -959,7 +959,10 @@ class Job(Base[Workflow]):
 					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 					raise ex
 
-		for parameterName, value, valueClass in (("uses", uses, UsesReference), ("matrix", matrix, Matrix)):
+		for parameterName, value, valueClass in (
+			("uses",   uses,   UsesReference),
+			("matrix", matrix, Matrix)
+		):
 			if value is not None and not isinstance(value, valueClass):
 				ex = TypeError(f"Parameter '{parameterName}' is not of type '{valueClass.__name__}'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -982,9 +985,11 @@ class Job(Base[Workflow]):
 		self._steps =           []
 		self._outputs =         {} if outputs is None else dict(outputs)
 
-		for element in (uses, matrix):
-			if element is not None:
-				element.Parent = self
+		if uses is not None:
+			uses.Parent = self
+
+		if matrix is not None:
+			matrix.Parent = self
 
 		if permissions is not None:
 			self._permissions = {}
@@ -1014,9 +1019,11 @@ class Job(Base[Workflow]):
 	def Parent(self, value: Workflow) -> None:
 		Base.Parent.fset(self, value)
 
-		for element in (self._uses, self._matrix):
-			if element is not None:
-				element.Parent = self
+		if self._uses is not None:
+			self._uses.Parent = self
+
+		if self._matrix is not None:
+			self._matrix.Parent = self
 
 		for step in self._steps:
 			step.Parent = self
@@ -1343,7 +1350,12 @@ class Step(Base[Job]):
 		"""
 		super().__init__(line, parent=parent)
 
-		for parameterName, value in (("name", name), ("identifier", identifier), ("condition", condition), ("run", run)):
+		for parameterName, value in (
+			("name",       name),
+			("identifier", identifier),
+			("condition",  condition),
+			("run",        run)
+		):
 			if value is not None and not isinstance(value, str):
 				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -1582,7 +1594,10 @@ class Matrix(Base[Job]):
 		if self.IsDynamic:
 			raise WorkflowError("Matrix is dynamic; its combinations are known at run time only.", path, self._line)
 
-		for key, entries in (("include", self._include), ("exclude", self._exclude)):
+		for key, entries in (
+			("include", self._include),
+			("exclude", self._exclude)
+		):
 			if entries is not None and (
 				not isinstance(entries, list) or not all(isinstance(entry, dict) for entry in entries)
 			):
