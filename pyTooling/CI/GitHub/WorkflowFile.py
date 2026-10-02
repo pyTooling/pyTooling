@@ -206,8 +206,9 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 
 	_PARENT_TYPE: ClassVar[ParentTypes] = None  #: Type a parent must have, or ``None`` when the element has no parent.
 
-	_parent: Nullable[ParentType]  #: Reference to the containing element.
-	_line:   int                   #: Line the element starts at in the workflow file, starting at 1.
+	_parent:   Nullable[ParentType]  #: Reference to the containing element.
+	_workflow: Nullable[Workflow]    #: Reference to the workflow this element belongs to.
+	_line:     int                   #: Line the element starts at in the workflow file, starting at 1.
 
 	def __init__(self, line: int, *, parent: Nullable[ParentType] = None) -> None:
 		"""
@@ -243,32 +244,50 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 				raise ex
 
-		self._parent = parent
-		self._line =   line
+		self._parent =   parent
+		self._workflow = None if parent is None else parent._workflow
+		self._line =     line
 
-	@readonly
+	@property
 	def Parent(self) -> Nullable[ParentType]:
 		"""
-		Read-only property to access the containing element (:attr:`_parent`).
+		Property to access the containing element (:attr:`_parent`).
 
-		:returns: The containing element, or ``None`` for a :class:`Workflow`.
+		Assigning a parent attaches an element constructed before it: the element takes the parent's workflow, and so do
+		the elements it contains.
+
+		:returns:           The containing element, or ``None`` for a :class:`Workflow`.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If a parent is assigned to a class declaring no :attr:`_PARENT_TYPE`.
+		:raises TypeError:  If an assigned value is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		return self._parent
+
+	@Parent.setter
+	def Parent(self, value: ParentType) -> None:
+		if value is None:
+			raise ValueError("Parameter 'value' is None.")
+		elif self._PARENT_TYPE is None:
+			ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+		elif not isinstance(value, self._PARENT_TYPE):
+			parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
+			ex = TypeError(f"Parameter 'value' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		self._parent =   value
+		self._workflow = value._workflow
 
 	@readonly
 	def Workflow(self) -> Nullable[Workflow]:
 		"""
-		Read-only property to return the workflow this element belongs to.
-
-		The workflow is found by following :attr:`Parent` up to the element without a parent.
+		Read-only property to access the workflow this element belongs to (:attr:`_workflow`).
 
 		:returns: The workflow, or ``None`` for an element outside one.
 		"""
-		element: Base = self
-		while element._parent is not None:
-			element = element._parent
-
-		return element if isinstance(element, Workflow) else None
+		return self._workflow
 
 	@readonly
 	def Line(self) -> int:
@@ -287,10 +306,10 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 		:returns: The workflow file's name and the line, as ``CompletePipeline.yml:552``, or ``line 552`` for an element
 		          outside a workflow.
 		"""
-		if (workflow := self.Workflow) is None:
+		if self._workflow is None:
 			return f"line {self._line}"
 
-		return f"{workflow._path.name}:{self._line}"
+		return f"{self._workflow._path.name}:{self._line}"
 
 	@staticmethod
 	def _KeyLine(mapping: CommentedMap, key: str) -> int:
@@ -403,6 +422,7 @@ class Workflow(Base[None]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(displayName)}'.")
 			raise ex
 
+		self._workflow =    self
 		self._path =        path
 		self._name =        path.stem
 		self._displayName = displayName
@@ -437,7 +457,7 @@ class Workflow(Base[None]):
 					raise ex
 
 				container[element._name] = element
-				element._parent = self
+				element.Parent = self
 
 		if permissions is not None:
 			self._permissions = {}
@@ -448,7 +468,7 @@ class Workflow(Base[None]):
 					raise ex
 
 				self._permissions[permission._scope] = permission
-				permission._parent = self
+				permission.Parent = self
 
 	@readonly
 	def Path(self) -> Path:
@@ -887,7 +907,7 @@ class Job(Base[Workflow]):
 		self._outputs =         {} if outputs is None else dict(outputs)
 
 		if uses is not None:
-			uses._parent = self
+			uses.Parent = self
 
 		if permissions is not None:
 			self._permissions = {}
@@ -898,10 +918,21 @@ class Job(Base[Workflow]):
 					raise ex
 
 				self._permissions[permission._scope] = permission
-				permission._parent = self
+				permission.Parent = self
 
 		if parent is not None:
 			parent._jobs[name] = self
+
+	@Base.Parent.setter
+	def Parent(self, value: Workflow) -> None:
+		Base.Parent.fset(self, value)
+
+		if self._uses is not None:
+			self._uses.Parent = self
+
+		if self._permissions is not None:
+			for permission in self._permissions.values():
+				permission.Parent = self
 
 	@readonly
 	def Name(self) -> str:
@@ -940,10 +971,10 @@ class Job(Base[Workflow]):
 
 		:returns: The jobs, in the order the ``needs`` key lists them, skipping names naming no job of the workflow.
 		"""
-		if self._parent is None:
+		if self._workflow is None:
 			return ()
 
-		jobs = self._parent._jobs
+		jobs = self._workflow._jobs
 		return tuple(jobs[name] for name in self._needNames if name in jobs)
 
 	@readonly

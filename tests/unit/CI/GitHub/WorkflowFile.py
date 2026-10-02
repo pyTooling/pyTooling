@@ -884,7 +884,7 @@ class JobsInFile(Fixture):
 		self.assertEqual(["Prepare", "Build"], list(workflow.Jobs))
 		self.assertIs(workflow, build.Parent)
 		self.assertEqual((prepare, ), build.Needs)
-		self.assertIs(workflow, uses.Workflow)
+		self.assertIs(workflow, uses.Workflow, "Attaching a job passes the workflow on to its elements.")
 		self.assertEqual("Pipeline.yml:6", uses.Location)
 
 	def test_Construction_Elements(self) -> None:
@@ -913,6 +913,25 @@ class JobsInFile(Fixture):
 					_ = Job("Build", 3, **arguments)
 
 				self.assertEqual(message, str(context.exception))
+
+	def test_Parent_Assigned(self) -> None:
+		workflow = Workflow(Path("Pipeline.yml"))
+		job =      Job("Build", 3, permissions=(Permission(PermissionScope.Contents, AccessLevel.Read, 4), ))
+		job.Parent = workflow
+
+		self.assertIs(workflow, job.Parent)
+		self.assertIs(workflow, job.Permissions["contents"].Workflow)
+
+		with self.assertRaises(ValueError):
+			job.Parent = None
+
+		with self.assertRaises(TypeError) as context:
+			job.Parent = job
+
+		self.assertEqual("Parameter 'value' is not of type 'Workflow'.", str(context.exception))
+
+		with self.assertRaises(TypeError):
+			workflow.Parent = job
 
 	def test_Construction_Defaults(self) -> None:
 		job = Job("Build", 3)
