@@ -571,6 +571,10 @@ Competing Solutions
 The roles and each directive have competitors solving a part of their task; none of them is one extension covering
 all of them.
 
+Outside Python, XML editors generate the documentation of an XML schema - e.g. `Oxygen XML Editor
+<https://www.oxygenxml.com/doc/ug-editor/topics/documentation-XML-Schema.html>`__ writes HTML or PDF pages listing
+every component, with diagrams - but outside the Sphinx build.
+
 .. _DOC/Sphinx/Competitors/Roles:
 
 docutils Roles
@@ -639,19 +643,15 @@ Schema Documentation
 ====================
 
 Source: :gh:`sphinx-jsonschema <lnoor/sphinx-jsonschema>`, on PyPI as
-`sphinx-jsonschema <https://pypi.org/project/sphinx-jsonschema/>`__, and the XML schema documentation generators of
-XML editors, as `Oxygen XML Editor <https://www.oxygenxml.com/doc/ug-editor/topics/documentation-XML-Schema.html>`__,
-compared to ``xsd-graph``.
+`sphinx-jsonschema <https://pypi.org/project/sphinx-jsonschema/>`__, compared to ``xsd-graph``.
 
 .. rubric:: Disadvantages
 
 * sphinx-jsonschema renders a JSON schema, not an XML schema, and as tables rather than as a graph.
-* An XML editor generates documentation of its own - HTML or PDF pages - outside the Sphinx build.
 
 .. rubric:: Advantages
 
-* sphinx-jsonschema shows every property with its description; an editor's documentation lists every component of
-  a schema, with diagrams.
+* sphinx-jsonschema shows every property with its description.
 
 .. _DOC/Sphinx/Competitors/Shields:
 
