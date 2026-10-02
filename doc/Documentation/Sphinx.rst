@@ -27,6 +27,8 @@ documentation uses - and any other project's documentation can use. It is enable
 
    :ref:`DOC/Sphinx/GHA`
       |rarr| The domain ``gha``, documenting GitHub Actions workflows from their YAML files.
+   :ref:`DOC/Sphinx/GHA/PipelineGraph`
+      |rarr| The directive ``gha:pipeline-graph``, drawing the pipeline of a GitHub Actions workflow.
 
 
 .. _DOC/Sphinx/Roles:
