@@ -435,12 +435,11 @@ class SupervisedWarningCollector(WarningCollector):
 
 		if self._supervisor is not None:
 			result = True
-			threadName = current_thread().name
 			if len(self._warnings) > 0:
-				self._supervisor.AddWarnings(threadName, self._warnings)
+				self._supervisor.AddWarnings(current_thread().name, self._warnings)
 
 			if exc_val is not None:
-				self._supervisor.AddException(threadName, exc_val)
+				self._supervisor.AddException(current_thread().name, exc_val)
 
 				if self._exceptionHandler is not None:
 					result = self._exceptionHandler(exc_val)
