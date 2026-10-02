@@ -68,7 +68,7 @@ from __future__                    import annotations
 
 from enum                          import Enum, auto
 from pathlib                       import Path
-from typing                        import TYPE_CHECKING, Any, Iterable, Literal, Mapping, Optional as Nullable
+from typing                        import TYPE_CHECKING, Any, ClassVar, Iterable, Literal, Mapping, Optional as Nullable
 from typing                        import TypeVar, cast
 
 from pyTooling.Common              import getFullyQualifiedName
@@ -195,21 +195,9 @@ CONFIG_PREFIX = "pyTooling_Dependency"
 #: What Sphinx accepts as the rebuild condition of a configuration value - the one this extension uses.
 _ConfigRebuild = Literal["env"]
 
-#: The configuration values this directive adds to :file:`conf.py`, as ``name: (default, rebuild, types)``.
-#:
-#: ``Requirements`` maps an identifier to what it names - a file, files, a package or packages. The other three are
-#: build-wide, because one package index is queried per build and one override file answers for it. All four are
-#: ``"env"``-rebuilt: changing any of them changes every table.
-CONFIG_VALUES: dict[str, tuple[Any, _ConfigRebuild, Any]] = {
-	f"{CONFIG_PREFIX}_Requirements":     ({},                "env", dict),
-	f"{CONFIG_PREFIX}_PackageOverrides": (None,              "env", (str, Path)),
-	f"{CONFIG_PREFIX}_IndexURL":         (DEFAULT_INDEX_URL, "env", str),
-	f"{CONFIG_PREFIX}_APIURL":           (DEFAULT_API_URL,   "env", str),
-}
-
 __all__ = [
 	"DEFAULT_INDEX_URL", "DEFAULT_API_URL", "DEFAULT_DEPTH", "DEFAULT_SIMPLIFIED_VERSIONS", "OPERATOR_SYMBOLS",
-	"TABLE_COLUMNS", "ENTRYPOINT_FIELDS", "CONFIG_PREFIX", "CONFIG_VALUES",
+	"TABLE_COLUMNS", "ENTRYPOINT_FIELDS", "CONFIG_PREFIX",
 	"DEFAULT_VERSION_FORMAT", "DEFAULT_DEPENDENCY_FORMAT"
 ]
 
@@ -731,6 +719,19 @@ class DependencyTable(BaseDirective):
 	"""
 
 	directiveName: str = "dependency-table"  #: Name the directive is invoked by.
+
+	#: The configuration values this directive adds to :file:`conf.py`, as ``name: (default, rebuild, types)``. Each is
+	#: registered with :data:`CONFIG_PREFIX` as prefix, e.g. ``pyTooling_Dependency_Requirements``.
+	#:
+	#: ``Requirements`` maps an identifier to what it names - a file, files, a package or packages. The other three are
+	#: build-wide, because one package index is queried per build and one override file answers for it. All four are
+	#: ``"env"``-rebuilt: changing any of them changes every table.
+	configValues: ClassVar[dict[str, tuple[Any, _ConfigRebuild, Any]]] = {
+		"Requirements":     ({},                "env", dict),
+		"PackageOverrides": (None,              "env", (str, Path)),
+		"IndexURL":         (DEFAULT_INDEX_URL, "env", str),
+		"APIURL":           (DEFAULT_API_URL,   "env", str),
+	}
 
 	_simplify:         bool               #: Whether this table's version constraints are reduced to their lower bound.
 	_versionFormat:    VersionFormat      #: How many parts of a version number this table prints.

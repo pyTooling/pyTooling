@@ -107,7 +107,7 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="sphinx", extra="sphinx") from ex
 
 from pyTooling.Documentation.Sphinx.CondensedClass          import CondensedClass
-from pyTooling.Documentation.Sphinx.DependencyTable         import CONFIG_VALUES, DependencyTable
+from pyTooling.Documentation.Sphinx.DependencyTable         import CONFIG_PREFIX, DependencyTable
 from pyTooling.Documentation.Sphinx.DependencyTable         import prepareEntrypoints, reportBuildTime
 from pyTooling.Documentation.Sphinx.Directives              import BaseDirective, SphinxExtensionError, strip
 from pyTooling.Documentation.Sphinx.Directives              import stripAndNormalize
@@ -216,8 +216,8 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 
 	sphinx.setup_extension("sphinx.ext.graphviz")
 
-	for configName, (default, rebuild, types) in CONFIG_VALUES.items():
-		sphinx.add_config_value(configName, default, rebuild, types)
+	for configName, (default, rebuild, types) in DependencyTable.configValues.items():
+		sphinx.add_config_value(f"{CONFIG_PREFIX}_{configName}", default, rebuild, types)
 
 	for configName, (default, rebuild, types) in GitHubActionsDomain.configValues.items():
 		sphinx.add_config_value(f"{GitHubActionsDomain.name}_{configName}", default, rebuild, types)
