@@ -572,23 +572,6 @@ nothing records *where* it was attached. :mod:`pyTooling.Attributes` adds that r
 asked for the entities carrying it. The solutions below either attach data without this reverse query, or find it by
 scanning modules.
 
-.. _ATTR/pyAttributes:
-
-pyAttributes
-============
-
-Source: on PyPI as `pyAttributes <https://pypi.org/project/pyAttributes/>`__ (2.5.1, released 2022-03-02); its
-repository is no longer on GitHub.
-
-.. rubric:: Disadvantages
-
-* No release since 2022: it is the predecessor of :mod:`pyTooling.Attributes`, by the same author, which continues it.
-
-.. rubric:: Standoff
-
-* The same concept - .NET-like attributes as decorators, a mix-in class for classes with annotated methods, and a
-  declarative description of an :mod:`argparse` parser.
-
 .. _ATTR/venusian:
 
 venusian
