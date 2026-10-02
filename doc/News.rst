@@ -124,7 +124,8 @@ Version 10.x (2026)
      :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`, :class:`~pyTooling.CI.GitHub.WorkflowFile.Input`,
      :class:`~pyTooling.CI.GitHub.WorkflowFile.Job`, :class:`~pyTooling.CI.GitHub.WorkflowFile.Step` and further
      objects, each knowing the line it is written at. :class:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowResolver` reads
-     the reusable workflows a job calls from a local directory, and a workflow reports the permissions it and the
+     the reusable workflows a job calls and the actions a step runs - :class:`~pyTooling.CI.GitHub.WorkflowFile.Action`,
+     with the steps of a composite action - from a local directory, and a workflow reports the permissions it and the
      workflows it calls ask for. It needs the ``github`` extra.
 
      * :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` builds the pipeline a workflow defines as a
@@ -148,6 +149,13 @@ Version 10.x (2026)
      expanded into clusters and linked to their pages. A job calling such a workflow at another ref than ``gha_ref`` is
      a warning. The graph is drawn from the file's :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` and its
      :meth:`~pyTooling.CI.Workflow.ToGraph`. See :ref:`DOC/Sphinx/GHA/PipelineGraph`.
+
+   * The ``gha`` domain summarizes a workflow from its file: ``gha:parameter-table`` renders the summary tables of its
+     inputs, secrets and outputs, ``gha:interface`` its contract with a caller including the permissions to grant,
+     ``gha:dependencies`` the templates, actions - also inside composite actions - and container images it uses,
+     merged with hand-written items, and ``gha:yaml`` a part of the file linked to GitHub. ``gha:autoinputs``
+     documents the inputs a page has no ``gha:input`` for; an input without an entry is a ``gha.drift`` warning. See
+     :ref:`DOC/Sphinx/GHA/Summaries`.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
