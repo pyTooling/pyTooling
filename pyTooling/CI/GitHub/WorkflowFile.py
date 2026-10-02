@@ -1174,7 +1174,11 @@ class Job(Base[Workflow]):
 		elif name == "":
 			raise ValueError("Parameter 'name' is empty.")
 
-		for parameterName, value in (("displayName", displayName), ("condition", condition), ("container", container)):
+		for parameterName, value in (
+			("displayName", displayName),
+			("condition",   condition),
+			("container",   container)
+		):
 			if value is not None and not isinstance(value, str):
 				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -1635,7 +1639,11 @@ class Action(Base[None]):
 		if using is None:
 			raise ValueError("Parameter 'using' is None.")
 
-		for parameterName, value in (("using", using), ("displayName", displayName), ("image", image)):
+		for parameterName, value in (
+			("using",       using),
+			("displayName", displayName),
+			("image",       image)
+		):
 			if value is not None and not isinstance(value, str):
 				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
