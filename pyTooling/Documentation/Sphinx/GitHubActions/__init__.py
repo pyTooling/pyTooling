@@ -648,7 +648,11 @@ class GitHubActionsDomain(Domain):
 		:raises TypeError:  If parameter 'nodeID' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'location' is not of type :class:`~docutils.nodes.Node`.
 		"""
-		for parameterName, value in (("objectType", objectType), ("name", name), ("nodeID", nodeID)):
+		for parameterName, value in (
+			("objectType", objectType),
+			("name",       name),
+			("nodeID",     nodeID)
+		):
 			if value is None:
 				raise ValueError(f"Parameter '{parameterName}' is None.")
 			elif not isinstance(value, str):
