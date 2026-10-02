@@ -49,9 +49,26 @@ stays hand-written, as the content of a directive:
 
 .. rubric:: What it registers
 
-* the directives ``gha:workflow``, ``gha:input``, ``gha:output`` and ``gha:secret``;
-* the roles ``:gha:workflow:``, ``:gha:input:``, ``:gha:output:`` and ``:gha:secret:``;
-* the configuration values in :data:`CONFIG_VALUES`.
+* Directives
+
+  * ``gha:workflow``
+  * ``gha:input``
+  * ``gha:output``
+  * ``gha:secret``
+
+* Roles
+
+  * ``:gha:workflow:``
+  * ``:gha:input:``
+  * ``:gha:output:``
+  * ``:gha:secret:``
+
+* Configuration values, as listed in :attr:`GitHubActionsDomain.configValues`
+
+  * ``gha_repository``
+  * ``gha_workflow_directory``
+  * ``gha_ref``
+  * ``gha_label_prefix``
 
 The workflow files are read with ``ruamel.yaml`` when a directive runs, not when this module is imported.
 
@@ -85,28 +102,7 @@ if TYPE_CHECKING:  # pragma: no cover
 	from pyTooling.CI.GitHub.WorkflowFile        import WorkflowResolver
 
 
-__all__ = ["CONFIG_VALUES", "NO_DEFAULT", "WARNING_TYPE", "LEADING_FIELDS"]
-
-#: The configuration values this domain adds to :file:`conf.py`, as ``name: (default, rebuild, types)``.
-#:
-#: ``gha_repository``
-#:    The documented repository, as ``owner/repo``. A ``uses`` naming it is read from ``gha_workflow_directory``,
-#:    whatever its ref.
-#: ``gha_workflow_directory``
-#:    The directory holding the workflow files, relative to the Sphinx source directory, as
-#:    ``../.github/workflows``. A ``gha:workflow`` without ``:file:`` reads ``<name>.yml`` from it.
-#: ``gha_ref``
-#:    The ref - a branch or tag - of the documented repository the documentation describes, as ``r8``, or ``None``.
-#:    A directive may warn about a ``uses`` of the documented repository at another ref.
-#: ``gha_label_prefix``
-#:    The root of the ``:ref:`` labels the directives register besides their domain targets, as
-#:    ``JOBTMPL/Parameters/Input/package_name``, or ``None`` for none.
-CONFIG_VALUES = {
-	"gha_repository":         (None,      "env", (str, type(None))),
-	"gha_workflow_directory": (None,      "env", (str, type(None))),
-	"gha_ref":                (None,      "env", (str, type(None))),
-	"gha_label_prefix":       ("JOBTMPL", "env", (str, type(None))),
-}
+__all__ = ["NO_DEFAULT", "WARNING_TYPE", "LEADING_FIELDS"]
 
 #: The text of the field *Default Value* when an input has no default.
 NO_DEFAULT = "— — — —"
@@ -544,6 +540,28 @@ class GitHubActionsDomain(Domain):
 	initial_data: ClassVar[dict[str, Any]] = {  # type: ignore[misc]
 		"objects": {},
 	}  #: The domain's data: ``objects`` maps (type, name) to (document, anchor).
+
+	#: The configuration values the domain adds to :file:`conf.py`, as ``name: (default, rebuild, types)``. Each is
+	#: registered with the domain's name as prefix, e.g. ``gha_repository``.
+	#:
+	#: ``repository``
+	#:    The documented repository, as ``owner/repo``. A ``uses`` naming it is read from ``gha_workflow_directory``,
+	#:    whatever its ref.
+	#: ``workflow_directory``
+	#:    The directory holding the workflow files, relative to the Sphinx source directory, as
+	#:    ``../.github/workflows``. A ``gha:workflow`` without ``:file:`` reads ``<name>.yml`` from it.
+	#: ``ref``
+	#:    The ref - a branch or tag - of the documented repository the documentation describes, as ``r8``, or ``None``.
+	#:    A directive may warn about a ``uses`` of the documented repository at another ref.
+	#: ``label_prefix``
+	#:    The root of the ``:ref:`` labels the directives register besides their domain targets, as
+	#:    ``JOBTMPL/Parameters/Input/package_name``, or ``None`` for none.
+	configValues: ClassVar[dict[str, tuple[Any, str, Any]]] = {
+		"repository":         (None,      "env", (str, type(None))),
+		"workflow_directory": (None,      "env", (str, type(None))),
+		"ref":                (None,      "env", (str, type(None))),
+		"label_prefix":       ("JOBTMPL", "env", (str, type(None))),
+	}
 
 	_resolver: Nullable[WorkflowResolver]  #: Resolver reading the workflow files, created when first needed.
 
