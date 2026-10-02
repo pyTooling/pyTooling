@@ -572,6 +572,14 @@ nothing records *where* it was attached. :mod:`pyTooling.Attributes` adds that r
 asked for the entities carrying it. The solutions below either attach data without this reverse query, or find it by
 scanning modules.
 
+The model is C#'s `attributes
+<https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__: an attribute is a
+class derived from ``System.Attribute``, and ``[AttributeUsage]`` names its targets as
+:class:`~pyTooling.Attributes.AttributeScope` does. There, the compiler checks an attribute's targets and whether it
+may be applied more than once - :mod:`pyTooling.Attributes` checks neither -, and attributes apply to fields,
+parameters, return values and assemblies too; but a program finds the uses of an attribute by reflecting over the
+types of the loaded assemblies.
+
 .. _ATTR/venusian:
 
 venusian
@@ -629,29 +637,3 @@ solution.
 .. rubric:: Advantages
 
 * A few lines of code and no dependency.
-
-.. _ATTR/DotNet:
-
-.NET Attributes
-===============
-
-Source: the model of this package,
-`attributes in C# <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__.
-
-.. rubric:: Disadvantages
-
-* There is no registry of where an attribute is used: a program enumerates the types of the loaded assemblies by
-  reflection and asks each for its attributes.
-
-.. rubric:: Standoff
-
-* An attribute is a class derived from ``System.Attribute``; ``[AttributeUsage]`` names its targets as
-  :class:`~pyTooling.Attributes.AttributeScope` does, and states whether it is inherited.
-
-.. rubric:: Advantages
-
-* The compiler checks an attribute's targets and whether it may be applied more than once.
-  :mod:`pyTooling.Attributes` doesn't check :attr:`~pyTooling.Attributes.Attribute.Scope` when an attribute is
-  applied, and registers an entity again each time an attribute is applied to it.
-* Attributes also apply to fields, parameters, return values and assemblies; :mod:`pyTooling.Attributes` supports
-  classes, methods and functions.
