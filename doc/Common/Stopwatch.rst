@@ -646,3 +646,98 @@ For a stopwatch that measured 26 hours, 3 minutes and 4.123456789 seconds:
    Formatting works from :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInNanoseconds`, because dividing a duration
    into fields wants a whole number of them. Not for precision - see
    :ref:`the two durations <COMMON/Stopwatch/Durations>`.
+
+
+.. _COMMON/Stopwatch/Competitors:
+
+Competing Solutions
+*******************
+
+The timers below measure one time span from a start to a stop. This stopwatch also keeps every split time and whether
+it was active, so it reports activity and inactivity separately, and it excludes a time span by a nested
+``with``-statement.
+
+.. _COMMON/Stopwatch/stdlib:
+
+Standard Library
+================
+
+Source: :func:`time.perf_counter_ns`, :mod:`timeit`.
+
+.. rubric:: Disadvantages
+
+* :func:`time.perf_counter_ns` is a counter: the caller subtracts the values, and keeps and formats them.
+* :mod:`timeit` runs a statement many times and reports the result, so it measures a snippet, not a part of a running
+  program.
+
+.. rubric:: Standoff
+
+* This stopwatch measures with :func:`time.perf_counter_ns` too.
+
+.. rubric:: Advantages
+
+* No dependency; :mod:`timeit` repeats a measurement and has a command line interface for micro benchmarks.
+
+.. _COMMON/Stopwatch/codetiming:
+
+codetiming
+==========
+
+Source: `codetiming <https://pypi.org/project/codetiming/>`__ 1.4.0, released 2022-11-08.
+
+.. rubric:: Disadvantages
+
+* A timer measures from ``start()`` to ``stop()``; there is no pause, no split time and no excluded time span.
+* A timer is started again for every measurement, so one measurement can't be interrupted and continued.
+
+.. rubric:: Standoff
+
+* Like this stopwatch, it is used as an object with explicit calls or in a ``with``-statement.
+
+.. rubric:: Advantages
+
+* A timer is also a decorator.
+* Measurements of timers with the same name accumulate in ``Timer.timers``, with their count, total, minimum, maximum,
+  mean, median and standard deviation.
+* The elapsed time is reported to a logger, with a configurable text.
+
+.. _COMMON/Stopwatch/stopwatch.py:
+
+stopwatch.py
+============
+
+Source: :gh:`stopwatch.py <ravener/stopwatch.py>`, on PyPI as
+`stopwatch.py <https://pypi.org/project/stopwatch.py/>`__ 2.0.1, released 2022-09-04.
+
+.. rubric:: Disadvantages
+
+* No split times, so the time a stopwatch was stopped in between isn't reported.
+* No ``with``-statement, no name, and no absolute start or stop time.
+
+.. rubric:: Standoff
+
+* Stopping and starting again continues the measurement, like :meth:`~pyTooling.Stopwatch.Stopwatch.Pause` and
+  :meth:`~pyTooling.Stopwatch.Stopwatch.Resume`.
+* :func:`str` renders the duration with a configurable number of digits.
+
+.. rubric:: Advantages
+
+* A stopwatch can be reset and restarted, which this stopwatch leaves out of scope.
+
+.. _COMMON/Stopwatch/pytictoc:
+
+pytictoc
+========
+
+Source: :gh:`pytictoc <ericcfields/pytictoc>`, on PyPI as `pytictoc <https://pypi.org/project/pytictoc/>`__ 1.5.3,
+released 2023-08-02.
+
+.. rubric:: Disadvantages
+
+* ``toc()`` prints the time since the last ``tic()``. A lap is taken by restarting the timer, and only the latest
+  elapsed time is kept.
+* No pause, and the ``with``-statement prints the time but doesn't return the timer.
+
+.. rubric:: Advantages
+
+* MATLAB's ``tic`` and ``toc``, for code ported from MATLAB.
