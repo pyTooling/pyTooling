@@ -44,7 +44,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from __future__           import annotations
 
-from threading            import local, Lock
+from threading            import current_thread, local, Lock
 from types                import TracebackType
 from typing               import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
 
@@ -436,10 +436,10 @@ class SupervisedWarningCollector(WarningCollector):
 		if self._supervisor is not None:
 			result = True
 			if len(self._warnings) > 0:
-				self._supervisor.AddWarnings(self._warnings)
+				self._supervisor.AddWarnings(current_thread().name, self._warnings)
 
 			if exc_val is not None:
-				self._supervisor.AddException("", exc_val)
+				self._supervisor.AddException(current_thread().name, exc_val)
 
 				if self._exceptionHandler is not None:
 					result = self._exceptionHandler(exc_val)

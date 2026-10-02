@@ -452,6 +452,13 @@ Version 10.x (2026)
 
      * A :class:`~pyTooling.LinkedList.Node` stored its value as its key, ignoring the parameter ``key``.
 
+   * :mod:`pyTooling.Warning`
+
+     * A :class:`~pyTooling.Warning.SupervisedWarningCollector` with a supervisor raised a :exc:`TypeError` when its
+       block was left after collecting a warning: it called :meth:`~pyTooling.Warning.ThreadSupervisor.AddWarnings`
+       without the thread's name. It passes the name now, also with an exception, which
+       :meth:`~pyTooling.Warning.ThreadSupervisor.ReRaise` named no thread for.
+
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
 
