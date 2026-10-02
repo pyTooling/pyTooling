@@ -560,3 +560,98 @@ This abstraction layer is used by:
 
 * ✅ Declarative definition of ArgParse parser rules. |br|
   :ref:`pyTooling.Attributes.ArgParse <ATTR/ArgParse>`
+
+
+.. _ATTR/Competitors:
+
+Competing Solutions
+*******************
+
+Python has no language feature for attributes: a decorator can attach data to a class, method or function, but
+nothing records *where* it was attached. :mod:`pyTooling.Attributes` adds that registry, so an attribute class is
+asked for the entities carrying it. The solutions below either attach data without this reverse query, or find it by
+scanning modules.
+
+.. _ATTR/venusian:
+
+venusian
+========
+
+Source: `venusian <https://pypi.org/project/venusian/>`__ (3.1.1, released 2024-12-02), of the Pylons project.
+
+.. rubric:: Disadvantages
+
+* A decorator only attaches a callback. The decorated objects are found by a ``Scanner``, which imports every module
+  of a package and inspects every object at module scope.
+* Callbacks are selected by a ``category`` string, not by a hierarchy of attribute classes, and the attached data has
+  no type of its own.
+
+.. rubric:: Advantages
+
+* The scan imports the modules itself, so it finds entities in modules nobody imported yet - a query of
+  :mod:`pyTooling.Attributes` answers for the modules imported so far.
+* A decorator is passive until a scan, so importing a module has no side effect.
+
+.. _ATTR/Annotated:
+
+typing.Annotated
+================
+
+Source: :pep:`593`, :data:`typing.Annotated` in the standard library.
+
+.. rubric:: Disadvantages
+
+* It annotates a **type** - of a parameter, a variable or a return value - not a class, method or function.
+* Metadata is read from one object, by :func:`typing.get_type_hints` with ``include_extras=True``; there is no query
+  for the objects carrying a given metadata class.
+
+.. rubric:: Standoff
+
+* Complementary: metadata about a value's type belongs into an annotation, metadata about an entity into an attribute.
+
+.. rubric:: Advantages
+
+* Part of the standard library and understood by type checkers.
+
+.. _ATTR/Registries:
+
+Decorators with a Registry
+==========================
+
+A decorator that appends the decorated object to a module-level list or dictionary is the usual hand-written
+solution.
+
+.. rubric:: Disadvantages
+
+* Every framework writes its own registry, and filtering by a hierarchy of attribute classes has to be written too.
+* Nothing is attached to the entity, so the entity can't be asked what was applied to it.
+
+.. rubric:: Advantages
+
+* A few lines of code and no dependency.
+
+.. _ATTR/DotNet:
+
+.NET Attributes
+===============
+
+Source: the model of this package,
+`attributes in C# <https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/reflection-and-attributes/>`__.
+
+.. rubric:: Disadvantages
+
+* There is no registry of where an attribute is used: a program enumerates the types of the loaded assemblies by
+  reflection and asks each for its attributes.
+
+.. rubric:: Standoff
+
+* An attribute is a class derived from ``System.Attribute``; ``[AttributeUsage]`` names its targets as
+  :class:`~pyTooling.Attributes.AttributeScope` does, and states whether it is inherited.
+
+.. rubric:: Advantages
+
+* The compiler checks an attribute's targets and whether it may be applied more than once.
+  :mod:`pyTooling.Attributes` doesn't check :attr:`~pyTooling.Attributes.Attribute.Scope` when an attribute is
+  applied, and registers an entity again each time an attribute is applied to it.
+* Attributes also apply to fields, parameters, return values and assemblies; :mod:`pyTooling.Attributes` supports
+  classes, methods and functions.
