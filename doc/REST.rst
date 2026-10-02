@@ -139,3 +139,111 @@ every header of a request is decided.
          error.add_note("Check the thing's name, and that the token may read it.")
 
 :mod:`pyTooling.CI.GitHub` is such a reader.
+
+
+.. _REST/Competitors:
+
+Competing Solutions
+*******************
+
+:mod:`pyTooling.REST` is no general HTTP client: it reads and writes JSON objects of one API, synchronously, and opens
+a connection per request. What it adds to the standard library is what every REST API needs - retries of transient
+failures, pagination by the ``Link`` header, and an error naming the URL. The packages below are general HTTP
+clients, so a caller builds these parts on top of them.
+
+.. _REST/requests:
+
+requests
+========
+
+Source: :gh:`requests <psf/requests>`, on PyPI as `requests <https://pypi.org/project/requests/>`__.
+
+.. rubric:: Disadvantages
+
+* Four dependencies: ``charset_normalizer``, ``idna``, ``urllib3`` and ``certifi``.
+* By default, a failed request isn't tried again, and a retry never follows an HTTP status. Retrying on a status needs
+  urllib3's ``Retry`` mounted on an ``HTTPAdapter``.
+* :pycode:`Response.json()` returns whatever JSON the answer holds; checking it is a JSON object is left to the
+  caller. :pycode:`Response.links` parses the ``Link`` header, but following the next page is the caller's loop.
+
+.. rubric:: Advantages
+
+* Sessions reuse connections and keep cookies, and authentication schemes, file uploads and streamed bodies are
+  included.
+* Any media type, not just JSON objects.
+
+.. _REST/urllib3:
+
+urllib3
+=======
+
+Source: :gh:`urllib3 <urllib3/urllib3>`, on PyPI as `urllib3 <https://pypi.org/project/urllib3/>`__.
+
+.. rubric:: Disadvantages
+
+* ``Retry`` retries on an HTTP status only if the status is listed in ``status_forcelist``, or if the answer to 413,
+  429 or 503 carries a ``Retry-After`` header.
+* Reading JSON, checking the media type and pagination are the caller's.
+
+.. rubric:: Standoff
+
+* No dependencies either.
+* The same rule for which requests are tried again: by default ``DELETE``, ``GET``, ``HEAD``, ``OPTIONS``, ``PUT``
+  and ``TRACE`` - not ``POST`` or ``PATCH``. The backoff doubles too, capped at 120 seconds.
+
+.. rubric:: Advantages
+
+* Thread-safe connection pools, and a random jitter for the backoff.
+
+.. _REST/httpx:
+
+HTTPX
+=====
+
+Source: :gh:`httpx <encode/httpx>`, on PyPI as `httpx <https://pypi.org/project/httpx/>`__.
+
+.. rubric:: Disadvantages
+
+* Four dependencies: ``anyio``, ``certifi``, ``httpcore`` and ``idna``.
+* The transport's ``retries`` retries a failed connection only - ``ConnectError`` and ``ConnectTimeout``. For a
+  ``503 Service Unavailable``, its documentation suggests a general retry package like ``tenacity``.
+
+.. rubric:: Advantages
+
+* One API for synchronous and asynchronous code (``Client``, ``AsyncClient``), and HTTP/2 with ``http2=True``.
+
+.. _REST/aiohttp:
+
+aiohttp
+=======
+
+Source: :gh:`aiohttp <aio-libs/aiohttp>`, on PyPI as `aiohttp <https://pypi.org/project/aiohttp/>`__.
+
+.. rubric:: Disadvantages
+
+* For :mod:`asyncio` only, with seven dependencies (nine before Python 3.13).
+
+.. rubric:: Advantages
+
+* Many requests in flight at once on one thread, and a server besides the client.
+
+.. _REST/Uplink:
+
+Uplink
+======
+
+Source: :gh:`uplink <prkumar/uplink>`, on PyPI as `uplink <https://pypi.org/project/uplink/>`__.
+
+.. rubric:: Disadvantages
+
+* Runs on requests by default, or on aiohttp or Twisted, so their dependencies come along.
+
+.. rubric:: Standoff
+
+* An API is a class of its own, as with a class derived from :class:`~pyTooling.REST.RESTClient`. Uplink declares a
+  request by decorators like ``@get`` on a method; here a method calls
+  :meth:`~pyTooling.REST.RESTClient.GetJSONObject`.
+
+.. rubric:: Advantages
+
+* A ``@retry`` decorator per request, and asynchronous requests through aiohttp or Twisted.
