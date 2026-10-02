@@ -98,6 +98,9 @@ ParentType = TypeVar("ParentType", bound="Base")
 ParentTypes = Nullable[Union[type, tuple[type, ...]]]
 """The type of :attr:`Base._PARENT_TYPE`: ``None``, a class, or a tuple of classes."""
 
+DefinitionType = TypeVar("DefinitionType", bound="Base")
+"""A type variable for the type of the workflow file's element an element of :mod:`pyTooling.CI` is built from."""
+
 
 @export
 class WorkflowError(CIError):
@@ -2713,7 +2716,7 @@ class WorkflowResolver(metaclass=ExtendedType, slots=True):
 
 
 @export
-class DefinitionMixin(metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_TYPE",)):
+class DefinitionMixin(Generic[DefinitionType], metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_TYPE",)):
 	"""
 	Mixin-class for an element of :mod:`pyTooling.CI` built from a workflow file, linking it to its definition.
 
@@ -2721,10 +2724,10 @@ class DefinitionMixin(metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_
 	the file has: the line an element is written at, the reference a job calls, its permissions.
 	"""
 
-	_definition: Union[Workflow, Job, Step]  #: The element of the workflow file this element was built from.
+	_definition: DefinitionType  #: The element of the workflow file this element was built from.
 
 	@classmethod
-	def _CheckDefinition(cls, definition: Union[Workflow, Job, Step]) -> None:
+	def _CheckDefinition(cls, definition: DefinitionType) -> None:
 		"""
 		Check a definition before the element is built from it.
 
@@ -2743,7 +2746,7 @@ class DefinitionMixin(metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_
 			ex.add_note(f"Got type '{getFullyQualifiedName(definition)}'.")
 			raise ex
 
-	def __init__(self, definition: Union[Workflow, Job, Step]) -> None:
+	def __init__(self, definition: DefinitionType) -> None:
 		"""
 		Initializes the link of an element to its definition, which :meth:`_CheckDefinition` checked.
 
@@ -2752,7 +2755,7 @@ class DefinitionMixin(metaclass=ExtendedType, mixin=True, expects=("_DEFINITION_
 		self._definition = definition
 
 	@readonly
-	def Definition(self) -> Union[Workflow, Job, Step]:
+	def Definition(self) -> DefinitionType:
 		"""
 		Read-only property to access the element of the workflow file this element was built from (:attr:`_definition`).
 
@@ -2795,7 +2798,7 @@ class CallMixin(metaclass=ExtendedType, mixin=True):
 
 
 @export
-class DefinedPipeline(CIPipeline, DefinitionMixin):
+class DefinedPipeline(CIPipeline, DefinitionMixin[Workflow]):
 	"""The pipeline a workflow file defines, as :meth:`Workflow.ToPipeline` builds it."""
 
 	_DEFINITION_TYPE: ClassVar[type] = Workflow  #: A pipeline is built from a workflow file.
@@ -2819,7 +2822,7 @@ class DefinedPipeline(CIPipeline, DefinitionMixin):
 
 
 @export
-class DefinedWorkflow(CIWorkflow, CallMixin, DefinitionMixin):
+class DefinedWorkflow(CIWorkflow, CallMixin, DefinitionMixin[Job]):
 	"""A called workflow built from the job calling it, as :meth:`Workflow.ToPipeline` builds it."""
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A called workflow is built from the job calling it.
@@ -2861,7 +2864,7 @@ class DefinedWorkflow(CIWorkflow, CallMixin, DefinitionMixin):
 
 
 @export
-class DefinedMatrix(CIMatrix, DefinitionMixin):
+class DefinedMatrix(CIMatrix, DefinitionMixin[Job]):
 	"""
 	A matrix built from the job declaring it, as :meth:`Workflow.ToPipeline` builds it.
 
@@ -2898,7 +2901,7 @@ class DefinedMatrix(CIMatrix, DefinitionMixin):
 
 
 @export
-class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
+class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin[Job]):
 	"""One instance of a matrix calling a reusable workflow, as :meth:`Workflow.ToPipeline` builds it."""
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A matrix instance is built from the job declaring the matrix.
@@ -2942,7 +2945,7 @@ class DefinedMatrixWorkflow(CIMatrixWorkflow, CallMixin, DefinitionMixin):
 
 
 @export
-class DefinedJob(CIJob, DefinitionMixin):
+class DefinedJob(CIJob, DefinitionMixin[Job]):
 	"""A job running steps, as :meth:`Workflow.ToPipeline` builds it."""
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A job is built from its job in the workflow file.
@@ -2968,7 +2971,7 @@ class DefinedJob(CIJob, DefinitionMixin):
 
 
 @export
-class DefinedMatrixJob(CIMatrixJob, DefinitionMixin):
+class DefinedMatrixJob(CIMatrixJob, DefinitionMixin[Job]):
 	"""One instance of a matrix running steps, as :meth:`Workflow.ToPipeline` builds it."""
 
 	_DEFINITION_TYPE: ClassVar[type] = Job  #: A matrix instance is built from the job declaring the matrix.
@@ -3002,7 +3005,7 @@ class DefinedMatrixJob(CIMatrixJob, DefinitionMixin):
 
 
 @export
-class DefinedStep(CIStep, DefinitionMixin):
+class DefinedStep(CIStep, DefinitionMixin[Step]):
 	"""A step of a job, as :meth:`Workflow.ToPipeline` builds it."""
 
 	_DEFINITION_TYPE: ClassVar[type] = Step  #: A step is built from its step in the workflow file.
