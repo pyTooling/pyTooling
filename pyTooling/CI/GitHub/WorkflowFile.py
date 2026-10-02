@@ -36,6 +36,9 @@ A workflow file is read once into objects:
 .. code-block:: text
 
    Workflow                 a workflow file, e.g. '.github/workflows/CompletePipeline.yml'
+   +-- Input                an input of 'on.workflow_call'
+   +-- Output               an output of 'on.workflow_call'
+   +-- Secret               a secret of 'on.workflow_call'
    +-- Permission           a permission the workflow declares
        +-- Permission       a permission the job declares
 
@@ -177,6 +180,15 @@ class PermissionScope(StringEnum):
 	SecurityEvents =      "security-events"       #: Code scanning alerts.
 	Statuses =            "statuses"              #: Commit statuses.
 	VulnerabilityAlerts = "vulnerability-alerts"  #: Dependabot alerts.
+
+
+@export
+class InputType(StringEnum):
+	"""The type of an input of a reusable workflow."""
+
+	String =  "string"   #: A string.
+	Boolean = "boolean"  #: A boolean.
+	Number =  "number"   #: A number.
 
 
 @export
@@ -325,25 +337,45 @@ class Workflow(Base[None]):
 	_name:        str                                          #: Name of the workflow, the file's stem.
 	_displayName: Nullable[str]                                #: Name of the workflow, as GitHub displays it.
 	_triggers:    tuple[str, ...]                              #: Events triggering the workflow.
+	_inputs:      dict[str, Input]                             #: Inputs of ``on.workflow_call``, by name.
+	_outputs:     dict[str, Output]                            #: Outputs of ``on.workflow_call``, by name.
+	_secrets:     dict[str, Secret]                            #: Secrets of ``on.workflow_call``, by name.
 	_permissions: Nullable[dict[PermissionScope, Permission]]  #: Permissions the workflow declares, by scope.
 
 	def __init__(
 		self,
 		path:        Path,
-		displayName: Nullable[str] = None,
-		triggers:    Iterable[str] = ()
+		displayName: Nullable[str]                  = None,
+		triggers:    Nullable[Iterable[str]]        = None,
+		inputs:      Nullable[Iterable[Input]]      = None,
+		outputs:     Nullable[Iterable[Output]]     = None,
+		secrets:     Nullable[Iterable[Secret]]     = None,
+		permissions: Nullable[Iterable[Permission]] = None
 	) -> None:
 		"""
 		Initializes a workflow.
 
-		Use :meth:`FromFile` to read a workflow file.
+		An input, output, secret or permission is attached by passing it, or by constructing it with the workflow as
+		parent. Use :meth:`FromFile` to read a workflow file.
 
 		:param path:        Path to the workflow file.
 		:param displayName: Optional, name of the workflow, as GitHub displays it. Default: ``None``.
-		:param triggers:    Optional, events triggering the workflow, as ``workflow_call``. Default: ``()``.
+		:param triggers:    Optional, events triggering the workflow, as ``workflow_call``. Default: ``None``.
+		:param inputs:      Optional, inputs of ``on.workflow_call``, which are attached to the workflow. Default: ``None``.
+		:param outputs:     Optional, outputs of ``on.workflow_call``, which are attached to the workflow. Default:
+		                    ``None``.
+		:param secrets:     Optional, secrets of ``on.workflow_call``, which are attached to the workflow. Default:
+		                    ``None``.
+		:param permissions: Optional, permissions the workflow declares for all its jobs, which are attached to the
+		                    workflow. Default: ``None``, for a workflow without a ``permissions`` key.
 		:raises ValueError: If parameter 'path' is ``None``.
 		:raises TypeError:  If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:  If parameter 'displayName' is not of type :class:`str`.
+		:raises TypeError:  If an element of parameter 'triggers' is not of type :class:`str`.
+		:raises TypeError:  If an element of parameter 'inputs' is not of type :class:`Input`.
+		:raises TypeError:  If an element of parameter 'outputs' is not of type :class:`Output`.
+		:raises TypeError:  If an element of parameter 'secrets' is not of type :class:`Secret`.
+		:raises TypeError:  If an element of parameter 'permissions' is not of type :class:`Permission`.
 		"""
 		super().__init__(1)
 
@@ -363,8 +395,49 @@ class Workflow(Base[None]):
 		self._path =        path
 		self._name =        path.stem
 		self._displayName = displayName
-		self._triggers =    tuple(triggers)
+		self._triggers =    ()
+		self._inputs =      {}
+		self._outputs =     {}
+		self._secrets =     {}
 		self._permissions = None
+
+		if triggers is not None:
+			self._triggers = tuple(triggers)
+			for trigger in self._triggers:
+				if not isinstance(trigger, str):
+					ex = TypeError("An element of parameter 'triggers' is not of type 'str'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(trigger)}'.")
+					raise ex
+
+		for parameterName, parameters, parameterClass, container in (
+			("inputs",  inputs,  Input,  self._inputs),
+			("outputs", outputs, Output, self._outputs),
+			("secrets", secrets, Secret, self._secrets)
+		):
+			if parameters is None:
+				continue
+
+			for parameter in parameters:
+				if not isinstance(parameter, parameterClass):
+					ex = TypeError(f"An element of parameter '{parameterName}' is not of type '{parameterClass.__name__}'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(parameter)}'.")
+					raise ex
+
+				container[parameter._name] = parameter
+				parameter._parent =   self
+				parameter._workflow = self
+
+		if permissions is not None:
+			self._permissions = {}
+			for permission in permissions:
+				if not isinstance(permission, Permission):
+					ex = TypeError("An element of parameter 'permissions' is not of type 'Permission'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(permission)}'.")
+					raise ex
+
+				self._permissions[permission._scope] = permission
+				permission._parent =   self
+				permission._workflow = self
 
 	@readonly
 	def Path(self) -> Path:
@@ -411,6 +484,32 @@ class Workflow(Base[None]):
 		"""
 		return "workflow_call" in self._triggers
 
+	@readonly
+	def Inputs(self) -> dict[str, Input]:
+		"""
+		Read-only property to access the inputs of ``on.workflow_call`` (:attr:`_inputs`).
+
+		:returns: The inputs, by name, in file order.
+		"""
+		return self._inputs
+
+	@readonly
+	def Outputs(self) -> dict[str, Output]:
+		"""
+		Read-only property to access the outputs of ``on.workflow_call`` (:attr:`_outputs`).
+
+		:returns: The outputs, by name, in file order.
+		"""
+		return self._outputs
+
+	@readonly
+	def Secrets(self) -> dict[str, Secret]:
+		"""
+		Read-only property to access the secrets of ``on.workflow_call`` (:attr:`_secrets`).
+
+		:returns: The secrets, by name, in file order.
+		"""
+		return self._secrets
 
 	@readonly
 	def Permissions(self) -> Nullable[dict[PermissionScope, Permission]]:
@@ -436,12 +535,15 @@ class Workflow(Base[None]):
 		Read a workflow file.
 
 		:param path:               Path to the workflow file.
-		:returns:                  The workflow, with its permissions attached.
+		:returns:                  The workflow, with its parameters and permissions attached.
 		:raises ValueError:        If parameter 'path' is ``None``.
 		:raises TypeError:         If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises FileNotFoundError: If the file doesn't exist.
 		:raises WorkflowError:     If the file is not a YAML document.
 		:raises WorkflowError:     If the document is not a mapping, or has no ``on`` or ``jobs`` key.
+		:raises WorkflowError:     If a parameter of ``on.workflow_call`` lacks a key GitHub requires, or has a value of
+		                           the wrong kind. |br|
+		                           For an unknown input type, the note lists the allowed values.
 		"""
 		if path is None:
 			raise ValueError("Parameter 'path' is None.")
@@ -478,15 +580,40 @@ class Workflow(Base[None]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(on)}'.")
 			raise ex
 
-		displayName = document.get("name", None)
-		workflow = cls(path, None if displayName is None else str(displayName), triggers)
+		parameters: dict[str, list[Parameter]] = {"inputs": [], "outputs": [], "secrets": []}
+		if isinstance(on, CommentedMap) and (call := on.get("workflow_call", None)) is not None:
+			if not isinstance(call, CommentedMap):
+				ex = WorkflowError("Key 'on.workflow_call' is not a mapping.", path, Base._KeyLine(on, "workflow_call"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(call)}'.")
+				raise ex
 
+			for section, parameterClass in (("inputs", Input), ("outputs", Output), ("secrets", Secret)):
+				if (declarations := call.get(section, None)) is None:
+					continue
+				elif not isinstance(declarations, CommentedMap):
+					ex = WorkflowError(f"Key 'on.workflow_call.{section}' is not a mapping.", path, Base._KeyLine(call, section))
+					ex.add_note(f"Got type '{getFullyQualifiedName(declarations)}'.")
+					raise ex
+
+				parameters[section] = [
+					parameterClass._FromYAML(str(name), declaration, path, Base._KeyLine(declarations, name))
+					for name, declaration in declarations.items()
+				]
+
+		permissions = None
 		if "permissions" in document:
-			workflow._permissions = Permission._FromYAML(
-				document["permissions"], path, Base._KeyLine(document, "permissions"), workflow
-			)
+			permissions = Permission._FromYAML(document["permissions"], path, Base._KeyLine(document, "permissions"))
 
-		return workflow
+		displayName = document.get("name", None)
+		return cls(
+			path,
+			None if displayName is None else str(displayName),
+			triggers,
+			parameters["inputs"],
+			parameters["outputs"],
+			parameters["secrets"],
+			permissions
+		)
 
 
 @export
@@ -516,7 +643,8 @@ class Permission(Base[Workflow]):
 		:param scope:       The scope, as ``contents``.
 		:param level:       The access granted.
 		:param line:        Line the permission is written at, starting at 1.
-		:param parent:      Optional, reference to the workflow or job declaring it. Default: ``None``.
+		:param parent:      Optional, reference to the workflow or job declaring it, which the permission is attached to.
+		                    Default: ``None``.
 		:raises ValueError: If parameter 'scope' is ``None``.
 		:raises TypeError:  If parameter 'scope' is not of type :class:`PermissionScope`.
 		:raises ValueError: If parameter 'level' is ``None``.
@@ -540,6 +668,12 @@ class Permission(Base[Workflow]):
 
 		self._scope = scope
 		self._level = level
+
+		if parent is not None:
+			if parent._permissions is None:
+				parent._permissions = {}
+
+			parent._permissions[scope] = self
 
 	@readonly
 	def Scope(self) -> PermissionScope:
@@ -572,15 +706,14 @@ class Permission(Base[Workflow]):
 		return f"{self._scope}: {self._level.value}"
 
 	@classmethod
-	def _FromYAML(cls, value: Any, path: Path, line: int, parent: Workflow) -> dict[PermissionScope, Self]:
+	def _FromYAML(cls, value: Any, path: Path, line: int) -> list[Self]:
 		"""
 		Read the value of a ``permissions`` key into the permissions a workflow or job declares.
 
 		:param value:          The value of the ``permissions`` key.
 		:param path:           Path to the workflow file.
 		:param line:           Line the key is written at, starting at 1.
-		:param parent:         Reference to the workflow or job declaring the permissions.
-		:returns:              The permissions, by scope.
+		:returns:              The permissions, in file order.
 		:raises WorkflowError: If the value is neither ``read-all``, ``write-all`` nor a mapping.
 		:raises WorkflowError: If a key is not a permission scope. |br|
 		                       The note lists the allowed values.
@@ -588,15 +721,15 @@ class Permission(Base[Workflow]):
 		                       The note lists the allowed values.
 		"""
 		if value == "read-all":
-			return {PermissionScope.All: cls(PermissionScope.All, AccessLevel.Read, line, parent=parent)}
+			return [cls(PermissionScope.All, AccessLevel.Read, line)]
 		elif value == "write-all":
-			return {PermissionScope.All: cls(PermissionScope.All, AccessLevel.Write, line, parent=parent)}
+			return [cls(PermissionScope.All, AccessLevel.Write, line)]
 		elif not isinstance(value, CommentedMap):
 			ex = WorkflowError("Key 'permissions' is neither 'read-all', 'write-all' nor a mapping.", path, line)
 			ex.add_note(f"Got '{value}'." if isinstance(value, str) else f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
 
-		permissions = {}
+		permissions = []
 		for scope, level in value.items():
 			scopeLine = Base._KeyLine(value, scope)
 			try:
@@ -615,8 +748,374 @@ class Permission(Base[Workflow]):
 				ex.add_note(f"Allowed values: {', '.join(member.value for member in AccessLevel)}.")
 				raise ex from cause
 
-			permissions[permissionScope] = cls(permissionScope, accessLevel, scopeLine, parent=parent)
+			permissions.append(cls(permissionScope, accessLevel, scopeLine))
 
 		return permissions
+
+
+@export
+@abstractclass
+class Parameter(Base[Workflow]):
+	"""
+	Common behaviour of the inputs, outputs and secrets of a reusable workflow.
+
+	Every parameter has a name and an optional description, and belongs to a :class:`Workflow`.
+	"""
+
+	_PARENT_TYPE: ClassVar[ParentTypes] = Workflow  #: A parameter is declared by a workflow.
+
+	_name:        str            #: Name of the parameter.
+	_description: Nullable[str]  #: Description of the parameter.
+
+	def __init__(
+		self,
+		name:        str,
+		line:        int,
+		description: Nullable[str]      = None,
+		*,
+		parent:      Nullable[Workflow] = None
+	) -> None:
+		"""
+		Initializes a parameter of a reusable workflow.
+
+		:param name:        Name of the parameter.
+		:param line:        Line the parameter's name is written at, starting at 1.
+		:param description: Optional, description of the parameter. Default: ``None``.
+		:param parent:      Optional, reference to the workflow declaring it. Default: ``None``.
+		:raises ValueError: If parameter 'name' is ``None``.
+		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
+		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'description' is not of type :class:`str`.
+		"""
+		super().__init__(line, parent=parent)
+
+		if name is None:
+			raise ValueError("Parameter 'name' is None.")
+		elif not isinstance(name, str):
+			ex = TypeError("Parameter 'name' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
+			raise ex
+		elif name == "":
+			raise ValueError("Parameter 'name' is empty.")
+
+		if description is not None and not isinstance(description, str):
+			ex = TypeError("Parameter 'description' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(description)}'.")
+			raise ex
+
+		self._name =        name
+		self._description = description
+
+	@readonly
+	def Name(self) -> str:
+		"""
+		Read-only property to access the parameter's name (:attr:`_name`).
+
+		:returns: Name of the parameter.
+		"""
+		return self._name
+
+	@readonly
+	def Description(self) -> Nullable[str]:
+		"""
+		Read-only property to access the parameter's description (:attr:`_description`).
+
+		:returns: The description, or ``None`` if the workflow gives none.
+		"""
+		return self._description
+
+	def __str__(self) -> str:
+		"""
+		Return the parameter's name.
+
+		:returns: Name of the parameter.
+		"""
+		return self._name
+
+
+@export
+class Input(Parameter):
+	"""An input of a reusable workflow, declared in ``on.workflow_call.inputs``."""
+
+	_type:     InputType  #: Type of the input.
+	_required: bool       #: ``True``, if a caller has to pass the input.
+	_default:  ValueT     #: Value of the input, if a caller doesn't pass it.
+
+	def __init__(
+		self,
+		name:        str,
+		line:        int,
+		inputType:   InputType,
+		required:    bool               = False,
+		default:     ValueT             = None,
+		description: Nullable[str]      = None,
+		*,
+		parent:      Nullable[Workflow] = None
+	) -> None:
+		"""
+		Initializes an input of a reusable workflow.
+
+		:param name:        Name of the input.
+		:param line:        Line the input's name is written at, starting at 1.
+		:param inputType:   Type of the input.
+		:param required:    Optional, ``True``, if a caller has to pass the input. Default: ``False``.
+		:param default:     Optional, value of the input, if a caller doesn't pass it. Default: ``None``.
+		:param description: Optional, description of the input. Default: ``None``.
+		:param parent:      Optional, reference to the workflow declaring it. Default: ``None``.
+		:raises ValueError: If parameter 'inputType' is ``None``.
+		:raises TypeError:  If parameter 'inputType' is not of type :class:`InputType`.
+		:raises TypeError:  If parameter 'required' is not of type :class:`bool`.
+		"""
+		super().__init__(name, line, description, parent=parent)
+
+		if inputType is None:
+			raise ValueError("Parameter 'inputType' is None.")
+		elif not isinstance(inputType, InputType):
+			ex = TypeError("Parameter 'inputType' is not of type 'InputType'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(inputType)}'.")
+			raise ex
+
+		if not isinstance(required, bool):
+			ex = TypeError("Parameter 'required' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(required)}'.")
+			raise ex
+
+		self._type =     inputType
+		self._required = required
+		self._default =  default
+
+		if parent is not None:
+			parent._inputs[name] = self
+
+	@readonly
+	def Type(self) -> InputType:
+		"""
+		Read-only property to access the input's type (:attr:`_type`).
+
+		:returns: Type of the input.
+		"""
+		return self._type
+
+	@readonly
+	def Required(self) -> bool:
+		"""
+		Read-only property to access whether a caller has to pass the input (:attr:`_required`).
+
+		:returns: ``True``, if the input is required.
+		"""
+		return self._required
+
+	@readonly
+	def Default(self) -> ValueT:
+		"""
+		Read-only property to access the input's value, if a caller doesn't pass it (:attr:`_default`).
+
+		The value keeps the type it is written with, as ``'3.14'`` or ``false``, and a multi-line value keeps its line
+		breaks.
+
+		:returns: The default value, or ``None`` if the workflow gives none.
+		"""
+		return self._default
+
+	@classmethod
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int) -> Self:
+		"""
+		Read an input's declaration below ``on.workflow_call.inputs``.
+
+
+		:param name:           Name of the input.
+		:param declaration:    The declaration.
+		:param path:           Path to the workflow file.
+		:param line:           Line the input's name is written at, starting at 1.
+		:returns:              The input.
+		:raises WorkflowError: If the declaration is not a mapping.
+		:raises WorkflowError: If key ``required`` is not a boolean.
+		:raises WorkflowError: If the declaration has no ``type`` key.
+		:raises WorkflowError: If key ``type`` is not an input type. |br|
+		                       The note lists the allowed values.
+		"""
+		if declaration is None:
+			raise WorkflowError(f"Input '{name}' has no 'type' key.", path, line)
+		elif not isinstance(declaration, CommentedMap):
+			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
+			raise ex
+
+		description = declaration.get("description", None)
+		required = Base._ToPython(declaration.get("required", False))
+		if not isinstance(required, bool):
+			ex = WorkflowError(f"Key 'required' of '{name}' is not a boolean.", path, line)
+			ex.add_note(f"Got '{required}'.")
+			raise ex
+
+		if (inputType := declaration.get("type", None)) is None:
+			raise WorkflowError(f"Input '{name}' has no 'type' key.", path, line)
+
+		try:
+			inputType = InputType.Parse(str(inputType))
+		except ValueError as cause:
+			ex = WorkflowError(f"Key 'type' of input '{name}' is not an input type.", path, line)
+			ex.add_note(f"Got '{inputType}'.")
+			ex.add_note(f"Allowed values: {', '.join(member.value for member in InputType)}.")
+			raise ex from cause
+
+		default = Base._ToPython(declaration.get("default", None))
+
+		return cls(name, line, inputType, required, default, None if description is None else str(description))
+
+
+@export
+class Output(Parameter):
+	"""An output of a reusable workflow, declared in ``on.workflow_call.outputs``."""
+
+	_value: str  #: Expression the output's value is taken from.
+
+	def __init__(
+		self,
+		name:        str,
+		line:        int,
+		value:       str,
+		description: Nullable[str]      = None,
+		*,
+		parent:      Nullable[Workflow] = None
+	) -> None:
+		"""
+		Initializes an output of a reusable workflow.
+
+		:param name:        Name of the output.
+		:param line:        Line the output's name is written at, starting at 1.
+		:param value:       Expression the output's value is taken from, as ``${{ jobs.Build.outputs.version }}``.
+		:param description: Optional, description of the output. Default: ``None``.
+		:param parent:      Optional, reference to the workflow declaring it. Default: ``None``.
+		:raises ValueError: If parameter 'value' is ``None``.
+		:raises TypeError:  If parameter 'value' is not of type :class:`str`.
+		"""
+		super().__init__(name, line, description, parent=parent)
+
+		if value is None:
+			raise ValueError("Parameter 'value' is None.")
+		elif not isinstance(value, str):
+			ex = TypeError("Parameter 'value' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		self._value = value
+
+		if parent is not None:
+			parent._outputs[name] = self
+
+	@readonly
+	def Value(self) -> str:
+		"""
+		Read-only property to access the expression the output's value is taken from (:attr:`_value`).
+
+		:returns: The expression, as ``${{ jobs.Build.outputs.version }}``.
+		"""
+		return self._value
+
+	@classmethod
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int) -> Self:
+		"""
+		Read an output's declaration below ``on.workflow_call.outputs``.
+
+
+		:param name:           Name of the output.
+		:param declaration:    The declaration.
+		:param path:           Path to the workflow file.
+		:param line:           Line the output's name is written at, starting at 1.
+		:returns:              The output.
+		:raises WorkflowError: If the declaration is not a mapping.
+		:raises WorkflowError: If the declaration has no ``value`` key.
+		"""
+		if declaration is None:
+			raise WorkflowError(f"Output '{name}' has no 'value' key.", path, line)
+		elif not isinstance(declaration, CommentedMap):
+			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
+			raise ex
+
+		description = declaration.get("description", None)
+
+		if (value := declaration.get("value", None)) is None:
+			raise WorkflowError(f"Output '{name}' has no 'value' key.", path, line)
+
+		return cls(name, line, str(value), None if description is None else str(description))
+
+
+@export
+class Secret(Parameter):
+	"""A secret of a reusable workflow, declared in ``on.workflow_call.secrets``."""
+
+	_required: bool  #: ``True``, if a caller has to pass the secret.
+
+	def __init__(
+		self,
+		name:        str,
+		line:        int,
+		required:    bool               = False,
+		description: Nullable[str]      = None,
+		*,
+		parent:      Nullable[Workflow] = None
+	) -> None:
+		"""
+		Initializes a secret of a reusable workflow.
+
+		:param name:        Name of the secret.
+		:param line:        Line the secret's name is written at, starting at 1.
+		:param required:    Optional, ``True``, if a caller has to pass the secret. Default: ``False``.
+		:param description: Optional, description of the secret. Default: ``None``.
+		:param parent:      Optional, reference to the workflow declaring it. Default: ``None``.
+		:raises TypeError:  If parameter 'required' is not of type :class:`bool`.
+		"""
+		super().__init__(name, line, description, parent=parent)
+
+		if not isinstance(required, bool):
+			ex = TypeError("Parameter 'required' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(required)}'.")
+			raise ex
+
+		self._required = required
+
+		if parent is not None:
+			parent._secrets[name] = self
+
+	@readonly
+	def Required(self) -> bool:
+		"""
+		Read-only property to access whether a caller has to pass the secret (:attr:`_required`).
+
+		:returns: ``True``, if the secret is required.
+		"""
+		return self._required
+
+	@classmethod
+	def _FromYAML(cls, name: str, declaration: Any, path: Path, line: int) -> Self:
+		"""
+		Read a secret's declaration below ``on.workflow_call.secrets``.
+
+
+		:param name:           Name of the secret.
+		:param declaration:    The declaration.
+		:param path:           Path to the workflow file.
+		:param line:           Line the secret's name is written at, starting at 1.
+		:returns:              The secret.
+		:raises WorkflowError: If the declaration is not a mapping.
+		:raises WorkflowError: If key ``required`` is not a boolean.
+		"""
+		if declaration is None:
+			return cls(name, line)
+		elif not isinstance(declaration, CommentedMap):
+			ex = WorkflowError(f"Declaration of '{name}' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(declaration)}'.")
+			raise ex
+
+		description = declaration.get("description", None)
+		required = Base._ToPython(declaration.get("required", False))
+		if not isinstance(required, bool):
+			ex = WorkflowError(f"Key 'required' of '{name}' is not a boolean.", path, line)
+			ex.add_note(f"Got '{required}'.")
+			raise ex
+
+		return cls(name, line, required, None if description is None else str(description))
 
 
