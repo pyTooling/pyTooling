@@ -448,6 +448,10 @@ Version 10.x (2026)
      * A message's indentation was recorded and never printed. ``BaseIndent`` and the ``indent`` parameter of every
        ``Write*`` method reached :attr:`~pyTooling.TerminalUI.Line.Indent` and got lost on the way to the terminal.
 
+   * :mod:`pyTooling.LinkedList`
+
+     * A :class:`~pyTooling.LinkedList.Node` stored its value as its key, ignoring the parameter ``key``.
+
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
 

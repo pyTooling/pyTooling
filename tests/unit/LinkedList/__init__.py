@@ -47,9 +47,16 @@ class Instantiation(Testcase):
 		node = Node(5)
 
 		self.assertEqual(5, node.Value)
+		self.assertIsNone(node.Key)
 		self.assertIsNone(node.List)
 		self.assertIsNone(node.PreviousNode)
 		self.assertIsNone(node.NextNode)
+
+	def test_Node_Key(self) -> None:
+		node = Node(5, key="five")
+
+		self.assertEqual(5, node.Value)
+		self.assertEqual("five", node.Key)
 
 	def test_Node_Previous(self) -> None:
 		previous = Node(4)
