@@ -83,10 +83,16 @@ and the line in :attr:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowError.Path` and
 Dependencies Between Jobs
 *************************
 
-:attr:`Job.Needs <pyTooling.CI.GitHub.WorkflowFile.Job.Needs>` resolves the names of ``needs`` to the jobs.
-:meth:`Workflow.FromFile <pyTooling.CI.GitHub.WorkflowFile.Workflow.FromFile>` checks them when it reads the file: a
-job needing a job the workflow doesn't have, and jobs needing each other in a cycle, raise a
-:exc:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowError`.
+:attr:`Job.Needs <pyTooling.CI.GitHub.WorkflowFile.Job.Needs>` resolves the names of ``needs`` to the jobs. The pipeline
+they form is built by :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` (see :ref:`CI/Workflow/Pipeline`)
+and converted into a :class:`~pyTooling.Graph.Graph` by :meth:`~pyTooling.CI.Workflow.ToGraph`, whose edges read
+*needs*, and which by default drops a dependency a longer path already implies:
+
+.. code-block:: text
+
+   Package  needs Prepare               Local --> Package --> Prepare
+   Local    needs Prepare, Package
+                                        (Local --> Prepare is implied)
 
 
 .. _CI/Workflow/Resolver:
@@ -133,3 +139,93 @@ permissions a workflow and its jobs declare, and - given a resolver - those of t
 
 When several elements declare a scope, the permission granting the most access is returned, so its location names
 where that access is asked for.
+
+
+.. _CI/Workflow/Pipeline:
+
+Building a Pipeline
+*******************
+
+:meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` builds the pipeline a workflow defines as a
+:mod:`pyTooling.CI` model (:ref:`CI/Pipeline`), expanding the workflows its jobs call as far as a resolver
+reads them and ``depth`` allows:
+
+.. code-block:: python
+
+   pipeline = workflow.ToPipeline(resolver, depth=1)
+   graph =    pipeline.ToGraph()                       # transitively reduced
+
+   for vertex in graph.IterateTopologically():         # in an order the jobs can run in
+     element = vertex.Value
+     print(f"{element.QualifiedName}  {element.Definition.Location}")
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Job in the workflow file
+     - Element of the pipeline
+   * - with ``steps``
+     - :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedJob`, its steps as
+       :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedStep`
+   * - with ``uses``
+     - :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedWorkflow`, the ``uses`` text as
+       :attr:`~pyTooling.CI.Workflow.Reference`, holding the elements of the called workflow - or none, if
+       the call isn't expanded
+   * - with ``strategy.matrix``
+     - :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrix`, holding a
+       :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrixJob` - or a
+       :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrixWorkflow` for a job with ``uses`` - per combination
+   * - ``needs``
+     - :attr:`~pyTooling.CI.DependencyMixin.Needs` between the elements
+   * - ``if``
+     - :attr:`~pyTooling.CI.ConditionMixin.Condition`
+
+* An element is named by its job's key, as the file names it in ``needs``. A step is named as GitHub displays it:
+  by its ``name``, or ``Run`` followed by its action or the first line of its script.
+* Every element links to what it was built from: :attr:`~pyTooling.CI.GitHub.WorkflowFile.DefinitionMixin.Definition` is
+  the :class:`~pyTooling.CI.GitHub.WorkflowFile.Job` - with its line, its ``uses`` reference and its permissions - or
+  the :class:`~pyTooling.CI.GitHub.WorkflowFile.Step`, and for the pipeline the
+  :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`. A called workflow's
+  :attr:`~pyTooling.CI.GitHub.WorkflowFile.CallMixin.CalledWorkflow` is the file it was expanded from.
+* A matrix yields its combinations as GitHub computes them from its dimensions, ``exclude`` and ``include`` -
+  :attr:`Matrix.Combinations <pyTooling.CI.GitHub.WorkflowFile.Matrix.Combinations>` -, and an instance is named by its
+  values: ``Test (ubuntu, 3.14)``. Its :attr:`~pyTooling.CI.MatrixInstanceMixin.Dimensions` are the combination, the
+  values formatted as GitHub prints them: ``{"os": "ubuntu", "python": "3.14"}``. A **dynamic** matrix -
+  ``include: ${{ fromJson(...) }}`` - is a :class:`~pyTooling.CI.GitHub.WorkflowFile.DefinedMatrix` without instances,
+  since its combinations are known at run time only.
+* A workflow calling itself, directly or through others, raises :exc:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowError`.
+
+
+.. _CI/Workflow/Run:
+
+Linking a Run
+*************
+
+A run read from the GitHub REST API (:ref:`CI/GitHub`) has no ``needs``: the API doesn't report them.
+:meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ApplyNeeds` gives a run the dependencies its workflow file - named by
+:attr:`Pipeline.Path <pyTooling.CI.GitHub.Pipeline.Path>` - declares:
+
+.. code-block:: python
+
+   run =      Pipeline.FromJSON(runJSON, jobsJSON)
+   workflow = resolver.Load(Path(run.Path))
+
+   for name in workflow.ApplyNeeds(run, resolver):
+     print(f"Job '{name}' isn't in the run.")
+
+   graph = run.ToGraph()
+
+* A job is looked up in the run by its display name - its ``name`` -, or else by its key:
+  :pycode:`group.GetElement(name)`. A matrix is found as the :class:`~pyTooling.CI.Matrix` its instances were grouped
+  into.
+* A job calling a reusable workflow is followed into the run's called workflow, and a matrix of calls into each
+  instance, as far as the resolver reads the called file.
+* A run names an instance's dimensions by position - ``{"0": "ubuntu", "1": "3.14"}`` -, since a job's name carries
+  the values only. For a static matrix, an instance whose values are those of a combination gets the combination's
+  names: ``{"os": "ubuntu", "python": "3.14"}``. The instances of a dynamic matrix, and one matching no combination,
+  keep the positions.
+* A job named by an expression - ``${{ matrix.os }} Tests`` - can't be looked up and is skipped. A job with a
+  condition may have been skipped in the run, so it isn't reported when it's missing. Every other job missing in the
+  run is returned by its qualified name, as the run would name it: ``Local / Static`` for the job ``Static`` of the
+  workflow the job ``Local`` calls.
