@@ -1059,3 +1059,112 @@ Both take one limit for every part (``bits`` / ``max``) or a limit per part (``m
 A rejected version raises :exc:`~pyTooling.Versioning.VersionValidatorError`, whose ``Version`` property is the
 version that was rejected.
 
+
+
+.. _VERSIONING/Competitors:
+
+Competing Solutions
+*******************
+
+:mod:`pyTooling.Versioning` puts several version schemes - semantic versions, :pep:`440` versions and four calendar
+schemes - and three dialects of version expressions - :pep:`440`, npm and Debian - behind one API of
+:class:`~pyTooling.Versioning.Version`, :class:`~pyTooling.Versioning.VersionRange` and
+:class:`~pyTooling.Versioning.VersionSet`. Each package below covers one scheme more completely, except for univers,
+which covers many schemes by building on scheme-specific packages. For calendar versions, the packages on PyPI -
+`calver <https://pypi.org/project/calver/>`__, `bumpver <https://pypi.org/project/bumpver/>`__ - write or bump a
+version number in a project's files; none of them parses and compares one.
+
+.. _VERSIONING/packaging:
+
+packaging
+=========
+
+Source: :gh:`packaging <pypa/packaging>`, on PyPI as `packaging <https://pypi.org/project/packaging/>`__.
+
+.. rubric:: Disadvantages
+
+* :pep:`440` only: no semantic versions, calendar versions, or npm and Debian expressions.
+
+.. rubric:: Advantages
+
+* The reference implementation of :pep:`440`, which pip uses. Where :class:`~pyTooling.Versioning.PythonVersion` and
+  packaging disagree, packaging is right.
+* Parses everything :pep:`440` allows, e.g. local versions as ``1.0+local.7``, which
+  :class:`~pyTooling.Versioning.PythonVersion` doesn't parse, and the operator ``===``.
+* A ``SpecifierSet`` handles pre-releases as pip does, and filters an iterable of versions.
+
+.. _VERSIONING/semver:
+
+semver
+======
+
+Source: :gh:`python-semver <python-semver/python-semver>`, on PyPI as `semver <https://pypi.org/project/semver/>`__.
+
+.. rubric:: Disadvantages
+
+* Semantic versions only. ``match()`` checks one comparison, as ``>=1.0.0``, not an expression of several.
+
+.. rubric:: Advantages
+
+* The whole grammar of SemVer 2.0.0, including dot-separated pre-release and build parts as
+  ``1.2.3-pre.2+build.4``, which :class:`~pyTooling.Versioning.SemanticVersion` doesn't parse.
+* Functions to bump a version's parts.
+
+.. _VERSIONING/npm:
+
+semantic-version and node-semver
+================================
+
+Source: :gh:`python-semanticversion <rbarrois/python-semanticversion>`, on PyPI as
+`semantic-version <https://pypi.org/project/semantic-version/>`__ (last release 2022), and
+:gh:`python-node-semver <podhmo/python-node-semver>`, a port of npm's ``node-semver``, on PyPI as
+`node-semver <https://pypi.org/project/node-semver/>`__.
+
+.. rubric:: Disadvantages
+
+* Semantic versions and npm's range notation only.
+
+.. rubric:: Advantages
+
+* npm's whole range notation: the alternative ``||``, x-ranges as ``2.x``, and - in node-semver - hyphen ranges.
+  :class:`~pyTooling.Versioning.NPMVersionExpression` parses none of them.
+* node-semver answers ``satisfies`` and ``max_satisfying`` as npm does, and has a loose mode for malformed versions.
+
+.. _VERSIONING/python-debian:
+
+python-debian
+=============
+
+Source: `python-debian <https://salsa.debian.org/python-debian-team/python-debian>`__, on PyPI as
+`python-debian <https://pypi.org/project/python-debian/>`__.
+
+.. rubric:: Disadvantages
+
+* Debian versions only.
+
+.. rubric:: Advantages
+
+* Orders Debian versions as dpkg does: epoch, upstream version and revision, with ``~`` sorting before everything.
+  pyTooling has no Debian version class; :class:`~pyTooling.Versioning.DebianVersionExpression` parses its versions
+  as :class:`~pyTooling.Versioning.SemanticVersion`.
+
+.. _VERSIONING/univers:
+
+univers
+=======
+
+Source: :gh:`univers <aboutcode-org/univers>`, on PyPI as `univers <https://pypi.org/project/univers/>`__.
+
+.. rubric:: Disadvantages
+
+* Depends on attrs, packaging, semantic-version and semver.
+
+.. rubric:: Standoff
+
+* Like this package, one model for the versions and ranges of several ecosystems.
+
+.. rubric:: Advantages
+
+* Many more schemes, among them npm, PyPI, RubyGems, Debian, Maven, RPM, Go and Composer.
+* Converts a range in an ecosystem's own notation into the common ``vers`` notation, as ``vers:npm/>=1.0.2|<2.0.0``
+  for ``^1.0.2``, and back.
