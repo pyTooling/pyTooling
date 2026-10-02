@@ -130,7 +130,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 		self._previousNode = previousNode
 		self._nextNode = nextNode
 		self._value = value
-		self._key = value
+		self._key = key
 
 		# Attache to previous node
 		if previousNode is not None:
