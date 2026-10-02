@@ -1149,6 +1149,7 @@ License
 
    Documentation/index
    Documentation/Sphinx
+   Documentation/GitHubActions
 
 .. toctree::
    :caption: Exceptions and Warnings

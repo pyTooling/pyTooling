@@ -4,7 +4,7 @@
 # package being documented, so requiring it would install a released copy over the checkout. Every extra a module
 # guards its imports with has to appear, because autodoc imports every module it documents.
 colorama >= 0.4.6      # 'terminal'
-ruamel.yaml ~= 0.19.1  # 'yaml'
+ruamel.yaml ~= 0.19.1  # 'yaml', 'sphinx' (the 'gha' domain reads workflow files)
 setuptools >= 83.0     # 'packaging'
 
 # 'pypi' - read by the 'dependency-table' directive, which resolves the tables in 'Dependency.rst' against PyPI
