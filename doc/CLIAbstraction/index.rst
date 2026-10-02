@@ -126,6 +126,86 @@ Executable API
 .. condensed-class:: pyTooling.CLIAbstraction.Executable
 
 
+.. _CLIABS/Competitors:
+
+Competing Solutions
+*******************
+
+The packages below run a program from Python, but describe its command line as strings. pyTooling describes it as
+classes: every argument of a program is a nested class of its :class:`~pyTooling.CLIAbstraction.Program`, whose base
+class - :class:`~pyTooling.CLIAbstraction.Flag.ShortFlag`, :class:`~pyTooling.CLIAbstraction.ValuedFlag.LongValuedFlag`,
+:class:`~pyTooling.CLIAbstraction.Flag.WindowsFlag`, ... - formats it as ``-v``, ``--value=42`` or ``/v``. The
+arguments are listed in the order they are declared, and the executable's name is chosen per platform.
+
+.. _CLIABS/subprocess:
+
+subprocess
+==========
+
+Source: the standard library's :mod:`subprocess`.
+
+.. rubric:: Disadvantages
+
+* A command line is a list of strings, assembled by the caller in the right order and in each program's syntax.
+
+.. rubric:: Standoff
+
+* :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` returns such a list, and
+  :class:`~pyTooling.CLIAbstraction.Executable` starts it with :class:`~subprocess.Popen`.
+
+.. rubric:: Advantages
+
+* No dependency, and every option of :class:`~subprocess.Popen` is available.
+
+.. _CLIABS/plumbum:
+
+plumbum
+=======
+
+Source: :gh:`plumbum <tomerfiliba/plumbum>`, on PyPI as `plumbum <https://pypi.org/project/plumbum/>`__.
+
+.. rubric:: Disadvantages
+
+* Arguments are bound as strings - ``local["ls"]["-l"]`` - so a flag's syntax is written at every call.
+
+.. rubric:: Advantages
+
+* Pipelines (``|``), redirection (``<``, ``>``), background execution, and commands run on a remote machine over SSH.
+* A toolkit for writing command line applications.
+
+.. _CLIABS/sh:
+
+sh
+==
+
+Source: :gh:`sh <amoffat/sh>`, on PyPI as `sh <https://pypi.org/project/sh/>`__.
+
+.. rubric:: Disadvantages
+
+* Windows is not supported.
+* Keyword arguments become flags by one rule - one letter ``-o value``, more letters ``--name`` - so a program
+  using another syntax, like ``/flag`` or ``-flag=value``, is called with strings.
+
+.. rubric:: Advantages
+
+* A program is called like a function, ``sh.git.commit(m="message")``, without declaring it first.
+
+.. _CLIABS/invoke:
+
+invoke
+======
+
+Source: :gh:`invoke <pyinvoke/invoke>`, on PyPI as `invoke <https://pypi.org/project/invoke/>`__.
+
+.. rubric:: Disadvantages
+
+* A command is one string run by a shell, so quoting and the shell's syntax are the caller's.
+
+.. rubric:: Standoff
+
+* A task runner - tasks with their own command line - more than a program abstraction.
+
+
 .. _CLIABS/Consumers:
 
 Consumers
