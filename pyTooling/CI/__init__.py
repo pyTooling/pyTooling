@@ -200,7 +200,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises TypeError:    If parameter 'startedAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:    If parameter 'completedAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:    If parameter 'outcome' is not of type :class:`Outcome`.
-		:raises TypeError:    If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
 		:raises TypeError:    If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		if name is None:
@@ -223,15 +222,10 @@ class Base(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(outcome)}'.")
 			raise ex
 
-		if parent is not None:
-			if self._PARENT_TYPE is None:
-				ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-			elif not isinstance(parent, self._PARENT_TYPE):
-				ex = TypeError(f"Parameter 'parent' is not of type '{self._PARENT_TYPE.__name__}'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
+		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
+			ex = TypeError(f"Parameter 'parent' is not of type '{self._PARENT_TYPE.__name__}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 
 		self._name =        name
 		self._parent =      parent
