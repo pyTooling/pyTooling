@@ -930,8 +930,10 @@ class JobsInFile(Fixture):
 
 		self.assertEqual("Parameter 'value' is not of type 'Workflow'.", str(context.exception))
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			workflow.Parent = job
+
+		self.assertEqual("A 'pyTooling.CI.GitHub.WorkflowFile.Workflow' has no parent.", str(context.exception))
 
 	def test_Construction_Defaults(self) -> None:
 		job = Job("Build", 3)

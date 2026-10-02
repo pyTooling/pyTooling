@@ -219,7 +219,6 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'line' is ``None``.
 		:raises TypeError:  If parameter 'line' is not of type :class:`int`.
 		:raises ValueError: If parameter 'line' is not positive.
-		:raises TypeError:  If parameter 'parent' is given for a class declaring no :attr:`_PARENT_TYPE`.
 		:raises TypeError:  If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		if line is None:
@@ -233,16 +232,11 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{line}'.")
 			raise ex
 
-		if parent is not None:
-			if self._PARENT_TYPE is None:
-				ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-			elif not isinstance(parent, self._PARENT_TYPE):
-				parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
-				ex = TypeError(f"Parameter 'parent' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
+		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
+			parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
+			ex = TypeError(f"Parameter 'parent' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 
 		self._parent =   parent
 		self._workflow = None if parent is None else parent._workflow
@@ -258,7 +252,7 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 
 		:returns:           The containing element, or ``None`` for a :class:`Workflow`.
 		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If a parent is assigned to a class declaring no :attr:`_PARENT_TYPE`.
+		:raises TypeError:  If a parent is assigned to a :class:`Workflow`, which has no parent.
 		:raises TypeError:  If an assigned value is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
 		return self._parent
@@ -267,10 +261,6 @@ class Base(Generic[ParentType], metaclass=ExtendedType, slots=True):
 	def Parent(self, value: ParentType) -> None:
 		if value is None:
 			raise ValueError("Parameter 'value' is None.")
-		elif self._PARENT_TYPE is None:
-			ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
-			raise ex
 		elif not isinstance(value, self._PARENT_TYPE):
 			parentTypes = self._PARENT_TYPE if isinstance(self._PARENT_TYPE, tuple) else (self._PARENT_TYPE, )
 			ex = TypeError(f"Parameter 'value' is not of type {' or '.join(f'{t.__name__!r}' for t in parentTypes)}.")
@@ -470,6 +460,12 @@ class Workflow(Base[None]):
 				self._permissions[permission._scope] = permission
 				permission.Parent = self
 
+	@Base.Parent.setter
+	def Parent(self, value: None) -> None:
+		ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+		raise ex
+
 	@readonly
 	def Path(self) -> Path:
 		"""
@@ -594,65 +590,6 @@ class Workflow(Base[None]):
 		:returns: Name of the workflow, the file's stem.
 		"""
 		return self._name
-
-	def _Validate(self) -> None:
-		"""
-		Validate the workflow read from a file.
-
-		:raises WorkflowError: If a job needs a job the workflow doesn't have. |br|
-		                       The note lists the workflow's jobs.
-		:raises WorkflowError: If the jobs need each other in a cycle.
-		"""
-		self._ValidateNeeds()
-		self._ValidateAcyclic()
-
-	def _ValidateNeeds(self) -> None:
-		"""
-		Validate that every job names only jobs of the workflow in its ``needs`` key.
-
-		:raises WorkflowError: If a job needs a job the workflow doesn't have. |br|
-		                       The note lists the workflow's jobs.
-		"""
-		for job in self._jobs.values():
-			for need in job._needNames:
-				if need not in self._jobs:
-					ex = WorkflowError(
-						f"Job '{job._name}' needs job '{need}', which the workflow doesn't have.", self._path, job._line
-					)
-					ex.add_note(f"Jobs: {', '.join(self._jobs)}.")
-					raise ex
-
-	def _ValidateAcyclic(self) -> None:
-		"""
-		Validate that the jobs don't need each other in a cycle.
-
-		:raises WorkflowError: If the jobs need each other in a cycle.
-		"""
-		# Depth-first search: a job still on the stack when it is reached again closes a cycle.
-		finished: set[str] = set()
-		stack:    list[str] = []
-
-		def visit(job: Job) -> None:
-			"""
-			Nested function for recursion.
-
-			:param job:            The job whose needs are followed.
-			:raises WorkflowError: If the job is reached again while its needs are followed.
-			"""
-			if job._name in finished:
-				return
-			elif job._name in stack:
-				cycle = stack[stack.index(job._name):] + [job._name]
-				raise WorkflowError(f"Jobs need each other in a cycle: {' -> '.join(cycle)}.", self._path, job._line)
-
-			stack.append(job._name)
-			for need in job.Needs:
-				visit(need)
-			stack.pop()
-			finished.add(job._name)
-
-		for job in self._jobs.values():
-			visit(job)
 
 	@classmethod
 	def FromFile(cls, path: Path) -> Self:
@@ -786,6 +723,65 @@ class Workflow(Base[None]):
 			permissions,
 			jobList
 		)
+
+	def _Validate(self) -> None:
+		"""
+		Validate the workflow read from a file.
+
+		:raises WorkflowError: If a job needs a job the workflow doesn't have. |br|
+		                       The note lists the workflow's jobs.
+		:raises WorkflowError: If the jobs need each other in a cycle.
+		"""
+		self._ValidateNeeds()
+		self._ValidateAcyclic()
+
+	def _ValidateNeeds(self) -> None:
+		"""
+		Validate that every job names only jobs of the workflow in its ``needs`` key.
+
+		:raises WorkflowError: If a job needs a job the workflow doesn't have. |br|
+		                       The note lists the workflow's jobs.
+		"""
+		for job in self._jobs.values():
+			for need in job._needNames:
+				if need not in self._jobs:
+					ex = WorkflowError(
+						f"Job '{job._name}' needs job '{need}', which the workflow doesn't have.", self._path, job._line
+					)
+					ex.add_note(f"Jobs: {', '.join(self._jobs)}.")
+					raise ex
+
+	def _ValidateAcyclic(self) -> None:
+		"""
+		Validate that the jobs don't need each other in a cycle.
+
+		:raises WorkflowError: If the jobs need each other in a cycle.
+		"""
+		# Depth-first search: a job still on the stack when it is reached again closes a cycle.
+		finished: set[str] = set()
+		stack:    list[str] = []
+
+		def visit(job: Job) -> None:
+			"""
+			Nested function for recursion.
+
+			:param job:            The job whose needs are followed.
+			:raises WorkflowError: If the job is reached again while its needs are followed.
+			"""
+			if job._name in finished:
+				return
+			elif job._name in stack:
+				cycle = stack[stack.index(job._name):] + [job._name]
+				raise WorkflowError(f"Jobs need each other in a cycle: {' -> '.join(cycle)}.", self._path, job._line)
+
+			stack.append(job._name)
+			for need in job.Needs:
+				visit(need)
+			stack.pop()
+			finished.add(job._name)
+
+		for job in self._jobs.values():
+			visit(job)
 
 
 @export
