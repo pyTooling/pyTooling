@@ -43,10 +43,14 @@ A workflow file is read once into objects:
    +-- Job                  a job, in file order
        +-- UsesReference    the reusable workflow the job calls
        +-- Permission       a permission the job declares
+       +-- Matrix           the job's 'strategy.matrix'
+       +-- Step             a step of the job
            +-- UsesReference    the action the step runs
 
 Every element knows its parent, the workflow it belongs to, and the line it starts at in the file, so a consumer can
 name the place a finding comes from, as ``CompletePipeline.yml:552``.
+
+:class:`WorkflowResolver` reads the reusable workflows a job calls, as far as they are in a local directory.
 
 The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow *run* as the REST API reports it.
 
@@ -55,6 +59,7 @@ The model is independent of :mod:`pyTooling.CI.GitHub`, which models a workflow 
 from __future__            import annotations
 
 from functools             import cached_property
+from itertools             import product
 from pathlib               import Path, PurePosixPath
 from typing                import Any, ClassVar, Generic, Iterable, Iterator, Mapping, Optional as Nullable, Self
 from typing                import TypeVar, Union
@@ -557,6 +562,69 @@ class Workflow(Base[None]):
 		return self._jobs
 
 
+	def IterateActions(self) -> Iterator[UsesReference]:
+		"""
+		Iterate the actions the workflow's steps run.
+
+		An action is yielded as often as a step runs it. The reusable workflows the jobs call are in :attr:`Job.Uses`.
+
+		:returns: An iterator over the actions, in file order.
+		"""
+		for job in self._jobs.values():
+			for step in job._steps:
+				if step._uses is not None:
+					yield step._uses
+
+	def CollectPermissions(self, resolver: Nullable[WorkflowResolver] = None) -> dict[PermissionScope, Permission]:
+		"""
+		Collect the permissions the workflow and its jobs declare, and those of the workflows its jobs call.
+
+		A called workflow can keep or reduce the permissions of the ``GITHUB_TOKEN``, never raise them, so what a
+		workflow's jobs declare is what a caller has to grant. When several elements declare a scope, the permission
+		granting the most access is returned, so its :attr:`~Base.Location` names where that access is asked for.
+
+		:param resolver:   Optional, the resolver reading the workflows the jobs call. Without it, called workflows are
+		                   not followed. Default: ``None``.
+		:returns:          The permissions, by scope, in the order they are first declared.
+		:raises TypeError: If parameter 'resolver' is not of type :class:`WorkflowResolver`.
+		"""
+		if resolver is not None and not isinstance(resolver, WorkflowResolver):
+			ex = TypeError("Parameter 'resolver' is not of type 'WorkflowResolver'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(resolver)}'.")
+			raise ex
+
+		collected: dict[PermissionScope, Permission] = {}
+		visited:   set[int] = set()
+
+		def collect(workflow: Workflow) -> None:
+			"""
+			Nested function for recursion.
+
+			:param workflow: The workflow whose permissions are collected.
+			"""
+			visited.add(id(workflow))
+
+			declarations = [] if workflow._permissions is None else [workflow._permissions]
+			for job in workflow._jobs.values():
+				if job._permissions is not None:
+					declarations.append(job._permissions)
+
+			for permissions in declarations:
+				for scope, permission in permissions.items():
+					if (known := collected.get(scope, None)) is None or permission._level.Rank > known._level.Rank:
+						collected[scope] = permission
+
+			if resolver is not None:
+				for job in workflow._jobs.values():
+					if job._uses is None or (called := resolver.Resolve(job._uses)) is None:
+						continue
+					elif id(called) not in visited:
+						collect(called)
+
+		collect(self)
+
+		return collected
+
 	@readonly
 	def JobCount(self) -> int:
 		"""
@@ -789,7 +857,7 @@ class Job(Base[Workflow]):
 	"""
 	A job of a workflow.
 
-	A job either runs steps on a runner selected by :attr:`RunsOn`, or calls the reusable workflow named by
+	A job either runs :attr:`Steps` on a runner selected by :attr:`RunsOn`, or calls the reusable workflow named by
 	:attr:`Uses`.
 	"""
 
@@ -805,6 +873,8 @@ class Job(Base[Workflow]):
 	_with:            dict[str, ValueT]                            #: Inputs passed to the called workflow, by name.
 	_secrets:         dict[str, str]                               #: Secrets passed to the called workflow, by name.
 	_inheritsSecrets: bool                                         #: ``True``, if secrets are inherited.
+	_matrix:          Nullable[Matrix]                             #: The job's matrix.
+	_steps:           list[Step]                                   #: Steps of the job.
 	_outputs:         dict[str, str]                               #: Outputs of the job, by name.
 
 	def __init__(
@@ -821,14 +891,17 @@ class Job(Base[Workflow]):
 		inheritsSecrets: bool                           = False,
 		outputs:         Nullable[Mapping[str, str]]    = None,
 		permissions:     Nullable[Iterable[Permission]] = None,
+		matrix:          Nullable[Matrix]               = None,
+		steps:           Nullable[Iterable[Step]]       = None,
 		*,
 		parent:          Nullable[Workflow]             = None
 	) -> None:
 		"""
 		Initializes a job of a workflow.
 
-		The reusable workflow a job calls and its permissions are attached by passing them, or by constructing a
-		:class:`UsesReference` or a :class:`Permission` with the job as parent.
+		The reusable workflow a job calls, its permissions, its matrix and its steps are attached by passing them, or by
+		constructing a :class:`UsesReference`, :class:`Permission`, :class:`Matrix` or :class:`Step` with the job as
+		parent.
 
 		:param name:            Name of the job, the key it is declared under.
 		:param line:            Line the job's name is written at, starting at 1.
@@ -844,6 +917,8 @@ class Job(Base[Workflow]):
 		:param outputs:         Optional, outputs of the job, by name. Default: ``None``.
 		:param permissions:     Optional, permissions the job declares, which are attached to the job. Default: ``None``,
 		                        for a job without a ``permissions`` key.
+		:param matrix:          Optional, the job's matrix, which is attached to the job. Default: ``None``.
+		:param steps:           Optional, the job's steps, which are attached to the job. Default: ``None``.
 		:param parent:          Optional, reference to the workflow containing the job. Default: ``None``.
 		:raises ValueError:     If parameter 'name' is ``None``.
 		:raises TypeError:      If parameter 'name' is not of type :class:`str`.
@@ -855,6 +930,8 @@ class Job(Base[Workflow]):
 		:raises TypeError:      If parameter 'uses' is not of type :class:`UsesReference`.
 		:raises TypeError:      If parameter 'inheritsSecrets' is not of type :class:`bool`.
 		:raises TypeError:      If an element of parameter 'permissions' is not of type :class:`Permission`.
+		:raises TypeError:      If parameter 'matrix' is not of type :class:`Matrix`.
+		:raises TypeError:      If an element of parameter 'steps' is not of type :class:`Step`.
 		"""
 		super().__init__(line, parent=parent)
 
@@ -882,10 +959,14 @@ class Job(Base[Workflow]):
 					ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 					raise ex
 
-		if uses is not None and not isinstance(uses, UsesReference):
-			ex = TypeError("Parameter 'uses' is not of type 'UsesReference'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(uses)}'.")
-			raise ex
+		for parameterName, value, valueClass in (
+			("uses",   uses,   UsesReference),
+			("matrix", matrix, Matrix)
+		):
+			if value is not None and not isinstance(value, valueClass):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type '{valueClass.__name__}'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
 
 		if not isinstance(inheritsSecrets, bool):
 			ex = TypeError("Parameter 'inheritsSecrets' is not of type 'bool'.")
@@ -900,10 +981,15 @@ class Job(Base[Workflow]):
 		self._with =            {} if withInputs is None else dict(withInputs)
 		self._secrets =         {} if secrets is None else dict(secrets)
 		self._inheritsSecrets = inheritsSecrets
+		self._matrix =          matrix
+		self._steps =           []
 		self._outputs =         {} if outputs is None else dict(outputs)
 
 		if uses is not None:
 			uses.Parent = self
+
+		if matrix is not None:
+			matrix.Parent = self
 
 		if permissions is not None:
 			self._permissions = {}
@@ -916,6 +1002,16 @@ class Job(Base[Workflow]):
 				self._permissions[permission._scope] = permission
 				permission.Parent = self
 
+		if steps is not None:
+			for step in steps:
+				if not isinstance(step, Step):
+					ex = TypeError("An element of parameter 'steps' is not of type 'Step'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(step)}'.")
+					raise ex
+
+				self._steps.append(step)
+				step.Parent = self
+
 		if parent is not None:
 			parent._jobs[name] = self
 
@@ -925,6 +1021,12 @@ class Job(Base[Workflow]):
 
 		if self._uses is not None:
 			self._uses.Parent = self
+
+		if self._matrix is not None:
+			self._matrix.Parent = self
+
+		for step in self._steps:
+			step.Parent = self
 
 		if self._permissions is not None:
 			for permission in self._permissions.values():
@@ -1038,6 +1140,23 @@ class Job(Base[Workflow]):
 		"""
 		return self._inheritsSecrets
 
+	@readonly
+	def Matrix(self) -> Nullable[Matrix]:
+		"""
+		Read-only property to access the job's matrix (:attr:`_matrix`).
+
+		:returns: The matrix, or ``None`` if the job has no ``strategy.matrix``.
+		"""
+		return self._matrix
+
+	@readonly
+	def Steps(self) -> list[Step]:
+		"""
+		Read-only property to access the job's steps (:attr:`_steps`).
+
+		:returns: The steps, in file order, or an empty list for a job calling a workflow.
+		"""
+		return self._steps
 
 	@readonly
 	def Outputs(self) -> dict[str, str]:
@@ -1048,6 +1167,22 @@ class Job(Base[Workflow]):
 		"""
 		return self._outputs
 
+	@readonly
+	def StepCount(self) -> int:
+		"""
+		Read-only property to return the number of steps of the job.
+
+		:returns: Number of steps.
+		"""
+		return len(self._steps)
+
+	def IterateSteps(self) -> Iterator[Step]:
+		"""
+		Iterate the job's steps.
+
+		:returns: An iterator over the steps, in file order.
+		"""
+		return iter(self._steps)
 
 	def __str__(self) -> str:
 		"""
@@ -1127,6 +1262,30 @@ class Job(Base[Workflow]):
 		if "permissions" in mapping:
 			permissions = Permission._FromYAML(mapping["permissions"], path, Base._KeyLine(mapping, "permissions"))
 
+		matrix = None
+		if (strategy := mapping.get("strategy", None)) is not None:
+			if not isinstance(strategy, CommentedMap):
+				ex = WorkflowError(
+					f"Key 'strategy' of job '{name}' is not a mapping.", path, Base._KeyLine(mapping, "strategy")
+				)
+				ex.add_note(f"Got type '{getFullyQualifiedName(strategy)}'.")
+				raise ex
+
+			if "matrix" in strategy:
+				matrix = Matrix._FromYAML(strategy["matrix"], path, Base._KeyLine(strategy, "matrix"))
+
+		steps = None
+		if (stepList := mapping.get("steps", None)) is not None:
+			if not isinstance(stepList, CommentedSeq):
+				ex = WorkflowError(f"Key 'steps' of job '{name}' is not a list.", path, Base._KeyLine(mapping, "steps"))
+				ex.add_note(f"Got type '{getFullyQualifiedName(stepList)}'.")
+				raise ex
+
+			steps = [
+				Step._FromYAML(step, position, f"job '{name}'", path, stepList.lc.item(position)[0] + 1)
+				for position, step in enumerate(stepList)
+			]
+
 		displayName = mapping.get("name", None)
 
 		return cls(
@@ -1140,12 +1299,367 @@ class Job(Base[Workflow]):
 			secrets=secrets,
 			inheritsSecrets=inheritsSecrets,
 			outputs=outputs,
-			permissions=permissions
+			permissions=permissions,
+			matrix=matrix,
+			steps=steps
 		)
 
 
 @export
-class UsesReference(Base[Job]):
+class Step(Base[Job]):
+	"""A step of a job."""
+
+	_PARENT_TYPE: ClassVar[ParentTypes] = Job  #: A step is contained in a job.
+
+	_name:       Nullable[str]            #: Name of the step.
+	_identifier: Nullable[str]            #: Identifier of the step, as referenced by ``steps.<id>``.
+	_condition:  Nullable[str]            #: Condition under which the step runs.
+	_uses:       Nullable[UsesReference]  #: The action the step runs.
+	_run:        Nullable[str]            #: The script the step runs.
+
+	def __init__(
+		self,
+		line:       int,
+		name:       Nullable[str]           = None,
+		identifier: Nullable[str]           = None,
+		condition:  Nullable[str]           = None,
+		run:        Nullable[str]           = None,
+		uses:       Nullable[UsesReference] = None,
+		*,
+		parent:     Nullable[Job]           = None
+	) -> None:
+		"""
+		Initializes a step of a job.
+
+		The action a step runs is attached by passing it, or by constructing a :class:`UsesReference` with the step as
+		parent.
+
+		:param line:       Line the step starts at, starting at 1.
+		:param name:       Optional, name of the step. Default: ``None``.
+		:param identifier: Optional, identifier of the step. Default: ``None``.
+		:param condition:  Optional, condition under which the step runs. Default: ``None``.
+		:param run:        Optional, the script the step runs. Default: ``None``.
+		:param uses:       Optional, the action the step runs, which is attached to the step. Default: ``None``.
+		:param parent:     Optional, reference to the job containing the step, which the step is attached to. Default:
+		                   ``None``.
+		:raises TypeError: If parameter 'name' is not of type :class:`str`.
+		:raises TypeError: If parameter 'identifier' is not of type :class:`str`.
+		:raises TypeError: If parameter 'condition' is not of type :class:`str`.
+		:raises TypeError: If parameter 'run' is not of type :class:`str`.
+		:raises TypeError: If parameter 'uses' is not of type :class:`UsesReference`.
+		"""
+		super().__init__(line, parent=parent)
+
+		for parameterName, value in (
+			("name",       name),
+			("identifier", identifier),
+			("condition",  condition),
+			("run",        run)
+		):
+			if value is not None and not isinstance(value, str):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
+
+		if uses is not None and not isinstance(uses, UsesReference):
+			ex = TypeError("Parameter 'uses' is not of type 'UsesReference'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(uses)}'.")
+			raise ex
+
+		self._name =       name
+		self._identifier = identifier
+		self._condition =  condition
+		self._uses =       uses
+		self._run =        run
+
+		if uses is not None:
+			uses.Parent = self
+
+		if parent is not None:
+			parent._steps.append(self)
+
+	@Base.Parent.setter
+	def Parent(self, value: Job) -> None:
+		Base.Parent.fset(self, value)
+
+		if self._uses is not None:
+			self._uses.Parent = self
+
+	@readonly
+	def Name(self) -> Nullable[str]:
+		"""
+		Read-only property to access the step's name (:attr:`_name`).
+
+		:returns: Name of the step, or ``None`` if the workflow gives none.
+		"""
+		return self._name
+
+	@readonly
+	def ID(self) -> Nullable[str]:
+		"""
+		Read-only property to access the step's identifier (:attr:`_identifier`).
+
+		:returns: Identifier of the step, or ``None`` if the workflow gives none.
+		"""
+		return self._identifier
+
+	@readonly
+	def Condition(self) -> Nullable[str]:
+		"""
+		Read-only property to access the condition under which the step runs (:attr:`_condition`).
+
+		:returns: The ``if`` expression, as written, or ``None`` if the step always runs.
+		"""
+		return self._condition
+
+	@readonly
+	def Uses(self) -> Nullable[UsesReference]:
+		"""
+		Read-only property to access the action the step runs (:attr:`_uses`).
+
+		:returns: The action, or ``None`` for a step running a script.
+		"""
+		return self._uses
+
+	@readonly
+	def Run(self) -> Nullable[str]:
+		"""
+		Read-only property to access the script the step runs (:attr:`_run`).
+
+		:returns: The script, or ``None`` for a step running an action.
+		"""
+		return self._run
+
+	@classmethod
+	def _FromYAML(cls, mapping: Any, position: int, what: str, path: Path, line: int) -> Self:
+		"""
+		Read a step from the ``steps`` list of a job.
+
+		:param mapping:        The step's mapping.
+		:param position:       Position of the step in its job, starting at 0.
+		:param what:           The job containing the step, for the exception's message, as ``job 'Build'``.
+		:param path:           Path to the workflow file.
+		:param line:           Line the step starts at, starting at 1.
+		:returns:              The step.
+		:raises WorkflowError: If the step is not a mapping.
+		:raises WorkflowError: If the step's ``uses`` is not a reference.
+		"""
+		if not isinstance(mapping, CommentedMap):
+			ex = WorkflowError(f"Step {position + 1} of {what} is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(mapping)}'.")
+			raise ex
+
+		name =       mapping.get("name", None)
+		identifier = mapping.get("id", None)
+		condition =  mapping.get("if", None)
+		run =        mapping.get("run", None)
+		uses =       None
+		if "uses" in mapping:
+			uses = UsesReference._FromYAML(mapping, f"step {position + 1} of {what}", path)
+
+		return cls(
+			line,
+			name=None if name is None else str(name),
+			identifier=None if identifier is None else str(identifier),
+			condition=None if condition is None else str(condition),
+			run=None if run is None else str(run),
+			uses=uses
+		)
+
+
+@export
+class Matrix(Base[Job]):
+	"""
+	The ``strategy.matrix`` of a job.
+
+	A matrix is *dynamic*, if a part of it is an expression - as ``include: ${{ fromJson(inputs.jobs) }}`` - because
+	its instances are then known at run time only.
+	"""
+
+	_PARENT_TYPE: ClassVar[ParentTypes] = Job  #: A matrix belongs to a job.
+
+	_dimensions: dict[str, ValueT]  #: The dimensions, by name.
+	_include:    ValueT             #: The combinations added, or an expression producing them.
+	_exclude:    ValueT             #: The combinations removed, or an expression producing them.
+	_expression: Nullable[str]      #: The expression the whole matrix is taken from.
+
+	def __init__(
+		self,
+		line:       int,
+		dimensions: Nullable[Mapping[str, ValueT]] = None,
+		include:    ValueT                         = None,
+		exclude:    ValueT                         = None,
+		expression: Nullable[str]                  = None,
+		*,
+		parent:     Nullable[Job]                  = None
+	) -> None:
+		"""
+		Initializes a job's matrix.
+
+		:param line:       Line the ``matrix`` key is written at, starting at 1.
+		:param dimensions: Optional, the dimensions, by name; a dimension's value is a list or an expression.
+		                   Default: ``None``.
+		:param include:    Optional, the combinations added, or an expression producing them. Default: ``None``.
+		:param exclude:    Optional, the combinations removed, or an expression producing them. Default: ``None``.
+		:param expression: Optional, the expression the whole matrix is taken from. Default: ``None``.
+		:param parent:     Optional, reference to the job the matrix belongs to, which the matrix is attached to.
+		                   Default: ``None``.
+		:raises TypeError: If parameter 'dimensions' is not a mapping.
+		:raises TypeError: If parameter 'expression' is not of type :class:`str`.
+		"""
+		super().__init__(line, parent=parent)
+
+		if dimensions is not None and not isinstance(dimensions, Mapping):
+			ex = TypeError("Parameter 'dimensions' is not a mapping.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(dimensions)}'.")
+			raise ex
+
+		if expression is not None and not isinstance(expression, str):
+			ex = TypeError("Parameter 'expression' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(expression)}'.")
+			raise ex
+
+		self._dimensions = {} if dimensions is None else dict(dimensions)
+		self._include =    include
+		self._exclude =    exclude
+		self._expression = expression
+
+		if parent is not None:
+			parent._matrix = self
+
+	@readonly
+	def Dimensions(self) -> dict[str, ValueT]:
+		"""
+		Read-only property to access the matrix' dimensions (:attr:`_dimensions`).
+
+		:returns: The dimensions, by name; a dimension's value is a list, or an expression producing one.
+		"""
+		return self._dimensions
+
+	@readonly
+	def Include(self) -> ValueT:
+		"""
+		Read-only property to access the combinations added to the matrix (:attr:`_include`).
+
+		:returns: A list of combinations, an expression producing them, or ``None`` if the matrix has no ``include``.
+		"""
+		return self._include
+
+	@readonly
+	def Exclude(self) -> ValueT:
+		"""
+		Read-only property to access the combinations removed from the matrix (:attr:`_exclude`).
+
+		:returns: A list of combinations, an expression producing them, or ``None`` if the matrix has no ``exclude``.
+		"""
+		return self._exclude
+
+	@readonly
+	def Expression(self) -> Nullable[str]:
+		"""
+		Read-only property to access the expression the whole matrix is taken from (:attr:`_expression`).
+
+		:returns: The expression, as ``${{ fromJson(needs.Params.outputs.matrix) }}``, or ``None`` if the matrix is a
+		          mapping.
+		"""
+		return self._expression
+
+	@readonly
+	def IsDynamic(self) -> bool:
+		"""
+		Read-only property to return whether the matrix' instances are known at run time only.
+
+		:returns: ``True``, if the matrix, its ``include``, its ``exclude`` or one of its dimensions is an expression.
+		"""
+		return (
+			self._expression is not None or isinstance(self._include, str) or isinstance(self._exclude, str) or
+			any(isinstance(value, str) for value in self._dimensions.values())
+		)
+
+	@readonly
+	def Combinations(self) -> list[dict[str, ValueT]]:
+		"""
+		Read-only property to return the combinations the matrix produces, as GitHub computes them.
+
+		The dimensions are combined in the order they are written, the last one varying fastest. Then ``exclude``
+		removes every combination matching all key-value pairs of an entry, and ``include`` extends every remaining
+		combination whose dimension values the entry doesn't change - its other keys, and those an earlier entry
+		added, it may change. An entry extending no combination is a combination of its own.
+
+		:returns:              The combinations, each a mapping of the dimensions' and included keys' names to values.
+		:raises WorkflowError: If the matrix is dynamic, so its combinations are known at run time only.
+		:raises WorkflowError: If ``include`` or ``exclude`` is not a list of mappings.
+		"""
+		path = None if self._workflow is None else self._workflow._path
+		if self.IsDynamic:
+			raise WorkflowError("Matrix is dynamic; its combinations are known at run time only.", path, self._line)
+
+		for key, entries in (
+			("include", self._include),
+			("exclude", self._exclude)
+		):
+			if entries is not None and (
+				not isinstance(entries, list) or not all(isinstance(entry, dict) for entry in entries)
+			):
+				raise WorkflowError(f"Key '{key}' of the matrix is not a list of mappings.", path, self._line)
+
+		combinations = []
+		if len(self._dimensions) > 0:
+			dimensions = {name: value if isinstance(value, list) else [value] for name, value in self._dimensions.items()}
+			combinations = [dict(zip(dimensions, values)) for values in product(*dimensions.values())]
+
+		if self._exclude is not None:
+			for entry in self._exclude:
+				combinations = [
+					combination for combination in combinations
+					if not all(combination.get(key, None) == value for key, value in entry.items())
+				]
+
+		if self._include is None:
+			return combinations
+
+		originals = [dict(combination) for combination in combinations]
+		for entry in self._include:
+			extended = False
+			for combination, original in zip(combinations, originals):
+				if all(original[key] == value for key, value in entry.items() if key in original):
+					combination.update(entry)
+					extended = True
+
+			if not extended:
+				combinations.append(dict(entry))
+
+		return combinations
+
+
+	@classmethod
+	def _FromYAML(cls, value: Any, path: Path, line: int) -> Self:
+		"""
+		Read the value of a job's ``strategy.matrix`` key.
+
+		:param value:          The value of the ``matrix`` key: a mapping, or an expression.
+		:param path:           Path to the workflow file.
+		:param line:           Line the key is written at, starting at 1.
+		:returns:              The matrix.
+		:raises WorkflowError: If the value is neither a mapping nor an expression.
+		"""
+		if isinstance(value, str):
+			return cls(line, expression=str(value))
+		elif not isinstance(value, CommentedMap):
+			ex = WorkflowError("Key 'strategy.matrix' is not a mapping.", path, line)
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		return cls(
+			line,
+			dimensions={key: Base._ToPython(item) for key, item in value.items() if key not in ("include", "exclude")},
+			include=Base._ToPython(value.get("include", None)),
+			exclude=Base._ToPython(value.get("exclude", None))
+		)
+
+
+@export
+class UsesReference(Base[Union[Job, Step]]):
 	"""
 	The value of a ``uses`` key: a reusable workflow called by a job, or an action run by a step.
 
@@ -1159,7 +1673,7 @@ class UsesReference(Base[Job]):
 	   docker://alpine:3.22                                  a Docker image
 	"""
 
-	_PARENT_TYPE: ClassVar[ParentTypes] = Job  #: A reference is contained in a job.
+	_PARENT_TYPE: ClassVar[ParentTypes] = (Job, Step)  #: A reference is contained in a job or a step.
 
 	_rawReference: str            #: The reference, as written.
 	_repository:   Nullable[str]  #: The repository, as ``owner/repo``.
@@ -1168,14 +1682,14 @@ class UsesReference(Base[Job]):
 	_isLocal:      bool           #: ``True``, if the reference names a file of the same repository.
 	_isDocker:     bool           #: ``True``, if the reference names a Docker image.
 
-	def __init__(self, rawReference: str, line: int, *, parent: Nullable[Job] = None) -> None:
+	def __init__(self, rawReference: str, line: int, *, parent: Nullable[Union[Job, Step]] = None) -> None:
 		"""
 		Initializes a ``uses`` reference by reading it into its parts.
 
 		:param rawReference: The reference, as written.
 		:param line:         Line the reference is written at, starting at 1.
-		:param parent:       Optional, reference to the job containing it, which the reference is attached to. Default:
-		                     ``None``.
+		:param parent:       Optional, reference to the job or step containing it, which the reference is attached to.
+		                     Default: ``None``.
 		:raises ValueError:  If parameter 'rawReference' is ``None``.
 		:raises TypeError:   If parameter 'rawReference' is not of type :class:`str`.
 		:raises ValueError:  If parameter 'rawReference' is empty.
@@ -1832,5 +2346,154 @@ class Secret(Parameter):
 			raise ex
 
 		return cls(name, line, required, None if description is None else str(description))
+
+
+@export
+class WorkflowResolver(metaclass=ExtendedType, slots=True):
+	"""
+	Reads the reusable workflows jobs call, as far as they are in a local directory.
+
+	A repository is mapped to the directory holding its workflow files, so a reference like
+	``pyTooling/Actions/.github/workflows/Package.yml@r8`` reads ``Package.yml`` from that directory, whatever its ref.
+	A local reference like ``./.github/workflows/Package.yml`` reads the file next to the calling workflow's file.
+
+	Every file is read once; asking for it again returns the same :class:`Workflow`.
+	"""
+
+	_repositories: dict[str, Path]       #: Directories holding the workflow files, by repository in lower case.
+	_workflows:    dict[Path, Workflow]  #: Workflows already read, by resolved path.
+
+	def __init__(self, repositories: Nullable[Mapping[str, Path]] = None) -> None:
+		"""
+		Initializes a resolver.
+
+		:param repositories: Optional, directories holding the workflow files, by repository, as
+		                     ``{"pyTooling/Actions": Path(".github/workflows")}``. Default: ``None``.
+		:raises TypeError:   If parameter 'repositories' is not a mapping.
+		:raises TypeError:   If a key of parameter 'repositories' is not of type :class:`str`.
+		:raises ValueError:  If a key of parameter 'repositories' is not of the form ``owner/repo``.
+		:raises TypeError:   If a value of parameter 'repositories' is not of type :class:`~pathlib.Path`.
+		"""
+		self._repositories = {}
+		self._workflows =    {}
+
+		if repositories is None:
+			return
+		elif not isinstance(repositories, Mapping):
+			ex = TypeError("Parameter 'repositories' is not a mapping.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(repositories)}'.")
+			raise ex
+
+		for repository, directory in repositories.items():
+			if not isinstance(repository, str):
+				ex = TypeError("Key of parameter 'repositories' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(repository)}'.")
+				raise ex
+			elif repository.count("/") != 1 or repository.startswith("/") or repository.endswith("/"):
+				ex = ValueError("Key of parameter 'repositories' is not of the form 'owner/repo'.")
+				ex.add_note(f"Got '{repository}'.")
+				raise ex
+			elif not isinstance(directory, Path):
+				ex = TypeError(f"Value of parameter 'repositories' for '{repository}' is not of type 'Path'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(directory)}'.")
+				raise ex
+
+			self._repositories[repository.lower()] = directory
+
+	@readonly
+	def Repositories(self) -> dict[str, Path]:
+		"""
+		Read-only property to access the directories holding the workflow files (:attr:`_repositories`).
+
+		:returns: The directories, by repository in lower case.
+		"""
+		return self._repositories
+
+	def CanResolve(self, uses: UsesReference) -> bool:
+		"""
+		Return whether a reference names a file the resolver reads: a local one, or one of a mapped repository.
+
+		:param uses:        The reference, as :attr:`Job.Uses`.
+		:returns:           ``True``, if the reference is local, or its repository is in :attr:`Repositories`.
+		:raises ValueError: If parameter 'uses' is ``None``.
+		:raises TypeError:  If parameter 'uses' is not of type :class:`UsesReference`.
+		"""
+		if uses is None:
+			raise ValueError("Parameter 'uses' is None.")
+		elif not isinstance(uses, UsesReference):
+			ex = TypeError("Parameter 'uses' is not of type 'UsesReference'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(uses)}'.")
+			raise ex
+
+		return uses._isLocal or (uses._repository is not None and uses._repository.lower() in self._repositories)
+
+	def Load(self, path: Path) -> Workflow:
+		"""
+		Read a workflow file, or return it if it was read before.
+
+		:param path:           Path to the workflow file.
+		:returns:              The workflow.
+		:raises ValueError:    If parameter 'path' is ``None``.
+		:raises TypeError:     If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises WorkflowError: If the file doesn't exist, can't be read, or is not a well-formed workflow.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		key = path.resolve()
+		if (workflow := self._workflows.get(key, None)) is None:
+			workflow = Workflow.FromFile(path)
+			self._workflows[key] = workflow
+
+		return workflow
+
+	def Resolve(self, uses: UsesReference) -> Nullable[Workflow]:
+		"""
+		Return the reusable workflow a reference names, if its file is in a local directory.
+
+		:param uses:           The reference, as :attr:`Job.Uses`.
+		:returns:              The workflow, or ``None`` if the reference names an action, or a repository without a
+		                       directory.
+		:raises ValueError:    If parameter 'uses' is ``None``.
+		:raises TypeError:     If parameter 'uses' is not of type :class:`UsesReference`.
+		:raises ValueError:    If parameter 'uses' is a local reference outside a workflow.
+		:raises WorkflowError: If the workflow file doesn't exist in the directory. |br|
+		                       The note names the reference's location.
+		:raises WorkflowError: If the file is not a well-formed workflow.
+		"""
+		if uses is None:
+			raise ValueError("Parameter 'uses' is None.")
+		elif not isinstance(uses, UsesReference):
+			ex = TypeError("Parameter 'uses' is not of type 'UsesReference'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(uses)}'.")
+			raise ex
+
+		if not uses.IsWorkflow:
+			return None
+		elif uses._isLocal:
+			if uses._workflow is None:
+				ex = ValueError("Parameter 'uses' is a local reference outside a workflow.")
+				ex.add_note(f"Got '{uses}'.")
+				raise ex
+
+			directory = uses._workflow._path.parent
+		elif (directory := self._repositories.get(uses._repository.lower(), None)) is None:
+			return None
+
+		path = directory / uses.FileName
+		if not path.exists():
+			ex = WorkflowError(
+				f"Workflow '{uses.FileName}' doesn't exist in '{directory}'.",
+				None if uses._workflow is None else uses._workflow._path,
+				uses._line
+			)
+			ex.add_note(f"Called as '{uses}'.")
+			raise ex
+
+		return self.Load(path)
 
 
