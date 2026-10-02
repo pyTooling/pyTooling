@@ -35,6 +35,7 @@ Every testcase builds a small Sphinx project in a temporary directory and checks
 warnings.
 """
 from io                    import StringIO
+from os                    import sep
 from pathlib               import Path
 from sys                   import version_info
 from tempfile              import TemporaryDirectory
@@ -214,11 +215,20 @@ class Project(Testcase):
 
 	def _warningLines(self) -> list[str]:
 		"""
-		Return the warnings of the last build, without the temporary directory's path.
+		Return the warnings of the last build, without the temporary directory's path - as given and as resolved, e.g.
+		below ``/private/var`` on macOS -, and with ``/`` as the separator of the remaining paths.
 
 		:returns: One line per warning.
 		"""
-		return [strip_colors(line).replace(f"{self._path}/", "") for line in self._warnings.getvalue().splitlines()]
+		prefixes = sorted({str(self._path), str(self._path.resolve())}, key=len, reverse=True)
+		lines = []
+		for line in self._warnings.getvalue().splitlines():
+			line = strip_colors(line)
+			for prefix in prefixes:
+				line = line.replace(f"{prefix}{sep}", "").replace(f"{prefix}/", "")
+			lines.append(line.replace("\\", "/") if sep == "\\" else line)
+
+		return lines
 
 
 class Workflows(Project):
