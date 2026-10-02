@@ -597,3 +597,99 @@ annotations.
 
       c = A("42")
       print(c.value)
+
+
+.. _META/Competitors:
+
+Competing Solutions
+###################
+
+:class:`~pyTooling.MetaClasses.ExtendedType` generates no methods - no ``__init__``, ``__repr__`` or ``__eq__`` - and
+validates no values. It shapes the class: slots computed from the annotations, including those of mixin-classes,
+singletons, abstract classes, and members a mixin-class expects from its host. The packages below generate methods or
+validate values, and share only parts of that.
+
+.. _META/dataclasses:
+
+dataclasses
+***********
+
+Source: :mod:`dataclasses` of the standard library.
+
+.. rubric:: Disadvantages
+
+* ``@dataclass(slots=True)`` creates the slots of one class. Two slotted dataclasses can't be base-classes of the same
+  class (``multiple bases have instance lay-out conflict``), so a slotted mixin-class isn't possible.
+* No singleton, no abstract class, no expected members.
+
+.. rubric:: Standoff
+
+* The fields are taken from the annotations, as :class:`~pyTooling.MetaClasses.ExtendedType` takes the slots, and
+  ``weakref_slot=True`` matches ``weakref=True``.
+
+.. rubric:: Advantages
+
+* Generates ``__init__``, ``__repr__``, ``__eq__`` and, on request, ordering, hashing and frozen instances.
+* Part of the standard library.
+
+.. _META/attrs:
+
+attrs
+*****
+
+Source: :gh:`attrs <python-attrs/attrs>`, on PyPI as `attrs <https://pypi.org/project/attrs/>`__.
+
+.. rubric:: Disadvantages
+
+* ``@attrs.define`` creates slotted classes by default, with the same limit as a dataclass: two slotted base-classes
+  conflict, so fields can't be contributed by mixin-classes.
+* No singleton, no abstract class, no expected members.
+
+.. rubric:: Advantages
+
+* Generates the methods a dataclass generates, plus validators and converters per field.
+* Adds ``__weakref__`` to the slots by default.
+
+.. _META/pydantic:
+
+pydantic
+********
+
+Source: :gh:`pydantic <pydantic/pydantic>`, on PyPI as `pydantic <https://pypi.org/project/pydantic/>`__.
+
+.. rubric:: Disadvantages
+
+* A model keeps its fields in a ``__dict__``, so it isn't a slotted type.
+* Depends on ``pydantic-core``, a compiled extension, and three more packages.
+
+.. rubric:: Standoff
+
+* A different purpose: validating, converting and serializing data, e.g. from JSON.
+
+.. rubric:: Advantages
+
+* Validates every field's value against its annotation, and creates JSON schemas.
+
+.. _META/abc:
+
+abc
+***
+
+Source: :mod:`abc` of the standard library.
+
+.. rubric:: Disadvantages
+
+* A class without an abstract method is concrete; there is no counterpart to
+  :deco:`~pyTooling.MetaClasses.abstractclass`.
+* The body of an abstract method stays callable. A method whose call has to fail, as one marked by
+  :deco:`~pyTooling.MetaClasses.abstractmethod` does, is written by hand.
+* Instantiating an abstract class raises a :exc:`TypeError`, not an exception of its own.
+
+.. rubric:: Standoff
+
+* ``abc.abstractmethod`` matches :deco:`~pyTooling.MetaClasses.mustoverride`: the class can't be instantiated until the
+  method is overridden, and an overriding method can call it with :func:`super`.
+
+.. rubric:: Advantages
+
+* Part of the standard library, and :func:`isinstance` checks against classes registered as virtual subclasses.
