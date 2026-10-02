@@ -255,42 +255,13 @@ Competing Solutions
 *******************
 
 No package on PyPI reads a workflow file into a Python object model. The packages below check a workflow file, or
-write one, and the complete data model that exists is written in Rust.
+write one.
 
-.. _CI/Workflow/zizmor:
-
-zizmor
-======
-
-Source: :gh:`zizmor <zizmorcore/zizmor>`, its models are the Rust crate
-`github-actions-models <https://crates.io/crates/github-actions-models>`__.
-
-.. rubric:: Disadvantages
-
-* The models are Rust code. The `PyPI package <https://pypi.org/project/zizmor/>`__ installs the command line tool
-  only, so a Python program gets its findings, not the workflow.
-
-.. rubric:: Advantages
-
-* Typed models of workflows, actions and Dependabot files, maintained along with GitHub's syntax.
-* A static analysis for security problems, as a template injection or an unpinned action.
-
-.. _CI/Workflow/actionlint:
-
-actionlint
-==========
-
-Source: :gh:`actionlint <rhysd/actionlint>`, wrapped for Python by
-`actionlint-py <https://pypi.org/project/actionlint-py/>`__.
-
-.. rubric:: Disadvantages
-
-* A Go program. The Python wrapper runs it and returns its messages, there is no model to access.
-
-.. rubric:: Advantages
-
-* Checks the syntax and the expressions of a file, the ``needs`` of a job and the inputs of a reusable workflow it
-  calls, and runs ``shellcheck`` on the scripts.
+Outside Python, :gh:`zizmor <zizmorcore/zizmor>` has typed models of workflows, actions and Dependabot files - the
+Rust crate `github-actions-models <https://crates.io/crates/github-actions-models>`__ - and checks a workflow for
+security problems, as a template injection or an unpinned action. :gh:`actionlint <rhysd/actionlint>`, written in Go,
+checks a file's syntax and expressions, the ``needs`` of its jobs and the inputs of the reusable workflows it calls.
+Both are installed from PyPI as command line tools, so a Python program gets their findings, not a model.
 
 .. _CI/Workflow/JSONSchema:
 
