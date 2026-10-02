@@ -67,6 +67,9 @@ document of every project. This extension declares them once:
   * :rst:dir:`shields` - renders a project's badges from shields.io, in rows, from the coordinates its options
     state: the GitHub repository, the PyPI package, the licenses, the workflow and the documentation's URL.
 
+* the **domain** ``gha`` - documents GitHub Actions workflows, taking an input's type, requirement and default from the
+  workflow file; see :mod:`pyTooling.Documentation.Sphinx.GitHubActions`.
+
 Two classes aren't registered, because they are base-classes for a project's own directives:
 :class:`~pyTooling.Documentation.Sphinx.Directives.BaseDirective` offers typed option access and table construction
 over the untyped mapping and the hand-assembled node trees docutils presents, and
@@ -108,6 +111,7 @@ from pyTooling.Documentation.Sphinx.DependencyTable import CONFIG_VALUES, Depend
 from pyTooling.Documentation.Sphinx.DependencyTable import prepareEntrypoints, reportBuildTime
 from pyTooling.Documentation.Sphinx.Directives      import BaseDirective, SphinxExtensionError, strip
 from pyTooling.Documentation.Sphinx.Directives      import stripAndNormalize
+from pyTooling.Documentation.Sphinx.GitHubActions   import GitHubActionsDomain
 from pyTooling.Documentation.Sphinx.SchemaGraph     import SchemaGraph
 from pyTooling.Documentation.Sphinx.Roles           import BREAK_ROLES, PYTHON_CODE_ROLE, STYLE_ROLES
 from pyTooling.Documentation.Sphinx.Roles           import breakRole, pythonCodeRole, styleRole
@@ -198,10 +202,15 @@ def setup(sphinx: Sphinx) -> dict[str, Any]:
 	sphinx.add_directive("xsd-graph", XSDSchemaGraph)
 	sphinx.add_directive("shields", Shields)
 
+	sphinx.add_domain(GitHubActionsDomain)
+
 	sphinx.setup_extension("sphinx.ext.graphviz")
 
 	for configName, (default, rebuild, types) in CONFIG_VALUES.items():
 		sphinx.add_config_value(configName, default, rebuild, types)
+
+	for configName, (default, rebuild, types) in GitHubActionsDomain.configValues.items():
+		sphinx.add_config_value(f"{GitHubActionsDomain.name}_{configName}", default, rebuild, types)
 
 	sphinx.connect("config-inited", extendProlog)
 	# after the configuration values above are registered, and before any document is read - a requirements file

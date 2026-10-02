@@ -23,6 +23,11 @@ documentation uses - and any other project's documentation can use. It is enable
    :local:
    :depth: 1
 
+.. seealso::
+
+   :ref:`DOC/Sphinx/GHA`
+      |rarr| The domain ``gha``, documenting GitHub Actions workflows from their YAML files.
+
 
 .. _DOC/Sphinx/Roles:
 
