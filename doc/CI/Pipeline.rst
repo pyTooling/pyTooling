@@ -291,3 +291,80 @@ GitLab CI
    * - Job ``status``
      - :attr:`~pyTooling.CI.Base.Outcome` (e.g. ``canceled`` |rarr| ``Cancellation``); ``manual`` and
        ``created`` haven't ended
+
+
+.. _CI/Pipeline/Competitors:
+
+Competing Solutions
+*******************
+
+No package on PyPI models a CI pipeline independently of the service running it. The solutions below are a
+vocabulary or an event format shared by services, a client of one service, or a pipeline to run on one engine.
+
+.. _CI/Pipeline/OpenTelemetry:
+
+OpenTelemetry CI/CD Semantic Conventions
+========================================
+
+Source: `Semantic conventions for CI/CD <https://opentelemetry.io/docs/specs/semconv/registry/attributes/cicd/>`__,
+in Python as `opentelemetry-semantic-conventions <https://pypi.org/project/opentelemetry-semantic-conventions/>`__.
+
+.. rubric:: Disadvantages
+
+* Names of attributes - ``cicd.pipeline.name``, ``cicd.pipeline.task.run.result`` - for spans and metrics, not a tree of
+  elements. There are no dependencies and no matrices.
+
+.. rubric:: Standoff
+
+* :mod:`pyTooling.Tracing.CI` writes a pipeline as spans with these attributes, and :class:`~pyTooling.CI.Outcome` takes
+  its values from ``cicd.pipeline.task.run.result``.
+
+.. _CI/Pipeline/CDEvents:
+
+CDEvents
+========
+
+Source: `CDEvents <https://cdevents.dev/>`__ of the CD Foundation, in Python as :gh:`sdk-python <cdevents/sdk-python>`.
+
+.. rubric:: Disadvantages
+
+* Events about a pipeline run or a task run - queued, started, finished - for one service to tell another. Neither
+  nested workflows, matrices nor dependencies are described.
+* The Python SDK isn't on PyPI.
+
+.. rubric:: Advantages
+
+* An event format several services and tools send already.
+
+.. _CI/Pipeline/Clients:
+
+Service Clients
+===============
+
+Source: :gh:`PyGithub <PyGithub/PyGithub>` (``WorkflowRun``, ``WorkflowJob``),
+:gh:`python-gitlab <python-gitlab/python-gitlab>` (``ProjectPipeline``, ``ProjectPipelineJob``, bridges).
+
+.. rubric:: Disadvantages
+
+* Each client models its own service's REST API, so code reading a pipeline is written once per service.
+* GitHub's REST API doesn't report a job's ``needs``, so a workflow run has no dependencies.
+
+.. rubric:: Advantages
+
+* Every field of the service's API is available, and the client can act - cancel a run, rerun a job.
+
+.. _CI/Pipeline/Engines:
+
+Pipeline Engines
+================
+
+Source: :gh:`Hera <argoproj-labs/hera>` for Argo Workflows, :gh:`Tekton <tektoncd/pipeline>` with its Python SDK
+`tekton-pipeline <https://pypi.org/project/tekton-pipeline/>`__ (last release 2021).
+
+.. rubric:: Disadvantages
+
+* A pipeline is defined in Python to be run on one engine. A run on another service is not read into it.
+
+.. rubric:: Advantages
+
+* Tasks depend on each other - Hera's ``>>``, Tekton's ``runAfter`` - like the dependencies of this model.

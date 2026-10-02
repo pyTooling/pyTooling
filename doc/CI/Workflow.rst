@@ -247,3 +247,78 @@ A run read from the GitHub REST API (:ref:`CI/GitHub`) has no ``needs``: the API
   condition may have been skipped in the run, so it isn't reported when it's missing. Every other job missing in the
   run is returned by its qualified name, as the run would name it: ``Local / Static`` for the job ``Static`` of the
   workflow the job ``Local`` calls.
+
+
+.. _CI/Workflow/Competitors:
+
+Competing Solutions
+*******************
+
+No package on PyPI reads a workflow file into a Python object model. The packages below check a workflow file, or
+write one, and the complete data model that exists is written in Rust.
+
+.. _CI/Workflow/zizmor:
+
+zizmor
+======
+
+Source: :gh:`zizmor <zizmorcore/zizmor>`, its models are the Rust crate
+`github-actions-models <https://crates.io/crates/github-actions-models>`__.
+
+.. rubric:: Disadvantages
+
+* The models are Rust code. The `PyPI package <https://pypi.org/project/zizmor/>`__ installs the command line tool
+  only, so a Python program gets its findings, not the workflow.
+
+.. rubric:: Advantages
+
+* Typed models of workflows, actions and Dependabot files, maintained along with GitHub's syntax.
+* A static analysis for security problems, as a template injection or an unpinned action.
+
+.. _CI/Workflow/actionlint:
+
+actionlint
+==========
+
+Source: :gh:`actionlint <rhysd/actionlint>`, wrapped for Python by
+`actionlint-py <https://pypi.org/project/actionlint-py/>`__.
+
+.. rubric:: Disadvantages
+
+* A Go program. The Python wrapper runs it and returns its messages, there is no model to access.
+
+.. rubric:: Advantages
+
+* Checks the syntax and the expressions of a file, the ``needs`` of a job and the inputs of a reusable workflow it
+  calls, and runs ``shellcheck`` on the scripts.
+
+.. _CI/Workflow/JSONSchema:
+
+JSON Schema
+===========
+
+Source: the schemas of `SchemaStore <https://www.schemastore.org/github-workflow.json>`__, checked by
+`check-jsonschema <https://pypi.org/project/check-jsonschema/>`__.
+
+.. rubric:: Disadvantages
+
+* A file is validated against the schema. A program reading it gets nested dictionaries and lists.
+* Classes generated from the schema - e.g. by
+  `datamodel-code-generator <https://pypi.org/project/datamodel-code-generator/>`__ - are typed, but know neither the
+  line of an element nor its parent, and don't check the ``needs`` of a job.
+
+.. rubric:: Advantages
+
+* The schema is used by editors too, so a file is checked the same way while it is written.
+
+.. _CI/Workflow/Generators:
+
+Workflow Generators
+===================
+
+Source: `github-actions-cdk <https://pypi.org/project/github-actions-cdk/>`__,
+`pygha <https://pypi.org/project/pygha/>`__.
+
+.. rubric:: Disadvantages
+
+* They write a workflow file from Python code, but don't read one.
