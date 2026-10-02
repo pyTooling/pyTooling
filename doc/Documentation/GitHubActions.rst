@@ -43,6 +43,12 @@ Configuration
    The ref - a branch or tag - of the documented repository the documentation describes, as ``r8``. A job calling a
    workflow of the documented repository at another ref is a warning. ``None`` checks nothing. Default: ``None``.
 
+.. confval:: gha_server
+
+   The URL of the GitHub server the links of :rst:dir:`gha:yaml`, :rst:dir:`gha:interface` and
+   :rst:dir:`gha:dependencies` point to: ``https://github.com``, or a GitHub Enterprise Server's, as
+   ``https://github.example.com``. Default: ``"https://github.com"``.
+
 .. confval:: gha_label_prefix
 
    The root of the ``:ref:`` labels the directives register besides their targets - see

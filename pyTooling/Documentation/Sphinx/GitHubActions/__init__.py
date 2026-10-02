@@ -65,6 +65,7 @@ stays hand-written, as the content of a directive:
 
 * Configuration values, as listed in :attr:`GitHubActionsDomain.configValues`
 
+  * ``gha_server``
   * ``gha_repository``
   * ``gha_workflow_directory``
   * ``gha_ref``
@@ -597,6 +598,9 @@ class GitHubActionsDomain(Domain):
 	#: The configuration values the domain adds to :file:`conf.py`, as ``name: (default, rebuild, types)``. Each is
 	#: registered with the domain's name as prefix, e.g. ``gha_repository``.
 	#:
+	#: ``server``
+	#:    The URL of the GitHub server links point to, ``https://github.com`` by default, or a GitHub Enterprise
+	#:    Server's, as ``https://github.example.com``.
 	#: ``repository``
 	#:    The documented repository, as ``owner/repo``. A ``uses`` naming it is read from ``gha_workflow_directory``,
 	#:    whatever its ref.
@@ -610,10 +614,11 @@ class GitHubActionsDomain(Domain):
 	#:    The root of the ``:ref:`` labels the directives register besides their domain targets, as
 	#:    ``JOBTMPL/Parameters/Input/package_name``, or ``None`` for none.
 	configValues: ClassVar[dict[str, tuple[Any, str, Any]]] = {
-		"repository":         (None,      "env", (str, type(None))),
-		"workflow_directory": (None,      "env", (str, type(None))),
-		"ref":                (None,      "env", (str, type(None))),
-		"label_prefix":       ("JOBTMPL", "env", (str, type(None))),
+		"server":             ("https://github.com", "env", str),
+		"repository":         (None,                 "env", (str, type(None))),
+		"workflow_directory": (None,                 "env", (str, type(None))),
+		"ref":                (None,                 "env", (str, type(None))),
+		"label_prefix":       ("JOBTMPL",            "env", (str, type(None))),
 	}
 
 	_resolver: Nullable[WorkflowResolver]  #: Resolver reading the workflow files, created when first needed.

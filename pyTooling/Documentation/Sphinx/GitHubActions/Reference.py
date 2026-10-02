@@ -141,7 +141,8 @@ class WorkflowReferenceDirective(BaseDirective):
 		if self.config.gha_repository is None or self.config.gha_ref is None:
 			return None
 
-		url = f"https://github.com/{self.config.gha_repository}/blob/{self.config.gha_ref}/.github/workflows/{fileName}"
+		server = self.config.gha_server.rstrip("/")
+		url = f"{server}/{self.config.gha_repository}/blob/{self.config.gha_ref}/.github/workflows/{fileName}"
 		if first is None:
 			return url
 		elif last is None or last == first:
@@ -512,14 +513,15 @@ class Dependencies(WorkflowReferenceDirective):
 			keys.update((uses.FileName, uses.Stem))
 
 		literal = nodes.literal(text, text)
+		server = self.config.gha_server.rstrip("/")
 		if uses.IsWorkflow and self.env.get_domain("gha").Resolver.CanResolve(uses):
 			return self._Item(nodes.paragraph("", "", self._Reference("workflow", uses.Stem, text)), keys)
 		elif uses.IsLocal and self.config.gha_repository is not None and self.config.gha_ref is not None:
-			url = f"https://github.com/{self.config.gha_repository}/tree/{self.config.gha_ref}/{uses.Path}"
+			url = f"{server}/{self.config.gha_repository}/tree/{self.config.gha_ref}/{uses.Path}"
 		elif uses.Repository is None:
 			return self._Item(nodes.paragraph("", "", literal), keys)
 		else:
-			url = f"https://github.com/{uses.Repository}"
+			url = f"{server}/{uses.Repository}"
 			if uses.Path != "":
 				url += f"/{'blob' if uses.IsWorkflow else 'tree'}/{uses.Reference}/{uses.Path}"
 

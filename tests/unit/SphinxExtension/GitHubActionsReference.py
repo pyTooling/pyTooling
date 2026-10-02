@@ -500,6 +500,14 @@ class DependencyLists(Project):
 		self.assertIn('href="https://github.com/owner/repo/tree/r1/.github/actions/Docker"', html)
 		self.assertIn('href="https://github.com/other/tools/blob/v2/.github/workflows/Notify.yml"', html)
 
+	def test_Links_Server(self) -> None:
+		self._items(gha_ref="r1", gha_server="https://github.example.com/")
+
+		html = self._html("Pipeline")
+		self.assertIn('href="https://github.example.com/actions/checkout"', html)
+		self.assertIn('href="https://github.example.com/owner/repo/tree/r1/.github/actions/Composite"', html)
+		self.assertNotIn('href="https://github.com/', html)
+
 	def test_Merge(self) -> None:
 		"""Hand-written items join the derived ones they name, at every level; the others are appended."""
 		content = dedent("""\
