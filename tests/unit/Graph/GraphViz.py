@@ -108,7 +108,7 @@ class Labels(Testcase):
 
 class Attributes(Testcase):
 	def test_DictionarySyntax(self) -> None:
-		node = Node("n", color="red")
+		node = Node("n", attributes={"color": "red"})
 		node["shape"] = "box"
 
 		self.assertIn("shape", node)
@@ -122,7 +122,9 @@ class Attributes(Testcase):
 			_ = node["color"]
 
 	def test_Values(self) -> None:
-		node = Node("n", s="text", i=1, f=0.5, t=True, n=False, h=HTMLLabel("<b>x</b>"), r=RecordLabel("a", "b"))
+		node = Node("n", attributes={
+			"s": "text", "i": 1, "f": 0.5, "t": True, "n": False, "h": HTMLLabel("<b>x</b>"), "r": RecordLabel("a", "b")
+		})
 
 		self.assertEqual(
 			'"n" [s="text", i=1, f=0.5, t=true, n=false, h=<<b>x</b>>, r="a|b"];\n',
@@ -132,9 +134,9 @@ class Attributes(Testcase):
 	def test_Parameters(self) -> None:
 		node = Node("n")
 		for name, value, exceptionType, message in (
-			(None, "x",  ValueError, "Parameter 'name' is None or empty."),
-			("",   "x",  ValueError, "Parameter 'name' is None or empty."),
+			(None, "x",  ValueError, "Parameter 'name' is None."),
 			(1,    "x",  TypeError,  "Parameter 'name' is not of type 'str'."),
+			("",   "x",  ValueError, "Parameter 'name' is empty."),
 			("a",  None, ValueError, "Parameter 'value' is None."),
 			("a",  [1],  TypeError,  "Parameter 'value' is not of a supported attribute type."),
 		):
@@ -143,12 +145,39 @@ class Attributes(Testcase):
 					node[name] = value
 				self.assertEqual(message, str(context.exception))
 
+	def test_Mapping(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Node("n", attributes=[("color", "red")])
+		self.assertEqual("Parameter 'attributes' is not a mapping ('dict', ...).", str(context.exception))
+
+		for attributes, exceptionType, message in (
+			({1: "x"},        TypeError,  "Parameter 'name' is not of type 'str'."),
+			({"color": [1]},  TypeError,  "Parameter 'value' is not of a supported attribute type."),
+			({"color": None}, ValueError, "Parameter 'value' is None."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					Edge(Node("a"), Node("b"), attributes)
+				self.assertEqual(message, str(context.exception))
+				self.assertIn("of parameter 'attributes'.", context.exception.__notes__[-1])
+
 	def test_DefaultAttributes(self) -> None:
 		defaults = DefaultAttributes("node")
 		self.assertListEqual([], defaults.ToStringLines())
 
 		defaults["shape"] = "box"
 		self.assertListEqual(['  node [shape="box"];\n'], defaults.ToStringLines())
+
+	def test_DefaultAttributes_Parameters(self) -> None:
+		for keyword, exceptionType, message in (
+			(None,    ValueError, "Parameter 'keyword' is None."),
+			(1,       TypeError,  "Parameter 'keyword' is not of type 'str'."),
+			("graph", ValueError, "Parameter 'keyword' is neither 'node' nor 'edge'."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					DefaultAttributes(keyword)
+				self.assertEqual(message, str(context.exception))
 
 
 class Elements(Testcase):
@@ -158,21 +187,31 @@ class Elements(Testcase):
 		self.assertEqual("a b", node.Identifier)
 		self.assertListEqual(['  "a b" [label="A"];\n'], node.ToStringLines())
 		self.assertListEqual(['"plain";\n'], Node("plain").ToStringLines(0))
+		record = Node("r", RecordLabel("a", "b"), {"shape": "record"})
+		self.assertListEqual(['  "r" [shape="record", label="a|b"];\n'], record.ToStringLines())
 
 	def test_Node_Parameters(self) -> None:
 		for identifier, exceptionType, message in (
-			(None, ValueError, "Parameter 'identifier' is None or empty."),
-			("",   ValueError, "Parameter 'identifier' is None or empty."),
+			(None, ValueError, "Parameter 'identifier' is None."),
 			(1,    TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			("",   ValueError, "Parameter 'identifier' is empty."),
 		):
 			with self.subTest(message=message, identifier=identifier):
 				with self.assertRaises(exceptionType) as context:
 					Node(identifier)
 				self.assertEqual(message, str(context.exception))
 
+		with self.assertRaises(TypeError) as context:
+			Node("a", 1)
+		self.assertEqual("Parameter 'label' is not of type 'str', 'HTMLLabel' or 'RecordLabel'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			Node("a", "A", {"label": "B"})
+		self.assertEqual("Parameters 'label' and 'attributes' both set a label.", str(context.exception))
+
 	def test_Edge(self) -> None:
 		a, b = Node("a"), Node("b")
-		edge = Edge(a, b, label="e")
+		edge = Edge(a, b, {"label": "e"})
 
 		self.assertIs(a, edge.Source)
 		self.assertIs(b, edge.Target)
