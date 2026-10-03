@@ -201,7 +201,7 @@ All of them except the ID reach the report as properties:
      <testsuite name="pytest" errors="0" failures="0" skipped="0"
                 tests="1" time="0.016" timestamp="2026-08-24T23:55:41+00:00" hostname="build-01">
        <testcase classname="tests.unit.Versioning.Comparison.VersionComparison"
-                 name="test_NewerIsGreater" time="0.001">
+                 name="NewerIsGreater" time="0.001">
          <properties>
            <property name="title" value="A newer version compares greater." />
            <property name="summary" value="A newer version compares greater than an older one." />
@@ -251,7 +251,7 @@ level's dotted path:
          <property name="versioning.test_comparison.description" value="Version comparison tests." />
          <property name="versioning.test_comparison.VersionComparison.title" value="Version comparison." />
        </properties>
-       <testcase classname="versioning.test_comparison.VersionComparison" name="test_NewerIsGreater" time="0.004">
+       <testcase classname="versioning.test_comparison.VersionComparison" name="NewerIsGreater" time="0.004">
          <properties>
            <property name="title" value="A newer version compares greater." />
          </properties>
@@ -318,12 +318,13 @@ What the plugin does
   as they do without the plugin.
 * An **unmarked** method in a marked class is not collected. Marking is the whole statement of intent, so a helper
   method needs no naming convention to stay out of the report.
-* A marked :class:`unittest.TestCase` is a special case. Such a class is collected by pytest's :mod:`unittest`
-  support, which asks :meth:`unittest.TestLoader.getTestCaseNames` for the test methods - and that loader matches
-  :attr:`~unittest.TestLoader.testMethodPrefix`, which is ``"test"``. It is **not** the ``python_functions``
-  setting: with ``python_functions = check_*``, a plain class collects ``check_*`` methods while a
-  :class:`~unittest.TestCase` still collects ``test_*`` ones. The plugin therefore aliases each marked method under
-  a name that loader accepts and lets pytest collect the class as usual.
+* A marked :class:`unittest.TestCase` is collected by
+  :class:`~pyTooling.Testing.PyTest.MarkedUnitTestCase`. pytest's own :mod:`unittest` support asks
+  :meth:`unittest.TestLoader.getTestCaseNames` for the test methods, and that loader matches
+  :attr:`~unittest.TestLoader.testMethodPrefix`, ``"test"`` - not the ``python_functions`` setting. The plugin's
+  collector takes those, and adds every marked method under its own name, in the order the class defines it. Such a
+  testcase runs as :mod:`unittest` runs any other - ``setUp()``, ``tearDown()``, ``subTest()`` and skipping
+  included - and its node ID is the method's name, so ``::VersionComparison::NewerIsGreater`` selects it.
 
 .. seealso::
 
@@ -370,8 +371,8 @@ understands while the richer file is produced beside it.
          <Description>Compare two release versions.
 
    Everything about comparing them.</Description>
-         <Testcase name="test_NewerIsGreater" status="passed" duration="0.000428"
-                   nodeID="test_versioning.py::VersionComparison::test_NewerIsGreater">
+         <Testcase name="NewerIsGreater" status="passed" duration="0.000428"
+                   nodeID="test_versioning.py::VersionComparison::NewerIsGreater">
            <Title>A newer version compares greater.</Title>
            <Summary>A newer version compares greater than an older one.</Summary>
            <Description>A newer version compares greater than an older one.
@@ -426,7 +427,7 @@ Where the nesting comes from
 ============================
 
 The levels are the node ID's own parts: the module path, then each class between it and the testcase. So
-``tests/unit/Versioning.py::VersionComparison::test_NewerIsGreater`` becomes ``tests`` → ``unit`` → ``Versioning``
+``tests/unit/Versioning.py::VersionComparison::NewerIsGreater`` becomes ``tests`` → ``unit`` → ``Versioning``
 → ``VersionComparison``, and a title or description attaches to whichever level declared one.
 
 .. seealso::

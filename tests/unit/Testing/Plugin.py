@@ -178,20 +178,6 @@ class Collection(Testcase):
 		self.assertIsNone(pytest_pycollect_makeitem(None, "Plain", Plain))
 		self.assertIsNone(pytest_pycollect_makeitem(None, "value", 42))
 
-	def test_AMarkedTestcaseClassIsAliasedForTheLoader(self) -> None:
-		""":class:`unittest.TestCase` collects by 'testMethodPrefix', so a marked method needs a name it accepts."""
-
-		from pyTooling.Testing.PyTest import pytest_pycollect_makeitem
-
-		@testsuite("A suite.")
-		class Suite(Testcase):
-			@testcase("A case.")
-			def NotNamedLikeATest(self) -> None:
-				pass
-
-		self.assertIsNone(pytest_pycollect_makeitem(None, "Suite", Suite), "The class is handed back to pytest.")
-		self.assertTrue(hasattr(Suite, "test_NotNamedLikeATest"), "The loader needs a name starting with 'test'.")
-
 	def test_TheMarkedMethodsAreFound(self) -> None:
 		from pyTooling.Testing.PyTest import getTestcases
 
@@ -253,7 +239,7 @@ class CollectedItems(Testcase):
 			Only the minor number differs here.
 			"""
 
-		item = self._Item("probe.py::Comparison::test_NewerIsGreater", NewerIsGreater)
+		item = self._Item("probe.py::Comparison::NewerIsGreater", NewerIsGreater)
 		pytest_collection_modifyitems([item])
 
 		self.assertEqual(

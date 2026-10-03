@@ -346,7 +346,7 @@ python_functions = test*
 		"""The report is titled, the item is not - so an IDE, a command line and '--last-failed' still work."""
 
 		with TemporaryDirectory() as directory:
-			result, _ = self._RunPyTest(Path(directory), "test_marked.py::VersionComparison::test_NewerIsGreater")
+			result, _ = self._RunPyTest(Path(directory), "test_marked.py::VersionComparison::NewerIsGreater")
 
 			self.assertExitCode(result)
 			self.assertIn("1 passed", result.stdout)
@@ -362,11 +362,11 @@ python_functions = test*
 				for testcaseElement in xml_parse(report).getroot().iter("testcase")
 			]
 
-		self.assertIn(("VersionComparison", "test_NewerIsGreater"), names)
-		self.assertIn(("VersionComparison", "test_UnnamedKeepsItsIdentifier"), names)
+		self.assertIn(("VersionComparison", "NewerIsGreater"), names)
+		self.assertIn(("VersionComparison", "UnnamedKeepsItsIdentifier"), names)
 		self.assertIn(("PlainSuite", "PlainWorks"), names)
 		self.assertIn(("NameBased", "test_StillCollectedByName"), names)
-		self.assertIn(("VersionComparison", "test_DescribedByItsDocString"), names)
+		self.assertIn(("VersionComparison", "DescribedByItsDocString"), names)
 		self.assertEqual(5, len(names), f"An unmarked method was collected: {names}")
 
 	def test_TheTitlesAreReportedAsProperties(self) -> None:
@@ -385,16 +385,134 @@ python_functions = test*
 				for testcaseElement in xml_parse(report).getroot().iter("testcase")
 			}
 
-		self.assertEqual({"title": "A newer version compares greater."}, properties["test_NewerIsGreater"])
+		self.assertEqual({"title": "A newer version compares greater."}, properties["NewerIsGreater"])
 		self.assertEqual(
 			{
 				"title":       "DescribedByItsDocString",
 				"summary":     "An equal version compares equal.",
 				"description": "An equal version compares equal.\n\nThe description reaches the report as a property.",
 			},
-			properties["test_DescribedByItsDocString"]
+			properties["DescribedByItsDocString"]
 		)
 		self.assertEqual({}, properties["test_StillCollectedByName"], "An unmarked testcase carries no properties.")
+
+
+UNITTEST_MODULE = '''
+from unittest import skip
+
+from pyTooling.Testing import Testcase, testsuite, testcase
+
+LOG = []
+
+
+@testsuite("A marked TestCase class")
+class Suite(Testcase):
+	@classmethod
+	def setUpClass(cls) -> None:
+		LOG.append("setUpClass")
+
+	def setUp(self) -> None:
+		self.value = 1
+
+	def tearDown(self) -> None:
+		LOG.append("tearDown")
+
+	@testcase("Defined first.")
+	def Zeta(self) -> None:
+		self.assertEqual(1, self.value)
+
+	@testcase("With subtests.")
+	def Alpha(self) -> None:
+		for index in range(3):
+			with self.subTest(index=index):
+				self.assertLess(index, 3)
+
+	@testcase("Skipped.")
+	@skip("on purpose")
+	def Skipped(self) -> None:
+		raise AssertionError("must never run")
+
+	def test_ByName(self) -> None:
+		self.assertTrue(True)
+
+	def NotMarked(self) -> None:
+		raise AssertionError("must never run")
+
+	@testcase("Defined last.")
+	def Omega(self) -> None:
+		self.assertEqual(["setUpClass", "tearDown", "tearDown", "tearDown"], LOG)
+'''   #: A marked 'unittest.TestCase' class, whose testcases aren't named 'test_*'.
+
+
+class MarkedTestCaseClass(ApplicationTestcase):
+	"""A marked :class:`unittest.TestCase` class: its testcases keep their names and run as :mod:`unittest` runs them."""
+
+	_consoleScript  = "pytest"
+	_runnableModule = "pytest"
+
+	def _RunPyTest(self, directory: Path, *arguments: str) -> tuple[object, Path]:
+		"""
+		Write the test module above into the given directory and run pytest over it.
+
+		:param directory: Directory to write the test module and the report into.
+		:param arguments: Further arguments to pytest, e.g. what to collect. Default: the whole directory.
+		:returns:         Tuple of the completed process and the path of the JUnit report.
+		"""
+		(directory / "test_unittest.py").write_text(UNITTEST_MODULE, encoding="utf-8")
+		(directory / "pytest.ini").write_text(PYTEST_CONFIGURATION, encoding="utf-8")
+		report = directory / "report.xml"
+
+		repositoryRoot = Path(__file__).resolve().parent.parent.parent.parent
+
+		result = self.RunModule(
+			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest", f"--junit-xml={report}",
+			*(arguments if len(arguments) > 0 else (str(directory), )),
+			environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+			workingDirectory=directory
+		)
+
+		return result, report
+
+	def test_Names(self) -> None:
+		"""A marked method is reported under its own name, in the order the class defines it, after the 'test*' ones."""
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory))
+
+			self.assertExitCode(result)
+			names = [testcaseElement.get("name") for testcaseElement in xml_parse(report).getroot().iter("testcase")]
+
+		self.assertEqual(["test_ByName", "Zeta", "Alpha", "Skipped", "Omega"], names)
+
+	def test_Selection(self) -> None:
+		"""The node ID is the method's name, so it selects the testcase."""
+		with TemporaryDirectory() as directory:
+			result, _ = self._RunPyTest(Path(directory), "test_unittest.py::Suite::Alpha")
+
+		self.assertExitCode(result)
+		self.assertIn("1 passed", result.stdout)
+
+	def test_Unittest(self) -> None:
+		"""'setUpClass()', 'setUp()', 'tearDown()', 'subTest()' and 'skip()' work as for a method named 'test_*'."""
+		with TemporaryDirectory() as directory:
+			result, _ = self._RunPyTest(Path(directory))
+
+		self.assertExitCode(result)
+		self.assertIn("4 passed, 1 skipped", result.stdout)
+
+	def test_Xdist(self) -> None:
+		"""
+		Distributed to 'pytest-xdist' workers, the marked testcases are collected and run alike.
+
+		'Omega' checks what ran before it in the same process, which a worker can't promise, so it is deselected - by
+		its own name.
+		"""
+		with TemporaryDirectory() as directory:
+			result, report = self._RunPyTest(Path(directory), "-p", "xdist", "-n", "2", "-k", "not Omega", directory)
+
+			self.assertExitCode(result)
+			names = {testcaseElement.get("name") for testcaseElement in xml_parse(report).getroot().iter("testcase")}
+
+		self.assertEqual({"test_ByName", "Zeta", "Alpha", "Skipped"}, names)
 
 
 class ReportFormat(ApplicationTestcase):
@@ -465,7 +583,7 @@ class ReportFormat(ApplicationTestcase):
 
 			testcase = next(
 				element for element in root.iter("Testcase")
-				if element.get("name") == "test_DescribedByItsDocString"
+				if element.get("name") == "DescribedByItsDocString"
 			)
 			names = {child.tag: child.text for child in testcase if child.tag in ("Title", "Summary", "Description")}
 			status = testcase.get("status")
@@ -475,7 +593,7 @@ class ReportFormat(ApplicationTestcase):
 		self.assertEqual("An equal version compares equal.", names["Summary"])
 		self.assertIn("The description reaches the report as a property.", names["Description"])
 		self.assertEqual("passed", status)
-		self.assertIn("::test_DescribedByItsDocString", nodeID, "The node ID lets a reader re-run the testcase.")
+		self.assertIn("::DescribedByItsDocString", nodeID, "The node ID lets a reader re-run the testcase.")
 
 	def test_ATestsuiteElementCarriesItsOwnNames(self) -> None:
 		"""The names of a level come from the marker plugin's hierarchy, not from the testcases inside it."""
