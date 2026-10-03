@@ -424,6 +424,11 @@ Version 10.x (2026)
        ``Edge[..., MyKind, ...]`` - after ID, value and weight - types :attr:`~pyTooling.Graph.BaseEdge.Kind` as
        ``MyKind``. The field annotations name the type parameters of ``Edge``, ``Link``, ``BaseGraph``, ``Subgraph``
        and ``Graph`` in their declared order; value and weight were swapped, and some were missing.
+     * :mod:`pyTooling.Graph.GraphViz` writes a graph in Graphviz' DOT language, the counterpart of
+       :mod:`pyTooling.Graph.GraphML`: a :class:`~pyTooling.Graph.GraphViz.Graph` with subgraphs, nodes and edges,
+       attributes with dictionary syntax, record and HTML-like labels escaped where they are written, and
+       :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` / :meth:`~pyTooling.Graph.GraphViz.Graph.FromTree` with
+       conversion methods a derived class overrides.
 
    .. rubric:: Breaking Changes
 

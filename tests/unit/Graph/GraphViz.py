@@ -31,7 +31,14 @@
 """
 Unit tests for :mod:`pyTooling.Graph.GraphViz`: writing a graph in the DOT language.
 """
-from pyTooling.Graph.GraphViz import GraphKind, HTMLLabel, RecordLabel, DefaultAttributes, Node, Edge, quote
+from pathlib                  import Path
+from tempfile                 import TemporaryDirectory
+from textwrap                 import dedent
+
+from pyTooling.Graph          import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Vertex
+from pyTooling.Graph.GraphViz import GraphKind, HTMLLabel, RecordLabel, DefaultAttributes, Node, Edge, Subgraph, Graph
+from pyTooling.Graph.GraphViz import quote
+from pyTooling.Tree           import Node as pyToolingNode
 from pyTooling.Testing        import Testcase
 
 
@@ -52,6 +59,17 @@ class Quoting(Testcase):
 		):
 			with self.subTest(text=text):
 				self.assertEqual(expected, quote(text))
+
+	def test_Text_Parameters(self) -> None:
+		for function in (quote, HTMLLabel.Escape, RecordLabel.Escape):
+			for text, exceptionType, message in (
+				(None, ValueError, "Parameter 'text' is None."),
+				(1,    TypeError,  "Parameter 'text' is not of type 'str'."),
+			):
+				with self.subTest(function=function.__qualname__, message=message):
+					with self.assertRaises(exceptionType) as context:
+						function(text)
+					self.assertEqual(message, str(context.exception))
 
 	def test_GraphKind(self) -> None:
 		self.assertEqual("digraph", GraphKind.Directed.Keyword)
@@ -235,4 +253,242 @@ class Elements(Testcase):
 			with self.subTest(message=message):
 				with self.assertRaises(exceptionType) as context:
 					Edge(source, target)
+				self.assertEqual(message, str(context.exception))
+
+
+class Graphs(Testcase):
+	def test_Graph(self) -> None:
+		graph = Graph("G", attributes={"rankdir": "LR"})
+		graph.NodeDefaults["shape"] = "box"
+		graph.EdgeDefaults["color"] = "gray"
+		cluster = graph.AddSubgraph(Subgraph("cluster_jobs", {"label": "Jobs"}))
+		a = cluster.AddNode(Node("a", "A"))
+		b = graph.AddNode(Node("b"))
+		graph.AddEdge(Edge(a, b))
+
+		self.assertEqual("G", graph.Identifier)
+		self.assertIs(GraphKind.Directed, graph.Kind)
+		self.assertFalse(graph.Strict)
+		self.assertDictEqual({"cluster_jobs": cluster}, graph.Subgraphs)
+		self.assertDictEqual({"b": b}, graph.Nodes)
+		self.assertDictEqual({"a": a}, cluster.Nodes)
+		self.assertTrue(cluster.IsCluster)
+		self.assertTrue(graph.HasNode("b"))
+		self.assertFalse(graph.HasNode("a"))
+		self.assertIs(b, graph.GetNode("b"))
+
+		self.assertEqual(dedent("""\
+			digraph "G" {
+			  rankdir="LR";
+			  node [shape="box"];
+			  edge [color="gray"];
+			  subgraph "cluster_jobs" {
+			    label="Jobs";
+			    "a" [label="A"];
+			  }
+			  "b";
+			  "a" -> "b";
+			}
+			"""), str(graph))
+
+	def test_Graph_Undirected(self) -> None:
+		graph = Graph(kind=GraphKind.Undirected, strict=True)
+		inner = graph.AddSubgraph(Subgraph("group"))
+		a, b = inner.AddNode(Node("a")), inner.AddNode(Node("b"))
+		inner.AddEdge(Edge(a, b))
+
+		self.assertIsNone(graph.Identifier)
+		self.assertFalse(inner.IsCluster)
+		self.assertEqual(dedent("""\
+			strict graph {
+			  subgraph "group" {
+			    "a";
+			    "b";
+			    "a" -- "b";
+			  }
+			}
+			"""), str(graph))
+
+	def test_WriteToFile(self) -> None:
+		graph = Graph("G")
+		graph.AddNode(Node("a"))
+
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "graph.dot"
+			graph.WriteToFile(file)
+
+			self.assertEqual(str(graph), file.read_text(encoding="utf-8"))
+
+		for file, exceptionType, message in (
+			(None,        ValueError, "Parameter 'file' is None."),
+			("graph.dot", TypeError,  "Parameter 'file' is not of type 'Path'."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					graph.WriteToFile(file)
+				self.assertEqual(message, str(context.exception))
+
+	def test_Graph_Parameters(self) -> None:
+		for arguments, exceptionType, message in (
+			((1, ),                                TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			(("G", None),                          ValueError, "Parameter 'kind' is None."),
+			(("G", "digraph"),                     TypeError,  "Parameter 'kind' is not of type 'GraphKind'."),
+			(("G", GraphKind.Directed, None),      ValueError, "Parameter 'strict' is None."),
+			(("G", GraphKind.Directed, 1),         TypeError,  "Parameter 'strict' is not of type 'bool'."),
+			(("G", GraphKind.Directed, False, 1),  TypeError,  "Parameter 'attributes' is not a mapping ('dict', ...)."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					Graph(*arguments)
+				self.assertEqual(message, str(context.exception))
+
+		for identifier, exceptionType, message in (
+			(None, ValueError, "Parameter 'identifier' is None."),
+			(1,    TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			("",   ValueError, "Parameter 'identifier' is empty."),
+		):
+			with self.subTest(message=message, identifier=identifier):
+				with self.assertRaises(exceptionType) as context:
+					Subgraph(identifier)
+				self.assertEqual(message, str(context.exception))
+
+	def test_Add_Parameters(self) -> None:
+		graph = Graph()
+		graph.AddNode(Node("a"))
+		graph.AddSubgraph(Subgraph("s"))
+		for method, argument, exceptionType, message in (
+			(graph.AddNode,     None,          ValueError, "Parameter 'node' is None."),
+			(graph.AddNode,     "a",           TypeError,  "Parameter 'node' is not of type 'Node'."),
+			(graph.AddNode,     Node("a"),     ValueError, "A node 'a' was added before."),
+			(graph.AddSubgraph, None,          ValueError, "Parameter 'subgraph' is None."),
+			(graph.AddSubgraph, Node("s"),     TypeError,  "Parameter 'subgraph' is not of type 'Subgraph'."),
+			(graph.AddSubgraph, Subgraph("s"), ValueError, "A subgraph 's' was added before."),
+			(graph.AddEdge,     None,          ValueError, "Parameter 'edge' is None."),
+			(graph.AddEdge,     Node("b"),     TypeError,  "Parameter 'edge' is not of type 'Edge'."),
+			(graph.GetNode,     None,          ValueError, "Parameter 'identifier' is None."),
+			(graph.GetNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			(graph.HasNode,     None,          ValueError, "Parameter 'identifier' is None."),
+			(graph.HasNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					method(argument)
+				self.assertEqual(message, str(context.exception))
+
+
+class pyToolingGraphs(Testcase):
+	def test_Identifiers(self) -> None:
+		for ids, expected in (
+			(["vertex1", "vertex2", None, None],         ["vertex1", "vertex2", "vertex3", "vertex4"]),
+			(["vertex1", "vertex3", None, None, None],   ["vertex1", "vertex3", "vertex2", "vertex4", "vertex5"]),
+			([None, "vertex2", None],                    ["vertex1", "vertex2", "vertex3"]),
+			([7, "vertex", "vertexA", None],             ["7", "vertex", "vertexA", "vertex1"]),
+		):
+			with self.subTest(ids=ids):
+				treeNodes = [pyToolingNode(nodeID=nodeID) for nodeID in ids]
+				identifiers = Graph._Identifiers(treeNodes)
+
+				self.assertListEqual(expected, [identifiers[id(treeNode)] for treeNode in treeNodes])
+
+	def test_FromGraph(self) -> None:
+		graph = pyToolingGraph(name="G")
+		s1 = pyToolingSubgraph(name="S1", graph=graph)
+		s2 = pyToolingSubgraph(name="S2", graph=graph)
+		root = Vertex(vertexID="r", value="root", graph=graph)
+		anonymous = Vertex(graph=graph)
+		Vertex(vertexID="vertex1", graph=graph)
+		a = Vertex(vertexID="a", value="A", subgraph=s1)
+		b = Vertex(vertexID="b", subgraph=s1)
+		c = Vertex(value="C", subgraph=s2)
+		a.EdgeToVertex(b, edgeValue="ab")
+		root.EdgeToVertex(anonymous)
+		a.LinkToVertex(c, linkValue="link")
+
+		dot = Graph()
+		dot.FromGraph(graph)
+
+		self.assertEqual(dedent("""\
+			digraph "G" {
+			  subgraph "cluster1" {
+			    label="S1";
+			    "a" [label="A"];
+			    "b";
+			    "a" -> "b" [label="ab"];
+			  }
+			  subgraph "cluster2" {
+			    label="S2";
+			    "vertex2" [label="C"];
+			  }
+			  "vertex3" [label=""];
+			  "r" [label="root"];
+			  "vertex1";
+			  "r" -> "vertex3";
+			  "a" -> "vertex2" [style="dashed", label="link"];
+			}
+			"""), str(dot))
+
+	def test_FromGraph_Identifier(self) -> None:
+		graph = pyToolingGraph(name="G")
+		Vertex(vertexID=1, graph=graph)
+
+		dot = Graph("own")
+		dot.FromGraph(graph)
+
+		self.assertEqual("own", dot.Identifier)
+		self.assertTrue(dot.HasNode("1"))
+
+	def test_FromGraph_Derived(self) -> None:
+		class ColoredGraph(Graph):
+			def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
+				node = super()._ConvertVertex(vertex, identifier)
+				node["color"] = "red"
+				return node
+
+		graph = pyToolingGraph(name="G")
+		Vertex(vertexID="a", graph=graph).EdgeToVertex(Vertex(vertexID="b", graph=graph))
+
+		dot = ColoredGraph(attributes={"rankdir": "LR"})
+		dot.FromGraph(graph)
+
+		self.assertEqual(dedent("""\
+			digraph "G" {
+			  rankdir="LR";
+			  "a" [color="red"];
+			  "b" [color="red"];
+			  "a" -> "b";
+			}
+			"""), str(dot))
+
+	def test_FromTree(self) -> None:
+		root = pyToolingNode(nodeID="root", value="R")
+		x = pyToolingNode(value="X", parent=root)
+		pyToolingNode(nodeID="y", parent=x)
+		pyToolingNode(parent=root)
+
+		dot = Graph()
+		dot.FromTree(root)
+
+		self.assertEqual(dedent("""\
+			digraph "root" {
+			  "root" [label="R"];
+			  "vertex1" [label="X"];
+			  "y";
+			  "vertex2" [label=""];
+			  "root" -> "vertex1";
+			  "vertex1" -> "y";
+			  "root" -> "vertex2";
+			}
+			"""), str(dot))
+
+	def test_Parameters(self) -> None:
+		dot = Graph()
+		for method, argument, exceptionType, message in (
+			(dot.FromGraph, None, ValueError, "Parameter 'graph' is None."),
+			(dot.FromGraph, 1,    TypeError,  "Parameter 'graph' is not of type 'pyTooling.Graph.Graph'."),
+			(dot.FromTree,  None, ValueError, "Parameter 'tree' is None."),
+			(dot.FromTree,  1,    TypeError,  "Parameter 'tree' is not of type 'pyTooling.Tree.Node'."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					method(argument)
 				self.assertEqual(message, str(context.exception))

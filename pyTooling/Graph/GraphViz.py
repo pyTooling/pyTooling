@@ -60,6 +60,9 @@ from typing                import Mapping, Optional as Nullable, Sequence, Union
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Vertex
+from pyTooling.Graph       import Edge as pyToolingEdge, Link as pyToolingLink
+from pyTooling.Tree        import Node as pyToolingNode
 
 
 __all__ = ["AttributeValue", "RecordField"]
@@ -73,9 +76,18 @@ def quote(text: str) -> str:
 	A backslash, a double quote and a line break are escaped, so the drawing shows the text as it was given - a
 	backslash doesn't start one of Graphviz' escape sequences like ``\\l``.
 
-	:param text: The text to quote.
-	:returns:    The text in double quotes.
+	:param text:        The text to quote.
+	:returns:           The text in double quotes.
+	:raises ValueError: If parameter 'text' is None.
+	:raises TypeError:  If parameter 'text' is not a string.
 	"""
+	if text is None:
+		raise ValueError("Parameter 'text' is None.")
+	elif not isinstance(text, str):
+		ex = TypeError("Parameter 'text' is not of type 'str'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+		raise ex
+
 	return '"' + text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'
 
 
@@ -144,9 +156,18 @@ class HTMLLabel(metaclass=ExtendedType, slots=True):
 		"""
 		Escape the characters HTML gives a meaning to: ``&``, ``<`` and ``>``.
 
-		:param text: The text to escape.
-		:returns:    The text, safe to place into the label's markup.
+		:param text:        The text to escape.
+		:returns:           The text, safe to place into the label's markup.
+		:raises ValueError: If parameter 'text' is None.
+		:raises TypeError:  If parameter 'text' is not a string.
 		"""
+		if text is None:
+			raise ValueError("Parameter 'text' is None.")
+		elif not isinstance(text, str):
+			ex = TypeError("Parameter 'text' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+			raise ex
+
 		return html_escape(text, quote=False)
 
 	def __str__(self) -> str:
@@ -190,7 +211,8 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'fields' is None or empty.
 		:raises TypeError:  If parameter 'fields' is not a sequence, or is a string.
 		:raises ValueError: If a field is None.
-		:raises TypeError:  If a field is not a string, a sequence of strings or a :class:`RecordLabel`.
+		:raises TypeError:  If a field is not a string, a sequence of strings or a :class:`RecordLabel`. |br|
+		                    The note lists the supported types.
 		:raises ValueError: If parameter 'flipped' is None.
 		:raises TypeError:  If parameter 'flipped' is not a boolean.
 		"""
@@ -223,7 +245,7 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(flipped)}'.")
 			raise ex
 
-		self._fields = list(fields)
+		self._fields  = list(fields)
 		self._flipped = flipped
 
 	@readonly
@@ -250,9 +272,18 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 		"""
 		Escape the characters a record label gives a meaning to: ``\\``, ``{``, ``}``, ``|``, ``<``, ``>`` and ``"``.
 
-		:param text: The text to escape.
-		:returns:    The text, safe to place into a field.
+		:param text:        The text to escape.
+		:returns:           The text, safe to place into a field.
+		:raises ValueError: If parameter 'text' is None.
+		:raises TypeError:  If parameter 'text' is not a string.
 		"""
+		if text is None:
+			raise ValueError("Parameter 'text' is None.")
+		elif not isinstance(text, str):
+			ex = TypeError("Parameter 'text' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+			raise ex
+
 		for character in ("\\", "{", "}", "|", "<", ">", '"'):
 			text = text.replace(character, f"\\{character}")
 
@@ -355,7 +386,8 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'name' is None or empty.
 		:raises TypeError:  If parameter 'name' is not a string.
 		:raises ValueError: If parameter 'value' is None.
-		:raises TypeError:  If parameter 'value' is not of type :data:`AttributeValue`.
+		:raises TypeError:  If parameter 'value' is not of type :data:`AttributeValue`. |br|
+		                    The note lists the supported types.
 		"""
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
@@ -365,6 +397,7 @@ class Base(metaclass=ExtendedType, slots=True):
 			raise ex
 		elif name == "":
 			raise ValueError("Parameter 'name' is empty.")
+
 		if value is None:
 			raise ValueError("Parameter 'value' is None.")
 		elif not isinstance(value, (str, int, float, bool, HTMLLabel, RecordLabel)):
@@ -597,3 +630,620 @@ class Edge(Base):
 		target = quote(self._target._identifier)
 
 		return [f"{'  ' * indent}{source} {kind.EdgeOperator} {target}{self._AttributeList()};\n"]
+
+
+@export
+class BaseGraph(Base):
+	"""
+	Base-class for everything that contains nodes, edges and subgraphs - a graph as well as a subgraph.
+
+	Its own attributes are the graph's attributes, written as ``name=value;`` statements, and its default attributes
+	are what every node and every edge starts with. The statements are written in this order: attributes, defaults,
+	subgraphs, nodes, edges.
+	"""
+	_nodeDefaults: DefaultAttributes    #: Attributes every node starts with.
+	_edgeDefaults: DefaultAttributes    #: Attributes every edge starts with.
+	_subgraphs:    dict[str, Subgraph]  #: Subgraphs, by identifier.
+	_nodes:        dict[str, Node]      #: Nodes, by identifier.
+	_edges:        list[Edge]           #: Edges, in the order they were added.
+
+	def __init__(self, attributes: Nullable[Mapping[str, AttributeValue]] = None) -> None:
+		"""
+		Initialize an empty graph.
+
+		:param attributes: Optional, attributes of the graph, by name.
+		"""
+		super().__init__(attributes)
+
+		self._nodeDefaults = DefaultAttributes("node")
+		self._edgeDefaults = DefaultAttributes("edge")
+		self._subgraphs    = {}
+		self._nodes        = {}
+		self._edges        = []
+
+	@readonly
+	def NodeDefaults(self) -> DefaultAttributes:
+		"""
+		Read-only property to access the attributes every node starts with (:attr:`_nodeDefaults`).
+
+		:returns: The node defaults.
+		"""
+		return self._nodeDefaults
+
+	@readonly
+	def EdgeDefaults(self) -> DefaultAttributes:
+		"""
+		Read-only property to access the attributes every edge starts with (:attr:`_edgeDefaults`).
+
+		:returns: The edge defaults.
+		"""
+		return self._edgeDefaults
+
+	@readonly
+	def Subgraphs(self) -> dict[str, Subgraph]:
+		"""
+		Read-only property to access the subgraphs (:attr:`_subgraphs`).
+
+		:returns: Dictionary of subgraph identifiers and subgraphs.
+		"""
+		return self._subgraphs
+
+	@readonly
+	def Nodes(self) -> dict[str, Node]:
+		"""
+		Read-only property to access the nodes (:attr:`_nodes`).
+
+		:returns: Dictionary of node identifiers and nodes.
+		"""
+		return self._nodes
+
+	@readonly
+	def Edges(self) -> list[Edge]:
+		"""
+		Read-only property to access the edges (:attr:`_edges`).
+
+		:returns: The edges, in the order they were added.
+		"""
+		return self._edges
+
+	def AddSubgraph(self, subgraph: Subgraph) -> Subgraph:
+		"""
+		Add a subgraph.
+
+		:param subgraph:    The subgraph to add.
+		:returns:           The added subgraph, so it can be used in the calling expression.
+		:raises ValueError: If parameter 'subgraph' is None.
+		:raises TypeError:  If parameter 'subgraph' is not a :class:`Subgraph`.
+		:raises ValueError: If a subgraph with the same identifier was added before.
+		"""
+		if subgraph is None:
+			raise ValueError("Parameter 'subgraph' is None.")
+		elif not isinstance(subgraph, Subgraph):
+			ex = TypeError("Parameter 'subgraph' is not of type 'Subgraph'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(subgraph)}'.")
+			raise ex
+		elif subgraph._identifier in self._subgraphs:
+			raise ValueError(f"A subgraph '{subgraph._identifier}' was added before.")
+
+		self._subgraphs[subgraph._identifier] = subgraph
+		return subgraph
+
+	def AddNode(self, node: Node) -> Node:
+		"""
+		Add a node.
+
+		:param node:        The node to add.
+		:returns:           The added node, so it can be used in the calling expression.
+		:raises ValueError: If parameter 'node' is None.
+		:raises TypeError:  If parameter 'node' is not a :class:`Node`.
+		:raises ValueError: If a node with the same identifier was added before.
+		"""
+		if node is None:
+			raise ValueError("Parameter 'node' is None.")
+		elif not isinstance(node, Node):
+			ex = TypeError("Parameter 'node' is not of type 'Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
+			raise ex
+		elif node._identifier in self._nodes:
+			raise ValueError(f"A node '{node._identifier}' was added before.")
+
+		self._nodes[node._identifier] = node
+		return node
+
+	def AddEdge(self, edge: Edge) -> Edge:
+		"""
+		Add an edge.
+
+		An edge may connect nodes of different subgraphs. Graphviz places the edge with the subgraph it is written in, so
+		an edge between clusters belongs to the graph containing both.
+
+		:param edge:        The edge to add.
+		:returns:           The added edge, so it can be used in the calling expression.
+		:raises ValueError: If parameter 'edge' is None.
+		:raises TypeError:  If parameter 'edge' is not an :class:`Edge`.
+		"""
+		if edge is None:
+			raise ValueError("Parameter 'edge' is None.")
+		elif not isinstance(edge, Edge):
+			ex = TypeError("Parameter 'edge' is not of type 'Edge'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(edge)}'.")
+			raise ex
+
+		self._edges.append(edge)
+		return edge
+
+	def GetNode(self, identifier: str) -> Node:
+		"""
+		Return the node with the given identifier.
+
+		:param identifier:  Identifier of the node.
+		:returns:           The node with that identifier.
+		:raises ValueError: If parameter 'identifier' is None.
+		:raises TypeError:  If parameter 'identifier' is not a string.
+		:raises KeyError:   If no node has that identifier.
+		"""
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+
+		return self._nodes[identifier]
+
+	def HasNode(self, identifier: str) -> bool:
+		"""
+		Check if a node with the given identifier was added.
+
+		:param identifier:  Identifier of the node.
+		:returns:           ``True``, if such a node exists.
+		:raises ValueError: If parameter 'identifier' is None.
+		:raises TypeError:  If parameter 'identifier' is not a string.
+		"""
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+
+		return identifier in self._nodes
+
+	def _StatementLines(self, kind: GraphKind, indent: int) -> list[str]:
+		"""
+		Render the graph's statements: attributes, defaults, subgraphs, nodes and edges.
+
+		:param kind:   Kind of the graph, which decides the edge operator.
+		:param indent: Indentation level of the statements.
+		:returns:      The statements as lines.
+		"""
+		lines = [f"{'  ' * indent}{name}={self._FormatValue(value)};\n" for name, value in self._attributes.items()]
+		lines.extend(self._nodeDefaults.ToStringLines(indent))
+		lines.extend(self._edgeDefaults.ToStringLines(indent))
+		for subgraph in self._subgraphs.values():
+			lines.extend(subgraph.ToStringLines(kind, indent))
+
+		for node in self._nodes.values():
+			lines.extend(node.ToStringLines(indent))
+
+		for edge in self._edges:
+			lines.extend(edge.ToStringLines(kind, indent))
+
+		return lines
+
+
+@export
+class Subgraph(BaseGraph):
+	"""
+	A subgraph of a DOT graph.
+
+	A subgraph whose identifier starts with ``cluster`` is a **cluster**: Graphviz draws its nodes together, inside a
+	box, and its attributes like ``label`` and ``style`` apply to that box.
+	"""
+	_identifier: str  #: Identifier of the subgraph.
+
+	def __init__(self, identifier: str, attributes: Nullable[Mapping[str, AttributeValue]] = None) -> None:
+		"""
+		Initialize an empty subgraph.
+
+		:param identifier:  Identifier of the subgraph. It starts with ``cluster`` for a cluster.
+		:param attributes:  Optional, further attributes of the subgraph, by name.
+		:raises ValueError: If parameter 'identifier' is None or empty.
+		:raises TypeError:  If parameter 'identifier' is not a string.
+		"""
+		super().__init__(attributes)
+
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+		elif identifier == "":
+			raise ValueError("Parameter 'identifier' is empty.")
+
+		self._identifier = identifier
+
+	@readonly
+	def Identifier(self) -> str:
+		"""
+		Read-only property to access the subgraph's identifier (:attr:`_identifier`).
+
+		:returns: The identifier of the subgraph.
+		"""
+		return self._identifier
+
+	@readonly
+	def IsCluster(self) -> bool:
+		"""
+		Read-only property to return whether Graphviz draws the subgraph as a cluster.
+
+		:returns: ``True``, if the identifier starts with ``cluster``.
+		"""
+		return self._identifier.startswith("cluster")
+
+	def ToStringLines(self, kind: GraphKind = GraphKind.Directed, indent: int = 1) -> list[str]:
+		"""
+		Render the subgraph as DOT lines.
+
+		:param kind:   Optional, kind of the graph, which decides the edge operator. Default: :attr:`GraphKind.Directed`.
+		:param indent: Optional, indentation level of the subgraph statement.
+		:returns:      The subgraph statement and its statements as lines.
+		"""
+		lines = [f"{'  ' * indent}subgraph {quote(self._identifier)} {{\n"]
+		lines.extend(self._StatementLines(kind, indent + 1))
+		lines.append(f"{'  ' * indent}}}\n")
+
+		return lines
+
+
+@export
+class Graph(BaseGraph):
+	"""
+	A DOT graph - the document Graphviz reads.
+
+	Its kind decides whether it is a ``digraph`` or a ``graph``, and a **strict** graph merges multiple edges between
+	the same two nodes into one.
+	"""
+	_identifier: Nullable[str]  #: Identifier of the graph, which Graphviz uses as the drawing's name.
+	_kind:       GraphKind      #: Directed or undirected.
+	_strict:     bool           #: If ``True``, multiple edges between the same two nodes are merged.
+
+	def __init__(
+		self,
+		identifier: Nullable[str] = None,
+		kind: GraphKind = GraphKind.Directed,
+		strict: bool = False,
+		attributes: Nullable[Mapping[str, AttributeValue]] = None
+	) -> None:
+		"""
+		Initialize an empty graph.
+
+		:param identifier:  Optional, identifier of the graph, which Graphviz uses as the drawing's name.
+		:param kind:        Optional, kind of the graph. Default: :attr:`GraphKind.Directed`.
+		:param strict:      Optional, if ``True``, multiple edges between the same two nodes are merged. Default:
+		                    ``False``.
+		:param attributes:  Optional, further attributes of the graph, by name, e.g. ``{"rankdir": "LR"}``.
+		:raises TypeError:  If parameter 'identifier' is not a string.
+		:raises ValueError: If parameter 'kind' is None.
+		:raises TypeError:  If parameter 'kind' is not a :class:`GraphKind`.
+		:raises ValueError: If parameter 'strict' is None.
+		:raises TypeError:  If parameter 'strict' is not a boolean.
+		"""
+		super().__init__(attributes)
+
+		if identifier is not None and not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+
+		if kind is None:
+			raise ValueError("Parameter 'kind' is None.")
+		elif not isinstance(kind, GraphKind):
+			ex = TypeError("Parameter 'kind' is not of type 'GraphKind'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
+			raise ex
+
+		if strict is None:
+			raise ValueError("Parameter 'strict' is None.")
+		elif not isinstance(strict, bool):
+			ex = TypeError("Parameter 'strict' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(strict)}'.")
+			raise ex
+
+		self._identifier = identifier
+		self._kind       = kind
+		self._strict     = strict
+
+	@readonly
+	def Identifier(self) -> Nullable[str]:
+		"""
+		Read-only property to access the graph's identifier (:attr:`_identifier`).
+
+		:returns: The identifier, or ``None`` if the graph is anonymous.
+		"""
+		return self._identifier
+
+	@readonly
+	def Kind(self) -> GraphKind:
+		"""
+		Read-only property to access the graph's kind (:attr:`_kind`).
+
+		:returns: Directed or undirected.
+		"""
+		return self._kind
+
+	@readonly
+	def Strict(self) -> bool:
+		"""
+		Read-only property to access whether multiple edges between the same two nodes are merged (:attr:`_strict`).
+
+		:returns: ``True``, if the graph is strict.
+		"""
+		return self._strict
+
+	@staticmethod
+	def _Identifiers(elements: Sequence[Union[Vertex, pyToolingNode]]) -> dict[int, str]:
+		"""
+		Return the identifiers of vertices or tree nodes: an element's ID as text, or - without an ID - a generated
+		``vertex<number>``, which no element's ID is.
+
+		Generated numbers first fill the gaps between the numbers taken by IDs like ``vertex7``, then follow the highest of
+		them. The elements without an ID are numbered in the order they are given.
+
+		:param elements: The vertices or tree nodes, in the order they are converted.
+		:returns:        The identifiers, by the elements' :func:`id`.
+		"""
+		identifiers = {id(element): str(element._id) for element in elements if element._id is not None}
+		taken       = sorted({
+			int(identifier[6:]) for identifier in identifiers.values()
+			if identifier.startswith("vertex") and identifier[6:].isdecimal()
+		})
+
+		if len(taken) > 0 and taken[-1] == len(taken):
+			number = len(taken) + 1
+			index  = len(taken)
+		else:
+			number = 1
+			index  = 0
+
+		for element in elements:
+			if element._id is not None:
+				continue
+
+			while index < len(taken) and taken[index] <= number:
+				if taken[index] == number:
+					number += 1
+
+				index += 1
+
+			identifiers[id(element)] = f"vertex{number}"
+			number += 1
+
+		return identifiers
+
+	def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
+		"""
+		Return the node a vertex of a :class:`pyTooling.Graph.Graph` becomes.
+
+		The node is labelled with the vertex' value. A vertex without a value shows its ID, and one without an ID either
+		gets an empty label rather than its generated identifier. A derived class overrides this method to add labels or
+		attributes.
+
+		:param vertex:     The vertex to convert.
+		:param identifier: Identifier of the node: the vertex' ID, or a generated one.
+		:returns:          The node.
+		"""
+		if vertex._value is not None:
+			return Node(identifier, str(vertex._value))
+		elif vertex._id is None:
+			return Node(identifier, "")
+
+		return Node(identifier)
+
+	def _ConvertEdge(self, edge: pyToolingEdge, source: Node, target: Node) -> Edge:
+		"""
+		Return the edge an edge of a :class:`pyTooling.Graph.Graph` becomes, labelled with the edge's value.
+
+		A derived class overrides this method to add labels or attributes.
+
+		:param edge:   The edge to convert.
+		:param source: Node the converted edge's source vertex became.
+		:param target: Node the converted edge's destination vertex became.
+		:returns:      The edge.
+		"""
+		if edge._value is not None:
+			return Edge(source, target, {"label": str(edge._value)})
+
+		return Edge(source, target)
+
+	def _ConvertLink(self, link: pyToolingLink, source: Node, target: Node) -> Edge:
+		"""
+		Return the edge a link between two subgraphs of a :class:`pyTooling.Graph.Graph` becomes: dashed, and labelled
+		with the link's value.
+
+		A derived class overrides this method to add labels or attributes.
+
+		:param link:   The link to convert.
+		:param source: Node the link's source vertex became.
+		:param target: Node the link's destination vertex became.
+		:returns:      The edge.
+		"""
+		if link._value is not None:
+			return Edge(source, target, {"style": "dashed", "label": str(link._value)})
+
+		return Edge(source, target, {"style": "dashed"})
+
+	def _ConvertSubgraph(self, subgraph: pyToolingSubgraph, identifier: str) -> Subgraph:
+		"""
+		Return the cluster a subgraph of a :class:`pyTooling.Graph.Graph` becomes, labelled with the subgraph's name.
+
+		A derived class overrides this method to add labels or attributes.
+
+		:param subgraph:   The subgraph to convert.
+		:param identifier: Identifier of the cluster.
+		:returns:          The cluster, still empty.
+		"""
+		if subgraph._name is not None:
+			return Subgraph(identifier, {"label": subgraph._name})
+
+		return Subgraph(identifier)
+
+	def _ConvertTreeNode(self, node: pyToolingNode, identifier: str) -> Node:
+		"""
+		Return the node a node of a :class:`pyTooling.Tree.Node` tree becomes.
+
+		The node is labelled like a vertex in :meth:`_ConvertVertex`. A derived class overrides this method to add labels
+		or attributes.
+
+		:param node:       The tree node to convert.
+		:param identifier: Identifier of the node: the tree node's ID, or a generated one.
+		:returns:          The node.
+		"""
+		if node._value is not None:
+			return Node(identifier, str(node._value))
+		elif node._id is None:
+			return Node(identifier, "")
+
+		return Node(identifier)
+
+	def FromGraph(self, graph: pyToolingGraph) -> None:
+		"""
+		Fill this graph from a :class:`pyTooling.Graph.Graph`.
+
+		Every subgraph becomes a cluster of its vertices, every vertex a node and every edge an edge, in the graph or in
+		the cluster they belong to. A link between two subgraphs becomes an edge of this graph. A vertex without an ID
+		gets a generated identifier, which no vertex with an ID has. Subgraphs are converted in the order of their names,
+		so the same graph is always written the same way.
+
+		What an element becomes is decided by :meth:`_ConvertVertex`, :meth:`_ConvertEdge`, :meth:`_ConvertLink` and
+		:meth:`_ConvertSubgraph`, which a derived class overrides. Without an identifier of its own, this graph takes the
+		graph's name.
+
+		:param graph:       The graph to convert.
+		:raises ValueError: If parameter 'graph' is None.
+		:raises TypeError:  If parameter 'graph' is not a :class:`pyTooling.Graph.Graph`.
+		"""
+		if graph is None:
+			raise ValueError("Parameter 'graph' is None.")
+		elif not isinstance(graph, pyToolingGraph):
+			ex = TypeError("Parameter 'graph' is not of type 'pyTooling.Graph.Graph'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
+			raise ex
+
+		if self._identifier is None:
+			self._identifier = graph._name
+
+		subgraphs = sorted(graph.Subgraphs, key=lambda subgraph: "" if subgraph._name is None else subgraph._name)
+		vertices: list[Vertex] = []
+		for subgraph in subgraphs:
+			vertices += subgraph.IterateVertices()
+
+		vertices += graph.IterateVertices()
+
+		identifiers = self._Identifiers(vertices)
+		nodes: dict[int, Node] = {}
+
+		clusters = []
+		for index, subgraph in enumerate(subgraphs, start=1):
+			cluster = self.AddSubgraph(self._ConvertSubgraph(subgraph, f"cluster{index}"))
+			clusters.append(cluster)
+			for vertex in subgraph.IterateVertices():
+				nodes[id(vertex)] = cluster.AddNode(self._ConvertVertex(vertex, identifiers[id(vertex)]))
+
+		for vertex in graph.IterateVertices():
+			nodes[id(vertex)] = self.AddNode(self._ConvertVertex(vertex, identifiers[id(vertex)]))
+
+		for cluster, subgraph in zip(clusters, subgraphs):
+			for edge in subgraph.IterateEdges():
+				cluster.AddEdge(self._ConvertEdge(edge, nodes[id(edge._source)], nodes[id(edge._destination)]))
+
+		for edge in graph.IterateEdges():
+			self.AddEdge(self._ConvertEdge(edge, nodes[id(edge._source)], nodes[id(edge._destination)]))
+
+		# a link is known to both subgraphs it connects
+		converted: set[int] = set()
+		for subgraph in subgraphs:
+			for link in subgraph.IterateLinks():
+				if id(link) not in converted:
+					converted.add(id(link))
+					self.AddEdge(self._ConvertLink(link, nodes[id(link._source)], nodes[id(link._destination)]))
+
+	def FromTree(self, tree: pyToolingNode) -> None:
+		"""
+		Fill this graph from a tree of :class:`pyTooling.Tree.Node`.
+
+		Every tree node becomes a node, connected to its parent by an edge from parent to child. A tree node without an
+		ID gets a generated identifier, which no tree node with an ID has.
+
+		What a tree node becomes is decided by :meth:`_ConvertTreeNode`, which a derived class overrides. Without an
+		identifier of its own, this graph takes the root's ID.
+
+		:param tree:        The root of the tree to convert.
+		:raises ValueError: If parameter 'tree' is None.
+		:raises TypeError:  If parameter 'tree' is not a :class:`pyTooling.Tree.Node`.
+		"""
+		if tree is None:
+			raise ValueError("Parameter 'tree' is None.")
+		elif not isinstance(tree, pyToolingNode):
+			ex = TypeError("Parameter 'tree' is not of type 'pyTooling.Tree.Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(tree)}'.")
+			raise ex
+
+		if self._identifier is None and tree._id is not None:
+			self._identifier = str(tree._id)
+
+		treeNodes  = [tree]
+		treeNodes += tree.GetDescendants()
+
+		identifiers = self._Identifiers(treeNodes)
+		nodes: dict[int, Node] = {}
+
+		for treeNode in treeNodes:
+			node = self.AddNode(self._ConvertTreeNode(treeNode, identifiers[id(treeNode)]))
+			nodes[id(treeNode)] = node
+			if treeNode is not tree:
+				self.AddEdge(Edge(nodes[id(treeNode._parent)], node))
+
+	def ToStringLines(self, indent: int = 0) -> list[str]:
+		"""
+		Render the graph as DOT lines.
+
+		:param indent: Optional, indentation level of the graph statement.
+		:returns:      The graph and its statements as lines.
+		"""
+		head = f"{'strict ' if self._strict else ''}{self._kind.Keyword}"
+		if self._identifier is not None:
+			head += f" {quote(self._identifier)}"
+
+		lines = [f"{'  ' * indent}{head} {{\n"]
+		lines.extend(self._StatementLines(self._kind, indent + 1))
+		lines.append(f"{'  ' * indent}}}\n")
+
+		return lines
+
+	def WriteToFile(self, file: Path) -> None:
+		"""
+		Write the graph as a DOT file.
+
+		:param file:        Path of the file to write.
+		:raises ValueError: If parameter 'file' is None.
+		:raises TypeError:  If parameter 'file' is not a :class:`~pathlib.Path`.
+		"""
+		if file is None:
+			raise ValueError("Parameter 'file' is None.")
+		elif not isinstance(file, Path):
+			ex = TypeError("Parameter 'file' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+			raise ex
+
+		with file.open("w", encoding="utf-8") as f:
+			f.writelines(self.ToStringLines())
+
+	def __str__(self) -> str:
+		"""
+		Return the graph as DOT text.
+
+		:returns: The graph in the DOT language.
+		"""
+		return "".join(self.ToStringLines())
