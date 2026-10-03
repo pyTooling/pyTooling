@@ -517,6 +517,7 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 		if needs is not None:
 			for need in needs:
 				self.AddNeed(need)
+
 		if dependents is not None:
 			for dependent in dependents:
 				if dependent is None:

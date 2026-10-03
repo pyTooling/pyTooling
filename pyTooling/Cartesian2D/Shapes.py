@@ -63,14 +63,17 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'p00' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p00)}'.")
 			raise ex
+
 		if not isinstance(p01, Point2D):
 			ex = TypeError("Parameter 'p01' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p01)}'.")
 			raise ex
+
 		if not isinstance(p11, Point2D):
 			ex = TypeError("Parameter 'p11' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p11)}'.")
 			raise ex
+
 		if not isinstance(p10, Point2D):
 			ex = TypeError("Parameter 'p10' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")

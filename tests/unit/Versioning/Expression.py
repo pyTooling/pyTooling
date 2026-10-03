@@ -214,6 +214,7 @@ class PythonDialect(Testcase):
 				self.assertEqual(upperBound, str(constraint.UpperBound))
 				for version in matching:
 					self.assertIn(PythonVersion.Parse(version), expression)
+
 				for version in notMatching:
 					self.assertNotIn(PythonVersion.Parse(version), expression)
 

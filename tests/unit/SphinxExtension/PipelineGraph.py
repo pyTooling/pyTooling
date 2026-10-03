@@ -348,6 +348,7 @@ class Edges(Testcase):
 		"""The pipeline flows left to right, unless ':direction:' says top to bottom."""
 		with TemporaryDirectory() as directory:
 			(code, ), _ = build(directory)
+
 		with TemporaryDirectory() as directory:
 			(codeTB, ), _ = build(directory, ":direction: tb")
 

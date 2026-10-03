@@ -953,6 +953,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
+
 		if targetLevel >= LazyLoaderState.PostProcessed:
 			self.PostProcess()
 
@@ -1331,6 +1332,7 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
+
 		if targetLevel >= LazyLoaderState.PostProcessed:
 			self.DownloadReleaseDetails()
 

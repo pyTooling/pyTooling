@@ -103,8 +103,10 @@ def _span(
 	span[CI.Span.Kind] = kind
 	if task != "":
 		span[OTLP.CICD.Pipeline.Task.Name] = task
+
 	if runner != "":
 		span[GitHub.Runner.Labels] = [runner]
+
 	if result != "":
 		span[OTLP.CICD.Pipeline.Task.Run.Result] = result
 	return span

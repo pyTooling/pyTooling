@@ -606,6 +606,7 @@ class Span(TraceElement):
 				raise ex
 
 			duration = _asTimedelta(duration)
+
 		if beginTime is None:
 			if endTime is not None:
 				ex = ValueError("Parameter 'endTime' is given without parameter 'beginTime'.")

@@ -396,6 +396,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 			if isinstance(element, CIWorkflow):
 				if element.CalledWorkflow not in self._workflows:
 					self._workflows.append(element.CalledWorkflow)
+
 				if self._link:
 					self._statements.append(f"{indent}\t/*gha-link:{element.Definition.Uses.Stem}*/")
 
@@ -420,6 +421,7 @@ class PipelineDotGraph(metaclass=ExtendedType, slots=True):
 				attributes = []
 				if tailCluster is not None:
 					attributes.append(f"ltail={self._Quote(tailCluster)}")
+
 				if headCluster is not None:
 					attributes.append(f"lhead={self._Quote(headCluster)}")
 
