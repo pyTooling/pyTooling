@@ -43,14 +43,15 @@ styles can live in the same run, and even in the same file.
 
    See :ref:`high-level help <TESTING/Markers>` for explanations and usage examples.
 """
-from inspect  import cleandoc
-from pathlib  import PurePath
-from sys      import modules as loadedModules
-from types    import ModuleType
-from typing   import Any, Callable, Union, Optional as Nullable
-from unittest import TestCase
+from inspect                 import cleandoc, isabstract
+from pathlib                 import PurePath
+from sys                     import modules as loadedModules
+from types                   import ModuleType
+from typing                  import Any, Callable, Iterable, Union, Optional as Nullable
+from unittest                import TestCase
 
-from pytest                  import Class, Collector, Item, StashKey, fixture
+from _pytest.unittest        import TestCaseFunction, UnitTestCase
+from pytest                  import Class, Collector, Item, StashKey, fixture, hookimpl
 from pyTooling.Decorators    import export
 from pyTooling.Documentation import splitDocString
 
@@ -75,16 +76,48 @@ def getTestcases(cls: type) -> dict[str, Any]:
 
 
 @export
+class MarkedUnitTestCase(UnitTestCase):
+	"""
+	Collector of a marked :class:`unittest.TestCase` class: every marked method is a testcase under its own name.
+
+	pytest's :mod:`unittest` support collects what :meth:`unittest.TestLoader.getTestCaseNames` returns - the methods
+	starting with :attr:`~unittest.TestLoader.testMethodPrefix`, ``"test"``. This collector collects them too, and
+	adds every marked method, in the order the class defines it. Such a testcase runs like any other: :mod:`unittest`
+	instantiates the class with the method's name, so ``setUp()``, ``tearDown()``, ``subTest()`` and skipping work as
+	they do for a method named ``test_*``.
+	"""
+
+	def collect(self) -> Iterable[Union[Item, Collector]]:
+		"""
+		Collect the methods :mod:`unittest` finds by name, then the marked ones it doesn't.
+
+		:returns: The testcases of the class.
+		"""
+		if not getattr(self.obj, "__test__", True):
+			return
+
+		items = list(super().collect())
+		collected = {item.name for item in items}
+		marked = [name for name in getTestcases(self.obj) if name not in collected]
+
+		# unittest runs 'runTest' only in a class without testcases, and marked methods are testcases
+		if len(marked) > 0 and collected == {"runTest"}:
+			items = []
+
+		yield from items
+		for name in marked:
+			yield TestCaseFunction.from_parent(self, name=name)
+
+
+@export
+@hookimpl(tryfirst=True)
 def pytest_pycollect_makeitem(collector: Collector, name: str, obj: Any) -> Nullable[Any]:
 	"""
 	Collect a marked class or a marked method, whatever it is named.
 
-	A marked :class:`unittest.TestCase` is a special case: such a class is collected by pytest's :mod:`unittest`
-	support, which asks :meth:`unittest.TestLoader.getTestCaseNames` for the test methods - and that loader matches
-	:attr:`~unittest.TestLoader.testMethodPrefix`, which is ``"test"`` and is *not* the ``python_functions`` setting.
-	Each marked method is therefore aliased under a name that loader accepts, and the class is handed back to pytest,
-	which collects a :class:`~unittest.TestCase` subclass regardless of ``python_classes``. The alias reaches no
-	report, because the entry is titled from the marker.
+	A marked :class:`unittest.TestCase` is collected by :class:`MarkedUnitTestCase` instead of pytest's :mod:`unittest`
+	support, which would collect only the methods named ``test*``. It runs before that support, so a marked class
+	reaches this collector first.
 
 	:param collector: The module collector asking about the object.
 	:param name:      Name the object is bound to in the module.
@@ -93,11 +126,10 @@ def pytest_pycollect_makeitem(collector: Collector, name: str, obj: Any) -> Null
 	"""
 	if isinstance(obj, type) and hasattr(obj, "__testsuite_title__"):
 		if issubclass(obj, TestCase):
-			for methodName, method in getTestcases(obj).items():
-				if not methodName.startswith("test"):
-					setattr(obj, f"test_{methodName}", method)
+			if isabstract(obj):
+				return None
 
-			return None
+			return MarkedUnitTestCase.from_parent(collector, name=name, obj=obj)
 
 		return Class.from_parent(collector, name=name)
 
