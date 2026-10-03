@@ -98,7 +98,8 @@ Out of Scope
   modification, which might leave the graph in a corrupted state.
 * Export the graph data structure to various file formats like JSON, YAML, TOML, ...
 * Import a graph data structure from various file formats like JSON, YAML, TOML, ...
-* Graph visualization or rendering to complex formats like GraphML, GraphViz, Mermaid, ...
+* Laying out or drawing a graph: :ref:`exporting <STRUCT/Graph/Export>` it to GraphML or Graphviz' DOT language is
+  in scope, the layout and the drawing are Graphviz', yEd's or another tool's job.
 
 
 .. _STRUCT/Graph/ByFeature:
@@ -247,6 +248,69 @@ An edge's kind is given when it is created - :attr:`EdgeKind.Default <pyTooling.
 :class:`~pyTooling.Graph.LinkKind`. A kind may be a member of an enumeration of the user's own, e.g.
 ``a.EdgeToVertex(c, edgeKind=Dependency.Implied)`` or ``graph.AnnotateTransitiveEdges(directKind=Dependency.Needed,
 transitiveKind=Dependency.Implied)``.
+
+
+.. _STRUCT/Graph/Export:
+
+Export
+******
+
+A graph is written for other tools by two modules with the same structure: a data model of the format's elements,
+filled with ``FromGraph()`` from a :class:`~pyTooling.Graph.Graph` or with ``FromTree()`` from a tree of
+:class:`~pyTooling.Tree.Node`, and written as text.
+
+* :mod:`pyTooling.Graph.GraphML` writes a GraphML document, read by tools like yEd or Gephi.
+* :mod:`pyTooling.Graph.GraphViz` writes Graphviz' DOT language, drawn by :program:`dot` or by
+  :mod:`sphinx.ext.graphviz` in a documentation.
+
+
+.. _STRUCT/Graph/Export/GraphViz:
+
+Graphviz (DOT)
+==============
+
+:class:`~pyTooling.Graph.GraphViz.Graph` is the document Graphviz reads.
+:meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` turns every subgraph into a cluster of its vertices, every vertex into
+a node labelled with its value, every edge into an edge, and a link between two subgraphs into a dashed edge. A vertex
+without an ID gets a generated identifier.
+
+.. code-block:: python
+
+   from pyTooling.Graph          import Graph, Vertex
+   from pyTooling.Graph.GraphViz import Graph as DotGraph
+
+   graph = Graph(name="Example")
+   a, b = Vertex(vertexID="A", value="first", graph=graph), Vertex(vertexID="B", graph=graph)
+   a.EdgeToVertex(b)
+
+   dot = DotGraph(rankdir="LR")
+   dot.NodeDefaults["shape"] = "box"
+   dot.FromGraph(graph)
+   print(dot)
+
+.. code-block:: text
+
+   digraph "Example" {
+     rankdir="LR";
+     node [shape="box"];
+     "A" [label="first"];
+     "B";
+     "A" -> "B";
+   }
+
+Every element carries attributes with dictionary syntax - ``node["color"] = "red"`` - and a value is written by its
+type: a text quoted, a number as it is, a boolean as ``true``/``false``. Labels with structure are
+:class:`~pyTooling.Graph.GraphViz.RecordLabel` (the fields of a ``record`` node, e.g. a type and its members) and
+:class:`~pyTooling.Graph.GraphViz.HTMLLabel` (HTML-like markup); each escapes what it is given.
+
+What an element becomes is decided by ``_ConvertVertex()``, ``_ConvertEdge()``, ``_ConvertLink()``,
+``_ConvertSubgraph()`` and ``_ConvertTreeNode()``. A derived class overrides them to add its own labels and attributes:
+
+.. code-block:: python
+
+   class TypeGraph(DotGraph):
+     def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
+       return Node(identifier, RecordLabel(vertex.ID, vertex["members"], flipped=True), shape="record")
 
 
 .. _STRUCT/Graph/Competitors:
