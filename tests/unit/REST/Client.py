@@ -382,8 +382,10 @@ class Writing(Testcase):
 
 		with self.assertRaises(TypeError):
 			_ = client.GetJSONObject(1)
+
 		with self.assertRaises(TypeError):
 			_ = client.PostJSONObject("things", [1, 2])
+
 		with self.assertRaises(TypeError):
 			_ = client.GetJSONObject("things", headers="Accept")
 
@@ -392,6 +394,7 @@ class Writing(Testcase):
 
 		with self.assertRaises(ValueError):
 			_ = client.GetJSONObject(None)
+
 		for method in (client.PostJSONObject, client.PutJSONObject, client.PatchJSONObject):
 			with self.subTest(method=method.__name__):
 				with self.assertRaises(ValueError):

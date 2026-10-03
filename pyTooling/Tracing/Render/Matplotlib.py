@@ -319,6 +319,7 @@ class MatplotlibRenderer(Renderer[Figure]):
 			axes.set_yticks(range(len(rows)), labels=labels)
 			for label, row in zip(axes.get_yticklabels(), rows):
 				label.set_gid(f"label-{row.SpanID}")
+
 			if self._collapsible:
 				axes.tick_params(axis="y", length=0)
 			axes.set_ylim(len(rows) - 0.5, -0.5)
@@ -333,6 +334,7 @@ class MatplotlibRenderer(Renderer[Figure]):
 			]
 			if hasQueued:
 				handles.append(Patch(facecolor=self.QUEUED, label="waiting for a runner"))
+
 			if hasLines:
 				handles.append(Line2D(
 					[], [], color=self.LINE, linewidth=1.0, marker="|", markersize=6, label=LINE_LEGEND_LABEL

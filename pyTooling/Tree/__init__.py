@@ -976,8 +976,10 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		nodeID = parent = value = ""
 		if self._id is not None:
 			nodeID = f"; nodeID='{self._id}'"
+
 		if (self._parent is not None) and (self._parent._id is not None):
 			parent = f"; parent='{self._parent._id}'"
+
 		if self._value is not None:
 			value = f"; value='{self._value}'"
 

@@ -303,10 +303,13 @@ def WordSizeValidator(
 
 	if majorBits is not None:
 		majorMax = 2**majorBits - 1
+
 	if minorBits is not None:
 		minorMax = 2**minorBits - 1
+
 	if microBits is not None:
 		microMax = 2 ** microBits - 1
+
 	if buildBits is not None:
 		buildMax = 2**buildBits - 1
 
@@ -2544,6 +2547,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		boundHandling = RangeBoundHandling.BothBoundsInclusive
 		if lowerExclusive:
 			boundHandling |= RangeBoundHandling.LowerBoundExclusive
+
 		if upperExclusive:
 			boundHandling |= RangeBoundHandling.UpperBoundExclusive
 

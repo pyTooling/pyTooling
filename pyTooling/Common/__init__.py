@@ -207,6 +207,7 @@ def getsizeof(obj: Any) -> int:
 				itemView = items()
 			else:
 				itemView = {}  # bind(obj, items)
+
 			for key, value in itemView:
 				size += recurse(key) + recurse(value)
 

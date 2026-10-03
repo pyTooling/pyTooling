@@ -170,6 +170,7 @@ def runnerCategory(span: Span) -> str:
 	while current is not None:
 		if job is None and current.get(CI.Span.Kind) == SpanKind.Job:
 			job = current
+
 		if label == "" and GitHub.Runner.Labels in current and len(labels := current[GitHub.Runner.Labels]) > 0:
 			label = str(labels[0])
 		current = current.Parent

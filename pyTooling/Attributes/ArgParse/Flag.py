@@ -77,6 +77,7 @@ class FlagArgument(NamedArgument):
 		args = []
 		if short is not None:
 			args.append(short)
+
 		if long is not None:
 			args.append(long)
 
