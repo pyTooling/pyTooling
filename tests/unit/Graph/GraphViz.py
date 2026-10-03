@@ -434,7 +434,7 @@ class pyToolingGraphs(Testcase):
 		graph = pyToolingGraph(name="G")
 		Vertex(vertexID="a", graph=graph).EdgeToVertex(Vertex(vertexID="b", graph=graph))
 
-		dot = ColoredGraph(rankdir="LR")
+		dot = ColoredGraph(attributes={"rankdir": "LR"})
 		dot.FromGraph(graph)
 
 		self.assertEqual(dedent("""\

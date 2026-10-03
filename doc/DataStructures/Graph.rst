@@ -283,7 +283,7 @@ without an ID gets a generated identifier.
    a, b = Vertex(vertexID="A", value="first", graph=graph), Vertex(vertexID="B", graph=graph)
    a.EdgeToVertex(b)
 
-   dot = DotGraph(rankdir="LR")
+   dot = DotGraph(attributes={"rankdir": "LR"})
    dot.NodeDefaults["shape"] = "box"
    dot.FromGraph(graph)
    print(dot)
@@ -298,10 +298,11 @@ without an ID gets a generated identifier.
      "A" -> "B";
    }
 
-Every element carries attributes with dictionary syntax - ``node["color"] = "red"`` - and a value is written by its
-type: a text quoted, a number as it is, a boolean as ``true``/``false``. Labels with structure are
-:class:`~pyTooling.Graph.GraphViz.RecordLabel` (the fields of a ``record`` node, e.g. a type and its members) and
-:class:`~pyTooling.Graph.GraphViz.HTMLLabel` (HTML-like markup); each escapes what it is given.
+Every element takes its attributes as a mapping in parameter ``attributes`` and gives access to them with dictionary
+syntax - ``node["color"] = "red"`` - and a value is written by its type: a text quoted, a number as it is, a boolean as
+``true``/``false``. Labels with structure are :class:`~pyTooling.Graph.GraphViz.RecordLabel` (the fields of a
+``record`` node, e.g. a type and its members) and :class:`~pyTooling.Graph.GraphViz.HTMLLabel` (HTML-like markup); each
+escapes what it is given.
 
 What an element becomes is decided by ``_ConvertVertex()``, ``_ConvertEdge()``, ``_ConvertLink()``,
 ``_ConvertSubgraph()`` and ``_ConvertTreeNode()``. A derived class overrides them to add its own labels and attributes:
@@ -310,7 +311,7 @@ What an element becomes is decided by ``_ConvertVertex()``, ``_ConvertEdge()``, 
 
    class TypeGraph(DotGraph):
      def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
-       return Node(identifier, RecordLabel(vertex.ID, vertex["members"], flipped=True), shape="record")
+       return Node(identifier, RecordLabel(vertex.ID, vertex["members"], flipped=True), {"shape": "record"})
 
 
 .. _STRUCT/Graph/Competitors:
