@@ -254,7 +254,9 @@ Version 10.x (2026)
      * Both markers take a title, and both fall back to the doc-string: its summary becomes the summary, its body
        becomes the description. A test item has four names - an ID, a title, a summary and a description.
      * :mod:`pyTooling.Testing.PyTest` is a new pytest plugin collecting what the markers mark. Node IDs are left
-       untouched, so test selection, ``pytest-xdist``, ``--last-failed`` and IDE integration are unaffected.
+       untouched, so test selection, ``pytest-xdist``, ``--last-failed`` and IDE integration are unaffected. A marked
+       method of a :class:`unittest.TestCase` class keeps its own name as its ID, though :mod:`unittest` collects
+       only methods named ``test*``.
      * :mod:`pyTooling.Testing.ReportWriter` is a second plugin writing a **test report format of our own**,
        opt-in through ``--pytooling-xml=PATH`` and additional - it runs in the same session as ``--junit-xml``, so
        a pipeline keeps the format its dashboard understands while the richer file appears beside it. Test suites
