@@ -638,8 +638,8 @@ class BaseGraph(Base):
 	are what every node and every edge starts with. The statements are written in this order: attributes, defaults,
 	subgraphs, nodes, edges.
 	"""
-	_nodeDefaults: DefaultAttributes   #: Attributes every node starts with.
-	_edgeDefaults: DefaultAttributes   #: Attributes every edge starts with.
+	_nodeDefaults: DefaultAttributes    #: Attributes every node starts with.
+	_edgeDefaults: DefaultAttributes    #: Attributes every edge starts with.
 	_subgraphs:    dict[str, Subgraph]  #: Subgraphs, by identifier.
 	_nodes:        dict[str, Node]      #: Nodes, by identifier.
 	_edges:        list[Edge]           #: Edges, in the order they were added.
@@ -773,19 +773,37 @@ class BaseGraph(Base):
 		"""
 		Return the node with the given identifier.
 
-		:param identifier: Identifier of the node.
-		:returns:          The node with that identifier.
-		:raises KeyError:  If no node has that identifier.
+		:param identifier:  Identifier of the node.
+		:returns:           The node with that identifier.
+		:raises ValueError: If parameter 'identifier' is None.
+		:raises TypeError:  If parameter 'identifier' is not a string.
+		:raises KeyError:   If no node has that identifier.
 		"""
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+
 		return self._nodes[identifier]
 
 	def HasNode(self, identifier: str) -> bool:
 		"""
 		Check if a node with the given identifier was added.
 
-		:param identifier: Identifier of the node.
-		:returns:          ``True``, if such a node exists.
+		:param identifier:  Identifier of the node.
+		:returns:           ``True``, if such a node exists.
+		:raises ValueError: If parameter 'identifier' is None.
+		:raises TypeError:  If parameter 'identifier' is not a string.
 		"""
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+
 		return identifier in self._nodes
 
 	def _StatementLines(self, kind: GraphKind, indent: int) -> list[str]:
@@ -913,12 +931,14 @@ class Graph(BaseGraph):
 			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
 			raise ex
+
 		if kind is None:
 			raise ValueError("Parameter 'kind' is None.")
 		elif not isinstance(kind, GraphKind):
 			ex = TypeError("Parameter 'kind' is not of type 'GraphKind'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 			raise ex
+
 		if strict is None:
 			raise ValueError("Parameter 'strict' is None.")
 		elif not isinstance(strict, bool):
