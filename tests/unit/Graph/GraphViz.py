@@ -363,6 +363,10 @@ class Graphs(Testcase):
 			(graph.AddSubgraph, Subgraph("s"), ValueError, "A subgraph 's' was added before."),
 			(graph.AddEdge,     None,          ValueError, "Parameter 'edge' is None."),
 			(graph.AddEdge,     Node("b"),     TypeError,  "Parameter 'edge' is not of type 'Edge'."),
+			(graph.GetNode,     None,          ValueError, "Parameter 'identifier' is None."),
+			(graph.GetNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			(graph.HasNode,     None,          ValueError, "Parameter 'identifier' is None."),
+			(graph.HasNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
 		):
 			with self.subTest(message=message):
 				with self.assertRaises(exceptionType) as context:
