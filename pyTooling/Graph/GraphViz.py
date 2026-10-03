@@ -288,12 +288,24 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize the element's attributes.
 
-		:param attributes: Optional, attributes of the element, by name.
+		:param attributes:  Optional, attributes of the element, by name.
+		:raises TypeError:  If parameter 'attributes' is not a mapping.
+		:raises ValueError: If an attribute's name is None or empty, or its value is None.
+		:raises TypeError:  If an attribute's name is not a string, or its value is not of type :data:`AttributeValue`.
 		"""
 		self._attributes = {}
 		if attributes is not None:
+			if not isinstance(attributes, Mapping):
+				ex = TypeError("Parameter 'attributes' is not a mapping ('dict', ...).")
+				ex.add_note(f"Got type '{getFullyQualifiedName(attributes)}'.")
+				raise ex
+
 			for name, value in attributes.items():
-				self[name] = value
+				try:
+					self[name] = value
+				except (TypeError, ValueError) as ex:
+					ex.add_note(f"Raised for attribute '{name}' of parameter 'attributes'.")
+					raise
 
 	@readonly
 	def Attributes(self) -> dict[str, AttributeValue]:
@@ -325,12 +337,14 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'value' is None.
 		:raises TypeError:  If parameter 'value' is not of type :data:`AttributeValue`.
 		"""
-		if name is None or name == "":
-			raise ValueError("Parameter 'name' is None or empty.")
+		if name is None:
+			raise ValueError("Parameter 'name' is None.")
 		elif not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
 			raise ex
+		elif name == "":
+			raise ValueError("Parameter 'name' is empty.")
 		if value is None:
 			raise ValueError("Parameter 'value' is None.")
 		elif not isinstance(value, (str, int, float, bool, HTMLLabel, RecordLabel)):
@@ -407,9 +421,21 @@ class DefaultAttributes(Base):
 		"""
 		Initialize empty default attributes.
 
-		:param keyword: ``node`` or ``edge``, the keyword of the statement.
+		:param keyword:     ``node`` or ``edge``, the keyword of the statement.
+		:raises ValueError: If parameter 'keyword' is None.
+		:raises TypeError:  If parameter 'keyword' is not a string.
+		:raises ValueError: If parameter 'keyword' is neither ``node`` nor ``edge``.
 		"""
 		super().__init__()
+
+		if keyword is None:
+			raise ValueError("Parameter 'keyword' is None.")
+		elif not isinstance(keyword, str):
+			ex = TypeError("Parameter 'keyword' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(keyword)}'.")
+			raise ex
+		elif keyword not in ("node", "edge"):
+			raise ValueError("Parameter 'keyword' is neither 'node' nor 'edge'.")
 
 		self._keyword = keyword
 
@@ -435,25 +461,39 @@ class Node(Base):
 		self,
 		identifier: str,
 		label: Nullable[Union[str, HTMLLabel, RecordLabel]] = None,
-		**attributes: AttributeValue
+		attributes: Nullable[Mapping[str, AttributeValue]] = None
 	) -> None:
 		"""
 		Initialize a node.
 
 		:param identifier:  Identifier of the node, which an edge names it by.
 		:param label:       Optional, the node's label. Graphviz shows the identifier, if there is none.
-		:param attributes:  Further attributes of the node.
+		:param attributes:  Optional, further attributes of the node, by name.
 		:raises ValueError: If parameter 'identifier' is None or empty.
 		:raises TypeError:  If parameter 'identifier' is not a string.
+		:raises TypeError:  If parameter 'label' is not a string, :class:`HTMLLabel` or :class:`RecordLabel`.
+		:raises ValueError: If parameters 'label' and 'attributes' both set a label.
 		"""
-		if identifier is None or identifier == "":
-			raise ValueError("Parameter 'identifier' is None or empty.")
+		super().__init__(attributes)
+
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
 		elif not isinstance(identifier, str):
 			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
 			raise ex
+		elif identifier == "":
+			raise ValueError("Parameter 'identifier' is empty.")
 
-		super().__init__(attributes if label is None else {"label": label, **attributes})
+		if label is not None:
+			if not isinstance(label, (str, HTMLLabel, RecordLabel)):
+				ex = TypeError("Parameter 'label' is not of type 'str', 'HTMLLabel' or 'RecordLabel'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(label)}'.")
+				raise ex
+			elif "label" in self._attributes:
+				raise ValueError("Parameters 'label' and 'attributes' both set a label.")
+
+			self._attributes["label"] = label
 
 		self._identifier = identifier
 
@@ -482,18 +522,20 @@ class Edge(Base):
 	_source: Node  #: Node the edge starts at.
 	_target: Node  #: Node the edge ends at.
 
-	def __init__(self, source: Node, target: Node, **attributes: AttributeValue) -> None:
+	def __init__(self, source: Node, target: Node, attributes: Nullable[Mapping[str, AttributeValue]] = None) -> None:
 		"""
 		Initialize an edge.
 
 		:param source:      Node the edge starts at.
 		:param target:      Node the edge ends at.
-		:param attributes:  Further attributes of the edge.
+		:param attributes:  Optional, further attributes of the edge, by name.
 		:raises ValueError: If parameter 'source' is None.
 		:raises TypeError:  If parameter 'source' is not a :class:`Node`.
 		:raises ValueError: If parameter 'target' is None.
 		:raises TypeError:  If parameter 'target' is not a :class:`Node`.
 		"""
+		super().__init__(attributes)
+
 		for parameter, node in (("source", source), ("target", target)):
 			if node is None:
 				raise ValueError(f"Parameter '{parameter}' is None.")
@@ -501,8 +543,6 @@ class Edge(Base):
 				ex = TypeError(f"Parameter '{parameter}' is not of type 'Node'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 				raise ex
-
-		super().__init__(attributes)
 
 		self._source = source
 		self._target = target
