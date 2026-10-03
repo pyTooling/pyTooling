@@ -122,6 +122,7 @@ class ReadOnly(Testcase):
 		self.assertEqual(4, d.length)
 		with self.assertRaises(AttributeError):
 			d.length = 5
+
 		with self.assertRaises(AttributeError):
 			del d.length
 
@@ -215,6 +216,7 @@ class ReadOnly(Testcase):
 
 		with self.assertRaises(AttributeError):
 			derived.setter(lambda self, value: None)
+
 		with self.assertRaises(AttributeError):
 			derived.deleter(lambda self: None)
 

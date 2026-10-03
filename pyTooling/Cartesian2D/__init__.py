@@ -70,6 +70,7 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'x' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
+
 		if not isinstance(y, (int, float)):
 			ex = TypeError("Parameter 'y' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
@@ -247,6 +248,7 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'xOffset' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(xOffset)}'.")
 			raise ex
+
 		if not isinstance(yOffset, (int, float)):
 			ex = TypeError("Parameter 'yOffset' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(yOffset)}'.")
@@ -440,6 +442,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'width' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
 			raise ex
+
 		if not isinstance(height, (int, float)):
 			ex = TypeError("Parameter 'height' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
@@ -501,6 +504,7 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'start' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
+
 		if not isinstance(end, Point2D):
 			ex = TypeError("Parameter 'end' is not of type Point2D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")

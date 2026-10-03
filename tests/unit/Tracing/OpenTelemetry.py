@@ -62,6 +62,7 @@ def _exampleTrace() -> Trace:
 			compileSpan["targets"] = ["a", "b"]
 			Event("cache miss", parent=compileSpan)
 			sleep(0.001)
+
 		with Span("link"):
 			pass
 

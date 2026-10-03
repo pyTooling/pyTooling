@@ -190,6 +190,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 			with requirementsFile.open("r", encoding="utf-8") as file:
 				if debug:
 					print(f"[pyTooling.Packaging]{'  ' * indent} Extracting requirements from '{requirementsFile}'.")
+
 				for line in file.readlines():
 					line = line.strip()
 					if line.startswith("#") or line == "":
@@ -418,12 +419,15 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 			if isinstance(target, Name) and target.id == "__author__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					author = value.value
+
 			if isinstance(target, Name) and target.id == "__copyright__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					copyright = value.value
+
 			if isinstance(target, Name) and target.id == "__email__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					email = value.value
+
 			if isinstance(target, Name) and target.id == "__keywords__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					cause = TypeError("Variable '__keywords__' should be a list of strings.")
@@ -438,21 +442,27 @@ def extractVersionInformation(sourceFile: Path) -> VersionInformation:
 				else:
 					cause = TypeError(f"Used unsupported type '{getFullyQualifiedName(value)}' for variable '__keywords__'.")
 					raise PackagingError(f"Couldn't extract '__keywords__' from '{sourceFile}'.") from cause
+
 			if isinstance(target, Name) and target.id == "__license__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					license = value.value
+
 			if isinstance(target, Name) and target.id == "__version__":
 				if isinstance(value, Constant) and isinstance(value.value, str):
 					version = value.value
 
 	if author is None:
 		raise AssertionError(f"Could not extract '__author__' from '{sourceFile}'.")     # pragma: no cover
+
 	if copyright is None:
 		raise AssertionError(f"Could not extract '__copyright__' from '{sourceFile}'.")  # pragma: no cover
+
 	if email is None:
 		raise AssertionError(f"Could not extract '__email__' from '{sourceFile}'.")      # pragma: no cover
+
 	if license is None:
 		raise AssertionError(f"Could not extract '__license__' from '{sourceFile}'.")    # pragma: no cover
+
 	if version is None:
 		raise AssertionError(f"Could not extract '__version__' from '{sourceFile}'.")    # pragma: no cover
 

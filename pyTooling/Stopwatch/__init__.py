@@ -195,6 +195,7 @@ class Stopwatch(SlottedObject):
 		"""
 		if self._startTime is not None:
 			raise StopwatchError("Stopwatch was already started.")
+
 		if self._stopTime is not None:
 			raise StopwatchError("Stopwatch was already used (started and stopped).")
 
@@ -293,6 +294,7 @@ class Stopwatch(SlottedObject):
 
 		if self._startTime is None:
 			raise StopwatchError("Stopwatch was never started.")
+
 		if self._totalTime is not None:
 			raise StopwatchError("Stopwatch was already stopped.")
 

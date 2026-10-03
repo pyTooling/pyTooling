@@ -724,14 +724,17 @@ class Vertex(
 			edge._destination._inboundEdges.remove(edge)
 			edge._Unregister()
 			edge._Delete()
+
 		for edge in self._inboundEdges:
 			edge._source._outboundEdges.remove(edge)
 			edge._Unregister()
 			edge._Delete()
+
 		for link in self._outboundLinks:
 			link._destination._inboundLinks.remove(link)
 			link._Unregister()
 			link._Delete()
+
 		for link in self._inboundLinks:
 			link._source._outboundLinks.remove(link)
 			link._Unregister()
@@ -1524,6 +1527,7 @@ class Vertex(
 
 		if linkingKeyToOriginalVertex is not None:
 			vertex._dict[linkingKeyToOriginalVertex] = self
+
 		if linkingKeyFromOriginalVertex is not None:
 			self._dict[linkingKeyFromOriginalVertex] = vertex
 
@@ -1803,6 +1807,7 @@ class Vertex(
 				# Child is destination, so construct the last node for path traversal and break from loop.
 				destinationNode = Node(startNode, nextVertex)
 				break
+
 			if nextVertex is not self:
 				# Ignore backward-edges and side-edges.
 				# Here self-edges, because there is only the starting vertex in the list of visited edges.
@@ -1818,6 +1823,7 @@ class Vertex(
 					if nextVertex is destination:
 						destinationNode = Node(node, nextVertex)
 						break
+
 					# Ignore backward-edges and side-edges.
 					if nextVertex not in visited:
 						visited.add(nextVertex)
@@ -1920,6 +1926,7 @@ class Vertex(
 			if nextVertex is destination:
 				destinationNode = Node(startNode, edge._weight, nextVertex)
 				break
+
 			# Ignore backward-edges and side-edges.
 			# Here self-edges, because there is only the starting vertex in the list of visited edges.
 			if nextVertex is not self:
@@ -1935,6 +1942,7 @@ class Vertex(
 					if nextVertex is destination:
 						destinationNode = Node(node, node.distance + edge._weight, nextVertex)
 						break
+
 					# Ignore backward-edges and side-edges.
 					if nextVertex not in visited:
 						visited.add(nextVertex)
@@ -2029,6 +2037,7 @@ class Vertex(
 		if self._id is not None:
 			vertexID = f"{sep}vertexID='{self._id}'"
 			sep = "; "
+
 		if self._value is not None:
 			value = f"{sep}value='{self._value}'"
 
@@ -2192,20 +2201,24 @@ class Edge(
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
 			raise ex
+
 		if not isinstance(destination, Vertex):
 			ex = TypeError("Parameter 'destination' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(destination)}'.")
 			raise ex
+
 		if edgeID is not None and not isinstance(edgeID, Hashable):
 			ex = TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(edgeID)}'.")
 			raise ex
+
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if weight is not None and not isinstance(weight, (int, float)):
 			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
+
 		if source._graph is not destination._graph:
 			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
@@ -2291,20 +2304,24 @@ class Link(
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
 			raise ex
+
 		if not isinstance(destination, Vertex):
 			ex = TypeError("Parameter 'destination' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(destination)}'.")
 			raise ex
+
 		if linkID is not None and not isinstance(linkID, Hashable):
 			ex = TypeError("Parameter 'linkID' is not of type 'LinkIDType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(linkID)}'.")
 			raise ex
+
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if weight is not None and not isinstance(weight, (int, float)):
 			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
+
 		if source._graph is not destination._graph:
 			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
 
@@ -3079,7 +3096,7 @@ class Subgraph(
 		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
-		if not isinstance(graph, Graph):
+		elif not isinstance(graph, Graph):
 			ex = TypeError("Parameter 'graph' is not of type 'Graph'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
 			raise ex

@@ -542,10 +542,13 @@ class Graphs(Testcase):
 		graph = DotGraph()
 		with self.subTest("identifier"), self.assertRaises(ValueError):
 			graph.AddNode(None, "A")
+
 		with self.subTest("identifier"), self.assertRaises(TypeError):
 			graph.AddNode(1, "A")
+
 		with self.subTest("label"), self.assertRaises(ValueError):
 			graph.AddNode("a", None)
+
 		with self.subTest("label"), self.assertRaises(TypeError):
 			graph.AddNode("a", 1)
 
@@ -554,6 +557,7 @@ class Graphs(Testcase):
 		graph = DotGraph()
 		with self.subTest("None"), self.assertRaises(ValueError):
 			graph.AddRecord("t", None)
+
 		with self.subTest("int"), self.assertRaises(TypeError):
 			graph.AddRecord("t", 1)
 
@@ -562,10 +566,13 @@ class Graphs(Testcase):
 		graph = DotGraph()
 		with self.subTest("source"), self.assertRaises(ValueError):
 			graph.AddEdge(None, "b")
+
 		with self.subTest("source"), self.assertRaises(TypeError):
 			graph.AddEdge(1, "b")
+
 		with self.subTest("target"), self.assertRaises(ValueError):
 			graph.AddEdge("a", None)
+
 		with self.subTest("target"), self.assertRaises(TypeError):
 			graph.AddEdge("a", 1)
 
@@ -974,11 +981,15 @@ class ShieldTable(Testcase):
 	def test_AShieldChecksItsParameters(self) -> None:
 		with self.subTest("alternativeText"), self.assertRaises(ValueError):
 			Shield(None, "path")
+
 		with self.subTest("alternativeText"), self.assertRaises(TypeError):
 			Shield(1, "path")
+
 		with self.subTest("path"), self.assertRaises(ValueError):
 			Shield("text", None)
+
 		with self.subTest("path"), self.assertRaises(TypeError):
 			Shield("text", 1)
+
 		with self.subTest("target"), self.assertRaises(TypeError):
 			Shield("text", "path", 1)

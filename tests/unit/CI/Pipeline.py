@@ -708,10 +708,13 @@ class Dependencies(Testcase):
 
 		with self.assertRaises(TypeError):
 			Job("B", parent=pipeline, needs=42)
+
 		with self.assertRaises(ValueError):
 			Job("C", parent=pipeline, dependents=[None])
+
 		with self.assertRaises(TypeError):
 			Job("D", parent=pipeline, dependents=["A"])
+
 		with self.assertRaises(NeedDependencyError):
 			Job("E", parent=pipeline, needs=[other])
 
