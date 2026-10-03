@@ -819,23 +819,25 @@ class Subgraph(BaseGraph):
 	"""
 	_identifier: str  #: Identifier of the subgraph.
 
-	def __init__(self, identifier: str, **attributes: AttributeValue) -> None:
+	def __init__(self, identifier: str, attributes: Nullable[Mapping[str, AttributeValue]] = None) -> None:
 		"""
 		Initialize an empty subgraph.
 
 		:param identifier:  Identifier of the subgraph. It starts with ``cluster`` for a cluster.
-		:param attributes:  Further attributes of the subgraph.
+		:param attributes:  Optional, further attributes of the subgraph, by name.
 		:raises ValueError: If parameter 'identifier' is None or empty.
 		:raises TypeError:  If parameter 'identifier' is not a string.
 		"""
-		if identifier is None or identifier == "":
-			raise ValueError("Parameter 'identifier' is None or empty.")
+		super().__init__(attributes)
+
+		if identifier is None:
+			raise ValueError("Parameter 'identifier' is None.")
 		elif not isinstance(identifier, str):
 			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
 			raise ex
-
-		super().__init__(attributes)
+		elif identifier == "":
+			raise ValueError("Parameter 'identifier' is empty.")
 
 		self._identifier = identifier
 
@@ -889,29 +891,40 @@ class Graph(BaseGraph):
 		identifier: Nullable[str] = None,
 		kind: GraphKind = GraphKind.Directed,
 		strict: bool = False,
-		**attributes: AttributeValue
+		attributes: Nullable[Mapping[str, AttributeValue]] = None
 	) -> None:
 		"""
 		Initialize an empty graph.
 
-		:param identifier: Optional, identifier of the graph, which Graphviz uses as the drawing's name.
-		:param kind:       Optional, kind of the graph. Default: :attr:`GraphKind.Directed`.
-		:param strict:     Optional, if ``True``, multiple edges between the same two nodes are merged. Default:
-		                   ``False``.
-		:param attributes: Further attributes of the graph, e.g. ``rankdir="LR"``.
-		:raises TypeError: If parameter 'identifier' is not a string.
-		:raises TypeError: If parameter 'kind' is not a :class:`GraphKind`.
+		:param identifier:  Optional, identifier of the graph, which Graphviz uses as the drawing's name.
+		:param kind:        Optional, kind of the graph. Default: :attr:`GraphKind.Directed`.
+		:param strict:      Optional, if ``True``, multiple edges between the same two nodes are merged. Default:
+		                    ``False``.
+		:param attributes:  Optional, further attributes of the graph, by name, e.g. ``{"rankdir": "LR"}``.
+		:raises TypeError:  If parameter 'identifier' is not a string.
+		:raises ValueError: If parameter 'kind' is None.
+		:raises TypeError:  If parameter 'kind' is not a :class:`GraphKind`.
+		:raises ValueError: If parameter 'strict' is None.
+		:raises TypeError:  If parameter 'strict' is not a boolean.
 		"""
+		super().__init__(attributes)
+
 		if identifier is not None and not isinstance(identifier, str):
 			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
 			raise ex
-		if not isinstance(kind, GraphKind):
+		if kind is None:
+			raise ValueError("Parameter 'kind' is None.")
+		elif not isinstance(kind, GraphKind):
 			ex = TypeError("Parameter 'kind' is not of type 'GraphKind'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 			raise ex
-
-		super().__init__(attributes)
+		if strict is None:
+			raise ValueError("Parameter 'strict' is None.")
+		elif not isinstance(strict, bool):
+			ex = TypeError("Parameter 'strict' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(strict)}'.")
+			raise ex
 
 		self._identifier = identifier
 		self._kind = kind
@@ -965,8 +978,17 @@ class Graph(BaseGraph):
 		"""
 		Write the graph as a DOT file.
 
-		:param file: Path of the file to write.
+		:param file:        Path of the file to write.
+		:raises ValueError: If parameter 'file' is None.
+		:raises TypeError:  If parameter 'file' is not a :class:`~pathlib.Path`.
 		"""
+		if file is None:
+			raise ValueError("Parameter 'file' is None.")
+		elif not isinstance(file, Path):
+			ex = TypeError("Parameter 'file' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(file)}'.")
+			raise ex
+
 		with file.open("w", encoding="utf-8") as f:
 			f.writelines(self.ToStringLines())
 
