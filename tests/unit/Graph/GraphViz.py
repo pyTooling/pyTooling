@@ -1,0 +1,193 @@
+# ==================================================================================================================== #
+#             _____           _ _               ____                 _                                                 #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|_ __ __ _ _ __ | |__                                              #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |  _| '__/ _` | '_ \| '_ \                                             #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |_| | | | (_| | |_) | | | |                                            #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____|_|  \__,_| .__/|_| |_|                                            #
+# |_|    |___/                          |___/                 |_|                                                      #
+# ==================================================================================================================== #
+# Authors:                                                                                                             #
+#   Patrick Lehmann                                                                                                    #
+#                                                                                                                      #
+# License:                                                                                                             #
+# ==================================================================================================================== #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+#                                                                                                                      #
+# Licensed under the Apache License, Version 2.0 (the "License");                                                      #
+# you may not use this file except in compliance with the License.                                                     #
+# You may obtain a copy of the License at                                                                              #
+#                                                                                                                      #
+#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
+#                                                                                                                      #
+# Unless required by applicable law or agreed to in writing, software                                                  #
+# distributed under the License is distributed on an "AS IS" BASIS,                                                    #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #
+# See the License for the specific language governing permissions and                                                  #
+# limitations under the License.                                                                                       #
+#                                                                                                                      #
+# SPDX-License-Identifier: Apache-2.0                                                                                  #
+# ==================================================================================================================== #
+#
+"""
+Unit tests for :mod:`pyTooling.Graph.GraphViz`: writing a graph in the DOT language.
+"""
+from pyTooling.Graph.GraphViz import GraphKind, HTMLLabel, RecordLabel, DefaultAttributes, Node, Edge, quote
+from pyTooling.Testing        import Testcase
+
+
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
+
+
+class Quoting(Testcase):
+	def test_Quote(self) -> None:
+		for text, expected in (
+			("plain",       '"plain"'),
+			("",            '""'),
+			('say "hi"',    '"say \\"hi\\""'),
+			("a\\l",        '"a\\\\l"'),
+			("two\nlines",  '"two\\nlines"'),
+		):
+			with self.subTest(text=text):
+				self.assertEqual(expected, quote(text))
+
+	def test_GraphKind(self) -> None:
+		self.assertEqual("digraph", GraphKind.Directed.Keyword)
+		self.assertEqual("->", GraphKind.Directed.EdgeOperator)
+		self.assertEqual("graph", GraphKind.Undirected.Keyword)
+		self.assertEqual("--", GraphKind.Undirected.EdgeOperator)
+
+
+class Labels(Testcase):
+	def test_HTMLLabel(self) -> None:
+		label = HTMLLabel(f"<b>{HTMLLabel.Escape('a < b & c')}</b>")
+
+		self.assertEqual("<b>a &lt; b &amp; c</b>", label.Markup)
+		self.assertEqual("<<b>a &lt; b &amp; c</b>>", str(label))
+
+	def test_HTMLLabel_Parameters(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			HTMLLabel(None)
+		self.assertEqual("Parameter 'markup' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			HTMLLabel(1)
+		self.assertEqual("Parameter 'markup' is not of type 'str'.", str(context.exception))
+
+	def test_RecordLabel(self) -> None:
+		for label, expected in (
+			(RecordLabel("a", "b"),                             '"a|b"'),
+			(RecordLabel("a", "b", flipped=True),               '"{a|b}"'),
+			(RecordLabel("a", RecordLabel("b", "c")),           '"a|{b|c}"'),
+			(RecordLabel("«T»", ["x", "y"], [], flipped=True),  '"{«T»|x\\ly\\l| }"'),
+			(RecordLabel('a|b {c} <d> "e" \\'),                 '"a\\|b \\{c\\} \\<d\\> \\"e\\" \\\\"'),
+		):
+			with self.subTest(expected=expected):
+				self.assertEqual(expected, str(label))
+
+	def test_RecordLabel_Fields(self) -> None:
+		nested = RecordLabel("b")
+		label = RecordLabel("a", ["r"], nested, flipped=True)
+
+		self.assertListEqual(["a", ["r"], nested], label.Fields)
+		self.assertTrue(label.Flipped)
+
+	def test_RecordLabel_Parameters(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RecordLabel("a", None)
+		self.assertEqual("Parameter 'fields' contains None.", str(context.exception))
+
+		for field in (1, [1]):
+			with self.subTest(field=field):
+				with self.assertRaises(TypeError) as context:
+					RecordLabel("a", field)
+				self.assertEqual("Parameter 'fields' contains a field of an unsupported type.", str(context.exception))
+
+
+class Attributes(Testcase):
+	def test_DictionarySyntax(self) -> None:
+		node = Node("n", color="red")
+		node["shape"] = "box"
+
+		self.assertIn("shape", node)
+		self.assertEqual("box", node["shape"])
+		self.assertEqual(2, len(node))
+		self.assertDictEqual({"color": "red", "shape": "box"}, node.Attributes)
+
+		del node["color"]
+		self.assertNotIn("color", node)
+		with self.assertRaises(KeyError):
+			_ = node["color"]
+
+	def test_Values(self) -> None:
+		node = Node("n", s="text", i=1, f=0.5, t=True, n=False, h=HTMLLabel("<b>x</b>"), r=RecordLabel("a", "b"))
+
+		self.assertEqual(
+			'"n" [s="text", i=1, f=0.5, t=true, n=false, h=<<b>x</b>>, r="a|b"];\n',
+			node.ToStringLines(0)[0]
+		)
+
+	def test_Parameters(self) -> None:
+		node = Node("n")
+		for name, value, exceptionType, message in (
+			(None, "x",  ValueError, "Parameter 'name' is None or empty."),
+			("",   "x",  ValueError, "Parameter 'name' is None or empty."),
+			(1,    "x",  TypeError,  "Parameter 'name' is not of type 'str'."),
+			("a",  None, ValueError, "Parameter 'value' is None."),
+			("a",  [1],  TypeError,  "Parameter 'value' is not of a supported attribute type."),
+		):
+			with self.subTest(message=message, name=name):
+				with self.assertRaises(exceptionType) as context:
+					node[name] = value
+				self.assertEqual(message, str(context.exception))
+
+	def test_DefaultAttributes(self) -> None:
+		defaults = DefaultAttributes("node")
+		self.assertListEqual([], defaults.ToStringLines())
+
+		defaults["shape"] = "box"
+		self.assertListEqual(['  node [shape="box"];\n'], defaults.ToStringLines())
+
+
+class Elements(Testcase):
+	def test_Node(self) -> None:
+		node = Node("a b", "A")
+
+		self.assertEqual("a b", node.Identifier)
+		self.assertListEqual(['  "a b" [label="A"];\n'], node.ToStringLines())
+		self.assertListEqual(['"plain";\n'], Node("plain").ToStringLines(0))
+
+	def test_Node_Parameters(self) -> None:
+		for identifier, exceptionType, message in (
+			(None, ValueError, "Parameter 'identifier' is None or empty."),
+			("",   ValueError, "Parameter 'identifier' is None or empty."),
+			(1,    TypeError,  "Parameter 'identifier' is not of type 'str'."),
+		):
+			with self.subTest(message=message, identifier=identifier):
+				with self.assertRaises(exceptionType) as context:
+					Node(identifier)
+				self.assertEqual(message, str(context.exception))
+
+	def test_Edge(self) -> None:
+		a, b = Node("a"), Node("b")
+		edge = Edge(a, b, label="e")
+
+		self.assertIs(a, edge.Source)
+		self.assertIs(b, edge.Target)
+		self.assertListEqual(['  "a" -> "b" [label="e"];\n'], edge.ToStringLines())
+		self.assertListEqual(['"a" -- "b" [label="e"];\n'], edge.ToStringLines(GraphKind.Undirected, 0))
+
+	def test_Edge_Parameters(self) -> None:
+		node = Node("a")
+		for source, target, exceptionType, message in (
+			(None, node, ValueError, "Parameter 'source' is None."),
+			("a",  node, TypeError,  "Parameter 'source' is not of type 'Node'."),
+			(node, None, ValueError, "Parameter 'target' is None."),
+			(node, "b",  TypeError,  "Parameter 'target' is not of type 'Node'."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					Edge(source, target)
+				self.assertEqual(message, str(context.exception))
