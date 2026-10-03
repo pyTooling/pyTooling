@@ -6,10 +6,15 @@ Coverage ~= 7.15
 # Test Runner
 pytest ~= 9.1
 pytest-cov ~= 7.1
+pytest-xdist ~= 3.8
 
 # For pyTooling.Dependency.Python testing
 aiohttp >= 3.12    # aiohttp limited on MSYS2 to 3.12.x
 requests >= 2.32
+
+# For pyTooling.Documentation.Sphinx testing - Sphinx 9.1 requires Python 3.12, so these testcases are skipped
+# on Python 3.11, where 'pyTooling[sphinx]' can't be installed either.
+sphinx >= 9.1 ; python_version >= "3.12"
 
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml ~= 0.19.1
@@ -17,5 +22,18 @@ ruamel.yaml ~= 0.19.1
 # For pyTooling.Packaging testing
 setuptools >= 83.0
 
+# For pyTooling.Licensing testing - PyPI's canonical classifier list
+trove-classifiers >= 2025.1
+
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6
+
+# For pyTooling.Tracing.Render.Matplotlib testing - these testcases are skipped where matplotlib isn't installed:
+# * PyPy on Windows: PyPI has no matplotlib wheel and building it from source fails (ft2font doesn't link).
+# * PyPy 8.0 on Linux: PyPI has no wheel of matplotlib's dependency Pillow for PyPy 8.0 (only 'pypy311_pp73'), and
+#   building Pillow from source fails on the runners (no libjpeg headers). Remove the 'implementation_version' limit
+#   once Pillow and matplotlib ship 'pp80' wheels.
+matplotlib >= 3.10 ; implementation_name != "pypy" or sys_platform == "darwin" or (sys_platform == "linux" and implementation_version < "8")
+
+# For pyTooling.Testing.ReportWriter testing - validates the report against its schema
+xmlschema ~= 4.3

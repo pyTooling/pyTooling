@@ -48,7 +48,7 @@ from typing              import ClassVar, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Platform    import PlatformException, CurrentPlatform
+from pyTooling.Platform    import PlatformError, CurrentPlatform
 
 if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 	from ctypes          import WinDLL
@@ -114,6 +114,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 		_processHandle: Any
 	elif CurrentPlatform.IsNativeLinux:
 		_processStatusFile: ClassVar[Path] = Path(f"/proc/self/statm")
+	elif CurrentPlatform.IsNativeFreeBSD:
+		pass
 
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
@@ -168,20 +170,36 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			``SC_PAGESIZE`` is typically 4096 bytes, but can be 16kiB (ARM64) or 64kiB (PowerPC/RHEL9+). :func:`os.sysconf`
 			reads it from the aux vector — no syscall overhead.
 
-			:returns:                  Physical memory usage (VmRSS) in bytes.
-			:raises PlatformException: If the process' memory usage couldn't be read.
+			:returns:              Physical memory usage (VmRSS) in bytes.
+			:raises PlatformError: If the process' memory usage couldn't be read.
 			"""
 
 			try:
 				with self._processStatusFile.open("rb") as f:
 					fields = f.read().split()
 			except FileNotFoundError as ex:
-				raise PlatformException(f"Can't open '{self._processStatusFile}' to extract the process' physical memory usage.") from ex
+				raise PlatformError(f"Can't open '{self._processStatusFile}' to extract the process' physical memory usage.") from ex
 
 			vms = int(fields[0]) * self._pageSize  #: VmSize
 			rss = int(fields[1]) * self._pageSize  #: VmRSS
 
 			return MemoryInfo(rss, vms)
+
+	elif CurrentPlatform.IsNativeFreeBSD:
+		def GetMemoryUsage(self) -> MemoryInfo:
+			"""
+			Get the memory usage of this Python process on a FreeBSD system.
+
+			``resource.getrusage`` provides the resident size portably on FreeBSD.
+			Virtual memory usage is not exposed by the stdlib here, so report ``0``
+			for the virtual component until upstream adds a native implementation.
+
+			:returns: Memory usage of the current process.
+			"""
+			from resource import RUSAGE_SELF, getrusage
+
+			rss = getrusage(RUSAGE_SELF).ru_maxrss * 1024
+			return MemoryInfo(rss, 0)
 
 	elif CurrentPlatform.IsNativeMacOS:
 		class _ProcTaskInfo(Structure):
@@ -221,8 +239,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			proc_pidinfo() returns the number of bytes written; ≤ 0 means error
 			(errno is set).  PROC_PIDTASKINFO = 4.
 
-			:returns:                  Memory usage of the current process.
-			:raises PlatformException: If ``proc_pidinfo`` reported an error.
+			:returns:              Memory usage of the current process.
+			:raises PlatformError: If ``proc_pidinfo`` reported an error.
 			"""
 			from ctypes import CDLL, byref, sizeof, get_errno
 			from ctypes.util import find_library
@@ -244,7 +262,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			ret = _libproc.proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, byref(taskInfo), sizeof(taskInfo))
 			if ret <= 0:
 				err = get_errno()
-				raise PlatformException(f"Failed to get current process' information.") from OSError(err, strerror(err), "proc_pidinfo")
+				raise PlatformError("Failed to get current process' information.") from OSError(err, strerror(err), "proc_pidinfo")
 
 			return MemoryInfo(taskInfo.pti_resident_size, taskInfo.pti_virtual_size)
 
@@ -299,4 +317,4 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			return MemoryInfo(processMemoryCounters.WorkingSetSize, processMemoryCounters.PagefileUsage)
 
 	else:
-		raise PlatformException(f"Unsupported platform: '{CurrentPlatform}'.")
+		raise PlatformError(f"Unsupported platform: '{CurrentPlatform}'.")

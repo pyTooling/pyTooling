@@ -72,6 +72,7 @@ Features
 * A graph, vertex and an edge can store key-value-pairs via dictionary syntax.
 * A vertex knows its inbound and outbound edges.
 * An edge can have a weight.
+* A directed acyclic graph can be reduced to its transitive reduction.
 
 
 .. _STRUCT/Graph/MissingFeatures:
@@ -97,7 +98,8 @@ Out of Scope
   modification, which might leave the graph in a corrupted state.
 * Export the graph data structure to various file formats like JSON, YAML, TOML, ...
 * Import a graph data structure from various file formats like JSON, YAML, TOML, ...
-* Graph visualization or rendering to complex formats like GraphML, GraphViz, Mermaid, ...
+* Laying out or drawing a graph: :ref:`exporting <STRUCT/Graph/Export>` it to GraphML or Graphviz' DOT language is
+  in scope, the layout and the drawing are Graphviz', yEd's or another tool's job.
 
 
 .. _STRUCT/Graph/ByFeature:
@@ -192,6 +194,124 @@ Graph Reference
 ===============
 
 .. todo:: GRAPH: reference to the graph
+
+
+.. _STRUCT/Graph/TransitiveReduction:
+
+Transitive Reduction
+====================
+
+An edge from ``A`` to ``C`` is *implied*, if ``C`` is reachable from ``A`` through another vertex as well - e.g. by the
+edges ``A → B`` and ``B → C``. :meth:`~pyTooling.Graph.BaseGraph.IterateTransitiveEdges` yields every implied edge,
+and :meth:`~pyTooling.Graph.BaseGraph.RemoveTransitiveEdges` removes them. What remains is the graph's *transitive
+reduction*: every vertex stays reachable from every vertex it was reachable from before, by the fewest edges. A graph
+with a cycle has no unique reduction and raises :exc:`~pyTooling.Graph.CycleError`.
+
+Only the edges of the graph it is called on are considered. A subgraph's edges are registered on the subgraph, so a
+subgraph is reduced by calling the method on it.
+
+.. code-block:: python
+
+   graph = Graph()
+   a, b, c = (Vertex(vertexID=name, graph=graph) for name in "ABC")
+   a.EdgeToVertex(b)
+   b.EdgeToVertex(c)
+   a.EdgeToVertex(c)                    # implied by A -> B -> C
+
+   graph.RemoveTransitiveEdges()
+
+   for subgraph in graph.Subgraphs:
+     subgraph.RemoveTransitiveEdges()
+
+:meth:`~pyTooling.Graph.BaseGraph.IterateTransitiveEdges` yields an edge as soon as it is found, so it can be removed
+while iterating. :meth:`~pyTooling.Graph.BaseGraph.IterateTransitiveEdgesWithPath` yields each edge with the path
+implying it, a tuple of vertices along direct edges.
+
+Instead of removing them, :meth:`~pyTooling.Graph.BaseGraph.AnnotateTransitiveEdges` marks the edges: every edge's
+:attr:`~pyTooling.Graph.BaseEdge.Kind` becomes :attr:`EdgeKind.Direct <pyTooling.Graph.EdgeKind.Direct>` or
+:attr:`EdgeKind.Transitive <pyTooling.Graph.EdgeKind.Transitive>`. The graph keeps every edge, and a consumer - e.g. a
+renderer drawing implied edges dashed - tells them apart. With ``keyName``, a transitive edge also gets the path
+implying it as a key-value-pair: the vertices from its source to its destination, along direct edges. The key
+``"transitive.path"`` is a good choice; without ``keyName``, no path is computed.
+
+.. code-block:: python
+
+   graph.AnnotateTransitiveEdges(keyName="transitive.path")
+
+   for edge in graph.IterateEdges():
+     if edge.Kind is EdgeKind.Transitive:
+       path = [vertex.ID for vertex in edge["transitive.path"]]
+       print(edge.Source.ID, edge.Destination.ID, path)   # A C ['A', 'B', 'C']
+
+An edge's kind is given when it is created - :attr:`EdgeKind.Default <pyTooling.Graph.EdgeKind.Default>`, unless
+``edgeKind`` states another one - and a link's likewise with ``linkKind`` and
+:class:`~pyTooling.Graph.LinkKind`. A kind may be a member of an enumeration of the user's own, e.g.
+``a.EdgeToVertex(c, edgeKind=Dependency.Implied)`` or ``graph.AnnotateTransitiveEdges(directKind=Dependency.Needed,
+transitiveKind=Dependency.Implied)``.
+
+
+.. _STRUCT/Graph/Export:
+
+Export
+******
+
+A graph is written for other tools by two modules with the same structure: a data model of the format's elements,
+filled with ``FromGraph()`` from a :class:`~pyTooling.Graph.Graph` or with ``FromTree()`` from a tree of
+:class:`~pyTooling.Tree.Node`, and written as text.
+
+* :mod:`pyTooling.Graph.GraphML` writes a GraphML document, read by tools like yEd or Gephi.
+* :mod:`pyTooling.Graph.GraphViz` writes Graphviz' DOT language, drawn by :program:`dot` or by
+  :mod:`sphinx.ext.graphviz` in a documentation.
+
+
+.. _STRUCT/Graph/Export/GraphViz:
+
+Graphviz (DOT)
+==============
+
+:class:`~pyTooling.Graph.GraphViz.Graph` is the document Graphviz reads.
+:meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` turns every subgraph into a cluster of its vertices, every vertex into
+a node labelled with its value, every edge into an edge, and a link between two subgraphs into a dashed edge. A vertex
+without an ID gets a generated identifier.
+
+.. code-block:: python
+
+   from pyTooling.Graph          import Graph, Vertex
+   from pyTooling.Graph.GraphViz import Graph as DotGraph
+
+   graph = Graph(name="Example")
+   a, b = Vertex(vertexID="A", value="first", graph=graph), Vertex(vertexID="B", graph=graph)
+   a.EdgeToVertex(b)
+
+   dot = DotGraph(attributes={"rankdir": "LR"})
+   dot.NodeDefaults["shape"] = "box"
+   dot.FromGraph(graph)
+   print(dot)
+
+.. code-block:: text
+
+   digraph "Example" {
+     rankdir="LR";
+     node [shape="box"];
+     "A" [label="first"];
+     "B";
+     "A" -> "B";
+   }
+
+Every element takes its attributes as a mapping in parameter ``attributes`` and gives access to them with dictionary
+syntax - ``node["color"] = "red"`` - and a value is written by its type: a text quoted, a number as it is, a boolean as
+``true``/``false``. Labels with structure are :class:`~pyTooling.Graph.GraphViz.RecordLabel` (the fields of a
+``record`` node, e.g. a type and its members) and :class:`~pyTooling.Graph.GraphViz.HTMLLabel` (HTML-like markup); each
+escapes what it is given.
+
+What an element becomes is decided by ``_ConvertVertex()``, ``_ConvertEdge()``, ``_ConvertLink()``,
+``_ConvertSubgraph()`` and ``_ConvertTreeNode()``. A derived class overrides them to add its own labels and attributes:
+
+.. code-block:: python
+
+   class TypeGraph(DotGraph):
+     def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
+       return Node(identifier, RecordLabel([vertex.ID, vertex["members"]], flipped=True), {"shape": "record"})
 
 
 .. _STRUCT/Graph/Competitors:

@@ -724,6 +724,7 @@ number of nodes and edges, the parsing order and both ID styles.
 		lines = [self.OpeningTag(indent)]
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 1))
+
 		for edge in self._edges.values():
 			lines.extend(edge.ToStringLines(indent + 1))
 		# for data in self._data:
@@ -920,6 +921,7 @@ class Subgraph(Node, BaseGraph):
 		lines.append(self.OpeningTag(indent + 1))
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 2))
+
 		for edge in self._edges.values():
 			lines.extend(edge.ToStringLines(indent + 2))
 		# for data in self._data:
@@ -1182,5 +1184,5 @@ class GraphMLDocument(Base):
 		:param file: Path of the file to write.
 		"""
 		with file.open("w", encoding="utf-8") as f:
-			f.write(f"""<?xml version="1.0" encoding="utf-8"?>""")
+			f.write("""<?xml version="1.0" encoding="utf-8"?>""")
 			f.writelines(self.ToStringLines())

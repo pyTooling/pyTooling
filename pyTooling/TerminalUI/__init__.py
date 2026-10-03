@@ -32,6 +32,8 @@
 """
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
+:raises MissingDependencyError: If the 'terminal' extra isn't installed.
+
 .. seealso::
 
    :mod:`pyTooling.Attributes.ArgParse`
@@ -50,17 +52,17 @@ from sys                     import stdin, stdout, stderr
 from textwrap                import dedent
 from types                   import ModuleType
 from typing                  import NoReturn, Any, Optional as Nullable, Callable, ClassVar
-from pyTooling.Exceptions    import MissingDependencyException
+from pyTooling.Exceptions    import MissingDependencyError
 from pyTooling.Versioning    import PythonVersion
 
 try:
 	from colorama import Fore as Foreground
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyException(dependency="colorama", extra="terminal") from ex
+	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, mixin
-from pyTooling.Exceptions  import PlatformNotSupportedException, ExceptionBase
+from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
 
@@ -77,8 +79,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
 	#: Return code (242), if an optional dependency is missing. The value lives on the exception, which stays
-	#: importable when this module is not - see :meth:`PrintMissingDependencyException`.
-	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyException.EXIT_CODE
+	#: importable when this module is not - see :meth:`PrintMissingDependencyError`.
+	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyError.EXIT_CODE
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
@@ -205,8 +207,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Returns the terminal size as tuple (width, height) for Windows, macOS (Darwin), Linux, cygwin (Windows), MinGW32/64 (Windows).
 
-		:returns:                              A tuple containing width and height of the terminal's size in characters.
-		:raises PlatformNotSupportedException: When a platform is not yet supported.
+		:returns:                          A tuple containing width and height of the terminal's size in characters.
+		:raises PlatformNotSupportedError: When a platform is not yet supported.
 		"""
 		platform = Platform()
 		if platform.IsNativeWindows:
@@ -215,7 +217,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 					or platform.IsUCRT64OnWindows or platform.IsCygwin32OnWindows or platform.IsClang64OnWindows):
 			size = TerminalBaseApplication.__GetTerminalSizeOnLinux()
 		else:  # pragma: no cover
-			raise PlatformNotSupportedException(f"Platform '{platform}' not yet supported.")
+			raise PlatformNotSupportedError(f"Platform '{platform}' not yet supported.")
 
 		if size is None:   # pragma: no cover
 			size = (80, 25)  # default size
@@ -381,7 +383,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Exit the terminal application by uninitializing color support and returning a fatal Exit code.
 
-		:param returnCode:  Optional, return code for application exit.
+		:param returnCode: Optional, return code for application exit.
 		"""
 		self.Exit(self.FATAL_EXIT_CODE if returnCode == 0 else returnCode)
 
@@ -448,14 +450,14 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
-	def PrintMissingDependencyException(self, ex: MissingDependencyException) -> NoReturn:
+	def PrintMissingDependencyError(self, ex: MissingDependencyError) -> NoReturn:
 		"""
 		Print a missing optional dependency and the command lines installing it.
 
 		Unlike the other printers, this one does **not** report a bug: there is no traceback, and no invitation to
 		open an issue, because nothing is wrong with the program - a package it can use is not installed. The message
 		names the missing package and every installation option the exception carries
-		(:attr:`~pyTooling.Exceptions.MissingDependencyException.InstallCommands`).
+		(:attr:`~pyTooling.Exceptions.MissingDependencyError.InstallCommands`).
 
 		.. attention::
 
@@ -466,13 +468,13 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		   .. code-block:: python
 
-		      from pyTooling.Exceptions import MissingDependencyException
+		      from pyTooling.Exceptions import MissingDependencyError
 
 		      try:
 		        from pyTooling.TerminalUI import TerminalApplication
-		      except MissingDependencyException as ex:
+		      except MissingDependencyError as ex:
 		        print(f"{ex}\n" + "\n".join(f"  {command}" for command in ex.InstallCommands))
-		        raise SystemExit(MissingDependencyException.EXIT_CODE) from ex
+		        raise SystemExit(MissingDependencyError.EXIT_CODE) from ex
 
 		:param ex: The exception to print.
 		:returns:  Never - the method exits the application with :attr:`MISSING_DEPENDENCY_EXIT_CODE`.
@@ -587,6 +589,7 @@ class Severity(Enum):
 	ExceptionNote =  110    #: Exception notes
 	Fatal =          100    #: Fatal messages
 	Error =           80    #: Error messages
+	ErrorNote =       75    #: Error notes
 	Quiet =           70    #: Always visible messages, even in quiet mode.
 
 	Critical =        60    #: Critical messages
@@ -621,9 +624,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value == other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by == operator.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -637,9 +640,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value != other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by != operator.")
+			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __lt__(self, other: Any) -> bool:
@@ -653,9 +656,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value < other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by < operator.")
+			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __le__(self, other: Any) -> bool:
@@ -669,9 +672,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value <= other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by <= operator.")
+			ex = TypeError("Second operand is not supported by <= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __gt__(self, other: Any) -> bool:
@@ -685,9 +688,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >	other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by > operator.")
+			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 	def __ge__(self, other: Any) -> bool:
@@ -701,9 +704,9 @@ class Severity(Enum):
 		if isinstance(other, Severity):
 			return self.value >= other.value
 		else:
-			ex = TypeError(f"Second operand is not supported by >= operator.")
+			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: Severity")
+			ex.add_note("Supported types for second operand: Severity")
 			raise ex
 
 
@@ -728,6 +731,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		Severity.ExceptionNote: "           > {message}",
 		Severity.Fatal:         "FATAL: {message}",
 		Severity.Error:         "ERROR: {message}",
+		Severity.ErrorNote:     "       > {message}",
 		Severity.Quiet:         "{message}",
 		Severity.Critical:      "CRITICAL: {message}",
 		Severity.CriticalNote:  "          > {message}",
@@ -834,7 +838,7 @@ class ILineTerminal:
 
 	def __init__(self, terminal: Nullable[TerminalApplication] = None) -> None:
 		"""
-		MixIn initializer.
+		Mixin initializer.
 
 		:param terminal: Optional, the terminal to write to. If ``None``, every writing method does nothing.
 		"""
@@ -1009,6 +1013,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		Severity.ExceptionNote:   "{DARK_RED}            > {message}{NOCOLOR}",
 		Severity.Fatal:           "{DARK_RED}[FATAL]     {message}{NOCOLOR}",
 		Severity.Error:                "{RED}[ERROR]     {message}{NOCOLOR}",
+		Severity.ErrorNote:       "{DARK_RED}            > {message}{NOCOLOR}",
 		Severity.Quiet:              "{WHITE}{message}{NOCOLOR}",
 		Severity.Critical:     "{DARK_YELLOW}[CRITICAL]  {message}{NOCOLOR}",
 		Severity.CriticalNote: "{DARK_YELLOW}            > {message}{NOCOLOR}",
@@ -1110,22 +1115,6 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
 		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HeadLine, **TerminalApplication.Foreground))
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
-
-	def _PrintHelp(self, command: Nullable[str] = None) -> None:
-		"""
-		Helper function to print the command line parsers help page(s).
-
-		:param command: Optional, the subcommand to print the help page(s) for.
-		"""
-		if command is None:
-			self.MainParser.print_help()
-		elif command == "help":
-			self.WriteWarning("This is a recursion ...")
-		else:
-			try:
-				self.SubParsers[command].print_help()
-			except KeyError:
-				self.WriteError(f"Command {command} is unknown.")
 
 	def _PrintVersion(
 		self,
@@ -1416,6 +1405,9 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		Print a formatted line to the underlying terminal/console offered by the operating system.
 
+		The message is indented by :attr:`INDENT` repeated :attr:`Line.Indent` times. The indentation is applied to the
+		message, not to the whole line, so the severity markers stay in one column.
+
 		:param line: Line object to indent, format and print.
 		:returns:    True, if line was actually written.
 		"""
@@ -1424,7 +1416,8 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 
 		self._lines.append(line)
 		for method in self._LOG_LEVEL_ROUTING__[line.Severity]:
-			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=line.Message, **self.Foreground), end="\n" if line.AppendLinebreak else "")
+			indentedMessage = self.INDENT * line.Indent + line.Message
+			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=indentedMessage, **self.Foreground), end="\n" if line.AppendLinebreak else "")
 
 		return True
 
@@ -1525,6 +1518,27 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		"""
 		self._criticalWarningCount += 1
 		return self.WriteLine(Line(message, Severity.Critical, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+	def WriteErrorNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		"""
+		Write a note belonging to an error, which is where the advice for fixing it goes.
+
+		Depending on internal settings and rules, a note might be skipped.
+
+		:param message:         Message to write.
+		:param indent:          Optional, indentation level of the note.
+		:param appendLinebreak: Optional, append a linebreak after the note. Default: ``True``
+		:returns:               True, if note was actually written.
+		"""
+		return self.WriteLine(
+			Line(message, Severity.ErrorNote, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak)
+		)
 
 	def WriteCriticalNote(
 		self,

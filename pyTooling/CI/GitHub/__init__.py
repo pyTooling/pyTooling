@@ -1,0 +1,1275 @@
+# ==================================================================================================================== #
+#             _____           _ _               ____ ___                                                               #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|_ _|                                                              #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |    | |                                                               #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |___ | |                                                               #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____|___|                                                              #
+# |_|    |___/                          |___/                                                                          #
+# ==================================================================================================================== #
+# Authors:                                                                                                             #
+#   Patrick Lehmann                                                                                                    #
+#                                                                                                                      #
+# License:                                                                                                             #
+# ==================================================================================================================== #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+#                                                                                                                      #
+# Licensed under the Apache License, Version 2.0 (the "License");                                                      #
+# you may not use this file except in compliance with the License.                                                     #
+# You may obtain a copy of the License at                                                                              #
+#                                                                                                                      #
+#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
+#                                                                                                                      #
+# Unless required by applicable law or agreed to in writing, software                                                  #
+# distributed under the License is distributed on an "AS IS" BASIS,                                                    #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #
+# See the License for the specific language governing permissions and                                                  #
+# limitations under the License.                                                                                       #
+#                                                                                                                      #
+# SPDX-License-Identifier: Apache-2.0                                                                                  #
+# ==================================================================================================================== #
+#
+"""
+A data model of a GitHub Actions workflow run.
+
+The GitHub REST API answers with nested JSON objects whose fields are strings - ``"status": "completed"``,
+``"conclusion": "timed_out"``, timestamps as ISO 8601 text. This model reads those payloads once into objects:
+
+.. code-block:: text
+
+   PipelineGroup            every run started for one commit
+   +-- Pipeline             a workflow run
+       +-- Workflow         a called (reusable) workflow, grouping the jobs it contains
+       |   +-- Workflow     a workflow called by that workflow
+       |   +-- Matrix       a matrix, grouping the job instances it produced
+       |   |   +-- MatrixJob
+       |   +-- Job
+       +-- Matrix
+       +-- Job              a job that ran on a runner
+           +-- Step         a step of that job
+
+The classes derive from the service-independent model :mod:`pyTooling.CI`, which a called workflow, a
+matrix and their base-class are taken from unchanged. Every element knows its parent and the pipeline it belongs to,
+and the string fields become :class:`Status`, :class:`Conclusion` and :class:`Event` members, so an undocumented value
+is an error rather than a comparison that never matches. A conclusion is reported as the model's
+:class:`~pyTooling.CI.Outcome` as well.
+
+The model carries no dependency on what is done with it. Converting a :class:`Pipeline` into a software execution
+trace, a graph or a report is a consumer of this model.
+"""
+from __future__                import annotations
+
+from datetime                  import datetime, timezone
+from typing                    import Optional as Nullable, Any, ClassVar, Hashable, Iterable, Mapping, Self, Union
+
+from pyTooling.CI              import CIError, JSONObject, MatrixInstanceMixin, Outcome
+from pyTooling.CI              import Job as CIJob, JobGroup as CIJobGroup, Matrix as CIMatrix
+from pyTooling.CI              import MatrixWorkflow as CIMatrixWorkflow, Pipeline as CIPipeline
+from pyTooling.CI              import PipelineGroup as CIPipelineGroup, Step as CIStep, Workflow as CIWorkflow
+from pyTooling.Common          import getFullyQualifiedName, parseISO8601Timestamp, StringEnum
+from pyTooling.Decorators      import export, readonly
+from pyTooling.GenericPath.URL import URL
+from pyTooling.MetaClasses     import ExtendedType
+
+
+__all__ = ["CONCLUSION_TO_OUTCOME"]
+
+
+@export
+class GitHubError(CIError):
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.CI.GitHub`."""
+
+
+@export
+class Status(StringEnum):
+	"""The state a workflow run, job or step is in."""
+
+	Queued =     "queued"       #: Waiting to be picked up.
+	InProgress = "in_progress"  #: Running.
+	Completed =  "completed"    #: Finished, with a :class:`Conclusion`.
+	Waiting =    "waiting"      #: Held, e.g. for an environment's approval.
+	Requested =  "requested"    #: Requested, but not yet queued.
+	Pending =    "pending"      #: Blocked by a concurrency group.
+
+	@classmethod
+	def Parse(cls, value: Nullable[str]) -> Nullable[Status]:
+		"""
+		Convert GitHub's ``status`` field to a member of this enumeration.
+
+		:param value:        Optional, the field's value. Default: ``None``.
+		:returns:            The matching member, or ``None`` if the field was absent or empty.
+		:raises TypeError:   If parameter 'value' is not of type :class:`str`.
+		:raises GitHubError: If the value is not a status GitHub documents. |br|
+		                     The note lists the documented values.
+		"""
+		try:
+			return super().Parse(value)
+		except ValueError as ex:
+			error = GitHubError(f"'{value}' is not a GitHub status.")
+			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
+			raise error from ex
+
+
+@export
+class Conclusion(StringEnum):
+	"""How a completed workflow run, job or step ended."""
+
+	Success =        "success"          #: Succeeded.
+	Failure =        "failure"          #: Failed.
+	Cancelled =      "cancelled"        #: Cancelled before it finished.
+	Skipped =        "skipped"          #: Not run, because a condition excluded it.
+	TimedOut =       "timed_out"        #: Stopped by a timeout.
+	ActionRequired = "action_required"  #: Waiting for a manual action.
+	Neutral =        "neutral"          #: Finished without a verdict.
+	Stale =          "stale"            #: Never ran, because the run was superseded.
+	StartupFailure = "startup_failure"  #: The workflow file itself couldn't be started.
+
+	@classmethod
+	def Parse(cls, value: Nullable[str]) -> Nullable[Conclusion]:
+		"""
+		Convert GitHub's ``conclusion`` field to a member of this enumeration.
+
+		:param value:        Optional, the field's value. Default: ``None``.
+		:returns:            The matching member, or ``None`` while it hasn't concluded.
+		:raises TypeError:   If parameter 'value' is not of type :class:`str`.
+		:raises GitHubError: If the value is not a conclusion GitHub documents. |br|
+		                     The note lists the documented values.
+		"""
+		try:
+			return super().Parse(value)
+		except ValueError as ex:
+			error = GitHubError(f"'{value}' is not a GitHub conclusion.")
+			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
+			raise error from ex
+
+	def ToOutcome(self) -> Outcome:
+		"""
+		Return the service-independent outcome this conclusion corresponds to.
+
+		The conclusions with a counterpart of their own - e.g. :attr:`TimedOut`, :attr:`Skipped`, :attr:`Cancelled` - are
+		listed in :data:`CONCLUSION_TO_OUTCOME`; any other, e.g. :attr:`StartupFailure` or :attr:`Neutral`, is an
+		:attr:`~pyTooling.CI.Outcome.Error`.
+
+		:returns: The outcome.
+		"""
+		return CONCLUSION_TO_OUTCOME.get(self, Outcome.Error)
+
+
+CONCLUSION_TO_OUTCOME = {
+	Conclusion.Success:   Outcome.Success,
+	Conclusion.Failure:   Outcome.Failure,
+	Conclusion.TimedOut:  Outcome.Timeout,
+	Conclusion.Skipped:   Outcome.Skip,
+	Conclusion.Cancelled: Outcome.Cancellation,
+}
+"""GitHub's conclusions with a service-independent outcome of their own."""
+
+
+@export
+class Event(StringEnum):
+	"""The event that triggered a workflow run."""
+
+	CheckRun                 = "check_run"                    #: A check run was created or completed.
+	CheckSuite               = "check_suite"                  #: A check suite was created or completed.
+	Create                   = "create"                       #: A branch or tag was created.
+	Delete                   = "delete"                       #: A branch or tag was deleted.
+	Deployment               = "deployment"                   #: A deployment was created.
+	DeploymentStatus         = "deployment_status"            #: A deployment's status changed.
+	Discussion               = "discussion"                   #: A discussion was touched.
+	DiscussionComment        = "discussion_comment"           #: A discussion was commented on.
+	Fork                     = "fork"                         #: The repository was forked.
+	Gollum                   = "gollum"                       #: A wiki page was created or updated.
+	IssueComment             = "issue_comment"                #: An issue or pull-request was commented on.
+	Issues                   = "issues"                       #: An issue was touched.
+	Label                    = "label"                        #: A label was touched.
+	MergeGroup               = "merge_group"                  #: A merge group entered the merge queue.
+	Milestone                = "milestone"                    #: A milestone was touched.
+	PageBuild                = "page_build"                   #: GitHub Pages was built.
+	Public                   = "public"                       #: The repository was made public.
+	PullRequest              = "pull_request"                 #: A pull-request was touched.
+	PullRequestComment       = "pull_request_comment"         #: A pull-request was commented on.
+	PullRequestReview        = "pull_request_review"          #: A pull-request was reviewed.
+	PullRequestReviewComment = "pull_request_review_comment"  #: A review was commented on.
+	PullRequestTarget        = "pull_request_target"          #: A pull-request, run against its base.
+	Push                     = "push"                         #: A commit or tag was pushed.
+	RegistryPackage          = "registry_package"             #: A package was published or updated.
+	Release                  = "release"                      #: A release was touched.
+	RepositoryDispatch       = "repository_dispatch"          #: An external event was dispatched.
+	Schedule                 = "schedule"                     #: A cron schedule fired.
+	Status                   = "status"                       #: A commit's status changed.
+	Watch                    = "watch"                        #: The repository was starred.
+	WorkflowCall             = "workflow_call"                #: The workflow was called by another one.
+	WorkflowDispatch         = "workflow_dispatch"            #: The workflow was started by hand or by a token.
+	WorkflowRun              = "workflow_run"                 #: Another workflow run completed.
+	Dynamic                  = "dynamic"                      #: GitHub started the run without a workflow file.
+
+	@classmethod
+	def Parse(cls, value: Nullable[str]) -> Nullable[Event]:
+		"""
+		Convert GitHub's ``event`` field to a member of this enumeration.
+
+		:param value:        Optional, the field's value. Default: ``None``.
+		:returns:            The matching member, or ``None`` if the field was absent or empty.
+		:raises TypeError:   If parameter 'value' is not of type :class:`str`.
+		:raises GitHubError: If the value is not an event GitHub documents. |br|
+		                     The note lists the documented values.
+		"""
+		try:
+			return super().Parse(value)
+		except ValueError as ex:
+			error = GitHubError(f"'{value}' is not a GitHub event.")
+			error.add_note(f"Known: {', '.join(member.value for member in cls)}.")
+			raise error from ex
+
+
+def _parseISO8601Timestamp(value: Nullable[str], field: str) -> Nullable[datetime]:
+	"""
+	Parse an ISO 8601 timestamp, as the GitHub REST API reports them.
+
+	A timestamp without a time zone is read as UTC, so every timestamp of a run can be compared with every other.
+
+	:param value:        Optional, the field's value. Default: ``None``.
+	:param field:        Name of the field, for the exception's message.
+	:returns:            The timestamp, or ``None`` if the field was absent or empty.
+	:raises GitHubError: If the value isn't an ISO 8601 timestamp. |br|
+	                     The note reports the value that was read.
+	"""
+	try:
+		return parseISO8601Timestamp(value, timezone.utc)
+	except ValueError as ex:
+		error = GitHubError(f"Field '{field}' isn't an ISO 8601 timestamp.")
+		error.add_note(f"Got '{value}'.")
+		raise error from ex
+
+
+def _parseURL(value: Nullable[str], field: str) -> Nullable[URL]:
+	"""
+	Parse a URL, as the GitHub REST API reports them.
+
+	:param value: Optional, the field's value. Default: ``None``.
+	:param field: Name of the field, kept for symmetry with :func:`_parseISO8601Timestamp` and for the message this
+	              will report once :meth:`~pyTooling.GenericPath.URL.URL.Parse` rejects what isn't a URL.
+	:returns:     The URL, or ``None`` if the field was absent or empty.
+	"""
+	if value is None or value == "":
+		return None
+
+	return URL.Parse(value)
+
+
+def _splitMatrixJobName(name: str) -> tuple[str, Nullable[dict[str, str]]]:
+	"""
+	Split a job's name into the matrix' name and the dimensions, if it carries any.
+
+	GitHub appends the dimensions' values of a matrix instance to the job's name, as
+	``Unit Tests (ubuntu-26.04, 3.14)``. That bracketed suffix is a naming convention of GitHub's own interface, not a
+	field of the payload, so a job genuinely named ``Build (fast)`` and produced by no matrix is indistinguishable from
+	one that was. A job whose workflow sets its own ``name:`` carries no values at all, and its matrix stays invisible.
+
+	The suffix carries no dimension names, so a dimension is named by the position of its value: ``"0"``, ``"1"``, ...
+
+	:param name: The job's name, without any calling workflows' prefixes.
+	:returns:    The name without the suffix and the dimensions, or the name and ``None`` if it carries none.
+	"""
+	if not name.endswith(")") or "(" not in name:
+		return name, None
+
+	base, _, values = name[:-1].rpartition("(")
+	base = base.rstrip()
+	if base == "":
+		return name, None
+
+	return base, {str(position): value.strip() for position, value in enumerate(values.split(","))}
+
+
+@export
+class StatusMixin(metaclass=ExtendedType, mixin=True, expects=("_outcome",)):
+	"""
+	Mixin-class for the elements GitHub reports: a workflow run, a job and a step.
+
+	GitHub reports a :class:`Status` and, once completed, a :class:`Conclusion` for each of them, and a URL on
+	github.com for a run and a job. A called workflow and a matrix aren't reported, so they have none of it. The
+	conclusion is also the element's generic :attr:`~pyTooling.CI.Base.Outcome`.
+	"""
+
+	_status:     Nullable[Status]      #: State the element is in.
+	_conclusion: Nullable[Conclusion]  #: How the element ended.
+	_url:        Nullable[URL]         #: URL of the element on github.com.
+
+	def __init__(
+		self,
+		status:     Nullable[Status]     = None,
+		conclusion: Nullable[Conclusion] = None,
+		url:        Nullable[URL]        = None
+	) -> None:
+		"""
+		Initializes what GitHub reports about an element.
+
+		:param status:     Optional, state the element is in. Default: ``None``.
+		:param conclusion: Optional, how the element ended. Default: ``None``.
+		:param url:        Optional, URL of the element on github.com. Default: ``None``.
+		:raises TypeError: If parameter 'status' is not of type :class:`Status`.
+		:raises TypeError: If parameter 'conclusion' is not of type :class:`Conclusion`.
+		:raises TypeError: If parameter 'url' is not of type :class:`~pyTooling.GenericPath.URL.URL`.
+		"""
+		if status is not None and not isinstance(status, Status):
+			ex = TypeError("Parameter 'status' is not of type 'Status'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(status)}'.")
+			raise ex
+
+		if conclusion is not None and not isinstance(conclusion, Conclusion):
+			ex = TypeError("Parameter 'conclusion' is not of type 'Conclusion'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(conclusion)}'.")
+			raise ex
+
+		if url is not None and not isinstance(url, URL):
+			ex = TypeError("Parameter 'url' is not of type 'URL'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
+			raise ex
+
+		self._status =     status
+		self._conclusion = conclusion
+		self._url =        url
+		if conclusion is not None:
+			self._outcome = conclusion.ToOutcome()
+
+	@readonly
+	def Status(self) -> Nullable[Status]:
+		"""
+		Read-only property to access the state the element is in (:attr:`_status`).
+
+		:returns: The state, or ``None`` if GitHub reported none.
+		"""
+		return self._status
+
+	@readonly
+	def Conclusion(self) -> Nullable[Conclusion]:
+		"""
+		Read-only property to access how the element ended (:attr:`_conclusion`).
+
+		The service-independent :attr:`~pyTooling.CI.Base.Outcome` is derived from it by
+		:meth:`Conclusion.ToOutcome`.
+
+		:returns: The conclusion, or ``None`` while the element hasn't concluded.
+		"""
+		return self._conclusion
+
+	@readonly
+	def URL(self) -> Nullable[URL]:
+		"""
+		Read-only property to access the element's URL on github.com (:attr:`_url`).
+
+		:returns: The URL, or ``None`` if GitHub reported none.
+		"""
+		return self._url
+
+
+@export
+class PipelineGroup(CIPipelineGroup):
+	"""
+	Every workflow run GitHub started for one commit, and the top of the tree.
+
+	A push starts one run per workflow file whose triggers match, so a commit has as many pipelines as the repository
+	has matching workflows - `pyTooling/Actions` answers a push with six.
+
+	**A run at a tag is in the group as well, and is not the same thing.** It carries the same commit, so the API
+	cannot separate it, but it was started later and for a different reason: a release pipeline tags its own commit,
+	and the run at that tag publishes the release. For `pyTooling/MiKTeX` v1.6.0 the two runs of commit ``2c36ead``
+	were
+
+	.. code-block:: text
+
+	   event=push               head_branch=main     run_started_at=07:53:39   tags the commit
+	   event=workflow_dispatch  head_branch=v1.6.0   run_started_at=08:09:37   publishes the release
+
+	:meth:`ByGitReference` separates them, since :attr:`Pipeline.GitReference` holds the tag's name for the second.
+
+	The group has no times of its own and derives them from its pipelines - so its span covers the tag's run too, and
+	is wider than the time the commit's checks took.
+	"""
+
+	def __init__(
+		self,
+		sha:           str,
+		pipelines:     Nullable[Iterable[Pipeline]]     = None,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> None:
+		"""
+		Initializes a group of pipelines started for one commit.
+
+		:param sha:           Commit every pipeline of the group was started on.
+		:param pipelines:     Optional, the pipelines, which are attached to the group. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises ValueError:   If parameter 'sha' is ``None``.
+		:raises TypeError:    If parameter 'sha' is not of type :class:`str`.
+		:raises ValueError:   If parameter 'sha' is empty.
+		:raises TypeError:    If an element of parameter 'pipelines' is not of type :class:`Pipeline`.
+		"""
+		if sha is None:
+			raise ValueError("Parameter 'sha' is None.")
+		elif not isinstance(sha, str):
+			ex = TypeError("Parameter 'sha' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(sha)}'.")
+			raise ex
+		elif sha == "":
+			raise ValueError("Parameter 'sha' is empty.")
+
+		super().__init__(sha, pipelines, keyValuePairs=keyValuePairs)
+
+	@readonly
+	def SHA(self) -> str:
+		"""
+		Read-only property to access the commit every pipeline of the group was started on (:attr:`_name`).
+
+		:returns: The commit's hash.
+		"""
+		return self._name
+
+	@readonly
+	def Conclusion(self) -> Nullable[Conclusion]:
+		"""
+		Read-only property to return how the commit's pipelines ended, taken together.
+
+		The worst conclusion wins, so one failed pipeline makes the commit's verdict a failure, as a branch protection
+		rule would. The order is:
+
+		#. :attr:`~Conclusion.Failure`
+		#. :attr:`~Conclusion.TimedOut`
+		#. :attr:`~Conclusion.StartupFailure`
+		#. :attr:`~Conclusion.ActionRequired`
+		#. :attr:`~Conclusion.Cancelled`
+		#. :attr:`~Conclusion.Stale`
+		#. :attr:`~Conclusion.Neutral`
+		#. :attr:`~Conclusion.Skipped`
+		#. :attr:`~Conclusion.Success`
+
+		:returns: The worst conclusion of the group's pipelines, or ``None`` while one hasn't concluded.
+		"""
+		if len(self._pipelines) == 0:
+			return None
+
+		conclusions = set()
+		for pipeline in self._pipelines:
+			if pipeline.Conclusion is None:
+				return None
+
+			conclusions.add(pipeline.Conclusion)
+
+		for conclusion in (
+			Conclusion.Failure, Conclusion.TimedOut, Conclusion.StartupFailure, Conclusion.ActionRequired,
+			Conclusion.Cancelled, Conclusion.Stale, Conclusion.Neutral, Conclusion.Skipped, Conclusion.Success
+		):
+			if conclusion in conclusions:
+				return conclusion
+
+		return None
+
+	def ByGitReference(self) -> dict[Nullable[str], list[Pipeline]]:
+		"""
+		Group the commit's pipelines by the branch or tag they were started on.
+
+		A commit pushed to a branch and later tagged has its pipelines under two keys - the branch's name and the
+		tag's - which is what separates the checks of a commit from the run that published its release.
+
+		:returns: Dictionary of a reference's name to the pipelines started on it, in the order they were reported.
+		"""
+		byReference: dict[Nullable[str], list[Pipeline]] = {}
+		for pipeline in self._pipelines:
+			if (pipelines := byReference.get(pipeline.GitReference, None)) is None:
+				pipelines = []
+				byReference[pipeline.GitReference] = pipelines
+
+			pipelines.append(pipeline)
+
+		return byReference
+
+	@classmethod
+	def FromJSON(
+		cls,
+		runs: Union[JSONObject, Iterable[JSONObject]],
+		jobs: Nullable[dict[int, Iterable[JSONObject]]] = None,
+		sha:  Nullable[str] = None
+	) -> Self:
+		"""
+		Build a group of pipelines from the JSON objects the GitHub REST API answers with.
+
+		:param runs:         The runs, as returned by ``GET /repos/{owner}/{repo}/actions/runs?head_sha=...`` - either
+		                     the answer itself or its ``workflow_runs`` array.
+		:param jobs:         Optional, the jobs of each run, by the run's identifier. Default: ``None``.
+		:param sha:          Optional, the commit. Default: the ``head_sha`` the runs report.
+		:returns:            The group, with its pipelines attached.
+		:raises GitHubError: If the runs report different commits.
+		:raises GitHubError: If no run reports a commit and parameter 'sha' wasn't given.
+		"""
+		if not isinstance(runs, dict):
+			workflowRuns = runs
+		elif (workflowRuns := runs.get("workflow_runs", None)) is None:
+			workflowRuns = []
+
+		pipelines = []
+		shas = set()
+		for run in workflowRuns:
+			runJobs = None
+			if jobs is not None:
+				runJobs = jobs.get(run.get("id", None), None)
+
+			pipeline = Pipeline.FromJSON(run, runJobs)
+			pipelines.append(pipeline)
+			if pipeline.SHA is not None:
+				shas.add(pipeline.SHA)
+
+		if sha is None:
+			if (commits := len(shas)) == 0:
+				raise GitHubError("None of the runs reports a 'head_sha', and parameter 'sha' wasn't given.")
+			elif commits > 1:
+				error = GitHubError("The runs report different commits.")
+				error.add_note(f"Got {', '.join(sorted(shas))}.")
+				raise error
+
+			sha = shas.pop()
+
+		return cls(sha, pipelines)
+
+
+@export
+class Pipeline(CIPipeline, StatusMixin):
+	"""
+	A workflow run.
+
+	A run contains its own jobs, a :class:`~pyTooling.CI.Matrix` for every matrix, and a
+	:class:`~pyTooling.CI.Workflow` for every workflow it called. Unlike a called workflow, a run reports its
+	own status, conclusion and times. Several runs of one commit are held by a :class:`PipelineGroup`, which is the
+	top of the tree.
+	"""
+
+	_PARENT_TYPE: ClassVar[Nullable[type]] = PipelineGroup  #: A workflow run is contained in a pipeline group.
+
+	_id:           Nullable[int]    #: GitHub's identifier of the run.
+	_workflowID:   Nullable[int]    #: GitHub's identifier of the workflow the run belongs to.
+	_path:         Nullable[str]    #: Path of the workflow's YAML file in the repository.
+	_runNumber:    Nullable[int]    #: Number of the run within its workflow.
+	_runAttempt:   Nullable[int]    #: Attempt of the run, starting at 1.
+	_event:        Nullable[Event]  #: Event that triggered the run.
+	_gitReference: Nullable[str]    #: Branch or tag the run was started on.
+	_sha:          Nullable[str]    #: Commit the run was started on.
+
+	def __init__(
+		self,
+		name:          str,
+		identifier:    Nullable[int]                    = None,
+		status:        Nullable[Status]                 = None,
+		conclusion:    Nullable[Conclusion]             = None,
+		createdAt:     Nullable[datetime]               = None,
+		startedAt:     Nullable[datetime]               = None,
+		completedAt:   Nullable[datetime]               = None,
+		url:           Nullable[URL]                    = None,
+		workflowID:    Nullable[int]                    = None,
+		path:          Nullable[str]                    = None,
+		runNumber:     Nullable[int]                    = None,
+		runAttempt:    Nullable[int]                    = None,
+		event:         Nullable[Event]                  = None,
+		gitReference:  Nullable[str]                    = None,
+		sha:           Nullable[str]                    = None,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[PipelineGroup]          = None
+	) -> None:
+		"""
+		Initializes a workflow run.
+
+		:param name:          Name of the workflow.
+		:param identifier:    Optional, GitHub's identifier of the run. Default: ``None``.
+		:param status:        Optional, state the run is in. Default: ``None``.
+		:param conclusion:    Optional, how the run ended. Default: ``None``.
+		:param createdAt:     Optional, time the run was created. Default: ``None``.
+		:param startedAt:     Optional, time the run started. Default: ``None``.
+		:param completedAt:   Optional, time the run was last updated, once completed. Default: ``None``.
+		:param url:           Optional, URL of the run on github.com. Default: ``None``.
+		:param workflowID:    Optional, GitHub's identifier of the workflow the run belongs to. Default: ``None``.
+		:param path:          Optional, path of the workflow's YAML file in the repository. Default: ``None``.
+		:param runNumber:     Optional, number of the run within its workflow. Default: ``None``.
+		:param runAttempt:    Optional, attempt of the run, starting at 1. Default: ``None``.
+		:param event:         Optional, event that triggered the run. Default: ``None``.
+		:param gitReference:  Optional, branch or tag the run was started on. Default: ``None``.
+		:param sha:           Optional, commit the run was started on. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the group of the commit's runs. Default: ``None``.
+		:raises TypeError:    If parameter 'identifier' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'workflowID' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'path' is not of type :class:`str`.
+		:raises TypeError:    If parameter 'runNumber' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'runAttempt' is not of type :class:`int`.
+		:raises TypeError:    If parameter 'event' is not of type :class:`Event`.
+		:raises TypeError:    If parameter 'gitReference' is not of type :class:`str`.
+		:raises TypeError:    If parameter 'sha' is not of type :class:`str`.
+		"""
+		for parameterName, number in (
+			("identifier", identifier), ("workflowID", workflowID), ("runNumber", runNumber), ("runAttempt", runAttempt)
+		):
+			if number is not None and not isinstance(number, int):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(number)}'.")
+				raise ex
+
+		if event is not None and not isinstance(event, Event):
+			ex = TypeError("Parameter 'event' is not of type 'Event'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(event)}'.")
+			raise ex
+
+		for parameterName, text in (("path", path), ("gitReference", gitReference), ("sha", sha)):
+			if text is not None and not isinstance(text, str):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+				raise ex
+
+		super().__init__(
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, keyValuePairs=keyValuePairs,
+			parent=parent
+		)
+		StatusMixin.__init__(self, status, conclusion, url)
+
+		self._id =           identifier
+		self._workflowID =   workflowID
+		self._path =         path
+		self._runNumber =    runNumber
+		self._runAttempt =   runAttempt
+		self._event =        event
+		self._gitReference = gitReference
+		self._sha =          sha
+
+	@readonly
+	def ID(self) -> Nullable[int]:
+		"""
+		Read-only property to access GitHub's identifier of the run (:attr:`_id`).
+
+		:returns: The identifier, or ``None`` if GitHub reported none.
+		"""
+		return self._id
+
+	@readonly
+	def WorkflowID(self) -> Nullable[int]:
+		"""
+		Read-only property to access GitHub's identifier of the workflow the run belongs to (:attr:`_workflowID`).
+
+		Every run of the same workflow file reports the same identifier, so it groups a workflow's runs over time,
+		where :attr:`ID` identifies the single run.
+
+		:returns: The identifier, or ``None`` if GitHub reported none.
+		"""
+		return self._workflowID
+
+	@readonly
+	def Path(self) -> Nullable[str]:
+		"""
+		Read-only property to access the path of the workflow's YAML file (:attr:`_path`).
+
+		GitHub reports it relative to the repository's root, e.g. ``.github/workflows/Pipeline.yml``.
+
+		:returns: The path, or ``None`` if GitHub reported none.
+		"""
+		return self._path
+
+	@readonly
+	def RunNumber(self) -> Nullable[int]:
+		"""
+		Read-only property to access the run's number within its workflow (:attr:`_runNumber`).
+
+		:returns: The number, or ``None`` if GitHub reported none.
+		"""
+		return self._runNumber
+
+	@readonly
+	def RunAttempt(self) -> Nullable[int]:
+		"""
+		Read-only property to access which attempt of the run this is (:attr:`_runAttempt`).
+
+		:returns: The attempt, starting at 1, or ``None`` if GitHub reported none.
+		"""
+		return self._runAttempt
+
+	@readonly
+	def Event(self) -> Nullable[Event]:
+		"""
+		Read-only property to access the event that triggered the run (:attr:`_event`).
+
+		:returns: The event, or ``None`` if GitHub reported none.
+		"""
+		return self._event
+
+	@readonly
+	def GitReference(self) -> Nullable[str]:
+		"""
+		Read-only property to access the branch or tag the run was started on (:attr:`_gitReference`).
+
+		GitHub reports this as ``head_branch`` and puts the **tag's** name there for a run started at a tag, with no
+		field saying which it is - a run of `pyTooling/MiKTeX` v1.6.0 reports ``main``, and the run at the tag of the
+		very same commit reports ``v1.6.0``. :attr:`Event` is the other half of telling them apart.
+
+		:returns: The branch's or tag's name, or ``None`` if GitHub reported none.
+		"""
+		return self._gitReference
+
+	@readonly
+	def SHA(self) -> Nullable[str]:
+		"""
+		Read-only property to access the commit the run was started on (:attr:`_sha`).
+
+		:returns: The commit's hash, or ``None`` if GitHub reported none.
+		"""
+		return self._sha
+
+	@classmethod
+	def FromJSON(
+		cls,
+		run:  JSONObject,
+		jobs: Nullable[Iterable[JSONObject]] = None,
+		*,
+		parent: Nullable[PipelineGroup] = None
+	) -> Self:
+		"""
+		Build a workflow run and its tree from the JSON objects the GitHub REST API answers with.
+
+		A job's name says where it sits, and is read back into the tree: ``Docs / Sphinx / HTML`` nests below a
+		:class:`~pyTooling.CI.Workflow` per prefix, and ``Unit Tests (ubuntu-26.04, 3.14)`` becomes a
+		:class:`MatrixJob` below a :class:`~pyTooling.CI.Matrix` named ``Unit Tests``. A prefix carrying
+		dimension values - ``Tests (3.14) / Unit``, a matrix of calls of a reusable workflow - becomes a
+		:class:`~pyTooling.CI.MatrixWorkflow` below a :class:`~pyTooling.CI.Matrix` named ``Tests``.
+
+		:param run:          The workflow run, as returned by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}``.
+		:param jobs:         Optional, the run's jobs, as listed by ``GET .../actions/runs/{run_id}/jobs``.
+		:param parent:       Optional, reference to the group of the commit's runs. Default: ``None``.
+		:returns:            The workflow run, with its workflows, matrices, jobs and steps attached.
+		:raises TypeError:   If parameter 'run' is not of type :class:`dict`.
+		:raises TypeError:   If an element of parameter 'jobs' is not of type :class:`dict`.
+		:raises GitHubError: If field ``name`` is missing.
+		:raises GitHubError: If a field holds a value GitHub doesn't document.
+		"""
+		if not isinstance(run, dict):
+			ex = TypeError("Parameter 'run' is not of type 'dict'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(run)}'.")
+			raise ex
+
+		if (name := run.get("name", None)) is None:
+			raise GitHubError("Field 'run.name' is missing.")
+
+		identifier =   run.get("id", None)
+		status =       Status.Parse(run.get("status", None))
+		conclusion =   Conclusion.Parse(run.get("conclusion", None))
+		createdAt =    _parseISO8601Timestamp(run.get("created_at", None), "run.created_at")
+		startedAt =    _parseISO8601Timestamp(run.get("run_started_at", None), "run.run_started_at")
+		completedAt =  _parseISO8601Timestamp(run.get("updated_at", None), "run.updated_at") \
+		               if status is Status.Completed else None
+		url =          _parseURL(run.get("html_url", None), "run.html_url")
+		workflowID =   run.get("workflow_id", None)
+		path =         run.get("path", None)
+		runNumber =    run.get("run_number", None)
+		runAttempt =   run.get("run_attempt", None)
+		event =        Event.Parse(run.get("event", None))
+		gitReference = run.get("head_branch", None)
+		sha =          run.get("head_sha", None)
+
+		pipeline = cls(
+			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, workflowID, path, runNumber,
+			runAttempt, event, gitReference, sha, parent=parent
+		)
+
+		if jobs is None:
+			return pipeline
+
+		for position, job in enumerate(jobs):
+			if not isinstance(job, dict):
+				ex = TypeError(f"Job {position} is not of type 'dict'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(job)}'.")
+				raise ex
+
+			path = f"jobs[{position}]"
+			if (fullName := job.get("name", None)) is None:
+				raise GitHubError(f"Field '{path}.name' is missing.")
+
+			*callers, leaf = fullName.split(" / ")
+
+			group: CIWorkflow = pipeline
+			for caller in callers:
+				if (calledWorkflow := group.Workflows.get(caller, None)) is None:
+					callerName, callerDimensions = _splitMatrixJobName(caller)
+					if callerDimensions is None:
+						calledWorkflow = CIWorkflow(caller, parent=group)
+					else:
+						if (matrix := group.Matrices.get(callerName, None)) is None:
+							matrix = CIMatrix(callerName, parent=group)
+
+						if matrix.ContainsElement(caller):
+							calledWorkflow = matrix.GetElement(caller)
+						else:
+							calledWorkflow = CIMatrixWorkflow(callerName, callerDimensions, parent=matrix)
+
+				group = calledWorkflow
+
+			jobName, dimensions = _splitMatrixJobName(leaf)
+			if dimensions is None:
+				Job.FromJSON(job, path, parent=group)
+			else:
+				if (matrix := group.Matrices.get(jobName, None)) is None:
+					matrix = CIMatrix(jobName, parent=group)
+
+				MatrixJob.FromJSON(job, path, jobName, dimensions, parent=matrix)
+
+		return pipeline
+
+
+@export
+class Job(CIJob, StatusMixin):
+	"""A job of a workflow run, which ran on a runner and contains steps."""
+
+	_id:              Nullable[int]  #: GitHub's identifier of the job.
+	_labels:          list[str]      #: Labels the job requested its runner by, i.e. its ``runs-on``.
+	_runnerName:      Nullable[str]  #: Name of the runner the job ran on.
+	_runnerGroupName: Nullable[str]  #: Name of the runner group the runner belongs to.
+
+	def __init__(
+		self,
+		name:            str,
+		identifier:      Nullable[int]                    = None,
+		status:          Nullable[Status]                 = None,
+		conclusion:      Nullable[Conclusion]             = None,
+		createdAt:       Nullable[datetime]               = None,
+		startedAt:       Nullable[datetime]               = None,
+		completedAt:     Nullable[datetime]               = None,
+		url:             Nullable[URL]                    = None,
+		labels:          Nullable[Iterable[str]]          = None,
+		runnerName:      Nullable[str]                    = None,
+		runnerGroupName: Nullable[str]                    = None,
+		steps:           Nullable[Iterable[Step]]         = None,
+		*,
+		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None,
+		parent:          Nullable[CIJobGroup]             = None
+	) -> None:
+		"""
+		Initializes a job of a workflow run.
+
+		:param name:            Name of the job, without the calling workflows' prefixes.
+		:param identifier:      Optional, GitHub's identifier of the job. Default: ``None``.
+		:param status:          Optional, state the job is in. Default: ``None``.
+		:param conclusion:      Optional, how the job ended. Default: ``None``.
+		:param createdAt:       Optional, time the job was created, i.e. queued for a runner. Default: ``None``.
+		:param startedAt:       Optional, time the job started running on a runner. Default: ``None``.
+		:param completedAt:     Optional, time the job completed. Default: ``None``.
+		:param url:             Optional, URL of the job on github.com. Default: ``None``.
+		:param labels:          Optional, labels the job requested its runner by. Default: ``None``.
+		:param runnerName:      Optional, name of the runner the job ran on. Default: ``None``.
+		:param runnerGroupName: Optional, name of the runner group the runner belongs to. Default: ``None``.
+		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
+		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:          Optional, reference to the group containing the job. Default: ``None``.
+		:raises TypeError:      If parameter 'identifier' is not of type :class:`int`.
+		:raises TypeError:      If an element of parameter 'steps' is not of type :class:`Step`.
+		:raises TypeError:      If an element of parameter 'labels' is not of type :class:`str`.
+		:raises TypeError:      If parameter 'runnerName' is not of type :class:`str`.
+		:raises TypeError:      If parameter 'runnerGroupName' is not of type :class:`str`.
+		"""
+		if identifier is not None and not isinstance(identifier, int):
+			ex = TypeError("Parameter 'identifier' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+
+		for parameterName, value in (("runnerName", runnerName), ("runnerGroupName", runnerGroupName)):
+			if value is not None and not isinstance(value, str):
+				ex = TypeError(f"Parameter '{parameterName}' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
+
+		self._labels = []
+		if labels is not None:
+			for label in labels:
+				if not isinstance(label, str):
+					ex = TypeError("An element of parameter 'labels' is not of type 'str'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(label)}'.")
+					raise ex
+
+				self._labels.append(label)
+
+		stepList = []
+		if steps is not None:
+			for step in steps:
+				if not isinstance(step, Step):
+					ex = TypeError("An element of parameter 'steps' is not of type 'Step'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(step)}'.")
+					raise ex
+
+				stepList.append(step)
+
+		super().__init__(
+			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, keyValuePairs=keyValuePairs,
+			parent=parent
+		)
+		StatusMixin.__init__(self, status, conclusion, url)
+
+		self._id =              identifier
+		self._runnerName =      runnerName
+		self._runnerGroupName = runnerGroupName
+
+		for step in stepList:
+			step._parent =   self
+			step._pipeline = self._pipeline
+			self._steps.append(step)
+
+	@readonly
+	def ID(self) -> Nullable[int]:
+		"""
+		Read-only property to access GitHub's identifier of the job (:attr:`_id`).
+
+		:returns: The identifier, or ``None`` if GitHub reported none.
+		"""
+		return self._id
+
+	@readonly
+	def Labels(self) -> list[str]:
+		"""
+		Read-only property to access the labels the job requested its runner by (:attr:`_labels`).
+
+		These are the values of the workflow's ``runs-on``. For a hosted runner a label doubles as the image's name
+		(``ubuntu-26.04``); for a self-hosted runner they are the tags the runner was registered with.
+
+		:returns: The labels, empty if GitHub reported none.
+		"""
+		return self._labels
+
+	@readonly
+	def RunnerName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the runner the job ran on (:attr:`_runnerName`).
+
+		:returns: The runner's name, or ``None`` while the job hasn't started.
+		"""
+		return self._runnerName
+
+	@readonly
+	def RunnerGroupName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the runner group the runner belongs to (:attr:`_runnerGroupName`).
+
+		:returns: The group's name, or ``None`` if GitHub reported none.
+		"""
+		return self._runnerGroupName
+
+	@readonly
+	def CreatedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return the time the job was created, at the latest when it started.
+
+		:returns: The time, or ``None`` if GitHub reported none.
+		"""
+		if self._createdAt is None or all(step.StartedAt is None for step in self._steps):
+			return self._createdAt
+
+		return min(self._createdAt, self.StartedAt)
+
+	@readonly
+	def StartedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return the time the job started, at the latest when its first step started.
+
+		GitHub reports a job's times and its steps' times independently and in whole seconds, so a step is sometimes
+		reported as starting before the job containing it. The step really did run then, so the job is the timespan
+		that stretches - otherwise a consumer building a tree has a child outside its parent.
+
+		:returns: The time, or ``None`` while neither the job nor a step of it has started.
+		"""
+		times = [step.StartedAt for step in self._steps if step.StartedAt is not None]
+		if len(times) == 0:
+			return self._startedAt
+
+		first = min(times)
+
+		return first if self._startedAt is None else min(self._startedAt, first)
+
+	@readonly
+	def CompletedAt(self) -> Nullable[datetime]:
+		"""
+		Read-only property to return the time the job completed, at the earliest when its last step completed.
+
+		A job that hasn't completed reports no time, even when a step of it has - see :attr:`StartedAt` for why the
+		job is the timespan that stretches.
+
+		:returns: The time, or ``None`` while the job hasn't completed.
+		"""
+		if self._completedAt is None or all(step.StartedAt is None for step in self._steps):
+			return self._completedAt
+
+		times = [step.CompletedAt for step in self._steps if step.CompletedAt is not None]
+		if len(times) == 0:
+			return self._completedAt
+
+		return max(self._completedAt, max(times))
+
+	@readonly
+	def QueuedDuration(self) -> Nullable[float]:
+		"""
+		Read-only property to return how long the job waited for a runner.
+
+		:returns: Seconds from being created to starting, or ``None`` while either time is unknown.
+		"""
+		if self._createdAt is None or self._startedAt is None:
+			return None
+
+		return (self._startedAt - self._createdAt).total_seconds()
+
+	@classmethod
+	def FromJSON(cls, json: JSONObject, path: str = "job", *, parent: Nullable[CIJobGroup] = None) -> Self:
+		"""
+		Build a job and its steps from the JSON object the GitHub REST API answers with.
+
+		The job's name is taken without the calling workflows' prefixes: a job reported as ``Caller / Build`` is named
+		``Build``, because the prefix describes where it sits, which the tree already says.
+
+		:param json:         The job, as listed by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs``.
+		:param path:         Optional, position of the job, for an exception's message. Default: ``'job'``.
+		:param parent:       Optional, reference to the group containing the job. Default: ``None``.
+		:returns:            The job, with its steps attached.
+		:raises TypeError:   If parameter 'json' is not of type :class:`dict`.
+		:raises GitHubError: If field ``name`` is missing.
+		:raises GitHubError: If a field holds a value GitHub doesn't document.
+		"""
+		if not isinstance(json, dict):
+			ex = TypeError("Parameter 'json' is not of type 'dict'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(json)}'.")
+			raise ex
+
+		if (fullName := json.get("name", None)) is None:
+			raise GitHubError(f"Field '{path}.name' is missing.")
+
+		name =            fullName.rsplit(" / ", 1)[-1]
+		identifier =      json.get("id", None)
+		status =          Status.Parse(json.get("status", None))
+		conclusion =      Conclusion.Parse(json.get("conclusion", None))
+		createdAt =       _parseISO8601Timestamp(json.get("created_at", None), f"{path}.created_at")
+		startedAt =       _parseISO8601Timestamp(json.get("started_at", None), f"{path}.started_at")
+		completedAt =     _parseISO8601Timestamp(json.get("completed_at", None), f"{path}.completed_at")
+		url =             _parseURL(json.get("html_url", None), f"{path}.html_url")
+		labels =          json.get("labels", None)
+		runnerName =      json.get("runner_name", None)
+		runnerGroupName = json.get("runner_group_name", None)
+
+		if (jsonSteps := json.get("steps", None)) is None:
+			steps = None
+		else:
+			steps = [Step.FromJSON(step, f"{path}.steps[{pos}]") for pos, step in enumerate(jsonSteps)]
+
+		return cls(
+			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels, runnerName,
+			runnerGroupName, steps, parent=parent
+		)
+
+
+@export
+class MatrixJob(Job, MatrixInstanceMixin):
+	"""
+	One instance of a job produced by a matrix.
+
+	GitHub reports a matrix instance as an ordinary job whose name carries the dimensions' values in brackets, e.g.
+	``Unit Tests (ubuntu-26.04, 3.14)``. :meth:`Pipeline.FromJSON` reads those back into :attr:`Dimensions` and groups
+	the instances below a :class:`~pyTooling.CI.Matrix`. The values are in the order GitHub prints them. The
+	job's payload names no dimension - only the workflow file does -, so a dimension's name is the position of its
+	value, ``{"0": "ubuntu-26.04", "1": "3.14"}``, until the names are known.
+	"""
+
+	_PARENT_TYPE: ClassVar[Nullable[type]] = CIMatrix  #: A matrix instance is contained in a matrix.
+
+	def __init__(
+		self,
+		name:            str,
+		dimensions:      Nullable[Mapping[str, Any]]      = None,
+		identifier:      Nullable[int]                    = None,
+		status:          Nullable[Status]                 = None,
+		conclusion:      Nullable[Conclusion]             = None,
+		createdAt:       Nullable[datetime]               = None,
+		startedAt:       Nullable[datetime]               = None,
+		completedAt:     Nullable[datetime]               = None,
+		url:             Nullable[URL]                    = None,
+		labels:          Nullable[Iterable[str]]          = None,
+		runnerName:      Nullable[str]                    = None,
+		runnerGroupName: Nullable[str]                    = None,
+		steps:           Nullable[Iterable[Step]]         = None,
+		*,
+		keyValuePairs:   Nullable[Mapping[Hashable, Any]] = None,
+		parent:          Nullable[CIMatrix]               = None
+	) -> None:
+		"""
+		Initializes one instance of a job produced by a matrix.
+
+		:param name:            Name of the job, without the dimensions' values.
+		:param dimensions:      Optional, the dimensions' names and values this instance ran with. Default: ``None``.
+		:param identifier:      Optional, GitHub's identifier of the job. Default: ``None``.
+		:param status:          Optional, state the job is in. Default: ``None``.
+		:param conclusion:      Optional, how the job ended. Default: ``None``.
+		:param createdAt:       Optional, time the job was created, i.e. queued for a runner. Default: ``None``.
+		:param startedAt:       Optional, time the job started running on a runner. Default: ``None``.
+		:param completedAt:     Optional, time the job completed. Default: ``None``.
+		:param url:             Optional, URL of the job on github.com. Default: ``None``.
+		:param labels:          Optional, labels the job requested its runner by. Default: ``None``.
+		:param runnerName:      Optional, name of the runner the job ran on. Default: ``None``.
+		:param runnerGroupName: Optional, name of the runner group the runner belongs to. Default: ``None``.
+		:param steps:           Optional, the job's steps, which are attached to it. Default: ``None``.
+		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:          Optional, reference to the matrix containing the instance. Default: ``None``.
+		"""
+		super().__init__(
+			name, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels, runnerName,
+			runnerGroupName, steps, keyValuePairs=keyValuePairs, parent=parent
+		)
+		MatrixInstanceMixin.__init__(self, dimensions)
+
+	def __str__(self) -> str:
+		"""
+		Return a string representation of the matrix instance.
+
+		:returns: The job's name with its dimensions' values, as GitHub prints it.
+		"""
+		if len(self._dimensions) == 0:
+			return self._name
+
+		return f"{self._name} ({', '.join(str(value) for value in self._dimensions.values())})"
+
+	@classmethod
+	def FromJSON(
+		cls,
+		json:       JSONObject,
+		path:       str                         = "job",
+		name:       Nullable[str]               = None,
+		dimensions: Nullable[Mapping[str, Any]] = None,
+		*,
+		parent:     Nullable[CIMatrix]          = None
+	) -> Self:
+		"""
+		Build a matrix instance and its steps from the JSON object the GitHub REST API answers with.
+
+		:param json:         The job, as listed by ``GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs``.
+		:param path:         Optional, position of the job, for an exception's message. Default: ``'job'``.
+		:param name:         Optional, the job's name without the dimensions' values. Default: read from the payload.
+		:param dimensions:   Optional, the dimensions' names and values. Default: read from the payload.
+		:param parent:       Optional, reference to the matrix containing the instance. Default: ``None``.
+		:returns:            The matrix instance, with its steps attached.
+		:raises TypeError:   If parameter 'json' is not of type :class:`dict`.
+		:raises GitHubError: If field ``name`` is missing.
+		:raises GitHubError: If a field holds a value GitHub doesn't document.
+		"""
+		if not isinstance(json, dict):
+			ex = TypeError("Parameter 'json' is not of type 'dict'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(json)}'.")
+			raise ex
+
+		if (fullName := json.get("name", None)) is None:
+			raise GitHubError(f"Field '{path}.name' is missing.")
+
+		if name is None:
+			name, dimensions = _splitMatrixJobName(fullName.rsplit(" / ", 1)[-1])
+
+		identifier =      json.get("id", None)
+		status =          Status.Parse(json.get("status", None))
+		conclusion =      Conclusion.Parse(json.get("conclusion", None))
+		createdAt =       _parseISO8601Timestamp(json.get("created_at", None), f"{path}.created_at")
+		startedAt =       _parseISO8601Timestamp(json.get("started_at", None), f"{path}.started_at")
+		completedAt =     _parseISO8601Timestamp(json.get("completed_at", None), f"{path}.completed_at")
+		url =             _parseURL(json.get("html_url", None), f"{path}.html_url")
+		labels =          json.get("labels", None)
+		runnerName =      json.get("runner_name", None)
+		runnerGroupName = json.get("runner_group_name", None)
+
+		if (jsonSteps := json.get("steps", None)) is None:
+			steps = None
+		else:
+			steps = [Step.FromJSON(step, f"{path}.steps[{pos}]") for pos, step in enumerate(jsonSteps)]
+
+		return cls(
+			name, dimensions, identifier, status, conclusion, createdAt, startedAt, completedAt, url, labels,
+			runnerName, runnerGroupName, steps, parent=parent
+		)
+
+
+@export
+class Step(CIStep, StatusMixin):
+	"""A step within a job."""
+
+	_PARENT_TYPE: ClassVar[Nullable[type]] = Job  #: A step is contained in a job of a workflow run.
+
+	_number: Nullable[int]  #: Position of the step within its job, starting at 1.
+
+	def __init__(
+		self,
+		name:          str,
+		number:        Nullable[int]                    = None,
+		status:        Nullable[Status]                 = None,
+		conclusion:    Nullable[Conclusion]             = None,
+		startedAt:     Nullable[datetime]               = None,
+		completedAt:   Nullable[datetime]               = None,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Job]                    = None
+	) -> None:
+		"""
+		Initializes a step within a job.
+
+		:param name:          Name of the step.
+		:param number:        Optional, position of the step within its job, starting at 1. Default: ``None``.
+		:param status:        Optional, state the step is in. Default: ``None``.
+		:param conclusion:    Optional, how the step ended. Default: ``None``.
+		:param startedAt:     Optional, time the step started running. Default: ``None``.
+		:param completedAt:   Optional, time the step completed. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the job containing the step. Default: ``None``.
+		:raises TypeError:    If parameter 'number' is not of type :class:`int`.
+		:raises ValueError:   If parameter 'number' is not positive.
+		"""
+		if number is not None and not isinstance(number, int):
+			ex = TypeError("Parameter 'number' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(number)}'.")
+			raise ex
+		elif number is not None and number < 1:
+			ex = ValueError("Parameter 'number' is not positive.")
+			ex.add_note(f"Got value '{number}'.")
+			raise ex
+
+		super().__init__(
+			name, startedAt=startedAt, completedAt=completedAt, keyValuePairs=keyValuePairs, parent=parent
+		)
+		StatusMixin.__init__(self, status, conclusion)
+
+		self._number = number
+
+	@readonly
+	def Number(self) -> Nullable[int]:
+		"""
+		Read-only property to access the step's position within its job (:attr:`_number`).
+
+		:returns: The position, starting at 1, or ``None`` if GitHub reported none.
+		"""
+		return self._number
+
+	@classmethod
+	def FromJSON(cls, json: JSONObject, path: str = "step", *, parent: Nullable[Job] = None) -> Self:
+		"""
+		Build a step from the JSON object the GitHub REST API answers with.
+
+		:param json:         The step, as it appears in a job's ``steps`` array.
+		:param path:         Optional, position of the step, for an exception's message. Default: ``'step'``.
+		:param parent:       Optional, reference to the job containing the step. Default: ``None``.
+		:returns:            The step.
+		:raises TypeError:   If parameter 'json' is not of type :class:`dict`.
+		:raises GitHubError: If field ``name`` is missing.
+		:raises GitHubError: If a field holds a value GitHub doesn't document.
+		"""
+		if not isinstance(json, dict):
+			ex = TypeError("Parameter 'json' is not of type 'dict'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(json)}'.")
+			raise ex
+
+		if (name := json.get("name", None)) is None:
+			raise GitHubError(f"Field '{path}.name' is missing.")
+
+		number =      json.get("number", None)
+		status =      Status.Parse(json.get("status", None))
+		conclusion =  Conclusion.Parse(json.get("conclusion", None))
+		startedAt =   _parseISO8601Timestamp(json.get("started_at", None), f"{path}.started_at")
+		completedAt = _parseISO8601Timestamp(json.get("completed_at", None), f"{path}.completed_at")
+
+		return cls(name, number, status, conclusion, startedAt, completedAt, parent=parent)

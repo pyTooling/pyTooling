@@ -309,7 +309,9 @@ class Integer(Testcase):
 			self.ref ^= "str"
 
 	def test_TypeConvertToBool(self) -> None:
+		assign_42(self.ref)
 		self.assertTrue(bool(self.ref))
 
 	def test_TypeConvertToInt(self) -> None:
+		assign_42(self.ref)
 		self.assertEqual(42, int(self.ref))

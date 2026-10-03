@@ -242,6 +242,7 @@ prefix, a postfix or a build number.
              pass
 
 .. _VERSIONING/SemVerVariants:
+
 Variants
 ========
 
@@ -895,3 +896,275 @@ VersionSet
 
                for version in versionSet:
                  pass
+
+
+.. _VERSIONING/Constraints:
+
+Version Constraints and Expressions
+***********************************
+
+A :class:`~pyTooling.Versioning.VersionRange` says which versions are acceptable; a **version expression** is how a
+packaging ecosystem *writes* that down - ``>=1.2.0,<2.0.0`` in a requirements file, ``^1.2.3`` in a
+:file:`package.json`, ``(>= 1.2.0)`` in a :file:`debian/control`.
+
+.. _VERSIONING/Constraints/Expression:
+
+VersionExpression
+=================
+
+A :class:`~pyTooling.Versioning.VersionExpression` is a **conjunction** of constraints: every one of them has to be
+satisfied, which is what separating them means in every ecosystem that has the notion.
+
+.. code-block:: Python
+
+   from pyTooling.Versioning import VersionExpression, SemanticVersion
+
+   expression = VersionExpression.Parse(">=1.2.0,<2.0.0")
+
+   SemanticVersion.Parse("1.5.0") in expression   # True
+   SemanticVersion.Parse("2.0.0") in expression   # False
+
+An expression with **no** constraints matches every version, and
+:attr:`~pyTooling.Versioning.VersionExpression.MatchesAnyVersion` reports it - so *no version restriction* is a value
+its callers can carry rather than a case they have to special-case.
+
+:attr:`~pyTooling.Versioning.VersionExpression.Constraints` gives the individual
+:class:`~pyTooling.Versioning.VersionConstraint` objects, and
+:meth:`~pyTooling.Versioning.VersionExpression.ToVersionRange` collapses the whole expression into the single
+:ref:`VersionRange <VERSIONING/VersionRange>` it describes - which is the bridge between how a dependency is written
+and how it is reasoned about.
+
+.. _VERSIONING/Constraints/Constraint:
+
+VersionConstraint
+=================
+
+One :class:`~pyTooling.Versioning.VersionConstraint` is one comparison: a
+:class:`~pyTooling.Versioning.VersionComparison` and the version it compares against.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 30 45
+
+   * - Written
+     - ``VersionComparison``
+     - Meaning
+   * - ``==`` ``!=``
+     - ``Equal`` ``Unequal``
+     - Exactly this version, or anything but it.
+   * - ``<`` ``<=`` ``>`` ``>=``
+     - ``LessThan`` … ``GreaterThanOrEqual``
+     - The four ordering comparisons.
+   * - ``~=``
+     - ``CompatibleRelease``
+     - :pep:`440`'s *compatible release*.
+   * - ``^``
+     - ``Caret``
+     - npm's *may not change the leftmost non-zero part*.
+   * - ``~``
+     - ``Tilde``
+     - npm's *may not change the minor part*.
+
+The last three are **shorthands for a range**, and they are what
+:class:`~pyTooling.Versioning.RangeVersionConstraint` implements: *at least the version written, and below a bound
+derived from it*. The derived bound is readable as
+:attr:`~pyTooling.Versioning.RangeVersionConstraint.UpperBound`, and each subclass derives it differently:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 32 20 48
+
+   * - Class
+     - Example
+     - Upper bound
+   * - :class:`~pyTooling.Versioning.CompatibleVersionConstraint`
+     - ``~=1.2.3``
+     - ``1.3.0`` - drop the last part written, increment what becomes the last.
+   * - :class:`~pyTooling.Versioning.CaretVersionConstraint`
+     - ``^1.2.3``
+     - ``2.0.0`` - increment the leftmost non-zero part that was written.
+   * - :class:`~pyTooling.Versioning.TildeVersionConstraint`
+     - ``~1.2.3``
+     - ``1.3.0`` - increment the minor part, or the major one when no minor part was written.
+
+.. attention::
+
+   ``~=`` and ``~`` are **not** the same operator: :pep:`440`'s ``~=`` depends on how many parts were written, while
+   npm's ``~`` always works on the minor part. They agree for ``1.2.3`` and disagree for ``1.2``.
+
+.. _VERSIONING/Constraints/Dialects:
+
+Dialects
+========
+
+The operators above are not spelled the same everywhere, so an expression is parsed by the class belonging to the
+ecosystem it was written in.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 50
+
+   * - Class
+     - Separator
+     - Differences
+   * - :class:`~pyTooling.Versioning.PythonVersionExpression`
+     - ``,``
+     - :pep:`440`: the six ordering comparisons plus ``~=``. Versions parse as
+       :class:`~pyTooling.Versioning.PythonVersion`.
+   * - :class:`~pyTooling.Versioning.NPMVersionExpression`
+     - whitespace
+     - Equality is ``=``, never ``==``; there is no ``!=``; adds ``^`` and ``~``. A comma is a syntax error.
+   * - :class:`~pyTooling.Versioning.DebianVersionExpression`
+     - ``,``
+     - Strict comparisons are ``<<`` and ``>>``, equality is ``=``, and there is no ``!=``.
+
+.. attention::
+
+   :class:`~pyTooling.Versioning.DebianVersionExpression` deliberately **rejects** the obsolete ``<`` and ``>``.
+   :program:`dpkg` still accepts them with a warning, because they historically meant ``<=`` and ``>=`` - reading
+   them as the strict operators would silently invert their meaning.
+
+
+.. _VERSIONING/Epoch:
+
+Epoch
+*****
+
+An **epoch** outranks every other part of a version number, and exists for the case a project's versioning scheme
+changed so that the new numbers sort below the old ones. It is readable as
+:attr:`~pyTooling.Versioning.Version.Epoch`, and it is present only when the parsed string stated one.
+
+The separator differs by scheme: :class:`~pyTooling.Versioning.SemanticVersion` writes ``1:1.2.3``, while
+:class:`~pyTooling.Versioning.PythonVersion` writes ``1!1.2.3`` as :pep:`440` prescribes.
+
+
+.. _VERSIONING/Validators:
+
+Validators
+**********
+
+A version parsed from an untrusted string can carry any number, which is a problem when it has to fit a fixed-width
+field later. A **validator** is a callable given to the parser, and it rejects a version instead of letting it
+through.
+
+Two factories build one:
+
+* :func:`~pyTooling.Versioning.WordSizeValidator` - bounds each part by a number of **bits**, for a version that has
+  to fit a hardware register or a packed struct;
+* :func:`~pyTooling.Versioning.MaxValueValidator` - bounds each part by an explicit **maximum**.
+
+Both take one limit for every part (``bits`` / ``max``) or a limit per part (``majorBits``, ``minorBits``,
+``microBits``, …), so the common case is one argument.
+
+A rejected version raises :exc:`~pyTooling.Versioning.VersionValidatorError`, whose ``Version`` property is the
+version that was rejected.
+
+
+
+.. _VERSIONING/Competitors:
+
+Competing Solutions
+*******************
+
+:mod:`pyTooling.Versioning` puts several version schemes - semantic versions, :pep:`440` versions and four calendar
+schemes - and three dialects of version expressions - :pep:`440`, npm and Debian - behind one API of
+:class:`~pyTooling.Versioning.Version`, :class:`~pyTooling.Versioning.VersionRange` and
+:class:`~pyTooling.Versioning.VersionSet`. Each package below covers one scheme more completely, except for univers,
+which covers many schemes by building on scheme-specific packages. For calendar versions, the packages on PyPI -
+`calver <https://pypi.org/project/calver/>`__, `bumpver <https://pypi.org/project/bumpver/>`__ - write or bump a
+version number in a project's files; none of them parses and compares one.
+
+.. _VERSIONING/packaging:
+
+packaging
+=========
+
+Source: :gh:`packaging <pypa/packaging>`, on PyPI as `packaging <https://pypi.org/project/packaging/>`__.
+
+.. rubric:: Disadvantages
+
+* :pep:`440` only: no semantic versions, calendar versions, or npm and Debian expressions.
+
+.. rubric:: Advantages
+
+* The reference implementation of :pep:`440`, which pip uses. Where :class:`~pyTooling.Versioning.PythonVersion` and
+  packaging disagree, packaging is right.
+* Parses everything :pep:`440` allows, e.g. local versions as ``1.0+local.7``, which
+  :class:`~pyTooling.Versioning.PythonVersion` doesn't parse, and the operator ``===``.
+* A ``SpecifierSet`` handles pre-releases as pip does, and filters an iterable of versions.
+
+.. _VERSIONING/semver:
+
+semver
+======
+
+Source: :gh:`python-semver <python-semver/python-semver>`, on PyPI as `semver <https://pypi.org/project/semver/>`__.
+
+.. rubric:: Disadvantages
+
+* Semantic versions only. ``match()`` checks one comparison, as ``>=1.0.0``, not an expression of several.
+
+.. rubric:: Advantages
+
+* The whole grammar of SemVer 2.0.0, including dot-separated pre-release and build parts as
+  ``1.2.3-pre.2+build.4``, which :class:`~pyTooling.Versioning.SemanticVersion` doesn't parse.
+* Functions to bump a version's parts.
+
+.. _VERSIONING/npm:
+
+semantic-version and node-semver
+================================
+
+Source: :gh:`python-semanticversion <rbarrois/python-semanticversion>`, on PyPI as
+`semantic-version <https://pypi.org/project/semantic-version/>`__ (last release 2022), and
+:gh:`python-node-semver <podhmo/python-node-semver>`, a port of npm's ``node-semver``, on PyPI as
+`node-semver <https://pypi.org/project/node-semver/>`__.
+
+.. rubric:: Disadvantages
+
+* Semantic versions and npm's range notation only.
+
+.. rubric:: Advantages
+
+* npm's whole range notation: the alternative ``||``, x-ranges as ``2.x``, and - in node-semver - hyphen ranges.
+  :class:`~pyTooling.Versioning.NPMVersionExpression` parses none of them.
+* node-semver answers ``satisfies`` and ``max_satisfying`` as npm does, and has a loose mode for malformed versions.
+
+.. _VERSIONING/python-debian:
+
+python-debian
+=============
+
+Source: `python-debian <https://salsa.debian.org/python-debian-team/python-debian>`__, on PyPI as
+`python-debian <https://pypi.org/project/python-debian/>`__.
+
+.. rubric:: Disadvantages
+
+* Debian versions only.
+
+.. rubric:: Advantages
+
+* Orders Debian versions as dpkg does: epoch, upstream version and revision, with ``~`` sorting before everything.
+  pyTooling has no Debian version class; :class:`~pyTooling.Versioning.DebianVersionExpression` parses its versions
+  as :class:`~pyTooling.Versioning.SemanticVersion`.
+
+.. _VERSIONING/univers:
+
+univers
+=======
+
+Source: :gh:`univers <aboutcode-org/univers>`, on PyPI as `univers <https://pypi.org/project/univers/>`__.
+
+.. rubric:: Disadvantages
+
+* Depends on attrs, packaging, semantic-version and semver.
+
+.. rubric:: Standoff
+
+* Like this package, one model for the versions and ranges of several ecosystems.
+
+.. rubric:: Advantages
+
+* Many more schemes, among them npm, PyPI, RubyGems, Debian, Maven, RPM, Go and Composer.
+* Converts a range in an ecosystem's own notation into the common ``vers`` notation, as ``vers:npm/>=1.0.2|<2.0.0``
+  for ``^1.0.2``, and back.
