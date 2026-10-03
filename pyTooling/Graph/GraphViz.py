@@ -180,16 +180,29 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 	_fields:  list[RecordField]  #: The fields, in the order they are drawn.
 	_flipped: bool               #: If ``True``, the outermost fields are laid out against the graph's direction.
 
-	def __init__(self, *fields: RecordField, flipped: bool = False) -> None:
+	def __init__(self, fields: Sequence[RecordField], flipped: bool = False) -> None:
 		"""
 		Initialize a record label.
 
 		:param fields:      The fields, in the order they are drawn.
 		:param flipped:     Optional, if ``True``, the outermost fields are laid out against the graph's direction.
 		                    Default: ``False``.
+		:raises ValueError: If parameter 'fields' is None or empty.
+		:raises TypeError:  If parameter 'fields' is not a sequence, or is a string.
 		:raises ValueError: If a field is None.
 		:raises TypeError:  If a field is not a string, a sequence of strings or a :class:`RecordLabel`.
+		:raises ValueError: If parameter 'flipped' is None.
+		:raises TypeError:  If parameter 'flipped' is not a boolean.
 		"""
+		if fields is None:
+			raise ValueError("Parameter 'fields' is None.")
+		elif isinstance(fields, str) or not isinstance(fields, Sequence):
+			ex = TypeError("Parameter 'fields' is not a sequence ('list', 'tuple', ...).")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fields)}'.")
+			raise ex
+		elif len(fields) == 0:
+			raise ValueError("Parameter 'fields' is empty.")
+
 		for field in fields:
 			if field is None:
 				raise ValueError("Parameter 'fields' contains None.")
@@ -201,6 +214,13 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'fields' contains a field of an unsupported type.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(field)}'.")
 			ex.add_note("Supported types: str, a sequence of str, RecordLabel")
+			raise ex
+
+		if flipped is None:
+			raise ValueError("Parameter 'flipped' is None.")
+		elif not isinstance(flipped, bool):
+			ex = TypeError("Parameter 'flipped' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(flipped)}'.")
 			raise ex
 
 		self._fields = list(fields)
