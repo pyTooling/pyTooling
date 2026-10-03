@@ -242,7 +242,7 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(flipped)}'.")
 			raise ex
 
-		self._fields = list(fields)
+		self._fields  = list(fields)
 		self._flipped = flipped
 
 	@readonly
@@ -394,6 +394,7 @@ class Base(metaclass=ExtendedType, slots=True):
 			raise ex
 		elif name == "":
 			raise ValueError("Parameter 'name' is empty.")
+
 		if value is None:
 			raise ValueError("Parameter 'value' is None.")
 		elif not isinstance(value, (str, int, float, bool, HTMLLabel, RecordLabel)):
