@@ -54,12 +54,16 @@ from __future__            import annotations
 
 from enum                  import Enum
 from html                  import escape as html_escape
+from itertools             import count
 from pathlib               import Path
-from typing                import Mapping, Optional as Nullable, Sequence, Union
+from typing                import Iterator, Mapping, Optional as Nullable, Sequence, Union
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Vertex
+from pyTooling.Graph       import Edge as pyToolingEdge, Link as pyToolingLink
+from pyTooling.Tree        import Node as pyToolingNode
 
 
 __all__ = ["AttributeValue", "RecordField"]
@@ -978,6 +982,203 @@ class Graph(BaseGraph):
 		:returns: ``True``, if the graph is strict.
 		"""
 		return self._strict
+
+	@staticmethod
+	def _Identifier(identifier: object, used: set[str], counter: Iterator[int]) -> str:
+		"""
+		Return an element's identifier: its ID as text, or - without an ID - a generated one no other element uses.
+
+		:param identifier: The element's ID, or ``None``.
+		:param used:       Identifiers used so far, which a generated identifier is added to.
+		:param counter:    Counter numbering the generated identifiers.
+		:returns:          The identifier.
+		"""
+		if identifier is not None:
+			return str(identifier)
+
+		while (candidate := f"vertex{next(counter)}") in used:
+			pass
+
+		used.add(candidate)
+		return candidate
+
+	def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
+		"""
+		Return the node a vertex of a :class:`pyTooling.Graph.Graph` becomes.
+
+		The node is labelled with the vertex' value. A vertex without a value shows its ID, and one without an ID either
+		gets an empty label rather than its generated identifier. A derived class overrides this method to add labels or
+		attributes.
+
+		:param vertex:     The vertex to convert.
+		:param identifier: Identifier of the node: the vertex' ID, or a generated one.
+		:returns:          The node.
+		"""
+		if vertex._value is not None:
+			return Node(identifier, str(vertex._value))
+		elif vertex._id is None:
+			return Node(identifier, "")
+
+		return Node(identifier)
+
+	def _ConvertEdge(self, edge: pyToolingEdge, source: Node, target: Node) -> Edge:
+		"""
+		Return the edge an edge of a :class:`pyTooling.Graph.Graph` becomes, labelled with the edge's value.
+
+		A derived class overrides this method to add labels or attributes.
+
+		:param edge:   The edge to convert.
+		:param source: Node the converted edge's source vertex became.
+		:param target: Node the converted edge's destination vertex became.
+		:returns:      The edge.
+		"""
+		if edge._value is not None:
+			return Edge(source, target, label=str(edge._value))
+
+		return Edge(source, target)
+
+	def _ConvertLink(self, link: pyToolingLink, source: Node, target: Node) -> Edge:
+		"""
+		Return the edge a link between two subgraphs of a :class:`pyTooling.Graph.Graph` becomes: dashed, and labelled
+		with the link's value.
+
+		A derived class overrides this method to add labels or attributes.
+
+		:param link:   The link to convert.
+		:param source: Node the link's source vertex became.
+		:param target: Node the link's destination vertex became.
+		:returns:      The edge.
+		"""
+		if link._value is not None:
+			return Edge(source, target, style="dashed", label=str(link._value))
+
+		return Edge(source, target, style="dashed")
+
+	def _ConvertSubgraph(self, subgraph: pyToolingSubgraph, identifier: str) -> Subgraph:
+		"""
+		Return the cluster a subgraph of a :class:`pyTooling.Graph.Graph` becomes, labelled with the subgraph's name.
+
+		A derived class overrides this method to add labels or attributes.
+
+		:param subgraph:   The subgraph to convert.
+		:param identifier: Identifier of the cluster.
+		:returns:          The cluster, still empty.
+		"""
+		if subgraph._name is not None:
+			return Subgraph(identifier, label=subgraph._name)
+
+		return Subgraph(identifier)
+
+	def _ConvertTreeNode(self, node: pyToolingNode, identifier: str) -> Node:
+		"""
+		Return the node a node of a :class:`pyTooling.Tree.Node` tree becomes.
+
+		The node is labelled like a vertex in :meth:`_ConvertVertex`. A derived class overrides this method to add labels
+		or attributes.
+
+		:param node:       The tree node to convert.
+		:param identifier: Identifier of the node: the tree node's ID, or a generated one.
+		:returns:          The node.
+		"""
+		if node._value is not None:
+			return Node(identifier, str(node._value))
+		elif node._id is None:
+			return Node(identifier, "")
+
+		return Node(identifier)
+
+	def FromGraph(self, graph: pyToolingGraph) -> None:
+		"""
+		Fill this graph from a :class:`pyTooling.Graph.Graph`.
+
+		Every subgraph becomes a cluster of its vertices, every vertex a node and every edge an edge, in the graph or in
+		the cluster they belong to. A link between two subgraphs becomes an edge of this graph. A vertex without an ID
+		gets a generated identifier, which no vertex with an ID has. Subgraphs are converted in the order of their names,
+		so the same graph is always written the same way.
+
+		What an element becomes is decided by :meth:`_ConvertVertex`, :meth:`_ConvertEdge`, :meth:`_ConvertLink` and
+		:meth:`_ConvertSubgraph`, which a derived class overrides. Without an identifier of its own, this graph takes the
+		graph's name.
+
+		:param graph:       The graph to convert.
+		:raises ValueError: If parameter 'graph' is None.
+		:raises TypeError:  If parameter 'graph' is not a :class:`pyTooling.Graph.Graph`.
+		"""
+		if graph is None:
+			raise ValueError("Parameter 'graph' is None.")
+		elif not isinstance(graph, pyToolingGraph):
+			ex = TypeError("Parameter 'graph' is not of type 'pyTooling.Graph.Graph'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
+			raise ex
+
+		if self._identifier is None:
+			self._identifier = graph._name
+
+		subgraphs = sorted(graph.Subgraphs, key=lambda subgraph: "" if subgraph._name is None else subgraph._name)
+		vertices = [*graph.IterateVertices(), *(vertex for subgraph in subgraphs for vertex in subgraph.IterateVertices())]
+		used = {str(vertex._id) for vertex in vertices if vertex._id is not None}
+		counter = count(1)
+		nodes: dict[int, Node] = {}
+
+		clusters = []
+		for index, subgraph in enumerate(subgraphs, start=1):
+			cluster = self.AddSubgraph(self._ConvertSubgraph(subgraph, f"cluster{index}"))
+			clusters.append(cluster)
+			for vertex in subgraph.IterateVertices():
+				nodes[id(vertex)] = cluster.AddNode(self._ConvertVertex(vertex, self._Identifier(vertex._id, used, counter)))
+
+		for vertex in graph.IterateVertices():
+			nodes[id(vertex)] = self.AddNode(self._ConvertVertex(vertex, self._Identifier(vertex._id, used, counter)))
+
+		for cluster, subgraph in zip(clusters, subgraphs):
+			for edge in subgraph.IterateEdges():
+				cluster.AddEdge(self._ConvertEdge(edge, nodes[id(edge._source)], nodes[id(edge._destination)]))
+
+		for edge in graph.IterateEdges():
+			self.AddEdge(self._ConvertEdge(edge, nodes[id(edge._source)], nodes[id(edge._destination)]))
+
+		# a link is known to both subgraphs it connects
+		converted: set[int] = set()
+		for subgraph in subgraphs:
+			for link in subgraph.IterateLinks():
+				if id(link) not in converted:
+					converted.add(id(link))
+					self.AddEdge(self._ConvertLink(link, nodes[id(link._source)], nodes[id(link._destination)]))
+
+	def FromTree(self, tree: pyToolingNode) -> None:
+		"""
+		Fill this graph from a tree of :class:`pyTooling.Tree.Node`.
+
+		Every tree node becomes a node, connected to its parent by an edge from parent to child. A tree node without an
+		ID gets a generated identifier, which no tree node with an ID has.
+
+		What a tree node becomes is decided by :meth:`_ConvertTreeNode`, which a derived class overrides. Without an
+		identifier of its own, this graph takes the root's ID.
+
+		:param tree:        The root of the tree to convert.
+		:raises ValueError: If parameter 'tree' is None.
+		:raises TypeError:  If parameter 'tree' is not a :class:`pyTooling.Tree.Node`.
+		"""
+		if tree is None:
+			raise ValueError("Parameter 'tree' is None.")
+		elif not isinstance(tree, pyToolingNode):
+			ex = TypeError("Parameter 'tree' is not of type 'pyTooling.Tree.Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(tree)}'.")
+			raise ex
+
+		if self._identifier is None and tree._id is not None:
+			self._identifier = str(tree._id)
+
+		treeNodes = [tree, *tree.GetDescendants()]
+		used = {str(node._id) for node in treeNodes if node._id is not None}
+		counter = count(1)
+		nodes: dict[int, Node] = {}
+
+		for treeNode in treeNodes:
+			node = self.AddNode(self._ConvertTreeNode(treeNode, self._Identifier(treeNode._id, used, counter)))
+			nodes[id(treeNode)] = node
+			if treeNode is not tree:
+				self.AddEdge(Edge(nodes[id(treeNode._parent)], node))
 
 	def ToStringLines(self, indent: int = 0) -> list[str]:
 		"""

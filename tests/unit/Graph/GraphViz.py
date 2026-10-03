@@ -35,8 +35,10 @@ from pathlib                  import Path
 from tempfile                 import TemporaryDirectory
 from textwrap                 import dedent
 
+from pyTooling.Graph          import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Vertex
 from pyTooling.Graph.GraphViz import GraphKind, HTMLLabel, RecordLabel, DefaultAttributes, Node, Edge, Subgraph, Graph
 from pyTooling.Graph.GraphViz import quote
+from pyTooling.Tree           import Node as pyToolingNode
 from pyTooling.Testing        import Testcase
 
 
@@ -367,6 +369,111 @@ class Graphs(Testcase):
 			(graph.GetNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
 			(graph.HasNode,     None,          ValueError, "Parameter 'identifier' is None."),
 			(graph.HasNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					method(argument)
+				self.assertEqual(message, str(context.exception))
+
+
+class pyToolingGraphs(Testcase):
+	def test_FromGraph(self) -> None:
+		graph = pyToolingGraph(name="G")
+		s1 = pyToolingSubgraph(name="S1", graph=graph)
+		s2 = pyToolingSubgraph(name="S2", graph=graph)
+		root = Vertex(vertexID="r", value="root", graph=graph)
+		anonymous = Vertex(graph=graph)
+		Vertex(vertexID="vertex1", graph=graph)
+		a = Vertex(vertexID="a", value="A", subgraph=s1)
+		b = Vertex(vertexID="b", subgraph=s1)
+		c = Vertex(value="C", subgraph=s2)
+		a.EdgeToVertex(b, edgeValue="ab")
+		root.EdgeToVertex(anonymous)
+		a.LinkToVertex(c, linkValue="link")
+
+		dot = Graph()
+		dot.FromGraph(graph)
+
+		self.assertEqual(dedent("""\
+			digraph "G" {
+			  subgraph "cluster1" {
+			    label="S1";
+			    "a" [label="A"];
+			    "b";
+			    "a" -> "b" [label="ab"];
+			  }
+			  subgraph "cluster2" {
+			    label="S2";
+			    "vertex2" [label="C"];
+			  }
+			  "vertex3" [label=""];
+			  "r" [label="root"];
+			  "vertex1";
+			  "r" -> "vertex3";
+			  "a" -> "vertex2" [style="dashed", label="link"];
+			}
+			"""), str(dot))
+
+	def test_FromGraph_Identifier(self) -> None:
+		graph = pyToolingGraph(name="G")
+		Vertex(vertexID=1, graph=graph)
+
+		dot = Graph("own")
+		dot.FromGraph(graph)
+
+		self.assertEqual("own", dot.Identifier)
+		self.assertTrue(dot.HasNode("1"))
+
+	def test_FromGraph_Derived(self) -> None:
+		class ColoredGraph(Graph):
+			def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
+				node = super()._ConvertVertex(vertex, identifier)
+				node["color"] = "red"
+				return node
+
+		graph = pyToolingGraph(name="G")
+		Vertex(vertexID="a", graph=graph).EdgeToVertex(Vertex(vertexID="b", graph=graph))
+
+		dot = ColoredGraph(rankdir="LR")
+		dot.FromGraph(graph)
+
+		self.assertEqual(dedent("""\
+			digraph "G" {
+			  rankdir="LR";
+			  "a" [color="red"];
+			  "b" [color="red"];
+			  "a" -> "b";
+			}
+			"""), str(dot))
+
+	def test_FromTree(self) -> None:
+		root = pyToolingNode(nodeID="root", value="R")
+		x = pyToolingNode(value="X", parent=root)
+		pyToolingNode(nodeID="y", parent=x)
+		pyToolingNode(parent=root)
+
+		dot = Graph()
+		dot.FromTree(root)
+
+		self.assertEqual(dedent("""\
+			digraph "root" {
+			  "root" [label="R"];
+			  "vertex1" [label="X"];
+			  "y";
+			  "vertex2" [label=""];
+			  "root" -> "vertex1";
+			  "vertex1" -> "y";
+			  "root" -> "vertex2";
+			}
+			"""), str(dot))
+
+	def test_Parameters(self) -> None:
+		dot = Graph()
+		for method, argument, exceptionType, message in (
+			(dot.FromGraph, None, ValueError, "Parameter 'graph' is None."),
+			(dot.FromGraph, 1,    TypeError,  "Parameter 'graph' is not of type 'pyTooling.Graph.Graph'."),
+			(dot.FromTree,  None, ValueError, "Parameter 'tree' is None."),
+			(dot.FromTree,  1,    TypeError,  "Parameter 'tree' is not of type 'pyTooling.Tree.Node'."),
 		):
 			with self.subTest(message=message):
 				with self.assertRaises(exceptionType) as context:
