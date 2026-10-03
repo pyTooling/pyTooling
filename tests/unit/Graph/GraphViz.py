@@ -256,10 +256,10 @@ class Elements(Testcase):
 
 class Graphs(Testcase):
 	def test_Graph(self) -> None:
-		graph = Graph("G", rankdir="LR")
+		graph = Graph("G", attributes={"rankdir": "LR"})
 		graph.NodeDefaults["shape"] = "box"
 		graph.EdgeDefaults["color"] = "gray"
-		cluster = graph.AddSubgraph(Subgraph("cluster_jobs", label="Jobs"))
+		cluster = graph.AddSubgraph(Subgraph("cluster_jobs", {"label": "Jobs"}))
 		a = cluster.AddNode(Node("a", "A"))
 		b = graph.AddNode(Node("b"))
 		graph.AddEdge(Edge(a, b))
@@ -317,10 +317,23 @@ class Graphs(Testcase):
 
 			self.assertEqual(str(graph), file.read_text(encoding="utf-8"))
 
+		for file, exceptionType, message in (
+			(None,        ValueError, "Parameter 'file' is None."),
+			("graph.dot", TypeError,  "Parameter 'file' is not of type 'Path'."),
+		):
+			with self.subTest(message=message):
+				with self.assertRaises(exceptionType) as context:
+					graph.WriteToFile(file)
+				self.assertEqual(message, str(context.exception))
+
 	def test_Graph_Parameters(self) -> None:
 		for arguments, exceptionType, message in (
-			((1, ),            TypeError, "Parameter 'identifier' is not of type 'str'."),
-			(("G", "digraph"), TypeError, "Parameter 'kind' is not of type 'GraphKind'."),
+			((1, ),                                TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			(("G", None),                          ValueError, "Parameter 'kind' is None."),
+			(("G", "digraph"),                     TypeError,  "Parameter 'kind' is not of type 'GraphKind'."),
+			(("G", GraphKind.Directed, None),      ValueError, "Parameter 'strict' is None."),
+			(("G", GraphKind.Directed, 1),         TypeError,  "Parameter 'strict' is not of type 'bool'."),
+			(("G", GraphKind.Directed, False, 1),  TypeError,  "Parameter 'attributes' is not a mapping ('dict', ...)."),
 		):
 			with self.subTest(message=message):
 				with self.assertRaises(exceptionType) as context:
@@ -328,9 +341,9 @@ class Graphs(Testcase):
 				self.assertEqual(message, str(context.exception))
 
 		for identifier, exceptionType, message in (
-			(None, ValueError, "Parameter 'identifier' is None or empty."),
-			("",   ValueError, "Parameter 'identifier' is None or empty."),
+			(None, ValueError, "Parameter 'identifier' is None."),
 			(1,    TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			("",   ValueError, "Parameter 'identifier' is empty."),
 		):
 			with self.subTest(message=message, identifier=identifier):
 				with self.assertRaises(exceptionType) as context:
