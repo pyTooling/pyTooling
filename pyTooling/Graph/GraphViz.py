@@ -73,9 +73,18 @@ def quote(text: str) -> str:
 	A backslash, a double quote and a line break are escaped, so the drawing shows the text as it was given - a
 	backslash doesn't start one of Graphviz' escape sequences like ``\\l``.
 
-	:param text: The text to quote.
-	:returns:    The text in double quotes.
+	:param text:        The text to quote.
+	:returns:           The text in double quotes.
+	:raises ValueError: If parameter 'text' is None.
+	:raises TypeError:  If parameter 'text' is not a string.
 	"""
+	if text is None:
+		raise ValueError("Parameter 'text' is None.")
+	elif not isinstance(text, str):
+		ex = TypeError("Parameter 'text' is not of type 'str'.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+		raise ex
+
 	return '"' + text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'
 
 
@@ -144,9 +153,18 @@ class HTMLLabel(metaclass=ExtendedType, slots=True):
 		"""
 		Escape the characters HTML gives a meaning to: ``&``, ``<`` and ``>``.
 
-		:param text: The text to escape.
-		:returns:    The text, safe to place into the label's markup.
+		:param text:        The text to escape.
+		:returns:           The text, safe to place into the label's markup.
+		:raises ValueError: If parameter 'text' is None.
+		:raises TypeError:  If parameter 'text' is not a string.
 		"""
+		if text is None:
+			raise ValueError("Parameter 'text' is None.")
+		elif not isinstance(text, str):
+			ex = TypeError("Parameter 'text' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+			raise ex
+
 		return html_escape(text, quote=False)
 
 	def __str__(self) -> str:
@@ -190,7 +208,8 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'fields' is None or empty.
 		:raises TypeError:  If parameter 'fields' is not a sequence, or is a string.
 		:raises ValueError: If a field is None.
-		:raises TypeError:  If a field is not a string, a sequence of strings or a :class:`RecordLabel`.
+		:raises TypeError:  If a field is not a string, a sequence of strings or a :class:`RecordLabel`. |br|
+		                    The note lists the supported types.
 		:raises ValueError: If parameter 'flipped' is None.
 		:raises TypeError:  If parameter 'flipped' is not a boolean.
 		"""
@@ -250,9 +269,18 @@ class RecordLabel(metaclass=ExtendedType, slots=True):
 		"""
 		Escape the characters a record label gives a meaning to: ``\\``, ``{``, ``}``, ``|``, ``<``, ``>`` and ``"``.
 
-		:param text: The text to escape.
-		:returns:    The text, safe to place into a field.
+		:param text:        The text to escape.
+		:returns:           The text, safe to place into a field.
+		:raises ValueError: If parameter 'text' is None.
+		:raises TypeError:  If parameter 'text' is not a string.
 		"""
+		if text is None:
+			raise ValueError("Parameter 'text' is None.")
+		elif not isinstance(text, str):
+			ex = TypeError("Parameter 'text' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(text)}'.")
+			raise ex
+
 		for character in ("\\", "{", "}", "|", "<", ">", '"'):
 			text = text.replace(character, f"\\{character}")
 
@@ -355,7 +383,8 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'name' is None or empty.
 		:raises TypeError:  If parameter 'name' is not a string.
 		:raises ValueError: If parameter 'value' is None.
-		:raises TypeError:  If parameter 'value' is not of type :data:`AttributeValue`.
+		:raises TypeError:  If parameter 'value' is not of type :data:`AttributeValue`. |br|
+		                    The note lists the supported types.
 		"""
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")

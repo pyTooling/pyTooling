@@ -53,6 +53,17 @@ class Quoting(Testcase):
 			with self.subTest(text=text):
 				self.assertEqual(expected, quote(text))
 
+	def test_Text_Parameters(self) -> None:
+		for function in (quote, HTMLLabel.Escape, RecordLabel.Escape):
+			for text, exceptionType, message in (
+				(None, ValueError, "Parameter 'text' is None."),
+				(1,    TypeError,  "Parameter 'text' is not of type 'str'."),
+			):
+				with self.subTest(function=function.__qualname__, message=message):
+					with self.assertRaises(exceptionType) as context:
+						function(text)
+					self.assertEqual(message, str(context.exception))
+
 	def test_GraphKind(self) -> None:
 		self.assertEqual("digraph", GraphKind.Directed.Keyword)
 		self.assertEqual("->", GraphKind.Directed.EdgeOperator)
