@@ -1115,8 +1115,11 @@ class Graph(BaseGraph):
 			self._identifier = graph._name
 
 		subgraphs = sorted(graph.Subgraphs, key=lambda subgraph: "" if subgraph._name is None else subgraph._name)
-		vertices = [*graph.IterateVertices(), *(vertex for subgraph in subgraphs for vertex in subgraph.IterateVertices())]
-		used = {str(vertex._id) for vertex in vertices if vertex._id is not None}
+		vertices  = list(graph.IterateVertices())
+		for subgraph in subgraphs:
+			vertices += subgraph.IterateVertices()
+
+		used    = {str(vertex._id) for vertex in vertices if vertex._id is not None}
 		counter = count(1)
 		nodes: dict[int, Node] = {}
 
@@ -1169,9 +1172,10 @@ class Graph(BaseGraph):
 		if self._identifier is None and tree._id is not None:
 			self._identifier = str(tree._id)
 
-		treeNodes = [tree, *tree.GetDescendants()]
-		used = {str(node._id) for node in treeNodes if node._id is not None}
-		counter = count(1)
+		treeNodes  = [tree]
+		treeNodes += tree.GetDescendants()
+		used       = {str(node._id) for node in treeNodes if node._id is not None}
+		counter    = count(1)
 		nodes: dict[int, Node] = {}
 
 		for treeNode in treeNodes:
