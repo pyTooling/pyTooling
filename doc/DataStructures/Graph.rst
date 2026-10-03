@@ -311,7 +311,7 @@ What an element becomes is decided by ``_ConvertVertex()``, ``_ConvertEdge()``, 
 
    class TypeGraph(DotGraph):
      def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
-       return Node(identifier, RecordLabel(vertex.ID, vertex["members"], flipped=True), {"shape": "record"})
+       return Node(identifier, RecordLabel([vertex.ID, vertex["members"]], flipped=True), {"shape": "record"})
 
 
 .. _STRUCT/Graph/Competitors:
