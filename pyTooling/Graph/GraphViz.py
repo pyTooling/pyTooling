@@ -627,3 +627,353 @@ class Edge(Base):
 		target = quote(self._target._identifier)
 
 		return [f"{'  ' * indent}{source} {kind.EdgeOperator} {target}{self._AttributeList()};\n"]
+
+
+@export
+class BaseGraph(Base):
+	"""
+	Base-class for everything that contains nodes, edges and subgraphs - a graph as well as a subgraph.
+
+	Its own attributes are the graph's attributes, written as ``name=value;`` statements, and its default attributes
+	are what every node and every edge starts with. The statements are written in this order: attributes, defaults,
+	subgraphs, nodes, edges.
+	"""
+	_nodeDefaults: DefaultAttributes   #: Attributes every node starts with.
+	_edgeDefaults: DefaultAttributes   #: Attributes every edge starts with.
+	_subgraphs:    dict[str, Subgraph]  #: Subgraphs, by identifier.
+	_nodes:        dict[str, Node]      #: Nodes, by identifier.
+	_edges:        list[Edge]           #: Edges, in the order they were added.
+
+	def __init__(self, attributes: Nullable[Mapping[str, AttributeValue]] = None) -> None:
+		"""
+		Initialize an empty graph.
+
+		:param attributes: Optional, attributes of the graph, by name.
+		"""
+		super().__init__(attributes)
+
+		self._nodeDefaults = DefaultAttributes("node")
+		self._edgeDefaults = DefaultAttributes("edge")
+		self._subgraphs = {}
+		self._nodes = {}
+		self._edges = []
+
+	@readonly
+	def NodeDefaults(self) -> DefaultAttributes:
+		"""
+		Read-only property to access the attributes every node starts with (:attr:`_nodeDefaults`).
+
+		:returns: The node defaults.
+		"""
+		return self._nodeDefaults
+
+	@readonly
+	def EdgeDefaults(self) -> DefaultAttributes:
+		"""
+		Read-only property to access the attributes every edge starts with (:attr:`_edgeDefaults`).
+
+		:returns: The edge defaults.
+		"""
+		return self._edgeDefaults
+
+	@readonly
+	def Subgraphs(self) -> dict[str, Subgraph]:
+		"""
+		Read-only property to access the subgraphs (:attr:`_subgraphs`).
+
+		:returns: Dictionary of subgraph identifiers and subgraphs.
+		"""
+		return self._subgraphs
+
+	@readonly
+	def Nodes(self) -> dict[str, Node]:
+		"""
+		Read-only property to access the nodes (:attr:`_nodes`).
+
+		:returns: Dictionary of node identifiers and nodes.
+		"""
+		return self._nodes
+
+	@readonly
+	def Edges(self) -> list[Edge]:
+		"""
+		Read-only property to access the edges (:attr:`_edges`).
+
+		:returns: The edges, in the order they were added.
+		"""
+		return self._edges
+
+	def AddSubgraph(self, subgraph: Subgraph) -> Subgraph:
+		"""
+		Add a subgraph.
+
+		:param subgraph:    The subgraph to add.
+		:returns:           The added subgraph, so it can be used in the calling expression.
+		:raises ValueError: If parameter 'subgraph' is None.
+		:raises TypeError:  If parameter 'subgraph' is not a :class:`Subgraph`.
+		:raises ValueError: If a subgraph with the same identifier was added before.
+		"""
+		if subgraph is None:
+			raise ValueError("Parameter 'subgraph' is None.")
+		elif not isinstance(subgraph, Subgraph):
+			ex = TypeError("Parameter 'subgraph' is not of type 'Subgraph'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(subgraph)}'.")
+			raise ex
+		elif subgraph._identifier in self._subgraphs:
+			raise ValueError(f"A subgraph '{subgraph._identifier}' was added before.")
+
+		self._subgraphs[subgraph._identifier] = subgraph
+		return subgraph
+
+	def AddNode(self, node: Node) -> Node:
+		"""
+		Add a node.
+
+		:param node:        The node to add.
+		:returns:           The added node, so it can be used in the calling expression.
+		:raises ValueError: If parameter 'node' is None.
+		:raises TypeError:  If parameter 'node' is not a :class:`Node`.
+		:raises ValueError: If a node with the same identifier was added before.
+		"""
+		if node is None:
+			raise ValueError("Parameter 'node' is None.")
+		elif not isinstance(node, Node):
+			ex = TypeError("Parameter 'node' is not of type 'Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
+			raise ex
+		elif node._identifier in self._nodes:
+			raise ValueError(f"A node '{node._identifier}' was added before.")
+
+		self._nodes[node._identifier] = node
+		return node
+
+	def AddEdge(self, edge: Edge) -> Edge:
+		"""
+		Add an edge.
+
+		An edge may connect nodes of different subgraphs. Graphviz places the edge with the subgraph it is written in, so
+		an edge between clusters belongs to the graph containing both.
+
+		:param edge:        The edge to add.
+		:returns:           The added edge, so it can be used in the calling expression.
+		:raises ValueError: If parameter 'edge' is None.
+		:raises TypeError:  If parameter 'edge' is not an :class:`Edge`.
+		"""
+		if edge is None:
+			raise ValueError("Parameter 'edge' is None.")
+		elif not isinstance(edge, Edge):
+			ex = TypeError("Parameter 'edge' is not of type 'Edge'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(edge)}'.")
+			raise ex
+
+		self._edges.append(edge)
+		return edge
+
+	def GetNode(self, identifier: str) -> Node:
+		"""
+		Return the node with the given identifier.
+
+		:param identifier: Identifier of the node.
+		:returns:          The node with that identifier.
+		:raises KeyError:  If no node has that identifier.
+		"""
+		return self._nodes[identifier]
+
+	def HasNode(self, identifier: str) -> bool:
+		"""
+		Check if a node with the given identifier was added.
+
+		:param identifier: Identifier of the node.
+		:returns:          ``True``, if such a node exists.
+		"""
+		return identifier in self._nodes
+
+	def _StatementLines(self, kind: GraphKind, indent: int) -> list[str]:
+		"""
+		Render the graph's statements: attributes, defaults, subgraphs, nodes and edges.
+
+		:param kind:   Kind of the graph, which decides the edge operator.
+		:param indent: Indentation level of the statements.
+		:returns:      The statements as lines.
+		"""
+		lines = [f"{'  ' * indent}{name}={self._FormatValue(value)};\n" for name, value in self._attributes.items()]
+		lines.extend(self._nodeDefaults.ToStringLines(indent))
+		lines.extend(self._edgeDefaults.ToStringLines(indent))
+		for subgraph in self._subgraphs.values():
+			lines.extend(subgraph.ToStringLines(kind, indent))
+		for node in self._nodes.values():
+			lines.extend(node.ToStringLines(indent))
+		for edge in self._edges:
+			lines.extend(edge.ToStringLines(kind, indent))
+
+		return lines
+
+
+@export
+class Subgraph(BaseGraph):
+	"""
+	A subgraph of a DOT graph.
+
+	A subgraph whose identifier starts with ``cluster`` is a **cluster**: Graphviz draws its nodes together, inside a
+	box, and its attributes like ``label`` and ``style`` apply to that box.
+	"""
+	_identifier: str  #: Identifier of the subgraph.
+
+	def __init__(self, identifier: str, **attributes: AttributeValue) -> None:
+		"""
+		Initialize an empty subgraph.
+
+		:param identifier:  Identifier of the subgraph. It starts with ``cluster`` for a cluster.
+		:param attributes:  Further attributes of the subgraph.
+		:raises ValueError: If parameter 'identifier' is None or empty.
+		:raises TypeError:  If parameter 'identifier' is not a string.
+		"""
+		if identifier is None or identifier == "":
+			raise ValueError("Parameter 'identifier' is None or empty.")
+		elif not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+
+		super().__init__(attributes)
+
+		self._identifier = identifier
+
+	@readonly
+	def Identifier(self) -> str:
+		"""
+		Read-only property to access the subgraph's identifier (:attr:`_identifier`).
+
+		:returns: The identifier of the subgraph.
+		"""
+		return self._identifier
+
+	@readonly
+	def IsCluster(self) -> bool:
+		"""
+		Read-only property to return whether Graphviz draws the subgraph as a cluster.
+
+		:returns: ``True``, if the identifier starts with ``cluster``.
+		"""
+		return self._identifier.startswith("cluster")
+
+	def ToStringLines(self, kind: GraphKind = GraphKind.Directed, indent: int = 1) -> list[str]:
+		"""
+		Render the subgraph as DOT lines.
+
+		:param kind:   Optional, kind of the graph, which decides the edge operator. Default: :attr:`GraphKind.Directed`.
+		:param indent: Optional, indentation level of the subgraph statement.
+		:returns:      The subgraph statement and its statements as lines.
+		"""
+		lines = [f"{'  ' * indent}subgraph {quote(self._identifier)} {{\n"]
+		lines.extend(self._StatementLines(kind, indent + 1))
+		lines.append(f"{'  ' * indent}}}\n")
+
+		return lines
+
+
+@export
+class Graph(BaseGraph):
+	"""
+	A DOT graph - the document Graphviz reads.
+
+	Its kind decides whether it is a ``digraph`` or a ``graph``, and a **strict** graph merges multiple edges between
+	the same two nodes into one.
+	"""
+	_identifier: Nullable[str]  #: Identifier of the graph, which Graphviz uses as the drawing's name.
+	_kind:       GraphKind      #: Directed or undirected.
+	_strict:     bool           #: If ``True``, multiple edges between the same two nodes are merged.
+
+	def __init__(
+		self,
+		identifier: Nullable[str] = None,
+		kind: GraphKind = GraphKind.Directed,
+		strict: bool = False,
+		**attributes: AttributeValue
+	) -> None:
+		"""
+		Initialize an empty graph.
+
+		:param identifier: Optional, identifier of the graph, which Graphviz uses as the drawing's name.
+		:param kind:       Optional, kind of the graph. Default: :attr:`GraphKind.Directed`.
+		:param strict:     Optional, if ``True``, multiple edges between the same two nodes are merged. Default:
+		                   ``False``.
+		:param attributes: Further attributes of the graph, e.g. ``rankdir="LR"``.
+		:raises TypeError: If parameter 'identifier' is not a string.
+		:raises TypeError: If parameter 'kind' is not a :class:`GraphKind`.
+		"""
+		if identifier is not None and not isinstance(identifier, str):
+			ex = TypeError("Parameter 'identifier' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(identifier)}'.")
+			raise ex
+		if not isinstance(kind, GraphKind):
+			ex = TypeError("Parameter 'kind' is not of type 'GraphKind'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
+			raise ex
+
+		super().__init__(attributes)
+
+		self._identifier = identifier
+		self._kind = kind
+		self._strict = strict
+
+	@readonly
+	def Identifier(self) -> Nullable[str]:
+		"""
+		Read-only property to access the graph's identifier (:attr:`_identifier`).
+
+		:returns: The identifier, or ``None`` if the graph is anonymous.
+		"""
+		return self._identifier
+
+	@readonly
+	def Kind(self) -> GraphKind:
+		"""
+		Read-only property to access the graph's kind (:attr:`_kind`).
+
+		:returns: Directed or undirected.
+		"""
+		return self._kind
+
+	@readonly
+	def Strict(self) -> bool:
+		"""
+		Read-only property to access whether multiple edges between the same two nodes are merged (:attr:`_strict`).
+
+		:returns: ``True``, if the graph is strict.
+		"""
+		return self._strict
+
+	def ToStringLines(self, indent: int = 0) -> list[str]:
+		"""
+		Render the graph as DOT lines.
+
+		:param indent: Optional, indentation level of the graph statement.
+		:returns:      The graph and its statements as lines.
+		"""
+		head = f"{'strict ' if self._strict else ''}{self._kind.Keyword}"
+		if self._identifier is not None:
+			head += f" {quote(self._identifier)}"
+
+		lines = [f"{'  ' * indent}{head} {{\n"]
+		lines.extend(self._StatementLines(self._kind, indent + 1))
+		lines.append(f"{'  ' * indent}}}\n")
+
+		return lines
+
+	def WriteToFile(self, file: Path) -> None:
+		"""
+		Write the graph as a DOT file.
+
+		:param file: Path of the file to write.
+		"""
+		with file.open("w", encoding="utf-8") as f:
+			f.writelines(self.ToStringLines())
+
+	def __str__(self) -> str:
+		"""
+		Return the graph as DOT text.
+
+		:returns: The graph in the DOT language.
+		"""
+		return "".join(self.ToStringLines())
