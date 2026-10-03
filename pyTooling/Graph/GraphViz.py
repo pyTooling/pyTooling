@@ -654,9 +654,9 @@ class BaseGraph(Base):
 
 		self._nodeDefaults = DefaultAttributes("node")
 		self._edgeDefaults = DefaultAttributes("edge")
-		self._subgraphs = {}
-		self._nodes = {}
-		self._edges = []
+		self._subgraphs    = {}
+		self._nodes        = {}
+		self._edges        = []
 
 	@readonly
 	def NodeDefaults(self) -> DefaultAttributes:
@@ -819,8 +819,10 @@ class BaseGraph(Base):
 		lines.extend(self._edgeDefaults.ToStringLines(indent))
 		for subgraph in self._subgraphs.values():
 			lines.extend(subgraph.ToStringLines(kind, indent))
+
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent))
+
 		for edge in self._edges:
 			lines.extend(edge.ToStringLines(kind, indent))
 
@@ -947,8 +949,8 @@ class Graph(BaseGraph):
 			raise ex
 
 		self._identifier = identifier
-		self._kind = kind
-		self._strict = strict
+		self._kind       = kind
+		self._strict     = strict
 
 	@readonly
 	def Identifier(self) -> Nullable[str]:
