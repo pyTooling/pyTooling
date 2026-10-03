@@ -54,9 +54,8 @@ from __future__            import annotations
 
 from enum                  import Enum
 from html                  import escape as html_escape
-from itertools             import count
 from pathlib               import Path
-from typing                import Iterator, Mapping, Optional as Nullable, Sequence, Union
+from typing                import Mapping, Optional as Nullable, Sequence, Union
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
@@ -984,23 +983,44 @@ class Graph(BaseGraph):
 		return self._strict
 
 	@staticmethod
-	def _Identifier(identifier: object, used: set[str], counter: Iterator[int]) -> str:
+	def _Identifiers(elements: Sequence[Union[Vertex, pyToolingNode]]) -> dict[int, str]:
 		"""
-		Return an element's identifier: its ID as text, or - without an ID - a generated one no other element uses.
+		Return the identifiers of vertices or tree nodes: an element's ID as text, or - without an ID - a generated
+		``vertex<number>``, which no element's ID is.
 
-		:param identifier: The element's ID, or ``None``.
-		:param used:       Identifiers used so far, which a generated identifier is added to.
-		:param counter:    Counter numbering the generated identifiers.
-		:returns:          The identifier.
+		Generated numbers first fill the gaps between the numbers taken by IDs like ``vertex7``, then follow the highest of
+		them. The elements without an ID are numbered in the order they are given.
+
+		:param elements: The vertices or tree nodes, in the order they are converted.
+		:returns:        The identifiers, by the elements' :func:`id`.
 		"""
-		if identifier is not None:
-			return str(identifier)
+		identifiers = {id(element): str(element._id) for element in elements if element._id is not None}
+		taken       = sorted({
+			int(identifier[6:]) for identifier in identifiers.values()
+			if identifier.startswith("vertex") and identifier[6:].isdecimal()
+		})
 
-		while (candidate := f"vertex{next(counter)}") in used:
-			pass
+		if len(taken) > 0 and taken[-1] == len(taken):
+			number = len(taken) + 1
+			index  = len(taken)
+		else:
+			number = 1
+			index  = 0
 
-		used.add(candidate)
-		return candidate
+		for element in elements:
+			if element._id is not None:
+				continue
+
+			while index < len(taken) and taken[index] <= number:
+				if taken[index] == number:
+					number += 1
+
+				index += 1
+
+			identifiers[id(element)] = f"vertex{number}"
+			number += 1
+
+		return identifiers
 
 	def _ConvertVertex(self, vertex: Vertex, identifier: str) -> Node:
 		"""
@@ -1115,12 +1135,13 @@ class Graph(BaseGraph):
 			self._identifier = graph._name
 
 		subgraphs = sorted(graph.Subgraphs, key=lambda subgraph: "" if subgraph._name is None else subgraph._name)
-		vertices  = list(graph.IterateVertices())
+		vertices: list[Vertex] = []
 		for subgraph in subgraphs:
 			vertices += subgraph.IterateVertices()
 
-		used    = {str(vertex._id) for vertex in vertices if vertex._id is not None}
-		counter = count(1)
+		vertices += graph.IterateVertices()
+
+		identifiers = self._Identifiers(vertices)
 		nodes: dict[int, Node] = {}
 
 		clusters = []
@@ -1128,10 +1149,10 @@ class Graph(BaseGraph):
 			cluster = self.AddSubgraph(self._ConvertSubgraph(subgraph, f"cluster{index}"))
 			clusters.append(cluster)
 			for vertex in subgraph.IterateVertices():
-				nodes[id(vertex)] = cluster.AddNode(self._ConvertVertex(vertex, self._Identifier(vertex._id, used, counter)))
+				nodes[id(vertex)] = cluster.AddNode(self._ConvertVertex(vertex, identifiers[id(vertex)]))
 
 		for vertex in graph.IterateVertices():
-			nodes[id(vertex)] = self.AddNode(self._ConvertVertex(vertex, self._Identifier(vertex._id, used, counter)))
+			nodes[id(vertex)] = self.AddNode(self._ConvertVertex(vertex, identifiers[id(vertex)]))
 
 		for cluster, subgraph in zip(clusters, subgraphs):
 			for edge in subgraph.IterateEdges():
@@ -1174,12 +1195,12 @@ class Graph(BaseGraph):
 
 		treeNodes  = [tree]
 		treeNodes += tree.GetDescendants()
-		used       = {str(node._id) for node in treeNodes if node._id is not None}
-		counter    = count(1)
+
+		identifiers = self._Identifiers(treeNodes)
 		nodes: dict[int, Node] = {}
 
 		for treeNode in treeNodes:
-			node = self.AddNode(self._ConvertTreeNode(treeNode, self._Identifier(treeNode._id, used, counter)))
+			node = self.AddNode(self._ConvertTreeNode(treeNode, identifiers[id(treeNode)]))
 			nodes[id(treeNode)] = node
 			if treeNode is not tree:
 				self.AddEdge(Edge(nodes[id(treeNode._parent)], node))

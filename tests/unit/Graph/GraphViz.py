@@ -377,6 +377,19 @@ class Graphs(Testcase):
 
 
 class pyToolingGraphs(Testcase):
+	def test_Identifiers(self) -> None:
+		for ids, expected in (
+			(["vertex1", "vertex2", None, None],         ["vertex1", "vertex2", "vertex3", "vertex4"]),
+			(["vertex1", "vertex3", None, None, None],   ["vertex1", "vertex3", "vertex2", "vertex4", "vertex5"]),
+			([None, "vertex2", None],                    ["vertex1", "vertex2", "vertex3"]),
+			([7, "vertex", "vertexA", None],             ["7", "vertex", "vertexA", "vertex1"]),
+		):
+			with self.subTest(ids=ids):
+				treeNodes = [pyToolingNode(nodeID=nodeID) for nodeID in ids]
+				identifiers = Graph._Identifiers(treeNodes)
+
+				self.assertListEqual(expected, [identifiers[id(treeNode)] for treeNode in treeNodes])
+
 	def test_FromGraph(self) -> None:
 		graph = pyToolingGraph(name="G")
 		s1 = pyToolingSubgraph(name="S1", graph=graph)
