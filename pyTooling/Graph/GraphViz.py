@@ -1033,7 +1033,7 @@ class Graph(BaseGraph):
 		:returns:      The edge.
 		"""
 		if edge._value is not None:
-			return Edge(source, target, label=str(edge._value))
+			return Edge(source, target, {"label": str(edge._value)})
 
 		return Edge(source, target)
 
@@ -1050,9 +1050,9 @@ class Graph(BaseGraph):
 		:returns:      The edge.
 		"""
 		if link._value is not None:
-			return Edge(source, target, style="dashed", label=str(link._value))
+			return Edge(source, target, {"style": "dashed", "label": str(link._value)})
 
-		return Edge(source, target, style="dashed")
+		return Edge(source, target, {"style": "dashed"})
 
 	def _ConvertSubgraph(self, subgraph: pyToolingSubgraph, identifier: str) -> Subgraph:
 		"""
@@ -1065,7 +1065,7 @@ class Graph(BaseGraph):
 		:returns:          The cluster, still empty.
 		"""
 		if subgraph._name is not None:
-			return Subgraph(identifier, label=subgraph._name)
+			return Subgraph(identifier, {"label": subgraph._name})
 
 		return Subgraph(identifier)
 
