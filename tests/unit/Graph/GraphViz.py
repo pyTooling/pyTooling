@@ -78,32 +78,38 @@ class Labels(Testcase):
 
 	def test_RecordLabel(self) -> None:
 		for label, expected in (
-			(RecordLabel("a", "b"),                             '"a|b"'),
-			(RecordLabel("a", "b", flipped=True),               '"{a|b}"'),
-			(RecordLabel("a", RecordLabel("b", "c")),           '"a|{b|c}"'),
-			(RecordLabel("«T»", ["x", "y"], [], flipped=True),  '"{«T»|x\\ly\\l| }"'),
-			(RecordLabel('a|b {c} <d> "e" \\'),                 '"a\\|b \\{c\\} \\<d\\> \\"e\\" \\\\"'),
+			(RecordLabel(["a", "b"]),                             '"a|b"'),
+			(RecordLabel(("a", "b"), flipped=True),               '"{a|b}"'),
+			(RecordLabel(["a", RecordLabel(["b", "c"])]),         '"a|{b|c}"'),
+			(RecordLabel(["«T»", ["x", "y"], []], flipped=True),  '"{«T»|x\\ly\\l| }"'),
+			(RecordLabel(['a|b {c} <d> "e" \\']),                 '"a\\|b \\{c\\} \\<d\\> \\"e\\" \\\\"'),
 		):
 			with self.subTest(expected=expected):
 				self.assertEqual(expected, str(label))
 
 	def test_RecordLabel_Fields(self) -> None:
-		nested = RecordLabel("b")
-		label = RecordLabel("a", ["r"], nested, flipped=True)
+		nested = RecordLabel(["b"])
+		label = RecordLabel(("a", ["r"], nested), flipped=True)
 
 		self.assertListEqual(["a", ["r"], nested], label.Fields)
 		self.assertTrue(label.Flipped)
 
 	def test_RecordLabel_Parameters(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			RecordLabel("a", None)
-		self.assertEqual("Parameter 'fields' contains None.", str(context.exception))
-
-		for field in (1, [1]):
-			with self.subTest(field=field):
-				with self.assertRaises(TypeError) as context:
-					RecordLabel("a", field)
-				self.assertEqual("Parameter 'fields' contains a field of an unsupported type.", str(context.exception))
+		for fields, flipped, exceptionType, message in (
+			(None,        False, ValueError, "Parameter 'fields' is None."),
+			("ab",        False, TypeError,  "Parameter 'fields' is not a sequence ('list', 'tuple', ...)."),
+			({"a"},       False, TypeError,  "Parameter 'fields' is not a sequence ('list', 'tuple', ...)."),
+			([],          False, ValueError, "Parameter 'fields' is empty."),
+			(["a", None], False, ValueError, "Parameter 'fields' contains None."),
+			(["a", 1],    False, TypeError,  "Parameter 'fields' contains a field of an unsupported type."),
+			(["a", [1]],  False, TypeError,  "Parameter 'fields' contains a field of an unsupported type."),
+			(["a"],       None,  ValueError, "Parameter 'flipped' is None."),
+			(["a"],       1,     TypeError,  "Parameter 'flipped' is not of type 'bool'."),
+		):
+			with self.subTest(message=message, fields=fields):
+				with self.assertRaises(exceptionType) as context:
+					RecordLabel(fields, flipped)
+				self.assertEqual(message, str(context.exception))
 
 
 class Attributes(Testcase):
@@ -123,7 +129,7 @@ class Attributes(Testcase):
 
 	def test_Values(self) -> None:
 		node = Node("n", attributes={
-			"s": "text", "i": 1, "f": 0.5, "t": True, "n": False, "h": HTMLLabel("<b>x</b>"), "r": RecordLabel("a", "b")
+			"s": "text", "i": 1, "f": 0.5, "t": True, "n": False, "h": HTMLLabel("<b>x</b>"), "r": RecordLabel(["a", "b"])
 		})
 
 		self.assertEqual(
@@ -187,7 +193,7 @@ class Elements(Testcase):
 		self.assertEqual("a b", node.Identifier)
 		self.assertListEqual(['  "a b" [label="A"];\n'], node.ToStringLines())
 		self.assertListEqual(['"plain";\n'], Node("plain").ToStringLines(0))
-		record = Node("r", RecordLabel("a", "b"), {"shape": "record"})
+		record = Node("r", RecordLabel(["a", "b"]), {"shape": "record"})
 		self.assertListEqual(['  "r" [shape="record", label="a|b"];\n'], record.ToStringLines())
 
 	def test_Node_Parameters(self) -> None:
