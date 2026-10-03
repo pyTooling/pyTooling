@@ -437,6 +437,7 @@ class DependencyLists(Project):
 		(github / "workflows").mkdir(parents=True)
 		for name, content in (("Pipeline", PIPELINE), ("Build", BUILD), ("Cleanup", CLEANUP)):
 			(github / "workflows" / f"{name}.yml").write_text(content, encoding="utf-8")
+
 		for name, content in (("Composite", COMPOSITE), ("Docker", DOCKER)):
 			(github / "actions" / name).mkdir(parents=True)
 			(github / "actions" / name / "action.yml").write_text(content, encoding="utf-8")

@@ -70,10 +70,12 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'x' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
+
 		if not isinstance(y, (int, float)):
 			ex = TypeError("Parameter 'y' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
+
 		if not isinstance(z, (int, float)):
 			ex = TypeError("Parameter 'z' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(z)}'.")
@@ -261,10 +263,12 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'xOffset' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(xOffset)}'.")
 			raise ex
+
 		if not isinstance(yOffset, (int, float)):
 			ex = TypeError("Parameter 'yOffset' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(yOffset)}'.")
 			raise ex
+
 		if not isinstance(zOffset, (int, float)):
 			ex = TypeError("Parameter 'zOffset' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(zOffset)}'.")
@@ -470,10 +474,12 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'width' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
 			raise ex
+
 		if not isinstance(height, (int, float)):
 			ex = TypeError("Parameter 'height' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
 			raise ex
+
 		if not isinstance(depth, (int, float)):
 			ex = TypeError("Parameter 'depth' is not of type integer or float.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(depth)}'.")
@@ -536,6 +542,7 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'start' is not of type Point3D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
+
 		if not isinstance(end, Point3D):
 			ex = TypeError("Parameter 'end' is not of type Point3D.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")

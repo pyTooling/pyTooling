@@ -559,8 +559,10 @@ class Dependencies(WorkflowReferenceDirective):
 		for job in workflow.IterateJobs():
 			if job.Uses is not None and job.Uses.IsWorkflow:
 				templates.setdefault(str(job.Uses), (job.Uses, []))[1].append(job.Name)
+
 			if job.Container is not None:
 				containers[job.Container] = None
+
 			for serviceName, image in job.Services.items():
 				services[(serviceName, image)] = None
 
@@ -599,6 +601,7 @@ class Dependencies(WorkflowReferenceDirective):
 				nested = nodes.bullet_list("", *self._ActionItems(action.IterateActions(), visited | {id(action)}))
 				if action.Image is not None:
 					nested += self._ImageItem("image", action.Image)
+
 				if len(nested) > 0:
 					item += nested
 

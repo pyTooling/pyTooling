@@ -250,6 +250,7 @@ class Node(Abstract_Node):
 						ex = InterpolationError(f"Unclosed variable reference in value '{value}'.")
 						ex.add_note(f"Missing closing '}}' for the '${{' at position {beginPos}.")
 						raise ex
+
 					if (nextPos > 0) and (nextPos < endPos):  # an embedded $-sign
 						path = rawValue[nextPos+2:endPos]
 #						print(f"_ResolveVariables: path='{path}'")

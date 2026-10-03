@@ -1548,8 +1548,10 @@ class GraphOperations(Iterate):
 
 		with self.assertRaises(ValueError):
 			g.AnnotateTransitiveEdges(directKind=None)
+
 		with self.assertRaises(TypeError):
 			g.AnnotateTransitiveEdges(transitiveKind="implied")
+
 		with self.assertRaises(TypeError):
 			g.AnnotateTransitiveEdges(keyName=1)
 
@@ -1592,8 +1594,10 @@ class GraphOperations(Iterate):
 
 		with self.assertRaises(ValueError):
 			Edge(a, b, kind=None)
+
 		with self.assertRaises(TypeError):
 			Edge(a, b, kind="direct")
+
 		with self.assertRaises(ValueError):
 			a.EdgeToVertex(b, edgeKind=None)
 
@@ -1621,6 +1625,7 @@ class GraphOperations(Iterate):
 
 		with self.assertRaises(ValueError):
 			Link(a, b, kind=None)
+
 		with self.assertRaises(TypeError):
 			Link(a, b, kind="calls")
 

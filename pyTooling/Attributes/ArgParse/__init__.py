@@ -406,8 +406,10 @@ class ArgParseHelperMixin(metaclass=ExtendedType, mixin=True):
 
 		if "formatter_class" in kwargs:
 			self._formatter = kwargs["formatter_class"]
+
 		if "allow_abbrev" not in kwargs:
 			kwargs["allow_abbrev"] = False
+
 		if "exit_on_error" not in kwargs:
 			kwargs["exit_on_error"] = False
 

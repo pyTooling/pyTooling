@@ -83,6 +83,7 @@ class LicenseDataClass(Testcase):
 		self.assertTrue("spdx" == license1, "The comparison is symmetric - 'str' defers to the reflected operand.")
 		with self.assertRaises(TypeError):
 			_ = license1 == 42
+
 		with self.assertRaises(TypeError):
 			_ = license1 != 42
 
@@ -244,6 +245,7 @@ class CreativeCommonsLicenses(Testcase):
 			with self.subTest(license=spdxLicense.SPDXIdentifier):
 				with self.assertRaises(ValueError):
 					_ = spdxLicense.PythonClassifier
+
 				with self.assertRaises(ValueError):
 					_ = spdxLicense.PythonLicenseName
 

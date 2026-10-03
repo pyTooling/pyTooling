@@ -618,6 +618,7 @@ class Reader(Testcase):
 		self.assertEqual((3, 2.0), (WorkflowRunReader("owner/repo").Retries, WorkflowRunReader("owner/repo").RetryDelay))
 		with self.assertRaises(TypeError):
 			_ = WorkflowRunReader("owner/repo", retries="3")
+
 		with self.assertRaises(ValueError):
 			_ = WorkflowRunReader("owner/repo", retryDelay=-0.1)
 
@@ -639,10 +640,13 @@ class Reader(Testcase):
 
 		with self.assertRaises(ValueError):
 			_ = reader.ReadRun(None)
+
 		with self.assertRaises(TypeError):
 			_ = reader.ReadRun("4711")
+
 		with self.assertRaises(ValueError):
 			_ = reader.ReadRun(0)
+
 		with self.assertRaises(ValueError):
 			_ = reader.ReadRun(4711, attempt=0)
 

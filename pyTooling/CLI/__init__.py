@@ -164,6 +164,7 @@ def main() -> NoReturn:
 		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**program.Foreground))
 		if ex.__cause__ is not None:
 			program.WriteLineToStdErr(f"{{DARK_YELLOW}}Because of: {ex.__cause__}{{NOCOLOR}}".format(**program.Foreground))
+
 		for note in getattr(ex, "__notes__", ()) or ():
 			program.WriteLineToStdErr(f"{{DARK_YELLOW}} [NOTE] {note}{{NOCOLOR}}".format(**program.Foreground))
 		program.Exit(1)
