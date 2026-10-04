@@ -106,6 +106,32 @@ class RunningAConsoleScript(ApplicationTestcase):
 		self.assertEqual("hello\n", result.stdout)
 
 
+class TheEnvironment(ApplicationTestcase):
+	"""The variables given as 'environment' are merged into this process's environment, not replacing it."""
+
+	_consoleScript =  PYTHON_CONSOLE_SCRIPT
+
+	def test_AVariableIsAdded(self) -> None:
+		result = self.RunEntrypoint(
+			"-c", "import os; print(os.environ['PYTOOLING_TEST'])", environment={"PYTOOLING_TEST": "42"}
+		)
+
+		self.assertExitCode(result)
+		self.assertEqual("42\n", result.stdout)
+
+	def test_TheRestIsInherited(self) -> None:
+		result = self.RunEntrypoint(
+			"-c", "import os; print('PATH' in os.environ)", environment={"PYTOOLING_TEST": "42"}
+		)
+
+		self.assertEqual("True\n", result.stdout)
+
+	def test_NoneRemovesAVariable(self) -> None:
+		result = self.RunEntrypoint("-c", "import os; print('PATH' in os.environ)", environment={"PATH": None})
+
+		self.assertEqual("False\n", result.stdout)
+
+
 class ATestcaseThatIsNotSetUp(Testcase):
 	"""setUpClass refuses a test class that cannot run anything, rather than letting every testcase fail."""
 

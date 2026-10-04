@@ -83,6 +83,9 @@ Both class variables are mandatory: a test class naming neither cannot run anyth
 :exc:`~pyTooling.Testing.TestingError` instead of letting every testcase in the class fail with a less obvious
 error. A console script that is not installed is reported the same way.
 
+The program inherits this process's environment. ``environment`` names the variables to set in it - or, with value
+``None``, to remove - so a test states only what differs: :pycode:`environment={"PYTHONPATH": str(root)}`.
+
 .. _TESTING/Application/Assertions:
 
 Assertions
