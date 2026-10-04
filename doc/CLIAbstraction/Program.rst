@@ -47,7 +47,7 @@ The following example implements a portion of the ``git`` program and its ``--ve
    git[git.FlagVersion] = True
 
    print(git.ToArgumentList())     # ['/usr/bin/git', '--version']
-   print(git)                      # "/usr/bin/git" "--version"
+   print(git)                      # /usr/bin/git --version
 
 Setting Program Names based on OS
 *********************************
@@ -164,8 +164,11 @@ once and re-run with a different value:
    git[git.ValuedOption].Value = "another value"
 
 :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` renders the whole thing - the executable's path first, then
-every set argument in declaration order - as the list :mod:`subprocess` expects. ``repr()`` and ``str()`` give the
-same list quoted for reading.
+every set argument in declaration order - as the list :mod:`subprocess` expects. ``str()`` joins it to one command
+line, escaped for the current platform by ``formatCommandLine`` from :mod:`pyTooling.CLIAbstraction.Argument`: that is
+:func:`shlex.join`, quoting for a POSIX shell, and on Windows ``subprocess.list2cmdline()``, quoting as
+:class:`subprocess.Popen` passes the list to the program. A commit message ``It's done.`` becomes
+``-m 'It'"'"'s done.'`` on Linux. ``repr()`` returns the list as a Python literal with strings in double quotes.
 
 Derive Program Variants
 ***********************

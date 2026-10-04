@@ -95,7 +95,7 @@ class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 		ValuedArgument.__init__(self, value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
-		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
+		"""Convert this argument instance to a string representation using the matching pattern based
 		on the internal name and value.
 
 		:returns:           Formatted argument.

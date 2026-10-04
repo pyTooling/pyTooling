@@ -338,6 +338,9 @@ Version 10.x (2026)
 
      * :meth:`Program._CopyParameters <pyTooling.CLIAbstraction.Program._CopyParameters>` copies every argument set on
        a program to another instance, for a method deriving a configured variant.
+     * ``formatCommandLine`` in :mod:`pyTooling.CLIAbstraction.Argument` joins arguments to one command line, escaped
+       for the current platform: :func:`shlex.join` for a POSIX shell, on Windows ``subprocess.list2cmdline()`` as
+       :class:`subprocess.Popen` passes them.
 
    * :mod:`pyTooling.Dependency`
 
@@ -402,6 +405,10 @@ Version 10.x (2026)
      list took 633 ms, now 55 ms; 10000 calls of :meth:`~pyTooling.Graph.Vertex.EdgeFromNewVertex` 1830 ms, now 39 ms.
      So the component kept is the larger one, not always the source's; of two of equal size, still the source's. The
      other one is dropped with its name and key-value pairs, as before.
+   * ``str()`` of a :class:`~pyTooling.CLIAbstraction.Program` or an argument is a command line escaped for the
+     current platform. It put each argument in double quotes without escaping the quotes inside: the two arguments
+     ``-m`` and ``a "b" c`` came out as ``"-m" "a "b" c"``. Now they are ``-m 'a "b" c'`` for a POSIX shell and
+     ``-m "a \"b\" c"`` on Windows. ``repr()`` is a Python literal with strings in double quotes.
 
    .. rubric:: Bug Fixes
 

@@ -57,7 +57,7 @@ from pyTooling.MetaClasses               import ExtendedType
 from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
 from pyTooling.Common                    import getFullyQualifiedName
 from pyTooling.Attributes                import Attribute
-from pyTooling.CLIAbstraction.Argument   import CommandLineArgument
+from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine
 from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
 from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
 from pyTooling.Platform                  import Platform
@@ -400,7 +400,10 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	def ToArgumentList(self) -> list[str]:
 		"""
-		Convert a program and used CLI options to a list of CLI argument strings in correct order.
+		Convert a program and used CLI options to a list of CLI argument strings in correct order, unescaped.
+
+		The list can be passed directly to :func:`subprocess.run` or :class:`subprocess.Popen` (without ``shell=True``):
+		each string reaches the program as one argument, so nothing needs escaping or quoting.
 
 		:returns:          List of CLI arguments
 		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|
@@ -436,24 +439,26 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	def __repr__(self) -> str:
 		"""
-		Returns the string representation as coma-separated list of double-quoted CLI argument strings within square brackets.
+		Return the argument list as a Python literal, with strings in double quotes.
 
-		Example: :pycode:`["arg1", "arg2"]`
+		Example: :pycode:`["/usr/bin/git", "--version"]`
 
-		:returns: Coma-separated list of CLI arguments with double-quotes.
+		:returns: :meth:`ToArgumentList`'s result as a literal.
 		"""
-		return "[" + ", ".join([f"\"{item}\"" for item in self.ToArgumentList()]) + "]"  # WORKAROUND: Python <3.12
-		# return f"[{", ".join([f"\"{item}\"" for item in self.ToArgumentList()])}]"
+		literal = CommandLineArgument._DoubleQuotedLiteral
+		return "[" + ", ".join([literal(item) for item in self.ToArgumentList()]) + "]"  # WORKAROUND: Python <3.12
+		# return f"[{", ".join([literal(item) for item in self.ToArgumentList()])}]"
 
 	def __str__(self) -> str:
 		"""
-		Returns the string representation as space-separated list of double-quoted CLI argument strings.
+		Return the command line, escaped for the current platform.
 
-		Example: :pycode:`"arg1" "arg2"`
+		Example: :pycode:`/usr/bin/git commit -m 'Bumped dependencies.'`
 
-		:returns: Space-separated list of CLI arguments with double-quotes.
+		:returns: The argument list joined by ``formatCommandLine``: :func:`shlex.join`, on Windows
+		          ``subprocess.list2cmdline()``.
 		"""
-		return " ".join([f"\"{item}\"" for item in self.ToArgumentList()])
+		return formatCommandLine(self.ToArgumentList())
 
 
 @export
@@ -504,7 +509,7 @@ class Executable(Program):  # (ILogable):
 		:raises CLIAbstractionError: When an :exc:`OSError` occurs while launching the child-process.
 		"""
 		if self._dryRun:
-			self.LogDryRun(f"Start process: {self!r}")
+			self.LogDryRun(f"Start process: {self}")
 			return
 
 		if environment is not None:
