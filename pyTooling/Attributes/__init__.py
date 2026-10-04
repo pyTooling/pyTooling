@@ -160,9 +160,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		qualified name is ``<Class>.<name>``, while a module's function is named ``<name>`` and a nested function
 		``<function>.<locals>.<name>``.
 
-		:param entity:              Entity, the attribute is attached to.
-		:param attribute:           Attribute to attach.
-		:raises TypeError:          If parameter 'entity' is not a class, method or function.
+		:param entity:               Entity, the attribute is attached to.
+		:param attribute:            Attribute to attach.
+		:raises TypeError:           If parameter 'entity' is not a class, method or function.
 		:raises AttributeScopeError: If the attribute's :attr:`Scope` doesn't allow the entity's kind.
 		"""
 		if isinstance(entity, MethodType):
