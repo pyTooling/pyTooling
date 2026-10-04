@@ -1201,6 +1201,8 @@ class SemanticVersion(Version):
 		r"(?:(?P<delim4>[\.\-\+])(?P<postfix>\w+))?"
 		r"$"
 	)  #: Regular expression to parse a semantic version from a string.
+# QUESTION: was this how many commits a version is ahead of the last tagged version?
+#	ahead:    int = 0
 
 	def __init_subclass__(cls, **kwargs: Any) -> None:
 		"""
