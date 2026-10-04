@@ -509,24 +509,12 @@ An attribute class may declare where it is meant to be used:
    class Hook(Attribute):
      _scope = AttributeScope.Method
 
-.. caution::
+Applying ``Hook`` to anything but a method - a class, or a function at module level - raises an
+:exc:`~pyTooling.Attributes.AttributeScopeError`. A function defined in a class body counts as a method, although it is
+still a plain function while the decorator runs: its qualified name tells.
 
-   ``_scope`` currently documents **intent, and nothing enforces it** - see
-   :ghissue:`#384 <384>`. Applying a ``Class``-scoped attribute to a
-   function is accepted silently, and the function is then registered in a list that attribute's own scope says it
-   can never hold.
-
-   Two cases have to be told apart, because only one of them is fixable where the attribute is applied:
-
-   * **class versus function/method** *is* decidable at that moment, so this mismatch should raise and today does
-     not;
-   * **method versus function** is *not* decidable there - as :ref:`the previous example <TUTORIAL/Attributes/Hooks>`
-     explains, a method is still a plain function while the decorator runs.
-
-   So until #384 is resolved: check the entity kind yourself if a misapplication has to fail.
-
-   Note also that ``_scope`` reads back from an attribute **instance** - :pycode:`Hook("open").Scope` - and not
-   from the class.
+``_scope`` reads back from an attribute **instance** - :pycode:`Hook("open").Scope` - and from the class as
+:pycode:`Hook._scope`.
 
 
 .. _TUTORIAL/Attributes/UseCases:

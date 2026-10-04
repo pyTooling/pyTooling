@@ -58,6 +58,7 @@ from typing               import Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
+from pyTooling.Exceptions import ToolingException
 
 
 __all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]
@@ -91,6 +92,13 @@ class AttributeScope(IntFlag):
 
 
 @export
+class AttributeScopeError(ToolingException):
+	"""
+	An attribute is applied to a language entity its :class:`AttributeScope` doesn't allow.
+	"""
+
+
+@export
 class Attribute:  # (metaclass=ExtendedType, slots=True):
 	"""Base-class for all pyTooling attributes."""
 #	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"             #: Field name on entities (function, class, method) to store pyTooling.Attributes.
@@ -121,9 +129,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		Attributes get attached to an entity (function, class, method) and an index is updated at the attribute for reverse
 		lookups.
 
-		:param entity:     Entity (function, class, method), to attach an attribute to.
-		:returns:          Same entity, with attached attribute.
-		:raises TypeError: If parameter 'entity' is not a function, class nor method.
+		:param entity:               Entity (function, class, method), to attach an attribute to.
+		:returns:                    Same entity, with attached attribute.
+		:raises TypeError:           If parameter 'entity' is not a function, class nor method.
+		:raises AttributeScopeError: If the attribute's :attr:`Scope` doesn't allow the entity's kind.
 		"""
 		self._AppendAttribute(entity, self)
 
@@ -147,20 +156,40 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 		          return entity
 
-		:param entity:     Entity, the attribute is attached to.
-		:param attribute:  Attribute to attach.
-		:raises TypeError: If parameter 'entity' is not a class, method or function.
+		A function defined in a class body is a method, although it is a plain function while the decorator runs: its
+		qualified name is ``<Class>.<name>``, while a module's function is named ``<name>`` and a nested function
+		``<function>.<locals>.<name>``.
+
+		:param entity:              Entity, the attribute is attached to.
+		:param attribute:           Attribute to attach.
+		:raises TypeError:          If parameter 'entity' is not a class, method or function.
+		:raises AttributeScopeError: If the attribute's :attr:`Scope` doesn't allow the entity's kind.
 		"""
 		if isinstance(entity, MethodType):
-			attribute._methods.append(entity)
+			kind = AttributeScope.Method
 		elif isinstance(entity, FunctionType):
-			attribute._functions.append(entity)
+			names = entity.__qualname__.split(".")
+			kind = AttributeScope.Method if len(names) > 1 and names[-2] != "<locals>" else AttributeScope.Function
 		elif isinstance(entity, type):
-			attribute._classes.append(entity)
+			kind = AttributeScope.Class
 		else:
 			ex = TypeError("Parameter 'entity' is not a function, class nor method.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
 			raise ex
+
+		if kind not in attribute._scope:
+			ex = AttributeScopeError(
+				f"Attribute '{attribute.__class__.__name__}' can't be applied to {kind.name.lower()} '{entity.__qualname__}'."
+			)
+			ex.add_note(f"Its scope is '{attribute._scope.name}'.")
+			raise ex
+
+		if isinstance(entity, MethodType):
+			attribute._methods.append(entity)
+		elif isinstance(entity, FunctionType):
+			attribute._functions.append(entity)
+		else:
+			attribute._classes.append(entity)
 
 		if hasattr(entity, ATTRIBUTES_MEMBER_NAME):
 			getattr(entity, ATTRIBUTES_MEMBER_NAME).insert(0, attribute)
@@ -168,13 +197,15 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [attribute, ])
 
 	@readonly
-	def Scope(cls) -> AttributeScope:
+	def Scope(self) -> AttributeScope:
 		"""
-		Read-only property to access the scope this attribute searches in (:attr:`_scope`).
+		Read-only property to access the language entities this attribute can be applied to (:attr:`_scope`).
 
-		:returns: The scope this attribute searches in.
+		It is an instance property: on the attribute class, :attr:`_scope` is read directly.
+
+		:returns: The language entities this attribute can be applied to.
 		"""
-		return cls._scope
+		return self._scope
 
 	@classmethod
 	def GetFunctions(cls, scope: Nullable[type | ModuleType] = None) -> Generator[TAttr, None, None]:
@@ -272,7 +303,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		if hasattr(method, ATTRIBUTES_MEMBER_NAME):
 			attributes = getattr(method, ATTRIBUTES_MEMBER_NAME)
 			if isinstance(attributes, list):
-				return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
+				if includeSubClasses:
+					return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
+				else:
+					return tuple(attribute for attribute in attributes if type(attribute) is cls)
 			else:
 				methodName = getFullyQualifiedName(method)
 				ex = TypeError(f"Method '{methodName}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's no list.")

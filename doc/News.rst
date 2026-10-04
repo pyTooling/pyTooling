@@ -350,6 +350,12 @@ Version 10.x (2026)
      :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.ContainsKey`, without aliases.
      :meth:`~pyTooling.Graph.GraphViz.BaseGraph.ContainsNode` is new in this release.
 
+   * **An attribute's scope is enforced**: applying an attribute to a class, method or function its
+     :attr:`~pyTooling.Attributes.Attribute.Scope` doesn't allow raises
+     :exc:`~pyTooling.Attributes.AttributeScopeError` - it was accepted silently and registered in a list the scope
+     said it could never hold (:ghissue:`384`). :attr:`~pyTooling.Attributes.Attribute.Scope` is an instance property,
+     and :meth:`~pyTooling.Attributes.Attribute.GetAttributes` honours ``includeSubClasses=False``.
+
    * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
      :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. The old
      names were briefly kept as aliases and are removed in the same release, so an ``import`` or an ``except``

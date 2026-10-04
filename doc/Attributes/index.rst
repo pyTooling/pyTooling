@@ -541,9 +541,15 @@ Scope
 =====
 
 :class:`~pyTooling.Attributes.AttributeScope` is an :class:`~enum.IntFlag` naming the language entities an attribute
-is meant for - :pycode:`Class`, :pycode:`Method`, :pycode:`Function`, and :pycode:`Any` as their union. A derived
-attribute states it by overriding :attr:`~pyTooling.Attributes.Attribute._scope`, and it is readable through
-:attr:`~pyTooling.Attributes.Attribute.Scope`.
+can be applied to - :pycode:`Class`, :pycode:`Method`, :pycode:`Function`, and :pycode:`Any` as their union. A derived
+attribute states it by overriding :attr:`~pyTooling.Attributes.Attribute._scope`, and an attribute instance reports it
+through :attr:`~pyTooling.Attributes.Attribute.Scope`.
+
+Applying an attribute to an entity its scope doesn't allow raises
+:exc:`~pyTooling.Attributes.AttributeScopeError`, naming the attribute and the entity. A function defined in a class
+body counts as a method, although it is still a plain function while the decorator runs: its qualified name is
+``<Class>.<name>``, where a module's function is named ``<name>`` and a nested function
+``<function>.<locals>.<name>``.
 
 It is what makes attribute **inheritance** possible: when the :ref:`META/ExtendedType` meta-class builds a class, it
 walks the base-classes' :pycode:`__pyattr__` and re-attaches every attribute whose scope contains :pycode:`Class` to the
