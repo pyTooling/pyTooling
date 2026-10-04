@@ -426,6 +426,13 @@ Version 10.x (2026)
 
      * A :class:`~pyTooling.LinkedList.Node` stored its value as its key, ignoring the parameter ``key``.
 
+   * :mod:`pyTooling.CLIAbstraction`
+
+     * A program searched in ``PATH`` kept the bare executable name, not the path it was found at. A variant built
+       with ``executablePath=program.Path`` raised :exc:`~pyTooling.CLIAbstraction.CLIAbstractionError`, unless
+       the working directory had a file of that name. :attr:`~pyTooling.CLIAbstraction.Program.Path` and the
+       first item of :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` are the full path now.
+
    * :mod:`pyTooling.Warning`
 
      * A :class:`~pyTooling.Warning.SupervisedWarningCollector` with a supervisor raised a :exc:`TypeError` when its

@@ -211,6 +211,16 @@ class CommonOptions(Testcase, Helper):
 		with self.assertRaises(CLIAbstractionError):
 			_ = Gitt()
 
+	def test_SearchedInPath(self) -> None:
+		"""A program searched in PATH keeps the path it was found at, so a variant can be built from it."""
+		tool = Git()
+
+		self.assertTrue(tool.Path.is_absolute())
+		self.assertEqual(Path(self.GetExecutablePath("git")), tool.Path)
+
+		variant = Git(executablePath=tool.Path)
+		self.assertEqual(tool.Path, variant.Path)
+
 	def test_SetUnknownFlag(self) -> None:
 		tool = Git()
 		with self.assertRaises(TypeError):

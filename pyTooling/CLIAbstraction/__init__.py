@@ -286,6 +286,9 @@ class Program(metaclass=ExtendedType, slots=True):
 				if not fullExecutablePath.exists():
 					raise CLIAbstractionError(f"Program '{fullExecutablePath}' not found.") from FileNotFoundError(fullExecutablePath)
 
+			if resolvedExecutable is not None:
+				executablePath = Path(resolvedExecutable)
+
 			# TODO: log found executable in PATH
 			# TODO: check if found executable has execute permissions
 			# raise ValueError(f"Neither parameter 'executablePath' nor 'binaryDirectoryPath' was set.")
@@ -365,9 +368,9 @@ class Program(metaclass=ExtendedType, slots=True):
 	@readonly
 	def Path(self) -> Path:
 		"""
-		Read-only property to access the program's path.
+		Read-only property to access the program's path (:attr:`_executablePath`).
 
-		:returns: The program's path.
+		:returns: The program's path. For a program searched in ``PATH``, the path it was found at.
 		"""
 		return self._executablePath
 
