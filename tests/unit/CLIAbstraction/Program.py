@@ -38,7 +38,7 @@ from typing       import Any, Self
 from pytest       import mark
 from sys          import platform as sys_platform
 
-from pyTooling.CLIAbstraction import Program, CLIAbstractionError, CLIArgument
+from pyTooling.CLIAbstraction import Executable, Program, CLIAbstractionError, CLIArgument
 from pyTooling.CLIAbstraction.Flag import LongFlag
 from pyTooling.Testing        import Testcase
 from .                        import Helper
@@ -266,3 +266,41 @@ class Commit(Testcase, Helper):
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "commit", "-m", "Initial commit."], tool.ToArgumentList())
 		self.assertEqual(f"[\"{executable}\", \"commit\", \"-m\", \"Initial commit.\"]", repr(tool))
+
+
+class DryRun(Testcase):
+	"""In dry-run mode, a missing program or a started process is recorded instead of raising or running."""
+
+	def test_AMissingExecutableIsRecorded(self) -> None:
+		gitt = Gitt(executablePath=Path("does/not/exist/gitt"), dryRun=True)
+
+		self.assertEqual(["File check for 'does/not/exist/gitt' failed. [SKIPPING]"], [
+			message.replace("\\", "/") for message in gitt.DryRunMessages
+		])
+
+	def test_AMissingBinaryDirectoryIsRecorded(self) -> None:
+		gitt = Gitt(binaryDirectoryPath=Path("does/not/exist"), dryRun=True)
+
+		self.assertEqual(2, len(gitt.DryRunMessages))
+		self.assertIn("Directory check", gitt.DryRunMessages[0])
+
+	def test_AProgramNotInPathIsRecorded(self) -> None:
+		gitt = Gitt(dryRun=True)
+
+		self.assertEqual(1, len(gitt.DryRunMessages))
+		self.assertIn("in PATH failed", gitt.DryRunMessages[0])
+
+	def test_StartingAProcessIsRecorded(self) -> None:
+		class Gittex(Executable):
+			_executableNames = Gitt._executableNames
+
+		gittex = Gittex(executablePath=Path("does/not/exist/gitt"), dryRun=True)
+		gittex.StartProcess()
+
+		self.assertIsNone(gittex._process)
+		self.assertTrue(gittex.DryRunMessages[-1].startswith("Start process: "))
+
+	def test_WithoutDryRunAMissingExecutableRaises(self) -> None:
+		with self.assertRaises(CLIAbstractionError):
+			Gitt(executablePath=Path("does/not/exist/gitt"))
+
