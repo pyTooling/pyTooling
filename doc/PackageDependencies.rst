@@ -28,12 +28,70 @@ from:
   repository.
 * :class:`~pyTooling.Dependency.PackageDependencyGraph` collects the packages known from one or more storages.
 
-:meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts it into a :class:`pyTooling.Graph.Graph`: a vertex
-per package version - the version is its ID; its license, release time and URLs are key-value pairs - and an edge from
-each version to every version it depends on. The algorithms of :mod:`pyTooling.Graph` then apply -
+.. _DEPENDENCIES/Graph:
+
+Conversion to a Graph
+#####################
+
+:meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts a dependency graph into a
+:class:`pyTooling.Graph.Graph`. The algorithms of :mod:`pyTooling.Graph` then apply -
 :meth:`~pyTooling.Graph.BaseGraph.IterateTopologically` yields the versions dependencies first,
 :meth:`~pyTooling.Graph.BaseGraph.HasCycle` finds a circular dependency, and :mod:`pyTooling.Graph.GraphViz` or
 :mod:`pyTooling.Graph.GraphML` write it for a viewer.
+
+Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex`:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 76
+
+   * - Vertex member
+     - Content
+   * - :attr:`~pyTooling.Graph.Vertex.ID`
+     - the :class:`~pyTooling.Dependency.PackageVersion`, so
+       :meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. Written by a
+       graph writer as ``<package> - <version>``.
+   * - :attr:`~pyTooling.Graph.Vertex.Value`
+     - empty (``None``) - the ID already references the version.
+   * - key ``license``
+     - the license as SPDX expression, e.g. ``BSD-3-Clause``; ``NOASSERTION`` if it's unknown. Always set.
+   * - key ``releasedAt``
+     - the release time in ISO 8601, e.g. ``2022-10-25T02:30:23``.
+   * - keys ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
+       ``changelogURL``
+     - the URL of the license text, the source repository, the documentation, the issue tracker, the project's
+       homepage and the changelog.
+
+Every key-value pair is a string. All but ``license`` are set only if the version knows the value - for a Python
+package, after its details were loaded; converting a graph doesn't load them.
+
+Every dependency becomes an :class:`~pyTooling.Graph.Edge` from the version needing to the version it needs, so an
+edge reads *needs*. An edge has no ID, value or key-value pairs.
+
+.. code-block:: Python
+
+   from pyTooling.Graph.GraphViz import Graph as DotGraph
+
+   graph = dependencyGraph.ToGraph()
+   for vertex in graph.IterateTopologically():
+     print(vertex.ID, vertex["license"])
+
+   dot = DotGraph("Example")
+   dot.FromGraph(graph)
+   print(dot)
+
+For a graph in which ``myApp 1.0.0`` depends on ``colorama 0.4.6``, Graphviz' DOT language reads:
+
+.. code-block:: text
+
+   digraph "Example" {
+     "myApp - 1.0.0";
+     "colorama - 0.4.6";
+     "myApp - 1.0.0" -> "colorama - 0.4.6";
+   }
+
+:mod:`pyTooling.Graph.GraphML` writes each key-value pair as a ``<data>`` element of the node, declared by a key
+named ``node<key>``, e.g. ``<data key="nodelicense">BSD-3-Clause</data>``.
 
 .. _DEPENDENCIES/Python:
 

@@ -1036,7 +1036,8 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		* ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
 		  ``changelogURL``.
 
-		All but ``license`` are set only if the version knows them; for a Python package, after its details were loaded.
+		All but ``license`` are set only if the version knows them; for a Python package, after its details were loaded. The
+		format is described in :ref:`DEPENDENCIES/Graph`.
 
 		Every dependency becomes an :class:`~pyTooling.Graph.Edge` from the package version needing to the package
 		version it needs, so an edge reads *needs*, and
