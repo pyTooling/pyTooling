@@ -207,14 +207,16 @@ LICENSE_URLS: dict[str, str] = {
 	"GPL-3.0-or-later":  "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
 	"LGPL-3.0-only":     "https://www.gnu.org/licenses/lgpl-3.0-standalone.html",
 	"LGPL-3.0-or-later": "https://www.gnu.org/licenses/lgpl-3.0-standalone.html",
+	"AGPL-3.0-only":     "https://www.gnu.org/licenses/agpl-3.0-standalone.html",
+	"AGPL-3.0-or-later": "https://www.gnu.org/licenses/agpl-3.0-standalone.html",
 }
 
 
 #: Mapping of SPDX identifiers to the license text, by the file extension it is published as.
 #:
 #: Keys are the extension without its dot - ``txt``, ``md``, ``rst``, ``tex``. What a license offers is entirely up
-#: to its licensor: the GNU licenses publish four formats, most publish one, and several publish none at all beyond
-#: an HTML page, which is :data:`LICENSE_URLS`.
+#: to its licensor: the GNU licenses publish three formats - the GPL-3.0 a fourth, ``rst`` -, most publish one, and
+#: several publish none at all beyond an HTML page, which is :data:`LICENSE_URLS`.
 #:
 #: Every URL here answered an HTTP request with the license, so the table is what is **known** rather than a claim
 #: of completeness - a license absent from it may still publish a text nobody has looked up yet.
@@ -231,24 +233,58 @@ LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
 	"CC-BY-NC-SA-4.0":   {"txt": "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.txt"},
 	"CC-BY-NC-ND-4.0":   {"txt": "https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.txt"},
 	"EPL-2.0":           {"txt": "https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.txt"},
-	"GPL-2.0-only":      {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
-	"GPL-2.0-or-later":  {"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"},
-	"LGPL-2.1-only":     {"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex"},
-	"LGPL-2.1-or-later": {"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex"},
-	"GPL-3.0-only":      {
+	"GPL-2.0-only":       {
+		"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt",
+		"md":  "https://www.gnu.org/licenses/old-licenses/gpl-2.0.md",
+		"tex": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.tex",
+	},
+	"GPL-2.0-or-later":   {
+		"txt": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt",
+		"md":  "https://www.gnu.org/licenses/old-licenses/gpl-2.0.md",
+		"tex": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.tex",
+	},
+	"LGPL-2.1-only":      {
+		"txt": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt",
+		"md":  "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.md",
+		"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex",
+	},
+	"LGPL-2.1-or-later":  {
+		"txt": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt",
+		"md":  "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.md",
+		"tex": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.tex",
+	},
+	"GPL-3.0-only":       {
 		"txt": "https://www.gnu.org/licenses/gpl-3.0.txt",
 		"md":  "https://www.gnu.org/licenses/gpl-3.0.md",
 		"rst": "https://www.gnu.org/licenses/gpl-3.0.rst",
 		"tex": "https://www.gnu.org/licenses/gpl-3.0.tex",
 	},
-	"GPL-3.0-or-later":  {
+	"GPL-3.0-or-later":   {
 		"txt": "https://www.gnu.org/licenses/gpl-3.0.txt",
 		"md":  "https://www.gnu.org/licenses/gpl-3.0.md",
 		"rst": "https://www.gnu.org/licenses/gpl-3.0.rst",
 		"tex": "https://www.gnu.org/licenses/gpl-3.0.tex",
 	},
-	"AGPL-3.0-only":     {"txt": "https://www.gnu.org/licenses/agpl-3.0.txt"},
-	"AGPL-3.0-or-later": {"txt": "https://www.gnu.org/licenses/agpl-3.0.txt"},
+	"LGPL-3.0-only":      {
+		"txt": "https://www.gnu.org/licenses/lgpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/lgpl-3.0.md",
+		"tex": "https://www.gnu.org/licenses/lgpl-3.0.tex",
+	},
+	"LGPL-3.0-or-later":  {
+		"txt": "https://www.gnu.org/licenses/lgpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/lgpl-3.0.md",
+		"tex": "https://www.gnu.org/licenses/lgpl-3.0.tex",
+	},
+	"AGPL-3.0-only":      {
+		"txt": "https://www.gnu.org/licenses/agpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/agpl-3.0.md",
+		"tex": "https://www.gnu.org/licenses/agpl-3.0.tex",
+	},
+	"AGPL-3.0-or-later":  {
+		"txt": "https://www.gnu.org/licenses/agpl-3.0.txt",
+		"md":  "https://www.gnu.org/licenses/agpl-3.0.md",
+		"tex": "https://www.gnu.org/licenses/agpl-3.0.tex",
+	},
 }
 
 #: Mapping of SPDX identifiers to the license's page at the
