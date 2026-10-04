@@ -805,7 +805,16 @@ class ReadingLicenseOverrides(Testcase):
 		overrides = LicenseOverrides.FromFile(Path("doc/Dependency.PackageOverrides.yaml"))
 
 		self.assertIsNotNone(overrides.AnalysedAt)
-		self.assertEqual("Apache-2.0", overrides.LicenseOf("aiohttp"))
+		self.assertEqual("Apache-2.0", overrides.LicenseOf("aiohttp", SemanticVersion.Parse("3.14.3")))
+		self.assertEqual("https://GitHub.com/aio-libs/aiohttp/blob/master/LICENSE.txt", overrides.LicenseURLOf("aiohttp"))
+
+	def test_TheRepositorysOwnOverrideFileCoversTheCheckedMajorVersion(self) -> None:
+		"""A license was checked against one version, so a next major version - where projects relicense - isn't covered."""
+		overrides = LicenseOverrides.FromFile(Path("doc/Dependency.PackageOverrides.yaml"))
+
+		self.assertEqual("Apache-2.0", overrides.LicenseOf("aiohttp", SemanticVersion.Parse("3.15.0")))
+		self.assertIsNone(overrides.LicenseOf("aiohttp", SemanticVersion.Parse("4.0.0")))
+		self.assertIsNone(overrides.LicenseOf("colorama", SemanticVersion.Parse("0.5.0")))
 
 	def test_AMissingFileRaises(self) -> None:
 		with self.assertRaises(FileNotFoundError):
