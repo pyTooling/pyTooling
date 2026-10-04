@@ -952,11 +952,9 @@ class Span(TraceElement):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__exit__(...)`` method.
+		Exit the context and stop the span.
 
-		An active span will be stopped.
-
-		Exit the context and ......
+		The span's parent becomes the current span of this thread again.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
@@ -1154,9 +1152,9 @@ class Trace(Span):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__exit__(...)`` method.
+		Exit the context and stop the trace.
 
-		The trace is stopped, and the current thread has no active trace or span afterwards.
+		The current thread has no active trace or span afterwards.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance

@@ -240,12 +240,12 @@ class WarningCollector:
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Exit the warning collector context.
+		Exit the context and make the parent warning collector the current one again.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
 		:param exc_tb:   Exception's traceback.
-		:returns:        ``None``
+		:returns:        ``False``, so an exception raised in the context propagates.
 		"""
 		global _threadLocalData
 
@@ -422,12 +422,13 @@ class SupervisedWarningCollector(WarningCollector):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Exit the warning collector context.
+		Exit the context and hand the collected warnings and a raised exception to the supervisor.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
 		:param exc_tb:   Exception's traceback.
-		:returns:        ``None``
+		:returns:        ``True`` to suppress a raised exception, if a supervisor is set; the exception handler's result
+		                 instead, if it handled a raised exception; ``None`` without a supervisor.
 		"""
 		global _threadLocalData
 
