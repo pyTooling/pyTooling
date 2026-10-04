@@ -166,12 +166,15 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		:raises AttributeScopeError: If the attribute's :attr:`Scope` doesn't allow the entity's kind.
 		"""
 		if isinstance(entity, MethodType):
-			kind = AttributeScope.Method
+			kind =     AttributeScope.Method
+			registry = attribute._methods
 		elif isinstance(entity, FunctionType):
-			names = entity.__qualname__.split(".")
-			kind = AttributeScope.Method if len(names) > 1 and names[-2] != "<locals>" else AttributeScope.Function
+			names =    entity.__qualname__.split(".")
+			kind =     AttributeScope.Method if len(names) > 1 and names[-2] != "<locals>" else AttributeScope.Function
+			registry = attribute._functions
 		elif isinstance(entity, type):
-			kind = AttributeScope.Class
+			kind =     AttributeScope.Class
+			registry = attribute._classes
 		else:
 			ex = TypeError("Parameter 'entity' is not a function, class nor method.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
@@ -184,12 +187,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Its scope is '{attribute._scope.name}'.")
 			raise ex
 
-		if isinstance(entity, MethodType):
-			attribute._methods.append(entity)
-		elif isinstance(entity, FunctionType):
-			attribute._functions.append(entity)
-		else:
-			attribute._classes.append(entity)
+		registry.append(entity)
 
 		if hasattr(entity, ATTRIBUTES_MEMBER_NAME):
 			getattr(entity, ATTRIBUTES_MEMBER_NAME).insert(0, attribute)
