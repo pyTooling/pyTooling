@@ -103,8 +103,8 @@ robust than encoding a rule about when the codes appear.
 
 .. _TESTING/Markers:
 
-Marker-based Collection
-#######################
+Finding Testcases and Testsuites
+################################
 
 A test runner has to decide what a test is, and by default it decides from a **name**: pytest collects classes
 matching ``python_classes`` (``Test*``) and functions matching ``python_functions`` (``test_*``), and
