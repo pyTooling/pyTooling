@@ -31,6 +31,7 @@
 """
 Unit tests for the command line argument classes: how each argument kind renders itself on a command line.
 """
+from ast     import literal_eval
 from pathlib import Path
 from shlex   import split as shlex_split
 from sys     import platform as sys_platform
@@ -76,7 +77,7 @@ class WithoutPrefix(Testcase):
 		self.assertIs(executablePath, argument.Executable)
 		self.assertEqual(f"{executablePath}", argument.AsArgument())
 		self.assertEqual(f"{executablePath}", str(argument))
-		self.assertEqual(f"'{executablePath}'", repr(argument))
+		self.assertEqual(f"\"{executablePath}\"", repr(argument))
 
 		with self.assertRaises(TypeError):
 			argument.Executable = "script.sh"
@@ -92,7 +93,7 @@ class WithoutPrefix(Testcase):
 
 		self.assertEqual(f"{pattern}", argument.AsArgument())
 		self.assertEqual(f"{pattern}", str(argument))
-		self.assertEqual(f"'{pattern}'", repr(argument))
+		self.assertEqual(f"\"{pattern}\"", repr(argument))
 
 	def test_DerivedDelimiterArgument(self) -> None:
 		pattern = "++"
@@ -104,7 +105,7 @@ class WithoutPrefix(Testcase):
 
 		self.assertEqual(f"{pattern}", argument.AsArgument())
 		self.assertEqual(f"{pattern}", str(argument))
-		self.assertEqual(f"'{pattern}'", repr(argument))
+		self.assertEqual(f"\"{pattern}\"", repr(argument))
 
 	def test_AbstractCommandArgument(self) -> None:
 		with self.assertRaises(AbstractClassError):
@@ -121,7 +122,7 @@ class WithoutPrefix(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"{name}", argument.AsArgument())
 		self.assertEqual(f"{name}", str(argument))
-		self.assertEqual(f"'{name}'", repr(argument))
+		self.assertEqual(f"\"{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -140,7 +141,7 @@ class WithoutPrefix(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"{name}", argument.AsArgument())
 		self.assertEqual(f"{name}", str(argument))
-		self.assertEqual(f"'{name}'", repr(argument))
+		self.assertEqual(f"\"{name}\"", repr(argument))
 
 
 		with self.assertRaises(AttributeError):
@@ -153,7 +154,7 @@ class WithoutPrefix(Testcase):
 		self.assertIs(value, argument.Value)
 		self.assertEqual(f"{value}", argument.AsArgument())
 		self.assertEqual(f"{value}", str(argument))
-		self.assertEqual(f"'{value}'", repr(argument))
+		self.assertEqual(f"\"{value}\"", repr(argument))
 
 	def test_NamedAndValuedArgument(self) -> None:
 		with self.assertRaises(TypeError):
@@ -170,7 +171,7 @@ class WithoutPrefix(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"{name}={value}", argument.AsArgument())
 		self.assertEqual(f"{name}={value}", str(argument))
-		self.assertEqual(f"'{name}={value}'", repr(argument))
+		self.assertEqual(f"\"{name}={value}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -182,7 +183,7 @@ class WithoutPrefix(Testcase):
 		self.assertIs(value, argument.Value)
 		self.assertEqual(f"{value}", argument.AsArgument())
 		self.assertEqual(f"{value}", str(argument))
-		self.assertEqual(f"'{value}'", repr(argument))
+		self.assertEqual(f"\"{value}\"", repr(argument))
 
 		value2 = "value2"
 		argument.Value = value2
@@ -195,7 +196,7 @@ class WithoutPrefix(Testcase):
 		self.assertListEqual(list(values), argument.Value)
 		self.assertEqual([f"{value}" for value in values], argument.AsArgument())
 		self.assertEqual(f"{values[0]} {values[1]}", str(argument))
-		self.assertEqual(f"['{values[0]}', '{values[1]}']", repr(argument))
+		self.assertEqual(f"[\"{values[0]}\", \"{values[1]}\"]", repr(argument))
 
 		with self.assertRaises(TypeError):
 			argument.Value = 42
@@ -209,7 +210,7 @@ class WithoutPrefix(Testcase):
 		self.assertListEqual(list(values2), argument.Value)
 		self.assertListEqual([f"{value}" for value in values2], argument.AsArgument())
 		self.assertEqual(f"{values2[0]} {values2[1]}", str(argument))
-		self.assertEqual(f"['{values2[0]}', '{values2[1]}']", repr(argument))
+		self.assertEqual(f"[\"{values2[0]}\", \"{values2[1]}\"]", repr(argument))
 
 	def test_PathArgument(self) -> None:
 		path = Path("file1.txt")
@@ -218,7 +219,7 @@ class WithoutPrefix(Testcase):
 		self.assertIs(path, argument.Value)
 		self.assertEqual(f"{path}", argument.AsArgument())
 		self.assertEqual(f"{path}", str(argument))
-		self.assertEqual(f"'{path}'", repr(argument))
+		self.assertEqual(f"\"{path}\"", repr(argument))
 
 		path2 = Path("file2.txt")
 		argument.Value = path2
@@ -231,7 +232,7 @@ class WithoutPrefix(Testcase):
 		self.assertListEqual(list(values), argument.Value)
 		self.assertEqual([f"{value}" for value in values], argument.AsArgument())
 		self.assertEqual(f"{values[0]} {values[1]}", str(argument))
-		self.assertEqual(f"['{values[0]}', '{values[1]}']", repr(argument))
+		self.assertEqual(f"[\"{values[0]}\", \"{values[1]}\"]", repr(argument))
 
 		with self.assertRaises(TypeError):
 			argument.Value = 42
@@ -245,7 +246,7 @@ class WithoutPrefix(Testcase):
 		self.assertListEqual(list(values2), argument.Value)
 		self.assertListEqual([f"{value}" for value in values2], argument.AsArgument())
 		self.assertEqual(f"{values2[0]} {values2[1]}", str(argument))
-		self.assertEqual(f"['{values2[0]}', '{values2[1]}']", repr(argument))
+		self.assertEqual(f"[\"{values2[0]}\", \"{values2[1]}\"]", repr(argument))
 
 
 class Commands(Testcase):
@@ -264,7 +265,7 @@ class Commands(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"-{name}", argument.AsArgument())
 		self.assertEqual(f"-{name}", str(argument))
-		self.assertEqual(f"'-{name}'", repr(argument))
+		self.assertEqual(f"\"-{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "command2"
@@ -284,7 +285,7 @@ class Commands(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"--{name}", argument.AsArgument())
 		self.assertEqual(f"--{name}", str(argument))
-		self.assertEqual(f"'--{name}'", repr(argument))
+		self.assertEqual(f"\"--{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "command2"
@@ -304,7 +305,7 @@ class Commands(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"/{name}", argument.AsArgument())
 		self.assertEqual(f"/{name}", str(argument))
-		self.assertEqual(f"'/{name}'", repr(argument))
+		self.assertEqual(f"\"/{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "command2"
@@ -326,7 +327,7 @@ class Flags(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"{name}", argument.AsArgument())
 		self.assertEqual(f"{name}", str(argument))
-		self.assertEqual(f"'{name}'", repr(argument))
+		self.assertEqual(f"\"{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -346,7 +347,7 @@ class Flags(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"-{name}", argument.AsArgument())
 		self.assertEqual(f"-{name}", str(argument))
-		self.assertEqual(f"'-{name}'", repr(argument))
+		self.assertEqual(f"\"-{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -366,7 +367,7 @@ class Flags(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"--{name}", argument.AsArgument())
 		self.assertEqual(f"--{name}", str(argument))
-		self.assertEqual(f"'--{name}'", repr(argument))
+		self.assertEqual(f"\"--{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -386,7 +387,7 @@ class Flags(Testcase):
 		self.assertIs(name, argument.Name)
 		self.assertEqual(f"/{name}", argument.AsArgument())
 		self.assertEqual(f"/{name}", str(argument))
-		self.assertEqual(f"'/{name}'", repr(argument))
+		self.assertEqual(f"\"/{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -409,13 +410,13 @@ class BooleanFlags(Testcase):
 		self.assertTrue(argument.Value)
 		self.assertEqual(f"with-{name}", argument.AsArgument())
 		self.assertEqual(f"with-{name}", str(argument))
-		self.assertEqual(f"'with-{name}'", repr(argument))
+		self.assertEqual(f"\"with-{name}\"", repr(argument))
 
 		argument.Value = False
 		self.assertFalse(argument.Value)
 		self.assertEqual(f"without-{name}", argument.AsArgument())
 		self.assertEqual(f"without-{name}", str(argument))
-		self.assertEqual(f"'without-{name}'", repr(argument))
+		self.assertEqual(f"\"without-{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -436,13 +437,13 @@ class BooleanFlags(Testcase):
 		self.assertTrue(argument.Value)
 		self.assertEqual(f"-with-{name}", argument.AsArgument())
 		self.assertEqual(f"-with-{name}", str(argument))
-		self.assertEqual(f"'-with-{name}'", repr(argument))
+		self.assertEqual(f"\"-with-{name}\"", repr(argument))
 
 		argument.Value = False
 		self.assertFalse(argument.Value)
 		self.assertEqual(f"-without-{name}", argument.AsArgument())
 		self.assertEqual(f"-without-{name}", str(argument))
-		self.assertEqual(f"'-without-{name}'", repr(argument))
+		self.assertEqual(f"\"-without-{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -463,13 +464,13 @@ class BooleanFlags(Testcase):
 		self.assertTrue(argument.Value)
 		self.assertEqual(f"--with-{name}", argument.AsArgument())
 		self.assertEqual(f"--with-{name}", str(argument))
-		self.assertEqual(f"'--with-{name}'", repr(argument))
+		self.assertEqual(f"\"--with-{name}\"", repr(argument))
 
 		argument.Value = False
 		self.assertFalse(argument.Value)
 		self.assertEqual(f"--without-{name}", argument.AsArgument())
 		self.assertEqual(f"--without-{name}", str(argument))
-		self.assertEqual(f"'--without-{name}'", repr(argument))
+		self.assertEqual(f"\"--without-{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -490,13 +491,13 @@ class BooleanFlags(Testcase):
 		self.assertTrue(argument.Value)
 		self.assertEqual(f"/with-{name}", argument.AsArgument())
 		self.assertEqual(f"/with-{name}", str(argument))
-		self.assertEqual(f"'/with-{name}'", repr(argument))
+		self.assertEqual(f"\"/with-{name}\"", repr(argument))
 
 		argument.Value = False
 		self.assertFalse(argument.Value)
 		self.assertEqual(f"/without-{name}", argument.AsArgument())
 		self.assertEqual(f"/without-{name}", str(argument))
-		self.assertEqual(f"'/without-{name}'", repr(argument))
+		self.assertEqual(f"\"/without-{name}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -520,7 +521,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIsNone(argument.Value)
 		self.assertEqual(f"{name}", argument.AsArgument())
 		self.assertEqual(f"{name}", str(argument))
-		self.assertEqual(f"'{name}'", repr(argument))
+		self.assertEqual(f"\"{name}\"", repr(argument))
 
 		value2 = "42"
 
@@ -528,7 +529,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"{name}={value2}", argument.AsArgument())
 		self.assertEqual(f"{name}={value2}", str(argument))
-		self.assertEqual(f"'{name}={value2}'", repr(argument))
+		self.assertEqual(f"\"{name}={value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -550,7 +551,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIsNone(argument.Value)
 		self.assertEqual(f"-{name}", argument.AsArgument())
 		self.assertEqual(f"-{name}", str(argument))
-		self.assertEqual(f"'-{name}'", repr(argument))
+		self.assertEqual(f"\"-{name}\"", repr(argument))
 
 		value2 = "42"
 
@@ -558,7 +559,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"-{name}={value2}", argument.AsArgument())
 		self.assertEqual(f"-{name}={value2}", str(argument))
-		self.assertEqual(f"'-{name}={value2}'", repr(argument))
+		self.assertEqual(f"\"-{name}={value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -580,7 +581,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIsNone(argument.Value)
 		self.assertEqual(f"--{name}", argument.AsArgument())
 		self.assertEqual(f"--{name}", str(argument))
-		self.assertEqual(f"'--{name}'", repr(argument))
+		self.assertEqual(f"\"--{name}\"", repr(argument))
 
 		value2 = "42"
 
@@ -588,7 +589,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"--{name}={value2}", argument.AsArgument())
 		self.assertEqual(f"--{name}={value2}", str(argument))
-		self.assertEqual(f"'--{name}={value2}'", repr(argument))
+		self.assertEqual(f"\"--{name}={value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -610,7 +611,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIsNone(argument.Value)
 		self.assertEqual(f"/{name}", argument.AsArgument())
 		self.assertEqual(f"/{name}", str(argument))
-		self.assertEqual(f"'/{name}'", repr(argument))
+		self.assertEqual(f"\"/{name}\"", repr(argument))
 
 		value2 = "42"
 
@@ -618,7 +619,7 @@ class OptionalValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"/{name}:{value2}", argument.AsArgument())
 		self.assertEqual(f"/{name}:{value2}", str(argument))
-		self.assertEqual(f"'/{name}:{value2}'", repr(argument))
+		self.assertEqual(f"\"/{name}:{value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -642,7 +643,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value, argument.Value)
 		self.assertEqual(f"{name}={value}", argument.AsArgument())
 		self.assertEqual(f"{name}={value}", str(argument))
-		self.assertEqual(f"'{name}={value}'", repr(argument))
+		self.assertEqual(f"\"{name}={value}\"", repr(argument))
 
 		value2 = "84"
 
@@ -650,7 +651,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"{name}={value2}", argument.AsArgument())
 		self.assertEqual(f"{name}={value2}", str(argument))
-		self.assertEqual(f"'{name}={value2}'", repr(argument))
+		self.assertEqual(f"\"{name}={value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -672,7 +673,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value, argument.Value)
 		self.assertEqual(f"-{name}={value}", argument.AsArgument())
 		self.assertEqual(f"-{name}={value}", str(argument))
-		self.assertEqual(f"'-{name}={value}'", repr(argument))
+		self.assertEqual(f"\"-{name}={value}\"", repr(argument))
 
 		value2 = "84"
 
@@ -680,7 +681,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"-{name}={value2}", argument.AsArgument())
 		self.assertEqual(f"-{name}={value2}", str(argument))
-		self.assertEqual(f"'-{name}={value2}'", repr(argument))
+		self.assertEqual(f"\"-{name}={value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -702,7 +703,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value, argument.Value)
 		self.assertEqual(f"--{name}={value}", argument.AsArgument())
 		self.assertEqual(f"--{name}={value}", str(argument))
-		self.assertEqual(f"'--{name}={value}'", repr(argument))
+		self.assertEqual(f"\"--{name}={value}\"", repr(argument))
 
 		value2 = "84"
 
@@ -710,7 +711,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"--{name}={value2}", argument.AsArgument())
 		self.assertEqual(f"--{name}={value2}", str(argument))
-		self.assertEqual(f"'--{name}={value2}'", repr(argument))
+		self.assertEqual(f"\"--{name}={value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -732,7 +733,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value, argument.Value)
 		self.assertEqual(f"/{name}:{value}", argument.AsArgument())
 		self.assertEqual(f"/{name}:{value}", str(argument))
-		self.assertEqual(f"'/{name}:{value}'", repr(argument))
+		self.assertEqual(f"\"/{name}:{value}\"", repr(argument))
 
 		value2 = "84"
 
@@ -740,7 +741,7 @@ class ValuedFlags(Testcase):
 		self.assertIs(value2, argument.Value)
 		self.assertEqual(f"/{name}:{value2}", argument.AsArgument())
 		self.assertEqual(f"/{name}:{value2}", str(argument))
-		self.assertEqual(f"'/{name}:{value2}'", repr(argument))
+		self.assertEqual(f"\"/{name}:{value2}\"", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -764,7 +765,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values), argument.Value)
 		self.assertListEqual([f"{name}={val}" for val in values], argument.AsArgument())
 		self.assertEqual(f"{name}={values[0]} {name}={values[1]}", str(argument))
-		self.assertEqual(f"['{name}={values[0]}', '{name}={values[1]}']", repr(argument))
+		self.assertEqual(f"[\"{name}={values[0]}\", \"{name}={values[1]}\"]", repr(argument))
 
 		with self.assertRaises(TypeError):
 			argument.Value = 42
@@ -778,7 +779,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values2), argument.Value)
 		self.assertListEqual([f"{name}={val}" for val in values2], argument.AsArgument())
 		self.assertEqual(f"{name}={values2[0]} {name}={values2[1]}", str(argument))
-		self.assertEqual(f"['{name}={values2[0]}', '{name}={values2[1]}']", repr(argument))
+		self.assertEqual(f"[\"{name}={values2[0]}\", \"{name}={values2[1]}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -800,7 +801,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values), argument.Value)
 		self.assertListEqual([f"-{name}={val}" for val in values], argument.AsArgument())
 		self.assertEqual(f"-{name}={values[0]} -{name}={values[1]}", str(argument))
-		self.assertEqual(f"['-{name}={values[0]}', '-{name}={values[1]}']", repr(argument))
+		self.assertEqual(f"[\"-{name}={values[0]}\", \"-{name}={values[1]}\"]", repr(argument))
 
 		with self.assertRaises(TypeError):
 			argument.Value = 42
@@ -814,7 +815,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values2), argument.Value)
 		self.assertListEqual([f"-{name}={val}" for val in values2], argument.AsArgument())
 		self.assertEqual(f"-{name}={values2[0]} -{name}={values2[1]}", str(argument))
-		self.assertEqual(f"['-{name}={values2[0]}', '-{name}={values2[1]}']", repr(argument))
+		self.assertEqual(f"[\"-{name}={values2[0]}\", \"-{name}={values2[1]}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -836,7 +837,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values), argument.Value)
 		self.assertListEqual([f"--{name}={val}" for val in values], argument.AsArgument())
 		self.assertEqual(f"--{name}={values[0]} --{name}={values[1]}", str(argument))
-		self.assertEqual(f"['--{name}={values[0]}', '--{name}={values[1]}']", repr(argument))
+		self.assertEqual(f"[\"--{name}={values[0]}\", \"--{name}={values[1]}\"]", repr(argument))
 
 		with self.assertRaises(TypeError):
 			argument.Value = 42
@@ -850,7 +851,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values2), argument.Value)
 		self.assertListEqual([f"--{name}={val}" for val in values2], argument.AsArgument())
 		self.assertEqual(f"--{name}={values2[0]} --{name}={values2[1]}", str(argument))
-		self.assertEqual(f"['--{name}={values2[0]}', '--{name}={values2[1]}']", repr(argument))
+		self.assertEqual(f"[\"--{name}={values2[0]}\", \"--{name}={values2[1]}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -873,7 +874,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values), argument.Value)
 		self.assertListEqual([f"/{name}:{val}" for val in values], argument.AsArgument())
 		self.assertEqual(f"/{name}:{values[0]} /{name}:{values[1]}", str(argument))
-		self.assertEqual(f"['/{name}:{values[0]}', '/{name}:{values[1]}']", repr(argument))
+		self.assertEqual(f"[\"/{name}:{values[0]}\", \"/{name}:{values[1]}\"]", repr(argument))
 
 		with self.assertRaises(TypeError):
 			argument.Value = 42
@@ -887,7 +888,7 @@ class ValuedFlagLists(Testcase):
 		self.assertListEqual(list(values2), argument.Value)
 		self.assertListEqual([f"/{name}:{val}" for val in values2], argument.AsArgument())
 		self.assertEqual(f"/{name}:{values2[0]} /{name}:{values2[1]}", str(argument))
-		self.assertEqual(f"['/{name}:{values2[0]}', '/{name}:{values2[1]}']", repr(argument))
+		self.assertEqual(f"[\"/{name}:{values2[0]}\", \"/{name}:{values2[1]}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -911,7 +912,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value, argument.Value)
 		self.assertListEqual([f"{name}", f"{value}"], list(argument.AsArgument()))
 		self.assertEqual(f"{name} {value}", str(argument))
-		self.assertEqual(f"['{name}', '{value}']", repr(argument))
+		self.assertEqual(f"[\"{name}\", \"{value}\"]", repr(argument))
 
 		# with self.assertRaises(TypeError):
 		# 	argument.Value = 42
@@ -922,7 +923,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value2, argument.Value)
 		self.assertListEqual([f"{name}", f"{value2}"], list(argument.AsArgument()))
 		self.assertEqual(f"{name} {value2}", str(argument))
-		self.assertEqual(f"['{name}', '{value2}']", repr(argument))
+		self.assertEqual(f"[\"{name}\", \"{value2}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -944,7 +945,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value, argument.Value)
 		self.assertListEqual([f"-{name}", f"{value}"], list(argument.AsArgument()))
 		self.assertEqual(f"-{name} {value}", str(argument))
-		self.assertEqual(f"['-{name}', '{value}']", repr(argument))
+		self.assertEqual(f"[\"-{name}\", \"{value}\"]", repr(argument))
 
 		# with self.assertRaises(TypeError):
 		# 	argument.Value = 42
@@ -955,7 +956,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value2, argument.Value)
 		self.assertListEqual([f"-{name}", f"{value2}"], list(argument.AsArgument()))
 		self.assertEqual(f"-{name} {value2}", str(argument))
-		self.assertEqual(f"['-{name}', '{value2}']", repr(argument))
+		self.assertEqual(f"[\"-{name}\", \"{value2}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -977,7 +978,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value, argument.Value)
 		self.assertListEqual([f"--{name}", f"{value}"], list(argument.AsArgument()))
 		self.assertEqual(f"--{name} {value}", str(argument))
-		self.assertEqual(f"['--{name}', '{value}']", repr(argument))
+		self.assertEqual(f"[\"--{name}\", \"{value}\"]", repr(argument))
 
 		# with self.assertRaises(TypeError):
 		# 	argument.Value = 42
@@ -988,7 +989,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value2, argument.Value)
 		self.assertListEqual([f"--{name}", f"{value2}"], list(argument.AsArgument()))
 		self.assertEqual(f"--{name} {value2}", str(argument))
-		self.assertEqual(f"['--{name}', '{value2}']", repr(argument))
+		self.assertEqual(f"[\"--{name}\", \"{value2}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -1011,7 +1012,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value, argument.Value)
 		self.assertListEqual([f"/{name}", f"{value}"], list(argument.AsArgument()))
 		self.assertEqual(f"/{name} {value}", str(argument))
-		self.assertEqual(f"['/{name}', '{value}']", repr(argument))
+		self.assertEqual(f"[\"/{name}\", \"{value}\"]", repr(argument))
 
 		# with self.assertRaises(TypeError):
 		# 	argument.Value = 42
@@ -1022,7 +1023,7 @@ class ValuedTupleFlags(Testcase):
 		self.assertEqual(value2, argument.Value)
 		self.assertListEqual([f"/{name}", f"{value2}"], list(argument.AsArgument()))
 		self.assertEqual(f"/{name} {value2}", str(argument))
-		self.assertEqual(f"['/{name}', '{value2}']", repr(argument))
+		self.assertEqual(f"[\"/{name}\", \"{value2}\"]", repr(argument))
 
 		with self.assertRaises(AttributeError):
 			argument.Name = "flag2"
@@ -1179,18 +1180,6 @@ class KeyValueFlags(Testcase):
 
 
 class Escaping(Testcase):
-	def test_None(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			formatCommandLine(None)
-
-		self.assertEqual("Parameter 'arguments' is None.", str(context.exception))
-
-	def test_SingleString(self) -> None:
-		with self.assertRaises(TypeError) as context:
-			formatCommandLine("commit")
-
-		self.assertEqual("Parameter 'arguments' is a string, not an iterable of strings.", str(context.exception))
-
 	@mark.skipif(sys_platform == "win32", reason="POSIX shell quoting isn't used on Windows.")
 	def test_POSIX(self) -> None:
 		"""Quotes, a variable, a command separator and an empty argument are quoted for a POSIX shell."""
@@ -1216,6 +1205,14 @@ class Escaping(Testcase):
 		self.assertEqual("'it'\"'\"'s here'", str(argument))
 		self.assertEqual("\"it's here\"", repr(argument))
 
+	def test_Repr(self) -> None:
+		"""Double quotes, single quotes, a backslash and a newline are escaped in a double-quoted literal."""
+		value = "say \"it's\" \\ done\n"
+		argument = StringArgument(value)
+
+		self.assertEqual("\"say \\\"it's\\\" \\\\ done\\n\"", repr(argument))
+		self.assertEqual(value, literal_eval(repr(argument)))
+
 	@mark.skipif(sys_platform == "win32", reason="POSIX shell quoting isn't used on Windows.")
 	def test_TupleFlag(self) -> None:
 		class Message(ShortTupleFlag, name="m"):
@@ -1224,7 +1221,7 @@ class Escaping(Testcase):
 		argument = Message("Bumped dependencies.")
 
 		self.assertEqual("-m 'Bumped dependencies.'", str(argument))
-		self.assertEqual("['-m', 'Bumped dependencies.']", repr(argument))
+		self.assertEqual("[\"-m\", \"Bumped dependencies.\"]", repr(argument))
 
 	def test_KeyValueFlag(self) -> None:
 		"""Each pair is one argument, not the whole list in one pair of quotes."""
@@ -1234,4 +1231,4 @@ class Escaping(Testcase):
 		argument = Define({"key1": "value1", "key2": "value2"})
 
 		self.assertEqual("-Dkey1=value1 -Dkey2=value2", str(argument))
-		self.assertEqual("['-Dkey1=value1', '-Dkey2=value2']", repr(argument))
+		self.assertEqual("[\"-Dkey1=value1\", \"-Dkey2=value2\"]", repr(argument))

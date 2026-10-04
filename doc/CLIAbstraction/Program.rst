@@ -165,9 +165,10 @@ once and re-run with a different value:
 
 :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` renders the whole thing - the executable's path first, then
 every set argument in declaration order - as the list :mod:`subprocess` expects. ``str()`` joins it to one command
-line, escaped for the current platform by :func:`~pyTooling.CLIAbstraction.Argument.formatCommandLine`: quoted for a
-POSIX shell, or on Windows as :class:`subprocess.Popen` passes it to the program. A commit message ``It's done.``
-becomes ``-m 'It'"'"'s done.'`` on Linux. ``repr()`` returns the list as a Python literal.
+line, escaped for the current platform by ``formatCommandLine`` from :mod:`pyTooling.CLIAbstraction.Argument`: that is
+:func:`shlex.join`, quoting for a POSIX shell, and on Windows ``subprocess.list2cmdline()``, quoting as
+:class:`subprocess.Popen` passes the list to the program. A commit message ``It's done.`` becomes
+``-m 'It'"'"'s done.'`` on Linux. ``repr()`` returns the list as a Python literal with strings in double quotes.
 
 Derive Program Variants
 ***********************

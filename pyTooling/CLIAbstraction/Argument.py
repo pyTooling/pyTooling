@@ -33,12 +33,11 @@
 This module implements command line arguments without prefix character(s).
 
 """
-from abc        import abstractmethod
-from pathlib    import Path
-from shlex      import join as shlex_join
-from subprocess import list2cmdline
-from sys        import platform as sys_platform
-from typing     import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
+from abc     import abstractmethod
+from pathlib import Path
+from sys     import platform as sys_platform
+from typing  import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Common      import getFullyQualifiedName
@@ -50,32 +49,24 @@ __all__ = ["ValueT"]
 ValueT = TypeVar("ValueT")   #: The type of value in a valued argument.
 
 
-@export
-def formatCommandLine(arguments: Iterable[str]) -> str:
+if sys_platform == "win32":
+	from subprocess import list2cmdline as formatCommandLine
+else:
+	from shlex      import join         as formatCommandLine
+
+
+def _doubleQuotedLiteral(value: str) -> str:
 	"""
-	Join command line arguments to one command line, escaped for the current platform.
+	Return a string as a Python literal in double quotes, escaped as :func:`repr` escapes it.
 
-	On Windows, the arguments are quoted the way :class:`subprocess.Popen` passes them to the program
-	(``subprocess.list2cmdline()``). Elsewhere, they are quoted for a POSIX shell (:func:`shlex.join`), so the command
-	line can be pasted into ``sh`` or ``bash``.
-
-	:param arguments:   The unescaped arguments.
-	:returns:           The command line.
-	:raises ValueError: If parameter 'arguments' is None.
-	:raises TypeError:  If parameter 'arguments' is a single string. |br|
-	                    Pass a single argument as a one-element tuple or list.
+	:param value: The string.
+	:returns:     The string's literal.
 	"""
-	if arguments is None:
-		raise ValueError("Parameter 'arguments' is None.")
-	elif isinstance(arguments, str):
-		ex = TypeError("Parameter 'arguments' is a string, not an iterable of strings.")
-		ex.add_note("Pass a single argument as a one-element tuple or list.")
-		raise ex
+	literal = repr(value)
+	if literal[0] == "\"":
+		return literal
 
-	if sys_platform == "win32":
-		return list2cmdline(arguments)
-	else:
-		return shlex_join(arguments)
+	return "\"" + literal[1:-1].replace("\\'", "'").replace("\"", "\\\"") + "\""
 
 
 @export
@@ -136,7 +127,8 @@ class CommandLineArgument(metaclass=ExtendedType):
 		"""
 		Return this argument as written on a command line, escaped for the current platform.
 
-		:returns: The formatted argument, escaped by :func:`formatCommandLine`.
+		:returns: The formatted argument, escaped by ``formatCommandLine``: :func:`shlex.join`, on Windows
+		          ``subprocess.list2cmdline()``.
 		"""
 		argument = self.AsArgument()
 		if isinstance(argument, str):
@@ -146,15 +138,15 @@ class CommandLineArgument(metaclass=ExtendedType):
 
 	def __repr__(self) -> str:
 		"""
-		Return this argument as a Python literal.
+		Return this argument as a Python literal, with strings in double quotes.
 
-		:returns: The :func:`repr` of the formatted argument (:meth:`AsArgument`); a sequence as a list.
+		:returns: The formatted argument (:meth:`AsArgument`) as a literal; a sequence as a list.
 		"""
 		argument = self.AsArgument()
 		if isinstance(argument, str):
-			return repr(argument)
+			return _doubleQuotedLiteral(argument)
 		else:
-			return repr(list(argument))
+			return "[" + ", ".join(_doubleQuotedLiteral(item) for item in argument) + "]"
 
 
 @export

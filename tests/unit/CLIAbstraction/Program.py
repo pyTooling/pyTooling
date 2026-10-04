@@ -32,6 +32,7 @@
 Unit tests for :class:`pyTooling.CLIAbstraction.Program`, using ``git`` as the abstracted program: path
 resolution per platform, common options, and a sub-command with its own options.
 """
+from ast          import literal_eval
 from pathlib      import Path
 from typing       import Any, Self
 
@@ -101,7 +102,7 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(repr([executable]), repr(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
@@ -118,7 +119,7 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(repr([executable]), repr(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_ExecutablePath_NotAPath(self) -> None:
@@ -140,7 +141,7 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(repr([executable]), repr(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
@@ -157,7 +158,7 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(repr([executable]), repr(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_ExecutablePath_NotAPath(self) -> None:
@@ -179,7 +180,7 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(repr([executable]), repr(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
@@ -196,7 +197,7 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(repr([executable]), repr(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_ExecutablePath_NotAPath(self) -> None:
@@ -258,7 +259,7 @@ class CommonOptions(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "--version"], tool.ToArgumentList())
-		self.assertEqual(repr([executable, "--version"]), repr(tool))
+		self.assertListEqual([executable, "--version"], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable, "--version"]), str(tool))
 
 	def test_HelpFlag(self) -> None:
@@ -267,7 +268,7 @@ class CommonOptions(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "--help"], tool.ToArgumentList())
-		self.assertEqual(repr([executable, "--help"]), repr(tool))
+		self.assertListEqual([executable, "--help"], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable, "--help"]), str(tool))
 
 	def test_HelpCommand(self) -> None:
@@ -276,7 +277,7 @@ class CommonOptions(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "help"], tool.ToArgumentList())
-		self.assertEqual(repr([executable, "help"]), repr(tool))
+		self.assertListEqual([executable, "help"], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable, "help"]), str(tool))
 
 
@@ -288,7 +289,7 @@ class Commit(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "commit", "-m", "Initial commit."], tool.ToArgumentList())
-		self.assertEqual(repr([executable, "commit", "-m", "Initial commit."]), repr(tool))
+		self.assertListEqual([executable, "commit", "-m", "Initial commit."], literal_eval(repr(tool)))
 		self.assertEqual(formatCommandLine([executable, "commit", "-m", "Initial commit."]), str(tool))
 
 

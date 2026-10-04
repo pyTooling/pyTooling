@@ -57,7 +57,7 @@ from pyTooling.MetaClasses               import ExtendedType
 from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
 from pyTooling.Common                    import getFullyQualifiedName
 from pyTooling.Attributes                import Attribute
-from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine
+from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine, _doubleQuotedLiteral
 from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
 from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
 from pyTooling.Platform                  import Platform
@@ -402,6 +402,9 @@ class Program(metaclass=ExtendedType, slots=True):
 		"""
 		Convert a program and used CLI options to a list of CLI argument strings in correct order, unescaped.
 
+		The list can be passed directly to :func:`subprocess.run` or :class:`subprocess.Popen` (without ``shell=True``):
+		each string reaches the program as one argument, so nothing needs escaping or quoting.
+
 		:returns:          List of CLI arguments
 		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|
 		                   An argument's :meth:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument.AsArgument` has to
@@ -436,13 +439,13 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	def __repr__(self) -> str:
 		"""
-		Return the argument list as a Python literal.
+		Return the argument list as a Python literal, with strings in double quotes.
 
-		Example: :pycode:`['/usr/bin/git', '--version']`
+		Example: :pycode:`["/usr/bin/git", "--version"]`
 
-		:returns: The :func:`repr` of :meth:`ToArgumentList`'s result.
+		:returns: :meth:`ToArgumentList`'s result as a literal.
 		"""
-		return repr(self.ToArgumentList())
+		return "[" + ", ".join(_doubleQuotedLiteral(argument) for argument in self.ToArgumentList()) + "]"
 
 	def __str__(self) -> str:
 		"""
@@ -450,7 +453,8 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		Example: :pycode:`/usr/bin/git commit -m 'Bumped dependencies.'`
 
-		:returns: The argument list joined by :func:`~pyTooling.CLIAbstraction.Argument.formatCommandLine`.
+		:returns: The argument list joined by ``formatCommandLine``: :func:`shlex.join`, on Windows
+		          ``subprocess.list2cmdline()``.
 		"""
 		return formatCommandLine(self.ToArgumentList())
 
