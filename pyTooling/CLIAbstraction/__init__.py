@@ -503,7 +503,7 @@ class Executable(Program):  # (ILogable):
 		:raises CLIAbstractionError: When an :exc:`OSError` occurs while launching the child-process.
 		"""
 		if self._dryRun:
-			self.LogDryRun(f"Start process: {self!r}")
+			self.LogDryRun(f"Start process: {self}")
 			return
 
 		if environment is not None:

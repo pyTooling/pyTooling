@@ -322,7 +322,7 @@ class DryRun(Testcase):
 		gittex.StartProcess()
 
 		self.assertIsNone(gittex._process)
-		self.assertTrue(gittex.DryRunMessages[-1].startswith("Start process: "))
+		self.assertEqual(f"Start process: {formatCommandLine(gittex.ToArgumentList())}", gittex.DryRunMessages[-1])
 
 	def test_WithoutDryRunAMissingExecutableRaises(self) -> None:
 		with self.assertRaises(CLIAbstractionError):
