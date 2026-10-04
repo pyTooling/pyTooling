@@ -41,8 +41,6 @@ Implementation of package dependencies.
       |rarr| The implementation for Python packages on a package index.
    :mod:`pyTooling.Versioning`
       |rarr| The version numbers a requirement is resolved against.
-   :mod:`pyTooling.Graph`
-      |rarr| The graph data structure a dependency graph is built on.
 """
 from __future__            import annotations
 

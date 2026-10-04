@@ -103,8 +103,8 @@ robust than encoding a rule about when the codes appear.
 
 .. _TESTING/Markers:
 
-Marker-based Collection
-#######################
+Finding Testcases and Testsuites
+################################
 
 A test runner has to decide what a test is, and by default it decides from a **name**: pytest collects classes
 matching ``python_classes`` (``Test*``) and functions matching ``python_functions`` (``test_*``), and
@@ -277,7 +277,7 @@ A level contributes only the names it has, and a level with none is skipped.
 
 .. note::
 
-   The `PyTest-JUnit schema <https://github.com/edaa-org/pyEDAA.Reports>`__ does allow ``<properties>`` on a
+   The :gh:`PyTest-JUnit schema <edaa-org/pyEDAA.Reports>` does allow ``<properties>`` on a
    ``<testsuite>`` element - it is pytest emitting a single one that leaves nowhere to put a per-class name.
    :ref:`TESTING/ReportFormat` is the format where the hierarchy is expressed directly instead of being encoded in
    a key.

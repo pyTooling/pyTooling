@@ -199,6 +199,12 @@ intersphinx_mapping = {
 	"pyToolGitHub": ("https://pyTooling.github.io/pyTooling.GitHub/", None),
 }
 
+# 'TestCase' is defined in 'unittest.case', so a base-class line names it that way, while Python's inventory knows only
+# the public name 'unittest.TestCase'.
+nitpick_ignore = [
+	("py:class", "unittest.case.TestCase"),
+]
+
 
 # ==============================================================================
 # Sphinx.Ext.AutoDoc

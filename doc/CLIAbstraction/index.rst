@@ -7,9 +7,9 @@ Overview
 Python. There is no need for manually assembling parameter lists or considering the order of parameters. All parameters
 like ``-v`` or ``--value=42`` are described as :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument` instances
 on a :class:`~pyTooling.CLIAbstraction.Program` class. Each argument class like :class:`~pyTooling.CLIAbstraction.Flag.ShortFlag`
-or :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` knows about the correct formatting pattern, character
-escaping, and if needed about necessary type conversions. A program instance can be converted to an argument list
-suitable for :class:`subprocess.Popen`.
+or :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` knows about the correct formatting pattern, and if needed
+about necessary type conversions. A program instance can be converted to an argument list suitable for
+:class:`subprocess.Popen`, which passes each argument to the program without a shell - so no argument needs escaping.
 
 While a user-defined command line program abstraction derived from :class:`~pyTooling.CLIAbstraction.Program` only
 takes care of maintaining and assembling parameter lists, a more advanced base-class, called :class:`~pyTooling.CLIAbstraction.Executable`,
@@ -28,7 +28,7 @@ The main design goals are:
 * Abstract differences in operating systems like argument pattern (POSIX: ``-h`` vs. Windows: ``/h``), path delimiter
   signs (POSIX: ``/`` vs. Windows: ``\``) or executable names.
 * Derive program variants from existing programs.
-* Assemble parameters as list for handover to :class:`subprocess.Popen` with proper escaping and quoting.
+* Assemble parameters as list for handover to :class:`subprocess.Popen`, in the order the program declares them.
 * Launch a program with :class:`~subprocess.Popen` and hide the complexity of Popen.
 * Get a generator object for line-by-line output reading to enable postprocessing of outputs.
 
@@ -59,8 +59,7 @@ The following example implements a portion of the ``git`` program and its ``comm
          git[git.FlagVerbose] = True
 
          # Derive a variant of that pre-configured program.
-         commit = git.getCommitTool()
-         commit[commit.ValueCommitMessage] = "Bumped dependencies."
+         commit = git.GetCommitTool("Bumped dependencies.", amend=True)
 
          # Launch the program and parse outputs line-by-line.
          commit.StartProcess()
@@ -72,7 +71,8 @@ The following example implements a portion of the ``git`` program and its ``comm
 
       .. code-block:: Python
 
-         from pyTooling.CLIAbstraction import Executable
+         from pyTooling.CLIAbstraction import CLIArgument, Executable
+         from pyTooling.CLIAbstraction.Argument import PathListArgument
          from pyTooling.CLIAbstraction.Command import CommandArgument
          from pyTooling.CLIAbstraction.Flag import LongFlag
          from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag
@@ -94,14 +94,41 @@ The following example implements a portion of the ``git`` program and its ``comm
              """Command to commit staged files."""
 
            @CLIArgument()
+           class FlagAmend(LongFlag, name="amend"):
+             """Replace the tip of the current branch."""
+
+           @CLIArgument()
            class ValueCommitMessage(ShortTupleFlag, name="m"):
              """Specify the commit message."""
 
-           def GetCommitTool(self):
-             """Derive a new program from a configured program."""
+           @CLIArgument()
+           class ArgumentPaths(PathListArgument):
+             """Files to commit."""
+
+           def _CopyParameters(self, tool: "Git") -> None:
+             """Copy all parameters of this program to another instance."""
+             for key, argument in self.__cliParameters__.items():
+               if self._NeedsParameterInitialization(key):
+                 tool[key] = argument.Value
+               else:
+                 tool[key] = True
+
+           def GetCommitTool(
+             self,
+             message: str,
+             amend: bool = False,
+             paths: Nullable[Iterable[Path]] = None
+           ) -> "Git":
+             """Derive a commit command from this program."""
              tool = self.__class__(executablePath=self._executablePath)
-             tool[tool.CommandCommit] = True
              self._CopyParameters(tool)
+
+             tool[tool.CommandCommit] = True
+             tool[tool.ValueCommitMessage] = message
+             if amend:
+               tool[tool.FlagAmend] = True
+             if paths is not None:
+               tool[tool.ArgumentPaths] = paths
 
              return tool
 
@@ -214,4 +241,4 @@ Consumers
 This abstraction layer is used by:
 
 * ✅ Wrap command line interfaces of EDA tools (Electronic Design Automation) in Python classes. |br|
-  `pyEDAA.CLITool <https://github.com/edaa-org/pyEDAA.CLITool>`__
+  :gh:`pyEDAA.CLITool <edaa-org/pyEDAA.CLITool>`

@@ -49,8 +49,9 @@ dependency graph is otherwise thousands of HTTP requests wide.
 
 .. attention::
 
-   Querying PyPI needs `aiohttp <https://GitHub.com/aio-libs/aiohttp>`__, which is an optional dependency. Install
-   it with the ``pypi`` extra:
+   Querying PyPI needs :gh:`aiohttp <aio-libs/aiohttp>`, :gh:`requests <psf/requests>`
+   and :gh:`packaging <pypa/packaging>`, which are optional dependencies. Install them with the
+   ``pypi`` extra:
 
    .. code-block:: shell
 

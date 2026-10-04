@@ -218,7 +218,9 @@ class WarningCollector:
 
 	def __enter__(self) -> Self:
 		"""
-		Enter the warning collector context.
+		Enter the context and make this warning collector the current one.
+
+		The previous current warning collector becomes its parent.
 
 		:returns: The warning collector instance.
 		"""
@@ -240,12 +242,12 @@ class WarningCollector:
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Exit the warning collector context.
+		Exit the context and make the parent warning collector the current one again.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
 		:param exc_tb:   Exception's traceback.
-		:returns:        ``None``
+		:returns:        ``False``, so an exception raised in the context propagates.
 		"""
 		global _threadLocalData
 
@@ -401,7 +403,7 @@ class SupervisedWarningCollector(WarningCollector):
 
 	def __enter__(self) -> Self:
 		"""
-		Enter the warning collector context.
+		Enter the context and make this warning collector the current one of its thread.
 
 		:returns:                                The warning collector instance.
 		:raises SupervisedWarningCollectorError: If this collector is not the top-most warning collector of its thread.
@@ -422,12 +424,13 @@ class SupervisedWarningCollector(WarningCollector):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Exit the warning collector context.
+		Exit the context and hand the collected warnings and a raised exception to the supervisor.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
 		:param exc_tb:   Exception's traceback.
-		:returns:        ``None``
+		:returns:        ``True`` to suppress a raised exception, if a supervisor is set; the exception handler's result
+		                 instead, if it handled a raised exception; ``None`` without a supervisor.
 		"""
 		global _threadLocalData
 

@@ -36,7 +36,7 @@ The Licensing module implements mapping tables for various license names and ide
    List of SPDX identifiers:
 
    * https://spdx.org/licenses/
-   * https://github.com/spdx/license-list-XML
+   * :gh:`spdx/license-list-XML`
 
    List of `Python classifiers <https://pypi.org/classifiers/>`__
 

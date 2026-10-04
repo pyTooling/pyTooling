@@ -535,9 +535,9 @@ class Stopwatch(SlottedObject):
 
 	def __enter__(self) -> Self:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__enter__(...)`` method.
+		Enter the context and start or resume the stopwatch.
 
-		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
+		An unstarted stopwatch is started, a paused one is resumed.
 
 		:returns:               The stopwatch itself.
 		:raises StopwatchError: If the stopwatch was already started.
@@ -567,14 +567,14 @@ class Stopwatch(SlottedObject):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__exit__(...)`` method.
+		Exit the context and pause or stop the stopwatch.
 
-		A running stopwatch will be paused or stopped depending on the configured ``preferPause`` behavior.
+		A running stopwatch is paused, if ``preferPause`` was set, otherwise it's stopped.
 
 		:param exc_type:        Exception type, otherwise None.
 		:param exc_val:         Exception object, otherwise None.
 		:param exc_tb:          Exception's traceback, otherwise None.
-		:returns:               True, if exceptions should be suppressed.
+		:returns:               ``None``
 		:raises StopwatchError: If the stopwatch was already stopped.
 		"""
 		if self._startTime is None:           # never started?

@@ -72,7 +72,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	"""
 	The class offers a basic terminal application base-class.
 
-	It offers basic colored output via `colorama <https://GitHub.com/tartley/colorama>`__ as well as retrieving the
+	It offers basic colored output via :gh:`colorama <tartley/colorama>` as well as retrieving the
 	terminal's width.
 	"""
 
@@ -144,7 +144,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		If the Python package `colorama <https://pypi.org/project/colorama/>`_ [#f_colorama]_ is available, then initialize
 		it for colored outputs.
 
-		.. [#f_colorama] Colorama on Github: https://GitHub.com/tartley/colorama
+		.. [#f_colorama] Colorama on GitHub: :gh:`tartley/colorama`
 		"""
 
 		self._stdin =  stdin
@@ -158,7 +158,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	def InitializeColors(self) -> bool:
 		"""
-		Initialize the terminal for color support by `colorama <https://GitHub.com/tartley/colorama>`__.
+		Initialize the terminal for color support by :gh:`colorama <tartley/colorama>`.
 
 		:returns: True, if 'colorama' package could be imported and initialized.
 		"""
@@ -172,7 +172,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	def UninitializeColors(self) -> bool:
 		"""
-		Uninitialize the terminal for color support by `colorama <https://GitHub.com/tartley/colorama>`__.
+		Uninitialize the terminal for color support by :gh:`colorama <tartley/colorama>`.
 
 		:returns: True, if 'colorama' package could be imported and uninitialized.
 		"""

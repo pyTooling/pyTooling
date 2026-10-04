@@ -512,7 +512,7 @@ An attribute class may declare where it is meant to be used:
 .. caution::
 
    ``_scope`` currently documents **intent, and nothing enforces it** - see
-   `#384 <https://github.com/pyTooling/pyTooling/issues/384>`__. Applying a ``Class``-scoped attribute to a
+   :ghissue:`#384 <384>`. Applying a ``Class``-scoped attribute to a
    function is accepted silently, and the function is then registered in a list that attribute's own scope says it
    can never hold.
 

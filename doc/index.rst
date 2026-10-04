@@ -29,7 +29,7 @@ handling of package descriptions or to unify multiple existing APIs into a singl
 It's useful ‒ if not even essential ‒ for **any** Python-based project independent if it's a library, framework, CLI
 tool or just a "script".
 
-In addition, pyTooling provides a collection of `CI job templates for GitHub Actions <https://github.com/pyTooling/Actions>`__.
+In addition, pyTooling provides a collection of :gh:`CI job templates for GitHub Actions <pyTooling/Actions>`.
 This drastically simplifies GHA-based CI pipelines for Python projects.
 
 
@@ -112,7 +112,7 @@ Attributes
 
 
                prog = Program()
-               for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):
+               for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase).items():
                  pass
 
          .. tab-item:: Class Attributes
@@ -1054,10 +1054,10 @@ Terminal
 Contributors
 ************
 
-* `Patrick Lehmann <https://GitHub.com/Paebbels>`__ (Maintainer)
-* `Sven Köhler <https://GitHub.com/skoehler>`__
-* `Unai Martinez-Corral <https://GitHub.com/umarcor/>`__
-* `and more... <https://GitHub.com/pyTooling/pyTooling/graphs/contributors>`__
+* :gh:`Patrick Lehmann <Paebbels>` (Maintainer)
+* :gh:`Sven Köhler <skoehler>`
+* :gh:`Unai Martinez-Corral <umarcor>`
+* :gh:`and more... <pyTooling/pyTooling/graphs/contributors>`
 
 
 .. _LICENSE:

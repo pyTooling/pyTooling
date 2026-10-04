@@ -913,9 +913,9 @@ class Span(TraceElement):
 
 	def __enter__(self) -> Self:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__enter__(...)`` method.
+		Enter the context and start the span.
 
-		A span will be started.
+		The span is added to the current span of this thread and becomes the current span.
 
 		:returns:             The span itself.
 		:raises TracingError: If the span is not :attr:`~SpanState.Empty`. |br|
@@ -952,11 +952,9 @@ class Span(TraceElement):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__exit__(...)`` method.
+		Exit the context and stop the span.
 
-		An active span will be stopped.
-
-		Exit the context and ......
+		The span's parent becomes the current span of this thread again.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
@@ -1119,7 +1117,9 @@ class Trace(Span):
 
 	def __enter__(self) -> Self:
 		"""
-		Start the trace and register it as the current trace and current span of this thread.
+		Enter the context and start the trace.
+
+		The trace becomes the current trace and the current span of this thread.
 
 		:returns:             The trace itself, so it can be named in an ``as`` clause.
 		:raises TracingError: If the trace is not :attr:`~SpanState.Empty`. |br|
@@ -1154,7 +1154,9 @@ class Trace(Span):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Exit the context and ......
+		Exit the context and stop the trace.
+
+		The current thread has no active trace or span afterwards.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
