@@ -993,9 +993,6 @@ class ExtendedType(type):
 					if isinstance(attributes, list) and len(attributes) > 0:
 						methodsWithAttributes.append(member)
 						for attribute in attributes:
-							attribute._functions.remove(method)
-							attribute._methods.append(method)
-
 							# print(f"    attributes: {attribute.__class__.__name__}")
 							if attribute not in attributeIndex:
 								attributeIndex[attribute] = [member]

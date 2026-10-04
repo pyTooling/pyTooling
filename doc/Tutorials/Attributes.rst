@@ -401,11 +401,11 @@ Step 2: ask one object what it offers
 
       .. important::
 
-         :meth:`~pyTooling.Attributes.Attribute.GetMethods` only ever finds methods of classes built with
-         :class:`~pyTooling.MetaClasses.ExtendedType`. When the decorator runs, a method in a class body is still a
-         plain function - it becomes a method only once the class object exists - so the annotation is filed under
-         *functions*. ``ExtendedType`` re-files it while creating the class. Without the meta-class, the same method
-         turns up in :pycode:`GetFunctions()` and :pycode:`GetMethods()` stays empty.
+         When the decorator runs, a method in a class body is still a plain function - it becomes a method only once
+         the class object exists. Its qualified name (``<Class>.<name>``) tells it apart from a module's function, so
+         the annotation is filed under *methods* right away, and :meth:`~pyTooling.Attributes.Attribute.GetMethods`
+         finds it in any class. Only :pycode:`GetMethods(scope=...)` needs a class built with
+         :class:`~pyTooling.MetaClasses.ExtendedType`, which links each method to its class.
 
       ``predicate=`` accepts an attribute class or an iterable of them, and it matches **sub-classes** too - which is
       the point of the next step.

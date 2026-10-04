@@ -375,6 +375,11 @@ Version 10.x (2026)
 
    .. rubric:: Changes
 
+   * An attribute applied to a method files it under *methods* when the decorator runs, recognized by its qualified
+     name, instead of under *functions* until :class:`~pyTooling.MetaClasses.ExtendedType` moved it - a search
+     through every function the attribute marks, per method. In a class not built by ``ExtendedType``,
+     :meth:`~pyTooling.Attributes.Attribute.GetMethods` finds the method now, and
+     :meth:`~pyTooling.Attributes.Attribute.GetFunctions` no longer does.
    * **A package's license is stated as an SPDX expression only; no** ``License ::`` **classifier is added.**
      setuptools deprecated them, and the expression was already there - ``license`` has always been filled from
      :attr:`~pyTooling.Licensing.License.SPDXIdentifier`. A classifier passed by the caller is kept, because it is

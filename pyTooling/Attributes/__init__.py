@@ -169,9 +169,13 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			kind =     AttributeScope.Method
 			registry = attribute._methods
 		elif isinstance(entity, FunctionType):
-			names =    entity.__qualname__.split(".")
-			kind =     AttributeScope.Method if len(names) > 1 and names[-2] != "<locals>" else AttributeScope.Function
-			registry = attribute._functions
+			names = entity.__qualname__.split(".")
+			if len(names) > 1 and names[-2] != "<locals>":
+				kind =     AttributeScope.Method
+				registry = attribute._methods
+			else:
+				kind =     AttributeScope.Function
+				registry = attribute._functions
 		elif isinstance(entity, type):
 			kind =     AttributeScope.Class
 			registry = attribute._classes
@@ -276,8 +280,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope: Optional, class or module the methods' classes have to be nested in or defined in; ``None``
-		              accepts every method.
+		:param scope: Optional, class the methods are defined in; ``None`` accepts every method. Only a class built with
+		              :class:`~pyTooling.MetaClasses.ExtendedType` links its methods to it, so a method of another class
+		              isn't found by scope.
 		:returns:     A sequence of methods where this attribute is attached to.
 		"""
 		if scope is None:
@@ -285,7 +290,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 				yield c
 		else:
 			for m in cls._methods:
-				if m.__classobj__ is scope:
+				if getattr(m, "__classobj__", None) is scope:
 					yield m
 
 	@classmethod
