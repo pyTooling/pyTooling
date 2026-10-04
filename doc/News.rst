@@ -342,7 +342,8 @@ Version 10.x (2026)
    * :mod:`pyTooling.Dependency`
 
      * :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts a package dependency graph into a
-       :class:`pyTooling.Graph.Graph`: a vertex per package version, an edge per dependency.
+       :class:`pyTooling.Graph.Graph`: a vertex per package version, with its license, release time and URLs as
+       key-value pairs, and an edge per dependency.
 
    .. rubric:: Breaking Changes
 

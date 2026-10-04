@@ -32,10 +32,14 @@
 Unit tests for :mod:`pyTooling.Dependency`: building a dependency graph and solving it to the latest
 matching versions.
 """
-from pyTooling.Exceptions import ToolingException
-from pyTooling.Versioning import SemanticVersion
-from pyTooling.Dependency import PackageDependencyGraph, PackageStorage, Package, PackageVersion
-from pyTooling.Testing    import Testcase
+from datetime import datetime
+
+from pyTooling.Exceptions      import ToolingException
+from pyTooling.GenericPath.URL import URL
+from pyTooling.Licensing       import LicenseExpression
+from pyTooling.Versioning      import SemanticVersion
+from pyTooling.Dependency      import PackageDependencyGraph, PackageStorage, Package, PackageVersion
+from pyTooling.Testing         import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -468,3 +472,31 @@ class ToGraph(Testcase):
 
 		self.assertEqual(2, graph.VertexCount)
 		self.assertListEqual([library], [vertex.ID for vertex in graph.GetVertexByID(app).IterateSuccessorVertices()])
+
+	def test_KeyValuePairs(self) -> None:
+		dependencyGraph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=dependencyGraph)
+		package = storage.CreatePackage("colorama")
+		known = PackageVersion(SemanticVersion.Parse("0.4.6"), package, releasedAt=datetime(2022, 10, 25, 2, 30, 23))
+		known._licenseExpression = LicenseExpression.Parse("BSD-3-Clause")
+		known._licenseURL =        URL.Parse("https://github.com/tartley/colorama/blob/master/LICENSE.txt")
+		known._repositoryURL =     URL.Parse("https://github.com/tartley/colorama")
+		known._documentationURL =  URL.Parse("https://github.com/tartley/colorama#readme")
+		known._issueTrackerURL =   URL.Parse("https://github.com/tartley/colorama/issues")
+		known._projectURL =        URL.Parse("https://pypi.org/project/colorama/")
+		known._changelogURL =      URL.Parse("https://github.com/tartley/colorama/blob/master/CHANGELOG.rst")
+		unknown = PackageVersion(SemanticVersion.Parse("0.4.5"), package)
+
+		graph = dependencyGraph.ToGraph()
+
+		self.assertDictEqual({
+			"license":          "BSD-3-Clause",
+			"releasedAt":       "2022-10-25T02:30:23",
+			"licenseURL":       "https://github.com/tartley/colorama/blob/master/LICENSE.txt",
+			"repositoryURL":    "https://github.com/tartley/colorama",
+			"documentationURL": "https://github.com/tartley/colorama#readme",
+			"issueTrackerURL":  "https://github.com/tartley/colorama/issues",
+			"projectURL":       "https://pypi.org/project/colorama/",
+			"changelogURL":     "https://github.com/tartley/colorama/blob/master/CHANGELOG.rst",
+		}, graph.GetVertexByID(known)._dict)
+		self.assertDictEqual({"license": "NOASSERTION"}, graph.GetVertexByID(unknown)._dict)

@@ -29,11 +29,11 @@ from:
 * :class:`~pyTooling.Dependency.PackageDependencyGraph` collects the packages known from one or more storages.
 
 :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts it into a :class:`pyTooling.Graph.Graph`: a vertex
-per package version - the version is its ID, its license the key-value pair ``license`` - and an edge from each version
-to every version it depends on. The algorithms of
-:mod:`pyTooling.Graph` then apply - :meth:`~pyTooling.Graph.BaseGraph.IterateTopologically` yields the versions
-dependencies first, :meth:`~pyTooling.Graph.BaseGraph.HasCycle` finds a circular dependency, and
-:mod:`pyTooling.Graph.GraphViz` or :mod:`pyTooling.Graph.GraphML` write it for a viewer.
+per package version - the version is its ID; its license, release time and URLs are key-value pairs - and an edge from
+each version to every version it depends on. The algorithms of :mod:`pyTooling.Graph` then apply -
+:meth:`~pyTooling.Graph.BaseGraph.IterateTopologically` yields the versions dependencies first,
+:meth:`~pyTooling.Graph.BaseGraph.HasCycle` finds a circular dependency, and :mod:`pyTooling.Graph.GraphViz` or
+:mod:`pyTooling.Graph.GraphML` write it for a viewer.
 
 .. _DEPENDENCIES/Python:
 

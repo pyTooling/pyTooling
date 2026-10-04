@@ -1028,11 +1028,20 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 
 		Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex` of the graph, with the
 		:class:`PackageVersion` as its :attr:`~pyTooling.Graph.Vertex.ID`, so
-		:meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. The key-value pair
-		``license`` holds the version's license as SPDX expression, ``NOASSERTION`` if it's unknown. Every dependency
-		becomes an :class:`~pyTooling.Graph.Edge` from the package version needing to the package version it needs, so
-		an edge reads *needs*, and :meth:`Graph.IterateTopologically <pyTooling.Graph.BaseGraph.IterateTopologically>`
-		yields the package versions dependencies first.
+		:meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. Its key-value pairs
+		are strings:
+
+		* ``license`` - the license as SPDX expression, ``NOASSERTION`` if it's unknown;
+		* ``releasedAt`` - the release time in ISO 8601;
+		* ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
+		  ``changelogURL``.
+
+		All but ``license`` are set only if the version knows them; for a Python package, after its details were loaded.
+
+		Every dependency becomes an :class:`~pyTooling.Graph.Edge` from the package version needing to the package
+		version it needs, so an edge reads *needs*, and
+		:meth:`Graph.IterateTopologically <pyTooling.Graph.BaseGraph.IterateTopologically>` yields the package versions
+		dependencies first.
 
 		:returns: The graph, named like the package dependency graph.
 		"""
@@ -1042,13 +1051,24 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		for storage in self._storages.values():
 			for package in storage._packages.values():
 				for packageVersion in package._versions.values():
-					vertices[packageVersion] = Vertex(
-						vertexID=packageVersion,
-						keyValuePairs={
-							"license": str(packageVersion._licenseExpression)
-						},
-						graph=graph
-					)
+					keyValuePairs = {
+						"license": str(packageVersion._licenseExpression)
+					}
+					if packageVersion._releasedAt is not None:
+						keyValuePairs["releasedAt"] = packageVersion._releasedAt.isoformat()
+
+					for key, url in (
+						("licenseURL",       packageVersion._licenseURL),
+						("repositoryURL",    packageVersion._repositoryURL),
+						("documentationURL", packageVersion._documentationURL),
+						("issueTrackerURL",  packageVersion._issueTrackerURL),
+						("projectURL",       packageVersion._projectURL),
+						("changelogURL",     packageVersion._changelogURL)
+					):
+						if url is not None:
+							keyValuePairs[key] = str(url)
+
+					vertices[packageVersion] = Vertex(vertexID=packageVersion, keyValuePairs=keyValuePairs, graph=graph)
 
 		for packageVersion, vertex in vertices.items():
 			for dependencies in packageVersion._dependsOn.values():
