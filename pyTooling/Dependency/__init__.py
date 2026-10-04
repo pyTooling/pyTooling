@@ -1042,9 +1042,13 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		for storage in self._storages.values():
 			for package in storage._packages.values():
 				for packageVersion in package._versions.values():
-					vertex = Vertex(vertexID=packageVersion, graph=graph)
-					vertex["license"] = str(packageVersion._licenseExpression)
-					vertices[packageVersion] = vertex
+					vertices[packageVersion] = Vertex(
+						vertexID=packageVersion,
+						keyValuePairs={
+							"license": str(packageVersion._licenseExpression)
+						},
+						graph=graph
+					)
 
 		for packageVersion, vertex in vertices.items():
 			for dependencies in packageVersion._dependsOn.values():
