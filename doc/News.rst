@@ -421,6 +421,14 @@ Version 10.x (2026)
        reaches its end of life in October 2026. A package not stating ``pythonVersions`` gets
        ``python_requires >=3.11``.
 
+   * :mod:`pyTooling.Graph.GraphML`
+
+     * :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.FromGraph` and
+       :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.FromTree` wrote ``<data key="nodeValue">None</data>`` for a
+       vertex, edge or node without a value, and an edge without an ID got ``id="None"``. A missing value adds no data
+       item now, and an edge without an ID no ``id`` attribute - it is optional in GraphML.
+     * IDs and key names weren't escaped, so an ID with ``&``, ``<`` or ``"`` made the document invalid XML.
+
    * :mod:`pyTooling.Testing`
 
      * The markers were collected as testcases themselves. :deco:`~pyTooling.Testing.testsuite` and

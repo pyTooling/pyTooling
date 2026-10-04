@@ -41,12 +41,23 @@ from __future__            import annotations
 from enum                  import Enum, auto
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
+from xml.sax.saxutils      import escape as xml_escape
 
 from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
 from pyTooling.Tree        import Node as pyToolingNode
 
+
+
+def _escapeAttribute(value: Any) -> str:
+	"""
+	Escape a value for an XML attribute in double quotes: ``&``, ``<``, ``>`` and ``"``.
+
+	:param value: The value, converted by :func:`str`.
+	:returns:     The escaped text.
+	"""
+	return xml_escape(str(value), {'"': "&quot;"})
 
 @export
 class AttributeContext(Enum):
@@ -325,7 +336,9 @@ class Key(BaseWithID):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />\n"""
+		identifier =    _escapeAttribute(self._id)
+		attributeName = _escapeAttribute(self._attributeName)
+		return f"""{'  '*indent}<key id="{identifier}" for="{self._context}" attr.name="{attributeName}" attr.type="{self._attributeType}" />\n"""
 
 	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
@@ -394,7 +407,7 @@ class Data(Base):
 		data = data.replace("<", "&lt;")
 		data = data.replace(">", "&gt;")
 		data = data.replace("\n", "\\n")
-		return f"""{'  '*indent}<data key="{self._key._id}">{data}</data>\n"""
+		return f"""{'  '*indent}<data key="{_escapeAttribute(self._key._id)}">{data}</data>\n"""
 
 	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
@@ -434,7 +447,7 @@ class Node(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<node id="{self._id}" />\n"""
+		return f"""{'  '*indent}<node id="{_escapeAttribute(self._id)}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
 		"""
@@ -443,7 +456,7 @@ class Node(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<node id="{self._id}">\n"""
+		return f"""{'  '*indent}<node id="{_escapeAttribute(self._id)}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
 		"""
@@ -478,7 +491,7 @@ class Edge(BaseWithData):
 	_source: Node  #: Node the edge starts at.
 	_target: Node  #: Node the edge ends at.
 
-	def __init__(self, identifier: str, source: Node, target: Node) -> None:
+	def __init__(self, identifier: Nullable[str], source: Node, target: Node) -> None:
 		"""
 		Initialize an edge between two nodes.
 
@@ -509,6 +522,17 @@ class Edge(BaseWithData):
 		"""
 		return self._target
 
+	def _IDAttribute(self) -> str:
+		"""
+		Return the ``id`` attribute of this edge's tag, or nothing for an edge without an ID - it is optional in GraphML.
+
+		:returns: The attribute with a leading space, or an empty string.
+		"""
+		if self._id is None:
+			return ""
+		else:
+			return f' id="{_escapeAttribute(self._id)}"'
+
 	@readonly
 	def HasClosingTag(self) -> bool:
 		"""
@@ -525,7 +549,9 @@ class Edge(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />\n"""
+		source = _escapeAttribute(self._source._id)
+		target = _escapeAttribute(self._target._id)
+		return f"""{'  ' * indent}<edge{self._IDAttribute()} source="{source}" target="{target}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
 		"""
@@ -534,7 +560,9 @@ class Edge(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}">\n"""
+		source = _escapeAttribute(self._source._id)
+		target = _escapeAttribute(self._target._id)
+		return f"""{'  '*indent}<edge{self._IDAttribute()} source="{source}" target="{target}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
 		"""
@@ -696,7 +724,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
-{'  '*indent}<graph id="{self._id}"
+{'  '*indent}<graph id="{_escapeAttribute(self._id)}"
 {'  '*indent}  edgedefault="{self._edgeDefault!s}"
 {'  '*indent}  parse.nodes="{len(self._nodes)}"
 {'  '*indent}  parse.edges="{len(self._edges)}"
@@ -889,7 +917,7 @@ class Subgraph(Node, BaseGraph):
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
-{'  ' * indent}<graph id="{self._subgraphID}"
+{'  ' * indent}<graph id="{_escapeAttribute(self._subgraphID)}"
 {'  ' * indent}  edgedefault="{self._edgeDefault!s}"
 {'  ' * indent}  parse.nodes="{len(self._nodes)}"
 {'  ' * indent}  parse.edges="{len(self._edges)}"
@@ -1034,12 +1062,15 @@ class GraphMLDocument(Base):
 			"""
 			for vertex in pyTGraph.IterateVertices():
 				newNode = Node(vertex._id)
-				newNode.AddData(Data(nodeValue, vertex._value))
+				if vertex._value is not None:
+					newNode.AddData(Data(nodeValue, vertex._value))
+
 				for key, value in vertex._dict.items():
-					if document.ContainsKey(str(key)):
-						nodeKey = document.GetKey(f"node{key!s}")
+					keyID = f"node{key!s}"
+					if document.ContainsKey(keyID):
+						nodeKey = document.GetKey(keyID)
 					else:
-						nodeKey = document.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
+						nodeKey = document.AddKey(Key(keyID, AttributeContext.Node, str(key), AttributeTypes.String))
 					newNode.AddData(Data(nodeKey, value))
 
 				rootGraph.AddNode(newNode)
@@ -1049,12 +1080,15 @@ class GraphMLDocument(Base):
 				target = rootGraph.GetByID(edge._destination._id)
 
 				newEdge = Edge(edge._id, source, target)
-				newEdge.AddData(Data(edgeValue, edge._value))
+				if edge._value is not None:
+					newEdge.AddData(Data(edgeValue, edge._value))
+
 				for key, value in edge._dict.items():
-					if self.ContainsKey(str(key)):
-						edgeKey = self.GetBy(f"edge{key!s}")
+					keyID = f"edge{key!s}"
+					if self.ContainsKey(keyID):
+						edgeKey = self.GetKey(keyID)
 					else:
-						edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
+						edgeKey = self.AddKey(Key(keyID, AttributeContext.Edge, str(key), AttributeTypes.String))
 					newEdge.AddData(Data(edgeKey, value))
 
 				rootGraph.AddEdge(newEdge)
@@ -1064,12 +1098,15 @@ class GraphMLDocument(Base):
 				target = rootGraph.GetByID(link._destination._id)
 
 				newEdge = Edge(link._id, source, target)
-				newEdge.AddData(Data(edgeValue, link._value))
+				if link._value is not None:
+					newEdge.AddData(Data(edgeValue, link._value))
+
 				for key, value in link._dict.items():
-					if self.ContainsKey(str(key)):
-						edgeKey = self.GetKey(f"link{key!s}")
+					keyID = f"link{key!s}"
+					if self.ContainsKey(keyID):
+						edgeKey = self.GetKey(keyID)
 					else:
-						edgeKey = self.AddKey(Key(f"link{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
+						edgeKey = self.AddKey(Key(keyID, AttributeContext.Edge, str(key), AttributeTypes.String))
 					newEdge.AddData(Data(edgeKey, value))
 
 				rootGraph.AddEdge(newEdge)
@@ -1132,11 +1169,13 @@ class GraphMLDocument(Base):
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 
 		rootNode = self._graph.AddNode(Node(tree._id))
-		rootNode.AddData(Data(nodeValue, tree._value))
+		if tree._value is not None:
+			rootNode.AddData(Data(nodeValue, tree._value))
 
 		for i, node in enumerate(tree.GetDescendants()):
 			newNode = self._graph.AddNode(Node(node._id))
-			newNode.AddData(Data(nodeValue, node._value))
+			if node._value is not None:
+				newNode.AddData(Data(nodeValue, node._value))
 
 			newEdge = self._graph.AddEdge(Edge(f"e{i}", newNode, self._graph.GetNode(node._parent._id)))
 
