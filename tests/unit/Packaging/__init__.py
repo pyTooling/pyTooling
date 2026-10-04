@@ -92,6 +92,7 @@ class HelperFunctions(Testcase):
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
 		self.assertEqual(16, len(requirements))
+		self.assertEqual([], [requirement for requirement in requirements if "#" in requirement])
 
 	def test_loadRequirementsGit(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
@@ -104,6 +105,17 @@ class HelperFunctions(Testcase):
 
 		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.HTTPS-ZIP.txt"))
 		self.assertEqual(1, len(requirements))
+
+	def test_loadRequirementsWithComments(self) -> None:
+		"""A trailing comment isn't part of the requirement, while a URL's fragment is."""
+		from pyTooling.Packaging import loadRequirementsFile
+
+		requirements = loadRequirementsFile(Path("tests/data/Requirements/requirements.Comments.txt"))
+		self.assertEqual([
+			"colorama >= 0.4.6",
+			"pyGHDL @ https://github.com/ghdl/ghdl/archive/master.zip",
+			"pyTooling @ git+https://github.com/pyTooling/pyTooling.git@dev",
+		], requirements)
 
 	def test_loadRequirementsRecursive(self) -> None:
 		from pyTooling.Packaging import loadRequirementsFile
