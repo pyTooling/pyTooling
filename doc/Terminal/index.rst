@@ -17,7 +17,7 @@ Terminal
 
       An application derives from :ref:`TerminalApplication <TERM/TerminalApplication>` and writes its messages with the
       matching ``Write*`` method. Coloring is provided by
-      `colorama <https://GitHub.com/tartley/colorama>`__, so an application doesn't handle escape sequences itself.
+      :gh:`colorama <tartley/colorama>`, so an application doesn't handle escape sequences itself.
 
    .. grid-item::
       :columns: 6

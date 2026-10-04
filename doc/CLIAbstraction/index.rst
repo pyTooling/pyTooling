@@ -241,4 +241,4 @@ Consumers
 This abstraction layer is used by:
 
 * ✅ Wrap command line interfaces of EDA tools (Electronic Design Automation) in Python classes. |br|
-  `pyEDAA.CLITool <https://github.com/edaa-org/pyEDAA.CLITool>`__
+  :gh:`pyEDAA.CLITool <edaa-org/pyEDAA.CLITool>`

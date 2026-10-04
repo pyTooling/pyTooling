@@ -167,9 +167,9 @@ def getsizeof(obj: Any) -> int:
 
 	   The code is based on code snippets and ideas from:
 
-	   * `Compute Memory Footprint of an Object and its Contents <https://code.activestate.com/recipes/577504/>`__ (MIT Lizense)
+	   * `Compute Memory Footprint of an Object and its Contents <https://code.activestate.com/recipes/577504/>`__ (MIT License)
 	   * `How do I determine the size of an object in Python? <https://stackoverflow.com/a/30316760/3719459>`__ (CC BY-SA 4.0)
-	   * `Python __slots__, slots, and object layout <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots>`__ (MIT Lizense)
+	   * :gh:`Python __slots__, slots, and object layout <mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots>` (MIT License)
 	"""
 	from sys import getsizeof as sys_getsizeof
 
@@ -419,7 +419,7 @@ def zipdicts(*dicts: dict[Hashable, Any]) -> Generator[tuple[Any, ...], None, No
 
 	   The code is based on code snippets and ideas from:
 
-	   * `zipping together Python dicts <https://github.com/mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>`__ (MIT Lizense)
+	   * :gh:`zipping together Python dicts <mCodingLLC/VideosSampleCode/tree/master/videos/101_zip_dict>` (MIT License)
 	"""
 	if len(dicts) == 0:
 		raise ValueError("Called 'zipdicts' without any dictionary parameter.")

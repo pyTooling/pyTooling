@@ -63,8 +63,8 @@ class InternalError(LinkedListError):
 	"""
 	The exception is raised when the linked list's internal state became inconsistent.
 
-	The exception message states the discovered inconsistency. Please create a `bug report
-	<https://GitHub.com/pyTooling/pyTooling/issues>`__ if this exception is raised.
+	The exception message states the discovered inconsistency. Please create a
+	:gh:`bug report <pyTooling/pyTooling/issues>` if this exception is raised.
 	"""
 
 

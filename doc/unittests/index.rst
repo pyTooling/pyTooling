@@ -8,5 +8,5 @@ Unittest Summary Report
 
 ----------
 
-Unittest report generated with `pytest <https://github.com/pytest-dev/pytest>`__ and visualized by
-`sphinx-reports <https://github.com/pyTooling/sphinx-reports>`__.
+Unittest report generated with :gh:`pytest <pytest-dev/pytest>` and visualized by
+:gh:`sphinx-reports <pyTooling/sphinx-reports>`.

@@ -3,14 +3,14 @@
 News
 ####
 
-See `pyTooling Release Pages <https://github.com/pyTooling/pyTooling/releases>`__ for detail release notes on every
+See :gh:`pyTooling Release Pages <pyTooling/pyTooling/releases>` for detail release notes on every
 release.
 
 
 Version 10.x (2026)
 *******************
 
-.. topic:: `v10.0.0 - unreleased <https://github.com/pyTooling/pyTooling/releases/v10.0.0>`__
+.. topic:: :gh:`v10.0.0 - unreleased <pyTooling/pyTooling/releases/v10.0.0>`
 
    .. rubric:: New Features
 
@@ -420,7 +420,7 @@ Version 10.x (2026)
 Version 9.x (2026)
 ******************
 
-.. topic:: `v9.0.0 - 20.08.2026 <https://github.com/pyTooling/pyTooling/releases/v9.0.0>`__
+.. topic:: :gh:`v9.0.0 - 20.08.2026 <pyTooling/pyTooling/releases/v9.0.0>`
 
    .. rubric:: New Features
 
@@ -474,7 +474,7 @@ Version 9.x (2026)
 Version 8.x (2025/2026)
 ***********************
 
-.. topic:: `v8.19.0 - 31.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.19.0>`__
+.. topic:: :gh:`v8.19.0 - 31.07.2026 <pyTooling/pyTooling/releases/v8.19.0>`
 
    .. rubric:: Changes
 
@@ -502,7 +502,7 @@ Version 8.x (2025/2026)
      *"to access"*.
    * Documentation coverage rose from 76.28 % to 80.97 %.
 
-.. topic:: `v8.18.0 - 30.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.18.0>`__
+.. topic:: :gh:`v8.18.0 - 30.07.2026 <pyTooling/pyTooling/releases/v8.18.0>`
 
    .. rubric:: New Features
 
@@ -552,7 +552,7 @@ Version 8.x (2025/2026)
 
      * ``YearMonthDayVersion`` dropped the day from ``__str__`` and ``__repr__``.
 
-.. topic:: `v8.17.0 - 20.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.17.0>`__
+.. topic:: :gh:`v8.17.0 - 20.07.2026 <pyTooling/pyTooling/releases/v8.17.0>`
 
    .. rubric:: New Features
 
@@ -564,13 +564,13 @@ Version 8.x (2025/2026)
 
      * Added ``SupervisedWarningCollector``, ``ThreadSupervisor`` and their exceptions (beta).
 
-.. topic:: `v8.16.1 - 08.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.16.1>`__
+.. topic:: :gh:`v8.16.1 - 08.07.2026 <pyTooling/pyTooling/releases/v8.16.1>`
 
    .. rubric:: Bug Fixes
 
    * Reverted a wrong dependency upgrade. Same day as v8.16.0, which carries the features below.
 
-.. topic:: `v8.16.0 - 08.07.2026 <https://github.com/pyTooling/pyTooling/releases/v8.16.0>`__
+.. topic:: :gh:`v8.16.0 - 08.07.2026 <pyTooling/pyTooling/releases/v8.16.0>`
 
    .. rubric:: New Features
 
@@ -580,7 +580,7 @@ Version 8.x (2025/2026)
      * Reworked ``_PrintVersion``: show project, documentation and issue URLs if defined as dunder-variables.
      * Added ``_GetLatestVersion``, showing whether a newer version is available.
 
-.. topic:: `v8.15.0 - 21.06.2026 <https://github.com/pyTooling/pyTooling/releases/v8.15.0>`__
+.. topic:: :gh:`v8.15.0 - 21.06.2026 <pyTooling/pyTooling/releases/v8.15.0>`
 
    .. rubric:: New Features
 
@@ -593,7 +593,7 @@ Version 8.x (2025/2026)
      * Added the severity levels ``Exception``, ``ExceptionCause``, ``ExceptionNote``, ``CriticalNote``,
        ``WarningNote`` and ``Silent``, and printing of exception and warning notes.
 
-.. topic:: `v8.14.0 - 21.03.2026 <https://github.com/pyTooling/pyTooling/releases/v8.14.0>`__
+.. topic:: :gh:`v8.14.0 - 21.03.2026 <pyTooling/pyTooling/releases/v8.14.0>`
 
    .. rubric:: New Features
 
@@ -611,7 +611,7 @@ Version 8.x (2025/2026)
 
      * ``WriteLayerFiles`` accepts an optional ``fileNamePattern``.
 
-.. topic:: `v8.13.0 - 19.03.2026 <https://github.com/pyTooling/pyTooling/releases/v8.13.0>`__
+.. topic:: :gh:`v8.13.0 - 19.03.2026 <pyTooling/pyTooling/releases/v8.13.0>`
 
    .. rubric:: New Features
 
@@ -631,17 +631,17 @@ Version 8.x (2025/2026)
 
      * ``WarningCollector.Raise`` accepts an optional ``cause`` parameter.
 
-.. topic:: `v8.12.0 - 07.02.2026 <https://github.com/pyTooling/pyTooling/releases/v8.12.0>`__
+.. topic:: :gh:`v8.12.0 - 07.02.2026 <pyTooling/pyTooling/releases/v8.12.0>`
 
    .. rubric:: Changes
 
-   * Removed bootstrap code (contributed by `@gtsiam <https://github.com/gtsiam>`__).
+   * Removed bootstrap code (contributed by :gh:`@gtsiam <gtsiam>`).
 
    .. rubric:: Bug Fixes
 
    * Fixed a buffer overflow exception caused by ``__GetTerminalSizeOnLinux``.
 
-.. topic:: `v8.11.0 - 18.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.11.0>`__
+.. topic:: :gh:`v8.11.0 - 18.01.2026 <pyTooling/pyTooling/releases/v8.11.0>`
 
    .. rubric:: New Features
 
@@ -650,7 +650,7 @@ Version 8.x (2025/2026)
      * Detect whether the program runs in a CI environment (AppVeyor, GitHub Actions, GitLab CI, Travis CI), with
        the new properties ``IsCI``, ``IsAppVeyor``, ``IsGitHub``, ``IsGitLab`` and ``IsTravisCI``.
 
-.. topic:: `v8.10.0 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.10.0>`__
+.. topic:: :gh:`v8.10.0 - 08.01.2026 <pyTooling/pyTooling/releases/v8.10.0>`
 
    .. rubric:: New Features
 
@@ -664,13 +664,13 @@ Version 8.x (2025/2026)
 
      * Reworked ``Executable.Terminate()`` and ``Executable.ExitCode``.
 
-.. topic:: `v8.9.1 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.9.1>`__
+.. topic:: :gh:`v8.9.1 - 08.01.2026 <pyTooling/pyTooling/releases/v8.9.1>`
 
    .. rubric:: Changes
 
    * Bumped copyright information.
 
-.. topic:: `v8.9.0 - 08.01.2026 <https://github.com/pyTooling/pyTooling/releases/v8.9.0>`__
+.. topic:: :gh:`v8.9.0 - 08.01.2026 <pyTooling/pyTooling/releases/v8.9.0>`
 
    .. rubric:: New Features
 
@@ -685,7 +685,7 @@ Version 8.x (2025/2026)
 
    * Fixed the uninitialized field ``_nodesWithoutID`` in :class:`pyTooling.Tree.Node`.
 
-.. topic:: `v8.8.0 - 10.11.2025 <https://github.com/pyTooling/pyTooling/releases/v8.8.0>`__
+.. topic:: :gh:`v8.8.0 - 10.11.2025 <pyTooling/pyTooling/releases/v8.8.0>`
 
    .. rubric:: New Features
 
@@ -703,26 +703,26 @@ Version 8.x (2025/2026)
 
    * Removed a wrong ``with_traceback`` overload from ``ExceptionBase``, which caused faults in pytest.
 
-.. topic:: `v8.7.6 - 28.10.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.6>`__
+.. topic:: :gh:`v8.7.6 - 28.10.2025 <pyTooling/pyTooling/releases/v8.7.6>`
 
    .. rubric:: New Features
 
    * Implemented ``__str__`` for :class:`~pyTooling.Packaging.VersionInformation`.
 
-.. topic:: `v8.7.5 - 27.10.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.5>`__
+.. topic:: :gh:`v8.7.5 - 27.10.2025 <pyTooling/pyTooling/releases/v8.7.5>`
 
    .. rubric:: Changes
 
    * Bumped dependencies.
    * Fixed a missing ``needs`` rule in the pipeline.
 
-.. topic:: `v8.7.4 - 19.10.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.4>`__
+.. topic:: :gh:`v8.7.4 - 19.10.2025 <pyTooling/pyTooling/releases/v8.7.4>`
 
    .. rubric:: Changes
 
    * Added Python 3.14 support to the wheel package, and dropped Python 3.9 and 3.10.
 
-.. topic:: `v8.7.3 - 21.09.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.3>`__
+.. topic:: :gh:`v8.7.3 - 21.09.2025 <pyTooling/pyTooling/releases/v8.7.3>`
 
    .. rubric:: New Features
 
@@ -737,7 +737,7 @@ Version 8.x (2025/2026)
    * Reworked accessing annotations in the metaclasses due to :pep:`649`.
    * Worked around a packaging problem with :file:`py.typed`.
 
-.. topic:: `v8.7.2 - 04.09.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.2>`__
+.. topic:: :gh:`v8.7.2 - 04.09.2025 <pyTooling/pyTooling/releases/v8.7.2>`
 
    .. rubric:: Bug Fixes
 
@@ -747,7 +747,7 @@ Version 8.x (2025/2026)
 
    * Disabled Ubuntu ARM images due to instability at GitHub.
 
-.. topic:: `v8.7.0 - 23.08.2025 <https://github.com/pyTooling/pyTooling/releases/v8.7.0>`__
+.. topic:: :gh:`v8.7.0 - 23.08.2025 <pyTooling/pyTooling/releases/v8.7.0>`
 
    .. rubric:: New Features
 
@@ -763,7 +763,7 @@ Version 8.x (2025/2026)
 
    * Removed the experimental ``classproperty`` decorator - support was explicitly revoked by Python.
 
-.. topic:: `v8.6.0 - 12.08.2025 <https://github.com/pyTooling/pyTooling/releases/v8.6.0>`__
+.. topic:: :gh:`v8.6.0 - 12.08.2025 <pyTooling/pyTooling/releases/v8.6.0>`
 
    .. rubric:: New Features
 
@@ -771,13 +771,13 @@ Version 8.x (2025/2026)
 
      * Added the classes :class:`~pyTooling.Versioning.VersionRange` and :class:`~pyTooling.Versioning.VersionSet`.
 
-.. topic:: `v8.5.1 - 14.06.2025 <https://github.com/pyTooling/pyTooling/releases/v8.5.1>`__
+.. topic:: :gh:`v8.5.1 - 14.06.2025 <pyTooling/pyTooling/releases/v8.5.1>`
 
    .. rubric:: Bug Fixes
 
    * Fixed the instantiation of ``YearReleaseVersion`` from ``CalendarVersion.Parse``.
 
-.. topic:: `v8.5.0 - 31.05.2025 <https://github.com/pyTooling/pyTooling/releases/v8.5.0>`__
+.. topic:: :gh:`v8.5.0 - 31.05.2025 <pyTooling/pyTooling/releases/v8.5.0>`
 
    .. rubric:: New Features
 
@@ -797,7 +797,7 @@ Version 8.x (2025/2026)
        :file:`__init__.py` from a parent namespace is excluded, because such a file breaks namespace packages
        without notice.
 
-.. topic:: `v8.4.0 - 17.04.2025 <https://github.com/pyTooling/pyTooling/releases/v8.4.0>`__
+.. topic:: :gh:`v8.4.0 - 17.04.2025 <pyTooling/pyTooling/releases/v8.4.0>`
 
    .. rubric:: New Features
 
@@ -810,7 +810,7 @@ Version 8.x (2025/2026)
      symbolic links, multiple filenames per file object (hardlinks), aggregated subdirectory sizes, a user defined
      collapse function, and conversion to a :mod:`pyTooling.Tree`.
 
-.. topic:: `v8.3.0 - 16.03.2025 <https://github.com/pyTooling/pyTooling/releases/v8.3.0>`__
+.. topic:: :gh:`v8.3.0 - 16.03.2025 <pyTooling/pyTooling/releases/v8.3.0>`
 
    .. rubric:: New Features
 
@@ -832,7 +832,7 @@ Version 8.x (2025/2026)
 
    * Added the :mod:`pyTooling.Warning` documentation.
 
-.. topic:: `v8.2.0 - 23.02.2025 <https://github.com/pyTooling/pyTooling/releases/v8.2.0>`__
+.. topic:: :gh:`v8.2.0 - 23.02.2025 <pyTooling/pyTooling/releases/v8.2.0>`
 
    .. rubric:: New Features
 
@@ -840,7 +840,7 @@ Version 8.x (2025/2026)
 
      * Added ``WarningCollector`` to handle warnings like exceptions and send them along the call stack.
 
-.. topic:: `v8.1.0 - 25.01.2025 <https://github.com/pyTooling/pyTooling/releases/v8.1.0>`__
+.. topic:: :gh:`v8.1.0 - 25.01.2025 <pyTooling/pyTooling/releases/v8.1.0>`
 
    .. rubric:: New Features
 
@@ -857,7 +857,7 @@ Version 8.x (2025/2026)
 
      * Added the ``Exclude`` context manager.
 
-.. topic:: `v8.0.3 - 17.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.3>`__
+.. topic:: :gh:`v8.0.3 - 17.11.2024 <pyTooling/pyTooling/releases/v8.0.3>`
 
    .. rubric:: Changes
 
@@ -868,7 +868,7 @@ Version 8.x (2025/2026)
 
    * README files, requirement files, GraphML files and JSON/YAML configurations are opened with UTF-8 encoding.
 
-.. topic:: `v8.0.2 - 12.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.2>`__
+.. topic:: :gh:`v8.0.2 - 12.11.2024 <pyTooling/pyTooling/releases/v8.0.2>`
 
    .. rubric:: Bug Fixes
 
@@ -876,13 +876,13 @@ Version 8.x (2025/2026)
 
      * Fixed the usage of a variable ``max`` that was unassigned and fell back to the builtin function.
 
-.. topic:: `v8.0.1 - 10.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.1>`__
+.. topic:: :gh:`v8.0.1 - 10.11.2024 <pyTooling/pyTooling/releases/v8.0.1>`
 
    .. rubric:: Bug Fixes
 
    * Fixed the platform name for MSYS2/MinGW32 with Python 3.12.
 
-.. topic:: `v8.0.0 - 09.11.2024 <https://github.com/pyTooling/pyTooling/releases/v8.0.0>`__
+.. topic:: :gh:`v8.0.0 - 09.11.2024 <pyTooling/pyTooling/releases/v8.0.0>`
 
    .. rubric:: New Features
 
@@ -918,7 +918,7 @@ Version 8.x (2025/2026)
 Version 7.x (2024)
 ******************
 
-.. topic:: `v7.0.0 - 27.10.2024 <https://github.com/pyTooling/pyTooling/releases/v7.0.0>`__
+.. topic:: :gh:`v7.0.0 - 27.10.2024 <pyTooling/pyTooling/releases/v7.0.0>`
 
    .. rubric:: New Features
 
@@ -936,7 +936,7 @@ Version 7.x (2024)
 Version 6.x (2024)
 ******************
 
-.. topic:: `v6.7.0 - 29.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.7.0>`__
+.. topic:: :gh:`v6.7.0 - 29.09.2024 <pyTooling/pyTooling/releases/v6.7.0>`
 
    .. rubric:: New Features
 
@@ -956,26 +956,26 @@ Version 6.x (2024)
 
      * Distinguish macOS for Intel (x86-64) from macOS for ARM (aarch64).
 
-.. topic:: `v6.6.2 - 22.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.6.2>`__
+.. topic:: :gh:`v6.6.2 - 22.09.2024 <pyTooling/pyTooling/releases/v6.6.2>`
 
    .. rubric:: Bug Fixes
 
    * Fixed some coding style issues.
 
-.. topic:: `v6.6.1 - 22.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.6.1>`__
+.. topic:: :gh:`v6.6.1 - 22.09.2024 <pyTooling/pyTooling/releases/v6.6.1>`
 
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.TerminalUI`
 
      * ``TerminalBaseApplication.GetTerminalSize``: added the missing check for FreeBSD (provided by
-       `@yurivict <https://github.com/yurivict>`__).
+       :gh:`@yurivict <yurivict>`).
 
    .. rubric:: CI Pipeline
 
    * Split the pipeline into a main pipeline, a benchmark pipeline and a performance pipeline.
 
-.. topic:: `v6.6.0 - 18.09.2024 <https://github.com/pyTooling/pyTooling/releases/v6.6.0>`__
+.. topic:: :gh:`v6.6.0 - 18.09.2024 <pyTooling/pyTooling/releases/v6.6.0>`
 
    .. rubric:: New Features
 
@@ -1009,7 +1009,7 @@ Version 6.x (2024)
 
      * Fixed the extension returned by ``SharedLibraryExtension`` for macOS.
 
-.. topic:: `v6.5.1 - 15.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.5.1>`__
+.. topic:: :gh:`v6.5.1 - 15.07.2024 <pyTooling/pyTooling/releases/v6.5.1>`
 
    .. rubric:: Bug Fixes
 
@@ -1017,7 +1017,7 @@ Version 6.x (2024)
 
      * Fixed the formatting in ``URL.__str__()`` when the URL has no query part.
 
-.. topic:: `v6.5.0 - 15.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.5.0>`__
+.. topic:: :gh:`v6.5.0 - 15.07.2024 <pyTooling/pyTooling/releases/v6.5.0>`
 
    .. rubric:: New Features
 
@@ -1043,7 +1043,7 @@ Version 6.x (2024)
 
      * Fixed the regular expression parsing a URL.
 
-.. topic:: `v6.4.0 - 04.07.2024 <https://github.com/pyTooling/pyTooling/releases/v6.4.0>`__
+.. topic:: :gh:`v6.4.0 - 04.07.2024 <pyTooling/pyTooling/releases/v6.4.0>`
 
    .. rubric:: New Features
 
@@ -1063,7 +1063,7 @@ Version 6.x (2024)
 
      * Fixed ``ExecutableExtension``, ``SharedLibraryExtension`` and ``__str__`` for FreeBSD.
 
-.. topic:: `v6.3.0 - 02.06.2024 <https://github.com/pyTooling/pyTooling/releases/v6.3.0>`__
+.. topic:: :gh:`v6.3.0 - 02.06.2024 <pyTooling/pyTooling/releases/v6.3.0>`
 
    .. rubric:: New Features
 
@@ -1083,7 +1083,7 @@ Version 6.x (2024)
 
      * The default ASCII characters for tree rendering are more compact.
 
-.. topic:: `v6.2.0 - 30.05.2024 <https://github.com/pyTooling/pyTooling/releases/v6.2.0>`__
+.. topic:: :gh:`v6.2.0 - 30.05.2024 <pyTooling/pyTooling/releases/v6.2.0>`
 
    .. rubric:: New Features
 
@@ -1103,7 +1103,7 @@ Version 6.x (2024)
 
    * Some functions raised a :exc:`TypeError` when ``None`` was passed; they raise a :exc:`ValueError` now.
 
-.. topic:: `v6.1.0 - 09.04.2024 <https://github.com/pyTooling/pyTooling/releases/v6.1.0>`__
+.. topic:: :gh:`v6.1.0 - 09.04.2024 <pyTooling/pyTooling/releases/v6.1.0>`
 
    .. rubric:: Breaking Changes
 
@@ -1119,13 +1119,13 @@ Version 6.x (2024)
 
      * Fixed the search for methods with attributes in multiple inheritance scenarios.
 
-.. topic:: `v6.0.1 - 16.01.2024 <https://github.com/pyTooling/pyTooling/releases/v6.0.1>`__
+.. topic:: :gh:`v6.0.1 - 16.01.2024 <pyTooling/pyTooling/releases/v6.0.1>`
 
    .. rubric:: Bug Fixes
 
    * Implemented the bootstrap feature in all modules.
 
-.. topic:: `v6.0.0 - 14.01.2024 <https://github.com/pyTooling/pyTooling/releases/v6.0.0>`__
+.. topic:: :gh:`v6.0.0 - 14.01.2024 <pyTooling/pyTooling/releases/v6.0.0>`
 
    .. rubric:: New Features
 
@@ -1174,7 +1174,7 @@ Version 6.x (2024)
 Version 5.x (2023)
 ******************
 
-.. topic:: `v5.0.0 - 02.07.2023 <https://github.com/pyTooling/pyTooling/releases/v5.0.0>`__
+.. topic:: :gh:`v5.0.0 - 02.07.2023 <pyTooling/pyTooling/releases/v5.0.0>`
 
    .. rubric:: New Features
 
@@ -1182,7 +1182,7 @@ Version 5.x (2023)
 
      * :class:`~pyTooling.MetaClasses.ExtendedType` supports mixin-classes and the delayed creation of slots, and
        generates initializers for annotated fields and annotated class fields, which previously raised because of
-       slots (contributed by `@skoehler <https://github.com/skoehler>`__).
+       slots (contributed by :gh:`@skoehler <skoehler>`).
      * New exceptions: ``ExtendedTypeError``, ``BaseClassWithoutSlotsError``, ``BaseClassWithNonEmptySlotsError``,
        ``BaseClassIsNotAMixinError`` and :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`.
 
@@ -1220,7 +1220,7 @@ Version 5.x (2023)
    .. rubric:: Changes
 
    * :class:`~pyTooling.MetaClasses.ExtendedType` supports multiple inheritance and mixins with deferred slots
-     (contributed by `@skoehler <https://github.com/skoehler>`__).
+     (contributed by :gh:`@skoehler <skoehler>`).
    * Improved the performance of :func:`~pyTooling.Common.mergedicts` by 10x, and the error handling in
      :func:`~pyTooling.Common.mergedicts` and :func:`~pyTooling.Common.zipdicts`.
 
@@ -1228,18 +1228,18 @@ Version 5.x (2023)
 
    * Reworked :class:`~pyTooling.MetaClasses.ExtendedType` for slots in multiple inheritance scenarios, and the
      internal inheritance graphs, which fixes :mod:`pyTooling.Configuration`, ``pyTooling.GraphML`` and
-     :mod:`pyTooling.TerminalUI` (contributed by `@skoehler <https://github.com/skoehler>`__).
+     :mod:`pyTooling.TerminalUI` (contributed by :gh:`@skoehler <skoehler>`).
 
 Version 4.x (2023)
 ******************
 
-.. topic:: `v4.0.1 - 26.03.2023 <https://github.com/pyTooling/pyTooling/releases/v4.0.1>`__
+.. topic:: :gh:`v4.0.1 - 26.03.2023 <pyTooling/pyTooling/releases/v4.0.1>`
 
    .. rubric:: Changes
 
    * Republished the package to PyPI. Same day as v4.0.0, which carries the changes below.
 
-.. topic:: `v4.0.0 - 26.03.2023 <https://github.com/pyTooling/pyTooling/releases/v4.0.0>`__
+.. topic:: :gh:`v4.0.0 - 26.03.2023 <pyTooling/pyTooling/releases/v4.0.0>`
 
    .. rubric:: New Features
 
@@ -1270,7 +1270,7 @@ Version 4.x (2023)
 Version 3.x (2023)
 ******************
 
-.. topic:: `v3.0.0 - 10.03.2023 <https://github.com/pyTooling/pyTooling/releases/v3.0.0>`__
+.. topic:: :gh:`v3.0.0 - 10.03.2023 <pyTooling/pyTooling/releases/v3.0.0>`
 
    .. rubric:: New Features
 
@@ -1446,7 +1446,7 @@ CLIAbstraction
 
    .. rubric:: Extracted CLIAbstraction from pyIPCMI
 
-* The CLI abstraction has been extracted from `pyIPCMI <https://GitHub.com/Paebbels/pyIPCMI>`__.
+* The CLI abstraction has been extracted from :gh:`pyIPCMI <Paebbels/pyIPCMI>`.
 
 
 CommonClasses
@@ -1513,7 +1513,7 @@ Exceptions
 
    .. rubric:: Oct. 2019 - Initial Release
 
-* An initial set of exceptions has been extracted from `pyIPCMI <https://GitHub.com/Paebbels/pyIPCMI>`__.
+* An initial set of exceptions has been extracted from :gh:`pyIPCMI <Paebbels/pyIPCMI>`.
 
 
 GenericPath
@@ -1552,7 +1552,7 @@ GenericPath
 
    .. rubric:: Oct. 2019 - Initial Release
 
-* An initial set of exceptions has been extracted from `pyIPCMI <https://GitHub.com/Paebbels/pyIPCMI>`__.
+* An initial set of exceptions has been extracted from :gh:`pyIPCMI <Paebbels/pyIPCMI>`.
 
 
 MetaClasses
@@ -1689,5 +1689,5 @@ TerminalUI
 
    .. rubric:: Dec. 2019 - Initial Release
 
-* TerminalUI has been extracted from `pyIPCMI <https://GitHub.com/Paebbels/pyIPCMI>`__.
+* TerminalUI has been extracted from :gh:`pyIPCMI <Paebbels/pyIPCMI>`.
 * Basic functionality to use a text based application in a terminal window.

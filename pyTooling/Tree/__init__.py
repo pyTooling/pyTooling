@@ -80,7 +80,7 @@ class InternalError(TreeError):
 	   This exception should never be raised.
 
 	   If so, please create an issue at GitHub so the data structure corruption can be investigated and fixed. |br|
-	   `⇒ Bug Tracker at GitHub <https://github.com/pyTooling/pyTooling/issues>`__
+	   :gh:`⇒ Bug Tracker at GitHub <pyTooling/pyTooling/issues>`
 	"""
 
 

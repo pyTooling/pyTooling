@@ -18,6 +18,6 @@ Documentation Coverage
 
 ----------
 
-Documentation coverage generated with `docstr-coverage <https://github.com/HunterMcGushion/docstr_coverage>`__ and
-visualized by `sphinx-reports <https://github.com/pyTooling/sphinx-reports>`__.
+Documentation coverage generated with :gh:`docstr-coverage <HunterMcGushion/docstr_coverage>` and
+visualized by :gh:`sphinx-reports <pyTooling/sphinx-reports>`.
 
