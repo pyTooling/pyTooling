@@ -112,7 +112,7 @@ Attributes
 
 
                prog = Program()
-               for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase):
+               for method, attributes in prog.GetMethodsWithAttributes(predicate=TestCase).items():
                  pass
 
          .. tab-item:: Class Attributes
