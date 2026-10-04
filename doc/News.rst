@@ -336,7 +336,7 @@ Version 10.x (2026)
 
    .. rubric:: Breaking Changes
 
-   * **The four mixin-classes of :mod:`pyTooling.GenericPath` are renamed to the ``***Mixin`` spelling**
+   * ⚠️ **The four mixin-classes of** :mod:`pyTooling.GenericPath` **are renamed to the** ``***Mixin`` **spelling**
      the rest of the package uses: ``PathMixIn`` |rarr| :class:`~pyTooling.GenericPath.PathMixin`, ``ElementMixIn``
      |rarr| :class:`~pyTooling.GenericPath.ElementMixin`, ``RootMixIn`` |rarr|
      :class:`~pyTooling.GenericPath.RootMixin` and ``SystemMixIn`` |rarr|
