@@ -416,3 +416,53 @@ class SolveLatest(Testcase):
 			_ = root.SolveLatest()
 
 		self.assertIn("Could not resolve dependencies", str(ex.exception))
+
+
+class ToGraph(Testcase):
+	def test_Empty(self) -> None:
+		graph = PackageDependencyGraph("graph").ToGraph()
+
+		self.assertEqual("graph", graph.Name)
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+
+	def test_Dependencies(self) -> None:
+		dependencyGraph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=dependencyGraph)
+		root = storage.CreatePackageVersion("app", "v0.0")
+		storage.CreatePackageVersions("packA", ("v1.0", "v1.1"))
+		storage.CreatePackageVersions("packB", ("v1.0", "v2.0", "v2.1"))
+
+		root.AddDependencyTo("packA", ("v1.0", "v1.1"))
+		(pAv10 := storage["packA"]["v1.0"]).AddDependencyTo("packB", "v1.0")
+		(pAv11 := storage["packA"]["v1.1"]).AddDependencyTo("packB", ("v2.0", "v2.1"))
+
+		graph = dependencyGraph.ToGraph()
+
+		self.assertEqual(6, graph.VertexCount)
+		self.assertEqual(5, graph.EdgeCount)
+
+		rootVertex = graph.GetVertexByID(root)
+		self.assertIs(root, rootVertex.Value)
+		self.assertSetEqual({pAv10, pAv11}, {vertex.Value for vertex in rootVertex.IterateSuccessorVertices()})
+		self.assertSetEqual(
+			{storage["packB"]["v2.0"], storage["packB"]["v2.1"]},
+			{vertex.Value for vertex in graph.GetVertexByID(pAv11).IterateSuccessorVertices()}
+		)
+
+		order = [vertex.Value for vertex in graph.IterateTopologically()]
+		self.assertLess(order.index(pAv10), order.index(root))
+		self.assertLess(order.index(storage["packB"]["v1.0"]), order.index(pAv10))
+
+	def test_AcrossStorages(self) -> None:
+		dependencyGraph = PackageDependencyGraph("graph")
+		python = PackageStorage("Python", graph=dependencyGraph)
+		system = PackageStorage("System", graph=dependencyGraph)
+		app = python.CreatePackageVersion("app", "v1.0")
+		library = system.CreatePackageVersion("libfoo", "v2.0")
+		app.AddDependencyToPackageVersion(library)
+
+		graph = dependencyGraph.ToGraph()
+
+		self.assertEqual(2, graph.VertexCount)
+		self.assertListEqual([library], [vertex.Value for vertex in graph.GetVertexByID(app).IterateSuccessorVertices()])

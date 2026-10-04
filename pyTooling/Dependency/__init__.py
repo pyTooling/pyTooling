@@ -41,6 +41,8 @@ Implementation of package dependencies.
       |rarr| The implementation for Python packages on a package index.
    :mod:`pyTooling.Versioning`
       |rarr| The version numbers a requirement is resolved against.
+   :mod:`pyTooling.Graph`
+      |rarr| The graph a dependency graph converts to (:meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph`).
 """
 from __future__            import annotations
 
@@ -52,6 +54,7 @@ from pyTooling.MetaClasses     import ExtendedType
 from pyTooling.Exceptions      import ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL import URL
+from pyTooling.Graph           import Graph, Vertex
 from pyTooling.Licensing       import LicenseExpression, BaseLicense, UnknownLicense
 from pyTooling.Versioning      import SemanticVersion
 from pyTooling.Warning         import Warning
@@ -1018,6 +1021,35 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		"""
 		for storage in self._storages.values():
 			storage.SortPackageVersions()
+
+	def ToGraph(self) -> Graph:
+		"""
+		Convert the package dependency graph into a graph of package versions and their dependencies.
+
+		Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex` of the graph, with the
+		:class:`PackageVersion` as its :attr:`~pyTooling.Graph.Vertex.ID` and its :attr:`~pyTooling.Graph.Vertex.Value`,
+		so :meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. A vertex has no
+		name; a consumer labels it by :pycode:`str(vertex.Value)`. Every dependency becomes an
+		:class:`~pyTooling.Graph.Edge` from the package version needing to the package version it needs, so an edge reads
+		*needs*, and :meth:`Graph.IterateTopologically <pyTooling.Graph.BaseGraph.IterateTopologically>` yields the
+		package versions dependencies first.
+
+		:returns: The graph, named like the package dependency graph.
+		"""
+		graph = Graph(name=self._name)
+
+		vertices: dict[PackageVersion, Vertex] = {}
+		for storage in self._storages.values():
+			for package in storage._packages.values():
+				for packageVersion in package._versions.values():
+					vertices[packageVersion] = Vertex(vertexID=packageVersion, value=packageVersion, graph=graph)
+
+		for packageVersion, vertex in vertices.items():
+			for dependencies in packageVersion._dependsOn.values():
+				for dependency in dependencies.values():
+					vertex.EdgeToVertex(vertices[dependency])
+
+		return graph
 
 	def __len__(self) -> int:
 		"""
