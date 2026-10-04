@@ -473,7 +473,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		      try:
 		        from pyTooling.TerminalUI import TerminalApplication
 		      except MissingDependencyError as ex:
-		        print(f"{ex}\n" + "\n".join(f"  {command}" for command in ex.InstallCommands))
+		        print(f"{ex}\\n" + "\\n".join(f"  {command}" for command in ex.InstallCommands))
 		        raise SystemExit(MissingDependencyError.EXIT_CODE) from ex
 
 		:param ex: The exception to print.
