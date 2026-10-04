@@ -396,6 +396,12 @@ Version 10.x (2026)
      :attr:`~pyTooling.Licensing.License.SPDXIdentifier`. A classifier passed by the caller is kept, because it is
      their statement, and reported on the console.
    * 339 f-strings that interpolate nothing lost their ``f`` prefix, across 33 modules.
+   * An edge joining two components of a :class:`~pyTooling.Graph.Graph` moves the smaller component's vertices into the
+     larger one. It moved the destination's vertices into the source's component whatever their sizes, so an edge from
+     a new vertex into a big component moved the whole component: building a graph of 10000 vertices from an edge
+     list took 633 ms, now 55 ms; 10000 calls of :meth:`~pyTooling.Graph.Vertex.EdgeFromNewVertex` 1830 ms, now 39 ms.
+     So the component kept is the larger one, not always the source's; of two of equal size, still the source's. The
+     other one is dropped with its name and key-value pairs, as before.
 
    .. rubric:: Bug Fixes
 
