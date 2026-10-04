@@ -93,7 +93,7 @@ An enumeration with its own exception
 enumeration belonging to a domain that has its own exception overrides ``Parse``, catches that ``ValueError``
 and chains it as the cause.
 
-The difference is visible to a user: :func:`pyTooling.CLI.main` prints a
+The difference is visible to a user: a program like pyTooling.GitHub's :program:`pytooling-github` prints a
 :exc:`~pyTooling.Exceptions.ToolingException` as a message, while an unhandled :exc:`ValueError` reaches
 :meth:`~pyTooling.TerminalUI.TerminalApplication.PrintException`, which prints a traceback and invites the user
 to open an issue. A value a service sent that pyTooling doesn't know is that service's problem, not a bug in
@@ -119,8 +119,7 @@ pyTooling, so it wants the first.
 The :exc:`TypeError` is deliberately **not** caught: a value of the wrong type is a defect at the call site, not
 a value the service chose, and it reads better as itself.
 
-:class:`~pyTooling.CI.GitHub.Status`, :class:`~pyTooling.CI.GitHub.Conclusion` and
-:class:`~pyTooling.CI.GitHub.Event` are written that way.
+``Status``, ``Conclusion`` and ``Event`` of :doc:`pyTooling.GitHub <pyToolGitHub:index>` are written that way.
 
 
 .. _COMMON/StringEnum/Member:

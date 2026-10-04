@@ -63,10 +63,8 @@ values, the interface of a reusable workflow.
 
 .. seealso::
 
-   :mod:`pyTooling.CI.GitHub`
-      |rarr| The model of a GitHub Actions workflow run.
-   :mod:`pyTooling.CI.GitHub.WorkflowFile`
-      |rarr| The model of a GitHub Actions workflow file.
+   `pyTooling.GitHub <https://pyTooling.github.io/pyTooling.GitHub/>`__
+      |rarr| The models of a GitHub Actions workflow run and workflow file, built on this model.
    :mod:`pyTooling.REST`
       |rarr| The client a model's payloads are read with.
 """

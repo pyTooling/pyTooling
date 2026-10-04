@@ -5,5 +5,5 @@
 .. include:: <mmlalias.txt>
 
 .. # |degree|, |br| and |hr|, the style roles and :pycode: are registered by the
-   # 'pyTooling.Documentation.Sphinx' extension, so they are declared once for every project instead of being
+   # 'pyTooling.Sphinx' extension, so they are declared once for every project instead of being
    # copied into each one's prolog.

@@ -178,7 +178,7 @@ extensions = [
 	"autoapi.sphinx",
 	"sphinx_reports",
 # pyTooling extensions
-	"pyTooling.Documentation.Sphinx",
+	"pyTooling.Sphinx",
 ]
 
 
@@ -186,8 +186,10 @@ extensions = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-	"python": ("https://docs.python.org/3", None),
-	"setup":  ("https://setuptools.pypa.io/en/latest", None),
+	"python":       ("https://docs.python.org/3", None),
+	"setup":        ("https://setuptools.pypa.io/en/latest", None),
+	"pyToolSphinx": ("https://pyTooling.github.io/pyTooling.Sphinx/", None),
+	"pyToolGitHub": ("https://pyTooling.github.io/pyTooling.GitHub/", None),
 }
 
 
@@ -257,7 +259,7 @@ todo_link_only = True
 
 
 # ==============================================================================
-# pyTooling.Documentation.Sphinx
+# pyTooling.Sphinx
 # ==============================================================================
 # Package meta-information a package index can't answer for: licenses, the URL of a project's own LICENSE file,
 # and repositories. Stated by hand, checked by hand.
@@ -330,3 +332,11 @@ for directory in [mod for mod in Path(f"../{directoryName}").iterdir() if mod.is
 		"output":   pythonProject,
 		"override": True
 	}
+
+
+def setup(app) -> None:
+	# Installed beside this checkout, pyTooling.Sphinx is a portion of the namespace package pyTooling, and AutoAPI would
+	# document it as a subpackage. Its extension is loaded by now, so the namespace is narrowed to this checkout.
+	import pyTooling
+
+	pyTooling.__path__ = [str((ROOT.parent / directoryName).resolve())]

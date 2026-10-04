@@ -41,7 +41,7 @@ knowledge about a particular service, so it lives here rather than in each reade
 
 .. seealso::
 
-   :mod:`pyTooling.CI.GitHub`
+   `pyTooling.GitHub <https://pyTooling.github.io/pyTooling.GitHub/>`__
       |rarr| A data model read from a REST API through this client.
 """
 from http                      import HTTPMethod

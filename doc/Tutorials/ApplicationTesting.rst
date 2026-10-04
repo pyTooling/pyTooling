@@ -114,6 +114,6 @@ belongs to the levels below, where a failure is cheaper to read.
 
 .. topic:: A test suite of one's own
 
-   ``pyTooling``'s own :file:`tests/app` directory is exactly this: a package of ``ApplicationTestcase`` classes
-   run separately from :file:`tests/unit`, because they need the package installed. Keeping them apart means the
-   unit tests stay runnable from a checkout with nothing installed.
+   The :file:`tests/app` directory of :doc:`pyTooling.GitHub <pyToolGitHub:index>` is exactly this: a package of
+   ``ApplicationTestcase`` classes run separately from :file:`tests/unit`, because they need the package installed.
+   Keeping them apart means the unit tests stay runnable from a checkout with nothing installed.

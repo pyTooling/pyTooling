@@ -505,7 +505,7 @@ class StringEnum(StrEnum):
 	filename without being unwrapped, and :pycode:`", ".join(GanttFormat)` lists what an option accepts.
 
 	**An enumeration belonging to a domain with its own exception overrides** :meth:`Parse`, catches the
-	:exc:`ValueError` and chains it as the cause. :class:`pyTooling.CI.GitHub.Status` does that, because a value
+	:exc:`ValueError` and chains it as the cause. ``Status`` of pyTooling.GitHub does that, because a value
 	a service sent that pyTooling doesn't know is that service's problem and not a programming error, and the
 	two are reported differently.
 

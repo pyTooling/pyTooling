@@ -138,7 +138,7 @@ every header of a request is decided.
        if status in (401, 403, 404):
          error.add_note("Check the thing's name, and that the token may read it.")
 
-:mod:`pyTooling.CI.GitHub` is such a reader.
+The workflow run reader of :doc:`pyTooling.GitHub <pyToolGitHub:index>` is such a reader.
 
 
 .. _REST/Competitors:

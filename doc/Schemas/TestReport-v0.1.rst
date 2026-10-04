@@ -47,7 +47,7 @@ structure rather than as a repeated type name, and ``testsuite``'s edge to itsel
 nest. A simple type gets a node of its own only when it is an enumeration, because its values are what a type
 name cannot say.
 
-.. xsd-graph:: ../../pyTooling/Resources/TestReport-v0.1.xsd
+.. xmlschema-graph:: ../../pyTooling/Resources/TestReport-v0.1.xsd
    :caption: The types of :file:`TestReport-v0.1.xsd`, drawn from the schema at documentation build time.
 
 .. _SCHEMAS/TestReport-v0.1/Source:

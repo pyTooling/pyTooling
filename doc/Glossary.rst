@@ -542,8 +542,8 @@ Glossary
      A *job* is the unit a :term:`pipeline` schedules onto a :term:`runner`: a sequence of :term:`steps <step>`
      running on one machine, with its own result.
 
-     :class:`pyTooling.CI.GitHub.Job` models one - see :ref:`CI/GitHub`. A job produced by a :term:`matrix` is a
-     :class:`~pyTooling.CI.GitHub.MatrixJob` and carries the values it was produced for.
+     :class:`pyTooling.CI.Job` models one - see :ref:`CI/Pipeline`. A job produced by a :term:`matrix` is a
+     :class:`~pyTooling.CI.MatrixJob` and carries the values it was produced for.
 
    JSON
      The *JavaScript Object Notation* is a text format for structured data, specified by :rfc:`8259` and
@@ -581,7 +581,7 @@ Glossary
      capability - and what a self-hosted runner is registered with. A service picks a runner whose labels cover the
      job's.
 
-     :attr:`Job.Labels <pyTooling.CI.GitHub.Job.Labels>` reports them.
+     The job model of :doc:`pyTooling.GitHub <pyToolGitHub:index>` reports them.
 
    Leaf
      A *leaf* is a :term:`node` of a :term:`tree` that has no :term:`children <child>` - the other end of the tree
@@ -616,8 +616,9 @@ Glossary
      given - three Python versions on two operating systems are six jobs.
 
      :class:`pyTooling.CI.Matrix` groups the instances a matrix produced, and each
-     :class:`~pyTooling.CI.GitHub.MatrixJob` carries the values it was produced for. GitHub reports no matrix as
-     such - the instances are recognized by the bracketed values in a job's name - see :ref:`CI/GitHub/Strings`.
+     :class:`~pyTooling.CI.MatrixJob` carries the values it was produced for. GitHub reports no matrix as such - the
+     instances are recognized by the bracketed values in a job's name - see
+     :external+pyToolGitHub:ref:`pyTooling.GitHub <DATA/PipelineRun/Strings>`.
 
    Meta-Class
      A *meta-class* is a class helping to construct classes. Thus, it's the type of a type - the default one is
@@ -823,9 +824,8 @@ Glossary
      A *pipeline* is one run of a CI service's automation for one commit: the :term:`jobs <job>` it schedules, the
      :term:`steps <step>` they run, and the result they produce together.
 
-     :class:`pyTooling.CI.GitHub.Pipeline` models a GitHub Actions workflow run as one - with
-     :term:`called workflows <workflow>`, :term:`matrices <matrix>`, jobs and steps below it, each knowing its
-     parent. See :ref:`CI/GitHub`.
+     :class:`pyTooling.CI.Pipeline` models one - with :term:`called workflows <workflow>`,
+     :term:`matrices <matrix>`, jobs and steps below it, each knowing its parent. See :ref:`CI/Pipeline`.
 
    Post-Order
      :wiki:`Post-order <Tree_traversal#Post-order,_LRN>` is a depth-first traversal of a :term:`tree` visiting a
@@ -941,8 +941,8 @@ Glossary
      <https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm>`__ rather than by a standard, so what
      an API calls REST varies.
 
-     A REST API usually answers in :term:`JSON`. :mod:`pyTooling.CI.GitHub` reads the payloads GitHub's REST API
-     answers with for a workflow run.
+     A REST API usually answers in :term:`JSON`. :doc:`pyTooling.GitHub <pyToolGitHub:index>` reads the payloads
+     GitHub's REST API answers with for a workflow run.
 
      Wikipedia: :wiki:`REST <REST>`
 
@@ -982,9 +982,8 @@ Glossary
      A *runner* is the machine a :term:`job` runs on - hosted by the service or self-hosted - and a *runner group*
      is how several of them are administered together, with who may use them.
 
-     :attr:`Job.RunnerName <pyTooling.CI.GitHub.Job.RunnerName>` and
-     :attr:`~pyTooling.CI.GitHub.Job.RunnerGroupName` report which one a job ran on; the :term:`labels <label>` it
-     asked for say what it wanted.
+     The job model of :doc:`pyTooling.GitHub <pyToolGitHub:index>` reports which one a job ran on; the :term:`labels
+     <label>` it asked for say what it wanted.
 
    Schema
      A *schema* is a formal description of the structure a document must have, written in a language of its own, so
@@ -1105,7 +1104,7 @@ Glossary
      A *step* is one command or action of a :term:`job`, run in the job's order on the job's :term:`runner`, with
      its own result.
 
-     :class:`pyTooling.CI.GitHub.Step` models one. A step that never started has no timing to report.
+     :class:`pyTooling.CI.Step` models one. A step that never started has no timing to report.
 
    Subgraph
      A *subgraph* is a part of a :term:`graph` handled as a unit - a cluster the drawing keeps together, or a
@@ -1202,7 +1201,7 @@ Glossary
 
      :class:`pyTooling.CI.Workflow` groups them, nested as deeply as they are called. GitHub reports no
      nesting as such - a called workflow is recognized by the ``Caller / Job`` shape of a job's name, see
-     :ref:`CI/GitHub/Strings`.
+     :external+pyToolGitHub:ref:`pyTooling.GitHub <DATA/PipelineRun/Strings>`.
 
    WSL
      The *Windows Subsystem for Linux* runs a Linux distribution on Windows. Python running in it **is** Python on

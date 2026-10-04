@@ -48,16 +48,13 @@ packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
 additionalRequirements = {
-	"diagram":   ["matplotlib >= 3.10", "ruamel.yaml ~= 0.19"],
-	"github":    ["ruamel.yaml ~= 0.19"],
+	"diagram":   ["matplotlib >= 3.10"],
 	"pypi":      ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
 	"packaging": ["setuptools >= 83.0"],
-	"sphinx":    ["sphinx >= 9.1", "xmlschema ~= 4.3", "ruamel.yaml ~= 0.19"],
 	"terminal":  ["colorama ~= 0.4.6"],
 	"testing":   ["pytest ~= 9.1"],
 	"yaml":      ["ruamel.yaml ~= 0.19"],
 }
-additionalRequirements["cli"] = additionalRequirements["terminal"] + additionalRequirements["diagram"]
 
 setup(
 	**DescribePythonPackageHostedOnGitHub(
@@ -68,13 +65,9 @@ setup(
 		additionalRequirements=additionalRequirements,
 		sourceFileWithVersion=packageInformationFile,
 		pythonVersions=("3.11", "3.12", "3.13", "3.14"),
-		consoleScripts={
-			"pyTooling": "pyTooling.CLI:main"
-		},
 		dataFiles={
 			packageName[:-1] + "Common": ["../py.typed"],
 			packageName[:-1] + "Resources": ["*.xsd"],
-			packageName[:-1] + "Resources.Sphinx": ["*.css"],
 			packageName[:-1] + "Resources.Tracing": ["*.css", "*.js"]
 		},
 		pytestPlugins={

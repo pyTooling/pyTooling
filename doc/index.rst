@@ -1148,8 +1148,7 @@ License
    :hidden:
 
    Documentation/index
-   Documentation/Sphinx
-   Documentation/GitHubActions
+   Sphinx extension ➚ <https://pyTooling.github.io/pyTooling.Sphinx/>
 
 .. toctree::
    :caption: Exceptions and Warnings
@@ -1193,6 +1192,7 @@ License
    :hidden:
 
    CI/index
+   GitHub Actions ➚ <https://pyTooling.github.io/pyTooling.GitHub/>
 
 .. toctree::
    :caption: Testing
@@ -1211,12 +1211,6 @@ License
    :hidden:
 
    Diagram
-
-.. toctree::
-   :caption: Command Line Interface
-   :hidden:
-
-   CLI
 
 .. raw:: latex
 

@@ -43,7 +43,6 @@ from xml.etree                   import ElementTree
 
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
-from pyTooling.Tracing.CI.GitHub import GitHub
 from pyTooling.MetaClasses       import AbstractClassError
 from pyTooling.Tracing.Render    import GanttLayout, Renderer, StepExclusion, ciSpanFilter, msys2Environment, \
                                        runnerCategory
@@ -105,7 +104,7 @@ def _span(
 		span[OTLP.CICD.Pipeline.Task.Name] = task
 
 	if runner != "":
-		span[GitHub.Runner.Labels] = [runner]
+		span["github.runner.labels"] = [runner]
 
 	if result != "":
 		span[OTLP.CICD.Pipeline.Task.Run.Result] = result

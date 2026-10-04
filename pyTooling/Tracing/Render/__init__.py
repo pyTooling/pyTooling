@@ -54,7 +54,6 @@ from pyTooling.Common            import getFullyQualifiedName
 from pyTooling.Diagram.Gantt     import Bar, Diagram, Row
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
-from pyTooling.Tracing.CI.GitHub import GitHub
 
 
 __all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP", "LINE_LEGEND_LABEL"]
@@ -171,7 +170,8 @@ def runnerCategory(span: Span) -> str:
 		if job is None and current.get(CI.Span.Kind) == SpanKind.Job:
 			job = current
 
-		if label == "" and GitHub.Runner.Labels in current and len(labels := current[GitHub.Runner.Labels]) > 0:
+		# the key pyTooling.GitHub's trace reader stores a job's runner labels under
+		if label == "" and "github.runner.labels" in current and len(labels := current["github.runner.labels"]) > 0:
 			label = str(labels[0])
 		current = current.Parent
 

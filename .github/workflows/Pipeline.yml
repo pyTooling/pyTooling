@@ -38,16 +38,6 @@ jobs:
       disable_list:        'ubuntu-arm:* mingw32:*'  # no ruamel-yaml for MinGW32
       pipeline-delay:      30
 
-  AppTestingParams:
-    uses: pyTooling/Actions/.github/workflows/Parameters.yml@r8
-    needs:
-      - UnitTestingParams
-    with:
-      package_namespace:   'pyTooling.*'
-      version_file:        'Common/__init__.py'
-      python_version:      ${{ needs.UnitTestingParams.outputs.python_version }}
-      python_version_list: ''
-
   UnitTesting:
     uses: pyTooling/Actions/.github/workflows/UnitTesting.yml@r8
     needs:
@@ -108,17 +98,6 @@ jobs:
     with:
       python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       artifact:       ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
-
-  AppTesting:
-    uses: pyTooling/Actions/.github/workflows/ApplicationTesting.yml@r8
-    needs:
-      - UnitTestingParams
-      - AppTestingParams
-      - Package
-    with:
-      jobs:                 ${{ needs.AppTestingParams.outputs.python_jobs }}
-      wheel:                ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
-      apptest_xml_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).apptesting_xml }}
 
   PublishCoverageResults:
     uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r8
@@ -223,7 +202,6 @@ jobs:
       - PlatformTesting
 #      - StaticTypeCheck
       - Package
-      - AppTesting
       - PublishToGitHubPages
     if: needs.Prepare.outputs.is_release_commit == 'true' && github.event_name != 'schedule'
     permissions:
@@ -243,7 +221,6 @@ jobs:
       - PlatformTesting
 #      - StaticTypeCheck
       - Package
-      - AppTesting
       - PublishToGitHubPages
     with:
       tag:        ${{ needs.Prepare.outputs.version }}
@@ -277,7 +254,6 @@ jobs:
       - PublishCoverageResults
       - PublishToGitHubPages
 #      - PublishOnPyPI
-      - AppTesting
       - IntermediateCleanUp
     with:
       package: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
@@ -303,5 +279,4 @@ jobs:
         ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_xml }}-*
         ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_json }}-*
         ${{ fromJson(needs.PlatformTestingParams.outputs.artifact_names).codecoverage_html }}-*
-        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).apptesting_xml }}-*
 #        ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_pdf }}

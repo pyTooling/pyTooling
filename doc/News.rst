@@ -39,53 +39,12 @@ Version 10.x (2026)
      * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
        working.
 
-   * :mod:`pyTooling.CI` is a new package holding data models of continuous integration services.
-
-     * :mod:`pyTooling.CI.GitHub` reads a GitHub Actions workflow run into a tree of
-       :class:`~pyTooling.CI.GitHub.Pipeline`, :class:`~pyTooling.CI.Workflow`,
-       :class:`~pyTooling.CI.Matrix`, :class:`~pyTooling.CI.GitHub.Job` and
-       :class:`~pyTooling.CI.GitHub.Step` objects, each knowing its parent and the run it belongs to.
-     * A called workflow and a matrix are encoded in a job's name - ``Caller / Job`` and
-       ``Job (ubuntu-26.04, 3.14)`` - and :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` reads them back into the
-       tree. Neither level reports times, so :class:`~pyTooling.CI.JobGroup` spans the jobs below it.
-     * A job's times **contain its steps**. GitHub reports both in whole seconds and independently, so a step is
-       sometimes reported as starting before, or completing after, the job holding it - and a consumer building a
-       tree then has a child outside its parent. The job is the timespan that stretches, because the step really
-       did run when it says it did, and a group's times follow.
-     * A group iterates what it holds **in the order it was queued**, jobs and nested groups alike, rather than
-       jobs first and called workflows last. The sort is stable, so elements reporting no time keep the order
-       GitHub listed them in.
-     * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.Workflow` the matrices
-       and called workflows below it as well. :class:`~pyTooling.CI.Workflow` needed three overrides to say
-       that and has none now.
-     * A :class:`~pyTooling.CI.GitHub.Pipeline` is the one group reporting times of its own, so it is the one with
-       two sets: :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsCreatedAt`,
-       :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsStartedAt` and
-       :attr:`~pyTooling.CI.GitHub.Pipeline.ContentsCompletedAt` span what the run holds, beside the run's own
-       times. They differ, because a job may be queued before the run reports itself created.
-     * ``status``, ``conclusion`` and ``event`` become :class:`~pyTooling.CI.GitHub.Status`,
-       :class:`~pyTooling.CI.GitHub.Conclusion` and :class:`~pyTooling.CI.GitHub.Event` members, so a value GitHub
-       doesn't document raises :exc:`~pyTooling.CI.GitHub.GitHubError` instead of matching no comparison.
-     * :class:`~pyTooling.CI.GitHub.PipelineGroup` holds every run of one commit, and
-       :meth:`~pyTooling.CI.GitHub.PipelineGroup.ByGitReference` separates a commit's checks from the run at its tag,
-       which the API reports under the same commit.
-     * :class:`~pyTooling.CI.QualifiedNameMixin` reports an element's name the way GitHub does -
-       ``Caller / Build (ubuntu-26.04)`` - so the name :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` took apart can
-       be put back together. :class:`~pyTooling.CI.GitHub.Job` and :class:`~pyTooling.CI.Workflow` are named
-       that way; the mixin ``expects`` the field it walks, so mixing it into a class without ``_parent`` is reported
-       instead of failing with an :exc:`AttributeError` later.
-     * :meth:`~pyTooling.CI.JobGroup.IterateElements` of a :class:`~pyTooling.CI.Workflow` yields its jobs,
-       its matrices **and** the workflows it calls, so the containers one level below it are reachable without
-       asking for each kind separately. :meth:`~pyTooling.CI.JobGroup.IterateJobs` remains the way to reach every
-       job below it. Because an element is placed in its group under its own name, it is asked for by that name:
-       :pycode:`pipeline.ContainsElement("UnitTesting")`.
-
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
      :class:`~pyTooling.CI.Workflow`\ s, :class:`~pyTooling.CI.Matrix`\ es,
      :class:`~pyTooling.CI.Job`\ s and :class:`~pyTooling.CI.Step`\ s, with the times and an
      :class:`~pyTooling.CI.Outcome` on every element, and a condition on those a definition can give one. Its
-     exceptions and those of :mod:`pyTooling.CI.GitHub` derive from :exc:`~pyTooling.CI.CIError`.
+     exceptions derive from :exc:`~pyTooling.CI.CIError`.
 
      * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.DependencyMixin.AddNeed` links
        two siblings, records the reverse link in :attr:`~pyTooling.CI.DependencyMixin.Dependents`, and
@@ -107,55 +66,25 @@ Version 10.x (2026)
        is counted, checked, looked up and iterated by named methods: ``ElementCount``, ``ContainsElement``,
        ``GetElement`` and ``IterateElements`` for a group, ``StepCount``, ``ContainsStep`` and ``IterateSteps`` for a
        job, ``PipelineCount``, ``ContainsPipeline`` and ``IteratePipelines`` for a pipeline group.
-     * :mod:`pyTooling.CI.GitHub` derives from it: ``Workflow``, ``Matrix``, ``JobGroup``, ``Base`` and
-       ``QualifiedNameMixin`` are the generic classes, GitHub's status, conclusion and URL moved into
-       :class:`~pyTooling.CI.GitHub.StatusMixin`, a conclusion is also an :class:`~pyTooling.CI.Outcome`, a
-       matrix has a qualified name, every group has ``Contents*At``, and a group's elements are in the order GitHub
-       listed them.
-     * A matrix calling a reusable workflow - jobs named ``Tests (3.14) / Unit`` - is read as a
+     * A matrix calling a reusable workflow - jobs named ``Tests (3.14) / Unit`` - is modelled as a
        :class:`~pyTooling.CI.Matrix` of :class:`~pyTooling.CI.MatrixWorkflow` instances instead of
        one called workflow per combination, so a trace groups them below a ``matrix`` timespan.
      * A matrix instance's :attr:`~pyTooling.CI.MatrixInstanceMixin.Dimensions` maps each dimension's name
        to its value, in the matrix' order; :func:`str` prints the values only - ``Test (ubuntu-26.04, 3.14)``.
-       :meth:`~pyTooling.CI.GitHub.Pipeline.FromJSON` names a dimension by its position,
-       ``{"0": "ubuntu-26.04", "1": "3.14"}``, because a job's name carries no dimension names.
-
-   * :mod:`pyTooling.CI.GitHub.WorkflowFile` reads a GitHub Actions workflow **file** into a tree of
-     :class:`~pyTooling.CI.GitHub.WorkflowFile.Workflow`, :class:`~pyTooling.CI.GitHub.WorkflowFile.Input`,
-     :class:`~pyTooling.CI.GitHub.WorkflowFile.Job`, :class:`~pyTooling.CI.GitHub.WorkflowFile.Step` and further
-     objects, each knowing the line it is written at. :class:`~pyTooling.CI.GitHub.WorkflowFile.WorkflowResolver` reads
-     the reusable workflows a job calls and the actions a step runs - :class:`~pyTooling.CI.GitHub.WorkflowFile.Action`,
-     with the steps of a composite action - from a local directory, and a workflow reports the permissions it and the
-     workflows it calls ask for. It needs the ``github`` extra.
-
-     * :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` builds the pipeline a workflow defines as a
-       :mod:`pyTooling.CI` model - jobs, called workflows expanded through the resolver, and a matrix' instances as
-       :attr:`~pyTooling.CI.GitHub.WorkflowFile.Matrix.Combinations` computes them -, whose elements link back to their
-       :attr:`~pyTooling.CI.GitHub.WorkflowFile.DefinitionMixin.Definition`, and which
-       :meth:`~pyTooling.CI.Workflow.ToGraph` converts into a graph.
-     * :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ApplyNeeds` gives a run read by :mod:`pyTooling.CI.GitHub` the
-       dependencies its workflow file declares, and returns the qualified names of the jobs it didn't find in the
-       run. An instance of a static matrix gets the dimensions' names of its combination instead of the positions
-       the run names them by.
-
-   * The Sphinx extension registers a domain ``gha`` documenting GitHub Actions workflows - see
-     :ref:`DOC/Sphinx/GHA`. ``gha:input``, ``gha:output`` and ``gha:secret`` take an input's type, requirement and
-     default from the workflow file and add the hand-written fields; a page and its workflow file drifting apart is a
-     ``gha.drift`` warning. The directives also register the ``JOBTMPL/...`` labels of converted pages, so existing
-     references keep working. The ``sphinx`` extra installs ``ruamel.yaml`` for the domain.
-
-   * The ``gha:pipeline-graph`` directive draws the jobs of a GitHub Actions workflow and their ``needs`` from the
-     workflow file, with a matrix as a cluster of its instances, and the reusable workflows of the documented repository
-     expanded into clusters and linked to their pages. A job calling such a workflow at another ref than ``gha_ref`` is
-     a warning. The graph is drawn from the file's :meth:`~pyTooling.CI.GitHub.WorkflowFile.Workflow.ToPipeline` and its
-     :meth:`~pyTooling.CI.Workflow.ToGraph`. See :ref:`DOC/Sphinx/GHA/PipelineGraph`.
-
-   * The ``gha`` domain summarizes a workflow from its file: ``gha:parameter-table`` renders the summary tables of its
-     inputs, secrets and outputs, ``gha:interface`` its contract with a caller including the permissions to grant,
-     ``gha:dependencies`` the templates, actions - also inside composite actions - and container images it uses,
-     merged with hand-written items, and ``gha:yaml`` a part of the file linked to GitHub. ``gha:autoinputs``
-     documents the inputs a page has no ``gha:input`` for; an input without an entry is a ``gha.drift`` warning. See
-     :ref:`DOC/Sphinx/GHA/Summaries`.
+     * A group iterates what it holds **in the order it was queued**, jobs and nested groups alike, rather than
+       jobs first and called workflows last. The sort is stable, so elements reporting no time keep the order
+       they were listed in.
+     * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.Workflow` the matrices
+       and called workflows below it as well. :class:`~pyTooling.CI.Workflow` needed three overrides to say
+       that and has none now.
+     * :meth:`~pyTooling.CI.JobGroup.IterateElements` of a :class:`~pyTooling.CI.Workflow` yields its jobs,
+       its matrices **and** the workflows it calls, so the containers one level below it are reachable without
+       asking for each kind separately. :meth:`~pyTooling.CI.JobGroup.IterateJobs` remains the way to reach every
+       job below it. Because an element is placed in its group under its own name, it is asked for by that name:
+       :pycode:`pipeline.ContainsElement("UnitTesting")`.
+     * :class:`~pyTooling.CI.QualifiedNameMixin` reports an element's qualified name as GitHub Actions names it -
+       ``Caller / Build (ubuntu-26.04)``. The mixin ``expects`` the field it walks, so mixing it into a class without
+       ``_parent`` is reported instead of failing with an :exc:`AttributeError` later.
 
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
@@ -289,26 +218,6 @@ Version 10.x (2026)
        down a path stay part of the path. The formats are a :class:`~pyTooling.Common.StringEnum`, and a value
        naming none gets its ``DEFAULT`` - or raises a :exc:`ValueError`, if the enumeration declares none.
 
-   * :mod:`pyTooling.CLI`
-
-     * pyTooling installs a **program of its own**: :program:`pyTooling`, the ``console_scripts`` entry point
-       :pycode:`pyTooling.CLI:main`. It is a :class:`~pyTooling.TerminalUI.TerminalApplication` whose commands are
-       declared as :mod:`pyTooling.Attributes.ArgParse` attributes, and it starts with :pycode:`help` and
-       :pycode:`version`. A group of commands is a mixin-class, so a new command adds a base-class and nothing else.
-     * The :pycode:`pipeline` command reads a **GitHub Actions workflow run** into a trace -
-       :pycode:`--github-pipeline-id`, defaulting to :pycode:`$GITHUB_RUN_ID` - and writes it with
-       :pycode:`--trace-file=[<format>:]<file>`, where the format defaults to ``otlp-json``. :pycode:`--force`
-       overwrites a file that exists.
-     * :pycode:`--gantt=[<format>:]<file>` draws the run as a **Gantt chart** - ``matplotlib-png``,
-       ``matplotlib-svg`` or ``matplotlib-pdf``, defaulting to ``matplotlib-png``. The file's suffix has to agree
-       with the format.
-     * The new application tests in :file:`tests/app` run the installed program.
-     * **The program needs the new** ``cli`` **extra**: :pycode:`pip install pyTooling[cli]`. It is the
-       ``terminal`` and ``diagram`` extras together - *colorama*, without which a terminal application writes
-       nothing, and *matplotlib*, which :pycode:`--gantt` draws with. The minimal installation registers the
-       program but leaves both out, and the program then reports the missing package and the commands installing
-       it.
-
    * :mod:`pyTooling.TerminalUI`
 
      * :meth:`~pyTooling.TerminalUI.TerminalApplication.WriteErrorNote` writes the note belonging to an error - the
@@ -346,26 +255,18 @@ Version 10.x (2026)
      * A trace and its timespans can be constructed with **recorded times** - ``beginTime`` and ``endTime`` - for
        timespans measured elsewhere, e.g. by a CI service. Without them, a timespan is timed by its
        ``with``-statement as before.
-     * :mod:`pyTooling.Tracing.CI.GitHub` reads a **GitHub Actions workflow run** into a trace: jobs, their steps,
-       the time each job waited for a runner, and called workflows and matrices as groups. The timespans carry
-       OpenTelemetry's CI/CD attributes, so a rendering or a query doesn't depend on the CI service. A transiently
-       failing request is tried again.
-     * The run is read by :mod:`pyTooling.CI.GitHub`, so reconstructing the tree is the model's job and
-       :meth:`~pyTooling.Tracing.CI.GitHub.WorkflowRunTrace.FromPipeline` converts a model that was built elsewhere.
      * Every kind of timespan is a class: :class:`~pyTooling.Tracing.CI.PipelineTrace`,
        :class:`~pyTooling.Tracing.CI.WorkflowSpan`, :class:`~pyTooling.Tracing.CI.MatrixSpan`,
        :class:`~pyTooling.Tracing.CI.QueuedSpan`, :class:`~pyTooling.Tracing.CI.JobSpan` and
        :class:`~pyTooling.Tracing.CI.StepSpan`. Each names its kind in ``KIND`` and takes the conventions'
        attributes as parameters, so a reader states values and never a key, and an unknown value sets no attribute.
-       The classes are service-independent, and :mod:`pyTooling.Tracing.CI.GitHub` derives them into flavours that
-       build themselves from the model -
-       :meth:`JobSpan.FromJob <pyTooling.Tracing.CI.GitHub.JobSpan.FromJob>`. Everything below the trace derives
-       from the abstract :class:`~pyTooling.Tracing.CI.TaskSpan`, because it is a *task* in the conventions' sense.
+       The classes are service-independent; a service's reader derives flavours that build themselves from its
+       model. Everything below the trace derives from the abstract :class:`~pyTooling.Tracing.CI.TaskSpan`, because
+       it is a *task* in the conventions' sense.
      * The attribute keys are namespaces nested the way the keys themselves are, instead of a flat block of module
-       constants: :class:`~pyTooling.Tracing.CI.OTLP` for OpenTelemetry's conventions,
-       :class:`~pyTooling.Tracing.CI.CI` for what pyTooling adds and :class:`~pyTooling.Tracing.CI.GitHub.GitHub` for
-       what only GitHub reports, so :attr:`OTLP.CICD.Pipeline.Task.Run.ID <pyTooling.Tracing.CI.OTLP>` spells
-       ``cicd.pipeline.task.run.id``. The closed value sets are enumerations -
+       constants: :class:`~pyTooling.Tracing.CI.OTLP` for OpenTelemetry's conventions and
+       :class:`~pyTooling.Tracing.CI.CI` for what pyTooling adds, so :attr:`OTLP.CICD.Pipeline.Task.Run.ID
+       <pyTooling.Tracing.CI.OTLP>` spells ``cicd.pipeline.task.run.id``. The closed value sets are enumerations -
        :class:`~pyTooling.Tracing.CI.SpanKind` and :class:`~pyTooling.Tracing.CI.Result`.
      * A trace **renders as a Gantt chart**: :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans
        in rows independently of a drawing library, and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it
@@ -396,10 +297,6 @@ Version 10.x (2026)
        member the enumeration declares as ``DEFAULT`` - an alias, so it isn't iterated - or with ``None`` where
        there is none. :class:`~pyTooling.REST.MediaType`, :class:`~pyTooling.Tracing.CI.SpanKind` and
        :class:`~pyTooling.Tracing.CI.Result` derive from it.
-       :class:`~pyTooling.CI.GitHub.Status`, :class:`~pyTooling.CI.GitHub.Conclusion` and
-       :class:`~pyTooling.CI.GitHub.Event` derive from it too, and show how an enumeration of a domain with its
-       own exception keeps it: their ``Parse`` calls the inherited one and re-raises a
-       :exc:`~pyTooling.CI.GitHub.GitHubError` with the :exc:`ValueError` as its cause.
 
    * :mod:`pyTooling.Decorators`
 
@@ -498,12 +395,9 @@ Version 10.x (2026)
    * :ref:`SCHEMAS` is a new section, last in *References and Reports*: a page per schema showing its full source
      with a copy button, and offering the file itself for download. The page includes the schema from the package,
      so there is no second copy to drift.
-   * A schema is also **drawn**. The :rst:dir:`xsd-graph` directive reads a schema with ``xmlschema`` and renders it
-     with ``sphinx.ext.graphviz`` - complex types as records, containment as labelled edges carrying the
-     cardinality, and a node for an enumeration. It ships in
-     :mod:`pyTooling.Documentation.Sphinx.XSDSchemaGraph` rather than in this project's :file:`doc/_extensions/`, so
-     every project drawing a schema has it from the extension it already enables. ``xmlschema`` is imported when
-     the directive runs, so it is needed only where a schema is actually drawn.
+   * A schema is also **drawn**, by the directive ``xmlschema-graph`` of
+     :doc:`pyTooling.Sphinx <pyToolSphinx:index>` - complex types as records, containment as labelled edges carrying
+     the cardinality, and a node for an enumeration.
    * This release history was written, covering every release back to v0.5.0.
 
    .. rubric:: Unit Tests
