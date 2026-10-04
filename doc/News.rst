@@ -372,6 +372,13 @@ Version 10.x (2026)
 
    .. rubric:: Bug Fixes
 
+   * :mod:`pyTooling.CLIAbstraction`
+
+     * A program in dry-run mode raised an :exc:`AttributeError` instead of skipping a missing executable or a
+       process start: ``LogDryRun`` was called, but defined nowhere.
+       :meth:`~pyTooling.CLIAbstraction.Program.LogDryRun` records the skipped action in
+       :attr:`~pyTooling.CLIAbstraction.Program.DryRunMessages`; a derived class may override it to write the message.
+
    * :mod:`pyTooling.Testing`
 
      * The markers were collected as testcases themselves. :deco:`~pyTooling.Testing.testsuite` and

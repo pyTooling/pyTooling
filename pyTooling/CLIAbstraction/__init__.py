@@ -189,6 +189,7 @@ class Program(metaclass=ExtendedType, slots=True):
 	_executableNames:  ClassVar[dict[str, str]]                              #: Dictionary of platform specific executable names.
 	_executablePath:   Path                                                  #: The path to the executable (binary, script, ...).
 	_dryRun:           bool                                                  #: True, if program shall run in *dry-run mode*.
+	_dryRunMessages:   list[str]                                             #: Actions skipped in *dry-run mode*.
 	__cliOptions__:    ClassVar[dict[type[CommandLineArgument], int]]        #: List of all possible CLI options.
 	__cliParameters__: dict[type[CommandLineArgument], CommandLineArgument]  #: List of all CLI parameters.
 
@@ -226,8 +227,9 @@ class Program(metaclass=ExtendedType, slots=True):
 		:raises TypeError:           If parameter 'executablePath' is not of type :class:`~pathlib.Path`.
 		:raises CLIAbstractionError: If the executable doesn't exist at the given path.
 		"""
-		self._platform =    system()
-		self._dryRun =      dryRun
+		self._platform =       system()
+		self._dryRun =         dryRun
+		self._dryRunMessages = []
 
 		if executablePath is not None:
 			if isinstance(executablePath, Path):
@@ -271,15 +273,11 @@ class Program(metaclass=ExtendedType, slots=True):
 			resolvedExecutable = shutil_which(str(executablePath))
 			if dryRun:
 				if resolvedExecutable is None:
-					pass
-					# XXX: log executable not found in PATH
-					# self.LogDryRun(f"Which '{executablePath}' failed. [SKIPPING]")
+					self.LogDryRun(f"Search for '{executablePath}' in PATH failed. [SKIPPING]")
 				else:
 					fullExecutablePath = Path(resolvedExecutable)
 					if not fullExecutablePath.exists():
-						pass
-						# XXX: log executable not found
-						# self.LogDryRun(f"File check for '{fullExecutablePath}' failed. [SKIPPING]")
+						self.LogDryRun(f"File check for '{fullExecutablePath}' failed. [SKIPPING]")
 			else:
 				if resolvedExecutable is None:
 					raise CLIAbstractionError("Program could not be found in PATH.") from FileNotFoundError(executablePath)
@@ -294,6 +292,26 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		self._executablePath = executablePath
 		self.__cliParameters__ = {}
+
+	@readonly
+	def DryRunMessages(self) -> list[str]:
+		"""
+		Read-only property to access the actions skipped in *dry-run mode* (:attr:`_dryRunMessages`).
+
+		:returns: The messages :meth:`LogDryRun` recorded, in the order the actions were skipped.
+		"""
+		return self._dryRunMessages
+
+	def LogDryRun(self, message: str) -> None:
+		"""
+		Record an action that was skipped, because the program runs in *dry-run mode*.
+
+		The message is appended to :attr:`DryRunMessages`. A derived class may override this method to write it, e.g.
+		to a terminal.
+
+		:param message: Description of the skipped action.
+		"""
+		self._dryRunMessages.append(message)
 
 	@staticmethod
 	def _NeedsParameterInitialization(key: type) -> bool:
