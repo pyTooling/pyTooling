@@ -33,40 +33,25 @@
 This module implements command line arguments without prefix character(s).
 
 """
-from abc     import abstractmethod
-from pathlib import Path
-from sys     import platform as sys_platform
-from typing  import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
+from abc                   import abstractmethod
+from pathlib               import Path
+from sys                   import platform as sys_platform
+from typing                import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Common      import getFullyQualifiedName
+
+if sys_platform == "win32":
+	from subprocess          import list2cmdline as formatCommandLine
+else:
+	from shlex               import join         as formatCommandLine
 
 
 __all__ = ["ValueT"]
 
 
 ValueT = TypeVar("ValueT")   #: The type of value in a valued argument.
-
-
-if sys_platform == "win32":
-	from subprocess import list2cmdline as formatCommandLine
-else:
-	from shlex      import join         as formatCommandLine
-
-
-def _doubleQuotedLiteral(value: str) -> str:
-	"""
-	Return a string as a Python literal in double quotes, escaped as :func:`repr` escapes it.
-
-	:param value: The string.
-	:returns:     The string's literal.
-	"""
-	literal = repr(value)
-	if literal[0] == "\"":
-		return literal
-
-	return "\"" + literal[1:-1].replace("\\'", "'").replace("\"", "\\\"") + "\""
 
 
 @export
@@ -136,6 +121,20 @@ class CommandLineArgument(metaclass=ExtendedType):
 		else:
 			return formatCommandLine(argument)
 
+	@staticmethod
+	def _DoubleQuotedLiteral(value: str) -> str:
+		"""
+		Return a string as a Python literal in double quotes, escaped as :func:`repr` escapes it.
+
+		:param value: The string.
+		:returns:     The string's literal.
+		"""
+		literal = repr(value)
+		if literal[0] == "\"":
+			return literal
+
+		return "\"" + literal[1:-1].replace("\\'", "'").replace("\"", "\\\"") + "\""
+
 	def __repr__(self) -> str:
 		"""
 		Return this argument as a Python literal, with strings in double quotes.
@@ -144,9 +143,11 @@ class CommandLineArgument(metaclass=ExtendedType):
 		"""
 		argument = self.AsArgument()
 		if isinstance(argument, str):
-			return _doubleQuotedLiteral(argument)
+			return self._DoubleQuotedLiteral(argument)
 		else:
-			return "[" + ", ".join(_doubleQuotedLiteral(item) for item in argument) + "]"
+			literal = self._DoubleQuotedLiteral
+			return "[" + ", ".join([literal(item) for item in argument]) + "]"  # WORKAROUND: Python <3.12
+			# return f"[{", ".join([literal(item) for item in argument])}]"
 
 
 @export

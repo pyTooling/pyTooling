@@ -57,7 +57,7 @@ from pyTooling.MetaClasses               import ExtendedType
 from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
 from pyTooling.Common                    import getFullyQualifiedName
 from pyTooling.Attributes                import Attribute
-from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine, _doubleQuotedLiteral
+from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine
 from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
 from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
 from pyTooling.Platform                  import Platform
@@ -445,7 +445,9 @@ class Program(metaclass=ExtendedType, slots=True):
 
 		:returns: :meth:`ToArgumentList`'s result as a literal.
 		"""
-		return "[" + ", ".join(_doubleQuotedLiteral(argument) for argument in self.ToArgumentList()) + "]"
+		literal = CommandLineArgument._DoubleQuotedLiteral
+		return "[" + ", ".join([literal(item) for item in self.ToArgumentList()]) + "]"  # WORKAROUND: Python <3.12
+		# return f"[{", ".join([literal(item) for item in self.ToArgumentList()])}]"
 
 	def __str__(self) -> str:
 		"""
