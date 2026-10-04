@@ -11,7 +11,7 @@ define and enable command line arguments.
 * Abstract a command line program as a Python class.
 * Abstract arguments of that program as nested classes derived from pre-defined Argument classes. |br|
   See :ref:`CLIABS/Arguments`.
-* Construct a list of arguments in correct order and with proper escaping ready to be used with e.g. :mod:`subprocess`.
+* Construct a list of arguments in correct order, ready to be used with e.g. :mod:`subprocess`.
 
 Simple Example
 **************

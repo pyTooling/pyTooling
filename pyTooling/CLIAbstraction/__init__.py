@@ -355,7 +355,7 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	def ToArgumentList(self) -> list[str]:
 		"""
-		Convert a program and used CLI options to a list of CLI argument strings in correct order and with escaping.
+		Convert a program and used CLI options to a list of CLI argument strings in correct order.
 
 		:returns:          List of CLI arguments
 		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|

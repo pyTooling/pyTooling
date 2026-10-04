@@ -7,9 +7,9 @@ Overview
 Python. There is no need for manually assembling parameter lists or considering the order of parameters. All parameters
 like ``-v`` or ``--value=42`` are described as :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument` instances
 on a :class:`~pyTooling.CLIAbstraction.Program` class. Each argument class like :class:`~pyTooling.CLIAbstraction.Flag.ShortFlag`
-or :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` knows about the correct formatting pattern, character
-escaping, and if needed about necessary type conversions. A program instance can be converted to an argument list
-suitable for :class:`subprocess.Popen`.
+or :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` knows about the correct formatting pattern, and if needed
+about necessary type conversions. A program instance can be converted to an argument list suitable for
+:class:`subprocess.Popen`, which passes each argument to the program without a shell - so no argument needs escaping.
 
 While a user-defined command line program abstraction derived from :class:`~pyTooling.CLIAbstraction.Program` only
 takes care of maintaining and assembling parameter lists, a more advanced base-class, called :class:`~pyTooling.CLIAbstraction.Executable`,
@@ -28,7 +28,7 @@ The main design goals are:
 * Abstract differences in operating systems like argument pattern (POSIX: ``-h`` vs. Windows: ``/h``), path delimiter
   signs (POSIX: ``/`` vs. Windows: ``\``) or executable names.
 * Derive program variants from existing programs.
-* Assemble parameters as list for handover to :class:`subprocess.Popen` with proper escaping and quoting.
+* Assemble parameters as list for handover to :class:`subprocess.Popen`, in the order the program declares them.
 * Launch a program with :class:`~subprocess.Popen` and hide the complexity of Popen.
 * Get a generator object for line-by-line output reading to enable postprocessing of outputs.
 
@@ -97,11 +97,11 @@ The following example implements a portion of the ``git`` program and its ``comm
            class ValueCommitMessage(ShortTupleFlag, name="m"):
              """Specify the commit message."""
 
-           def GetCommitTool(self):
-             """Derive a new program from a configured program."""
+           def GetCommitTool(self, message: str) -> "Git":
+             """Derive a commit command from this program."""
              tool = self.__class__(executablePath=self._executablePath)
              tool[tool.CommandCommit] = True
-             self._CopyParameters(tool)
+             tool[tool.ValueCommitMessage] = message
 
              return tool
 
