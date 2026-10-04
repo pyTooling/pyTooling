@@ -59,8 +59,7 @@ The following example implements a portion of the ``git`` program and its ``comm
          git[git.FlagVerbose] = True
 
          # Derive a variant of that pre-configured program.
-         commit = git.getCommitTool()
-         commit[commit.ValueCommitMessage] = "Bumped dependencies."
+         commit = git.GetCommitTool("Bumped dependencies.", amend=True)
 
          # Launch the program and parse outputs line-by-line.
          commit.StartProcess()
@@ -72,7 +71,8 @@ The following example implements a portion of the ``git`` program and its ``comm
 
       .. code-block:: Python
 
-         from pyTooling.CLIAbstraction import Executable
+         from pyTooling.CLIAbstraction import CLIArgument, Executable
+         from pyTooling.CLIAbstraction.Argument import PathListArgument
          from pyTooling.CLIAbstraction.Command import CommandArgument
          from pyTooling.CLIAbstraction.Flag import LongFlag
          from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag
@@ -94,14 +94,41 @@ The following example implements a portion of the ``git`` program and its ``comm
              """Command to commit staged files."""
 
            @CLIArgument()
+           class FlagAmend(LongFlag, name="amend"):
+             """Replace the tip of the current branch."""
+
+           @CLIArgument()
            class ValueCommitMessage(ShortTupleFlag, name="m"):
              """Specify the commit message."""
 
-           def GetCommitTool(self, message: str) -> "Git":
+           @CLIArgument()
+           class ArgumentPaths(PathListArgument):
+             """Files to commit."""
+
+           def _CopyParameters(self, tool: "Git") -> None:
+             """Copy all parameters of this program to another instance."""
+             for key, argument in self.__cliParameters__.items():
+               if self._NeedsParameterInitialization(key):
+                 tool[key] = argument.Value
+               else:
+                 tool[key] = True
+
+           def GetCommitTool(
+             self,
+             message: str,
+             amend: bool = False,
+             paths: Nullable[Iterable[Path]] = None
+           ) -> "Git":
              """Derive a commit command from this program."""
              tool = self.__class__(executablePath=self._executablePath)
+             self._CopyParameters(tool)
+
              tool[tool.CommandCommit] = True
              tool[tool.ValueCommitMessage] = message
+             if amend:
+               tool[tool.FlagAmend] = True
+             if paths is not None:
+               tool[tool.ArgumentPaths] = paths
 
              return tool
 
