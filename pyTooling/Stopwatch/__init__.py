@@ -535,9 +535,9 @@ class Stopwatch(SlottedObject):
 
 	def __enter__(self) -> Self:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__enter__(...)`` method.
+		Enter the context and start or resume the stopwatch.
 
-		An unstarted stopwatch will be started. A paused stopwatch will be resumed.
+		An unstarted stopwatch is started, a paused one is resumed.
 
 		:returns:               The stopwatch itself.
 		:raises StopwatchError: If the stopwatch was already started.

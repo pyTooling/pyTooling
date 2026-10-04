@@ -913,9 +913,9 @@ class Span(TraceElement):
 
 	def __enter__(self) -> Self:
 		"""
-		Implementation of the :ref:`context manager protocol's <context-managers>` ``__enter__(...)`` method.
+		Enter the context and start the span.
 
-		A span will be started.
+		The span is added to the current span of this thread and becomes the current span.
 
 		:returns:             The span itself.
 		:raises TracingError: If the span is not :attr:`~SpanState.Empty`. |br|
@@ -1117,7 +1117,9 @@ class Trace(Span):
 
 	def __enter__(self) -> Self:
 		"""
-		Start the trace and register it as the current trace and current span of this thread.
+		Enter the context and start the trace.
+
+		The trace becomes the current trace and the current span of this thread.
 
 		:returns:             The trace itself, so it can be named in an ``as`` clause.
 		:raises TracingError: If the trace is not :attr:`~SpanState.Empty`. |br|

@@ -218,7 +218,9 @@ class WarningCollector:
 
 	def __enter__(self) -> Self:
 		"""
-		Enter the warning collector context.
+		Enter the context and make this warning collector the current one.
+
+		The previous current warning collector becomes its parent.
 
 		:returns: The warning collector instance.
 		"""
@@ -401,7 +403,7 @@ class SupervisedWarningCollector(WarningCollector):
 
 	def __enter__(self) -> Self:
 		"""
-		Enter the warning collector context.
+		Enter the context and make this warning collector the current one of its thread.
 
 		:returns:                                The warning collector instance.
 		:raises SupervisedWarningCollectorError: If this collector is not the top-most warning collector of its thread.
