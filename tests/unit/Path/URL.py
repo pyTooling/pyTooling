@@ -33,7 +33,7 @@ Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.GenericPath.URL`
 parts and rendering it back.
 """
 from pyTooling.Exceptions      import ToolingException
-from pyTooling.GenericPath.URL import URL, URLError, Protocols
+from pyTooling.GenericPath.URL import Host, URL, URLError, Protocols
 from pyTooling.Testing         import Testcase
 
 
@@ -654,6 +654,24 @@ class ForbiddenCharacters(Testcase):
 	def test_AnAcceptedURLIsUnaffected(self) -> None:
 		"""A space is accepted today, so the note never fires for one - see the pull-request's Known Issues."""
 		self.assertEqual("https://a b/c", str(URL.Parse("https://a b/c")))
+
+
+class HostParameters(Testcase):
+	"""A host is constructed from a non-empty name and an optional port in range."""
+
+	def test_Rejected(self) -> None:
+		for hostname, port, exceptionType, message in (
+			(None,   None,    ValueError, "Parameter 'hostname' is None."),
+			(42,     None,    TypeError,  "Parameter 'hostname' is not of type 'str'."),
+			("",     None,    ValueError, "Parameter 'hostname' is empty."),
+			("host", "80",    TypeError,  "Parameter 'port' is not of type 'int'."),
+			("host", 65536,   ValueError, "Parameter 'port' is out of range 0..65535."),
+		):
+			with self.subTest(hostname=hostname, port=port):
+				with self.assertRaises(exceptionType) as context:
+					Host(hostname, port)
+
+				self.assertEqual(message, str(context.exception))
 
 
 class IPv6Hosts(Testcase):
