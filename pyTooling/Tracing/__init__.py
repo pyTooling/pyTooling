@@ -1154,7 +1154,9 @@ class Trace(Span):
 		exc_tb:   Nullable[TracebackType] = None
 	) -> Nullable[bool]:
 		"""
-		Exit the context and ......
+		Implementation of the :ref:`context manager protocol's <context-managers>` ``__exit__(...)`` method.
+
+		The trace is stopped, and the current thread has no active trace or span afterwards.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance

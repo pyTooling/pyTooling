@@ -29,6 +29,43 @@ by hand. An :class:`~pyTooling.Tracing.Event` is a point in time rather than a s
 :meth:`~pyTooling.Tracing.Span.Format` renders the tree as indented lines for a terminal. For anything else, the
 trace is exported.
 
+.. _TRACING/Model:
+
+Data Model
+==========
+
+.. code-block:: text
+
+   TraceElement              a name, a parent and attributes
+   +-- Event                 a point in time, attached to a span
+   +-- Span                  a timespan, holding sub-spans and events
+       +-- Trace             the root timespan, holding the trace's identifier
+
+* Every element has a :attr:`~pyTooling.Tracing.TraceElement.Parent` - the enclosing timespan - and attributes,
+  read and written with dictionary syntax: ``span["files"] = 12``.
+  :meth:`~pyTooling.Tracing.TraceElement.get` reads one that may not be there.
+* A :class:`~pyTooling.Tracing.Trace` is a :class:`~pyTooling.Tracing.Span` without a parent. Its
+  :attr:`~pyTooling.Tracing.Trace.TraceID` is shared by every timespan below it, and each timespan has its own
+  :attr:`~pyTooling.Tracing.Span.SpanID`. Both are drawn when the element is constructed, so exporting a trace twice
+  reports the same identifiers.
+* An :class:`~pyTooling.Tracing.Event` names its span with ``parent``; it never attaches to the active span.
+
+.. rubric:: The active span of a thread
+
+A ``with``-statement attaches a timespan to the **active span of the current thread**:
+
+#. Entering a :class:`~pyTooling.Tracing.Trace` makes it the thread's active trace and its active span.
+#. Entering a :class:`~pyTooling.Tracing.Span` appends it to the active span's sub-spans and makes it the active
+   span; leaving it makes its parent the active span again.
+#. Leaving the trace ends the tracing on that thread.
+
+:meth:`Span.CurrentSpan() <pyTooling.Tracing.Span.CurrentSpan>` and
+:meth:`Trace.CurrentTrace() <pyTooling.Tracing.Trace.CurrentTrace>` return them, or ``None`` outside a trace.
+
+Each thread has an active span of its own, so a thread started inside a trace has none: entering a span there raises
+:exc:`~pyTooling.Tracing.TracingError`. A worker thread that wants its timespans in the trace records them with
+``parent`` and its own times - see :ref:`TRACING/Recorded`.
+
 .. _TRACING/Recorded:
 
 Recorded Timespans
