@@ -365,6 +365,30 @@ class Program(metaclass=ExtendedType, slots=True):
 		else:
 			self.__cliParameters__[key] = key()
 
+	def _CopyParameters(self, tool: Program) -> None:
+		"""
+		Copy every command line argument set on this program to another program instance.
+
+		A method deriving a program variant calls it on the new instance, then sets the arguments it is given explicitly.
+
+		:param tool:        The program instance receiving the arguments.
+		:raises ValueError: If parameter 'tool' is None.
+		:raises TypeError:  If parameter 'tool' is not of type :class:`Program`.
+		:raises KeyError:   If an argument isn't allowed on 'tool', or is set there already.
+		"""
+		if tool is None:
+			raise ValueError("Parameter 'tool' is None.")
+		elif not isinstance(tool, Program):
+			ex = TypeError("Parameter 'tool' is not of type 'Program'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(tool)}'.")
+			raise ex
+
+		for key, argument in self.__cliParameters__.items():
+			if self._NeedsParameterInitialization(key):
+				tool[key] = argument.Value
+			else:
+				tool[key] = True
+
 	@readonly
 	def Path(self) -> Path:
 		"""

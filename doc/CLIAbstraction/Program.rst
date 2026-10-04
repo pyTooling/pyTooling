@@ -174,8 +174,7 @@ A program class can be derived like any other class, and the derived class **inh
 ``__init_subclass__`` collects the nested classes in *its own* scope, so a variant declares the arguments it
 supports, including re-declaring the ones it shares.
 
-.. attention::
-
-   There is currently **no helper to copy the set arguments** of one program instance to another, and no method to
-   derive a configured variant from a configured program. A caller that needs one iterates the arguments it set and
-   assigns them again on the new instance.
+A configured variant of a configured *instance* is derived by a method of the program: it creates a new instance, copies
+every argument set on this one with :meth:`~pyTooling.CLIAbstraction.Program._CopyParameters`, then sets the arguments
+it is given explicitly - see ``GetCommitTool`` in the :ref:`overview's example <CLIABS/Example>`. An argument the new
+instance's class doesn't declare raises :exc:`KeyError`.
