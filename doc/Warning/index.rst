@@ -10,7 +10,9 @@ Warnings
 
       A warning can be raised similar to an exception, but it doesn't interrupt execution at the position where it was
       raised. The warning travels upwards the call-stack until it's handled by a :class:`~pyTooling.Warning.WarningCollector`
-      similar to a `try .. except` statement. If a warning isn't handled within the call-stack, it raises an exception.
+      similar to a `try .. except` statement. A warning nobody collects is dropped; a
+      :class:`~pyTooling.Warning.CriticalWarning` or an exception nobody collects raises an
+      :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` or :exc:`~pyTooling.Warning.UnhandledExceptionError`.
 
       A warning is raised by Calling the class-method :meth:`WarningCollector.Raise <pyTooling.Warning.WarningCollector.Raise>`.
       This function expects a single parameter: an instance of :class:`Warning`.
