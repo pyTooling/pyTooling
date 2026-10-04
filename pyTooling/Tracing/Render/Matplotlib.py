@@ -61,13 +61,13 @@ from pyTooling.Tracing.CI        import SpanKind
 from pyTooling.Tracing.Render    import GanttLayout, LINE_LEGEND_LABEL, Renderer
 
 try:
-	from matplotlib              import rc_context
-	from matplotlib.figure       import Figure
-	from matplotlib.font_manager import FontProperties, findfont, fontManager
-	from matplotlib.ft2font      import FT2Font
-	from matplotlib.lines        import Line2D
-	from matplotlib.patches      import Patch
-	from matplotlib.ticker       import FuncFormatter
+	from matplotlib                import rc_context
+	from matplotlib.figure         import Figure
+	from matplotlib.font_manager   import FontProperties, findfont, fontManager
+	from matplotlib.ft2font        import FT2Font
+	from matplotlib.lines          import Line2D
+	from matplotlib.patches        import Patch
+	from matplotlib.ticker         import FuncFormatter
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="matplotlib", extra="diagram") from ex
 
