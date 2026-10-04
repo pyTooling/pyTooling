@@ -31,6 +31,8 @@
 """
 Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX license mappings.
 """
+from unittest            import skipUnless
+
 from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
 from pyTooling.Licensing import CC0_1_0, GPL_2_0_only, GPL_2_0_or_later, OSI_LICENSE_URLS, PSF_2_0_License
 from pyTooling.Licensing import LicenseAbsence, ProprietaryLicense, UnknownLicense
@@ -46,6 +48,13 @@ from pyTooling.Licensing import SPDXLicense
 from pyTooling.Licensing import BaseLicense, Operator, UnaryOperator, WithOperator
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing   import Testcase
+
+
+try:
+	from trove_classifiers import classifiers
+	HAS_TROVE_CLASSIFIERS = True
+except ImportError:  # pragma: no cover
+	HAS_TROVE_CLASSIFIERS = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -158,10 +167,9 @@ class SPDXIndex(Testcase):
 			with self.subTest(license=spdxIdentifier):
 				self.assertEqual(spdxIdentifier, spdxLicense.SPDXIdentifier)
 
+	@skipUnless(HAS_TROVE_CLASSIFIERS, "Needs 'trove-classifiers', a requirement of the unit tests.")
 	def test_EveryClassifierIsARealClassifier(self) -> None:
 		"""The strings are checked against PyPI's own list, not against what looked right when they were typed."""
-
-		from trove_classifiers import classifiers
 
 		for spdxIdentifier in PYTHON_LICENSE_NAMES:
 			with self.subTest(license=spdxIdentifier):

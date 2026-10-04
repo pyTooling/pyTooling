@@ -178,13 +178,20 @@ class Host(RootMixin):
 		:param hostname:    Name of the host (either IP address or DNS).
 		:param port:        Optional, port number.
 		:raises ValueError: If parameter 'hostname' is None or empty.
+		:raises TypeError:  If parameter 'hostname' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'port' is not of type :class:`int`.
+		:raises ValueError: If parameter 'port' is out of range 0..65535.
 		"""
 		super().__init__()
 
-		if not isinstance(hostname, str):
+		if hostname is None:
+			raise ValueError("Parameter 'hostname' is None.")
+		elif not isinstance(hostname, str):
 			ex = TypeError("Parameter 'hostname' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(hostname)}'.")
 			raise ex
+		elif hostname == "":
+			raise ValueError("Parameter 'hostname' is empty.")
 
 		self._hostname = hostname
 

@@ -129,6 +129,8 @@ Version 10.x (2026)
      * :exc:`~pyTooling.GenericPath.URL.URLError` replaces the bare
        :exc:`~pyTooling.Exceptions.ToolingException` the module raised, so a consumer can catch a URL problem
        without catching everything pyTooling raises. It still derives from it.
+     * :class:`~pyTooling.GenericPath.URL.Host` rejects a host name that is ``None`` or empty with a
+       :exc:`ValueError`, as its doc-string always said; ``None`` was a :exc:`TypeError`.
      * A rejected URL holding a character :rfc:`3986` forbids - a space, a control character, ``<``, ``|``,
        ... - gets a note naming it and its percent-encoding, e.g. *"Character ' ' is not allowed in a URL.
        Write it percent-encoded as '%20'."*

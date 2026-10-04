@@ -690,7 +690,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		Return the opening XML tag of this graph.
 
 		Beside the graph's ID, the tag carries the parsing hints a reader needs: the default edge direction, the
-number of nodes and edges, the parsing order and both ID styles.
+		number of nodes and edges, the parsing order and both ID styles.
 
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
