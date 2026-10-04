@@ -442,6 +442,51 @@ class Construction(Testcase):
 		self.assertEqual(7, next(iter(v1.Graph.Components)).VertexCount)
 
 
+class Components(Testcase):
+	def test_Merge_SmallIntoLarge(self) -> None:
+		"""An edge from a single vertex to a bigger component keeps the bigger component."""
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+		component = vertex1.Component
+
+		vertex3 = Vertex(graph=graph)
+		vertex3.EdgeToVertex(vertex1)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertIs(component, vertex3.Component)
+		self.assertSetEqual({vertex1, vertex2, vertex3}, component.Vertices)
+
+	def test_Merge_LargeIntoSmall(self) -> None:
+		"""An edge from a bigger component to a single vertex keeps the bigger component."""
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+		component = vertex1.Component
+
+		vertex3 = Vertex(graph=graph)
+		vertex1.EdgeToVertex(vertex3)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertIs(component, vertex3.Component)
+		self.assertSetEqual({vertex1, vertex2, vertex3}, component.Vertices)
+
+	def test_Merge_EqualSize(self) -> None:
+		"""Of two components of equal size, the source's component is kept."""
+		graph = Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(graph=graph)
+		component = vertex1.Component
+
+		vertex1.EdgeToVertex(vertex2)
+
+		self.assertEqual(1, graph.ComponentCount)
+		self.assertIs(component, vertex2.Component)
+		self.assertSetEqual({vertex1, vertex2}, component.Vertices)
+
+
 class Subgraphs(Testcase):
 	def test_OuterVertices(self) -> None:
 		graph = Graph()

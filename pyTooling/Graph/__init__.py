@@ -2116,6 +2116,9 @@ class BaseEdge(
 		if component is not destination._component:
 			# TODO: should it be divided into with/without ID?
 			oldComponent = destination._component
+			if len(oldComponent._vertices) > len(component._vertices):
+				component, oldComponent = oldComponent, component
+
 			for vertex in oldComponent._vertices:
 				vertex._component = component
 				component._vertices.add(vertex)

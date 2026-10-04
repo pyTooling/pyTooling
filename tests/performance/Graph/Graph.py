@@ -69,6 +69,30 @@ class EdgeLinking(PerformanceTest):
 		self.runSizedTests(wrapper, self.counts)
 
 
+	def test_LinkFromNewVertex_Flat(self) -> None:
+		def wrapper(count: int):
+			def func():
+				rootVertex = pt_Vertex(0)
+
+				for i in range(1, count):
+					rootVertex.EdgeFromNewVertex(i)
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts)
+
+	def test_LinkFromNewVertex_Linear(self) -> None:
+		def wrapper(count: int):
+			def func():
+				vertex = pt_Vertex(0)
+
+				for i in range(1, count):
+					vertex = vertex.EdgeFromNewVertex(i).Source
+
+			return func
+
+		self.runSizedTests(wrapper, self.counts)
+
 class RandomGraph(PerformanceTest):
 	def ConstructGraphFromEdgeListFile(self, file: Path, vertexCount: int) -> pt_Graph:
 		graph = pt_Graph(name=str(vertexCount))
