@@ -60,8 +60,8 @@ resolves the console script once per test class and offers two ways to start the
   one in ``_runnableModule``. When this passes while the entry point fails, the packaging is at fault rather than
   the code. A program without a ``__main__`` module leaves it unset.
 
-Both capture ``stdout`` and ``stderr`` as text and take a ``timeout``, so a hanging program fails the test instead
-of the test suite.
+Both capture ``stdout`` and ``stderr`` as text and take a ``timeout`` - 60 seconds by default -, so a hanging
+program fails the test instead of the test suite.
 
 .. code-block:: python
 

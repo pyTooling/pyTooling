@@ -178,6 +178,9 @@ Version 10.x (2026)
      * :class:`~pyTooling.Testing.ApplicationTestcase` no longer requires ``_runnableModule``: a program without a
        ``__main__`` module is tested through its entry point, and only
        :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` asks for the module.
+     * :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` and
+       :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` wait 60 seconds by default instead of 10. The timeout
+       guards against a hanging program; a cold Windows runner or PyPy on macOS needed longer than 10 seconds.
      * :deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase` mark what a test runner
        collects, so a testcase's name stops carrying two unrelated jobs at once.
      * Both markers take a title, and both fall back to the doc-string: its summary becomes the summary, its body
