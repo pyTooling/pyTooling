@@ -83,6 +83,8 @@ class MyClass:
     ...
 ````
 
+[pyTooling.Attributes]: https://pytooling.github.io/pyTooling/Attributes/index.html
+
 
 ### CLI Abstraction
 
@@ -107,6 +109,14 @@ is offered with embedded [subprocess.Popen] behavior.
 * Assemble parameters as list for handover to [subprocess.Popen], in the order the program declares them.
 * Launch a program with [subprocess.Popen] and hide the complexity of Popen.
 * Get a generator object for line-by-line output reading to enable postprocessing of outputs.
+
+[pyTooling.CLIAbstraction]: https://pytooling.github.io/pyTooling/CLIAbstraction/index.html
+[CommandLineArgument]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument
+[Program]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Program
+[ShortFlag]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Flag.html#pyTooling.CLIAbstraction.Flag.ShortFlag
+[PathArgument]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathArgument
+[subprocess.Popen]: https://docs.python.org/3/library/subprocess.html#subprocess.Popen
+[Executable]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Executable
 
 
 ### Common Helper Functions
@@ -331,12 +341,3 @@ The accompanying documentation is licensed under [Creative Commons - Attribution
 -------------------------
 
 SPDX-License-Identifier: Apache-2.0
-
-[pyTooling.Attributes]: https://pytooling.github.io/pyTooling/Attributes/index.html
-[pyTooling.CLIAbstraction]: https://pytooling.github.io/pyTooling/CLIAbstraction/index.html
-[CommandLineArgument]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument
-[Program]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Program
-[Executable]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Executable
-[ShortFlag]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Flag.html#pyTooling.CLIAbstraction.Flag.ShortFlag
-[PathArgument]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathArgument
-[subprocess.Popen]: https://docs.python.org/3/library/subprocess.html#subprocess.Popen
