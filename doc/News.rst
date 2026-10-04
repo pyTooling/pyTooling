@@ -379,6 +379,12 @@ Version 10.x (2026)
        :meth:`~pyTooling.CLIAbstraction.Program.LogDryRun` records the skipped action in
        :attr:`~pyTooling.CLIAbstraction.Program.DryRunMessages`; a derived class may override it to write the message.
 
+   * :mod:`pyTooling.Configuration`
+
+     * A key stated without a value - ``key:`` in YAML, ``null`` in JSON - raised
+       :exc:`~pyTooling.Configuration.UnsupportedValueTypeError`. It reads as ``None`` now, and a variable referencing
+       it raises :exc:`~pyTooling.Configuration.PathExpressionError` instead of being replaced by ``"None"``.
+
    * :mod:`pyTooling.Testing`
 
      * The markers were collected as testcases themselves. :deco:`~pyTooling.Testing.testsuite` and

@@ -37,7 +37,6 @@ from pathlib  import Path
 from pytest                       import raises
 
 from pyTooling.Configuration      import InterpolationError, KeyNotFoundError, PathExpressionError
-from pyTooling.Configuration      import UnsupportedValueTypeError
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.JSON import Configuration
 from pyTooling.Testing            import Testcase
@@ -154,13 +153,19 @@ class Errors(Testcase):
 
 		self.assertIn("Node 'emptySequence' is an empty sequence.", context.exception.__notes__)
 
-	def test_UnsupportedValueType(self) -> None:
+	def test_NullValue(self) -> None:
+		"""A null value is ``None``, not an unsupported type."""
 		config = Configuration(self._configFile)
 
-		with self.assertRaises(UnsupportedValueTypeError) as context:
-			_ = config["nullValue"]
+		self.assertIsNone(config["nullValue"])
 
-		self.assertIn("Unsupported type 'NoneType' for key 'nullValue'", str(context.exception))
+	def test_ReferenceToANullValue(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(PathExpressionError) as context:
+			_ = config["nullReference"]
+
+		self.assertIn("Path expression 'nullValue' resolves to a null value.", str(context.exception))
 
 	def test_UnclosedVariableReference(self) -> None:
 		config = Configuration(self._configFile)

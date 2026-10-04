@@ -98,6 +98,10 @@ never reorders a file.
    item3 =     settings.get("key3", "")  # by key, with a default
    pairCount = len(settings)             # number of key-value pairs
 
+A key the document states without a value - ``key:`` in YAML, ``null`` in JSON - reads as ``None``, and
+:meth:`~pyTooling.Configuration.Dictionary.get` returns its default only for a key that is absent. A variable
+``${...}`` referencing such a key raises :exc:`~pyTooling.Configuration.PathExpressionError`.
+
 Three iterators are named alike, so nothing has to be remembered about which one plain iteration gives:
 :meth:`~pyTooling.Configuration.Dictionary.IterateKeys`,
 :meth:`~pyTooling.Configuration.Dictionary.IterateValues` and
