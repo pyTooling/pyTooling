@@ -62,6 +62,8 @@ _ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")   #: Pattern matching an ANSI 
 class TestingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Testing`."""
 
+	__test__ = False  #: Not a test class, although its name starts with ``Test``: pytest doesn't collect it.
+
 
 @export
 class ApplicationTestingError(TestingError):
