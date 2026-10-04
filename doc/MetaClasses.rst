@@ -571,12 +571,16 @@ cached instance of that class will be returned.
 Overloading
 ###########
 
-.. warning:: This needs a clear definition before overloading makes sense...
+.. attention::
 
-This class provides a method dispatcher based on method signature's type
-annotations.
+   This meta-class is planned and not available yet: :mod:`pyTooling.MetaClasses` has no ``Overloading``, and a
+   class with :class:`~pyTooling.MetaClasses.ExtendedType` keeps the last of two methods of one name, as Python does.
+   It needs a clear definition before overloading makes sense.
 
-.. admonition:: Example Usage
+A meta-class ``Overloading`` would dispatch a call to one of several methods of the same name, by their parameters'
+type annotations.
+
+.. admonition:: Planned Usage
 
    .. code-block:: python
 
