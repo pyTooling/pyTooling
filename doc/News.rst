@@ -356,6 +356,11 @@ Version 10.x (2026)
      said it could never hold (:ghissue:`384`). :attr:`~pyTooling.Attributes.Attribute.Scope` is an instance property,
      and :meth:`~pyTooling.Attributes.Attribute.GetAttributes` honours ``includeSubClasses=False``.
 
+   * :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` and
+     :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` **merge** ``environment`` into this process's
+     environment instead of replacing it; a value of ``None`` removes a variable. A program given only the variables a
+     test named lost the rest - on Windows ``SystemRoot``, without which it can't open a network connection.
+
    * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
      :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. The old
      names were briefly kept as aliases and are removed in the same release, so an ``import`` or an ``except``

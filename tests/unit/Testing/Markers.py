@@ -33,7 +33,6 @@ Unit tests for :mod:`pyTooling.Testing`'s markers :deco:`~pyTooling.Testing.test
 
 Also for :mod:`pyTooling.Testing.PyTest`, the plugin collecting what they mark.
 """
-from os                    import environ
 from pathlib               import Path
 from tempfile              import TemporaryDirectory
 from xml.etree.ElementTree import parse as xml_parse
@@ -292,10 +291,8 @@ class PyTestPlugin(ApplicationTestcase):
 		report = directory / "report.xml"
 
 		# the subprocess runs elsewhere, so point it at the sources under test rather than an installed copy.
-		# 'environment' replaces the environment rather than extending it, so it is merged into this process's -
-		# without 'SystemRoot' Winsock fails to initialise on Windows, and pytest aborts with an INTERNALERROR.
 		repositoryRoot = Path(__file__).resolve().parent.parent.parent.parent
-		environment = {**environ, "PYTHONPATH": str(repositoryRoot)}
+		environment = {"PYTHONPATH": str(repositoryRoot)}
 
 		result = self.RunModule(
 			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest",
@@ -333,7 +330,7 @@ python_functions = test*
 			repositoryRoot = Path(__file__).resolve().parent.parent.parent.parent
 			result = self.RunModule(
 				"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest", "--collect-only", "-q", str(directory),
-				environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+				environment={"PYTHONPATH": str(repositoryRoot)},
 				workingDirectory=directory
 			)
 
@@ -467,7 +464,7 @@ class MarkedTestCaseClass(ApplicationTestcase):
 		result = self.RunModule(
 			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest", f"--junit-xml={report}",
 			*(arguments if len(arguments) > 0 else (str(directory), )),
-			environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+			environment={"PYTHONPATH": str(repositoryRoot)},
 			workingDirectory=directory
 		)
 
@@ -537,7 +534,7 @@ class ReportFormat(ApplicationTestcase):
 		result = self.RunModule(
 			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest", "-p", "pyTooling.Testing.ReportWriter",
 			f"--pytooling-xml={report}", str(directory),
-			environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+			environment={"PYTHONPATH": str(repositoryRoot)},
 			workingDirectory=directory
 		)
 
@@ -680,7 +677,7 @@ class VersionComparison(Testcase):
 		result = self.RunModule(
 			"-p", "no:cacheprovider", "-p", "pyTooling.Testing.PyTest",
 			f"--junit-xml={report}", "versioning",
-			environment={**environ, "PYTHONPATH": str(repositoryRoot)},
+			environment={"PYTHONPATH": str(repositoryRoot)},
 			workingDirectory=directory
 		)
 

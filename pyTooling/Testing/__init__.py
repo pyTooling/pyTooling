@@ -43,10 +43,11 @@ from inspect    import cleandoc
 from pathlib    import Path
 from re         import compile as re_compile
 from shutil     import which
+from os         import environ
 from subprocess import CompletedProcess, run as subprocess_run
 from unittest   import TestCase
 from sys        import executable as PythonExecutable, version_info
-from typing     import Any, Callable, ClassVar, Union, Optional as Nullable
+from typing     import Any, Callable, ClassVar, Mapping, Union, Optional as Nullable
 
 from pyTooling.Common        import getFullyQualifiedName
 from pyTooling.Decorators    import export
@@ -323,12 +324,32 @@ class ApplicationTestcase(Testcase):
 
 		cls._executable = resolved
 
+	@staticmethod
+	def _MergeEnvironment(environment: Nullable[Mapping[str, Nullable[str]]]) -> Nullable[dict[str, str]]:
+		"""
+		Return a copy of this process's environment with the given variables set or removed.
+
+		:param environment: Variables to set, or - with value ``None`` - to remove; ``None`` inherits the environment.
+		:returns:           The merged environment, or ``None`` to inherit this process's environment unchanged.
+		"""
+		if environment is None:
+			return None
+
+		merged = dict(environ)
+		for name, value in environment.items():
+			if value is None:
+				merged.pop(name, None)
+			else:
+				merged[name] = value
+
+		return merged
+
 	def RunEntrypoint(
 		self,
 		*arguments:       str,
 		timeout:          float = 60.0,
 		stdInput:         Nullable[str] = None,
-		environment:      Nullable[dict[str, str]] = None,
+		environment:      Nullable[Mapping[str, Nullable[str]]] = None,
 		workingDirectory: Nullable[Path] = None
 	) -> CompletedProcess:
 		"""
@@ -340,7 +361,8 @@ class ApplicationTestcase(Testcase):
 		:param timeout:          Optional, seconds to wait before the program is killed and :exc:`subprocess.TimeoutExpired`
 		                         is raised. A test should fail rather than hang. Default: 60 seconds.
 		:param stdInput:         Optional, text to send to the program's standard input.
-		:param environment:      Optional, the environment to run in, or ``None`` to inherit this process's environment.
+		:param environment:      Optional, variables to set - or, with value ``None``, to remove - in this process's
+		                         environment, which the program inherits.
 		:param workingDirectory: Optional, directory to run in, or ``None`` for the current one.
 		:returns:                The completed process, with ``stdout`` and ``stderr`` captured as text.
 		"""
@@ -350,7 +372,7 @@ class ApplicationTestcase(Testcase):
 			text=True,
 			timeout=timeout,
 			input=stdInput,
-			env=environment,
+			env=self._MergeEnvironment(environment),
 			cwd=None if workingDirectory is None else str(workingDirectory)
 		)
 
@@ -359,7 +381,7 @@ class ApplicationTestcase(Testcase):
 		*arguments:       str,
 		timeout:          float = 60.0,
 		stdInput:         Nullable[str] = None,
-		environment:      Nullable[dict[str, str]] = None,
+		environment:      Nullable[Mapping[str, Nullable[str]]] = None,
 		workingDirectory: Nullable[Path] = None
 	) -> CompletedProcess:
 		"""
@@ -372,8 +394,8 @@ class ApplicationTestcase(Testcase):
 		:param timeout:                  Optional, seconds to wait before the program is killed and
 		                                 :exc:`subprocess.TimeoutExpired` is raised. Default: 60 seconds.
 		:param stdInput:                 Optional, text to send to the program's standard input.
-		:param environment:              Optional, the environment to run in, or ``None`` to inherit this process's
-		                                 environment.
+		:param environment:              Optional, variables to set - or, with value ``None``, to remove - in this
+		                                 process's environment, which the program inherits.
 		:param workingDirectory:         Optional, directory to run in, or ``None`` for the current one.
 		:returns:                        The completed process, with ``stdout`` and ``stderr`` captured as text.
 		:raises ApplicationTestingError: If the test class named no runnable module.
@@ -389,7 +411,7 @@ class ApplicationTestcase(Testcase):
 			text=True,
 			timeout=timeout,
 			input=stdInput,
-			env=environment,
+			env=self._MergeEnvironment(environment),
 			cwd=None if workingDirectory is None else str(workingDirectory)
 		)
 
