@@ -1029,12 +1029,13 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex` of the graph, with the
 		:class:`PackageVersion` as its :attr:`~pyTooling.Graph.Vertex.ID`, so
 		:meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. Its key-value pairs
-		are strings:
+		keep the version's typed objects:
 
-		* ``license`` - the license as SPDX expression, ``NOASSERTION`` if it's unknown;
-		* ``releasedAt`` - the release time in ISO 8601;
+		* ``license`` - the :class:`~pyTooling.Licensing.LicenseExpression`, an
+		  :class:`~pyTooling.Licensing.UnknownLicense` if it's unknown;
+		* ``releasedAt`` - the release time as :class:`~datetime.datetime`;
 		* ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
-		  ``changelogURL``.
+		  ``changelogURL`` - each a :class:`~pyTooling.GenericPath.URL.URL`.
 
 		All but ``license`` are set only if the version knows them; for a Python package, after its details were loaded. The
 		format is described in :ref:`DEPENDENCIES/Graph`.
@@ -1053,10 +1054,10 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 			for package in storage._packages.values():
 				for packageVersion in package._versions.values():
 					keyValuePairs = {
-						"license": str(packageVersion._licenseExpression)
+						"license": packageVersion._licenseExpression
 					}
 					if packageVersion._releasedAt is not None:
-						keyValuePairs["releasedAt"] = packageVersion._releasedAt.isoformat()
+						keyValuePairs["releasedAt"] = packageVersion._releasedAt
 
 					for key, url in (
 						("licenseURL",       packageVersion._licenseURL),
@@ -1067,7 +1068,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 						("changelogURL",     packageVersion._changelogURL)
 					):
 						if url is not None:
-							keyValuePairs[key] = str(url)
+							keyValuePairs[key] = url
 
 					vertices[packageVersion] = Vertex(vertexID=packageVersion, keyValuePairs=keyValuePairs, graph=graph)
 

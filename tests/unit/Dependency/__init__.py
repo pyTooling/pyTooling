@@ -36,7 +36,7 @@ from datetime import datetime
 
 from pyTooling.Exceptions      import ToolingException
 from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing       import LicenseExpression
+from pyTooling.Licensing       import LicenseExpression, UnknownLicense
 from pyTooling.Versioning      import SemanticVersion
 from pyTooling.Dependency      import PackageDependencyGraph, PackageStorage, Package, PackageVersion
 from pyTooling.Testing         import Testcase
@@ -449,7 +449,7 @@ class ToGraph(Testcase):
 		rootVertex = graph.GetVertexByID(root)
 		self.assertIs(root, rootVertex.ID)
 		self.assertIsNone(rootVertex.Value)
-		self.assertEqual("NOASSERTION", rootVertex["license"])
+		self.assertIsInstance(rootVertex["license"], UnknownLicense)
 		self.assertSetEqual({pAv10, pAv11}, {vertex.ID for vertex in rootVertex.IterateSuccessorVertices()})
 		self.assertSetEqual(
 			{storage["packB"]["v2.0"], storage["packB"]["v2.1"]},
@@ -490,13 +490,14 @@ class ToGraph(Testcase):
 		graph = dependencyGraph.ToGraph()
 
 		self.assertDictEqual({
-			"license":          "BSD-3-Clause",
-			"releasedAt":       "2022-10-25T02:30:23",
-			"licenseURL":       "https://github.com/tartley/colorama/blob/master/LICENSE.txt",
-			"repositoryURL":    "https://github.com/tartley/colorama",
-			"documentationURL": "https://github.com/tartley/colorama#readme",
-			"issueTrackerURL":  "https://github.com/tartley/colorama/issues",
-			"projectURL":       "https://pypi.org/project/colorama/",
-			"changelogURL":     "https://github.com/tartley/colorama/blob/master/CHANGELOG.rst",
+			"license":          known._licenseExpression,
+			"releasedAt":       known._releasedAt,
+			"licenseURL":       known._licenseURL,
+			"repositoryURL":    known._repositoryURL,
+			"documentationURL": known._documentationURL,
+			"issueTrackerURL":  known._issueTrackerURL,
+			"projectURL":       known._projectURL,
+			"changelogURL":     known._changelogURL,
 		}, graph.GetVertexByID(known)._dict)
-		self.assertDictEqual({"license": "NOASSERTION"}, graph.GetVertexByID(unknown)._dict)
+		self.assertListEqual(["license"], list(graph.GetVertexByID(unknown)._dict))
+		self.assertIsInstance(graph.GetVertexByID(unknown)["license"], UnknownLicense)

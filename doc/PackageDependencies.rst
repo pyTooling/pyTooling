@@ -54,16 +54,18 @@ Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex
    * - :attr:`~pyTooling.Graph.Vertex.Value`
      - empty (``None``) - the ID already references the version.
    * - key ``license``
-     - the license as SPDX expression, e.g. ``BSD-3-Clause``; ``NOASSERTION`` if it's unknown. Always set.
+     - the license as :class:`~pyTooling.Licensing.LicenseExpression`, e.g. ``BSD-3-Clause``; an
+       :class:`~pyTooling.Licensing.UnknownLicense` (``NOASSERTION``) if it's unknown. Always set.
    * - key ``releasedAt``
-     - the release time in ISO 8601, e.g. ``2022-10-25T02:30:23``.
+     - the release time as :class:`~datetime.datetime`.
    * - keys ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
        ``changelogURL``
      - the URL of the license text, the source repository, the documentation, the issue tracker, the project's
-       homepage and the changelog.
+       homepage and the changelog, each a :class:`~pyTooling.GenericPath.URL.URL`.
 
-Every key-value pair is a string. All but ``license`` are set only if the version knows the value - for a Python
-package, after its details were loaded; converting a graph doesn't load them.
+The key-value pairs keep the version's typed objects; a graph writer converts them to text. All but ``license`` are set
+only if the version knows the value - for a Python package, after its details were loaded; converting a graph doesn't
+load them.
 
 Every dependency becomes an :class:`~pyTooling.Graph.Edge` from the version needing to the version it needs, so an
 edge reads *needs*. An edge has no ID, value or key-value pairs.
@@ -90,8 +92,8 @@ For a graph in which ``myApp 1.0.0`` depends on ``colorama 0.4.6``, Graphviz' DO
      "myApp - 1.0.0" -> "colorama - 0.4.6";
    }
 
-:mod:`pyTooling.Graph.GraphML` writes each key-value pair as a ``<data>`` element of the node, declared by a key
-named ``node<key>``, e.g. ``<data key="nodelicense">BSD-3-Clause</data>``.
+:mod:`pyTooling.Graph.GraphML` writes each key-value pair as text in a ``<data>`` element of the node, declared by a
+key named ``node<key>``, e.g. ``<data key="nodelicense">BSD-3-Clause</data>``.
 
 .. _DEPENDENCIES/Python:
 
