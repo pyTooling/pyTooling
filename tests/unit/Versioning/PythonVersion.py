@@ -175,7 +175,9 @@ class SemanticVersionSpellings(Testcase):
 
 		with self.assertRaises(ValueError):
 			SemanticVersion(1, 0, 0, level=ReleaseLevel.ReleaseCandidate, number=1, spelling="a")
+
 		with self.assertRaises(ValueError):
 			SemanticVersion(1, 0, 0, spelling="rc")
+
 		with self.assertRaises(TypeError):
 			SemanticVersion(1, 0, 0, level=ReleaseLevel.ReleaseCandidate, number=1, spelling=1)
