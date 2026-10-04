@@ -49,7 +49,7 @@ from ast             import parse as ast_parse, get_docstring as ast_get_docstri
 from collections.abc import Sized
 from os              import scandir as os_scandir
 from pathlib         import Path
-from re              import split as re_split
+from re              import split as re_split, sub as re_sub
 from sys             import version_info
 from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
 from pyTooling.Decorators    import export, readonly
@@ -192,8 +192,9 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 					print(f"[pyTooling.Packaging]{'  ' * indent} Extracting requirements from '{requirementsFile}'.")
 
 				for line in file.readlines():
-					line = line.strip()
-					if line.startswith("#") or line == "":
+					# a comment starts a line or follows whitespace; a '#' inside a word is a URL's fragment ('URL#NAME')
+					line = re_sub(r"(^|\s)#.*$", "", line).strip()
+					if line == "":
 						continue
 					elif line.startswith("-r"):
 						# Remove the first word/argument (-r)
@@ -502,7 +503,7 @@ Default license (Apache License, 2.0) used by :func:`DescribePythonPackage` and 
 if parameter ``license`` is not assigned.
 """
 
-DEFAULT_PY_VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
+DEFAULT_PY_VERSIONS = ("3.11", "3.12", "3.13", "3.14")
 """
 A tuple of supported CPython versions used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
 if parameter ``pythonVersions`` is not assigned.

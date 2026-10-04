@@ -425,6 +425,6 @@ knowing the GitHub namespace and repository name: issue tracker URL, source code
           keywords="Python3 setuptools package wheel installation",
           sourceFileWithVersion=Path(f"{packageName.replace('.', '/')}/__init__.py"),
           developmentStatus="beta",
-          pythonVersions=("3.8", "3.9", "3.10")
+          pythonVersions=("3.12", "3.13", "3.14")
         )
       )
