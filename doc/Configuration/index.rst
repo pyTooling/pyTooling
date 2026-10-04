@@ -123,9 +123,10 @@ because they exist.
 
 .. attention::
 
-   A value is only a :class:`str`, :class:`int` or :class:`float` when the document states a scalar there. When it
-   states a sub-mapping or a list, the value is another :class:`~pyTooling.Configuration.Dictionary` or
-   :class:`~pyTooling.Configuration.Sequence`, not a :class:`dict` or :class:`list`.
+   A scalar is returned as a :class:`str`, whatever the document writes: ``42`` is ``"42"``, ``1.5`` is ``"1.5"`` and
+   ``true`` is ``"True"``. When the document states a sub-mapping or a list, the value is another
+   :class:`~pyTooling.Configuration.Dictionary` or :class:`~pyTooling.Configuration.Sequence`, not a :class:`dict` or
+   :class:`list`.
 
 
 Sequences
@@ -340,9 +341,8 @@ code has to instantiate a *format's* dictionary or sequence when it descends int
 instantiates. A concrete implementation sets them, which is step 5 below.
 
 Two implementations ship with pyTooling - :mod:`pyTooling.Configuration.JSON` and
-:mod:`pyTooling.Configuration.YAML` - and the YAML one additionally interpolates ``${...}`` variable references in
-scalar values, raising :exc:`~pyTooling.Configuration.InterpolationError` for a dangling ``$`` or an unclosed
-reference.
+:mod:`pyTooling.Configuration.YAML` - and both interpolate ``${...}`` variable references in scalar values, raising
+:exc:`~pyTooling.Configuration.InterpolationError` for a dangling ``$`` or an unclosed reference.
 
 .. mermaid::
 
