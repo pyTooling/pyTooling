@@ -339,6 +339,12 @@ Version 10.x (2026)
      * :meth:`Program._CopyParameters <pyTooling.CLIAbstraction.Program._CopyParameters>` copies every argument set on
        a program to another instance, for a method deriving a configured variant.
 
+   * :mod:`pyTooling.Dependency`
+
+     * :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts a package dependency graph into a
+       :class:`pyTooling.Graph.Graph`: a vertex per package version, with its license, release time and URLs as
+       key-value pairs, and an edge per dependency.
+
    .. rubric:: Breaking Changes
 
    * ⚠️ **The four mixin-classes of** :mod:`pyTooling.GenericPath` **are renamed to the** ``***Mixin`` **spelling**
