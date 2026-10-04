@@ -105,14 +105,6 @@ The following example implements a portion of the ``git`` program and its ``comm
            class ArgumentPaths(PathListArgument):
              """Files to commit."""
 
-           def _CopyParameters(self, tool: "Git") -> None:
-             """Copy all parameters of this program to another instance."""
-             for key, argument in self.__cliParameters__.items():
-               if self._NeedsParameterInitialization(key):
-                 tool[key] = argument.Value
-               else:
-                 tool[key] = True
-
            def GetCommitTool(
              self,
              message: str,

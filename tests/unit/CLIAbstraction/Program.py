@@ -81,6 +81,15 @@ class GitUnknownOS(Program):
 	}
 
 
+class GitWithoutArguments(Program):
+	_executableNames = {
+		"Darwin":  "git",
+		"FreeBSD": "git",
+		"Linux":   "git",
+		"Windows": "git.exe"
+	}
+
+
 @mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
 class ExplicitPathsOnFreeBSD(Testcase, Helper):
 	_binaryDirectoryPath = Path("/usr/local/bin")
@@ -314,3 +323,56 @@ class DryRun(Testcase):
 		with self.assertRaises(CLIAbstractionError):
 			Gitt(executablePath=Path("does/not/exist/gitt"))
 
+
+class Derive(Testcase, Helper):
+	def test_CopyParameters(self) -> None:
+		tool = Git()
+		tool[tool.CommandCommit] = True
+		tool[tool.ValueCommitMessage] = "Initial commit."
+
+		variant = Git()
+		tool._CopyParameters(variant)
+
+		self.assertListEqual(tool.ToArgumentList(), variant.ToArgumentList())
+		self.assertIsNot(tool[tool.ValueCommitMessage], variant[variant.ValueCommitMessage])
+
+	def test_CopyParameters_ThenSetExplicitly(self) -> None:
+		tool = Git()
+		tool[tool.FlagVersion] = True
+
+		variant = Git()
+		tool._CopyParameters(variant)
+		variant[variant.CommandCommit] = True
+
+		executable = self.GetExecutablePath("git")
+		self.assertListEqual([executable, "--version"], tool.ToArgumentList())
+		self.assertListEqual([executable, "--version", "commit"], variant.ToArgumentList())
+
+	def test_CopyParameters_SetAlready(self) -> None:
+		tool = Git()
+		tool[tool.FlagVersion] = True
+
+		variant = Git()
+		variant[variant.FlagVersion] = True
+
+		with self.assertRaises(KeyError):
+			tool._CopyParameters(variant)
+
+	def test_CopyParameters_NotDeclared(self) -> None:
+		tool = Git()
+		tool[tool.FlagVersion] = True
+
+		with self.assertRaises(KeyError):
+			tool._CopyParameters(GitWithoutArguments())
+
+	def test_CopyParameters_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Git()._CopyParameters(None)
+
+		self.assertEqual("Parameter 'tool' is None.", str(context.exception))
+
+	def test_CopyParameters_NotAProgram(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Git()._CopyParameters("git")
+
+		self.assertEqual("Parameter 'tool' is not of type 'Program'.", str(context.exception))

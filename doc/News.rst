@@ -334,6 +334,11 @@ Version 10.x (2026)
        :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` / :meth:`~pyTooling.Graph.GraphViz.Graph.FromTree` with
        conversion methods a derived class overrides.
 
+   * :mod:`pyTooling.CLIAbstraction`
+
+     * :meth:`Program._CopyParameters <pyTooling.CLIAbstraction.Program._CopyParameters>` copies every argument set on
+       a program to another instance, for a method deriving a configured variant.
+
    .. rubric:: Breaking Changes
 
    * ⚠️ **The four mixin-classes of** :mod:`pyTooling.GenericPath` **are renamed to the** ``***Mixin`` **spelling**
