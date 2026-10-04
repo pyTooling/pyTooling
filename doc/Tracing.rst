@@ -199,7 +199,7 @@ CI Pipelines
 :ref:`recorded timespans <TRACING/Recorded>`. A trace read this way renders and exports like any other, so the time
 a pipeline spends waiting for runners and running jobs and steps can be inspected in the same viewers.
 
-A service's reader builds such a trace: :external+pyToolGitHub:ref:`pyTooling.GitHub <TRACING/CI/GitHub>` reads a GitHub
+A service's reader builds such a trace: :external+pyToolGitHub:ref:`pyTooling.GitHub <VIS/PipelineTrace>` reads a GitHub
 Actions workflow run through the GitHub REST API.
 
 
