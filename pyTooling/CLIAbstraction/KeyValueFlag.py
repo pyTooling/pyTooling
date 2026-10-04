@@ -130,7 +130,7 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument[str], pattern="{0}{1}={2
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal name.
 
 		:returns:           Formatted argument.

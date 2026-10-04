@@ -57,7 +57,7 @@ from pyTooling.MetaClasses               import ExtendedType
 from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
 from pyTooling.Common                    import getFullyQualifiedName
 from pyTooling.Attributes                import Attribute
-from pyTooling.CLIAbstraction.Argument   import CommandLineArgument
+from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine
 from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
 from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
 from pyTooling.Platform                  import Platform
@@ -400,7 +400,7 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	def ToArgumentList(self) -> list[str]:
 		"""
-		Convert a program and used CLI options to a list of CLI argument strings in correct order.
+		Convert a program and used CLI options to a list of CLI argument strings in correct order, unescaped.
 
 		:returns:          List of CLI arguments
 		:raises TypeError: If an argument is neither a string nor a sequence of strings. |br|
@@ -436,24 +436,23 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	def __repr__(self) -> str:
 		"""
-		Returns the string representation as coma-separated list of double-quoted CLI argument strings within square brackets.
+		Return the argument list as a Python literal.
 
-		Example: :pycode:`["arg1", "arg2"]`
+		Example: :pycode:`['/usr/bin/git', '--version']`
 
-		:returns: Coma-separated list of CLI arguments with double-quotes.
+		:returns: The :func:`repr` of :meth:`ToArgumentList`'s result.
 		"""
-		return "[" + ", ".join([f"\"{item}\"" for item in self.ToArgumentList()]) + "]"  # WORKAROUND: Python <3.12
-		# return f"[{", ".join([f"\"{item}\"" for item in self.ToArgumentList()])}]"
+		return repr(self.ToArgumentList())
 
 	def __str__(self) -> str:
 		"""
-		Returns the string representation as space-separated list of double-quoted CLI argument strings.
+		Return the command line, escaped for the current platform.
 
-		Example: :pycode:`"arg1" "arg2"`
+		Example: :pycode:`/usr/bin/git commit -m 'Bumped dependencies.'`
 
-		:returns: Space-separated list of CLI arguments with double-quotes.
+		:returns: The argument list joined by :func:`~pyTooling.CLIAbstraction.Argument.formatCommandLine`.
 		"""
-		return " ".join([f"\"{item}\"" for item in self.ToArgumentList()])
+		return formatCommandLine(self.ToArgumentList())
 
 
 @export
