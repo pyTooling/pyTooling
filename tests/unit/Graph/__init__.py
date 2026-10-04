@@ -591,20 +591,20 @@ class IDs(Testcase):
 	def test_HasVertexByNoneID(self) -> None:
 		graph = Graph()
 
-		self.assertFalse(graph.HasVertexByID(None))
+		self.assertFalse(graph.ContainsVertexByID(None))
 
 		_ = Vertex(graph=graph)
-		self.assertTrue(graph.HasVertexByID(None))
+		self.assertTrue(graph.ContainsVertexByID(None))
 
 	def test_HasVertexByID(self) -> None:
 		graph = Graph()
 
-		self.assertFalse(graph.HasVertexByID(1))
+		self.assertFalse(graph.ContainsVertexByID(1))
 
 		_ = Vertex(vertexID=1, graph=graph)
-		self.assertFalse(graph.HasVertexByID(None))
-		self.assertFalse(graph.HasVertexByID(0))
-		self.assertTrue(graph.HasVertexByID(1))
+		self.assertFalse(graph.ContainsVertexByID(None))
+		self.assertFalse(graph.ContainsVertexByID(0))
+		self.assertTrue(graph.ContainsVertexByID(1))
 
 	def test_GetVertexByNoneID(self) -> None:
 		graph = Graph()
@@ -658,24 +658,24 @@ class Values(Testcase):
 	def test_HasVertexByNoneValue(self) -> None:
 		graph = Graph()
 
-		self.assertFalse(graph.HasVertexByValue(None))
+		self.assertFalse(graph.ContainsVertexByValue(None))
 
 		_ = Vertex(graph=graph)
-		self.assertTrue(graph.HasVertexByValue(None))
+		self.assertTrue(graph.ContainsVertexByValue(None))
 
 	def test_HasVertexByValue(self) -> None:
 		graph = Graph()
 
-		self.assertFalse(graph.HasVertexByValue(1))
+		self.assertFalse(graph.ContainsVertexByValue(1))
 
 		vertex = Vertex(value=1, graph=graph)
-		self.assertFalse(graph.HasVertexByValue(None))
-		self.assertFalse(graph.HasVertexByValue(0))
-		self.assertTrue(graph.HasVertexByValue(1))
+		self.assertFalse(graph.ContainsVertexByValue(None))
+		self.assertFalse(graph.ContainsVertexByValue(0))
+		self.assertTrue(graph.ContainsVertexByValue(1))
 
 		vertex.Value = None
-		self.assertTrue(graph.HasVertexByValue(None))
-		self.assertFalse(graph.HasVertexByValue(1))
+		self.assertTrue(graph.ContainsVertexByValue(None))
+		self.assertFalse(graph.ContainsVertexByValue(1))
 
 	def test_GetVertexByNoneValue(self) -> None:
 		graph = Graph()
@@ -1933,7 +1933,7 @@ class Deletion(Testcase):
 		second.Delete()
 
 		self.assertEqual(1, graph.VertexCount)
-		self.assertFalse(graph.HasVertexByID("v2"))
+		self.assertFalse(graph.ContainsVertexByID("v2"))
 		self.assertEqual(0, graph.EdgeCount)
 		self.assertEqual(0, len(first.OutboundEdges))
 		self.assertEqual(0, len(first.InboundEdges))

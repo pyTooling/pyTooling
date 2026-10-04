@@ -791,7 +791,7 @@ class BaseGraph(Base):
 
 		return self._nodes[identifier]
 
-	def HasNode(self, identifier: str) -> bool:
+	def ContainsNode(self, identifier: str) -> bool:
 		"""
 		Check if a node with the given identifier was added.
 

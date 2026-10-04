@@ -3356,7 +3356,7 @@ class Graph(
 			yield from self._verticesWithID
 		return iter(gen())
 
-	def HasVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
+	def ContainsVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
 		"""
 		Check if a vertex with the given ID exists in this graph.
 
@@ -3368,7 +3368,7 @@ class Graph(
 		else:
 			return vertexID in self._verticesWithID
 
-	def HasVertexByValue(self, value: Nullable[VertexValueType]) -> bool:
+	def ContainsVertexByValue(self, value: Nullable[VertexValueType]) -> bool:
 		"""
 		Check if a vertex carrying the given value exists in this graph.
 

@@ -273,8 +273,8 @@ class Graphs(Testcase):
 		self.assertDictEqual({"b": b}, graph.Nodes)
 		self.assertDictEqual({"a": a}, cluster.Nodes)
 		self.assertTrue(cluster.IsCluster)
-		self.assertTrue(graph.HasNode("b"))
-		self.assertFalse(graph.HasNode("a"))
+		self.assertTrue(graph.ContainsNode("b"))
+		self.assertFalse(graph.ContainsNode("a"))
 		self.assertIs(b, graph.GetNode("b"))
 
 		self.assertEqual(dedent("""\
@@ -357,18 +357,18 @@ class Graphs(Testcase):
 		graph.AddNode(Node("a"))
 		graph.AddSubgraph(Subgraph("s"))
 		for method, argument, exceptionType, message in (
-			(graph.AddNode,     None,          ValueError, "Parameter 'node' is None."),
-			(graph.AddNode,     "a",           TypeError,  "Parameter 'node' is not of type 'Node'."),
-			(graph.AddNode,     Node("a"),     ValueError, "A node 'a' was added before."),
-			(graph.AddSubgraph, None,          ValueError, "Parameter 'subgraph' is None."),
-			(graph.AddSubgraph, Node("s"),     TypeError,  "Parameter 'subgraph' is not of type 'Subgraph'."),
-			(graph.AddSubgraph, Subgraph("s"), ValueError, "A subgraph 's' was added before."),
-			(graph.AddEdge,     None,          ValueError, "Parameter 'edge' is None."),
-			(graph.AddEdge,     Node("b"),     TypeError,  "Parameter 'edge' is not of type 'Edge'."),
-			(graph.GetNode,     None,          ValueError, "Parameter 'identifier' is None."),
-			(graph.GetNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
-			(graph.HasNode,     None,          ValueError, "Parameter 'identifier' is None."),
-			(graph.HasNode,     1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			(graph.AddNode,      None,          ValueError, "Parameter 'node' is None."),
+			(graph.AddNode,      "a",           TypeError,  "Parameter 'node' is not of type 'Node'."),
+			(graph.AddNode,      Node("a"),     ValueError, "A node 'a' was added before."),
+			(graph.AddSubgraph,  None,          ValueError, "Parameter 'subgraph' is None."),
+			(graph.AddSubgraph,  Node("s"),     TypeError,  "Parameter 'subgraph' is not of type 'Subgraph'."),
+			(graph.AddSubgraph,  Subgraph("s"), ValueError, "A subgraph 's' was added before."),
+			(graph.AddEdge,      None,          ValueError, "Parameter 'edge' is None."),
+			(graph.AddEdge,      Node("b"),     TypeError,  "Parameter 'edge' is not of type 'Edge'."),
+			(graph.GetNode,      None,          ValueError, "Parameter 'identifier' is None."),
+			(graph.GetNode,      1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
+			(graph.ContainsNode, None,          ValueError, "Parameter 'identifier' is None."),
+			(graph.ContainsNode, 1,             TypeError,  "Parameter 'identifier' is not of type 'str'."),
 		):
 			with self.subTest(message=message):
 				with self.assertRaises(exceptionType) as context:
@@ -435,7 +435,7 @@ class pyToolingGraphs(Testcase):
 		dot.FromGraph(graph)
 
 		self.assertEqual("own", dot.Identifier)
-		self.assertTrue(dot.HasNode("1"))
+		self.assertTrue(dot.ContainsNode("1"))
 
 	def test_FromGraph_Derived(self) -> None:
 		class ColoredGraph(Graph):

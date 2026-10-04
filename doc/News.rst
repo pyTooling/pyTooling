@@ -341,6 +341,13 @@ Version 10.x (2026)
      :class:`~pyTooling.GenericPath.SystemMixin`. They were the last four spelled ``MixIn``, and the old names are
      gone rather than kept as aliases - the same rule the renamed exceptions follow.
 
+   * **A membership test is named** ``Contains***``: ``Has***`` asks for a property of the object itself, like
+     :meth:`~pyTooling.Graph.BaseGraph.HasCycle`. ``Graph.HasVertexByID`` |rarr|
+     :meth:`~pyTooling.Graph.Graph.ContainsVertexByID`, ``Graph.HasVertexByValue`` |rarr|
+     :meth:`~pyTooling.Graph.Graph.ContainsVertexByValue` and ``GraphMLDocument.HasKey`` |rarr|
+     :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.ContainsKey`, without aliases.
+     :meth:`~pyTooling.Graph.GraphViz.BaseGraph.ContainsNode` is new in this release.
+
    * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
      :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. The old
      names were briefly kept as aliases and are removed in the same release, so an ``import`` or an ``except``
