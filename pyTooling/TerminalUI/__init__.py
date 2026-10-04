@@ -56,7 +56,7 @@ from pyTooling.Exceptions    import MissingDependencyError
 from pyTooling.Versioning    import PythonVersion
 
 try:
-	from colorama import Fore as Foreground
+	from colorama              import Fore as Foreground
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
 

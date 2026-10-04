@@ -46,7 +46,7 @@ from typing               import Any, Union, Iterator as typing_Iterator, Option
 from pyTooling.Exceptions import MissingDependencyError
 
 try:
-	from ruamel.yaml import YAML, CommentedMap, CommentedSeq
+	from ruamel.yaml             import YAML, CommentedMap, CommentedSeq
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 

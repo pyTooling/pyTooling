@@ -63,20 +63,20 @@ from pyTooling.Configuration import Dictionary
 from pyTooling.Exceptions    import MissingDependencyError
 
 try:
-	from aiohttp import ClientSession
+	from aiohttp                 import ClientSession
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
 
 try:
-	from packaging.requirements import InvalidRequirement, Requirement
-	from packaging.utils        import canonicalize_name
+	from packaging.requirements  import InvalidRequirement, Requirement
+	from packaging.utils         import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
 
 try:
-	from requests           import Session, HTTPError
-	from requests.adapters  import HTTPAdapter
-	from urllib3.util.retry import Retry
+	from requests                import Session, HTTPError
+	from requests.adapters       import HTTPAdapter
+	from urllib3.util.retry      import Retry
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="requests", extra="pypi") from ex
 
