@@ -1022,7 +1022,8 @@ Terminal
 
       .. code-block:: Python
 
-         from sys import argv
+         from sys    import argv
+         from typing import NoReturn
 
          from pyTooling.TerminalUI import TerminalApplication
 

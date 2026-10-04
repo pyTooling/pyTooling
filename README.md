@@ -23,7 +23,7 @@
 performance boosting meta-class and enhanced exceptions. It also provides lots of helper functions e.g. to ease the
 handling of package descriptions or to unify multiple existing APIs into a single API.
 
-It's useful - if not even essential - for **any** Python-base project independent if it's a library, framework, CLI tool
+It's useful - if not even essential - for **any** Python-based project independent if it's a library, framework, CLI tool
 or just a "script".
 
 In addition, pyTooling provides a collection of [CI job templates for GitHub Actions](https://github.com/pyTooling/Actions).
@@ -57,11 +57,11 @@ attributes via Python decorators.
 
 **With this in mind, the following use-cases and ideas can be derived:**
 
-* Describe a command line argument parser (like ArgParse) in a declarative form. |br|
+* Describe a command line argument parser (like ArgParse) in a declarative form.  
   See [pyTooling.Attributes.ArgParse Package and Examples](https://pytooling.github.io/pyTooling/Attributes/ArgParse.html)
 * Mark nested classes, so later when the outer class gets instantiated, these nested classes are indexed or
   automatically registered.  
-  See [CLIAbstraction](https://pytooling.github.io/pyTooling/CLIAbstraction/index.html) &rarr; [CLIABS/CLIArgument]
+  See [CLIAbstraction](https://pytooling.github.io/pyTooling/CLIAbstraction/index.html) &rarr; [CLIArgument](https://pytooling.github.io/pyTooling/CLIAbstraction/Program.html#cliabs-cliargument)
 * Mark methods in a class as test cases and classes as test suites, so test cases and suites are not identified based on
   a magic method name.  
   *Investigation ongoing / planned feature.*
@@ -89,8 +89,9 @@ class MyClass:
 [pyTooling.CLIAbstraction] offers an abstraction layer for command line programs, so they can be used easily in Python.
 There is no need for manually assembling parameter lists or considering the order of parameters. All parameters like
 `-v` or `--value=42` are described as [CommandLineArgument] instances on a [Program] class. Each argument class like
-[ShortFlag] or [PathArgument] knows about the correct formatting pattern, character escaping, and if needed about
-necessary type conversions. A program instance can be converted to an argument list suitable for [subprocess.Popen].
+[ShortFlag] or [PathArgument] knows about the correct formatting pattern, and if needed about necessary type
+conversions. A program instance can be converted to an argument list suitable for [subprocess.Popen], which passes each
+argument to the program without a shell - so no argument needs escaping.
 
 While a user-defined command line program abstraction derived from [Program] only
 takes care of maintaining and assembling parameter lists, a more advanced base-class, called [Executable],
@@ -103,8 +104,8 @@ is offered with embedded [subprocess.Popen] behavior.
 * Abstract differences in operating systems like argument pattern (POSIX: `-h` vs. Windows: `/h`), path delimiter
   signs (POSIX: `/` vs. Windows: `\`) or executable names.
 * Derive program variants from existing programs.
-* Assemble parameters as list for handover to [subprocess.Popen] with proper escaping and quoting.
-* Launch a program with :class:[subprocess.Popen] and hide the complexity of Popen.
+* Assemble parameters as list for handover to [subprocess.Popen], in the order the program declares them.
+* Launch a program with [subprocess.Popen] and hide the complexity of Popen.
 * Get a generator object for line-by-line output reading to enable postprocessing of outputs.
 
 
@@ -114,7 +115,7 @@ This is a set of useful [helper functions](https://pytooling.github.io/pyTooling
 
 * [getsizeof](https://pytooling.github.io/pyTooling/Common/index.html#getsizeof) calculates the "real" size of a data structure.
 * [isnestedclass](https://pytooling.github.io/pyTooling/Common/index.html#isnestedclass) checks if a class is nested inside another class.
-* [firstKey](https://pytooling.github.io/pyTooling/Common/index.html#firstkey), [firstValue](https://pytooling.github.io/pyTooling/Common/index.html#firstvalue), [firstPair](https://pytooling.github.io/pyTooling/Common/index.html#firstitem) get the firstItem key/value/item from an ordered dictionary.
+* [firstKey](https://pytooling.github.io/pyTooling/Common/index.html#firstkey), [firstValue](https://pytooling.github.io/pyTooling/Common/index.html#firstvalue), [firstPair](https://pytooling.github.io/pyTooling/Common/index.html#firstpair) get the first key/value/pair from an ordered dictionary.
 * [mergedicts](https://pytooling.github.io/pyTooling/Common/index.html#mergedicts) merges multiple dictionaries into a new dictionary.
 * [zipdicts](https://pytooling.github.io/pyTooling/Common/index.html#zipdicts) iterate multiple dictionaries simultaneously.
 
@@ -166,31 +167,25 @@ offering object-oriented APIs:
 
 ### Decorators
 
-* [Abstract Methods](https://pytooling.github.io/pyTooling/MetaClasses.html#meta-abstract)
+* [Abstract Methods](https://pytooling.github.io/pyTooling/MetaClasses.html#meta-abstractmethod)
   * Methods marked with `abstractmethod` are abstract and need to be overwritten in a derived class.  
     An *abstract method* might be called from the overwriting method.
   * Methods marked with `mustoverride` are abstract and need to be overridden in a derived class.  
     It's not allowed to call a *mustoverride method*.
 * [Documentation](https://pytooling.github.io/pyTooling/Decorators.html#deco-documentation)
   * Copy the doc-string from given base-class via `InheritDocString`.
-* [Visibility](https://pytooling.github.io/pyTooling/Decorators.html#deco-visibility)
+* [Visibility](https://pytooling.github.io/pyTooling/Decorators.html#deco-export)
   * Register the given function or class as publicly accessible in a module via `export`.
-* [Documentation](https://pyTooling.GitHub.io/pyTooling/Decorators.html#documentation)
-  * [`@InheritDocString`](https://pyTooling.GitHub.io/pyTooling/Decorators.html#inheritdocstring)  
-    &rarr; Copy the doc-string from given base-class.
-* [Visibility](https://pyTooling.GitHub.io/pyTooling/Decorators.html#visibility)
-  * [`@export`](https://pyTooling.GitHub.io/pyTooling/Decorators.html#export)  
-    &rarr; Register the given function or class as publicly accessible in a module.
 
 
 ### Exceptions
 
-* [EnvironmentException](https://pyTooling.GitHub.io/pyTooling/Exceptions.html#environmentexception)  
+* [EnvironmentVariableError](https://pytooling.github.io/pyTooling/Exceptions.html#environmentvariableerror)  
   ... is raised when an expected environment variable is missing.
-* [PlatformNotSupportedException](https://pyTooling.GitHub.io/pyTooling/Exceptions.html#platformnotsupportedexception)  
-  ... is raise if the platform is not supported.
-* [NotConfiguredException](https://pyTooling.GitHub.io/pyTooling/Exceptions.html#notconfiguredexception)  
-  ... is raise if the requested setting is not configured.
+* [PlatformNotSupportedError](https://pytooling.github.io/pyTooling/Exceptions.html#platformnotsupportederror)  
+  ... is raised if the platform is not supported.
+* [NotConfiguredError](https://pytooling.github.io/pyTooling/Exceptions.html#notconfigurederror)  
+  ... is raised if the requested setting is not configured.
 
 
 ### Meta-Classes
@@ -199,7 +194,7 @@ pyTooling provides an [enhanced meta-class](https://pytooling.github.io/pyToolin
 `ExtendedType`. This meta-classes allows to implement
 [abstract methods](https://pytooling.github.io/pyTooling/MetaClasses.html#abstract-method),
 [singletons](https://pytooling.github.io/pyTooling/MetaClasses.html#singleton),
-[slotted types](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) and combinations thereof.
+[slotted types](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted) and combinations thereof.
 
 `class MyClass(metaclass=ExtendedType):`
   A class definition using that meta-class can implement
@@ -212,15 +207,15 @@ pyTooling provides an [enhanced meta-class](https://pytooling.github.io/pyToolin
   instance of that class will be returned.
 
 `class MyClass(metaclass=ExtendedType, slots=True):`
-  A class defined with enabled [slots](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted-type) behavior
+  A class defined with enabled [slots](https://pytooling.github.io/pyTooling/MetaClasses.html#slotted) behavior
   stores instance fields in slots. The meta-class, translates all type-annotated fields in a class definition into
   slots. Slots allow a more efficient field storage and access compared to dynamically stored and accessed fields hosted
   by `__dict__`. This improves the memory footprint as well as the field access performance of all class instances. This
   behavior is automatically inherited to all derived classes.
 
-`class MyClass(ObjectWithSlots):`
-  A class definition deriving from `ObjectWithSlots` will bring the slotted type behavior to that class and all derived
-  classes.
+`class MyClass(SlottedObject):`
+  A class definition deriving from [`SlottedObject`](https://pytooling.github.io/pyTooling/MetaClasses.html#slottedobject)
+  will bring the slotted type behavior to that class and all derived classes.
 
 
 ### Packaging
@@ -254,26 +249,34 @@ A set of helpers to implement a text user interface (TUI) in a terminal.
 
 #### Simple Terminal Application
 
-This is a minimal terminal application example which inherits from `LineTerminal`.
+This is a minimal terminal application example which inherits from `TerminalApplication`.
 
 ```python
+from sys    import argv
+from typing import NoReturn
+
 from pyTooling.TerminalUI import TerminalApplication
 
 class Application(TerminalApplication):
-  def __init__(self) -> None:
-    super().__init__()
+  HeadLine = "My Application"
 
-  def run(self):
-    self.WriteNormal("This is a simple application.")
-    self.WriteWarning("This is a warning message.")
-    self.WriteError("This is an error message.")
+  def Run(self) -> None:
+    self._PrintHeadline()
+    self.WriteNormal("A normal message.")
+    self.WriteVerbose("Only with --verbose.")
+    self.WriteWarning("A warning.")
+    self.ExitOnPreviousErrors()
 
-# entry point
+def main() -> NoReturn:
+  program = Application()
+  program.Configure(verbose=("-v" in argv or "--verbose" in argv))
+  try:
+    program.Run()
+  except Exception as ex:
+    program.PrintException(ex)
+
 if __name__ == "__main__":
-  Application.CheckPythonVersion((3, 6, 0))
-  app = Application()
-  app.run()
-  app.Exit()
+  main()
 ```
 
 ### Stopwatch
@@ -328,3 +331,12 @@ The accompanying documentation is licensed under [Creative Commons - Attribution
 -------------------------
 
 SPDX-License-Identifier: Apache-2.0
+
+[pyTooling.Attributes]: https://pytooling.github.io/pyTooling/Attributes/index.html
+[pyTooling.CLIAbstraction]: https://pytooling.github.io/pyTooling/CLIAbstraction/index.html
+[CommandLineArgument]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.CommandLineArgument
+[Program]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Program
+[Executable]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.html#pyTooling.CLIAbstraction.Executable
+[ShortFlag]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Flag.html#pyTooling.CLIAbstraction.Flag.ShortFlag
+[PathArgument]: https://pytooling.github.io/pyTooling/pyTooling/pyTooling.CLIAbstraction.Argument.html#pyTooling.CLIAbstraction.Argument.PathArgument
+[subprocess.Popen]: https://docs.python.org/3/library/subprocess.html#subprocess.Popen
