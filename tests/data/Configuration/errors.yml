@@ -11,3 +11,5 @@ unclosedVariable:    "${unclosed"
 danglingDollar:      "prefix$"
 dictionaryReference: "${dictionary}"
 aboveRoot:           "${..:dictionary}"
+nullReference:       "${nullValue}"
+binaryValue:         !!binary aGVsbG8=

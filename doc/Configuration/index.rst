@@ -98,6 +98,10 @@ never reorders a file.
    item3 =     settings.get("key3", "")  # by key, with a default
    pairCount = len(settings)             # number of key-value pairs
 
+A key the document states without a value - ``key:`` in YAML, ``null`` in JSON - reads as ``None``, and
+:meth:`~pyTooling.Configuration.Dictionary.get` returns its default only for a key that is absent. A variable
+``${...}`` referencing such a key raises :exc:`~pyTooling.Configuration.PathExpressionError`.
+
 Three iterators are named alike, so nothing has to be remembered about which one plain iteration gives:
 :meth:`~pyTooling.Configuration.Dictionary.IterateKeys`,
 :meth:`~pyTooling.Configuration.Dictionary.IterateValues` and
@@ -124,9 +128,9 @@ because they exist.
 .. attention::
 
    A scalar is returned as a :class:`str`, whatever the document writes: ``42`` is ``"42"``, ``1.5`` is ``"1.5"`` and
-   ``true`` is ``"True"``. When the document states a sub-mapping or a list, the value is another
-   :class:`~pyTooling.Configuration.Dictionary` or :class:`~pyTooling.Configuration.Sequence`, not a :class:`dict` or
-   :class:`list`.
+   ``true`` is ``"True"``. Only a key stated without a value reads as ``None``. When the document states a sub-mapping
+   or a list, the value is another :class:`~pyTooling.Configuration.Dictionary` or
+   :class:`~pyTooling.Configuration.Sequence`, not a :class:`dict` or :class:`list`.
 
 
 Sequences

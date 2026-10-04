@@ -155,13 +155,27 @@ class Errors(Testcase):
 
 		self.assertIn("Node 'emptySequence' is an empty sequence.", context.exception.__notes__)
 
+	def test_NullValue(self) -> None:
+		"""A null value is ``None``, not an unsupported type."""
+		config = Configuration(self._configFile)
+
+		self.assertIsNone(config["nullValue"])
+
+	def test_ReferenceToANullValue(self) -> None:
+		config = Configuration(self._configFile)
+
+		with self.assertRaises(PathExpressionError) as context:
+			_ = config["nullReference"]
+
+		self.assertIn("Path expression 'nullValue' resolves to a null value.", str(context.exception))
+
 	def test_UnsupportedValueType(self) -> None:
 		config = Configuration(self._configFile)
 
 		with self.assertRaises(UnsupportedValueTypeError) as context:
-			_ = config["nullValue"]
+			_ = config["binaryValue"]
 
-		self.assertIn("Unsupported type 'NoneType' for key 'nullValue'", str(context.exception))
+		self.assertIn("Unsupported type 'bytes' for key 'binaryValue'", str(context.exception))
 
 	def test_UnclosedVariableReference(self) -> None:
 		config = Configuration(self._configFile)

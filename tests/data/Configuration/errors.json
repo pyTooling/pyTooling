@@ -13,5 +13,6 @@
 	"unclosedVariable": "${unclosed",
 	"danglingDollar": "prefix$",
 	"dictionaryReference": "${dictionary}",
-	"aboveRoot": "${..:dictionary}"
+	"aboveRoot": "${..:dictionary}",
+	"nullReference": "${nullValue}"
 }

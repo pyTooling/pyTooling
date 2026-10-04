@@ -177,8 +177,8 @@ class Node(Abstract_Node):
 		The converted object is cached, so a second access returns the same node object rather than a new one.
 
 		:param key:                        Key or index to look up.
-		:returns:                          A dictionary node, a sequence node, or a scalar value with its variables
-		                                   resolved.
+		:returns:                          A dictionary node, a sequence node, a scalar value with its variables
+		                                   resolved, or ``None`` for a null value.
 		:raises KeyNotFoundError:          If the key doesn't exist in this node.
 		:raises UnsupportedValueTypeError: If the JSON parser returned a value that is neither a scalar, nor a
 		                                   node.
@@ -188,7 +188,9 @@ class Node(Abstract_Node):
 		except KeyError:
 			value = self._LookupKey(key)
 
-			if isinstance(value, str):
+			if value is None:
+				pass
+			elif isinstance(value, str):
 				value = self._ResolveVariables(value)
 			elif isinstance(value, (int, float)):
 				value = str(value)
@@ -272,6 +274,8 @@ class Node(Abstract_Node):
 		:param path:                 Path elements, where ``..`` selects the parent node.
 		:returns:                    The scalar value at that path.
 		:raises KeyNotFoundError:    If a path element doesn't exist.
+		:raises PathExpressionError: If the path resolves to a null value. |br|
+		                             A variable can't be replaced by a value the document doesn't state.
 		:raises PathExpressionError: If the path resolves to a node instead of a value - extend the path expression
 		                             to address a scalar value - or if a ``..`` element is applied to the root node,
 		                             which has no parent.
@@ -289,7 +293,12 @@ class Node(Abstract_Node):
 			else:
 				node = node._GetNodeOrValue(p)
 
-		if isinstance(node, Dictionary):
+		if node is None:
+			pathExpression = ":".join(str(element) for element in path)
+			ex = PathExpressionError(f"Path expression '{pathExpression}' resolves to a null value.")
+			ex.add_note("A variable can't be replaced by a value the document doesn't state.")
+			raise ex
+		elif isinstance(node, Dictionary):
 			pathExpression = ":".join(str(element) for element in path)
 			ex = PathExpressionError(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
 			ex.add_note(f"Element '{p}' is a dictionary. Extend the path expression to address a scalar value.")
