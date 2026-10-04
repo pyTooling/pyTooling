@@ -293,7 +293,8 @@ class Node(Abstract_Node):
 		:param path:                 Path elements, where ``..`` selects the parent node.
 		:returns:                    The scalar value at that path.
 		:raises KeyNotFoundError:    If a path element doesn't exist.
-		:raises PathExpressionError: If the path resolves to a null value.
+		:raises PathExpressionError: If the path resolves to a null value. |br|
+		                             A variable can't be replaced by a value the document doesn't state.
 		:raises PathExpressionError: If the path resolves to a node instead of a value - extend the path expression
 		                             to address a scalar value - or if a ``..`` element is applied to the root node,
 		                             which has no parent.
