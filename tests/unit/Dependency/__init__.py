@@ -443,14 +443,16 @@ class ToGraph(Testcase):
 		self.assertEqual(5, graph.EdgeCount)
 
 		rootVertex = graph.GetVertexByID(root)
-		self.assertIs(root, rootVertex.Value)
-		self.assertSetEqual({pAv10, pAv11}, {vertex.Value for vertex in rootVertex.IterateSuccessorVertices()})
+		self.assertIs(root, rootVertex.ID)
+		self.assertIsNone(rootVertex.Value)
+		self.assertEqual("NOASSERTION", rootVertex["license"])
+		self.assertSetEqual({pAv10, pAv11}, {vertex.ID for vertex in rootVertex.IterateSuccessorVertices()})
 		self.assertSetEqual(
 			{storage["packB"]["v2.0"], storage["packB"]["v2.1"]},
-			{vertex.Value for vertex in graph.GetVertexByID(pAv11).IterateSuccessorVertices()}
+			{vertex.ID for vertex in graph.GetVertexByID(pAv11).IterateSuccessorVertices()}
 		)
 
-		order = [vertex.Value for vertex in graph.IterateTopologically()]
+		order = [vertex.ID for vertex in graph.IterateTopologically()]
 		self.assertLess(order.index(pAv10), order.index(root))
 		self.assertLess(order.index(storage["packB"]["v1.0"]), order.index(pAv10))
 
@@ -465,4 +467,4 @@ class ToGraph(Testcase):
 		graph = dependencyGraph.ToGraph()
 
 		self.assertEqual(2, graph.VertexCount)
-		self.assertListEqual([library], [vertex.Value for vertex in graph.GetVertexByID(app).IterateSuccessorVertices()])
+		self.assertListEqual([library], [vertex.ID for vertex in graph.GetVertexByID(app).IterateSuccessorVertices()])

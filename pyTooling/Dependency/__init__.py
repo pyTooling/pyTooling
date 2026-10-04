@@ -1027,12 +1027,12 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		Convert the package dependency graph into a graph of package versions and their dependencies.
 
 		Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex` of the graph, with the
-		:class:`PackageVersion` as its :attr:`~pyTooling.Graph.Vertex.ID` and its :attr:`~pyTooling.Graph.Vertex.Value`,
-		so :meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. A vertex has no
-		name; a consumer labels it by :pycode:`str(vertex.Value)`. Every dependency becomes an
-		:class:`~pyTooling.Graph.Edge` from the package version needing to the package version it needs, so an edge reads
-		*needs*, and :meth:`Graph.IterateTopologically <pyTooling.Graph.BaseGraph.IterateTopologically>` yields the
-		package versions dependencies first.
+		:class:`PackageVersion` as its :attr:`~pyTooling.Graph.Vertex.ID`, so
+		:meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. The key-value pair
+		``license`` holds the version's license as SPDX expression, ``NOASSERTION`` if it's unknown. Every dependency
+		becomes an :class:`~pyTooling.Graph.Edge` from the package version needing to the package version it needs, so
+		an edge reads *needs*, and :meth:`Graph.IterateTopologically <pyTooling.Graph.BaseGraph.IterateTopologically>`
+		yields the package versions dependencies first.
 
 		:returns: The graph, named like the package dependency graph.
 		"""
@@ -1042,7 +1042,9 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		for storage in self._storages.values():
 			for package in storage._packages.values():
 				for packageVersion in package._versions.values():
-					vertices[packageVersion] = Vertex(vertexID=packageVersion, value=packageVersion, graph=graph)
+					vertex = Vertex(vertexID=packageVersion, graph=graph)
+					vertex["license"] = str(packageVersion._licenseExpression)
+					vertices[packageVersion] = vertex
 
 		for packageVersion, vertex in vertices.items():
 			for dependencies in packageVersion._dependsOn.values():
