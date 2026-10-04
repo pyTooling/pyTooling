@@ -181,3 +181,36 @@ class SemanticVersionSpellings(Testcase):
 
 		with self.assertRaises(TypeError):
 			SemanticVersion(1, 0, 0, level=ReleaseLevel.ReleaseCandidate, number=1, spelling=1)
+
+
+class ImplicitReleaseNumber(Testcase):
+	"""A release level without a number is that level with number 0, as PEP 440 normalizes '1.0a' to '1.0a0'."""
+
+	def test_SemanticVersion(self) -> None:
+		version = SemanticVersion.Parse("1.0.0-alpha")
+
+		self.assertIs(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(0, version.ReleaseNumber)
+		self.assertLess(version, SemanticVersion.Parse("1.0.0"))
+		self.assertLess(version, SemanticVersion.Parse("1.0.0-alpha1"))
+
+	def test_PythonVersion(self) -> None:
+		self.assertEqual(PythonVersion.Parse("1.0a0"), PythonVersion.Parse("1.0a"))
+		self.assertIs(ReleaseLevel.ReleaseCandidate, PythonVersion.Parse("1.0rc").ReleaseLevel)
+
+	def test_AWordStartingWithALevelIsAPostfix(self) -> None:
+		version = SemanticVersion.Parse("1.0.0-alphabet")
+
+		self.assertIs(ReleaseLevel.Final, version.ReleaseLevel)
+		self.assertEqual("alphabet", version.Postfix)
+
+
+class FourthComponent(Testcase):
+	"""A fourth numeric component is the build number, and is written back."""
+
+	def test_PythonVersion(self) -> None:
+		version = PythonVersion.Parse("1.2.3.4")
+
+		self.assertEqual(4, version.Build)
+		self.assertEqual("1.2.3.4", str(version))
+		self.assertLess(version, PythonVersion.Parse("1.2.3.5"))

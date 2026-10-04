@@ -1204,7 +1204,7 @@ class SemanticVersion(Version):
 		r"|"
 			r"(?:[\.\-]?(?P<release>dev|final))"
 		r"|"
-			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc|pl)(?P<number>\d+))"
+			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc|pl)(?P<number>\d*))"
 		r")?"
 		r"(?:(?P<delim2>[\.\-]post)(?P<post>\d+))?"
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
@@ -1839,6 +1839,7 @@ class PythonVersion(SemanticVersion):
 		result += f"{self._major}"  # major is always present
 		result += f".{self._minor}" if Parts.Minor in self._parts else ""
 		result += f".{self._micro}" if Parts.Micro in self._parts else ""
+		result += f".{self._build}" if Parts.Build in self._parts else ""
 		if self._releaseLevel is ReleaseLevel.Development:
 			result += "-dev"
 		elif self._releaseLevel is ReleaseLevel.Alpha:

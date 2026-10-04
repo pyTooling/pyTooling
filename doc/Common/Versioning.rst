@@ -312,6 +312,10 @@ Variants
             but keeps its own meaning of ``c`` (*gamma*) and ``-dev`` (a release level): there, ``10.0.0c1`` isn't
             ``10.0.0rc1``.
 
+            A release level without a number has the number 0, as :pep:`440` normalizes ``1.0a`` to ``1.0a0`` - so
+            ``1.0.0-alpha`` is an alpha release, not a final release with the postfix ``alpha``. A fourth numeric
+            component is the build number, and ``1.2.3.4`` is written back as such.
+
          .. grid-item::
             :columns: 6
 
