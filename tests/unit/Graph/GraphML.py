@@ -32,6 +32,8 @@
 Unit tests for :mod:`pyTooling.Graph.GraphML`: constructing a GraphML document, and converting a
 :mod:`pyTooling.Graph` graph or a :mod:`pyTooling.Tree` tree into one.
 """
+from xml.dom.minidom         import parseString
+
 from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
 from pyTooling.Tree          import Node as pyToolingNode
@@ -308,6 +310,60 @@ class pyToolingGraph(Testcase):
 			print(line, end="")
 
 
+	def test_ConvertGraph_WithoutValues(self) -> None:
+		"""A vertex or edge without a value gets no data item, and an edge without an ID no 'id' attribute."""
+		graph = pyTooling_Graph(name="g1")
+		vertex1 = Vertex(vertexID="n1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		text = "".join(doc.ToStringLines())
+
+		self.assertNotIn("None", text)
+		self.assertIn('<edge source="n1" target="n2" />', text)
+		self.assertListEqual([], doc._graph.GetNode("n1").Data)
+
+	def test_ConvertGraph_KeyValuePairs(self) -> None:
+		"""A key is declared once, however many vertices or edges carry it."""
+		graph = pyTooling_Graph(name="g1")
+		vertex1 = Vertex(vertexID="n1", graph=graph, keyValuePairs={"license": "MIT"})
+		vertex2 = Vertex(vertexID="n2", graph=graph, keyValuePairs={"license": "BSD-3-Clause"})
+		vertex3 = Vertex(vertexID="n3", graph=graph)
+		vertex1.EdgeToVertex(vertex2, keyValuePairs={"kind": "runtime"})
+		vertex1.EdgeToVertex(vertex3, keyValuePairs={"kind": "test"})
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		text = "".join(doc.ToStringLines())
+
+		self.assertEqual(1, text.count('<key id="nodelicense"'))
+		self.assertEqual(1, text.count('<key id="edgekind"'))
+		self.assertIn('<data key="nodelicense">BSD-3-Clause</data>', text)
+		self.assertIn('<data key="edgekind">test</data>', text)
+
+	def test_ConvertGraph_Escaping(self) -> None:
+		"""IDs and values with XML's special characters give a well-formed document, which reads back unchanged."""
+		graph = pyTooling_Graph(name="a & b")
+		vertex1 = Vertex(vertexID='say "<hi>"', graph=graph, keyValuePairs={"url": "https://example.org/?a=1&b=2"})
+		vertex2 = Vertex(vertexID="n&2", graph=graph)
+		vertex1.EdgeToVertex(vertex2, edgeID="e<1>")
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("a & b", dom.getElementsByTagName("graph")[0].getAttribute("id"))
+		self.assertListEqual(['say "<hi>"', "n&2"], [node.getAttribute("id") for node in dom.getElementsByTagName("node")])
+		edge = dom.getElementsByTagName("edge")[0]
+		self.assertListEqual(
+			["e<1>", 'say "<hi>"', "n&2"],
+			[edge.getAttribute(name) for name in ("id", "source", "target")]
+		)
+		self.assertEqual("https://example.org/?a=1&b=2", dom.getElementsByTagName("data")[0].firstChild.data)
+
+
 class pyToolingTree(Testcase):
 	def test_Conversion(self) -> None:
 		root = pyToolingNode(nodeID="n0", value="v0")
@@ -324,3 +380,12 @@ class pyToolingTree(Testcase):
 		print()
 		for line in doc.ToStringLines():
 			print(line, end="")
+
+	def test_Conversion_WithoutValues(self) -> None:
+		root = pyToolingNode(nodeID="n0")
+		pyToolingNode("n1", parent=root)
+
+		doc = GraphMLDocument()
+		doc.FromTree(root)
+
+		self.assertNotIn("None", "".join(doc.ToStringLines()))
