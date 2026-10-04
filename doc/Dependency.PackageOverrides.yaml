@@ -63,12 +63,20 @@ packages:
   colorama:
     licenseURL: https://GitHub.com/tartley/colorama/blob/master/LICENSE.txt
 
-  # Three License classifiers at once (BSD, GPL, Public Domain) and no 'license' field. COPYING.txt says the
-  # majority of files are public domain, several are BSD-2-Clause, and the eLyXer-derived 'math2html.py' plus
-  # 'math.css' are GPL-3.0-or-later. Those ship in the wheel, so the distribution carries both; the public-domain
-  # majority imposes nothing and needs no identifier.
-  "docutils >=0.23, <0.24":
-    license: BSD-2-Clause AND GPL-3.0-or-later
+  # Only 'License :: OSI Approved :: BSD License', and a 'license' field quoting the start of LICENSE, which carries
+  # the three-clause text. Checked on 2026-10-04 (0.12.1).
+  "cycler >=0.12.1, <0.13":
+    license: BSD-3-Clause
+  cycler:
+    licenseURL: https://GitHub.com/matplotlib/cycler/blob/main/LICENSE
+
+  # Three License classifiers at once (BSD, GPL, Public Domain) and no 'license' field. COPYING.txt of 0.21.2, 0.22.4
+  # and 0.23 says the majority of files are public domain and several are BSD-2-Clause; the eLyXer-derived
+  # 'math2html.py' and 'math.css' were GPL-3.0-or-later, but their author relicensed them as BSD-2-Clause.
+  # 'smartquotes.py' carries SmartyPants' BSD-3-Clause license. The one GPL file left, 'tools/editors/emacs/rst.el',
+  # isn't in the wheel. The public-domain majority imposes nothing and needs no identifier.
+  "docutils >=0.21, <0.24":
+    license: BSD-2-Clause AND BSD-3-Clause
   docutils:
     licenseURL: https://docutils.sourceforge.io/COPYING.html
 
@@ -76,9 +84,9 @@ packages:
   "doubly-py-linked-list >=1.1.2, <2":
     license: BSD-3-Clause
 
-  # 'GNU General Public License (GPL)' names no version. The source headers say "version 2 [...] or (at your option)
-  # any later version".
-  "igraph >=1.0.0, <2":
+  # 'GNU General Public License (GPL)' names no version. The source headers of 0.11.9 and 1.0.0 say "version 2 [...] or
+  # (at your option) any later version".
+  "igraph >=0.11.9, <2":
     license: GPL-2.0-or-later
   igraph:
     licenseURL: https://GitHub.com/igraph/python-igraph/blob/main/LICENSE
@@ -88,6 +96,13 @@ packages:
     license: BSD-3-Clause
   jinja2:
     licenseURL: https://GitHub.com/pallets/jinja/blob/main/LICENSE.txt
+
+  # Only the ambiguous BSD classifier, and a 'license' field quoting LICENSE's title. LICENSE names the Modified BSD
+  # License and carries its three clauses. Checked on 2026-10-04 (1.5.1).
+  "kiwisolver >=1.5.1, <2":
+    license: BSD-3-Clause
+  kiwisolver:
+    licenseURL: https://GitHub.com/nucleic/kiwi/blob/main/LICENSE
 
   # 'Apache License 2.0' is the license's title, not its SPDX identifier. 7.0.0, released after 'analysedAt', was
   # checked on 2026-10-04: its LICENSE is the Apache License 2.0 as well.
@@ -119,6 +134,12 @@ packages:
     license: BSD-2-Clause
   sphinxcontrib-htmlhelp:
     licenseURL: https://GitHub.com/sphinx-doc/sphinxcontrib-htmlhelp/blob/master/LICENCE.rst
+
+  # Only 'License :: OSI Approved :: BSD License'. LICENCE is the BSD Zero Clause Licence. Checked on 2026-10-04 (4.1).
+  "sphinxcontrib-jquery >=4.1, <5":
+    license: 0BSD
+  sphinxcontrib-jquery:
+    licenseURL: https://GitHub.com/sphinx-contrib/jquery/blob/master/LICENCE
 
   "sphinxcontrib-jsmath >=1.0.1, <2":
     license: BSD-2-Clause
