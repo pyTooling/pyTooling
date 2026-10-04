@@ -271,6 +271,32 @@ class CreativeCommonsLicenses(Testcase):
 		)
 
 
+class CMULicense(Testcase):
+	"""The CMU License, under which Pillow is published."""
+
+	def test_OSIApprovedButNotFSF(self) -> None:
+		"""OSI approved it in 2024; the FSF's list doesn't name it."""
+		from pyTooling.Licensing import MIT_CMU_License
+
+		self.assertIs(MIT_CMU_License, SPDX_INDEX["MIT-CMU"])
+		self.assertTrue(MIT_CMU_License.OSIApproved)
+		self.assertFalse(MIT_CMU_License.FSFApproved)
+		self.assertEqual("https://opensource.org/license/cmu-license", MIT_CMU_License.OSIURL)
+
+	def test_TheClassifierFindsIt(self) -> None:
+		from pyTooling.Licensing import MIT_CMU_License
+
+		self.assertEqual("License :: OSI Approved :: CMU License (MIT-CMU)", MIT_CMU_License.PythonClassifier)
+		self.assertEqual((MIT_CMU_License,), LICENSES_BY_CLASSIFIER["License :: OSI Approved :: CMU License (MIT-CMU)"])
+
+	def test_AnExpressionNamesIt(self) -> None:
+		from pyTooling.Licensing import MIT_CMU_License
+
+		expression = LicenseExpression.Parse("MIT-CMU")
+
+		self.assertIs(MIT_CMU_License, expression.License)
+
+
 class ParsingExpressions(Testcase):
 	"""Parsing SPDX license expressions into a tree."""
 

@@ -202,9 +202,9 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Licensing`
 
-     * **27 more SPDX licenses**, taking ``SPDX_INDEX`` from 4 to 31 - permissive, weak and strong copyleft,
-       and public domain. The ``-only``/``-or-later`` pairs are separate licenses, as SPDX defines them, because
-       PyPI has a distinct classifier for each.
+     * **28 more SPDX licenses**, taking ``SPDX_INDEX`` from 4 to 32 - permissive, weak and strong copyleft, and public
+       domain, among them ``MIT-CMU``, Pillow's license. The ``-only``/``-or-later`` pairs are separate licenses, as
+       SPDX defines them, because PyPI has a distinct classifier for each.
      * The six **Creative Commons 4.0** licenses (``CC-BY-4.0``, ``CC-BY-SA-4.0``, ``CC-BY-NC-4.0``,
        ``CC-BY-ND-4.0``, ``CC-BY-NC-SA-4.0``, ``CC-BY-NC-ND-4.0``) are among them, for documentation and media. PyPI
        has no classifier for them, so asking one for its classifier raises a :exc:`ValueError`.
