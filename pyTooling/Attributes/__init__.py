@@ -210,7 +210,8 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 		:param scope:      Optional, class or module the classes have to be nested in or defined in; ``None`` accepts every
 		                   class.
-		:param subclassOf: Optional, an attribute class or tuple thereof, to filter for that attribute type or subtype.
+		:param subclassOf: Optional, a class or tuple thereof; only annotated classes derived from it are returned.
+		                   ``None`` accepts every class.
 		:returns:          A sequence of classes where this attribute is attached to.
 		"""
 		from pyTooling.Common import isnestedclass
