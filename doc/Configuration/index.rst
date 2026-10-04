@@ -128,9 +128,9 @@ because they exist.
 .. attention::
 
    A scalar is returned as a :class:`str`, whatever the document writes: ``42`` is ``"42"``, ``1.5`` is ``"1.5"`` and
-   ``true`` is ``"True"``. When the document states a sub-mapping or a list, the value is another
-   :class:`~pyTooling.Configuration.Dictionary` or :class:`~pyTooling.Configuration.Sequence`, not a :class:`dict` or
-   :class:`list`.
+   ``true`` is ``"True"``. Only a key stated without a value reads as ``None``. When the document states a sub-mapping
+   or a list, the value is another :class:`~pyTooling.Configuration.Dictionary` or
+   :class:`~pyTooling.Configuration.Sequence`, not a :class:`dict` or :class:`list`.
 
 
 Sequences
