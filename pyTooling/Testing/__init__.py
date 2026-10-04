@@ -62,6 +62,8 @@ _ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")   #: Pattern matching an ANSI 
 class TestingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Testing`."""
 
+	__test__ = False  #: Not a test class, although its name starts with ``Test``: pytest doesn't collect it.
+
 
 @export
 class ApplicationTestingError(TestingError):
@@ -324,7 +326,7 @@ class ApplicationTestcase(Testcase):
 	def RunEntrypoint(
 		self,
 		*arguments:       str,
-		timeout:          float = 10.0,
+		timeout:          float = 60.0,
 		stdInput:         Nullable[str] = None,
 		environment:      Nullable[dict[str, str]] = None,
 		workingDirectory: Nullable[Path] = None
@@ -336,7 +338,7 @@ class ApplicationTestcase(Testcase):
 
 		:param arguments:        Command line arguments to pass to the program.
 		:param timeout:          Optional, seconds to wait before the program is killed and :exc:`subprocess.TimeoutExpired`
-		                         is raised. A test should fail rather than hang.
+		                         is raised. A test should fail rather than hang. Default: 60 seconds.
 		:param stdInput:         Optional, text to send to the program's standard input.
 		:param environment:      Optional, the environment to run in, or ``None`` to inherit this process's environment.
 		:param workingDirectory: Optional, directory to run in, or ``None`` for the current one.
@@ -355,7 +357,7 @@ class ApplicationTestcase(Testcase):
 	def RunModule(
 		self,
 		*arguments:       str,
-		timeout:          float = 10.0,
+		timeout:          float = 60.0,
 		stdInput:         Nullable[str] = None,
 		environment:      Nullable[dict[str, str]] = None,
 		workingDirectory: Nullable[Path] = None
@@ -367,7 +369,8 @@ class ApplicationTestcase(Testcase):
 		:meth:`RunEntrypoint` fails, the packaging is at fault, not the code.
 
 		:param arguments:                Command line arguments to pass to the program.
-		:param timeout:                  Optional, seconds to wait before the program is killed.
+		:param timeout:                  Optional, seconds to wait before the program is killed and
+		                                 :exc:`subprocess.TimeoutExpired` is raised. Default: 60 seconds.
 		:param stdInput:                 Optional, text to send to the program's standard input.
 		:param environment:              Optional, the environment to run in, or ``None`` to inherit this process's
 		                                 environment.

@@ -178,6 +178,9 @@ Version 10.x (2026)
      * :class:`~pyTooling.Testing.ApplicationTestcase` no longer requires ``_runnableModule``: a program without a
        ``__main__`` module is tested through its entry point, and only
        :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` asks for the module.
+     * :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` and
+       :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` wait 60 seconds by default instead of 10. The timeout
+       guards against a hanging program; a cold Windows runner or PyPy on macOS needed longer than 10 seconds.
      * :deco:`~pyTooling.Testing.testsuite` and :deco:`~pyTooling.Testing.testcase` mark what a test runner
        collects, so a testcase's name stops carrying two unrelated jobs at once.
      * Both markers take a title, and both fall back to the doc-string: its summary becomes the summary, its body
@@ -199,9 +202,9 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Licensing`
 
-     * **27 more SPDX licenses**, taking ``SPDX_INDEX`` from 4 to 31 - permissive, weak and strong copyleft,
-       and public domain. The ``-only``/``-or-later`` pairs are separate licenses, as SPDX defines them, because
-       PyPI has a distinct classifier for each.
+     * **28 more SPDX licenses**, taking ``SPDX_INDEX`` from 4 to 32 - permissive, weak and strong copyleft, and public
+       domain, among them ``MIT-CMU``, Pillow's license. The ``-only``/``-or-later`` pairs are separate licenses, as
+       SPDX defines them, because PyPI has a distinct classifier for each.
      * The six **Creative Commons 4.0** licenses (``CC-BY-4.0``, ``CC-BY-SA-4.0``, ``CC-BY-NC-4.0``,
        ``CC-BY-ND-4.0``, ``CC-BY-NC-SA-4.0``, ``CC-BY-NC-ND-4.0``) are among them, for documentation and media. PyPI
        has no classifier for them, so asking one for its classifier raises a :exc:`ValueError`.

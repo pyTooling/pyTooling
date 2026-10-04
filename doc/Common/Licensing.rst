@@ -288,10 +288,10 @@ Mappings
 names used by Python (setuptools). Each dictionary item contains a :class:`~pyTooling.Licensing.PythonLicenseNames`
 instance which contains the license name and package classifier used by setuptools.
 
-Every predefined license is listed in that mapping - the same 23 SPDX identifiers
-:data:`~pyTooling.Licensing.LICENSES` holds. :data:`~pyTooling.Licensing.LICENSES_BY_CLASSIFIER` is the inverse, from
-a Python classifier back to the licenses it can mean; it is one-to-one except for
-``License :: OSI Approved :: BSD License``, which names either
+Every predefined license PyPI has a classifier for is listed in that mapping - all of
+:data:`~pyTooling.Licensing.LICENSES` except the Creative Commons licenses.
+:data:`~pyTooling.Licensing.LICENSES_BY_CLASSIFIER` is the inverse, from a Python classifier back to the licenses it
+can mean; it is one-to-one except for ``License :: OSI Approved :: BSD License``, which names either
 :data:`~pyTooling.Licensing.BSD_2_Clause_License` or :data:`~pyTooling.Licensing.BSD_3_Clause_License`.
 
 .. _LICENSING/Usage:
@@ -334,7 +334,7 @@ The following examples demonstrates the usage with setuptools in a ``setup.py``.
 Competing Solutions
 *******************
 
-:mod:`pyTooling.Licensing` knows a selection of licenses - :data:`~pyTooling.Licensing.SPDX_INDEX` holds 31 - with
+:mod:`pyTooling.Licensing` knows a selection of licenses - :data:`~pyTooling.Licensing.SPDX_INDEX` holds 32 - with
 their names, URLs, approvals and Python classifiers, and parses SPDX license expressions into a tree. It doesn't
 simplify or compare expressions, and checking whether licenses are compatible is not implemented: the comparison
 operators of :class:`~pyTooling.Licensing.License` raise :exc:`NotImplementedError`.
