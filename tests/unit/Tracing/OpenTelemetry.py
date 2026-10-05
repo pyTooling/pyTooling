@@ -30,7 +30,7 @@
 """
 Unit tests for the **OTLP/JSON** export of :mod:`pyTooling.Tracing`.
 """
-from datetime  import datetime
+from datetime  import datetime, timedelta, timezone
 from json      import loads as json_loads
 from pathlib   import Path
 from tempfile  import TemporaryDirectory
@@ -282,8 +282,9 @@ class Events(Testcase):
 
 		self.assertGreaterEqual(event.Time, before)
 		self.assertLessEqual(event.Time, after)
+		sinceEpoch = event.Time.astimezone(timezone.utc) - datetime(1970, 1, 1, tzinfo=timezone.utc)
 		self.assertEqual(
-			str(int(event.Time.timestamp() * 1_000_000_000)),
+			str(sinceEpoch // timedelta(microseconds=1) * 1_000),
 			spans["span"]["events"][0]["timeUnixNano"]
 		)
 
@@ -298,7 +299,21 @@ class Events(Testcase):
 			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
 		}
 
-		self.assertEqual(str(int(time.timestamp() * 1_000_000_000)), spans["span"]["events"][0]["timeUnixNano"])
+		self.assertEqual(str(int(time.timestamp()) * 1_000_000_000), spans["span"]["events"][0]["timeUnixNano"])
+
+	def test_ATimeIsExactToTheMicrosecond(self) -> None:
+		"""Converted through float seconds, this timestamp's nanoseconds would end in 024 instead of 000."""
+		time = datetime(2026, 10, 5, 12, 34, 56, 123457, tzinfo=timezone.utc)
+		with Trace("trace") as trace:
+			with Span("span") as span:
+				Event("stamped", time=time, parent=span)
+
+		spans = {
+			exported["name"]: exported
+			for exported in trace.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]
+		}
+
+		self.assertEqual("1791203696123457000", spans["span"]["events"][0]["timeUnixNano"])
 
 
 class WrittenFile(Testcase):

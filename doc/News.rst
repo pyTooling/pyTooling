@@ -286,6 +286,8 @@ Version 10.x (2026)
        the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
      * A Gantt chart written as SVG can be **collapsible**: a click on a called workflow or a job hides or shows the
        rows below it.
+     * A timestamp is exported exact to the microsecond it holds. It was converted through :class:`float` seconds,
+       which left its nanoseconds up to a few hundred off.
 
    * :mod:`pyTooling.Packaging`
 

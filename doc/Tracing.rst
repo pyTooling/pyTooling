@@ -180,7 +180,7 @@ How a trace is mapped
    * - a span's events
      - ``events``
 
-Three details of the encoding are easy to get wrong, and each has a testcase:
+Four details of the encoding are easy to get wrong, and each has a testcase:
 
 * **Identifiers are hex, not base64.** OTLP/JSON deviates from proto3's JSON mapping for ``traceId`` (16 bytes)
   and ``spanId`` (8 bytes), and writes them as lower-case hex.
@@ -189,6 +189,9 @@ Three details of the encoding are easy to get wrong, and each has a testcase:
 * **A duration is nanoseconds.** :attr:`~pyTooling.Tracing.Span.Duration` is in seconds, and the end timestamp is
   computed from it rather than from :attr:`~pyTooling.Tracing.Span.StopTime`, because the duration comes from a
   nanosecond performance counter while the wall clock has microsecond resolution.
+* **A timestamp is converted with integers.** ``timestamp() * 1e9`` goes through a :class:`float`, whose 16
+  significant digits leave the nanoseconds of a current timestamp off by up to a few hundred. Seconds and microseconds
+  are converted separately, so a timestamp is exact to the microsecond.
 
 .. _TRACING/OTLP/Attributes:
 
