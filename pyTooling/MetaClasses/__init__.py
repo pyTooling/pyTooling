@@ -1471,8 +1471,7 @@ class ExtendedType(type):
 					if memberName in members:
 						continue
 
-					# A class or static method carries the markers on its underlying function.
-					function = member.__func__ if isinstance(member, (classmethod, staticmethod)) else member
+					function = metacls._getMarkedFunction(member)
 					if (memberName in abstractMethods and isinstance(function, FunctionType) and
 						not (hasattr(function, "__abstract__") or hasattr(function, "__mustOverride__"))):
 						def outer(method):
@@ -1499,9 +1498,12 @@ class ExtendedType(type):
 							inner.__dict__.pop("__classobj__", None)
 
 							return inner
-						# Add the wrapper as new class member or apply classmethod/staticmethod to the new member before adding it, 
+						# Add the wrapper as new class member. Before adding it, apply classmethod/staticmethod to it, or make it
+						# the getter of a copy of the property.
 						if function is member:
 							members[memberName] = outer(member)
+						elif isinstance(member, property):
+							members[memberName] = member.getter(outer(function))
 						else:
 							members[memberName] = type(member)(outer(function))
 
@@ -1509,8 +1511,7 @@ class ExtendedType(type):
 		# * If so, add them to list of abstract methods
 		# * If not, method is now implemented and removed from list
 		for memberName, member in members.items():
-			# A class or static method carries the markers on its underlying function.
-			function = member.__func__ if isinstance(member, (classmethod, staticmethod)) else member
+			function = metacls._getMarkedFunction(member)
 			if callable(function):
 				if ((hasattr(function, "__abstract__") and function.__abstract__) or
 						(hasattr(function, "__mustOverride__") and function.__mustOverride__)):
@@ -1519,6 +1520,24 @@ class ExtendedType(type):
 					del abstractMethods[memberName]
 
 		return abstractMethods, members
+
+	@staticmethod
+	def _getMarkedFunction(member: Any) -> Any:
+		"""
+		Return the function, which carries the markers of :deco:`abstractmethod` and :deco:`mustoverride` for a member.
+
+		A :class:`classmethod` or :class:`staticmethod` wraps the marked function, a :class:`property` (and so
+		:deco:`~pyTooling.Decorators.readonly`) holds it as its getter-method.
+
+		:param member: A member of a class.
+		:returns:      The wrapped function, the getter-method, or the member itself.
+		"""
+		if isinstance(member, (classmethod, staticmethod)):
+			return member.__func__
+		elif isinstance(member, property):
+			return member.fget
+
+		return member
 
 	@classmethod
 	def _wrapNewMethodIfSingleton(metacls, newClass, singleton: bool) -> bool:
