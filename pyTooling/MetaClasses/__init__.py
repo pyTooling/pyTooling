@@ -721,7 +721,7 @@ class ExtendedType(type):
 	# 	return DispatchDictionary()
 
 	def __new__(
-		self,
+		metacls,
 		className: str,
 		baseClasses: tuple[type],
 		members: dict[str, Any],
@@ -758,19 +758,19 @@ class ExtendedType(type):
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
-			if isinstance(primaryBaseClass, self):
+			if isinstance(primaryBaseClass, metacls):
 				slots = primaryBaseClass.__slotted__
 
 		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
-		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin, weakref)
+		classFields, objectFields = metacls._computeSlots(className, baseClasses, members, slots, mixin, weakref)
 
 		# Compute abstract methods
-		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
+		abstractMethods, members = metacls._checkForAbstractMethods(baseClasses, members)
 
 		# Create a new class - the remaining keyword arguments belong to '__init_subclass__', which 'type' calls.
 		# Class variables with an initial value are part of 'members', so they are bound before that hook runs and
 		# are not re-assigned afterwards - doing so would overwrite whatever '__init_subclass__' computed from them.
-		newClass = type.__new__(self, className, baseClasses, members, **kwargs)
+		newClass = type.__new__(metacls, className, baseClasses, members, **kwargs)
 
 		# A class variable set to 'ThisClass' means "the class I am declared in". The class doesn't exist while its body
 		# runs, so the value is resolved here. Only a variable this class declared is rebound - an inherited one keeps
@@ -784,14 +784,14 @@ class ExtendedType(type):
 		newClass.__abstractMethods__ = abstractMethods
 
 		newClass.__abstractClass__ = False
-		newClass.__isAbstract__ =    self._wrapNewMethodIfAbstract(newClass)
-		newClass.__isSingleton__ =   self._wrapNewMethodIfSingleton(newClass, singleton)
+		newClass.__isAbstract__ =    metacls._wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ =   metacls._wrapNewMethodIfSingleton(newClass, singleton)
 
 		# Collect the members expected from the host class and reject instantiation while any of them is missing
-		newClass.__expectedMembers__ = self._collectExpectedMembers(className, baseClasses, members, expects)
-		newClass.__missingMembers__ = self._computeMissingMembers(newClass, mixin)
+		newClass.__expectedMembers__ = metacls._collectExpectedMembers(className, baseClasses, members, expects)
+		newClass.__missingMembers__ = metacls._computeMissingMembers(newClass, mixin)
 		if not newClass.__isAbstract__:
-			self._wrapNewMethodIfExpectationUnfulfilled(newClass)
+			metacls._wrapNewMethodIfExpectationUnfulfilled(newClass)
 
 		if slots:
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
@@ -842,14 +842,14 @@ class ExtendedType(type):
 						att.__class__._classes.append(newClass)
 
 		# Check methods for attributes
-		methods, methodsWithAttributes = self._findMethods(newClass, baseClasses, members)
+		methods, methodsWithAttributes = metacls._findMethods(newClass, baseClasses, members)
 
 		# Add new fields for found methods
 		newClass.__methods__ = tuple(methods)
 		newClass.__methodsWithAttributes__ = tuple(methodsWithAttributes)
 
 		# Reject calling a method that expects members this class doesn't provide
-		self._wrapMethodsWithUnfulfilledExpectations(newClass)
+		metacls._wrapMethodsWithUnfulfilledExpectations(newClass)
 
 		# Additional methods on a class
 		def GetMethodsWithAttributes(
@@ -900,7 +900,7 @@ class ExtendedType(type):
 
 	@classmethod
 	def _findMethods(
-		self,
+		metacls,
 		newClass:    ExtendedType,
 		baseClasses: tuple[type],
 		members:     dict[str, Any]
@@ -1132,7 +1132,7 @@ class ExtendedType(type):
 
 	@classmethod
 	def _computeSlots(
-		self,
+		metacls,
 		className:   str,
 		baseClasses: tuple[type],
 		members:     dict[str, Any],
@@ -1178,7 +1178,7 @@ class ExtendedType(type):
 		slottedFields = []
 		classFields =   {}
 		objectFields =  {}
-		annotations: dict[str, Any] = self._getAnnotations(members)
+		annotations: dict[str, Any] = metacls._getAnnotations(members)
 		if "__weakref__" in annotations:
 			ex = ExtendedTypeError(f"Class '{className}' annotates '__weakref__' as a field.")
 			ex.add_note(f"Set 'weakref=True' instead: 'class {className}(..., weakref=True)'.")
@@ -1193,7 +1193,7 @@ class ExtendedType(type):
 
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
-			for baseClass in self._iterateBaseClasses(baseClasses):
+			for baseClass in metacls._iterateBaseClasses(baseClasses):
 				# Exclude object as a special case
 				if baseClass is object or baseClass is Generic:
 					continue
@@ -1233,7 +1233,7 @@ class ExtendedType(type):
 				#   'type.__new__' binds it before calling '__init_subclass__'. Removing it and assigning it
 				#   afterwards made a derived class' value invisible to that hook, which then read the base class'.
 				# * Otherwise it's a forward declaration and derived classes assign the actual value.
-				isClassVariable = self._isClassVariable(typeAnnotation)
+				isClassVariable = metacls._isClassVariable(typeAnnotation)
 				hasInitialValue = fieldName in members
 				if isClassVariable:
 					if hasInitialValue:
@@ -1249,7 +1249,7 @@ class ExtendedType(type):
 				else:
 					slottedFields.append(fieldName)
 
-			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
+			mixinSlots = metacls._aggregateMixinSlots(className, baseClasses)
 
 			# A member assigned in the class body without a type annotation stays a class attribute. If it carries the name
 			# of a slot, that class attribute shadows the slot's descriptor and the field becomes read-only on instances.
@@ -1278,10 +1278,10 @@ class ExtendedType(type):
 				# If annotated field is a ClassVar, and it has an initial value
 				# * copy field and initial value to classFields dictionary
 				# * remove field from members
-				if self._isClassVariable(typeAnnotation) and fieldName in members:
+				if metacls._isClassVariable(typeAnnotation) and fieldName in members:
 					classFields[fieldName] = members[fieldName]
 
-		self._checkForUnannotatedFields(className, members, annotations)
+		metacls._checkForUnannotatedFields(className, members, annotations)
 
 		if mixin:
 			mixinSlots.extend(slottedFields)
@@ -1306,7 +1306,7 @@ class ExtendedType(type):
 		return classFields, objectFields
 
 	@classmethod
-	def _aggregateMixinSlots(self, className: str, baseClasses: tuple[type]) -> list[str]:
+	def _aggregateMixinSlots(metacls, className: str, baseClasses: tuple[type]) -> list[str]:
 		"""
 		Aggregate slot names requested by mixin-base-classes.
 
@@ -1324,7 +1324,7 @@ class ExtendedType(type):
 		if len(baseClasses) > 0:
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
 			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
-			inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
+			inheritancePaths = [path for path in metacls._iterateBaseClassPaths(baseClasses)]
 			primaryInharitancePath: set[type] = set(inheritancePaths[0])
 			for typePath in inheritancePaths[1:]:
 				for t in typePath:
@@ -1344,7 +1344,7 @@ class ExtendedType(type):
 			for baseClass in baseClasses:  # type: ExtendedType
 				if isinstance(baseClass, _GenericAlias) and baseClass.__origin__ is Generic:
 					pass
-				elif baseClass.__class__ is self and baseClass.__isMixin__:
+				elif baseClass.__class__ is metacls and baseClass.__isMixin__:
 					mixinSlots.extend(baseClass.__mixinSlots__)
 				elif hasattr(baseClass, "__mixinSlots__"):
 					mixinSlots.extend(baseClass.__mixinSlots__)
