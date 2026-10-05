@@ -710,9 +710,21 @@ class LazyLoaderState(IntEnum):
 @export
 class lazy:
 	"""
-	Unified decorator that supports:
-	1. @lazy(state) def method()
-	2. @lazy(state) @property def prop()
+	Decorator loading an object far enough, before a method or property of it is used.
+
+	The object is a :class:`LazyLoadableMixin`; the decorator passes the state given to it to the object's
+	``__lazy_loader__``, unless the object reached that state already. It is applied to a method, or on top of a property:
+
+	.. code-block:: Python
+
+	   @lazy(LazyLoaderState.PartiallyLoaded)
+	   def Method(self) -> None:
+	     ...
+
+	   @lazy(LazyLoaderState.PartiallyLoaded)
+	   @readonly
+	   def Property(self) -> int:
+	     ...
 	"""
 
 	def __init__(self, _requiredState: LazyLoaderState = LazyLoaderState.PartiallyLoaded):
