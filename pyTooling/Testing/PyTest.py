@@ -49,11 +49,12 @@ from sys                     import modules as loadedModules
 from types                   import ModuleType
 from typing                  import Any, Callable, Iterable, Union, Optional as Nullable
 from unittest                import TestCase
+from warnings                import warn
 
 from _pytest.unittest        import TestCaseFunction, UnitTestCase
-from pytest                  import Class, Collector, Item, StashKey, fixture, hookimpl
+from pytest                  import Class, Collector, Item, PytestCollectionWarning, StashKey, fixture, hookimpl
 from pyTooling.Decorators    import export
-from pyTooling.Documentation import splitDocString
+from pyTooling.Documentation import DocumentationError, splitDocString
 
 
 hierarchyKey: StashKey[dict[str, dict[str, str]]] = StashKey()
@@ -147,6 +148,9 @@ def getNamesOfTestItem(holder: Union[ModuleType, type]) -> dict[str, str]:
 	A class marked with :deco:`~pyTooling.Testing.testsuite` carries all three in its ``__testsuite_***__`` fields.
 	A package or a module has only its doc-string, whose summary and full text are the summary and the description.
 
+	A summary longer than :data:`~pyTooling.Documentation.MAXIMUM_SUMMARY_LENGTH` isn't reported; a
+	:class:`~pytest.PytestCollectionWarning` names the item instead, so one doc-string doesn't stop the collection.
+
 	:param holder: The package, module or class to read the names from.
 	:returns:      Dictionary of a name's kind to its value, holding only the ones that are not empty.
 	"""
@@ -157,7 +161,12 @@ def getNamesOfTestItem(holder: Union[ModuleType, type]) -> dict[str, str]:
 			"description": holder.__testsuite_description__,
 		}
 	else:
-		summary, _ = splitDocString(holder.__doc__)
+		try:
+			summary, _ = splitDocString(holder.__doc__)
+		except DocumentationError as ex:
+			warn(PytestCollectionWarning(f"The summary of '{holder.__name__}' isn't reported: {ex}"))
+			summary = ""
+
 		names = {
 			"summary":     summary,
 			"description": "" if holder.__doc__ is None else cleandoc(holder.__doc__),

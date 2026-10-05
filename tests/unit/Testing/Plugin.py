@@ -84,6 +84,25 @@ class Names(Testcase):
 			getNamesOfTestItem(module)
 		)
 
+	def test_ALongSummaryIsNotReported(self) -> None:
+		"""A summary over the length limit is left out with a warning, instead of stopping the collection."""
+
+		from pytest                  import PytestCollectionWarning
+		from pyTooling.Testing.PyTest import getNamesOfTestItem
+
+		docString = " ".join(["A very long first paragraph."] * 10) + "\n\nThe body."
+		module = ModuleType("probe")
+		module.__doc__ = docString
+
+		with self.assertWarns(PytestCollectionWarning) as warningCapture:
+			names = getNamesOfTestItem(module)
+
+		self.assertEqual({"description": docString}, names)
+		self.assertEqual(
+			"The summary of 'probe' isn't reported: The doc-string's summary is longer than 200 characters.",
+			str(warningCapture.warning)
+		)
+
 	def test_AnEmptyNameIsNotReported(self) -> None:
 		"""A level contributes only the names it has, so an undocumented one contributes nothing."""
 

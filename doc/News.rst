@@ -454,6 +454,10 @@ Version 10.x (2026)
        :deco:`~pyTooling.Testing.testcase` are module-level callables whose names start with ``test``, which is
        what pytest's **default** ``python_functions = ["test*"]`` matches - so importing them put two phantom
        testcases into every module that used them. They passed, which is why nothing looked wrong.
+     * A package, module or class of the test suite whose doc-string starts with a paragraph longer than 200
+       characters stopped pytest's collection with an ``INTERNALERROR``: the plugin read the paragraph as the level's
+       summary, and :func:`~pyTooling.Documentation.splitDocString` rejects one that long. The summary is left out of
+       the report now, and a :class:`~pytest.PytestCollectionWarning` names the item.
 
    * :mod:`pyTooling.TerminalUI`
 
