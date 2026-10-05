@@ -1471,8 +1471,10 @@ class ExtendedType(type):
 					if memberName in members:
 						continue
 
-					if (memberName in abstractMethods and isinstance(member, FunctionType) and
-						not (hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"))):
+					# A class or static method carries the markers on its underlying function.
+					function = member.__func__ if isinstance(member, (classmethod, staticmethod)) else member
+					if (memberName in abstractMethods and isinstance(function, FunctionType) and
+						not (hasattr(function, "__abstract__") or hasattr(function, "__mustOverride__"))):
 						def outer(method):
 							"""
 							Nested function creating a wrapper, so the abstract method of the base-class isn't modified itself.
@@ -1481,16 +1483,15 @@ class ExtendedType(type):
 							:returns:      A wrapper forwarding to that method.
 							"""
 							@wraps(method)
-							def inner(cls, *args: Any, **kwargs: Any):
+							def inner(*args: Any, **kwargs: Any):
 								"""
 								Wrapper forwarding to the inherited abstract method.
 
-								:param cls:    The class the method is called on.
-								:param args:   Positional parameters passed to the method.
+								:param args:   Positional parameters passed to the method, the instance or class first, if bound.
 								:param kwargs: Named parameters passed to the method.
 								:returns:      Whatever the wrapped method returns.
 								"""
-								return method(cls, *args, **kwargs)
+								return method(*args, **kwargs)
 
 							# ':func:`~functools.wraps` copies the wrapped function's '__dict__', which carries the
 							# bookkeeping ExtendedType attached to it. The wrapper belongs to the class being
@@ -1499,15 +1500,20 @@ class ExtendedType(type):
 
 							return inner
 
-						members[memberName] = outer(member)
+						if function is member:
+							members[memberName] = outer(member)
+						else:
+							members[memberName] = type(member)(outer(function))
 
 		# Check if methods are marked:
 		# * If so, add them to list of abstract methods
 		# * If not, method is now implemented and removed from list
 		for memberName, member in members.items():
-			if callable(member):
-				if ((hasattr(member, "__abstract__") and member.__abstract__) or
-						(hasattr(member, "__mustOverride__") and member.__mustOverride__)):
+			# A class or static method carries the markers on its underlying function.
+			function = member.__func__ if isinstance(member, (classmethod, staticmethod)) else member
+			if callable(function):
+				if ((hasattr(function, "__abstract__") and function.__abstract__) or
+						(hasattr(function, "__mustOverride__") and function.__mustOverride__)):
 					abstractMethods[memberName] = member
 				elif memberName in abstractMethods:
 					del abstractMethods[memberName]
