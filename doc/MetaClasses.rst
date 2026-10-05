@@ -207,6 +207,10 @@ The mixin-class' ``__init__`` sets its own fields; the class it is mixed into ca
   ordinary attributes in the instance's ``__dict__``.
 * **The host class doesn't shadow a mixin field.** Assigning a member of that name in the class body raises a
   :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`.
+* **A mixin field exists once.** The host class annotating it again, a base-class of the primary inheritance line
+  having a slot of that name, or a second mixin-class declaring it raises a
+  :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`. Two mixin-classes deriving from one mixin-class pass its
+  field on twice; it becomes one slot.
 
 The :deco:`~pyTooling.MetaClasses.mixin` decorator recreates a class as a mixin-class. A mixin-class names the
 members it needs from the class it is mixed into with :ref:`expects <META/ExpectedMembers>`.
@@ -261,8 +265,8 @@ the child lives, and a weak reference is how that cycle is avoided.
       class Again(Base, weakref=True): ...           # AttributeError: slot '__weakref__' already exists
 
 A mixin-class can ask for it too. ``__weakref__`` is then one of the slots it contributes, and it is added to the
-class the mixin-class is mixed into. That class must not have it already - Python rejects the second one with
-``TypeError: __weakref__ slot disallowed``:
+class the mixin-class is mixed into. That class must not have it already - the second one raises a
+:exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`:
 
 .. code-block:: Python
 

@@ -1189,6 +1189,134 @@ class SlotShadowedByClassMember(Testcase):
 		self.assertEqual(100, inst._data_0)
 
 
+class DuplicateMixinSlot(Testcase):
+	"""A mixin-class' slot exists once in the class it is mixed into."""
+
+	def test_MixinAndPrimaryBaseClass(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin):
+				pass
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' of mixin-class '.*\.Mixin' already exists in base-class '.*\.Primary'\.$"
+		)
+
+	def test_TwoMixins(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Mixin1(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		class Mixin2(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin1, Mixin2):
+				pass
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' is declared by mixin-classes '.*\.Mixin1' and '.*\.Mixin2'\.$"
+		)
+		self.assertEqual("Both are base-classes of class 'Final'.", context.exception.__notes__[0])
+
+	def test_OwnField(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin):
+				_data: int
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' declared in class 'Final' already exists in mixin-class '.*\.Mixin'\.$"
+		)
+
+	def test_MixinDerivedFromMixin(self) -> None:
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class DerivedMixin(Mixin, mixin=True):
+				_data: int
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' declared in class 'DerivedMixin' already exists in mixin-class '.*\.Mixin'\.$"
+		)
+
+	def test_WeakReferenceTwice(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True, weakref=True):
+			_own: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True, weakref=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin):
+				pass
+
+		self.assertIn("'__weakref__'", str(context.exception))
+		self.assertEqual(
+			"Set 'weakref=True' in one class of a hierarchy; derived classes inherit '__weakref__'.",
+			context.exception.__notes__[0]
+		)
+
+	def test_Diamond(self) -> None:
+		"""Two mixin-classes deriving from one mixin-class pass its slot on twice; it's one slot."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Common(metaclass=ExtendedType, mixin=True):
+			_common: int
+
+		class Mixin1(Common, mixin=True):
+			_data1: int
+
+		class Mixin2(Common, mixin=True):
+			_data2: int
+
+		class Final(Primary, Mixin1, Mixin2):
+			pass
+
+		self.assertTupleEqual(("_common", "_data1", "_data2"), Final.__slots__)
+
+	def test_Diamond_Materialized(self) -> None:
+		"""A slot the primary inheritance line already got from the same mixin-class isn't added again."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Common(metaclass=ExtendedType, mixin=True):
+			_common: int
+
+		class Mixin1(Common, mixin=True):
+			_data1: int
+
+		class Mixin2(Common, mixin=True):
+			_data2: int
+
+		class Intermediate(Primary, Mixin1):
+			pass
+
+		class Final(Intermediate, Mixin2):
+			pass
+
+		self.assertTupleEqual(("_data2", ), Final.__slots__)
+		self.assertSetEqual({"_own", "_common", "_data1", "_data2"}, Final.__allSlots__)
+
+
 class UnannotatedFields(Testcase):
 	"""
 	Every field should carry type information.
