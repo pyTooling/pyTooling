@@ -603,6 +603,34 @@ class Context(Testcase):
 			print(line)
 
 
+class Formatting(Testcase):
+	def test_NeverStarted(self) -> None:
+		"""A timespan without a begin has no duration to show; it shows '--' instead of raising."""
+		begin = datetime(2026, 1, 1, 12, 0, 0)
+		trace = Trace("trace", beginTime=begin, endTime=begin + timedelta(seconds=1))
+		Span("never", parent=trace)
+
+		self.assertListEqual(
+			[
+				"Software Execution Trace: 1000.000 ms",
+				"📉trace                   1000.000 ms",
+				"  🕑never                       -- ms"
+			],
+			trace.Format()
+		)
+
+	def test_TraceNeverStarted(self) -> None:
+		trace = Trace("trace")
+
+		self.assertListEqual(
+			[
+				"Software Execution Trace:       -- ms",
+				"📉trace                         -- ms"
+			],
+			trace.Format()
+		)
+
+
 class TraceElements(Testcase):
 	def test_ASpanAndAnEventAreTraceElements(self) -> None:
 		trace = Trace("trace")
