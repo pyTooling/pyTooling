@@ -150,7 +150,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			"""
 			Get the memory usage of this Python process on a Linux system.
 
-			Read the `/proc/self/statm` memory statistic file (space separated) for the current process:
+			Read the ``/proc/self/statm`` memory statistic file (space separated) for the current process:
 
 			[0] size
 					VmSize (total virtual address space)
@@ -231,13 +231,14 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			"""
 			Call libproc.proc_pidinfo(PROC_PIDTASKINFO) – the same route psutil takes.
 
-			struct proc_taskinfo  (<sys/proc_info.h>):
-					pti_virtual_size   uint64  – virtual address space in bytes
-					pti_resident_size  uint64  – resident (physical) memory in bytes
-					… 16 further fields (timing, policy, fault/syscall counters)
+			``struct proc_taskinfo`` (``<sys/proc_info.h>``):
 
-			proc_pidinfo() returns the number of bytes written; ≤ 0 means error
-			(errno is set).  PROC_PIDTASKINFO = 4.
+			* ``pti_virtual_size`` (``uint64``) - virtual address space in bytes
+			* ``pti_resident_size`` (``uint64``) - resident (physical) memory in bytes
+			* 16 further fields (timing, policy, fault/syscall counters)
+
+			``proc_pidinfo()`` returns the number of bytes written; ``<= 0`` means error (``errno`` is set).
+			``PROC_PIDTASKINFO = 4``.
 
 			:returns:              Memory usage of the current process.
 			:raises PlatformError: If ``proc_pidinfo`` reported an error.
@@ -289,15 +290,15 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 		def GetMemoryUsage(self) -> MemoryInfo:
 			"""
-			Call psapi.GetProcessMemoryInfo() with a PROCESS_MEMORY_COUNTERS struct.
+			Call ``psapi.GetProcessMemoryInfo()`` with a ``PROCESS_MEMORY_COUNTERS`` struct.
 
-			WorkingSetSize  – physical pages currently mapped  → RSS
-			PagefileUsage   – private committed bytes          → VMS  (= "Private Bytes"
-												in Task Manager; mirrors psutil's vms on Windows)
+			* ``WorkingSetSize`` - physical pages currently mapped |rarr| RSS
+			* ``PagefileUsage`` - private committed bytes |rarr| VMS (= "Private Bytes" in Task Manager; mirrors psutil's
+			  ``vms`` on Windows)
 
-			GetCurrentProcess() returns a pseudo-handle (-1) requiring no CloseHandle.
-			use_last_error=True routes SetLastError / GetLastError through ctypes so
-			WinError() picks up the correct code without a race.
+			``GetCurrentProcess()`` returns a pseudo-handle (``-1``) requiring no ``CloseHandle``.
+			``use_last_error=True`` routes ``SetLastError``/``GetLastError`` through :mod:`ctypes`, so ``WinError()``
+			picks up the correct code without a race.
 
 			:returns:         Memory usage of the current process.
 			:raises WinError: If ``GetProcessMemoryInfo`` reported an error.

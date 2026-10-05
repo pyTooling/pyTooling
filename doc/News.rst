@@ -508,6 +508,8 @@ Version 10.x (2026)
    * :class:`~pyTooling.Stopwatch.Stopwatch`'s ``__enter__`` and ``__exit__`` document each condition they raise a
      :exc:`~pyTooling.Stopwatch.StopwatchError` for - ``__exit__`` named one of three. ``__getitem__`` documented a
      :exc:`KeyError`, but raises an :exc:`IndexError`.
+   * Two doc-strings didn't parse as ReST: :class:`~pyTooling.Dependency.Python.lazy`'s usage list was folded into its
+     summary, and the Windows ``GetMemoryUsage`` of :mod:`pyTooling.Process` had an unexpectedly indented line.
 
    .. rubric:: Unit Tests
 
