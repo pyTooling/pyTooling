@@ -53,23 +53,17 @@ from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
 from types                import BuiltinFunctionType, FunctionType, MethodType
-from typing               import Any, Callable, Generator, Iterator, Iterable, Union, NoReturn, Self
+from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Self
 from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
 from pyTooling.Common     import getFullyQualifiedName
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
 from pyTooling.Warning    import Warning, WarningCollector
+from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, Attribute, AttributeScope, TAttr, TAttributeFilter
 
 
 __all__ = ["M"]
-
-TAttr = TypeVar("TAttr")  # , bound='Attribute')
-"""A type variable for :class:`~pyTooling.Attributes.Attribute`."""
-
-TAttributeFilter = Union[TAttr, Iterable[TAttr], None]
-"""A type hint for a predicate parameter that accepts either a single :class:`~pyTooling.Attributes.Attribute` or an
-iterable of those."""
 
 
 @export
@@ -761,8 +755,6 @@ class ExtendedType(type):
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-		from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
-
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
@@ -873,8 +865,6 @@ class ExtendedType(type):
 			:raises ValueError: If an element of parameter 'predicate' is not a sub-class of :class:`~pyTooling.Attributes.Attribute`.
 			:raises ValueError: If parameter 'predicate' is neither an attribute class nor an iterable of those.
 			"""
-			from pyTooling.Attributes import Attribute
-
 			if predicate is None:
 				predicate = Attribute
 			elif isinstance(predicate, Iterable):
@@ -928,8 +918,6 @@ class ExtendedType(type):
 		:returns:           A 2-tuple of all methods and those methods carrying at least one attribute.
 		:raises TypeError:  If a member is neither a method nor a class, so it can't be searched for methods.
 		"""
-		from pyTooling.Attributes import Attribute
-
 		# Embedded bind function due to circular dependencies.
 		def bind(instance: object, func: FunctionType, methodName: Nullable[str] = None):
 			"""

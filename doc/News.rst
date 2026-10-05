@@ -415,6 +415,10 @@ Version 10.x (2026)
      current platform. It put each argument in double quotes without escaping the quotes inside: the two arguments
      ``-m`` and ``a "b" c`` came out as ``"-m" "a "b" c"``. Now they are ``-m 'a "b" c'`` for a POSIX shell and
      ``-m "a \"b\" c"`` on Windows. ``repr()`` is a Python literal with strings in double quotes.
+   * :mod:`pyTooling.MetaClasses` imports :data:`~pyTooling.Attributes.TAttr` and
+     :data:`~pyTooling.Attributes.TAttributeFilter` from :mod:`pyTooling.Attributes`. It declared its own copies, and
+     its filter was a union of attribute *instances*, while the predicate of ``GetMethodsWithAttributes`` takes
+     attribute classes.
 
    .. rubric:: Bug Fixes
 
