@@ -1498,7 +1498,8 @@ class ExtendedType(type):
 							inner.__dict__.pop("__classobj__", None)
 
 							return inner
-						# Add the wrapper as new class member or apply classmethod/staticmethod to the new member before adding it, 
+						# Add the wrapper as new class member. Before adding it, apply classmethod/staticmethod to it, or make it
+						# the getter of a copy of the property.
 						if function is member:
 							members[memberName] = outer(member)
 						elif isinstance(member, property):
