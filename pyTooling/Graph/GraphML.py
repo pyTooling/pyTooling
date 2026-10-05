@@ -47,6 +47,7 @@ from xml.sax.saxutils      import escape as xml_escape
 from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
+from pyTooling.Graph       import GraphViz
 from pyTooling.Tree        import Node as pyToolingNode
 
 
@@ -1066,13 +1067,22 @@ class GraphMLDocument(Base):
 		Vertices become nodes, edges become edges, and the vertex and edge values are attached as data items,
 		declared by two keys this method adds. Subgraphs are translated recursively.
 
+		A node's ID is its vertex' ID. A vertex without an ID gets a generated ID ``vertex<number>``, which no vertex' ID
+		is, because GraphML requires one. A graph without a name keeps the document's graph ID.
+
 		:param graph: The graph to translate into this document.
 		"""
 		document = self
-		self._graph._id = graph._name
+		if graph._name is not None:
+			self._graph._id = graph._name
 
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 		edgeValue = self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
+
+		vertices = [vertex for subgraph in graph.Subgraphs for vertex in subgraph.IterateVertices()]
+		vertices += graph.IterateVertices()
+		identifiers = GraphViz.Graph._Identifiers(vertices)
+		nodes: dict[int, Node] = {}
 
 		def translateGraph(rootGraph: Graph, pyTGraph: pyToolingGraph):
 			"""
@@ -1085,7 +1095,8 @@ class GraphMLDocument(Base):
 			:param pyTGraph:  The pyTooling graph to translate.
 			"""
 			for vertex in pyTGraph.IterateVertices():
-				newNode = Node(vertex._id)
+				newNode = Node(identifiers[id(vertex)])
+				nodes[id(vertex)] = newNode
 				if vertex._value is not None:
 					newNode.AddData(Data(nodeValue, vertex._value))
 
@@ -1100,8 +1111,8 @@ class GraphMLDocument(Base):
 				rootGraph.AddNode(newNode)
 
 			for edge in pyTGraph.IterateEdges():
-				source = rootGraph.GetByID(edge._source._id)
-				target = rootGraph.GetByID(edge._destination._id)
+				source = nodes[id(edge._source)]
+				target = nodes[id(edge._destination)]
 
 				newEdge = Edge(edge._id, source, target)
 				if edge._value is not None:
@@ -1118,8 +1129,8 @@ class GraphMLDocument(Base):
 				rootGraph.AddEdge(newEdge)
 
 			for link in pyTGraph.IterateLinks():
-				source = rootGraph.GetByID(link._source._id)
-				target = rootGraph.GetByID(link._destination._id)
+				source = nodes[id(link._source)]
+				target = nodes[id(link._destination)]
 
 				newEdge = Edge(link._id, source, target)
 				if link._value is not None:
@@ -1147,7 +1158,8 @@ class GraphMLDocument(Base):
 			rootGraph = nodeGraph.RootGraph
 
 			for vertex in pyTSubgraph.IterateVertices():
-				newNode = Node(vertex._id)
+				newNode = Node(identifiers[id(vertex)])
+				nodes[id(vertex)] = newNode
 				newNode.AddData(Data(nodeValue, vertex._value))
 				for key, value in vertex._dict.items():
 					if self.ContainsKey(str(key)):
@@ -1159,8 +1171,8 @@ class GraphMLDocument(Base):
 				nodeGraph.AddNode(newNode)
 
 			for edge in pyTSubgraph.IterateEdges():
-				source = nodeGraph.GetNode(edge._source._id)
-				target = nodeGraph.GetNode(edge._destination._id)
+				source = nodes[id(edge._source)]
+				target = nodes[id(edge._destination)]
 
 				newEdge = Edge(edge._id, source, target)
 				newEdge.AddData(Data(edgeValue, edge._value))
@@ -1186,22 +1198,29 @@ class GraphMLDocument(Base):
 
 		Every node of the tree becomes a GraphML node, and every parent-child relation becomes an edge.
 
+		A GraphML node's ID is the tree node's ID. A tree node without an ID gets a generated ID ``vertex<number>``, which
+		no tree node's ID is, because GraphML requires one. A root without an ID keeps the document's graph ID.
+
 		:param tree: The root node of the tree to translate into this document.
 		"""
-		self._graph._id = tree._id
+		if tree._id is not None:
+			self._graph._id = tree._id
 
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 
-		rootNode = self._graph.AddNode(Node(tree._id))
-		if tree._value is not None:
-			rootNode.AddData(Data(nodeValue, tree._value))
+		treeNodes  = [tree]
+		treeNodes += tree.GetDescendants()
+		identifiers = GraphViz.Graph._Identifiers(treeNodes)
+		nodes: dict[int, Node] = {}
 
-		for i, node in enumerate(tree.GetDescendants()):
-			newNode = self._graph.AddNode(Node(node._id))
-			if node._value is not None:
-				newNode.AddData(Data(nodeValue, node._value))
+		for i, treeNode in enumerate(treeNodes):
+			newNode = self._graph.AddNode(Node(identifiers[id(treeNode)]))
+			nodes[id(treeNode)] = newNode
+			if treeNode._value is not None:
+				newNode.AddData(Data(nodeValue, treeNode._value))
 
-			newEdge = self._graph.AddEdge(Edge(f"e{i}", newNode, self._graph.GetNode(node._parent._id)))
+			if treeNode is not tree:
+				self._graph.AddEdge(Edge(f"e{i - 1}", newNode, nodes[id(treeNode._parent)]))
 
 	def OpeningTag(self, indent: int = 0) -> str:
 		"""

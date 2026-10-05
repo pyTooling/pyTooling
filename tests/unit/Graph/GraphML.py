@@ -393,6 +393,49 @@ class pyToolingGraph(Testcase):
 		self.assertEqual("https://example.org/?a=1&b=2", dom.getElementsByTagName("data")[0].firstChild.data)
 
 
+	def test_ConvertGraph_WithoutIDs(self) -> None:
+		"""A vertex without an ID gets a generated one, which no vertex' ID is; a graph without a name keeps 'G'."""
+		graph = pyTooling_Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(vertexID="vertex1", graph=graph)
+		vertex3 = Vertex(graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+		vertex3.EdgeToVertex(vertex1)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("G", dom.getElementsByTagName("graph")[0].getAttribute("id"))
+		self.assertSetEqual(
+			{"vertex1", "vertex2", "vertex3"},
+			{node.getAttribute("id") for node in dom.getElementsByTagName("node")}
+		)
+		self.assertSetEqual(
+			{("vertex2", "vertex1"), ("vertex3", "vertex2")},
+			{(edge.getAttribute("source"), edge.getAttribute("target")) for edge in dom.getElementsByTagName("edge")}
+		)
+
+	def test_ConvertSubgraph_WithoutIDs(self) -> None:
+		"""Generated IDs are unique across the subgraphs, and an edge inside a subgraph finds its nodes."""
+		graph = pyTooling_Graph(name="g1")
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
+		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+		vertex1 = Vertex(subgraph=subgraph1)
+		vertex2 = Vertex(subgraph=subgraph1)
+		vertex3 = Vertex(subgraph=subgraph2)
+		vertex1.EdgeToVertex(vertex2)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		nodeIDs = {node.getAttribute("id") for node in dom.getElementsByTagName("node")}
+		self.assertSetEqual({"vertex1", "vertex2", "vertex3"}, {node for node in nodeIDs if node.startswith("vertex")})
+		edge = dom.getElementsByTagName("edge")[0]
+		self.assertEqual(("vertex1", "vertex2"), (edge.getAttribute("source"), edge.getAttribute("target")))
+
+
 class pyToolingTree(Testcase):
 	def test_Conversion(self) -> None:
 		root = pyToolingNode(nodeID="n0", value="v0")
@@ -418,3 +461,24 @@ class pyToolingTree(Testcase):
 		doc.FromTree(root)
 
 		self.assertNotIn("None", "".join(doc.ToStringLines()))
+
+	def test_Conversion_WithoutIDs(self) -> None:
+		"""A tree node without an ID gets a generated one; a root without an ID keeps the graph ID 'G'."""
+		root = pyToolingNode()
+		child1 = pyToolingNode(parent=root)
+		pyToolingNode("vertex2", parent=root)
+		pyToolingNode(parent=child1)
+
+		doc = GraphMLDocument()
+		doc.FromTree(root)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("G", dom.getElementsByTagName("graph")[0].getAttribute("id"))
+		self.assertSetEqual(
+			{"vertex1", "vertex2", "vertex3", "vertex4"},
+			{node.getAttribute("id") for node in dom.getElementsByTagName("node")}
+		)
+		self.assertSetEqual(
+			{("vertex3", "vertex1"), ("vertex2", "vertex1"), ("vertex4", "vertex3")},
+			{(edge.getAttribute("source"), edge.getAttribute("target")) for edge in dom.getElementsByTagName("edge")}
+		)
