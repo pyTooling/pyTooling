@@ -178,9 +178,7 @@ class RecordedTimes(Testcase):
 			with self.subTest(span=name):
 				span = spans[name]
 				self.assertEqual(expected, int(span["endTimeUnixNano"]) - int(span["startTimeUnixNano"]))
-				self.assertAlmostEqual(
-					int(self._begin.timestamp()) * 1_000_000_000, int(span["startTimeUnixNano"]), delta=1_000
-				)
+				self.assertEqual(int(self._begin.timestamp()) * 1_000_000_000, int(span["startTimeUnixNano"]))
 
 	def test_EndTimeWithoutBeginTime(self) -> None:
 		with self.assertRaises(ValueError) as context:

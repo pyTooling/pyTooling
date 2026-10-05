@@ -148,6 +148,22 @@ def _nanoseconds(beginTime: datetime, endTime: datetime) -> int:
 	return seconds * 1_000_000_000 + difference.microseconds * 1_000
 
 
+def _unixNanoseconds(timestamp: datetime) -> int:
+	"""
+	Compute a timestamp's distance from the Unix epoch in nanoseconds.
+
+	Whole seconds and microseconds are converted separately with integer arithmetic, so the result is exact to the
+	microsecond the timestamp holds. ``timestamp() * 1e9`` is not: a :class:`float` has about 16 significant digits, so
+	the nanoseconds of a current timestamp are off by up to a few hundred.
+
+	A naive timestamp is local time, as for :meth:`~datetime.datetime.timestamp`.
+
+	:param timestamp: The timestamp to convert.
+	:returns:         Nanoseconds since the Unix epoch.
+	"""
+	return int(timestamp.replace(microsecond=0).timestamp()) * 1_000_000_000 + timestamp.microsecond * 1_000
+
+
 @export
 class TracingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
@@ -514,7 +530,7 @@ class Event(TraceElement):
 		"""
 		converted: OTLPEvent = {
 			"name":         self._name,
-			"timeUnixNano": str(int(self._time.timestamp() * 1_000_000_000)),
+			"timeUnixNano": str(_unixNanoseconds(self._time)),
 		}
 
 		if len(attributes := _toAttributes(self._dict.items())) != 0:
@@ -1001,7 +1017,7 @@ class Span(TraceElement):
 			converted["parentSpanId"] = self._parent._spanID
 
 		if self.StartTime is not None:
-			startTimeUnixNano = int(self.StartTime.timestamp() * 1_000_000_000)
+			startTimeUnixNano = _unixNanoseconds(self.StartTime)
 			converted["startTimeUnixNano"] = str(startTimeUnixNano)
 
 			# The wall clock has microsecond resolution while the duration comes from a nanosecond performance
