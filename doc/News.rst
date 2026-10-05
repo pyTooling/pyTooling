@@ -465,7 +465,8 @@ Version 10.x (2026)
        vertex, edge or node without a value, and an edge without an ID got ``id="None"``. A missing value adds no data
        item now, and an edge without an ID no ``id`` attribute - it is optional in GraphML.
      * Of several edges without an ID, only the last one added was written: a graph stored its edges by ID, and all of
-       them had the ID ``None``.
+       them had the ID ``None``. They are kept apart now, in
+       :attr:`BaseGraph.EdgesWithoutID <pyTooling.Graph.GraphML.BaseGraph.EdgesWithoutID>`.
      * IDs and key names weren't escaped, so an ID with ``&``, ``<`` or ``"`` made the document invalid XML.
 
    * :mod:`pyTooling.Testing`

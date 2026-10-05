@@ -328,7 +328,7 @@ class pyToolingGraph(Testcase):
 		self.assertListEqual([], doc._graph.GetNode("n1").Data)
 
 	def test_ConvertGraph_EdgesWithoutIDs(self) -> None:
-		"""Every edge without an ID is written, not only the last one added."""
+		"""Every edge without an ID is written, not only the last one added; ``Edges`` and ``EdgesWithoutID`` split them."""
 		graph = pyTooling_Graph(name="g1")
 		vertex1 = Vertex(vertexID="n1", graph=graph)
 		vertex2 = Vertex(vertexID="n2", graph=graph)
@@ -348,6 +348,11 @@ class pyToolingGraph(Testcase):
 			{tuple(edge.getAttribute(attr) for attr in ("id", "source", "target")) for edge in edges}
 		)
 		self.assertNotIn(None, doc._graph._ids)
+		self.assertListEqual(["e31"], list(doc._graph.Edges))
+		self.assertListEqual(
+			[("n1", "n2"), ("n2", "n3")],
+			[(edge.Source.ID, edge.Target.ID) for edge in doc._graph.EdgesWithoutID]
+		)
 
 	def test_ConvertGraph_KeyValuePairs(self) -> None:
 		"""A key is declared once, however many vertices or edges carry it."""

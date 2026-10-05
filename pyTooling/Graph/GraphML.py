@@ -619,14 +619,14 @@ class BaseGraph(BaseWithData, mixin=True):
 		"""
 		super().__init__(identifier)
 
-		self._subgraphs = {}
-		self._nodes = {}
-		self._edges = {}
+		self._subgraphs =      {}
+		self._nodes =          {}
+		self._edges =          {}
 		self._edgesWithoutID = []
-		self._edgeDefault = EdgeDefault.Directed
-		self._parseOrder = ParsingOrder.NodesFirst
-		self._nodeIDStyle = IDStyle.Free
-		self._edgeIDStyle = IDStyle.Free
+		self._edgeDefault =    EdgeDefault.Directed
+		self._parseOrder =     ParsingOrder.NodesFirst
+		self._nodeIDStyle =    IDStyle.Free
+		self._edgeIDStyle =    IDStyle.Free
 
 	@readonly
 	def Subgraphs(self) -> dict[str, Subgraph]:
@@ -651,11 +651,22 @@ class BaseGraph(BaseWithData, mixin=True):
 		"""
 		Read-only property to access the graph's edges with an ID (:attr:`_edges`).
 
-		An edge without an ID is in :attr:`_edgesWithoutID`.
+		An edge without an ID is in :attr:`EdgesWithoutID`.
 
 		:returns: Dictionary of edge IDs and edges.
 		"""
 		return self._edges
+
+	@readonly
+	def EdgesWithoutID(self) -> list[Edge]:
+		"""
+		Read-only property to access the graph's edges without an ID (:attr:`_edgesWithoutID`).
+
+		An edge with an ID is in :attr:`Edges`.
+
+		:returns: List of edges without an ID, in the order they were added.
+		"""
+		return self._edgesWithoutID
 
 	def AddSubgraph(self, subgraph: Subgraph) -> Subgraph:
 		"""
