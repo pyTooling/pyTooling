@@ -540,7 +540,8 @@ class Stopwatch(SlottedObject):
 		An unstarted stopwatch is started, a paused one is resumed.
 
 		:returns:               The stopwatch itself.
-		:raises StopwatchError: If the stopwatch was already started.
+		:raises StopwatchError: If the stopwatch is running.
+		:raises StopwatchError: If the stopwatch was already stopped.
 		"""
 		if self._startTime is None:           # start stopwatch
 			self._beginTime = datetime.now()
@@ -575,7 +576,9 @@ class Stopwatch(SlottedObject):
 		:param exc_val:         Exception object, otherwise None.
 		:param exc_tb:          Exception's traceback, otherwise None.
 		:returns:               ``None``
+		:raises StopwatchError: If the stopwatch was never started.
 		:raises StopwatchError: If the stopwatch was already stopped.
+		:raises StopwatchError: If the stopwatch is paused, because it wasn't resumed.
 		"""
 		if self._startTime is None:           # never started?
 			raise StopwatchError("Stopwatch was never started.")
@@ -612,11 +615,11 @@ class Stopwatch(SlottedObject):
 		"""
 		Implementation of ``split = object[i]`` to return the i-th split time.
 
-		:param index:     Index to access the i-th split time.
-		:returns:         i-th split time as a tuple of: |br|
-		                  (1) delta time to the previous stopwatch operation and |br|
-		                  (2) a boolean indicating if the split was an activity (true) or inactivity (false).
-		:raises KeyError: If index *i* doesn't exist.
+		:param index:       Index to access the i-th split time.
+		:returns:           i-th split time as a tuple of: |br|
+		                    (1) delta time to the previous stopwatch operation and |br|
+		                    (2) a boolean indicating if the split was an activity (true) or inactivity (false).
+		:raises IndexError: If index *i* doesn't exist.
 		"""
 		return self._splits[index]
 

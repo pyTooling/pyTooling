@@ -342,6 +342,55 @@ class ContextManagerProtocol(Testcase):
 		self.assertEqual(0, sw.InactiveCount)
 
 
+class ContextManagerErrors(Testcase):
+	"""Entering and exiting a stopwatch in a state that doesn't allow it."""
+
+	def test_Enter_Running(self) -> None:
+		sw = Stopwatch(started=True)
+
+		with self.assertRaises(StopwatchError) as context:
+			sw.__enter__()
+
+		self.assertEqual("Stopwatch is currently running and can not be started/resumed again.", str(context.exception))
+
+	def test_Enter_Stopped(self) -> None:
+		sw = Stopwatch(started=True)
+		sw.Stop()
+
+		with self.assertRaises(StopwatchError) as context:
+			sw.__enter__()
+
+		self.assertEqual("Stopwatch was already stopped.", str(context.exception))
+
+	def test_Exit_NeverStarted(self) -> None:
+		with self.assertRaises(StopwatchError) as context:
+			Stopwatch().__exit__()
+
+		self.assertEqual("Stopwatch was never started.", str(context.exception))
+
+	def test_Exit_Stopped(self) -> None:
+		sw = Stopwatch(started=True)
+		sw.Stop()
+
+		with self.assertRaises(StopwatchError) as context:
+			sw.__exit__()
+
+		self.assertEqual("Stopwatch was already stopped.", str(context.exception))
+
+	def test_Exit_Paused(self) -> None:
+		sw = Stopwatch(started=True)
+		sw.Pause()
+
+		with self.assertRaises(StopwatchError) as context:
+			sw.__exit__()
+
+		self.assertEqual("Stopwatch was not resumed.", str(context.exception))
+
+	def test_SplitTime_IndexError(self) -> None:
+		with self.assertRaises(IndexError):
+			_ = Stopwatch()[0]
+
+
 class Excluding(Testcase):
 	"""Excluding time spans from the measurement with :attr:`~pyTooling.Stopwatch.Stopwatch.Exclude`."""
 
