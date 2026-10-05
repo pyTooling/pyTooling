@@ -38,7 +38,7 @@ from weakref import ref as WeakReference
 
 from pytest                import mark
 
-from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
+from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError, DuplicateFieldInSlotsError
 from pyTooling.Platform    import CurrentPlatform
 from pyTooling.Testing     import Testcase
 
@@ -169,7 +169,7 @@ class WeakReferences(Testcase):
 		self.assertIsNotNone(WeakReference(Combined()))
 
 	def test_AMixinAskingOnAWeakReferenceableClassIsAnError(self) -> None:
-		"""Python rejects the second ``__weakref__`` when the mixin-class' slots are materialized."""
+		"""A second ``__weakref__`` is rejected, before Python rejects it when materializing the mixin's slots."""
 
 		class Mixin(metaclass=ExtendedType, mixin=True, weakref=True):
 			_fromMixin: int
@@ -177,7 +177,7 @@ class WeakReferences(Testcase):
 		class Application(metaclass=ExtendedType, slots=True, weakref=True):
 			_own: int
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(DuplicateFieldInSlotsError):
 			class Combined(Application, Mixin):
 				pass
 

@@ -472,6 +472,14 @@ Version 10.x (2026)
        without the thread's name. It passes the name now, also with an exception, which
        :meth:`~pyTooling.Warning.ThreadSupervisor.ReRaise` named no thread for.
 
+   * :mod:`pyTooling.MetaClasses`
+
+     * A mixin-class' field was added to the slots of the class it is mixed into, even if that name was a slot
+       already: of the primary inheritance line, of the class itself, or of a second mixin-class. The class got two
+       slots of one name, or for ``__weakref__`` Python's ``TypeError: __weakref__ slot disallowed``. These raise a
+       :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now. Two mixin-classes deriving from one mixin-class
+       passed its field on twice; it is one slot now.
+
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
 

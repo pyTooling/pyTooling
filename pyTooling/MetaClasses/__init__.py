@@ -1185,6 +1185,13 @@ class ExtendedType(type):
 		                                    assignment. Annotating it does **not** resolve the clash - the slot
 		                                    exists either way - so a class variable of that name has to be renamed,
 		                                    or the slot dropped.
+		:raises DuplicateFieldInSlotsError: If a field of the class has the name of a mixin-class' slot. |br|
+		                                    Remove the annotation; the mixin-class' field becomes a slot of this class.
+		:raises DuplicateFieldInSlotsError: If a slot of the primary inheritance line has the name of a mixin-class'
+		                                    slot. |br|
+		                                    Rename one of the two fields, or declare it in one class only. Set
+		                                    ``weakref=True`` in one class of a hierarchy; derived classes inherit
+		                                    ``__weakref__``.
 		"""
 		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 		slottedFields = []
@@ -1263,6 +1270,32 @@ class ExtendedType(type):
 
 			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
 
+			# A mixin-class' slot must not exist a second time: neither as a field of this class, nor as a slot of the
+			# primary inheritance line. A slot both reach from the same declaring class (a diamond) exists once.
+			for fieldName, declaringClass in list(mixinSlots.items()):
+				mixinName = getFullyQualifiedName(declaringClass)
+				if fieldName in slottedFields:
+					ex = DuplicateFieldInSlotsError(
+						f"Slot '{fieldName}' declared in class '{className}' already exists in mixin-class '{mixinName}'."
+					)
+					ex.add_note("Remove the annotation; the mixin-class' field becomes a slot of this class.")
+					raise ex
+				elif fieldName in inheritedSlottedFields:
+					baseClass = self._findSlotDeclaration(baseClasses[0], fieldName)
+					if baseClass is declaringClass:
+						del mixinSlots[fieldName]
+						continue
+
+					baseName = getFullyQualifiedName(baseClass)
+					ex = DuplicateFieldInSlotsError(
+						f"Slot '{fieldName}' of mixin-class '{mixinName}' already exists in base-class '{baseName}'."
+					)
+					if fieldName == "__weakref__":
+						ex.add_note("Set 'weakref=True' in one class of a hierarchy; derived classes inherit '__weakref__'.")
+					else:
+						ex.add_note("Rename one of the two fields, or declare it in one class only.")
+					raise ex
+
 			# A member assigned in the class body without a type annotation stays a class attribute. If it carries the name
 			# of a slot, that class attribute shadows the slot's descriptor and the field becomes read-only on instances.
 			# Report it here instead of letting the first assignment fail with a bare AttributeError.
@@ -1296,7 +1329,7 @@ class ExtendedType(type):
 		self._checkForUnannotatedFields(className, members, annotations)
 
 		if mixin:
-			mixinSlots.extend(slottedFields)
+			mixinSlots = [*mixinSlots, *slottedFields]
 			members["__slotted__"] = True
 			members["__slots__"] = tuple()
 			members["__allSlots__"] = set()
@@ -1318,7 +1351,7 @@ class ExtendedType(type):
 		return classFields, objectFields
 
 	@classmethod
-	def _aggregateMixinSlots(self, className: str, baseClasses: tuple[type]) -> list[str]:
+	def _aggregateMixinSlots(self, className: str, baseClasses: tuple[type]) -> dict[str, type]:
 		"""
 		Aggregate slot names requested by mixin-base-classes.
 
@@ -1328,11 +1361,15 @@ class ExtendedType(type):
 
 		:param className:                        The name of the class to construct.
 		:param baseClasses:                      The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:returns:                                A list of slot names.
+		:returns:                                A dictionary of slot names and the mixin-class declaring each.
 		:raises BaseClassWithNonEmptySlotsError: If a mixin-class uses non-empty slots. |br|
 		                                         In Python, only one inheritance branch can use non-empty ``__slots__``.
+		:raises DuplicateFieldInSlotsError:      If two mixin-classes declare a slot of the same name. |br|
+		                                         Rename one of the two fields, or move it into a mixin-class both derive
+		                                         from. Set ``weakref=True`` in one class of a hierarchy; derived classes
+		                                         inherit ``__weakref__``.
 		"""
-		mixinSlots = []
+		mixinSlots: dict[str, type] = {}
 		if len(baseClasses) > 0:
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
 			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
@@ -1356,12 +1393,48 @@ class ExtendedType(type):
 			for baseClass in baseClasses:  # type: ExtendedType
 				if isinstance(baseClass, _GenericAlias) and baseClass.__origin__ is Generic:
 					pass
-				elif baseClass.__class__ is self and baseClass.__isMixin__:
-					mixinSlots.extend(baseClass.__mixinSlots__)
 				elif hasattr(baseClass, "__mixinSlots__"):
-					mixinSlots.extend(baseClass.__mixinSlots__)
+					for fieldName in baseClass.__mixinSlots__:
+						declaringClass = self._findSlotDeclaration(baseClass, fieldName)
+						if fieldName not in mixinSlots:
+							mixinSlots[fieldName] = declaringClass
+						elif mixinSlots[fieldName] is not declaringClass:
+							firstName =  getFullyQualifiedName(mixinSlots[fieldName])
+							secondName = getFullyQualifiedName(declaringClass)
+							ex = DuplicateFieldInSlotsError(
+								f"Slot '{fieldName}' is declared by mixin-classes '{firstName}' and '{secondName}'."
+							)
+							ex.add_note(f"Both are base-classes of class '{className}'.")
+							if fieldName == "__weakref__":
+								ex.add_note("Set 'weakref=True' in one class of a hierarchy; derived classes inherit '__weakref__'.")
+							else:
+								ex.add_note("Rename one of the two fields, or move it into a mixin-class both derive from.")
+							raise ex
 
 		return mixinSlots
+
+	@staticmethod
+	def _findSlotDeclaration(baseClass: type, fieldName: str) -> type:
+		"""
+		Find the class in a base-class' hierarchy, which declared a slot.
+
+		A mixin-class passes the slots of its mixin-base-classes on in ``__mixinSlots__``, and the slotted class it is mixed
+		into lists them in its ``__slots__``. Searched from the root of the method resolution order, the first class
+		listing the name declared it.
+
+		:param baseClass: The base-class whose hierarchy is searched.
+		:param fieldName: The slot's name.
+		:returns:         The class declaring the slot.
+		"""
+		for cls in reversed(baseClass.__mro__):
+			slots = cls.__dict__.get("__slots__", ())
+			if isinstance(slots, str):
+				slots = (slots, )
+
+			if fieldName in slots or fieldName in cls.__dict__.get("__mixinSlots__", ()):
+				return cls
+
+		return baseClass
 
 	@classmethod
 	def _iterateBaseClasses(metacls, baseClasses: tuple[type]) -> Generator[type, None, None]:
