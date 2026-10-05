@@ -500,21 +500,21 @@ A word on ``AttributeScope``
 ****************************
 
 
-An attribute class may declare where it is meant to be used:
+An attribute class may declare where it is meant to be used, by the class keyword argument ``scope``:
 
 .. code-block:: Python
 
    from pyTooling.Attributes import Attribute, AttributeScope
 
-   class Hook(Attribute):
-     _scope = AttributeScope.Method
+   class Hook(Attribute, scope=AttributeScope.Method):
+     pass
 
 Applying ``Hook`` to anything but a method - a class, or a function at module level - raises an
 :exc:`~pyTooling.Attributes.AttributeScopeError`. A function defined in a class body counts as a method, although it is
 still a plain function while the decorator runs: its qualified name tells.
 
-``_scope`` reads back from an attribute **instance** - :pycode:`Hook("open").Scope` - and from the class as
-:pycode:`Hook._scope`.
+The scope reads back from an attribute **instance** - :pycode:`Hook("open").Scope` - and from the class as
+:pycode:`Hook._scope`. A class derived from ``Hook`` inherits it, unless it states its own.
 
 
 .. _TUTORIAL/Attributes/UseCases:

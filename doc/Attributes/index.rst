@@ -542,8 +542,20 @@ Scope
 
 :class:`~pyTooling.Attributes.AttributeScope` is an :class:`~enum.IntFlag` naming the language entities an attribute
 can be applied to - :pycode:`Class`, :pycode:`Method`, :pycode:`Function`, and :pycode:`Any` as their union. A derived
-attribute states it by overriding :attr:`~pyTooling.Attributes.Attribute._scope`, and an attribute instance reports it
-through :attr:`~pyTooling.Attributes.Attribute.Scope`.
+attribute states it as class keyword argument ``scope``, and an attribute instance reports it through
+:attr:`~pyTooling.Attributes.Attribute.Scope`:
+
+.. code-block:: Python
+
+   class Hook(Attribute, scope=AttributeScope.Method):
+     pass
+
+   class AsyncHook(Hook):                 # inherits the scope 'Method'
+     pass
+
+The keyword sets :attr:`~pyTooling.Attributes.Attribute._scope`, which a class without it inherits. Overriding
+``_scope`` in the class body still works; the keyword takes precedence. A value other than an
+:class:`~pyTooling.Attributes.AttributeScope` raises :exc:`TypeError`.
 
 Applying an attribute to an entity its scope doesn't allow raises
 :exc:`~pyTooling.Attributes.AttributeScopeError`, naming the attribute and the entity. A function defined in a class

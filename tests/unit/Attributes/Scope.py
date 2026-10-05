@@ -42,16 +42,16 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class ClassOnly(Attribute):
-	_scope = AttributeScope.Class
+class ClassOnly(Attribute, scope=AttributeScope.Class):
+	pass
 
 
-class MethodOnly(Attribute):
-	_scope = AttributeScope.Method
+class MethodOnly(Attribute, scope=AttributeScope.Method):
+	pass
 
 
-class FunctionOnly(Attribute):
-	_scope = AttributeScope.Function
+class FunctionOnly(Attribute, scope=AttributeScope.Function):
+	pass
 
 
 class Enforcement(Testcase):
@@ -141,6 +141,57 @@ class ScopeProperty(Testcase):
 	def test_Instance(self) -> None:
 		self.assertEqual(AttributeScope.Method, MethodOnly().Scope)
 		self.assertEqual(AttributeScope.Any, Attribute().Scope)
+
+
+class ScopeKeyword(Testcase):
+	"""The scope is a class keyword argument; a class without it inherits its base-class' scope."""
+
+	def test_Keyword(self) -> None:
+		self.assertIs(AttributeScope.Method, MethodOnly._scope)
+
+	def test_Inherited(self) -> None:
+		class Derived(MethodOnly):
+			pass
+
+		self.assertIs(AttributeScope.Method, Derived._scope)
+		self.assertIs(AttributeScope.Method, Derived().Scope)
+
+	def test_Derived_OwnScope(self) -> None:
+		class Derived(MethodOnly, scope=AttributeScope.Method | AttributeScope.Function):
+			pass
+
+		self.assertEqual(AttributeScope.Method | AttributeScope.Function, Derived._scope)
+		self.assertIs(AttributeScope.Method, MethodOnly._scope, "The base-class keeps its scope.")
+
+	def test_ClassVariable(self) -> None:
+		"""Overriding '_scope' in the class body still works."""
+		class Overridden(Attribute):
+			_scope = AttributeScope.Function
+
+		self.assertIs(AttributeScope.Function, Overridden._scope)
+
+	def test_KeywordTakesPrecedence(self) -> None:
+		class Both(Attribute, scope=AttributeScope.Class):
+			_scope = AttributeScope.Function
+
+		self.assertIs(AttributeScope.Class, Both._scope)
+
+	def test_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			class Wrong(Attribute, scope="method"):
+				pass
+
+		self.assertEqual("Parameter 'scope' is not of type 'AttributeScope'.", str(context.exception))
+		self.assertIn("Got type 'str'.", context.exception.__notes__)
+
+	def test_Enforced(self) -> None:
+		class Hook(Attribute, scope=AttributeScope.Method):
+			pass
+
+		with self.assertRaises(AttributeScopeError):
+			@Hook()
+			def function() -> None:
+				pass
 
 
 class SubClassFilter(Testcase):
