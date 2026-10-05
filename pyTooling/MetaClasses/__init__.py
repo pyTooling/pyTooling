@@ -129,9 +129,9 @@ class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
 @export
 class BaseClassIsNotAMixinError(ExtendedTypeError):
 	"""
-	This exception is raised when a class inherits from a secondary base-class that is not declared as a mixin.
+	This exception is raised when a secondary base-class is a slotted class, but not declared as a mixin.
 
-	Only the primary inheritance line may carry a normal class; every further base-class needs ``mixin=True`` (or the
+	Only the primary inheritance line may carry a slotted class; every further base-class needs ``mixin=True`` (or the
 	:deco:`~pyTooling.MetaClasses.mixin` decorator), because that is what allows their slots to be merged.
 	"""
 
@@ -1317,11 +1317,25 @@ class ExtendedType(type):
 		:param className:                        The name of the class to construct.
 		:param baseClasses:                      The tuple of :term:`base-classes <base-class>` the class is derived from.
 		:returns:                                A list of slot names.
+		:raises BaseClassIsNotAMixinError:       If a secondary base-class is a slotted class, but not a mixin-class. |br|
+		                                         Only the primary base-class may be a slotted class; every further
+		                                         base-class is a mixin-class. Declare it with ``mixin=True`` or apply
+		                                         the :deco:`mixin` decorator.
 		:raises BaseClassWithNonEmptySlotsError: If a mixin-class uses non-empty slots. |br|
 		                                         In Python, only one inheritance branch can use non-empty ``__slots__``.
 		"""
 		mixinSlots = []
 		if len(baseClasses) > 0:
+			# A secondary base-class built by ExtendedType with slots contributes its fields as a mixin-class only.
+			for baseClass in baseClasses[1:]:
+				if isinstance(baseClass, ExtendedType) and baseClass.__slotted__ and not baseClass.__isMixin__:
+					ex = BaseClassIsNotAMixinError(
+						f"Secondary base-class '{getFullyQualifiedName(baseClass)}' of class '{className}' is not a mixin-class."
+					)
+					ex.add_note("Only the primary base-class may be a slotted class; every further base-class is a mixin-class.")
+					ex.add_note(f"Declare it as 'class {baseClass.__name__}(..., mixin=True)' or apply the '@mixin' decorator.")
+					raise ex
+
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
 			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
 			inheritancePaths = [path for path in metacls._iterateBaseClassPaths(baseClasses)]
@@ -1331,8 +1345,6 @@ class ExtendedType(type):
 					if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
 						ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
 						ex.add_note("In Python, only one inheritance branch can use non-empty __slots__.")
-						# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
-						# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
 						raise ex
 
 			# If current class is set to be a mixin, then aggregate all mixinSlots in a list.

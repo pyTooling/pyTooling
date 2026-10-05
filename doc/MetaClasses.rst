@@ -197,8 +197,9 @@ The mixin-class' ``__init__`` sets its own fields; the class it is mixed into ca
 * **The primary base-class comes first.** The first base-class is the primary inheritance line and carries the
   slots; every further base-class is a mixin-class.
 * **A further base-class with slots is rejected.** A slotted class that isn't a mixin-class raises a
-  :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError`; a class without ``__slots__`` at all raises a
-  :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`.
+  :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`, also with empty slots. Another class with non-empty
+  ``__slots__`` raises a :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError`; a class without ``__slots__``
+  at all raises a :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`.
 * **Mixin-classes combine.** A mixin-class derived from other mixin-classes collects their fields too, and a
   mixin-class may derive from a class of the primary inheritance line, e.g. to use its members.
 * **A mixin-class is used mixed in.** An instance of the mixin-class itself has neither slots for its fields nor a

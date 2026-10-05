@@ -397,6 +397,9 @@ Version 10.x (2026)
      ``sourceFileWithVersion`` a module doc-string.
    * The ``description`` parameter of both ``Describe***`` functions moved behind the required parameters, so a
      caller passing it positionally has to name it.
+   * ⚠️ **A slotted secondary base-class has to be a mixin-class**, also without fields:
+     :class:`~pyTooling.MetaClasses.ExtendedType` raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`.
+     Declare it with ``mixin=True`` or apply :deco:`~pyTooling.MetaClasses.mixin`.
 
    .. rubric:: Changes
 
@@ -424,6 +427,11 @@ Version 10.x (2026)
      :data:`~pyTooling.Attributes.TAttributeFilter` from :mod:`pyTooling.Attributes`. It declared its own copies, and
      its filter was a union of attribute *instances*, while the predicate of ``GetMethodsWithAttributes`` takes
      attribute classes.
+   * A secondary base-class built by :class:`~pyTooling.MetaClasses.ExtendedType` with ``slots=True``, but without
+     ``mixin=True``, raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`, which was declared but never
+     raised. One with fields raised :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError`, one without fields
+     was accepted. A plain class with non-empty ``__slots__`` still raises
+     :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError`.
 
    .. rubric:: Bug Fixes
 
