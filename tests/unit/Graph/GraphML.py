@@ -345,12 +345,59 @@ class pyToolingGraph(Testcase):
 		self.assertEqual(2, len(doc._graph._subgraphs))
 		self.assertEqual(4, len(doc._graph._nodes))
 		self.assertEqual(0, len(doc._graph._edges))
-		self.assertEqual(3, len(doc._graph._edgesWithoutID))
+		self.assertEqual(4, len(doc._graph._edgesWithoutID))
 
 		print()
 		for line in doc.ToStringLines():
 			print(line, end="")
 
+
+	def test_ConvertSubgraph_Links(self) -> None:
+		"""A link between two subgraphs is written once, as an edge of the root graph, with its key-value pairs."""
+		graph = pyTooling_Graph(name="g1")
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
+		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+		vertex1 = Vertex(vertexID="n1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", subgraph=subgraph1)
+		vertex3 = Vertex(vertexID="n3", subgraph=subgraph2)
+		vertex1.LinkToVertex(vertex2)
+		vertex2.LinkToVertex(vertex3, linkValue="v23", keyValuePairs={"kind": "runtime"})
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		rootEdges = [element for element in dom.getElementsByTagName("graph")[0].childNodes if element.nodeName == "edge"]
+		self.assertSetEqual(
+			{("n1", "n2"), ("n2", "n3")},
+			{(edge.getAttribute("source"), edge.getAttribute("target")) for edge in rootEdges}
+		)
+		self.assertEqual(2, len(rootEdges))
+		self.assertEqual(2, len(dom.getElementsByTagName("edge")), "No link is written a second time, in a subgraph.")
+		self.assertEqual(
+			{"edgeValue": "v23", "linkkind": "runtime"},
+			{data.getAttribute("key"): data.firstChild.data for data in dom.getElementsByTagName("data")}
+		)
+
+	def test_ConvertSubgraph_KeyValuePairs(self) -> None:
+		"""A key of the vertices and edges in subgraphs is declared once; a missing value adds no data item."""
+		graph = pyTooling_Graph(name="g1")
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
+		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+		vertex1 = Vertex(vertexID="n1", subgraph=subgraph1, keyValuePairs={"license": "MIT"})
+		vertex2 = Vertex(vertexID="n2", subgraph=subgraph1, keyValuePairs={"license": "BSD-3-Clause"})
+		Vertex(vertexID="n3", subgraph=subgraph2, keyValuePairs={"license": "MIT"})
+		vertex1.EdgeToVertex(vertex2, keyValuePairs={"kind": "runtime"})
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		text = "".join(doc.ToStringLines())
+
+		self.assertNotIn("None", text)
+		self.assertEqual(1, text.count('<key id="nodelicense"'))
+		self.assertEqual(1, text.count('<key id="edgekind"'))
+		self.assertEqual(3, text.count('<data key="nodelicense">'))
+		self.assertNotIn('<data key="nodeValue">', text)
 
 	def test_ConvertGraph_WithoutValues(self) -> None:
 		"""A vertex or edge without a value gets no data item, and an edge without an ID no 'id' attribute."""

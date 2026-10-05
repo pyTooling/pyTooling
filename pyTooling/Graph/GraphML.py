@@ -47,6 +47,7 @@ from xml.sax.saxutils      import escape as xml_escape
 from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
+from pyTooling.Graph       import Edge as pyToolingEdge, Link as pyToolingLink
 from pyTooling.Graph       import GraphViz
 from pyTooling.Tree        import Node as pyToolingNode
 
@@ -1108,7 +1109,8 @@ class GraphMLDocument(Base):
 		Fill this document from a :class:`pyTooling.Graph.Graph`.
 
 		Vertices become nodes, edges become edges, and the vertex and edge values are attached as data items,
-		declared by two keys this method adds. Subgraphs are translated recursively.
+		declared by two keys this method adds. A subgraph becomes a GraphML subgraph. A link connects vertices of two
+		graphs; it becomes an edge of the root graph.
 
 		A node's ID is its vertex' ID. A vertex without an ID gets a generated ID ``vertex<number>``, which no vertex' ID
 		is, because GraphML requires one. Subgraphs are translated ordered by name, so the generated IDs don't change from
@@ -1129,113 +1131,70 @@ class GraphMLDocument(Base):
 		identifiers = GraphViz.Graph._Identifiers(vertices)
 		nodes: dict[int, Node] = {}
 
-		def translateGraph(rootGraph: Graph, pyTGraph: pyToolingGraph):
+		def getKey(keyID: str, context: AttributeContext, name: str) -> Key:
 			"""
-			Nested function for recursion.
+			Nested function returning the key with the given ID, which is declared on first use.
 
-			It translates the vertices and edges of one pyTooling graph into GraphML nodes and edges, and recurses into the
-			subgraphs it finds.
+			:param keyID:   ID of the key.
+			:param context: Kind of element the key's data items belong to.
+			:param name:    Attribute name of the key.
+			:returns:       The key.
+			"""
+			if document.ContainsKey(keyID):
+				return document.GetKey(keyID)
 
-			:param rootGraph: The GraphML graph the elements are added to.
-			:param pyTGraph:  The pyTooling graph to translate.
+			return document.AddKey(Key(keyID, context, name, AttributeTypes.String))
+
+		def translateEdge(edge: Union[pyToolingEdge, pyToolingLink], prefix: str) -> Edge:
+			"""
+			Nested function translating an edge or a link, with its value and key-value pairs, into a GraphML edge.
+
+			:param edge:   The edge or link to translate.
+			:param prefix: Prefix of the key IDs for its key-value pairs: ``edge`` or ``link``.
+			:returns:      The GraphML edge between the nodes of its source and destination vertex.
+			"""
+			newEdge = Edge(edge._id, nodes[id(edge._source)], nodes[id(edge._destination)])
+			if edge._value is not None:
+				newEdge.AddData(Data(edgeValue, edge._value))
+
+			for key, value in edge._dict.items():
+				newEdge.AddData(Data(getKey(f"{prefix}{key!s}", AttributeContext.Edge, str(key)), value))
+
+			return newEdge
+
+		def translateGraph(graphMLGraph: BaseGraph, pyTGraph: Union[pyToolingGraph, pyToolingSubgraph]) -> None:
+			"""
+			Nested function translating the vertices and edges of a graph or subgraph into GraphML nodes and edges.
+
+			:param graphMLGraph: The GraphML graph or subgraph the elements are added to.
+			:param pyTGraph:     The pyTooling graph or subgraph to translate.
 			"""
 			for vertex in pyTGraph.IterateVertices():
-				newNode = Node(identifiers[id(vertex)])
+				newNode = graphMLGraph.AddNode(Node(identifiers[id(vertex)]))
 				nodes[id(vertex)] = newNode
 				if vertex._value is not None:
 					newNode.AddData(Data(nodeValue, vertex._value))
 
 				for key, value in vertex._dict.items():
-					keyID = f"node{key!s}"
-					if document.ContainsKey(keyID):
-						nodeKey = document.GetKey(keyID)
-					else:
-						nodeKey = document.AddKey(Key(keyID, AttributeContext.Node, str(key), AttributeTypes.String))
-					newNode.AddData(Data(nodeKey, value))
-
-				rootGraph.AddNode(newNode)
+					newNode.AddData(Data(getKey(f"node{key!s}", AttributeContext.Node, str(key)), value))
 
 			for edge in pyTGraph.IterateEdges():
-				source = nodes[id(edge._source)]
-				target = nodes[id(edge._destination)]
-
-				newEdge = Edge(edge._id, source, target)
-				if edge._value is not None:
-					newEdge.AddData(Data(edgeValue, edge._value))
-
-				for key, value in edge._dict.items():
-					keyID = f"edge{key!s}"
-					if self.ContainsKey(keyID):
-						edgeKey = self.GetKey(keyID)
-					else:
-						edgeKey = self.AddKey(Key(keyID, AttributeContext.Edge, str(key), AttributeTypes.String))
-					newEdge.AddData(Data(edgeKey, value))
-
-				rootGraph.AddEdge(newEdge)
-
-			for link in pyTGraph.IterateLinks():
-				source = nodes[id(link._source)]
-				target = nodes[id(link._destination)]
-
-				newEdge = Edge(link._id, source, target)
-				if link._value is not None:
-					newEdge.AddData(Data(edgeValue, link._value))
-
-				for key, value in link._dict.items():
-					keyID = f"link{key!s}"
-					if self.ContainsKey(keyID):
-						edgeKey = self.GetKey(keyID)
-					else:
-						edgeKey = self.AddKey(Key(keyID, AttributeContext.Edge, str(key), AttributeTypes.String))
-					newEdge.AddData(Data(edgeKey, value))
-
-				rootGraph.AddEdge(newEdge)
-
-		def translateSubgraph(nodeGraph: Subgraph, pyTSubgraph: pyToolingSubgraph):
-			"""
-			Nested function for recursion.
-
-			It translates one pyTooling subgraph into a GraphML subgraph.
-
-			:param nodeGraph:   The GraphML subgraph the elements are added to.
-			:param pyTSubgraph: The pyTooling subgraph to translate.
-			"""
-			rootGraph = nodeGraph.RootGraph
-
-			for vertex in pyTSubgraph.IterateVertices():
-				newNode = Node(identifiers[id(vertex)])
-				nodes[id(vertex)] = newNode
-				newNode.AddData(Data(nodeValue, vertex._value))
-				for key, value in vertex._dict.items():
-					if self.ContainsKey(str(key)):
-						nodeKey = self.GetKey(f"node{key!s}")
-					else:
-						nodeKey = self.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
-					newNode.AddData(Data(nodeKey, value))
-
-				nodeGraph.AddNode(newNode)
-
-			for edge in pyTSubgraph.IterateEdges():
-				source = nodes[id(edge._source)]
-				target = nodes[id(edge._destination)]
-
-				newEdge = Edge(edge._id, source, target)
-				newEdge.AddData(Data(edgeValue, edge._value))
-				for key, value in edge._dict.items():
-					if self.ContainsKey(str(key)):
-						edgeKey = self.GetKey(f"edge{key!s}")
-					else:
-						edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
-					newEdge.AddData(Data(edgeKey, value))
-
-				nodeGraph.AddEdge(newEdge)
+				graphMLGraph.AddEdge(translateEdge(edge, "edge"))
 
 		for subgraph in subgraphs:
 			nodeGraph = Subgraph(subgraph.Name, "sg" + subgraph.Name)
 			self._graph.AddSubgraph(nodeGraph)
-			translateSubgraph(nodeGraph, subgraph)
+			translateGraph(nodeGraph, subgraph)
 
 		translateGraph(self._graph, graph)
+
+		# A link is known to both graphs it connects: collect it from all graphs, and write it once into the root graph.
+		translatedLinks: set[int] = set()
+		for pyTGraph in chain(subgraphs, (graph, )):
+			for link in pyTGraph.IterateLinks():
+				if id(link) not in translatedLinks:
+					translatedLinks.add(id(link))
+					self._graph.AddEdge(translateEdge(link, "link"))
 
 	def FromTree(self, tree: pyToolingNode) -> None:
 		"""
