@@ -747,7 +747,7 @@ class BaseGraph(BaseWithData, mixin=True):
 {'  '*indent}<graph id="{_escapeAttribute(self._id)}"
 {'  '*indent}  edgedefault="{self._edgeDefault!s}"
 {'  '*indent}  parse.nodes="{len(self._nodes)}"
-{'  '*indent}  parse.edges="{len(self._edges) + len(self._edgesWithoutID)}"
+{'  '*indent}  parse.edges="{len(self._edgesWithoutID) + len(self._edges)}"
 {'  '*indent}  parse.order="{self._parseOrder!s}"
 {'  '*indent}  parse.nodeids="{self._nodeIDStyle!s}"
 {'  '*indent}  parse.edgeids="{self._edgeIDStyle!s}">
@@ -773,7 +773,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 1))
 
-		for edge in chain(self._edges.values(), self._edgesWithoutID):
+		for edge in chain(self._edgesWithoutID, self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 1))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))
@@ -944,7 +944,7 @@ class Subgraph(Node, BaseGraph):
 {'  ' * indent}<graph id="{_escapeAttribute(self._subgraphID)}"
 {'  ' * indent}  edgedefault="{self._edgeDefault!s}"
 {'  ' * indent}  parse.nodes="{len(self._nodes)}"
-{'  ' * indent}  parse.edges="{len(self._edges) + len(self._edgesWithoutID)}"
+{'  ' * indent}  parse.edges="{len(self._edgesWithoutID) + len(self._edges)}"
 {'  ' * indent}  parse.order="{self._parseOrder!s}"
 {'  ' * indent}  parse.nodeids="{self._nodeIDStyle!s}"
 {'  ' * indent}  parse.edgeids="{self._edgeIDStyle!s}">
@@ -974,7 +974,7 @@ class Subgraph(Node, BaseGraph):
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 2))
 
-		for edge in chain(self._edges.values(), self._edgesWithoutID):
+		for edge in chain(self._edgesWithoutID, self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 2))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))

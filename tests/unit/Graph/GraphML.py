@@ -328,7 +328,7 @@ class pyToolingGraph(Testcase):
 		self.assertListEqual([], doc._graph.GetNode("n1").Data)
 
 	def test_ConvertGraph_EdgesWithoutIDs(self) -> None:
-		"""Every edge without an ID is written, not only the last one added; ``Edges`` and ``EdgesWithoutID`` split them."""
+		"""Every edge without an ID is written, before those with an ID; ``Edges`` and ``EdgesWithoutID`` split them."""
 		graph = pyTooling_Graph(name="g1")
 		vertex1 = Vertex(vertexID="n1", graph=graph)
 		vertex2 = Vertex(vertexID="n2", graph=graph)
@@ -343,9 +343,9 @@ class pyToolingGraph(Testcase):
 
 		self.assertEqual("3", dom.getElementsByTagName("graph")[0].getAttribute("parse.edges"))
 		edges = dom.getElementsByTagName("edge")
-		self.assertSetEqual(
-			{("", "n1", "n2"), ("", "n2", "n3"), ("e31", "n3", "n1")},
-			{tuple(edge.getAttribute(attr) for attr in ("id", "source", "target")) for edge in edges}
+		self.assertListEqual(
+			[("", "n1", "n2"), ("", "n2", "n3"), ("e31", "n3", "n1")],
+			[tuple(edge.getAttribute(attr) for attr in ("id", "source", "target")) for edge in edges]
 		)
 		self.assertNotIn(None, doc._graph._ids)
 		self.assertListEqual(["e31"], list(doc._graph.Edges))
