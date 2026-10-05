@@ -46,10 +46,20 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
+# Factor by which a sleep may take longer than requested. A shared GitHub runner overshoots by up to 3x (Windows:
+# 1.44 s for a 0.5 s sleep); a local machine doesn't.
+if CurrentPlatform.IsGitHub:
+	SLEEP_INACCURACY = 4.0
+elif CurrentPlatform.IsNativeMacOS:
+	SLEEP_INACCURACY = 2.7
+else:
+	SLEEP_INACCURACY = 1.25
+
+
 class Operations(Testcase):
 	DELAY = 0.5
 	PAUSE = 0.9
-	INACCURACY = 2.7 if CurrentPlatform.IsNativeMacOS else 1.25
+	INACCURACY = SLEEP_INACCURACY
 
 	def test_StartStart(self) -> None:
 		sw = Stopwatch()
@@ -238,7 +248,7 @@ class Formatting(Testcase):
 class ContextManagerProtocol(Testcase):
 	DELAY = 0.5
 	PAUSE = 0.9
-	INACCURACY = 2.7 if CurrentPlatform.IsNativeMacOS else 1.25
+	INACCURACY = SLEEP_INACCURACY
 
 	def test_OneLiner(self) -> None:
 		print()
@@ -346,7 +356,7 @@ class Excluding(Testcase):
 	"""Excluding time spans from the measurement with :attr:`~pyTooling.Stopwatch.Stopwatch.Exclude`."""
 
 	DELAY = 0.5
-	INACCURACY = 2.7 if CurrentPlatform.IsNativeMacOS else 1.25
+	INACCURACY = SLEEP_INACCURACY
 
 	def test_ExcludedSpanCountsAsInactivity(self) -> None:
 		sw = Stopwatch(started=True)
