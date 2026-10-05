@@ -45,7 +45,7 @@ from typing                import Any, ClassVar, Union, Optional as Nullable
 from xml.sax.saxutils      import escape as xml_escape
 
 from pyTooling.Decorators  import export, notimplemented, readonly
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
 from pyTooling.Tree        import Node as pyToolingNode
 
@@ -165,45 +165,48 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		return True
 
+	@abstractmethod
 	def Tag(self, indent: int = 0) -> str:
 		"""
 		Return this element as a self-closing XML tag.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    The XML tag, indented and terminated by a newline.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
-		"""
-		raise NotImplementedError()
+		An element always written with an opening and a closing tag overrides it with
+		:deco:`~pyTooling.Decorators.notimplemented`.
 
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      The XML tag, indented and terminated by a newline.
+		"""
+
+	@abstractmethod
 	def OpeningTag(self, indent: int = 0) -> str:
 		"""
 		Return the opening XML tag of this element.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    The opening XML tag, indented and terminated by a newline.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
-		"""
-		raise NotImplementedError()
+		An element always written as a single tag overrides it with :deco:`~pyTooling.Decorators.notimplemented`.
 
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      The opening XML tag, indented and terminated by a newline.
+		"""
+
+	@abstractmethod
 	def ClosingTag(self, indent: int = 0) -> str:
 		"""
 		Return the closing XML tag of this element.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    The closing XML tag, indented and terminated by a newline.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
-		"""
-		raise NotImplementedError()
+		An element always written as a single tag overrides it with :deco:`~pyTooling.Decorators.notimplemented`.
 
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      The closing XML tag, indented and terminated by a newline.
+		"""
+
+	@abstractmethod
 	def ToStringLines(self, indent: int = 0) -> list[str]:
 		"""
 		Render this element as a list of XML lines.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    List of XML lines describing this element.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      List of XML lines describing this element.
 		"""
-		raise NotImplementedError()
 
 
 @export
@@ -341,6 +344,22 @@ class Key(BaseWithID):
 		attributeName = _escapeAttribute(self._attributeName)
 		return f"""{'  '*indent}<key id="{identifier}" for="{self._context}" attr.name="{attributeName}" attr.type="{self._attributeType}" />\n"""
 
+	@notimplemented("A key is always written as a self-closing tag.")
+	def OpeningTag(self, indent: int = 2) -> str:
+		"""
+		A key has no content, so it is never written with an opening and a closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
+
+	@notimplemented("A key is always written as a self-closing tag.")
+	def ClosingTag(self, indent: int = 2) -> str:
+		"""
+		A key has no content, so it is never written with an opening and a closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
+
 	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
 		Render this key as a list of XML lines.
@@ -409,6 +428,22 @@ class Data(Base):
 		data = data.replace(">", "&gt;")
 		data = data.replace("\n", "\\n")
 		return f"""{'  '*indent}<data key="{_escapeAttribute(self._key._id)}">{data}</data>\n"""
+
+	@notimplemented("A data item is always written in one line by Tag().")
+	def OpeningTag(self, indent: int = 2) -> str:
+		"""
+		A data item holds a value only, so :meth:`Tag` writes it in one line.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
+
+	@notimplemented("A data item is always written in one line by Tag().")
+	def ClosingTag(self, indent: int = 2) -> str:
+		"""
+		A data item holds a value only, so :meth:`Tag` writes it in one line.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
 
 	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
@@ -732,6 +767,14 @@ class BaseGraph(BaseWithData, mixin=True):
 		:raises KeyError: If no edge has that ID.
 		"""
 		return self._edges[edgeName]
+
+	@notimplemented("A graph is always written with an opening and a closing tag.")
+	def Tag(self, indent: int = 1) -> str:
+		"""
+		A graph is written with its nodes and edges inside, so it is never written as a self-closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
 
 	def OpeningTag(self, indent: int = 1) -> str:
 		"""
@@ -1202,6 +1245,14 @@ class GraphMLDocument(Base):
 				newNode.AddData(Data(nodeValue, node._value))
 
 			newEdge = self._graph.AddEdge(Edge(f"e{i}", newNode, self._graph.GetNode(node._parent._id)))
+
+	@notimplemented("A GraphML document is always written with an opening and a closing tag.")
+	def Tag(self, indent: int = 0) -> str:
+		"""
+		A GraphML document always contains keys and a graph, so it is never written as a self-closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
 
 	def OpeningTag(self, indent: int = 0) -> str:
 		"""
