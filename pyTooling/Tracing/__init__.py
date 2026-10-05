@@ -153,8 +153,7 @@ def _unixNanoseconds(timestamp: datetime) -> int:
 	Compute a timestamp's distance from the Unix epoch in nanoseconds.
 
 	Whole seconds and microseconds are converted separately with integer arithmetic, so the result is exact to the
-	microsecond the timestamp holds. ``timestamp() * 1e9`` is not: a :class:`float` has about 16 significant digits, so
-	the nanoseconds of a current timestamp are off by up to a few hundred.
+	microsecond the timestamp holds.
 
 	A naive timestamp is local time, as for :meth:`~datetime.datetime.timestamp`.
 
