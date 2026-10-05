@@ -472,6 +472,18 @@ Version 10.x (2026)
        without the thread's name. It passes the name now, also with an exception, which
        :meth:`~pyTooling.Warning.ThreadSupervisor.ReRaise` named no thread for.
 
+   * :mod:`pyTooling.Versioning`
+
+     * :meth:`PythonVersion.Parse <pyTooling.Versioning.PythonVersion.Parse>` missed most spellings :pep:`440`
+       normalizes, and read some of them wrongly: ``1.0rev1`` became major 1 with the local version ``0rev1`` - the
+       minor number was lost -, ``1.0-1`` a local version instead of ``1.0.post1``, ``1.0.0-rc.1`` was ``rc0`` with
+       the local version ``1``, and ``1.0.0.RC1`` wasn't a release candidate.
+       :class:`~pyTooling.Versioning.PythonVersion` has a pattern of its own now: case-insensitive, ``.``, ``-`` or
+       ``_`` around every part, ``rev`` and ``r`` for ``post``, implicit numbers, and a local version with ``.``,
+       ``-`` or ``_`` inside. ⚠️ ``10.0.0-PRE1`` is a release candidate now, not the local version ``PRE1``; a local
+       version can't follow a ``.`` any more (``1.0.0.foo``), and ``final`` and ``pl`` aren't release levels of a
+       Python version.
+
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
 

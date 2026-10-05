@@ -46,7 +46,7 @@ from __future__            import annotations
 
 from collections.abc       import Iterable as abc_Iterable
 from enum                  import Flag, Enum
-from re                    import compile as re_compile, escape as re_escape, Pattern
+from re                    import compile as re_compile, escape as re_escape, Pattern, IGNORECASE
 from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable
 from typing                import Iterator, Self
 
@@ -1660,6 +1660,24 @@ class PythonVersion(SemanticVersion):
 	#: :pep:`440` writes an epoch ``v2!1.2.3``, where Debian and the default write ``2:1.2.3``.
 	_EPOCH_SEPARATOR: ClassVar[str] = "!"
 
+	_PATTERN: ClassVar[Pattern] = re_compile(
+		r"^"
+		r"(?P<prefix>rev|[vir])?"
+		r"(?:(?P<epoch>\d+)!)?"
+		r"(?P<major>\d+)"
+		r"(?:\.(?P<minor>\d+))?"
+		r"(?:\.(?P<micro>\d+))?"
+		r"(?:\.(?P<build>\d+))?"
+		r"(?:[-_.]?(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc)[-_.]?(?P<number>\d+)?)?"
+		r"(?:-(?P<implicitPost>\d+)|[-_.]?(?P<postSpelling>post|rev|r)[-_.]?(?P<post>\d+)?)?"
+		r"(?:[-_.]?(?P<devSpelling>dev)[-_.]?(?P<dev>\d+)?)?"
+		r"(?:[-+](?P<local>[a-z0-9]+(?:[-_.][a-z0-9]+)*))?"
+		r"$",
+		IGNORECASE
+	)  #: Regular expression to parse a version string with the spellings :pep:`440` normalizes, case-insensitively.
+
+	_LOCAL_SEPARATOR: ClassVar[Pattern] = re_compile(r"[-_]")  #: Separators in a local version, normalized to ``.``.
+
 	@classmethod
 	def Parse(
 		cls,
@@ -1671,9 +1689,14 @@ class PythonVersion(SemanticVersion):
 		"""
 		Parse a version string and return a :class:`PythonVersion` instance.
 
-		The version keeps the spelling it was parsed from, e.g. ``1.0-pre1`` or ``1.0-dev``, and compares equal to its
-		:pep:`440` normalized form ``1.0rc1`` or ``1.0.dev0``. With ``normalize``, the version is normalized as by
-		:meth:`Normalize`.
+		Every spelling :pep:`440` normalizes is accepted, case-insensitively: the separators ``.``, ``-`` and ``_``
+		around a release level, post-release and development release, ``rev`` and ``r`` for ``post``, an implicit
+		post-release ``1.0-1``, missing numbers (``1.0a``, ``1.0.post``, ``1.0.dev``), and a local version
+		``1.0+ubuntu-1``. A local version may also follow a ``-``, e.g. ``1.0-precise1``, as before.
+
+		The version keeps the spelling of its release level, e.g. ``1.0-pre1`` or ``1.0-dev``, and of its local version,
+		and compares equal to its :pep:`440` normalized form ``1.0rc1`` or ``1.0.dev0``. With ``normalize``, the version
+		is normalized as by :meth:`Normalize`.
 
 		:param versionString:          The version string to parse.
 		:param validator:              Optional, a validation function.
@@ -1681,10 +1704,76 @@ class PythonVersion(SemanticVersion):
 		:returns:                      An object representing a Python version.
 		:raises TypeError:             When parameter ``versionString`` is not a string.
 		:raises ValueError:            When parameter ``versionString`` is None or empty.
-		:raises ValueError:            When parameter ``versionString`` isn't a version number.
+		:raises ValueError:            When parameter ``versionString`` isn't a version number. |br|
+		                               It follows :pep:`440`, and may carry one of the prefixes ``v``, ``i``, ``r`` or
+		                               ``rev``.
 		:raises VersionValidatorError: When the parsed version is rejected by ``validator``.
 		"""
-		version = super().Parse(versionString)
+		if versionString is None:
+			raise ValueError("Parameter 'versionString' is None.")
+		elif not isinstance(versionString, str):
+			ex = TypeError("Parameter 'versionString' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(versionString)}'.")
+			raise ex
+		elif (versionString := versionString.strip()) == "":
+			raise ValueError("Parameter 'versionString' is empty.")
+
+		if (match := cls._PATTERN.match(versionString)) is None:
+			ex = ValueError(f"Syntax error in parameter 'versionString': '{versionString}'")
+			ex.add_note("It follows PEP 440, and may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v1.2.3'.")
+			raise ex
+
+		def toInt(value: Nullable[str]) -> Nullable[int]:
+			"""
+			Nested function converting an optional part of a version string to an integer.
+
+			:param value: The matched part, or ``None`` if the pattern didn't match it.
+			:returns:     The part as an integer, or ``None`` if it wasn't present.
+			"""
+			return None if value is None else int(value)
+
+		if (spelling := match["level"]) is not None:
+			spelling = spelling.lower()
+			releaseLevel = next(level for level, spellings in cls._RELEASE_LEVEL_SPELLINGS.items() if spelling in spellings)
+			number =       toInt(match["number"]) or 0
+		else:
+			releaseLevel = ReleaseLevel.Final
+			number =       None
+
+		if match["implicitPost"] is not None:
+			post = int(match["implicitPost"])
+		elif match["postSpelling"] is not None:
+			post = toInt(match["post"]) or 0
+		else:
+			post = None
+
+		# A development release without a number and without a release level or post-release is the release level
+		# 'dev', which keeps its spelling '-dev'.
+		dev = toInt(match["dev"])
+		if match["devSpelling"] is not None and dev is None:
+			if releaseLevel is ReleaseLevel.Final and post is None:
+				releaseLevel = ReleaseLevel.Development
+			else:
+				dev = 0
+
+		local = match["local"]
+		prefix = match["prefix"]
+
+		version = cls(
+			major=int(match["major"]),
+			minor=toInt(match["minor"]),
+			micro=toInt(match["micro"]),
+			level=releaseLevel,
+			number=number,
+			post=post,
+			dev=dev,
+			epoch=toInt(match["epoch"]),
+			build=toInt(match["build"]),
+			postfix=local,
+			prefix=prefix,
+			flags=Flags.Clean,
+			spelling=spelling
+		)
 		if normalize:
 			version = version.Normalize()
 
@@ -1725,7 +1814,8 @@ class PythonVersion(SemanticVersion):
 		Return this version in :pep:`440`'s normalized form.
 
 		The release candidate's spellings ``c``, ``pre`` and ``preview`` become ``rc``, a development release ``-dev``
-		becomes ``.dev0``, and the prefix is dropped: ``v1.0-pre1`` becomes ``1.0rc1``.
+		becomes ``.dev0``, a local version is written in lower case with ``.`` as its only separator, and the prefix is
+		dropped: ``v1.0-pre1+Ubuntu-1`` becomes ``1.0rc1+ubuntu.1``.
 
 		:returns: A new version in normalized form.
 		"""
@@ -1748,10 +1838,20 @@ class PythonVersion(SemanticVersion):
 			dev=dev,
 			epoch=self._epoch if Parts.Epoch in self._parts else None,
 			build=self._build if Parts.Build in self._parts else None,
-			postfix=self._postfix if Parts.Postfix in self._parts else None,
+			postfix=self._NormalizeLocal(self._postfix) if Parts.Postfix in self._parts else None,
 			hash=self._hash if Parts.Hash in self._parts else None,
 			flags=self._flags
 		)
+
+	@classmethod
+	def _NormalizeLocal(cls, local: str) -> str:
+		"""
+		Return a local version in :pep:`440`'s normalized form: lower case, with ``.`` as its only separator.
+
+		:param local: The local version, e.g. ``Ubuntu-1``.
+		:returns:     The normalized local version, e.g. ``ubuntu.1``.
+		"""
+		return cls._LOCAL_SEPARATOR.sub(".", local.lower())
 
 	def _key(self, version: Version) -> tuple[Any, ...]:
 		"""
@@ -1797,7 +1897,10 @@ class PythonVersion(SemanticVersion):
 		:param right: Right operand.
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
-		return self._key(left) == self._key(right) and left._postfix == right._postfix
+		if self._key(left) != self._key(right):
+			return False
+
+		return self._NormalizeLocal(left._postfix) == self._NormalizeLocal(right._postfix)
 
 	def _compare(self, left: Version, right: Version) -> Nullable[bool]:
 		"""
@@ -1826,7 +1929,7 @@ class PythonVersion(SemanticVersion):
 
 		:returns: Hash of this version number.
 		"""
-		return hash((self._key(self), self._postfix))
+		return hash((self._key(self), self._NormalizeLocal(self._postfix)))
 
 	def __str__(self) -> str:
 		"""

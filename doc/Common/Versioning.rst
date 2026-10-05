@@ -307,6 +307,29 @@ Variants
                  - ``v10.0.0rc1``
                  - ``10.0.0rc1``
                  - rc
+               * - ``10.0.0-RC.1``
+                 - ``10.0.0rc1``
+                 - ``10.0.0rc1``
+                 - rc
+               * - ``10.0.0rev1``, ``10.0.0-r1``, ``10.0.0-1``
+                 - ``10.0.0.post1``
+                 - ``10.0.0.post1``
+                 - final
+               * - ``10.0.0.post``
+                 - ``10.0.0.post0``
+                 - ``10.0.0.post0``
+                 - final
+               * - ``10.0.0rc1_dev-2``
+                 - ``10.0.0rc1.dev2``
+                 - ``10.0.0rc1.dev2``
+                 - rc
+               * - ``10.0.0+Ubuntu-1``
+                 - ``10.0.0+Ubuntu-1``
+                 - ``10.0.0+ubuntu.1``
+                 - final
+
+            Every spelling is case-insensitive, and ``.``, ``-`` or ``_`` may separate the parts. A local version keeps
+            its spelling, and is compared in its normalized form.
 
             :class:`~pyTooling.Versioning.SemanticVersion` reads ``pre`` and ``preview`` as a release candidate, too,
             but keeps its own meaning of ``c`` (*gamma*) and ``-dev`` (a release level): there, ``10.0.0c1`` isn't
@@ -1156,8 +1179,8 @@ Source: :gh:`packaging <pypa/packaging>`, on PyPI as `packaging <https://pypi.or
 
 * The reference implementation of :pep:`440`, which pip uses. Where :class:`~pyTooling.Versioning.PythonVersion` and
   packaging disagree, packaging is right.
-* Parses everything :pep:`440` allows, e.g. local versions as ``1.0+local.7``, which
-  :class:`~pyTooling.Versioning.PythonVersion` doesn't parse, and the operator ``===``.
+* Parses release segments of any length, which :class:`~pyTooling.Versioning.PythonVersion` limits to four numbers,
+  and the operator ``===``.
 * A ``SpecifierSet`` handles pre-releases as pip does, and filters an iterable of versions.
 
 .. _VERSIONING/semver:
