@@ -102,10 +102,32 @@ variable.
 An instance has no ``__dict__``, so it needs less memory and reads its fields faster, and an assignment to a
 misspelt field raises an :exc:`AttributeError` instead of creating a new field.
 
-.. attention::
+.. rubric:: Initial values
 
-   A slot has no default value. An initial value in the class body (``_name: str = "root"``) is dropped, and reading
-   the field before ``__init__`` assigned it raises an :exc:`AttributeError`. Assign every field in ``__init__``.
+A slot can't have a class attribute of the same name, so an initial value in the class body (``_name: str = "root"``)
+can't stay there. :class:`~pyTooling.MetaClasses.ExtendedType` moves it into an intermediate ``__init__``, which
+assigns it to the new instance and then calls the class' own ``__init__``:
+
+.. code-block:: Python
+
+   class Node(metaclass=ExtendedType, slots=True):
+     _name:  str = "root"
+     _count: int = 0
+
+     def __init__(self, count: int) -> None:
+       self._count = count
+
+   Node(3)._name                       # 'root'
+   Node(3)._count                      # 3
+
+* A field already assigned keeps its value, so a derived class' ``__init__`` may assign a base-class' field before
+  calling ``super().__init__()``.
+* A base-class' initial values are assigned by its ``__init__``: a derived class' ``__init__`` calls
+  ``super().__init__()``.
+* The class a mixin-class is mixed into assigns the mixin-class' initial values too.
+* The value is assigned, not copied: a mutable initial value (``[]``) is one object shared by all instances, like a
+  class variable. Assign a new one in ``__init__`` instead.
+* A class variable (:class:`~typing.ClassVar`) keeps its initial value on the class.
 
 .. rubric:: Rules
 

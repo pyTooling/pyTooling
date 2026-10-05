@@ -472,6 +472,14 @@ Version 10.x (2026)
        without the thread's name. It passes the name now, also with an exception, which
        :meth:`~pyTooling.Warning.ThreadSupervisor.ReRaise` named no thread for.
 
+   * :mod:`pyTooling.MetaClasses`
+
+     * The initial value of a slotted field (``_name: str = "root"`` in a class with ``slots=True`` or ``mixin=True``)
+       was dropped: reading the field before ``__init__`` assigned it raised an :exc:`AttributeError`.
+       :class:`~pyTooling.MetaClasses.ExtendedType` collected the values, but never used them. An intermediate
+       ``__init__`` assigns them now, before it calls the class' own ``__init__``; a field already assigned keeps its
+       value. The class a mixin-class is mixed into assigns the mixin-class' initial values too.
+
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
 
