@@ -480,6 +480,11 @@ Version 10.x (2026)
        now, which no vertex' ID is, as :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` does, and an edge is
        connected to the node of its vertex. Subgraphs are translated ordered by name, so the generated IDs are the same
        in every run. A graph without a name or a root without an ID keeps the document's graph ID ``G``.
+     * A link between two subgraphs was lost: :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.FromGraph` read links
+       only from the graph, but such a link is stored in both subgraphs. Links are collected from the graph and all
+       subgraphs, and each is written once, as an edge of the root graph.
+     * In a subgraph, a vertex or edge without a value got a data item ``None``, and a key-value pair's key was looked
+       up under another ID than it was declared with, so it was declared again for every vertex or edge.
      * IDs and key names weren't escaped, so an ID with ``&``, ``<`` or ``"`` made the document invalid XML.
 
    * :mod:`pyTooling.Testing`
