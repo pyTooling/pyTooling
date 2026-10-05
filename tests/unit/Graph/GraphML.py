@@ -417,10 +417,10 @@ class pyToolingGraph(Testcase):
 		)
 
 	def test_ConvertSubgraph_WithoutIDs(self) -> None:
-		"""Generated IDs are unique across the subgraphs, and an edge inside a subgraph finds its nodes."""
+		"""Generated IDs are unique across the subgraphs and numbered by subgraph name; an edge finds its nodes."""
 		graph = pyTooling_Graph(name="g1")
-		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
 		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
 		vertex1 = Vertex(subgraph=subgraph1)
 		vertex2 = Vertex(subgraph=subgraph1)
 		vertex3 = Vertex(subgraph=subgraph2)

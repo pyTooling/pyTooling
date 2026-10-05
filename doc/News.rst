@@ -478,8 +478,8 @@ Version 10.x (2026)
      * A vertex or tree node without an ID became ``<node id="None">``, although GraphML requires a node ID, and every
        such node had the same one; an edge to it was connected by that ID. It gets a generated ID ``vertex<number>``
        now, which no vertex' ID is, as :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` does, and an edge is
-       connected to the node of its vertex. A graph without a name or a root without an ID keeps the document's graph
-       ID ``G``.
+       connected to the node of its vertex. Subgraphs are translated ordered by name, so the generated IDs are the same
+       in every run. A graph without a name or a root without an ID keeps the document's graph ID ``G``.
      * IDs and key names weren't escaped, so an ID with ``&``, ``<`` or ``"`` made the document invalid XML.
 
    * :mod:`pyTooling.Testing`

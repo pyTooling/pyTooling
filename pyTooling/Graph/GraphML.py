@@ -1068,7 +1068,8 @@ class GraphMLDocument(Base):
 		declared by two keys this method adds. Subgraphs are translated recursively.
 
 		A node's ID is its vertex' ID. A vertex without an ID gets a generated ID ``vertex<number>``, which no vertex' ID
-		is, because GraphML requires one. A graph without a name keeps the document's graph ID.
+		is, because GraphML requires one. Subgraphs are translated ordered by name, so the generated IDs don't change from
+		one run to the next. A graph without a name keeps the document's graph ID.
 
 		:param graph: The graph to translate into this document.
 		"""
@@ -1079,7 +1080,8 @@ class GraphMLDocument(Base):
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 		edgeValue = self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
 
-		vertices = [vertex for subgraph in graph.Subgraphs for vertex in subgraph.IterateVertices()]
+		subgraphs = sorted(graph.Subgraphs, key=lambda subgraph: "" if subgraph._name is None else subgraph._name)
+		vertices = [vertex for subgraph in subgraphs for vertex in subgraph.IterateVertices()]
 		vertices += graph.IterateVertices()
 		identifiers = GraphViz.Graph._Identifiers(vertices)
 		nodes: dict[int, Node] = {}
@@ -1185,7 +1187,7 @@ class GraphMLDocument(Base):
 
 				nodeGraph.AddEdge(newEdge)
 
-		for subgraph in graph.Subgraphs:
+		for subgraph in subgraphs:
 			nodeGraph = Subgraph(subgraph.Name, "sg" + subgraph.Name)
 			self._graph.AddSubgraph(nodeGraph)
 			translateSubgraph(nodeGraph, subgraph)
