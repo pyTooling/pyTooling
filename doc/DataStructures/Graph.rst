@@ -259,7 +259,8 @@ A graph is written for other tools by two modules with the same structure: a dat
 filled with ``FromGraph()`` from a :class:`~pyTooling.Graph.Graph` or with ``FromTree()`` from a tree of
 :class:`~pyTooling.Tree.Node`, and written as text.
 
-* :mod:`pyTooling.Graph.GraphML` writes a GraphML document, read by tools like yEd or Gephi.
+* :mod:`pyTooling.Graph.GraphML` writes a GraphML document, read by tools like yEd or Gephi. GraphML requires a node
+  ID, so a vertex or tree node without an ID gets a generated one, like in DOT.
 * :mod:`pyTooling.Graph.GraphViz` writes Graphviz' DOT language, drawn by :program:`dot` or by
   :mod:`sphinx.ext.graphviz` in a documentation.
 
