@@ -472,6 +472,13 @@ Version 10.x (2026)
        without the thread's name. It passes the name now, also with an exception, which
        :meth:`~pyTooling.Warning.ThreadSupervisor.ReRaise` named no thread for.
 
+   * :mod:`pyTooling.MetaClasses`
+
+     * A class or static method marked with :deco:`~pyTooling.MetaClasses.abstractmethod` or
+       :deco:`~pyTooling.MetaClasses.mustoverride` didn't make its class abstract: the class could be instantiated.
+       :class:`~pyTooling.MetaClasses.ExtendedType` looked for the marker on the :class:`classmethod` or
+       :class:`staticmethod` object instead of the function it wraps.
+
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
 

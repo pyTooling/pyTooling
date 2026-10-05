@@ -504,6 +504,17 @@ instantiated, an :exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
      def method(self) -> int:
        return 2
 
+A class method or static method is marked the same way. The decorator is applied to the function, so it is listed
+below :class:`classmethod` or :class:`staticmethod`:
+
+.. code-block:: Python
+
+   class A(metaclass=ExtendedType):
+     @classmethod
+     @abstractmethod
+     def Parse(cls, value: str) -> "A":
+       """Create an instance from a string."""
+
 .. hint::
 
    If the abstract method should contain code that should be called from an overriding method in a derived class, use
