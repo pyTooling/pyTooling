@@ -673,6 +673,7 @@ class ExtendedType(type):
 	                             See :pep:`253` for details.
 	:__isMixin__:                True, if class is a mixin-class
 	:__mixinSlots__:             List of collected slots from secondary inheritance hierarchy (mixin hierarchy).
+	:__slotDefaults__:           Mapping of a slotted field declared by this class to its initial value.
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
@@ -708,6 +709,9 @@ class ExtendedType(type):
 	If class is abstract, ``__new__`` will be replaced by a method raising an exception. This replacement is marked with ``__raises_abstract_class_error__``.
 
 	.. rubric:: Modified ``__init__`` method:
+
+	If slotted fields have initial values, ``__init__`` will be replaced by a wrapper method assigning them, before it
+	calls the original ``__init__``.
 
 	If class is a singleton, ``__init__`` will be replaced by a wrapper method. This wrapper is marked by ``__singleton_wrapper__``.
 
@@ -792,6 +796,8 @@ class ExtendedType(type):
 		newClass.__abstractMethods__ = abstractMethods
 
 		newClass.__abstractClass__ = False
+		newClass.__slotDefaults__ =  objectFields
+		self._wrapInitMethodIfSlotDefaults(newClass, baseClasses, mixin)
 		newClass.__isAbstract__ =    self._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ =   self._wrapNewMethodIfSingleton(newClass, singleton)
 
@@ -1513,6 +1519,57 @@ class ExtendedType(type):
 					del abstractMethods[memberName]
 
 		return abstractMethods, members
+
+	@classmethod
+	def _wrapInitMethodIfSlotDefaults(metacls, newClass: ExtendedType, baseClasses: tuple[type], mixin: bool) -> None:
+		"""
+		If slotted fields have initial values, wrap the ``__init__`` method, so it assigns them before calling it.
+
+		A slot can't have a class attribute of the same name, so an initial value of a slotted field (``_name: str =
+		"root"``) can't stay in the class body. :meth:`_computeSlots` collects these values in :attr:`__slotDefaults__`
+		instead, and the wrapper assigns each one to the new instance, before it calls the class' own (or inherited)
+		``__init__``. A field already assigned keeps its value: a derived class' ``__init__`` may assign a field of its
+		base-class before calling ``super().__init__()``.
+
+		A class mixed with mixin-classes assigns their initial values too, because its instances hold their slots.
+
+		The value is assigned, not copied: a mutable initial value is shared by all instances, as a class variable is.
+
+		:param newClass:    The newly created class.
+		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param mixin:       If ``True``, the class is a mixin-class.
+		"""
+		defaults = dict(newClass.__slotDefaults__)
+		if not mixin:
+			for baseClass in baseClasses:
+				for cls in baseClass.__mro__:
+					if cls.__dict__.get("__isMixin__", False):
+						for fieldName, value in cls.__dict__.get("__slotDefaults__", {}).items():
+							defaults.setdefault(fieldName, value)
+
+		if len(defaults) == 0:
+			return
+
+		init = newClass.__init__
+
+		@wraps(init)
+		def init_withDefaults(self, *args: Any, **kwargs: Any) -> None:
+			"""
+			Replacement ``__init__`` method, which assigns the initial values of slotted fields, then calls ``__init__``.
+
+			:param args:   Positional parameters passed to the original ``__init__``.
+			:param kwargs: Named parameters passed to the original ``__init__``.
+			"""
+			for fieldName, value in defaults.items():
+				if not hasattr(self, fieldName):
+					setattr(self, fieldName, value)
+
+			init(self, *args, **kwargs)
+
+		# ':func:`~functools.wraps` copies the bookkeeping '_findMethods' attached to the original method.
+		init_withDefaults.__dict__.pop("__classobj__", None)
+
+		newClass.__init__ = init_withDefaults
 
 	@classmethod
 	def _wrapNewMethodIfSingleton(metacls, newClass, singleton: bool) -> bool:

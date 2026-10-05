@@ -895,11 +895,10 @@ marking secondary base-classes as mixins. This defers slot creation until a mixi
 
                class Data(metaclass=ExtendedType, slots=True):
                   _x: int
-                  _y: int
+                  _y: int = 12
 
                   def __init__(self, x: int) -> None:
                      self._x = x
-                     self._y = 12
 
                data = Data(11)
 
