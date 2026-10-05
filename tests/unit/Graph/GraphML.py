@@ -271,7 +271,8 @@ class pyToolingGraph(Testcase):
 
 		self.assertEqual("g1", doc._graph.ID)
 		self.assertEqual(2, len(doc._graph._nodes))
-		self.assertEqual(1, len(doc._graph._edges))
+		self.assertEqual(0, len(doc._graph._edges))
+		self.assertEqual(1, len(doc._graph._edgesWithoutID))
 
 		print()
 		for line in doc.ToStringLines():
@@ -303,7 +304,8 @@ class pyToolingGraph(Testcase):
 		self.assertEqual("g1", doc._graph.ID)
 		self.assertEqual(2, len(doc._graph._subgraphs))
 		self.assertEqual(4, len(doc._graph._nodes))
-		self.assertEqual(1, len(doc._graph._edges))
+		self.assertEqual(0, len(doc._graph._edges))
+		self.assertEqual(3, len(doc._graph._edgesWithoutID))
 
 		print()
 		for line in doc.ToStringLines():
@@ -324,6 +326,33 @@ class pyToolingGraph(Testcase):
 		self.assertNotIn("None", text)
 		self.assertIn('<edge source="n1" target="n2" />', text)
 		self.assertListEqual([], doc._graph.GetNode("n1").Data)
+
+	def test_ConvertGraph_EdgesWithoutIDs(self) -> None:
+		"""Every edge without an ID is written, before those with an ID; ``Edges`` and ``EdgesWithoutID`` split them."""
+		graph = pyTooling_Graph(name="g1")
+		vertex1 = Vertex(vertexID="n1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", graph=graph)
+		vertex3 = Vertex(vertexID="n3", graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+		vertex2.EdgeToVertex(vertex3)
+		vertex3.EdgeToVertex(vertex1, edgeID="e31")
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("3", dom.getElementsByTagName("graph")[0].getAttribute("parse.edges"))
+		edges = dom.getElementsByTagName("edge")
+		self.assertListEqual(
+			[("", "n1", "n2"), ("", "n2", "n3"), ("e31", "n3", "n1")],
+			[tuple(edge.getAttribute(attr) for attr in ("id", "source", "target")) for edge in edges]
+		)
+		self.assertNotIn(None, doc._graph._ids)
+		self.assertListEqual(["e31"], list(doc._graph.Edges))
+		self.assertListEqual(
+			[("n1", "n2"), ("n2", "n3")],
+			[(edge.Source.ID, edge.Target.ID) for edge in doc._graph.EdgesWithoutID]
+		)
 
 	def test_ConvertGraph_KeyValuePairs(self) -> None:
 		"""A key is declared once, however many vertices or edges carry it."""

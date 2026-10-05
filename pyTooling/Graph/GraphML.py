@@ -39,6 +39,7 @@ A data model to write out GraphML XML files.
 from __future__            import annotations
 
 from enum                  import Enum, auto
+from itertools             import chain
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
 from xml.sax.saxutils      import escape as xml_escape
@@ -208,23 +209,23 @@ class Base(metaclass=ExtendedType, slots=True):
 @export
 class BaseWithID(Base):
 	"""Base-class for all GraphML elements carrying a document-wide unique ID."""
-	_id: str  #: Unique identifier of this GraphML element.
+	_id: Nullable[str]  #: Unique identifier of this GraphML element. ``None`` if it has none, e.g. an edge.
 
-	def __init__(self, identifier: str) -> None:
+	def __init__(self, identifier: Nullable[str]) -> None:
 		"""
 		Initialize a GraphML element with its unique ID.
 
-		:param identifier: Optional, unique ID of the element within the GraphML document.
+		:param identifier: Unique ID of the element within the GraphML document, or ``None``.
 		"""
 		super().__init__()
 		self._id = identifier
 
 	@readonly
-	def ID(self) -> str:
+	def ID(self) -> Nullable[str]:
 		"""
 		Read-only property to access the element's unique ID (:attr:`_id`).
 
-		:returns: Unique ID of the element.
+		:returns: Unique ID of the element, or ``None`` if it has none.
 		"""
 		return self._id
 
@@ -234,11 +235,11 @@ class BaseWithData(BaseWithID):
 	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
 	_data: list[Data]  #: Data items (key-value-pairs) attached to this GraphML element.
 
-	def __init__(self, identifier: str) -> None:
+	def __init__(self, identifier: Nullable[str]) -> None:
 		"""
 		Initialize a GraphML element with its unique ID and an empty list of data items.
 
-		:param identifier: Optional, unique ID of the element within the GraphML document.
+		:param identifier: Unique ID of the element within the GraphML document, or ``None``.
 		"""
 		super().__init__(identifier)
 
@@ -599,13 +600,14 @@ class BaseGraph(BaseWithData, mixin=True):
 	Beside the elements themselves, it carries the document-level settings applied while writing them: the default edge
 	direction, the parsing order, and the ID styles for nodes and edges.
 	"""
-	_subgraphs:   dict[str, Subgraph]  #: Subgraphs of this graph, by ID.
-	_nodes:       dict[str, Node]      #: Nodes of this graph, by ID.
-	_edges:       dict[str, Edge]      #: Edges of this graph, by ID.
-	_edgeDefault: EdgeDefault          #: Direction applied to edges that don't specify one.
-	_parseOrder:  ParsingOrder         #: Order in which nodes and edges may appear in the XML document.
-	_nodeIDStyle: IDStyle              #: Whether node IDs are free-form or canonical.
-	_edgeIDStyle: IDStyle              #: Whether edge IDs are free-form or canonical.
+	_subgraphs:      dict[str, Subgraph]  #: Subgraphs of this graph, by ID.
+	_nodes:          dict[str, Node]      #: Nodes of this graph, by ID.
+	_edges:          dict[str, Edge]      #: Edges of this graph with an ID, by ID.
+	_edgesWithoutID: list[Edge]           #: Edges of this graph without an ID.
+	_edgeDefault:    EdgeDefault          #: Direction applied to edges that don't specify one.
+	_parseOrder:     ParsingOrder         #: Order in which nodes and edges may appear in the XML document.
+	_nodeIDStyle:    IDStyle              #: Whether node IDs are free-form or canonical.
+	_edgeIDStyle:    IDStyle              #: Whether edge IDs are free-form or canonical.
 
 	def __init__(self, identifier: Nullable[str] = None) -> None:
 		"""
@@ -617,13 +619,14 @@ class BaseGraph(BaseWithData, mixin=True):
 		"""
 		super().__init__(identifier)
 
-		self._subgraphs = {}
-		self._nodes = {}
-		self._edges = {}
-		self._edgeDefault = EdgeDefault.Directed
-		self._parseOrder = ParsingOrder.NodesFirst
-		self._nodeIDStyle = IDStyle.Free
-		self._edgeIDStyle = IDStyle.Free
+		self._subgraphs =      {}
+		self._nodes =          {}
+		self._edges =          {}
+		self._edgesWithoutID = []
+		self._edgeDefault =    EdgeDefault.Directed
+		self._parseOrder =     ParsingOrder.NodesFirst
+		self._nodeIDStyle =    IDStyle.Free
+		self._edgeIDStyle =    IDStyle.Free
 
 	@readonly
 	def Subgraphs(self) -> dict[str, Subgraph]:
@@ -646,11 +649,24 @@ class BaseGraph(BaseWithData, mixin=True):
 	@readonly
 	def Edges(self) -> dict[str, Edge]:
 		"""
-		Read-only property to access the graph's edges (:attr:`_edges`).
+		Read-only property to access the graph's edges with an ID (:attr:`_edges`).
+
+		An edge without an ID is in :attr:`EdgesWithoutID`.
 
 		:returns: Dictionary of edge IDs and edges.
 		"""
 		return self._edges
+
+	@readonly
+	def EdgesWithoutID(self) -> list[Edge]:
+		"""
+		Read-only property to access the graph's edges without an ID (:attr:`_edgesWithoutID`).
+
+		An edge with an ID is in :attr:`Edges`.
+
+		:returns: List of edges without an ID, in the order they were added.
+		"""
+		return self._edgesWithoutID
 
 	def AddSubgraph(self, subgraph: Subgraph) -> Subgraph:
 		"""
@@ -700,7 +716,11 @@ class BaseGraph(BaseWithData, mixin=True):
 		:param edge: The edge to add.
 		:returns:    The added edge, so it can be used in the calling expression.
 		"""
-		self._edges[edge._id] = edge
+		if edge._id is None:
+			self._edgesWithoutID.append(edge)
+		else:
+			self._edges[edge._id] = edge
+
 		return edge
 
 	def GetEdge(self, edgeName: str) -> Edge:
@@ -727,7 +747,7 @@ class BaseGraph(BaseWithData, mixin=True):
 {'  '*indent}<graph id="{_escapeAttribute(self._id)}"
 {'  '*indent}  edgedefault="{self._edgeDefault!s}"
 {'  '*indent}  parse.nodes="{len(self._nodes)}"
-{'  '*indent}  parse.edges="{len(self._edges)}"
+{'  '*indent}  parse.edges="{len(self._edgesWithoutID) + len(self._edges)}"
 {'  '*indent}  parse.order="{self._parseOrder!s}"
 {'  '*indent}  parse.nodeids="{self._nodeIDStyle!s}"
 {'  '*indent}  parse.edgeids="{self._edgeIDStyle!s}">
@@ -753,7 +773,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 1))
 
-		for edge in self._edges.values():
+		for edge in chain(self._edgesWithoutID, self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 1))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))
@@ -818,13 +838,15 @@ class Graph(BaseGraph):
 
 	def AddEdge(self, edge: Edge) -> Edge:
 		"""
-		Add an edge to the root graph and register its ID.
+		Add an edge to the root graph and register its ID, if it has one.
 
 		:param edge: The edge to add.
 		:returns:    The added edge, so it can be used in the calling expression.
 		"""
 		result = super().AddEdge(edge)
-		self._ids[edge._id] = edge
+		if edge._id is not None:
+			self._ids[edge._id] = edge
+
 		return result
 
 
@@ -892,13 +914,15 @@ class Subgraph(Node, BaseGraph):
 
 	def AddEdge(self, edge: Edge) -> Edge:
 		"""
-		Add an edge to this subgraph and register its ID at the root graph.
+		Add an edge to this subgraph and register its ID at the root graph, if it has one.
 
 		:param edge: The edge to add.
 		:returns:    The added edge, so it can be used in the calling expression.
 		"""
 		result = super().AddEdge(edge)
-		self._root._ids[edge._id] = edge
+		if edge._id is not None:
+			self._root._ids[edge._id] = edge
+
 		return result
 
 	@notimplemented("A subgraph is always written with an opening and a closing tag.")
@@ -920,7 +944,7 @@ class Subgraph(Node, BaseGraph):
 {'  ' * indent}<graph id="{_escapeAttribute(self._subgraphID)}"
 {'  ' * indent}  edgedefault="{self._edgeDefault!s}"
 {'  ' * indent}  parse.nodes="{len(self._nodes)}"
-{'  ' * indent}  parse.edges="{len(self._edges)}"
+{'  ' * indent}  parse.edges="{len(self._edgesWithoutID) + len(self._edges)}"
 {'  ' * indent}  parse.order="{self._parseOrder!s}"
 {'  ' * indent}  parse.nodeids="{self._nodeIDStyle!s}"
 {'  ' * indent}  parse.edgeids="{self._edgeIDStyle!s}">
@@ -950,7 +974,7 @@ class Subgraph(Node, BaseGraph):
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 2))
 
-		for edge in self._edges.values():
+		for edge in chain(self._edgesWithoutID, self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 2))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))
