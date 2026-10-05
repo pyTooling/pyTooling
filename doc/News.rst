@@ -215,6 +215,12 @@ Version 10.x (2026)
      * A :class:`~pyTooling.Licensing.License` is hashable and compares equal to its SPDX identifier as a string,
        so it can be a dictionary key and be looked up by what a user writes.
 
+   * :mod:`pyTooling.Attributes`
+
+     * An attribute class states its scope as class keyword argument:
+       :pycode:`class Hook(Attribute, scope=AttributeScope.Method)` (:ghissue:`383`). A derived class inherits it;
+       overriding ``_scope`` in the class body still works.
+
    * :mod:`pyTooling.Attributes.ArgParse`
 
      * :func:`~pyTooling.Attributes.ArgParse.splitFormat` splits an option's value of the form

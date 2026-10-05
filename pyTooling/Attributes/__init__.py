@@ -108,17 +108,33 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 	_scope:                   ClassVar[AttributeScope] = AttributeScope.Any  #: Allowed language construct this attribute can be used with.
 
 	# Ensure each derived class has its own instances of class variables.
-	def __init_subclass__(cls, **kwargs: Any) -> None:
+	def __init_subclass__(cls, scope: Nullable[AttributeScope] = None, **kwargs: Any) -> None:
 		"""
-		Ensure each derived attribute class gets its own registry of annotated entities.
+		Set a derived attribute class' scope, and give it its own registry of annotated entities.
+
+		The scope is given as class keyword argument: :pycode:`class Hook(Attribute, scope=AttributeScope.Method)`.
+		Without it, the class inherits its base-class' scope. Overriding :attr:`_scope` in the class body works as
+		well, but the keyword takes precedence.
 
 		The registries :attr:`_functions`, :attr:`_classes` and :attr:`_methods` are class variables, so a derived
 		attribute class would otherwise share the base-class' lists and report entities it was never attached to. Fresh
 		lists are assigned per derived class to prevent that.
 
-		:param kwargs: Class keyword arguments forwarded to the base-class.
+		:param scope:      Optional, the language entities the attribute can be applied to. Default: the base-class'
+		                   scope.
+		:param kwargs:     Class keyword arguments forwarded to the base-class.
+		:raises TypeError: If parameter 'scope' is not of type :class:`AttributeScope`.
 		"""
 		super().__init_subclass__(**kwargs)
+
+		if scope is not None:
+			if not isinstance(scope, AttributeScope):
+				ex = TypeError("Parameter 'scope' is not of type 'AttributeScope'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(scope)}'.")
+				raise ex
+
+			cls._scope = scope
+
 		cls._functions = []
 		cls._classes = []
 		cls._methods = []
