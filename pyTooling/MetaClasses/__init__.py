@@ -1499,7 +1499,7 @@ class ExtendedType(type):
 							inner.__dict__.pop("__classobj__", None)
 
 							return inner
-
+						# Add the wrapper as new class member or apply classmethod/staticmethod to the new member before adding it, 
 						if function is member:
 							members[memberName] = outer(member)
 						else:
