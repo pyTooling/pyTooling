@@ -288,6 +288,9 @@ Version 10.x (2026)
        rows below it.
      * A timestamp is exported exact to the microsecond it holds. It was converted through :class:`float` seconds,
        which left its nanoseconds up to a few hundred off.
+     * :meth:`Span.Format() <pyTooling.Tracing.Span.Format>` and :meth:`Trace.Format() <pyTooling.Tracing.Trace.Format>`
+       show ``--`` for a timespan that never started. They raised :exc:`~pyTooling.Tracing.TracingError`, because
+       such a timespan has no duration.
 
    * :mod:`pyTooling.Packaging`
 

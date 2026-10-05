@@ -1033,16 +1033,29 @@ class Span(TraceElement):
 
 		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON())]
 
+	def _FormatDuration(self) -> str:
+		"""
+		Format the duration in milliseconds, right-aligned in 8 characters, as :meth:`Format` lines show it.
+
+		:returns: The duration with unit, or ``--`` with unit for a timespan that never started.
+		"""
+		if self.State is SpanState.Empty:
+			return f"{'--':>8} ms"
+
+		return f"{self.Duration * 1e3:8.3f} ms"
+
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
 		"""
 		Render this timespan and its sub-spans as indented lines.
+
+		A timespan that never started (:attr:`~SpanState.Empty`) has no duration; it shows ``--`` instead.
 
 		:param indent:     Optional, indentation level of this timespan.
 		:param columnSize: Optional, column the durations are aligned at.
 		:returns:          One line per timespan, deepest last.
 		"""
 		result = []
-		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self.Duration * 1e3:8.3f} ms")
+		result.append(f"{'  ' * indent}🕑{self._name:<{columnSize - 2 * indent}} {self._FormatDuration()}")
 		for span in self._spans:
 			result.extend(span.Format(indent + 1, columnSize))
 
@@ -1306,13 +1319,15 @@ class Trace(Span):
 		"""
 		Render this trace and its spans as indented lines.
 
+		A trace or span that never started (:attr:`~SpanState.Empty`) has no duration; it shows ``--`` instead.
+
 		:param indent:     Optional, indentation level of the trace.
 		:param columnSize: Optional, column the durations are aligned at.
 		:returns:          A headline, followed by one line per timespan.
 		"""
 		result = []
-		result.append(f"{'  ' * indent}Software Execution Trace: {self.Duration * 1e3:8.3f} ms")
-		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self.Duration * 1e3:8.3f} ms")
+		result.append(f"{'  ' * indent}Software Execution Trace: {self._FormatDuration()}")
+		result.append(f"{'  ' * indent}📉{self._name:<{columnSize - 2}} {self._FormatDuration()}")
 		for span in self._spans:
 			result.extend(span.Format(indent + 1, columnSize - 2))
 
