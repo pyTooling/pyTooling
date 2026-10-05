@@ -501,6 +501,9 @@ Version 10.x (2026)
      :doc:`pyTooling.Sphinx <pyToolSphinx:index>` - complex types as records, containment as labelled edges carrying
      the cardinality, and a node for an enumeration.
    * This release history was written, covering every release back to v0.5.0.
+   * :class:`~pyTooling.Stopwatch.Stopwatch`'s ``__enter__`` and ``__exit__`` document each condition they raise a
+     :exc:`~pyTooling.Stopwatch.StopwatchError` for - ``__exit__`` named one of three. ``__getitem__`` documented a
+     :exc:`KeyError`, but raises an :exc:`IndexError`.
 
    .. rubric:: Unit Tests
 
