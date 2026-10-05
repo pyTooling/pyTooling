@@ -535,6 +535,10 @@ Version 10.x (2026)
        :deco:`~pyTooling.MetaClasses.mustoverride` didn't make its class abstract: the class could be instantiated.
        :class:`~pyTooling.MetaClasses.ExtendedType` looked for the marker on the :class:`classmethod` or
        :class:`staticmethod` object instead of the function it wraps.
+     * The same for a property: :deco:`~pyTooling.MetaClasses.abstractmethod` below :class:`property` or
+       :deco:`~pyTooling.Decorators.readonly` was ignored silently. And a property overriding an abstract method didn't
+       count as its implementation, so the derived class stayed abstract. :class:`~pyTooling.Licensing.BaseLicense`
+       is abstract now, as its abstract properties ``Identifier`` and ``Name`` say.
 
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.

@@ -505,8 +505,9 @@ instantiated, an :exc:`~pyTooling.Exceptions.AbstractClassError` is raised.
      def method(self) -> int:
        return 2
 
-A class method or static method is marked the same way. The decorator is applied to the function, so it is listed
-below :class:`classmethod` or :class:`staticmethod`:
+A class method, static method or property is marked the same way. The decorator is applied to the function, so it
+is listed below :class:`classmethod`, :class:`staticmethod`, :class:`property` or
+:deco:`~pyTooling.Decorators.readonly`:
 
 .. code-block:: Python
 
@@ -515,6 +516,20 @@ below :class:`classmethod` or :class:`staticmethod`:
      @abstractmethod
      def Parse(cls, value: str) -> "A":
        """Create an instance from a string."""
+
+     @readonly
+     @abstractmethod
+     def Name(self) -> str:
+       """Read-only property to return the name."""
+
+   class B(A):
+     @classmethod
+     def Parse(cls, value: str) -> "B":
+       return cls()
+
+     @readonly
+     def Name(self) -> str:
+       return "B"
 
 .. hint::
 
