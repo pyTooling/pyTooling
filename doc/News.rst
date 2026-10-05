@@ -500,6 +500,8 @@ Version 10.x (2026)
 
    * Five FigLet banners named a module the file has nothing to do with, copied along with the file they were
      copied from.
+   * The :class:`~pyTooling.Stopwatch.Stopwatch` tests allow a sleep to take 4 times as long on GitHub Actions, where a
+     shared runner overshot a 0.5 s sleep by up to 3x and failed them at random. A local run keeps the narrow limit.
 
 Version 9.x (2026)
 ******************
