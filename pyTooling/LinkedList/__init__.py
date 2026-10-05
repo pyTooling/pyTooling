@@ -101,11 +101,11 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 	field of the **last node** is ``None``. ``None`` represents the end of the linked list when iterating it node-by-node.
 	"""
 
-	_linkedList:   Nullable[LinkedList[_NodeValue]]      #: Reference to the doubly linked list instance.
-	_previousNode: Nullable[Node[_NodeKey, _NodeValue]]  #: Reference to the previous node.
-	_nextNode:     Nullable[Node[_NodeKey, _NodeValue]]  #: Reference to the next node.
-	_key:          Nullable[_NodeKey]                    #: The sortable key of the node.
-	_value:        _NodeValue                            #: The value of the node.
+	_linkedList:   Nullable[LinkedList[_NodeKey, _NodeValue]]  #: Reference to the doubly linked list instance.
+	_previousNode: Nullable[Node[_NodeKey, _NodeValue]]        #: Reference to the previous node.
+	_nextNode:     Nullable[Node[_NodeKey, _NodeValue]]        #: Reference to the next node.
+	_key:          Nullable[_NodeKey]                          #: The sortable key of the node.
+	_value:        _NodeValue                                  #: The value of the node.
 
 	def __init__(
 		self,
@@ -196,7 +196,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 			self._linkedList = None
 
 	@readonly
-	def List(self) -> Nullable[LinkedList[_NodeValue]]:
+	def List(self) -> Nullable[LinkedList[_NodeKey, _NodeValue]]:
 		"""
 		Read-only property to access the linked list, this node belongs to.
 

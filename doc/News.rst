@@ -446,6 +446,15 @@ Version 10.x (2026)
        reaches its end of life in October 2026. A package not stating ``pythonVersions`` gets
        ``python_requires >=3.11``.
 
+   * :mod:`pyTooling.Graph`
+
+     * :func:`typing.get_type_hints` raised ``TypeError: 'readonly' object is not subscriptable`` for
+       :class:`~pyTooling.Graph.Subgraph`'s base-class ``BaseWithVertices``, :class:`~pyTooling.Graph.View` and
+       :class:`~pyTooling.Graph.Component`, when given the module's namespace: the annotation ``Graph[...]`` of the
+       field ``_graph`` named the class' own property :attr:`~pyTooling.Graph.Subgraph.Graph`. The same shadowing
+       resolved ``Subgraph._graph`` and ``Vertex._component`` to a property instead of a class. They are annotated
+       with module-level aliases of :class:`~pyTooling.Graph.Graph` and :class:`~pyTooling.Graph.Component` now.
+
    * :mod:`pyTooling.Graph.GraphML`
 
      * :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.FromGraph` and
@@ -473,6 +482,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.LinkedList`
 
      * A :class:`~pyTooling.LinkedList.Node` stored its value as its key, ignoring the parameter ``key``.
+     * The annotation of ``Node._linkedList`` and :attr:`Node.List <pyTooling.LinkedList.Node.List>` named one type
+       parameter of :class:`~pyTooling.LinkedList.LinkedList`, which has two, so :func:`typing.get_type_hints` raised a
+       :exc:`TypeError` for :class:`~pyTooling.LinkedList.Node`.
 
    * :mod:`pyTooling.CLIAbstraction`
 

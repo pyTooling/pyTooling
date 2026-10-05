@@ -32,6 +32,8 @@
 Unit tests for :mod:`pyTooling.LinkedList`: insertion, removal, searching, iteration and the conversions
 from and to Python's own sequence types.
 """
+from typing               import get_type_hints
+
 from pyTooling.LinkedList import Node, LinkedList, LinkedListError
 from pyTooling.Testing    import Testcase
 
@@ -1185,3 +1187,11 @@ class Usecases(Testcase):
 
 			self.assertEqual(expected[i][0], len(bucket))
 			self.assertEqual(expected[i][1], sum(bucket))
+
+
+class TypeHints(Testcase):
+	def test_FieldAnnotations(self) -> None:
+		"""The field annotations name every type parameter of the classes they use."""
+		for cls in (Node, LinkedList):
+			with self.subTest(cls=cls.__name__):
+				get_type_hints(cls)
