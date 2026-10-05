@@ -227,6 +227,14 @@ class OTLPEvent(TypedDict, total=False):
 
 
 @export
+class OTLPStatus(TypedDict):
+	"""OTLP's ``Status``: whether a span completed successfully."""
+
+	code:    int  #: Status code - always ``2`` (``STATUS_CODE_ERROR``) here, as only a failed span carries a status.
+	message: str  #: Description of the error.
+
+
+@export
 class OTLPSpan(TypedDict, total=False):
 	"""
 	OTLP's ``Span``: a single timespan of a trace.
@@ -243,6 +251,7 @@ class OTLPSpan(TypedDict, total=False):
 	endTimeUnixNano:   str                  #: End in nanoseconds since the Unix epoch, as a decimal string.
 	attributes:        list[OTLPAttribute]  #: Attributes attached to the span.
 	events:            list[OTLPEvent]      #: Events that happened within the span.
+	status:            OTLPStatus           #: Status of the span, present for a failed span only.
 
 
 @export
@@ -553,17 +562,18 @@ class Span(TraceElement):
 
 	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
-	_trace:     Nullable[Trace]     #: Reference to the trace this timespan belongs to.
-	_spanID:    str                 #: Identifier of this timespan, as 16 hex digits.
+	_trace:     Nullable[Trace]          #: Reference to the trace this timespan belongs to.
+	_spanID:    str                      #: Identifier of this timespan, as 16 hex digits.
 
-	_beginTime: Nullable[datetime]  #: Timestamp when the timespan begins.
-	_endTime:   Nullable[datetime]  #: Timestamp when the timespan ends.
-	_startTime: Nullable[int]       #: Performance counter in ns when the timespan was started.
-	_stopTime:  Nullable[int]       #: Performance counter in ns when the timespan was stopped.
-	_totalTime: Nullable[int]       #: Duration of this timespan in ns.
+	_beginTime: Nullable[datetime]       #: Timestamp when the timespan begins.
+	_endTime:   Nullable[datetime]       #: Timestamp when the timespan ends.
+	_startTime: Nullable[int]            #: Performance counter in ns when the timespan was started.
+	_stopTime:  Nullable[int]            #: Performance counter in ns when the timespan was stopped.
+	_totalTime: Nullable[int]            #: Duration of this timespan in ns.
 
-	_spans:     list[Span]          #: Sub-timespans
-	_events:    list[Event]         #: Events happened within this timespan
+	_spans:     list[Span]               #: Sub-timespans
+	_events:    list[Event]              #: Events happened within this timespan
+	_exception: Nullable[BaseException]  #: The exception that left the ``with``-statement timing this timespan.
 
 	def __init__(
 		self,
@@ -669,6 +679,7 @@ class Span(TraceElement):
 
 		self._spans =     []
 		self._events =    []
+		self._exception = None
 
 	@readonly
 	def SpanID(self) -> str:
@@ -680,6 +691,19 @@ class Span(TraceElement):
 		:returns: Identifier of the timespan, as 16 hex digits.
 		"""
 		return self._spanID
+
+	@readonly
+	def Exception(self) -> Nullable[BaseException]:
+		"""
+		Read-only property to access the exception that left the ``with``-statement timing this timespan
+		(:attr:`_exception`).
+
+		A timespan with an exception has failed. The exception isn't caught: it propagates out of the ``with``-statement
+		as before, and is recorded only.
+
+		:returns: The exception, or ``None`` if the timespan ended normally or wasn't timed by a ``with``-statement.
+		"""
+		return self._exception
 
 	@readonly
 	def Trace(self) -> Nullable[Trace]:
@@ -969,7 +993,8 @@ class Span(TraceElement):
 		"""
 		Exit the context and stop the span.
 
-		The span's parent becomes the current span of this thread again.
+		The span's parent becomes the current span of this thread again. An exception leaving the ``with``-statement is
+		recorded in :attr:`Exception`, and propagates.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
@@ -981,6 +1006,7 @@ class Span(TraceElement):
 		self._stopTime =  perf_counter_ns()
 		self._endTime =   datetime.now()
 		self._totalTime = self._stopTime - self._startTime
+		self._exception = exc_val
 
 		currentSpan = _threadLocalData.currentSpan
 		_threadLocalData.currentSpan = currentSpan._parent
@@ -1030,6 +1056,12 @@ class Span(TraceElement):
 
 		if len(events := [event._ToOTLPJSON() for event in self._events]) != 0:
 			converted["events"] = events
+
+		if self._exception is not None:
+			converted["status"] = {
+				"code":    2,  # STATUS_CODE_ERROR
+				"message": f"{getFullyQualifiedName(self._exception)}: {self._exception}"
+			}
 
 		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON())]
 
@@ -1184,7 +1216,8 @@ class Trace(Span):
 		"""
 		Exit the context and stop the trace.
 
-		The current thread has no active trace or span afterwards.
+		The current thread has no active trace or span afterwards. An exception leaving the ``with``-statement is
+		recorded in :attr:`~Span.Exception`, and propagates.
 
 		:param exc_type: Exception type
 		:param exc_val:  Exception instance
@@ -1196,6 +1229,7 @@ class Trace(Span):
 		self._stopTime =  perf_counter_ns()
 		self._endTime =   datetime.now()
 		self._totalTime = self._stopTime - self._startTime
+		self._exception = exc_val
 
 		del _threadLocalData.currentTrace
 		del _threadLocalData.currentSpan

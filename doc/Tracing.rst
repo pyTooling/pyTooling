@@ -49,6 +49,8 @@ Data Model
   :attr:`~pyTooling.Tracing.Span.SpanID`. Both are drawn when the element is constructed, so exporting a trace twice
   reports the same identifiers.
 * An :class:`~pyTooling.Tracing.Event` names its span with ``parent``; it never attaches to the active span.
+* A timespan left by an exception records it in :attr:`~pyTooling.Tracing.Span.Exception`; the exception isn't
+  caught and propagates as before. A timespan with an exception has failed.
 
 .. rubric:: The active span of a thread
 
@@ -179,6 +181,9 @@ How a trace is mapped
      - ``attributes``, each value wrapped by its type
    * - a span's events
      - ``events``
+   * - :attr:`~pyTooling.Tracing.Span.Exception` of a failed span
+     - ``status`` with ``code`` 2 (``STATUS_CODE_ERROR``) and the exception's type and message; a successful span has
+       no ``status``
 
 Four details of the encoding are easy to get wrong, and each has a testcase:
 

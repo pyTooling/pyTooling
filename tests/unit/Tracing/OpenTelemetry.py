@@ -226,6 +226,25 @@ class Spans(Testcase):
 		self.assertNotIn("attributes", spans["link"])
 		self.assertNotIn("events", spans["link"])
 
+	def test_ASuccessfulSpanHasNoStatus(self) -> None:
+		for name, span in self._Spans(_exampleTrace().ToJSON()).items():
+			with self.subTest(span=name):
+				self.assertNotIn("status", span)
+
+	def test_AFailedSpanHasAnErrorStatus(self) -> None:
+		"""A span left by an exception reports ``STATUS_CODE_ERROR`` with the exception as message."""
+		try:
+			with Trace("build") as trace:
+				with Span("compile"):
+					raise ValueError("Syntax error in 'a.c'.")
+		except ValueError:
+			pass
+
+		spans = self._Spans(trace.ToJSON())
+
+		self.assertEqual({"code": 2, "message": "ValueError: Syntax error in 'a.c'."}, spans["compile"]["status"])
+		self.assertEqual(spans["compile"]["status"], spans["build"]["status"])
+
 
 class Events(Testcase):
 	"""An event belongs to the span it was created in."""
