@@ -62,7 +62,7 @@ class PerformanceTest(Testcase):
 
 	def runTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
 		print()
-		print(f"         min           mean          median        max")
+		print("         min           mean          median        max")
 		for count in counts:
 			results = timeit.repeat(func(count), repeat=20, number=50)
 			norm = count / 10
