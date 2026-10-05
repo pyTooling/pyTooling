@@ -1,0 +1,16 @@
+doc-warnings: true
+max-line-length: 120
+
+pycodestyle:
+  disable:
+    - W191  # indentation contains tabs
+    - E101  # indentation contains mixed spaces and tabs
+
+pydocstyle:
+  disable:
+    - D206  # docstring should be indented with spaces, not tabs
+    - D212  # multi-line docstring summary should start at the first line
+
+pylint:
+  options:
+    indent-string: "\t"
