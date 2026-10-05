@@ -237,7 +237,7 @@ class Requirements(Testcase):
 		broken = [warning for warning in collector.Warnings if isinstance(warning, BrokenRequirementWarning)]
 
 		self.assertEqual(1, len(broken))
-		self.assertEqual([f"Broken requirement: lxml>=6.1; extra == \"xml\""], broken[0].__notes__)
+		self.assertEqual(["Broken requirement: lxml>=6.1; extra == \"xml\""], broken[0].__notes__)
 
 
 class ReleaseDetails(Testcase):
