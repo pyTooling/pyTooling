@@ -209,23 +209,23 @@ class Base(metaclass=ExtendedType, slots=True):
 @export
 class BaseWithID(Base):
 	"""Base-class for all GraphML elements carrying a document-wide unique ID."""
-	_id: str  #: Unique identifier of this GraphML element.
+	_id: Nullable[str]  #: Unique identifier of this GraphML element. ``None`` if it has none, e.g. an edge.
 
-	def __init__(self, identifier: str) -> None:
+	def __init__(self, identifier: Nullable[str]) -> None:
 		"""
 		Initialize a GraphML element with its unique ID.
 
-		:param identifier: Optional, unique ID of the element within the GraphML document.
+		:param identifier: Unique ID of the element within the GraphML document, or ``None``.
 		"""
 		super().__init__()
 		self._id = identifier
 
 	@readonly
-	def ID(self) -> str:
+	def ID(self) -> Nullable[str]:
 		"""
 		Read-only property to access the element's unique ID (:attr:`_id`).
 
-		:returns: Unique ID of the element.
+		:returns: Unique ID of the element, or ``None`` if it has none.
 		"""
 		return self._id
 
@@ -235,11 +235,11 @@ class BaseWithData(BaseWithID):
 	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
 	_data: list[Data]  #: Data items (key-value-pairs) attached to this GraphML element.
 
-	def __init__(self, identifier: str) -> None:
+	def __init__(self, identifier: Nullable[str]) -> None:
 		"""
 		Initialize a GraphML element with its unique ID and an empty list of data items.
 
-		:param identifier: Optional, unique ID of the element within the GraphML document.
+		:param identifier: Unique ID of the element within the GraphML document, or ``None``.
 		"""
 		super().__init__(identifier)
 
