@@ -37,6 +37,7 @@ from typing   import Any, Optional as Nullable, List, Tuple, Callable, get_type_
 
 from pyTooling.Decorators import readonly
 from pyTooling.Graph      import Graph, BaseGraph, Subgraph, View, Vertex, BaseEdge, Edge, Link
+from pyTooling.Graph      import BaseWithVertices, Component
 from pyTooling.Graph      import EdgeKind, EdgeKindType, LinkKind, LinkKindType, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
@@ -2092,9 +2093,17 @@ class TypeHints(Testcase):
 		"""The field annotations name every type parameter of the classes they use."""
 		import pyTooling.Graph
 
-		for cls in (Vertex, Edge, Link, BaseGraph, Subgraph, Graph):
+		for cls in (Vertex, Edge, Link, BaseGraph, BaseWithVertices, Subgraph, View, Component, Graph):
 			with self.subTest(cls=cls.__name__):
 				get_type_hints(cls, vars(pyTooling.Graph))
+
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Graph
+
+		self.assertIs(Graph, get_type_hints(Subgraph, vars(pyTooling.Graph))["_graph"])
+		self.assertIs(Graph, get_type_hints(BaseWithVertices, vars(pyTooling.Graph))["_graph"].__origin__)
+		self.assertIs(Component, get_type_hints(Vertex, vars(pyTooling.Graph))["_component"])
 
 	def test_Kind(self) -> None:
 		"""An edge's and a link's kind is a type parameter of its class, before the dictionary's types."""

@@ -536,7 +536,7 @@ class BaseWithVertices(
 ):
 	"""Base-class for named graph elements owning a set of vertices - a subgraph, a view or a component."""
 
-	_graph:    Graph[
+	_graph:    _Graph[
 								GraphDictKeyType, GraphDictValueType,
 								Any, Any, Any, Any, Any, Any,
 								VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
@@ -634,7 +634,7 @@ class Vertex(
 	"""
 	_graph:         BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]  #: Field storing a reference to the graph.
 	_subgraph:      Subgraph[Any, Any, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]                               #: Field storing a reference to the subgraph.
-	_component:     Component                                                                                                                                                                                                                                                                                                                           #: Field storing a reference to the component this vertex belongs to.
+	_component:     _Component                                                                                                                                                                                                                                                                                                                          #: Field storing a reference to the component this vertex belongs to.
 	_views:         dict[Hashable, View]                                                                                                                                                                                                                                                                                                                #: Field storing the views this vertex is part of, by view name.
 	_inboundEdges:  list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of inbound edges.
 	_outboundEdges: list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of outbound edges.
@@ -3079,7 +3079,7 @@ class Subgraph(
 	.. todo:: GRAPH::Subgraph Needs documentation.
 	"""
 
-	_graph:    Graph  #: Reference to the graph this subgraph is part of.
+	_graph:    _Graph  #: Reference to the graph this subgraph is part of.
 
 	def __init__(
 		self,
@@ -3520,3 +3520,9 @@ class Graph(
 			return "Graph: unnamed graph"
 		else:
 			return f"Graph: '{self._name}'"
+
+
+# A class with a property named like a class - ``Graph``, ``Component`` - can't name that class in the annotation of a
+# field: the class body's namespace, where annotations are evaluated, binds the name to the property.
+_Graph =     Graph
+_Component = Component
