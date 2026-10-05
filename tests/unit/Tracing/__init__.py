@@ -631,6 +631,55 @@ class Formatting(Testcase):
 		)
 
 
+class Failure(Testcase):
+	"""An exception leaving a ``with``-statement is recorded by the timespan it leaves, and propagates."""
+
+	def test_Span(self) -> None:
+		error = ValueError("broken")
+		with self.assertRaises(ValueError) as context:
+			with Trace("trace") as trace:
+				with Span("ok") as okSpan:
+					pass
+
+				with Span("failing") as failingSpan:
+					raise error
+
+		self.assertIs(error, context.exception)
+		self.assertIsNone(okSpan.Exception)
+		self.assertIs(error, failingSpan.Exception)
+		self.assertIs(error, trace.Exception, "The exception left the trace's with-statement too.")
+		self.assertIs(SpanState.Complete, failingSpan.State)
+
+	def test_Caught(self) -> None:
+		"""An exception caught inside the span's with-statement doesn't fail it."""
+		with Trace("trace") as trace:
+			with Span("span") as span:
+				try:
+					raise ValueError("handled")
+				except ValueError:
+					pass
+
+		self.assertIsNone(span.Exception)
+		self.assertIsNone(trace.Exception)
+
+	def test_CaughtOutside(self) -> None:
+		"""An exception caught between span and trace fails the span only."""
+		with Trace("trace") as trace:
+			try:
+				with Span("span") as span:
+					raise KeyError("missing")
+			except KeyError:
+				pass
+
+		self.assertIsInstance(span.Exception, KeyError)
+		self.assertIsNone(trace.Exception)
+
+	def test_Recorded(self) -> None:
+		span = Span("recorded", datetime(2026, 1, 1, 12, 0, 0), datetime(2026, 1, 1, 12, 0, 1))
+
+		self.assertIsNone(span.Exception)
+
+
 class TraceElements(Testcase):
 	def test_ASpanAndAnEventAreTraceElements(self) -> None:
 		trace = Trace("trace")

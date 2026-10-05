@@ -255,8 +255,8 @@ Version 10.x (2026)
        :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
        accepted it since v1.35.
-     * The document is typed rather than a mapping of :class:`~typing.Any`: ten :class:`~typing.TypedDict` classes
-       name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
+     * The document is typed rather than a mapping of :class:`~typing.Any`: twelve :class:`~typing.TypedDict`
+       classes name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
        :class:`~pyTooling.Tracing.OTLPAnyValue`.
      * A trace and each of its timespans draw their identifiers when they are **constructed**, so exporting one
        trace twice reports the same ``traceId``, and :attr:`~pyTooling.Tracing.Trace.TraceID` can be handed to
@@ -291,6 +291,9 @@ Version 10.x (2026)
      * :meth:`Span.Format() <pyTooling.Tracing.Span.Format>` and :meth:`Trace.Format() <pyTooling.Tracing.Trace.Format>`
        show ``--`` for a timespan that never started. They raised :exc:`~pyTooling.Tracing.TracingError`, because
        such a timespan has no duration.
+     * A timespan left by an exception records it - :attr:`~pyTooling.Tracing.Span.Exception` - and the exception
+       propagates as before. The OTLP/JSON export reports such a span with ``STATUS_CODE_ERROR``
+       (:class:`~pyTooling.Tracing.OTLPStatus`); a failed span looked like a successful one.
 
    * :mod:`pyTooling.Packaging`
 
