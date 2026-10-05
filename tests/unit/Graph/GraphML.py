@@ -36,6 +36,7 @@ from xml.dom.minidom         import parseString
 
 from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
+from pyTooling.Graph.GraphML import Base, BaseWithID, BaseWithData
 from pyTooling.Tree          import Node as pyToolingNode
 from pyTooling.Testing       import Testcase
 
@@ -256,6 +257,45 @@ class Construction(Testcase):
 		print()
 		for line in doc.ToStringLines():
 			print(line, end="")
+
+
+class Tags(Testcase):
+	"""Each element is written either as a single tag or with an opening and a closing tag; the other way raises."""
+
+	def test_BaseIsAbstract(self) -> None:
+		for cls in (Base, BaseWithID, BaseWithData):
+			with self.subTest(cls=cls.__name__):
+				self.assertTrue(cls.__isAbstract__)
+				self.assertSetEqual({"Tag", "OpeningTag", "ClosingTag", "ToStringLines"}, set(cls.__abstractMethods__))
+
+	def test_SingleTag(self) -> None:
+		key = Key("k1", AttributeContext.Node, "name", AttributeTypes.String)
+		data = Data(key, "value")
+
+		for element, message in (
+			(key, "A key is always written as a self-closing tag."),
+			(data, "A data item is always written in one line by Tag().")
+		):
+			for method in (element.OpeningTag, element.ClosingTag):
+				with self.subTest(element=element.__class__.__name__, method=method.__name__):
+					with self.assertRaises(NotImplementedError) as context:
+						method()
+
+					self.assertEqual(message, str(context.exception))
+
+	def test_OpeningAndClosingTag(self) -> None:
+		document = GraphMLDocument()
+
+		for element, message in (
+			(document, "A GraphML document is always written with an opening and a closing tag."),
+			(document.Graph, "A graph is always written with an opening and a closing tag."),
+			(Subgraph("sg1", "g1"), "A subgraph is always written with an opening and a closing tag.")
+		):
+			with self.subTest(element=element.__class__.__name__):
+				with self.assertRaises(NotImplementedError) as context:
+					element.Tag()
+
+				self.assertEqual(message, str(context.exception))
 
 
 class pyToolingGraph(Testcase):

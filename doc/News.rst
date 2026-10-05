@@ -432,6 +432,11 @@ Version 10.x (2026)
      raised. One with fields raised :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError`, one without fields
      was accepted. A plain class with non-empty ``__slots__`` still raises
      :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError`.
+   * The four methods writing a :mod:`pyTooling.Graph.GraphML` element are abstract in its base-class
+     :class:`~pyTooling.Graph.GraphML.Base`. They raised a bare :exc:`NotImplementedError` when called, so a derived
+     class missing one could be instantiated. An element that is never written as a single tag, or never with an
+     opening and a closing tag, says so in the :exc:`NotImplementedError` of the other methods, as
+     :class:`~pyTooling.Graph.GraphML.Subgraph` already did.
 
    .. rubric:: Bug Fixes
 
