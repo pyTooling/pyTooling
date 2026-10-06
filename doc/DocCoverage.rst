@@ -19,5 +19,5 @@ Documentation Coverage
 ----------
 
 Documentation coverage generated with :gh:`docstr-coverage <HunterMcGushion/docstr_coverage>` and
-visualized by :gh:`sphinx-reports <pyTooling/sphinx-reports>`.
+visualized by :gh:`pyTooling.Sphinx <pyTooling/pyTooling.Sphinx>`.
 

@@ -9,4 +9,4 @@ Unittest Summary Report
 ----------
 
 Unittest report generated with :gh:`pytest <pytest-dev/pytest>` and visualized by
-:gh:`sphinx-reports <pyTooling/sphinx-reports>`.
+:gh:`pyTooling.Sphinx <pyTooling/pyTooling.Sphinx>`.
