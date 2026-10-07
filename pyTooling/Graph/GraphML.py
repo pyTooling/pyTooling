@@ -39,7 +39,6 @@ A data model to write out GraphML XML files.
 from __future__            import annotations
 
 from enum                  import Enum, auto
-from itertools             import chain
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
 from xml.sax.saxutils      import escape as xml_escape
@@ -818,7 +817,7 @@ class BaseGraph(BaseWithData, mixin=True):
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 1))
 
-		for edge in chain(self._edgesWithoutID, self._edges.values()):
+		for edge in (*self._edgesWithoutID, *self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 1))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))
@@ -1019,7 +1018,7 @@ class Subgraph(Node, BaseGraph):
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 2))
 
-		for edge in chain(self._edgesWithoutID, self._edges.values()):
+		for edge in (*self._edgesWithoutID, *self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 2))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))
@@ -1190,7 +1189,7 @@ class GraphMLDocument(Base):
 
 		# A link is known to both graphs it connects: collect it from all graphs, and write it once into the root graph.
 		translatedLinks: set[int] = set()
-		for pyTGraph in chain(subgraphs, (graph, )):
+		for pyTGraph in (*subgraphs, graph):
 			for link in pyTGraph.IterateLinks():
 				if id(link) not in translatedLinks:
 					translatedLinks.add(id(link))

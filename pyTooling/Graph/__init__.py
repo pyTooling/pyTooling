@@ -3041,7 +3041,7 @@ class BaseGraph(
 			raise CycleError("Graph has a cycle. Thus, no unique transitive reduction exists.")
 
 		if keyName is None:
-			for edge in chain(self._edgesWithoutID, self._edgesWithID.values()):
+			for edge in (*self._edgesWithoutID, *self._edgesWithID.values()):
 				edge._kind = directKind
 
 			for edge in self.IterateTransitiveEdges():
@@ -3051,7 +3051,7 @@ class BaseGraph(
 			ex.add_note(f"Got type '{getFullyQualifiedName(keyName)}'.")
 			raise ex
 		else:
-			for edge in chain(self._edgesWithoutID, self._edgesWithID.values()):
+			for edge in (*self._edgesWithoutID, *self._edgesWithID.values()):
 				edge._kind = directKind
 				edge._dict.pop(keyName, None)
 
@@ -3409,7 +3409,9 @@ class Graph(
 		:raises KeyError: If no vertex carries that value, or if more than one vertex does.
 		"""
 		# FIXME: optimize: iterate only until first item is found and check for a second to produce error
-		vertices = [vertex for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()) if vertex._value == value]
+		vertices = [
+			vertex for vertex in (*self._verticesWithoutID, *self._verticesWithID.values()) if vertex._value == value
+		]
 		if (l := len(vertices)) == 1:
 			return vertices[0]
 		elif l == 0:

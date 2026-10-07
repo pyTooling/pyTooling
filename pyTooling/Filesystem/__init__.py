@@ -47,7 +47,6 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
 from __future__            import annotations
 
 from enum                  import Enum
-from itertools             import chain
 from os                    import scandir, readlink
 from pathlib               import Path
 from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
@@ -642,7 +641,7 @@ class Directory(Element["Directory"]):
 
 		:returns: A generator to iterate all direct files.
 		"""
-		return (f for f in chain(self._files.values(), self._symbolicLinks.values()))
+		return (f for f in (*self._files.values(), *self._symbolicLinks.values()))
 
 	@readonly
 	def RegularFiles(self) -> Generator[Filename, None, None]:
@@ -845,7 +844,7 @@ class Directory(Element["Directory"]):
 			format=format
 		)
 		directoryNode.AddChildren(
-			e.ToTree(format) for e in chain(self._subdirectories.values())  #, self._files.values(), self._symbolicLinks.values())
+			e.ToTree(format) for e in self._subdirectories.values()  #(*self._subdirectories.values(), *self._files.values(), *self._symbolicLinks.values())
 		)
 
 		return directoryNode
