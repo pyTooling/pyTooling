@@ -7,9 +7,9 @@ Overview
 Python. There is no need for manually assembling parameter lists or considering the order of parameters. All parameters
 like ``-v`` or ``--value=42`` are described as :class:`~pyTooling.CLIAbstraction.Argument.CommandLineArgument` instances
 on a :class:`~pyTooling.CLIAbstraction.Program` class. Each argument class like :class:`~pyTooling.CLIAbstraction.Flag.ShortFlag`
-or :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` knows about the correct formatting pattern, character
-escaping, and if needed about necessary type conversions. A program instance can be converted to an argument list
-suitable for :class:`subprocess.Popen`.
+or :class:`~pyTooling.CLIAbstraction.Argument.PathArgument` knows about the correct formatting pattern, and if needed
+about necessary type conversions. A program instance can be converted to an argument list suitable for
+:class:`subprocess.Popen`, which passes each argument to the program without a shell - so no argument needs escaping.
 
 While a user-defined command line program abstraction derived from :class:`~pyTooling.CLIAbstraction.Program` only
 takes care of maintaining and assembling parameter lists, a more advanced base-class, called :class:`~pyTooling.CLIAbstraction.Executable`,
@@ -28,7 +28,7 @@ The main design goals are:
 * Abstract differences in operating systems like argument pattern (POSIX: ``-h`` vs. Windows: ``/h``), path delimiter
   signs (POSIX: ``/`` vs. Windows: ``\``) or executable names.
 * Derive program variants from existing programs.
-* Assemble parameters as list for handover to :class:`subprocess.Popen` with proper escaping and quoting.
+* Assemble parameters as list for handover to :class:`subprocess.Popen`, in the order the program declares them.
 * Launch a program with :class:`~subprocess.Popen` and hide the complexity of Popen.
 * Get a generator object for line-by-line output reading to enable postprocessing of outputs.
 
@@ -59,8 +59,7 @@ The following example implements a portion of the ``git`` program and its ``comm
          git[git.FlagVerbose] = True
 
          # Derive a variant of that pre-configured program.
-         commit = git.getCommitTool()
-         commit[commit.ValueCommitMessage] = "Bumped dependencies."
+         commit = git.GetCommitTool("Bumped dependencies.", amend=True)
 
          # Launch the program and parse outputs line-by-line.
          commit.StartProcess()
@@ -72,7 +71,8 @@ The following example implements a portion of the ``git`` program and its ``comm
 
       .. code-block:: Python
 
-         from pyTooling.CLIAbstraction import Executable
+         from pyTooling.CLIAbstraction import CLIArgument, Executable
+         from pyTooling.CLIAbstraction.Argument import PathListArgument
          from pyTooling.CLIAbstraction.Command import CommandArgument
          from pyTooling.CLIAbstraction.Flag import LongFlag
          from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag
@@ -94,14 +94,33 @@ The following example implements a portion of the ``git`` program and its ``comm
              """Command to commit staged files."""
 
            @CLIArgument()
+           class FlagAmend(LongFlag, name="amend"):
+             """Replace the tip of the current branch."""
+
+           @CLIArgument()
            class ValueCommitMessage(ShortTupleFlag, name="m"):
              """Specify the commit message."""
 
-           def GetCommitTool(self):
-             """Derive a new program from a configured program."""
+           @CLIArgument()
+           class ArgumentPaths(PathListArgument):
+             """Files to commit."""
+
+           def GetCommitTool(
+             self,
+             message: str,
+             amend: bool = False,
+             paths: Nullable[Iterable[Path]] = None
+           ) -> "Git":
+             """Derive a commit command from this program."""
              tool = self.__class__(executablePath=self._executablePath)
-             tool[tool.CommandCommit] = True
              self._CopyParameters(tool)
+
+             tool[tool.CommandCommit] = True
+             tool[tool.ValueCommitMessage] = message
+             if amend:
+               tool[tool.FlagAmend] = True
+             if paths is not None:
+               tool[tool.ArgumentPaths] = paths
 
              return tool
 
@@ -113,38 +132,7 @@ Programm API
 
 **Condensed definition of class** :class:`~pyTooling.CLIAbstraction.Program`:
 
-.. code-block:: Python
-
-   class Program(metaclass=ExtendedType, slots=True):
-      # Register @CLIArgument marked nested classes in `__cliOptions__
-      def __init_subclass__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]):
-        ...
-
-      def __init__(self, executablePath: Path = None, binaryDirectoryPath: Path = None, dryRun: bool = False) -> None:
-        ...
-
-      @staticmethod
-      def _NeedsParameterInitialization(key):
-         ...
-
-      # Implement indexed access operators: prog[...]
-      def __getitem__(self, key):
-         ...
-      def __setitem__(self, key, value):
-         ...
-
-      @readonly
-      def Path(self) -> Path:
-         ...
-
-      def ToArgumentList(self) -> List[str]:
-         ...
-
-      def __repr__(self):
-         ...
-
-      def __str__(self):
-         ...
+.. condensed-class:: pyTooling.CLIAbstraction.Program
 
 
 .. _CLIABS/ExecutableAPI:
@@ -154,24 +142,87 @@ Executable API
 
 **Condensed definition of class** :class:`~pyTooling.CLIAbstraction.Executable`:
 
-.. code-block:: Python
+.. condensed-class:: pyTooling.CLIAbstraction.Executable
 
-   class Executable(Program):
-      def __init__( self, executablePath: Path = None, binaryDirectoryPath: Path = None, workingDirectory: Path = None, # environment: Environment = None, dryRun: bool = False):
-         ...
 
-      def StartProcess(self):
-         ...
+.. _CLIABS/Competitors:
 
-      def Send(self, line: str, end: str="\n") -> None:
-         ...
+Competing Solutions
+*******************
 
-      def GetLineReader(self) -> Generator[str, None, None]:
-         ...
+The packages below run a program from Python, but describe its command line as strings. pyTooling describes it as
+classes: every argument of a program is a nested class of its :class:`~pyTooling.CLIAbstraction.Program`, whose base
+class - :class:`~pyTooling.CLIAbstraction.Flag.ShortFlag`, :class:`~pyTooling.CLIAbstraction.ValuedFlag.LongValuedFlag`,
+:class:`~pyTooling.CLIAbstraction.Flag.WindowsFlag`, ... - formats it as ``-v``, ``--value=42`` or ``/v``. The
+arguments are listed in the order they are declared, and the executable's name is chosen per platform.
 
-      @readonly
-      def ExitCode(self) -> int:
-         ...
+.. _CLIABS/subprocess:
+
+subprocess
+==========
+
+Source: the standard library's :mod:`subprocess`.
+
+.. rubric:: Disadvantages
+
+* A command line is a list of strings, assembled by the caller in the right order and in each program's syntax.
+
+.. rubric:: Standoff
+
+* :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` returns such a list, and
+  :class:`~pyTooling.CLIAbstraction.Executable` starts it with :class:`~subprocess.Popen`.
+
+.. rubric:: Advantages
+
+* No dependency, and every option of :class:`~subprocess.Popen` is available.
+
+.. _CLIABS/plumbum:
+
+plumbum
+=======
+
+Source: :gh:`plumbum <tomerfiliba/plumbum>`, on PyPI as `plumbum <https://pypi.org/project/plumbum/>`__.
+
+.. rubric:: Disadvantages
+
+* Arguments are bound as strings - ``local["ls"]["-l"]`` - so a flag's syntax is written at every call.
+
+.. rubric:: Advantages
+
+* Pipelines (``|``), redirection (``<``, ``>``), background execution, and commands run on a remote machine over SSH.
+* A toolkit for writing command line applications.
+
+.. _CLIABS/sh:
+
+sh
+==
+
+Source: :gh:`sh <amoffat/sh>`, on PyPI as `sh <https://pypi.org/project/sh/>`__.
+
+.. rubric:: Disadvantages
+
+* Windows is not supported.
+* Keyword arguments become flags by one rule - one letter ``-o value``, more letters ``--name`` - so a program
+  using another syntax, like ``/flag`` or ``-flag=value``, is called with strings.
+
+.. rubric:: Advantages
+
+* A program is called like a function, ``sh.git.commit(m="message")``, without declaring it first.
+
+.. _CLIABS/invoke:
+
+invoke
+======
+
+Source: :gh:`invoke <pyinvoke/invoke>`, on PyPI as `invoke <https://pypi.org/project/invoke/>`__.
+
+.. rubric:: Disadvantages
+
+* A command is one string run by a shell, so quoting and the shell's syntax are the caller's.
+
+.. rubric:: Standoff
+
+* A task runner - tasks with their own command line - more than a program abstraction.
 
 
 .. _CLIABS/Consumers:
@@ -182,4 +233,4 @@ Consumers
 This abstraction layer is used by:
 
 * ✅ Wrap command line interfaces of EDA tools (Electronic Design Automation) in Python classes. |br|
-  `pyEDAA.CLITool <https://github.com/edaa-org/pyEDAA.CLITool>`__
+  :gh:`pyEDAA.CLITool <edaa-org/pyEDAA.CLITool>`

@@ -41,12 +41,25 @@ from __future__            import annotations
 from enum                  import Enum, auto
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
+from xml.sax.saxutils      import escape as xml_escape
 
 from pyTooling.Decorators  import export, notimplemented, readonly
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
+from pyTooling.Graph       import Edge as pyToolingEdge, Link as pyToolingLink
+from pyTooling.Graph       import GraphViz
 from pyTooling.Tree        import Node as pyToolingNode
 
+
+
+def _escapeAttribute(value: Any) -> str:
+	"""
+	Escape a value for an XML attribute in double quotes: ``&``, ``<``, ``>`` and ``"``.
+
+	:param value: The value, converted by :func:`str`.
+	:returns:     The escaped text.
+	"""
+	return xml_escape(str(value), {'"': "&quot;"})
 
 @export
 class AttributeContext(Enum):
@@ -153,67 +166,70 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		return True
 
+	@abstractmethod
 	def Tag(self, indent: int = 0) -> str:
 		"""
 		Return this element as a self-closing XML tag.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    The XML tag, indented and terminated by a newline.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
-		"""
-		raise NotImplementedError()
+		An element always written with an opening and a closing tag overrides it with
+		:deco:`~pyTooling.Decorators.notimplemented`.
 
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      The XML tag, indented and terminated by a newline.
+		"""
+
+	@abstractmethod
 	def OpeningTag(self, indent: int = 0) -> str:
 		"""
 		Return the opening XML tag of this element.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    The opening XML tag, indented and terminated by a newline.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
-		"""
-		raise NotImplementedError()
+		An element always written as a single tag overrides it with :deco:`~pyTooling.Decorators.notimplemented`.
 
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      The opening XML tag, indented and terminated by a newline.
+		"""
+
+	@abstractmethod
 	def ClosingTag(self, indent: int = 0) -> str:
 		"""
 		Return the closing XML tag of this element.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    The closing XML tag, indented and terminated by a newline.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
-		"""
-		raise NotImplementedError()
+		An element always written as a single tag overrides it with :deco:`~pyTooling.Decorators.notimplemented`.
 
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      The closing XML tag, indented and terminated by a newline.
+		"""
+
+	@abstractmethod
 	def ToStringLines(self, indent: int = 0) -> list[str]:
 		"""
 		Render this element as a list of XML lines.
 
-		:param indent:               Optional, indentation level of the XML element.
-		:returns:                    List of XML lines describing this element.
-		:raises NotImplementedError: If this abstract method is not overridden by a derived class.
+		:param indent: Optional, indentation level of the XML element.
+		:returns:      List of XML lines describing this element.
 		"""
-		raise NotImplementedError()
 
 
 @export
 class BaseWithID(Base):
 	"""Base-class for all GraphML elements carrying a document-wide unique ID."""
-	_id: str  #: Unique identifier of this GraphML element.
+	_id: Nullable[str]  #: Unique identifier of this GraphML element. ``None`` if it has none, e.g. an edge.
 
-	def __init__(self, identifier: str) -> None:
+	def __init__(self, identifier: Nullable[str]) -> None:
 		"""
 		Initialize a GraphML element with its unique ID.
 
-		:param identifier: Optional, unique ID of the element within the GraphML document.
+		:param identifier: Unique ID of the element within the GraphML document, or ``None``.
 		"""
 		super().__init__()
 		self._id = identifier
 
 	@readonly
-	def ID(self) -> str:
+	def ID(self) -> Nullable[str]:
 		"""
 		Read-only property to access the element's unique ID (:attr:`_id`).
 
-		:returns: Unique ID of the element.
+		:returns: Unique ID of the element, or ``None`` if it has none.
 		"""
 		return self._id
 
@@ -223,11 +239,11 @@ class BaseWithData(BaseWithID):
 	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
 	_data: list[Data]  #: Data items (key-value-pairs) attached to this GraphML element.
 
-	def __init__(self, identifier: str) -> None:
+	def __init__(self, identifier: Nullable[str]) -> None:
 		"""
 		Initialize a GraphML element with its unique ID and an empty list of data items.
 
-		:param identifier: Optional, unique ID of the element within the GraphML document.
+		:param identifier: Unique ID of the element within the GraphML document, or ``None``.
 		"""
 		super().__init__(identifier)
 
@@ -325,7 +341,25 @@ class Key(BaseWithID):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<key id="{self._id}" for="{self._context}" attr.name="{self._attributeName}" attr.type="{self._attributeType}" />\n"""
+		identifier =    _escapeAttribute(self._id)
+		attributeName = _escapeAttribute(self._attributeName)
+		return f"""{'  '*indent}<key id="{identifier}" for="{self._context}" attr.name="{attributeName}" attr.type="{self._attributeType}" />\n"""
+
+	@notimplemented("A key is always written as a self-closing tag.")
+	def OpeningTag(self, indent: int = 2) -> str:
+		"""
+		A key has no content, so it is never written with an opening and a closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
+
+	@notimplemented("A key is always written as a self-closing tag.")
+	def ClosingTag(self, indent: int = 2) -> str:
+		"""
+		A key has no content, so it is never written with an opening and a closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
 
 	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
@@ -394,7 +428,23 @@ class Data(Base):
 		data = data.replace("<", "&lt;")
 		data = data.replace(">", "&gt;")
 		data = data.replace("\n", "\\n")
-		return f"""{'  '*indent}<data key="{self._key._id}">{data}</data>\n"""
+		return f"""{'  '*indent}<data key="{_escapeAttribute(self._key._id)}">{data}</data>\n"""
+
+	@notimplemented("A data item is always written in one line by Tag().")
+	def OpeningTag(self, indent: int = 2) -> str:
+		"""
+		A data item holds a value only, so :meth:`Tag` writes it in one line.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
+
+	@notimplemented("A data item is always written in one line by Tag().")
+	def ClosingTag(self, indent: int = 2) -> str:
+		"""
+		A data item holds a value only, so :meth:`Tag` writes it in one line.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
 
 	def ToStringLines(self, indent: int = 2) -> list[str]:
 		"""
@@ -434,7 +484,7 @@ class Node(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<node id="{self._id}" />\n"""
+		return f"""{'  '*indent}<node id="{_escapeAttribute(self._id)}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
 		"""
@@ -443,7 +493,7 @@ class Node(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<node id="{self._id}">\n"""
+		return f"""{'  '*indent}<node id="{_escapeAttribute(self._id)}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
 		"""
@@ -478,7 +528,7 @@ class Edge(BaseWithData):
 	_source: Node  #: Node the edge starts at.
 	_target: Node  #: Node the edge ends at.
 
-	def __init__(self, identifier: str, source: Node, target: Node) -> None:
+	def __init__(self, identifier: Nullable[str], source: Node, target: Node) -> None:
 		"""
 		Initialize an edge between two nodes.
 
@@ -509,6 +559,17 @@ class Edge(BaseWithData):
 		"""
 		return self._target
 
+	def _IDAttribute(self) -> str:
+		"""
+		Return the ``id`` attribute of this edge's tag, or nothing for an edge without an ID - it is optional in GraphML.
+
+		:returns: The attribute with a leading space, or an empty string.
+		"""
+		if self._id is None:
+			return ""
+		else:
+			return f' id="{_escapeAttribute(self._id)}"'
+
 	@readonly
 	def HasClosingTag(self) -> bool:
 		"""
@@ -525,7 +586,9 @@ class Edge(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  ' * indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}" />\n"""
+		source = _escapeAttribute(self._source._id)
+		target = _escapeAttribute(self._target._id)
+		return f"""{'  ' * indent}<edge{self._IDAttribute()} source="{source}" target="{target}" />\n"""
 
 	def OpeningTag(self, indent: int = 2) -> str:
 		"""
@@ -534,7 +597,9 @@ class Edge(BaseWithData):
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
-		return f"""{'  '*indent}<edge id="{self._id}" source="{self._source._id}" target="{self._target._id}">\n"""
+		source = _escapeAttribute(self._source._id)
+		target = _escapeAttribute(self._target._id)
+		return f"""{'  '*indent}<edge{self._IDAttribute()} source="{source}" target="{target}">\n"""
 
 	def ClosingTag(self, indent: int = 2) -> str:
 		"""
@@ -571,13 +636,14 @@ class BaseGraph(BaseWithData, mixin=True):
 	Beside the elements themselves, it carries the document-level settings applied while writing them: the default edge
 	direction, the parsing order, and the ID styles for nodes and edges.
 	"""
-	_subgraphs:   dict[str, Subgraph]  #: Subgraphs of this graph, by ID.
-	_nodes:       dict[str, Node]      #: Nodes of this graph, by ID.
-	_edges:       dict[str, Edge]      #: Edges of this graph, by ID.
-	_edgeDefault: EdgeDefault          #: Direction applied to edges that don't specify one.
-	_parseOrder:  ParsingOrder         #: Order in which nodes and edges may appear in the XML document.
-	_nodeIDStyle: IDStyle              #: Whether node IDs are free-form or canonical.
-	_edgeIDStyle: IDStyle              #: Whether edge IDs are free-form or canonical.
+	_subgraphs:      dict[str, Subgraph]  #: Subgraphs of this graph, by ID.
+	_nodes:          dict[str, Node]      #: Nodes of this graph, by ID.
+	_edges:          dict[str, Edge]      #: Edges of this graph with an ID, by ID.
+	_edgesWithoutID: list[Edge]           #: Edges of this graph without an ID.
+	_edgeDefault:    EdgeDefault          #: Direction applied to edges that don't specify one.
+	_parseOrder:     ParsingOrder         #: Order in which nodes and edges may appear in the XML document.
+	_nodeIDStyle:    IDStyle              #: Whether node IDs are free-form or canonical.
+	_edgeIDStyle:    IDStyle              #: Whether edge IDs are free-form or canonical.
 
 	def __init__(self, identifier: Nullable[str] = None) -> None:
 		"""
@@ -589,13 +655,14 @@ class BaseGraph(BaseWithData, mixin=True):
 		"""
 		super().__init__(identifier)
 
-		self._subgraphs = {}
-		self._nodes = {}
-		self._edges = {}
-		self._edgeDefault = EdgeDefault.Directed
-		self._parseOrder = ParsingOrder.NodesFirst
-		self._nodeIDStyle = IDStyle.Free
-		self._edgeIDStyle = IDStyle.Free
+		self._subgraphs =      {}
+		self._nodes =          {}
+		self._edges =          {}
+		self._edgesWithoutID = []
+		self._edgeDefault =    EdgeDefault.Directed
+		self._parseOrder =     ParsingOrder.NodesFirst
+		self._nodeIDStyle =    IDStyle.Free
+		self._edgeIDStyle =    IDStyle.Free
 
 	@readonly
 	def Subgraphs(self) -> dict[str, Subgraph]:
@@ -618,11 +685,24 @@ class BaseGraph(BaseWithData, mixin=True):
 	@readonly
 	def Edges(self) -> dict[str, Edge]:
 		"""
-		Read-only property to access the graph's edges (:attr:`_edges`).
+		Read-only property to access the graph's edges with an ID (:attr:`_edges`).
+
+		An edge without an ID is in :attr:`EdgesWithoutID`.
 
 		:returns: Dictionary of edge IDs and edges.
 		"""
 		return self._edges
+
+	@readonly
+	def EdgesWithoutID(self) -> list[Edge]:
+		"""
+		Read-only property to access the graph's edges without an ID (:attr:`_edgesWithoutID`).
+
+		An edge with an ID is in :attr:`Edges`.
+
+		:returns: List of edges without an ID, in the order they were added.
+		"""
+		return self._edgesWithoutID
 
 	def AddSubgraph(self, subgraph: Subgraph) -> Subgraph:
 		"""
@@ -672,7 +752,11 @@ class BaseGraph(BaseWithData, mixin=True):
 		:param edge: The edge to add.
 		:returns:    The added edge, so it can be used in the calling expression.
 		"""
-		self._edges[edge._id] = edge
+		if edge._id is None:
+			self._edgesWithoutID.append(edge)
+		else:
+			self._edges[edge._id] = edge
+
 		return edge
 
 	def GetEdge(self, edgeName: str) -> Edge:
@@ -685,21 +769,29 @@ class BaseGraph(BaseWithData, mixin=True):
 		"""
 		return self._edges[edgeName]
 
+	@notimplemented("A graph is always written with an opening and a closing tag.")
+	def Tag(self, indent: int = 1) -> str:
+		"""
+		A graph is written with its nodes and edges inside, so it is never written as a self-closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
+
 	def OpeningTag(self, indent: int = 1) -> str:
 		"""
 		Return the opening XML tag of this graph.
 
 		Beside the graph's ID, the tag carries the parsing hints a reader needs: the default edge direction, the
-number of nodes and edges, the parsing order and both ID styles.
+		number of nodes and edges, the parsing order and both ID styles.
 
 		:param indent: Optional, indentation level of the XML element.
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
-{'  '*indent}<graph id="{self._id}"
+{'  '*indent}<graph id="{_escapeAttribute(self._id)}"
 {'  '*indent}  edgedefault="{self._edgeDefault!s}"
 {'  '*indent}  parse.nodes="{len(self._nodes)}"
-{'  '*indent}  parse.edges="{len(self._edges)}"
+{'  '*indent}  parse.edges="{len(self._edgesWithoutID) + len(self._edges)}"
 {'  '*indent}  parse.order="{self._parseOrder!s}"
 {'  '*indent}  parse.nodeids="{self._nodeIDStyle!s}"
 {'  '*indent}  parse.edgeids="{self._edgeIDStyle!s}">
@@ -724,7 +816,8 @@ number of nodes and edges, the parsing order and both ID styles.
 		lines = [self.OpeningTag(indent)]
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 1))
-		for edge in self._edges.values():
+
+		for edge in (*self._edgesWithoutID, *self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 1))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))
@@ -789,13 +882,15 @@ class Graph(BaseGraph):
 
 	def AddEdge(self, edge: Edge) -> Edge:
 		"""
-		Add an edge to the root graph and register its ID.
+		Add an edge to the root graph and register its ID, if it has one.
 
 		:param edge: The edge to add.
 		:returns:    The added edge, so it can be used in the calling expression.
 		"""
 		result = super().AddEdge(edge)
-		self._ids[edge._id] = edge
+		if edge._id is not None:
+			self._ids[edge._id] = edge
+
 		return result
 
 
@@ -863,13 +958,15 @@ class Subgraph(Node, BaseGraph):
 
 	def AddEdge(self, edge: Edge) -> Edge:
 		"""
-		Add an edge to this subgraph and register its ID at the root graph.
+		Add an edge to this subgraph and register its ID at the root graph, if it has one.
 
 		:param edge: The edge to add.
 		:returns:    The added edge, so it can be used in the calling expression.
 		"""
 		result = super().AddEdge(edge)
-		self._root._ids[edge._id] = edge
+		if edge._id is not None:
+			self._root._ids[edge._id] = edge
+
 		return result
 
 	@notimplemented("A subgraph is always written with an opening and a closing tag.")
@@ -888,10 +985,10 @@ class Subgraph(Node, BaseGraph):
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
-{'  ' * indent}<graph id="{self._subgraphID}"
+{'  ' * indent}<graph id="{_escapeAttribute(self._subgraphID)}"
 {'  ' * indent}  edgedefault="{self._edgeDefault!s}"
 {'  ' * indent}  parse.nodes="{len(self._nodes)}"
-{'  ' * indent}  parse.edges="{len(self._edges)}"
+{'  ' * indent}  parse.edges="{len(self._edgesWithoutID) + len(self._edges)}"
 {'  ' * indent}  parse.order="{self._parseOrder!s}"
 {'  ' * indent}  parse.nodeids="{self._nodeIDStyle!s}"
 {'  ' * indent}  parse.edgeids="{self._edgeIDStyle!s}">
@@ -920,7 +1017,8 @@ class Subgraph(Node, BaseGraph):
 		lines.append(self.OpeningTag(indent + 1))
 		for node in self._nodes.values():
 			lines.extend(node.ToStringLines(indent + 2))
-		for edge in self._edges.values():
+
+		for edge in (*self._edgesWithoutID, *self._edges.values()):
 			lines.extend(edge.ToStringLines(indent + 2))
 		# for data in self._data:
 		# 	lines.extend(data.ToStringLines(indent + 1))
@@ -996,7 +1094,7 @@ class GraphMLDocument(Base):
 		"""
 		return self._keys[keyName]
 
-	def HasKey(self, keyName: str) -> bool:
+	def ContainsKey(self, keyName: str) -> bool:
 		"""
 		Check if a key with the given ID was declared.
 
@@ -1010,112 +1108,92 @@ class GraphMLDocument(Base):
 		Fill this document from a :class:`pyTooling.Graph.Graph`.
 
 		Vertices become nodes, edges become edges, and the vertex and edge values are attached as data items,
-		declared by two keys this method adds. Subgraphs are translated recursively.
+		declared by two keys this method adds. A subgraph becomes a GraphML subgraph. A link connects vertices of two
+		graphs; it becomes an edge of the root graph.
+
+		A node's ID is its vertex' ID. A vertex without an ID gets a generated ID ``vertex<number>``, which no vertex' ID
+		is, because GraphML requires one. Subgraphs are translated ordered by name, so the generated IDs don't change from
+		one run to the next. A graph without a name keeps the document's graph ID.
 
 		:param graph: The graph to translate into this document.
 		"""
 		document = self
-		self._graph._id = graph._name
+		if graph._name is not None:
+			self._graph._id = graph._name
 
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 		edgeValue = self.AddKey(Key("edgeValue", AttributeContext.Edge, "value", AttributeTypes.String))
 
-		def translateGraph(rootGraph: Graph, pyTGraph: pyToolingGraph):
+		subgraphs = sorted(graph.Subgraphs, key=lambda subgraph: "" if subgraph._name is None else subgraph._name)
+		vertices = [vertex for subgraph in subgraphs for vertex in subgraph.IterateVertices()]
+		vertices += graph.IterateVertices()
+		identifiers = GraphViz.Graph._Identifiers(vertices)
+		nodes: dict[int, Node] = {}
+
+		def getKey(keyID: str, context: AttributeContext, name: str) -> Key:
 			"""
-			Nested function for recursion.
+			Nested function returning the key with the given ID, which is declared on first use.
 
-			It translates the vertices and edges of one pyTooling graph into GraphML nodes and edges, and recurses into the
-			subgraphs it finds.
+			:param keyID:   ID of the key.
+			:param context: Kind of element the key's data items belong to.
+			:param name:    Attribute name of the key.
+			:returns:       The key.
+			"""
+			if document.ContainsKey(keyID):
+				return document.GetKey(keyID)
 
-			:param rootGraph: The GraphML graph the elements are added to.
-			:param pyTGraph:  The pyTooling graph to translate.
+			return document.AddKey(Key(keyID, context, name, AttributeTypes.String))
+
+		def translateEdge(edge: Union[pyToolingEdge, pyToolingLink], prefix: str) -> Edge:
+			"""
+			Nested function translating an edge or a link, with its value and key-value pairs, into a GraphML edge.
+
+			:param edge:   The edge or link to translate.
+			:param prefix: Prefix of the key IDs for its key-value pairs: ``edge`` or ``link``.
+			:returns:      The GraphML edge between the nodes of its source and destination vertex.
+			"""
+			newEdge = Edge(edge._id, nodes[id(edge._source)], nodes[id(edge._destination)])
+			if edge._value is not None:
+				newEdge.AddData(Data(edgeValue, edge._value))
+
+			for key, value in edge._dict.items():
+				newEdge.AddData(Data(getKey(f"{prefix}{key!s}", AttributeContext.Edge, str(key)), value))
+
+			return newEdge
+
+		def translateGraph(graphMLGraph: BaseGraph, pyTGraph: Union[pyToolingGraph, pyToolingSubgraph]) -> None:
+			"""
+			Nested function translating the vertices and edges of a graph or subgraph into GraphML nodes and edges.
+
+			:param graphMLGraph: The GraphML graph or subgraph the elements are added to.
+			:param pyTGraph:     The pyTooling graph or subgraph to translate.
 			"""
 			for vertex in pyTGraph.IterateVertices():
-				newNode = Node(vertex._id)
-				newNode.AddData(Data(nodeValue, vertex._value))
-				for key, value in vertex._dict.items():
-					if document.HasKey(str(key)):
-						nodeKey = document.GetKey(f"node{key!s}")
-					else:
-						nodeKey = document.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
-					newNode.AddData(Data(nodeKey, value))
+				newNode = graphMLGraph.AddNode(Node(identifiers[id(vertex)]))
+				nodes[id(vertex)] = newNode
+				if vertex._value is not None:
+					newNode.AddData(Data(nodeValue, vertex._value))
 
-				rootGraph.AddNode(newNode)
+				for key, value in vertex._dict.items():
+					newNode.AddData(Data(getKey(f"node{key!s}", AttributeContext.Node, str(key)), value))
 
 			for edge in pyTGraph.IterateEdges():
-				source = rootGraph.GetByID(edge._source._id)
-				target = rootGraph.GetByID(edge._destination._id)
+				graphMLGraph.AddEdge(translateEdge(edge, "edge"))
 
-				newEdge = Edge(edge._id, source, target)
-				newEdge.AddData(Data(edgeValue, edge._value))
-				for key, value in edge._dict.items():
-					if self.HasKey(str(key)):
-						edgeKey = self.GetBy(f"edge{key!s}")
-					else:
-						edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
-					newEdge.AddData(Data(edgeKey, value))
-
-				rootGraph.AddEdge(newEdge)
-
-			for link in pyTGraph.IterateLinks():
-				source = rootGraph.GetByID(link._source._id)
-				target = rootGraph.GetByID(link._destination._id)
-
-				newEdge = Edge(link._id, source, target)
-				newEdge.AddData(Data(edgeValue, link._value))
-				for key, value in link._dict.items():
-					if self.HasKey(str(key)):
-						edgeKey = self.GetKey(f"link{key!s}")
-					else:
-						edgeKey = self.AddKey(Key(f"link{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
-					newEdge.AddData(Data(edgeKey, value))
-
-				rootGraph.AddEdge(newEdge)
-
-		def translateSubgraph(nodeGraph: Subgraph, pyTSubgraph: pyToolingSubgraph):
-			"""
-			Nested function for recursion.
-
-			It translates one pyTooling subgraph into a GraphML subgraph.
-
-			:param nodeGraph:   The GraphML subgraph the elements are added to.
-			:param pyTSubgraph: The pyTooling subgraph to translate.
-			"""
-			rootGraph = nodeGraph.RootGraph
-
-			for vertex in pyTSubgraph.IterateVertices():
-				newNode = Node(vertex._id)
-				newNode.AddData(Data(nodeValue, vertex._value))
-				for key, value in vertex._dict.items():
-					if self.HasKey(str(key)):
-						nodeKey = self.GetKey(f"node{key!s}")
-					else:
-						nodeKey = self.AddKey(Key(f"node{key!s}", AttributeContext.Node, str(key), AttributeTypes.String))
-					newNode.AddData(Data(nodeKey, value))
-
-				nodeGraph.AddNode(newNode)
-
-			for edge in pyTSubgraph.IterateEdges():
-				source = nodeGraph.GetNode(edge._source._id)
-				target = nodeGraph.GetNode(edge._destination._id)
-
-				newEdge = Edge(edge._id, source, target)
-				newEdge.AddData(Data(edgeValue, edge._value))
-				for key, value in edge._dict.items():
-					if self.HasKey(str(key)):
-						edgeKey = self.GetKey(f"edge{key!s}")
-					else:
-						edgeKey = self.AddKey(Key(f"edge{key!s}", AttributeContext.Edge, str(key), AttributeTypes.String))
-					newEdge.AddData(Data(edgeKey, value))
-
-				nodeGraph.AddEdge(newEdge)
-
-		for subgraph in graph.Subgraphs:
+		for subgraph in subgraphs:
 			nodeGraph = Subgraph(subgraph.Name, "sg" + subgraph.Name)
 			self._graph.AddSubgraph(nodeGraph)
-			translateSubgraph(nodeGraph, subgraph)
+			translateGraph(nodeGraph, subgraph)
 
 		translateGraph(self._graph, graph)
+
+		# A link is known to both graphs it connects: collect it from all graphs, and write it once into the root graph.
+		translatedLinks: set[int] = set()
+		for pyTGraph in (*subgraphs, graph):
+			for link in pyTGraph.IterateLinks():
+				if id(link) not in translatedLinks:
+					translatedLinks.add(id(link))
+					self._graph.AddEdge(translateEdge(link, "link"))
 
 	def FromTree(self, tree: pyToolingNode) -> None:
 		"""
@@ -1123,20 +1201,37 @@ class GraphMLDocument(Base):
 
 		Every node of the tree becomes a GraphML node, and every parent-child relation becomes an edge.
 
+		A GraphML node's ID is the tree node's ID. A tree node without an ID gets a generated ID ``vertex<number>``, which
+		no tree node's ID is, because GraphML requires one. A root without an ID keeps the document's graph ID.
+
 		:param tree: The root node of the tree to translate into this document.
 		"""
-		self._graph._id = tree._id
+		if tree._id is not None:
+			self._graph._id = tree._id
 
 		nodeValue = self.AddKey(Key("nodeValue", AttributeContext.Node, "value", AttributeTypes.String))
 
-		rootNode = self._graph.AddNode(Node(tree._id))
-		rootNode.AddData(Data(nodeValue, tree._value))
+		treeNodes  = [tree]
+		treeNodes += tree.GetDescendants()
+		identifiers = GraphViz.Graph._Identifiers(treeNodes)
+		nodes: dict[int, Node] = {}
 
-		for i, node in enumerate(tree.GetDescendants()):
-			newNode = self._graph.AddNode(Node(node._id))
-			newNode.AddData(Data(nodeValue, node._value))
+		for i, treeNode in enumerate(treeNodes):
+			newNode = self._graph.AddNode(Node(identifiers[id(treeNode)]))
+			nodes[id(treeNode)] = newNode
+			if treeNode._value is not None:
+				newNode.AddData(Data(nodeValue, treeNode._value))
 
-			newEdge = self._graph.AddEdge(Edge(f"e{i}", newNode, self._graph.GetNode(node._parent._id)))
+			if treeNode is not tree:
+				self._graph.AddEdge(Edge(f"e{i - 1}", newNode, nodes[id(treeNode._parent)]))
+
+	@notimplemented("A GraphML document is always written with an opening and a closing tag.")
+	def Tag(self, indent: int = 0) -> str:
+		"""
+		A GraphML document always contains keys and a graph, so it is never written as a self-closing tag.
+
+		:param indent: Optional, indentation level of the XML element.
+		"""
 
 	def OpeningTag(self, indent: int = 0) -> str:
 		"""
@@ -1182,5 +1277,5 @@ class GraphMLDocument(Base):
 		:param file: Path of the file to write.
 		"""
 		with file.open("w", encoding="utf-8") as f:
-			f.write(f"""<?xml version="1.0" encoding="utf-8"?>""")
+			f.write("""<?xml version="1.0" encoding="utf-8"?>""")
 			f.writelines(self.ToStringLines())

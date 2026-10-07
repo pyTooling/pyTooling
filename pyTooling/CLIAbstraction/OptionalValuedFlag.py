@@ -35,7 +35,6 @@ Command line arguments with an optional value, like ``--width`` or ``--width=100
 
 The argument renders one of two patterns: the one with a value when a value was assigned, and the one without a value
 otherwise - which is why an optional-valued flag carries two format strings instead of one.
-
 """
 from typing import ClassVar, Union, Iterable, Any, Optional as Nullable
 
@@ -96,27 +95,17 @@ class OptionalValuedFlag(NamedAndValuedArgument[str], pattern="{0"):
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal name and optional value.
 
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		pattern = self._pattern if self._value is None else self._patternWithValue
 		return pattern.format(self._name, self._value)
-
-	def __str__(self) -> str:
-		"""
-		Return the argument as a quoted string, ready to be pasted into a shell.
-
-		:returns: The rendered argument, in double quotes.
-		"""
-		return f"\"{self.AsArgument()}\""
-
-	__repr__ = __str__
 
 
 @export

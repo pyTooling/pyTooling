@@ -12,3 +12,4 @@ ruamel.yaml ~= 0.19.1
 
 # For pyTooling.TerminalUI testing
 colorama ~= 0.4.6
+

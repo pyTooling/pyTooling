@@ -65,6 +65,7 @@ from __future__            import annotations
 
 import heapq
 from collections           import deque
+from enum                  import Enum
 from itertools             import chain
 from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable
 from typing                import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
@@ -121,6 +122,9 @@ EdgeDictKeyType = TypeVar("EdgeDictKeyType", bound=Hashable)
 EdgeDictValueType = TypeVar("EdgeDictValueType")
 """A type variable for an edge's dictionary values."""
 
+EdgeKindType = TypeVar("EdgeKindType", bound=Enum)
+"""A type variable for an edge's kind, e.g. :class:`EdgeKind`."""
+
 LinkIDType = TypeVar("LinkIDType", bound=Hashable)
 """A type variable for an link's ID."""
 
@@ -135,6 +139,9 @@ LinkDictKeyType = TypeVar("LinkDictKeyType", bound=Hashable)
 
 LinkDictValueType = TypeVar("LinkDictValueType")
 """A type variable for an link's dictionary values."""
+
+LinkKindType = TypeVar("LinkKindType", bound=Enum)
+"""A type variable for a link's kind, e.g. :class:`LinkKind`."""
 
 ComponentDictKeyType = TypeVar("ComponentDictKeyType", bound=Hashable)
 """A type variable for a component's dictionary keys."""
@@ -162,12 +169,35 @@ GraphDictValueType = TypeVar("GraphDictValueType")
 
 
 @export
-class GraphException(ToolingException):
+class EdgeKind(Enum):
+	"""
+	Kind of an edge.
+
+	.. seealso::
+
+	   :meth:`BaseGraph.AnnotateTransitiveEdges`
+	      |rarr| Mark every edge as direct or transitive.
+	"""
+	Default =    0  #: The edge wasn't classified.
+	Direct =     1  #: No longer path connects the edge's source with its destination.
+	Transitive = 2  #: A longer path connects the edge's source with its destination, so the edge is implied by it.
+
+
+@export
+class LinkKind(Enum):
+	"""
+	Kind of a link between subgraphs.
+	"""
+	Default = 0  #: The link wasn't classified.
+
+
+@export
+class GraphError(ToolingException):
 	"""Base exception of all exceptions raised by :mod:`pyTooling.Graph`."""
 
 
 @export
-class InternalError(GraphException):
+class InternalError(GraphError):
 	"""
 	The exception is raised when a data structure corruption is detected.
 
@@ -176,17 +206,17 @@ class InternalError(GraphException):
 	   This exception should never be raised.
 
 	   If so, please create an issue at GitHub so the data structure corruption can be investigated and fixed. |br|
-	   `⇒ Bug Tracker at GitHub <https://github.com/pyTooling/pyTooling/issues>`__
+	   :gh:`⇒ Bug Tracker at GitHub <pyTooling/pyTooling/issues>`
 	"""
 
 
 @export
-class NotInSameGraph(GraphException):
+class NotInSameGraph(GraphError):
 	"""The exception is raised when creating an edge between two vertices, but these are not in the same graph."""
 
 
 @export
-class NotInDifferentSubgraphs(GraphException):
+class NotInDifferentSubgraphs(GraphError):
 	"""
 	The exception is raised when creating a link between two vertices, but these are in the same subgraph.
 
@@ -195,7 +225,7 @@ class NotInDifferentSubgraphs(GraphException):
 
 
 @export
-class DuplicateVertexError(GraphException):
+class DuplicateVertexError(GraphError):
 	"""The exception is raised when the vertex already exists in the graph."""
 
 	_vertexID: Nullable[VertexIDType]  #: ID of the vertex that already exists in the graph.
@@ -221,7 +251,7 @@ class DuplicateVertexError(GraphException):
 
 
 @export
-class DuplicateEdgeError(GraphException):
+class DuplicateEdgeError(GraphError):
 	"""The exception is raised when the edge already exists in the graph."""
 
 	_edgeID: Nullable[EdgeIDType]  #: ID of the edge that already exists in the graph.
@@ -247,12 +277,12 @@ class DuplicateEdgeError(GraphException):
 
 
 @export
-class DestinationNotReachable(GraphException):
+class DestinationNotReachable(GraphError):
 	"""The exception is raised when a destination vertex is not reachable."""
 
 
 @export
-class NotATreeError(GraphException):
+class NotATreeError(GraphError):
 	"""
 	The exception is raised when a subgraph is not a tree.
 
@@ -261,7 +291,22 @@ class NotATreeError(GraphException):
 
 
 @export
-class CycleError(GraphException):
+class EdgeNotFoundError(GraphError):
+	"""The exception is raised when no edge matching the given source or destination vertex was found."""
+
+
+@export
+class LinkNotFoundError(GraphError):
+	"""The exception is raised when no link matching the given source or destination vertex was found."""
+
+
+@export
+class SameGraphError(GraphError):
+	"""The exception is raised when a vertex is copied into the graph it already belongs to."""
+
+
+@export
+class CycleError(GraphError):
 	"""The exception is raised when a not permitted cycle is found."""
 
 
@@ -293,7 +338,6 @@ class Base(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Base::del Needs documentation.
-
 		"""
 		try:
 			del self._dict
@@ -486,23 +530,24 @@ class BaseWithVertices(
 		DictKeyType, DictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""Base-class for named graph elements owning a set of vertices - a subgraph, a view or a component."""
 
-	_graph:    Graph[
+	_graph:    _Graph[
 								GraphDictKeyType, GraphDictValueType,
+								Any, Any, Any, Any, Any, Any,
 								VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-								LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+								LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 							]   #: Field storing a reference to the graph.
 	_vertices: set[Vertex[
 								GraphDictKeyType, GraphDictValueType,
 								VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-								LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+								EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+								LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 							]]  #: Field storing a set of vertices.
 
 	def __init__(
@@ -537,7 +582,6 @@ class BaseWithVertices(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseWithVertices::del Needs documentation.
-
 		"""
 		try:
 			del self._vertices
@@ -580,22 +624,22 @@ class Vertex(
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
 	A **vertex** can have a unique ID, a value and attached meta information as key-value-pairs. A vertex has references
 	to inbound and outbound edges, thus a graph can be traversed in reverse.
 	"""
-	_graph:     BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]  #: Field storing a reference to the graph.
-	_subgraph:  Subgraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]   #: Field storing a reference to the subgraph.
-	_component: Component                                                                                                                                                                                                                #: Field storing a reference to the component this vertex belongs to.
-	_views:     dict[Hashable, View]                                                                                                                                                                                                     #: Field storing the views this vertex is part of, by view name.
-	_inboundEdges:   list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of inbound edges.
-	_outboundEdges:  list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of outbound edges.
-	_inboundLinks:   list[Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of inbound links.
-	_outboundLinks:  list[Link[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                           #: Field storing a list of outbound links.
+	_graph:         BaseGraph[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]  #: Field storing a reference to the graph.
+	_subgraph:      Subgraph[Any, Any, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]                               #: Field storing a reference to the subgraph.
+	_component:     _Component                                                                                                                                                                                                                                                                                                                          #: Field storing a reference to the component this vertex belongs to.
+	_views:         dict[Hashable, View]                                                                                                                                                                                                                                                                                                                #: Field storing the views this vertex is part of, by view name.
+	_inboundEdges:  list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of inbound edges.
+	_outboundEdges: list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of outbound edges.
+	_inboundLinks:  list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of inbound links.
+	_outboundLinks: list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                                                                                                                                                                                                                             #: Field storing a list of outbound links.
 
 	def __init__(
 		self,
@@ -657,7 +701,6 @@ class Vertex(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseEdge::del Needs documentation.
-
 		"""
 		try:
 			del self._views
@@ -681,14 +724,17 @@ class Vertex(
 			edge._destination._inboundEdges.remove(edge)
 			edge._Unregister()
 			edge._Delete()
+
 		for edge in self._inboundEdges:
 			edge._source._outboundEdges.remove(edge)
 			edge._Unregister()
 			edge._Delete()
+
 		for link in self._outboundLinks:
 			link._destination._inboundLinks.remove(link)
 			link._Unregister()
 			link._Delete()
+
 		for link in self._inboundLinks:
 			link._source._outboundLinks.remove(link)
 			link._Unregister()
@@ -733,7 +779,7 @@ class Vertex(
 	@readonly
 	def InboundEdges(self) -> tuple[Edge, ...]:
 		"""
-		Read-only property to get a tuple of inbound edges (:attr:`_inboundEdges`).
+		Read-only property to return the inbound edges (:attr:`_inboundEdges`) as a tuple.
 
 		:returns: Tuple of inbound edges.
 		"""
@@ -742,7 +788,7 @@ class Vertex(
 	@readonly
 	def OutboundEdges(self) -> tuple[Edge, ...]:
 		"""
-		Read-only property to get a tuple of outbound edges (:attr:`_outboundEdges`).
+		Read-only property to return the outbound edges (:attr:`_outboundEdges`) as a tuple.
 
 		:returns: Tuple of outbound edges.
 		"""
@@ -751,7 +797,7 @@ class Vertex(
 	@readonly
 	def InboundLinks(self) -> tuple[Link, ...]:
 		"""
-		Read-only property to get a tuple of inbound links (:attr:`_inboundLinks`).
+		Read-only property to return the inbound links (:attr:`_inboundLinks`) as a tuple.
 
 		:returns: Tuple of inbound links.
 		"""
@@ -760,7 +806,7 @@ class Vertex(
 	@readonly
 	def OutboundLinks(self) -> tuple[Link, ...]:
 		"""
-		Read-only property to get a tuple of outbound links (:attr:`_outboundLinks`).
+		Read-only property to return the outbound links (:attr:`_outboundLinks`) as a tuple.
 
 		:returns: Tuple of outbound links.
 		"""
@@ -769,7 +815,7 @@ class Vertex(
 	@readonly
 	def EdgeCount(self) -> int:
 		"""
-		Read-only property to get the number of all edges (inbound and outbound).
+		Read-only property to return the number of all edges (:attr:`_inboundEdges` and :attr:`_outboundEdges`).
 
 		:returns: Number of inbound and outbound edges.
 		"""
@@ -778,7 +824,7 @@ class Vertex(
 	@readonly
 	def InboundEdgeCount(self) -> int:
 		"""
-		Read-only property to get the number of inbound edges.
+		Read-only property to return the number of inbound edges (:attr:`_inboundEdges`).
 
 		:returns: Number of inbound edges.
 		"""
@@ -787,7 +833,7 @@ class Vertex(
 	@readonly
 	def OutboundEdgeCount(self) -> int:
 		"""
-		Read-only property to get the number of outbound edges.
+		Read-only property to return the number of outbound edges (:attr:`_outboundEdges`).
 
 		:returns: Number of outbound edges.
 		"""
@@ -796,7 +842,7 @@ class Vertex(
 	@readonly
 	def LinkCount(self) -> int:
 		"""
-		Read-only property to get the number of all links (inbound and outbound).
+		Read-only property to return the number of all links (:attr:`_inboundLinks` and :attr:`_outboundLinks`).
 
 		:returns: Number of inbound and outbound links.
 		"""
@@ -805,7 +851,7 @@ class Vertex(
 	@readonly
 	def InboundLinkCount(self) -> int:
 		"""
-		Read-only property to get the number of inbound links.
+		Read-only property to return the number of inbound links (:attr:`_inboundLinks`).
 
 		:returns: Number of inbound links.
 		"""
@@ -814,7 +860,7 @@ class Vertex(
 	@readonly
 	def OutboundLinkCount(self) -> int:
 		"""
-		Read-only property to get the number of outbound links.
+		Read-only property to return the number of outbound links (:attr:`_outboundLinks`).
 
 		:returns: Number of outbound links.
 		"""
@@ -863,7 +909,7 @@ class Vertex(
 	@readonly
 	def Predecessors(self) -> tuple[Vertex, ...]:
 		"""
-		Read-only property to get a tuple of predecessor vertices.
+		Read-only property to return the predecessor vertices, the sources of :attr:`_inboundEdges`.
 
 		:returns: Tuple of predecessor vertices.
 		"""
@@ -872,7 +918,7 @@ class Vertex(
 	@readonly
 	def Successors(self) -> tuple[Vertex, ...]:
 		"""
-		Read-only property to get a tuple of successor vertices.
+		Read-only property to return the successor vertices, the destinations of :attr:`_outboundEdges`.
 
 		:returns: Tuple of successor vertices.
 		"""
@@ -884,6 +930,7 @@ class Vertex(
 		edgeID: Nullable[EdgeIDType] = None,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
@@ -893,6 +940,7 @@ class Vertex(
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
@@ -912,10 +960,9 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, keyValuePairs)
+			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, edgeKind, keyValuePairs)
 
 			self._outboundEdges.append(edge)
 			vertex._inboundEdges.append(edge)
@@ -939,8 +986,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this subgraph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -951,6 +998,7 @@ class Vertex(
 		edgeID: Nullable[EdgeIDType] = None,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
@@ -960,6 +1008,7 @@ class Vertex(
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
@@ -979,10 +1028,9 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, keyValuePairs)
+			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, edgeKind, keyValuePairs)
 
 			vertex._outboundEdges.append(edge)
 			self._inboundEdges.append(edge)
@@ -1006,8 +1054,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1021,6 +1069,7 @@ class Vertex(
 		edgeID: Nullable[EdgeIDType] = None,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
@@ -1033,6 +1082,7 @@ class Vertex(
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
@@ -1052,12 +1102,11 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, edgeKeyValuePairs)
+			edge = Edge(self, vertex, edgeID, edgeValue, edgeWeight, edgeKind, edgeKeyValuePairs)
 
 			self._outboundEdges.append(edge)
 			vertex._inboundEdges.append(edge)
@@ -1081,8 +1130,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1096,6 +1145,7 @@ class Vertex(
 		edgeID: Nullable[EdgeIDType] = None,
 		edgeWeight: Nullable[EdgeWeightType] = None,
 		edgeValue: Nullable[VertexValueType] = None,
+		edgeKind: Enum = EdgeKind.Default,
 		edgeKeyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Edge:
 		"""
@@ -1108,6 +1158,7 @@ class Vertex(
 		:param edgeID:              Optional, the edge's optional ID for the new edge object.
 		:param edgeWeight:          Optional, the edge's optional weight for the new edge object.
 		:param edgeValue:           Optional, the edge's optional value for the new edge object.
+		:param edgeKind:            Optional, the kind of the new edge object. Default: :attr:`EdgeKind.Default`.
 		:param edgeKeyValuePairs:   Optional, mapping (dictionary) of key-value-pairs for the new edge object.
 		:returns:                   The edge object linking this vertex and the created vertex.
 		:raises DuplicateEdgeError: If the given edge ID already exists in this graph or subgraph.
@@ -1127,12 +1178,11 @@ class Vertex(
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		vertex = Vertex(vertexID, vertexValue, vertexWeight, vertexKeyValuePairs, graph=self._graph)  # , component=self._component)
 
 		if self._subgraph is vertex._subgraph:
-			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, edgeKeyValuePairs)
+			edge = Edge(vertex, self, edgeID, edgeValue, edgeWeight, edgeKind, edgeKeyValuePairs)
 
 			vertex._outboundEdges.append(edge)
 			self._inboundEdges.append(edge)
@@ -1156,8 +1206,8 @@ class Vertex(
 					raise DuplicateEdgeError(f"Edge ID '{edgeID}' already exists in this graph.", edgeID=edgeID)
 		else:
 			ex = NotInSameGraph(f"Vertex {self!r} and vertex {vertex!r} are not in the same graph or subgraph.")
-			ex.add_note(f"An edge can only connect vertices within the same graph or subgraph.")
-			ex.add_note(f"Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
+			ex.add_note("An edge can only connect vertices within the same graph or subgraph.")
+			ex.add_note("Use LinkToVertex or LinkFromVertex to connect vertices across subgraph boundaries.")
 			raise ex
 
 		return edge
@@ -1168,7 +1218,8 @@ class Vertex(
 		linkID: Nullable[EdgeIDType] = None,
 		linkWeight: Nullable[EdgeWeightType] = None,
 		linkValue: Nullable[VertexValueType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		linkKind: Enum = LinkKind.Default,
+		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> Link:
 		"""
 		Create an outbound link from this vertex to the referenced vertex.
@@ -1177,6 +1228,7 @@ class Vertex(
 		:param linkID:                   Optional, the link's optional ID for the new link object.
 		:param linkWeight:               Optional, the link's optional weight for the new link object.
 		:param linkValue:                Optional, the link's optional value for the new link object.
+		:param linkKind:                 Optional, the kind of the new link object. Default: :attr:`LinkKind.Default`.
 		:param keyValuePairs:            Optional, mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking this vertex and the referenced vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
@@ -1197,15 +1249,14 @@ class Vertex(
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
 		   :meth:`LinkFromVertex`
 		      |rarr| Create an inbound link from the referenced vertex to this vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
-			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
-			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			ex.add_note("A link can only connect vertices across subgraph boundaries.")
+			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
-			link = Link(self, vertex, linkID, linkValue, linkWeight, keyValuePairs)
+			link = Link(self, vertex, linkID, linkValue, linkWeight, linkKind, keyValuePairs)
 
 			self._outboundLinks.append(link)
 			vertex._inboundLinks.append(link)
@@ -1238,8 +1289,9 @@ class Vertex(
 		linkID: Nullable[EdgeIDType] = None,
 		linkWeight: Nullable[EdgeWeightType] = None,
 		linkValue: Nullable[VertexValueType] = None,
+		linkKind: Enum = LinkKind.Default,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
-	) -> Edge:
+	) -> Link:
 		"""
 		Create an inbound link from the referenced vertex to this vertex.
 
@@ -1247,6 +1299,7 @@ class Vertex(
 		:param linkID:                   Optional, the link's optional ID for the new link object.
 		:param linkWeight:               Optional, the link's optional weight for the new link object.
 		:param linkValue:                Optional, the link's optional value for the new link object.
+		:param linkKind:                 Optional, the kind of the new link object. Default: :attr:`LinkKind.Default`.
 		:param keyValuePairs:            Optional, mapping (dictionary) of key-value-pairs for the new link object.
 		:returns:                        The link object linking the referenced vertex and this vertex.
 		:raises DuplicateEdgeError:      If the given link ID already exists in this graph.
@@ -1267,15 +1320,14 @@ class Vertex(
 		      |rarr| Create a new vertex and link that vertex by an inbound edge to this vertex.
 		   :meth:`LinkToVertex`
 		      |rarr| Create an outbound link from this vertex to the referenced vertex.
-
 		"""
 		if self._subgraph is vertex._subgraph:
 			ex = NotInDifferentSubgraphs(f"Vertex {self!r} and vertex {vertex!r} are in the same subgraph.")
-			ex.add_note(f"A link can only connect vertices across subgraph boundaries.")
-			ex.add_note(f"Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
+			ex.add_note("A link can only connect vertices across subgraph boundaries.")
+			ex.add_note("Use EdgeToVertex or EdgeFromVertex to connect vertices within the same subgraph.")
 			raise ex
 		else:
-			link = Link(vertex, self, linkID, linkValue, linkWeight, keyValuePairs)
+			link = Link(vertex, self, linkID, linkValue, linkWeight, linkKind, keyValuePairs)
 
 			vertex._outboundLinks.append(link)
 			self._inboundLinks.append(link)
@@ -1394,14 +1446,14 @@ class Vertex(
 		"""
 		Delete the outbound edge to the given vertex.
 
-		:param destination:     The vertex the edge points to.
-		:raises GraphException: If no outbound edge to that vertex exists.
+		:param destination:        The vertex the edge points to.
+		:raises EdgeNotFoundError: If no outbound edge to that vertex exists.
 		"""
 		for edge in self._outboundEdges:
 			if edge._destination is destination:
 				break
 		else:
-			raise GraphException(f"No outbound edge found to '{destination!r}'.")
+			raise EdgeNotFoundError(f"No outbound edge found to '{destination!r}'.")
 
 		edge.Delete()
 
@@ -1409,14 +1461,14 @@ class Vertex(
 		"""
 		Delete the inbound edge from the given vertex.
 
-		:param source:          The vertex the edge comes from.
-		:raises GraphException: If no inbound edge from that vertex exists.
+		:param source:             The vertex the edge comes from.
+		:raises EdgeNotFoundError: If no inbound edge from that vertex exists.
 		"""
 		for edge in self._inboundEdges:
 			if edge._source is source:
 				break
 		else:
-			raise GraphException(f"No inbound edge found to '{source!r}'.")
+			raise EdgeNotFoundError(f"No inbound edge found to '{source!r}'.")
 
 		edge.Delete()
 
@@ -1424,14 +1476,14 @@ class Vertex(
 		"""
 		Delete the outbound link to the given vertex.
 
-		:param destination:     The vertex the link points to.
-		:raises GraphException: If no outbound link to that vertex exists.
+		:param destination:        The vertex the link points to.
+		:raises LinkNotFoundError: If no outbound link to that vertex exists.
 		"""
 		for link in self._outboundLinks:
 			if link._destination is destination:
 				break
 		else:
-			raise GraphException(f"No outbound link found to '{destination!r}'.")
+			raise LinkNotFoundError(f"No outbound link found to '{destination!r}'.")
 
 		link.Delete()
 
@@ -1439,14 +1491,14 @@ class Vertex(
 		"""
 		Delete the inbound link from the given vertex.
 
-		:param source:          The vertex the link comes from.
-		:raises GraphException: If no inbound link from that vertex exists.
+		:param source:             The vertex the link comes from.
+		:raises LinkNotFoundError: If no inbound link from that vertex exists.
 		"""
 		for link in self._inboundLinks:
 			if link._source is source:
 				break
 		else:
-			raise GraphException(f"No inbound link found to '{source!r}'.")
+			raise LinkNotFoundError(f"No inbound link found to '{source!r}'.")
 
 		link.Delete()
 
@@ -1464,10 +1516,10 @@ class Vertex(
 		:param linkingKeyFromOriginalVertex: Optional, if not ``None``, add a key-value-pair using this parameter as key
 		                                     from original vertex to the new vertex.
 		:returns:                            The newly created vertex.
-		:raises GraphException:              If source graph and destination graph are the same.
+		:raises SameGraphError:              If source graph and destination graph are the same.
 		"""
 		if graph is self._graph:
-			raise GraphException("Graph to copy this vertex to, is the same graph.")
+			raise SameGraphError("Graph to copy this vertex to, is the same graph.")
 
 		vertex = Vertex(self._id, self._value, self._weight, graph=graph)
 		if copyDict:
@@ -1475,6 +1527,7 @@ class Vertex(
 
 		if linkingKeyToOriginalVertex is not None:
 			vertex._dict[linkingKeyToOriginalVertex] = self
+
 		if linkingKeyFromOriginalVertex is not None:
 			self._dict[linkingKeyFromOriginalVertex] = vertex
 
@@ -1675,8 +1728,8 @@ class Vertex(
 				edge = next(iteratorStack[-1])
 				nextVertex = edge._destination
 				if nextVertex in visited:
-					ex = CycleError(f"Loop detected.")
-					ex.add_note(f"First loop is:")
+					ex = CycleError("Loop detected.")
+					ex.add_note("First loop is:")
 					for i, vertex in enumerate(vertexStack):
 						ex.add_note(f"  {i}: {vertex!r}")
 					raise ex
@@ -1754,6 +1807,7 @@ class Vertex(
 				# Child is destination, so construct the last node for path traversal and break from loop.
 				destinationNode = Node(startNode, nextVertex)
 				break
+
 			if nextVertex is not self:
 				# Ignore backward-edges and side-edges.
 				# Here self-edges, because there is only the starting vertex in the list of visited edges.
@@ -1769,6 +1823,7 @@ class Vertex(
 					if nextVertex is destination:
 						destinationNode = Node(node, nextVertex)
 						break
+
 					# Ignore backward-edges and side-edges.
 					if nextVertex not in visited:
 						visited.add(nextVertex)
@@ -1779,7 +1834,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise DestinationNotReachable(f"Destination is not reachable.")
+				raise DestinationNotReachable("Destination is not reachable.")
 
 		# Reverse order of linked list from destinationNode to startNode
 		currentNode = destinationNode
@@ -1871,6 +1926,7 @@ class Vertex(
 			if nextVertex is destination:
 				destinationNode = Node(startNode, edge._weight, nextVertex)
 				break
+
 			# Ignore backward-edges and side-edges.
 			# Here self-edges, because there is only the starting vertex in the list of visited edges.
 			if nextVertex is not self:
@@ -1886,6 +1942,7 @@ class Vertex(
 					if nextVertex is destination:
 						destinationNode = Node(node, node.distance + edge._weight, nextVertex)
 						break
+
 					# Ignore backward-edges and side-edges.
 					if nextVertex not in visited:
 						visited.add(nextVertex)
@@ -1896,7 +1953,7 @@ class Vertex(
 				break
 			else:
 				# All reachable vertices have been processed, but destination was not among them.
-				raise DestinationNotReachable(f"Destination is not reachable.")
+				raise DestinationNotReachable("Destination is not reachable.")
 
 		# Reverse order of linked-list from destinationNode to startNode
 		currentNode = destinationNode
@@ -1936,9 +1993,9 @@ class Vertex(
 
 		The tree is traversed using depths-first-search.
 
-		:returns:               Root node of the resulting tree, representing this vertex.
-		:raises NotATreeError:  If the graph reachable from this vertex is not a tree, because a vertex has more than one
-		                        parent.
+		:returns:              Root node of the resulting tree, representing this vertex.
+		:raises NotATreeError: If the graph reachable from this vertex is not a tree, because a vertex has more than one
+		                       parent.
 		"""
 		visited: set[Vertex] = set()
 		stack: list[tuple[Node, typing_Iterator[Edge]]] = list()
@@ -1959,7 +2016,7 @@ class Vertex(
 					if len(nextVertex._outboundEdges) != 0:
 						stack.append((node, iter(nextVertex._outboundEdges)))
 				else:
-					raise NotATreeError(f"The directed subgraph is not a tree.")
+					raise NotATreeError("The directed subgraph is not a tree.")
 					# TODO: compute cycle:
 					#       a) branch 1 is described in stack
 					#       b) branch 2 can be found by walking from joint to root in the tree
@@ -1980,6 +2037,7 @@ class Vertex(
 		if self._id is not None:
 			vertexID = f"{sep}vertexID='{self._id}'"
 			sep = "; "
+
 		if self._value is not None:
 			value = f"{sep}value='{self._value}'"
 
@@ -2008,14 +2066,15 @@ class Vertex(
 @export
 class BaseEdge(
 	BaseWithIDValueAndWeight[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
-	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
+	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]
 ):
 	"""
-	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
-	directed.
+	An **edge** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
+	edges are directed.
 	"""
-	_source:      Vertex  #: Vertex the edge starts at.
-	_destination: Vertex  #: Vertex the edge ends at.
+	_source:      Vertex        #: Vertex the edge starts at.
+	_destination: Vertex        #: Vertex the edge ends at.
+	_kind:        EdgeKindType  #: Kind of the edge, e.g. an :class:`EdgeKind` or a :class:`LinkKind` member.
 
 	def __init__(
 		self,
@@ -2024,6 +2083,7 @@ class BaseEdge(
 		edgeID: Nullable[EdgeIDType] = None,
 		value: Nullable[EdgeValueType] = None,
 		weight: Nullable[EdgeWeightType] = None,
+		kind: Nullable[EdgeKindType] = None,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
@@ -2034,17 +2094,31 @@ class BaseEdge(
 		:param edgeID:        Optional, unique ID for the new edge.
 		:param value:         Optional, value for the new edge.
 		:param weight:        Optional, weight for the new edge.
+		:param kind:          The kind of the new edge, a member of an enumeration.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
+		:raises ValueError:   If parameter 'kind' is None.
+		:raises TypeError:    If parameter 'kind' is not an enumeration member.
 		"""
 		super().__init__(edgeID, value, weight, keyValuePairs)
 
+		if kind is None:
+			raise ValueError("Parameter 'kind' is None.")
+		elif not isinstance(kind, Enum):
+			ex = TypeError("Parameter 'kind' is not an enumeration member.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
+			raise ex
+
 		self._source = source
 		self._destination = destination
+		self._kind = kind
 
 		component = source._component
 		if component is not destination._component:
 			# TODO: should it be divided into with/without ID?
 			oldComponent = destination._component
+			if len(oldComponent._vertices) > len(component._vertices):
+				component, oldComponent = oldComponent, component
+
 			for vertex in oldComponent._vertices:
 				vertex._component = component
 				component._vertices.add(vertex)
@@ -2054,7 +2128,7 @@ class BaseEdge(
 	@readonly
 	def Source(self) -> Vertex:
 		"""
-		Read-only property to get the source (:attr:`_source`) of an edge.
+		Read-only property to access the source (:attr:`_source`) of an edge.
 
 		:returns: The source of an edge.
 		"""
@@ -2063,11 +2137,23 @@ class BaseEdge(
 	@readonly
 	def Destination(self) -> Vertex:
 		"""
-		Read-only property to get the destination (:attr:`_destination`) of an edge.
+		Read-only property to access the destination (:attr:`_destination`) of an edge.
 
 		:returns: The destination of an edge.
 		"""
 		return self._destination
+
+	@readonly
+	def Kind(self) -> EdgeKindType:
+		"""
+		Read-only property to access the kind (:attr:`_kind`) of an edge.
+
+		The kind is given when the edge is created - :attr:`EdgeKind.Default` or :attr:`LinkKind.Default`, unless stated
+		otherwise.
+
+		:returns: The kind of the edge.
+		"""
+		return self._kind
 
 	def Reverse(self) -> None:
 		"""Reverse the direction of this edge."""
@@ -2078,12 +2164,14 @@ class BaseEdge(
 
 @export
 class Edge(
-	BaseEdge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType],
-	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeDictKeyType, EdgeDictValueType]
+	BaseEdge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType],
+	Generic[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]
 ):
 	"""
-	An **edge** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All edges are
-	directed.
+	An **edge** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
+	edges are directed.
+
+	The kind of an edge might be modified by graph algorithms like :meth:`BaseGraph.AnnotateTransitiveEdges`.
 	"""
 
 	def __init__(
@@ -2093,6 +2181,7 @@ class Edge(
 		edgeID: Nullable[EdgeIDType] = None,
 		value: Nullable[EdgeValueType] = None,
 		weight: Nullable[EdgeWeightType] = None,
+		kind: Enum = EdgeKind.Default,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
@@ -2103,32 +2192,40 @@ class Edge(
 		:param edgeID:          Optional, unique ID for the new edge.
 		:param value:           Optional, value for the new edge.
 		:param weight:          Optional, weight for the new edge.
+		:param kind:            Optional, kind of the new edge - a member of :class:`EdgeKind` or of an enumeration of the
+		                        user's own. Default: :attr:`EdgeKind.Default`.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:      If parameter 'weight' is not of the graph's edge weight type.
+		:raises ValueError:     If parameter 'kind' is None.
+		:raises TypeError:      If parameter 'kind' is not an enumeration member.
 		:raises NotInSameGraph: If source and destination vertex are not in the same graph or subgraph.
 		"""
 		if not isinstance(source, Vertex):
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
 			raise ex
+
 		if not isinstance(destination, Vertex):
 			ex = TypeError("Parameter 'destination' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(destination)}'.")
 			raise ex
+
 		if edgeID is not None and not isinstance(edgeID, Hashable):
 			ex = TypeError("Parameter 'edgeID' is not of type 'EdgeIDType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(edgeID)}'.")
 			raise ex
+
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if weight is not None and not isinstance(weight, (int, float)):
 			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
-		if source._graph is not destination._graph:
-			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, edgeID, value, weight, keyValuePairs)
+		if source._graph is not destination._graph:
+			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
+
+		super().__init__(source, destination, edgeID, value, weight, kind, keyValuePairs)
 
 	def Delete(self) -> None:
 		"""
@@ -2172,21 +2269,22 @@ class Edge(
 
 @export
 class Link(
-	BaseEdge[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType],
-	Generic[LinkIDType, LinkValueType, LinkWeightType, LinkDictKeyType, LinkDictValueType]
+	BaseEdge[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType],
+	Generic[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]
 ):
 	"""
-	A **link** can have a unique ID, a value, a weight and attached meta information as key-value-pairs. All links are
-	directed.
+	A **link** can have a unique ID, a kind, a value, a weight and attached meta information as key-value-pairs. All
+	links are directed.
 	"""
 
 	def __init__(
 		self,
 		source: Vertex,
 		destination: Vertex,
-		linkID: LinkIDType = None,
-		value: LinkValueType = None,
+		linkID: Nullable[LinkIDType] = None,
+		value: Nullable[LinkValueType] = None,
 		weight: Nullable[LinkWeightType] = None,
+		kind: Enum = LinkKind.Default,
 		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None
 	) -> None:
 		"""
@@ -2197,32 +2295,40 @@ class Link(
 		:param linkID:          Optional, unique ID for the new link.
 		:param value:           Optional, value for the new v.
 		:param weight:          Optional, weight for the new link.
+		:param kind:            Optional, kind of the new link - a member of :class:`LinkKind` or of an enumeration of the
+		                        user's own. Default: :attr:`LinkKind.Default`.
 		:param keyValuePairs:   Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:      If parameter 'weight' is not of the graph's link weight type.
+		:raises ValueError:     If parameter 'kind' is None.
+		:raises TypeError:      If parameter 'kind' is not an enumeration member.
 		:raises NotInSameGraph: If source and destination vertex are in the same subgraph, where an edge is to be used.
 		"""
 		if not isinstance(source, Vertex):
 			ex = TypeError("Parameter 'source' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(source)}'.")
 			raise ex
+
 		if not isinstance(destination, Vertex):
 			ex = TypeError("Parameter 'destination' is not of type 'Vertex'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(destination)}'.")
 			raise ex
+
 		if linkID is not None and not isinstance(linkID, Hashable):
 			ex = TypeError("Parameter 'linkID' is not of type 'LinkIDType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(linkID)}'.")
 			raise ex
+
 		# if value is not None and  not isinstance(value, Vertex):
 		# 	raise TypeError("Parameter 'value' is not of type 'EdgeValueType'.")
 		if weight is not None and not isinstance(weight, (int, float)):
 			ex = TypeError("Parameter 'weight' is not of type 'EdgeWeightType'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(weight)}'.")
 			raise ex
-		if source._graph is not destination._graph:
-			raise NotInSameGraph(f"Source vertex and destination vertex are not in same graph.")
 
-		super().__init__(source, destination, linkID, value, weight, keyValuePairs)
+		if source._graph is not destination._graph:
+			raise NotInSameGraph("Source vertex and destination vertex are not in same graph.")
+
+		super().__init__(source, destination, linkID, value, weight, kind, keyValuePairs)
 
 	def Delete(self) -> None:
 		"""
@@ -2274,21 +2380,20 @@ class BaseGraph(
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
 	.. todo:: GRAPH::BaseGraph Needs documentation.
-
 	"""
 
-	_verticesWithID:    dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
-	_verticesWithoutID: list[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Vertices without an ID, in insertion order.
-	_edgesWithID:       dict[EdgeIDType, Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
-	_edgesWithoutID:    list[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
-	_linksWithID:       dict[EdgeIDType, Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
-	_linksWithoutID:    list[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
+	_verticesWithID:    dict[VertexIDType, Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Vertices with an ID, by ID.
+	_verticesWithoutID: list[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Vertices without an ID, in insertion order.
+	_edgesWithID:       dict[EdgeIDType, Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges with an ID, by ID.
+	_edgesWithoutID:    list[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType]]  #: Edges without an ID, in insertion order.
+	_linksWithID:       dict[LinkIDType, Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs with an ID, by ID.
+	_linksWithoutID:    list[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Links between subgraphs without an ID, in insertion order.
 
 	def __init__(
 		self,
@@ -2314,7 +2419,6 @@ class BaseGraph(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::BaseGraph::del Needs documentation.
-
 		"""
 		try:
 			del self._verticesWithoutID
@@ -2349,7 +2453,7 @@ class BaseGraph(
 		:returns: The number of links in this graph."""
 		return len(self._linksWithoutID) + len(self._linksWithID)
 
-	def IterateVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices of a graph.
 
@@ -2371,7 +2475,7 @@ class BaseGraph(
 				if predicate(vertex):
 					yield vertex
 
-	def IterateRoots(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateRoots(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected roots (vertices without inbound edges / without predecessors) of a graph.
 
@@ -2406,7 +2510,7 @@ class BaseGraph(
 				if len(vertex._inboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	def IterateLeafs(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateLeafs(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected leafs (vertices without outbound edges / without successors) of a graph.
 
@@ -2441,15 +2545,17 @@ class BaseGraph(
 				if len(vertex._outboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	# def IterateBFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	# def IterateBFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 	# 	raise NotImplementedError()
 	#
-	# def IterateDFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	# def IterateDFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 	# 	raise NotImplementedError()
 
-	def IterateTopologically(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateTopologically(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected vertices in topological order.
+
+		An edge from ``A`` to ``B`` reads as *A depends on B*, and a vertex is yielded after every vertex it depends on.
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
@@ -2457,7 +2563,6 @@ class BaseGraph(
 		:returns:              A generator to iterate all vertices in topological order.
 		:raises CycleError:    If the graph contains a cycle, so no topological order exists.
 		:raises InternalError: If the algorithm's internal state became inconsistent.
-		:except CycleError: Raised if graph is cyclic, thus topological sorting isn't possible.
 		"""
 		outboundEdgeCounts = {}
 		leafVertices = []
@@ -2475,7 +2580,7 @@ class BaseGraph(
 				outboundEdgeCounts[vertex] = count
 
 		if not leafVertices:
-			raise CycleError(f"Graph has no leafs. Thus, no topological sorting exists.")
+			raise CycleError("Graph has no leafs. Thus, no topological sorting exists.")
 
 		overallCount = len(outboundEdgeCounts) + len(leafVertices)
 
@@ -2509,11 +2614,11 @@ class BaseGraph(
 		if overallCount == 0:
 			return
 		elif overallCount > 0:
-			raise CycleError(f"Graph has remaining vertices. Thus, the graph has at least one cycle.")
+			raise CycleError("Graph has remaining vertices. Thus, the graph has at least one cycle.")
 
-		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
-	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType], None, None]:
+	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType], None, None]:
 		"""
 		Iterate all or selected edges of a graph.
 
@@ -2535,7 +2640,7 @@ class BaseGraph(
 				if predicate(edge):
 					yield edge
 
-	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType], None, None]:
+	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType, LinkDictKeyType, LinkDictValueType], None, None]:
 		"""
 		Iterate all or selected links of a graph.
 
@@ -2770,7 +2875,189 @@ class BaseGraph(
 		elif overallCount > 0:
 			return True
 
-		raise InternalError(f"Graph data structure is corrupted.")  # pragma: no cover
+		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
+
+	def IterateTransitiveEdges(self) -> Generator[Edge, None, None]:
+		"""
+		Iterate the edges a longer path already implies.
+
+		An edge from ``A`` to ``C`` is implied, if ``C`` is also reachable from ``A`` through another vertex, e.g. by the
+		edges ``A → B`` and ``B → C``. A second edge between the same two vertices is implied by the first. Removing every
+		implied edge leaves the graph's *transitive reduction*: every vertex stays reachable from every vertex it was
+		reachable from before, by the fewest edges. See :meth:`RemoveTransitiveEdges`.
+
+		Only the edges of this graph are taken into account, not its links, and for a :class:`Graph` not the vertices of
+		its subgraphs. A :class:`Subgraph` is reduced by calling the method on it.
+
+		An edge is yielded as soon as it is found, and may be removed while iterating. In a graph with a cycle, edges of its
+		acyclic part may be yielded before :exc:`CycleError` is raised.
+
+		:returns:           A generator to iterate the implied edges.
+		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`IterateTransitiveEdgesWithPath`
+		      |rarr| Iterate the edges a longer path already implies, each with that path.
+		   :meth:`RemoveTransitiveEdges`
+		      |rarr| Remove the edges a longer path already implies.
+		   :meth:`IterateTopologically`
+		      |rarr| Iterate all or selected vertices in topological order.
+		"""
+		if self.VertexCount == 0:
+			return
+
+		descendants: dict[Vertex, set[Vertex]] = {}
+
+		# A vertex is yielded after every vertex it has an edge to, so its successors' descendants are known already.
+		for vertex in self.IterateTopologically():
+			successors =    set()
+			indirect =      set()
+			outboundEdges = tuple(vertex._outboundEdges)
+			for edge in outboundEdges:
+				indirect |= descendants[edge._destination]
+
+			for edge in outboundEdges:
+				if edge._destination in indirect or edge._destination in successors:
+					yield edge
+				else:
+					successors.add(edge._destination)
+
+			descendants[vertex] = successors | indirect
+
+	def IterateTransitiveEdgesWithPath(self) -> Generator[tuple[Edge, tuple[Vertex, ...]], None, None]:
+		"""
+		Iterate the edges a longer path already implies, each with that path.
+
+		The edges are those :meth:`IterateTransitiveEdges` yields. An edge's path is a tuple of vertices from its source to
+		its destination along direct edges, e.g. ``(A, B, C)`` for the edge ``A → C``. An edge is yielded as soon as it is
+		found, and may be removed while iterating.
+
+		:returns:           A generator to iterate the implied edges, each with its path.
+		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`IterateTransitiveEdges`
+		      |rarr| Iterate the edges a longer path already implies.
+		"""
+		if self.VertexCount == 0:
+			return
+
+		# For every vertex, the vertices reachable from it are mapped to the direct successor they are reached through.
+		reachable: dict[Vertex, dict[Vertex, Vertex]] = {}
+
+		for vertex in self.IterateTopologically():
+			outboundEdges = tuple(vertex._outboundEdges)
+			indirect =      set()
+			for edge in outboundEdges:
+				indirect.update(reachable[edge._destination])
+
+			successors =      []
+			transitiveEdges = []
+			for edge in outboundEdges:
+				if edge._destination in indirect or edge._destination in successors:
+					transitiveEdges.append(edge)
+				else:
+					successors.append(edge._destination)
+
+			via = {}
+			for successor in successors:
+				via.setdefault(successor, successor)
+				for descendant in reachable[successor]:
+					via.setdefault(descendant, successor)
+			reachable[vertex] = via
+
+			for edge in transitiveEdges:
+				path =    [vertex]
+				current = vertex
+				while current is not edge._destination:
+					current = reachable[current][edge._destination]
+					path.append(current)
+
+				yield edge, tuple(path)
+
+	def RemoveTransitiveEdges(self) -> None:
+		"""
+		Remove the edges a longer path already implies, which leaves the graph's *transitive reduction*.
+
+		Reachability is preserved: every vertex stays reachable from every vertex it was reachable from before. The edges
+		removed are those :meth:`IterateTransitiveEdges` yields. A graph with a cycle is left unchanged.
+
+		:raises CycleError: If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`IterateTransitiveEdges`
+		      |rarr| Iterate the edges a longer path already implies.
+		"""
+		if self.HasCycle():
+			raise CycleError("Graph has a cycle. Thus, no unique transitive reduction exists.")
+
+		for edge in self.IterateTransitiveEdges():
+			edge.Delete()
+
+	def AnnotateTransitiveEdges(
+		self,
+		directKind: Enum = EdgeKind.Direct,
+		transitiveKind: Enum = EdgeKind.Transitive,
+		keyName: Nullable[str] = None
+	) -> None:
+		"""
+		Mark every edge as direct or transitive, and optionally record the path implying a transitive edge.
+
+		The edges marked transitive are those :meth:`IterateTransitiveEdges` yields; every other edge is marked direct.
+		Nothing is removed, so the graph keeps every dependency and a consumer can still tell the implied ones apart. A
+		graph with a cycle is left unchanged.
+
+		If parameter ``keyName`` is given, a transitive edge gets the path implying it as a key-value-pair: a tuple of
+		vertices from the edge's source to its destination along direct edges, e.g. ``(A, B, C)`` for ``A → C``. A direct
+		edge's pair of that key is removed. ``"transitive.path"`` is a suggested key.
+
+		:param directKind:     Optional, the kind a direct edge gets - a member of :class:`EdgeKind` or of an enumeration
+		                       of the user's own. Default: :attr:`EdgeKind.Direct`.
+		:param transitiveKind: Optional, the kind a transitive edge gets. Default: :attr:`EdgeKind.Transitive`.
+		:param keyName:        Optional, the key the path of a transitive edge is stored as. Default: ``None``, no path is
+		                       computed.
+		:raises ValueError:    If parameter 'directKind' or 'transitiveKind' is None.
+		:raises TypeError:     If parameter 'directKind' or 'transitiveKind' is not an enumeration member.
+		:raises TypeError:     If parameter 'keyName' is not a string.
+		:raises CycleError:    If the graph contains a cycle, which has no unique transitive reduction.
+
+		.. seealso::
+
+		   :meth:`RemoveTransitiveEdges`
+		      |rarr| Remove the edges a longer path already implies.
+		"""
+		for name, kind in (("directKind", directKind), ("transitiveKind", transitiveKind)):
+			if kind is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(kind, Enum):
+				ex = TypeError(f"Parameter '{name}' is not an enumeration member.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
+				raise ex
+
+		if self.HasCycle():
+			raise CycleError("Graph has a cycle. Thus, no unique transitive reduction exists.")
+
+		if keyName is None:
+			for edge in (*self._edgesWithoutID, *self._edgesWithID.values()):
+				edge._kind = directKind
+
+			for edge in self.IterateTransitiveEdges():
+				edge._kind = transitiveKind
+		elif not isinstance(keyName, str):
+			ex = TypeError("Parameter 'keyName' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(keyName)}'.")
+			raise ex
+		else:
+			for edge in (*self._edgesWithoutID, *self._edgesWithID.values()):
+				edge._kind = directKind
+				edge._dict.pop(keyName, None)
+
+			for edge, path in self.IterateTransitiveEdgesWithPath():
+				edge._kind =          transitiveKind
+				edge._dict[keyName] = path
 
 
 @export
@@ -2778,22 +3065,21 @@ class Subgraph(
 	BaseGraph[
 		SubgraphDictKeyType, SubgraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		SubgraphDictKeyType, SubgraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
 	.. todo:: GRAPH::Subgraph Needs documentation.
-
 	"""
 
-	_graph:    Graph  #: Reference to the graph this subgraph is part of.
+	_graph:    _Graph  #: Reference to the graph this subgraph is part of.
 
 	def __init__(
 		self,
@@ -2813,7 +3099,7 @@ class Subgraph(
 		"""
 		if graph is None:
 			raise ValueError("Parameter 'graph' is None.")
-		if not isinstance(graph, Graph):
+		elif not isinstance(graph, Graph):
 			ex = TypeError("Parameter 'graph' is not of type 'Graph'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
 			raise ex
@@ -2827,7 +3113,6 @@ class Subgraph(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Subgraph::del Needs documentation.
-
 		"""
 		super().__del__()
 
@@ -2855,20 +3140,19 @@ class View(
 		ViewDictKeyType, ViewDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		ViewDictKeyType, ViewDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
 	.. todo:: GRAPH::View Needs documentation.
-
 	"""
 
 	def __init__(
@@ -2893,7 +3177,6 @@ class View(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::View::del Needs documentation.
-
 		"""
 		super().__del__()
 
@@ -2912,20 +3195,19 @@ class Component(
 		ComponentDictKeyType, ComponentDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		ComponentDictKeyType, ComponentDictValueType,
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
 	.. todo:: GRAPH::Component Needs documentation.
-
 	"""
 
 	def __init__(
@@ -2950,7 +3232,6 @@ class Component(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Component::del Needs documentation.
-
 		"""
 		super().__del__()
 
@@ -2968,8 +3249,8 @@ class Graph(
 	BaseGraph[
 		GraphDictKeyType, GraphDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	],
 	Generic[
 		GraphDictKeyType, GraphDictValueType,
@@ -2977,8 +3258,8 @@ class Graph(
 		SubgraphDictKeyType, SubgraphDictValueType,
 		ViewDictKeyType, ViewDictValueType,
 		VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType,
-		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType,
-		LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType
+		EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType,
+		LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType
 	]
 ):
 	"""
@@ -2986,9 +3267,9 @@ class Graph(
 	all nodes. Nodes are instances of :class:`~pyTooling.Graph.Vertex` classes and directed links between nodes are
 	made of :class:`~pyTooling.Graph.Edge` instances. A graph can have attached meta information as key-value-pairs.
 	"""
-	_subgraphs:         set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]                                           #: Subgraphs of this graph.
-	_views:             set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]                 #: Views defined on this graph.
-	_components:        set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]  #: Connected components of this graph.
+	_subgraphs:         set[Subgraph[SubgraphDictKeyType, SubgraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                                           #: Subgraphs of this graph.
+	_views:             set[View[ViewDictKeyType, ViewDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]                 #: Views defined on this graph.
+	_components:        set[Component[ComponentDictKeyType, ComponentDictValueType, GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]  #: Connected components of this graph.
 
 	def __init__(
 		self,
@@ -3010,7 +3291,6 @@ class Graph(
 	def __del__(self) -> None:
 		"""
 		.. todo:: GRAPH::Graph::del Needs documentation.
-
 		"""
 		try:
 			del self._subgraphs
@@ -3063,7 +3343,7 @@ class Graph(
 		:returns: The number of components in this graph."""
 		return len(self._components)
 
-	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkDictKeyType, LinkDictValueType]]:
+	def __iter__(self) -> typing_Iterator[Vertex[GraphDictKeyType, GraphDictValueType, VertexIDType, VertexWeightType, VertexValueType, VertexDictKeyType, VertexDictValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, EdgeDictKeyType, EdgeDictValueType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType, LinkDictKeyType, LinkDictValueType]]:
 		"""
 		Iterate all vertices of this graph.
 
@@ -3079,7 +3359,7 @@ class Graph(
 			yield from self._verticesWithID
 		return iter(gen())
 
-	def HasVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
+	def ContainsVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
 		"""
 		Check if a vertex with the given ID exists in this graph.
 
@@ -3091,7 +3371,7 @@ class Graph(
 		else:
 			return vertexID in self._verticesWithID
 
-	def HasVertexByValue(self, value: Nullable[VertexValueType]) -> bool:
+	def ContainsVertexByValue(self, value: Nullable[VertexValueType]) -> bool:
 		"""
 		Check if a vertex carrying the given value exists in this graph.
 
@@ -3114,9 +3394,9 @@ class Graph(
 			if (l := len(self._verticesWithoutID)) == 1:
 				return self._verticesWithoutID[0]
 			elif l == 0:
-				raise KeyError(f"Found no vertex with ID `None`.")
+				raise KeyError("Found no vertex with ID `None`.")
 			else:
-				raise KeyError(f"Found multiple vertices with ID `None`.")
+				raise KeyError("Found multiple vertices with ID `None`.")
 		else:
 			return self._verticesWithID[vertexID]
 
@@ -3129,7 +3409,9 @@ class Graph(
 		:raises KeyError: If no vertex carries that value, or if more than one vertex does.
 		"""
 		# FIXME: optimize: iterate only until first item is found and check for a second to produce error
-		vertices = [vertex for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()) if vertex._value == value]
+		vertices = [
+			vertex for vertex in (*self._verticesWithoutID, *self._verticesWithID.values()) if vertex._value == value
+		]
 		if (l := len(vertices)) == 1:
 			return vertices[0]
 		elif l == 0:
@@ -3237,6 +3519,12 @@ class Graph(
 		:returns: The graph's name, or ``"Unnamed graph"`` if it has none.
 		"""
 		if self._name is None:
-			return f"Graph: unnamed graph"
+			return "Graph: unnamed graph"
 		else:
 			return f"Graph: '{self._name}'"
+
+
+# A class with a property named like a class - ``Graph``, ``Component`` - can't name that class in the annotation of a
+# field: the class body's namespace, where annotations are evaluated, binds the name to the property.
+_Graph =     Graph
+_Component = Component

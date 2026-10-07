@@ -32,8 +32,11 @@
 Unit tests for :mod:`pyTooling.Graph.GraphML`: constructing a GraphML document, and converting a
 :mod:`pyTooling.Graph` graph or a :mod:`pyTooling.Tree` tree into one.
 """
+from xml.dom.minidom         import parseString
+
 from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
 from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
+from pyTooling.Graph.GraphML import Base, BaseWithID, BaseWithData
 from pyTooling.Tree          import Node as pyToolingNode
 from pyTooling.Testing       import Testcase
 
@@ -256,6 +259,45 @@ class Construction(Testcase):
 			print(line, end="")
 
 
+class Tags(Testcase):
+	"""Each element is written either as a single tag or with an opening and a closing tag; the other way raises."""
+
+	def test_BaseIsAbstract(self) -> None:
+		for cls in (Base, BaseWithID, BaseWithData):
+			with self.subTest(cls=cls.__name__):
+				self.assertTrue(cls.__isAbstract__)
+				self.assertSetEqual({"Tag", "OpeningTag", "ClosingTag", "ToStringLines"}, set(cls.__abstractMethods__))
+
+	def test_SingleTag(self) -> None:
+		key = Key("k1", AttributeContext.Node, "name", AttributeTypes.String)
+		data = Data(key, "value")
+
+		for element, message in (
+			(key, "A key is always written as a self-closing tag."),
+			(data, "A data item is always written in one line by Tag().")
+		):
+			for method in (element.OpeningTag, element.ClosingTag):
+				with self.subTest(element=element.__class__.__name__, method=method.__name__):
+					with self.assertRaises(NotImplementedError) as context:
+						method()
+
+					self.assertEqual(message, str(context.exception))
+
+	def test_OpeningAndClosingTag(self) -> None:
+		document = GraphMLDocument()
+
+		for element, message in (
+			(document, "A GraphML document is always written with an opening and a closing tag."),
+			(document.Graph, "A graph is always written with an opening and a closing tag."),
+			(Subgraph("sg1", "g1"), "A subgraph is always written with an opening and a closing tag.")
+		):
+			with self.subTest(element=element.__class__.__name__):
+				with self.assertRaises(NotImplementedError) as context:
+					element.Tag()
+
+				self.assertEqual(message, str(context.exception))
+
+
 class pyToolingGraph(Testcase):
 	def test_ConvertGraph(self) -> None:
 		graph = pyTooling_Graph(name="g1")
@@ -269,7 +311,8 @@ class pyToolingGraph(Testcase):
 
 		self.assertEqual("g1", doc._graph.ID)
 		self.assertEqual(2, len(doc._graph._nodes))
-		self.assertEqual(1, len(doc._graph._edges))
+		self.assertEqual(0, len(doc._graph._edges))
+		self.assertEqual(1, len(doc._graph._edgesWithoutID))
 
 		print()
 		for line in doc.ToStringLines():
@@ -301,11 +344,183 @@ class pyToolingGraph(Testcase):
 		self.assertEqual("g1", doc._graph.ID)
 		self.assertEqual(2, len(doc._graph._subgraphs))
 		self.assertEqual(4, len(doc._graph._nodes))
-		self.assertEqual(1, len(doc._graph._edges))
+		self.assertEqual(0, len(doc._graph._edges))
+		self.assertEqual(4, len(doc._graph._edgesWithoutID))
 
 		print()
 		for line in doc.ToStringLines():
 			print(line, end="")
+
+
+	def test_ConvertSubgraph_Links(self) -> None:
+		"""A link between two subgraphs is written once, as an edge of the root graph, with its key-value pairs."""
+		graph = pyTooling_Graph(name="g1")
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
+		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+		vertex1 = Vertex(vertexID="n1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", subgraph=subgraph1)
+		vertex3 = Vertex(vertexID="n3", subgraph=subgraph2)
+		vertex1.LinkToVertex(vertex2)
+		vertex2.LinkToVertex(vertex3, linkValue="v23", keyValuePairs={"kind": "runtime"})
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		rootEdges = [element for element in dom.getElementsByTagName("graph")[0].childNodes if element.nodeName == "edge"]
+		self.assertSetEqual(
+			{("n1", "n2"), ("n2", "n3")},
+			{(edge.getAttribute("source"), edge.getAttribute("target")) for edge in rootEdges}
+		)
+		self.assertEqual(2, len(rootEdges))
+		self.assertEqual(2, len(dom.getElementsByTagName("edge")), "No link is written a second time, in a subgraph.")
+		self.assertEqual(
+			{"edgeValue": "v23", "linkkind": "runtime"},
+			{data.getAttribute("key"): data.firstChild.data for data in dom.getElementsByTagName("data")}
+		)
+
+	def test_ConvertSubgraph_KeyValuePairs(self) -> None:
+		"""A key of the vertices and edges in subgraphs is declared once; a missing value adds no data item."""
+		graph = pyTooling_Graph(name="g1")
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
+		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+		vertex1 = Vertex(vertexID="n1", subgraph=subgraph1, keyValuePairs={"license": "MIT"})
+		vertex2 = Vertex(vertexID="n2", subgraph=subgraph1, keyValuePairs={"license": "BSD-3-Clause"})
+		Vertex(vertexID="n3", subgraph=subgraph2, keyValuePairs={"license": "MIT"})
+		vertex1.EdgeToVertex(vertex2, keyValuePairs={"kind": "runtime"})
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		text = "".join(doc.ToStringLines())
+
+		self.assertNotIn("None", text)
+		self.assertEqual(1, text.count('<key id="nodelicense"'))
+		self.assertEqual(1, text.count('<key id="edgekind"'))
+		self.assertEqual(3, text.count('<data key="nodelicense">'))
+		self.assertNotIn('<data key="nodeValue">', text)
+
+	def test_ConvertGraph_WithoutValues(self) -> None:
+		"""A vertex or edge without a value gets no data item, and an edge without an ID no 'id' attribute."""
+		graph = pyTooling_Graph(name="g1")
+		vertex1 = Vertex(vertexID="n1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		text = "".join(doc.ToStringLines())
+
+		self.assertNotIn("None", text)
+		self.assertIn('<edge source="n1" target="n2" />', text)
+		self.assertListEqual([], doc._graph.GetNode("n1").Data)
+
+	def test_ConvertGraph_EdgesWithoutIDs(self) -> None:
+		"""Every edge without an ID is written, before those with an ID; ``Edges`` and ``EdgesWithoutID`` split them."""
+		graph = pyTooling_Graph(name="g1")
+		vertex1 = Vertex(vertexID="n1", graph=graph)
+		vertex2 = Vertex(vertexID="n2", graph=graph)
+		vertex3 = Vertex(vertexID="n3", graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+		vertex2.EdgeToVertex(vertex3)
+		vertex3.EdgeToVertex(vertex1, edgeID="e31")
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("3", dom.getElementsByTagName("graph")[0].getAttribute("parse.edges"))
+		edges = dom.getElementsByTagName("edge")
+		self.assertListEqual(
+			[("", "n1", "n2"), ("", "n2", "n3"), ("e31", "n3", "n1")],
+			[tuple(edge.getAttribute(attr) for attr in ("id", "source", "target")) for edge in edges]
+		)
+		self.assertNotIn(None, doc._graph._ids)
+		self.assertListEqual(["e31"], list(doc._graph.Edges))
+		self.assertListEqual(
+			[("n1", "n2"), ("n2", "n3")],
+			[(edge.Source.ID, edge.Target.ID) for edge in doc._graph.EdgesWithoutID]
+		)
+
+	def test_ConvertGraph_KeyValuePairs(self) -> None:
+		"""A key is declared once, however many vertices or edges carry it."""
+		graph = pyTooling_Graph(name="g1")
+		vertex1 = Vertex(vertexID="n1", graph=graph, keyValuePairs={"license": "MIT"})
+		vertex2 = Vertex(vertexID="n2", graph=graph, keyValuePairs={"license": "BSD-3-Clause"})
+		vertex3 = Vertex(vertexID="n3", graph=graph)
+		vertex1.EdgeToVertex(vertex2, keyValuePairs={"kind": "runtime"})
+		vertex1.EdgeToVertex(vertex3, keyValuePairs={"kind": "test"})
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		text = "".join(doc.ToStringLines())
+
+		self.assertEqual(1, text.count('<key id="nodelicense"'))
+		self.assertEqual(1, text.count('<key id="edgekind"'))
+		self.assertIn('<data key="nodelicense">BSD-3-Clause</data>', text)
+		self.assertIn('<data key="edgekind">test</data>', text)
+
+	def test_ConvertGraph_Escaping(self) -> None:
+		"""IDs and values with XML's special characters give a well-formed document, which reads back unchanged."""
+		graph = pyTooling_Graph(name="a & b")
+		vertex1 = Vertex(vertexID='say "<hi>"', graph=graph, keyValuePairs={"url": "https://example.org/?a=1&b=2"})
+		vertex2 = Vertex(vertexID="n&2", graph=graph)
+		vertex1.EdgeToVertex(vertex2, edgeID="e<1>")
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("a & b", dom.getElementsByTagName("graph")[0].getAttribute("id"))
+		self.assertListEqual(['say "<hi>"', "n&2"], [node.getAttribute("id") for node in dom.getElementsByTagName("node")])
+		edge = dom.getElementsByTagName("edge")[0]
+		self.assertListEqual(
+			["e<1>", 'say "<hi>"', "n&2"],
+			[edge.getAttribute(name) for name in ("id", "source", "target")]
+		)
+		self.assertEqual("https://example.org/?a=1&b=2", dom.getElementsByTagName("data")[0].firstChild.data)
+
+
+	def test_ConvertGraph_WithoutIDs(self) -> None:
+		"""A vertex without an ID gets a generated one, which no vertex' ID is; a graph without a name keeps 'G'."""
+		graph = pyTooling_Graph()
+		vertex1 = Vertex(graph=graph)
+		vertex2 = Vertex(vertexID="vertex1", graph=graph)
+		vertex3 = Vertex(graph=graph)
+		vertex1.EdgeToVertex(vertex2)
+		vertex3.EdgeToVertex(vertex1)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("G", dom.getElementsByTagName("graph")[0].getAttribute("id"))
+		self.assertSetEqual(
+			{"vertex1", "vertex2", "vertex3"},
+			{node.getAttribute("id") for node in dom.getElementsByTagName("node")}
+		)
+		self.assertSetEqual(
+			{("vertex2", "vertex1"), ("vertex3", "vertex2")},
+			{(edge.getAttribute("source"), edge.getAttribute("target")) for edge in dom.getElementsByTagName("edge")}
+		)
+
+	def test_ConvertSubgraph_WithoutIDs(self) -> None:
+		"""Generated IDs are unique across the subgraphs and numbered by subgraph name; an edge finds its nodes."""
+		graph = pyTooling_Graph(name="g1")
+		subgraph2 = pyTooling_Subgraph(name="sg2", graph=graph)
+		subgraph1 = pyTooling_Subgraph(name="sg1", graph=graph)
+		vertex1 = Vertex(subgraph=subgraph1)
+		vertex2 = Vertex(subgraph=subgraph1)
+		vertex3 = Vertex(subgraph=subgraph2)
+		vertex1.EdgeToVertex(vertex2)
+
+		doc = GraphMLDocument()
+		doc.FromGraph(graph)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		nodeIDs = {node.getAttribute("id") for node in dom.getElementsByTagName("node")}
+		self.assertSetEqual({"vertex1", "vertex2", "vertex3"}, {node for node in nodeIDs if node.startswith("vertex")})
+		edge = dom.getElementsByTagName("edge")[0]
+		self.assertEqual(("vertex1", "vertex2"), (edge.getAttribute("source"), edge.getAttribute("target")))
 
 
 class pyToolingTree(Testcase):
@@ -324,3 +539,33 @@ class pyToolingTree(Testcase):
 		print()
 		for line in doc.ToStringLines():
 			print(line, end="")
+
+	def test_Conversion_WithoutValues(self) -> None:
+		root = pyToolingNode(nodeID="n0")
+		pyToolingNode("n1", parent=root)
+
+		doc = GraphMLDocument()
+		doc.FromTree(root)
+
+		self.assertNotIn("None", "".join(doc.ToStringLines()))
+
+	def test_Conversion_WithoutIDs(self) -> None:
+		"""A tree node without an ID gets a generated one; a root without an ID keeps the graph ID 'G'."""
+		root = pyToolingNode()
+		child1 = pyToolingNode(parent=root)
+		pyToolingNode("vertex2", parent=root)
+		pyToolingNode(parent=child1)
+
+		doc = GraphMLDocument()
+		doc.FromTree(root)
+		dom = parseString("".join(doc.ToStringLines()))
+
+		self.assertEqual("G", dom.getElementsByTagName("graph")[0].getAttribute("id"))
+		self.assertSetEqual(
+			{"vertex1", "vertex2", "vertex3", "vertex4"},
+			{node.getAttribute("id") for node in dom.getElementsByTagName("node")}
+		)
+		self.assertSetEqual(
+			{("vertex3", "vertex1"), ("vertex2", "vertex1"), ("vertex4", "vertex3")},
+			{(edge.getAttribute("source"), edge.getAttribute("target")) for edge in dom.getElementsByTagName("edge")}
+		)

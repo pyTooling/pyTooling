@@ -29,11 +29,11 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for the version validators and :exc:`~pyTooling.Versioning.VersionValidatorException`, which
+Unit tests for the version validators and :exc:`~pyTooling.Versioning.VersionValidatorError`, which
 carries the rejected version.
 """
 from pyTooling.Exceptions import ToolingException
-from pyTooling.Versioning import CalendarVersion, SemanticVersion, VersionValidatorException
+from pyTooling.Versioning import CalendarVersion, SemanticVersion, VersionValidatorError
 from pyTooling.Testing    import Testcase
 
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Validators(Testcase):
-	"""A validator rejecting a parsed version raises VersionValidatorException, not a generic ValueError."""
+	"""A validator rejecting a parsed version raises VersionValidatorError, not a generic ValueError."""
 
 	def test_AnAcceptedSemanticVersionIsReturned(self) -> None:
 		version = SemanticVersion.Parse("1.2.3", validator=lambda v: v.Major == 1)
@@ -52,27 +52,27 @@ class Validators(Testcase):
 		self.assertEqual(1, version.Major)
 
 	def test_ARejectedSemanticVersionRaises(self) -> None:
-		with self.assertRaises(VersionValidatorException) as context:
+		with self.assertRaises(VersionValidatorError) as context:
 			SemanticVersion.Parse("2.0.0", validator=lambda v: v.Major == 1)
 
 		self.assertIn("2.0.0", str(context.exception))
 
 	def test_TheVersionIsKeywordOnly(self) -> None:
 		"""The message is positional, the attached object is not - as AttributeError and NameError do it."""
-		exception = VersionValidatorException("rejected", version=SemanticVersion.Parse("1.2.3"))
+		exception = VersionValidatorError("rejected", version=SemanticVersion.Parse("1.2.3"))
 
 		self.assertEqual("rejected", str(exception))
 		self.assertEqual(3, exception.Version.Patch)
 
 	def test_TheRejectedVersionIsCarried(self) -> None:
 		"""The caller gets the version object, not only the string it came from."""
-		with self.assertRaises(VersionValidatorException) as context:
+		with self.assertRaises(VersionValidatorError) as context:
 			SemanticVersion.Parse("2.0.0", validator=lambda v: False)
 
 		self.assertEqual(2, context.exception.Version.Major)
 
 	def test_ARejectedCalendarVersionRaises(self) -> None:
-		with self.assertRaises(VersionValidatorException) as context:
+		with self.assertRaises(VersionValidatorError) as context:
 			CalendarVersion.Parse("2026.08", validator=lambda v: False)
 
 		self.assertIsInstance(context.exception.Version, CalendarVersion)

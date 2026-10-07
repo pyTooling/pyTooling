@@ -28,9 +28,9 @@ PIP might download further packages as listed in :ref:`package dependencies <DEP
 Installing a Wheel Package from PyPI using PIP
 ==============================================
 
-Users can install the |PackageName| package as a minimal installation or the package with extensions (``packaging``,
-``terminal``, ``yaml``) installing further dependencies. In case the provided extensions are not needed, it keeps the
-list of dependencies low - especially the minimal installation is still dependency free.
+Users can install the |PackageName| package as a minimal installation or the package with extensions (``diagram``,
+``packaging``, ``pypi``, ``terminal``, ``yaml``) installing further dependencies. In case the provided extensions are
+not needed, it keeps the list of dependencies low - especially the minimal installation is still dependency free.
 
 See :ref:`DEP/package` for more details.
 

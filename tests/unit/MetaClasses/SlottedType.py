@@ -37,7 +37,7 @@ from typing                import ClassVar, Optional as Nullable
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning
+from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning, mixin
 from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
@@ -617,7 +617,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):  #BaseClassIsNotAMixinError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Final(Primary, Secondary):
 				_data_2: int
 
@@ -655,7 +655,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Final(Primary, Secondary):
 				_data_2: int
 
@@ -912,7 +912,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):  #BaseClassIsNotAMixinError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Merged(Primary, Secondary):
 				_data_2: int
 
@@ -956,7 +956,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Merged(Primary, Secondary):
 				_data_2: int
 
@@ -1126,11 +1126,74 @@ class NonEmptySlotsOnSecondaryBaseClass(Testcase):
 		self.assertEqual(3, inst._data_2)
 
 
+class SecondaryBaseClassIsNotAMixin(Testcase):
+	"""A slotted class contributes its fields as a mixin-class only, if it isn't the primary base-class."""
+
+	def test_SlottedClass(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		class Secondary(metaclass=ExtendedType, slots=True):
+			_data_R1: int
+
+		with self.assertRaises(BaseClassIsNotAMixinError) as context:
+			class Final(Primary, Secondary):
+				pass
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Secondary base-class '.*\.Secondary' of class 'Final' is not a mixin-class\.$"
+		)
+		self.assertEqual(
+			"Declare it as 'class Secondary(..., mixin=True)' or apply the '@mixin' decorator.",
+			context.exception.__notes__[1]
+		)
+
+	def test_SlottedClassWithoutFields(self) -> None:
+		"""Empty slots don't make it a mixin-class."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		class Secondary(metaclass=ExtendedType, slots=True):
+			pass
+
+		with self.assertRaises(BaseClassIsNotAMixinError):
+			class Final(Primary, Secondary):
+				pass
+
+	def test_ClassWithoutSlots(self) -> None:
+		"""A class without slots is no mixin-class either, but it can't be mixed into a slotted class at all."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		class Secondary(metaclass=ExtendedType):
+			_data_R1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError):
+			class Final(Primary, Secondary):
+				pass
+
+	def test_MixinDecorator(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		@mixin
+		class Secondary(metaclass=ExtendedType, slots=True):
+			_data_R1: int
+
+		class Final(Primary, Secondary):
+			pass
+
+		self.assertTupleEqual(("_data_R1", ), Final.__slots__)
+
+
 class SlotShadowedByClassMember(Testcase):
 	"""
-	A class member assigned without a type annotation stays a class attribute. If it carries the name of a slot, it
-	shadows the slot's descriptor and the field becomes read-only on instances - which used to surface much later as a
-	bare ``AttributeError: ... is read-only`` on the first assignment.
+	A class member assigned without a type annotation stays a class attribute.
+
+	If it carries the name of a slot, it shadows the slot's descriptor and the field becomes read-only on
+	instances - which used to surface much later as a bare ``AttributeError: ... is read-only`` on the first
+	assignment.
 	"""
 
 	def test_ShadowedInheritedSlot(self) -> None:
@@ -1189,8 +1252,10 @@ class SlotShadowedByClassMember(Testcase):
 
 class UnannotatedFields(Testcase):
 	"""
-	Every field should carry type information. A field assigned in the class body without a type annotation is reported
-	as a warning - it needs a :class:`WarningCollector` to be observed, so importing such a module doesn't fail.
+	Every field should carry type information.
+
+	A field assigned in the class body without a type annotation is reported as a warning - it needs a
+	:class:`WarningCollector` to be observed, so importing such a module doesn't fail.
 	"""
 
 	def _collect(self, construct) -> list:

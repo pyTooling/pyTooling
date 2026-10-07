@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _                                                                                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _                                                                          #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` |                                                                         #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |                                                                         #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, |                                                                         #
+#             _____           _ _               ____                                        _        _   _             #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \  ___   ___ _   _ _ __ ___   ___ _ __ | |_ __ _| |_(_) ___  _ __  #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | | | |/ _ \ / __| | | | '_ ` _ \ / _ \ '_ \| __/ _` | __| |/ _ \| '_ \ #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |_| | (_) | (__| |_| | | | | | |  __/ | | | || (_| | |_| | (_) | | | |#
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \___/ \___|\__,_|_| |_| |_|\___|_| |_|\__\__,_|\__|_|\___/|_| |_|#
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -28,14 +28,9 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests keeping the tutorial's example programs correct."""
-from pathlib              import Path
-from sys                  import path as sys_path
-from importlib            import import_module
-from unittest             import TestLoader, TestResult
-
-from pyTooling.TerminalUI import Severity, TerminalApplication
-from pyTooling.Testing    import Testcase
+"""Unit tests for :mod:`pyTooling.Documentation`, the doc-string helpers."""
+from pyTooling.Documentation import MAXIMUM_SUMMARY_LENGTH, DocumentationError, splitDocString
+from pyTooling.Testing       import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -44,81 +39,88 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-EXAMPLE_DIRECTORY = Path(__file__).parent.parent / "example" / "TerminalApplication"
+class Splitting(Testcase):
+	"""A doc-string is its summary - the first paragraph - followed by its body."""
 
-if str(EXAMPLE_DIRECTORY) not in sys_path:
-	sys_path.insert(0, str(EXAMPLE_DIRECTORY))
+	def test_NoDocStringIsTwoEmptyStrings(self) -> None:
+		self.assertEqual(("", ""), splitDocString(None))
 
+	def test_ASingleParagraphHasNoBody(self) -> None:
+		summary, body = splitDocString("A single sentence.")
 
-class ExampleImports(Testcase):
-	"""Every example in the tutorial is a module that must import."""
+		self.assertEqual("A single sentence.", summary)
+		self.assertEqual("", body)
 
-	def test_EveryStepImports(self) -> None:
-		for step in range(1, 7):
-			with self.subTest(step=step):
-				module = import_module(f"Step{step}")
+	def test_TheBodyIsWhateverFollowsTheFirstBlankLine(self) -> None:
+		summary, body = splitDocString("The summary.\n\nThe first paragraph.\n\nThe second paragraph.")
 
-				self.assertTrue(issubclass(module.Application, TerminalApplication))
+		self.assertEqual("The summary.", summary)
+		self.assertEqual("The first paragraph.\n\nThe second paragraph.", body)
 
-	def test_NoExampleWasRemovedFromDisk(self) -> None:
-		for step in range(1, 7):
-			with self.subTest(step=step):
-				self.assertTrue((EXAMPLE_DIRECTORY / f"Step{step}.py").exists())
+	def test_TheDocStringIsDedented(self) -> None:
+		"""An indented doc-string is what 'cleandoc' sees in a source file, so both parts arrive dedented."""
 
+		def documented() -> None:
+			"""
+			The summary.
 
-class Step1(Testcase):
-	"""The first example writes a normal message and a warning, but no verbose message."""
+			The body,
+			over two lines.
+			"""
 
-	def test_TheVerboseMessageIsSuppressedAndTheWarningIsCounted(self) -> None:
-		module = import_module("Step1")
+		summary, body = splitDocString(documented.__doc__)
 
-		class TestApplication(module.Application):    # own class: the base class is a singleton
-			pass
+		self.assertEqual("The summary.", summary)
+		self.assertEqual("The body,\nover two lines.", body)
 
-		program = TestApplication()
-		program.Run()
+	def test_AWrappedSummaryKeepsItsLineBreaks(self) -> None:
+		"""The split doesn't fold - a caller that needs one line joins the words itself."""
+		summary, _ = splitDocString("A summary wrapped\nover two lines.")
 
-		self.assertEqual(1, program.WarningCount)
-		self.assertIn(Severity.Warning, [line.Severity for line in program.Lines])
-		self.assertNotIn(Severity.Verbose, [line.Severity for line in program.Lines])
-
-
-class Step6(Testcase):
-	"""The 'help' command takes a command name, so 'args.Command' must exist."""
-
-	def test_TheHelpCommandAcceptsACommandName(self) -> None:
-		module = import_module("Step6")
-
-		class TestApplication(module.Application):    # own class: the base class is a singleton
-			pass
-
-		program = TestApplication()
-		parsed = program.MainParser.parse_args(["help", "version"])
-
-		self.assertEqual("version", parsed.Command)
-
-	def test_TheHelpCommandsArgumentIsOptional(self) -> None:
-		module = import_module("Step6")
-
-		class TestApplication(module.Application):    # own class: the base class is a singleton
-			pass
-
-		program = TestApplication()
-		parsed = program.MainParser.parse_args(["help"])
-
-		self.assertIsNone(parsed.Command)
+		self.assertEqual("A summary wrapped\nover two lines.", summary)
 
 
-class TutorialTestcase(Testcase):
-	"""The testcase shown in the tutorial's testing section is executed, not just displayed."""
+class SummaryLength(Testcase):
+	"""A summary is a single sentence, so it is length-limited."""
 
-	def test_TheDocumentedTestcasePasses(self) -> None:
-		module = import_module("Testing")
+	def test_TheDefaultIsTwoHundredCharacters(self) -> None:
+		self.assertEqual(200, MAXIMUM_SUMMARY_LENGTH)
 
-		suite = TestLoader().loadTestsFromTestCase(module.ApplicationTests)
-		result = TestResult()
-		suite.run(result)
+	def test_ASummaryOfExactlyTheLimitIsAccepted(self) -> None:
+		summary, _ = splitDocString("x" * MAXIMUM_SUMMARY_LENGTH)
 
-		self.assertEqual(1, result.testsRun)
-		self.assertEqual([], result.failures)
-		self.assertEqual([], result.errors)
+		self.assertEqual(MAXIMUM_SUMMARY_LENGTH, len(summary))
+
+	def test_OneCharacterMoreIsRejected(self) -> None:
+		with self.assertRaises(DocumentationError) as exceptionCapture:
+			splitDocString("x" * (MAXIMUM_SUMMARY_LENGTH + 1))
+
+		self.assertEqual(
+			"The doc-string's summary is longer than 200 characters.",
+			str(exceptionCapture.exception)
+		)
+		self.assertEqual("Got 201 characters.", exceptionCapture.exception.__notes__[0])
+
+	def test_OnlyTheSummaryIsMeasuredNotTheBody(self) -> None:
+		"""A long body is normal - it is the first paragraph that has to stay short."""
+		summary, body = splitDocString("The summary.\n\n" + "x" * 1000)
+
+		self.assertEqual("The summary.", summary)
+		self.assertEqual(1000, len(body))
+
+	def test_ZeroDisablesTheCheck(self) -> None:
+		summary, _ = splitDocString("x" * 1000, maxSummaryLength=0)
+
+		self.assertEqual(1000, len(summary))
+
+	def test_TheLimitIsAParameter(self) -> None:
+		summary, _ = splitDocString("x" * 30, maxSummaryLength=30)
+		self.assertEqual(30, len(summary))
+
+		with self.assertRaises(DocumentationError) as exceptionCapture:
+			splitDocString("x" * 31, maxSummaryLength=30)
+
+		self.assertEqual(
+			"The doc-string's summary is longer than 30 characters.",
+			str(exceptionCapture.exception)
+		)

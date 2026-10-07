@@ -32,7 +32,9 @@
 Unit tests for :class:`pyTooling.MetaClasses.ExtendedType` - one module per feature of the meta-class.
 """
 
-from pyTooling.MetaClasses import ExtendedType
+from typing                import ClassVar, Optional as Nullable
+
+from pyTooling.MetaClasses import ExtendedType, ThisClass
 from pyTooling.Testing     import Testcase
 
 
@@ -575,3 +577,57 @@ class Mixin(Testcase):
 
 		inst = Base()
 		self.assertIsNotNone(inst)
+
+
+class ThisClassSentinel(Testcase):
+	"""A class variable set to :class:`~pyTooling.MetaClasses.ThisClass` is resolved to the declaring class."""
+
+	def test_ResolvedToTheDeclaringClass(self) -> None:
+		class Node(metaclass=ExtendedType, slots=True):
+			_PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass
+
+		self.assertIs(Node, Node._PARENT_TYPE)
+
+	def test_ADerivedClassInheritsTheResolvedValue(self) -> None:
+		class Node(metaclass=ExtendedType, slots=True):
+			_PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass
+
+		class Derived(Node):
+			pass
+
+		self.assertIs(Node, Derived._PARENT_TYPE)
+
+	def test_ADerivedClassCanDeclareItAgain(self) -> None:
+		class Node(metaclass=ExtendedType, slots=True):
+			_PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass
+
+		class Derived(Node):
+			_PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass
+
+		self.assertIs(Derived, Derived._PARENT_TYPE)
+
+	def test_AnotherValueIsUntouched(self) -> None:
+		class Other(metaclass=ExtendedType, slots=True):
+			pass
+
+		class Node(metaclass=ExtendedType, slots=True):
+			_PARENT_TYPE: ClassVar[Nullable[type]] = Other
+			_NONE:        ClassVar[Nullable[type]] = None
+
+		self.assertIs(Other, Node._PARENT_TYPE)
+		self.assertIsNone(Node._NONE)
+
+	def test_TheSentinelIsAClass(self) -> None:
+		"""It is a class, not a bare object, so a variable annotated as a type still type-checks."""
+		self.assertIsInstance(ThisClass, type)
+
+	def test_SlotsAreUnaffected(self) -> None:
+		class Node(metaclass=ExtendedType, slots=True):
+			_PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass
+			_field:       int
+
+			def __init__(self) -> None:
+				self._field = 1
+
+		self.assertTupleEqual(("_field",), Node.__slots__)
+		self.assertEqual(1, Node()._field)

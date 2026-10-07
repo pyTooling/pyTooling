@@ -28,6 +28,73 @@ from:
   repository.
 * :class:`~pyTooling.Dependency.PackageDependencyGraph` collects the packages known from one or more storages.
 
+.. _DEPENDENCIES/Graph:
+
+Conversion to a Graph
+#####################
+
+:meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts a dependency graph into a
+:class:`pyTooling.Graph.Graph`. The algorithms of :mod:`pyTooling.Graph` then apply -
+:meth:`~pyTooling.Graph.BaseGraph.IterateTopologically` yields the versions dependencies first,
+:meth:`~pyTooling.Graph.BaseGraph.HasCycle` finds a circular dependency, and :mod:`pyTooling.Graph.GraphViz` or
+:mod:`pyTooling.Graph.GraphML` write it for a viewer.
+
+Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex`:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 76
+
+   * - Vertex member
+     - Content
+   * - :attr:`~pyTooling.Graph.Vertex.ID`
+     - the :class:`~pyTooling.Dependency.PackageVersion`, so
+       :meth:`Graph.GetVertexByID <pyTooling.Graph.Graph.GetVertexByID>` finds a version's vertex. Written by a
+       graph writer as ``<package> - <version>``.
+   * - :attr:`~pyTooling.Graph.Vertex.Value`
+     - empty (``None``) - the ID already references the version.
+   * - key ``license``
+     - the license as :class:`~pyTooling.Licensing.LicenseExpression`, e.g. ``BSD-3-Clause``; an
+       :class:`~pyTooling.Licensing.UnknownLicense` (``NOASSERTION``) if it's unknown. Always set.
+   * - key ``releasedAt``
+     - the release time as :class:`~datetime.datetime`.
+   * - keys ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
+       ``changelogURL``
+     - the URL of the license text, the source repository, the documentation, the issue tracker, the project's
+       homepage and the changelog, each a :class:`~pyTooling.GenericPath.URL.URL`.
+
+The key-value pairs keep the version's typed objects; a graph writer converts them to text. All but ``license`` are set
+only if the version knows the value - for a Python package, after its details were loaded; converting a graph doesn't
+load them.
+
+Every dependency becomes an :class:`~pyTooling.Graph.Edge` from the version needing to the version it needs, so an
+edge reads *needs*. An edge has no ID, value or key-value pairs.
+
+.. code-block:: Python
+
+   from pyTooling.Graph.GraphViz import Graph as DotGraph
+
+   graph = dependencyGraph.ToGraph()
+   for vertex in graph.IterateTopologically():
+     print(vertex.ID, vertex["license"])
+
+   dot = DotGraph("Example")
+   dot.FromGraph(graph)
+   print(dot)
+
+For a graph in which ``myApp 1.0.0`` depends on ``colorama 0.4.6``, Graphviz' DOT language reads:
+
+.. code-block:: text
+
+   digraph "Example" {
+     "myApp - 1.0.0";
+     "colorama - 0.4.6";
+     "myApp - 1.0.0" -> "colorama - 0.4.6";
+   }
+
+:mod:`pyTooling.Graph.GraphML` writes each key-value pair as text in a ``<data>`` element of the node, declared by a
+key named ``node<key>``, e.g. ``<data key="nodelicense">BSD-3-Clause</data>``.
+
 .. _DEPENDENCIES/Python:
 
 Python Packages
@@ -49,8 +116,9 @@ dependency graph is otherwise thousands of HTTP requests wide.
 
 .. attention::
 
-   Querying PyPI needs `aiohttp <https://GitHub.com/aio-libs/aiohttp>`__, which is an optional dependency. Install
-   it with the ``pypi`` extra:
+   Querying PyPI needs :gh:`aiohttp <aio-libs/aiohttp>`, :gh:`requests <psf/requests>`
+   and :gh:`packaging <pypa/packaging>`, which are optional dependencies. Install them with the
+   ``pypi`` extra:
 
    .. code-block:: shell
 
@@ -64,12 +132,100 @@ dependency graph is otherwise thousands of HTTP requests wide.
 Exceptions and Warnings
 #######################
 
-:exc:`~pyTooling.Dependency.DependencyException` is the base of the module's exceptions:
-:exc:`~pyTooling.Dependency.NoSessionAvailableException` when a query is attempted without an open session,
-:exc:`~pyTooling.Dependency.ProjectNotFoundException` and
-:exc:`~pyTooling.Dependency.ReleaseNotFoundException` when the index does not know what was asked for.
+:exc:`~pyTooling.Dependency.DependencyError` is the base of the module's exceptions:
+:exc:`~pyTooling.Dependency.NoSessionAvailableError` when a query is attempted without an open session,
+:exc:`~pyTooling.Dependency.ProjectNotFoundError` and
+:exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for.
 
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
 graph.
+
+
+.. _DEPENDENCIES/Competitors:
+
+Competing Solutions
+###################
+
+:mod:`pyTooling.Dependency` is a library: a data model of packages, their versions and dependencies, read from PyPI's
+JSON API without installing anything, with the license of every release and hand-written
+:class:`~pyTooling.Dependency.Python.LicenseOverrides` for packages whose metadata states none. The tools below are
+command-line tools first, or parse a requirements file only.
+
+.. _DEPENDENCIES/pipdeptree:
+
+pipdeptree
+==========
+
+Source: :gh:`pipdeptree <tox-dev/pipdeptree>`, on PyPI as `pipdeptree <https://pypi.org/project/pipdeptree/>`__.
+
+.. rubric:: Disadvantages
+
+* A command-line tool: a program receives its tree as text, JSON, Mermaid or Graphviz, not as objects.
+
+.. rubric:: Advantages
+
+* Shows the installed environment, and reports conflicting requirements and cycles.
+* ``from-index`` resolves a package or a requirements file against an index without installing it, and
+  ``from-lock`` reads a resolved :pep:`751` lock file.
+* ``--summary`` reports package counts, depth, conflicts, cycles, licenses and size.
+
+.. _DEPENDENCIES/pipgrip:
+
+pipgrip
+=======
+
+Source: :gh:`pipgrip <ddelange/pipgrip>`, on PyPI as `pipgrip <https://pypi.org/project/pipgrip/>`__.
+
+.. rubric:: Disadvantages
+
+* A command-line tool: its result is a list of pins or a tree, as text or JSON.
+
+.. rubric:: Standoff
+
+* Both select the latest versions satisfying every constraint: pipgrip with the PubGrub algorithm, which poetry
+  uses too, :meth:`PackageVersion.SolveLatest <pyTooling.Dependency.PackageVersion.SolveLatest>` by backtracking over
+  the versions in the graph.
+
+.. rubric:: Advantages
+
+* Installs the resolved tree, and combines the trees of several packages into one set of pins.
+
+.. _DEPENDENCIES/johnnydep:
+
+johnnydep
+=========
+
+Source: :gh:`johnnydep <wimglenn/johnnydep>`, on PyPI as `johnnydep <https://pypi.org/project/johnnydep/>`__.
+
+.. rubric:: Disadvantages
+
+* A command-line tool printing a tree of names and summaries.
+
+.. rubric:: Standoff
+
+* Both read a package's dependencies from the index, not from the installed environment.
+
+.. rubric:: Advantages
+
+* Resolves a package's tree into pinned versions (``--output-format pinned``).
+
+.. _DEPENDENCIES/requirements-parser:
+
+requirements-parser
+===================
+
+Source: :gh:`requirements-parser <madpah/requirements-parser>`, on PyPI as
+`requirements-parser <https://pypi.org/project/requirements-parser/>`__.
+
+.. rubric:: Disadvantages
+
+* Options traversing the local file system are not handled, so a ``-r`` reference to another file isn't followed.
+  :class:`~pyTooling.Dependency.Python.RequirementsFile` reads the referenced files as a tree, keeps which file a
+  requirement was stated in, and raises a :exc:`~pyTooling.Dependency.CircularRequirementsFileError` for a cycle.
+
+.. rubric:: Advantages
+
+* Parses editables, version control URIs, hashes and URLs, which
+  :class:`~pyTooling.Dependency.Python.RequirementsFile` skips as instructions to the installer.

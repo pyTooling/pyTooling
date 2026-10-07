@@ -8,7 +8,7 @@ Code Coverage Report
 
 ----------
 
-Code coverage report generated with `pytest <https://github.com/pytest-dev/pytest>`__,
-`Coverage.py <https://github.com/nedbat/coveragepy/tree/master>`__ and visualized by
-`sphinx-reports <https://github.com/pyTooling/sphinx-reports>`__.
+Code coverage report generated with :gh:`pytest <pytest-dev/pytest>`,
+:gh:`Coverage.py <nedbat/coveragepy/tree/master>` and visualized by
+:gh:`pyTooling.Sphinx <pyTooling/pyTooling.Sphinx>`.
 

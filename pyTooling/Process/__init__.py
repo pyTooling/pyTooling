@@ -48,7 +48,7 @@ from typing              import ClassVar, Any
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Platform    import PlatformException, CurrentPlatform
+from pyTooling.Platform    import PlatformError, CurrentPlatform
 
 if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 	from ctypes          import WinDLL
@@ -114,6 +114,8 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 		_processHandle: Any
 	elif CurrentPlatform.IsNativeLinux:
 		_processStatusFile: ClassVar[Path] = Path(f"/proc/self/statm")
+	elif CurrentPlatform.IsNativeFreeBSD:
+		pass
 
 	if CurrentPlatform.IsNativeWindows or CurrentPlatform.IsMSYS2Environment:
 		def __init__(self) -> None:
@@ -148,7 +150,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			"""
 			Get the memory usage of this Python process on a Linux system.
 
-			Read the `/proc/self/statm` memory statistic file (space separated) for the current process:
+			Read the ``/proc/self/statm`` memory statistic file (space separated) for the current process:
 
 			[0] size
 					VmSize (total virtual address space)
@@ -168,20 +170,36 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			``SC_PAGESIZE`` is typically 4096 bytes, but can be 16kiB (ARM64) or 64kiB (PowerPC/RHEL9+). :func:`os.sysconf`
 			reads it from the aux vector — no syscall overhead.
 
-			:returns:                  Physical memory usage (VmRSS) in bytes.
-			:raises PlatformException: If the process' memory usage couldn't be read.
+			:returns:              Physical memory usage (VmRSS) in bytes.
+			:raises PlatformError: If the process' memory usage couldn't be read.
 			"""
 
 			try:
 				with self._processStatusFile.open("rb") as f:
 					fields = f.read().split()
 			except FileNotFoundError as ex:
-				raise PlatformException(f"Can't open '{self._processStatusFile}' to extract the process' physical memory usage.") from ex
+				raise PlatformError(f"Can't open '{self._processStatusFile}' to extract the process' physical memory usage.") from ex
 
 			vms = int(fields[0]) * self._pageSize  #: VmSize
 			rss = int(fields[1]) * self._pageSize  #: VmRSS
 
 			return MemoryInfo(rss, vms)
+
+	elif CurrentPlatform.IsNativeFreeBSD:
+		def GetMemoryUsage(self) -> MemoryInfo:
+			"""
+			Get the memory usage of this Python process on a FreeBSD system.
+
+			``resource.getrusage`` provides the resident size portably on FreeBSD.
+			Virtual memory usage is not exposed by the stdlib here, so report ``0``
+			for the virtual component until upstream adds a native implementation.
+
+			:returns: Memory usage of the current process.
+			"""
+			from resource import RUSAGE_SELF, getrusage
+
+			rss = getrusage(RUSAGE_SELF).ru_maxrss * 1024
+			return MemoryInfo(rss, 0)
 
 	elif CurrentPlatform.IsNativeMacOS:
 		class _ProcTaskInfo(Structure):
@@ -213,16 +231,17 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			"""
 			Call libproc.proc_pidinfo(PROC_PIDTASKINFO) – the same route psutil takes.
 
-			struct proc_taskinfo  (<sys/proc_info.h>):
-					pti_virtual_size   uint64  – virtual address space in bytes
-					pti_resident_size  uint64  – resident (physical) memory in bytes
-					… 16 further fields (timing, policy, fault/syscall counters)
+			``struct proc_taskinfo`` (``<sys/proc_info.h>``):
 
-			proc_pidinfo() returns the number of bytes written; ≤ 0 means error
-			(errno is set).  PROC_PIDTASKINFO = 4.
+			* ``pti_virtual_size`` (``uint64``) - virtual address space in bytes
+			* ``pti_resident_size`` (``uint64``) - resident (physical) memory in bytes
+			* 16 further fields (timing, policy, fault/syscall counters)
 
-			:returns:                  Memory usage of the current process.
-			:raises PlatformException: If ``proc_pidinfo`` reported an error.
+			``proc_pidinfo()`` returns the number of bytes written; ``<= 0`` means error (``errno`` is set).
+			``PROC_PIDTASKINFO = 4``.
+
+			:returns:              Memory usage of the current process.
+			:raises PlatformError: If ``proc_pidinfo`` reported an error.
 			"""
 			from ctypes import CDLL, byref, sizeof, get_errno
 			from ctypes.util import find_library
@@ -244,7 +263,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			ret = _libproc.proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, byref(taskInfo), sizeof(taskInfo))
 			if ret <= 0:
 				err = get_errno()
-				raise PlatformException(f"Failed to get current process' information.") from OSError(err, strerror(err), "proc_pidinfo")
+				raise PlatformError("Failed to get current process' information.") from OSError(err, strerror(err), "proc_pidinfo")
 
 			return MemoryInfo(taskInfo.pti_resident_size, taskInfo.pti_virtual_size)
 
@@ -271,15 +290,15 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 		def GetMemoryUsage(self) -> MemoryInfo:
 			"""
-			Call psapi.GetProcessMemoryInfo() with a PROCESS_MEMORY_COUNTERS struct.
+			Call ``psapi.GetProcessMemoryInfo()`` with a ``PROCESS_MEMORY_COUNTERS`` struct.
 
-			WorkingSetSize  – physical pages currently mapped  → RSS
-			PagefileUsage   – private committed bytes          → VMS  (= "Private Bytes"
-												in Task Manager; mirrors psutil's vms on Windows)
+			* ``WorkingSetSize`` - physical pages currently mapped |rarr| RSS
+			* ``PagefileUsage`` - private committed bytes |rarr| VMS (= "Private Bytes" in Task Manager; mirrors psutil's
+			  ``vms`` on Windows)
 
-			GetCurrentProcess() returns a pseudo-handle (-1) requiring no CloseHandle.
-			use_last_error=True routes SetLastError / GetLastError through ctypes so
-			WinError() picks up the correct code without a race.
+			``GetCurrentProcess()`` returns a pseudo-handle (``-1``) requiring no ``CloseHandle``.
+			``use_last_error=True`` routes ``SetLastError``/``GetLastError`` through :mod:`ctypes`, so ``WinError()``
+			picks up the correct code without a race.
 
 			:returns:         Memory usage of the current process.
 			:raises WinError: If ``GetProcessMemoryInfo`` reported an error.
@@ -299,4 +318,4 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			return MemoryInfo(processMemoryCounters.WorkingSetSize, processMemoryCounters.PagefileUsage)
 
 	else:
-		raise PlatformException(f"Unsupported platform: '{CurrentPlatform}'.")
+		raise PlatformError(f"Unsupported platform: '{CurrentPlatform}'.")

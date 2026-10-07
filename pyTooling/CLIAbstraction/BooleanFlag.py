@@ -95,14 +95,14 @@ class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 		ValuedArgument.__init__(self, value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
-		"""Convert this argument instance to a string representation with proper escaping using the matching pattern based
+		"""Convert this argument instance to a string representation using the matching pattern based
 		on the internal name and value.
 
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		pattern = self._pattern if self._value is True else self._falsePattern
 		return pattern.format(self._name)

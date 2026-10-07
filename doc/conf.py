@@ -2,11 +2,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 from sys      import path as sys_path
+from os       import environ
 from os.path  import abspath
 from pathlib  import Path
 from textwrap import dedent
-
-from pyTooling.Packaging import extractVersionInformation
 
 # ==============================================================================
 # Project configuration
@@ -24,6 +23,10 @@ ROOT = Path(__file__).resolve().parent
 sys_path.insert(0, abspath("."))
 sys_path.insert(0, abspath(".."))
 sys_path.insert(0, abspath(f"../{directoryName}"))
+
+# pyTooling is a namespace package, so its '__path__' is fixed the first time it is imported. Importing it before the
+# lines above would fix it to an installed copy and document that copy instead of this checkout.
+from pyTooling.Packaging import extractVersionInformation
 
 
 # ==============================================================================
@@ -90,6 +93,12 @@ html_theme_options = {
 html_css_files = [
 	'css/override.css',
 ]
+
+# GoatCounter counts the page views of the published documentation, which is built on GitHub Actions.
+if environ.get("GITHUB_ACTIONS") == "true":
+	html_js_files = [
+		("https://gc.zgo.at/count.js", {"async": "async", "data-goatcounter": "https://pytooling.goatcounter.com/count"}),
+	]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -174,8 +183,8 @@ extensions = [
 	"sphinx_copybutton",
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
-	"sphinx_reports",
-# User defined extensions
+# pyTooling extensions
+	"pyTooling.Sphinx",
 ]
 
 
@@ -183,9 +192,17 @@ extensions = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-	"python": ("https://docs.python.org/3", None),
-	"setup":  ("https://setuptools.pypa.io/en/latest", None),
+	"python":       ("https://docs.python.org/3", None),
+	"setup":        ("https://setuptools.pypa.io/en/latest", None),
+	"pyToolSphinx": ("https://pyTooling.github.io/pyTooling.Sphinx/", None),
+	"pyToolGitHub": ("https://pyTooling.github.io/pyTooling.GitHub/", None),
 }
+
+# 'TestCase' is defined in 'unittest.case', so a base-class line names it that way, while Python's inventory knows only
+# the public name 'unittest.TestCase'.
+nitpick_ignore = [
+	("py:class", "unittest.case.TestCase"),
+]
 
 
 # ==============================================================================
@@ -254,15 +271,38 @@ todo_link_only = True
 
 
 # ==============================================================================
-# sphinx-reports
+# pyTooling.Sphinx
 # ==============================================================================
-report_unittest_testsuites = {
+# Package meta-information a package index can't answer for: licenses, the URL of a project's own LICENSE file,
+# and repositories. Stated by hand, checked by hand.
+pyTooling_Dependency_PackageOverrides = "Dependency.PackageOverrides.yaml"
+
+# The entrypoints 'dependency-table' renders, by the identifier the documents name them with. A requirements file is
+# read relative to this file; a package is read from the package index. The tables share one view of that index, so
+# a package required by more than one entrypoint - and most of these overlap - is downloaded once per build.
+pyTooling_Dependency_Requirements = {
+	"package":       {"file":     "../requirements.txt"},
+	"packaging":     {"package":  "pyTooling[packaging]"},
+	"terminal":      {"package":  "pyTooling[terminal]"},
+	"yaml":          {"package":  "pyTooling[yaml]"},
+	"unittest":      {"file":     "../tests/unit/requirements.txt"},
+	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
+	"performance":   {"file":     "../tests/performance/requirements.txt"},
+	"documentation": {"file":     "requirements.txt"},
+	"publishing":    {"file":     "../dist/requirements.txt"}
+}
+
+
+# ==============================================================================
+# pyTooling.Sphinx - reports of domain 'report'
+# ==============================================================================
+pyTooling_Unittest_Testsuites = {
 	"src": {
 		"name":        f"{pythonProject}",
 		"xml_report":  "../report/unit/unittest.xml",
 	}
 }
-report_codecov_packages = {
+pyTooling_CodeCoverage_Packages = {
 	"src": {
 		"name":        f"{pythonProject}",
 		"json_report": "../report/coverage/coverage.json",
@@ -270,7 +310,7 @@ report_codecov_packages = {
 		"levels":      "default"
 	}
 }
-report_doccov_packages = {
+pyTooling_DocCoverage_Packages = {
 	"src": {
 		"name":       f"{pythonProject}",
 		"directory":  f"../{directoryName}",
@@ -304,3 +344,11 @@ for directory in [mod for mod in Path(f"../{directoryName}").iterdir() if mod.is
 		"output":   pythonProject,
 		"override": True
 	}
+
+
+def setup(app) -> None:
+	# Installed beside this checkout, pyTooling.Sphinx is a portion of the namespace package pyTooling, and AutoAPI would
+	# document it as a subpackage. Its extension is loaded by now, so the namespace is narrowed to this checkout.
+	import pyTooling
+
+	pyTooling.__path__ = [str((ROOT.parent / directoryName).resolve())]
