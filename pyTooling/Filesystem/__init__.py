@@ -844,7 +844,7 @@ class Directory(Element["Directory"]):
 			format=format
 		)
 		directoryNode.AddChildren(
-			e.ToTree(format) for e in (*self._subdirectories.values(), )  #, *self._files.values(), *self._symbolicLinks.values())
+			e.ToTree(format) for e in self._subdirectories.values()  #(*self._subdirectories.values(), *self._files.values(), *self._symbolicLinks.values())
 		)
 
 		return directoryNode
