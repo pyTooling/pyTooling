@@ -48,7 +48,6 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 from __future__           import annotations
 
 from functools            import wraps
-from itertools            import chain
 from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
@@ -1294,7 +1293,7 @@ class ExtendedType(type):
 			slottedFields.extend(mixinSlots)
 			members["__slotted__"] = True
 			members["__slots__"] = tuple(slottedFields)
-			members["__allSlots__"] = set(chain(slottedFields, inheritedSlottedFields.keys()))
+			members["__allSlots__"] = {*slottedFields, *inheritedSlottedFields.keys()}
 			members["__isMixin__"] = False
 			members["__mixinSlots__"] = tuple()
 		else:
