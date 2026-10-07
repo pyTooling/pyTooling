@@ -183,7 +183,6 @@ extensions = [
 	"sphinx_copybutton",
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
-	"sphinx_reports",
 # pyTooling extensions
 	"pyTooling.Sphinx",
 ]
@@ -295,15 +294,15 @@ pyTooling_Dependency_Requirements = {
 
 
 # ==============================================================================
-# sphinx-reports
+# pyTooling.Sphinx - reports of domain 'report'
 # ==============================================================================
-report_unittest_testsuites = {
+pyTooling_Unittest_Testsuites = {
 	"src": {
 		"name":        f"{pythonProject}",
 		"xml_report":  "../report/unit/unittest.xml",
 	}
 }
-report_codecov_packages = {
+pyTooling_CodeCoverage_Packages = {
 	"src": {
 		"name":        f"{pythonProject}",
 		"json_report": "../report/coverage/coverage.json",
@@ -311,7 +310,7 @@ report_codecov_packages = {
 		"levels":      "default"
 	}
 }
-report_doccov_packages = {
+pyTooling_DocCoverage_Packages = {
 	"src": {
 		"name":       f"{pythonProject}",
 		"directory":  f"../{directoryName}",
