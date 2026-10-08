@@ -497,7 +497,8 @@ def expects(*memberNames: str) -> Callable[[M], M]:
 	method is replaced by one raising an :exc:`UnfulfilledExpectationError` when called - naming the missing members,
 	instead of an :exc:`AttributeError` from somewhere in the method's body. A replacement inherited from a
 	base-class is removed again as soon as a class provides the missing members, so the mixin-class may join any
-	number of levels further down.
+	number of levels further down. An overriding method expects what its own marker names; without the marker it
+	expects nothing.
 
 	.. admonition:: ``example.py``
 
@@ -1741,6 +1742,9 @@ class ExtendedType(type):
 		original function stays in the class, so a fulfilled expectation costs nothing per call. A replacement
 		inherited from a base-class is removed again as soon as a class provides the missing members.
 
+		Only the method the class resolves counts: an override without the marker expects nothing, even if the method it
+		overrides does.
+
 		:param newClass: The newly constructed class for further modifications.
 		:returns:        Tuple of method names that were replaced.
 		"""
@@ -1754,8 +1758,12 @@ class ExtendedType(type):
 
 		wrapped: list[str] = []
 		for memberName, original in marked.items():
-			missing = tuple(name for name in original.__expectedMembers__ if not hasattr(newClass, name))
 			inherited = getattr(newClass, memberName)
+			if not hasattr(getattr(inherited, "__wrapped__", inherited), "__expectedMembers__"):
+				# an override without the marker expects nothing
+				continue
+
+			missing = tuple(name for name in original.__expectedMembers__ if not hasattr(newClass, name))
 			isReplaced = hasattr(inherited, "__raises_unfulfilled_expectation_error__")
 
 			if len(missing) == 0:
