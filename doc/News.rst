@@ -86,6 +86,20 @@ Version 10.x (2026)
        ``Caller / Build (ubuntu-26.04)``. The mixin ``expects`` the field it walks, so mixing it into a class without
        ``_parent`` is reported instead of failing with an :exc:`AttributeError` later.
 
+   * :mod:`pyTooling.ControlFlow` is a new package describing the control flow graph of a function: a
+     :class:`~pyTooling.ControlFlow.ControlFlowGraph` of :class:`~pyTooling.ControlFlow.BasicBlock`\ s and
+     :class:`~pyTooling.ControlFlow.Edge`\ s. Its exceptions derive from :exc:`~pyTooling.ControlFlow.ControlFlowError`.
+
+     * A graph has an entry and an exit block, and optionally an unwind block, through which an exception leaves the
+       function. A block is looked up by its ID: :pycode:`graph[3]`, :pycode:`3 in graph`.
+     * An edge's :class:`~pyTooling.ControlFlow.EdgeKind` says why control continues with its destination: a
+       fall-through, a jump, an exception - to a handler or to the unwind block - or an abnormal exit like
+       ``exit()``. A ``switch`` is a block with an edge per target.
+     * Blocks and edges carry an optional execution count, e.g. from a code coverage report, and an optional value.
+     * :meth:`~pyTooling.ControlFlow.ControlFlowGraph.ToGraph` converts it into a :class:`~pyTooling.Graph.Graph`,
+       with ``kind`` and ``count`` as key-value pairs on vertices and edges, which :mod:`pyTooling.Graph.GraphML`
+       writes as data elements.
+
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
 

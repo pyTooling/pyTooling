@@ -587,6 +587,9 @@ Data Structures
       * :ref:`Finite State Machine data structure <STRUCT/StateMachine>` |br|
         |rarr| A data model for state machines using a :class:`~pyTooling.StateMachine.State` and a
         :class:`~pyTooling.StateMachine.Transition` class.
+      * :ref:`Control flow graph <STRUCT/ControlFlow>` |br|
+        |rarr| The basic blocks of a function and the edges between them, using a
+        :class:`~pyTooling.ControlFlow.BasicBlock` and an :class:`~pyTooling.ControlFlow.Edge` class.
 
       .. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
          |rarr| A fast and simple implementation using a single :class:`~pyTooling.Tree.Node` class.
@@ -1133,6 +1136,7 @@ License
    DataStructures/index
    DataStructures/LinkedList
    DataStructures/Cartesian
+   DataStructures/ControlFlow
    DataStructures/Graph
    DataStructures/Path/index
    DataStructures/StateMachine

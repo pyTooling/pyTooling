@@ -171,6 +171,8 @@ offering object-oriented APIs:
   &rarr; To be documented.
 * [Finite State Machine data structure](https://pytooling.github.io/pyTooling/DataStructures/StateMachine.html)  
   &rarr; A data model for state machines using a `State` and a `Transition` class.
+* [Control flow graph](https://pytooling.github.io/pyTooling/DataStructures/ControlFlow.html)  
+  &rarr; The basic blocks of a function and the edges between them, using a `BasicBlock` and an `Edge` class.
 * [Tree data structure](https://pytooling.github.io/pyTooling/DataStructures/Tree.html)  
   &rarr; A fast and simple implementation using a single `Node` class.
 
