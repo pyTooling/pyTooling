@@ -50,6 +50,8 @@ analysis. :meth:`ControlFlowGraph.ToGraph` converts a control flow graph into a 
 
 .. seealso::
 
+   :mod:`pyTooling.CallGraph`
+      |rarr| The call graph of a program, whose calls are made from the blocks of control flow graphs.
    :mod:`pyTooling.Graph`
       |rarr| The graph data structure a control flow graph is converted into.
    :mod:`pyTooling.Graph.GraphML`
@@ -201,10 +203,10 @@ class Base(metaclass=ExtendedType, slots=True):
 @export
 class BaseWithCountAndValue(Base):
 	"""
-	Base-class of basic blocks and edges, which both carry an execution count and a value.
+	Base-class of elements carrying an execution count and a value, e.g. basic blocks and edges.
 	"""
-	_count: Nullable[int]  #: How often the block or edge was executed, or ``None`` if that's unknown.
-	_value: Nullable[Any]  #: Any value attached to the block or edge, or ``None``.
+	_count: Nullable[int]  #: How often the element was executed, or ``None`` if that's unknown.
+	_value: Nullable[Any]  #: Any value attached to the element, or ``None``.
 
 	def __init__(
 		self,
@@ -213,10 +215,10 @@ class BaseWithCountAndValue(Base):
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
-		Initializes the execution count, the value and the key-value-pairs of a block or an edge.
+		Initializes the execution count, the value and the key-value-pairs of an element.
 
-		:param count:         Optional, how often the block or edge was executed. Default: ``None``.
-		:param value:         Optional, any value attached to the block or edge. Default: ``None``.
+		:param count:         Optional, how often the element was executed. Default: ``None``.
+		:param value:         Optional, any value attached to the element. Default: ``None``.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:raises TypeError:    If parameter 'count' is not of type :class:`int`.
 		:raises ValueError:   If parameter 'count' is negative.
@@ -229,7 +231,7 @@ class BaseWithCountAndValue(Base):
 	@property
 	def Count(self) -> Nullable[int]:
 		"""
-		Property to access how often the block or edge was executed (:attr:`_count`).
+		Property to access how often the element was executed (:attr:`_count`).
 
 		:returns:           The execution count, or ``None`` if it's unknown.
 		:raises TypeError:  If the assigned count is not of type :class:`int`.
@@ -254,7 +256,7 @@ class BaseWithCountAndValue(Base):
 	@property
 	def Value(self) -> Nullable[Any]:
 		"""
-		Property to access the value attached to the block or edge (:attr:`_value`).
+		Property to access the value attached to the element (:attr:`_value`).
 
 		:returns: The value, or ``None`` if none is attached.
 		"""
