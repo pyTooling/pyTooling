@@ -1746,7 +1746,8 @@ class ExtendedType(type):
 		"""
 		# Collect every marked method reachable on this class, looking underneath a replacement from a base-class
 		marked: dict[str, Callable[..., Any]] = {}
-		for baseClass in reversed(newClass.__mro__):
+		# The last class of every MRO is 'object', whose members are never marked.
+		for baseClass in reversed(newClass.__mro__[:-1]):
 			for memberName, member in vars(baseClass).items():
 				original = getattr(member, "__wrapped__", member)
 				if hasattr(original, "__expectedMembers__"):
