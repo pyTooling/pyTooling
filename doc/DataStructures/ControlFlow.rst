@@ -5,7 +5,12 @@ Control Flow Graph
 
 The :mod:`pyTooling.ControlFlow` package describes the **control flow graph** of a function: its basic blocks and the
 edges control takes between them. A :class:`~pyTooling.ControlFlow.ControlFlowGraph` describes one function - a C or
-C++ function, or a Python code object. A call graph, connecting the graphs of several functions, is not part of it.
+C++ function, or a Python code object. The calls between functions are described by a call graph.
+
+.. seealso::
+
+   :ref:`STRUCT/CallGraph`
+      |rarr| The functions of a program and the calls between them, made from the blocks of their control flow graphs.
 
 .. #contents:: Table of Contents
    :local:
@@ -61,7 +66,8 @@ Features
 Out of Scope
 ============
 
-* Call graphs and interprocedural edges from a call to the callee's entry: a call is part of a block.
+* Call graphs and interprocedural edges from a call to the callee's entry: a call is part of a block, and a
+  :ref:`call graph <STRUCT/CallGraph>` refers to that block as the call's call site.
 * Parsing source code or byte code into a control flow graph.
 
 
