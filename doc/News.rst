@@ -441,6 +441,12 @@ Version 10.x (2026)
      opening and a closing tag, says so in the :exc:`NotImplementedError` of the other methods, as
      :class:`~pyTooling.Graph.GraphML.Subgraph` already did.
 
+   * :class:`~pyTooling.MetaClasses.ExtendedType` compiles a textual annotation once per distinct text. It compiled
+     every string annotation of every class anew - under ``from __future__ import annotations`` that is every
+     annotation - although the same text recurs throughout a model (``Nullable[str]``). The code object is cached and
+     evaluated in the namespaces of each class being created, as before. Resolving a text seen before takes 1.0 µs
+     instead of 11.4 µs (Python 3.14), and creating a class with postponed annotations takes 26 to 59 % less time.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.CLIAbstraction`

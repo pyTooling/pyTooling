@@ -123,3 +123,41 @@ class PostponedAnnotations(Testcase):
 		"""A forward reference nothing can resolve keeps its string form, and is classified by its text."""
 		self.assertEqual("kept", Unresolvable.MARKER)
 		self.assertEqual(("_field", ), Unresolvable.__slots__)
+
+
+class ResolveAnnotation(Testcase):
+	"""Each annotation text is compiled once; evaluating it still uses the namespaces of the class being created."""
+
+	def test_ResolveAnnotation(self) -> None:
+		resolved = ExtendedType._resolveAnnotation("Nullable[Node]", {"__module__": __name__})
+
+		self.assertEqual(Nullable[Node], resolved)
+		self.assertIn("Nullable[Node]", ExtendedType._compiledAnnotations)
+
+	def test_ResolveAnnotation_SameTextOtherNamespace(self) -> None:
+		"""The same text names a different type in another class body."""
+		first =  ExtendedType._resolveAnnotation("Kind", {"__module__": __name__, "Kind": int})
+		second = ExtendedType._resolveAnnotation("Kind", {"__module__": __name__, "Kind": str})
+
+		self.assertIs(int, first)
+		self.assertIs(str, second)
+
+	def test_ResolveAnnotation_Unresolvable(self) -> None:
+		"""A text that can't be resolved stays a string, also when it was compiled before, until a namespace resolves it."""
+		members =  {"__module__": __name__}
+		declared = {"__module__": __name__, "ForwardDeclared": Node}
+
+		self.assertEqual("ForwardDeclared", ExtendedType._resolveAnnotation("ForwardDeclared", members))
+		self.assertEqual("ForwardDeclared", ExtendedType._resolveAnnotation("ForwardDeclared", members))
+		self.assertIs(Node, ExtendedType._resolveAnnotation("ForwardDeclared", declared))
+
+	def test_ResolveAnnotation_LeadingWhitespace(self) -> None:
+		"""Leading spaces and tabs are stripped, as :func:`eval` strips them from a string."""
+		self.assertIs(int, ExtendedType._resolveAnnotation(" \tint", {"__module__": __name__}))
+
+	def test_ResolveAnnotation_SyntaxError(self) -> None:
+		"""A text that isn't an expression stays a string, every time."""
+		members = {"__module__": __name__}
+
+		self.assertEqual("not an expression", ExtendedType._resolveAnnotation("not an expression", members))
+		self.assertEqual("not an expression", ExtendedType._resolveAnnotation("not an expression", members))
