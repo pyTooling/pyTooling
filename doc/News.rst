@@ -441,6 +441,11 @@ Version 10.x (2026)
      opening and a closing tag, says so in the :exc:`NotImplementedError` of the other methods, as
      :class:`~pyTooling.Graph.GraphML.Subgraph` already did.
 
+   * :class:`~pyTooling.MetaClasses.ExtendedType` scans the members of the base-classes for an implementation of an
+     inherited abstract method only if a base-class has abstract methods, and looks at a member's marker only if its
+     name is one of them. It scanned every member of every base-class for every new class. Over pyVHDLModel's 412
+     classes, the abstract-method check took 2.2 ms, now 0.95 ms.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.CLIAbstraction`

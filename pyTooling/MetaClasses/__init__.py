@@ -1457,21 +1457,22 @@ class ExtendedType(type):
 		:returns:           A tuple of abstract method's names.
 		"""
 		abstractMethods = {}
-		if baseClasses:
-			# Aggregate all abstract methods from all base-classes.
-			for baseClass in baseClasses:
-				if hasattr(baseClass, "__abstractMethods__"):
-					abstractMethods.update(baseClass.__abstractMethods__)
+		# Aggregate all abstract methods from all base-classes.
+		for baseClass in baseClasses:
+			if hasattr(baseClass, "__abstractMethods__"):
+				abstractMethods.update(baseClass.__abstractMethods__)
 
+		# Only a member implementing an inherited abstract method needs a wrapper.
+		if len(abstractMethods) > 0:
 			for base in baseClasses:
 				for memberName, member in base.__dict__.items():
 					# A method the new class defines itself is the implementation; it must not be replaced by the one an
 					# inheritance branch happens to carry (pyTooling #297).
-					if memberName in members:
+					if memberName in members or memberName not in abstractMethods:
 						continue
 
 					function = metacls._getMarkedFunction(member)
-					if (memberName in abstractMethods and isinstance(function, FunctionType) and
+					if (isinstance(function, FunctionType) and
 						not (hasattr(function, "__abstract__") or hasattr(function, "__mustOverride__"))):
 						def outer(method):
 							"""

@@ -231,6 +231,46 @@ class AbstractMethod(Testcase):
 		derived = MultipleInheritance(6)
 		derived.AbstractMethod()
 
+	def test_MultipleInheritance_AbstractMixin(self) -> None:
+		"""Only the mixin-class has an abstract method; the primary base-class implements it."""
+		class Implementation(metaclass=ExtendedType, slots=True):
+			def AbstractMethod(self) -> bool:
+				return True
+
+		class AbstractMixin(metaclass=ExtendedType, mixin=True):
+			@abstractmethod
+			def AbstractMethod(self) -> bool:
+				return False
+
+		class MultipleInheritance(Implementation, AbstractMixin):
+			pass
+
+		self.assertEqual({}, MultipleInheritance.__abstractMethods__)
+		self.assertTrue(MultipleInheritance().AbstractMethod())
+
+	def test_NoAbstractMethods(self) -> None:
+		"""Without an inherited abstract method, no inherited method is replaced by a wrapper."""
+		class Base(metaclass=ExtendedType):
+			def Method(self) -> bool:
+				return True
+
+			@classmethod
+			def ClassMethod(cls) -> bool:
+				return True
+
+		class Mixin:
+			def MixinMethod(self) -> bool:
+				return True
+
+		class Derived(Base, Mixin):
+			pass
+
+		self.assertEqual({}, Derived.__abstractMethods__)
+		self.assertNotIn("Method", Derived.__dict__)
+		self.assertNotIn("ClassMethod", Derived.__dict__)
+		self.assertNotIn("MixinMethod", Derived.__dict__)
+		self.assertTrue(Derived().Method())
+
 
 class AbstractClassAndStaticMethod(Testcase):
 	"""The markers sit on the function a :class:`classmethod` or :class:`staticmethod` wraps."""
