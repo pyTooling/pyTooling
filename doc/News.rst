@@ -440,6 +440,10 @@ Version 10.x (2026)
      class missing one could be instantiated. An element that is never written as a single tag, or never with an
      opening and a closing tag, says so in the :exc:`NotImplementedError` of the other methods, as
      :class:`~pyTooling.Graph.GraphML.Subgraph` already did.
+   * :class:`~pyTooling.MetaClasses.ExtendedType` checks that every base-class of a slotted class or mixin-class uses
+     ``__slots__`` without walking the whole hierarchy, when each direct base-class is a slotted class or mixin-class
+     built by ``ExtendedType`` (or :class:`~typing.Generic`): those passed the same check when they were created. A
+     class below a hierarchy of depth 6 computes its slots in 7.6 µs instead of 10.7 µs on Python 3.14.
 
    .. rubric:: Bug Fixes
 

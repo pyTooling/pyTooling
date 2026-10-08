@@ -1192,15 +1192,20 @@ class ExtendedType(type):
 
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
-			for baseClass in metacls._iterateBaseClasses(baseClasses):
-				# Exclude object as a special case
-				if baseClass is object or baseClass is Generic:
-					continue
+			# A slotted class or mixin-class built by ExtendedType passed this check for its own base-classes already.
+			if not all(
+				baseClass is Generic or (isinstance(baseClass, ExtendedType) and baseClass.__slotted__)
+				for baseClass in baseClasses
+			):
+				for baseClass in metacls._iterateBaseClasses(baseClasses):
+					# Exclude object as a special case
+					if baseClass is object or baseClass is Generic:
+						continue
 
-				if not hasattr(baseClass, "__slots__"):
-					ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
-					ex.add_note("All base-classes of a class using '__slots__' must use '__slots__' itself.")
-					raise ex
+					if not hasattr(baseClass, "__slots__"):
+						ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
+						ex.add_note("All base-classes of a class using '__slots__' must use '__slots__' itself.")
+						raise ex
 
 			# Non-empty __slots__ on secondary base-classes are rejected by _aggregateMixinSlots below.
 
@@ -1341,7 +1346,7 @@ class ExtendedType(type):
 			primaryInharitancePath: set[type] = set(inheritancePaths[0])
 			for typePath in inheritancePaths[1:]:
 				for t in typePath:
-					if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
+					if t not in primaryInharitancePath and hasattr(t, "__slots__") and len(t.__slots__) != 0:
 						ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
 						ex.add_note("In Python, only one inheritance branch can use non-empty __slots__.")
 						raise ex
