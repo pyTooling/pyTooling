@@ -542,6 +542,12 @@ Version 10.x (2026)
        :deco:`~pyTooling.Decorators.readonly` was ignored silently. And a property overriding an abstract method didn't
        count as its implementation, so the derived class stayed abstract. :class:`~pyTooling.Licensing.BaseLicense`
        is abstract now, as its abstract properties ``Identifier`` and ``Name`` say.
+     * A class that fulfilled an expectation its base-class missed - a mixin-class' ``expects`` naming a member only
+       the derived class defines - couldn't be instantiated with parameters, and neither could a class derived from
+       it: ``TypeError: object.__new__() takes exactly one argument``. :class:`~pyTooling.MetaClasses.ExtendedType`
+       put :meth:`object.__new__` back into the class, which rejects every parameter there
+       (:gh:`python/cpython#105888 <python/cpython/issues/105888>`). It puts back the replacement a class that isn't
+       abstract anymore already got, which calls :meth:`object.__new__` with the class only.
 
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.

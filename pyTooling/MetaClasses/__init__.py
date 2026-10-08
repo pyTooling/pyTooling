@@ -1705,7 +1705,7 @@ class ExtendedType(type):
 			# skip an intermediate 'new' function if the class fulfills its expectations again
 			oldnew = newClass.__new__
 			if hasattr(oldnew, "__raises_unfulfilled_expectation_error__"):
-				newClass.__new__ = oldnew.__wrapped__
+				metacls._restoreNewMethod(newClass, oldnew.__wrapped__)
 
 			return False
 
@@ -1801,6 +1801,37 @@ class ExtendedType(type):
 
 		return tuple(wrapped)
 
+	@staticmethod
+	def _restoreNewMethod(newClass: type, originalNew: Callable[..., Any]) -> None:
+		"""
+		Restore the ``__new__`` method, which a replacement raising an exception had wrapped.
+
+		:meth:`object.__new__` can't be put back as it is: assigned to a class, it rejects every parameter of the
+		instantiation. A replacement calling it with the class only is assigned instead.
+
+		:param newClass:    The newly constructed class for further modifications.
+		:param originalNew: The ``__new__`` method the replacement had wrapped.
+		"""
+		# WORKAROUND: __new__ checks tp_new and implements different behavior
+		#  Bugreport: https://github.com/python/cpython/issues/105888
+		if originalNew is object.__new__:
+			@wraps(object.__new__)
+			def wrapped_new(inst, *_, **__):
+				"""
+				Replacement ``__new__`` method for a class that can be instantiated again.
+
+				It calls :meth:`object.__new__` with the class only, because that implementation rejects further
+				parameters.
+
+				:param inst: The class being instantiated.
+				:returns:    The new instance.
+				"""
+				return object.__new__(inst)
+
+			newClass.__new__ = wrapped_new
+		else:
+			newClass.__new__ = originalNew
+
 	@classmethod
 	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
 		"""
@@ -1845,27 +1876,7 @@ class ExtendedType(type):
 			# skip intermediate 'new' function if class isn't abstract anymore
 			try:
 				if newClass.__new__.__raises_abstract_class_error__:
-					origNew = newClass.__new__.__wrapped__
-
-					# WORKAROUND: __new__ checks tp_new and implements different behavior
-					#  Bugreport: https://github.com/python/cpython/issues/105888
-					if origNew is object.__new__:
-						@wraps(object.__new__)
-						def wrapped_new(inst, *_, **__):
-							"""
-							Replacement ``__new__`` method for a class that isn't abstract anymore.
-
-							It calls :meth:`object.__new__` with the class only, because that implementation rejects further
-							parameters.
-
-							:param inst: The class being instantiated.
-							:returns:    The new instance.
-							"""
-							return object.__new__(inst)
-
-						newClass.__new__ = wrapped_new
-					else:
-						newClass.__new__ = origNew
+					metacls._restoreNewMethod(newClass, newClass.__new__.__wrapped__)
 				elif newClass.__new__.__isSingleton__:
 					raise ExtendedTypeError(
 						"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet."
