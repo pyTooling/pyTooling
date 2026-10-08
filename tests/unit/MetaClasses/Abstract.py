@@ -85,6 +85,45 @@ class AbstractClasses(Testcase):
 		self.assertFalse(Derived.__isAbstract__)
 		self.assertEqual(1, Derived().Method())
 
+	def test_AbstractClass_DerivedWithParameters(self) -> None:
+		"""The derived class' ``__new__`` accepts the parameters meant for ``__init__``, also one level further down."""
+
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			_value: int
+
+			def __init__(self, value: int) -> None:
+				self._value = value
+
+		class Derived(Base):
+			pass
+
+		class DoubleDerived(Derived):
+			pass
+
+		self.assertFalse(hasattr(Derived.__new__, "__raises_abstract_class_error__"))
+		self.assertIs(Derived.__new__, DoubleDerived.__new__)
+		self.assertEqual(5, Derived(5)._value)
+		self.assertEqual(6, DoubleDerived(value=6)._value)
+
+	def test_AbstractClass_DerivedWithNew(self) -> None:
+		"""The derived class gets the abstract class' own ``__new__`` back."""
+
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			_value: int
+
+			def __new__(cls, value: int):
+				instance = super().__new__(cls)
+				instance._value = value * 2
+				return instance
+
+		class Derived(Base):
+			pass
+
+		self.assertIs(Base.__new__.__wrapped__, Derived.__new__)
+		self.assertEqual(10, Derived(5)._value)
+
 	def test_AbstractClass_AbstractClass(self) -> None:
 		@abstractclass
 		class Base(metaclass=ExtendedType):
