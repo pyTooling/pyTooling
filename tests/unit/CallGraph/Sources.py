@@ -264,9 +264,9 @@ class ControlFlow(Testcase):
 
 		graph =     CallGraph("prog")
 		main =      Function(graph, "main", count=1)
-		summation = Function(graph, "Sum", controlFlow=sumCFG, count=1)
+		summation = Function(graph, "Sum", controlFlowGraph=sumCFG, count=1)
 		leaf =      Function(graph, "Leaf", count=5)
-		fib =       Function(graph, "Fib", controlFlow=fibCFG, count=15)
+		fib =       Function(graph, "Fib", controlFlowGraph=fibCFG, count=15)
 		Call(main, summation, CallKind.Direct, count=1)
 		Call(main, fib, CallKind.Direct, count=1)
 		Call(summation, leaf, CallKind.Direct, callSite=sumBody, count=4)
@@ -278,11 +278,11 @@ class ControlFlow(Testcase):
 		for call in graph.Calls:
 			with self.subTest(caller=call.Caller.ID, callee=call.Callee.ID, value=call.Value):
 				if call.CallSite is None:
-					self.assertIsNone(call.Caller.ControlFlow)
+					self.assertIsNone(call.Caller.ControlFlowGraph)
 				else:
-					self.assertIs(call.Caller.ControlFlow, call.CallSite.Graph)
+					self.assertIs(call.Caller.ControlFlowGraph, call.CallSite.Graph)
 					self.assertEqual(call.CallSite.Count, call.Count)
 
 		for function in (summation, fib):
 			with self.subTest(function=function.ID):
-				self.assertEqual(function.Count, function.ControlFlow.Entry.OutboundEdges[0].Count)
+				self.assertEqual(function.Count, function.ControlFlowGraph.Entry.OutboundEdges[0].Count)

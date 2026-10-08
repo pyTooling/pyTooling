@@ -60,7 +60,7 @@ class Construction(Testcase):
 		self.assertIs(graph, function.Graph)
 		self.assertEqual("main", function.ID)
 		self.assertIs(FunctionKind.Defined, function.Kind)
-		self.assertIsNone(function.ControlFlow)
+		self.assertIsNone(function.ControlFlowGraph)
 		self.assertIsNone(function.Count)
 		self.assertIsNone(function.Value)
 		self.assertTupleEqual((), function.InboundCalls)
@@ -92,14 +92,14 @@ class Construction(Testcase):
 		self.assertListEqual(functions, list(graph))
 		self.assertListEqual(list(FunctionKind), [function.Kind for function in graph])
 
-	def test_Function_ControlFlow(self) -> None:
+	def test_Function_ControlFlowGraph(self) -> None:
 		cfg =      ControlFlowGraph("Sum")
 		graph =    CallGraph("prog")
-		function = Function(graph, "Sum", controlFlow=cfg)
-		external = Function(graph, "printf", kind=FunctionKind.External, controlFlow=ControlFlowGraph("printf"))
+		function = Function(graph, "Sum", controlFlowGraph=cfg)
+		external = Function(graph, "printf", kind=FunctionKind.External, controlFlowGraph=ControlFlowGraph("printf"))
 
-		self.assertIs(cfg, function.ControlFlow)
-		self.assertEqual("printf", external.ControlFlow.Name)
+		self.assertIs(cfg, function.ControlFlowGraph)
+		self.assertEqual("printf", external.ControlFlowGraph.Name)
 
 	def test_Call(self) -> None:
 		graph =     CallGraph("prog")
@@ -150,12 +150,12 @@ class Construction(Testcase):
 		cfg =       ControlFlowGraph("main")
 		block =     BasicBlock(cfg, 2)
 		graph =     CallGraph("prog")
-		main =      Function(graph, "main", controlFlow=cfg)
+		main =      Function(graph, "main", controlFlowGraph=cfg)
 		summation = Function(graph, "Sum")
 		call =      Call(main, summation, CallKind.Direct, callSite=block)
 
 		self.assertIs(block, call.CallSite)
-		self.assertIs(main.ControlFlow, call.CallSite.Graph)
+		self.assertIs(main.ControlFlowGraph, call.CallSite.Graph)
 
 	def test_Kind_Str(self) -> None:
 		self.assertEqual("External", str(FunctionKind.External))
@@ -228,19 +228,19 @@ class Checks(Testcase):
 		self.assertEqual("Parameter 'kind' is not of type 'FunctionKind'.", str(context.exception))
 		self.assertEqual(0, len(graph))
 
-	def test_Function_ControlFlow(self) -> None:
+	def test_Function_ControlFlowGraph(self) -> None:
 		graph = CallGraph("prog")
 
 		with self.assertRaises(TypeError) as context:
-			_ = Function(graph, "main", controlFlow="main")
+			_ = Function(graph, "main", controlFlowGraph="main")
 
-		self.assertEqual("Parameter 'controlFlow' is not of type 'ControlFlowGraph'.", str(context.exception))
+		self.assertEqual("Parameter 'controlFlowGraph' is not of type 'ControlFlowGraph'.", str(context.exception))
 
 		with self.assertRaises(ValueError) as context:
-			_ = Function(graph, "__indirect_call", kind=FunctionKind.Unknown, controlFlow=ControlFlowGraph("main"))
+			_ = Function(graph, "__indirect_call", kind=FunctionKind.Unknown, controlFlowGraph=ControlFlowGraph("main"))
 
 		self.assertEqual(
-			"Parameter 'controlFlow' is given for a function of kind 'Unknown'.",
+			"Parameter 'controlFlowGraph' is given for a function of kind 'Unknown'.",
 			str(context.exception)
 		)
 		self.assertEqual(0, len(graph))
@@ -323,8 +323,8 @@ class Checks(Testcase):
 		mainCFG =   ControlFlowGraph("main")
 		sumCFG =    ControlFlowGraph("Sum")
 		graph =     CallGraph("prog")
-		main =      Function(graph, "main", controlFlow=mainCFG)
-		summation = Function(graph, "Sum", controlFlow=sumCFG)
+		main =      Function(graph, "main", controlFlowGraph=mainCFG)
+		summation = Function(graph, "Sum", controlFlowGraph=sumCFG)
 		leaf =      Function(graph, "Leaf")
 		block =     BasicBlock(sumCFG, 3)
 
