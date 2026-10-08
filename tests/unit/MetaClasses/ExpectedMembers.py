@@ -183,6 +183,103 @@ class AbstractClasses(Testcase):
 		self.assertIsInstance(Application(), Application)
 
 
+class Counter(metaclass=ExtendedType, slots=True):
+	"""A host class taking the counter as a constructor parameter, but providing no ``Write`` method."""
+
+	_counter: int
+
+	def __init__(self, counter: int) -> None:
+		"""Initializes the counter the mixin reports."""
+		self._counter = counter
+
+
+class Instantiation(Testcase):
+	"""A class fulfilling an inherited expectation again is instantiated like a class that never missed a member."""
+
+	def test_Parameters(self) -> None:
+		class Incomplete(Counter, Mixin):
+			pass
+
+		class Application(Incomplete):
+			def Write(self, message: str) -> bool:
+				return message == "5"
+
+		application = Application(5)
+
+		self.assertEqual(5, application._counter)
+		self.assertTrue(application.Report())
+
+	def test_Parameters_Keyword(self) -> None:
+		class Incomplete(Counter, Mixin):
+			pass
+
+		class Application(Incomplete):
+			def Write(self, message: str) -> bool:
+				return True
+
+		self.assertEqual(5, Application(counter=5)._counter)
+
+	def test_Parameters_Derived(self) -> None:
+		class Incomplete(Counter, Mixin):
+			pass
+
+		class Application(Incomplete):
+			def Write(self, message: str) -> bool:
+				return True
+
+		class Derived(Application):
+			pass
+
+		self.assertEqual(7, Derived(7)._counter)
+
+	def test_Parameters_AfterAbstract(self) -> None:
+		"""An abstract class between the incomplete and the fulfilling class."""
+
+		class Incomplete(Counter, Mixin):
+			pass
+
+		class Abstract(Incomplete):
+			@abstractmethod
+			def Write(self, message: str) -> bool:
+				...
+
+		class Application(Abstract):
+			def Write(self, message: str) -> bool:
+				return True
+
+		self.assertEqual(3, Application(3)._counter)
+
+	def test_NoParameters(self) -> None:
+		class Incomplete(HalfHost, Mixin):
+			pass
+
+		class Application(Incomplete):
+			def Write(self, message: str) -> bool:
+				return True
+
+		class Derived(Application):
+			pass
+
+		self.assertIsInstance(Application(), Application)
+		self.assertIsInstance(Derived(), Derived)
+
+	def test_Unfulfilled(self) -> None:
+		"""The incomplete class still rejects instantiation, after a subclass fulfilled the expectation."""
+
+		class Incomplete(Counter, Mixin):
+			pass
+
+		class Application(Incomplete):
+			def Write(self, message: str) -> bool:
+				return True
+
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			Incomplete(5)
+
+		self.assertEqual("Class 'Incomplete' doesn't provide every expected member.", str(exceptionCapture.exception))
+		self.assertIn("Missing 'Write', expected by 'Mixin'.", exceptionCapture.exception.__notes__)
+
+
 class Inheritance(Testcase):
 	"""An expectation survives until a class can satisfy it."""
 
