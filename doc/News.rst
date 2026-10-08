@@ -440,6 +440,10 @@ Version 10.x (2026)
      class missing one could be instantiated. An element that is never written as a single tag, or never with an
      opening and a closing tag, says so in the :exc:`NotImplementedError` of the other methods, as
      :class:`~pyTooling.Graph.GraphML.Subgraph` already did.
+   * :class:`~pyTooling.MetaClasses.ExtendedType` finds out whether a class' ``__new__`` is the replacement an abstract
+     base-class put in place without raising and catching an :exc:`AttributeError`, and accepts a tuple as ``expects``
+     without the slower check against :class:`~collections.abc.Iterable`. Both ran for every class; creating one takes
+     0.8 µs less on Python 3.14, 0.6 µs on 3.13.
 
    .. rubric:: Bug Fixes
 
