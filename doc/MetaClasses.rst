@@ -437,6 +437,10 @@ A member counts whether it is a method, a property, a class variable, or a field
 annotation - :class:`~pyTooling.MetaClasses.ExtendedType` materialises those as slots when the mixin joins the
 primary inheritance line, which is what makes them visible to the check.
 
+The expectation belongs to the method, so an override doesn't inherit it: a subclass overriding the method without
+:deco:`~pyTooling.MetaClasses.expects` expects nothing, and one marking its override expects what its own marker
+names.
+
 .. seealso::
 
    :ref:`@abstractmethod <META/AbstractMethod>`

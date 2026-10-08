@@ -335,3 +335,90 @@ class ExpectingMethods(Testcase):
 
 		with self.assertRaises(UnfulfilledExpectationError):
 			Sibling().PrintHelp()
+
+
+class Overriding(Testcase):
+	"""The expectation belongs to the method, so an override expects only what its own marker names."""
+
+	def test_Override(self) -> None:
+		"""An override without the marker expects nothing."""
+
+		class Derived(Terminal):
+			def PrintHelp(self) -> str:
+				return "own help"
+
+		self.assertEqual("own help", Derived().PrintHelp())
+		with self.assertRaises(UnfulfilledExpectationError):
+			Terminal().PrintHelp()
+
+	def test_Override_Derived(self) -> None:
+		"""A class further down inherits the override, not the replacement of the overridden method."""
+
+		class Derived(Terminal):
+			def PrintHelp(self) -> str:
+				return "own help"
+
+		class Leaf(Derived):
+			pass
+
+		self.assertEqual("own help", Leaf().PrintHelp())
+
+	def test_Override_Marked(self) -> None:
+		"""A marked override expects its own members, which this class provides."""
+
+		class Derived(Terminal):
+			@expects("Write")
+			def PrintHelp(self) -> str:
+				return "own help"
+
+		self.assertEqual("own help", Derived().PrintHelp())
+
+	def test_Override_MarkedUnfulfilled(self) -> None:
+		"""A marked override reports only the members its own marker names."""
+
+		class Derived(Terminal):
+			@expects("Parser")
+			def PrintHelp(self) -> str:
+				return "own help"
+
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			Derived().PrintHelp()
+
+		self.assertEqual(
+			"Method 'Derived.PrintHelp()' expects members this class doesn't provide.",
+			str(exceptionCapture.exception)
+		)
+		self.assertEqual(("Missing 'Parser'.", ), tuple(exceptionCapture.exception.__notes__)[:1])
+		self.assertNotIn("Missing 'MainParser'.", exceptionCapture.exception.__notes__)
+
+	def test_Override_Mixin(self) -> None:
+		"""A mixin-class overriding the method without the marker."""
+
+		class HelpMixin(Terminal, mixin=True):
+			def PrintHelp(self) -> str:
+				return "mixin help"
+
+		class Middle(Terminal):
+			pass
+
+		class Application(Middle, HelpMixin):
+			pass
+
+		self.assertEqual("mixin help", Application().PrintHelp())
+
+	def test_Override_MixinShadowed(self) -> None:
+		"""A marked method of a mixin-class, shadowed by an unmarked one on the primary inheritance line."""
+
+		class Plain(metaclass=ExtendedType, slots=True):
+			def PrintHelp(self) -> str:
+				return "plain help"
+
+		class HelpMixin(metaclass=ExtendedType, mixin=True):
+			@expects("MainParser")
+			def PrintHelp(self) -> str:
+				return "mixin help"
+
+		class Application(Plain, HelpMixin):
+			pass
+
+		self.assertEqual("plain help", Application().PrintHelp())
