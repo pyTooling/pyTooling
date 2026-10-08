@@ -134,6 +134,52 @@ class ExpectedMembers(Testcase):
 		self.assertEqual(tuple(), Plain.__missingMembers__)
 
 
+class ExpectsParameter(Testcase):
+	"""The ``expects`` class keyword argument accepts any iterable of strings, except a string itself."""
+
+	def test_Expects_Tuple(self) -> None:
+		class Expecting(metaclass=ExtendedType, mixin=True, expects=("Write",)):
+			pass
+
+		self.assertDictEqual({"Write": "Expecting"}, Expecting.__expectedMembers__)
+
+	def test_Expects_List(self) -> None:
+		class Expecting(metaclass=ExtendedType, mixin=True, expects=["Write"]):
+			pass
+
+		self.assertDictEqual({"Write": "Expecting"}, Expecting.__expectedMembers__)
+
+	def test_Expects_Generator(self) -> None:
+		class Expecting(metaclass=ExtendedType, mixin=True, expects=(name for name in ("Write",))):
+			pass
+
+		self.assertDictEqual({"Write": "Expecting"}, Expecting.__expectedMembers__)
+
+	def test_Expects_String(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			class Expecting(metaclass=ExtendedType, mixin=True, expects="Write"):
+				pass
+
+		self.assertEqual("Parameter 'expects' is not an iterable of strings.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Expects_NotIterable(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			class Expecting(metaclass=ExtendedType, mixin=True, expects=5):
+				pass
+
+		self.assertEqual("Parameter 'expects' is not an iterable of strings.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Expects_TupleWithNonString(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			class Expecting(metaclass=ExtendedType, mixin=True, expects=("Write", 5)):
+				pass
+
+		self.assertEqual("Parameter 'expects' contains an element that is not a string.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+
 class AbstractClasses(Testcase):
 	"""An abstract class is allowed to stay incomplete, and abstractness wins over an unfulfilled expectation."""
 

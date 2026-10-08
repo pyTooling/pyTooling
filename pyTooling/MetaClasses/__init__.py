@@ -1644,7 +1644,8 @@ class ExtendedType(type):
 		:raises TypeError:  If parameter 'expects' is not an iterable of strings.
 		:raises TypeError:  If an element of parameter 'expects' is not a string.
 		"""
-		if isinstance(expects, str) or not isinstance(expects, Iterable):
+		# A tuple (the default) skips the slower isinstance check against the abstract base class 'Iterable'.
+		if type(expects) is not tuple and (isinstance(expects, str) or not isinstance(expects, Iterable)):
 			ex = TypeError(f"Parameter 'expects' is not an iterable of strings.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(expects)}'.")
 			raise ex
@@ -1839,6 +1840,11 @@ class ExtendedType(type):
 
 			newClass.__new__ = abstract_new
 			return True
+
+		# A function or built-in method without the marker: nothing to unwrap.
+		elif (isinstance(newClass.__new__, (FunctionType, BuiltinFunctionType)) and
+			not hasattr(newClass.__new__, "__raises_abstract_class_error__")):
+			return False
 
 		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
 		else:
