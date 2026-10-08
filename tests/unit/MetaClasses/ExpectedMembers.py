@@ -335,3 +335,25 @@ class ExpectingMethods(Testcase):
 
 		with self.assertRaises(UnfulfilledExpectationError):
 			Sibling().PrintHelp()
+
+	def test_ClassicBaseClass(self) -> None:
+		"""The marked method is inherited from a class not built by :class:`~pyTooling.MetaClasses.ExtendedType`."""
+		class Classic:
+			@expects("MainParser")
+			def PrintHelp(self) -> str:
+				return f"help from {self.MainParser}"
+
+		class Application(Classic, metaclass=ExtendedType):
+			pass
+
+		class Complete(Application):
+			MainParser: str = "<parser>"
+
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			Application().PrintHelp()
+
+		self.assertEqual(
+			"Method 'Application.PrintHelp()' expects members this class doesn't provide.",
+			str(exceptionCapture.exception)
+		)
+		self.assertEqual("help from <parser>", Complete().PrintHelp())
