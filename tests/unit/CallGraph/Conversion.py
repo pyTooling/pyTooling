@@ -59,7 +59,7 @@ class ToGraph(Testcase):
 	def test_Vertices(self) -> None:
 		callGraph = CallGraph("prog")
 		Function(callGraph, "main", count=1)
-		Function(callGraph, "Sum", controlFlow=ControlFlowGraph("Sum"), value="prog.c:7")
+		Function(callGraph, "Sum", controlFlowGraph=ControlFlowGraph("Sum"), value="prog.c:7")
 		Function(callGraph, "printf", kind=FunctionKind.External)
 		Function(callGraph, "__indirect_call", kind=FunctionKind.Unknown)
 
@@ -86,7 +86,7 @@ class ToGraph(Testcase):
 		block =     BasicBlock(cfg, 2)
 		callGraph = CallGraph("prog")
 		main =      Function(callGraph, "main")
-		apply =     Function(callGraph, "Apply", controlFlow=cfg)
+		apply =     Function(callGraph, "Apply", controlFlowGraph=cfg)
 		indirect =  Function(callGraph, "__indirect_call", kind=FunctionKind.Unknown)
 		Call(main, apply, CallKind.Direct, count=1, value="prog.c:11:3")
 		Call(main, apply)
@@ -134,7 +134,7 @@ class GraphML(Testcase):
 		block =     BasicBlock(cfg, 3, count=7)
 		callGraph = CallGraph("prog")
 		main =      Function(callGraph, "main", count=1)
-		fib =       Function(callGraph, "Fib", controlFlow=cfg, count=15, value="prog.c:4")
+		fib =       Function(callGraph, "Fib", controlFlowGraph=cfg, count=15, value="prog.c:4")
 		printf =    Function(callGraph, "printf", kind=FunctionKind.External)
 		Call(main, fib, CallKind.Direct, count=1)
 		Call(main, printf, CallKind.Direct)

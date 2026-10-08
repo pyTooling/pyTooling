@@ -67,6 +67,11 @@ from pyTooling.Graph       import Graph, Vertex
 from pyTooling.MetaClasses import ExtendedType
 
 
+# A class with a property named like a class - ``ControlFlowGraph`` - can't name that class in the annotation of a
+# field: the class body's namespace, where annotations are evaluated, binds the name to the property.
+_ControlFlowGraph = ControlFlowGraph
+
+
 @export
 class FunctionKind(Enum):
 	"""
@@ -122,22 +127,22 @@ class Function(Base):
 	to the functions it calls, its inbound calls come from the functions calling it. It can refer to its control flow
 	graph, whose blocks are the call sites of its outbound calls.
 	"""
-	_graph:         CallGraph                   #: The graph this function belongs to.
-	_id:            Hashable                    #: ID of the function, unique within its graph.
-	_kind:          FunctionKind                #: Kind of the function.
-	_controlFlow:   Nullable[ControlFlowGraph]  #: The function's control flow graph, if it's known.
-	_inboundCalls:  list[Call]                  #: Calls of this function.
-	_outboundCalls: list[Call]                  #: Calls this function makes.
+	_graph:            CallGraph                    #: The graph this function belongs to.
+	_id:               Hashable                     #: ID of the function, unique within its graph.
+	_kind:             FunctionKind                 #: Kind of the function.
+	_controlFlowGraph: Nullable[_ControlFlowGraph]  #: The function's control flow graph, if it's known.
+	_inboundCalls:     list[Call]                   #: Calls of this function.
+	_outboundCalls:    list[Call]                   #: Calls this function makes.
 
 	def __init__(
 		self,
-		graph:       CallGraph,
-		functionID:  Hashable,
+		graph:            CallGraph,
+		functionID:       Hashable,
 		*,
-		kind:        FunctionKind               = FunctionKind.Defined,
-		controlFlow: Nullable[ControlFlowGraph] = None,
-		count:       Nullable[int]              = None,
-		value:       Any                        = None
+		kind:             FunctionKind                = FunctionKind.Defined,
+		controlFlowGraph: Nullable[_ControlFlowGraph] = None,
+		count:            Nullable[int]               = None,
+		value:            Any                         = None
 	) -> None:
 		"""
 		Initializes a function and adds it to its graph.
@@ -145,7 +150,7 @@ class Function(Base):
 		:param graph:                   The graph the function belongs to.
 		:param functionID:              ID of the function, unique within its graph.
 		:param kind:                    Optional, kind of the function. Default: :attr:`FunctionKind.Defined`.
-		:param controlFlow:             Optional, the function's control flow graph. Default: ``None``.
+		:param controlFlowGraph:        Optional, the function's control flow graph. Default: ``None``.
 		:param count:                   Optional, how often the function was called. Default: ``None``.
 		:param value:                   Optional, any value attached to the function, e.g. its location. Default: ``None``.
 		:raises TypeError:              If parameter 'count' is not of type :class:`int`.
@@ -157,9 +162,9 @@ class Function(Base):
 		:raises DuplicateFunctionError: If the graph has a function with that ID already.
 		:raises ValueError:             If parameter 'kind' is None.
 		:raises TypeError:              If parameter 'kind' is not of type :class:`FunctionKind`.
-		:raises TypeError:              If parameter 'controlFlow' is not of type
+		:raises TypeError:              If parameter 'controlFlowGraph' is not of type
 		                                :class:`~pyTooling.ControlFlow.ControlFlowGraph`.
-		:raises ValueError:             If parameter 'controlFlow' is given for a function of kind
+		:raises ValueError:             If parameter 'controlFlowGraph' is given for a function of kind
 		                                :attr:`FunctionKind.Unknown`.
 		"""
 		super().__init__(count, value)
@@ -187,22 +192,22 @@ class Function(Base):
 			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 			raise ex
 
-		if controlFlow is not None:
-			if not isinstance(controlFlow, ControlFlowGraph):
-				ex = TypeError("Parameter 'controlFlow' is not of type 'ControlFlowGraph'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(controlFlow)}'.")
+		if controlFlowGraph is not None:
+			if not isinstance(controlFlowGraph, _ControlFlowGraph):
+				ex = TypeError("Parameter 'controlFlowGraph' is not of type 'ControlFlowGraph'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(controlFlowGraph)}'.")
 				raise ex
 			elif kind is FunctionKind.Unknown:
-				ex = ValueError("Parameter 'controlFlow' is given for a function of kind 'Unknown'.")
+				ex = ValueError("Parameter 'controlFlowGraph' is given for a function of kind 'Unknown'.")
 				ex.add_note(f"Got function '{functionID}'.")
 				raise ex
 
-		self._graph =         graph
-		self._id =            functionID
-		self._kind =          kind
-		self._controlFlow =   controlFlow
-		self._inboundCalls =  []
-		self._outboundCalls = []
+		self._graph =            graph
+		self._id =               functionID
+		self._kind =             kind
+		self._controlFlowGraph = controlFlowGraph
+		self._inboundCalls =     []
+		self._outboundCalls =    []
 
 		graph._functions[functionID] = self
 
@@ -234,13 +239,13 @@ class Function(Base):
 		return self._kind
 
 	@readonly
-	def ControlFlow(self) -> Nullable[ControlFlowGraph]:
+	def ControlFlowGraph(self) -> Nullable[_ControlFlowGraph]:
 		"""
-		Read-only property to access the function's control flow graph (:attr:`_controlFlow`).
+		Read-only property to access the function's control flow graph (:attr:`_controlFlowGraph`).
 
 		:returns: The control flow graph, or ``None`` if it's unknown.
 		"""
-		return self._controlFlow
+		return self._controlFlowGraph
 
 	@readonly
 	def InboundCalls(self) -> tuple[Call, ...]:
@@ -339,13 +344,13 @@ class Call(Base):
 				ex = TypeError("Parameter 'callSite' is not of type 'BasicBlock'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(callSite)}'.")
 				raise ex
-			elif caller._controlFlow is None:
+			elif caller._controlFlowGraph is None:
 				ex = ValueError("Parameter 'callSite' is given, but the caller has no control flow graph.")
 				ex.add_note(f"Got caller '{caller._id}'.")
 				raise ex
-			elif callSite._graph is not caller._controlFlow:
+			elif callSite._graph is not caller._controlFlowGraph:
 				ex = ValueError("Parameter 'callSite' belongs to another control flow graph than the caller's.")
-				ex.add_note(f"Got graphs '{callSite._graph._name}' and '{caller._controlFlow._name}'.")
+				ex.add_note(f"Got graphs '{callSite._graph._name}' and '{caller._controlFlowGraph._name}'.")
 				raise ex
 			elif callSite._kind is not BlockKind.Code:
 				ex = ValueError("Parameter 'callSite' is not a block of code.")

@@ -155,7 +155,7 @@ call. A block can hold several calls, e.g. both recursive calls of ``Fib``.
 
    cfg =   ControlFlowGraph("Fib", entryID=0, exitID=1)
    block = BasicBlock(cfg, 3, count=7, value="Fib(n - 1) + Fib(n - 2)")
-   fib =   Function(graph, "Fib", controlFlow=cfg, count=15)
+   fib =   Function(graph, "Fib", controlFlowGraph=cfg, count=15)
 
    Call(fib, fib, CallKind.Direct, callSite=block, count=7, value="Fib(n - 1)")
    Call(fib, fib, CallKind.Direct, callSite=block, count=7, value="Fib(n - 2)")
