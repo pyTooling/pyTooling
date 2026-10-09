@@ -100,6 +100,22 @@ Version 10.x (2026)
        with ``kind`` and ``count`` as key-value pairs on vertices and edges, which :mod:`pyTooling.Graph.GraphML`
        writes as data elements.
 
+   * :mod:`pyTooling.CallGraph` is a new package describing the call graph of a program: a
+     :class:`~pyTooling.CallGraph.CallGraph` of :class:`~pyTooling.CallGraph.Function`\ s and
+     :class:`~pyTooling.CallGraph.Call`\ s. Its exceptions derive from :exc:`~pyTooling.CallGraph.CallGraphError`.
+
+     * A function is looked up by its ID: :pycode:`graph["main"]`, :pycode:`"main" in graph`. Its
+       :class:`~pyTooling.CallGraph.FunctionKind` says if it's defined in the described code, defined elsewhere like a
+       library function, or a placeholder for unknown functions, e.g. the targets of an indirect call.
+     * A call leads from the caller to the callee, so a recursion is a cycle. Its
+       :class:`~pyTooling.CallGraph.CallKind` says if the callee is named (direct) or determined at run time
+       (indirect). Two functions can be connected by several calls, e.g. one per call site.
+     * Functions and calls carry an optional execution count, e.g. from a profiler, and an optional value. A function
+       can refer to its :class:`~pyTooling.ControlFlow.ControlFlowGraph`, and a call to its call site, a block of that
+       graph.
+     * :meth:`~pyTooling.CallGraph.CallGraph.ToGraph` converts it into a :class:`~pyTooling.Graph.Graph`, with
+       ``kind``, ``count`` and ``callsite`` as key-value pairs.
+
    * :class:`~pyTooling.MetaClasses.ThisClass` is a sentinel for a class variable whose value is the class declaring
      it.
 

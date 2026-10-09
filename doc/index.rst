@@ -590,6 +590,9 @@ Data Structures
       * :ref:`Control flow graph <STRUCT/ControlFlow>` |br|
         |rarr| The basic blocks of a function and the edges between them, using a
         :class:`~pyTooling.ControlFlow.BasicBlock` and an :class:`~pyTooling.ControlFlow.Edge` class.
+      * :ref:`Call graph <STRUCT/CallGraph>` |br|
+        |rarr| The functions of a program and the calls between them, using a
+        :class:`~pyTooling.CallGraph.Function` and a :class:`~pyTooling.CallGraph.Call` class.
 
       .. #* :ref:`Scope data structure <STRUCT/Scope>` |br|
          |rarr| A fast and simple implementation using a single :class:`~pyTooling.Tree.Node` class.
@@ -1135,6 +1138,7 @@ License
 
    DataStructures/index
    DataStructures/LinkedList
+   DataStructures/CallGraph
    DataStructures/Cartesian
    DataStructures/ControlFlow
    DataStructures/Graph

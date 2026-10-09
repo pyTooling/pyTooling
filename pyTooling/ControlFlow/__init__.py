@@ -50,6 +50,8 @@ type, e.g. the source lines of a block. :meth:`ControlFlowGraph.ToGraph` convert
 
 .. seealso::
 
+   :mod:`pyTooling.CallGraph`
+      |rarr| The call graph of a program, whose calls are made from the blocks of control flow graphs.
    :mod:`pyTooling.Graph`
       |rarr| The graph data structure a control flow graph is converted into.
    :mod:`pyTooling.Graph.GraphML`
@@ -127,17 +129,19 @@ class DuplicateEdgeError(ControlFlowError):
 @export
 class Base(metaclass=ExtendedType, slots=True):
 	"""
-	Base-class of basic blocks and edges, which both carry an execution count and a value.
+	Base-class of elements carrying an execution count and a value.
+
+	Basic blocks and edges are such elements.
 	"""
-	_count: Nullable[int]  #: How often the block or edge was executed, or ``None`` if that's unknown.
-	_value: Any            #: Any value attached to the block or edge.
+	_count: Nullable[int]  #: How often the element was executed, or ``None`` if that's unknown.
+	_value: Any            #: Any value attached to the element.
 
 	def __init__(self, count: Nullable[int] = None, value: Any = None) -> None:
 		"""
-		Initializes the execution count and the value of a block or an edge.
+		Initializes the execution count and the value of an element.
 
-		:param count:       Optional, how often the block or edge was executed. Default: ``None``.
-		:param value:       Optional, any value attached to the block or edge. Default: ``None``.
+		:param count:       Optional, how often the element was executed. Default: ``None``.
+		:param value:       Optional, any value attached to the element. Default: ``None``.
 		:raises TypeError:  If parameter 'count' is not of type :class:`int`.
 		:raises ValueError: If parameter 'count' is negative.
 		"""
@@ -147,7 +151,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	@property
 	def Count(self) -> Nullable[int]:
 		"""
-		Property to access how often the block or edge was executed (:attr:`_count`).
+		Property to access how often the element was executed (:attr:`_count`).
 
 		:returns:           The execution count, or ``None`` if it's unknown.
 		:raises TypeError:  If the assigned count is not of type :class:`int`.
@@ -172,7 +176,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	@property
 	def Value(self) -> Any:
 		"""
-		Property to access the value attached to the block or edge (:attr:`_value`).
+		Property to access the value attached to the element (:attr:`_value`).
 
 		:returns: The value, or ``None`` if none is attached.
 		"""
