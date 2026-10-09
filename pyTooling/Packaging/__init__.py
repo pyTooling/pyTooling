@@ -259,7 +259,7 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		self._license =     license
 		self._version =     version
 		self._description = description
-		self._keywords =    [k for k in keywords]
+		self._keywords =    list(keywords)
 
 	@readonly
 	def Author(self) -> str:

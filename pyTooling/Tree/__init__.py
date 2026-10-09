@@ -195,7 +195,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		self._id = nodeID
 		self._value = value
-		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
+		self._dict = dict(keyValuePairs) if keyValuePairs is not None else {}
 
 		self._format = format
 
