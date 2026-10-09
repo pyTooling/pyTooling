@@ -89,6 +89,18 @@ class Instantiation(Testcase):
 
 		self.assertEqual(now, release.ReleasedAt)
 
+	def test_Release_Requirements(self) -> None:
+		"""The requirements by extra are copied as a mapping, not unpacked from its keys."""
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		project = Project("project", "https://index.org/project/", index=index)
+		requirements = {"ab": [], "test": []}
+		release = Release(PythonVersion.Parse("v1.0.0"), datetime.now(), requirements=requirements, project=project)
+
+		# 'Requirements' would load the release's details from the index first; the field holds what was passed.
+		self.assertEqual({"ab": [], "test": []}, release._requirements)
+		self.assertIsNot(requirements, release._requirements)
+
 
 class PyPI(Testcase):
 	def test_pyTooling(self) -> None:
