@@ -54,7 +54,7 @@ class ApplyFunctionAttributes(Testcase):
 		def func1():
 			pass
 
-		foundFunctions = [c for c in AttributeA.GetFunctions()]
+		foundFunctions = list(AttributeA.GetFunctions())
 
 		self.assertListEqual(foundFunctions, [func1])
 
@@ -70,7 +70,7 @@ class ApplyFunctionAttributes(Testcase):
 		def func2():
 			pass
 
-		foundFunctions = [c for c in AttributeA.GetFunctions()]
+		foundFunctions = list(AttributeA.GetFunctions())
 
 		self.assertListEqual(foundFunctions, [func1, func2])
 
@@ -102,8 +102,8 @@ class Filtering(Testcase):
 	def test_Scope_Module(self) -> None:
 		from sys import modules
 
-		foundFunctions = [c for c in ModuleAttribute.GetFunctions()]
-		foundModuleFunctions = [c for c in ModuleAttribute.GetFunctions(scope=modules[ModuleFunction.__module__])]
+		foundFunctions = list(ModuleAttribute.GetFunctions())
+		foundModuleFunctions = list(ModuleAttribute.GetFunctions(scope=modules[ModuleFunction.__module__]))
 
 		self.assertListEqual(foundFunctions, [ModuleFunction])
 		self.assertListEqual(foundModuleFunctions, [ModuleFunction])
@@ -127,7 +127,7 @@ class Filtering(Testcase):
 
 		# l = locals()
 
-		foundFunctions = [c for c in LocalAttribute.GetFunctions()]
+		foundFunctions = list(LocalAttribute.GetFunctions())
 		# foundLocalClasses = [c for c in LocalAttribute.GetClasses(scope=l)]
 
 		self.assertListEqual(foundFunctions, [nestedFunction, LocalFunction])
@@ -147,7 +147,7 @@ class Filtering(Testcase):
 		nestedFunction = LocalFunction()
 		l = locals()
 
-		foundFunctions = [c for c in GlobalAttribute.GetFunctions()]
+		foundFunctions = list(GlobalAttribute.GetFunctions())
 
 		self.assertListEqual(foundFunctions, [ModuleFunction, moduleNestedFunction, LocalFunction, nestedFunction])
 

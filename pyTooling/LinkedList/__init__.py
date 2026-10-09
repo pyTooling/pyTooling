@@ -784,7 +784,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 		if key is None:
 			key = lambda node: node._value
 
-		sequence = [n for n in self.IterateFromFirst()]
+		sequence = list(self.IterateFromFirst())
 		sequence.sort(key=key, reverse=reverse)
 
 		first = sequence[0]

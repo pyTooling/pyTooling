@@ -1243,14 +1243,14 @@ class IterateOnGraph(Iterate):
 			vListValue[u].EdgeToVertex(vListValue[v], edgeWeight=w)
 			vListMixed[u].EdgeToVertex(vListMixed[v], edgeWeight=w)
 
-		self.assertListEqual([i for i in range(0, 15, 1)], [v.Value for v in gID.IterateVertices()])
-		self.assertListEqual([i for i in range(0, 15, 2)], [v.Value for v in gID.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
+		self.assertListEqual(list(range(0, 15, 1)), [v.Value for v in gID.IterateVertices()])
+		self.assertListEqual(list(range(0, 15, 2)), [v.Value for v in gID.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
 
-		self.assertListEqual([i for i in range(0, 15, 1)], [v.Value for v in gValue.IterateVertices()])
-		self.assertListEqual([i for i in range(0, 15, 2)], [v.Value for v in gValue.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
+		self.assertListEqual(list(range(0, 15, 1)), [v.Value for v in gValue.IterateVertices()])
+		self.assertListEqual(list(range(0, 15, 2)), [v.Value for v in gValue.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
 
-		self.assertListEqual([i for i in range(0, 15, 2)] + [i for i in range(1, 15, 2)], [v.Value for v in gMixed.IterateVertices()])
-		self.assertListEqual([i for i in range(0, 15, 2)],                                [v.Value for v in gMixed.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
+		self.assertListEqual(list(range(0, 15, 2)) + list(range(1, 15, 2)), [v.Value for v in gMixed.IterateVertices()])
+		self.assertListEqual(list(range(0, 15, 2)),                         [v.Value for v in gMixed.IterateVertices(predicate=lambda v: v.Value % 2 == 0)])
 
 	def test_Topologically(self) -> None:
 		g = Graph()
@@ -1808,7 +1808,7 @@ class IterateStartingFromVertex(Iterate):
 			vList[u].EdgeToVertex(vList[v], edgeWeight=w)
 
 		source = vList[10]
-		paths = [path for path in source.IterateAllOutboundPathsAsVertexList()]
+		paths = list(source.IterateAllOutboundPathsAsVertexList())
 		self.assertEqual(1, len(paths))
 		self.assertTupleEqual((source,), paths[0])
 

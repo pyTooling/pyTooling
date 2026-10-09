@@ -344,7 +344,7 @@ class URL:
 				ex.add_note(f"Got type '{getFullyQualifiedName(query)}'.")
 				raise ex
 
-			self._query = {keyword: value for keyword, value in query.items()}
+			self._query = dict(query)
 		else:
 			self._query = None
 

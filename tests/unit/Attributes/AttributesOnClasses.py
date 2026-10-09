@@ -55,7 +55,7 @@ class ApplyClassAttributes(Testcase):
 		class Class1:
 			pass
 
-		foundClasses = [c for c in AttributeA.GetClasses()]
+		foundClasses = list(AttributeA.GetClasses())
 
 		self.assertListEqual(foundClasses, [Class1])
 
@@ -71,7 +71,7 @@ class ApplyClassAttributes(Testcase):
 		class Class2:
 			pass
 
-		foundClasses = [c for c in AttributeA.GetClasses()]
+		foundClasses = list(AttributeA.GetClasses())
 
 		self.assertListEqual(foundClasses, [Class1, Class2])
 
@@ -87,8 +87,8 @@ class ApplyClassAttributes(Testcase):
 		class Class1:
 			pass
 
-		foundClassesForA = [c for c in AttributeA.GetClasses()]
-		foundClassesForB = [c for c in AttributeB.GetClasses()]
+		foundClassesForA = list(AttributeA.GetClasses())
+		foundClassesForB = list(AttributeB.GetClasses())
 
 		self.assertListEqual(foundClassesForA, [Class1])
 		self.assertListEqual(foundClassesForB, [Class1])
@@ -118,8 +118,8 @@ class ApplyClassAttributes(Testcase):
 		class Class4:
 			pass
 
-		foundClassesForA = [c for c in AttributeA.GetClasses()]
-		foundClassesForB = [c for c in AttributeB.GetClasses()]
+		foundClassesForA = list(AttributeA.GetClasses())
+		foundClassesForB = list(AttributeB.GetClasses())
 
 		self.assertListEqual(foundClassesForA, [Class1, Class2, Class3])
 		self.assertListEqual(foundClassesForB, [Class2, Class3, Class4])
@@ -139,8 +139,8 @@ class ApplyClassAttributes(Testcase):
 		class Class2:
 			pass
 
-		foundClassesForA1 = [c for c in AttributeA1.GetClasses()]
-		foundClassesForA2 = [c for c in AttributeA2.GetClasses()]
+		foundClassesForA1 = list(AttributeA1.GetClasses())
+		foundClassesForA2 = list(AttributeA2.GetClasses())
 
 		self.assertListEqual(foundClassesForA1, [Class1])
 		self.assertListEqual(foundClassesForA2, [Class2])
@@ -154,7 +154,7 @@ class ApplyClassAttributes(Testcase):
 		class Class1:
 			pass
 
-		foundClasses = [c for c in AttributeA.GetClasses()]
+		foundClasses = list(AttributeA.GetClasses())
 
 		self.assertListEqual(foundClasses, [Class1, Class1])
 
@@ -170,8 +170,8 @@ class ApplyClassAttributes(Testcase):
 		class Class1:
 			pass
 
-		foundClassesForA1 = [c for c in AttributeA1.GetClasses()]
-		foundClassesForA2 = [c for c in AttributeA2.GetClasses()]
+		foundClassesForA1 = list(AttributeA1.GetClasses())
+		foundClassesForA2 = list(AttributeA2.GetClasses())
 
 		self.assertListEqual(foundClassesForA1, [Class1])
 		self.assertListEqual(foundClassesForA2, [Class1])
@@ -211,10 +211,10 @@ class Filtering(Testcase):
 		class Class3(Class2):
 			pass
 
-		foundClasses = [c for c in AttributeA.GetClasses()]
-		foundClassesForC1 = [c for c in AttributeA.GetClasses(subclassOf=Class1)]
-		foundClassesForC2 = [c for c in AttributeA.GetClasses(subclassOf=Class2)]
-		foundClassesForC3 = [c for c in AttributeA.GetClasses(subclassOf=Class3)]
+		foundClasses = list(AttributeA.GetClasses())
+		foundClassesForC1 = list(AttributeA.GetClasses(subclassOf=Class1))
+		foundClassesForC2 = list(AttributeA.GetClasses(subclassOf=Class2))
+		foundClassesForC3 = list(AttributeA.GetClasses(subclassOf=Class3))
 
 		self.assertListEqual(foundClasses, [Class1, Class2, Class3])
 		self.assertListEqual(foundClassesForC1, [Class1, Class2, Class3])
@@ -224,8 +224,8 @@ class Filtering(Testcase):
 	def test_Scope_Module(self) -> None:
 		from sys import modules
 
-		foundClasses = [c for c in ModuleAttribute.GetClasses()]
-		foundModuleClasses = [c for c in ModuleAttribute.GetClasses(scope=modules[ModuleClass.__module__])]
+		foundClasses = list(ModuleAttribute.GetClasses())
+		foundModuleClasses = list(ModuleAttribute.GetClasses(scope=modules[ModuleClass.__module__]))
 
 		self.assertListEqual(foundClasses, [ModuleClass.InnerClass, ModuleClass])
 		self.assertListEqual(foundModuleClasses, [ModuleClass])
@@ -245,8 +245,8 @@ class Filtering(Testcase):
 
 		l = locals()
 
-		foundClasses = [c for c in LocalAttribute.GetClasses()]
-		foundLocalClasses = [c for c in LocalAttribute.GetClasses(scope=l)]
+		foundClasses = list(LocalAttribute.GetClasses())
+		foundLocalClasses = list(LocalAttribute.GetClasses(scope=l))
 
 		self.assertListEqual(foundClasses, [LocalClass.NestedClass, LocalClass])
 		self.assertListEqual(foundLocalClasses, [LocalClass])
@@ -262,9 +262,9 @@ class Filtering(Testcase):
 
 		l = locals()
 
-		foundClasses = [c for c in GlobalAttribute.GetClasses()]
-		foundInnerClasses = [c for c in GlobalAttribute.GetClasses(scope=ModuleClass)]
-		foundNestedClasses = [c for c in GlobalAttribute.GetClasses(scope=LocalClass)]
+		foundClasses = list(GlobalAttribute.GetClasses())
+		foundInnerClasses = list(GlobalAttribute.GetClasses(scope=ModuleClass))
+		foundNestedClasses = list(GlobalAttribute.GetClasses(scope=LocalClass))
 
 		self.assertListEqual(foundClasses, [ModuleClass.InnerClass, ModuleClass, LocalClass.NestedClass, LocalClass])
 		self.assertListEqual(foundInnerClasses, [ModuleClass.InnerClass])
@@ -289,8 +289,8 @@ class Filtering(Testcase):
 			class NestedClass2(Base):
 				pass
 
-		foundClasses = [c for c in LocalAttribute.GetClasses()]
-		foundNestedClasses = [c for c in LocalAttribute.GetClasses(scope=LocalClass, subclassOf=Base)]
+		foundClasses = list(LocalAttribute.GetClasses())
+		foundNestedClasses = list(LocalAttribute.GetClasses(scope=LocalClass, subclassOf=Base))
 
 		self.assertListEqual(foundClasses, [LocalClass.NestedClass1, LocalClass.NestedClass2, LocalClass])
 		self.assertListEqual(foundNestedClasses, [LocalClass.NestedClass2])
