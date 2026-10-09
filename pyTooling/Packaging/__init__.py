@@ -111,7 +111,7 @@ class Readme:
 @export
 def loadReadmeFile(readmeFile: Path) -> Readme:
 	"""
-	Read the README file (e.g. in Markdown format), so it can be used as long description for the package.
+	Read the README file, so it can be used as long description for the package.
 
 	Supported formats:
 
