@@ -129,7 +129,7 @@ class Grouped(Testcase):
 		class MyClass1:
 			pass
 
-		foundClasses = [c for c in MySimpleAttribute.GetClasses()]
+		foundClasses = list(MySimpleAttribute.GetClasses())
 
 		self.assertEqual(3, len(foundClasses))
 		for c in foundClasses:

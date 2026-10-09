@@ -53,14 +53,14 @@ class Instantiation(Testcase):
 		self.assertEqual("trace", str(t))
 		self.assertFalse(t.HasSubSpans)
 		self.assertEqual(0, t.SubSpanCount)
-		self.assertEqual(0, len([s for s in t.IterateSubSpans()]))
+		self.assertEqual(0, len(list(t.IterateSubSpans())))
 
 		self.assertFalse(t.HasEvents)
 		self.assertEqual(0, t.EventCount)
-		self.assertEqual(0, len([e for e in t.IterateEvents()]))
+		self.assertEqual(0, len(list(t.IterateEvents())))
 
 		self.assertEqual(0, len(t))
-		self.assertEqual(0, len([a for a in t]))
+		self.assertEqual(0, len(list(t)))
 
 		with self.assertRaises(TracingError) as ex:
 			_ = t.Duration
@@ -73,14 +73,14 @@ class Instantiation(Testcase):
 		self.assertEqual("span", str(s))
 		self.assertFalse(s.HasSubSpans)
 		self.assertEqual(0, s.SubSpanCount)
-		self.assertEqual(0, len([ss for ss in s.IterateSubSpans()]))
+		self.assertEqual(0, len(list(s.IterateSubSpans())))
 
 		self.assertFalse(s.HasEvents)
 		self.assertEqual(0, s.EventCount)
-		self.assertEqual(0, len([e for e in s.IterateEvents()]))
+		self.assertEqual(0, len(list(s.IterateEvents())))
 
 		self.assertEqual(0, len(s))
-		self.assertEqual(0, len([a for a in s]))
+		self.assertEqual(0, len(list(s)))
 
 	def test_SubSpan(self) -> None:
 		s = Span("span")
@@ -90,7 +90,7 @@ class Instantiation(Testcase):
 		self.assertIsNone(s.Parent)
 		self.assertTrue(s.HasSubSpans)
 		self.assertEqual(1, s.SubSpanCount)
-		self.assertListEqual([ss], [ss for ss in s.IterateSubSpans()])
+		self.assertListEqual([ss], list(s.IterateSubSpans()))
 
 		self.assertIs(s, ss.Parent)
 		self.assertFalse(ss.HasSubSpans)
@@ -103,7 +103,7 @@ class Instantiation(Testcase):
 		self.assertEqual("event", e.Name)
 		self.assertEqual("event", str(e))
 		self.assertEqual(0, len(e))
-		self.assertEqual(0, len([a for a in e]))
+		self.assertEqual(0, len(list(e)))
 
 
 class RecordedTimes(Testcase):
@@ -152,8 +152,8 @@ class RecordedTimes(Testcase):
 		self.assertEqual(540.0, t.Duration)
 		self.assertIs(t, job.Trace)
 		self.assertIs(t, step.Trace)
-		self.assertListEqual([job], [s for s in t.IterateSubSpans()])
-		self.assertListEqual([step], [s for s in job.IterateSubSpans()])
+		self.assertListEqual([job], list(t.IterateSubSpans()))
+		self.assertListEqual([step], list(job.IterateSubSpans()))
 		self.assertEqual(8.0, step.Duration)
 
 	def test_Trace_Format(self) -> None:
@@ -474,13 +474,13 @@ class Context(Testcase):
 		self.assertIsNone(t.Parent)
 		self.assertFalse(t.HasSubSpans)
 		self.assertEqual(0, t.SubSpanCount)
-		self.assertEqual(0, len([s for s in t.IterateSubSpans()]))
+		self.assertEqual(0, len(list(t.IterateSubSpans())))
 
 		self.assertEqual(0, t.EventCount)
-		self.assertEqual(0, len([e for e in t.IterateEvents()]))
+		self.assertEqual(0, len(list(t.IterateEvents())))
 
 		self.assertEqual(0, len(t))
-		self.assertEqual(0, len([a for a in t]))
+		self.assertEqual(0, len(list(t)))
 
 		print(f"Duration: {t.Duration*1e3:.3f} ms")
 		for line in t.Format():
@@ -501,13 +501,13 @@ class Context(Testcase):
 		self.assertIsNone(t.Parent)
 		self.assertTrue(t.HasSubSpans)
 		self.assertEqual(1, t.SubSpanCount)
-		self.assertEqual(1, len([s for s in t.IterateSubSpans()]))
+		self.assertEqual(1, len(list(t.IterateSubSpans())))
 
 		self.assertEqual(0, t.EventCount)
-		self.assertEqual(0, len([e for e in t.IterateEvents()]))
+		self.assertEqual(0, len(list(t.IterateEvents())))
 
 		self.assertEqual(0, len(t))
-		self.assertEqual(0, len([a for a in t]))
+		self.assertEqual(0, len(list(t)))
 
 		self.assertIs(t, s.Parent)
 		self.assertFalse(s.HasSubSpans)
@@ -533,13 +533,13 @@ class Context(Testcase):
 		self.assertIsNone(t.Parent)
 		self.assertTrue(t.HasSubSpans)
 		self.assertEqual(1, t.SubSpanCount)
-		self.assertEqual(1, len([s for s in t.IterateSubSpans()]))
+		self.assertEqual(1, len(list(t.IterateSubSpans())))
 
 		self.assertEqual(0, t.EventCount)
-		self.assertEqual(0, len([e for e in t.IterateEvents()]))
+		self.assertEqual(0, len(list(t.IterateEvents())))
 
 		self.assertEqual(0, len(t))
-		self.assertEqual(0, len([a for a in t]))
+		self.assertEqual(0, len(list(t)))
 
 		self.assertIs(t, s.Parent)
 		self.assertFalse(s.HasSubSpans)
@@ -597,7 +597,7 @@ class Context(Testcase):
 			sleep(0.001)
 
 		self.assertEqual(4, t.SubSpanCount)
-		self.assertEqual(4, len([s for s in t.IterateSubSpans()]))
+		self.assertEqual(4, len(list(t.IterateSubSpans())))
 
 		for line in t.Format():
 			print(line)
@@ -707,12 +707,12 @@ class Attributes(Testcase):
 		t = Trace("trace")
 
 		self.assertEqual(0, len(t))
-		self.assertEqual(0, len([a for a in t]))
+		self.assertEqual(0, len(list(t)))
 
 		t["id1"] = "value"
 
 		self.assertEqual(1, len(t))
-		self.assertEqual(1, len([a for a in t]))
+		self.assertEqual(1, len(list(t)))
 		self.assertIn("id1", t)
 
 		self.assertEqual("value", t["id1"])
@@ -720,18 +720,18 @@ class Attributes(Testcase):
 		t["id1"] = "value1"
 
 		self.assertEqual(1, len(t))
-		self.assertListEqual([("id1", "value1")], [a for a in t])
+		self.assertListEqual([("id1", "value1")], list(t))
 
 		t["id2"] = "value2"
 
 		self.assertEqual(2, len(t))
 		self.assertIn("id2", t)
-		self.assertListEqual([("id1", "value1"), ("id2", "value2")], [a for a in t])
+		self.assertListEqual([("id1", "value1"), ("id2", "value2")], list(t))
 
 		del t["id1"]
 
 		self.assertEqual(1, len(t))
-		self.assertListEqual([("id2", "value2")], [a for a in t])
+		self.assertListEqual([("id2", "value2")], list(t))
 		self.assertIn("id2", t)
 
 	def test_Get(self) -> None:
@@ -748,12 +748,12 @@ class Attributes(Testcase):
 		s = Span("span")
 
 		self.assertEqual(0, len(s))
-		self.assertEqual(0, len([a for a in s]))
+		self.assertEqual(0, len(list(s)))
 
 		s["id1"] = "value"
 
 		self.assertEqual(1, len(s))
-		self.assertEqual(1, len([a for a in s]))
+		self.assertEqual(1, len(list(s)))
 		self.assertIn("id1", s)
 
 		self.assertEqual("value", s["id1"])
@@ -761,30 +761,30 @@ class Attributes(Testcase):
 		s["id1"] = "value1"
 
 		self.assertEqual(1, len(s))
-		self.assertListEqual([("id1", "value1")], [a for a in s])
+		self.assertListEqual([("id1", "value1")], list(s))
 
 		s["id2"] = "value2"
 
 		self.assertEqual(2, len(s))
 		self.assertIn("id2", s)
-		self.assertListEqual([("id1", "value1"), ("id2", "value2")], [a for a in s])
+		self.assertListEqual([("id1", "value1"), ("id2", "value2")], list(s))
 
 		del s["id1"]
 
 		self.assertEqual(1, len(s))
-		self.assertListEqual([("id2", "value2")], [a for a in s])
+		self.assertListEqual([("id2", "value2")], list(s))
 		self.assertIn("id2", s)
 
 	def test_Event(self) -> None:
 		e = Event("event")
 
 		self.assertEqual(0, len(e))
-		self.assertEqual(0, len([a for a in e]))
+		self.assertEqual(0, len(list(e)))
 
 		e["id1"] = "value"
 
 		self.assertEqual(1, len(e))
-		self.assertEqual(1, len([a for a in e]))
+		self.assertEqual(1, len(list(e)))
 		self.assertIn("id1", e)
 
 		self.assertEqual("value", e["id1"])
@@ -792,16 +792,16 @@ class Attributes(Testcase):
 		e["id1"] = "value1"
 
 		self.assertEqual(1, len(e))
-		self.assertListEqual([("id1", "value1")], [a for a in e])
+		self.assertListEqual([("id1", "value1")], list(e))
 
 		e["id2"] = "value2"
 
 		self.assertEqual(2, len(e))
 		self.assertIn("id2", e)
-		self.assertListEqual([("id1", "value1"), ("id2", "value2")], [a for a in e])
+		self.assertListEqual([("id1", "value1"), ("id2", "value2")], list(e))
 
 		del e["id1"]
 
 		self.assertEqual(1, len(e))
-		self.assertListEqual([("id2", "value2")], [a for a in e])
+		self.assertListEqual([("id2", "value2")], list(e))
 		self.assertIn("id2", e)
