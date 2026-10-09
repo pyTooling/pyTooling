@@ -126,7 +126,11 @@ class Construction(Testcase):
 		self.assertListEqual([call1, call2], graph.Calls)
 
 	def test_Call_Parallel(self) -> None:
-		"""Two functions can be connected by several calls of the same kind, e.g. one per call site."""
+		"""
+		Two functions can be connected by several calls of the same kind.
+
+		Each call site is a call of its own.
+		"""
 		graph =     CallGraph("prog")
 		main =      Function(graph, "main")
 		summation = Function(graph, "Sum")

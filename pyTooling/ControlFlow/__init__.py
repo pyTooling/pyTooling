@@ -203,7 +203,9 @@ class Base(metaclass=ExtendedType, slots=True):
 @export
 class BaseWithCountAndValue(Base):
 	"""
-	Base-class of elements carrying an execution count and a value, e.g. basic blocks and edges.
+	Base-class of elements carrying an execution count and a value.
+
+	Basic blocks and edges are such elements.
 	"""
 	_count: Nullable[int]  #: How often the element was executed, or ``None`` if that's unknown.
 	_value: Nullable[Any]  #: Any value attached to the element, or ``None``.
