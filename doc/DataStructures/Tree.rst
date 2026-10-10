@@ -87,18 +87,18 @@ The following example code demonstrates a few features in a compact form:
 
 The presented code will generate this tree:
 
-.. code-block::
+.. tree::
 
-   OSVVM Regression Tests
-   ├── Utility Library
-   ├── Verification Components
-       ├── Common
-       ├── AXI
-       │   ├── AXI4 Common
-       │   ├── AXI4-Stream
-       │   ├── AXI4-Lite
-       │   ├── AXI4
-       ├── UART
+   - OSVVM Regression Tests
+     - Utility Library
+     - Verification Components
+       - Common
+       - AXI
+         - AXI4 Common
+         - AXI4-Stream
+         - AXI4-Lite
+         - AXI4
+       - UART
 
 
 .. _STRUCT/Tree/Features:

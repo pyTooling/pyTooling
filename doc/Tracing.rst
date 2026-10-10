@@ -34,12 +34,12 @@ trace is exported.
 Data Model
 ==========
 
-.. code-block:: text
+.. tree::
 
-   TraceElement              a name, a parent and attributes
-   +-- Event                 a point in time, attached to a span
-   +-- Span                  a timespan, holding sub-spans and events
-       +-- Trace             the root timespan, holding the trace's identifier
+   - :class:`~pyTooling.Tracing.TraceElement` | a name, a parent and attributes
+     - :class:`~pyTooling.Tracing.Event`      | a point in time, attached to a span
+     - :class:`~pyTooling.Tracing.Span`       | a timespan, holding sub-spans and events
+       - :class:`~pyTooling.Tracing.Trace`    | the root timespan, holding the trace's identifier
 
 * Every element has a :attr:`~pyTooling.Tracing.TraceElement.Parent` - the enclosing timespan - and attributes,
   read and written with dictionary syntax: ``span["files"] = 12``.
