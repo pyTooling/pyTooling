@@ -162,6 +162,53 @@ class Construction(Testcase):
 		self.assertIs(block, call.CallSite)
 		self.assertIs(main.ControlFlowGraph, call.CallSite.ControlFlowGraph)
 
+	def test_CallTo(self) -> None:
+		cfg =       ControlFlowGraph("main")
+		block =     BasicBlock(cfg, 2)
+		graph =     CallGraph("prog")
+		main =      Function(graph, "main", controlFlowGraph=cfg)
+		summation = Function(graph, "Sum")
+
+		call = main.CallTo(summation, 3, "prog.c:7", CallKind.Direct, block, {"line": 7})
+
+		self.assertIs(main, call.Caller)
+		self.assertIs(summation, call.Callee)
+		self.assertEqual(3, call.Count)
+		self.assertEqual("prog.c:7", call.Value)
+		self.assertIs(CallKind.Direct, call.Kind)
+		self.assertIs(block, call.CallSite)
+		self.assertEqual(7, call["line"])
+		self.assertTupleEqual((call, ), main.OutboundCalls)
+		self.assertTupleEqual((call, ), summation.InboundCalls)
+		self.assertListEqual([call], graph.Calls)
+
+	def test_CallFrom(self) -> None:
+		graph =     CallGraph("prog")
+		main =      Function(graph, "main")
+		summation = Function(graph, "Sum")
+
+		call = summation.CallFrom(main, callKind=CallKind.Indirect)
+
+		self.assertIs(main, call.Caller)
+		self.assertIs(summation, call.Callee)
+		self.assertIsNone(call.Count)
+		self.assertIsNone(call.CallSite)
+		self.assertIs(CallKind.Indirect, call.Kind)
+		self.assertEqual(0, len(call))
+
+	def test_CallTo_Checks(self) -> None:
+		graph = CallGraph("prog")
+		main =  Function(graph, "main")
+
+		with self.assertRaises(ValueError):
+			main.CallTo(None)
+
+		with self.assertRaises(ValueError):
+			main.CallTo(Function(CallGraph("other"), "Sum"))
+
+		with self.assertRaises(ValueError):
+			main.CallTo(main, callSite=BasicBlock(ControlFlowGraph("main"), 2))
+
 	def test_Kind_Str(self) -> None:
 		self.assertEqual("External", str(FunctionKind.External))
 		self.assertEqual("Indirect", str(CallKind.Indirect))

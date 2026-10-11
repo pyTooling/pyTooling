@@ -268,6 +268,88 @@ class Function(BaseWithCountAndValue):
 		"""
 		return tuple(self._outboundCalls)
 
+	def CallTo(
+		self,
+		callee:        Function,
+		callCount:     Nullable[int]                    = None,
+		callValue:     Nullable[Any]                    = None,
+		callKind:      CallKind                         = CallKind.Default,
+		callSite:      Nullable[BasicBlock]             = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> Call:
+		"""
+		Create an outbound call from this function to the called function.
+
+		:param callee:        The called function.
+		:param callCount:     Optional, how often the call was made. Default: ``None``.
+		:param callValue:     Optional, any value attached to the call, e.g. the call's source line. Default: ``None``.
+		:param callKind:      Optional, kind of the call. Default: :attr:`CallKind.Default`.
+		:param callSite:      Optional, the block of the caller's control flow graph the call is made from.
+		                      Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs for the call. Default: ``None``.
+		:returns:             The call from this function to the callee.
+		:raises ValueError:   If parameter 'callee' is None.
+		:raises TypeError:    If parameter 'callee' is not of type :class:`Function`.
+		:raises ValueError:   If parameter 'callee' belongs to another graph than this function.
+		:raises TypeError:    If parameter 'callCount' is not of type :class:`int`.
+		:raises ValueError:   If parameter 'callCount' is negative.
+		:raises ValueError:   If parameter 'callKind' is None.
+		:raises TypeError:    If parameter 'callKind' is not of type :class:`CallKind`.
+		:raises TypeError:    If parameter 'callSite' is not of type :class:`~pyTooling.ControlFlow.BasicBlock`.
+		:raises ValueError:   If parameter 'callSite' is given, but the caller has no control flow graph.
+		:raises ValueError:   If parameter 'callSite' belongs to another control flow graph than the caller's.
+		:raises ValueError:   If parameter 'callSite' is not a block of :attr:`~pyTooling.ControlFlow.BlockKind.Code`.
+
+		.. seealso::
+
+		   :meth:`CallFrom`
+		      |rarr| Create an inbound call from a calling function to this function.
+		"""
+		return Call(
+			self, callee, callKind, callSite=callSite, count=callCount, value=callValue, keyValuePairs=keyValuePairs
+		)
+
+	def CallFrom(
+		self,
+		caller:        Function,
+		callCount:     Nullable[int]                    = None,
+		callValue:     Nullable[Any]                    = None,
+		callKind:      CallKind                         = CallKind.Default,
+		callSite:      Nullable[BasicBlock]             = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> Call:
+		"""
+		Create an inbound call from the calling function to this function.
+
+		:param caller:        The calling function.
+		:param callCount:     Optional, how often the call was made. Default: ``None``.
+		:param callValue:     Optional, any value attached to the call, e.g. the call's source line. Default: ``None``.
+		:param callKind:      Optional, kind of the call. Default: :attr:`CallKind.Default`.
+		:param callSite:      Optional, the block of the caller's control flow graph the call is made from.
+		                      Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs for the call. Default: ``None``.
+		:returns:             The call from the caller to this function.
+		:raises ValueError:   If parameter 'caller' is None.
+		:raises TypeError:    If parameter 'caller' is not of type :class:`Function`.
+		:raises ValueError:   If this function belongs to another graph than parameter 'caller'.
+		:raises TypeError:    If parameter 'callCount' is not of type :class:`int`.
+		:raises ValueError:   If parameter 'callCount' is negative.
+		:raises ValueError:   If parameter 'callKind' is None.
+		:raises TypeError:    If parameter 'callKind' is not of type :class:`CallKind`.
+		:raises TypeError:    If parameter 'callSite' is not of type :class:`~pyTooling.ControlFlow.BasicBlock`.
+		:raises ValueError:   If parameter 'callSite' is given, but the caller has no control flow graph.
+		:raises ValueError:   If parameter 'callSite' belongs to another control flow graph than the caller's.
+		:raises ValueError:   If parameter 'callSite' is not a block of :attr:`~pyTooling.ControlFlow.BlockKind.Code`.
+
+		.. seealso::
+
+		   :meth:`CallTo`
+		      |rarr| Create an outbound call from this function to a called function.
+		"""
+		return Call(
+			caller, self, callKind, callSite=callSite, count=callCount, value=callValue, keyValuePairs=keyValuePairs
+		)
+
 
 @export
 class Call(BaseWithCountAndValue):

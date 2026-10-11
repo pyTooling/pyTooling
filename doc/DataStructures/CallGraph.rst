@@ -128,6 +128,13 @@ compiler reports one per call site, a profiler one per pair of caller and callee
    Call(main, apply, count=1)
    Call(apply, indirect, CallKind.Indirect)
 
+A call is also created from one of its functions, as an edge from a block in :mod:`pyTooling.ControlFlow`:
+
+.. code-block:: Python
+
+   main.CallTo(apply, 1)                                 # Call(main, apply, count=1)
+   indirect.CallFrom(apply, callKind=CallKind.Indirect)  # Call(apply, indirect, CallKind.Indirect)
+
 .. rubric:: Call kinds
 
 +---------------------------------------------------+--------------------------------------------------------------+

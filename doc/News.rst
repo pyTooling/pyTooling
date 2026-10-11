@@ -112,7 +112,8 @@ Version 10.x (2026)
        targets of an indirect call.
      * A call leads from the caller to the callee, so a recursion is a cycle. Its
        :class:`~pyTooling.CallGraph.CallKind` says if the callee is named (direct) or determined at run time
-       (indirect). Two functions can be connected by several calls, e.g. one per call site.
+       (indirect). Two functions can be connected by several calls, e.g. one per call site. A function creates calls
+       with :meth:`~pyTooling.CallGraph.Function.CallTo` and :meth:`~pyTooling.CallGraph.Function.CallFrom`.
      * Functions and calls carry an optional execution count, e.g. from a profiler, and an optional value. A function
        can refer to its :class:`~pyTooling.ControlFlow.ControlFlowGraph`, and a call to its call site, a block of that
        graph. Call graphs, functions and calls carry key-value pairs, served by their dunder methods.
