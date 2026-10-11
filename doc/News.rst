@@ -94,7 +94,8 @@ Version 10.x (2026)
        function. A block is looked up by its ID: :pycode:`graph.GetBlock(3)`, :pycode:`graph.ContainsBlock(3)`.
      * An edge's :class:`~pyTooling.ControlFlow.EdgeKind` says why control continues with its destination: a
        fall-through, a jump, an exception - to a handler or to the unwind block - or an abnormal exit like
-       ``exit()``. A ``switch`` is a block with an edge per target.
+       ``exit()``. A ``switch`` is a block with an edge per target. A block creates edges with
+       :meth:`~pyTooling.ControlFlow.BasicBlock.EdgeTo` and :meth:`~pyTooling.ControlFlow.BasicBlock.EdgeFrom`.
      * Blocks and edges carry an optional execution count, e.g. from a code coverage report, and an optional value.
        Graphs, blocks and edges carry key-value pairs, served by their dunder methods as in :mod:`pyTooling.Graph`.
      * :meth:`~pyTooling.ControlFlow.ControlFlowGraph.ToGraph` converts it into a :class:`~pyTooling.Graph.Graph`,

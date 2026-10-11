@@ -128,6 +128,56 @@ class Construction(Testcase):
 		self.assertTupleEqual((edge2,), graph.Exit.InboundEdges)
 		self.assertListEqual([edge1, edge2], graph.Edges)
 
+	def test_EdgeTo(self) -> None:
+		graph = ControlFlowGraph("main")
+		block = BasicBlock(graph, 2)
+
+		edge = graph.Entry.EdgeTo(block, 3, "start", EdgeKind.FallThrough, {"label": "start"})
+
+		self.assertIs(graph.Entry, edge.Source)
+		self.assertIs(block, edge.Destination)
+		self.assertEqual(3, edge.Count)
+		self.assertEqual("start", edge.Value)
+		self.assertIs(EdgeKind.FallThrough, edge.Kind)
+		self.assertEqual("start", edge["label"])
+		self.assertTupleEqual((edge, ), graph.Entry.OutboundEdges)
+		self.assertTupleEqual((edge, ), block.InboundEdges)
+		self.assertListEqual([edge], graph.Edges)
+
+	def test_EdgeFrom(self) -> None:
+		graph = ControlFlowGraph("main")
+		block = BasicBlock(graph, 2)
+
+		edge = graph.Exit.EdgeFrom(block, edgeKind=EdgeKind.Jump)
+
+		self.assertIs(block, edge.Source)
+		self.assertIs(graph.Exit, edge.Destination)
+		self.assertIsNone(edge.Count)
+		self.assertIsNone(edge.Value)
+		self.assertIs(EdgeKind.Jump, edge.Kind)
+		self.assertEqual(0, len(edge))
+		self.assertTupleEqual((edge, ), graph.Exit.InboundEdges)
+
+	def test_EdgeTo_Checks(self) -> None:
+		graph = ControlFlowGraph("main")
+		block = BasicBlock(graph, 2)
+		graph.Entry.EdgeTo(block)
+
+		with self.assertRaises(DuplicateEdgeError):
+			graph.Entry.EdgeTo(block)
+
+		with self.assertRaises(ValueError):
+			graph.Exit.EdgeTo(block)
+
+		with self.assertRaises(ValueError):
+			block.EdgeFrom(graph.Exit)
+
+		with self.assertRaises(ValueError):
+			block.EdgeTo(graph.Entry)
+
+		with self.assertRaises(ValueError):
+			block.EdgeTo(BasicBlock(ControlFlowGraph("other"), 3))
+
 	def test_Edge_Kinds(self) -> None:
 		"""Two blocks can be connected by one edge of each kind."""
 		graph = ControlFlowGraph("main")

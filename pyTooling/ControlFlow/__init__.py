@@ -398,6 +398,76 @@ class BasicBlock(BaseWithCountAndValue):
 		"""
 		return tuple(self._outboundEdges)
 
+	def EdgeTo(
+		self,
+		destination:   BasicBlock,
+		edgeCount:     Nullable[int]                    = None,
+		edgeValue:     Nullable[Any]                    = None,
+		edgeKind:      EdgeKind                         = EdgeKind.Default,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> Edge:
+		"""
+		Create an outbound edge from this block to the block control continues with.
+
+		:param destination:         The block control continues with.
+		:param edgeCount:           Optional, how often control took the edge. Default: ``None``.
+		:param edgeValue:           Optional, any value attached to the edge, e.g. a ``case`` label. Default: ``None``.
+		:param edgeKind:            Optional, kind of the edge. Default: :attr:`EdgeKind.Default`.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the edge. Default: ``None``.
+		:returns:                   The edge leading from this block to the destination.
+		:raises ValueError:         If this block is an exit or unwind block.
+		:raises ValueError:         If parameter 'destination' is None.
+		:raises TypeError:          If parameter 'destination' is not of type :class:`BasicBlock`.
+		:raises ValueError:         If parameter 'destination' is an entry block.
+		:raises ValueError:         If parameter 'destination' belongs to another graph than this block.
+		:raises TypeError:          If parameter 'edgeCount' is not of type :class:`int`.
+		:raises ValueError:         If parameter 'edgeCount' is negative.
+		:raises ValueError:         If parameter 'edgeKind' is None.
+		:raises TypeError:          If parameter 'edgeKind' is not of type :class:`EdgeKind`.
+		:raises DuplicateEdgeError: If an edge of the same kind connects the two blocks already.
+
+		.. seealso::
+
+		   :meth:`EdgeFrom`
+		      |rarr| Create an inbound edge from a block to this block.
+		"""
+		return Edge(self, destination, edgeKind, count=edgeCount, value=edgeValue, keyValuePairs=keyValuePairs)
+
+	def EdgeFrom(
+		self,
+		source:        BasicBlock,
+		edgeCount:     Nullable[int]                    = None,
+		edgeValue:     Nullable[Any]                    = None,
+		edgeKind:      EdgeKind                         = EdgeKind.Default,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> Edge:
+		"""
+		Create an inbound edge from the block control leaves to this block.
+
+		:param source:              The block control leaves.
+		:param edgeCount:           Optional, how often control took the edge. Default: ``None``.
+		:param edgeValue:           Optional, any value attached to the edge, e.g. a ``case`` label. Default: ``None``.
+		:param edgeKind:            Optional, kind of the edge. Default: :attr:`EdgeKind.Default`.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs for the edge. Default: ``None``.
+		:returns:                   The edge leading from the source to this block.
+		:raises ValueError:         If parameter 'source' is None.
+		:raises TypeError:          If parameter 'source' is not of type :class:`BasicBlock`.
+		:raises ValueError:         If parameter 'source' is an exit or unwind block.
+		:raises ValueError:         If this block is an entry block.
+		:raises ValueError:         If this block belongs to another graph than parameter 'source'.
+		:raises TypeError:          If parameter 'edgeCount' is not of type :class:`int`.
+		:raises ValueError:         If parameter 'edgeCount' is negative.
+		:raises ValueError:         If parameter 'edgeKind' is None.
+		:raises TypeError:          If parameter 'edgeKind' is not of type :class:`EdgeKind`.
+		:raises DuplicateEdgeError: If an edge of the same kind connects the two blocks already.
+
+		.. seealso::
+
+		   :meth:`EdgeTo`
+		      |rarr| Create an outbound edge from this block to a block control continues with.
+		"""
+		return Edge(source, self, edgeKind, count=edgeCount, value=edgeValue, keyValuePairs=keyValuePairs)
+
 
 @export
 class Edge(BaseWithCountAndValue):

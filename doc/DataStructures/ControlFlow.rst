@@ -113,6 +113,14 @@ An :class:`~pyTooling.ControlFlow.Edge` leads from a block to a block control co
 outbound edges branches; a ``switch`` has an edge per target. Two blocks can be connected by edges of different kinds,
 but only by one edge of each kind. No edge leads to the entry block, and none leaves the exit or unwind block.
 
+An edge is created by its constructor, or from one of its blocks, as in :mod:`pyTooling.Graph`:
+
+.. code-block:: Python
+
+   Edge(graph.Entry, body, EdgeKind.FallThrough, count=3)
+   graph.Entry.EdgeTo(body, 3, edgeKind=EdgeKind.FallThrough)       # the same edge
+   graph.Exit.EdgeFrom(body, edgeKind=EdgeKind.Jump)
+
 .. rubric:: Edge kinds
 
 +---------------------------------------------------+--------------------------------------------------------------+
