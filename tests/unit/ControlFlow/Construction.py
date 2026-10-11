@@ -72,7 +72,7 @@ class Construction(Testcase):
 		graph = ControlFlowGraph("main")
 		block = BasicBlock(graph, 2)
 
-		self.assertIs(graph, block.Graph)
+		self.assertIs(graph, block.ControlFlowGraph)
 		self.assertEqual(2, block.ID)
 		self.assertIs(BlockKind.Code, block.Kind)
 		self.assertIsNone(block.Count)
@@ -177,16 +177,16 @@ class Checks(Testcase):
 
 		self.assertEqual("Parameter 'exitID' equals parameter 'entryID'.", str(context.exception))
 
-	def test_BasicBlock_Graph(self) -> None:
+	def test_BasicBlock_ControlFlowGraph(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = BasicBlock(None, 2)
 
-		self.assertEqual("Parameter 'graph' is None.", str(context.exception))
+		self.assertEqual("Parameter 'controlFlowGraph' is None.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			_ = BasicBlock("main", 2)
 
-		self.assertEqual("Parameter 'graph' is not of type 'ControlFlowGraph'.", str(context.exception))
+		self.assertEqual("Parameter 'controlFlowGraph' is not of type 'ControlFlowGraph'.", str(context.exception))
 
 	def test_BasicBlock_ID(self) -> None:
 		graph = ControlFlowGraph("main")

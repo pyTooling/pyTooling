@@ -191,20 +191,20 @@ class BasicBlock(Base):
 	A block is identified by an ID unique within its graph, e.g. a compiler's block number or a line number. Its outbound
 	edges lead to the blocks control continues with.
 	"""
-	_graph:         ControlFlowGraph  #: The graph this block belongs to.
-	_id:            Hashable          #: ID of the block, unique within its graph.
-	_kind:          BlockKind         #: Kind of the block.
-	_inboundEdges:  list[Edge]        #: Edges leading to this block.
-	_outboundEdges: list[Edge]        #: Edges leading from this block to the blocks control continues with.
+	_controlFlowGraph: _ControlFlowGraph  #: The control flow graph this block belongs to.
+	_id:               Hashable           #: ID of the block, unique within its graph.
+	_kind:             BlockKind          #: Kind of the block.
+	_inboundEdges:     list[Edge]         #: Edges leading to this block.
+	_outboundEdges:    list[Edge]         #: Edges leading from this block to the blocks control continues with.
 
 	def __init__(
 		self,
-		graph:   ControlFlowGraph,
-		blockID: Hashable,
+		controlFlowGraph: _ControlFlowGraph,
+		blockID:          Hashable,
 		*,
-		kind:    BlockKind     = BlockKind.Code,
-		count:   Nullable[int] = None,
-		value:   Nullable[Any] = None
+		kind:             BlockKind     = BlockKind.Code,
+		count:            Nullable[int] = None,
+		value:            Nullable[Any] = None
 	) -> None:
 		"""
 		Initializes a basic block and adds it to its graph.
@@ -212,15 +212,15 @@ class BasicBlock(Base):
 		A graph creates its entry and exit block itself. A block of :attr:`BlockKind.Unwind` becomes the graph's unwind
 		block.
 
-		:param graph:                The graph the block belongs to.
+		:param controlFlowGraph:     The control flow graph the block belongs to.
 		:param blockID:              ID of the block, unique within its graph.
 		:param kind:                 Optional, kind of the block. Default: :attr:`BlockKind.Code`.
 		:param count:                Optional, how often the block was executed. Default: ``None``.
 		:param value:                Optional, any value attached to the block, e.g. its source lines. Default: ``None``.
 		:raises TypeError:           If parameter 'count' is not of type :class:`int`.
 		:raises ValueError:          If parameter 'count' is negative.
-		:raises ValueError:          If parameter 'graph' is None.
-		:raises TypeError:           If parameter 'graph' is not of type :class:`ControlFlowGraph`.
+		:raises ValueError:          If parameter 'controlFlowGraph' is None.
+		:raises TypeError:           If parameter 'controlFlowGraph' is not of type :class:`ControlFlowGraph`.
 		:raises ValueError:          If parameter 'blockID' is None.
 		:raises TypeError:           If parameter 'blockID' is not hashable.
 		:raises ValueError:          If parameter 'kind' is None.
@@ -230,11 +230,11 @@ class BasicBlock(Base):
 		"""
 		super().__init__(count, value)
 
-		if graph is None:
-			raise ValueError("Parameter 'graph' is None.")
-		elif not isinstance(graph, ControlFlowGraph):
-			ex = TypeError("Parameter 'graph' is not of type 'ControlFlowGraph'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
+		if controlFlowGraph is None:
+			raise ValueError("Parameter 'controlFlowGraph' is None.")
+		elif not isinstance(controlFlowGraph, _ControlFlowGraph):
+			ex = TypeError("Parameter 'controlFlowGraph' is not of type 'ControlFlowGraph'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(controlFlowGraph)}'.")
 			raise ex
 
 		if blockID is None:
@@ -243,8 +243,8 @@ class BasicBlock(Base):
 			ex = TypeError("Parameter 'blockID' is not hashable.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(blockID)}'.")
 			raise ex
-		elif blockID in graph._blocks:
-			raise DuplicateBlockError(f"Control flow graph '{graph._name}' has a block '{blockID}' already.")
+		elif blockID in controlFlowGraph._blocks:
+			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has a block '{blockID}' already.")
 
 		if kind is None:
 			raise ValueError("Parameter 'kind' is None.")
@@ -252,31 +252,31 @@ class BasicBlock(Base):
 			ex = TypeError("Parameter 'kind' is not of type 'BlockKind'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 			raise ex
-		elif kind is BlockKind.Entry and len(graph._blocks) > 0:
-			raise DuplicateBlockError(f"Control flow graph '{graph._name}' has an entry block already.")
-		elif kind is BlockKind.Exit and len(graph._blocks) > 1:
-			raise DuplicateBlockError(f"Control flow graph '{graph._name}' has an exit block already.")
-		elif kind is BlockKind.Unwind and graph._unwind is not None:
-			raise DuplicateBlockError(f"Control flow graph '{graph._name}' has an unwind block already.")
+		elif kind is BlockKind.Entry and len(controlFlowGraph._blocks) > 0:
+			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has an entry block already.")
+		elif kind is BlockKind.Exit and len(controlFlowGraph._blocks) > 1:
+			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has an exit block already.")
+		elif kind is BlockKind.Unwind and controlFlowGraph._unwind is not None:
+			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has an unwind block already.")
 
-		self._graph =         graph
-		self._id =            blockID
-		self._kind =          kind
-		self._inboundEdges =  []
-		self._outboundEdges = []
+		self._controlFlowGraph = controlFlowGraph
+		self._id =               blockID
+		self._kind =             kind
+		self._inboundEdges =     []
+		self._outboundEdges =    []
 
-		graph._blocks[blockID] = self
+		controlFlowGraph._blocks[blockID] = self
 		if kind is BlockKind.Unwind:
-			graph._unwind = self
+			controlFlowGraph._unwind = self
 
 	@readonly
-	def Graph(self) -> ControlFlowGraph:
+	def ControlFlowGraph(self) -> _ControlFlowGraph:
 		"""
-		Read-only property to access the graph this block belongs to (:attr:`_graph`).
+		Read-only property to access the control flow graph this block belongs to (:attr:`_controlFlowGraph`).
 
 		:returns: The control flow graph.
 		"""
-		return self._graph
+		return self._controlFlowGraph
 
 	@readonly
 	def ID(self) -> Hashable:
@@ -380,9 +380,9 @@ class Edge(Base):
 			ex = ValueError("Parameter 'destination' is an entry block.")
 			ex.add_note(f"Got block '{destination._id}'.")
 			raise ex
-		elif destination._graph is not source._graph:
+		elif destination._controlFlowGraph is not source._controlFlowGraph:
 			ex = ValueError("Parameter 'destination' belongs to another graph than parameter 'source'.")
-			ex.add_note(f"Got graphs '{source._graph._name}' and '{destination._graph._name}'.")
+			ex.add_note(f"Got graphs '{source._controlFlowGraph._name}' and '{destination._controlFlowGraph._name}'.")
 			raise ex
 
 		if kind is None:
@@ -404,7 +404,7 @@ class Edge(Base):
 
 		source._outboundEdges.append(self)
 		destination._inboundEdges.append(self)
-		source._graph._edges.append(self)
+		source._controlFlowGraph._edges.append(self)
 
 	@readonly
 	def Source(self) -> BasicBlock:
@@ -629,3 +629,8 @@ class ControlFlowGraph(metaclass=ExtendedType, slots=True):
 			)
 
 		return graph
+
+
+# A class with a property named like a class - ``ControlFlowGraph`` - can't name that class in the annotation of a
+# field: the class body's namespace, where annotations are evaluated, binds the name to the property.
+_ControlFlowGraph = ControlFlowGraph
