@@ -32,7 +32,7 @@
 Unit tests for the slots handling of :class:`pyTooling.MetaClasses.ExtendedType`: object sizes, the errors
 raised for unannotated or shadowed fields, and inheritance including mixin-classes.
 """
-from typing                import ClassVar, Optional as Nullable
+from typing                import ClassVar, Generic, TypeVar, Optional as Nullable
 
 from pytest                import mark
 
@@ -49,6 +49,9 @@ if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
+
+
+T = TypeVar("T")
 
 
 class ObjectSizes(Testcase):
@@ -1124,6 +1127,93 @@ class NonEmptySlotsOnSecondaryBaseClass(Testcase):
 		self.assertEqual(1, inst._data_L1)
 		self.assertEqual(2, inst._data_M1)
 		self.assertEqual(3, inst._data_2)
+
+	def test_SharedBaseClassWithNonEmptySlots(self) -> None:
+		"""A base-class on the primary inheritance line may also be reached through a mixin-class."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data_B1: int
+
+		class Primary(Base):
+			_data_L1: int
+
+		class Mixin(Base, mixin=True):
+			_data_M1: int
+
+		class Final(Primary, Mixin):
+			def __init__(self) -> None:
+				self._data_B1 = 1
+				self._data_L1 = 2
+				self._data_M1 = 3
+
+		inst = Final()
+
+		self.assertTupleEqual(("_data_M1", ), Final.__slots__)
+		self.assertEqual(1, inst._data_B1)
+		self.assertEqual(2, inst._data_L1)
+		self.assertEqual(3, inst._data_M1)
+
+
+class BaseClassWithoutSlots(Testcase):
+	"""Every base-class of a slotted class or mixin-class uses ``__slots__``, also an indirect one."""
+
+	def test_NonSlottedBaseClass_Mixin(self) -> None:
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Mixin(Base, mixin=True):
+				_data_M1: int
+
+		self.assertEqual("Base-classes 'Base' doesn't use '__slots__'.", str(context.exception))
+
+	def test_IndirectPlainBaseClass(self) -> None:
+		"""A plain base-class using ``__slots__`` may itself derive from one without."""
+		class Root:
+			pass
+
+		class Plain(Root):
+			__slots__ = ()
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Plain, metaclass=ExtendedType, slots=True):
+				_data_2: int
+
+		self.assertEqual("Base-classes 'Root' doesn't use '__slots__'.", str(context.exception))
+
+	def test_IndirectPlainBaseClass_Mixin(self) -> None:
+		class Root:
+			pass
+
+		class Plain(Root):
+			__slots__ = ()
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Mixin(Plain, metaclass=ExtendedType, mixin=True):
+				_data_M1: int
+
+		self.assertEqual("Base-classes 'Root' doesn't use '__slots__'.", str(context.exception))
+
+	def test_GenericBaseClass(self) -> None:
+		class Base(Generic[T], metaclass=ExtendedType, slots=True):
+			_data_B1: int
+
+		class Mixin(Generic[T], metaclass=ExtendedType, mixin=True):
+			_data_M1: int
+
+		class Final(Base[int], Mixin[int], Generic[T]):
+			_data_2: int
+
+		self.assertTupleEqual(("_data_2", "_data_M1"), Final.__slots__)
+
+	def test_GenericBaseClass_PlainBaseClass(self) -> None:
+		class Plain:
+			pass
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Plain, Generic[T], metaclass=ExtendedType, slots=True):
+				_data_2: int
+
+		self.assertEqual("Base-classes 'Plain' doesn't use '__slots__'.", str(context.exception))
 
 
 class SecondaryBaseClassIsNotAMixin(Testcase):
