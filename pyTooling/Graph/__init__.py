@@ -2555,7 +2555,9 @@ class BaseGraph(
 		"""
 		Iterate all or selected vertices in topological order.
 
-		An edge from ``A`` to ``B`` reads as *A depends on B*, and a vertex is yielded after every vertex it depends on.
+		A vertex is yielded after every destination of its outbound edges, so the vertices without outbound edges come
+		first. An edge points the way control flows or jobs execute, so the order is the reverse execution order: a control
+		flow graph yields its exit first.
 
 		If parameter ``predicate`` is not None, the given filter function is used to skip vertices in the generator.
 
