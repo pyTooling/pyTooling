@@ -1514,6 +1514,11 @@ class ExtendedType(type):
 		iteratorStack: list[Iterator[type]] = list()
 
 		for baseClass in baseClasses:
+			# 'object' as a direct base-class is a path of its own.
+			if len(baseClass.__bases__) == 0:
+				yield (baseClass, )
+				continue
+
 			typeStack.append(baseClass)
 			iteratorStack.append(iter(baseClass.__bases__))
 
