@@ -31,17 +31,17 @@ values, the interface of a reusable workflow.
 The Tree
 ********
 
-.. code-block:: text
+.. tree::
 
-   PipelineGroup            the pipelines started for one commit
-   +-- Pipeline             a pipeline
-       +-- Workflow         a called workflow or a child pipeline
-       |   +-- ...          the same elements a pipeline contains
-       +-- Matrix           a matrix
-       |   +-- MatrixJob        one job instance it produced
-       |   +-- MatrixWorkflow   one instance of a called workflow it produced
-       +-- Job              a job
-           +-- Step         a step of that job
+   - :class:`~pyTooling.CI.PipelineGroup`        | the pipelines started for one commit
+     - :class:`~pyTooling.CI.Pipeline`           | a pipeline
+       - :class:`~pyTooling.CI.Workflow`         | a called workflow or a child pipeline
+         - ...                                   | the same elements a pipeline contains
+       - :class:`~pyTooling.CI.Matrix`           | a matrix
+         - :class:`~pyTooling.CI.MatrixJob`      | one job instance it produced
+         - :class:`~pyTooling.CI.MatrixWorkflow` | one instance of a called workflow it produced
+       - :class:`~pyTooling.CI.Job`              | a job
+         - :class:`~pyTooling.CI.Step`           | a step of that job
 
 An element is created with its parent, which adds it to its elements: a group's
 :attr:`~pyTooling.CI.JobGroup.Elements`, a job's :attr:`~pyTooling.CI.Job.Steps` or a pipeline
