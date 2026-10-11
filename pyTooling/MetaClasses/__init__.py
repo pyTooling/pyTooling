@@ -1337,7 +1337,7 @@ class ExtendedType(type):
 
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
 			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
-			inheritancePaths = [path for path in metacls._iterateBaseClassPaths(baseClasses)]
+			inheritancePaths = list(metacls._iterateBaseClassPaths(baseClasses))
 			primaryInharitancePath: set[type] = set(inheritancePaths[0])
 			for typePath in inheritancePaths[1:]:
 				for t in typePath:

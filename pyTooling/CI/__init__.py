@@ -232,7 +232,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._startedAt =   startedAt
 		self._completedAt = completedAt
 		self._outcome =     outcome
-		self._dict =        {} if keyValuePairs is None else {key: value for key, value in keyValuePairs.items()}
+		self._dict =        {} if keyValuePairs is None else dict(keyValuePairs)
 
 		if parent is not None:
 			parent._AddElement(self)

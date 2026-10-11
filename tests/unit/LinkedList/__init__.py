@@ -725,7 +725,7 @@ class MiscOperations(Testcase):
 
 		ll.Sort()
 
-		self.assertListEqual([i for i in range(1, len(sequence) + 1)], ll.ToList())
+		self.assertListEqual(list(range(1, len(sequence) + 1)), ll.ToList())
 
 	def test_Sort_Reverse(self) -> None:
 		sequence = [7, 6, 4, 8, 2, 5, 3, 1, 9]
@@ -736,7 +736,7 @@ class MiscOperations(Testcase):
 
 		ll.Sort(reverse=True)
 
-		self.assertListEqual([i for i in range(len(sequence), 0, -1)], ll.ToList())
+		self.assertListEqual(list(range(len(sequence), 0, -1)), ll.ToList())
 
 	def test_Sort_Key(self) -> None:
 		sequence = [7, 6, 4, 8, 2, 5, 3, 1, 9]
@@ -753,7 +753,7 @@ class MiscOperations(Testcase):
 
 		ll.Sort(key=lambda node: node._value._value)
 
-		self.assertListEqual([i for i in range(1, len(sequence) + 1)], [n._value for n in ll.ToList()])
+		self.assertListEqual(list(range(1, len(sequence) + 1)), [n._value for n in ll.ToList()])
 
 
 class GetNode(Testcase):
@@ -884,7 +884,7 @@ class Iterate(Testcase):
 
 		self.assertEqual(length, ll.Count)
 
-		self.assertListEqual(sequence, [n for n in ll.IterateFromFirst()])
+		self.assertListEqual(sequence, list(ll.IterateFromFirst()))
 
 	def test_IterateFromLast_Empty(self) -> None:
 		ll = LinkedList()
@@ -906,7 +906,7 @@ class Iterate(Testcase):
 		self.assertEqual(length, ll.Count)
 
 		sequence.reverse()
-		self.assertListEqual(sequence, [n for n in ll.IterateFromLast()])
+		self.assertListEqual(sequence, list(ll.IterateFromLast()))
 
 	def test_IterateToFirst_First(self) -> None:
 		ll = LinkedList()
@@ -921,7 +921,7 @@ class Iterate(Testcase):
 		self.assertEqual(length, ll.Count)
 
 		index = 0
-		actual = [n for n in sequence[index].IterateToFirst()]
+		actual = list(sequence[index].IterateToFirst())
 		self.assertEqual(0, len(actual))
 
 	def test_IterateToFirst(self) -> None:
@@ -937,7 +937,7 @@ class Iterate(Testcase):
 		self.assertEqual(length, ll.Count)
 
 		index = 3
-		actual = [n for n in sequence[index].IterateToFirst()]
+		actual = list(sequence[index].IterateToFirst())
 		self.assertEqual(index, len(actual))
 
 		expected = sequence[0:index]
@@ -957,7 +957,7 @@ class Iterate(Testcase):
 		self.assertEqual(length, ll.Count)
 
 		index = 3
-		actual = [n for n in sequence[index].IterateToFirst(includeSelf=True)]
+		actual = list(sequence[index].IterateToFirst(includeSelf=True))
 		self.assertEqual(index + 1, len(actual))
 
 		expected = sequence[0:index + 1]
@@ -977,7 +977,7 @@ class Iterate(Testcase):
 		self.assertEqual(length, ll.Count)
 
 		index = length - 1
-		actual = [n for n in sequence[index].IterateToLast()]
+		actual = list(sequence[index].IterateToLast())
 		self.assertEqual(0, len(actual))
 
 	def test_IterateToLast(self) -> None:
@@ -993,7 +993,7 @@ class Iterate(Testcase):
 		self.assertEqual(length, ll.Count)
 
 		index = 1
-		actual = [n for n in sequence[index].IterateToLast()]
+		actual = list(sequence[index].IterateToLast())
 		self.assertEqual(length - index - 1, len(actual))
 
 		expected = sequence[index + 1:length - index + 1]
@@ -1012,7 +1012,7 @@ class Iterate(Testcase):
 		self.assertEqual(length, ll.Count)
 
 		index = 1
-		actual = [n for n in sequence[index].IterateToLast(includeSelf=True)]
+		actual = list(sequence[index].IterateToLast(includeSelf=True))
 		self.assertEqual(length - index, len(actual))
 
 		expected = sequence[index:length - index + 1]

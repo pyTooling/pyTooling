@@ -954,8 +954,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 		super().__init__(version, project, timestamp)
 		LazyLoadableMixin.__init__(self, lazy)
 
-		self._files = [file for file in files] if files is not None else []
-		self._requirements = {k: v for k, v in requirements} if requirements is not None else {None: []}
+		self._files = list(files) if files is not None else []
+		self._requirements = dict(requirements) if requirements is not None else {None: []}
 
 	def __lazy_loader__(self, targetLevel: LazyLoaderState) -> None:
 		"""

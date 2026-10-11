@@ -79,9 +79,9 @@ class Construction(Testcase):
 			self.assertFalse(child.HasChildren)
 			self.assertListEqual([root, child], list(child.Path))
 			self.assertListEqual([root, child], list(child.GetPath()))
-			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
+			self.assertListEqual([root], list(child.GetAncestors()))
 
-		self.assertListEqual(children, [child for child in root.GetChildren()])
+		self.assertListEqual(children, list(root.GetChildren()))
 #		self.assertListEqual(children, [child for child in root.GetSiblings()])
 
 	def test_NewNodeWithChildren(self) -> None:
@@ -105,10 +105,10 @@ class Construction(Testcase):
 			self.assertFalse(child.HasChildren)
 			self.assertListEqual([root, child], list(child.Path))
 			self.assertListEqual([root, child], list(child.GetPath()))
-			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
+			self.assertListEqual([root], list(child.GetAncestors()))
 
-		self.assertListEqual(children, [child for child in root.GetChildren()])
-		self.assertListEqual(children, [child for child in root.GetDescendants()])
+		self.assertListEqual(children, list(root.GetChildren()))
+		self.assertListEqual(children, list(root.GetDescendants()))
 
 	def test_GrandChildren(self) -> None:
 		root = Node(1)
@@ -130,9 +130,9 @@ class Construction(Testcase):
 			self.assertTrue(child.HasChildren)
 			self.assertListEqual([root, child], list(child.Path))
 			self.assertListEqual([root, child], list(child.GetPath()))
-			self.assertListEqual([root], [ancestor for ancestor in child.GetAncestors()])
+			self.assertListEqual([root], list(child.GetAncestors()))
 
-		self.assertListEqual(children, [child for child in root.GetChildren()])
+		self.assertListEqual(children, list(root.GetChildren()))
 
 		for grandChild in grandChildren:
 			self.assertIs(root, grandChild.Root)
@@ -142,11 +142,11 @@ class Construction(Testcase):
 			self.assertFalse(grandChild.HasChildren)
 			self.assertListEqual([root, grandChild.Parent, grandChild], list(grandChild.Path))
 			self.assertListEqual([root, grandChild.Parent, grandChild], list(grandChild.GetPath()))
-			self.assertListEqual([grandChild.Parent, root], [ancestor for ancestor in grandChild.GetAncestors()])
+			self.assertListEqual([grandChild.Parent, root], list(grandChild.GetAncestors()))
 
 		self.assertListEqual(
 			[children[0], grandChildren[0], grandChildren[1], children[1], grandChildren[2], grandChildren[3]],
-			[child for child in root.GetDescendants()]
+			list(root.GetDescendants())
 		)
 
 	def test_AddChild(self) -> None:
@@ -160,7 +160,7 @@ class Construction(Testcase):
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.HasChildren)
 		self.assertFalse(root.IsLeaf)
-		self.assertListEqual([child], [child for child in root.GetChildren()])
+		self.assertListEqual([child], list(root.GetChildren()))
 
 		self.assertIs(root, child.Root)
 		self.assertEqual(1, child.Level)
@@ -181,7 +181,7 @@ class Construction(Testcase):
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.HasChildren)
 		self.assertFalse(root.IsLeaf)
-		self.assertListEqual([child], [child for child in root.GetChildren()])
+		self.assertListEqual([child], list(root.GetChildren()))
 
 		self.assertIs(root, child.Root)
 		self.assertEqual(1, child.Level)
@@ -212,7 +212,7 @@ class Construction(Testcase):
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.HasChildren)
 		self.assertFalse(root.IsLeaf)
-		self.assertListEqual(children, [child for child in root.GetChildren()])
+		self.assertListEqual(children, list(root.GetChildren()))
 
 		for child in children:
 			self.assertIs(root, child.Root)
@@ -240,7 +240,7 @@ class Construction(Testcase):
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.HasChildren)
 		self.assertFalse(root.IsLeaf)
-		self.assertListEqual([child], [child for child in root.GetChildren()])
+		self.assertListEqual([child], list(root.GetChildren()))
 
 		self.assertIs(root, child.Root)
 		self.assertEqual(1, child.Level)
@@ -496,7 +496,7 @@ class Features(Testcase):
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
-		self.assertListEqual(children, [node for node in root])
+		self.assertListEqual(children, list(root))
 
 	def test_Siblings(self) -> None:
 		root = Node(1)

@@ -61,7 +61,7 @@ class Count(Testcase):
 	def test_count_10(self) -> None:
 		length = 10
 
-		l = [i for i in range(length)]
+		l = list(range(length))
 		g = (i for i in l)
 		c = count(g)
 

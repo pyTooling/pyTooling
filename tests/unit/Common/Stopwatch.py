@@ -172,7 +172,7 @@ class Operations(Testcase):
 		self.assertTupleEqual(seq[0], sw[0])
 		self.assertTupleEqual(seq[1], sw[1])
 		self.assertTupleEqual(seq[2], sw[2])
-		self.assertTupleEqual(seq, tuple(t for t in sw))
+		self.assertTupleEqual(seq, tuple(sw))
 
 
 class Formatting(Testcase):

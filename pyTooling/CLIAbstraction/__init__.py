@@ -122,7 +122,7 @@ class Environment(metaclass=ExtendedType, slots=True):
 		elif newVariables is None:
 			newVariables = os_environ
 
-		self._variables = {name: value for name, value in newVariables.items()}
+		self._variables = dict(newVariables)
 
 		if delVariables is not None:
 			for variableName in delVariables:

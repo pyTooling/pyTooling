@@ -333,7 +333,7 @@ class Base(
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises TypeError:    If parameter 'name' is not of type string.
 		"""
-		self._dict = {key: value for key, value in keyValuePairs.items()} if keyValuePairs is not None else {}
+		self._dict = dict(keyValuePairs) if keyValuePairs is not None else {}
 
 	def __del__(self) -> None:
 		"""
@@ -577,7 +577,7 @@ class BaseWithVertices(
 		super().__init__(name, keyValuePairs)
 
 		self._graph = graph
-		self._vertices = set() if vertices is None else {v for v in vertices}
+		self._vertices = set() if vertices is None else set(vertices)
 
 	def __del__(self) -> None:
 		"""
