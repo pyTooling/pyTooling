@@ -244,9 +244,9 @@ class WarningCollector:
 		"""
 		Exit the context and make the parent warning collector the current one again.
 
-		:param exc_type: Exception type
-		:param exc_val:  Exception instance
-		:param exc_tb:   Exception's traceback.
+		:param exc_type: Optional, exception type.
+		:param exc_val:  Optional, exception instance.
+		:param exc_tb:   Optional, exception's traceback.
 		:returns:        ``False``, so an exception raised in the context propagates.
 		"""
 		global _threadLocalData
@@ -426,9 +426,9 @@ class SupervisedWarningCollector(WarningCollector):
 		"""
 		Exit the context and hand the collected warnings and a raised exception to the supervisor.
 
-		:param exc_type: Exception type
-		:param exc_val:  Exception instance
-		:param exc_tb:   Exception's traceback.
+		:param exc_type: Optional, exception type.
+		:param exc_val:  Optional, exception instance.
+		:param exc_tb:   Optional, exception's traceback.
 		:returns:        ``True`` to suppress a raised exception, if a supervisor is set; the exception handler's result
 		                 instead, if it handled a raised exception; ``None`` without a supervisor.
 		"""
@@ -599,7 +599,7 @@ class ThreadSupervisor:
 		"""
 		Collect a warning raised in a supervised thread.
 
-		:param threadName: Optional, name of the thread the warning was raised in.
+		:param threadName: Name of the thread the warning was raised in.
 		:param warning:    The warning to collect.
 		"""
 		with self._lock:
@@ -609,8 +609,8 @@ class ThreadSupervisor:
 		"""
 		Collect several warnings raised in a supervised thread.
 
-		:param threadName: Optional, name of the thread the warnings were raised in.
-		:param warnings:   Optional, the warnings to collect.
+		:param threadName: Name of the thread the warnings were raised in.
+		:param warnings:   The warnings to collect.
 		"""
 		with self._lock:
 			self._warnings.extend((threadName, warning) for warning in warnings)
@@ -619,7 +619,7 @@ class ThreadSupervisor:
 		"""
 		Collect an exception that escaped a supervised thread.
 
-		:param threadName: Optional, name of the thread the exception was raised in.
+		:param threadName: Name of the thread the exception was raised in.
 		:param ex:         The exception to collect.
 		"""
 		with self._lock:

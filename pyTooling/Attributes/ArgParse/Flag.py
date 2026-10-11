@@ -70,8 +70,8 @@ class FlagArgument(NamedArgument):
 
 		:param short: Optional, short option name including the dash, e.g. ``"-v"``. Default: ``None``.
 		:param long:  Optional, long option name including the dashes, e.g. ``"--verbose"``. Default: ``None``.
-		:param dest:  Name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the handler
-		              method reads it by.
+		:param dest:  Optional, name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
+		              handler method reads it by.
 		:param help:  Optional, help text shown for this argument in the help page. Default: ``None``.
 		"""
 		args = []

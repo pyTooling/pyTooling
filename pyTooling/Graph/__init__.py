@@ -366,7 +366,7 @@ class Base(
 		If a key doesn't exist yet, a new key-value-pair is created.
 
 		:param key:   The key to create or update.
-		:param value: Optional, the value to associate to the given key.
+		:param value: The value to associate to the given key.
 		"""
 		self._dict[key] = value
 
@@ -560,7 +560,7 @@ class BaseWithVertices(
 		"""
 		Initialize a named graph element owning a set of vertices, and register it at its graph.
 
-		:param graph:         Optional, the reference to the graph.
+		:param graph:         The reference to the graph.
 		:param name:          Optional, name.
 		:param vertices:      Optional, list of vertices.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
@@ -1509,7 +1509,7 @@ class Vertex(
 		Optionally, the vertex's attached attributes (key-value-pairs) can be copied and a linkage between both vertices
 		can be established.
 
-		:param graph:                        Optional, the graph, the vertex is created in.
+		:param graph:                        The graph, the vertex is created in.
 		:param copyDict:                     Optional, if ``True``, copy all attached attributes into the new vertex.
 		:param linkingKeyToOriginalVertex:   Optional, if not ``None``, add a key-value-pair using this parameter as key
 		                                     from new vertex to the original vertex.
@@ -2094,7 +2094,7 @@ class BaseEdge(
 		:param edgeID:        Optional, unique ID for the new edge.
 		:param value:         Optional, value for the new edge.
 		:param weight:        Optional, weight for the new edge.
-		:param kind:          The kind of the new edge, a member of an enumeration.
+		:param kind:          Optional, the kind of the new edge, a member of an enumeration.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises ValueError:   If parameter 'kind' is None.
 		:raises TypeError:    If parameter 'kind' is not an enumeration member.
@@ -3091,7 +3091,7 @@ class Subgraph(
 		"""
 		Initialize a subgraph and register it at its graph.
 
-		:param graph:         Optional, the reference to the graph.
+		:param graph:         The reference to the graph.
 		:param name:          Optional, name of the new sub-graph.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
 		:raises ValueError:   If parameter 'graph' is None.
@@ -3165,7 +3165,7 @@ class View(
 		"""
 		.. todo:: GRAPH::View::init Needs documentation.
 
-		:param graph:         Optional, the reference to the graph.
+		:param graph:         The reference to the graph.
 		:param name:          Optional, name of the new view.
 		:param vertices:      Optional, list of vertices in the new view.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
@@ -3220,7 +3220,7 @@ class Component(
 		"""
 		Initialize a component of a graph and register it at that graph.
 
-		:param graph:         Optional, the reference to the graph.
+		:param graph:         The reference to the graph.
 		:param name:          Optional, name of the new component.
 		:param vertices:      Optional, list of vertices in the new component.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs.
@@ -3363,7 +3363,7 @@ class Graph(
 		"""
 		Check if a vertex with the given ID exists in this graph.
 
-		:param vertexID: Optional, ID to look for, or ``None`` for a vertex without an ID.
+		:param vertexID: ID to look for, or ``None`` for a vertex without an ID.
 		:returns:        ``True``, if such a vertex exists.
 		"""
 		if vertexID is None:
@@ -3375,7 +3375,7 @@ class Graph(
 		"""
 		Check if a vertex carrying the given value exists in this graph.
 
-		:param value: Optional, value to look for.
+		:param value: Value to look for.
 		:returns:     ``True``, if such a vertex exists.
 		"""
 		return any(vertex._value == value for vertex in chain(self._verticesWithoutID, self._verticesWithID.values()))
@@ -3386,7 +3386,7 @@ class Graph(
 
 		A vertex created without an ID can be looked up with ``None``, provided it is the only such vertex.
 
-		:param vertexID:  Optional, ID of the vertex to return, or ``None`` for the vertex without an ID.
+		:param vertexID:  ID of the vertex to return, or ``None`` for the vertex without an ID.
 		:returns:         The vertex with that ID.
 		:raises KeyError: If no vertex has that ID, or if more than one vertex matches ``None``.
 		"""
@@ -3404,7 +3404,7 @@ class Graph(
 		"""
 		Return the vertex carrying the given value.
 
-		:param value:     Optional, value of the vertex to return.
+		:param value:     Value of the vertex to return.
 		:returns:         The vertex with that value.
 		:raises KeyError: If no vertex carries that value, or if more than one vertex does.
 		"""

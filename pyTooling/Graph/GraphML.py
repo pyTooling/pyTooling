@@ -285,7 +285,7 @@ class Key(BaseWithID):
 		"""
 		Initialize a key declaring an attribute.
 
-		:param identifier: Optional, unique ID of the key within the GraphML document.
+		:param identifier: Unique ID of the key within the GraphML document.
 		:param context:    GraphML element kind this key can be used on.
 		:param name:       Name of the declared attribute.
 		:param type:       Data type of the declared attribute.
@@ -464,7 +464,7 @@ class Node(BaseWithData):
 		"""
 		Initialize a node.
 
-		:param identifier: Optional, unique ID of the node within the GraphML document.
+		:param identifier: Unique ID of the node within the GraphML document.
 		"""
 		super().__init__(identifier)
 
@@ -532,7 +532,7 @@ class Edge(BaseWithData):
 		"""
 		Initialize an edge between two nodes.
 
-		:param identifier: Optional, unique ID of the edge within the GraphML document.
+		:param identifier: Unique ID of the edge within the GraphML document.
 		:param source:     Node the edge starts at.
 		:param target:     Node the edge ends at.
 		"""
@@ -841,7 +841,7 @@ class Graph(BaseGraph):
 		Initialize the root graph of a GraphML document.
 
 		:param document:   The GraphML document this graph belongs to.
-		:param identifier: Optional, unique ID of the graph within the GraphML document.
+		:param identifier: Unique ID of the graph within the GraphML document.
 		"""
 		super().__init__(identifier)
 		self._document = document
@@ -851,7 +851,7 @@ class Graph(BaseGraph):
 		"""
 		Return the element with the given ID, whichever kind it is.
 
-		:param identifier: Optional, ID of the node, edge or subgraph.
+		:param identifier: ID of the node, edge or subgraph.
 		:returns:          The element registered under that ID.
 		:raises KeyError:  If no element has that ID.
 		"""

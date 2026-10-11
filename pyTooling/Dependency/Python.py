@@ -652,7 +652,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 		:param table:       One of the per-package tables.
 		:param packageName: Name of the package.
-		:param version:     Optional, the version to answer for. Without one, only an unrestricted key answers.
+		:param version:     The version to answer for. Without one, only an unrestricted key answers.
 		:returns:           What that key states, or ``None`` if none applies.
 		"""
 		if (entries := table.get(canonicalize_name(packageName), None)) is None:
@@ -818,7 +818,7 @@ class LazyLoadableMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		Load the object's details up to the given state.
 
-		:param targetLevel: Optional, state the object needs to be loaded to.
+		:param targetLevel: State the object needs to be loaded to.
 		"""
 		pass
 
@@ -961,7 +961,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download the release's details and post-process them, as far as the target state demands.
 
-		:param targetLevel: Optional, state the release needs to be loaded to.
+		:param targetLevel: State the release needs to be loaded to.
 		"""
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
@@ -1340,7 +1340,7 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download the project's details and its releases' details, as far as the target state demands.
 
-		:param targetLevel: Optional, state the project needs to be loaded to.
+		:param targetLevel: State the project needs to be loaded to.
 		"""
 		if targetLevel >= LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()

@@ -317,7 +317,7 @@ def WordSizeValidator(
 		"""
 		Validator function, which checks each version part against the maximum its word size allows.
 
-		:param version:     Optional, the version to validate.
+		:param version:     The version to validate.
 		:returns:           ``True``, if every part fits into its word size.
 		:raises ValueError: If a part exceeds the maximum value of its word size.
 		"""
@@ -363,7 +363,7 @@ def MaxValueValidator(
 		"""
 		Validator function, which checks each version part against its maximum value.
 
-		:param version:     Optional, the version to validate.
+		:param version:     The version to validate.
 		:returns:           ``True``, if every part is within its maximum.
 		:raises ValueError: If a part exceeds its maximum value.
 		"""
@@ -2834,7 +2834,7 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Check if the version is in the version range.
 
-		:param version:    Optional, version to check.
+		:param version:    Version to check.
 		:returns:          ``True``, if version is in range.
 		:raises TypeError: If parameter ``version`` is not of type :class:`Version`.
 		:raises TypeError: If parameter ``version``'s type is unrelated to this range's bounds. |br|
@@ -3075,7 +3075,7 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		"""
 		Checks if the version a member of the set.
 
-		:param version: Optional, the version to check.
+		:param version: The version to check.
 		:returns:       ``True``, if the version is a member of the set.
 		"""
 		return version in self._items

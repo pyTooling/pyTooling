@@ -616,6 +616,10 @@ Version 10.x (2026)
      :exc:`KeyError`, but raises an :exc:`IndexError`.
    * Two doc-strings didn't parse as ReST: :class:`~pyTooling.Dependency.Python.lazy`'s usage list was folded into its
      summary, and the Windows ``GetMemoryUsage`` of :mod:`pyTooling.Process` had an unexpectedly indented line.
+   * A parameter's description opens with *Optional,* exactly when the parameter has a default value: 25 parameters
+     with a default gained it - the ``__exit__`` parameters of the context managers, ``dest`` of the ArgParse flags,
+     ``kind`` of :class:`~pyTooling.Graph.BaseEdge` - and 56 parameters without one lost it, among them parameters
+     accepting ``None``. :meth:`pyTooling.Common.StringEnum.Parse` named a default its ``value`` doesn't have.
 
    .. rubric:: Unit Tests
 

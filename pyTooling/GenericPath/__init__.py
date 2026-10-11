@@ -85,7 +85,7 @@ class ElementMixin(Base, mixin=True):
 		"""
 		Initialize the mixin-class for a path element.
 
-		:param parent:      Optional, reference to a parent path element.
+		:param parent:      Reference to a parent path element.
 		:param elementName: Name of the path element.
 		"""
 		super().__init__(parent)
