@@ -280,7 +280,7 @@ class ControlFlow(Testcase):
 				if call.CallSite is None:
 					self.assertIsNone(call.Caller.ControlFlowGraph)
 				else:
-					self.assertIs(call.Caller.ControlFlowGraph, call.CallSite.Graph)
+					self.assertIs(call.Caller.ControlFlowGraph, call.CallSite.ControlFlowGraph)
 					self.assertEqual(call.CallSite.Count, call.Count)
 
 		for function in (summation, fib):

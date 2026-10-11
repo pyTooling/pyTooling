@@ -159,7 +159,7 @@ class Construction(Testcase):
 		call =      Call(main, summation, CallKind.Direct, callSite=block)
 
 		self.assertIs(block, call.CallSite)
-		self.assertIs(main.ControlFlowGraph, call.CallSite.Graph)
+		self.assertIs(main.ControlFlowGraph, call.CallSite.ControlFlowGraph)
 
 	def test_Kind_Str(self) -> None:
 		self.assertEqual("External", str(FunctionKind.External))

@@ -60,7 +60,7 @@ from enum                  import Enum
 from typing                import Any, Hashable, Iterator, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.ControlFlow import Base, BasicBlock, BlockKind, ControlFlowGraph
+from pyTooling.ControlFlow import BaseWithCountAndValue, BasicBlock, BlockKind, ControlFlowGraph
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Graph       import Graph, Vertex
@@ -119,7 +119,7 @@ class DuplicateFunctionError(CallGraphError):
 
 
 @export
-class Function(Base):
+class Function(BaseWithCountAndValue):
 	"""
 	A function of a call graph.
 
@@ -267,7 +267,7 @@ class Function(Base):
 
 
 @export
-class Call(Base):
+class Call(BaseWithCountAndValue):
 	"""
 	A call in a call graph, leading from the calling function to the called function.
 
@@ -348,9 +348,9 @@ class Call(Base):
 				ex = ValueError("Parameter 'callSite' is given, but the caller has no control flow graph.")
 				ex.add_note(f"Got caller '{caller._id}'.")
 				raise ex
-			elif callSite._graph is not caller._controlFlowGraph:
+			elif callSite._controlFlowGraph is not caller._controlFlowGraph:
 				ex = ValueError("Parameter 'callSite' belongs to another control flow graph than the caller's.")
-				ex.add_note(f"Got graphs '{callSite._graph._name}' and '{caller._controlFlowGraph._name}'.")
+				ex.add_note(f"Got graphs '{callSite._controlFlowGraph._name}' and '{caller._controlFlowGraph._name}'.")
 				raise ex
 			elif callSite._kind is not BlockKind.Code:
 				ex = ValueError("Parameter 'callSite' is not a block of code.")
