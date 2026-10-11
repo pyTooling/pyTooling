@@ -136,7 +136,7 @@ class GCC(Testcase):
 		Call(main, apply, CallKind.Direct, value="prog.c:11:3")
 		Call(main, printf, CallKind.Direct, value="prog.c:11:3")
 
-		self.assertEqual(7, len(graph))
+		self.assertEqual(7, graph.FunctionCount)
 		self.assertEqual(10, len(graph.Calls))
 		self.assertListEqual(["prog.c:4:37", "prog.c:4:50"], [call.Value for call in fib.OutboundCalls])
 		self.assertListEqual([main, main, main], [call.Caller for call in printf.InboundCalls])
@@ -176,7 +176,7 @@ class GProf(Testcase):
 		self.assertIn(recursion, fib.InboundCalls)
 		self.assertSetEqual({CallKind.Default}, {call.Kind for call in graph.Calls})
 
-		for function in graph:
+		for function in graph.IterateFunctions():
 			with self.subTest(function=function.ID):
 				if function is not main:
 					self.assertEqual(function.Count, sum(call.Count for call in function.InboundCalls))
@@ -207,12 +207,12 @@ class CProfile(Testcase):
 
 		for (_, _, functionName), (*_, callers) in stats.items():
 			for (_, _, callerName), (calls, *_) in callers.items():
-				Call(graph[callerName], graph[functionName], count=calls)
+				Call(graph.GetFunction(callerName), graph.GetFunction(functionName), count=calls)
 
-		run =   graph["Run"]
-		leaf =  graph["Leaf"]
-		fib =   graph["Fib"]
-		apply = graph["Apply"]
+		run =   graph.GetFunction("Run")
+		leaf =  graph.GetFunction("Leaf")
+		fib =   graph.GetFunction("Fib")
+		apply = graph.GetFunction("Apply")
 
 		self.assertListEqual([1, 4, 9, 1], [function.Count for function in (run, leaf, fib, apply)])
 		self.assertEqual(1, fib.Value)
@@ -223,7 +223,7 @@ class CProfile(Testcase):
 		self.assertListEqual([(leaf, 1)], [(call.Callee, call.Count) for call in apply.OutboundCalls])
 		self.assertListEqual([(fib, 8)], [(call.Callee, call.Count) for call in fib.OutboundCalls])
 
-		for function in graph:
+		for function in graph.IterateFunctions():
 			with self.subTest(function=function.ID):
 				if function.Kind is FunctionKind.External:
 					self.assertEqual("~", next(key[0] for key in stats if key[2] == function.ID))

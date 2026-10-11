@@ -48,8 +48,9 @@ class Construction(Testcase):
 		graph = CallGraph("prog")
 
 		self.assertEqual("prog", graph.Name)
-		self.assertEqual(0, len(graph))
-		self.assertListEqual([], list(graph))
+		self.assertEqual(0, graph.FunctionCount)
+		self.assertListEqual([], list(graph.IterateFunctions()))
+		self.assertEqual(0, len(graph), "A new graph has no key-value-pairs.")
 		self.assertDictEqual({}, graph.Functions)
 		self.assertListEqual([], graph.Calls)
 
@@ -65,13 +66,13 @@ class Construction(Testcase):
 		self.assertIsNone(function.Value)
 		self.assertTupleEqual((), function.InboundCalls)
 		self.assertTupleEqual((), function.OutboundCalls)
-		self.assertIs(function, graph["main"])
-		self.assertIn("main", graph)
-		self.assertNotIn("Sum", graph)
-		self.assertEqual(1, len(graph))
+		self.assertIs(function, graph.GetFunction("main"))
+		self.assertTrue(graph.ContainsFunction("main"))
+		self.assertFalse(graph.ContainsFunction("Sum"))
+		self.assertEqual(1, graph.FunctionCount)
 
 		with self.assertRaises(KeyError):
-			_ = graph["Sum"]
+			_ = graph.GetFunction("Sum")
 
 	def test_Function_CountAndValue(self) -> None:
 		graph =    CallGraph("prog")
@@ -89,8 +90,8 @@ class Construction(Testcase):
 		graph =     CallGraph("prog")
 		functions = [Function(graph, kind.name, kind=kind) for kind in FunctionKind]
 
-		self.assertListEqual(functions, list(graph))
-		self.assertListEqual(list(FunctionKind), [function.Kind for function in graph])
+		self.assertListEqual(functions, list(graph.IterateFunctions()))
+		self.assertListEqual(list(FunctionKind), [function.Kind for function in graph.IterateFunctions()])
 
 	def test_Function_ControlFlowGraph(self) -> None:
 		cfg =      ControlFlowGraph("Sum")
@@ -169,6 +170,45 @@ class Construction(Testcase):
 		self.assertTrue(issubclass(DuplicateFunctionError, CallGraphError))
 
 
+class KeyValuePairs(Testcase):
+	def test_CallGraph(self) -> None:
+		graph = CallGraph("prog", keyValuePairs={"tool": "gprof"})
+
+		self.assertEqual(1, len(graph))
+		self.assertEqual("gprof", graph["tool"])
+		self.assertNotIn("main", graph, "A function ID is no key-value-pair.")
+
+	def test_Function(self) -> None:
+		function = Function(CallGraph("prog"), "main", keyValuePairs={"file": "main.c"})
+
+		function["recursive"] = False
+		self.assertListEqual(["file", "recursive"], list(function))
+
+		del function["file"]
+		self.assertNotIn("file", function)
+		with self.assertRaises(KeyError):
+			_ = function["file"]
+
+	def test_Call(self) -> None:
+		graph = CallGraph("prog")
+		call =  Call(Function(graph, "main"), Function(graph, "Sum"), keyValuePairs={"line": 12})
+
+		self.assertEqual(12, call["line"])
+		self.assertEqual(1, len(call))
+
+	def test_IterateFunctions(self) -> None:
+		graph = CallGraph("prog")
+		Function(graph, "main")
+		Function(graph, "printf", kind=FunctionKind.External)
+		Function(graph, "Sum")
+
+		self.assertListEqual(["main", "printf", "Sum"], [function.ID for function in graph.IterateFunctions()])
+		self.assertListEqual(
+			["printf"],
+			[function.ID for function in graph.IterateFunctions(lambda function: function.Kind is FunctionKind.External)]
+		)
+
+
 class Checks(Testcase):
 	def test_CallGraph_Name(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -215,8 +255,8 @@ class Checks(Testcase):
 			_ = Function(graph, "main", kind=FunctionKind.External)
 
 		self.assertEqual("Call graph 'prog' has a function 'main' already.", str(context.exception))
-		self.assertEqual(1, len(graph))
-		self.assertIs(FunctionKind.Defined, graph["main"].Kind)
+		self.assertEqual(1, graph.FunctionCount)
+		self.assertIs(FunctionKind.Defined, graph.GetFunction("main").Kind)
 
 	def test_Function_Kind(self) -> None:
 		graph = CallGraph("prog")
@@ -230,7 +270,7 @@ class Checks(Testcase):
 			_ = Function(graph, "main", kind=CallKind.Direct)
 
 		self.assertEqual("Parameter 'kind' is not of type 'FunctionKind'.", str(context.exception))
-		self.assertEqual(0, len(graph))
+		self.assertEqual(0, graph.FunctionCount)
 
 	def test_Function_ControlFlowGraph(self) -> None:
 		graph = CallGraph("prog")
@@ -247,7 +287,7 @@ class Checks(Testcase):
 			"Parameter 'controlFlowGraph' is given for a function of kind 'Unknown'.",
 			str(context.exception)
 		)
-		self.assertEqual(0, len(graph))
+		self.assertEqual(0, graph.FunctionCount)
 
 	def test_Count(self) -> None:
 		graph =    CallGraph("prog")

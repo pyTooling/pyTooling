@@ -56,6 +56,21 @@ class ToGraph(Testcase):
 		self.assertEqual(0, graph.VertexCount)
 		self.assertEqual(0, graph.EdgeCount)
 
+	def test_KeyValuePairs(self) -> None:
+		callGraph = CallGraph("prog", keyValuePairs={"tool": "gprof"})
+		main =      Function(callGraph, "main", count=1, keyValuePairs={"file": "main.c"})
+		Call(main, Function(callGraph, "Sum"), keyValuePairs={"line": 12})
+
+		graph = callGraph.ToGraph()
+
+		self.assertEqual("gprof", graph["tool"])
+		vertex = graph.GetVertexByID("main")
+		self.assertDictEqual({"file": "main.c", "kind": FunctionKind.Defined, "count": 1}, vertex._dict)
+		self.assertDictEqual({"line": 12, "kind": CallKind.Default}, vertex.OutboundEdges[0]._dict)
+
+		graph["tool"] = "other"
+		self.assertEqual("gprof", callGraph["tool"], "The graph copies the key-value-pairs.")
+
 	def test_Vertices(self) -> None:
 		callGraph = CallGraph("prog")
 		Function(callGraph, "main", count=1)

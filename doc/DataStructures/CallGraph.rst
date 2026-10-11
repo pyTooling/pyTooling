@@ -52,10 +52,13 @@ leads from the calling function to the called function, so a recursion is a cycl
 Features
 ********
 
-* A function is looked up by its ID: :pycode:`graph["main"]` and :pycode:`"main" in graph`.
+* A function is looked up by its ID: :pycode:`graph.GetFunction("main")` and :pycode:`graph.ContainsFunction("main")`;
+  :pycode:`graph.IterateFunctions()` yields all functions, :pycode:`graph.FunctionCount` counts them.
 * Every function and every call has a kind, given as a :class:`~pyTooling.CallGraph.FunctionKind` or
   :class:`~pyTooling.CallGraph.CallKind` member.
 * Functions and calls carry an optional execution count and an optional value of any type, e.g. a source location.
+* Call graphs, functions and calls carry key-value pairs; their dunder methods (``len``, ``in``, ``[]``, ``del``,
+  iteration) serve these pairs, as in :mod:`pyTooling.ControlFlow` and :mod:`pyTooling.Graph`.
 * A function can refer to its control flow graph, and a call to its call site: the block of that graph the call is made
   from.
 * :meth:`~pyTooling.CallGraph.CallGraph.ToGraph` converts a call graph into a :class:`~pyTooling.Graph.Graph`, so it
@@ -182,7 +185,8 @@ Conversion to a Graph
 
 :meth:`~pyTooling.CallGraph.CallGraph.ToGraph` returns a :class:`~pyTooling.Graph.Graph` named like the call graph. A
 function becomes a vertex, whose ID and value are the function's; a call becomes an edge from the caller to the callee,
-whose kind and value are the call's. Vertices and edges carry these key-value pairs:
+whose kind and value are the call's. The graph, vertices and edges carry a copy of the key-value pairs of the call
+graph, functions and calls; vertices and edges carry these more:
 
 +---------------------------------------------------+--------------------------------------------------------------+
 | Key                                               | Value                                                        |

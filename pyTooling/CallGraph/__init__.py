@@ -39,7 +39,8 @@ elsewhere, or a placeholder for unknown functions, e.g. the targets of an indire
 
 Functions and calls carry an optional execution count, e.g. from a profiler, and an optional value of any type. A
 function can refer to its control flow graph, and a call to its call site: the basic block of the caller's control flow
-graph the call is made from. :meth:`CallGraph.ToGraph` converts a call graph into a :class:`~pyTooling.Graph.Graph`.
+graph the call is made from. Call graphs, functions and calls carry key-value-pairs, e.g. the results of an analysis.
+:meth:`CallGraph.ToGraph` converts a call graph into a :class:`~pyTooling.Graph.Graph`.
 
 .. hint::
 
@@ -57,10 +58,10 @@ graph the call is made from. :meth:`CallGraph.ToGraph` converts a call graph int
 from __future__            import annotations
 
 from enum                  import Enum
-from typing                import Any, Hashable, Iterator, Optional as Nullable
+from typing                import Any, Callable, Generator, Hashable, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.ControlFlow import BaseWithCountAndValue, BasicBlock, BlockKind, ControlFlowGraph
+from pyTooling.ControlFlow import Base, BaseWithCountAndValue, BasicBlock, BlockKind, ControlFlowGraph
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Graph       import Graph, Vertex
@@ -139,10 +140,11 @@ class Function(BaseWithCountAndValue):
 		callGraph:        _CallGraph,
 		functionID:       Hashable,
 		*,
-		kind:             FunctionKind                = FunctionKind.Defined,
-		controlFlowGraph: Nullable[_ControlFlowGraph] = None,
-		count:            Nullable[int]               = None,
-		value:            Nullable[Any]               = None
+		kind:             FunctionKind                     = FunctionKind.Defined,
+		controlFlowGraph: Nullable[_ControlFlowGraph]      = None,
+		count:            Nullable[int]                    = None,
+		value:            Nullable[Any]                    = None,
+		keyValuePairs:    Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a function and adds it to its graph.
@@ -153,6 +155,7 @@ class Function(BaseWithCountAndValue):
 		:param controlFlowGraph:        Optional, the function's control flow graph. Default: ``None``.
 		:param count:                   Optional, how often the function was called. Default: ``None``.
 		:param value:                   Optional, any value attached to the function, e.g. its location. Default: ``None``.
+		:param keyValuePairs:           Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:raises TypeError:              If parameter 'count' is not of type :class:`int`.
 		:raises ValueError:             If parameter 'count' is negative.
 		:raises ValueError:             If parameter 'callGraph' is None.
@@ -167,7 +170,7 @@ class Function(BaseWithCountAndValue):
 		:raises ValueError:             If parameter 'controlFlowGraph' is given for a function of kind
 		                                :attr:`FunctionKind.Unknown`.
 		"""
-		super().__init__(count, value)
+		super().__init__(count, value, keyValuePairs)
 
 		if callGraph is None:
 			raise ValueError("Parameter 'callGraph' is None.")
@@ -281,38 +284,41 @@ class Call(BaseWithCountAndValue):
 
 	def __init__(
 		self,
-		caller:   Function,
-		callee:   Function,
-		kind:     CallKind             = CallKind.Default,
+		caller:        Function,
+		callee:        Function,
+		kind:          CallKind                         = CallKind.Default,
 		*,
-		callSite: Nullable[BasicBlock] = None,
-		count:    Nullable[int]        = None,
-		value:    Nullable[Any]        = None
+		callSite:      Nullable[BasicBlock]             = None,
+		count:         Nullable[int]                    = None,
+		value:         Nullable[Any]                    = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a call between two functions of a graph and adds it to the graph.
 
-		:param caller:      The calling function.
-		:param callee:      The called function.
-		:param kind:        Optional, kind of the call. Default: :attr:`CallKind.Default`.
-		:param callSite:    Optional, the block of the caller's control flow graph the call is made from. Default: ``None``.
-		:param count:       Optional, how often the call was made. Default: ``None``.
-		:param value:       Optional, any value attached to the call, e.g. the source line of the call. Default: ``None``.
-		:raises TypeError:  If parameter 'count' is not of type :class:`int`.
-		:raises ValueError: If parameter 'count' is negative.
-		:raises ValueError: If parameter 'caller' is None.
-		:raises TypeError:  If parameter 'caller' is not of type :class:`Function`.
-		:raises ValueError: If parameter 'callee' is None.
-		:raises TypeError:  If parameter 'callee' is not of type :class:`Function`.
-		:raises ValueError: If parameter 'callee' belongs to another graph than parameter 'caller'.
-		:raises ValueError: If parameter 'kind' is None.
-		:raises TypeError:  If parameter 'kind' is not of type :class:`CallKind`.
-		:raises TypeError:  If parameter 'callSite' is not of type :class:`~pyTooling.ControlFlow.BasicBlock`.
-		:raises ValueError: If parameter 'callSite' is given, but the caller has no control flow graph.
-		:raises ValueError: If parameter 'callSite' belongs to another control flow graph than the caller's.
-		:raises ValueError: If parameter 'callSite' is not a block of :attr:`~pyTooling.ControlFlow.BlockKind.Code`.
+		:param caller:        The calling function.
+		:param callee:        The called function.
+		:param kind:          Optional, kind of the call. Default: :attr:`CallKind.Default`.
+		:param callSite:      Optional, the block of the caller's control flow graph the call is made from.
+		                      Default: ``None``.
+		:param count:         Optional, how often the call was made. Default: ``None``.
+		:param value:         Optional, any value attached to the call, e.g. the source line of the call. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises TypeError:    If parameter 'count' is not of type :class:`int`.
+		:raises ValueError:   If parameter 'count' is negative.
+		:raises ValueError:   If parameter 'caller' is None.
+		:raises TypeError:    If parameter 'caller' is not of type :class:`Function`.
+		:raises ValueError:   If parameter 'callee' is None.
+		:raises TypeError:    If parameter 'callee' is not of type :class:`Function`.
+		:raises ValueError:   If parameter 'callee' belongs to another graph than parameter 'caller'.
+		:raises ValueError:   If parameter 'kind' is None.
+		:raises TypeError:    If parameter 'kind' is not of type :class:`CallKind`.
+		:raises TypeError:    If parameter 'callSite' is not of type :class:`~pyTooling.ControlFlow.BasicBlock`.
+		:raises ValueError:   If parameter 'callSite' is given, but the caller has no control flow graph.
+		:raises ValueError:   If parameter 'callSite' belongs to another control flow graph than the caller's.
+		:raises ValueError:   If parameter 'callSite' is not a block of :attr:`~pyTooling.ControlFlow.BlockKind.Code`.
 		"""
-		super().__init__(count, value)
+		super().__init__(count, value, keyValuePairs)
 
 		if caller is None:
 			raise ValueError("Parameter 'caller' is None.")
@@ -404,27 +410,30 @@ class Call(BaseWithCountAndValue):
 
 
 @export
-class CallGraph(metaclass=ExtendedType, slots=True):
+class CallGraph(Base):
 	"""
 	The call graph of a program: its functions and the calls between them.
 
-	A function is looked up by its ID: :pycode:`graph["main"]` returns the function with ID ``main``, and
-	:pycode:`"main" in graph` checks if the graph has one. Iterating the graph yields its functions in the order they were
-	created.
+	A function is looked up by its ID: :pycode:`graph.GetFunction("main")` returns the function with ID ``main``, and
+	:pycode:`graph.ContainsFunction("main")` checks if the graph has one. :meth:`IterateFunctions` yields the functions in
+	the order they were created. The graph's dunder methods serve its key-value-pairs, like a function's or a call's.
 	"""
 	_name:      str                       #: Name of the graph, e.g. of the program or the translation unit.
 	_functions: dict[Hashable, Function]  #: Functions of the graph by ID, in the order they were created.
 	_calls:     list[Call]                #: Calls of the graph, in the order they were created.
 
-	def __init__(self, name: str) -> None:
+	def __init__(self, name: str, *, keyValuePairs: Nullable[Mapping[Hashable, Any]] = None) -> None:
 		"""
 		Initializes an empty call graph.
 
-		:param name:        Name of the graph, e.g. of the program or the translation unit.
-		:raises ValueError: If parameter 'name' is None.
-		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
-		:raises ValueError: If parameter 'name' is empty.
+		:param name:          Name of the graph, e.g. of the program or the translation unit.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises ValueError:   If parameter 'name' is None.
+		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
+		:raises ValueError:   If parameter 'name' is empty.
 		"""
+		super().__init__(keyValuePairs)
+
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
 		elif not isinstance(name, str):
@@ -465,23 +474,16 @@ class CallGraph(metaclass=ExtendedType, slots=True):
 		"""
 		return self._calls
 
-	def __len__(self) -> int:
+	@readonly
+	def FunctionCount(self) -> int:
 		"""
-		Return the number of functions in the graph.
+		Read-only property to return the number of functions in the graph.
 
 		:returns: Number of functions.
 		"""
 		return len(self._functions)
 
-	def __iter__(self) -> Iterator[Function]:
-		"""
-		Iterate the functions of the graph.
-
-		:returns: An iterator over the functions, in the order they were created.
-		"""
-		return iter(self._functions.values())
-
-	def __contains__(self, functionID: Hashable) -> bool:
+	def ContainsFunction(self, functionID: Hashable) -> bool:
 		"""
 		Check if the graph has a function with the given ID.
 
@@ -490,7 +492,7 @@ class CallGraph(metaclass=ExtendedType, slots=True):
 		"""
 		return functionID in self._functions
 
-	def __getitem__(self, functionID: Hashable) -> Function:
+	def GetFunction(self, functionID: Hashable) -> Function:
 		"""
 		Return the function with the given ID.
 
@@ -499,6 +501,25 @@ class CallGraph(metaclass=ExtendedType, slots=True):
 		:raises KeyError:  If the graph has no function with that ID.
 		"""
 		return self._functions[functionID]
+
+	def IterateFunctions(
+		self,
+		predicate: Nullable[Callable[[Function], bool]] = None
+	) -> Generator[Function, None, None]:
+		"""
+		Iterate all or selected functions of the graph.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip functions in the generator.
+
+		:param predicate: Optional, filter function accepting any function and returning a boolean.
+		:returns:         A generator to iterate the functions, in the order they were created.
+		"""
+		if predicate is None:
+			yield from self._functions.values()
+		else:
+			for function in self._functions.values():
+				if predicate(function):
+					yield function
 
 	def ToGraph(self) -> Graph:
 		"""
@@ -510,7 +531,9 @@ class CallGraph(metaclass=ExtendedType, slots=True):
 		:class:`~pyTooling.Graph.Edge` from the caller to the callee, with the call's kind as
 		:attr:`~pyTooling.Graph.BaseEdge.Kind` and the call's value as value.
 
-		Vertices and edges carry these key-value-pairs, which a writer like :mod:`pyTooling.Graph.GraphML` writes out:
+		The graph, its vertices and its edges carry a copy of the key-value-pairs of the call graph, its functions and its
+		calls. Vertices and edges carry these key-value-pairs more, which a writer like :mod:`pyTooling.Graph.GraphML`
+		writes out:
 
 		* ``kind``: the function's :class:`FunctionKind` or the call's :class:`CallKind` member, whose :func:`str` is its
 		  name.
@@ -519,11 +542,11 @@ class CallGraph(metaclass=ExtendedType, slots=True):
 
 		:returns: The graph, named like the call graph.
 		"""
-		graph = Graph(name=self._name)
+		graph = Graph(name=self._name, keyValuePairs=self._dict)
 
 		vertices: dict[Hashable, Vertex] = {}
 		for function in self._functions.values():
-			keyValuePairs: dict[str, Any] = {"kind": function._kind}
+			keyValuePairs: dict[Hashable, Any] = {**function._dict, "kind": function._kind}
 			if function._count is not None:
 				keyValuePairs["count"] = function._count
 
@@ -535,7 +558,7 @@ class CallGraph(metaclass=ExtendedType, slots=True):
 			)
 
 		for call in self._calls:
-			keyValuePairs = {"kind": call._kind}
+			keyValuePairs = {**call._dict, "kind": call._kind}
 			if call._count is not None:
 				keyValuePairs["count"] = call._count
 
