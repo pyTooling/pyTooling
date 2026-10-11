@@ -584,6 +584,11 @@ Version 10.x (2026)
        own method. The same for an override contributed by a mixin-class, and for a marked method of a mixin-class
        shadowed by an unmarked one on the primary inheritance line. An override expects only what its own marker
        names.
+     * The initial value of a slotted field (``_name: str = "root"`` in a class with ``slots=True`` or ``mixin=True``)
+       was dropped: reading the field before ``__init__`` assigned it raised an :exc:`AttributeError`.
+       :class:`~pyTooling.MetaClasses.ExtendedType` collected the values, but never used them. An intermediate
+       ``__init__`` assigns them now, before it calls the class' own ``__init__``; a field already assigned keeps its
+       value. The class a mixin-class is mixed into assigns the mixin-class' initial values too.
 
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
