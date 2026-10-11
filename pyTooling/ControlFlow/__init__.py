@@ -130,9 +130,9 @@ class Base(metaclass=ExtendedType, slots=True):
 	Base-class of basic blocks and edges, which both carry an execution count and a value.
 	"""
 	_count: Nullable[int]  #: How often the block or edge was executed, or ``None`` if that's unknown.
-	_value: Any            #: Any value attached to the block or edge.
+	_value: Nullable[Any]  #: Any value attached to the block or edge, or ``None``.
 
-	def __init__(self, count: Nullable[int] = None, value: Any = None) -> None:
+	def __init__(self, count: Nullable[int] = None, value: Nullable[Any] = None) -> None:
 		"""
 		Initializes the execution count and the value of a block or an edge.
 
@@ -170,7 +170,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._count = count
 
 	@property
-	def Value(self) -> Any:
+	def Value(self) -> Nullable[Any]:
 		"""
 		Property to access the value attached to the block or edge (:attr:`_value`).
 
@@ -179,7 +179,7 @@ class Base(metaclass=ExtendedType, slots=True):
 		return self._value
 
 	@Value.setter
-	def Value(self, value: Any) -> None:
+	def Value(self, value: Nullable[Any]) -> None:
 		self._value = value
 
 
@@ -204,7 +204,7 @@ class BasicBlock(Base):
 		*,
 		kind:    BlockKind     = BlockKind.Code,
 		count:   Nullable[int] = None,
-		value:   Any           = None
+		value:   Nullable[Any] = None
 	) -> None:
 		"""
 		Initializes a basic block and adds it to its graph.
@@ -334,7 +334,7 @@ class Edge(Base):
 		kind:        EdgeKind      = EdgeKind.Default,
 		*,
 		count:       Nullable[int] = None,
-		value:       Any           = None
+		value:       Nullable[Any] = None
 	) -> None:
 		"""
 		Initializes an edge between two blocks of a graph and adds it to the graph.
