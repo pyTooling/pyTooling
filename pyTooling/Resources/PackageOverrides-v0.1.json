@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://pyTooling.GitHub.io/pyTooling/schema/PackageOverrides-v0.1.json",
+	"$id": "https://pyTooling.GitHub.io/pyTooling/Schemas/PackageOverrides-v0.1.json",
 	"title": "pyTooling package overrides",
 	"description": "Package meta-information a package index can't answer for: licenses, the URL of a project's own LICENSE file, and repositories. Read by pyTooling.Dependency.Python.LicenseOverrides and rendered by the 'dependency-table' directive.",
 	"type": "object",
