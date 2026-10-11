@@ -11,7 +11,7 @@ without owning pyTooling. Each schema is listed here with its full source, ready
 Available schemas
 *****************
 
-Schema URL prefix: ``http://pytooling.github.io/pyTooling/Schemas/***``
+Schema URL prefix: ``https://pyTooling.GitHub.io/pyTooling/Schemas/***``
 
 .. list-table::
    :header-rows: 1

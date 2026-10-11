@@ -111,10 +111,11 @@ html_extra_path = ["_extra"]
 
 # Every schema the package ships, found by extension rather than by importing the module that names them: reading
 # 'LicenseOverrides.SCHEMA_FILES' would make building the documentation need the 'pypi' extra at configuration time.
+# They are served under 'Schemas/', the schema URL prefix, next to the pages describing them.
 _resourceDirectory = ROOT.parent / directoryName / "Resources"
-_schemaDirectory = ROOT / "_extra" / "schema"
+_schemaDirectory = ROOT / "_extra" / "Schemas"
 _schemaDirectory.mkdir(parents=True, exist_ok=True)
-for _schemaFile in sorted(_resourceDirectory.glob("*.json")):
+for _schemaFile in sorted((*_resourceDirectory.glob("*.json"), *_resourceDirectory.glob("*.xsd"))):
 	_schemaFile.copy(_schemaDirectory / _schemaFile.name)
 
 html_logo = str(Path(html_static_path[0]) / "logo.png")

@@ -52,7 +52,7 @@ Outside a checkout, the schema is served at its ``$id``:
 
 .. code-block:: YAML
 
-   # yaml-language-server: $schema=https://pyTooling.GitHub.io/pyTooling/schema/PackageOverrides-v0.1.json
+   # yaml-language-server: $schema=https://pyTooling.GitHub.io/pyTooling/Schemas/PackageOverrides-v0.1.json
 
 .. _SCHEMAS/PackageOverrides-v0.1/Source:
 
