@@ -41,8 +41,8 @@ the handler catching it - a C++ ``catch`` or a Python ``except`` clause - or, if
 block, through which it leaves the function.
 
 Blocks and edges carry an optional execution count, e.g. from a code coverage report, and an optional value of any
-type, e.g. the source lines of a block. :meth:`ControlFlowGraph.ToGraph` converts a control flow graph into a
-:class:`~pyTooling.Graph.Graph`.
+type, e.g. the source lines of a block. Graphs, blocks and edges carry key-value-pairs, e.g. the results of an
+analysis. :meth:`ControlFlowGraph.ToGraph` converts a control flow graph into a :class:`~pyTooling.Graph.Graph`.
 
 .. hint::
 
@@ -58,7 +58,7 @@ type, e.g. the source lines of a block. :meth:`ControlFlowGraph.ToGraph` convert
 from __future__            import annotations
 
 from enum                  import Enum
-from typing                import Any, Hashable, Iterator, Optional as Nullable
+from typing                import Any, Callable, Generator, Hashable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
@@ -127,20 +127,102 @@ class DuplicateEdgeError(ControlFlowError):
 @export
 class Base(metaclass=ExtendedType, slots=True):
 	"""
+	Base-class of all control flow graph elements, adding a dictionary of arbitrary key-value-pairs to them.
+
+	Every graph, block and edge can carry data attached by its user, e.g. the results of an analysis under a key of the
+	analysis' choice: :pycode:`block["dominator"] = entry`. The element's dunder methods serve this dictionary.
+	"""
+	_dict: dict[Hashable, Any]  #: A dictionary to store arbitrary key-value-pairs.
+
+	def __init__(self, keyValuePairs: Nullable[Mapping[Hashable, Any]] = None) -> None:
+		"""
+		Initializes the key-value-pairs of an element.
+
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		"""
+		self._dict = dict(keyValuePairs) if keyValuePairs is not None else {}
+
+	def __getitem__(self, key: Hashable) -> Any:
+		"""
+		Read an attached attribute (key-value-pair) by key.
+
+		:param key:       The key to look for.
+		:returns:         The value associated to the given key.
+		:raises KeyError: If the key doesn't exist in the element's attributes.
+		"""
+		return self._dict[key]
+
+	def __setitem__(self, key: Hashable, value: Any) -> None:
+		"""
+		Create or update an attached attribute (key-value-pair) by key.
+
+		If a key doesn't exist yet, a new key-value-pair is created.
+
+		:param key:   The key to create or update.
+		:param value: The value to associate to the given key.
+		"""
+		self._dict[key] = value
+
+	def __delitem__(self, key: Hashable) -> None:
+		"""
+		Remove an attached attribute (key-value-pair) by key.
+
+		:param key:       The key to remove.
+		:raises KeyError: If the key doesn't exist in the element's attributes.
+		"""
+		del self._dict[key]
+
+	def __contains__(self, key: Hashable) -> bool:
+		"""
+		Check if the key is an attached attribute (key-value-pair) of this element.
+
+		:param key: The key to check.
+		:returns:   ``True``, if the key is an attached attribute.
+		"""
+		return key in self._dict
+
+	def __len__(self) -> int:
+		"""
+		Return the number of attached attributes (key-value-pairs) of this element.
+
+		:returns: Number of attached attributes.
+		"""
+		return len(self._dict)
+
+	def __iter__(self) -> Iterator[Hashable]:
+		"""
+		Iterate the keys of the attached attributes (key-value-pairs) of this element.
+
+		:returns: An iterator over the keys, in the order they were created.
+		"""
+		return iter(self._dict)
+
+
+@export
+class BaseWithCountAndValue(Base):
+	"""
 	Base-class of basic blocks and edges, which both carry an execution count and a value.
 	"""
 	_count: Nullable[int]  #: How often the block or edge was executed, or ``None`` if that's unknown.
 	_value: Nullable[Any]  #: Any value attached to the block or edge, or ``None``.
 
-	def __init__(self, count: Nullable[int] = None, value: Nullable[Any] = None) -> None:
+	def __init__(
+		self,
+		count:         Nullable[int]                    = None,
+		value:         Nullable[Any]                    = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> None:
 		"""
-		Initializes the execution count and the value of a block or an edge.
+		Initializes the execution count, the value and the key-value-pairs of a block or an edge.
 
-		:param count:       Optional, how often the block or edge was executed. Default: ``None``.
-		:param value:       Optional, any value attached to the block or edge. Default: ``None``.
-		:raises TypeError:  If parameter 'count' is not of type :class:`int`.
-		:raises ValueError: If parameter 'count' is negative.
+		:param count:         Optional, how often the block or edge was executed. Default: ``None``.
+		:param value:         Optional, any value attached to the block or edge. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises TypeError:    If parameter 'count' is not of type :class:`int`.
+		:raises ValueError:   If parameter 'count' is negative.
 		"""
+		super().__init__(keyValuePairs)
+
 		self.Count =  count
 		self._value = value
 
@@ -184,7 +266,7 @@ class Base(metaclass=ExtendedType, slots=True):
 
 
 @export
-class BasicBlock(Base):
+class BasicBlock(BaseWithCountAndValue):
 	"""
 	A basic block of a control flow graph: a sequence of code, which control enters at its top and leaves at its bottom.
 
@@ -202,9 +284,10 @@ class BasicBlock(Base):
 		controlFlowGraph: _ControlFlowGraph,
 		blockID:          Hashable,
 		*,
-		kind:             BlockKind     = BlockKind.Code,
-		count:            Nullable[int] = None,
-		value:            Nullable[Any] = None
+		kind:             BlockKind                        = BlockKind.Code,
+		count:            Nullable[int]                    = None,
+		value:            Nullable[Any]                    = None,
+		keyValuePairs:    Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes a basic block and adds it to its graph.
@@ -217,6 +300,7 @@ class BasicBlock(Base):
 		:param kind:                 Optional, kind of the block. Default: :attr:`BlockKind.Code`.
 		:param count:                Optional, how often the block was executed. Default: ``None``.
 		:param value:                Optional, any value attached to the block, e.g. its source lines. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:raises TypeError:           If parameter 'count' is not of type :class:`int`.
 		:raises ValueError:          If parameter 'count' is negative.
 		:raises ValueError:          If parameter 'controlFlowGraph' is None.
@@ -228,7 +312,7 @@ class BasicBlock(Base):
 		:raises DuplicateBlockError: If the graph has a block with that ID already.
 		:raises DuplicateBlockError: If the block is an entry, exit or unwind block, and the graph has one already.
 		"""
-		super().__init__(count, value)
+		super().__init__(count, value, keyValuePairs)
 
 		if controlFlowGraph is None:
 			raise ValueError("Parameter 'controlFlowGraph' is None.")
@@ -316,7 +400,7 @@ class BasicBlock(Base):
 
 
 @export
-class Edge(Base):
+class Edge(BaseWithCountAndValue):
 	"""
 	An edge of a control flow graph, leading from a block to a block control continues with.
 
@@ -329,12 +413,13 @@ class Edge(Base):
 
 	def __init__(
 		self,
-		source:      BasicBlock,
-		destination: BasicBlock,
-		kind:        EdgeKind      = EdgeKind.Default,
+		source:        BasicBlock,
+		destination:   BasicBlock,
+		kind:          EdgeKind                         = EdgeKind.Default,
 		*,
-		count:       Nullable[int] = None,
-		value:       Nullable[Any] = None
+		count:         Nullable[int]                    = None,
+		value:         Nullable[Any]                    = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
 	) -> None:
 		"""
 		Initializes an edge between two blocks of a graph and adds it to the graph.
@@ -344,6 +429,7 @@ class Edge(Base):
 		:param kind:                Optional, kind of the edge. Default: :attr:`EdgeKind.Default`.
 		:param count:               Optional, how often control took the edge. Default: ``None``.
 		:param value:               Optional, any value attached to the edge, e.g. a ``case`` label. Default: ``None``.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:raises TypeError:          If parameter 'count' is not of type :class:`int`.
 		:raises ValueError:         If parameter 'count' is negative.
 		:raises ValueError:         If parameter 'source' is None.
@@ -357,7 +443,7 @@ class Edge(Base):
 		:raises TypeError:          If parameter 'kind' is not of type :class:`EdgeKind`.
 		:raises DuplicateEdgeError: If an edge of the same kind connects the two blocks already.
 		"""
-		super().__init__(count, value)
+		super().__init__(count, value, keyValuePairs)
 
 		if source is None:
 			raise ValueError("Parameter 'source' is None.")
@@ -435,12 +521,13 @@ class Edge(Base):
 
 
 @export
-class ControlFlowGraph(metaclass=ExtendedType, slots=True):
+class ControlFlowGraph(Base):
 	"""
 	The control flow graph of a function: its basic blocks, the edges between them, and its entry and exit block.
 
-	A block is looked up by its ID: :pycode:`graph[3]` returns the block with ID ``3``, and :pycode:`3 in graph` checks
-	if the graph has one. Iterating the graph yields its blocks in the order they were created.
+	A block is looked up by its ID: :pycode:`graph.GetBlock(3)` returns the block with ID ``3``, and
+	:pycode:`graph.ContainsBlock(3)` checks if the graph has one. :meth:`IterateBlocks` yields the blocks in the order
+	they were created. The graph's dunder methods serve its key-value-pairs, like a block's or an edge's.
 	"""
 	_name:   str                         #: Name of the function.
 	_blocks: dict[Hashable, BasicBlock]  #: Blocks of the graph by ID, in the order they were created.
@@ -449,25 +536,35 @@ class ControlFlowGraph(metaclass=ExtendedType, slots=True):
 	_exit:   BasicBlock                  #: The block control leaves the function through, when the function returns.
 	_unwind: Nullable[BasicBlock]        #: The block an exception leaves the function through, if the graph has one.
 
-	def __init__(self, name: str, *, entryID: Hashable = "entry", exitID: Hashable = "exit") -> None:
+	def __init__(
+		self,
+		name:          str,
+		*,
+		entryID:       Hashable                         = "entry",
+		exitID:        Hashable                         = "exit",
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None
+	) -> None:
 		"""
 		Initializes a control flow graph of a function, with an entry and an exit block.
 
 		The entry and the exit are the graph's first two blocks. An unwind block is created like any other block, as a
 		block of :attr:`BlockKind.Unwind`.
 
-		:param name:        Name of the function.
-		:param entryID:     Optional, ID of the entry block. Default: ``"entry"``.
-		:param exitID:      Optional, ID of the exit block. Default: ``"exit"``.
-		:raises ValueError: If parameter 'name' is None.
-		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
-		:raises ValueError: If parameter 'name' is empty.
-		:raises ValueError: If parameter 'entryID' is None.
-		:raises TypeError:  If parameter 'entryID' is not hashable.
-		:raises ValueError: If parameter 'exitID' is None.
-		:raises TypeError:  If parameter 'exitID' is not hashable.
-		:raises ValueError: If parameter 'exitID' equals parameter 'entryID'.
+		:param name:          Name of the function.
+		:param entryID:       Optional, ID of the entry block. Default: ``"entry"``.
+		:param exitID:        Optional, ID of the exit block. Default: ``"exit"``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:raises ValueError:   If parameter 'name' is None.
+		:raises TypeError:    If parameter 'name' is not of type :class:`str`.
+		:raises ValueError:   If parameter 'name' is empty.
+		:raises ValueError:   If parameter 'entryID' is None.
+		:raises TypeError:    If parameter 'entryID' is not hashable.
+		:raises ValueError:   If parameter 'exitID' is None.
+		:raises TypeError:    If parameter 'exitID' is not hashable.
+		:raises ValueError:   If parameter 'exitID' equals parameter 'entryID'.
 		"""
+		super().__init__(keyValuePairs)
+
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
 		elif not isinstance(name, str):
@@ -554,23 +651,16 @@ class ControlFlowGraph(metaclass=ExtendedType, slots=True):
 		"""
 		return self._edges
 
-	def __len__(self) -> int:
+	@readonly
+	def BlockCount(self) -> int:
 		"""
-		Return the number of blocks in the graph, including its entry, exit and unwind block.
+		Read-only property to return the number of blocks in the graph, including its entry, exit and unwind block.
 
 		:returns: Number of blocks.
 		"""
 		return len(self._blocks)
 
-	def __iter__(self) -> Iterator[BasicBlock]:
-		"""
-		Iterate the blocks of the graph.
-
-		:returns: An iterator over the blocks, in the order they were created.
-		"""
-		return iter(self._blocks.values())
-
-	def __contains__(self, blockID: Hashable) -> bool:
+	def ContainsBlock(self, blockID: Hashable) -> bool:
 		"""
 		Check if the graph has a block with the given ID.
 
@@ -579,7 +669,7 @@ class ControlFlowGraph(metaclass=ExtendedType, slots=True):
 		"""
 		return blockID in self._blocks
 
-	def __getitem__(self, blockID: Hashable) -> BasicBlock:
+	def GetBlock(self, blockID: Hashable) -> BasicBlock:
 		"""
 		Return the block with the given ID.
 
@@ -588,6 +678,25 @@ class ControlFlowGraph(metaclass=ExtendedType, slots=True):
 		:raises KeyError: If the graph has no block with that ID.
 		"""
 		return self._blocks[blockID]
+
+	def IterateBlocks(
+		self,
+		predicate: Nullable[Callable[[BasicBlock], bool]] = None
+	) -> Generator[BasicBlock, None, None]:
+		"""
+		Iterate all or selected blocks of the graph.
+
+		If parameter ``predicate`` is not None, the given filter function is used to skip blocks in the generator.
+
+		:param predicate: Optional, filter function accepting any block and returning a boolean.
+		:returns:         A generator to iterate the blocks, in the order they were created.
+		"""
+		if predicate is None:
+			yield from self._blocks.values()
+		else:
+			for block in self._blocks.values():
+				if predicate(block):
+					yield block
 
 	def ToGraph(self) -> Graph:
 		"""
@@ -599,25 +708,27 @@ class ControlFlowGraph(metaclass=ExtendedType, slots=True):
 		:class:`~pyTooling.Graph.Edge` in the direction control flows, with the edge's kind as
 		:attr:`~pyTooling.Graph.BaseEdge.Kind` and the edge's value as value.
 
-		Vertices and edges carry two key-value-pairs, which a writer like :mod:`pyTooling.Graph.GraphML` writes out:
+		The graph, its vertices and its edges carry a copy of the key-value-pairs of the control flow graph, its blocks and
+		its edges. Vertices and edges carry two key-value-pairs more, which a writer like :mod:`pyTooling.Graph.GraphML`
+		writes out:
 
 		* ``kind``: the block's :class:`BlockKind` or the edge's :class:`EdgeKind` member, whose :func:`str` is its name.
 		* ``count``: the execution count; only if it's known.
 
 		:returns: The graph, named like the control flow graph.
 		"""
-		graph = Graph(name=self._name)
+		graph = Graph(name=self._name, keyValuePairs=self._dict)
 
 		vertices: dict[Hashable, Vertex] = {}
 		for block in self._blocks.values():
-			keyValuePairs: dict[str, Any] = {"kind": block._kind}
+			keyValuePairs: dict[Hashable, Any] = {**block._dict, "kind": block._kind}
 			if block._count is not None:
 				keyValuePairs["count"] = block._count
 
 			vertices[block._id] = Vertex(vertexID=block._id, value=block._value, keyValuePairs=keyValuePairs, graph=graph)
 
 		for edge in self._edges:
-			keyValuePairs = {"kind": edge._kind}
+			keyValuePairs = {**edge._dict, "kind": edge._kind}
 			if edge._count is not None:
 				keyValuePairs["count"] = edge._count
 

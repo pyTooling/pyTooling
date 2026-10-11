@@ -52,21 +52,22 @@ class Construction(Testcase):
 		self.assertEqual("exit", graph.Exit.ID)
 		self.assertIs(BlockKind.Exit, graph.Exit.Kind)
 		self.assertIsNone(graph.Unwind)
-		self.assertEqual(2, len(graph))
-		self.assertListEqual([graph.Entry, graph.Exit], list(graph))
+		self.assertEqual(2, graph.BlockCount)
+		self.assertListEqual([graph.Entry, graph.Exit], list(graph.IterateBlocks()))
+		self.assertEqual(0, len(graph), "A new graph has no key-value-pairs.")
 		self.assertDictEqual({"entry": graph.Entry, "exit": graph.Exit}, graph.Blocks)
 		self.assertListEqual([], graph.Edges)
 
 	def test_ControlFlowGraph_IDs(self) -> None:
 		graph = ControlFlowGraph("main", entryID=0, exitID=1)
 
-		self.assertIs(graph.Entry, graph[0])
-		self.assertIs(graph.Exit, graph[1])
-		self.assertIn(0, graph)
-		self.assertNotIn("entry", graph)
+		self.assertIs(graph.Entry, graph.GetBlock(0))
+		self.assertIs(graph.Exit, graph.GetBlock(1))
+		self.assertTrue(graph.ContainsBlock(0))
+		self.assertFalse(graph.ContainsBlock("entry"))
 
 		with self.assertRaises(KeyError):
-			_ = graph[2]
+			_ = graph.GetBlock(2)
 
 	def test_BasicBlock(self) -> None:
 		graph = ControlFlowGraph("main")
@@ -79,9 +80,9 @@ class Construction(Testcase):
 		self.assertIsNone(block.Value)
 		self.assertTupleEqual((), block.InboundEdges)
 		self.assertTupleEqual((), block.OutboundEdges)
-		self.assertIs(block, graph[2])
-		self.assertIn(2, graph)
-		self.assertEqual(3, len(graph))
+		self.assertIs(block, graph.GetBlock(2))
+		self.assertTrue(graph.ContainsBlock(2))
+		self.assertEqual(3, graph.BlockCount)
 
 	def test_BasicBlock_CountAndValue(self) -> None:
 		graph = ControlFlowGraph("main")
@@ -104,7 +105,7 @@ class Construction(Testcase):
 
 		self.assertIs(unwind, graph.Unwind)
 		self.assertIs(BlockKind.Unwind, unwind.Kind)
-		self.assertEqual(3, len(graph))
+		self.assertEqual(3, graph.BlockCount)
 
 	def test_Edge(self) -> None:
 		graph = ControlFlowGraph("main")
@@ -142,6 +143,58 @@ class Construction(Testcase):
 	def test_Exceptions(self) -> None:
 		self.assertTrue(issubclass(DuplicateBlockError, ControlFlowError))
 		self.assertTrue(issubclass(DuplicateEdgeError, ControlFlowError))
+
+
+class KeyValuePairs(Testcase):
+	def test_ControlFlowGraph(self) -> None:
+		graph = ControlFlowGraph("main", keyValuePairs={"file": "main.c"})
+
+		self.assertEqual(1, len(graph))
+		self.assertIn("file", graph)
+		self.assertEqual("main.c", graph["file"])
+		self.assertNotIn("entry", graph, "A block ID is no key-value-pair.")
+
+	def test_BasicBlock(self) -> None:
+		graph = ControlFlowGraph("main")
+		block = BasicBlock(graph, 2, keyValuePairs={"lines": (3, 4)})
+
+		block["dominator"] = graph.Entry
+		self.assertEqual(2, len(block))
+		self.assertListEqual(["lines", "dominator"], list(block))
+		self.assertIs(graph.Entry, block["dominator"])
+
+		del block["lines"]
+		self.assertNotIn("lines", block)
+		with self.assertRaises(KeyError):
+			_ = block["lines"]
+
+		with self.assertRaises(KeyError):
+			del block["lines"]
+
+	def test_Edge(self) -> None:
+		graph = ControlFlowGraph("main")
+		edge =  Edge(graph.Entry, graph.Exit, keyValuePairs={"label": "return"})
+
+		self.assertEqual("return", edge["label"])
+		self.assertEqual(1, len(edge))
+
+	def test_Copy(self) -> None:
+		pairs = {"lines": (3, 4)}
+		block = BasicBlock(ControlFlowGraph("main"), 2, keyValuePairs=pairs)
+
+		block["count"] = 1
+		self.assertDictEqual({"lines": (3, 4)}, pairs, "The element copies the given mapping.")
+
+	def test_IterateBlocks(self) -> None:
+		graph = ControlFlowGraph("main", entryID=0, exitID=1)
+		BasicBlock(graph, 2)
+		BasicBlock(graph, 3, kind=BlockKind.Unwind)
+
+		self.assertListEqual([0, 1, 2, 3], [block.ID for block in graph.IterateBlocks()])
+		self.assertListEqual(
+			[2, 3],
+			[block.ID for block in graph.IterateBlocks(lambda block: block.Kind not in (BlockKind.Entry, BlockKind.Exit))]
+		)
 
 
 class Checks(Testcase):
@@ -206,7 +259,7 @@ class Checks(Testcase):
 			_ = BasicBlock(graph, 2)
 
 		self.assertEqual("Control flow graph 'main' has a block '2' already.", str(context.exception))
-		self.assertEqual(3, len(graph))
+		self.assertEqual(3, graph.BlockCount)
 
 	def test_BasicBlock_Kind(self) -> None:
 		graph = ControlFlowGraph("main")
@@ -233,7 +286,7 @@ class Checks(Testcase):
 
 				self.assertEqual(message, str(context.exception))
 
-		self.assertEqual(3, len(graph))
+		self.assertEqual(3, graph.BlockCount)
 
 	def test_Count(self) -> None:
 		graph = ControlFlowGraph("main")

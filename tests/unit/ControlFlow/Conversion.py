@@ -57,6 +57,21 @@ class ToGraph(Testcase):
 		self.assertEqual(BlockKind.Entry, graph.GetVertexByID("entry")["kind"])
 		self.assertEqual(BlockKind.Exit, graph.GetVertexByID("exit")["kind"])
 
+	def test_KeyValuePairs(self) -> None:
+		cfg =   ControlFlowGraph("main", keyValuePairs={"file": "main.c"})
+		block = BasicBlock(cfg, 2, count=1, keyValuePairs={"lines": (3, 4)})
+		Edge(cfg.Entry, block, keyValuePairs={"label": "start"})
+
+		graph = cfg.ToGraph()
+
+		self.assertEqual("main.c", graph["file"])
+		self.assertDictEqual({"lines": (3, 4), "kind": BlockKind.Code, "count": 1}, graph.GetVertexByID(2)._dict)
+		edge = graph.GetVertexByID("entry").OutboundEdges[0]
+		self.assertDictEqual({"label": "start", "kind": EdgeKind.Default}, edge._dict)
+
+		graph["file"] = "other.c"
+		self.assertEqual("main.c", cfg["file"], "The graph copies the key-value-pairs.")
+
 	def test_Vertices(self) -> None:
 		cfg = ControlFlowGraph("main", entryID=0, exitID=1)
 

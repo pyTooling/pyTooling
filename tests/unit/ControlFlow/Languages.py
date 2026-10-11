@@ -81,12 +81,12 @@ class C(Testcase):
 		loop = Edge(step, condition, EdgeKind.Jump, count=4)
 		Edge(ret, graph.Exit, EdgeKind.FallThrough, count=1)
 
-		self.assertEqual(9, len(graph))
+		self.assertEqual(9, graph.BlockCount)
 		self.assertEqual(10, len(graph.Edges))
 		self.assertListEqual([test, ret], [edge.Destination for edge in condition.OutboundEdges])
 		self.assertIn(loop, condition.InboundEdges)
 
-		for block in graph:
+		for block in graph.IterateBlocks():
 			with self.subTest(block=block.ID):
 				if block.Kind is not BlockKind.Entry:
 					self.assertEqual(block.Count, sum(edge.Count for edge in block.InboundEdges))

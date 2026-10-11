@@ -47,10 +47,14 @@ Features
 
 * A graph has an entry and an exit block, and optionally an unwind block, through which an exception leaves the
   function.
-* A block is looked up by its ID: :pycode:`graph[3]` and :pycode:`3 in graph`.
+* A block is looked up by its ID: :pycode:`graph.GetBlock(3)` and :pycode:`graph.ContainsBlock(3)`;
+  :pycode:`graph.IterateBlocks()` yields all blocks, :pycode:`graph.BlockCount` counts them.
 * Every edge has a kind, given as an :class:`~pyTooling.ControlFlow.EdgeKind` member.
 * Blocks and edges carry an optional execution count and an optional value of any type, e.g. source lines or a
   ``case`` label.
+* Graphs, blocks and edges carry key-value pairs, e.g. the results of an analysis under a key of its choice:
+  :pycode:`block["dominator"] = graph.Entry`. Their dunder methods (``len``, ``in``, ``[]``, ``del``, iteration) serve
+  these pairs, as in :mod:`pyTooling.Graph`.
 * :meth:`~pyTooling.ControlFlow.ControlFlowGraph.ToGraph` converts a control flow graph into a
   :class:`~pyTooling.Graph.Graph`, so it can be written as GraphML or Graphviz DOT, or analysed by the graph
   algorithms.
@@ -179,7 +183,8 @@ Conversion to a Graph
 
 :meth:`~pyTooling.ControlFlow.ControlFlowGraph.ToGraph` returns a :class:`~pyTooling.Graph.Graph` named like the
 function. A block becomes a vertex, whose ID and value are the block's; an edge becomes an edge in the direction
-control flows, whose kind and value are the edge's. Vertices and edges carry these key-value pairs:
+control flows, whose kind and value are the edge's. The graph, vertices and edges carry a copy of the key-value pairs
+of the control flow graph, blocks and edges; vertices and edges carry these two more:
 
 +---------------------------------------------------+--------------------------------------------------------------+
 | Key                                               | Value                                                        |
