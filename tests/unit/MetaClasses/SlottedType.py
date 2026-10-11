@@ -1468,6 +1468,49 @@ class DuplicateMixinSlot(Testcase):
 		self.assertSetEqual({"_own", "_common", "_data1", "_data2"}, Final.__allSlots__)
 
 
+class ObjectBaseClass(Testcase):
+	"""An explicit :class:`object` base-class behaves like no base-class."""
+
+	def test_SlottedClass(self) -> None:
+		"""``class C(object, ..., slots=True)`` is a slotted class."""
+		class Data(object, metaclass=ExtendedType, slots=True):
+			_value: int
+
+			def __init__(self, value: int) -> None:
+				self._value = value
+
+		self.assertTupleEqual(("_value", ), Data.__slots__)
+		self.assertEqual(5, Data(5)._value)
+		with self.assertRaises(AttributeError):
+			Data(5)._other = 1
+
+	def test_MixinClass(self) -> None:
+		"""``class M(object, ..., mixin=True)`` is a mixin-class, whose field becomes a slot where it is mixed in."""
+		class Mixin(object, metaclass=ExtendedType, mixin=True):
+			_name: str
+
+		class Data(metaclass=ExtendedType, slots=True):
+			_value: int
+
+		class Final(Data, Mixin):
+			pass
+
+		self.assertTupleEqual((), Mixin.__slots__)
+		self.assertTupleEqual(("_name", ), Mixin.__mixinSlots__)
+		self.assertTupleEqual(("_name", ), Final.__slots__)
+
+	def test_MetaClassCall(self) -> None:
+		"""Calling the meta-class with ``(object, )`` as base-classes creates the same class as with ``()``."""
+		fields = ("__slots__", "__mixinSlots__", "__allSlots__", "__slotted__", "__isMixin__")
+		for keywords in ({"slots": True}, {"mixin": True}, {"slots": True, "weakref": True}):
+			with self.subTest(keywords=keywords):
+				withoutBase = ExtendedType("Data", (), {"__annotations__": {"_value": int}}, **keywords)
+				withObject =  ExtendedType("Data", (object, ), {"__annotations__": {"_value": int}}, **keywords)
+
+				for field in fields:
+					self.assertEqual(withoutBase.__dict__.get(field), withObject.__dict__.get(field), field)
+
+
 class UnannotatedFields(Testcase):
 	"""
 	Every field should carry type information.

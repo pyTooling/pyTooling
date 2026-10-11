@@ -601,6 +601,10 @@ Version 10.x (2026)
        slots of one name, or for ``__weakref__`` Python's ``TypeError: __weakref__ slot disallowed``. These raise a
        :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now. Two mixin-classes deriving from one mixin-class
        passed its field on twice; it is one slot now.
+     * A slotted class or mixin-class naming :class:`object` as its base-class (``class C(object,
+       metaclass=ExtendedType, slots=True)``) raised an :exc:`IndexError`: an inheritance path ending in
+       :class:`object` was collected for every base-class, except for :class:`object` itself. An explicit
+       :class:`object` base-class behaves like none.
 
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
