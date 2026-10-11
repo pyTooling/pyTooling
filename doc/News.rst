@@ -461,6 +461,12 @@ Version 10.x (2026)
      name is one of them. It scanned every member of every base-class for every new class. Over pyVHDLModel's 412
      classes, the abstract-method check took 2.2 ms, now 0.95 ms.
 
+   * :class:`~pyTooling.MetaClasses.ExtendedType` compiles a textual annotation once per distinct text. It compiled
+     every string annotation of every class anew - under ``from __future__ import annotations`` that is every
+     annotation - although the same text recurs throughout a model (``Nullable[str]``). The code object is cached and
+     evaluated in the namespaces of each class being created, as before. Resolving a text seen before takes 1.0 µs
+     instead of 11.4 µs (Python 3.14), and creating a class with postponed annotations takes 26 to 59 % less time.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.CLIAbstraction`

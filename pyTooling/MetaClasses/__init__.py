@@ -51,7 +51,7 @@ from functools            import wraps
 from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
-from types                import BuiltinFunctionType, FunctionType, MethodType
+from types                import BuiltinFunctionType, CodeType, FunctionType, MethodType
 from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Self
 from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
@@ -1030,6 +1030,7 @@ class ExtendedType(type):
 
 	#: Matches a textual annotation denoting a :class:`~typing.ClassVar`, with or without a module qualifier.
 	_CLASS_VARIABLE_PATTERN = re_compile(r"^\s*(?:\w+\.)*ClassVar\s*(?:\[|$)")
+	_compiledAnnotations: ClassVar[dict[str, CodeType]] = {}  #: Code object per textual annotation, compiled once.
 
 	@classmethod
 	def _resolveAnnotation(metacls, typeAnnotation: Any, members: dict[str, Any]) -> Any:
@@ -1045,6 +1046,9 @@ class ExtendedType(type):
 		is harmless: the textual fallback in :meth:`_isClassVariable` still classifies it, and nothing else needs the
 		type object.
 
+		Each distinct annotation text is compiled once and its code object is kept in :attr:`_compiledAnnotations`. Only
+		the code is shared: it is evaluated in the namespaces of the class being created, every time.
+
 		:param typeAnnotation: The annotation to resolve; returned unchanged when it is not a string.
 		:param members:        Dictionary of class members, used as the local namespace.
 		:returns:              The evaluated annotation, or the original string when it cannot be evaluated.
@@ -1054,8 +1058,13 @@ class ExtendedType(type):
 
 		module = modules.get(members.get("__module__", ""), None)
 		try:
+			if (code := metacls._compiledAnnotations.get(typeAnnotation, None)) is None:
+				# Like 'eval' does for a string, leading spaces and tabs are stripped.
+				code = compile(typeAnnotation.lstrip(" \t"), "<string>", "eval")
+				metacls._compiledAnnotations[typeAnnotation] = code
+
 			# The annotation is source code written in the class being created - the same trust level as importing it.
-			return eval(typeAnnotation, getattr(module, "__dict__", {}), members)
+			return eval(code, getattr(module, "__dict__", {}), members)
 		except Exception:      # noqa: BLE001 - any failure means "keep the string", see above
 			return typeAnnotation
 
