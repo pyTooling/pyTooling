@@ -578,6 +578,12 @@ Version 10.x (2026)
        put :meth:`object.__new__` back into the class, which rejects every parameter there
        (:gh:`python/cpython#105888 <python/cpython/issues/105888>`). It puts back the replacement a class that isn't
        abstract anymore already got, which calls :meth:`object.__new__` with the class only.
+     * A method overriding one marked with :deco:`~pyTooling.MetaClasses.expects`, without the marker itself, was
+       replaced by the overridden method's replacement while the class missed what *that* method expected:
+       calling the override raised :exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError`, and the class lost its
+       own method. The same for an override contributed by a mixin-class, and for a marked method of a mixin-class
+       shadowed by an unmarked one on the primary inheritance line. An override expects only what its own marker
+       names.
 
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
