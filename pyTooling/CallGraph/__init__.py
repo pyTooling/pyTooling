@@ -127,7 +127,7 @@ class Function(BaseWithCountAndValue):
 	to the functions it calls, its inbound calls come from the functions calling it. It can refer to its control flow
 	graph, whose blocks are the call sites of its outbound calls.
 	"""
-	_graph:            CallGraph                    #: The graph this function belongs to.
+	_callGraph:        _CallGraph                   #: The call graph this function belongs to.
 	_id:               Hashable                     #: ID of the function, unique within its graph.
 	_kind:             FunctionKind                 #: Kind of the function.
 	_controlFlowGraph: Nullable[_ControlFlowGraph]  #: The function's control flow graph, if it's known.
@@ -136,7 +136,7 @@ class Function(BaseWithCountAndValue):
 
 	def __init__(
 		self,
-		graph:            CallGraph,
+		callGraph:        _CallGraph,
 		functionID:       Hashable,
 		*,
 		kind:             FunctionKind                = FunctionKind.Defined,
@@ -147,7 +147,7 @@ class Function(BaseWithCountAndValue):
 		"""
 		Initializes a function and adds it to its graph.
 
-		:param graph:                   The graph the function belongs to.
+		:param callGraph:               The call graph the function belongs to.
 		:param functionID:              ID of the function, unique within its graph.
 		:param kind:                    Optional, kind of the function. Default: :attr:`FunctionKind.Defined`.
 		:param controlFlowGraph:        Optional, the function's control flow graph. Default: ``None``.
@@ -155,8 +155,8 @@ class Function(BaseWithCountAndValue):
 		:param value:                   Optional, any value attached to the function, e.g. its location. Default: ``None``.
 		:raises TypeError:              If parameter 'count' is not of type :class:`int`.
 		:raises ValueError:             If parameter 'count' is negative.
-		:raises ValueError:             If parameter 'graph' is None.
-		:raises TypeError:              If parameter 'graph' is not of type :class:`CallGraph`.
+		:raises ValueError:             If parameter 'callGraph' is None.
+		:raises TypeError:              If parameter 'callGraph' is not of type :class:`CallGraph`.
 		:raises ValueError:             If parameter 'functionID' is None.
 		:raises TypeError:              If parameter 'functionID' is not hashable.
 		:raises DuplicateFunctionError: If the graph has a function with that ID already.
@@ -169,11 +169,11 @@ class Function(BaseWithCountAndValue):
 		"""
 		super().__init__(count, value)
 
-		if graph is None:
-			raise ValueError("Parameter 'graph' is None.")
-		elif not isinstance(graph, CallGraph):
-			ex = TypeError("Parameter 'graph' is not of type 'CallGraph'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(graph)}'.")
+		if callGraph is None:
+			raise ValueError("Parameter 'callGraph' is None.")
+		elif not isinstance(callGraph, _CallGraph):
+			ex = TypeError("Parameter 'callGraph' is not of type 'CallGraph'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(callGraph)}'.")
 			raise ex
 
 		if functionID is None:
@@ -182,8 +182,8 @@ class Function(BaseWithCountAndValue):
 			ex = TypeError("Parameter 'functionID' is not hashable.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(functionID)}'.")
 			raise ex
-		elif functionID in graph._functions:
-			raise DuplicateFunctionError(f"Call graph '{graph._name}' has a function '{functionID}' already.")
+		elif functionID in callGraph._functions:
+			raise DuplicateFunctionError(f"Call graph '{callGraph._name}' has a function '{functionID}' already.")
 
 		if kind is None:
 			raise ValueError("Parameter 'kind' is None.")
@@ -202,23 +202,23 @@ class Function(BaseWithCountAndValue):
 				ex.add_note(f"Got function '{functionID}'.")
 				raise ex
 
-		self._graph =            graph
+		self._callGraph =        callGraph
 		self._id =               functionID
 		self._kind =             kind
 		self._controlFlowGraph = controlFlowGraph
 		self._inboundCalls =     []
 		self._outboundCalls =    []
 
-		graph._functions[functionID] = self
+		callGraph._functions[functionID] = self
 
 	@readonly
-	def Graph(self) -> CallGraph:
+	def CallGraph(self) -> _CallGraph:
 		"""
-		Read-only property to access the graph this function belongs to (:attr:`_graph`).
+		Read-only property to access the call graph this function belongs to (:attr:`_callGraph`).
 
 		:returns: The call graph.
 		"""
-		return self._graph
+		return self._callGraph
 
 	@readonly
 	def ID(self) -> Hashable:
@@ -327,9 +327,9 @@ class Call(BaseWithCountAndValue):
 			ex = TypeError("Parameter 'callee' is not of type 'Function'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(callee)}'.")
 			raise ex
-		elif callee._graph is not caller._graph:
+		elif callee._callGraph is not caller._callGraph:
 			ex = ValueError("Parameter 'callee' belongs to another graph than parameter 'caller'.")
-			ex.add_note(f"Got graphs '{caller._graph._name}' and '{callee._graph._name}'.")
+			ex.add_note(f"Got graphs '{caller._callGraph._name}' and '{callee._callGraph._name}'.")
 			raise ex
 
 		if kind is None:
@@ -364,7 +364,7 @@ class Call(BaseWithCountAndValue):
 
 		caller._outboundCalls.append(self)
 		callee._inboundCalls.append(self)
-		caller._graph._calls.append(self)
+		caller._callGraph._calls.append(self)
 
 	@readonly
 	def Caller(self) -> Function:
@@ -550,3 +550,7 @@ class CallGraph(metaclass=ExtendedType, slots=True):
 			)
 
 		return graph
+
+
+# ``Function`` has a property named like the class ``CallGraph``, so it annotates its field with this alias.
+_CallGraph = CallGraph

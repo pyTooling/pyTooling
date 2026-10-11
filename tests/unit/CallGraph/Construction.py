@@ -57,7 +57,7 @@ class Construction(Testcase):
 		graph =    CallGraph("prog")
 		function = Function(graph, "main")
 
-		self.assertIs(graph, function.Graph)
+		self.assertIs(graph, function.CallGraph)
 		self.assertEqual("main", function.ID)
 		self.assertIs(FunctionKind.Defined, function.Kind)
 		self.assertIsNone(function.ControlFlowGraph)
@@ -186,16 +186,16 @@ class Checks(Testcase):
 
 		self.assertEqual("Parameter 'name' is empty.", str(context.exception))
 
-	def test_Function_Graph(self) -> None:
+	def test_Function_CallGraph(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Function(None, "main")
 
-		self.assertEqual("Parameter 'graph' is None.", str(context.exception))
+		self.assertEqual("Parameter 'callGraph' is None.", str(context.exception))
 
 		with self.assertRaises(TypeError) as context:
 			_ = Function(ControlFlowGraph("main"), "main")
 
-		self.assertEqual("Parameter 'graph' is not of type 'CallGraph'.", str(context.exception))
+		self.assertEqual("Parameter 'callGraph' is not of type 'CallGraph'.", str(context.exception))
 
 	def test_Function_ID(self) -> None:
 		graph = CallGraph("prog")
