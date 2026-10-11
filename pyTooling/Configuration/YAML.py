@@ -71,7 +71,6 @@ class Node(Abstract_Node):
 	_yamlNode: Union[CommentedMap, CommentedSeq]  #: Reference to the associated YAML node.
 	_cache:    dict[str, ValueT]                  #: Cache of already converted sub-nodes and values, by key.
 	_key:      KeyT                               #: Key of this node.
-	_length:   int                                #: Number of sub-elements.
 
 	def __init__(
 		self,
@@ -93,11 +92,10 @@ class Node(Abstract_Node):
 		self._yamlNode = yamlNode
 		self._cache = {}
 		self._key = key
-		self._length = len(yamlNode)
 
 	@InheritDocString(Abstract_Node)
 	def __len__(self) -> int:
-		return self._length
+		return len(self._yamlNode)
 
 	@InheritDocString(Abstract_Node)
 	def __getitem__(self, key: KeyT) -> ValueT:
@@ -168,16 +166,16 @@ class Node(Abstract_Node):
 		:returns: A one-line description of the node's keys or index range.
 		"""
 		if isinstance(self._yamlNode, CommentedMap):
-			if self._length == 0:
+			if len(self._yamlNode) == 0:
 				return f"Node '{self._key}' is an empty dictionary."
 
 			keys = "', '".join(str(key) for key in self._yamlNode)
 			return f"Available keys: '{keys}'."
 		else:
-			if self._length == 0:
+			if len(self._yamlNode) == 0:
 				return f"Node '{self._key}' is an empty sequence."
 
-			return f"Node '{self._key}' is a sequence with indices 0..{self._length - 1}."
+			return f"Node '{self._key}' is a sequence with indices 0..{len(self._yamlNode) - 1}."
 
 	def _GetNodeOrValue(self, key: str) -> ValueT:
 		"""
@@ -438,7 +436,6 @@ class Sequence(Node, Abstract_Seq):
 		"""
 		Node.__init__(self, root, parent, key, yamlNode)
 
-		self._length = len(yamlNode)
 
 	def __iter__(self) -> typing_Iterator[ValueT]:
 		"""
