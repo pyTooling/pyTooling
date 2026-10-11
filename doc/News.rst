@@ -467,6 +467,10 @@ Version 10.x (2026)
      evaluated in the namespaces of each class being created, as before. Resolving a text seen before takes 1.0 µs
      instead of 11.4 µs (Python 3.14), and creating a class with postponed annotations takes 26 to 59 % less time.
 
+   * :class:`~pyTooling.MetaClasses.ExtendedType` no longer searches :class:`object` for methods marked with
+     :deco:`~pyTooling.MetaClasses.expects`. The search walks the new class' MRO, which always ends in :class:`object`,
+     whose members are never marked. Over pyVHDLModel's 412 classes, the search took 3.7 ms, now 3.2 ms.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.CLIAbstraction`
