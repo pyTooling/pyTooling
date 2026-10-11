@@ -54,7 +54,7 @@ from typing                import Iterator, cast
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
 from pyTooling.Warning     import WarningCollector, Warning
 from pyTooling.Stopwatch   import Stopwatch
@@ -286,13 +286,13 @@ class Element(Base, Generic[_ParentType]):
 		return self._name
 
 	@readonly
-	def Path(self) -> Path:
+	@abstractmethod
+	def Path(self) -> Path:  # type: ignore[empty-body]
 		"""
 		Read-only property to access the element's path.
 
 		:returns: Path of the element.
 		"""
-		raise NotImplementedError("Property 'Path' is abstract.")
 
 	@readonly
 	def LinkSources(self) -> list[SymbolicLink]:

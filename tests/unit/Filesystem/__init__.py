@@ -33,10 +33,11 @@ Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the st
 """
 from pathlib import Path
 
-from pyTooling.Exceptions import ToolingException
-from pyTooling.Common     import count
-from pyTooling.Filesystem import Root, Directory, Filename, File, FilesystemError
-from pyTooling.Testing    import Testcase
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import count
+from pyTooling.Filesystem  import Root, Directory, Element, Filename, File, FilesystemError
+from pyTooling.MetaClasses import AbstractClassError
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -256,6 +257,36 @@ class Instantiation(Testcase):
 		self.assertListEqual(file.Parents, [filename])
 		self.assertEqual(2, file.ID)
 		self.assertEqual(2048, file.Size)
+
+
+class AbstractMembers(Testcase):
+	"""``Element`` declares ``Path`` abstract; every concrete element implements it."""
+
+	def test_Element(self) -> None:
+		"""An ``Element`` can't be instantiated, as its ``Path`` is abstract."""
+		with self.assertRaises(AbstractClassError) as context:
+			Element("element")
+
+		self.assertIn("Path", str(context.exception))
+
+	def test_ElementWithoutPath(self) -> None:
+		"""A derived element without its own ``Path`` stays abstract."""
+		class Incomplete(Element[Directory]):
+			pass
+
+		with self.assertRaises(AbstractClassError):
+			Incomplete("incomplete")
+
+	def test_ConcreteElements(self) -> None:
+		"""Directory, file name and the root implement ``Path``; ``File`` is no ``Element``."""
+		root = Root(Path("tests/data"), collectSubdirectories=False)
+		directory = Directory("dir", parent=root)
+		filename = Filename("file.txt", parent=directory)
+
+		self.assertEqual(Path("tests/data"), root.Path)
+		self.assertEqual(Path("tests/data/dir"), directory.Path)
+		self.assertEqual(Path("tests/data/dir/file.txt"), filename.Path)
+		self.assertIsInstance(File(1, 1024), File)
 
 
 class Scanning(Testcase):

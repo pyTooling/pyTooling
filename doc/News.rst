@@ -471,6 +471,13 @@ Version 10.x (2026)
      :deco:`~pyTooling.MetaClasses.expects`. The search walks the new class' MRO, which always ends in :class:`object`,
      whose members are never marked. Over pyVHDLModel's 412 classes, the search took 3.7 ms, now 3.2 ms.
 
+   * :mod:`pyTooling.Filesystem`
+
+     * :attr:`Element.Path <pyTooling.Filesystem.Element.Path>` is an abstract property, so
+       :class:`~pyTooling.Filesystem.Element` and a derived class without its own ``Path`` raise an
+       :exc:`~pyTooling.MetaClasses.AbstractClassError` when instantiated. The property raised a
+       :exc:`NotImplementedError` only when read.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.CLIAbstraction`
