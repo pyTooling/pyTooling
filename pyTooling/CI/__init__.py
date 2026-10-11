@@ -1356,7 +1356,9 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 @export
 class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 	"""
-	One instance of a called workflow produced by a matrix, e.g. a GitHub job with ``strategy.matrix`` and ``uses:``.
+	One instance of a called workflow produced by a matrix.
+
+	A GitHub job with ``strategy.matrix`` and ``uses:`` produces such instances.
 	"""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = Matrix  #: A matrix instance is contained in a matrix.

@@ -528,7 +528,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	@readonly
 	def PathSeperator(self) -> str:
 		"""
-		Returns the path element separation character (e.g. for directories).
+		Returns the path element separation character.
+
+		The character separates e.g. directories.
 
 		* POSIX-like: ``/``
 		* Windows: ``\\``
@@ -543,7 +545,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	@readonly
 	def ValueSeperator(self) -> str:
 		"""
-		Returns the value separation character (e.g. for paths in PATH).
+		Returns the value separation character.
+
+		The character separates e.g. the paths in ``PATH``.
 
 		* POSIX-like: ``:``
 		* Windows: ``;``

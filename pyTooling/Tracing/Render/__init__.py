@@ -317,7 +317,9 @@ class GanttRow(Row):
 @export
 class CategoryStatistics(metaclass=ExtendedType, slots=True):
 	"""
-	The waiting and running times of the jobs of one category, e.g. of one runner image.
+	The waiting and running times of the jobs of one category.
+
+	A category is e.g. a runner image.
 	"""
 	_category:  str          #: The category.
 	_waitTimes: list[float]  #: Seconds each job waited for a runner.

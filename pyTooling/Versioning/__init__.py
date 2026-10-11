@@ -3147,9 +3147,10 @@ class VersionComparison(Enum):
 @export
 class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
 	"""
-	One comparison of a :class:`VersionExpression`, such as ``>=1.2.0``.
+	One comparison of a :class:`VersionExpression`.
 
-	A constraint is a container of the versions satisfying it, so membership is asked with ``in``:
+	A constraint is written e.g. as ``>=1.2.0``. It is a container of the versions satisfying it, so membership is asked
+	with ``in``:
 
 	.. code-block:: python
 
@@ -3565,11 +3566,11 @@ def _BuildConstraintPattern(
 @export
 class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 	"""
-	A conjunction of :class:`VersionConstraint`\\ s, such as ``>=1.2.0,<2.0.0``.
+	A conjunction of :class:`VersionConstraint`\\ s.
 
-	Every constraint has to be satisfied, which is what separating them means in every packaging ecosystem that has
-	the notion. An expression with **no** constraints matches every version, so *no version restriction* can be
-	represented rather than special-cased by its callers.
+	An expression is written e.g. as ``>=1.2.0,<2.0.0``. Every constraint has to be satisfied, which is what separating
+	them means in every packaging ecosystem that has the notion. An expression with **no** constraints matches every
+	version, so *no version restriction* can be represented rather than special-cased by its callers.
 
 	.. code-block:: python
 
@@ -3657,11 +3658,11 @@ class VersionExpression(Generic[V], metaclass=ExtendedType, slots=True):
 	@classmethod
 	def Parse(cls, expression: Nullable[str], versionType: Nullable[type[Version]] = None) -> Self:
 		"""
-		Parse an expression such as ``>=1.2.0,<2.0.0`` into its constraints.
+		Parse an expression into its constraints.
 
-		A constraint without an operator is an equality, so ``1.2.0`` and ``==1.2.0`` are the same statement. An
-		empty expression yields an expression with no constraints, which every version satisfies - that is how *no
-		version restriction* is written.
+		An expression is written e.g. as ``>=1.2.0,<2.0.0``. A constraint without an operator is an equality, so ``1.2.0``
+		and ``==1.2.0`` are the same statement. An empty expression yields an expression with no constraints, which every
+		version satisfies - that is how *no version restriction* is written.
 
 		The expression is *scanned* rather than split, so a dialect separating constraints by whitespace does not
 		break a constraint that has whitespace after its operator.
