@@ -361,6 +361,11 @@ Version 10.x (2026)
      * :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts a package dependency graph into a
        :class:`pyTooling.Graph.Graph`: a vertex per package version, with its license, release time and URLs as
        key-value pairs, and an edge per dependency.
+     * The package-override file :class:`~pyTooling.Dependency.Python.LicenseOverrides` reads has a JSON schema,
+       :file:`PackageOverrides-v0.1.json`, shipped as a package resource and named by
+       :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES`. The documentation serves it - and
+       :file:`TestReport-v0.1.xsd` - under ``https://pyTooling.GitHub.io/pyTooling/Schemas/``, the schema's ``$id``,
+       so an editor validates the file as it is typed.
 
    .. rubric:: Breaking Changes
 
