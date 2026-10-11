@@ -126,6 +126,25 @@ class ReadOnly(Testcase):
 		with self.assertRaises(AttributeError):
 			del d.length
 
+	def test_Get(self) -> None:
+		"""Reading the property runs :class:`property`'s own ``__get__``; the overloads exist for type checkers only."""
+		class Data:
+			_data: int
+
+			def __init__(self, data: int) -> None:
+				self._data = data
+
+			@readonly
+			def length(self) -> int:
+				return 2 ** self._data
+
+		d = Data(3)
+
+		self.assertIs(property.__get__, readonly.__get__)
+		self.assertEqual(8, Data.length.__get__(d, Data))
+		self.assertEqual(8, Data.length.__get__(d))
+		self.assertIs(Data.__dict__["length"], Data.length.__get__(None, Data))
+
 	def test_Setter(self) -> None:
 		"""Attaching a setter to a read-only property is rejected while the class body is executed."""
 		with self.assertRaises(AttributeError) as context:

@@ -48,7 +48,7 @@ from functools  import wraps
 from inspect    import cleandoc
 from sys        import modules
 from types      import FunctionType
-from typing     import Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
+from typing     import TYPE_CHECKING, Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
 from typing     import Optional as Nullable
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
@@ -223,27 +223,30 @@ class readonly(property, Generic[_ReturnType]):
 		"""
 		return type(self)(fget)
 
-	@overload
-	def __get__(self, instance: None, owner: type, /) -> readonly[_ReturnType]:
-		...     # pragma: no cover - an overload carries no implementation
+	if TYPE_CHECKING:  # pragma: no cover - only type checkers read these declarations
+		@overload
+		def __get__(self, instance: None, owner: type, /) -> readonly[_ReturnType]:
+			...
 
-	@overload
-	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> _ReturnType:
-		...     # pragma: no cover - an overload carries no implementation
+		@overload
+		def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> _ReturnType:
+			...
 
-	def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> Union[readonly[_ReturnType], _ReturnType]:
-		"""
-		Return the value of the property, or the property itself when it is read from the class.
+		def __get__(self, instance: Any, owner: Nullable[type] = None, /) -> Union[readonly[_ReturnType], _ReturnType]:
+			"""
+			Return the value of the property, or the property itself when it is read from the class.
 
-		Declaring this - :class:`property` implements it already - is what tells a type checker that the value has
-		the getter's return type. Without it, every read of a ``@readonly`` property is :data:`~typing.Any`, and that
-		spreads: a comparison of two such values, or a method returning one, becomes ``Any`` as well.
+			Declaring this - :class:`property` implements it already - is what tells a type checker that the value has
+			the getter's return type. Without it, every read of a ``@readonly`` property is :data:`~typing.Any`, and that
+			spreads: a comparison of two such values, or a method returning one, becomes ``Any`` as well.
 
-		:param instance: The object the property is read from, or ``None`` when it is read from the class.
-		:param owner:    Optional, the class the property is defined in.
-		:returns:        The value the getter returns, or this property when read from the class.
-		"""
-		return super().__get__(instance, owner)     # type: ignore[no-any-return]
+			It is declared for type checkers only. At runtime, :class:`property`'s own ``__get__`` reads the value.
+
+			:param instance: The object the property is read from, or ``None`` when it is read from the class.
+			:param owner:    Optional, the class the property is defined in.
+			:returns:        The value the getter returns, or this property when read from the class.
+			"""
+			return super().__get__(instance, owner)     # type: ignore[no-any-return]
 
 	def setter(self, fset: Callable[..., Any]) -> NoReturn:
 		"""

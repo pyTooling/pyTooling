@@ -441,6 +441,13 @@ Version 10.x (2026)
      opening and a closing tag, says so in the :exc:`NotImplementedError` of the other methods, as
      :class:`~pyTooling.Graph.GraphML.Subgraph` already did.
 
+   * :mod:`pyTooling.Decorators`
+
+     * Reading a :deco:`~pyTooling.Decorators.readonly` property runs :class:`property`'s own ``__get__``. The
+       ``__get__`` overloads telling a type checker the getter's return type are declared under
+       :data:`~typing.TYPE_CHECKING` only; at runtime, they put a Python-level method call into every read. A read
+       takes 41 ns instead of 189 ns on Python 3.14, 27 ns instead of 123 ns on 3.13; a :class:`property` 14 ns.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.CLIAbstraction`
