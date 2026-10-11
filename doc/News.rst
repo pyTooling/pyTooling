@@ -473,6 +473,13 @@ Version 10.x (2026)
 
    .. rubric:: Bug Fixes
 
+   * :mod:`pyTooling.Decorators`
+
+     * A type checker rejected every function decorated with :deco:`~pyTooling.Decorators.export`: the type variable
+       ``T`` was bound to :class:`type` or :class:`~types.FunctionType`, but a type checker sees a ``def`` as a
+       :class:`~collections.abc.Callable`. It is bound to :class:`type` or :class:`~collections.abc.Callable` now, and
+       the decorated function or class keeps its signature.
+
    * :mod:`pyTooling.CLIAbstraction`
 
      * A program in dry-run mode raised an :exc:`AttributeError` instead of skipping a missing executable or a
