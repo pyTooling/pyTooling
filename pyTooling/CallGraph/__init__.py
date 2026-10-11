@@ -142,7 +142,7 @@ class Function(BaseWithCountAndValue):
 		kind:             FunctionKind                = FunctionKind.Defined,
 		controlFlowGraph: Nullable[_ControlFlowGraph] = None,
 		count:            Nullable[int]               = None,
-		value:            Any                         = None
+		value:            Nullable[Any]               = None
 	) -> None:
 		"""
 		Initializes a function and adds it to its graph.
@@ -287,7 +287,7 @@ class Call(BaseWithCountAndValue):
 		*,
 		callSite: Nullable[BasicBlock] = None,
 		count:    Nullable[int]        = None,
-		value:    Any                  = None
+		value:    Nullable[Any]        = None
 	) -> None:
 		"""
 		Initializes a call between two functions of a graph and adds it to the graph.
