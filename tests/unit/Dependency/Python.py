@@ -668,6 +668,46 @@ class Licenses(Testcase):
 
 		self.assertEqual("https://example.org/LICENSE.txt", str(release.LicenseURL))
 
+	def test_Override_Rejected(self) -> None:
+		"""An override that doesn't parse is reported with its statement, not as unpublished metadata."""
+		overrides = LicenseOverrides.FromDictionary({"project": {"license": "BSD-2-Clause-Views"}})
+		release = self._release(overrides)
+		warnings = self._resolve(release, self._json(license_expression="BSD-2-Clause"))
+
+		self.assertEqual(1, len(warnings))
+		self.assertIsInstance(release.LicenseExpression, UnknownLicense)
+		self.assertEqual("BSD-2-Clause-Views", release.PublishedLicense)
+		self.assertEqual(
+			[
+				"'BSD-2-Clause-Views', stated by the license overrides, "
+				"isn't a license expression 'pyTooling.Licensing' knows."
+			],
+			warnings[0].__notes__
+		)
+
+	def test_Override_RejectedNamesItsFile(self) -> None:
+		"""Read from a file, the warning names the file to correct."""
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "overrides.yml"
+			path.write_text(
+				'version: "0.1"\nanalysedAt: 2026-09-04\npackages:\n  project:\n    license: BSD-2-Clause-Views\n',
+				encoding="utf-8"
+			)
+			overrides = LicenseOverrides.FromFile(path)
+
+		release = self._release(overrides)
+		warnings = self._resolve(release, self._json())
+
+		self.assertEqual(path, overrides.Path)
+		self.assertEqual(1, len(warnings))
+		self.assertEqual(
+			[
+				f"'BSD-2-Clause-Views', stated by the license override file '{path}', "
+				"isn't a license expression 'pyTooling.Licensing' knows."
+			],
+			warnings[0].__notes__
+		)
+
 	def test_Override_NameIsNormalized(self) -> None:
 		"""``ruamel.yaml`` and ``ruamel-yaml`` are the same package."""
 		overrides = LicenseOverrides.FromDictionary({"Ruamel_YAML": {"license": "MIT"}})

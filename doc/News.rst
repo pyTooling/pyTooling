@@ -500,6 +500,13 @@ Version 10.x (2026)
        :exc:`~pyTooling.Configuration.UnsupportedValueTypeError`. It reads as ``None`` now, and a variable referencing
        it raises :exc:`~pyTooling.Configuration.PathExpressionError` instead of being replaced by ``"None"``.
 
+   * :mod:`pyTooling.Dependency`
+
+     * A license override :class:`~pyTooling.Licensing.LicenseExpression` can't parse (``BSD-2-Clause-Views``) was
+       reported as *"The package index published no license information."* The
+       :exc:`~pyTooling.Dependency.UnknownLicenseWarning` names the override's statement and the override file now,
+       which :attr:`LicenseOverrides.Path <pyTooling.Dependency.Python.LicenseOverrides.Path>` keeps.
+
    * :mod:`pyTooling.Packaging`
 
      * :func:`~pyTooling.Packaging.loadRequirementsFile` kept a comment behind a requirement, so an extra's metadata

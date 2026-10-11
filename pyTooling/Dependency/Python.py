@@ -429,6 +429,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
 
 	_analysedAt:   Nullable[datetime]                         #: When the statements were last checked by a human.
+	_path:         Nullable[Path]                             #: Path of the file the statements were read from.
 	#: License expression per package, by the version expression its key states, in the file's order.
 	_licenses:     dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 	#: URL of the license's text per package, by the version expression its key states, in the file's order.
@@ -436,13 +437,15 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	#: URL of the source repository per package, by the version expression its key states, in the file's order.
 	_repositories: dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 
-	def __init__(self, analysedAt: Nullable[datetime] = None) -> None:
+	def __init__(self, analysedAt: Nullable[datetime] = None, path: Nullable[Path] = None) -> None:
 		"""
 		Initialize an empty set of overrides.
 
 		:param analysedAt: Optional, the day these statements were last checked by a human.
+		:param path:       Optional, path of the file the statements were read from.
 		"""
 		self._analysedAt   = analysedAt
+		self._path         = path
 		self._licenses     = {}
 		self._licenseURLs  = {}
 		self._repositories = {}
@@ -462,6 +465,17 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		:returns: The day of the last analysis, or ``None`` if the overrides were built without one.
 		"""
 		return self._analysedAt
+
+	@readonly
+	def Path(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the file the statements were read from (:attr:`_path`).
+
+		A warning about a statement names the file to correct.
+
+		:returns: The path :meth:`FromFile` read, or ``None`` if the overrides were built without a file.
+		"""
+		return self._path
 
 	@classmethod
 	def FromFile(cls, path: Path) -> Self:
@@ -541,19 +555,20 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 		packages = configuration.get("packages", None)
 		if packages is None:
-			return cls(analysedAt)
+			return cls(analysedAt, path)
 		elif not isinstance(packages, Dictionary):
 			ex = DependencyError(f"License override file '{path}' states a 'packages' node that isn't a mapping.")
 			ex.add_note(f"Got '{packages}'.")
 			raise ex
 
-		return cls.FromDictionary(packages, analysedAt)
+		return cls.FromDictionary(packages, analysedAt, path)
 
 	@classmethod
 	def FromDictionary(
 		cls,
-		packages: Union[Mapping[str, Any], Dictionary],
-		analysedAt: Nullable[datetime] = None
+		packages:   Union[Mapping[str, Any], Dictionary],
+		analysedAt: Nullable[datetime] = None,
+		path:       Nullable[Path] = None
 	) -> Self:
 		"""
 		Build overrides from an already parsed mapping.
@@ -569,10 +584,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		:param packages:         Mapping of a package's name to what is stated for it.
 		:param analysedAt:       Optional, the day these statements were last checked. :meth:`FromFile` requires one;
 		                         overrides assembled in code are as old as the code and need none.
+		:param path:             Optional, path of the file the mapping was read from.
 		:returns:                The overrides the mapping states.
 		:raises DependencyError: If a version specifier can't be parsed.
 		"""
-		overrides = cls(analysedAt)
+		overrides = cls(analysedAt, path)
 
 		# A configuration node types its values as the whole 'ValueT' union, which every '.get' below would then
 		# have to be narrowed against. What is read here is a document either way, so it is read as one.
@@ -1133,7 +1149,9 @@ class Release(PackageVersion, LazyLoadableMixin):
 		license stays unresolved is reported as an
 		:class:`~pyTooling.Dependency.UnknownLicenseWarning` naming what was published, because that is the list of
 		packages the override file has to answer for. A release publishing ``NOASSERTION`` or ``NONE`` is on that
-		list too - the *statement* resolved, the license is still unknown.
+		list too - the *statement* resolved, the license is still unknown. An override that doesn't parse is reported
+		the same way, naming the override file and its statement, because that is the file to correct; the published
+		metadata isn't read in its place.
 
 		:param infoNode: The ``info`` node of the JSON document describing this release.
 		"""
@@ -1143,6 +1161,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		candidates = []
 		proprietaryClassifier = None
 
+		overrideRejected = False
 		if (override := overrides.LicenseOf(self._package._name, self._version)) is not None:
 			candidates.append(override)
 		else:
@@ -1174,6 +1193,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 			# The expression keeps the candidate as its 'OriginalText', which is the only place it is held.
 			break
 		else:
+			# An override is the only candidate, so nothing resolving means the override was rejected.
+			overrideRejected = override is not None
 			if proprietaryClassifier is not None:
 				# SPDX has no identifier for a proprietary license, so there is nothing to parse - the node is built,
 				# and it carries the classifier it was built from.
@@ -1191,11 +1212,17 @@ class Release(PackageVersion, LazyLoadableMixin):
 		# 'UnknownLicense' covers both: the index said 'NOASSERTION' itself, and nothing resolved at all. Either way
 		# the license is unknown, which is what this list is for.
 		if isinstance(self._licenseExpression, UnknownLicense):
+			if overrideRejected:
+				source = f"license override file '{overrides._path}'" if overrides._path is not None else "license overrides"
+				notes = [f"'{override}', stated by the {source}, isn't a license expression 'pyTooling.Licensing' knows."]
+			elif len(published) > 0:
+				notes = published
+			else:
+				notes = ["The package index published no license information."]
+
 			WarningCollector.Raise(
-				UnknownLicenseWarning(
-					f"License of '{self._package._name}' {self._version} couldn't be resolved."
-				),
-				notes=published if len(published) > 0 else ["The package index published no license information."]
+				UnknownLicenseWarning(f"License of '{self._package._name}' {self._version} couldn't be resolved."),
+				notes=notes
 			)
 
 	def _ResolveURLs(self, infoNode: Mapping[str, Any]) -> None:
