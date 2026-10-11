@@ -286,7 +286,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		If a key doesn't exist yet, a new key-value-pair is created.
 
 		:param key:   The key to create or update.
-		:param value: Optional, the value to associate to the given key.
+		:param value: The value to associate to the given key.
 		"""
 		self._dict[key] = value
 
@@ -596,7 +596,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Add multiple children nodes to the current node of the tree.
 
-		:param children:            Optional, the list of children nodes to be added to the tree.
+		:param children:            The list of children nodes to be added to the tree.
 		:raises TypeError:          If parameter ``children`` contains an item, which is not a :class:`Node`.
 		:raises AlreadyInTreeError: If parameter ``children`` contains an item, which is already a node in the tree.
 
@@ -931,7 +931,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		Lookup a node by its unique ID.
 
-		:param nodeID:      Optional, ID of a node to lookup in the tree.
+		:param nodeID:      ID of a node to lookup in the tree.
 		:returns:           Node for the given ID.
 		:raises ValueError: If parameter ``nodeID`` is None.
 		:raises KeyError:   If parameter ``nodeID`` is not found in the tree.

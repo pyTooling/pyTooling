@@ -692,7 +692,7 @@ class OutputFilteredExecutable(Executable):
 
 		:param platform:       Platform the executable is called on.
 		:param dryrun:         If ``True``, the executable is not started, only the command line is assembled.
-		:param executablePath: Optional, path to the executable.
+		:param executablePath: Path to the executable.
 		"""
 		super().__init__(platform, dryrun, executablePath)  #, environment=environment, logger=logger)
 

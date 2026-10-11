@@ -97,9 +97,9 @@ class ExcludeContextManager:
 		"""
 		Exit the context and restart stopwatch.
 
-		:param exc_type: Exception type
-		:param exc_val:  Exception instance
-		:param exc_tb:   Exception's traceback.
+		:param exc_type: Optional, exception type.
+		:param exc_val:  Optional, exception instance.
+		:param exc_tb:   Optional, exception's traceback.
 		:returns:        ``None``
 		"""
 		self._stopwatch.Resume()
@@ -572,9 +572,9 @@ class Stopwatch(SlottedObject):
 
 		A running stopwatch is paused, if ``preferPause`` was set, otherwise it's stopped.
 
-		:param exc_type:        Exception type, otherwise None.
-		:param exc_val:         Exception object, otherwise None.
-		:param exc_tb:          Exception's traceback, otherwise None.
+		:param exc_type:        Optional, exception type, otherwise None.
+		:param exc_val:         Optional, exception object, otherwise None.
+		:param exc_tb:          Optional, exception's traceback, otherwise None.
 		:returns:               ``None``
 		:raises StopwatchError: If the stopwatch was never started.
 		:raises StopwatchError: If the stopwatch was already stopped.

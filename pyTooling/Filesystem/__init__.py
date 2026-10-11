@@ -132,8 +132,8 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize the base-class with filesystem element size and root reference.
 
-		:param size:       Optional, size of the element.
-		:param root:       Optional reference to the filesystem root element.
+		:param size:       Size of the element.
+		:param root:       Reference to the filesystem root element.
 		:raises TypeError: If parameter 'size' is not of type integer.
 		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
 		"""
@@ -1016,7 +1016,7 @@ class Filename(Element[Directory]):
 		The file object behind the filename is copied only once per scope: a filename referring to a file that was
 		already copied - a hardlink - is connected to the existing copy.
 
-		:param parent: Optional, the directory in the target scope the copy is registered at.
+		:param parent: The directory in the target scope the copy is registered at.
 		:returns:      The copied filename.
 		"""
 		fileID = self._file._id
@@ -1131,7 +1131,7 @@ class SymbolicLink(Element[Directory]):
 
 		:param name:        Name of the symbolic link.
 		:param target:      Path the symbolic link points to.
-		:param parent:      Optional, parent directory of the symbolic link.
+		:param parent:      Parent directory of the symbolic link.
 		:raises ValueError: If parameter 'target' is None.
 		:raises TypeError:  If parameter 'target' is not of type :class:`~pathlib.Path`.
 		"""
@@ -1217,7 +1217,7 @@ class SymbolicLink(Element[Directory]):
 		"""
 		Copy this symbolic link into another filesystem statistics scope.
 
-		:param parent: Optional, the directory in the target scope the copy is registered at.
+		:param parent: The directory in the target scope the copy is registered at.
 		:returns:      The copied symbolic link, unresolved.
 		"""
 		return SymbolicLink(self._name, self._target, parent=parent)
@@ -1520,7 +1520,7 @@ class File(Base):
 		Initialize the File storage object with an ID, size and parent reference.
 
 		:param id:          Unique ID of the file object.
-		:param size:        Optional, size of the file object.
+		:param size:        Size of the file object.
 		:param parent:      Optional, parent reference.
 		:raises ValueError: If parameter 'id' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Filename`.

@@ -62,7 +62,7 @@ def addNoteWithItemList(
 	long, remaining items will be continued in addition notes.
 
 	:param ex:        Exception to attach the note to.
-	:param message:   Optional, the message of the note.
+	:param message:   The message of the note.
 	:param items:     An iterable of items to add to the note.
 	:param indent:    Optional, the indentation of the additional notes.
 	:param separator: Optional, separator between items.

@@ -536,8 +536,7 @@ class StringEnum(StrEnum):
 		"""
 		Convert a string to the member carrying that value.
 
-		:param value:       Optional, the string to convert. ``None`` and the empty string mean *no value was
-		                    given*. Default: ``None``.
+		:param value:       The string to convert. ``None`` and the empty string mean *no value was given*.
 		:returns:           The member carrying that value. If no value was given: ``DEFAULT``, if the enumeration
 		                    declares one, otherwise ``None``.
 		:raises TypeError:  If parameter 'value' is not of type :class:`str`.
@@ -597,9 +596,9 @@ class ChangeDirectory:
 		"""
 		Exit the context and revert any working directory changes.
 
-		:param exc_type: Exception type
-		:param exc_val:  Exception instance
-		:param exc_tb:   Exception's traceback.
+		:param exc_type: Optional, exception type.
+		:param exc_val:  Optional, exception instance.
+		:param exc_tb:   Optional, exception's traceback.
 		:returns:        ``None``
 		"""
 		chdir(self._oldWorkingDirectory)

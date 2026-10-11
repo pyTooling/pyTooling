@@ -295,7 +295,7 @@ class URL:
 		"""
 		Initializes a Uniform Resource Locator (URL).
 
-		:param scheme:     Optional, transport scheme to be used for a specified resource.
+		:param scheme:     Transport scheme to be used for a specified resource.
 		:param path:       Path to the resource.
 		:param host:       Optional, hostname where the resource is located.
 		:param user:       Optional, username for basic authentication.

@@ -803,7 +803,7 @@ class Line(metaclass=ExtendedType, slots=True):
 		"""
 		Increase a line's indentation level.
 
-		:param indent: Optional, indentation level added to the current indentation level.
+		:param indent: Indentation level added to the current indentation level.
 		:returns:      The new indentation level.
 		"""
 		self._indent = (newIndent := self._indent + indent)
@@ -1188,7 +1188,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		Every error - an unreachable index, a timeout, an unknown package - is answered with ``None``, because a version
 		check must not fail the application it is printing the version of.
 
-		:param packageName: Optional, name of the package on PyPI.
+		:param packageName: Name of the package on PyPI.
 		:param timeout:     Optional, timeout in seconds for the request. Default: ``1``.
 		:returns:           The latest version as a string, or ``None``, if it couldn't be determined.
 		"""

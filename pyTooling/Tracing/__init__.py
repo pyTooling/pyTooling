@@ -996,9 +996,9 @@ class Span(TraceElement):
 		The span's parent becomes the current span of this thread again. An exception leaving the ``with``-statement is
 		recorded in :attr:`Exception`, and propagates.
 
-		:param exc_type: Exception type
-		:param exc_val:  Exception instance
-		:param exc_tb:   Exception's traceback.
+		:param exc_type: Optional, exception type.
+		:param exc_val:  Optional, exception instance.
+		:param exc_tb:   Optional, exception's traceback.
 		:returns:        ``None``
 		"""
 		global _threadLocalData
@@ -1219,9 +1219,9 @@ class Trace(Span):
 		The current thread has no active trace or span afterwards. An exception leaving the ``with``-statement is
 		recorded in :attr:`~Span.Exception`, and propagates.
 
-		:param exc_type: Exception type
-		:param exc_val:  Exception instance
-		:param exc_tb:   Exception's traceback.
+		:param exc_type: Optional, exception type.
+		:param exc_val:  Optional, exception instance.
+		:param exc_tb:   Optional, exception's traceback.
 		:returns:        ``None``
 		"""
 		global _threadLocalData

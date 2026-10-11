@@ -1165,9 +1165,9 @@ class ExtendedType(type):
 		:param className:                   The name of the class to construct.
 		:param baseClasses:                 Tuple of base-classes.
 		:param members:                     Dictionary of class members.
-		:param slots:                       Optional, ``True``, if the class should setup ``__slots__``.
-		:param mixin:                       Optional, ``True``, if the class should behave as a mixin-class.
-		:param weakref:                     Optional, ``True``, if instances should be referenced weakly.
+		:param slots:                       ``True``, if the class should setup ``__slots__``.
+		:param mixin:                       ``True``, if the class should behave as a mixin-class.
+		:param weakref:                     ``True``, if instances should be referenced weakly.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
 		:raises ExtendedTypeError:          If a class annotates ``__weakref__`` instead of passing ``weakref=True``.
 		                                    A class derived from a weak-referenceable class inherits ``__weakref__``.
@@ -1707,7 +1707,7 @@ class ExtendedType(type):
 		This implementation is threadsafe.
 
 		:param newClass:  The newly constructed class for further modifications.
-		:param singleton: Optional, if ``True``, the class allows only a single instance to exist.
+		:param singleton: If ``True``, the class allows only a single instance to exist.
 		:returns:         ``True``, if the class is a singleton.
 		"""
 		if hasattr(newClass, "__isSingleton__"):

@@ -119,7 +119,7 @@ def loadReadmeFile(readmeFile: Path) -> Readme:
 	  * Markdown (``*.md``)
 	  * ReStructured Text (``*.rst``)
 
-	:param readmeFile:         Optional, path to the `README` file as an instance of :class:`Path`.
+	:param readmeFile:         Path to the `README` file as an instance of :class:`Path`.
 	:returns:                  A tuple containing the file content and the MIME type.
 	:raises TypeError:         If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
 	:raises ValueError:        If README file has an unsupported format.
@@ -164,7 +164,7 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 
 	      requirements = list(set(loadRequirementsFile(requirementsFile)))
 
-	:param requirementsFile:   Optional, path to the ``requirements.txt`` file as an instance of :class:`Path`.
+	:param requirementsFile:   Path to the ``requirements.txt`` file as an instance of :class:`Path`.
 	:param indent:             Optional, indentation level used for the debug output of nested requirements files.
 	:param debug:              Optional, if ``True``, print found dependencies and recursion.
 	:returns:                  A list of dependencies.
@@ -180,8 +180,8 @@ def loadRequirementsFile(requirementsFile: Path, indent: int = 0, debug: bool = 
 		"""
 		Recursive variant of :func:`loadRequirementsFile`.
 
-		:param requirementsFile:   Optional, path to the requirements file to read.
-		:param indent:             Optional, indentation level used for the debug output of nested requirements files.
+		:param requirementsFile:   Path to the requirements file to read.
+		:param indent:             Indentation level used for the debug output of nested requirements files.
 		:returns:                  List of requirements read from that file and every file it includes.
 		:raises FileNotFoundError: If the requirements file doesn't exist.
 		"""
@@ -248,10 +248,10 @@ class VersionInformation(metaclass=ExtendedType, slots=True):
 		:param author:      Author of the Python package.
 		:param email:       The author's email address
 		:param copyright:   The copyright notice of the Package.
-		:param license:     Optional, the Python package's license.
+		:param license:     The Python package's license.
 		:param version:     The Python package's version.
 		:param description: The Python package's short description.
-		:param keywords:    Optional, the Python package's list of keywords.
+		:param keywords:    The Python package's list of keywords.
 		"""
 		self._author =      author
 		self._email =       email
@@ -572,9 +572,9 @@ def _collectEntryPoints(
 	function knows *how* it is declared - which group it belongs to, and setuptools' ``"name = entry.point"``
 	spelling.
 
-	:param consoleScripts: Optional, command line programs, declared as ``console_scripts``.
-	:param guiScripts:     Optional, windowed programs, declared as ``gui_scripts``.
-	:param pytestPlugins:  Optional, pytest plugins, declared as ``pytest11``.
+	:param consoleScripts: Command line programs, declared as ``console_scripts``.
+	:param guiScripts:     Windowed programs, declared as ``gui_scripts``.
+	:param pytestPlugins:  Pytest plugins, declared as ``pytest11``.
 	:returns:              A dictionary mapping a group to its entry point lines, or ``None`` if a package
 	                       advertises nothing.
 	"""
