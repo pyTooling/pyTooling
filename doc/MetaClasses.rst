@@ -106,7 +106,7 @@ misspelt field raises an :exc:`AttributeError` instead of creating a new field.
 
 A slot can't have a class attribute of the same name, so an initial value in the class body (``_name: str = "root"``)
 can't stay there. :class:`~pyTooling.MetaClasses.ExtendedType` moves it into an intermediate ``__init__``, which
-assigns it to the new instance and then calls the class' own ``__init__``:
+assigns the initial values of the whole hierarchy to the new instance and then calls the class' own ``__init__``:
 
 .. code-block:: Python
 
@@ -120,9 +120,9 @@ assigns it to the new instance and then calls the class' own ``__init__``:
    Node(3)._name                       # 'root'
    Node(3)._count                      # 3
 
-* A field already assigned keeps its value, so a derived class' ``__init__`` may assign a base-class' field before
-  calling ``super().__init__()``.
-* A base-class' initial values are assigned by its ``__init__``: a derived class' ``__init__`` calls
+* The initial values are assigned before any ``__init__`` runs, so a derived class' ``__init__`` may assign a
+  base-class' field before calling ``super().__init__()``.
+* A base-class' initial values are assigned too, also if a derived class' ``__init__`` doesn't call
   ``super().__init__()``.
 * The class a mixin-class is mixed into assigns the mixin-class' initial values too.
 * The value is assigned, not copied: a mutable initial value (``[]``) is one object shared by all instances, like a
