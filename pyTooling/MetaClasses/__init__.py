@@ -51,7 +51,7 @@ from functools            import wraps
 from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
-from types                import BuiltinFunctionType, CodeType, FunctionType, MethodType
+from types                import BuiltinFunctionType, CodeType, FunctionType, MemberDescriptorType, MethodType
 from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Self
 from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
@@ -705,7 +705,7 @@ class ExtendedType(type):
 	.. rubric:: Modified ``__init__`` method:
 
 	If slotted fields have initial values, ``__init__`` will be replaced by a wrapper method assigning them, before it
-	calls the original ``__init__``.
+	calls the original ``__init__``. This wrapper is marked with ``__slot_defaults_wrapper__``.
 
 	If class is a singleton, ``__init__`` will be replaced by a wrapper method. This wrapper is marked by ``__singleton_wrapper__``.
 
@@ -789,7 +789,7 @@ class ExtendedType(type):
 
 		newClass.__abstractClass__ = False
 		newClass.__slotDefaults__ =  objectFields
-		metacls._wrapInitMethodIfSlotDefaults(newClass, baseClasses, mixin)
+		metacls._wrapInitMethodIfSlotDefaults(newClass, mixin)
 		newClass.__isAbstract__ =    metacls._wrapNewMethodIfAbstract(newClass)
 		newClass.__isSingleton__ =   metacls._wrapNewMethodIfSingleton(newClass, singleton)
 
@@ -1634,36 +1634,48 @@ class ExtendedType(type):
 		return member
 
 	@classmethod
-	def _wrapInitMethodIfSlotDefaults(metacls, newClass: ExtendedType, baseClasses: tuple[type], mixin: bool) -> None:
+	def _wrapInitMethodIfSlotDefaults(metacls, newClass: ExtendedType, mixin: bool) -> None:
 		"""
 		If slotted fields have initial values, wrap the ``__init__`` method, so it assigns them before calling it.
 
 		A slot can't have a class attribute of the same name, so an initial value of a slotted field (``_name: str =
 		"root"``) can't stay in the class body. :meth:`_computeSlots` collects these values in :attr:`__slotDefaults__`
-		instead, and the wrapper assigns each one to the new instance, before it calls the class' own (or inherited)
-		``__init__``. A field already assigned keeps its value: a derived class' ``__init__`` may assign a field of its
-		base-class before calling ``super().__init__()``.
+		instead. The wrapper assigns the initial values of the whole hierarchy - of every base-class and mixin-class - to
+		the new instance, then calls the class' own (or inherited) ``__init__``.
 
-		A class mixed with mixin-classes assigns their initial values too, because its instances hold their slots.
+		Only the wrapper of the instance's own class assigns them; a base-class' wrapper, reached by
+		``super().__init__()``, calls its ``__init__`` only. So a derived class' ``__init__`` may assign a base-class'
+		field before calling ``super().__init__()``, and a base-class' initial values are assigned, even if the derived
+		class' ``__init__`` doesn't call it.
+
+		A mixin-class gets no wrapper: its fields are slots of the class it is mixed into, or entries in the instance's
+		``__dict__``, if that class has no slots.
 
 		The value is assigned, not copied: a mutable initial value is shared by all instances, as a class variable is.
 
-		:param newClass:    The newly created class.
-		:param baseClasses: The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:param mixin:       If ``True``, the class is a mixin-class.
+		:param newClass: The newly created class.
+		:param mixin:    If ``True``, the class is a mixin-class.
 		"""
-		defaults = dict(newClass.__slotDefaults__)
-		if not mixin:
-			for baseClass in baseClasses:
-				for cls in baseClass.__mro__:
-					if cls.__dict__.get("__isMixin__", False):
-						for fieldName, value in cls.__dict__.get("__slotDefaults__", {}).items():
-							defaults.setdefault(fieldName, value)
+		if mixin:
+			return
 
-		if len(defaults) == 0:
+		setters = []
+		for cls in reversed(newClass.__mro__):
+			for fieldName, value in cls.__dict__.get("__slotDefaults__", {}).items():
+				slot = getattr(newClass, fieldName, None)
+				if isinstance(slot, MemberDescriptorType):
+					setters.append((slot.__set__, value))
+				else:
+					# A mixin-class' field in a class without slots is stored in the instance's '__dict__'.
+					setters.append((lambda obj, val, name=fieldName: setattr(obj, name, val), value))
+
+		if len(setters) == 0:
 			return
 
 		init = newClass.__init__
+		if hasattr(init, "__slot_defaults_wrapper__"):
+			# The wrapper inherited from a base-class: this class' wrapper assigns the base-class' initial values too.
+			init = init.__wrapped__
 
 		@wraps(init)
 		def init_withDefaults(self, *args: Any, **kwargs: Any) -> None:
@@ -1673,14 +1685,15 @@ class ExtendedType(type):
 			:param args:   Positional parameters passed to the original ``__init__``.
 			:param kwargs: Named parameters passed to the original ``__init__``.
 			"""
-			for fieldName, value in defaults.items():
-				if not hasattr(self, fieldName):
-					setattr(self, fieldName, value)
+			if self.__class__ is newClass:
+				for setter, value in setters:
+					setter(self, value)
 
 			init(self, *args, **kwargs)
 
 		# ':func:`~functools.wraps` copies the bookkeeping '_findMethods' attached to the original method.
 		init_withDefaults.__dict__.pop("__classobj__", None)
+		init_withDefaults.__slot_defaults_wrapper__ = True
 
 		newClass.__init__ = init_withDefaults
 

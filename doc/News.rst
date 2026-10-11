@@ -587,8 +587,8 @@ Version 10.x (2026)
      * The initial value of a slotted field (``_name: str = "root"`` in a class with ``slots=True`` or ``mixin=True``)
        was dropped: reading the field before ``__init__`` assigned it raised an :exc:`AttributeError`.
        :class:`~pyTooling.MetaClasses.ExtendedType` collected the values, but never used them. An intermediate
-       ``__init__`` assigns them now, before it calls the class' own ``__init__``; a field already assigned keeps its
-       value. The class a mixin-class is mixed into assigns the mixin-class' initial values too.
+       ``__init__`` assigns them now - those of every base-class and mixin-class too - before it calls the class' own
+       ``__init__``, also if a derived class' ``__init__`` doesn't call ``super().__init__()``.
      * A mixin-class' field was added to the slots of the class it is mixed into, even if that name was a slot
        already: of the primary inheritance line, of the class itself, or of a second mixin-class. The class got two
        slots of one name, or for ``__weakref__`` Python's ``TypeError: __weakref__ slot disallowed``. These raise a

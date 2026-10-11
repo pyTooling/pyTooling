@@ -214,6 +214,54 @@ class WithSlots(Testcase):
 
 		self.assertEqual(5, Derived()._data0)
 
+	def test_InitValue_DerivedWithoutSuper(self) -> None:
+		"""A base-class' initial value is assigned, even if the derived class' __init__ doesn't call it."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		class Derived(Base):
+			_data1: int = 2
+
+			def __init__(self) -> None:
+				pass
+
+		inst = Derived()
+
+		self.assertEqual(1, inst._data0)
+		self.assertEqual(2, inst._data1)
+
+	def test_InitValue_DerivedWithoutInit(self) -> None:
+		"""A derived class wraps the base-class' own __init__, not the base-class' wrapper."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+			def __init__(self) -> None:
+				self._data0 += 1
+
+		class Derived(Base):
+			pass
+
+		self.assertEqual(2, Base()._data0)
+		self.assertEqual(2, Derived()._data0)
+		self.assertTrue(Derived.__init__.__slot_defaults_wrapper__)
+		self.assertIs(Base.__init__.__wrapped__, Derived.__init__.__wrapped__)
+
+	def test_InitValue_MixinWithoutSlots(self) -> None:
+		"""A mixin-class' initial value is assigned to the instance's __dict__, if the class has no slots."""
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_name: str = "unnamed"
+
+		class Primary(metaclass=ExtendedType):
+			pass
+
+		class Final(Primary, Mixin):
+			pass
+
+		inst = Final()
+
+		self.assertEqual("unnamed", inst._name)
+		self.assertDictEqual({"_name": "unnamed"}, inst.__dict__)
+
 	def test_InitValue_Mixin(self) -> None:
 		"""The class a mixin-class is mixed into assigns the mixin-class' initial values, also without calling it."""
 		class Mixin(metaclass=ExtendedType, mixin=True):
