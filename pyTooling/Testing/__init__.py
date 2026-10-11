@@ -93,7 +93,7 @@ def stripANSIColorCodes(text: str) -> str:
 
 
 @export
-def testsuite(title: Union[str, C, None] = None) -> Union[C, Callable[[C], C]]:
+def testsuite(title: Nullable[Union[str, C]] = None) -> Union[C, Callable[[C], C]]:
 	"""
 	Mark a class as a test suite, so it is collected however it is named.
 
@@ -165,7 +165,7 @@ testsuite.__test__ = False   #: The marker is not a testcase itself, whatever a 
 
 
 @export
-def testcase(title: Union[str, M, None] = None) -> Union[M, Callable[[M], M]]:
+def testcase(title: Nullable[Union[str, M]] = None) -> Union[M, Callable[[M], M]]:
 	"""
 	Mark a method as a testcase, so it is collected however it is named.
 

@@ -916,11 +916,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 	A release knows its distributions (the files that can be downloaded) and its requirements, sorted into the extras
 	they belong to. Both are fetched from the index on first use.
 	"""
-	_files:        list[Distribution]                         #: Distributions (wheels, source archives) of this release.
-	_requirements: dict[Union[str, None], list[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
+	_files:        list[Distribution]                      #: Distributions (wheels, source archives) of this release.
+	_requirements: dict[Nullable[str], list[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
 
-	_api:          Nullable[URL]                              #: URL of the package index's API, used to load the release's details.
-	_session:      Nullable[Session]                          #: HTTP session reused for the API requests.
+	_api:          Nullable[URL]                           #: URL of the package index's API, used to load the release's details.
+	_session:      Nullable[Session]                       #: HTTP session reused for the API requests.
 
 	def __init__(
 		self,

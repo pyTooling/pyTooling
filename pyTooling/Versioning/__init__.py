@@ -1135,7 +1135,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		result = self._compare(self, other)
 		return not result if result is not None else equalValue
 
-	def __rshift__(self, other: Union[Version, str, int, None]) -> bool:
+	def __rshift__(self, other: Nullable[Union[Version, str, int]]) -> bool:
 		"""
 		Return the minimum of this version and a second operand.
 
@@ -1570,7 +1570,7 @@ class SemanticVersion(Version):
 		"""
 		return super().__ge__(other)
 
-	def __rshift__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
+	def __rshift__(self, other: Nullable[Union[SemanticVersion, str, int]]) -> bool:
 		"""
 		Return the minimum of this semantic version and a second operand.
 
