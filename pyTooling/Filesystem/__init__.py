@@ -56,7 +56,7 @@ from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
-from pyTooling.Warning     import WarningCollector, Warning
+from pyTooling.Warning     import CriticalWarning, WarningCollector
 from pyTooling.Stopwatch   import Stopwatch
 from pyTooling.Tree        import Node
 
@@ -74,16 +74,17 @@ class FilesystemError(ToolingException):
 
 
 @export
-class PermissionWarning(Warning):
+class PermissionWarning(CriticalWarning):
 	"""
 	Warning emitted when a directory or file couldn't be read while scanning a filesystem.
 
-	The scan continues, so the collected statistics are incomplete by exactly the path this warning carries.
+	With a collector, the scan continues, so the collected statistics are incomplete by exactly the path this warning
+	carries.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 	_path: Path  #: Path that couldn't be read.
 
@@ -359,12 +360,16 @@ class Directory(Element["Directory"]):
 		"""
 		Initialize the directory with name and parent reference.
 
-		If ``collectSubdirectories`` is ``True``, a directory that can't be read is reported as a :class:`PermissionWarning`
-		to a :class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
+		If ``collectSubdirectories`` is ``True``, a directory that can't be read is reported as a critical
+		:class:`PermissionWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a collector,
+		:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 
-		:param name:                  Name of the element.
-		:param collectSubdirectories: Optional, if ``True``, collect subdirectory statistics.
-		:param parent:                Optional, parent reference.
+		:param name:                           Name of the element.
+		:param collectSubdirectories:          Optional, if ``True``, collect subdirectory statistics.
+		:param parent:                         Optional, parent reference.
+		:raises UnhandledCriticalWarningError: If ``collectSubdirectories`` is ``True``, a directory can't be read and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :class:`PermissionWarning`.
 		"""
 		super().__init__(name, None, parent)
 
@@ -390,8 +395,13 @@ class Directory(Element["Directory"]):
 		"""
 		Helper method for scanning subdirectories and aggregating found element sizes therein.
 
-		A directory that can't be read is reported as a :class:`PermissionWarning` to a
-		:class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
+		A directory that can't be read is reported as a critical :class:`PermissionWarning` to a
+		:class:`~pyTooling.Warning.WarningCollector`; without a collector,
+		:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+
+		:raises UnhandledCriticalWarningError: If a directory can't be read and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :class:`PermissionWarning`.
 		"""
 		self.ScanSubdirectories()
 		self.AggregateSizes()
@@ -404,13 +414,17 @@ class Directory(Element["Directory"]):
 		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
 		storage object is assumed.
 
-		A directory that can't be read is reported as a :class:`PermissionWarning` to a
+		A directory that can't be read is reported as a critical :class:`PermissionWarning` to a
 		:class:`~pyTooling.Warning.WarningCollector` and skipped, so the scan continues and the collected statistics are
-		incomplete by exactly that path. Without a collector, the warning is dropped.
+		incomplete by exactly that path. Without a collector, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is
+		raised and the scan stops.
 
-		:raises FilesystemError: If this directory isn't attached to a :class:`Root`, which owns the ID table.
-		:raises FilesystemError: If the directory contains an element that is neither a directory, a file nor a
-		                         symbolic link.
+		:raises FilesystemError:               If this directory isn't attached to a :class:`Root`, which owns the ID table.
+		:raises FilesystemError:               If the directory contains an element that is neither a directory, a file
+		                                       nor a symbolic link.
+		:raises UnhandledCriticalWarningError: If a directory can't be read and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :class:`PermissionWarning`.
 		"""
 		if (root := self._root) is None:
 			raise FilesystemError(f"Directory '{self._name}' is not attached to a filesystem root.")
@@ -1330,14 +1344,19 @@ class Root(Directory):
 		Initialize a filesystem statistics scope for the given directory.
 
 		Unless ``collectSubdirectories`` is disabled, the whole tree is scanned and its symbolic links are resolved right
-		away, so the root is usable as soon as it exists. A directory that can't be read is reported as a
-		:class:`PermissionWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
+		away, so the root is usable as soon as it exists. A directory that can't be read is reported as a critical
+		:class:`PermissionWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a collector,
+		:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 
-		:param rootDirectory:         Directory to collect the statistics for.
-		:param collectSubdirectories: Optional, if ``True``, scan the tree and resolve its symbolic links immediately.
-		:raises ValueError:           If parameter 'rootDirectory' is None.
-		:raises TypeError:            If parameter 'rootDirectory' is not of type :class:`~pathlib.Path`.
-		:raises ToolingException:     If the given path doesn't exist.
+		:param rootDirectory:                  Directory to collect the statistics for.
+		:param collectSubdirectories:          Optional, if ``True``, scan the tree and resolve its symbolic links
+		                                       immediately.
+		:raises ValueError:                    If parameter 'rootDirectory' is None.
+		:raises TypeError:                     If parameter 'rootDirectory' is not of type :class:`~pathlib.Path`.
+		:raises ToolingException:              If the given path doesn't exist.
+		:raises UnhandledCriticalWarningError: If ``collectSubdirectories`` is ``True``, a directory can't be read and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :class:`PermissionWarning`.
 		"""
 		if rootDirectory is None:
 			raise ValueError("Parameter 'rootDirectory' is None.")

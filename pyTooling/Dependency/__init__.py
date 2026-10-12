@@ -57,7 +57,7 @@ from pyTooling.GenericPath.URL import URL
 from pyTooling.Graph           import Graph, Vertex
 from pyTooling.Licensing       import LicenseExpression, BaseLicense, UnknownLicense
 from pyTooling.Versioning      import SemanticVersion
-from pyTooling.Warning         import Warning
+from pyTooling.Warning         import CriticalWarning, Warning
 
 
 @export
@@ -100,17 +100,17 @@ class ReleaseNotFoundError(DependencyError):
 
 
 @export
-class BrokenRequirementWarning(Warning):
+class BrokenRequirementWarning(CriticalWarning):
 	"""
 	A requirement can't be parsed, or names an extra the project doesn't declare.
 
 	Such a requirement is left out. One naming an undeclared extra can't be assigned to an extra, so it's not reachable
 	through :attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 
@@ -130,14 +130,14 @@ class UnknownLicenseWarning(Warning):
 
 
 @export
-class ReleaseDetailsWarning(Warning):
+class ReleaseDetailsWarning(CriticalWarning):
 	"""
 	Downloading the details of a release failed, therefore the release was dropped from the project.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 
