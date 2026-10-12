@@ -668,6 +668,8 @@ class ExtendedType(type):
 	:__isMixin__:                True, if class is a mixin-class
 	:__mixinSlots__:             List of collected slots from secondary inheritance hierarchy (mixin hierarchy).
 	:__slotDefaults__:           Mapping of a slotted field declared by this class to its initial value.
+	:__allSlotDefaults__:        Mapping of every slotted field with an initial value in the inheritance hierarchy to its
+	                             initial value.
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
@@ -1658,24 +1660,30 @@ class ExtendedType(type):
 
 		The value is assigned, not copied: a mutable initial value is shared by all instances, as a class variable is.
 
+		The initial values of the whole hierarchy are kept in :attr:`__allSlotDefaults__`, merged from the direct
+		base-classes' mappings and this class' own :attr:`__slotDefaults__`, so a class doesn't walk its method resolution
+		order.
+
 		:param newClass: The newly created class.
 		:param mixin:    If ``True``, the class is a mixin-class.
 		"""
-		if mixin:
+		allSlotDefaults = {}
+		for baseClass in reversed(newClass.__bases__):
+			allSlotDefaults.update(getattr(baseClass, "__allSlotDefaults__", {}))
+		allSlotDefaults.update(newClass.__slotDefaults__)
+		newClass.__allSlotDefaults__ = allSlotDefaults
+
+		if mixin or len(allSlotDefaults) == 0:
 			return
 
 		setters = []
-		for cls in reversed(newClass.__mro__):
-			for fieldName, value in cls.__dict__.get("__slotDefaults__", {}).items():
-				slot = getattr(newClass, fieldName, None)
-				if isinstance(slot, MemberDescriptorType):
-					setters.append((slot.__set__, value))
-				else:
-					# A mixin-class' field in a class without slots is stored in the instance's '__dict__'.
-					setters.append((lambda obj, val, name=fieldName: setattr(obj, name, val), value))
-
-		if len(setters) == 0:
-			return
+		for fieldName, value in allSlotDefaults.items():
+			slot = getattr(newClass, fieldName, None)
+			if isinstance(slot, MemberDescriptorType):
+				setters.append((slot.__set__, value))
+			else:
+				# A mixin-class' field in a class without slots is stored in the instance's '__dict__'.
+				setters.append((lambda obj, val, name=fieldName: setattr(obj, name, val), value))
 
 		init = newClass.__init__
 		if hasattr(init, "__slot_defaults_wrapper__"):

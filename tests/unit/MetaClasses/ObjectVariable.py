@@ -262,6 +262,40 @@ class WithSlots(Testcase):
 		self.assertEqual("unnamed", inst._name)
 		self.assertDictEqual({"_name": "unnamed"}, inst.__dict__)
 
+	def test_AllSlotDefaults(self) -> None:
+		"""A class keeps the initial values of its whole hierarchy, including mixin-classes."""
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_name: str = "unnamed"
+
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		class Middle(Base):
+			_data1: int
+
+		class Final(Middle, Mixin):
+			_data2: int = 2
+
+		self.assertDictEqual({"_name": "unnamed"}, Mixin.__allSlotDefaults__)
+		self.assertDictEqual({"_data0": 1}, Middle.__allSlotDefaults__)
+		self.assertDictEqual({"_name": "unnamed", "_data0": 1, "_data2": 2}, Final.__allSlotDefaults__)
+		self.assertDictEqual({"_data2": 2}, Final.__slotDefaults__)
+
+	def test_NoSlotDefaults_NoWrapper(self) -> None:
+		"""A hierarchy without initial values keeps its own __init__."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int
+
+			def __init__(self) -> None:
+				self._data0 = 1
+
+		class Derived(Base):
+			_data1: int
+
+		self.assertDictEqual({}, Derived.__allSlotDefaults__)
+		self.assertFalse(hasattr(Derived.__init__, "__slot_defaults_wrapper__"))
+		self.assertEqual(1, Derived()._data0)
+
 	def test_InitValue_Mixin(self) -> None:
 		"""The class a mixin-class is mixed into assigns the mixin-class' initial values, also without calling it."""
 		class Mixin(metaclass=ExtendedType, mixin=True):
