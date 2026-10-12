@@ -173,6 +173,8 @@ offering object-oriented APIs:
   &rarr; A data model for state machines using a `State` and a `Transition` class.
 * [Control flow graph](https://pytooling.github.io/pyTooling/DataStructures/ControlFlow.html)  
   &rarr; The basic blocks of a function and the edges between them, using a `BasicBlock` and an `Edge` class.
+* [Call graph](https://pytooling.github.io/pyTooling/DataStructures/CallGraph.html)  
+  &rarr; The functions of a program and the calls between them, using a `Function` and a `Call` class.
 * [Tree data structure](https://pytooling.github.io/pyTooling/DataStructures/Tree.html)  
   &rarr; A fast and simple implementation using a single `Node` class.
 
