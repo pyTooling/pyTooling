@@ -223,8 +223,8 @@ Documenting Warnings
 
 A function reporting warnings says so in its doc-string:
 
-* The description names the warning classes it reports and what happens without a collector, e.g. "Reports a
-  :exc:`~pyTooling.Filesystem.PermissionWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a
+* The description names the warning classes it reports and what happens without a collector, e.g. "Reports an
+  :exc:`~pyTooling.MetaClasses.UnannotatedFieldWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a
   collector, it's dropped."
 * The ``:raises:`` field lists :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` for a critical warning and
   :exc:`~pyTooling.Warning.UnhandledExceptionError` for a reported exception, because these are raised without a
