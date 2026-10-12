@@ -35,7 +35,7 @@ from pathlib import Path
 
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import count
-from pyTooling.Filesystem  import Root, Directory, Element, Filename, File, FilesystemError
+from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, FilesystemError, NodeKind
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing     import Testcase
 
@@ -260,7 +260,22 @@ class Instantiation(Testcase):
 
 
 class AbstractMembers(Testcase):
-	"""``Element`` declares ``Path`` abstract; every concrete element implements it."""
+	"""``Base`` declares ``ToTree`` and ``Element`` declares ``Path`` abstract; every concrete class implements them."""
+
+	def test_Base(self) -> None:
+		"""A ``Base`` can't be instantiated, as its ``ToTree`` is abstract."""
+		with self.assertRaises(AbstractClassError) as context:
+			Base(None, None)
+
+		self.assertIn("ToTree", str(context.exception))
+
+	def test_BaseWithoutToTree(self) -> None:
+		"""A derived class without its own ``ToTree`` stays abstract."""
+		class Incomplete(Base):
+			pass
+
+		with self.assertRaises(AbstractClassError):
+			Incomplete(None, None)
 
 	def test_Element(self) -> None:
 		"""An ``Element`` can't be instantiated, as its ``Path`` is abstract."""
@@ -287,6 +302,32 @@ class AbstractMembers(Testcase):
 		self.assertEqual(Path("tests/data/dir"), directory.Path)
 		self.assertEqual(Path("tests/data/dir/file.txt"), filename.Path)
 		self.assertIsInstance(File(1, 1024), File)
+
+
+class Conversion(Testcase):
+	"""Converting filesystem elements to nodes of a :mod:`pyTooling.Tree`."""
+
+	def test_FileToTree(self) -> None:
+		"""A file storage object becomes a node with its kind and size, referencing the file object."""
+		file = File(7, 2_000_000)
+		node = file.ToTree()
+
+		self.assertIs(file, node.Value)
+		self.assertEqual(NodeKind.File, node["kind"])
+		self.assertEqual(2_000_000, node["size"])
+		self.assertEqual("    2.0 MiB file object 7\n", node.Render())
+
+	def test_HardLinkedFileToTree(self) -> None:
+		"""Every call creates a new node; the filenames of a hard-linked file stay reachable through the value."""
+		file = File(3, 1024)
+		file.AddParent(Filename("a.txt"))
+		file.AddParent(Filename("b.txt"))
+
+		first = file.ToTree()
+		second = file.ToTree()
+
+		self.assertIsNot(first, second)
+		self.assertEqual(2, len(first.Value.Parents))
 
 
 class Scanning(Testcase):

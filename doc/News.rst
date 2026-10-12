@@ -511,6 +511,11 @@ Version 10.x (2026)
        :class:`~pyTooling.Filesystem.Element` and a derived class without its own ``Path`` raise an
        :exc:`~pyTooling.MetaClasses.AbstractClassError` when instantiated. The property raised a
        :exc:`NotImplementedError` only when read.
+     * :meth:`File.ToTree <pyTooling.Filesystem.File.ToTree>` converts a file storage object to a tree node, like
+       the other filesystem elements: the node references the file object and carries its kind and size. With it,
+       :meth:`Base.ToTree <pyTooling.Filesystem.Base.ToTree>` is an abstract method; a derived class without its own
+       ``ToTree`` raises an :exc:`~pyTooling.MetaClasses.AbstractClassError` when instantiated, instead of a
+       :exc:`NotImplementedError` when called.
 
    .. rubric:: Bug Fixes
 
