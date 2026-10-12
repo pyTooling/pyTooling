@@ -707,6 +707,16 @@ Version 10.x (2026)
      with a default gained it - the ``__exit__`` parameters of the context managers, ``dest`` of the ArgParse flags,
      ``kind`` of :class:`~pyTooling.Graph.BaseEdge` - and 56 parameters without one lost it, among them parameters
      accepting ``None``. :meth:`pyTooling.Common.StringEnum.Parse` named a default its ``value`` doesn't have.
+   * :ref:`WARNING` explains the kinds of warnings, raising, collecting, escalation, threads, and how warnings are
+     documented and designed. Its example raised Python's built-in :exc:`Warning` - an exception, not pyTooling's
+     :class:`~pyTooling.Warning.Warning` - and didn't parse.
+   * The doc-strings of :mod:`pyTooling.Warning` describe what happens:
+     :meth:`~pyTooling.Warning.WarningCollector.Raise` hands a warning to the current collector of the calling thread
+     instead of walking the call-stack, a :class:`~pyTooling.Warning.CriticalWarning` must be collected, and an
+     escalated warning is collected before :exc:`~pyTooling.Warning.EscalatedWarningError` is raised.
+   * A function reporting a warning names it in its doc-string and says it's dropped without a collector - in
+     :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Dependency` and :class:`~pyTooling.MetaClasses.ExtendedType`. Each
+     warning class states whether it's critical.
 
    .. rubric:: Unit Tests
 
