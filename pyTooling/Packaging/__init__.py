@@ -49,9 +49,10 @@ from ast             import parse as ast_parse, get_docstring as ast_get_docstri
 from collections.abc import Sized
 from os              import scandir as os_scandir
 from pathlib         import Path
-from re              import split as re_split, sub as re_sub
+from re              import compile as re_compile, split as re_split, sub as re_sub
 from sys             import version_info
 from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
+from warnings        import warn
 from pyTooling.Decorators    import export, readonly
 from pyTooling.Documentation import splitDocString
 from pyTooling.Exceptions    import ToolingException, MissingDependencyError
@@ -70,6 +71,16 @@ __all__ = [
 @export
 class PackagingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Packaging`."""
+
+
+@export
+class DirectReferenceWarning(Warning):
+	"""
+	A requirement of an extra names its distribution by a URL, a direct reference (``name @ URL``).
+
+	The Python Package Index rejects a package whose metadata contains a direct reference, therefore
+	:func:`DescribePythonPackage` leaves such a requirement out of the extra.
+	"""
 
 
 @export
@@ -559,6 +570,35 @@ if parameter ``packagingRequirementsFile`` is not assigned.
 
 DEFAULT_VERSION_FILE = Path("__init__.py")
 
+_DIRECT_REFERENCE_PATTERN = re_compile(r"^\s*[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?\s*(?:\[[^\]]*\])?\s*@")
+
+
+def _removeDirectReferences(requirements: Iterable[str], extra: str, source: str) -> list[str]:
+	"""
+	Remove direct references (``name @ URL``) from the requirements of an extra.
+
+	The Python Package Index rejects a package whose metadata contains a direct reference. Each removed requirement is
+	reported as a :exc:`DirectReferenceWarning` via :func:`warnings.warn`.
+
+	:param requirements: Requirements of the extra.
+	:param extra:        Name of the extra.
+	:param source:       Where the requirements were read from, e.g. the requirements file.
+	:returns:            The requirements, which aren't direct references.
+	"""
+	result = []
+	for requirement in requirements:
+		if _DIRECT_REFERENCE_PATTERN.match(requirement) is None:
+			result.append(requirement)
+			continue
+
+		warn(
+			f"Requirement '{requirement}' (extra '{extra}', from {source}) is a direct reference, which PyPI rejects; "
+			f"it's left out of the extra.",
+			DirectReferenceWarning
+		)
+
+	return result
+
 
 def _collectEntryPoints(
 	consoleScripts: Nullable[dict[str, str]],
@@ -697,6 +737,13 @@ def DescribePythonPackage(
 	     If any of the above was added, an additional extra requirement called ``all`` will be added, summarizing all
 	     extra requirements.
 
+	   A requirement with a direct reference (``name @ URL``, e.g. ``pyTooling.Sphinx @ git+https://...@dev``) is left out
+	   of every extra, because the Python Package Index rejects a package whose metadata contains one. Each one is
+	   reported as a :exc:`DirectReferenceWarning` via :func:`warnings.warn`. So a project can name a dependency, which
+	   isn't on PyPI yet, by its repository in e.g. ``doc/requirements.txt`` - the documentation build installs it - and
+	   still be released. The base requirements (``requirementsFile``) are kept as they are: without one of them, the
+	   package wouldn't work.
+
 	.. topic:: Handling of keywords
 
 	   If parameter ``keywords`` is not specified, the dunder variable ``__keywords__`` from ``sourceFileWithVersion``
@@ -807,7 +854,11 @@ def DescribePythonPackage(
 				print( "[pyTooling.Packaging]   No section added to 'extraRequirements'.")
 		# raise FileNotFoundError(f"Documentation requirements file '{documentationRequirementsFile}' not found in '{Path.cwd()}'.")
 		else:
-			extraRequirements["doc"] = list(set(loadRequirementsFile(documentationRequirementsFile, debug=debug)))
+			extraRequirements["doc"] = _removeDirectReferences(
+				list(set(loadRequirementsFile(documentationRequirementsFile, debug=debug))),
+				"doc",
+				f"'{documentationRequirementsFile}'"
+			)
 
 	if unittestRequirementsFile is not None:
 		if not isinstance(unittestRequirementsFile, Path):
@@ -820,7 +871,11 @@ def DescribePythonPackage(
 				print( "[pyTooling.Packaging]   No section added to 'extraRequirements'.")
 		# raise FileNotFoundError(f"Unit testing requirements file '{unittestRequirementsFile}' not found in '{Path.cwd()}'.")
 		else:
-			extraRequirements["test"] = list(set(loadRequirementsFile(unittestRequirementsFile, debug=debug)))
+			extraRequirements["test"] = _removeDirectReferences(
+				list(set(loadRequirementsFile(unittestRequirementsFile, debug=debug))),
+				"test",
+				f"'{unittestRequirementsFile}'"
+			)
 
 	if packagingRequirementsFile is not None:
 		if not isinstance(packagingRequirementsFile, Path):
@@ -833,11 +888,15 @@ def DescribePythonPackage(
 				print( "[pyTooling.Packaging]   No section added to 'extraRequirements'.")
 		# raise FileNotFoundError(f"Packaging requirements file '{packagingRequirementsFile}' not found in '{Path.cwd()}'.")
 		else:
-			extraRequirements["build"] = list(set(loadRequirementsFile(packagingRequirementsFile, debug=debug)))
+			extraRequirements["build"] = _removeDirectReferences(
+				list(set(loadRequirementsFile(packagingRequirementsFile, debug=debug))),
+				"build",
+				f"'{packagingRequirementsFile}'"
+			)
 
 	if additionalRequirements is not None:
 		for key, value in additionalRequirements.items():
-			extraRequirements[key] = value
+			extraRequirements[key] = _removeDirectReferences(value, key, "parameter 'additionalRequirements'")
 
 	if len(extraRequirements) > 0:
 		extraRequirements["all"] = list(set([dep for deps in extraRequirements.values() for dep in deps]))

@@ -305,6 +305,13 @@ User-defined
   If any of the above was added, an additional extra requirement called ``all`` will be added, summarizing all
   extra requirements.
 
+A requirement with a direct reference (``name @ URL``, e.g. ``pyTooling.Sphinx @ git+https://...@dev``) is left out of
+every extra, because the Python Package Index rejects a package whose metadata contains one. Each one is reported as a
+:exc:`~pyTooling.Packaging.DirectReferenceWarning`. So a project can name a dependency, which isn't on PyPI yet, by its
+repository in e.g. :file:`doc/requirements.txt` - the documentation build installs it from there - and still be
+released. The base requirements (``requirementsFile``) are kept as they are: without one of them, the package wouldn't
+work.
+
 .. _PACKAGING/Descriptions/License:
 
 Handling of the license
