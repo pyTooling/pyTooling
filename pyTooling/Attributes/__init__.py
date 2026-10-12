@@ -58,6 +58,7 @@ from typing               import Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName
+from pyTooling.Exceptions import ToolingException
 
 
 __all__ = ["Entity", "TAttr", "TAttributeFilter", "ATTRIBUTES_MEMBER_NAME"]
@@ -91,6 +92,13 @@ class AttributeScope(IntFlag):
 
 
 @export
+class AttributeScopeError(ToolingException):
+	"""
+	An attribute is applied to a language entity its :class:`AttributeScope` doesn't allow.
+	"""
+
+
+@export
 class Attribute:  # (metaclass=ExtendedType, slots=True):
 	"""Base-class for all pyTooling attributes."""
 #	__AttributesMemberName__: ClassVar[str]       = "__pyattr__"             #: Field name on entities (function, class, method) to store pyTooling.Attributes.
@@ -100,12 +108,33 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 	_scope:                   ClassVar[AttributeScope] = AttributeScope.Any  #: Allowed language construct this attribute can be used with.
 
 	# Ensure each derived class has its own instances of class variables.
-	def __init_subclass__(cls, **kwargs: Any) -> None:
+	def __init_subclass__(cls, scope: Nullable[AttributeScope] = None, **kwargs: Any) -> None:
 		"""
-		Ensure each derived class has its own instance of ``_functions``, ``_classes`` and ``_methods`` to register the
-		usage of that Attribute.
+		Set a derived attribute class' scope, and give it its own registry of annotated entities.
+
+		The scope is given as class keyword argument: :pycode:`class Hook(Attribute, scope=AttributeScope.Method)`.
+		Without it, the class inherits its base-class' scope. Overriding :attr:`_scope` in the class body works as
+		well, but the keyword takes precedence.
+
+		The registries :attr:`_functions`, :attr:`_classes` and :attr:`_methods` are class variables, so a derived
+		attribute class would otherwise share the base-class' lists and report entities it was never attached to. Fresh
+		lists are assigned per derived class to prevent that.
+
+		:param scope:      Optional, the language entities the attribute can be applied to. Default: the base-class'
+		                   scope.
+		:param kwargs:     Class keyword arguments forwarded to the base-class.
+		:raises TypeError: If parameter 'scope' is not of type :class:`AttributeScope`.
 		"""
 		super().__init_subclass__(**kwargs)
+
+		if scope is not None:
+			if not isinstance(scope, AttributeScope):
+				ex = TypeError("Parameter 'scope' is not of type 'AttributeScope'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(scope)}'.")
+				raise ex
+
+			cls._scope = scope
+
 		cls._functions = []
 		cls._classes = []
 		cls._methods = []
@@ -116,9 +145,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		Attributes get attached to an entity (function, class, method) and an index is updated at the attribute for reverse
 		lookups.
 
-		:param entity:     Entity (function, class, method), to attach an attribute to.
-		:returns:          Same entity, with attached attribute.
-		:raises TypeError: If parameter 'entity' is not a function, class nor method.
+		:param entity:               Entity (function, class, method), to attach an attribute to.
+		:returns:                    Same entity, with attached attribute.
+		:raises TypeError:           If parameter 'entity' is not a function, class nor method.
+		:raises AttributeScopeError: If the attribute's :attr:`Scope` doesn't allow the entity's kind.
 		"""
 		self._AppendAttribute(entity, self)
 
@@ -142,20 +172,42 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 		          return entity
 
-		:param entity:     Entity, the attribute is attached to.
-		:param attribute:  Attribute to attach.
-		:raises TypeError: If parameter 'entity' is not a class, method or function.
+		A function defined in a class body is a method, although it is a plain function while the decorator runs: its
+		qualified name is ``<Class>.<name>``, while a module's function is named ``<name>`` and a nested function
+		``<function>.<locals>.<name>``.
+
+		:param entity:               Entity, the attribute is attached to.
+		:param attribute:            Attribute to attach.
+		:raises TypeError:           If parameter 'entity' is not a class, method or function.
+		:raises AttributeScopeError: If the attribute's :attr:`Scope` doesn't allow the entity's kind.
 		"""
 		if isinstance(entity, MethodType):
-			attribute._methods.append(entity)
+			kind =     AttributeScope.Method
+			registry = attribute._methods
 		elif isinstance(entity, FunctionType):
-			attribute._functions.append(entity)
+			names = entity.__qualname__.split(".")
+			if len(names) > 1 and names[-2] != "<locals>":
+				kind =     AttributeScope.Method
+				registry = attribute._methods
+			else:
+				kind =     AttributeScope.Function
+				registry = attribute._functions
 		elif isinstance(entity, type):
-			attribute._classes.append(entity)
+			kind =     AttributeScope.Class
+			registry = attribute._classes
 		else:
-			ex = TypeError(f"Parameter 'entity' is not a function, class nor method.")
+			ex = TypeError("Parameter 'entity' is not a function, class nor method.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
 			raise ex
+
+		if kind not in attribute._scope:
+			ex = AttributeScopeError(
+				f"Attribute '{attribute.__class__.__name__}' can't be applied to {kind.name.lower()} '{entity.__qualname__}'."
+			)
+			ex.add_note(f"Its scope is '{attribute._scope.name}'.")
+			raise ex
+
+		registry.append(entity)
 
 		if hasattr(entity, ATTRIBUTES_MEMBER_NAME):
 			getattr(entity, ATTRIBUTES_MEMBER_NAME).insert(0, attribute)
@@ -163,16 +215,18 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			setattr(entity, ATTRIBUTES_MEMBER_NAME,  [attribute, ])
 
 	@readonly
-	def Scope(cls) -> AttributeScope:
+	def Scope(self) -> AttributeScope:
 		"""
-		Read-only property to access the scope this attribute searches in (:attr:`_scope`).
+		Read-only property to access the language entities this attribute can be applied to (:attr:`_scope`).
 
-		:returns: The scope this attribute searches in.
+		It is an instance property: on the attribute class, :attr:`_scope` is read directly.
+
+		:returns: The language entities this attribute can be applied to.
 		"""
-		return cls._scope
+		return self._scope
 
 	@classmethod
-	def GetFunctions(cls, scope: Nullable[type] = None) -> Generator[TAttr, None, None]:
+	def GetFunctions(cls, scope: Nullable[type | ModuleType] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all functions, where this attribute is attached to.
 
@@ -192,11 +246,10 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 				if c in elementsInScope:
 					yield c
 		else:
-			raise NotImplementedError(f"Parameter 'scope' is a class isn't supported yet.")
+			raise NotImplementedError("Parameter 'scope' is a class isn't supported yet.")
 
 	@classmethod
 	def GetClasses(cls, scope: Nullable[type | ModuleType] = None, subclassOf: Nullable[type] = None) -> Generator[TAttr, None, None]:
-	# def GetClasses(cls, scope: Nullable[Type] = None, predicate: Nullable[TAttributeFilter] = None) -> Generator[TAttr, None, None]:
 		"""
 		Return a generator for all classes, where this attribute is attached to.
 
@@ -206,7 +259,8 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 		:param scope:      Optional, class or module the classes have to be nested in or defined in; ``None`` accepts every
 		                   class.
-		:param subclassOf: Optional, an attribute class or tuple thereof, to filter for that attribute type or subtype.
+		:param subclassOf: Optional, a class or tuple thereof; only annotated classes derived from it are returned.
+		                   ``None`` accepts every class.
 		:returns:          A sequence of classes where this attribute is attached to.
 		"""
 		from pyTooling.Common import isnestedclass
@@ -242,16 +296,17 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		The resulting item stream can be filtered by:
 		 * ``scope`` - when the item is a nested class in scope ``scope``.
 
-		:param scope:     Optional, class or module the methods' classes have to be nested in or defined in; ``None``
-		                  accepts every method.
-		:returns:         A sequence of methods where this attribute is attached to.
+		:param scope: Optional, class the methods are defined in; ``None`` accepts every method. Only a class built with
+		              :class:`~pyTooling.MetaClasses.ExtendedType` links its methods to it, so a method of another class
+		              isn't found by scope.
+		:returns:     A sequence of methods where this attribute is attached to.
 		"""
 		if scope is None:
 			for c in cls._methods:
 				yield c
 		else:
 			for m in cls._methods:
-				if m.__classobj__ is scope:
+				if getattr(m, "__classobj__", None) is scope:
 					yield m
 
 	@classmethod
@@ -262,12 +317,15 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		:param method:            Method to search attributes for.
 		:param includeSubClasses: Optional, if ``True``, attributes of derived attribute classes are included too.
 		:returns:                 Tuple of attached attributes of this kind.
-		:raises TypeError:
+		:raises TypeError:        If the method's attribute field is not a list.
 		"""
 		if hasattr(method, ATTRIBUTES_MEMBER_NAME):
 			attributes = getattr(method, ATTRIBUTES_MEMBER_NAME)
 			if isinstance(attributes, list):
-				return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
+				if includeSubClasses:
+					return tuple(attribute for attribute in attributes if isinstance(attribute, cls))
+				else:
+					return tuple(attribute for attribute in attributes if type(attribute) is cls)
 			else:
 				methodName = getFullyQualifiedName(method)
 				ex = TypeError(f"Method '{methodName}' has a '{ATTRIBUTES_MEMBER_NAME}' field, but it's no list.")

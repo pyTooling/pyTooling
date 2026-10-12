@@ -38,7 +38,7 @@ This test suite tests decorators:
 """
 from typing import Tuple
 
-from pyTooling.Decorators  import notimplemented
+from pyTooling.Decorators  import notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod, mustoverride, AbstractClassError
 from pyTooling.MetaClasses import mixin
 from pyTooling.Testing     import Testcase
@@ -84,6 +84,45 @@ class AbstractClasses(Testcase):
 		self.assertFalse(Derived.__abstractClass__)
 		self.assertFalse(Derived.__isAbstract__)
 		self.assertEqual(1, Derived().Method())
+
+	def test_AbstractClass_DerivedWithParameters(self) -> None:
+		"""The derived class' ``__new__`` accepts the parameters meant for ``__init__``, also one level further down."""
+
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			_value: int
+
+			def __init__(self, value: int) -> None:
+				self._value = value
+
+		class Derived(Base):
+			pass
+
+		class DoubleDerived(Derived):
+			pass
+
+		self.assertFalse(hasattr(Derived.__new__, "__raises_abstract_class_error__"))
+		self.assertIs(Derived.__new__, DoubleDerived.__new__)
+		self.assertEqual(5, Derived(5)._value)
+		self.assertEqual(6, DoubleDerived(value=6)._value)
+
+	def test_AbstractClass_DerivedWithNew(self) -> None:
+		"""The derived class gets the abstract class' own ``__new__`` back."""
+
+		@abstractclass
+		class Base(metaclass=ExtendedType):
+			_value: int
+
+			def __new__(cls, value: int):
+				instance = super().__new__(cls)
+				instance._value = value * 2
+				return instance
+
+		class Derived(Base):
+			pass
+
+		self.assertIs(Base.__new__.__wrapped__, Derived.__new__)
+		self.assertEqual(10, Derived(5)._value)
 
 	def test_AbstractClass_AbstractClass(self) -> None:
 		@abstractclass
@@ -230,6 +269,304 @@ class AbstractMethod(Testcase):
 
 		derived = MultipleInheritance(6)
 		derived.AbstractMethod()
+
+	def test_MultipleInheritance_AbstractMixin(self) -> None:
+		"""Only the mixin-class has an abstract method; the primary base-class implements it."""
+		class Implementation(metaclass=ExtendedType, slots=True):
+			def AbstractMethod(self) -> bool:
+				return True
+
+		class AbstractMixin(metaclass=ExtendedType, mixin=True):
+			@abstractmethod
+			def AbstractMethod(self) -> bool:
+				return False
+
+		class MultipleInheritance(Implementation, AbstractMixin):
+			pass
+
+		self.assertEqual({}, MultipleInheritance.__abstractMethods__)
+		self.assertTrue(MultipleInheritance().AbstractMethod())
+
+	def test_NoAbstractMethods(self) -> None:
+		"""Without an inherited abstract method, no inherited method is replaced by a wrapper."""
+		class Base(metaclass=ExtendedType):
+			def Method(self) -> bool:
+				return True
+
+			@classmethod
+			def ClassMethod(cls) -> bool:
+				return True
+
+		class Mixin:
+			def MixinMethod(self) -> bool:
+				return True
+
+		class Derived(Base, Mixin):
+			pass
+
+		self.assertEqual({}, Derived.__abstractMethods__)
+		self.assertNotIn("Method", Derived.__dict__)
+		self.assertNotIn("ClassMethod", Derived.__dict__)
+		self.assertNotIn("MixinMethod", Derived.__dict__)
+		self.assertTrue(Derived().Method())
+
+
+class AbstractClassAndStaticMethod(Testcase):
+	"""The markers sit on the function a :class:`classmethod` or :class:`staticmethod` wraps."""
+
+	def test_ClassMethod(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@classmethod
+			@abstractmethod
+			def Create(cls) -> "Base":
+				pass
+
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
+			Base()
+
+		self.assertEqual(
+			"Class 'Base' is abstract. The following methods: 'Create' need to be overridden in a derived class.",
+			str(exceptionCapture.exception)
+		)
+
+		with self.assertRaises(NotImplementedError) as exceptionCapture:
+			Base.Create()
+
+		self.assertEqual(
+			"Method 'Create' is abstract and needs to be overridden in a derived class.",
+			str(exceptionCapture.exception)
+		)
+
+	def test_ClassMethod_Derived(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@classmethod
+			@abstractmethod
+			def Create(cls) -> "Base":
+				pass
+
+		class Derived(Base):
+			pass
+
+		self.assertTrue(Derived.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Derived()
+
+	def test_ClassMethod_Overridden(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@classmethod
+			@abstractmethod
+			def Create(cls) -> "Base":
+				pass
+
+		class Derived(Base):
+			@classmethod
+			def Create(cls) -> "Derived":
+				return cls()
+
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertIsInstance(Derived.Create(), Derived)
+
+	def test_StaticMethod(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@staticmethod
+			@abstractmethod
+			def Name() -> str:
+				pass
+
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
+			Base()
+
+		self.assertEqual(
+			"Class 'Base' is abstract. The following methods: 'Name' need to be overridden in a derived class.",
+			str(exceptionCapture.exception)
+		)
+
+	def test_StaticMethod_Overridden(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@staticmethod
+			@abstractmethod
+			def Name() -> str:
+				pass
+
+		class Derived(Base):
+			@staticmethod
+			def Name() -> str:
+				return "derived"
+
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertEqual("derived", Derived().Name())
+
+	def test_MustOverride_ClassMethod(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@classmethod
+			@mustoverride
+			def Create(cls) -> "Base":
+				return cls()
+
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Base()
+
+		class Derived(Base):
+			@classmethod
+			def Create(cls) -> "Derived":
+				return super().Create()
+
+		self.assertIsInstance(Derived.Create(), Derived)
+
+	def test_MixinCarriesTheImplementation(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			@classmethod
+			@abstractmethod
+			def Create(cls) -> "Base":
+				pass
+
+			@staticmethod
+			@abstractmethod
+			def Name() -> str:
+				pass
+
+		@mixin
+		class Implementing(Base):
+			@classmethod
+			def Create(cls) -> "Base":
+				return cls()
+
+			@staticmethod
+			def Name() -> str:
+				return "mixin"
+
+		class Primary(Base):
+			pass
+
+		class Derived(Primary, Implementing):
+			pass
+
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertIsInstance(Derived.Create(), Derived)
+		self.assertEqual("mixin", Derived.Name())
+
+
+class AbstractProperty(Testcase):
+	"""The markers sit on a property's getter-method."""
+
+	def test_ReadOnly(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@readonly
+			@abstractmethod
+			def Name(self) -> str:
+				pass
+
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
+			Base()
+
+		self.assertEqual(
+			"Class 'Base' is abstract. The following methods: 'Name' need to be overridden in a derived class.",
+			str(exceptionCapture.exception)
+		)
+
+	def test_Property(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@property
+			@abstractmethod
+			def Name(self) -> str:
+				pass
+
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Base()
+
+	def test_ReadOnly_Derived(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@readonly
+			@abstractmethod
+			def Name(self) -> str:
+				pass
+
+		class Derived(Base):
+			pass
+
+		self.assertTrue(Derived.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Derived()
+
+	def test_ReadOnly_Overridden(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			_name: str
+
+			def __init__(self) -> None:
+				self._name = "derived"
+
+			@readonly
+			@abstractmethod
+			def Name(self) -> str:
+				pass
+
+		class Derived(Base):
+			@readonly
+			def Name(self) -> str:
+				return self._name
+
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertEqual("derived", Derived().Name)
+
+	def test_MethodOverriddenByProperty(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@abstractmethod
+			def Name(self) -> str:
+				pass
+
+		class Derived(Base):
+			@readonly
+			def Name(self) -> str:
+				return "derived"
+
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertEqual("derived", Derived().Name)
+
+	def test_MustOverride(self) -> None:
+		class Base(metaclass=ExtendedType):
+			@readonly
+			@mustoverride
+			def Name(self) -> str:
+				return "base"
+
+		self.assertTrue(Base.__isAbstract__)
+		with self.assertRaises(AbstractClassError):
+			Base()
+
+		class Derived(Base):
+			@readonly
+			def Name(self) -> str:
+				return Base.Name.fget(self) + "+derived"
+
+		self.assertEqual("base+derived", Derived().Name)
+
+	def test_MixinCarriesTheImplementation(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			@readonly
+			@abstractmethod
+			def Name(self) -> str:
+				pass
+
+		@mixin
+		class Implementing(Base):
+			@readonly
+			def Name(self) -> str:
+				return "mixin"
+
+		class Primary(Base):
+			pass
+
+		class Derived(Primary, Implementing):
+			pass
+
+		self.assertFalse(Derived.__isAbstract__)
+		self.assertIsInstance(Derived.__dict__["Name"], readonly)
+		self.assertEqual("mixin", Derived().Name)
 
 
 class MustOverride(Testcase):

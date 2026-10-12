@@ -104,7 +104,7 @@ class ValuedFlagList(NamedAndValuedArgument[str], pattern="{0}={1}"):
 		innerList.clear()
 		for value in values:
 			if not isinstance(value, str):
-				ex = TypeError(f"Value contains elements which are not of type 'str'.")
+				ex = TypeError("Value contains elements which are not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 			innerList.append(value)
@@ -120,22 +120,6 @@ class ValuedFlagList(NamedAndValuedArgument[str], pattern="{0}={1}"):
 			raise ValueError("Internal value '_name' is None.")
 
 		return [self._pattern.format(self._name, value) for value in self._value]
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return " ".join([f"\"{value}\"" for value in self.AsArgument()])
-
-	def __repr__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return ", ".join([f"\"{value}\"" for value in self.AsArgument()])
 
 
 @export

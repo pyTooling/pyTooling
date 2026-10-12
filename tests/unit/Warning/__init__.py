@@ -35,8 +35,8 @@ and what happens when no collector is installed.
 from typing   import List
 
 from pyTooling.Warning import WarningCollector, Warning, CriticalWarning
-from pyTooling.Warning import UnhandledExceptionException, UnhandledCriticalWarningException
-from pyTooling.Warning import EscalatedWarningException
+from pyTooling.Warning import UnhandledExceptionError, UnhandledCriticalWarningError
+from pyTooling.Warning import EscalatedWarningError
 from pyTooling.Testing import Testcase
 
 
@@ -102,14 +102,14 @@ class NoWarningCollector(Testcase):
 
 	def test_RaiseCriticalWarning(self) -> None:
 		a = ClassA("none")
-		with self.assertRaises(UnhandledCriticalWarningException) as ex:
+		with self.assertRaises(UnhandledCriticalWarningError) as ex:
 			a.methA_RaiseCriticalWarning()
 
 		self.assertEqual("Unhandled Critical Warning: CriticalWarning from ClassA.methA_RaiseCriticalWarning", str(ex.exception))
 
 	def test_RaiseException(self) -> None:
 		a = ClassA("none")
-		with self.assertRaises(UnhandledExceptionException) as ex:
+		with self.assertRaises(UnhandledExceptionError) as ex:
 			a.methA_RaiseException()
 
 		self.assertEqual("Unhandled Exception: Exception from ClassA.methA_RaiseException", str(ex.exception))
@@ -163,7 +163,7 @@ class WarningCollection(Testcase):
 			return True
 
 		a = ClassA("abort")
-		with self.assertRaises(EscalatedWarningException) as ex:
+		with self.assertRaises(EscalatedWarningError) as ex:
 			with WarningCollector(handler=func) as warning:
 				a.methA_RaiseException()
 

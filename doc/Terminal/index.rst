@@ -17,7 +17,7 @@ Terminal
 
       An application derives from :ref:`TerminalApplication <TERM/TerminalApplication>` and writes its messages with the
       matching ``Write*`` method. Coloring is provided by
-      `colorama <https://GitHub.com/tartley/colorama>`__, so an application doesn't handle escape sequences itself.
+      :gh:`colorama <tartley/colorama>`, so an application doesn't handle escape sequences itself.
 
    .. grid-item::
       :columns: 6
@@ -125,7 +125,7 @@ once in the constructor by :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.
 supports native Windows (``kernel32.dll:GetConsoleScreenBufferInfo``) as well as Linux, macOS, FreeBSD, MinGW32/64,
 UCRT64, Clang64 and Cygwin (``ioctl(TIOCGWINSZ)``, falling back to the environment variables ``COLUMNS`` and ``LINES``).
 If the size can't be determined, ``(80, 25)`` is assumed; on an unsupported platform, a
-:exc:`~pyTooling.Exceptions.PlatformNotSupportedException` is raised.
+:exc:`~pyTooling.Exceptions.PlatformNotSupportedError` is raised.
 
 
 .. _TERM/LowLevelWriting:
@@ -482,9 +482,9 @@ Three helper methods print the parts of a program's user interface that look the
                         Report Service Program
    ================================================================
 
-:meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHelp` prints the help page of the argument parser, or of one
-subcommand. It expects ``MainParser`` and ``SubParsers``, which come from
-:class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin` - so it's usable in an application combining both classes.
+:meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin._PrintHelp` prints the help page of the argument parser,
+or of one subcommand. It belongs to the mixin-class, which owns the parsers, and expects the ``Write***`` methods of
+:class:`~pyTooling.TerminalUI.TerminalApplication` - so it is usable in an application combining both classes.
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` prints the program's meta data, read from the dunder
 variables of the module handed to it:
@@ -555,3 +555,89 @@ while the messages, the verbosity and the exception reporting come from this pac
 
 The :ref:`Terminal Application tutorial <TUTORIAL/TerminalApplication>` builds such a program step by step - from the
 first message to the command handlers, the exception reporting and the unit tests.
+
+
+.. _TERM/Competitors:
+
+Competing Solutions
+*******************
+
+:mod:`pyTooling.TerminalUI` is the skeleton of a line-based command line program - severities, a log level, the
+routing of messages to ``STDOUT`` or ``STDERR``, counters of warnings and errors, and reserved exit codes. It is no
+rendering library: its colors come from colorama, and the packages below draw far more than colored lines.
+
+.. _TERM/rich:
+
+rich
+====
+
+Source: :gh:`rich <Textualize/rich>`, on PyPI as `rich <https://pypi.org/project/rich/>`__.
+
+.. rubric:: Disadvantages
+
+* A message has no severity, and there is no log level deciding whether it is written: a ``Console`` writes every
+  message, or none with ``quiet=True``. Levels come from :mod:`logging` and rich's ``RichHandler``.
+* Warnings and errors aren't counted, so ending a step because of them, and choosing the exit code, is left to the
+  program.
+
+.. rubric:: Standoff
+
+* Both keep what was written: ``Console(record=True)`` exports it as text, :attr:`TerminalApplication.Lines
+  <pyTooling.TerminalUI.TerminalApplication.Lines>` holds every message as a :class:`~pyTooling.TerminalUI.Line`.
+* Both write to ``STDERR`` on request and print an exception for a human reader - rich with
+  ``Console.print_exception()``.
+
+.. rubric:: Advantages
+
+* Rendering, by far: tables, Markdown, syntax highlighting, progress bars, panels and styled tracebacks.
+
+.. _TERM/click:
+
+click
+=====
+
+Source: :gh:`click <pallets/click>`, on PyPI as `click <https://pypi.org/project/click/>`__.
+
+.. rubric:: Disadvantages
+
+* Output is ``click.echo()``, which picks the stream per call (``err=True``). There are no severities, no verbosity
+  levels and no counters.
+
+.. rubric:: Standoff
+
+* Both exit with defined codes: click with a ``ClickException``'s ``exit_code``, and ``1`` after ``Abort``;
+  :mod:`pyTooling.TerminalUI` reserves ``240`` to ``242`` and ``255`` - see :ref:`TERM/Exiting`.
+
+.. rubric:: Advantages
+
+* Parses the command line - pyTooling does that in :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin` - and
+  offers prompts and styled text, without any dependency.
+
+.. _TERM/FullScreen:
+
+blessed and Textual
+===================
+
+Source: :gh:`blessed <jquast/blessed>` and :gh:`Textual <Textualize/textual>`, on PyPI as
+`blessed <https://pypi.org/project/blessed/>`__ and `textual <https://pypi.org/project/textual/>`__.
+
+.. rubric:: Standoff
+
+* A different purpose: they control the whole screen - the cursor's position and the keyboard with blessed, widgets
+  and layouts with Textual - instead of writing a stream of lines a log file or a pipe takes.
+
+.. rubric:: Advantages
+
+* Interactive full-screen programs, which :mod:`pyTooling.TerminalUI` doesn't offer.
+
+.. _TERM/colorama:
+
+colorama
+========
+
+Source: :gh:`colorama <tartley/colorama>`, on PyPI as `colorama <https://pypi.org/project/colorama/>`__.
+
+.. rubric:: Standoff
+
+* Not a competitor but the dependency of :mod:`pyTooling.TerminalUI`, installed by the extra ``terminal``: it emits
+  the color codes, and makes them work on the console of Windows.

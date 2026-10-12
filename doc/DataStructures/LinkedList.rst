@@ -623,3 +623,62 @@ Item Access
                from pyTooling.LinkedList import LinkedList
 
                ll = LinkedList()
+
+
+.. _STRUCT/LinkedList/Competitors:
+
+Competing Solutions
+*******************
+
+:mod:`pyTooling.LinkedList` is written in Python and isn't faster than a list implemented in C. Its elements are node
+objects: a :class:`~pyTooling.LinkedList.Node` knows its list, its neighbours, its value and a key, and an element is
+inserted or removed next to a node by a method of that node, e.g. :meth:`~pyTooling.LinkedList.Node.InsertNodeAfter`
+or :meth:`~pyTooling.LinkedList.Node.Remove`. A list is searched by a predicate
+(:meth:`~pyTooling.LinkedList.LinkedList.Search`), sorted stably (:meth:`~pyTooling.LinkedList.LinkedList.Sort`) and
+reversed in place (:meth:`~pyTooling.LinkedList.LinkedList.Reverse`).
+
+.. _STRUCT/LinkedList/deque:
+
+deque and list
+==============
+
+Source: :class:`collections.deque` and :class:`list` of the standard library.
+
+.. rubric:: Disadvantages
+
+* There are no node objects. An element is addressed by its index or found by its value, so inserting or removing
+  next to a known element first searches for it.
+
+.. rubric:: Standoff
+
+* Both are generic in type annotations (``deque[int]``), as :class:`~pyTooling.LinkedList.LinkedList` is.
+
+.. rubric:: Advantages
+
+* Implemented in C and part of Python, so nothing has to be installed.
+* :class:`~collections.deque` appends and pops at both ends in constant time, can be bounded (``maxlen``) and rotated;
+  a :class:`list` accesses any index in constant time.
+
+.. _STRUCT/LinkedList/llist:
+
+llist
+=====
+
+Source: :gh:`llist <ajakubek/python-llist>`, on PyPI as `llist <https://pypi.org/project/llist/>`__ (0.7.1,
+released 2021-04-26). Its pure Python variant is :gh:`pypy-llist <rgsoda/pypy-llist>`, on PyPI as
+`pyllist <https://pypi.org/project/pyllist/>`__ (0.3, released 2017-11-18).
+
+.. rubric:: Disadvantages
+
+* No release since 2021, and PyPI holds a source distribution only, so installing it compiles a C extension.
+
+.. rubric:: Standoff
+
+* Node objects, as here: a ``dllistnode`` has ``prev``, ``next``, ``value`` and its list as ``owner``, and
+  ``insertbefore``/``insertafter`` insert next to a node.
+
+.. rubric:: Advantages
+
+* A C extension, which according to its documentation is faster than :class:`~collections.deque` and :class:`list`
+  when elements are inserted and removed in the middle of a sequence.
+* A singly linked list (``sllist``) as well.

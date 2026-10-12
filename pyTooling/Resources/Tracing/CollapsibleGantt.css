@@ -1,0 +1,4 @@
+/* Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany */
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Style of the markers a collapsible SVG Gantt chart shows in front of the labels of expandable rows. */
+.gantt-marker { fill: #404040; font-family: sans-serif; cursor: pointer; user-select: none; }

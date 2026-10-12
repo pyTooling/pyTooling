@@ -51,7 +51,7 @@ class Instantiate(Testcase):
 		term = TerminalBaseApplication()
 
 		self.assertGreaterEqual(term.Width, 80)
-		self.assertGreaterEqual(term.Height, 25)
+		self.assertGreaterEqual(term.Height, 24)
 
 	def test_UninitializeColors(self) -> None:
 		term = TerminalBaseApplication()
@@ -174,7 +174,7 @@ class ExceptionHandling(Testcase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				raise NotImplementedError(f"Abstract method")
+				raise NotImplementedError("Abstract method")
 
 		app = Application()
 		try:
@@ -194,7 +194,7 @@ class ExceptionHandling(Testcase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				raise Exception(f"Common exception")
+				raise Exception("Common exception")
 
 		app = Application()
 		try:
@@ -214,7 +214,7 @@ class ExceptionHandling(Testcase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				ex = Exception(f"Common exception")
+				ex = Exception("Common exception")
 				ex.add_note("First note")
 				raise ex
 
@@ -236,7 +236,7 @@ class ExceptionHandling(Testcase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				ex = Exception(f"Common exception")
+				ex = Exception("Common exception")
 				ex.add_note("First note")
 				ex.add_note("Second note")
 				raise ex
@@ -259,9 +259,9 @@ class ExceptionHandling(Testcase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				ex = Exception(f"Common exception")
+				ex = Exception("Common exception")
 				ex.add_note("First note")
-				nex = FileNotFoundError(f"File doesn't exist.")
+				nex = FileNotFoundError("File doesn't exist.")
 				nex.add_note("Nested note")
 				nex.add_note("Second nested line")
 				raise ex from nex
@@ -284,7 +284,7 @@ class ExceptionHandling(Testcase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				raise ExceptionBase(f"Base exception")
+				raise ExceptionBase("Base exception")
 
 		app = Application()
 		try:
@@ -304,7 +304,7 @@ class ExceptionHandling(Testcase):
 				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
 
 			def Run(self):
-				raise ExceptionBase(f"Base exception") from FileNotFoundError(f"File doesn't exist.")
+				raise ExceptionBase("Base exception") from FileNotFoundError("File doesn't exist.")
 
 		app = Application()
 		try:

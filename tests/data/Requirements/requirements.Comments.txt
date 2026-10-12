@@ -1,0 +1,4 @@
+# A comment line, and comments behind requirements
+colorama >= 0.4.6    # 'terminal'
+https://github.com/ghdl/ghdl/archive/master.zip#pyGHDL   # a URL with the package name as fragment
+pyTooling @ git+https://github.com/pyTooling/pyTooling.git@dev  # from Git

@@ -47,7 +47,6 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
 from __future__            import annotations
 
 from enum                  import Enum
-from itertools             import chain
 from os                    import scandir, readlink
 from pathlib               import Path
 from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
@@ -55,7 +54,7 @@ from typing                import Iterator, cast
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
 from pyTooling.Warning     import WarningCollector, Warning
 from pyTooling.Stopwatch   import Stopwatch
@@ -70,7 +69,7 @@ _ParentType = TypeVar("_ParentType", bound="Element")
 
 
 @export
-class FilesystemException(ToolingException):
+class FilesystemError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Filesystem`."""
 
 
@@ -133,8 +132,8 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Initialize the base-class with filesystem element size and root reference.
 
-		:param size:       Optional, size of the element.
-		:param root:       Optional reference to the filesystem root element.
+		:param size:       Size of the element.
+		:param root:       Reference to the filesystem root element.
 		:raises TypeError: If parameter 'size' is not of type integer.
 		:raises TypeError: If parameter 'root' is not of type :class:`Root`.
 		"""
@@ -165,7 +164,7 @@ class Base(metaclass=ExtendedType, slots=True):
 	@Root.setter
 	def Root(self, value: Root) -> None:
 		if value is None:
-			raise ValueError(f"Parameter 'value' is None.")
+			raise ValueError("Parameter 'value' is None.")
 		elif not isinstance(value, Root):
 			ex = TypeError("Parameter 'value' is not of type 'Root'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -178,25 +177,24 @@ class Base(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the element's size in Bytes.
 
-		:returns:                    Size in Bytes.
-		:raises FilesystemException: If size is not computed, yet.
+		:returns:                Size in Bytes.
+		:raises FilesystemError: If size is not computed, yet.
 		"""
 		if self._size is None:
-			raise FilesystemException("Size is not computed, yet.")
+			raise FilesystemError("Size is not computed, yet.")
 
 		return self._size
 
-	# FIXME: @abstractmethod
-	def ToTree(self) -> Node:
+	@abstractmethod
+	def ToTree(self) -> Node:  # type: ignore[empty-body]
 		"""
 		Convert a filesystem element to a node in :mod:`pyTooling.Tree`.
 
 		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the filesystem element. Additional data
 		will be stored in the node's key-value store.
 
-		:returns:                    A tree's node referencing this filesystem element.
+		:returns: A tree's node referencing this filesystem element.
 		"""
-		raise NotImplementedError()
 
 
 @export
@@ -230,7 +228,7 @@ class Element(Base, Generic[_ParentType]):
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Directory`.
 		"""
 		if name is None:
-			raise ValueError(f"Parameter 'name' is None.")
+			raise ValueError("Parameter 'name' is None.")
 		elif not isinstance(name, str):
 			ex = TypeError("Parameter 'name' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(name)}'.")
@@ -266,7 +264,7 @@ class Element(Base, Generic[_ParentType]):
 	@Parent.setter
 	def Parent(self, value: _ParentType) -> None:
 		if value is None:
-			raise ValueError(f"Parameter 'value' is None.")
+			raise ValueError("Parameter 'value' is None.")
 		elif not isinstance(value, Directory):
 			ex = TypeError("Parameter 'value' is not of type 'Directory'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
@@ -287,13 +285,13 @@ class Element(Base, Generic[_ParentType]):
 		return self._name
 
 	@readonly
-	def Path(self) -> Path:
+	@abstractmethod
+	def Path(self) -> Path:  # type: ignore[empty-body]
 		"""
 		Read-only property to access the element's path.
 
-		:returns:                    Path of the element.
+		:returns: Path of the element.
 		"""
-		raise NotImplementedError(f"Property 'Path' is abstract.")
 
 	@readonly
 	def LinkSources(self) -> list[SymbolicLink]:
@@ -398,18 +396,19 @@ class Directory(Element["Directory"]):
 		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
 		the collected statistics are incomplete by exactly that path.
 
-		:raises FilesystemException: If this directory isn't attached to a :class:`Root`, which owns the ID table.
-		:raises FilesystemException: If the directory contains an element that is neither a directory, a file nor a
-		                             symbolic link.
+		:raises FilesystemError: If this directory isn't attached to a :class:`Root`, which owns the ID table.
+		:raises FilesystemError: If the directory contains an element that is neither a directory, a file nor a
+		                         symbolic link.
 		"""
 		if (root := self._root) is None:
-			raise FilesystemException(f"Directory '{self._name}' is not attached to a filesystem root.")
+			raise FilesystemError(f"Directory '{self._name}' is not attached to a filesystem root.")
 
 		with Stopwatch() as sw1:
 			try:
 				items = scandir(directoryPath := self.Path)
 			except PermissionError as ex:
-				return WarningCollector.Raise(PermissionWarning(self.Path), ex)
+				WarningCollector.Raise(PermissionWarning(self.Path), ex)
+				return
 
 			for dirEntry in items:
 				if dirEntry.is_dir(follow_symlinks=False):
@@ -430,7 +429,7 @@ class Directory(Element["Directory"]):
 					target = Path(readlink(directoryPath / dirEntry.name))
 					_ = SymbolicLink(dirEntry.name, target, parent=self)
 				else:
-					raise FilesystemException(f"Unknown directory element.")
+					raise FilesystemError("Unknown directory element.")
 
 		self._scanDuration = sw1.Duration
 
@@ -641,7 +640,7 @@ class Directory(Element["Directory"]):
 
 		:returns: A generator to iterate all direct files.
 		"""
-		return (f for f in chain(self._files.values(), self._symbolicLinks.values()))
+		return (f for f in (*self._files.values(), *self._symbolicLinks.values()))
 
 	@readonly
 	def RegularFiles(self) -> Generator[Filename, None, None]:
@@ -666,14 +665,14 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the equivalent Path instance for accessing the represented directory.
 
-		:returns:                    Path to the directory.
-		:raises FilesystemException: If no parent is set.
+		:returns:                Path to the directory.
+		:raises FilesystemError: If no parent is set.
 		"""
 		if self._path is not None:
 			return self._path
 
 		if self._parent is None:
-			raise FilesystemException(f"No parent or root set for directory.")
+			raise FilesystemError("No parent or root set for directory.")
 
 		self._path = self._parent.Path / self._name
 		return self._path
@@ -683,11 +682,11 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the time needed to scan a directory structure including all subelements (recursively).
 
-		:returns:                    The scan duration in seconds.
-		:raises FilesystemException: If the directory was not scanned.
+		:returns:                The scan duration in seconds.
+		:raises FilesystemError: If the directory was not scanned.
 		"""
 		if self._scanDuration is None:
-			raise FilesystemException(f"Directory was not scanned, yet.")
+			raise FilesystemError("Directory was not scanned, yet.")
 
 		return self._scanDuration
 
@@ -696,11 +695,11 @@ class Directory(Element["Directory"]):
 		"""
 		Read-only property to access the time needed to aggregate the directory's and subelement's properties (recursively).
 
-		:returns:                    The aggregation duration in seconds.
-		:raises FilesystemException: If the directory properties were not aggregated.
+		:returns:                The aggregation duration in seconds.
+		:raises FilesystemError: If the directory properties were not aggregated.
 		"""
 		if self._scanDuration is None:
-			raise FilesystemException(f"Directory properties were not aggregated, yet.")
+			raise FilesystemError("Directory properties were not aggregated, yet.")
 
 		return self._aggregateDuration
 
@@ -817,11 +816,13 @@ class Directory(Element["Directory"]):
 		attached to the node's key-value store:
 
 		``kind``
-		  The node's kind. See :class:`NodeKind`.
+		  The node's kind: :attr:`NodeKind.Directory`.
 		``size``
 		  The directory's aggregated size.
 
-		:param format: Optional, a user defined formatting function for tree nodes.
+		Its subdirectories, files and symbolic links become the node's children, in this order.
+
+		:param format: Optional, a user defined formatting function for the tree nodes of this directory and its elements.
 		:returns:      A tree node representing this directory.
 		"""
 		if format is None:
@@ -838,13 +839,13 @@ class Directory(Element["Directory"]):
 		directoryNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
-				"kind": NodeKind.File,
+				"kind": NodeKind.Directory,
 				"size": self._size
 			},
 			format=format
 		)
 		directoryNode.AddChildren(
-			e.ToTree(format) for e in chain(self._subdirectories.values())  #, self._files.values(), self._symbolicLinks.values())
+			e.ToTree(format) for e in (*self._subdirectories.values(), *self._files.values(), *self._symbolicLinks.values())
 		)
 
 		return directoryNode
@@ -979,7 +980,7 @@ class Filename(Element[Directory]):
 		:raises ToolingException: If the filename isn't linked to a file object.
 		"""
 		if self._file is None:
-			raise ToolingException(f"Filename isn't linked to a File object.")
+			raise ToolingException("Filename isn't linked to a File object.")
 
 		return self._file._size
 
@@ -994,7 +995,7 @@ class Filename(Element[Directory]):
 		:raises ToolingException: If the filename has no parent object.
 		"""
 		if self._parent is None:
-			raise ToolingException(f"Filename has no parent object.")
+			raise ToolingException("Filename has no parent object.")
 
 		return self._parent.Path / self._name
 
@@ -1016,7 +1017,7 @@ class Filename(Element[Directory]):
 		The file object behind the filename is copied only once per scope: a filename referring to a file that was
 		already copied - a hardlink - is connected to the existing copy.
 
-		:param parent: Optional, the directory in the target scope the copy is registered at.
+		:param parent: The directory in the target scope the copy is registered at.
 		:returns:      The copied filename.
 		"""
 		fileID = self._file._id
@@ -1031,20 +1032,22 @@ class Filename(Element[Directory]):
 
 		return Filename(self._name, file, parent=parent)
 
-	def ToTree(self) -> Node:
+	def ToTree(self, format: Nullable[Callable[[Node], str]] = None) -> Node:
 		"""
 		Convert this filename to a node of a :mod:`pyTooling.Tree`.
 
-		:returns: A tree node carrying this filename, its kind and its size.
+		:param format: Optional, a user defined formatting function for the tree node.
+		:returns:      A tree node carrying this filename, its kind and its size.
 		"""
-		def format(node: Node) -> str:
-			"""
-			Nested function rendering a tree node as one line.
+		if format is None:
+			def format(node: Node) -> str:
+				"""
+				Nested function rendering a tree node as one line.
 
-			:param node: The tree node to render.
-			:returns:    The node's size in MiB, followed by its name.
-			"""
-			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
+				:param node: The tree node to render.
+				:returns:    The node's size in MiB, followed by its name.
+				"""
+				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		fileNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
@@ -1131,14 +1134,14 @@ class SymbolicLink(Element[Directory]):
 
 		:param name:        Name of the symbolic link.
 		:param target:      Path the symbolic link points to.
-		:param parent:      Optional, parent directory of the symbolic link.
+		:param parent:      Parent directory of the symbolic link.
 		:raises ValueError: If parameter 'target' is None.
 		:raises TypeError:  If parameter 'target' is not of type :class:`~pathlib.Path`.
 		"""
 		super().__init__(name, None, parent)
 
 		if target is None:
-			raise ValueError(f"Parameter 'target' is None.")
+			raise ValueError("Parameter 'target' is None.")
 		elif not isinstance(target, Path):
 			ex = TypeError("Parameter 'target' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(target)}'.")
@@ -1217,25 +1220,27 @@ class SymbolicLink(Element[Directory]):
 		"""
 		Copy this symbolic link into another filesystem statistics scope.
 
-		:param parent: Optional, the directory in the target scope the copy is registered at.
+		:param parent: The directory in the target scope the copy is registered at.
 		:returns:      The copied symbolic link, unresolved.
 		"""
 		return SymbolicLink(self._name, self._target, parent=parent)
 
-	def ToTree(self) -> Node:
+	def ToTree(self, format: Nullable[Callable[[Node], str]] = None) -> Node:
 		"""
 		Convert this symbolic link to a node of a :mod:`pyTooling.Tree`.
 
-		:returns: A tree node carrying this symbolic link, its kind and its size.
+		:param format: Optional, a user defined formatting function for the tree node.
+		:returns:      A tree node carrying this symbolic link, its kind and its size.
 		"""
-		def format(node: Node) -> str:
-			"""
-			Nested function rendering a tree node as one line.
+		if format is None:
+			def format(node: Node) -> str:
+				"""
+				Nested function rendering a tree node as one line.
 
-			:param node: The tree node to render.
-			:returns:    The node's size in MiB, followed by its name.
-			"""
-			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
+				:param node: The tree node to render.
+				:returns:    The node's size in MiB, followed by its name.
+				"""
+				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		symbolicLinkNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
@@ -1322,9 +1327,9 @@ class Root(Directory):
 		:raises ToolingException:     If the given path doesn't exist.
 		"""
 		if rootDirectory is None:
-			raise ValueError(f"Parameter 'rootDirectory' is None.")
+			raise ValueError("Parameter 'rootDirectory' is None.")
 		elif not isinstance(rootDirectory, Path):
-			raise TypeError(f"Parameter 'rootDirectory' is not of type 'Path'.")
+			raise TypeError("Parameter 'rootDirectory' is not of type 'Path'.")
 		elif not rootDirectory.exists():
 			raise ToolingException(f"Path '{rootDirectory}' doesn't exist.") from FileNotFoundError(rootDirectory)
 
@@ -1520,13 +1525,13 @@ class File(Base):
 		Initialize the File storage object with an ID, size and parent reference.
 
 		:param id:          Unique ID of the file object.
-		:param size:        Optional, size of the file object.
+		:param size:        Size of the file object.
 		:param parent:      Optional, parent reference.
 		:raises ValueError: If parameter 'id' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Filename`.
 		"""
 		if id is None:
-			raise ValueError(f"Parameter 'id' is None.")
+			raise ValueError("Parameter 'id' is None.")
 		elif not isinstance(id, int):
 			ex = TypeError("Parameter 'id' is not of type 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(id)}'.")
@@ -1578,7 +1583,7 @@ class File(Base):
 		:raises ToolingException: If the filename already references another file object.
 		"""
 		if filename is None:
-			raise ValueError(f"Parameter 'filename' is None.")
+			raise ValueError("Parameter 'filename' is None.")
 		elif not isinstance(filename, Filename):
 			ex = TypeError("Parameter 'filename' is not of type 'Filename'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(filename)}'.")
@@ -1591,3 +1596,37 @@ class File(Base):
 
 		if filename._root is not None:
 			self._root = filename._root
+
+	def ToTree(self) -> Node:
+		"""
+		Convert this file storage object to a node of a :mod:`pyTooling.Tree`.
+
+		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the file object. Additional data is
+		attached to the node's key-value store:
+
+		``kind``
+		  The node's kind: :attr:`NodeKind.File`.
+		``size``
+		  The file object's size.
+
+		:returns: A tree node carrying this file object, its kind and its size.
+		"""
+		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by the file object's ID.
+			"""
+			return f"{node['size'] * 1e-6:7.1f} MiB file object {node._value.ID}"
+
+		fileNode: Node[Any, Any, Any, Any] = Node(
+			value=self,
+			keyValuePairs={
+				"kind": NodeKind.File,
+				"size": self._size
+			},
+			format=format
+		)
+
+		return fileNode

@@ -32,17 +32,19 @@
 Unit tests for :class:`pyTooling.CLIAbstraction.Program`, using ``git`` as the abstracted program: path
 resolution per platform, common options, and a sub-command with its own options.
 """
+from ast          import literal_eval
 from pathlib      import Path
 from typing       import Any, Self
 
 from pytest       import mark
 from sys          import platform as sys_platform
 
-from pyTooling.CLIAbstraction import Program, CLIAbstractionException, CLIArgument
-from pyTooling.CLIAbstraction.Flag import LongFlag
-from pyTooling.Testing        import Testcase
-from .                        import Helper
-from .Examples                import GitArgumentsMixin
+from pyTooling.CLIAbstraction          import Executable, Program, CLIAbstractionError, CLIArgument
+from pyTooling.CLIAbstraction.Argument import formatCommandLine
+from pyTooling.CLIAbstraction.Flag     import LongFlag
+from pyTooling.Testing                 import Testcase
+from .                                 import Helper
+from .Examples                         import GitArgumentsMixin
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -81,6 +83,15 @@ class GitUnknownOS(Program):
 	}
 
 
+class GitWithoutArguments(Program):
+	_executableNames = {
+		"Darwin":  "git",
+		"FreeBSD": "git",
+		"Linux":   "git",
+		"Windows": "git.exe"
+	}
+
+
 @mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
 class ExplicitPathsOnFreeBSD(Testcase, Helper):
 	_binaryDirectoryPath = Path("/usr/local/bin")
@@ -91,15 +102,15 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\"]", repr(tool))
-		self.assertEqual(f"\"{executable}\"", str(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
 	def test_ExecutablePath(self) -> None:
@@ -108,15 +119,15 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\"]", repr(tool))
-		self.assertEqual(f"\"{executable}\"", str(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
 
 
@@ -130,15 +141,15 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\"]", repr(tool))
-		self.assertEqual(f"\"{executable}\"", str(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
 	def test_ExecutablePath(self) -> None:
@@ -147,15 +158,15 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\"]", repr(tool))
-		self.assertEqual(f"\"{executable}\"", str(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
 
 
@@ -169,15 +180,15 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\"]", repr(tool))
-		self.assertEqual(f"\"{executable}\"", str(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
 
 	def test_ExecutablePath(self) -> None:
@@ -186,30 +197,40 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\"]", repr(tool))
-		self.assertEqual(f"\"{executable}\"", str(tool))
+		self.assertListEqual([executable], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable]), str(tool))
 
 	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Git(executablePath=str(self._binaryDirectoryPath / "git.exe"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Git(executablePath=self._binaryDirectoryPath / "gitt.exe")
 
 
 class CommonOptions(Testcase, Helper):
 	def test_UnknownOS(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = GitUnknownOS()
 
 	def test_BinaryDirectory_UnknownOS(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = GitUnknownOS(binaryDirectoryPath=Path(""))
 
 	def test_NotInPath(self) -> None:
-		with self.assertRaises(CLIAbstractionException):
+		with self.assertRaises(CLIAbstractionError):
 			_ = Gitt()
+
+	def test_SearchedInPath(self) -> None:
+		"""A program searched in PATH keeps the path it was found at, so a variant can be built from it."""
+		tool = Git()
+
+		self.assertTrue(tool.Path.is_absolute())
+		self.assertEqual(Path(self.GetExecutablePath("git")), tool.Path)
+
+		variant = Git(executablePath=tool.Path)
+		self.assertEqual(tool.Path, variant.Path)
 
 	def test_SetUnknownFlag(self) -> None:
 		tool = Git()
@@ -238,7 +259,8 @@ class CommonOptions(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "--version"], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\", \"--version\"]", repr(tool))
+		self.assertListEqual([executable, "--version"], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable, "--version"]), str(tool))
 
 	def test_HelpFlag(self) -> None:
 		tool = Git()
@@ -246,7 +268,8 @@ class CommonOptions(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "--help"], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\", \"--help\"]", repr(tool))
+		self.assertListEqual([executable, "--help"], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable, "--help"]), str(tool))
 
 	def test_HelpCommand(self) -> None:
 		tool = Git()
@@ -254,7 +277,8 @@ class CommonOptions(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "help"], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\", \"help\"]", repr(tool))
+		self.assertListEqual([executable, "help"], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable, "help"]), str(tool))
 
 
 class Commit(Testcase, Helper):
@@ -265,4 +289,96 @@ class Commit(Testcase, Helper):
 
 		executable = self.GetExecutablePath("git")
 		self.assertListEqual([executable, "commit", "-m", "Initial commit."], tool.ToArgumentList())
-		self.assertEqual(f"[\"{executable}\", \"commit\", \"-m\", \"Initial commit.\"]", repr(tool))
+		self.assertListEqual([executable, "commit", "-m", "Initial commit."], literal_eval(repr(tool)))
+		self.assertEqual(formatCommandLine([executable, "commit", "-m", "Initial commit."]), str(tool))
+
+
+class DryRun(Testcase):
+	"""In dry-run mode, a missing program or a started process is recorded instead of raising or running."""
+
+	def test_AMissingExecutableIsRecorded(self) -> None:
+		gitt = Gitt(executablePath=Path("does/not/exist/gitt"), dryRun=True)
+
+		self.assertEqual(["File check for 'does/not/exist/gitt' failed. [SKIPPING]"], [
+			message.replace("\\", "/") for message in gitt.DryRunMessages
+		])
+
+	def test_AMissingBinaryDirectoryIsRecorded(self) -> None:
+		gitt = Gitt(binaryDirectoryPath=Path("does/not/exist"), dryRun=True)
+
+		self.assertEqual(2, len(gitt.DryRunMessages))
+		self.assertIn("Directory check", gitt.DryRunMessages[0])
+
+	def test_AProgramNotInPathIsRecorded(self) -> None:
+		gitt = Gitt(dryRun=True)
+
+		self.assertEqual(1, len(gitt.DryRunMessages))
+		self.assertIn("in PATH failed", gitt.DryRunMessages[0])
+
+	def test_StartingAProcessIsRecorded(self) -> None:
+		class Gittex(Executable):
+			_executableNames = Gitt._executableNames
+
+		gittex = Gittex(executablePath=Path("does/not/exist/gitt"), dryRun=True)
+		gittex.StartProcess()
+
+		self.assertIsNone(gittex._process)
+		self.assertEqual(f"Start process: {formatCommandLine(gittex.ToArgumentList())}", gittex.DryRunMessages[-1])
+
+	def test_WithoutDryRunAMissingExecutableRaises(self) -> None:
+		with self.assertRaises(CLIAbstractionError):
+			Gitt(executablePath=Path("does/not/exist/gitt"))
+
+
+class Derive(Testcase, Helper):
+	def test_CopyParameters(self) -> None:
+		tool = Git()
+		tool[tool.CommandCommit] = True
+		tool[tool.ValueCommitMessage] = "Initial commit."
+
+		variant = Git()
+		tool._CopyParameters(variant)
+
+		self.assertListEqual(tool.ToArgumentList(), variant.ToArgumentList())
+		self.assertIsNot(tool[tool.ValueCommitMessage], variant[variant.ValueCommitMessage])
+
+	def test_CopyParameters_ThenSetExplicitly(self) -> None:
+		tool = Git()
+		tool[tool.FlagVersion] = True
+
+		variant = Git()
+		tool._CopyParameters(variant)
+		variant[variant.CommandCommit] = True
+
+		executable = self.GetExecutablePath("git")
+		self.assertListEqual([executable, "--version"], tool.ToArgumentList())
+		self.assertListEqual([executable, "--version", "commit"], variant.ToArgumentList())
+
+	def test_CopyParameters_SetAlready(self) -> None:
+		tool = Git()
+		tool[tool.FlagVersion] = True
+
+		variant = Git()
+		variant[variant.FlagVersion] = True
+
+		with self.assertRaises(KeyError):
+			tool._CopyParameters(variant)
+
+	def test_CopyParameters_NotDeclared(self) -> None:
+		tool = Git()
+		tool[tool.FlagVersion] = True
+
+		with self.assertRaises(KeyError):
+			tool._CopyParameters(GitWithoutArguments())
+
+	def test_CopyParameters_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Git()._CopyParameters(None)
+
+		self.assertEqual("Parameter 'tool' is None.", str(context.exception))
+
+	def test_CopyParameters_NotAProgram(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Git()._CopyParameters("git")
+
+		self.assertEqual("Parameter 'tool' is not of type 'Program'.", str(context.exception))

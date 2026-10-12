@@ -32,14 +32,20 @@
 """
 This module implements command line arguments without prefix character(s).
 
-
 """
-from abc     import abstractmethod
-from pathlib import Path
-from typing  import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
+from abc                   import abstractmethod
+from pathlib               import Path
+from sys                   import platform as sys_platform
+from typing                import ClassVar, Union, Iterable, TypeVar, Generic, Any, Optional as Nullable
+
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Common      import getFullyQualifiedName
+
+if sys_platform == "win32":
+	from subprocess          import list2cmdline as formatCommandLine
+else:
+	from shlex               import join         as formatCommandLine
 
 
 __all__ = ["ValueT"]
@@ -91,35 +97,57 @@ class CommandLineArgument(metaclass=ExtendedType):
 	@abstractmethod
 	def AsArgument(self) -> Union[str, Iterable[str]]:  # type: ignore[empty-body]
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal name and value.
+
+		The result isn't escaped: :class:`subprocess.Popen` passes each string to the program as one argument.
+		:meth:`__str__` returns it escaped for a command line.
 
 		:returns:                    Formatted argument.
 		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
 		"""
-		raise NotImplementedError(f"Method 'AsArgument' is an abstract method and must be implemented by a subclass.")
+		raise NotImplementedError("Method 'AsArgument' is an abstract method and must be implemented by a subclass.")
 
-	@abstractmethod
-	def __str__(self) -> str:  # type: ignore[empty-body]
+	def __str__(self) -> str:
 		"""
-		Return a string representation of this argument instance.
+		Return this argument as written on a command line, escaped for the current platform.
 
-		:returns:                    Argument formatted and enclosed in double quotes.
-		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
+		:returns: The formatted argument, escaped by ``formatCommandLine``: :func:`shlex.join`, on Windows
+		          ``subprocess.list2cmdline()``.
 		"""
-		raise NotImplementedError(f"Method '__str__' is an abstract method and must be implemented by a subclass.")
+		argument = self.AsArgument()
+		if isinstance(argument, str):
+			return formatCommandLine((argument, ))
+		else:
+			return formatCommandLine(argument)
 
-	@abstractmethod
-	def __repr__(self) -> str:  # type: ignore[empty-body]
+	@staticmethod
+	def _DoubleQuotedLiteral(value: str) -> str:
 		"""
-		Return a string representation of this argument instance.
+		Return a string as a Python literal in double quotes, escaped as :func:`repr` escapes it.
 
-		.. note:: By default, this method is identical to :meth:`__str__`.
-
-		:returns:                    Argument formatted and enclosed in double quotes.
-		:raises NotImplementedError: This is an abstract method and must be overwritten by a subclass.
+		:param value: The string.
+		:returns:     The string's literal.
 		"""
-		raise NotImplementedError(f"Method '__repr__' is an abstract method and must be implemented by a subclass.")
+		literal = repr(value)
+		if literal[0] == "\"":
+			return literal
+
+		return "\"" + literal[1:-1].replace("\\'", "'").replace("\"", "\\\"") + "\""
+
+	def __repr__(self) -> str:
+		"""
+		Return this argument as a Python literal, with strings in double quotes.
+
+		:returns: The formatted argument (:meth:`AsArgument`) as a literal; a sequence as a list.
+		"""
+		argument = self.AsArgument()
+		if isinstance(argument, str):
+			return self._DoubleQuotedLiteral(argument)
+		else:
+			literal = self._DoubleQuotedLiteral
+			return "[" + ", ".join([literal(item) for item in argument]) + "]"  # WORKAROUND: Python <3.12
+			# return f"[{", ".join([literal(item) for item in argument])}]"
 
 
 @export
@@ -165,22 +193,12 @@ class ExecutableArgument(CommandLineArgument):
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal path to the wrapped executable.
 
 		:returns: Formatted argument.
 		"""
 		return f"{self._executable}"
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Argument formatted and enclosed in double quotes.
-		"""
-		return f"\"{self._executable}\""
-
-	__repr__ = __str__
 
 
 @export
@@ -203,21 +221,11 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern.
+		Convert this argument instance to a string representation using the matching pattern.
 
 		:returns: Formatted argument.
 		"""
 		return self._pattern
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Argument formatted and enclosed in double quotes.
-		"""
-		return f"\"{self._pattern}\""
-
-	__repr__ = __str__
 
 
 @export
@@ -254,26 +262,16 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal name.
 
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		return self._pattern.format(self._name)
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Argument formatted and enclosed in double quotes.
-		"""
-		return f"\"{self.AsArgument()}\""
-
-	__repr__ = __str__
 
 
 @export
@@ -322,28 +320,18 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	@Value.setter
 	def Value(self, value: ValueT) -> None:
 		if value is None:
-			raise ValueError(f"Value to set is None.")
+			raise ValueError("Value to set is None.")
 
 		self._value = value
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal value.
 
 		:returns: Formatted argument.
 		"""
 		return self._pattern.format(self._value)
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Argument formatted and enclosed in double quotes.
-		"""
-		return f"\"{self.AsArgument()}\""
-
-	__repr__ = __str__
 
 
 class NamedAndValuedArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT], pattern="{0}={1}"):
@@ -378,26 +366,16 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument[ValueT], Generic[Valu
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal name and value.
 
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		return self._pattern.format(self._name, self._value)
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Argument formatted and enclosed in double quotes.
-		"""
-		return f"\"{self.AsArgument()}\""
-
-	__repr__ = __str__
 
 
 @abstractclass
@@ -451,35 +429,19 @@ class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT]
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a sequence of string representations with proper escaping using the matching
+		Convert this argument instance to a sequence of string representations using the matching
 		pattern based on the internal name and value.
 
 		:returns:           Formatted argument as tuple of strings.
 		:raises ValueError: If internal name is None.
 		"""
 		if self._name is None:
-			raise ValueError(f"Internal value '_name' is None.")
+			raise ValueError("Internal value '_name' is None.")
 
 		return (
 			self._pattern.format(self._name),
 			self._valuePattern.format(self._value)
 		)
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return " ".join([f"\"{item}\"" for item in self.AsArgument()])
-
-	def __repr__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return ", ".join([f"\"{item}\"" for item in self.AsArgument()])
 
 
 @export
@@ -518,7 +480,7 @@ class StringListArgument(ValuedArgument[str]):
 		self._values = []
 		for value in values:
 			if not isinstance(value, str):
-				ex = TypeError(f"Parameter 'values' contains elements which are not of type 'str'.")
+				ex = TypeError("Parameter 'values' contains elements which are not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(values)}'.")
 				raise ex
 
@@ -542,35 +504,19 @@ class StringListArgument(ValuedArgument[str]):
 		self._values.clear()
 		for value in value:
 			if not isinstance(value, str):
-				ex = TypeError(f"Value contains elements which are not of type 'str'.")
+				ex = TypeError("Value contains elements which are not of type 'str'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 				raise ex
 			self._values.append(value)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal value.
 
 		:returns: Sequence of formatted arguments.
 		"""
 		return [f"{value}" for value in self._values]
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return " ".join([f"\"{value}\"" for value in self.AsArgument()])
-
-	def __repr__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return ", ".join([f"\"{value}\"" for value in self.AsArgument()])
 
 
 # TODO: Add option to class if path should be checked for existence
@@ -618,22 +564,12 @@ class PathArgument(CommandLineArgument):
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal value.
 
 		:returns: Formatted argument.
 		"""
 		return f"{self._path}"
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Argument formatted and enclosed in double quotes.
-		"""
-		return f"\"{self._path}\""
-
-	__repr__ = __str__
 
 
 @export
@@ -654,7 +590,7 @@ class PathListArgument(CommandLineArgument):
 		self._paths = []
 		for path in paths:
 			if not isinstance(path, Path):
-				ex = TypeError(f"Parameter 'paths' contains elements which are not of type 'Path'.")
+				ex = TypeError("Parameter 'paths' contains elements which are not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 				raise ex
 
@@ -678,32 +614,16 @@ class PathListArgument(CommandLineArgument):
 		self._paths.clear()
 		for path in value:
 			if not isinstance(path, Path):
-				ex = TypeError(f"Value contains elements which are not of type 'Path'.")
+				ex = TypeError("Value contains elements which are not of type 'Path'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 				raise ex
 			self._paths.append(path)
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
-		Convert this argument instance to a string representation with proper escaping using the matching pattern based on
+		Convert this argument instance to a string representation using the matching pattern based on
 		the internal value.
 
 		:returns: Sequence of formatted arguments.
 		"""
 		return [f"{path}" for path in self._paths]
-
-	def __str__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Space separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return " ".join([f"\"{value}\"" for value in self.AsArgument()])
-
-	def __repr__(self) -> str:
-		"""
-		Return a string representation of this argument instance.
-
-		:returns: Comma separated sequence of arguments formatted and each enclosed in double quotes.
-		"""
-		return ", ".join([f"\"{value}\"" for value in self.AsArgument()])

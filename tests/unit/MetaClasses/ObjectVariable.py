@@ -31,6 +31,8 @@
 """
 Unit tests for object fields handled by :class:`pyTooling.MetaClasses.ExtendedType`, with and without slots.
 """
+from types                 import MemberDescriptorType
+
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Testing     import Testcase
 
@@ -159,3 +161,216 @@ class WithSlots(Testcase):
 		self.assertEqual(5, inst._data0)
 		inst._data0 = 2
 		self.assertEqual(2, inst._data0)
+
+	def test_InitValue_NoDunderInit_InstCheck(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		self.assertEqual(1, Base()._data0)
+		self.assertIsInstance(Base.__dict__["_data0"], MemberDescriptorType, "The class keeps the slot, not the value.")
+
+	def test_InitValue_DunderInit_InstCheck(self) -> None:
+		"""The initial value is assigned before the class' own __init__ runs, which can read it."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+			_data1: int
+
+			def __init__(self, offset: int) -> None:
+				self._data1 = self._data0 + offset
+
+		inst = Base(10)
+
+		self.assertEqual(1, inst._data0)
+		self.assertEqual(11, inst._data1)
+
+	def test_InitValue_Derived(self) -> None:
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		class Derived(Base):
+			_data1: int = 2
+
+			def __init__(self) -> None:
+				super().__init__()
+
+		inst = Derived()
+
+		self.assertEqual(1, inst._data0)
+		self.assertEqual(2, inst._data1)
+		self.assertDictEqual({"_data1": 2}, Derived.__slotDefaults__)
+
+	def test_InitValue_AssignedBeforeSuper(self) -> None:
+		"""A field assigned before the base-class' __init__ runs keeps its value."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+			def __init__(self) -> None:
+				pass
+
+		class Derived(Base):
+			def __init__(self) -> None:
+				self._data0 = 5
+				super().__init__()
+
+		self.assertEqual(5, Derived()._data0)
+
+	def test_InitValue_DerivedWithoutSuper(self) -> None:
+		"""A base-class' initial value is assigned, even if the derived class' __init__ doesn't call it."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		class Derived(Base):
+			_data1: int = 2
+
+			def __init__(self) -> None:
+				pass
+
+		inst = Derived()
+
+		self.assertEqual(1, inst._data0)
+		self.assertEqual(2, inst._data1)
+
+	def test_InitValue_DerivedWithoutInit(self) -> None:
+		"""A derived class wraps the base-class' own __init__, not the base-class' wrapper."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+			def __init__(self) -> None:
+				self._data0 += 1
+
+		class Derived(Base):
+			pass
+
+		self.assertEqual(2, Base()._data0)
+		self.assertEqual(2, Derived()._data0)
+		self.assertTrue(Derived.__init__.__slot_defaults_wrapper__)
+		self.assertIs(Base.__init__.__wrapped__, Derived.__init__.__wrapped__)
+
+	def test_InitValue_MixinWithoutSlots(self) -> None:
+		"""A mixin-class' initial value is assigned to the instance's __dict__, if the class has no slots."""
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_name: str = "unnamed"
+
+		class Primary(metaclass=ExtendedType):
+			pass
+
+		class Final(Primary, Mixin):
+			pass
+
+		inst = Final()
+
+		self.assertEqual("unnamed", inst._name)
+		self.assertDictEqual({"_name": "unnamed"}, inst.__dict__)
+
+	def test_AllSlotDefaults(self) -> None:
+		"""A class keeps the initial values of its whole hierarchy, including mixin-classes."""
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_name: str = "unnamed"
+
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		class Middle(Base):
+			_data1: int
+
+		class Final(Middle, Mixin):
+			_data2: int = 2
+
+		self.assertDictEqual({"_name": "unnamed"}, Mixin.__allSlotDefaults__)
+		self.assertDictEqual({"_data0": 1}, Middle.__allSlotDefaults__)
+		self.assertDictEqual({"_name": "unnamed", "_data0": 1, "_data2": 2}, Final.__allSlotDefaults__)
+		self.assertDictEqual({"_data2": 2}, Final.__slotDefaults__)
+
+	def test_NoSlotDefaults_NoWrapper(self) -> None:
+		"""A hierarchy without initial values keeps its own __init__."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data0: int
+
+			def __init__(self) -> None:
+				self._data0 = 1
+
+		class Derived(Base):
+			_data1: int
+
+		self.assertDictEqual({}, Derived.__allSlotDefaults__)
+		self.assertFalse(hasattr(Derived.__init__, "__slot_defaults_wrapper__"))
+		self.assertEqual(1, Derived()._data0)
+
+	def test_InitValue_Mixin(self) -> None:
+		"""The class a mixin-class is mixed into assigns the mixin-class' initial values, also without calling it."""
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_name: str = "unnamed"
+
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		class Final(Primary, Mixin):
+			pass
+
+		inst = Final()
+
+		self.assertEqual(1, inst._data0)
+		self.assertEqual("unnamed", inst._name)
+
+	def test_InitValue_MixinInitKeepsValue(self) -> None:
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_name: str = "unnamed"
+
+			def __init__(self, name: str) -> None:
+				self._name = name
+
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data0: int = 1
+
+		class Final(Primary, Mixin):
+			def __init__(self, name: str) -> None:
+				super().__init__()
+				Mixin.__init__(self, name)
+
+		self.assertEqual("named", Final("named")._name)
+
+	def test_InitValue_Shared(self) -> None:
+		"""The initial value is assigned, not copied."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_items: list = []
+
+		self.assertIs(Base()._items, Base()._items)
+
+	def test_InitValue_Singleton(self) -> None:
+		class Single(metaclass=ExtendedType, slots=True, singleton=True):
+			_data0: int = 1
+
+			def __init__(self) -> None:
+				self._data0 += 1
+
+		self.assertEqual(2, Single()._data0)
+		self.assertEqual(2, Single()._data0, "The singleton is initialized once.")
+
+	def test_InitValue_Pickle(self) -> None:
+		from pickle import dumps, loads
+
+		inst = _Pickled()
+		inst._data0 = 7
+		copy = loads(dumps(inst))
+
+		self.assertEqual(7, copy._data0)
+		self.assertEqual("x", copy._data1)
+
+	def test_ClassVariable(self) -> None:
+		"""A ClassVar keeps its initial value on the class."""
+		from typing import ClassVar
+
+		class Base(metaclass=ExtendedType, slots=True):
+			_count: ClassVar[int] = 3
+
+		self.assertEqual(3, Base._count)
+		self.assertNotIn("_count", Base.__slots__)
+		self.assertDictEqual({}, Base.__slotDefaults__)
+
+
+class _Pickled(metaclass=ExtendedType, slots=True):
+	"""A module-level slotted class with initial values, so pickle can find it."""
+
+	_data0: int = 1
+	_data1: str = "x"
+

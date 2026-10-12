@@ -29,7 +29,6 @@ filterwarnings = [
 	"error::DeprecationWarning",
 	"error::PendingDeprecationWarning"
 ]
-junit_xml = "report/unit/UnittestReportSummary.xml"
 junit_logging = "all"
 
 [tool.pyedaa-reports]
@@ -51,6 +50,8 @@ ignore-setters = true
 [tool.coverage.run]
 branch = true
 relative_files = true
+patch = ["subprocess"]
+include = ["pyTooling/*"]
 omit = [
 	"*site-packages*",
 	"setup.py",

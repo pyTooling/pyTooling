@@ -32,10 +32,14 @@
 Unit tests for :mod:`pyTooling.Dependency`: building a dependency graph and solving it to the latest
 matching versions.
 """
-from pyTooling.Exceptions import ToolingException
-from pyTooling.Versioning import SemanticVersion
-from pyTooling.Dependency import PackageDependencyGraph, PackageStorage, Package, PackageVersion
-from pyTooling.Testing    import Testcase
+from datetime import datetime
+
+from pyTooling.Exceptions      import ToolingException
+from pyTooling.GenericPath.URL import URL
+from pyTooling.Licensing       import LicenseExpression, UnknownLicense
+from pyTooling.Versioning      import SemanticVersion
+from pyTooling.Dependency      import PackageDependencyGraph, PackageStorage, Package, PackageVersion
+from pyTooling.Testing         import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -416,3 +420,84 @@ class SolveLatest(Testcase):
 			_ = root.SolveLatest()
 
 		self.assertIn("Could not resolve dependencies", str(ex.exception))
+
+
+class ToGraph(Testcase):
+	def test_Empty(self) -> None:
+		graph = PackageDependencyGraph("graph").ToGraph()
+
+		self.assertEqual("graph", graph.Name)
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+
+	def test_Dependencies(self) -> None:
+		dependencyGraph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=dependencyGraph)
+		root = storage.CreatePackageVersion("app", "v0.0")
+		storage.CreatePackageVersions("packA", ("v1.0", "v1.1"))
+		storage.CreatePackageVersions("packB", ("v1.0", "v2.0", "v2.1"))
+
+		root.AddDependencyTo("packA", ("v1.0", "v1.1"))
+		(pAv10 := storage["packA"]["v1.0"]).AddDependencyTo("packB", "v1.0")
+		(pAv11 := storage["packA"]["v1.1"]).AddDependencyTo("packB", ("v2.0", "v2.1"))
+
+		graph = dependencyGraph.ToGraph()
+
+		self.assertEqual(6, graph.VertexCount)
+		self.assertEqual(5, graph.EdgeCount)
+
+		rootVertex = graph.GetVertexByID(root)
+		self.assertIs(root, rootVertex.ID)
+		self.assertIsNone(rootVertex.Value)
+		self.assertIsInstance(rootVertex["license"], UnknownLicense)
+		self.assertSetEqual({pAv10, pAv11}, {vertex.ID for vertex in rootVertex.IterateSuccessorVertices()})
+		self.assertSetEqual(
+			{storage["packB"]["v2.0"], storage["packB"]["v2.1"]},
+			{vertex.ID for vertex in graph.GetVertexByID(pAv11).IterateSuccessorVertices()}
+		)
+
+		order = [vertex.ID for vertex in graph.IterateTopologically()]
+		self.assertLess(order.index(pAv10), order.index(root))
+		self.assertLess(order.index(storage["packB"]["v1.0"]), order.index(pAv10))
+
+	def test_AcrossStorages(self) -> None:
+		dependencyGraph = PackageDependencyGraph("graph")
+		python = PackageStorage("Python", graph=dependencyGraph)
+		system = PackageStorage("System", graph=dependencyGraph)
+		app = python.CreatePackageVersion("app", "v1.0")
+		library = system.CreatePackageVersion("libfoo", "v2.0")
+		app.AddDependencyToPackageVersion(library)
+
+		graph = dependencyGraph.ToGraph()
+
+		self.assertEqual(2, graph.VertexCount)
+		self.assertListEqual([library], [vertex.ID for vertex in graph.GetVertexByID(app).IterateSuccessorVertices()])
+
+	def test_KeyValuePairs(self) -> None:
+		dependencyGraph = PackageDependencyGraph("graph")
+		storage = PackageStorage("storage", graph=dependencyGraph)
+		package = storage.CreatePackage("colorama")
+		known = PackageVersion(SemanticVersion.Parse("0.4.6"), package, releasedAt=datetime(2022, 10, 25, 2, 30, 23))
+		known._licenseExpression = LicenseExpression.Parse("BSD-3-Clause")
+		known._licenseURL =        URL.Parse("https://github.com/tartley/colorama/blob/master/LICENSE.txt")
+		known._repositoryURL =     URL.Parse("https://github.com/tartley/colorama")
+		known._documentationURL =  URL.Parse("https://github.com/tartley/colorama#readme")
+		known._issueTrackerURL =   URL.Parse("https://github.com/tartley/colorama/issues")
+		known._projectURL =        URL.Parse("https://pypi.org/project/colorama/")
+		known._changelogURL =      URL.Parse("https://github.com/tartley/colorama/blob/master/CHANGELOG.rst")
+		unknown = PackageVersion(SemanticVersion.Parse("0.4.5"), package)
+
+		graph = dependencyGraph.ToGraph()
+
+		self.assertDictEqual({
+			"license":          known._licenseExpression,
+			"releasedAt":       known._releasedAt,
+			"licenseURL":       known._licenseURL,
+			"repositoryURL":    known._repositoryURL,
+			"documentationURL": known._documentationURL,
+			"issueTrackerURL":  known._issueTrackerURL,
+			"projectURL":       known._projectURL,
+			"changelogURL":     known._changelogURL,
+		}, graph.GetVertexByID(known)._dict)
+		self.assertListEqual(["license"], list(graph.GetVertexByID(unknown)._dict))
+		self.assertIsInstance(graph.GetVertexByID(unknown)["license"], UnknownLicense)

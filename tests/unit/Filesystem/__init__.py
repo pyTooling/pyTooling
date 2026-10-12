@@ -33,10 +33,12 @@ Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the st
 """
 from pathlib import Path
 
-from pyTooling.Exceptions import ToolingException
-from pyTooling.Common     import count
-from pyTooling.Filesystem import Root, Directory, Filename, File, FilesystemException
-from pyTooling.Testing    import Testcase
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.Common      import count
+from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError
+from pyTooling.Filesystem  import NodeKind
+from pyTooling.MetaClasses import AbstractClassError
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -258,6 +260,109 @@ class Instantiation(Testcase):
 		self.assertEqual(2048, file.Size)
 
 
+class AbstractMembers(Testcase):
+	"""``Base`` declares ``ToTree`` and ``Element`` declares ``Path`` abstract; every concrete class implements them."""
+
+	def test_Base(self) -> None:
+		"""A ``Base`` can't be instantiated, as its ``ToTree`` is abstract."""
+		with self.assertRaises(AbstractClassError) as context:
+			Base(None, None)
+
+		self.assertIn("ToTree", str(context.exception))
+
+	def test_BaseWithoutToTree(self) -> None:
+		"""A derived class without its own ``ToTree`` stays abstract."""
+		class Incomplete(Base):
+			pass
+
+		with self.assertRaises(AbstractClassError):
+			Incomplete(None, None)
+
+	def test_Element(self) -> None:
+		"""An ``Element`` can't be instantiated, as its ``Path`` is abstract."""
+		with self.assertRaises(AbstractClassError) as context:
+			Element("element")
+
+		self.assertIn("Path", str(context.exception))
+
+	def test_ElementWithoutPath(self) -> None:
+		"""A derived element without its own ``Path`` stays abstract."""
+		class Incomplete(Element[Directory]):
+			pass
+
+		with self.assertRaises(AbstractClassError):
+			Incomplete("incomplete")
+
+	def test_ConcreteElements(self) -> None:
+		"""Directory, file name and the root implement ``Path``; ``File`` is no ``Element``."""
+		root = Root(Path("tests/data"), collectSubdirectories=False)
+		directory = Directory("dir", parent=root)
+		filename = Filename("file.txt", parent=directory)
+
+		self.assertEqual(Path("tests/data"), root.Path)
+		self.assertEqual(Path("tests/data/dir"), directory.Path)
+		self.assertEqual(Path("tests/data/dir/file.txt"), filename.Path)
+		self.assertIsInstance(File(1, 1024), File)
+
+
+class Conversion(Testcase):
+	"""Converting filesystem elements to nodes of a :mod:`pyTooling.Tree`."""
+
+	def test_FileToTree(self) -> None:
+		"""A file storage object becomes a node with its kind and size, referencing the file object."""
+		file = File(7, 2_000_000)
+		node = file.ToTree()
+
+		self.assertIs(file, node.Value)
+		self.assertEqual(NodeKind.File, node["kind"])
+		self.assertEqual(2_000_000, node["size"])
+		self.assertEqual("    2.0 MiB file object 7\n", node.Render())
+
+	def test_HardLinkedFileToTree(self) -> None:
+		"""Every call creates a new node; the filenames of a hard-linked file stay reachable through the value."""
+		file = File(3, 1024)
+		file.AddParent(Filename("a.txt"))
+		file.AddParent(Filename("b.txt"))
+
+		first = file.ToTree()
+		second = file.ToTree()
+
+		self.assertIsNot(first, second)
+		self.assertEqual(2, len(first.Value.Parents))
+
+	def test_DirectoryToTree(self) -> None:
+		"""A directory node is of kind directory; its subdirectories, files and symbolic links are its children."""
+		root = Root(Path("tests/data"), collectSubdirectories=False)
+		directory = Directory("dir", parent=root)
+		subdirectory = Directory("sub", parent=directory)
+		filename = Filename("file.txt", parent=directory)
+		File(5, 1024, parent=filename)
+		link = SymbolicLink("link", Path("file.txt"), parent=directory)
+
+		node = directory.ToTree(format=lambda n: n.Value.Name)
+
+		self.assertIs(directory, node.Value)
+		self.assertEqual(NodeKind.Directory, node["kind"])
+		self.assertEqual([subdirectory, filename, link], [child.Value for child in node.GetChildren()])
+		self.assertEqual(
+			[NodeKind.Directory, NodeKind.File, NodeKind.SymbolicLink],
+			[child["kind"] for child in node.GetChildren()]
+		)
+
+	def test_DirectoryToTreeFormat(self) -> None:
+		"""A user defined format renders every node of the directory's tree."""
+		root = Root(Path("tests/data"), collectSubdirectories=False)
+		directory = Directory("dir", parent=root)
+		Filename("file.txt", parent=directory)
+		SymbolicLink("link", Path("file.txt"), parent=directory)
+
+		lines = directory.ToTree(format=lambda n: f"<{n.Value.Name}>").Render().splitlines()
+
+		self.assertEqual(3, len(lines))
+		self.assertTrue(all(line.endswith(">") for line in lines))
+		self.assertIn("<dir>", lines[0])
+
+
 class Scanning(Testcase):
 	"""Scanning a real directory tree - the path that reads the filesystem and fills the inode table."""
 
@@ -273,7 +378,7 @@ class Scanning(Testcase):
 		"""A directory that is not attached to a root has no inode table to fill."""
 		directory = Directory("detached")
 
-		with self.assertRaises(FilesystemException) as context:
+		with self.assertRaises(FilesystemError) as context:
 			directory.ScanSubdirectories()
 
 		self.assertIn("not attached to a filesystem root", str(context.exception))

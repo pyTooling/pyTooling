@@ -584,6 +584,21 @@ class CompareVersions(Testcase):
 				requirement = SemanticVersion.Parse(req)
 				self.assertEqual(exp, version >> requirement, f"{version} ~= {requirement}")
 
+	def test_DevAndPostPartsArePresent(self) -> None:
+		for smaller, greater in (
+			("1.0.dev0",       "1.0"),
+			("1.0",            "1.0.post0"),
+			("1.0.post1.dev0", "1.0.post1"),
+			("1.0.dev0",       "1.0.dev1")
+		):
+			with self.subTest(smaller=smaller, greater=greater):
+				v1 = SemanticVersion.Parse(smaller)
+				v2 = SemanticVersion.Parse(greater)
+
+				self.assertNotEqual(v1, v2)
+				self.assertLess(v1, v2)
+				self.assertGreater(v2, v1)
+
 
 class CompareNone(Testcase):
 	def test_Equal(self) -> None:

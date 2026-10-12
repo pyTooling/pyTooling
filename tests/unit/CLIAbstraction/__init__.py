@@ -33,6 +33,7 @@ Helper classes shared by the CLI abstraction tests.
 """
 from pathlib  import Path
 from platform import system
+from shutil   import which
 from typing   import Optional as Nullable
 
 
@@ -46,4 +47,4 @@ class Helper:
 		if binaryDirectory is not None:
 			return str(binaryDirectory / programName)
 		else:
-			return programName
+			return str(Path(which(programName)))

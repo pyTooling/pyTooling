@@ -32,12 +32,12 @@
 Unit tests for the slots handling of :class:`pyTooling.MetaClasses.ExtendedType`: object sizes, the errors
 raised for unannotated or shadowed fields, and inheritance including mixin-classes.
 """
-from typing                import ClassVar, Optional as Nullable
+from typing                import ClassVar, Generic, TypeVar, Optional as Nullable
 
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning
+from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning, mixin
 from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
@@ -49,6 +49,9 @@ if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
+
+
+T = TypeVar("T")
 
 
 class ObjectSizes(Testcase):
@@ -617,7 +620,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):  #BaseClassIsNotAMixinError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Final(Primary, Secondary):
 				_data_2: int
 
@@ -655,7 +658,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Final(Primary, Secondary):
 				_data_2: int
 
@@ -912,7 +915,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):  #BaseClassIsNotAMixinError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Merged(Primary, Secondary):
 				_data_2: int
 
@@ -956,7 +959,7 @@ class Inheritance(Testcase):
 				super().__init__(data)
 				self._data_R1 = data + 2
 
-		with self.assertRaises(BaseClassWithNonEmptySlotsError):
+		with self.assertRaises(BaseClassIsNotAMixinError):
 			class Merged(Primary, Secondary):
 				_data_2: int
 
@@ -1125,12 +1128,162 @@ class NonEmptySlotsOnSecondaryBaseClass(Testcase):
 		self.assertEqual(2, inst._data_M1)
 		self.assertEqual(3, inst._data_2)
 
+	def test_SharedBaseClassWithNonEmptySlots(self) -> None:
+		"""A base-class on the primary inheritance line may also be reached through a mixin-class."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data_B1: int
+
+		class Primary(Base):
+			_data_L1: int
+
+		class Mixin(Base, mixin=True):
+			_data_M1: int
+
+		class Final(Primary, Mixin):
+			def __init__(self) -> None:
+				self._data_B1 = 1
+				self._data_L1 = 2
+				self._data_M1 = 3
+
+		inst = Final()
+
+		self.assertTupleEqual(("_data_M1", ), Final.__slots__)
+		self.assertEqual(1, inst._data_B1)
+		self.assertEqual(2, inst._data_L1)
+		self.assertEqual(3, inst._data_M1)
+
+
+class BaseClassWithoutSlots(Testcase):
+	"""Every base-class of a slotted class or mixin-class uses ``__slots__``, also an indirect one."""
+
+	def test_NonSlottedBaseClass_Mixin(self) -> None:
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Mixin(Base, mixin=True):
+				_data_M1: int
+
+		self.assertEqual("Base-classes 'Base' doesn't use '__slots__'.", str(context.exception))
+
+	def test_IndirectPlainBaseClass(self) -> None:
+		"""A plain base-class using ``__slots__`` may itself derive from one without."""
+		class Root:
+			pass
+
+		class Plain(Root):
+			__slots__ = ()
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Plain, metaclass=ExtendedType, slots=True):
+				_data_2: int
+
+		self.assertEqual("Base-classes 'Root' doesn't use '__slots__'.", str(context.exception))
+
+	def test_IndirectPlainBaseClass_Mixin(self) -> None:
+		class Root:
+			pass
+
+		class Plain(Root):
+			__slots__ = ()
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Mixin(Plain, metaclass=ExtendedType, mixin=True):
+				_data_M1: int
+
+		self.assertEqual("Base-classes 'Root' doesn't use '__slots__'.", str(context.exception))
+
+	def test_GenericBaseClass(self) -> None:
+		class Base(Generic[T], metaclass=ExtendedType, slots=True):
+			_data_B1: int
+
+		class Mixin(Generic[T], metaclass=ExtendedType, mixin=True):
+			_data_M1: int
+
+		class Final(Base[int], Mixin[int], Generic[T]):
+			_data_2: int
+
+		self.assertTupleEqual(("_data_2", "_data_M1"), Final.__slots__)
+
+	def test_GenericBaseClass_PlainBaseClass(self) -> None:
+		class Plain:
+			pass
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Plain, Generic[T], metaclass=ExtendedType, slots=True):
+				_data_2: int
+
+		self.assertEqual("Base-classes 'Plain' doesn't use '__slots__'.", str(context.exception))
+
+
+class SecondaryBaseClassIsNotAMixin(Testcase):
+	"""A slotted class contributes its fields as a mixin-class only, if it isn't the primary base-class."""
+
+	def test_SlottedClass(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		class Secondary(metaclass=ExtendedType, slots=True):
+			_data_R1: int
+
+		with self.assertRaises(BaseClassIsNotAMixinError) as context:
+			class Final(Primary, Secondary):
+				pass
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Secondary base-class '.*\.Secondary' of class 'Final' is not a mixin-class\.$"
+		)
+		self.assertEqual(
+			"Declare it as 'class Secondary(..., mixin=True)' or apply the '@mixin' decorator.",
+			context.exception.__notes__[1]
+		)
+
+	def test_SlottedClassWithoutFields(self) -> None:
+		"""Empty slots don't make it a mixin-class."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		class Secondary(metaclass=ExtendedType, slots=True):
+			pass
+
+		with self.assertRaises(BaseClassIsNotAMixinError):
+			class Final(Primary, Secondary):
+				pass
+
+	def test_ClassWithoutSlots(self) -> None:
+		"""A class without slots is no mixin-class either, but it can't be mixed into a slotted class at all."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		class Secondary(metaclass=ExtendedType):
+			_data_R1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError):
+			class Final(Primary, Secondary):
+				pass
+
+	def test_MixinDecorator(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data_L1: int
+
+		@mixin
+		class Secondary(metaclass=ExtendedType, slots=True):
+			_data_R1: int
+
+		class Final(Primary, Secondary):
+			pass
+
+		self.assertTupleEqual(("_data_R1", ), Final.__slots__)
+
 
 class SlotShadowedByClassMember(Testcase):
 	"""
-	A class member assigned without a type annotation stays a class attribute. If it carries the name of a slot, it
-	shadows the slot's descriptor and the field becomes read-only on instances - which used to surface much later as a
-	bare ``AttributeError: ... is read-only`` on the first assignment.
+	A class member assigned without a type annotation stays a class attribute.
+
+	If it carries the name of a slot, it shadows the slot's descriptor and the field becomes read-only on
+	instances - which used to surface much later as a bare ``AttributeError: ... is read-only`` on the first
+	assignment.
 	"""
 
 	def test_ShadowedInheritedSlot(self) -> None:
@@ -1187,10 +1340,183 @@ class SlotShadowedByClassMember(Testcase):
 		self.assertEqual(100, inst._data_0)
 
 
+class DuplicateMixinSlot(Testcase):
+	"""A mixin-class' slot exists once in the class it is mixed into."""
+
+	def test_MixinAndPrimaryBaseClass(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_data: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin):
+				pass
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' of mixin-class '.*\.Mixin' already exists in base-class '.*\.Primary'\.$"
+		)
+
+	def test_TwoMixins(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Mixin1(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		class Mixin2(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin1, Mixin2):
+				pass
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' is declared by mixin-classes '.*\.Mixin1' and '.*\.Mixin2'\.$"
+		)
+		self.assertEqual("Both are base-classes of class 'Final'.", context.exception.__notes__[0])
+
+	def test_OwnField(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin):
+				_data: int
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' declared in class 'Final' already exists in mixin-class '.*\.Mixin'\.$"
+		)
+
+	def test_MixinDerivedFromMixin(self) -> None:
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class DerivedMixin(Mixin, mixin=True):
+				_data: int
+
+		self.assertRegex(
+			str(context.exception),
+			r"^Slot '_data' declared in class 'DerivedMixin' already exists in mixin-class '.*\.Mixin'\.$"
+		)
+
+	def test_WeakReferenceTwice(self) -> None:
+		class Primary(metaclass=ExtendedType, slots=True, weakref=True):
+			_own: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True, weakref=True):
+			_data: int
+
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			class Final(Primary, Mixin):
+				pass
+
+		self.assertIn("'__weakref__'", str(context.exception))
+		self.assertEqual(
+			"Set 'weakref=True' in one class of a hierarchy; derived classes inherit '__weakref__'.",
+			context.exception.__notes__[0]
+		)
+
+	def test_Diamond(self) -> None:
+		"""Two mixin-classes deriving from one mixin-class pass its slot on twice; it's one slot."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Common(metaclass=ExtendedType, mixin=True):
+			_common: int
+
+		class Mixin1(Common, mixin=True):
+			_data1: int
+
+		class Mixin2(Common, mixin=True):
+			_data2: int
+
+		class Final(Primary, Mixin1, Mixin2):
+			pass
+
+		self.assertTupleEqual(("_common", "_data1", "_data2"), Final.__slots__)
+
+	def test_Diamond_Materialized(self) -> None:
+		"""A slot the primary inheritance line already got from the same mixin-class isn't added again."""
+		class Primary(metaclass=ExtendedType, slots=True):
+			_own: int
+
+		class Common(metaclass=ExtendedType, mixin=True):
+			_common: int
+
+		class Mixin1(Common, mixin=True):
+			_data1: int
+
+		class Mixin2(Common, mixin=True):
+			_data2: int
+
+		class Intermediate(Primary, Mixin1):
+			pass
+
+		class Final(Intermediate, Mixin2):
+			pass
+
+		self.assertTupleEqual(("_data2", ), Final.__slots__)
+		self.assertSetEqual({"_own", "_common", "_data1", "_data2"}, Final.__allSlots__)
+
+
+class ObjectBaseClass(Testcase):
+	"""An explicit :class:`object` base-class behaves like no base-class."""
+
+	def test_SlottedClass(self) -> None:
+		"""``class C(object, ..., slots=True)`` is a slotted class."""
+		class Data(object, metaclass=ExtendedType, slots=True):
+			_value: int
+
+			def __init__(self, value: int) -> None:
+				self._value = value
+
+		self.assertTupleEqual(("_value", ), Data.__slots__)
+		self.assertEqual(5, Data(5)._value)
+		with self.assertRaises(AttributeError):
+			Data(5)._other = 1
+
+	def test_MixinClass(self) -> None:
+		"""``class M(object, ..., mixin=True)`` is a mixin-class, whose field becomes a slot where it is mixed in."""
+		class Mixin(object, metaclass=ExtendedType, mixin=True):
+			_name: str
+
+		class Data(metaclass=ExtendedType, slots=True):
+			_value: int
+
+		class Final(Data, Mixin):
+			pass
+
+		self.assertTupleEqual((), Mixin.__slots__)
+		self.assertTupleEqual(("_name", ), Mixin.__mixinSlots__)
+		self.assertTupleEqual(("_name", ), Final.__slots__)
+
+	def test_MetaClassCall(self) -> None:
+		"""Calling the meta-class with ``(object, )`` as base-classes creates the same class as with ``()``."""
+		fields = ("__slots__", "__mixinSlots__", "__allSlots__", "__slotted__", "__isMixin__")
+		for keywords in ({"slots": True}, {"mixin": True}, {"slots": True, "weakref": True}):
+			with self.subTest(keywords=keywords):
+				withoutBase = ExtendedType("Data", (), {"__annotations__": {"_value": int}}, **keywords)
+				withObject =  ExtendedType("Data", (object, ), {"__annotations__": {"_value": int}}, **keywords)
+
+				for field in fields:
+					self.assertEqual(withoutBase.__dict__.get(field), withObject.__dict__.get(field), field)
+
+
 class UnannotatedFields(Testcase):
 	"""
-	Every field should carry type information. A field assigned in the class body without a type annotation is reported
-	as a warning - it needs a :class:`WarningCollector` to be observed, so importing such a module doesn't fail.
+	Every field should carry type information.
+
+	A field assigned in the class body without a type annotation is reported as a warning - it needs a
+	:class:`WarningCollector` to be observed, so importing such a module doesn't fail.
 	"""
 
 	def _collect(self, construct) -> list:

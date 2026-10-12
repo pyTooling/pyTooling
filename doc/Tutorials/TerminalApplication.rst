@@ -208,8 +208,8 @@ Step 6 - Commands and Options
       The message handling is independent of argument parsing, but the two are designed to be combined: an application
       deriving from :class:`~pyTooling.TerminalUI.TerminalApplication` **and**
       :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin` gets commands and options as decorated methods - and
-      :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHelp` then prints the parser's help page, or the help page
-      of a single command.
+      :meth:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin._PrintHelp` then prints the parser's help page, or
+      the help page of a single command.
 
       A command that takes a parameter declares it: ``help`` accepts an optional command name, so
       :class:`~pyTooling.Attributes.ArgParse.Argument.StringArgument` adds it to that command's parser and

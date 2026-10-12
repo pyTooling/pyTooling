@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.Decorators`: :deco:`~pyTooling.Decorators.export`,
 :deco:`~pyTooling.Decorators.readonly` and :deco:`~pyTooling.Decorators.InheritDocString`.
 """
-from pyTooling.Decorators import export, InheritDocString, DocStringMergeOrder, readonly
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy, readonly
 from pyTooling.Testing    import Testcase
 
 
@@ -122,8 +122,28 @@ class ReadOnly(Testcase):
 		self.assertEqual(4, d.length)
 		with self.assertRaises(AttributeError):
 			d.length = 5
+
 		with self.assertRaises(AttributeError):
 			del d.length
+
+	def test_Get(self) -> None:
+		"""Reading the property runs :class:`property`'s own ``__get__``; the overloads exist for type checkers only."""
+		class Data:
+			_data: int
+
+			def __init__(self, data: int) -> None:
+				self._data = data
+
+			@readonly
+			def length(self) -> int:
+				return 2 ** self._data
+
+		d = Data(3)
+
+		self.assertIs(property.__get__, readonly.__get__)
+		self.assertEqual(8, Data.length.__get__(d, Data))
+		self.assertEqual(8, Data.length.__get__(d))
+		self.assertIs(Data.__dict__["length"], Data.length.__get__(None, Data))
 
 	def test_Setter(self) -> None:
 		"""Attaching a setter to a read-only property is rejected while the class body is executed."""
@@ -215,6 +235,7 @@ class ReadOnly(Testcase):
 
 		with self.assertRaises(AttributeError):
 			derived.setter(lambda self, value: None)
+
 		with self.assertRaises(AttributeError):
 			derived.deleter(lambda self: None)
 
@@ -230,7 +251,7 @@ class InheritDocStrings(Testcase):
 		self.assertEqual("Class1", Class1.__doc__)
 		self.assertEqual(Class1.__doc__, Class2.__doc__)
 
-	def test_Class_Override(self) -> None:
+	def test_Class_BaseLastIsTheDefault(self) -> None:
 		class Class1:
 			"""Class1"""
 
@@ -238,45 +259,35 @@ class InheritDocStrings(Testcase):
 		class Class2(Class1):
 			"""Class2"""
 
-		self.assertEqual("Class1", Class2.__doc__)
+		self.assertEqual("Class1", Class1.__doc__)
+		self.assertEqual("Class2\n\nClass1", Class2.__doc__)
 
 	def test_Class_Fallback(self) -> None:
 		class Class1:
 			pass
 
-		@InheritDocString(Class1, merge=True)
+		@InheritDocString(Class1)
 		class Class2(Class1):
 			"""Class2"""
 
 		self.assertIsNone(Class1.__doc__)
 		self.assertEqual("Class2", Class2.__doc__)
 
-	def test_Class_Merge(self) -> None:
+	def test_Class_BaseFirst(self) -> None:
 		class Class1:
 			"""Class1"""
 
-		@InheritDocString(Class1, merge=True)
+		@InheritDocString(Class1, DocStringMergeStrategy.BaseFirst)
 		class Class2(Class1):
 			"""Class2"""
 
-		self.assertEqual("Class1", Class1.__doc__)
 		self.assertEqual("Class1\n\nClass2", Class2.__doc__)
-
-	def test_Class_MergeDerivedFirst(self) -> None:
-		class Class1:
-			"""Class1"""
-
-		@InheritDocString(Class1, merge=True, order=DocStringMergeOrder.DerivedFirst)
-		class Class2(Class1):
-			"""Class2"""
-
-		self.assertEqual("Class2\n\nClass1", Class2.__doc__)
 
 	def test_Class_MergeAffixes(self) -> None:
 		class Class1:
 			"""Class1"""
 
-		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		@InheritDocString(Class1, DocStringMergeStrategy.BaseFirst, prefix="<", interfix="|", postfix=">")
 		class Class2(Class1):
 			"""Class2"""
 
@@ -286,7 +297,7 @@ class InheritDocStrings(Testcase):
 		class Class1:
 			pass
 
-		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		@InheritDocString(Class1, DocStringMergeStrategy.BaseFirst, prefix="<", interfix="|", postfix=">")
 		class Class2(Class1):
 			"""Class2"""
 
@@ -296,7 +307,7 @@ class InheritDocStrings(Testcase):
 		class Class1:
 			"""Class1"""
 
-		@InheritDocString(Class1, merge=True, prefix="<", interfix="|", postfix=">")
+		@InheritDocString(Class1, DocStringMergeStrategy.BaseFirst, prefix="<", interfix="|", postfix=">")
 		class Class2(Class1):
 			pass
 
@@ -306,7 +317,7 @@ class InheritDocStrings(Testcase):
 		class Class1:
 			pass
 
-		@InheritDocString(Class1, merge=True, prefix="<", postfix=">")
+		@InheritDocString(Class1, prefix="<", postfix=">")
 		class Class2(Class1):
 			pass
 
@@ -324,7 +335,7 @@ class InheritDocStrings(Testcase):
 		Class1.__doc__ = "\n\tLine 1.\n\n\tLine 2.\n\t"
 		Class2.__doc__ = "\n    Line 3.\n\n    Line 4.\n    "
 
-		InheritDocString(Class1, merge=True)(Class2)
+		InheritDocString(Class1, DocStringMergeStrategy.BaseFirst)(Class2)
 
 		self.assertEqual("Line 1.\n\nLine 2.\n\nLine 3.\n\nLine 4.", Class2.__doc__)
 
@@ -346,8 +357,102 @@ class InheritDocStrings(Testcase):
 				"""Base method's doc-string."""
 
 		class Class2(Class1):
-			@InheritDocString(Class1, merge=True, order=DocStringMergeOrder.DerivedFirst)
+			@InheritDocString(Class1)
 			def method(self):
 				"""Derived method's doc-string."""
 
 		self.assertEqual("Derived method's doc-string.\n\nBase method's doc-string.", Class2.method.__doc__)
+
+
+class MergeStrategies(Testcase):
+	"""Every strategy, on a base and a derived doc-string that both have a summary and a body."""
+
+	class Base:
+		def method(self) -> None:
+			"""
+			Base summary.
+
+			Base body.
+			"""
+
+	def _Derived(self, strategy: DocStringMergeStrategy) -> str:
+		class Derived(MergeStrategies.Base):
+			@InheritDocString(MergeStrategies.Base, strategy)
+			def method(self) -> None:
+				"""
+				Derived summary.
+
+				Derived body.
+				"""
+
+		return Derived.method.__doc__
+
+	def test_SummaryOnly(self) -> None:
+		expected = "Base summary.\n\nDerived summary.\n\nDerived body."
+		self.assertEqual(expected, self._Derived(DocStringMergeStrategy.SummaryOnly))
+
+	def test_BaseLast(self) -> None:
+		expected = "Derived summary.\n\nDerived body.\n\nBase summary.\n\nBase body."
+		self.assertEqual(expected, self._Derived(DocStringMergeStrategy.BaseLast))
+
+	def test_BaseLastWithoutSummary(self) -> None:
+		expected = "Derived summary.\n\nDerived body.\n\nBase body."
+		self.assertEqual(expected, self._Derived(DocStringMergeStrategy.BaseLastWithoutSummary))
+
+	def test_BaseFirst(self) -> None:
+		expected = "Base summary.\n\nBase body.\n\nDerived summary.\n\nDerived body."
+		self.assertEqual(expected, self._Derived(DocStringMergeStrategy.BaseFirst))
+
+	def test_BaseInBetweenWithoutSummary(self) -> None:
+		expected = "Derived summary.\n\nBase body.\n\nDerived body."
+		self.assertEqual(expected, self._Derived(DocStringMergeStrategy.BaseInBetweenWithoutSummary))
+
+
+class InheritSummaryOnly(Testcase):
+	"""'SummaryOnly' takes the base doc-string's first paragraph and leaves its field list behind."""
+
+	class Base:
+		def method(self) -> None:
+			"""
+			Summary line of the base.
+
+			:param value: A parameter the derived method does not have.
+			:returns:     Something.
+			"""
+
+	def test_TheDerivedFieldListIsKept(self) -> None:
+		class Derived(self.Base):
+			@InheritDocString(InheritSummaryOnly.Base, DocStringMergeStrategy.SummaryOnly)
+			def method(self, caseNode) -> None:
+				""":param caseNode: The node this variant takes first."""
+
+		expected = "Summary line of the base.\n\n:param caseNode: The node this variant takes first."
+		self.assertEqual(expected, Derived.method.__doc__)
+
+	def test_ASingleParagraphBaseIsUsedInFull(self) -> None:
+		class SingleParagraph:
+			def method(self) -> None:
+				"""Only a summary."""
+
+		class Derived(SingleParagraph):
+			@InheritDocString(SingleParagraph, DocStringMergeStrategy.SummaryOnly)
+			def method(self) -> None:
+				"""Kept underneath."""
+
+		self.assertEqual("Only a summary.\n\nKept underneath.", Derived.method.__doc__)
+
+	def test_ADerivedWithoutADocStringGetsTheSummary(self) -> None:
+		class Derived(self.Base):
+			@InheritDocString(InheritSummaryOnly.Base, DocStringMergeStrategy.SummaryOnly)
+			def method(self) -> None:
+				pass
+
+		self.assertEqual("Summary line of the base.", Derived.method.__doc__)
+
+	def test_TheWholeBaseIsUsedByDefault(self) -> None:
+		class Derived(self.Base):
+			@InheritDocString(InheritSummaryOnly.Base)
+			def method(self, caseNode) -> None:
+				""":param caseNode: The node this variant takes first."""
+
+		self.assertIn(":param value:", Derived.method.__doc__)

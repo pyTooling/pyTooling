@@ -86,7 +86,7 @@ class PerformanceTest(Testcase):
 
 	def runSizedTests(self, func: Callable[[int], Callable[[], None]], counts: Iterable[int]):
 		print()
-		print(f"         min           mean          median        max")
+		print("         min           mean          median        max")
 		for count in counts:
 			results = timeit.repeat(func(count), repeat=20, number=50)
 			norm = count / 10
@@ -96,7 +96,7 @@ class PerformanceTest(Testcase):
 
 	def runFileBasedTests(self, setup: Callable[[Path, int], pt_Graph], func: Callable[[pt_Graph, int, int], Callable[[], None]], edgeFiles: Iterable[EdgeFile]):
 		print()
-		print(f"         min           mean          median        max           construct")
+		print("         min           mean          median        max           construct")
 		for edgeFile in edgeFiles:
 			file = Path("tests/data/Graph/EdgeLists") / edgeFile.file
 

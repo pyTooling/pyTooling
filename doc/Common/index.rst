@@ -232,3 +232,33 @@ key doesn't exist in all dictionaries.
 
    for key, valueA, valueB in zipdicts(dictA, dictB):
      pass
+
+
+.. _COMMON/Helper/parseISO8601Timestamp:
+
+parseISO8601Timestamp
+*********************
+
+:func:`~pyTooling.Common.parseISO8601Timestamp` parses an ISO 8601 timestamp into a :class:`~datetime.datetime`. An
+empty value and ``None`` are answered with ``None``, and a value that isn't a timestamp raises a :exc:`ValueError`
+naming it.
+
+A timestamp carrying no UTC offset is naive, and a naive timestamp can't be compared with an aware one. Whether that
+is a defect depends on where the timestamp came from, so the caller decides: a time zone given as ``defaultTimeZone``
+is attached to such a timestamp, while ``None`` leaves it naive.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from datetime import timezone
+   from pyTooling.Common import parseISO8601Timestamp
+
+   parseISO8601Timestamp("2026-09-15T06:35:24Z")
+   # datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc)
+
+   parseISO8601Timestamp("2026-09-15T06:35:24")
+   # datetime(2026, 9, 15, 6, 35, 24) - naive
+
+   parseISO8601Timestamp("2026-09-15T06:35:24", timezone.utc)
+   # datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc)
+

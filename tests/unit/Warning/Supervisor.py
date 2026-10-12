@@ -32,7 +32,10 @@
 Unit tests for :class:`pyTooling.Warning.ThreadSupervisor` and the exception it raises when supervised
 threads failed.
 """
-from pyTooling.Warning    import SupervisedThreadException, ThreadSupervisor
+from threading            import Thread
+
+from pyTooling.Warning    import SupervisedThreadError, SupervisedWarningCollector, ThreadSupervisor, Warning
+from pyTooling.Warning    import WarningCollector
 from pyTooling.Testing    import Testcase
 
 
@@ -57,7 +60,7 @@ class ReRaising(Testcase):
 		self._supervisorWith().ReRaise()
 
 	def test_OneExceptionIsWrapped(self) -> None:
-		with self.assertRaises(SupervisedThreadException) as context:
+		with self.assertRaises(SupervisedThreadError) as context:
 			self._supervisorWith("Worker").ReRaise()
 
 		self.assertEqual("Worker", context.exception.ThreadName)
@@ -76,7 +79,7 @@ class ReRaising(Testcase):
 		self.assertEqual(2, len(wrapped))
 		self.assertCountEqual(["Alpha", "Beta"], [exception.ThreadName for exception in wrapped])
 		for exception in wrapped:
-			self.assertIsInstance(exception, SupervisedThreadException)
+			self.assertIsInstance(exception, SupervisedThreadError)
 			self.assertIsInstance(exception.__cause__, ValueError)
 
 	def test_SeveralExceptionsAreGroupedUnwrapped(self) -> None:
@@ -84,3 +87,37 @@ class ReRaising(Testcase):
 			self._supervisorWith("Alpha", "Beta").ReRaise(unwrapped=True)
 
 		self.assertTrue(all(isinstance(exception, ValueError) for exception in context.exception.exceptions))
+
+
+class Collecting(Testcase):
+	"""What a SupervisedWarningCollector hands to its ThreadSupervisor when its thread's block is left."""
+
+	@staticmethod
+	def _runThread(target, supervisor: ThreadSupervisor, name: str = "Worker") -> None:
+		def run() -> None:
+			with SupervisedWarningCollector(supervisor=supervisor, exceptionHandler=lambda ex: True):
+				target()
+
+		thread = Thread(target=run, name=name)
+		thread.start()
+		thread.join()
+
+	def test_WarningsReachTheSupervisor(self) -> None:
+		warning = Warning("A warning in a supervised thread.")
+		supervisor = ThreadSupervisor()
+		self._runThread(lambda: WarningCollector.Raise(warning), supervisor)
+
+		self.assertTrue(supervisor.HasWarning)
+		self.assertEqual([warning], supervisor.Warnings)
+
+	def test_ExceptionNamesItsThread(self) -> None:
+		def fail() -> None:
+			raise ValueError("A supervised thread failed.")
+
+		supervisor = ThreadSupervisor()
+		self._runThread(fail, supervisor, name="Builder")
+
+		with self.assertRaises(SupervisedThreadError) as context:
+			supervisor.ReRaise()
+
+		self.assertEqual("Builder", context.exception.ThreadName)

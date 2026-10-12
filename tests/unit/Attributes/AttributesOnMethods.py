@@ -53,8 +53,8 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth0(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth0))
 
 		self.assertEqual(0, len(foundMethodsOnAttributeA))
 		self.assertEqual(0, len(foundAttributesAOnClass1Meth1))
@@ -71,12 +71,13 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth1(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
 
 		self.assertEqual(1, len(foundMethodsOnAttributeA))
 		self.assertListEqual(foundMethodsOnAttributeA, [Class1.meth1])
+		self.assertListEqual([], list(AttributeA.GetFunctions()))
 
 		self.assertEqual(0, len(foundAttributesAOnClass1Meth0))
 		self.assertEqual(1, len(foundAttributesAOnClass1Meth1))
@@ -99,10 +100,10 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth2(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
-		foundAttributesAOnClass1Meth2 = [a for a in AttributeA.GetAttributes(Class1.meth2)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
+		foundAttributesAOnClass1Meth2 = list(AttributeA.GetAttributes(Class1.meth2))
 
 		self.assertEqual(2, len(foundMethodsOnAttributeA))
 		self.assertListEqual(foundMethodsOnAttributeA, [Class1.meth1, Class1.meth2])
@@ -135,11 +136,11 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth1(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
-		foundAttributesAOnClass2Meth0 = [a for a in AttributeA.GetAttributes(Class2.meth0)]
-		foundAttributesAOnClass2Meth1 = [a for a in AttributeA.GetAttributes(Class2.meth1)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
+		foundAttributesAOnClass2Meth0 = list(AttributeA.GetAttributes(Class2.meth0))
+		foundAttributesAOnClass2Meth1 = list(AttributeA.GetAttributes(Class2.meth1))
 
 		self.assertEqual(2, len(foundMethodsOnAttributeA))
 		self.assertListEqual(foundMethodsOnAttributeA, [Class1.meth1, Class2.meth1])
@@ -182,13 +183,13 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth3(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
-		foundAttributesAOnClass1Meth2 = [a for a in AttributeA.GetAttributes(Class1.meth2)]
-		foundAttributesAOnClass2Meth1 = [a for a in AttributeA.GetAttributes(Class2.meth1)]
-		foundAttributesAOnClass2Meth2 = [a for a in AttributeA.GetAttributes(Class2.meth2)]
-		foundAttributesAOnClass2Meth3 = [a for a in AttributeA.GetAttributes(Class2.meth3)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
+		foundAttributesAOnClass1Meth2 = list(AttributeA.GetAttributes(Class1.meth2))
+		foundAttributesAOnClass2Meth1 = list(AttributeA.GetAttributes(Class2.meth1))
+		foundAttributesAOnClass2Meth2 = list(AttributeA.GetAttributes(Class2.meth2))
+		foundAttributesAOnClass2Meth3 = list(AttributeA.GetAttributes(Class2.meth3))
 
 		self.assertEqual(4, len(foundMethodsOnAttributeA))
 		self.assertListEqual(foundMethodsOnAttributeA, [Class1.meth1, Class1.meth2, Class2.meth1, Class2.meth3])
@@ -229,14 +230,14 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth2(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
-		foundAttributesAOnClass1Meth2 = [a for a in AttributeA.GetAttributes(Class1.meth2)]
-		foundAttributesBOnClass1Meth1 = [b for b in AttributeB.GetAttributes(Class1.meth1)]
-		foundAttributesBOnClass1Meth2 = [b for b in AttributeB.GetAttributes(Class1.meth2)]
-		foundAttributesBOnClass1Meth3 = [b for b in AttributeB.GetAttributes(Class1.meth0)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
+		foundAttributesAOnClass1Meth2 = list(AttributeA.GetAttributes(Class1.meth2))
+		foundAttributesBOnClass1Meth1 = list(AttributeB.GetAttributes(Class1.meth1))
+		foundAttributesBOnClass1Meth2 = list(AttributeB.GetAttributes(Class1.meth2))
+		foundAttributesBOnClass1Meth3 = list(AttributeB.GetAttributes(Class1.meth0))
 
 		self.assertEqual(1, len(foundMethodsOnAttributeA))
 		self.assertEqual(2, len(foundMethodsOnAttributeB))
@@ -281,16 +282,16 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth3(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
-		foundAttributesAOnClass1Meth2 = [a for a in AttributeA.GetAttributes(Class1.meth2)]
-		foundAttributesAOnClass1Meth3 = [a for a in AttributeA.GetAttributes(Class1.meth3)]
-		foundAttributesBOnClass1Meth0 = [b for b in AttributeB.GetAttributes(Class1.meth0)]
-		foundAttributesBOnClass1Meth1 = [b for b in AttributeB.GetAttributes(Class1.meth1)]
-		foundAttributesBOnClass1Meth2 = [b for b in AttributeB.GetAttributes(Class1.meth2)]
-		foundAttributesBOnClass1Meth3 = [b for b in AttributeB.GetAttributes(Class1.meth3)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
+		foundAttributesAOnClass1Meth2 = list(AttributeA.GetAttributes(Class1.meth2))
+		foundAttributesAOnClass1Meth3 = list(AttributeA.GetAttributes(Class1.meth3))
+		foundAttributesBOnClass1Meth0 = list(AttributeB.GetAttributes(Class1.meth0))
+		foundAttributesBOnClass1Meth1 = list(AttributeB.GetAttributes(Class1.meth1))
+		foundAttributesBOnClass1Meth2 = list(AttributeB.GetAttributes(Class1.meth2))
+		foundAttributesBOnClass1Meth3 = list(AttributeB.GetAttributes(Class1.meth3))
 
 		self.assertEqual(2, len(foundMethodsOnAttributeA))
 		self.assertEqual(2, len(foundMethodsOnAttributeB))
@@ -344,18 +345,18 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth1(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
-		foundAttributesAOnClass1Meth2 = [a for a in AttributeA.GetAttributes(Class1.meth2)]
-		foundAttributesAOnClass2Meth0 = [a for a in AttributeA.GetAttributes(Class2.meth0)]
-		foundAttributesAOnClass2Meth1 = [a for a in AttributeA.GetAttributes(Class2.meth1)]
-		foundAttributesBOnClass1Meth0 = [b for b in AttributeB.GetAttributes(Class1.meth0)]
-		foundAttributesBOnClass1Meth1 = [b for b in AttributeB.GetAttributes(Class1.meth1)]
-		foundAttributesBOnClass1Meth2 = [b for b in AttributeB.GetAttributes(Class1.meth2)]
-		foundAttributesBOnClass2Meth0 = [b for b in AttributeB.GetAttributes(Class2.meth0)]
-		foundAttributesBOnClass2Meth1 = [b for b in AttributeB.GetAttributes(Class2.meth1)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
+		foundAttributesAOnClass1Meth2 = list(AttributeA.GetAttributes(Class1.meth2))
+		foundAttributesAOnClass2Meth0 = list(AttributeA.GetAttributes(Class2.meth0))
+		foundAttributesAOnClass2Meth1 = list(AttributeA.GetAttributes(Class2.meth1))
+		foundAttributesBOnClass1Meth0 = list(AttributeB.GetAttributes(Class1.meth0))
+		foundAttributesBOnClass1Meth1 = list(AttributeB.GetAttributes(Class1.meth1))
+		foundAttributesBOnClass1Meth2 = list(AttributeB.GetAttributes(Class1.meth2))
+		foundAttributesBOnClass2Meth0 = list(AttributeB.GetAttributes(Class2.meth0))
+		foundAttributesBOnClass2Meth1 = list(AttributeB.GetAttributes(Class2.meth1))
 
 		self.assertEqual(2, len(foundMethodsOnAttributeA))
 		self.assertEqual(3, len(foundMethodsOnAttributeB))
@@ -423,22 +424,22 @@ class ApplyMethodAttributes_NoMetaClass(Testcase):
 			def meth3(self):
 				pass
 
-		foundMethodsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundAttributesAOnClass1Meth0 = [a for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundAttributesAOnClass1Meth1 = [a for a in AttributeA.GetAttributes(Class1.meth1)]
-		foundAttributesAOnClass1Meth2 = [a for a in AttributeA.GetAttributes(Class1.meth2)]
-		foundAttributesAOnClass2Meth0 = [a for a in AttributeA.GetAttributes(Class2.meth0)]
-		foundAttributesAOnClass2Meth1 = [a for a in AttributeA.GetAttributes(Class2.meth1)]
-		foundAttributesAOnClass2Meth2 = [a for a in AttributeA.GetAttributes(Class2.meth2)]
-		foundAttributesAOnClass2Meth3 = [a for a in AttributeA.GetAttributes(Class2.meth3)]
-		foundAttributesBOnClass1Meth0 = [a for a in AttributeB.GetAttributes(Class1.meth0)]
-		foundAttributesBOnClass1Meth1 = [a for a in AttributeB.GetAttributes(Class1.meth1)]
-		foundAttributesBOnClass1Meth2 = [a for a in AttributeB.GetAttributes(Class1.meth2)]
-		foundAttributesBOnClass2Meth0 = [a for a in AttributeB.GetAttributes(Class2.meth0)]
-		foundAttributesBOnClass2Meth1 = [a for a in AttributeB.GetAttributes(Class2.meth1)]
-		foundAttributesBOnClass2Meth2 = [a for a in AttributeB.GetAttributes(Class2.meth2)]
-		foundAttributesBOnClass2Meth3 = [a for a in AttributeB.GetAttributes(Class2.meth3)]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
+		foundAttributesAOnClass1Meth0 = list(AttributeA.GetAttributes(Class1.meth0))
+		foundAttributesAOnClass1Meth1 = list(AttributeA.GetAttributes(Class1.meth1))
+		foundAttributesAOnClass1Meth2 = list(AttributeA.GetAttributes(Class1.meth2))
+		foundAttributesAOnClass2Meth0 = list(AttributeA.GetAttributes(Class2.meth0))
+		foundAttributesAOnClass2Meth1 = list(AttributeA.GetAttributes(Class2.meth1))
+		foundAttributesAOnClass2Meth2 = list(AttributeA.GetAttributes(Class2.meth2))
+		foundAttributesAOnClass2Meth3 = list(AttributeA.GetAttributes(Class2.meth3))
+		foundAttributesBOnClass1Meth0 = list(AttributeB.GetAttributes(Class1.meth0))
+		foundAttributesBOnClass1Meth1 = list(AttributeB.GetAttributes(Class1.meth1))
+		foundAttributesBOnClass1Meth2 = list(AttributeB.GetAttributes(Class1.meth2))
+		foundAttributesBOnClass2Meth0 = list(AttributeB.GetAttributes(Class2.meth0))
+		foundAttributesBOnClass2Meth1 = list(AttributeB.GetAttributes(Class2.meth1))
+		foundAttributesBOnClass2Meth2 = list(AttributeB.GetAttributes(Class2.meth2))
+		foundAttributesBOnClass2Meth3 = list(AttributeB.GetAttributes(Class2.meth3))
 
 		self.assertEqual(5, len(foundMethodsOnAttributeA))
 		self.assertEqual(2, len(foundMethodsOnAttributeB))
@@ -487,10 +488,10 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth0(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
-		foundMethodsOnClass1 = [m for m in Class1.GetMethodsWithAttributes()]
+		foundMethodsOnClass1 = list(Class1.GetMethodsWithAttributes())
 		# foundAttributesOnClass1Meth1 = Class1.GetAttributes(Class1.meth0)
 
 		self.assertFalse(Class1.HasClassAttributes)
@@ -515,8 +516,8 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth1(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 
@@ -544,8 +545,8 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth2(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 		foundAttributesAOnClass1Meth2 = [type(a) for a in AttributeA.GetAttributes(Class1.meth2)]
@@ -580,8 +581,8 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth1(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 		foundAttributesAOnClass2Meth0 = [type(a) for a in AttributeA.GetAttributes(Class2.meth0)]
@@ -627,8 +628,8 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth2(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 		foundAttributesAOnClass1Meth2 = [type(a) for a in AttributeA.GetAttributes(Class1.meth2)]
@@ -672,10 +673,10 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth2(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundFunctionsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
-		foundMethodsOnAttributeB = [m for m in AttributeB.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundFunctionsOnAttributeB = list(AttributeB.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 		foundAttributesAOnClass1Meth2 = [type(a) for a in AttributeA.GetAttributes(Class1.meth2)]
@@ -725,10 +726,10 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth3(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundFunctionsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
-		foundMethodsOnAttributeB = [m for m in AttributeB.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundFunctionsOnAttributeB = list(AttributeB.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 		foundAttributesAOnClass1Meth2 = [type(a) for a in AttributeA.GetAttributes(Class1.meth2)]
@@ -789,10 +790,10 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 				pass
 
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundFunctionsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
-		foundMethodsOnAttributeB = [m for m in AttributeB.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundFunctionsOnAttributeB = list(AttributeB.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 		foundAttributesAOnClass1Meth2 = [type(a) for a in AttributeA.GetAttributes(Class1.meth2)]
@@ -863,10 +864,10 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 			def meth2(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundFunctionsOnAttributeB = [f for f in AttributeB.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
-		foundMethodsOnAttributeB = [m for m in AttributeB.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundFunctionsOnAttributeB = list(AttributeB.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
 		foundAttributesAOnClass1Meth0 = [type(a) for a in AttributeA.GetAttributes(Class1.meth0)]
 		foundAttributesAOnClass1Meth1 = [type(a) for a in AttributeA.GetAttributes(Class1.meth1)]
 		foundAttributesAOnClass1Meth2 = [type(a) for a in AttributeA.GetAttributes(Class1.meth2)]
@@ -910,6 +911,39 @@ class ApplyMethodAttributes_WithMetaClass(Testcase):
 		self.assertListEqual(foundAttributesBOnClass2Meth2, [AttributeB])
 
 
+class Registry(Testcase):
+	def test_FunctionAndMethod(self) -> None:
+		"""A function and a method marked by the same attribute are registered in their own lists."""
+		class AttributeA(Attribute):
+			pass
+
+		@AttributeA()
+		def function():
+			pass
+
+		class Class1(metaclass=ExtendedType):
+			@AttributeA()
+			def meth1(self):
+				pass
+
+		self.assertListEqual([function], list(AttributeA.GetFunctions()))
+		self.assertListEqual([Class1.meth1], list(AttributeA.GetMethods()))
+		self.assertListEqual([Class1.meth1], list(AttributeA.GetMethods(scope=Class1)))
+
+	def test_MethodScope_PlainClass(self) -> None:
+		"""A method of a plain class has no class reference, so a scoped query doesn't find it."""
+		class AttributeA(Attribute):
+			pass
+
+		class Class1:
+			@AttributeA()
+			def meth1(self):
+				pass
+
+		self.assertListEqual([Class1.meth1], list(AttributeA.GetMethods()))
+		self.assertListEqual([], list(AttributeA.GetMethods(scope=Class1)))
+
+
 class MetaTesting(Testcase):
 	def test_Meta(self) -> None:
 		print()
@@ -943,9 +977,9 @@ class MetaTesting(Testcase):
 			def meth4(self):
 				pass
 
-		foundFunctionsOnAttributeA = [f for f in AttributeA.GetFunctions()]
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
-		foundMethodsOnAttributeB = [m for m in AttributeB.GetMethods()]
+		foundFunctionsOnAttributeA = list(AttributeA.GetFunctions())
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeB = list(AttributeB.GetMethods())
 
 		self.assertEqual(0, len(foundFunctionsOnAttributeA))
 		self.assertEqual(3, len(foundMethodsOnAttributeA))
@@ -995,16 +1029,16 @@ class Filtering(Testcase):
 			def meth2(self):
 				pass
 
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
-		foundMethodsOnAttributeAA = [m for m in AttributeAA.GetMethods()]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
+		foundMethodsOnAttributeAA = list(AttributeAA.GetMethods())
 
 		self.assertEqual(2, len(foundMethodsOnAttributeA))
 		self.assertListEqual(foundMethodsOnAttributeA, [Class1.meth1, Class2.meth1])
 		self.assertEqual(2, len(foundMethodsOnAttributeAA))
 		self.assertListEqual(foundMethodsOnAttributeAA, [Class1.meth2, Class2.meth2])
 
-		foundMethodsOnAttributeAScopedToClass1 = [m for m in AttributeA.GetMethods(scope=Class1)]
-		foundMethodsOnAttributeAScopedToClass2 = [m for m in AttributeA.GetMethods(scope=Class2)]
+		foundMethodsOnAttributeAScopedToClass1 = list(AttributeA.GetMethods(scope=Class1))
+		foundMethodsOnAttributeAScopedToClass2 = list(AttributeA.GetMethods(scope=Class2))
 
 		self.assertListEqual(foundMethodsOnAttributeAScopedToClass1, [Class1.meth1])
 		self.assertListEqual(foundMethodsOnAttributeAScopedToClass2, [Class2.meth1])
@@ -1081,7 +1115,7 @@ class MultipleInheritance(Testcase):
 			def meth0(self):
 				pass
 
-		foundMethodsOnAttributeA = [m for m in AttributeA.GetMethods()]
+		foundMethodsOnAttributeA = list(AttributeA.GetMethods())
 
 		self.assertEqual(3, len(foundMethodsOnAttributeA))
 		self.assertListEqual(foundMethodsOnAttributeA, [Part_A.meth1, Part_B.meth2, Common.meth0])

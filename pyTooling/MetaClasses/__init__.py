@@ -48,27 +48,49 @@ The MetaClasses package implements Python meta-classes (classes to construct oth
 from __future__           import annotations
 
 from functools            import wraps
-from itertools            import chain
 from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
-from types                import BuiltinFunctionType, FunctionType, MethodType
-from typing               import Any, Callable, Generator, Iterator, Iterable, Union, NoReturn, Self
+from types                import BuiltinFunctionType, CodeType, FunctionType, MemberDescriptorType, MethodType
+from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Self
 from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
+from pyTooling.Common     import getFullyQualifiedName
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
 from pyTooling.Warning    import Warning, WarningCollector
+from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, Attribute, AttributeScope, TAttr, TAttributeFilter
 
 
 __all__ = ["M"]
 
-TAttr = TypeVar("TAttr")  # , bound='Attribute')
-"""A type variable for :class:`~pyTooling.Attributes.Attribute`."""
 
-TAttributeFilter = Union[TAttr, Iterable[TAttr], None]
-"""A type hint for a predicate parameter that accepts either a single :class:`~pyTooling.Attributes.Attribute` or an
-iterable of those."""
+@export
+class ThisClass:
+	"""
+	Sentinel for a class variable whose value is the class declaring it.
+
+	A class doesn't exist while its body runs, so a class variable can't name it. Setting the variable to this
+	sentinel says *"the class I am declared in"*, and :class:`ExtendedType` rebinds it once the class exists.
+
+	.. code-block:: python
+
+	   class Workflow(metaclass=ExtendedType, slots=True):
+	     _PARENT_TYPE: ClassVar[Nullable[type]] = ThisClass   # a workflow is contained in a workflow
+
+	   assert Workflow._PARENT_TYPE is Workflow
+
+	Only a variable the class **declared** is rebound; an inherited one keeps the value its own class resolved. It is
+	an empty class rather than a bare object, so a variable annotated as a :class:`type` still type-checks.
+
+	.. note::
+
+	   :pep:`661` adds a ``sentinel`` builtin in Python 3.15, and ``ThisClass = sentinel("ThisClass")`` would give a
+	   better :func:`repr` and identity through :mod:`pickle` and :mod:`copy`. It is **not** used here: a sentinel is
+	   an *instance*, so a variable annotated :class:`type` would no longer type-check, and this sentinel never
+	   survives class creation anyway - it is replaced before anyone can pickle or print it. :class:`ExtendedType`
+	   compares by identity, so swapping the definition is a one-line change if that day comes.
+	"""
 
 
 @export
@@ -106,9 +128,9 @@ class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
 @export
 class BaseClassIsNotAMixinError(ExtendedTypeError):
 	"""
-	This exception is raised when a class inherits from a secondary base-class that is not declared as a mixin.
+	This exception is raised when a secondary base-class is a slotted class, but not declared as a mixin.
 
-	Only the primary inheritance line may carry a normal class; every further base-class needs ``mixin=True`` (or the
+	Only the primary inheritance line may carry a slotted class; every further base-class needs ``mixin=True`` (or the
 	:deco:`~pyTooling.MetaClasses.mixin` decorator), because that is what allows their slots to be merged.
 	"""
 
@@ -127,6 +149,34 @@ class UnannotatedFieldWarning(Warning):
 
 	An object field is annotated with its type, a class variable with :class:`~typing.ClassVar`. Without an annotation,
 	:class:`ExtendedType` can't tell the two apart, and the field never becomes a slot.
+	"""
+
+
+@export
+class UnfulfilledExpectationError(ExtendedTypeError):
+	"""
+	This exception is raised when a class doesn't provide the members a mixin-class in its hierarchy expects.
+
+	An expectation is declared in one of two places, and this exception is raised at the matching moment:
+
+	* A **class** lists what it needs from whichever class it is mixed into, with the ``expects`` class keyword
+	  argument. Which members are missing is determined when the class is constructed, and instantiating a class that
+	  still misses one raises this exception. A class may stay incomplete as long as nothing instantiates it, so an
+	  intermediate class can pass the expectation on to its own subclasses.
+	* A single **method** lists what it needs from its class, with the :deco:`expects` decorator. The class stays
+	  usable; only calling that method raises this exception.
+
+	Either way the alternative is an :exc:`AttributeError` on first access, somewhere else entirely, and only if that
+	code path runs.
+
+	.. seealso::
+
+	   :exc:`~pyTooling.MetaClasses.AbstractClassError`
+	      |rarr| The same mechanism, for a class with methods that still need to be overridden.
+	   :deco:`~pyTooling.MetaClasses.expects`
+	      |rarr| Mark a *method* as needing members its class provides only in some combinations.
+	   :class:`~pyTooling.MetaClasses.ExtendedType`
+	      |rarr| The meta-class implementing the check.
 	"""
 
 
@@ -183,13 +233,13 @@ M = TypeVar("M", bound=Callable[..., Any])   #: A type variable for methods.
 C = TypeVar("C", bound=type)       #: A type variable for classes.
 
 
-def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
+def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 	"""
 	Recreate a class with :class:`ExtendedType` (or the class' own compatible meta-class) applying the given options.
 
 	:param cls:                         Class to recreate.
 	:param decoratorName:               Name of the calling decorator. It's used in the error message.
-	:param options:                     Meta-class options like ``slots``, ``mixin`` or ``singleton``.
+	:param options:                     Meta-class options like ``slots``, ``mixin``, ``singleton`` or ``expects``.
 	:returns:                           The recreated class.
 	:raises IncompatibleMetaClassError: If the class' meta-class is neither :class:`type`, nor derived from
 	                                    :class:`ExtendedType`. |br|
@@ -206,7 +256,7 @@ def _recreateClass(cls: type, decoratorName: str, **options: bool) -> type:
 		metaClass = cls.__class__
 		ex = IncompatibleMetaClassError(f"Class '{cls.__name__}' decorated with '@{decoratorName}' uses an incompatible meta-class.")
 		ex.add_note(f"Meta-class is '{metaClass.__module__}.{metaClass.__name__}'.")
-		ex.add_note(f"A decorated class must use 'type' or a meta-class derived from 'pyTooling.MetaClasses.ExtendedType'.")
+		ex.add_note("A decorated class must use 'type' or a meta-class derived from 'pyTooling.MetaClasses.ExtendedType'.")
 		raise ex
 
 	bases = tuple(base for base in cls.__bases__ if base is not object)
@@ -326,7 +376,7 @@ def abstractclass(cls: C) -> C:
 	"""
 	if not isinstance(cls, ExtendedType):
 		ex = AttributeError(f"Class '{cls.__name__}' is not created by meta-class 'ExtendedType'.")
-		ex.add_note(f"Add 'metaclass=ExtendedType' to the class definition, so abstractness is computed.")
+		ex.add_note("Add 'metaclass=ExtendedType' to the class definition, so abstractness is computed.")
 		raise ex
 
 	cls.__abstractClass__ = True
@@ -431,6 +481,81 @@ def mustoverride(method: M) -> M:
 	return method
 
 
+@export
+def expects(*memberNames: str) -> Callable[[M], M]:
+	"""
+	Mark a method as needing members its class provides only in some combinations, usually through a mixin-class.
+
+	The marked method sits on the class in the **primary inheritance line** and waits for a :term:`mixin-class`
+	further along the bases to supply what it reads, while the class itself stays perfectly usable without that
+	mixin. The requirement belongs to the method, not to the class, so ``expects`` as a class keyword argument would
+	be too strict: it would reject a class that never calls the method. It is the opposite direction of
+	``ExtendedType``'s ``expects`` keyword, where a mixin-class states what it needs from its host.
+
+	:class:`ExtendedType` checks the marked method against every class it is reachable from. If a class provides the
+	members, the method is left untouched, so a fulfilled expectation costs nothing per call. If it doesn't, the
+	method is replaced by one raising an :exc:`UnfulfilledExpectationError` when called - naming the missing members,
+	instead of an :exc:`AttributeError` from somewhere in the method's body. A replacement inherited from a
+	base-class is removed again as soon as a class provides the missing members, so the mixin-class may join any
+	number of levels further down. An overriding method expects what its own marker names; without the marker it
+	expects nothing.
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      class Terminal(metaclass=ExtendedType, slots=True):
+	        @expects("MainParser", "SubParsers")
+	        def PrintHelp(self) -> None:
+	          self.MainParser.print_help()
+
+	      Terminal().PrintHelp()                  # UnfulfilledExpectationError
+
+	      class Application(Terminal, ArgParseHelperMixin):
+	        pass
+
+	      Application().PrintHelp()               # fine
+
+	:param memberNames: Names of the members the method needs from its class.
+	:returns:           Decorator marking the method with an ``<method>.__expectedMembers__`` field.
+	:raises TypeError:  If an element of parameter 'memberNames' is not a string.
+
+	.. seealso::
+
+	   :class:`~pyTooling.MetaClasses.ExtendedType`
+	      |rarr| The ``expects`` class keyword argument, for a class that needs the members as a whole.
+	   :exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError`
+	      |rarr| The exception raised when a missing member is reached for.
+	   :deco:`~pyTooling.MetaClasses.abstractmethod`
+	      |rarr| Mark a method as *abstract*, when the class itself declares what has to be overridden.
+	"""
+	for memberName in memberNames:
+		if not isinstance(memberName, str):
+			ex = TypeError(f"Parameter 'memberNames' contains an element that is not a string.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(memberName)}'.")
+			raise ex
+
+	def decorator(method: M) -> M:
+		"""
+		Attach the expected member names to the decorated method.
+
+		:param method:     Method that expects members from its class.
+		:returns:          Same method, but with additional ``<method>.__expectedMembers__`` field.
+		:raises TypeError: If applied to a class instead of a method. |br|
+		                   A class states what it expects with the ``expects`` class keyword argument of
+		                   :class:`ExtendedType`.
+		"""
+		if isinstance(method, type):
+			ex = TypeError(f"Decorator 'expects' is applied to class '{method.__name__}' instead of a method.")
+			ex.add_note(f"A class names what it expects with the 'expects' class keyword argument of 'ExtendedType'.")
+			raise ex
+
+		method.__expectedMembers__ = memberNames
+		return method
+
+	return decorator
+
+
 # @export
 # def overloadable(method: M) -> M:
 # 	method.__overloadable__ = True
@@ -515,13 +640,11 @@ class ExtendedType(type):
 	"""
 	An updates meta-class to construct new classes with an extended feature set.
 
-	.. todo:: META::ExtendedType Needs documentation.
-	.. todo:: META::ExtendedType allow __dict__ and __weakref__ if slotted is enabled
-
 	.. rubric:: Features:
 
 	* Store object members more efficiently in ``__slots__`` instead of ``_dict__``.
 
+	  * Let instances be referenced weakly (``weakref=True``), which a slotted class otherwise cannot be.
 	  * Implement ``__slots__`` only on primary inheritance line.
 	  * Collect class variables on secondary inheritance lines (mixin-classes) and defer implementation as ``__slots__``.
 	  * Handle object state exporting and importing for slots (:mod:`pickle` support) via ``__getstate__``/``__setstate__``.
@@ -530,6 +653,9 @@ class ExtendedType(type):
 	  Further instantiations will return the previously create instance (identical object).
 	* Define methods as :term:`abstract <abstract method>` or :term:`must-override <mustoverride method>` and prohibit
 	  instantiation of :term:`abstract classes <abstract class>`.
+	* Let a mixin-class state which members it expects from its host class (``expects``), or a single method state
+	  what it needs from its class (:deco:`expects`), and reject instantiation resp. that call while a member is
+	  missing.
 
 	.. #* Allow method overloading and dispatch overloads based on argument signatures.
 
@@ -541,9 +667,15 @@ class ExtendedType(type):
 	                             See :pep:`253` for details.
 	:__isMixin__:                True, if class is a mixin-class
 	:__mixinSlots__:             List of collected slots from secondary inheritance hierarchy (mixin hierarchy).
+	:__slotDefaults__:           Mapping of a slotted field declared by this class to its initial value.
+	:__allSlotDefaults__:        Mapping of every slotted field with an initial value in the inheritance hierarchy to its
+	                             initial value.
 	:__methods__:                List of methods.
 	:__methodsWithAttributes__:  List of methods with pyTooling attributes.
 	:__abstractMethods__:        List of abstract methods, which need to be implemented in the next class hierarchy levels.
+	:__expectedMembers__:        Mapping of a member name expected from the host class to the name of the class
+	                             expecting it.
+	:__missingMembers__:         Tuple of expected members this class doesn't provide (yet).
 	:__abstractClass__:          True, if this class was decorated with :deco:`abstractclass`.
 	:__isAbstract__:             True, if class is abstract.
 	:__isSingleton__:            True, if class is a singleton
@@ -574,12 +706,20 @@ class ExtendedType(type):
 
 	.. rubric:: Modified ``__init__`` method:
 
+	If slotted fields have initial values, ``__init__`` will be replaced by a wrapper method assigning them, before it
+	calls the original ``__init__``. This wrapper is marked with ``__slot_defaults_wrapper__``.
+
 	If class is a singleton, ``__init__`` will be replaced by a wrapper method. This wrapper is marked by ``__singleton_wrapper__``.
 
 	.. rubric:: Modified abstract methods:
 
 	If a method is abstract, its marked with ``__abstract__``. |br|
 	If a method is must override, its marked with ``__mustOverride__``.
+
+	.. seealso::
+
+	   :ref:`META/ExtendedType`
+	      |rarr| Every class keyword argument, its rules and the exceptions it raises.
 	"""
 
 	# @classmethod
@@ -587,13 +727,15 @@ class ExtendedType(type):
 	# 	return DispatchDictionary()
 
 	def __new__(
-		self,
+		metacls,
 		className: str,
 		baseClasses: tuple[type],
 		members: dict[str, Any],
 		slots: bool = False,
 		mixin: bool = False,
+		weakref: bool = False,
 		singleton: bool = False,
+		expects: Iterable[str] = (),
 		**kwargs: Any
 	) -> Self:
 		"""
@@ -604,43 +746,60 @@ class ExtendedType(type):
 		:param members:         The dictionary of members for the constructed class.
 		:param slots:           Optional, if ``True``, store object attributes in :term:`__slots__ <slots>` instead of
 		                        ``__dict__``.
-		:param mixin:          Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
-		                       ``slots``
+		:param mixin:           Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
+		                        ``slots``
 		                        is true. If ``None``, preserve behavior of primary base-class.
+		:param weakref:         Optional, if ``True``, let instances of a slotted class be referenced weakly by adding
+		                        ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on to the class it
+		                        is mixed into.
 		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
+		:param expects:         Optional, names of members this class needs from whichever class it is mixed into. |br|
+		                        See :attr:`__expectedMembers__`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
 		                        :func:`type` does.
 		:returns:               The new class.
 		:raises AttributeError: If base-class has no '__slots__' attribute.
 		:raises AttributeError: If slot already exists in base-class.
 		"""
-		from pyTooling.Attributes import ATTRIBUTES_MEMBER_NAME, AttributeScope
-
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
-			if isinstance(primaryBaseClass, self):
+			if isinstance(primaryBaseClass, metacls):
 				slots = primaryBaseClass.__slotted__
 
 		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
-		classFields, objectFields = self._computeSlots(className, baseClasses, members, slots, mixin)
+		classFields, objectFields = metacls._computeSlots(className, baseClasses, members, slots, mixin, weakref)
 
 		# Compute abstract methods
-		abstractMethods, members = self._checkForAbstractMethods(baseClasses, members)
+		abstractMethods, members = metacls._checkForAbstractMethods(baseClasses, members)
 
-		# Create a new class - the remaining keyword arguments belong to '__init_subclass__', which 'type' calls
-		newClass = type.__new__(self, className, baseClasses, members, **kwargs)
+		# Create a new class - the remaining keyword arguments belong to '__init_subclass__', which 'type' calls.
+		# Class variables with an initial value are part of 'members', so they are bound before that hook runs and
+		# are not re-assigned afterwards - doing so would overwrite whatever '__init_subclass__' computed from them.
+		newClass = type.__new__(metacls, className, baseClasses, members, **kwargs)
 
-		# Apply class fields
-		for fieldName, typeAnnotation in classFields.items():
-			setattr(newClass, fieldName, typeAnnotation)
+		# A class variable set to 'ThisClass' means "the class I am declared in". The class doesn't exist while its body
+		# runs, so the value is resolved here. Only a variable this class declared is rebound - an inherited one keeps
+		# the value its own class resolved - and the current value is read from the class, so an '__init_subclass__'
+		# that replaced it wins.
+		for memberName in members:
+			if getattr(newClass, memberName, None) is ThisClass:
+				setattr(newClass, memberName, newClass)
 
 		# Search in inheritance tree for abstract methods
 		newClass.__abstractMethods__ = abstractMethods
 
 		newClass.__abstractClass__ = False
-		newClass.__isAbstract__ =    self._wrapNewMethodIfAbstract(newClass)
-		newClass.__isSingleton__ =   self._wrapNewMethodIfSingleton(newClass, singleton)
+		newClass.__slotDefaults__ =  objectFields
+		metacls._wrapInitMethodIfSlotDefaults(newClass, mixin)
+		newClass.__isAbstract__ =    metacls._wrapNewMethodIfAbstract(newClass)
+		newClass.__isSingleton__ =   metacls._wrapNewMethodIfSingleton(newClass, singleton)
+
+		# Collect the members expected from the host class and reject instantiation while any of them is missing
+		newClass.__expectedMembers__ = metacls._collectExpectedMembers(className, baseClasses, members, expects)
+		newClass.__missingMembers__ = metacls._computeMissingMembers(newClass, mixin)
+		if not newClass.__isAbstract__:
+			metacls._wrapNewMethodIfExpectationUnfulfilled(newClass)
 
 		if slots:
 			# If slots are used, implement __getstate__/__setstate__ API to support serialization using pickle.
@@ -691,11 +850,14 @@ class ExtendedType(type):
 						att.__class__._classes.append(newClass)
 
 		# Check methods for attributes
-		methods, methodsWithAttributes = self._findMethods(newClass, baseClasses, members)
+		methods, methodsWithAttributes = metacls._findMethods(newClass, baseClasses, members)
 
 		# Add new fields for found methods
 		newClass.__methods__ = tuple(methods)
 		newClass.__methodsWithAttributes__ = tuple(methodsWithAttributes)
+
+		# Reject calling a method that expects members this class doesn't provide
+		metacls._wrapMethodsWithUnfulfilledExpectations(newClass)
 
 		# Additional methods on a class
 		def GetMethodsWithAttributes(
@@ -711,18 +873,16 @@ class ExtendedType(type):
 			:raises ValueError: If an element of parameter 'predicate' is not a sub-class of :class:`~pyTooling.Attributes.Attribute`.
 			:raises ValueError: If parameter 'predicate' is neither an attribute class nor an iterable of those.
 			"""
-			from pyTooling.Attributes import Attribute
-
 			if predicate is None:
 				predicate = Attribute
 			elif isinstance(predicate, Iterable):
 				for attribute in predicate:
 					if not issubclass(attribute, Attribute):
-						raise ValueError(f"Parameter 'predicate' contains an element which is not a sub-class of 'Attribute'.")
+						raise ValueError("Parameter 'predicate' contains an element which is not a sub-class of 'Attribute'.")
 
 				predicate = tuple(predicate)
 			elif not issubclass(predicate, Attribute):
-				raise ValueError(f"Parameter 'predicate' is not a sub-class of 'Attribute'.")
+				raise ValueError("Parameter 'predicate' is not a sub-class of 'Attribute'.")
 
 			methodAttributePairs = {}
 			for method in newClass.__methodsWithAttributes__:
@@ -748,7 +908,7 @@ class ExtendedType(type):
 
 	@classmethod
 	def _findMethods(
-		self,
+		metacls,
 		newClass:    ExtendedType,
 		baseClasses: tuple[type],
 		members:     dict[str, Any]
@@ -766,8 +926,6 @@ class ExtendedType(type):
 		:returns:           A 2-tuple of all methods and those methods carrying at least one attribute.
 		:raises TypeError:  If a member is neither a method nor a class, so it can't be searched for methods.
 		"""
-		from pyTooling.Attributes import Attribute
-
 		# Embedded bind function due to circular dependencies.
 		def bind(instance: object, func: FunctionType, methodName: Nullable[str] = None):
 			"""
@@ -831,9 +989,6 @@ class ExtendedType(type):
 					if isinstance(attributes, list) and len(attributes) > 0:
 						methodsWithAttributes.append(member)
 						for attribute in attributes:
-							attribute._functions.remove(method)
-							attribute._methods.append(method)
-
 							# print(f"    attributes: {attribute.__class__.__name__}")
 							if attribute not in attributeIndex:
 								attributeIndex[attribute] = [member]
@@ -884,6 +1039,7 @@ class ExtendedType(type):
 
 	#: Matches a textual annotation denoting a :class:`~typing.ClassVar`, with or without a module qualifier.
 	_CLASS_VARIABLE_PATTERN = re_compile(r"^\s*(?:\w+\.)*ClassVar\s*(?:\[|$)")
+	_compiledAnnotations: ClassVar[dict[str, CodeType]] = {}  #: Code object per textual annotation, compiled once.
 
 	@classmethod
 	def _resolveAnnotation(metacls, typeAnnotation: Any, members: dict[str, Any]) -> Any:
@@ -899,6 +1055,9 @@ class ExtendedType(type):
 		is harmless: the textual fallback in :meth:`_isClassVariable` still classifies it, and nothing else needs the
 		type object.
 
+		Each distinct annotation text is compiled once and its code object is kept in :attr:`_compiledAnnotations`. Only
+		the code is shared: it is evaluated in the namespaces of the class being created, every time.
+
 		:param typeAnnotation: The annotation to resolve; returned unchanged when it is not a string.
 		:param members:        Dictionary of class members, used as the local namespace.
 		:returns:              The evaluated annotation, or the original string when it cannot be evaluated.
@@ -908,8 +1067,13 @@ class ExtendedType(type):
 
 		module = modules.get(members.get("__module__", ""), None)
 		try:
+			if (code := metacls._compiledAnnotations.get(typeAnnotation, None)) is None:
+				# Like 'eval' does for a string, leading spaces and tabs are stripped.
+				code = compile(typeAnnotation.lstrip(" \t"), "<string>", "eval")
+				metacls._compiledAnnotations[typeAnnotation] = code
+
 			# The annotation is source code written in the class being created - the same trust level as importing it.
-			return eval(typeAnnotation, getattr(module, "__dict__", {}), members)
+			return eval(code, getattr(module, "__dict__", {}), members)
 		except Exception:      # noqa: BLE001 - any failure means "keep the string", see above
 			return typeAnnotation
 
@@ -979,18 +1143,19 @@ class ExtendedType(type):
 				UnannotatedFieldWarning(f"Class '{className}' declares {len(unannotatedFields)} field(s) without a type annotation."),
 				notes=(
 					f"Field(s) without a type annotation: '{fieldNames}'.",
-					f"Annotate a class variable as 'ClassVar[...]' or an object field with its type.",
+					"Annotate a class variable as 'ClassVar[...]' or an object field with its type.",
 				)
 			)
 
 	@classmethod
 	def _computeSlots(
-		self,
+		metacls,
 		className:   str,
 		baseClasses: tuple[type],
 		members:     dict[str, Any],
 		slots:       bool,
-		mixin:       bool
+		mixin:       bool,
+		weakref:     bool
 	) -> tuple[dict[str, Any], dict[str, Any]]:
 		"""
 		Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
@@ -1002,9 +1167,13 @@ class ExtendedType(type):
 		:param className:                   The name of the class to construct.
 		:param baseClasses:                 Tuple of base-classes.
 		:param members:                     Dictionary of class members.
-		:param slots:                       Optional, ``True``, if the class should setup ``__slots__``.
-		:param mixin:                       Optional, ``True``, if the class should behave as a mixin-class.
+		:param slots:                       ``True``, if the class should setup ``__slots__``.
+		:param mixin:                       ``True``, if the class should behave as a mixin-class.
+		:param weakref:                     ``True``, if instances should be referenced weakly.
 		:returns:                           A 2-tuple with a dictionary of class members and object members.
+		:raises ExtendedTypeError:          If a class annotates ``__weakref__`` instead of passing ``weakref=True``.
+		                                    A class derived from a weak-referenceable class inherits ``__weakref__``.
+		:raises ExtendedTypeError:          If a class annotates ``__dict__``.
 		:raises AttributeError:             If a field's annotation refers to a name that can't be resolved. |br|
 		                                    An assignment without a type annotation creates a class attribute, which
 		                                    hides the slot's descriptor: reading the field works, but assigning it on an
@@ -1015,23 +1184,53 @@ class ExtendedType(type):
 		:raises BaseClassWithoutSlotsError: If a base-class doesn't use slots. |br|
 		                                    All base-classes of a class using ``__slots__`` must use ``__slots__``
 		                                    themselves.
+		:raises DuplicateFieldInSlotsError: If a class member shadows a slot a base-class or mixin-class declares.
+		                                    |br|
+		                                    Without an annotation, annotate it as ``ClassVar[...]`` or remove the
+		                                    assignment. Annotating it does **not** resolve the clash - the slot
+		                                    exists either way - so a class variable of that name has to be renamed,
+		                                    or the slot dropped.
+		:raises DuplicateFieldInSlotsError: If a field of the class has the name of a mixin-class' slot. |br|
+		                                    Remove the annotation; the mixin-class' field becomes a slot of this class.
+		:raises DuplicateFieldInSlotsError: If a slot of the primary inheritance line has the name of a mixin-class'
+		                                    slot. |br|
+		                                    Rename one of the two fields, or declare it in one class only. Set
+		                                    ``weakref=True`` in one class of a hierarchy; derived classes inherit
+		                                    ``__weakref__``.
 		"""
 		# Compute which field are listed in __slots__ and which need to be initialized in an instance or class.
 		slottedFields = []
 		classFields =   {}
 		objectFields =  {}
-		annotations: dict[str, Any] = self._getAnnotations(members)
+		annotations: dict[str, Any] = metacls._getAnnotations(members)
+		if "__weakref__" in annotations:
+			ex = ExtendedTypeError(f"Class '{className}' annotates '__weakref__' as a field.")
+			ex.add_note(f"Set 'weakref=True' instead: 'class {className}(..., weakref=True)'.")
+			ex.add_note("A class derived from a weak-referenceable class inherits '__weakref__' and doesn't ask again.")
+			raise ex
+
+		if "__dict__" in annotations:
+			ex = ExtendedTypeError(f"Class '{className}' annotates '__dict__' as a field.")
+			ex.add_note("A '__dict__' slot accepts any attribute on an instance again and gives up what slots save.")
+			ex.add_note(f"Set 'slots=False' instead, if instances of '{className}' need a '__dict__'.")
+			raise ex
+
 		if slots or mixin:
 			# If slots are used, all base classes must use __slots__.
-			for baseClass in self._iterateBaseClasses(baseClasses):
-				# Exclude object as a special case
-				if baseClass is object or baseClass is Generic:
-					continue
+			# A slotted class or mixin-class built by ExtendedType passed this check for its own base-classes already.
+			if not all(
+				baseClass is Generic or (isinstance(baseClass, ExtendedType) and baseClass.__slotted__)
+				for baseClass in baseClasses
+			):
+				for baseClass in metacls._iterateBaseClasses(baseClasses):
+					# Exclude object as a special case
+					if baseClass is object or baseClass is Generic:
+						continue
 
-				if not hasattr(baseClass, "__slots__"):
-					ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
-					ex.add_note(f"All base-classes of a class using '__slots__' must use '__slots__' itself.")
-					raise ex
+					if not hasattr(baseClass, "__slots__"):
+						ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
+						ex.add_note("All base-classes of a class using '__slots__' must use '__slots__' itself.")
+						raise ex
 
 			# Non-empty __slots__ on secondary base-classes are rejected by _aggregateMixinSlots below.
 
@@ -1046,21 +1245,28 @@ class ExtendedType(type):
 					for annotation in base.__slots__:
 						inheritedSlottedFields[annotation] = base
 
+			if weakref:
+				fields = annotations.copy()
+				fields["__weakref__"] = None
+			else:
+				fields = annotations
+
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
-			for fieldName, typeAnnotation in annotations.items():
+			for fieldName, typeAnnotation in fields.items():
 				if fieldName in inheritedSlottedFields:
 					cls = inheritedSlottedFields[fieldName]
 					raise AttributeError(f"Slot '{fieldName}' declared in class '{className}' already exists in base-class '{cls.__module__}.{cls.__name__}'.")
 
 				# A ClassVar is never a slot, with or without an initial value.
-				# * If it has an initial value, copy field and initial value to classFields dictionary and remove field from members.
+				# * If it has an initial value, note the field in classFields and **leave it in members**, so that
+				#   'type.__new__' binds it before calling '__init_subclass__'. Removing it and assigning it
+				#   afterwards made a derived class' value invisible to that hook, which then read the base class'.
 				# * Otherwise it's a forward declaration and derived classes assign the actual value.
-				isClassVariable = self._isClassVariable(typeAnnotation)
+				isClassVariable = metacls._isClassVariable(typeAnnotation)
 				hasInitialValue = fieldName in members
 				if isClassVariable:
 					if hasInitialValue:
 						classFields[fieldName] = members[fieldName]
-						del members[fieldName]
 
 				# If an annotated field has an initial value
 				# * copy field and initial value to objectFields dictionary
@@ -1072,7 +1278,33 @@ class ExtendedType(type):
 				else:
 					slottedFields.append(fieldName)
 
-			mixinSlots = self._aggregateMixinSlots(className, baseClasses)
+			mixinSlots = metacls._aggregateMixinSlots(className, baseClasses)
+
+			# A mixin-class' slot must not exist a second time: neither as a field of this class, nor as a slot of the
+			# primary inheritance line. A slot both reach from the same declaring class (a diamond) exists once.
+			for fieldName, declaringClass in list(mixinSlots.items()):
+				mixinName = getFullyQualifiedName(declaringClass)
+				if fieldName in slottedFields:
+					ex = DuplicateFieldInSlotsError(
+						f"Slot '{fieldName}' declared in class '{className}' already exists in mixin-class '{mixinName}'."
+					)
+					ex.add_note("Remove the annotation; the mixin-class' field becomes a slot of this class.")
+					raise ex
+				elif fieldName in inheritedSlottedFields:
+					baseClass = metacls._findSlotDeclaration(baseClasses[0], fieldName)
+					if baseClass is declaringClass:
+						del mixinSlots[fieldName]
+						continue
+
+					baseName = getFullyQualifiedName(baseClass)
+					ex = DuplicateFieldInSlotsError(
+						f"Slot '{fieldName}' of mixin-class '{mixinName}' already exists in base-class '{baseName}'."
+					)
+					if fieldName == "__weakref__":
+						ex.add_note("Set 'weakref=True' in one class of a hierarchy; derived classes inherit '__weakref__'.")
+					else:
+						ex.add_note("Rename one of the two fields, or declare it in one class only.")
+					raise ex
 
 			# A member assigned in the class body without a type annotation stays a class attribute. If it carries the name
 			# of a slot, that class attribute shadows the slot's descriptor and the field becomes read-only on instances.
@@ -1082,12 +1314,18 @@ class ExtendedType(type):
 				ex = DuplicateFieldInSlotsError(f"Slot '{fieldName}' is shadowed by a class member in class '{className}'.")
 				if (baseClass := shadowedSlots[fieldName]) is not None:
 					ex.add_note(f"Slot '{fieldName}' is declared in base-class '{baseClass.__module__}.{baseClass.__name__}'.")
-					ex.add_note(f"An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
-					ex.add_note(f"Reading the field works, but assigning it on an instance raises an AttributeError.")
+					ex.add_note("An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
+					ex.add_note("Reading the field works, but assigning it on an instance raises an AttributeError.")
 				else:
 					ex.add_note(f"Slot '{fieldName}' is contributed by a mixin-class and materialized in this class' '__slots__'.")
-					ex.add_note(f"Python doesn't allow a name to be listed in '__slots__' and assigned in the class body.")
-				ex.add_note(f"Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
+					ex.add_note("Python doesn't allow a name to be listed in '__slots__' and assigned in the class body.")
+
+				if fieldName in classFields:
+					ex.add_note("Annotating it as 'ClassVar[...]' doesn't resolve this - the slot exists either way.")
+					ex.add_note("Rename the class variable, or drop the slot the base-class or mixin-class declares.")
+				else:
+					ex.add_note("Annotate it as 'ClassVar[...]' to declare a class variable, or remove the assignment.")
+
 				raise ex
 		else:
 			# When adding annotated fields to slottedFields, check if name was not used in inheritance hierarchy.
@@ -1095,14 +1333,13 @@ class ExtendedType(type):
 				# If annotated field is a ClassVar, and it has an initial value
 				# * copy field and initial value to classFields dictionary
 				# * remove field from members
-				if self._isClassVariable(typeAnnotation) and fieldName in members:
+				if metacls._isClassVariable(typeAnnotation) and fieldName in members:
 					classFields[fieldName] = members[fieldName]
-					del members[fieldName]
 
-		self._checkForUnannotatedFields(className, members, annotations)
+		metacls._checkForUnannotatedFields(className, members, annotations)
 
 		if mixin:
-			mixinSlots.extend(slottedFields)
+			mixinSlots = [*mixinSlots, *slottedFields]
 			members["__slotted__"] = True
 			members["__slots__"] = tuple()
 			members["__allSlots__"] = set()
@@ -1112,7 +1349,7 @@ class ExtendedType(type):
 			slottedFields.extend(mixinSlots)
 			members["__slotted__"] = True
 			members["__slots__"] = tuple(slottedFields)
-			members["__allSlots__"] = set(chain(slottedFields, inheritedSlottedFields.keys()))
+			members["__allSlots__"] = {*slottedFields, *inheritedSlottedFields.keys()}
 			members["__isMixin__"] = False
 			members["__mixinSlots__"] = tuple()
 		else:
@@ -1124,7 +1361,7 @@ class ExtendedType(type):
 		return classFields, objectFields
 
 	@classmethod
-	def _aggregateMixinSlots(self, className: str, baseClasses: tuple[type]) -> list[str]:
+	def _aggregateMixinSlots(metacls, className: str, baseClasses: tuple[type]) -> dict[str, type]:
 		"""
 		Aggregate slot names requested by mixin-base-classes.
 
@@ -1134,23 +1371,39 @@ class ExtendedType(type):
 
 		:param className:                        The name of the class to construct.
 		:param baseClasses:                      The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:returns:                                A list of slot names.
+		:returns:                                A dictionary of slot names and the mixin-class declaring each.
+		:raises BaseClassIsNotAMixinError:       If a secondary base-class is a slotted class, but not a mixin-class. |br|
+		                                         Only the primary base-class may be a slotted class; every further
+		                                         base-class is a mixin-class. Declare it with ``mixin=True`` or apply
+		                                         the :deco:`mixin` decorator.
 		:raises BaseClassWithNonEmptySlotsError: If a mixin-class uses non-empty slots. |br|
 		                                         In Python, only one inheritance branch can use non-empty ``__slots__``.
+		:raises DuplicateFieldInSlotsError:      If two mixin-classes declare a slot of the same name. |br|
+		                                         Rename one of the two fields, or move it into a mixin-class both derive
+		                                         from. Set ``weakref=True`` in one class of a hierarchy; derived classes
+		                                         inherit ``__weakref__``.
 		"""
-		mixinSlots = []
+		mixinSlots: dict[str, type] = {}
 		if len(baseClasses) > 0:
+			# A secondary base-class built by ExtendedType with slots contributes its fields as a mixin-class only.
+			for baseClass in baseClasses[1:]:
+				if isinstance(baseClass, ExtendedType) and baseClass.__slotted__ and not baseClass.__isMixin__:
+					ex = BaseClassIsNotAMixinError(
+						f"Secondary base-class '{getFullyQualifiedName(baseClass)}' of class '{className}' is not a mixin-class."
+					)
+					ex.add_note("Only the primary base-class may be a slotted class; every further base-class is a mixin-class.")
+					ex.add_note(f"Declare it as 'class {baseClass.__name__}(..., mixin=True)' or apply the '@mixin' decorator.")
+					raise ex
+
 			# If class has base-classes ensure only the primary inheritance path uses slots and all secondary inheritance
 			# paths have an empty slots tuple. Otherwise, raise a BaseClassWithNonEmptySlotsError.
-			inheritancePaths = [path for path in self._iterateBaseClassPaths(baseClasses)]
+			inheritancePaths = list(metacls._iterateBaseClassPaths(baseClasses))
 			primaryInharitancePath: set[type] = set(inheritancePaths[0])
 			for typePath in inheritancePaths[1:]:
 				for t in typePath:
-					if hasattr(t, "__slots__") and len(t.__slots__) != 0 and t not in primaryInharitancePath:
+					if t not in primaryInharitancePath and hasattr(t, "__slots__") and len(t.__slots__) != 0:
 						ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
-						ex.add_note(f"In Python, only one inheritance branch can use non-empty __slots__.")
-						# ex.add_note(f"With ExtendedType, only the primary base-class can use non-empty __slots__.")
-						# ex.add_note(f"Secondary base-classes should be marked as mixin-classes.")
+						ex.add_note("In Python, only one inheritance branch can use non-empty __slots__.")
 						raise ex
 
 			# If current class is set to be a mixin, then aggregate all mixinSlots in a list.
@@ -1162,12 +1415,48 @@ class ExtendedType(type):
 			for baseClass in baseClasses:  # type: ExtendedType
 				if isinstance(baseClass, _GenericAlias) and baseClass.__origin__ is Generic:
 					pass
-				elif baseClass.__class__ is self and baseClass.__isMixin__:
-					mixinSlots.extend(baseClass.__mixinSlots__)
 				elif hasattr(baseClass, "__mixinSlots__"):
-					mixinSlots.extend(baseClass.__mixinSlots__)
+					for fieldName in baseClass.__mixinSlots__:
+						declaringClass = metacls._findSlotDeclaration(baseClass, fieldName)
+						if fieldName not in mixinSlots:
+							mixinSlots[fieldName] = declaringClass
+						elif mixinSlots[fieldName] is not declaringClass:
+							firstName =  getFullyQualifiedName(mixinSlots[fieldName])
+							secondName = getFullyQualifiedName(declaringClass)
+							ex = DuplicateFieldInSlotsError(
+								f"Slot '{fieldName}' is declared by mixin-classes '{firstName}' and '{secondName}'."
+							)
+							ex.add_note(f"Both are base-classes of class '{className}'.")
+							if fieldName == "__weakref__":
+								ex.add_note("Set 'weakref=True' in one class of a hierarchy; derived classes inherit '__weakref__'.")
+							else:
+								ex.add_note("Rename one of the two fields, or move it into a mixin-class both derive from.")
+							raise ex
 
 		return mixinSlots
+
+	@staticmethod
+	def _findSlotDeclaration(baseClass: type, fieldName: str) -> type:
+		"""
+		Find the class in a base-class' hierarchy, which declared a slot.
+
+		A mixin-class passes the slots of its mixin-base-classes on in ``__mixinSlots__``, and the slotted class it is mixed
+		into lists them in its ``__slots__``. Searched from the root of the method resolution order, the first class
+		listing the name declared it.
+
+		:param baseClass: The base-class whose hierarchy is searched.
+		:param fieldName: The slot's name.
+		:returns:         The class declaring the slot.
+		"""
+		for cls in reversed(baseClass.__mro__):
+			slots = cls.__dict__.get("__slots__", ())
+			if isinstance(slots, str):
+				slots = (slots, )
+
+			if fieldName in slots or fieldName in cls.__dict__.get("__mixinSlots__", ()):
+				return cls
+
+		return baseClass
 
 	@classmethod
 	def _iterateBaseClasses(metacls, baseClasses: tuple[type]) -> Generator[type, None, None]:
@@ -1227,6 +1516,11 @@ class ExtendedType(type):
 		iteratorStack: list[Iterator[type]] = list()
 
 		for baseClass in baseClasses:
+			# 'object' as a direct base-class is a path of its own.
+			if len(baseClass.__bases__) == 0:
+				yield (baseClass, )
+				continue
+
 			typeStack.append(baseClass)
 			iteratorStack.append(iter(baseClass.__bases__))
 
@@ -1264,21 +1558,23 @@ class ExtendedType(type):
 		:returns:           A tuple of abstract method's names.
 		"""
 		abstractMethods = {}
-		if baseClasses:
-			# Aggregate all abstract methods from all base-classes.
-			for baseClass in baseClasses:
-				if hasattr(baseClass, "__abstractMethods__"):
-					abstractMethods.update(baseClass.__abstractMethods__)
+		# Aggregate all abstract methods from all base-classes.
+		for baseClass in baseClasses:
+			if hasattr(baseClass, "__abstractMethods__"):
+				abstractMethods.update(baseClass.__abstractMethods__)
 
+		# Only a member implementing an inherited abstract method needs a wrapper.
+		if len(abstractMethods) > 0:
 			for base in baseClasses:
 				for memberName, member in base.__dict__.items():
 					# A method the new class defines itself is the implementation; it must not be replaced by the one an
 					# inheritance branch happens to carry (pyTooling #297).
-					if memberName in members:
+					if memberName in members or memberName not in abstractMethods:
 						continue
 
-					if (memberName in abstractMethods and isinstance(member, FunctionType) and
-						not (hasattr(member, "__abstract__") or hasattr(member, "__mustOverride__"))):
+					function = metacls._getMarkedFunction(member)
+					if (isinstance(function, FunctionType) and
+						not (hasattr(function, "__abstract__") or hasattr(function, "__mustOverride__"))):
 						def outer(method):
 							"""
 							Nested function creating a wrapper, so the abstract method of the base-class isn't modified itself.
@@ -1287,16 +1583,15 @@ class ExtendedType(type):
 							:returns:      A wrapper forwarding to that method.
 							"""
 							@wraps(method)
-							def inner(cls, *args: Any, **kwargs: Any):
+							def inner(*args: Any, **kwargs: Any):
 								"""
 								Wrapper forwarding to the inherited abstract method.
 
-								:param cls:    The class the method is called on.
-								:param args:   Positional parameters passed to the method.
+								:param args:   Positional parameters passed to the method, the instance or class first, if bound.
 								:param kwargs: Named parameters passed to the method.
 								:returns:      Whatever the wrapped method returns.
 								"""
-								return method(cls, *args, **kwargs)
+								return method(*args, **kwargs)
 
 							# ':func:`~functools.wraps` copies the wrapped function's '__dict__', which carries the
 							# bookkeeping ExtendedType attached to it. The wrapper belongs to the class being
@@ -1304,21 +1599,116 @@ class ExtendedType(type):
 							inner.__dict__.pop("__classobj__", None)
 
 							return inner
-
-						members[memberName] = outer(member)
+						# Add the wrapper as new class member. Before adding it, apply classmethod/staticmethod to it, or make it
+						# the getter of a copy of the property.
+						if function is member:
+							members[memberName] = outer(member)
+						elif isinstance(member, property):
+							members[memberName] = member.getter(outer(function))
+						else:
+							members[memberName] = type(member)(outer(function))
 
 		# Check if methods are marked:
 		# * If so, add them to list of abstract methods
 		# * If not, method is now implemented and removed from list
 		for memberName, member in members.items():
-			if callable(member):
-				if ((hasattr(member, "__abstract__") and member.__abstract__) or
-						(hasattr(member, "__mustOverride__") and member.__mustOverride__)):
+			function = metacls._getMarkedFunction(member)
+			if callable(function):
+				if ((hasattr(function, "__abstract__") and function.__abstract__) or
+						(hasattr(function, "__mustOverride__") and function.__mustOverride__)):
 					abstractMethods[memberName] = member
 				elif memberName in abstractMethods:
 					del abstractMethods[memberName]
 
 		return abstractMethods, members
+
+	@staticmethod
+	def _getMarkedFunction(member: Any) -> Any:
+		"""
+		Return the function, which carries the markers of :deco:`abstractmethod` and :deco:`mustoverride` for a member.
+
+		A :class:`classmethod` or :class:`staticmethod` wraps the marked function, a :class:`property` (and so
+		:deco:`~pyTooling.Decorators.readonly`) holds it as its getter-method.
+
+		:param member: A member of a class.
+		:returns:      The wrapped function, the getter-method, or the member itself.
+		"""
+		if isinstance(member, (classmethod, staticmethod)):
+			return member.__func__
+		elif isinstance(member, property):
+			return member.fget
+
+		return member
+
+	@classmethod
+	def _wrapInitMethodIfSlotDefaults(metacls, newClass: ExtendedType, mixin: bool) -> None:
+		"""
+		If slotted fields have initial values, wrap the ``__init__`` method, so it assigns them before calling it.
+
+		A slot can't have a class attribute of the same name, so an initial value of a slotted field (``_name: str =
+		"root"``) can't stay in the class body. :meth:`_computeSlots` collects these values in :attr:`__slotDefaults__`
+		instead. The wrapper assigns the initial values of the whole hierarchy - of every base-class and mixin-class - to
+		the new instance, then calls the class' own (or inherited) ``__init__``.
+
+		Only the wrapper of the instance's own class assigns them; a base-class' wrapper, reached by
+		``super().__init__()``, calls its ``__init__`` only. So a derived class' ``__init__`` may assign a base-class'
+		field before calling ``super().__init__()``, and a base-class' initial values are assigned, even if the derived
+		class' ``__init__`` doesn't call it.
+
+		A mixin-class gets no wrapper: its fields are slots of the class it is mixed into, or entries in the instance's
+		``__dict__``, if that class has no slots.
+
+		The value is assigned, not copied: a mutable initial value is shared by all instances, as a class variable is.
+
+		The initial values of the whole hierarchy are kept in :attr:`__allSlotDefaults__`, merged from the direct
+		base-classes' mappings and this class' own :attr:`__slotDefaults__`, so a class doesn't walk its method resolution
+		order.
+
+		:param newClass: The newly created class.
+		:param mixin:    If ``True``, the class is a mixin-class.
+		"""
+		allSlotDefaults = {}
+		for baseClass in reversed(newClass.__bases__):
+			allSlotDefaults.update(getattr(baseClass, "__allSlotDefaults__", {}))
+		allSlotDefaults.update(newClass.__slotDefaults__)
+		newClass.__allSlotDefaults__ = allSlotDefaults
+
+		if mixin or len(allSlotDefaults) == 0:
+			return
+
+		setters = []
+		for fieldName, value in allSlotDefaults.items():
+			slot = getattr(newClass, fieldName, None)
+			if isinstance(slot, MemberDescriptorType):
+				setters.append((slot.__set__, value))
+			else:
+				# A mixin-class' field in a class without slots is stored in the instance's '__dict__'.
+				setters.append((lambda obj, val, name=fieldName: setattr(obj, name, val), value))
+
+		init = newClass.__init__
+		if hasattr(init, "__slot_defaults_wrapper__"):
+			# The wrapper inherited from a base-class: this class' wrapper assigns the base-class' initial values too.
+			init = init.__wrapped__
+
+		@wraps(init)
+		def init_withDefaults(self, *args: Any, **kwargs: Any) -> None:
+			"""
+			Replacement ``__init__`` method, which assigns the initial values of slotted fields, then calls ``__init__``.
+
+			:param args:   Positional parameters passed to the original ``__init__``.
+			:param kwargs: Named parameters passed to the original ``__init__``.
+			"""
+			if self.__class__ is newClass:
+				for setter, value in setters:
+					setter(self, value)
+
+			init(self, *args, **kwargs)
+
+		# ':func:`~functools.wraps` copies the bookkeeping '_findMethods' attached to the original method.
+		init_withDefaults.__dict__.pop("__classobj__", None)
+		init_withDefaults.__slot_defaults_wrapper__ = True
+
+		newClass.__init__ = init_withDefaults
 
 	@classmethod
 	def _wrapNewMethodIfSingleton(metacls, newClass, singleton: bool) -> bool:
@@ -1330,7 +1720,7 @@ class ExtendedType(type):
 		This implementation is threadsafe.
 
 		:param newClass:  The newly constructed class for further modifications.
-		:param singleton: Optional, if ``True``, the class allows only a single instance to exist.
+		:param singleton: If ``True``, the class allows only a single instance to exist.
 		:returns:         ``True``, if the class is a singleton.
 		"""
 		if hasattr(newClass, "__isSingleton__"):
@@ -1386,7 +1776,7 @@ class ExtendedType(type):
 						cls.__singletonInstanceInit__ = False
 						cv.notify_all()
 					elif args or kwargs:
-						raise ValueError(f"A further instance of a singleton can't be reinitialized with parameters.")
+						raise ValueError("A further instance of a singleton can't be reinitialized with parameters.")
 					else:
 						while cls.__singletonInstanceInit__:
 							cv.wait()
@@ -1402,6 +1792,226 @@ class ExtendedType(type):
 			return True
 
 		return False
+
+	@classmethod
+	def _collectExpectedMembers(
+		metacls,
+		className: str,
+		baseClasses: tuple[type, ...],
+		members: dict[str, Any],
+		expects: Iterable[str]
+	) -> dict[str, str]:
+		"""
+		Collect the members expected by this class and by every class in its inheritance hierarchy.
+
+		A mixin-class states what it needs from the class it is mixed into, and that expectation has to survive until a
+		concrete class can satisfy it. The result maps each expected member's name to the name of the class expecting
+		it, so an error message can name the origin.
+
+		:param className:   The name of the class being constructed.
+		:param baseClasses: The tuple of base-classes the class is derived from.
+		:param members:     The dictionary of members for the constructed class.
+		:param expects:     Names of members the class being constructed expects.
+		:returns:           Dictionary mapping an expected member's name to the name of the class expecting it.
+		:raises TypeError:  If parameter 'expects' is not an iterable of strings.
+		:raises TypeError:  If an element of parameter 'expects' is not a string.
+		"""
+		# A tuple (the default) skips the slower isinstance check against the abstract base class 'Iterable'.
+		if type(expects) is not tuple and (isinstance(expects, str) or not isinstance(expects, Iterable)):
+			ex = TypeError(f"Parameter 'expects' is not an iterable of strings.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(expects)}'.")
+			raise ex
+
+		expects = tuple(expects)
+		for memberName in expects:
+			if not isinstance(memberName, str):
+				ex = TypeError(f"Parameter 'expects' contains an element that is not a string.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(memberName)}'.")
+				raise ex
+
+		expected: dict[str, str] = {}
+		for baseClass in baseClasses:
+			for memberName, origin in getattr(baseClass, "__expectedMembers__", {}).items():
+				expected.setdefault(memberName, origin)
+
+		# a class recreated by '@mixin' and friends carries its own expectations in the copied members
+		for memberName, origin in members.get("__expectedMembers__", {}).items():
+			expected.setdefault(memberName, origin)
+
+		for memberName in expects:
+			expected.setdefault(memberName, className)
+
+		return expected
+
+	@classmethod
+	def _computeMissingMembers(metacls, newClass: type, mixin: bool) -> tuple[str, ...]:
+		"""
+		Determine which of the expected members the class doesn't provide.
+
+		A member is provided when it is reachable on the class: a method, a property, a class variable, or a field, for
+		which :class:`ExtendedType` created a slot descriptor when the mixin-class joined the primary inheritance line.
+
+		A mixin-class is never missing anything, because it can't provide what it expects from its host class.
+
+		:param newClass: The newly constructed class.
+		:param mixin:    ``True``, if the class is a mixin-class.
+		:returns:        Tuple of expected member names the class doesn't provide.
+		"""
+		if mixin:
+			return tuple()
+
+		return tuple(memberName for memberName in newClass.__expectedMembers__ if not hasattr(newClass, memberName))
+
+	@classmethod
+	def _wrapNewMethodIfExpectationUnfulfilled(metacls, newClass) -> bool:
+		"""
+		If the class doesn't provide every expected member, replace the ``__new__`` method, so it raises an exception.
+
+		The diagnosis happens here, at class construction time, but the exception is raised on instantiation - the same
+		way an abstract class is handled. A class is allowed to stay incomplete as long as nothing instantiates it, so
+		an intermediate class can pass an expectation on to its own subclasses.
+
+		:param newClass: The newly constructed class for further modifications.
+		:returns:        ``True``, if the class has unfulfilled expectations.
+		"""
+		if len(newClass.__missingMembers__) == 0:
+			# skip an intermediate 'new' function if the class fulfills its expectations again
+			oldnew = newClass.__new__
+			if hasattr(oldnew, "__raises_unfulfilled_expectation_error__"):
+				metacls._restoreNewMethod(newClass, oldnew.__wrapped__)
+
+			return False
+
+		oldnew = newClass.__new__
+		if hasattr(oldnew, "__raises_unfulfilled_expectation_error__"):
+			oldnew = oldnew.__wrapped__
+
+		@wraps(oldnew)
+		def unfulfilled_new(cls, *_, **__):
+			"""
+			Replacement ``__new__`` method, which rejects the instantiation of a class with unfulfilled expectations.
+
+			:param cls:                          The class an instance was requested of.
+			:raises UnfulfilledExpectationError: Always, because the class doesn't provide every expected member.
+			"""
+			ex = UnfulfilledExpectationError(f"Class '{cls.__name__}' doesn't provide every expected member.")
+			for memberName in newClass.__missingMembers__:
+				ex.add_note(f"Missing '{memberName}', expected by '{newClass.__expectedMembers__[memberName]}'.")
+			raise ex
+
+		unfulfilled_new.__raises_unfulfilled_expectation_error__ = True
+
+		newClass.__new__ = unfulfilled_new
+		return True
+
+	@classmethod
+	def _wrapMethodsWithUnfulfilledExpectations(metacls, newClass) -> tuple[str, ...]:
+		"""
+		Replace every method marked with :deco:`expects` whose expected members the class doesn't provide.
+
+		The replacement raises an :exc:`UnfulfilledExpectationError` when it is called, so the class stays usable and
+		only the method that can't work is rejected. A method whose expectation is fulfilled is left alone - the
+		original function stays in the class, so a fulfilled expectation costs nothing per call. A replacement
+		inherited from a base-class is removed again as soon as a class provides the missing members.
+
+		Only the method the class resolves counts: an override without the marker expects nothing, even if the method it
+		overrides does.
+
+		:param newClass: The newly constructed class for further modifications.
+		:returns:        Tuple of method names that were replaced.
+		"""
+		# Collect every marked method reachable on this class, looking underneath a replacement from a base-class
+		marked: dict[str, Callable[..., Any]] = {}
+		# The last class of every MRO is 'object', whose members are never marked.
+		for baseClass in reversed(newClass.__mro__[:-1]):
+			for memberName, member in vars(baseClass).items():
+				original = getattr(member, "__wrapped__", member)
+				if hasattr(original, "__expectedMembers__"):
+					marked[memberName] = original
+
+		wrapped: list[str] = []
+		for memberName, original in marked.items():
+			inherited = getattr(newClass, memberName)
+			if not hasattr(getattr(inherited, "__wrapped__", inherited), "__expectedMembers__"):
+				# an override without the marker expects nothing
+				continue
+
+			missing = tuple(name for name in original.__expectedMembers__ if not hasattr(newClass, name))
+			isReplaced = hasattr(inherited, "__raises_unfulfilled_expectation_error__")
+
+			if len(missing) == 0:
+				# the class provides the members now, so the original method is reachable again
+				if isReplaced:
+					setattr(newClass, memberName, original)
+				continue
+
+			wrapped.append(memberName)
+			if isReplaced and inherited.__missingMembers__ == missing:
+				# the inherited replacement already reports exactly these members
+				continue
+
+			def unfulfilledMethodFactory(methodName: str, missingMembers: tuple[str, ...]) -> Callable[..., NoReturn]:
+				"""
+				Create the replacement for one method, binding the names it is missing.
+
+				:param methodName:     Name of the method that is replaced.
+				:param missingMembers: Names of the members the method needs and the class doesn't provide.
+				:returns:              Replacement method raising an :exc:`UnfulfilledExpectationError`.
+				"""
+				@wraps(original)
+				def unfulfilledMethod(self, *_, **__) -> NoReturn:
+					"""
+					Replacement method, which rejects a call that would fail on a missing member.
+
+					:raises UnfulfilledExpectationError: Always, because the class doesn't provide every expected member.
+					"""
+					message = f"Method '{type(self).__name__}.{methodName}()' expects members this class doesn't provide."
+					ex = UnfulfilledExpectationError(message)
+					for memberName in missingMembers:
+						ex.add_note(f"Missing '{memberName}'.")
+					raise ex
+
+				return unfulfilledMethod
+
+			replacement = unfulfilledMethodFactory(memberName, missing)
+
+			replacement.__raises_unfulfilled_expectation_error__ = True
+			replacement.__missingMembers__ = missing
+
+			setattr(newClass, memberName, replacement)
+
+		return tuple(wrapped)
+
+	@staticmethod
+	def _restoreNewMethod(newClass: type, originalNew: Callable[..., Any]) -> None:
+		"""
+		Restore the ``__new__`` method, which a replacement raising an exception had wrapped.
+
+		:meth:`object.__new__` can't be put back as it is: assigned to a class, it rejects every parameter of the
+		instantiation. A replacement calling it with the class only is assigned instead.
+
+		:param newClass:    The newly constructed class for further modifications.
+		:param originalNew: The ``__new__`` method the replacement had wrapped.
+		"""
+		# WORKAROUND: __new__ checks tp_new and implements different behavior
+		#  Bugreport: https://github.com/python/cpython/issues/105888
+		if originalNew is object.__new__:
+			@wraps(object.__new__)
+			def wrapped_new(inst, *_, **__):
+				"""
+				Replacement ``__new__`` method for a class that can be instantiated again.
+
+				It calls :meth:`object.__new__` with the class only, because that implementation rejects further
+				parameters.
+
+				:param inst: The class being instantiated.
+				:returns:    The new instance.
+				"""
+				return object.__new__(inst)
+
+			newClass.__new__ = wrapped_new
+		else:
+			newClass.__new__ = originalNew
 
 	@classmethod
 	def _wrapNewMethodIfAbstract(metacls, newClass) -> bool:
@@ -1429,6 +2039,7 @@ class ExtendedType(type):
 				The message names the methods to override, or says that the class needs to be derived when it was declared
 				abstract without having abstract methods.
 
+				:param cls:                 The abstract class an instance was requested of.
 				:raises AbstractClassError: Always, because an abstract class can't be instantiated.
 				"""
 				if len(newClass.__abstractMethods__) > 0:
@@ -1441,32 +2052,17 @@ class ExtendedType(type):
 			newClass.__new__ = abstract_new
 			return True
 
+		# A function or built-in method without the marker: nothing to unwrap.
+		elif (isinstance(newClass.__new__, (FunctionType, BuiltinFunctionType)) and
+			not hasattr(newClass.__new__, "__raises_abstract_class_error__")):
+			return False
+
 		# Handle classes which are not abstract, especially derived classes, if not abstract anymore
 		else:
 			# skip intermediate 'new' function if class isn't abstract anymore
 			try:
 				if newClass.__new__.__raises_abstract_class_error__:
-					origNew = newClass.__new__.__wrapped__
-
-					# WORKAROUND: __new__ checks tp_new and implements different behavior
-					#  Bugreport: https://github.com/python/cpython/issues/105888
-					if origNew is object.__new__:
-						@wraps(object.__new__)
-						def wrapped_new(inst, *_, **__):
-							"""
-							Replacement ``__new__`` method for a class that isn't abstract anymore.
-
-							It calls :meth:`object.__new__` with the class only, because that implementation rejects further
-							parameters.
-
-							:param inst: The class being instantiated.
-							:returns:    The new instance.
-							"""
-							return object.__new__(inst)
-
-						newClass.__new__ = wrapped_new
-					else:
-						newClass.__new__ = origNew
+					metacls._restoreNewMethod(newClass, newClass.__new__.__wrapped__)
 				elif newClass.__new__.__isSingleton__:
 					raise ExtendedTypeError(
 						"Found a singleton wrapper around an AbstractError raising method. This case is not handled yet."
