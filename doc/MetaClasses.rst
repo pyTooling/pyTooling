@@ -142,7 +142,8 @@ assigns the initial values of the whole hierarchy to the new instance and then c
   :ref:`mixin-class <META/Mixin>`.
 * **Every field is annotated.** A field assigned in the class body without an annotation is neither a slot nor a
   declared class variable. It stays a class attribute, and :class:`~pyTooling.MetaClasses.ExtendedType` reports an
-  :exc:`~pyTooling.MetaClasses.UnannotatedFieldWarning` to the nearest :class:`~pyTooling.Warning.WarningCollector`.
+  :exc:`~pyTooling.MetaClasses.UnannotatedFieldWarning` to the innermost :class:`~pyTooling.Warning.WarningCollector`;
+  without a collector, it's dropped.
 
 .. rubric:: Serialization
 

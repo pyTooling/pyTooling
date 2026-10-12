@@ -149,6 +149,10 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read a requirements file and the files it references.
 
+		A line that can't be parsed as a requirement is left out and reported as a
+		:exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a
+		collector, it's dropped.
+
 		:param path:                           Path of the requirements file to read.
 		:param parent:                         Optional, the file referencing this one. Default: ``None``, a root.
 		:raises TypeError:                     If parameter 'path' is not of type :class:`~pathlib.Path`.
@@ -930,7 +934,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 	One released version of a project on a Python package index.
 
 	A release knows its distributions (the files that can be downloaded) and its requirements, sorted into the extras
-	they belong to. Both are fetched from the index on first use.
+	they belong to. Both are fetched from the index on first use, which reports the warnings of
+	:meth:`UpdateDetailsFromPyPIJSON`.
 	"""
 	_files:        list[Distribution]                      #: Distributions (wheels, source archives) of this release.
 	_requirements: dict[Nullable[str], list[Requirement]]  #: Requirements per extra; ``None`` collects the unconditional ones.
@@ -951,7 +956,8 @@ class Release(PackageVersion, LazyLoadableMixin):
 		Initialize a release of a project.
 
 		The API endpoint and the HTTP session are taken from the project's package index, so a release created from a
-		project can fetch its own details.
+		project can fetch its own details. If ``lazy`` asks for them, they're fetched right away, which reports the
+		warnings of :meth:`UpdateDetailsFromPyPIJSON`.
 
 		:param version:      Version number of this release.
 		:param timestamp:    Time this version was released.
@@ -1036,6 +1042,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download this release's details from the package index and load the projects it requires.
 
+		Reading the details reports a :exc:`~pyTooling.Dependency.BrokenRequirementWarning` or an
+		:exc:`~pyTooling.Dependency.UnknownLicenseWarning` to a :class:`~pyTooling.Warning.WarningCollector`, see
+		:meth:`UpdateDetailsFromPyPIJSON`; without a collector, they're dropped.
+
 		:raises NoSessionAvailableError: If the release wasn't created by a package index, so it has no session. |br|
 		                                 A session is opened by the package index and handed to the objects it
 		                                 creates.
@@ -1069,7 +1079,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 		The requirements are sorted into the extras they belong to. A requirement lands under ``None`` when it has no
 		marker at all, and also when its marker conditions it on the *environment* rather than on an extra -
 		``importlib-resources; python_version < "3.7"`` is required unconditionally, just not everywhere. A
-		requirement naming an extra the release does not declare is reported as a :class:`BrokenRequirementWarning`.
+		requirement naming an extra the release does not declare is reported as a
+		:exc:`~pyTooling.Dependency.BrokenRequirementWarning`, and a license that can't be resolved as an
+		:exc:`~pyTooling.Dependency.UnknownLicenseWarning` (see :meth:`_ResolveLicense`), each to a
+		:class:`~pyTooling.Warning.WarningCollector`; without a collector, they're dropped.
 
 		Metadata older than core-metadata 2.1 has no ``provides_extra`` field. Its extras are recovered from the
 		markers naming them, because dropping every conditional requirement of an old release would empty exactly the
@@ -1148,10 +1161,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:attr:`~pyTooling.Dependency.PackageVersion.PublishedLicense`, even when it doesn't parse. A release whose
 		license stays unresolved is reported as an
 		:class:`~pyTooling.Dependency.UnknownLicenseWarning` naming what was published, because that is the list of
-		packages the override file has to answer for. A release publishing ``NOASSERTION`` or ``NONE`` is on that
-		list too - the *statement* resolved, the license is still unknown. An override that doesn't parse is reported
-		the same way, naming the override file and its statement, because that is the file to correct; the published
-		metadata isn't read in its place.
+		packages the override file has to answer for; without a :class:`~pyTooling.Warning.WarningCollector`, it's
+		dropped. A release publishing ``NOASSERTION`` or ``NONE`` is on that list too - the *statement* resolved, the
+		license is still unknown. An override that doesn't parse is reported the same way, naming the override file and
+		its statement, because that is the file to correct; the published metadata isn't read in its place.
 
 		:param infoNode: The ``info`` node of the JSON document describing this release.
 		"""
@@ -1335,7 +1348,9 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Initialize a project on a package index.
 
-		The API endpoint and the HTTP session are taken from the index, so the project can fetch its own details.
+		The API endpoint and the HTTP session are taken from the index, so the project can fetch its own details. If
+		``lazy`` asks for :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, the details of every
+		release are fetched right away, which reports the warnings of :meth:`DownloadReleaseDetails`.
 
 		:param name:     Name of the project on the package index.
 		:param url:      URL of the project's page, as a string or a parsed URL.
@@ -1436,6 +1451,9 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download this project's details and its list of releases from the package index.
 
+		If this project is loaded already, the releases fetch their details right away, which reports the warnings of
+		:meth:`Release.UpdateDetailsFromPyPIJSON`.
+
 		:raises NoSessionAvailableError: If the project wasn't created by a package index, so it has no session. |br|
 		                                 A session is opened by the package index and handed to the objects it
 		                                 creates.
@@ -1460,7 +1478,8 @@ class Project(Package, LazyLoadableMixin):
 		Fill this project from the JSON document the package index returned.
 
 		Releases without a distribution are skipped, and a version the parser doesn't understand is reported as a
-		warning rather than failing the whole project.
+		warning rather than failing the whole project. If this project is loaded already, the releases fetch their
+		details right away, which reports the warnings of :meth:`Release.UpdateDetailsFromPyPIJSON`.
 
 		:param json: The parsed JSON document describing this project.
 		"""
@@ -1506,6 +1525,13 @@ class Project(Package, LazyLoadableMixin):
 
 		The requests run in one :mod:`asyncio` event loop over a shared session, because a project can easily have
 		hundreds of releases.
+
+		The event loop runs in the calling thread, so the warnings of :meth:`Release.UpdateDetailsFromPyPIJSON` reach the
+		caller's :class:`~pyTooling.Warning.WarningCollector`. A release whose details can't be downloaded or read is
+		dropped and reported as a :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`; without a collector, the warnings
+		are dropped. An exception raised while reading a release's details doesn't propagate, not even an
+		:exc:`~pyTooling.Warning.EscalatedWarningError` from a collector's handler: the release is dropped and the
+		exception becomes the cause of its :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`.
 		"""
 		async def ParallelDownloadReleaseDetails():
 			"""
@@ -1689,6 +1715,9 @@ class PythonPackageIndex(PackageStorage):
 	def DownloadProject(self, projectName: str, lazy: LazyLoaderState = LazyLoaderState.PartiallyLoaded) -> Project:
 		"""
 		Look up a project on this package index.
+
+		If ``lazy`` asks for :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, the details of every
+		release are fetched right away, which reports the warnings of :meth:`Project.DownloadReleaseDetails`.
 
 		:param projectName: Name of the project on the package index.
 		:param lazy:        Optional, state the project should be loaded to immediately.
