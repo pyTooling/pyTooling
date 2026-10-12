@@ -33,5 +33,8 @@ colorama ~= 0.4.6
 # Remove the 'implementation_version' limit once Pillow, numpy and matplotlib ship 'pp80' wheels.
 matplotlib >= 3.10 ; implementation_name != "pypy" or (sys_platform != "win32" and implementation_version < "8")
 
+# For pyTooling.Tracing.Render.Plotly testing
+plotly >= 6.0
+
 # For pyTooling.Testing.ReportWriter testing - validates the report against its schema
 xmlschema ~= 4.3
