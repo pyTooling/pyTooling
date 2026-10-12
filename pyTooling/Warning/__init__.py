@@ -65,10 +65,10 @@ class CriticalWarning(BaseException):
 	"""
 	Base-exception of all critical warnings handled by :class:`WarningCollector`.
 
-	.. tip::
+	.. important::
 
-	   Critical warnings must be unhandled within a call hierarchy, otherwise a :exc:`UnhandledCriticalWarningError`
-	   will be raised.
+	   A critical warning must be collected by a :class:`WarningCollector` up the call-hierarchy, otherwise
+	   :meth:`WarningCollector.Raise` raises an :exc:`UnhandledCriticalWarningError`.
 	"""
 
 	@readonly
@@ -97,7 +97,8 @@ class Warning(BaseException):
 
 	.. tip::
 
-	   Warnings can be unhandled within a call hierarchy.
+	   A warning doesn't need a collector: without a :class:`WarningCollector` up the call-hierarchy, it's dropped
+	   silently.
 	"""
 
 	@readonly
@@ -127,6 +128,9 @@ class UnhandledCriticalWarningError(ExceptionBase):
 	"""
 	This exception is raised when a critical warning isn't handled by a :class:`WarningCollector` within the
 	call-hierarchy.
+
+	:meth:`WarningCollector.Raise` raises it, if no collector is current in the calling thread. The critical warning is
+	its cause (``__cause__``), and a note says how to collect it.
 	"""
 
 
@@ -134,17 +138,23 @@ class UnhandledCriticalWarningError(ExceptionBase):
 class UnhandledExceptionError(ExceptionBase):
 	"""
 	This exception is raised when an exception isn't handled by a :class:`WarningCollector` within the call-hierarchy.
+
+	:meth:`WarningCollector.Raise` raises it, if no collector is current in the calling thread. The exception is its
+	cause (``__cause__``), and a note says how to collect it.
 	"""
 
 
 @export
 class EscalatedWarningError(ExceptionBase):
 	"""
-	This exception is raised when a :class:`WarningCollector` decides a collected warning should not be collected but
-	raised.
+	This exception is raised when a :class:`WarningCollector` decides a collected warning is escalated.
 
-	A collector's handler returning ``True`` asks for the warning to be escalated; the warning itself becomes the
-	exception's cause.
+	:meth:`WarningCollector.Raise` hands a warning to the current collector, which appends it to its list and calls its
+	handler. A handler returning ``True`` asks for the warning to be escalated: :meth:`~WarningCollector.Raise` raises
+	this exception, and the warning becomes its cause (``__cause__``). The warning stays in the collector's list.
+
+	Any function reporting a warning can raise it, but only when the caller installed a handler returning ``True`` for
+	that warning.
 	"""
 
 
@@ -152,6 +162,15 @@ class EscalatedWarningError(ExceptionBase):
 class WarningCollector:
 	"""
 	A context manager to collect warnings within the call hierarchy.
+
+	Entering the context makes the collector the *current* one of its thread, and :meth:`Raise` hands a warning to the
+	current collector. Collectors are kept per thread: a warning raised in another thread doesn't reach it, see
+	:class:`SupervisedWarningCollector`.
+
+	Collectors can be nested. The previous current collector becomes the :attr:`Parent`, and only the innermost
+	collector receives a warning - the parent doesn't see it, unless it's passed on, e.g. by :meth:`AddWarning`.
+
+	The collected warnings are accessible by :attr:`Warnings`, by iteration, by :func:`len` and by index.
 	"""
 	_parent:   Nullable[WarningCollector]                 #: Parent WarningCollector
 	_warnings: list[BaseException]                        #: List of collected warnings (and exceptions).
@@ -170,8 +189,9 @@ class WarningCollector:
 		:param warnings:   Optional, reference to a list of warnings, which can be modified (appended) by this warning
 		                   collector. If ``None``, an internal list is created and can be referenced by the collector's
 		                   instance.
-		:param handler:    Optional, handler function, which processes the current warning and decides if a warning should
-		                   be reraised as an exception.
+		:param handler:    Optional, handler function, which is called with each collected warning and decides, if it's
+		                   escalated. If it returns ``True``, :meth:`Raise` raises an :exc:`EscalatedWarningError`, whose
+		                   cause is the warning. An exception raised by the handler propagates through :meth:`Raise`.
 		:raises TypeError: If optional parameter 'warnings' is not of type list.
 		:raises TypeError: If optional parameter 'handler' is not a callable.
 		"""
@@ -279,13 +299,16 @@ class WarningCollector:
 
 	def AddWarning(self, warning: Warning | CriticalWarning | Exception) -> bool:
 		"""
-		Add a warning to the list of warnings managed by this warning collector.
+		Add a warning to the list of warnings managed by this warning collector and call its handler.
 
-		:param warning:     The warning to add to the collectors internal warning list.
+		An exception raised by the handler propagates.
+
+		:param warning:     The warning to add to the collector's internal warning list.
 		:returns:           Return ``True`` if the warning collector has a local handler callback and this handler returned
 		                    ``True``; otherwise ``False``.
 		:raises ValueError: If parameter ``warning`` is None.
-		:raises TypeError:  If parameter ``warning`` is not of type :class:`Warning`.
+		:raises TypeError:  If parameter ``warning`` is not of type :class:`Warning`, :class:`CriticalWarning` or
+		                    :exc:`Exception`.
 		"""
 		if warning is None:
 			raise ValueError("Parameter 'warning' is None.")
@@ -307,12 +330,23 @@ class WarningCollector:
 		notes:   Nullable[str | Iterable[str]] = None
 	) -> None:
 		"""
-		Walk the callstack frame by frame upwards and search for the first warning collector.
+		Hand a warning to the current warning collector of the calling thread.
 
-		:param warning:                        Warning to send upwards in the call stack.
-		:param cause:                          Optional, root cause to be added to the warning.
+		The current collector is the innermost :class:`WarningCollector` context entered in the calling thread. It appends
+		the warning to its list (:meth:`AddWarning`) and calls its handler. Without a current collector, a :class:`Warning`
+		is dropped, while a :class:`CriticalWarning` or an :exc:`Exception` is wrapped in an exception and raised.
+
+		Called inside a generator, the warning reaches the collector current when the generator is resumed, i.e. the one
+		of the code consuming it. An exception raised by the collector's handler propagates.
+
+		:param warning:                        Warning to send to the current warning collector.
+		:param cause:                          Optional, root cause to be added to the warning (``__cause__``).
 		:param notes:                          Optional, a single note or a list of notes to be added to the warning.
-		:raises EscalatedWarningError:         If the warning collector asks for the warning to be raised.
+		:raises ValueError:                    If parameter ``warning`` is None and a warning collector is current.
+		:raises TypeError:                     If parameter ``warning`` is not of type :class:`Warning`,
+		                                       :class:`CriticalWarning` or :exc:`Exception` and a warning collector is
+		                                       current.
+		:raises EscalatedWarningError:         If the warning collector's handler asks for the warning to be escalated.
 		:raises UnhandledExceptionError:       If no warning collector was found along the call-hierarchy to collect and
 		                                       handle an exception.
 		:raises UnhandledCriticalWarningError: If no warning collector was found along the call-hierarchy to collect
@@ -359,7 +393,11 @@ class SupervisedWarningCollectorError(ExceptionBase):
 @export
 class SupervisedWarningCollector(WarningCollector):
 	"""
-	A context manager to collect warnings within the call hierarchy.
+	A context manager to collect the warnings of a thread and hand them to a :class:`ThreadSupervisor`.
+
+	It's the top-most warning collector of its thread. On leaving the context, the collected warnings and an exception
+	leaving the block are handed to the supervisor, so the thread that started this one can read the warnings and
+	re-raise the exception (:meth:`ThreadSupervisor.ReRaise`).
 	"""
 	_supervisor:       Nullable[ThreadSupervisor]                 #: Supervisor collecting warnings and exceptions of all threads.
 	_exceptionHandler: Nullable[Callable[[BaseException], bool]]  #: Handler called for an exception escaping the thread.
@@ -382,8 +420,9 @@ class SupervisedWarningCollector(WarningCollector):
 		:param warnings:         Optional, reference to a list of warnings, which can be modified (appended) by this warning
 		                         collector. If ``None``, an internal list is created and can be referenced by the
 		                         collector's instance.
-		:param handler:          Optional, handler function, which processes the current warning and decides if a warning
-		                         should be reraised as an exception.
+		:param handler:          Optional, handler function, which is called with each collected warning and decides, if
+		                         it's escalated. If it returns ``True``, :meth:`Raise` raises an
+		                         :exc:`EscalatedWarningError`, whose cause is the warning.
 		:param supervisor:       Optional, thread supervisor. On leaving the context, the collected warnings and an
 		                         exception leaving the block are handed to it, so the thread that started this one can
 		                         reraise them. Without a supervisor, an exception leaves the block unchanged.
@@ -456,8 +495,10 @@ class SupervisedWarningCollector(WarningCollector):
 @export
 class SupervisedThreadError(ExceptionBase):
 	"""
-	The exception is raise if a supervised thread received an unhandled exception which got collected by
-	:class:`ExceptionCollector`.
+	This exception is raised by :meth:`ThreadSupervisor.ReRaise`, if a supervised thread failed with an exception.
+
+	A :class:`SupervisedWarningCollector` hands the exception leaving its thread to the :class:`ThreadSupervisor`; it
+	becomes this exception's cause, and :attr:`~SupervisedThreadError.ThreadName` names the thread.
 	"""
 	_threadName: Nullable[str]  #: Name of the thread the exception was raised in.
 
@@ -495,8 +536,8 @@ class ThreadSupervisor:
 	"""
 	Thread-safe collector of exceptions and warnings raised in worker threads for surfacing on another thread.
 
-	This thread supervisor should be used in combination with :class:`WarningCollector` to accumulate exceptions
-	(:class:`BaseException`) and warnings (:class:`CriticalWarning` or :class:`Warning`).
+	This thread supervisor should be used in combination with :class:`SupervisedWarningCollector` to accumulate
+	exceptions (:class:`BaseException`) and warnings (:class:`CriticalWarning` or :class:`Warning`).
 
 	.. code-block:: python
 
@@ -513,18 +554,19 @@ class ThreadSupervisor:
 	       self._stopEvent =        stopEvent
 
 	     def run(self) -> None:
-	       def exceptionHandler(ex: BaseException) -> None:
+	       def exceptionHandler(ex: BaseException) -> bool:
 	         self._stopEvent.set()
+	         return True
 
 	       def finallyHandler() -> None:
-	         # some finally code
+	         ...  # some finally code
 
 	       with SupervisedWarningCollector(
 	         supervisor=self._threadSupervisor,
 	         exceptionHandler=exceptionHandler,
 	         finallyHandler=finallyHandler
 	       ) as warnings:
-	         # Thread body
+	         ...  # thread body
 
 	.. code-block:: python
 
