@@ -340,10 +340,11 @@ Version 10.x (2026)
      * The module raises its own :exc:`~pyTooling.Packaging.PackagingError`, so a caller can catch what this module
        reports without catching everything derived from :exc:`~pyTooling.Exceptions.ToolingException`.
      * :func:`~pyTooling.Packaging.DescribePythonPackage` leaves requirements with a direct reference (``name @ URL``)
-       out of every extra and reports each as a :exc:`~pyTooling.Packaging.DirectReferenceWarning`: the Python
-       Package Index rejects a package whose metadata contains one. pyTooling itself names pyTooling.Sphinx, which
-       isn't on PyPI yet, by its repository in :file:`doc/requirements.txt`; its ``doc`` and ``all`` extras carried
-       it, so v10.0.0-rc1 couldn't be uploaded. Base requirements are kept.
+       out of every extra and reports each as a :exc:`~pyTooling.Packaging.DirectReferenceWarning` to a
+       :class:`~pyTooling.Warning.WarningCollector`: the Python Package Index rejects a package whose metadata contains
+       one. pyTooling itself names pyTooling.Sphinx, which isn't on PyPI yet, by its repository in
+       :file:`doc/requirements.txt`; its ``doc`` and ``all`` extras carried it, so v10.0.0-rc1 couldn't be uploaded.
+       Base requirements are kept. pyTooling's :file:`setup.py` collects these warnings and prints them.
 
    * :mod:`pyTooling.Common`
 

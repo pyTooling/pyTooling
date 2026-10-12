@@ -41,6 +41,7 @@ from setuptools import setup
 
 from pathlib    import Path
 from pyTooling.Packaging  import DescribePythonPackageHostedOnGitHub
+from pyTooling.Warning    import WarningCollector
 
 gitHubNamespace =        "pyTooling"
 packageName =            "pyTooling.*"
@@ -56,26 +57,31 @@ additionalRequirements = {
 	"yaml":      ["ruamel.yaml ~= 0.19"],
 }
 
-setup(
-	**DescribePythonPackageHostedOnGitHub(
-		packageName=packageName,
-		description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and exceptions.",
-		gitHubNamespace=gitHubNamespace,
-		unittestRequirementsFile=Path("tests/requirements.txt"),
-		additionalRequirements=additionalRequirements,
-		sourceFileWithVersion=packageInformationFile,
-		pythonVersions=("3.11", "3.12", "3.13", "3.14", "3.15"),
-		dataFiles={
-			packageName[:-1] + "Common": ["../py.typed"],
-			packageName[:-1] + "Resources": ["*.xsd"],
-			packageName[:-1] + "Resources.Tracing": ["*.css", "*.js"]
-		},
-		pytestPlugins={
-			# The entry point's name is the module's name on purpose, so '-p <module>' finds the plugin already
-			# registered instead of importing and registering it a second time.
-			"pyTooling.Testing.PyTest":       "pyTooling.Testing.PyTest",
-			"pyTooling.Testing.ReportWriter": "pyTooling.Testing.ReportWriter",
-		},
-		debug=True
+with WarningCollector() as warnings:
+	setup(
+		**DescribePythonPackageHostedOnGitHub(
+			packageName=packageName,
+			description="pyTooling is a powerful collection of arbitrary useful classes, decorators, meta-classes and "
+			            "exceptions.",
+			gitHubNamespace=gitHubNamespace,
+			unittestRequirementsFile=Path("tests/requirements.txt"),
+			additionalRequirements=additionalRequirements,
+			sourceFileWithVersion=packageInformationFile,
+			pythonVersions=("3.11", "3.12", "3.13", "3.14", "3.15"),
+			dataFiles={
+				packageName[:-1] + "Common": ["../py.typed"],
+				packageName[:-1] + "Resources": ["*.xsd"],
+				packageName[:-1] + "Resources.Tracing": ["*.css", "*.js"]
+			},
+			pytestPlugins={
+				# The entry point's name is the module's name on purpose, so '-p <module>' finds the plugin already
+				# registered instead of importing and registering it a second time.
+				"pyTooling.Testing.PyTest":       "pyTooling.Testing.PyTest",
+				"pyTooling.Testing.ReportWriter": "pyTooling.Testing.ReportWriter",
+			},
+			debug=True
+		)
 	)
-)
+
+for warning in warnings:
+	print(f"[setup.py] WARNING: {warning}")

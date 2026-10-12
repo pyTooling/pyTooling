@@ -307,10 +307,26 @@ User-defined
 
 A requirement with a direct reference (``name @ URL``, e.g. ``pyTooling.Sphinx @ git+https://...@dev``) is left out of
 every extra, because the Python Package Index rejects a package whose metadata contains one. Each one is reported as a
-:exc:`~pyTooling.Packaging.DirectReferenceWarning`. So a project can name a dependency, which isn't on PyPI yet, by its
-repository in e.g. :file:`doc/requirements.txt` - the documentation build installs it from there - and still be
-released. The base requirements (``requirementsFile``) are kept as they are: without one of them, the package wouldn't
-work.
+:exc:`~pyTooling.Packaging.DirectReferenceWarning` to a :class:`~pyTooling.Warning.WarningCollector`. So a project can
+name a dependency, which isn't on PyPI yet, by its repository in e.g. :file:`doc/requirements.txt` - the documentation
+build installs it from there - and still be released. The base requirements (``requirementsFile``) are kept as they are:
+without one of them, the package wouldn't work.
+
+Without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, these warnings are dropped silently. A
+:file:`setup.py` collects and prints them like this:
+
+.. code-block:: Python
+
+   from setuptools import setup
+
+   from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
+   from pyTooling.Warning   import WarningCollector
+
+   with WarningCollector() as warnings:
+     setup(**DescribePythonPackageHostedOnGitHub(...))
+
+   for warning in warnings:
+     print(f"[setup.py] WARNING: {warning}")
 
 .. _PACKAGING/Descriptions/License:
 

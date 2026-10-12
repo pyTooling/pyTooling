@@ -35,11 +35,9 @@ package, and the description assembled for setuptools.
 from contextlib import redirect_stdout
 from io         import StringIO
 from pathlib    import Path
-from warnings   import catch_warnings, simplefilter
-
-from pytest            import mark
 
 from pyTooling.Testing import Testcase
+from pyTooling.Warning import WarningCollector
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -264,7 +262,6 @@ class MalformedKeywords(Testcase):
 		)
 
 
-@mark.filterwarnings("ignore::pyTooling.Packaging.DirectReferenceWarning")
 class DescribePackage(Testcase):
 	def test_PythonPackage(self) -> None:
 		print()
@@ -364,12 +361,11 @@ class DirectReferences(Testcase):
 
 	_directory = Path("tests/data/Packaging/DirectReferences")
 
-	def _describe(self) -> tuple[dict, list[Warning]]:
+	def _describe(self) -> tuple[dict, WarningCollector]:
 		from pyTooling.Packaging import DescribePythonPackage
 
 		with redirect_stdout(StringIO()):
-			with catch_warnings(record=True) as warnings:
-				simplefilter("always")
+			with WarningCollector() as warnings:
 				packageInformation = DescribePythonPackage(
 					packageName="pyPackage.Tool",
 					description="Swiss army knife.",
@@ -387,7 +383,7 @@ class DirectReferences(Testcase):
 					}
 				)
 
-		return packageInformation, [warning.message for warning in warnings]
+		return packageInformation, warnings
 
 	def test_ExtrasWithoutDirectReferences(self) -> None:
 		"""Every extra, also the ``all`` extra, keeps only requirements without a URL."""
@@ -427,7 +423,6 @@ class DirectReferences(Testcase):
 		self.assertIn("extra 'dist', from parameter 'additionalRequirements'", messages[0])
 
 
-@mark.filterwarnings("ignore::pyTooling.Packaging.DirectReferenceWarning")
 class EntryPoints(Testcase):
 	"""A package advertises what it offers; the describe-functions know which group it is declared in."""
 
@@ -521,7 +516,6 @@ class EntryPoints(Testcase):
 		self.assertNotIn("entry_points", packageInformation)
 
 
-@mark.filterwarnings("ignore::pyTooling.Packaging.DirectReferenceWarning")
 class LicenseExpression(Testcase):
 	"""A package states its license as an SPDX expression, not as a deprecated classifier."""
 

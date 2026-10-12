@@ -52,13 +52,13 @@ from pathlib         import Path
 from re              import compile as re_compile, split as re_split, sub as re_sub
 from sys             import version_info
 from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
-from warnings        import warn
 from pyTooling.Decorators    import export, readonly
 from pyTooling.Documentation import splitDocString
 from pyTooling.Exceptions    import ToolingException, MissingDependencyError
 from pyTooling.MetaClasses   import ExtendedType
 from pyTooling.Common        import __version__, getFullyQualifiedName, firstElement
 from pyTooling.Licensing     import License, Apache_2_0_License
+from pyTooling.Warning       import Warning, WarningCollector
 
 
 __all__ = [
@@ -80,6 +80,11 @@ class DirectReferenceWarning(Warning):
 
 	The Python Package Index rejects a package whose metadata contains a direct reference, therefore
 	:func:`DescribePythonPackage` leaves such a requirement out of the extra.
+
+	.. hint::
+
+	   Like every :class:`pyTooling.Warning.Warning`, it's dropped silently, if no
+	   :class:`~pyTooling.Warning.WarningCollector` collects it up the call-hierarchy.
 	"""
 
 
@@ -578,7 +583,7 @@ def _removeDirectReferences(requirements: Iterable[str], extra: str, source: str
 	Remove direct references (``name @ URL``) from the requirements of an extra.
 
 	The Python Package Index rejects a package whose metadata contains a direct reference. Each removed requirement is
-	reported as a :exc:`DirectReferenceWarning` via :func:`warnings.warn`.
+	reported as a :exc:`DirectReferenceWarning` to a :class:`~pyTooling.Warning.WarningCollector`.
 
 	:param requirements: Requirements of the extra.
 	:param extra:        Name of the extra.
@@ -591,11 +596,10 @@ def _removeDirectReferences(requirements: Iterable[str], extra: str, source: str
 			result.append(requirement)
 			continue
 
-		warn(
+		WarningCollector.Raise(DirectReferenceWarning(
 			f"Requirement '{requirement}' (extra '{extra}', from {source}) is a direct reference, which PyPI rejects; "
-			f"it's left out of the extra.",
-			DirectReferenceWarning
-		)
+			f"it's left out of the extra."
+		))
 
 	return result
 
@@ -739,10 +743,10 @@ def DescribePythonPackage(
 
 	   A requirement with a direct reference (``name @ URL``, e.g. ``pyTooling.Sphinx @ git+https://...@dev``) is left out
 	   of every extra, because the Python Package Index rejects a package whose metadata contains one. Each one is
-	   reported as a :exc:`DirectReferenceWarning` via :func:`warnings.warn`. So a project can name a dependency, which
-	   isn't on PyPI yet, by its repository in e.g. ``doc/requirements.txt`` - the documentation build installs it - and
-	   still be released. The base requirements (``requirementsFile``) are kept as they are: without one of them, the
-	   package wouldn't work.
+	   reported as a :exc:`DirectReferenceWarning` to a :class:`~pyTooling.Warning.WarningCollector`. So a project can
+	   name a dependency, which isn't on PyPI yet, by its repository in e.g. ``doc/requirements.txt`` - the documentation
+	   build installs it - and still be released. The base requirements (``requirementsFile``) are kept as they are:
+	   without one of them, the package wouldn't work.
 
 	.. topic:: Handling of keywords
 
