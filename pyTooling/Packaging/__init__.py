@@ -503,7 +503,7 @@ Default license (Apache License, 2.0) used by :func:`DescribePythonPackage` and 
 if parameter ``license`` is not assigned.
 """
 
-DEFAULT_PY_VERSIONS = ("3.11", "3.12", "3.13", "3.14")
+DEFAULT_PY_VERSIONS = ("3.11", "3.12", "3.13", "3.14", "3.15")
 """
 A tuple of supported CPython versions used by :func:`DescribePythonPackage` and :func:`DescribePythonPackageHostedOnGitHub`
 if parameter ``pythonVersions`` is not assigned.

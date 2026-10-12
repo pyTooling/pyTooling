@@ -561,9 +561,9 @@ Version 10.x (2026)
      * :func:`~pyTooling.Packaging.loadRequirementsFile` kept a comment behind a requirement, so an extra's metadata
        carried e.g. ``colorama ~= 0.4.6    # 'terminal'``. A comment starts a line or follows whitespace; a ``#``
        inside a word stays, as the package name of ``URL#name``.
-     * :const:`~pyTooling.Packaging.DEFAULT_PY_VERSIONS` is 3.11 to 3.14, the maintained CPython versions - 3.10
-       reaches its end of life in October 2026. A package not stating ``pythonVersions`` gets
-       ``python_requires >=3.11``.
+     * :const:`~pyTooling.Packaging.DEFAULT_PY_VERSIONS` is 3.11 to 3.15, the maintained CPython versions - 3.10
+       reaches its end of life in October 2026, 3.15 was released in October 2026. A package not stating
+       ``pythonVersions`` gets ``python_requires >=3.11`` and a classifier for each of them.
 
    * :mod:`pyTooling.Graph`
 
