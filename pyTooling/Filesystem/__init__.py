@@ -185,8 +185,8 @@ class Base(metaclass=ExtendedType, slots=True):
 
 		return self._size
 
-	# FIXME: @abstractmethod
-	def ToTree(self) -> Node:
+	@abstractmethod
+	def ToTree(self) -> Node:  # type: ignore[empty-body]
 		"""
 		Convert a filesystem element to a node in :mod:`pyTooling.Tree`.
 
@@ -195,7 +195,6 @@ class Base(metaclass=ExtendedType, slots=True):
 
 		:returns: A tree's node referencing this filesystem element.
 		"""
-		raise NotImplementedError()
 
 
 @export
@@ -1591,3 +1590,37 @@ class File(Base):
 
 		if filename._root is not None:
 			self._root = filename._root
+
+	def ToTree(self) -> Node:
+		"""
+		Convert this file storage object to a node of a :mod:`pyTooling.Tree`.
+
+		The node's :attr:`~pyTooling.Tree.Node.Value` field contains a reference to the file object. Additional data is
+		attached to the node's key-value store:
+
+		``kind``
+		  The node's kind: :attr:`NodeKind.File`.
+		``size``
+		  The file object's size.
+
+		:returns: A tree node carrying this file object, its kind and its size.
+		"""
+		def format(node: Node) -> str:
+			"""
+			Nested function rendering a tree node as one line.
+
+			:param node: The tree node to render.
+			:returns:    The node's size in MiB, followed by the file object's ID.
+			"""
+			return f"{node['size'] * 1e-6:7.1f} MiB file object {node._value.ID}"
+
+		fileNode: Node[Any, Any, Any, Any] = Node(
+			value=self,
+			keyValuePairs={
+				"kind": NodeKind.File,
+				"size": self._size
+			},
+			format=format
+		)
+
+		return fileNode
