@@ -66,12 +66,10 @@ itself, so the reference is never ``None`` within a scan and needs no special ca
 
 .. code-block:: Python
 
-   from pathlib              import Path
+   from pathlib import Path
    from pyTooling.Filesystem import Root
-   from pyTooling.Warning    import WarningCollector
 
-   with WarningCollector() as warnings:
-     root = Root(Path("/home/user/project"))
+   root = Root(Path("/home/user/project"))
 
    root.Root is root                        # True
 
@@ -150,9 +148,7 @@ Size
 
 .. code-block:: Python
 
-   with WarningCollector() as warnings:
-     root = Root(Path("/home/user/project"))
-
+   root = Root(Path("/home/user/project"))
    root.AggregateSizes()
 
    root.Size                  # every directory entry, hard links counted each time
@@ -197,13 +193,15 @@ So ``Size - Size2`` is what hard-linking saves, and the counts alongside them te
 Unreadable Directories
 ======================
 
-A directory that can't be read is reported as a :class:`~pyTooling.Filesystem.PermissionWarning`, which carries its
-:attr:`~pyTooling.Filesystem.PermissionWarning.Path`. It's a critical warning: with a
-:class:`~pyTooling.Warning.WarningCollector`, the scan skips the directory and continues, so the statistics are
-incomplete by exactly that path. Without a collector, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is
-raised and the scan stops (see :ref:`WARNING`).
+A directory that can't be read is skipped and reported as a :class:`~pyTooling.Filesystem.PermissionWarning`, which
+carries its :attr:`~pyTooling.Filesystem.PermissionWarning.Path`. The scan continues, so the statistics are incomplete
+by exactly that path. It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector`, it's
+dropped silently (see :ref:`WARNING`). To learn which directories are missing from the statistics, collect the
+warnings:
 
 .. code-block:: Python
+
+   from pyTooling.Warning import WarningCollector
 
    with WarningCollector() as warnings:
      root = Root(Path("/home/user/project"))

@@ -43,7 +43,7 @@ from pyTooling.Common      import count
 from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError
 from pyTooling.Filesystem  import NodeKind, PermissionWarning
 from pyTooling.MetaClasses import AbstractClassError
-from pyTooling.Warning     import UnhandledCriticalWarningError, WarningCollector
+from pyTooling.Warning     import WarningCollector
 from pyTooling.Testing     import Testcase
 
 if sys_platform != "win32":
@@ -394,7 +394,7 @@ class Scanning(Testcase):
 
 
 class PermissionDenied(Testcase):
-	"""A directory that can't be read is reported as a critical :exc:`~pyTooling.Filesystem.PermissionWarning`."""
+	"""A directory that can't be read is skipped and reported as a :exc:`~pyTooling.Filesystem.PermissionWarning`."""
 
 	_root:   Path
 	_locked: Path
@@ -424,14 +424,11 @@ class PermissionDenied(Testcase):
 			self.addCleanup(self._locked.chmod, 0o700)
 
 	def test_Scan_Uncollected(self) -> None:
-		"""Without a collector, the scan stops with an :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`."""
-		with self.assertRaises(UnhandledCriticalWarningError) as context:
-			Root(self._root)
+		"""Without a collector, the warning is dropped and the scan continues."""
+		root = Root(self._root)
 
-		warning = context.exception.__cause__
-		self.assertIsInstance(warning, PermissionWarning)
-		self.assertEqual(self._locked, warning.Path)
-		self.assertIsInstance(warning.__cause__, PermissionError)
+		self.assertEqual(2, root.TotalSubdirectoryCount)
+		self.assertEqual(1, root.TotalFileCount)
 
 	def test_Scan_Collected(self) -> None:
 		"""With a collector, the warning is collected and the scan continues."""

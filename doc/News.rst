@@ -445,11 +445,10 @@ Version 10.x (2026)
    * ⚠️ **A slotted secondary base-class has to be a mixin-class**, also without fields:
      :class:`~pyTooling.MetaClasses.ExtendedType` raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`.
      Declare it with ``mixin=True`` or apply :deco:`~pyTooling.MetaClasses.mixin`.
-   * ⚠️ :exc:`~pyTooling.Dependency.BrokenRequirementWarning`, :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` and
-     :exc:`~pyTooling.Filesystem.PermissionWarning` **are critical warnings**: without a
-     :class:`~pyTooling.Warning.WarningCollector`, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised
-     instead of dropping the warning. Scan a filesystem, read a requirements file or download from a package index
-     within ``with WarningCollector() as warnings:``.
+   * ⚠️ :exc:`~pyTooling.Dependency.BrokenRequirementWarning` and :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`
+     **are critical warnings**: without a :class:`~pyTooling.Warning.WarningCollector`,
+     :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised instead of dropping the warning. Read a
+     requirements file or download from a package index within ``with WarningCollector() as warnings:``.
 
    .. rubric:: Changes
 
@@ -533,9 +532,6 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Filesystem`
 
-     * :exc:`~pyTooling.Filesystem.PermissionWarning` derives from :class:`~pyTooling.Warning.CriticalWarning`.
-       Without a :class:`~pyTooling.Warning.WarningCollector`, a scan stops at a directory it can't read; it continued
-       and returned incomplete statistics.
      * :attr:`Element.Path <pyTooling.Filesystem.Element.Path>` is an abstract property, so
        :class:`~pyTooling.Filesystem.Element` and a derived class without its own ``Path`` raise an
        :exc:`~pyTooling.MetaClasses.AbstractClassError` when instantiated. The property raised a
@@ -739,7 +735,7 @@ Version 10.x (2026)
      :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Dependency` and :class:`~pyTooling.MetaClasses.ExtendedType`. Each
      warning class states whether it's critical.
    * :ref:`FILESYS/Permissions` explains how a scan reports a directory it can't read, and the examples of
-     :ref:`FILESYS` and :ref:`DEPENDENCIES/Exceptions` collect the warnings.
+     :ref:`DEPENDENCIES/Exceptions` collect the warnings.
 
    .. rubric:: Unit Tests
 
@@ -748,9 +744,10 @@ Version 10.x (2026)
    * The :class:`~pyTooling.Stopwatch.Stopwatch` tests allow a sleep to take 4 times as long on GitHub Actions, where a
      shared runner overshot a 0.5 s sleep by up to 3x and failed them at random. A local run keeps the narrow limit.
    * The last 14 f-strings in the tests that interpolate nothing lost their ``f`` prefix.
-   * :class:`~pyTooling.Filesystem.PermissionWarning`, :exc:`~pyTooling.Dependency.BrokenRequirementWarning` and
-     :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` are tested with and without a collector - a directory that
-     can't be read, and release downloads answered by a replaced ``aiohttp.ClientSession``.
+   * :exc:`~pyTooling.Dependency.BrokenRequirementWarning` and :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` are
+     tested with and without a collector, with release downloads answered by a replaced ``aiohttp.ClientSession``.
+   * :class:`~pyTooling.Filesystem.PermissionWarning` is tested with and without a collector, scanning a directory that
+     can't be read.
 
 Version 9.x (2026)
 ******************
