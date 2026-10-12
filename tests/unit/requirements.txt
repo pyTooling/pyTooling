@@ -27,9 +27,11 @@ colorama ~= 0.4.6
 # For pyTooling.Tracing.Render.Matplotlib testing - these testcases are skipped where matplotlib isn't installed:
 # * PyPy on Windows: PyPI has no matplotlib wheel and building it from source fails (ft2font doesn't link).
 # * PyPy 8.0 on Linux: PyPI has no wheel of matplotlib's dependency Pillow for PyPy 8.0 (only 'pypy311_pp73'), and
-#   building Pillow from source fails on the runners (no libjpeg headers). Remove the 'implementation_version' limit
-#   once Pillow and matplotlib ship 'pp80' wheels.
-matplotlib >= 3.10 ; implementation_name != "pypy" or sys_platform == "darwin" or (sys_platform == "linux" and implementation_version < "8")
+#   building Pillow from source fails on the runners (no libjpeg headers).
+# * PyPy 8.0 on macOS: PyPI has no wheel of matplotlib's dependency numpy for PyPy 8.0 ('pp80-darwin'), and building
+#   numpy from source fails (pythoncapi_compat.h redeclares 'PyFrame_GetCode' and 'PyInterpreterState_Get').
+# Remove the 'implementation_version' limit once Pillow, numpy and matplotlib ship 'pp80' wheels.
+matplotlib >= 3.10 ; implementation_name != "pypy" or (sys_platform != "win32" and implementation_version < "8")
 
 # For pyTooling.Testing.ReportWriter testing - validates the report against its schema
 xmlschema ~= 4.3

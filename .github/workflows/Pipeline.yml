@@ -23,9 +23,9 @@ jobs:
       package_namespace:   'pyTooling.*'
       version_file:        'Common/__init__.py'
       python_version:      '3.14'
-      python_version_list: '3.11 3.12 3.13 3.14 pypy-3.11'
+      python_version_list: '3.11 3.12 3.13 3.14 3.15 pypy-3.11 pypy-3.12'
       system_list:         'ubuntu ubuntu-arm windows windows-arm macos macos-arm ucrt64'
-      disable_list:        'ubuntu-arm:* windows-arm:pypy-3.11'
+      disable_list:        'ubuntu-arm:* windows-arm:pypy-3.11 windows-arm:pypy-3.12'
 
   PlatformTestingParams:
     uses: pyTooling/Actions/.github/workflows/Parameters.yml@r9
@@ -208,8 +208,9 @@ jobs:
       contents: write  # required for create tag
       actions:  write  # required for trigger workflow
     with:
-      version:  ${{ needs.Prepare.outputs.version }}
-      auto_tag: ${{ needs.Prepare.outputs.is_release_commit }}
+      version:        ${{ needs.Prepare.outputs.version }}
+      auto_tag:       ${{ needs.Prepare.outputs.is_release_commit }}
+      pypi_compliant: ${{ needs.Package.outputs.pypi_compliant }}
     secrets: inherit
 
   ReleasePage:
@@ -233,11 +234,13 @@ jobs:
     if: startsWith(github.ref, 'refs/tags')
     needs:
       - UnitTestingParams
+      - Package
       - ReleasePage
     with:
       python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       requirements:   '-r dist/requirements.txt'
       artifact:       ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
+      pypi_compliant: ${{ needs.Package.outputs.pypi_compliant }}
     secrets:
       PYPI_TOKEN:     ${{ secrets.PYPI_TOKEN }}
 

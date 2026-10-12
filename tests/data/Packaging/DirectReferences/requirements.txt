@@ -1,0 +1,2 @@
+colorama >= 0.4.6
+pyTooling @ git+https://github.com/pyTooling/pyTooling.git@dev

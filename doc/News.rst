@@ -339,6 +339,14 @@ Version 10.x (2026)
        is removed, because nothing renders ReST where a short description is displayed.
      * The module raises its own :exc:`~pyTooling.Packaging.PackagingError`, so a caller can catch what this module
        reports without catching everything derived from :exc:`~pyTooling.Exceptions.ToolingException`.
+     * :func:`~pyTooling.Packaging.DescribePythonPackage` leaves requirements with a direct reference (``name @ URL``)
+       out of every extra and reports each as a critical :exc:`~pyTooling.Packaging.DirectReferenceWarning` to a
+       :class:`~pyTooling.Warning.WarningCollector`: the Python Package Index rejects a package whose metadata contains
+       one. pyTooling itself names pyTooling.Sphinx, which isn't on PyPI yet, by its repository in
+       :file:`doc/requirements.txt`; its ``doc`` and ``all`` extras carried it, so v10.0.0-rc1 couldn't be uploaded.
+       Base requirements are kept. A :file:`setup.py` with such an extra must collect the warnings, otherwise
+       :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` stops the build; pyTooling's own collects and prints
+       them.
 
    * :mod:`pyTooling.Common`
 
@@ -561,9 +569,9 @@ Version 10.x (2026)
      * :func:`~pyTooling.Packaging.loadRequirementsFile` kept a comment behind a requirement, so an extra's metadata
        carried e.g. ``colorama ~= 0.4.6    # 'terminal'``. A comment starts a line or follows whitespace; a ``#``
        inside a word stays, as the package name of ``URL#name``.
-     * :const:`~pyTooling.Packaging.DEFAULT_PY_VERSIONS` is 3.11 to 3.14, the maintained CPython versions - 3.10
-       reaches its end of life in October 2026. A package not stating ``pythonVersions`` gets
-       ``python_requires >=3.11``.
+     * :const:`~pyTooling.Packaging.DEFAULT_PY_VERSIONS` is 3.11 to 3.15, the maintained CPython versions - 3.10
+       reaches its end of life in October 2026, 3.15 was released in October 2026. A package not stating
+       ``pythonVersions`` gets ``python_requires >=3.11`` and a classifier for each of them.
 
    * :mod:`pyTooling.Graph`
 
@@ -631,6 +639,10 @@ Version 10.x (2026)
        block was left after collecting a warning: it called :meth:`~pyTooling.Warning.ThreadSupervisor.AddWarnings`
        without the thread's name. It passes the name now, also with an exception, which
        :meth:`~pyTooling.Warning.ThreadSupervisor.ReRaise` named no thread for.
+     * An :exc:`AttributeError` raised by a collector's handler was taken for a missing collector:
+       :meth:`~pyTooling.Warning.WarningCollector.Raise` swallowed it for a warning, and turned it into
+       :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` or :exc:`~pyTooling.Warning.UnhandledExceptionError` for
+       a critical warning or an exception. It propagates now.
 
    * :mod:`pyTooling.MetaClasses`
 
@@ -695,6 +707,16 @@ Version 10.x (2026)
      with a default gained it - the ``__exit__`` parameters of the context managers, ``dest`` of the ArgParse flags,
      ``kind`` of :class:`~pyTooling.Graph.BaseEdge` - and 56 parameters without one lost it, among them parameters
      accepting ``None``. :meth:`pyTooling.Common.StringEnum.Parse` named a default its ``value`` doesn't have.
+   * :ref:`WARNING` explains the kinds of warnings, raising, collecting, escalation, threads, and how warnings are
+     documented and designed. Its example raised Python's built-in :exc:`Warning` - an exception, not pyTooling's
+     :class:`~pyTooling.Warning.Warning` - and didn't parse.
+   * The doc-strings of :mod:`pyTooling.Warning` describe what happens:
+     :meth:`~pyTooling.Warning.WarningCollector.Raise` hands a warning to the current collector of the calling thread
+     instead of walking the call-stack, a :class:`~pyTooling.Warning.CriticalWarning` must be collected, and an
+     escalated warning is collected before :exc:`~pyTooling.Warning.EscalatedWarningError` is raised.
+   * A function reporting a warning names it in its doc-string and says it's dropped without a collector - in
+     :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Dependency` and :class:`~pyTooling.MetaClasses.ExtendedType`. Each
+     warning class states whether it's critical.
 
    .. rubric:: Unit Tests
 

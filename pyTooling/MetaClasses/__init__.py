@@ -149,6 +149,11 @@ class UnannotatedFieldWarning(Warning):
 
 	An object field is annotated with its type, a class variable with :class:`~typing.ClassVar`. Without an annotation,
 	:class:`ExtendedType` can't tell the two apart, and the field never becomes a slot.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
 	"""
 
 
@@ -740,6 +745,9 @@ class ExtendedType(type):
 	) -> Self:
 		"""
 		Construct a new class using this :term:`meta-class`.
+
+		A field assigned in the class body without a type annotation is reported as an :exc:`UnannotatedFieldWarning` to
+		a :class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
 
 		:param className:       The name of the class to construct.
 		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.

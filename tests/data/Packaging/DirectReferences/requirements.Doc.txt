@@ -1,0 +1,2 @@
+sphinx ~= 9.1
+pyTooling.Sphinx[reports] @ git+https://github.com/pyTooling/pyTooling.Sphinx.git@dev
