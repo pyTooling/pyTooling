@@ -150,7 +150,7 @@ class UnannotatedFieldWarning(Warning):
 	An object field is annotated with its type, a class variable with :class:`~typing.ClassVar`. Without an annotation,
 	:class:`ExtendedType` can't tell the two apart, and the field never becomes a slot.
 
-	.. note::
+	.. attention::
 
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.

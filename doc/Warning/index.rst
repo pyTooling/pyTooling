@@ -234,7 +234,8 @@ A function reporting warnings says so in its doc-string:
 * Each function up the call-hierarchy documents it the same way, up to the first public function, method, property or
   ``__init__``. It stops at a function, which installs a collector itself. For a generator, the function consuming it
   documents the warnings.
-* A warning class states in its doc-string, whether it's critical.
+* A warning class states in its doc-string, whether it's critical: in an ``.. important::`` box for a critical warning,
+  in an ``.. attention::`` box for a non-critical one.
 
 .. code-block:: Python
 

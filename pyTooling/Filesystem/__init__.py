@@ -80,7 +80,7 @@ class PermissionWarning(Warning):
 
 	The scan continues, so the collected statistics are incomplete by exactly the path this warning carries.
 
-	.. note::
+	.. attention::
 
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.

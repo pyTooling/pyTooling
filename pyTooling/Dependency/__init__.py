@@ -107,7 +107,7 @@ class BrokenRequirementWarning(Warning):
 	Such a requirement is left out. One naming an undeclared extra can't be assigned to an extra, so it's not reachable
 	through :attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`.
 
-	.. note::
+	.. attention::
 
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
@@ -122,7 +122,7 @@ class UnknownLicenseWarning(Warning):
 	The published expression is kept in :attr:`~PackageVersion.LicenseExpression` either way, so the warning names
 	what would have to be stated by hand.
 
-	.. note::
+	.. attention::
 
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
@@ -134,7 +134,7 @@ class ReleaseDetailsWarning(Warning):
 	"""
 	Downloading the details of a release failed, therefore the release was dropped from the project.
 
-	.. note::
+	.. attention::
 
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.

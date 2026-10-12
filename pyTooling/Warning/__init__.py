@@ -95,7 +95,7 @@ class Warning(BaseException):
 	"""
 	Base-exception of all warnings handled by :class:`WarningCollector`.
 
-	.. tip::
+	.. attention::
 
 	   A warning doesn't need a collector: without a :class:`WarningCollector` up the call-hierarchy, it's dropped
 	   silently.
