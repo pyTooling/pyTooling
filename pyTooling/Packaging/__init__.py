@@ -58,7 +58,7 @@ from pyTooling.Exceptions    import ToolingException, MissingDependencyError
 from pyTooling.MetaClasses   import ExtendedType
 from pyTooling.Common        import __version__, getFullyQualifiedName, firstElement
 from pyTooling.Licensing     import License, Apache_2_0_License
-from pyTooling.Warning       import Warning, WarningCollector
+from pyTooling.Warning       import CriticalWarning, WarningCollector
 
 
 __all__ = [
@@ -74,17 +74,17 @@ class PackagingError(ToolingException):
 
 
 @export
-class DirectReferenceWarning(Warning):
+class DirectReferenceWarning(CriticalWarning):
 	"""
 	A requirement of an extra names its distribution by a URL, a direct reference (``name @ URL``).
 
 	The Python Package Index rejects a package whose metadata contains a direct reference, therefore
 	:func:`DescribePythonPackage` leaves such a requirement out of the extra.
 
-	.. hint::
+	.. important::
 
-	   Like every :class:`pyTooling.Warning.Warning`, it's dropped silently, if no
-	   :class:`~pyTooling.Warning.WarningCollector` collects it up the call-hierarchy.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 
@@ -585,10 +585,12 @@ def _removeDirectReferences(requirements: Iterable[str], extra: str, source: str
 	The Python Package Index rejects a package whose metadata contains a direct reference. Each removed requirement is
 	reported as a :exc:`DirectReferenceWarning` to a :class:`~pyTooling.Warning.WarningCollector`.
 
-	:param requirements: Requirements of the extra.
-	:param extra:        Name of the extra.
-	:param source:       Where the requirements were read from, e.g. the requirements file.
-	:returns:            The requirements, which aren't direct references.
+	:param requirements:                   Requirements of the extra.
+	:param extra:                          Name of the extra.
+	:param source:                         Where the requirements were read from, e.g. the requirements file.
+	:returns:                              The requirements, which aren't direct references.
+	:raises UnhandledCriticalWarningError: If a requirement is a direct reference and no
+	                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 	"""
 	result = []
 	for requirement in requirements:
@@ -743,10 +745,11 @@ def DescribePythonPackage(
 
 	   A requirement with a direct reference (``name @ URL``, e.g. ``pyTooling.Sphinx @ git+https://...@dev``) is left out
 	   of every extra, because the Python Package Index rejects a package whose metadata contains one. Each one is
-	   reported as a :exc:`DirectReferenceWarning` to a :class:`~pyTooling.Warning.WarningCollector`. So a project can
-	   name a dependency, which isn't on PyPI yet, by its repository in e.g. ``doc/requirements.txt`` - the documentation
-	   build installs it - and still be released. The base requirements (``requirementsFile``) are kept as they are:
-	   without one of them, the package wouldn't work.
+	   reported as a critical :exc:`DirectReferenceWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without
+	   a collector up the call-hierarchy, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised. So a project
+	   can name a dependency, which isn't on PyPI yet, by its repository in e.g. ``doc/requirements.txt`` - the
+	   documentation build installs it - and still be released, if its :file:`setup.py` collects the warnings. The base
+	   requirements (``requirementsFile``) are kept as they are: without one of them, the package wouldn't work.
 
 	.. topic:: Handling of keywords
 
@@ -759,65 +762,71 @@ def DescribePythonPackage(
 	   ``sourceFileWithVersion`` is used, so a package describes itself in one place. An explicitly passed description
 	   always wins - including an empty one.
 
-	:param packageName:                   Name of the Python package.
-	:param projectURL:                    URL to the Python project.
-	:param sourceCodeURL:                 URL to the Python source code.
-	:param documentationURL:              URL to the package's documentation.
-	:param issueTrackerCodeURL:           URL to the projects issue tracker (ticket system).
-	:param description:                   Optional, short description of the package. (Default: the first paragraph
-	                                      of the module doc-string in ``sourceFileWithVersion``.) The long description
-	                                      is read from the README file.
-	:param keywords:                      Optional, a list of keywords.
-	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
-	                                      :const:`DEFAULT_LICENSE`)
-	:param readmeFile:                    Optional, the path to the README file. (Default: ``README.md``, see
-	                                      :const:`DEFAULT_README`)
-	:param requirementsFile:              Optional, the path to the project's requirements file. (Default:
-	                                      ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
-	:param documentationRequirementsFile: Optional, the path to the project's requirements file for documentation.
-	                                      (Default: ``doc/requirements.txt``, see
-	                                      :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
-	:param unittestRequirementsFile:      Optional, the path to the project's requirements file for unit tests. (Default:
-	                                      ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
-	:param packagingRequirementsFile:     Optional, the path to the project's requirements file for packaging. (Default:
-	                                      ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
-	:param additionalRequirements:        Optional, a dictionary of a lists with additional requirements. (default: None)
-	:param sourceFileWithVersion:         Optional, the path to the project's source file containing dunder variables like
-	                                      ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
-	:param classifiers:                   Optional, a list of package classifiers. (Default: 3 classifiers, see
-	                                      :const:`DEFAULT_CLASSIFIERS`)
-	:param developmentStatus:             Optional, development status of the package. (Default: stable, see
-	                                      :const:`STATUS` for supported status values)
-	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
-	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points, declared
-	                                      as ``console_scripts``. (Default: None)
-	:param guiScripts:                    Optional, like ``consoleScripts``, but declared as ``gui_scripts`` - on
-	                                      Windows such a program starts without a console window. (Default: None)
-	:param pytestPlugins:                 Optional, a dictionary mapping plugin names to entry points, declared as
-	                                      ``pytest11``. The classifier ``Framework :: Pytest`` is added with it.
-	                                      (Default: None)
-	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
-	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
-	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
-	:raises MissingDependencyError:       If package 'setuptools' is not available.
-	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:            If README file doesn't exist.
-	:raises TypeError:                    If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:            If requirements file doesn't exist.
-	:raises TypeError:                    If parameter 'documentationRequirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises TypeError:                    If parameter 'unittestRequirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises TypeError:                    If parameter 'packagingRequirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises TypeError:                    If parameter 'sourceFileWithVersion' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:            If package file with dunder variables doesn't exist.
-	:raises TypeError:                    If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
-	:raises ValueError:                   If developmentStatus uses an unsupported value. (See :const:`STATUS`)
-	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
-	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
-	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
-	:raises Exception:                    If the package's directory doesn't exist, or if a requirements file is
-	                                      malformed.
-	:raises PackagingError:               If no description was given and the package file has no module doc-string.
+	:param packageName:                    Name of the Python package.
+	:param projectURL:                     URL to the Python project.
+	:param sourceCodeURL:                  URL to the Python source code.
+	:param documentationURL:               URL to the package's documentation.
+	:param issueTrackerCodeURL:            URL to the projects issue tracker (ticket system).
+	:param description:                    Optional, short description of the package. (Default: the first paragraph
+	                                       of the module doc-string in ``sourceFileWithVersion``.) The long description
+	                                       is read from the README file.
+	:param keywords:                       Optional, a list of keywords.
+	:param license:                        Optional, the package's license. (Default: ``Apache License, 2.0``, see
+	                                       :const:`DEFAULT_LICENSE`)
+	:param readmeFile:                     Optional, the path to the README file. (Default: ``README.md``, see
+	                                       :const:`DEFAULT_README`)
+	:param requirementsFile:               Optional, the path to the project's requirements file. (Default:
+	                                       ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
+	:param documentationRequirementsFile:  Optional, the path to the project's requirements file for documentation.
+	                                       (Default: ``doc/requirements.txt``, see
+	                                       :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
+	:param unittestRequirementsFile:       Optional, the path to the project's requirements file for unit tests. (Default:
+	                                       ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
+	:param packagingRequirementsFile:      Optional, the path to the project's requirements file for packaging. (Default:
+	                                       ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
+	:param additionalRequirements:         Optional, a dictionary of a lists with additional requirements. (default: None)
+	:param sourceFileWithVersion:          Optional, the path to the project's source file containing dunder variables
+	                                       like ``__version__``. (Default: ``__init__.py``, see
+	                                       :const:`DEFAULT_VERSION_FILE`)
+	:param classifiers:                    Optional, a list of package classifiers. (Default: 3 classifiers, see
+	                                       :const:`DEFAULT_CLASSIFIERS`)
+	:param developmentStatus:              Optional, development status of the package. (Default: stable, see
+	                                       :const:`STATUS` for supported status values)
+	:param pythonVersions:                 Optional, a list of supported Python 3 version. (Default: all currently
+	                                       maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
+	:param consoleScripts:                 Optional, a dictionary mapping command line names to entry points, declared
+	                                       as ``console_scripts``. (Default: None)
+	:param guiScripts:                     Optional, like ``consoleScripts``, but declared as ``gui_scripts`` - on
+	                                       Windows such a program starts without a console window. (Default: None)
+	:param pytestPlugins:                  Optional, a dictionary mapping plugin names to entry points, declared as
+	                                       ``pytest11``. The classifier ``Framework :: Pytest`` is added with it.
+	                                       (Default: None)
+	:param dataFiles:                      Optional, a dictionary mapping package names to lists of additional data files.
+	:param debug:                          Optional, if ``True``, enable extended outputs for debugging.
+	:returns:                              A dictionary suitable for :func:`setuptools.setup`.
+	:raises MissingDependencyError:        If package 'setuptools' is not available.
+	:raises TypeError:                     If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:             If README file doesn't exist.
+	:raises TypeError:                     If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:             If requirements file doesn't exist.
+	:raises TypeError:                     If parameter 'documentationRequirementsFile' is not of type
+	                                       :class:`~pathlib.Path`.
+	:raises TypeError:                     If parameter 'unittestRequirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises TypeError:                     If parameter 'packagingRequirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises TypeError:                     If parameter 'sourceFileWithVersion' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:             If package file with dunder variables doesn't exist.
+	:raises TypeError:                     If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
+	:raises ValueError:                    If developmentStatus uses an unsupported value. (See :const:`STATUS`)
+	:raises ValueError:                    If the content type of the README file is not supported. (See
+	                                       :func:`loadReadmeFile`)
+	:raises FileNotFoundError:             If the README file doesn't exist. (See :func:`loadReadmeFile`)
+	:raises FileNotFoundError:             If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
+	:raises Exception:                     If the package's directory doesn't exist, or if a requirements file is
+	                                       malformed.
+	:raises PackagingError:                If no description was given and the package file has no module doc-string.
+	:raises UnhandledCriticalWarningError: If an extra's requirement is a direct reference and no
+	                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+	                                       :exc:`DirectReferenceWarning`.
 	"""
 	try:
 		from setuptools import find_packages, find_namespace_packages
@@ -1078,62 +1087,68 @@ def DescribePythonPackageHostedOnGitHub(
 	This is a wrapper for :func:`DescribePythonPackage`, because some parameters can be simplified by knowing the GitHub
 	namespace and repository name: issue tracker URL, source code URL, ...
 
-	:param packageName:                   Name of the Python package.
-	:param gitHubNamespace:               Name of the GitHub namespace (organization or user).
-	:param gitHubRepository:              Optional, name of the GitHub repository.
-	:param projectURL:                    Optional, URL to the Python project.
-	:param description:                   Optional, short description of the package. (Default: the first paragraph
-	                                      of the module doc-string in ``sourceFileWithVersion``.) The long description
-	                                      is read from the README file.
-	:param keywords:                      Optional, a list of keywords.
-	:param license:                       Optional, the package's license. (Default: ``Apache License, 2.0``, see
-	                                      :const:`DEFAULT_LICENSE`)
-	:param readmeFile:                    Optional, the path to the README file. (Default: ``README.md``, see
-	                                      :const:`DEFAULT_README`)
-	:param requirementsFile:              Optional, the path to the project's requirements file. (Default:
-	                                      ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
-	:param documentationRequirementsFile: Optional, the path to the project's requirements file for documentation.
-	                                      (Default: ``doc/requirements.txt``, see
-	                                      :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
-	:param unittestRequirementsFile:      Optional, the path to the project's requirements file for unit tests. (Default:
-	                                      ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
-	:param packagingRequirementsFile:     Optional, the path to the project's requirements file for packaging. (Default:
-	                                      ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
-	:param additionalRequirements:        Optional, a dictionary of a lists with additional requirements. (default: None)
-	:param sourceFileWithVersion:         Optional, the path to the project's source file containing dunder variables like
-	                                      ``__version__``. (Default: ``__init__.py``, see :const:`DEFAULT_VERSION_FILE`)
-	:param classifiers:                   Optional, a list of package classifiers. (Default: 3 classifiers, see
-	                                      :const:`DEFAULT_CLASSIFIERS`)
-	:param developmentStatus:             Optional, development status of the package. (Default: stable, see
-	                                      :const:`STATUS` for supported status values)
-	:param pythonVersions:                Optional, a list of supported Python 3 version. (Default: all currently
-	                                      maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
-	:param consoleScripts:                Optional, a dictionary mapping command line names to entry points, declared
-	                                      as ``console_scripts``. (Default: None)
-	:param guiScripts:                    Optional, like ``consoleScripts``, but declared as ``gui_scripts`` - on
-	                                      Windows such a program starts without a console window. (Default: None)
-	:param pytestPlugins:                 Optional, a dictionary mapping plugin names to entry points, declared as
-	                                      ``pytest11``. The classifier ``Framework :: Pytest`` is added with it.
-	                                      (Default: None)
-	:param dataFiles:                     Optional, a dictionary mapping package names to lists of additional data files.
-	:param debug:                         Optional, if ``True``, enable extended outputs for debugging.
-	:returns:                             A dictionary suitable for :func:`setuptools.setup`.
-	:raises MissingDependencyError:       If package 'setuptools' is not available.
-	:raises TypeError:                    If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:            If README file doesn't exist.
-	:raises TypeError:                    If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:            If requirements file doesn't exist.
-	:raises TypeError:                    If parameter 'documentationRequirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises TypeError:                    If parameter 'unittestRequirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises TypeError:                    If parameter 'packagingRequirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises TypeError:                    If parameter 'sourceFileWithVersion' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:            If package file with dunder variables doesn't exist.
-	:raises TypeError:                    If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
-	:raises ValueError:                   If developmentStatus uses an unsupported value. (See :const:`STATUS`)
-	:raises ValueError:                   If the content type of the README file is not supported. (See :func:`loadReadmeFile`)
-	:raises FileNotFoundError:            If the README file doesn't exist. (See :func:`loadReadmeFile`)
-	:raises FileNotFoundError:            If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
-	:raises PackagingError:               If no description was given and the package file has no module doc-string.
+	:param packageName:                    Name of the Python package.
+	:param gitHubNamespace:                Name of the GitHub namespace (organization or user).
+	:param gitHubRepository:               Optional, name of the GitHub repository.
+	:param projectURL:                     Optional, URL to the Python project.
+	:param description:                    Optional, short description of the package. (Default: the first paragraph
+	                                       of the module doc-string in ``sourceFileWithVersion``.) The long description
+	                                       is read from the README file.
+	:param keywords:                       Optional, a list of keywords.
+	:param license:                        Optional, the package's license. (Default: ``Apache License, 2.0``, see
+	                                       :const:`DEFAULT_LICENSE`)
+	:param readmeFile:                     Optional, the path to the README file. (Default: ``README.md``, see
+	                                       :const:`DEFAULT_README`)
+	:param requirementsFile:               Optional, the path to the project's requirements file. (Default:
+	                                       ``requirements.txt``, see :const:`DEFAULT_REQUIREMENTS`)
+	:param documentationRequirementsFile:  Optional, the path to the project's requirements file for documentation.
+	                                       (Default: ``doc/requirements.txt``, see
+	                                       :const:`DEFAULT_DOCUMENTATION_REQUIREMENTS`)
+	:param unittestRequirementsFile:       Optional, the path to the project's requirements file for unit tests. (Default:
+	                                       ``tests/requirements.txt``, see :const:`DEFAULT_TEST_REQUIREMENTS`)
+	:param packagingRequirementsFile:      Optional, the path to the project's requirements file for packaging. (Default:
+	                                       ``build/requirements.txt``, see :const:`DEFAULT_PACKAGING_REQUIREMENTS`)
+	:param additionalRequirements:         Optional, a dictionary of a lists with additional requirements. (default: None)
+	:param sourceFileWithVersion:          Optional, the path to the project's source file containing dunder variables
+	                                       like ``__version__``. (Default: ``__init__.py``, see
+	                                       :const:`DEFAULT_VERSION_FILE`)
+	:param classifiers:                    Optional, a list of package classifiers. (Default: 3 classifiers, see
+	                                       :const:`DEFAULT_CLASSIFIERS`)
+	:param developmentStatus:              Optional, development status of the package. (Default: stable, see
+	                                       :const:`STATUS` for supported status values)
+	:param pythonVersions:                 Optional, a list of supported Python 3 version. (Default: all currently
+	                                       maintained CPython versions, see :const:`DEFAULT_PY_VERSIONS`)
+	:param consoleScripts:                 Optional, a dictionary mapping command line names to entry points, declared
+	                                       as ``console_scripts``. (Default: None)
+	:param guiScripts:                     Optional, like ``consoleScripts``, but declared as ``gui_scripts`` - on
+	                                       Windows such a program starts without a console window. (Default: None)
+	:param pytestPlugins:                  Optional, a dictionary mapping plugin names to entry points, declared as
+	                                       ``pytest11``. The classifier ``Framework :: Pytest`` is added with it.
+	                                       (Default: None)
+	:param dataFiles:                      Optional, a dictionary mapping package names to lists of additional data files.
+	:param debug:                          Optional, if ``True``, enable extended outputs for debugging.
+	:returns:                              A dictionary suitable for :func:`setuptools.setup`.
+	:raises MissingDependencyError:        If package 'setuptools' is not available.
+	:raises TypeError:                     If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:             If README file doesn't exist.
+	:raises TypeError:                     If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:             If requirements file doesn't exist.
+	:raises TypeError:                     If parameter 'documentationRequirementsFile' is not of type
+	                                       :class:`~pathlib.Path`.
+	:raises TypeError:                     If parameter 'unittestRequirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises TypeError:                     If parameter 'packagingRequirementsFile' is not of type :class:`~pathlib.Path`.
+	:raises TypeError:                     If parameter 'sourceFileWithVersion' is not of type :class:`~pathlib.Path`.
+	:raises FileNotFoundError:             If package file with dunder variables doesn't exist.
+	:raises TypeError:                     If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
+	:raises ValueError:                    If developmentStatus uses an unsupported value. (See :const:`STATUS`)
+	:raises ValueError:                    If the content type of the README file is not supported. (See
+	                                       :func:`loadReadmeFile`)
+	:raises FileNotFoundError:             If the README file doesn't exist. (See :func:`loadReadmeFile`)
+	:raises FileNotFoundError:             If the requirements file doesn't exist. (See :func:`loadRequirementsFile`)
+	:raises PackagingError:                If no description was given and the package file has no module doc-string.
+	:raises UnhandledCriticalWarningError: If an extra's requirement is a direct reference and no
+	                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+	                                       :exc:`DirectReferenceWarning`.
 	"""
 	if gitHubRepository is None:
 		# Assign GitHub repository name without '.*', if derived from Python package name.

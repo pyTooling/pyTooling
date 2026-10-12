@@ -46,6 +46,19 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
+class CollectingTestcase(Testcase):
+	"""
+	Describes this repository's package, whose :file:`doc/requirements.txt` names pyTooling.Sphinx by a direct reference.
+
+	Each test runs within a :class:`~pyTooling.Warning.WarningCollector`, which collects the critical
+	:exc:`~pyTooling.Packaging.DirectReferenceWarning`.
+	"""
+
+	def setUp(self) -> None:
+		super().setUp()
+		self.enterContext(WarningCollector())
+
+
 class HelperFunctions(Testcase):
 	def test_VersionInformation(self) -> None:
 		from pyTooling.Packaging import extractVersionInformation
@@ -262,7 +275,7 @@ class MalformedKeywords(Testcase):
 		)
 
 
-class DescribePackage(Testcase):
+class DescribePackage(CollectingTestcase):
 	def test_PythonPackage(self) -> None:
 		print()
 
@@ -385,6 +398,29 @@ class DirectReferences(Testcase):
 
 		return packageInformation, warnings
 
+	def test_UncollectedWarning(self) -> None:
+		"""Without a collector, a direct reference in an extra stops the description."""
+		from pyTooling.Packaging import DescribePythonPackage, DirectReferenceWarning
+		from pyTooling.Warning   import UnhandledCriticalWarningError
+
+		with redirect_stdout(StringIO()):
+			with self.assertRaises(UnhandledCriticalWarningError) as context:
+				_ = DescribePythonPackage(
+					packageName="pyPackage.Tool",
+					description="Swiss army knife.",
+					projectURL="https://",
+					sourceCodeURL="https://",
+					documentationURL="https://",
+					issueTrackerCodeURL="https://",
+					sourceFileWithVersion=Path("tests/pyPackage.Tool/__init__.py"),
+					requirementsFile=self._directory / "requirements.txt",
+					documentationRequirementsFile=self._directory / "requirements.Doc.txt",
+					unittestRequirementsFile=None,
+					packagingRequirementsFile=None
+				)
+
+		self.assertIsInstance(context.exception.__cause__, DirectReferenceWarning)
+
 	def test_ExtrasWithoutDirectReferences(self) -> None:
 		"""Every extra, also the ``all`` extra, keeps only requirements without a URL."""
 		packageInformation, _ = self._describe()
@@ -423,7 +459,7 @@ class DirectReferences(Testcase):
 		self.assertIn("extra 'dist', from parameter 'additionalRequirements'", messages[0])
 
 
-class EntryPoints(Testcase):
+class EntryPoints(CollectingTestcase):
 	"""A package advertises what it offers; the describe-functions know which group it is declared in."""
 
 	def test_APackageMayAdvertiseNothing(self) -> None:
@@ -516,7 +552,7 @@ class EntryPoints(Testcase):
 		self.assertNotIn("entry_points", packageInformation)
 
 
-class LicenseExpression(Testcase):
+class LicenseExpression(CollectingTestcase):
 	"""A package states its license as an SPDX expression, not as a deprecated classifier."""
 
 	@staticmethod

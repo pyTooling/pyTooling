@@ -312,8 +312,11 @@ name a dependency, which isn't on PyPI yet, by its repository in e.g. :file:`doc
 build installs it from there - and still be released. The base requirements (``requirementsFile``) are kept as they are:
 without one of them, the package wouldn't work.
 
-Without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, these warnings are dropped silently. A
-:file:`setup.py` collects and prints them like this:
+:exc:`~pyTooling.Packaging.DirectReferenceWarning` is a critical warning: without a
+:class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy,
+:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised and the package isn't built. No warning is raised, if
+no extra contains a direct reference. A :file:`setup.py`, whose extras contain or might contain one, collects and prints
+the warnings like this:
 
 .. code-block:: Python
 
