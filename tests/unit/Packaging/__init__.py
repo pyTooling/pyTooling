@@ -37,6 +37,8 @@ from io         import StringIO
 from pathlib    import Path
 from warnings   import catch_warnings, simplefilter
 
+from pytest            import mark
+
 from pyTooling.Testing import Testcase
 
 
@@ -262,6 +264,7 @@ class MalformedKeywords(Testcase):
 		)
 
 
+@mark.filterwarnings("ignore::pyTooling.Packaging.DirectReferenceWarning")
 class DescribePackage(Testcase):
 	def test_PythonPackage(self) -> None:
 		print()
@@ -424,6 +427,7 @@ class DirectReferences(Testcase):
 		self.assertIn("extra 'dist', from parameter 'additionalRequirements'", messages[0])
 
 
+@mark.filterwarnings("ignore::pyTooling.Packaging.DirectReferenceWarning")
 class EntryPoints(Testcase):
 	"""A package advertises what it offers; the describe-functions know which group it is declared in."""
 
@@ -517,6 +521,7 @@ class EntryPoints(Testcase):
 		self.assertNotIn("entry_points", packageInformation)
 
 
+@mark.filterwarnings("ignore::pyTooling.Packaging.DirectReferenceWarning")
 class LicenseExpression(Testcase):
 	"""A package states its license as an SPDX expression, not as a deprecated classifier."""
 
