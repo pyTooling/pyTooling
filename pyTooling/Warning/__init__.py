@@ -332,11 +332,7 @@ class WarningCollector:
 				for note in notes:
 					warning.add_note(note)
 
-		try:
-			warningCollector = _threadLocalData.warningCollector
-			if warningCollector.AddWarning(warning):
-				raise EscalatedWarningError(f"Warning: {warning}") from warning
-		except AttributeError:
+		if (warningCollector := getattr(_threadLocalData, "warningCollector", None)) is None:
 			ex = None
 			if isinstance(warning, Exception):
 				ex = UnhandledExceptionError(f"Unhandled Exception: {warning}")
@@ -346,6 +342,8 @@ class WarningCollector:
 			if ex is not None:
 				ex.add_note(f"Add a 'with'-statement using '{cls.__name__}' somewhere up the call-hierarchy to receive and collect warnings.")
 				raise ex from warning
+		elif warningCollector.AddWarning(warning):
+			raise EscalatedWarningError(f"Warning: {warning}") from warning
 
 
 @export

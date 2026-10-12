@@ -639,6 +639,10 @@ Version 10.x (2026)
        block was left after collecting a warning: it called :meth:`~pyTooling.Warning.ThreadSupervisor.AddWarnings`
        without the thread's name. It passes the name now, also with an exception, which
        :meth:`~pyTooling.Warning.ThreadSupervisor.ReRaise` named no thread for.
+     * An :exc:`AttributeError` raised by a collector's handler was taken for a missing collector:
+       :meth:`~pyTooling.Warning.WarningCollector.Raise` swallowed it for a warning, and turned it into
+       :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` or :exc:`~pyTooling.Warning.UnhandledExceptionError` for
+       a critical warning or an exception. It propagates now.
 
    * :mod:`pyTooling.MetaClasses`
 

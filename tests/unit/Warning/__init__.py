@@ -172,6 +172,57 @@ class WarningCollection(Testcase):
 		self.assertEqual("Exception from ClassA.methA_RaiseException", str(ex.exception.__cause__))
 
 
+class HandlerErrors(Testcase):
+	"""An exception raised by a collector's handler propagates; it isn't mistaken for a missing collector."""
+
+	@staticmethod
+	def _handler(warning: BaseException) -> bool:
+		raise AttributeError("Handler failed.")
+
+	def test_Warning(self) -> None:
+		a = ClassA("handler")
+		with self.assertRaises(AttributeError) as ex:
+			with WarningCollector(handler=self._handler):
+				a.methA_RaiseWarning()
+
+		self.assertEqual("Handler failed.", str(ex.exception))
+
+	def test_CriticalWarning(self) -> None:
+		a = ClassA("handler")
+		with self.assertRaises(AttributeError) as ex:
+			with WarningCollector(handler=self._handler):
+				a.methA_RaiseCriticalWarning()
+
+		self.assertEqual("Handler failed.", str(ex.exception))
+
+	def test_Exception(self) -> None:
+		a = ClassA("handler")
+		with self.assertRaises(AttributeError) as ex:
+			with WarningCollector(handler=self._handler):
+				a.methA_RaiseException()
+
+		self.assertEqual("Handler failed.", str(ex.exception))
+
+
+class AfterCollector(Testcase):
+	"""After the outermost collector is left, a raised warning behaves as without any collector."""
+
+	def test_CriticalWarning(self) -> None:
+		a = ClassA("after")
+		with WarningCollector():
+			pass
+
+		with self.assertRaises(UnhandledCriticalWarningError):
+			a.methA_RaiseCriticalWarning()
+
+	def test_Warning(self) -> None:
+		a = ClassA("after")
+		with WarningCollector():
+			pass
+
+		a.methA_RaiseWarning()
+
+
 class CallStack(Testcase):
 	def test_Level_1(self) -> None:
 		warnings = []
