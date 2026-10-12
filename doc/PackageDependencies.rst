@@ -140,7 +140,11 @@ Exceptions and Warnings
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
-graph.
+graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dependency.UnknownLicenseWarning`.
+
+These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
+collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see
+:ref:`WARNING`.
 
 
 .. _DEPENDENCIES/Competitors:

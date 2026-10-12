@@ -79,6 +79,11 @@ class PermissionWarning(Warning):
 	Warning emitted when a directory or file couldn't be read while scanning a filesystem.
 
 	The scan continues, so the collected statistics are incomplete by exactly the path this warning carries.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
 	"""
 	_path: Path  #: Path that couldn't be read.
 
@@ -354,6 +359,9 @@ class Directory(Element["Directory"]):
 		"""
 		Initialize the directory with name and parent reference.
 
+		If ``collectSubdirectories`` is ``True``, a directory that can't be read is reported as a :class:`PermissionWarning`
+		to a :class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
+
 		:param name:                  Name of the element.
 		:param collectSubdirectories: Optional, if ``True``, collect subdirectory statistics.
 		:param parent:                Optional, parent reference.
@@ -381,6 +389,9 @@ class Directory(Element["Directory"]):
 	def CollectSubdirectories(self) -> None:
 		"""
 		Helper method for scanning subdirectories and aggregating found element sizes therein.
+
+		A directory that can't be read is reported as a :class:`PermissionWarning` to a
+		:class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
 		"""
 		self.ScanSubdirectories()
 		self.AggregateSizes()
@@ -393,8 +404,9 @@ class Directory(Element["Directory"]):
 		If a file refers to the same filesystem internal unique ID, a hardlink (two or more filenames) to the same file
 		storage object is assumed.
 
-		A directory that can't be read is reported as a :class:`PermissionWarning` and skipped, so the scan continues and
-		the collected statistics are incomplete by exactly that path.
+		A directory that can't be read is reported as a :class:`PermissionWarning` to a
+		:class:`~pyTooling.Warning.WarningCollector` and skipped, so the scan continues and the collected statistics are
+		incomplete by exactly that path. Without a collector, the warning is dropped.
 
 		:raises FilesystemError: If this directory isn't attached to a :class:`Root`, which owns the ID table.
 		:raises FilesystemError: If the directory contains an element that is neither a directory, a file nor a
@@ -1318,7 +1330,8 @@ class Root(Directory):
 		Initialize a filesystem statistics scope for the given directory.
 
 		Unless ``collectSubdirectories`` is disabled, the whole tree is scanned and its symbolic links are resolved right
-		away, so the root is usable as soon as it exists.
+		away, so the root is usable as soon as it exists. A directory that can't be read is reported as a
+		:class:`PermissionWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
 
 		:param rootDirectory:         Directory to collect the statistics for.
 		:param collectSubdirectories: Optional, if ``True``, scan the tree and resolve its symbolic links immediately.

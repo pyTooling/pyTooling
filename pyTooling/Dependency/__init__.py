@@ -102,9 +102,15 @@ class ReleaseNotFoundError(DependencyError):
 @export
 class BrokenRequirementWarning(Warning):
 	"""
-	A requirement names an extra the project doesn't declare.
+	A requirement can't be parsed, or names an extra the project doesn't declare.
 
-	Such a requirement can't be assigned to an extra, so it's not reachable through :attr:`Requirements`.
+	Such a requirement is left out. One naming an undeclared extra can't be assigned to an extra, so it's not reachable
+	through :attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
 	"""
 
 
@@ -115,12 +121,24 @@ class UnknownLicenseWarning(Warning):
 
 	The published expression is kept in :attr:`~PackageVersion.LicenseExpression` either way, so the warning names
 	what would have to be stated by hand.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
 	"""
 
 
 @export
 class ReleaseDetailsWarning(Warning):
-	"""Downloading the details of a release failed, therefore the release was dropped from the project."""
+	"""
+	Downloading the details of a release failed, therefore the release was dropped from the project.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
 
 
 @export
