@@ -816,11 +816,13 @@ class Directory(Element["Directory"]):
 		attached to the node's key-value store:
 
 		``kind``
-		  The node's kind. See :class:`NodeKind`.
+		  The node's kind: :attr:`NodeKind.Directory`.
 		``size``
 		  The directory's aggregated size.
 
-		:param format: Optional, a user defined formatting function for tree nodes.
+		Its subdirectories, files and symbolic links become the node's children, in this order.
+
+		:param format: Optional, a user defined formatting function for the tree nodes of this directory and its elements.
 		:returns:      A tree node representing this directory.
 		"""
 		if format is None:
@@ -837,13 +839,13 @@ class Directory(Element["Directory"]):
 		directoryNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
 			keyValuePairs={
-				"kind": NodeKind.File,
+				"kind": NodeKind.Directory,
 				"size": self._size
 			},
 			format=format
 		)
 		directoryNode.AddChildren(
-			e.ToTree(format) for e in self._subdirectories.values()  #(*self._subdirectories.values(), *self._files.values(), *self._symbolicLinks.values())
+			e.ToTree(format) for e in (*self._subdirectories.values(), *self._files.values(), *self._symbolicLinks.values())
 		)
 
 		return directoryNode
@@ -1030,20 +1032,22 @@ class Filename(Element[Directory]):
 
 		return Filename(self._name, file, parent=parent)
 
-	def ToTree(self) -> Node:
+	def ToTree(self, format: Nullable[Callable[[Node], str]] = None) -> Node:
 		"""
 		Convert this filename to a node of a :mod:`pyTooling.Tree`.
 
-		:returns: A tree node carrying this filename, its kind and its size.
+		:param format: Optional, a user defined formatting function for the tree node.
+		:returns:      A tree node carrying this filename, its kind and its size.
 		"""
-		def format(node: Node) -> str:
-			"""
-			Nested function rendering a tree node as one line.
+		if format is None:
+			def format(node: Node) -> str:
+				"""
+				Nested function rendering a tree node as one line.
 
-			:param node: The tree node to render.
-			:returns:    The node's size in MiB, followed by its name.
-			"""
-			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
+				:param node: The tree node to render.
+				:returns:    The node's size in MiB, followed by its name.
+				"""
+				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		fileNode: Node[Any, Any, Any, Any] = Node(
 			value=self,
@@ -1221,20 +1225,22 @@ class SymbolicLink(Element[Directory]):
 		"""
 		return SymbolicLink(self._name, self._target, parent=parent)
 
-	def ToTree(self) -> Node:
+	def ToTree(self, format: Nullable[Callable[[Node], str]] = None) -> Node:
 		"""
 		Convert this symbolic link to a node of a :mod:`pyTooling.Tree`.
 
-		:returns: A tree node carrying this symbolic link, its kind and its size.
+		:param format: Optional, a user defined formatting function for the tree node.
+		:returns:      A tree node carrying this symbolic link, its kind and its size.
 		"""
-		def format(node: Node) -> str:
-			"""
-			Nested function rendering a tree node as one line.
+		if format is None:
+			def format(node: Node) -> str:
+				"""
+				Nested function rendering a tree node as one line.
 
-			:param node: The tree node to render.
-			:returns:    The node's size in MiB, followed by its name.
-			"""
-			return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
+				:param node: The tree node to render.
+				:returns:    The node's size in MiB, followed by its name.
+				"""
+				return f"{node['size'] * 1e-6:7.1f} MiB {node._value.Name}"
 
 		symbolicLinkNode: Node[Any, Any, Any, Any] = Node(
 			value=self,

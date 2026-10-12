@@ -546,6 +546,16 @@ Version 10.x (2026)
        :exc:`~pyTooling.Dependency.UnknownLicenseWarning` names the override's statement and the override file now,
        which :attr:`LicenseOverrides.Path <pyTooling.Dependency.Python.LicenseOverrides.Path>` keeps.
 
+   * :mod:`pyTooling.Filesystem`
+
+     * :meth:`Directory.ToTree <pyTooling.Filesystem.Directory.ToTree>` marked a directory's node as
+       :attr:`NodeKind.File <pyTooling.Filesystem.NodeKind.File>` and added only its subdirectories as children. The
+       node is of kind :attr:`~pyTooling.Filesystem.NodeKind.Directory`, and its files and symbolic links are children
+       too.
+       :meth:`Filename.ToTree <pyTooling.Filesystem.Filename.ToTree>` and
+       :meth:`SymbolicLink.ToTree <pyTooling.Filesystem.SymbolicLink.ToTree>` take the optional ``format`` as well, so
+       a user defined format renders the whole tree.
+
    * :mod:`pyTooling.Packaging`
 
      * :func:`~pyTooling.Packaging.loadRequirementsFile` kept a comment behind a requirement, so an extra's metadata
