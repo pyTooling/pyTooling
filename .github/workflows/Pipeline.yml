@@ -208,8 +208,9 @@ jobs:
       contents: write  # required for create tag
       actions:  write  # required for trigger workflow
     with:
-      version:  ${{ needs.Prepare.outputs.version }}
-      auto_tag: ${{ needs.Prepare.outputs.is_release_commit }}
+      version:        ${{ needs.Prepare.outputs.version }}
+      auto_tag:       ${{ needs.Prepare.outputs.is_release_commit }}
+      pypi_compliant: ${{ needs.Package.outputs.pypi_compliant }}
     secrets: inherit
 
   ReleasePage:
@@ -233,11 +234,13 @@ jobs:
     if: startsWith(github.ref, 'refs/tags')
     needs:
       - UnitTestingParams
+      - Package
       - ReleasePage
     with:
       python_version: ${{ needs.UnitTestingParams.outputs.python_version }}
       requirements:   '-r dist/requirements.txt'
       artifact:       ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
+      pypi_compliant: ${{ needs.Package.outputs.pypi_compliant }}
     secrets:
       PYPI_TOKEN:     ${{ secrets.PYPI_TOKEN }}
 
