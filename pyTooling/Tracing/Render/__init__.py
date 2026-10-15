@@ -95,9 +95,8 @@ def ciSpanFilter(
 	Steps outnumber jobs by far - a pipeline of 74 jobs has more than 1600 steps, of which a third were skipped - and a
 	skipped job has neither waited nor run.
 
-	:param excludeSteps:       Optional, which steps to hide: ``True`` or :attr:`StepExclusion.All` hides every step,
-	                           ``False`` or :attr:`StepExclusion.Nothing` none, and :attr:`StepExclusion.Skipped` the
-	                           skipped ones. Default: :attr:`StepExclusion.All`.
+	:param excludeSteps:       Optional, which steps to hide; ``True`` stands for :attr:`StepExclusion.All`, ``False`` for
+	                           :attr:`StepExclusion.Nothing`. Default: :attr:`StepExclusion.All`.
 	:param excludeSkippedJobs: Optional, hide the jobs that were skipped. Default: ``True``.
 	:returns:                  The span filter.
 	:raises TypeError:         If parameter 'excludeSteps' is neither of type :class:`bool` nor :class:`StepExclusion`.
