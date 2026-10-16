@@ -94,13 +94,19 @@ class Spellings(Testcase):
 				self.assertIs(ReleaseLevel.Final, normalized.ReleaseLevel)
 				self.assertEqual(0, normalized.Dev)
 
-	def test_UpperCaseIsNoReleaseLevel(self) -> None:
-		for spelling in ("10.0.0-PRE1", "10.0.0-DEV"):
+	def test_UpperCase(self) -> None:
+		"""PEP 440 spellings are case-insensitive; the release level's spelling is kept in lower case."""
+		for spelling, written, level in (
+			("10.0.0-PRE1", "10.0.0pre1", ReleaseLevel.ReleaseCandidate),
+			("10.0.0.RC1",  "10.0.0rc1",  ReleaseLevel.ReleaseCandidate),
+			("10.0.0-DEV",  "10.0.0-dev", ReleaseLevel.Development)
+		):
 			with self.subTest(spelling=spelling):
 				version = PythonVersion.Parse(spelling)
 
-				self.assertIs(ReleaseLevel.Final, version.ReleaseLevel)
-				self.assertEqual(spelling[7:], version.Postfix)
+				self.assertIs(level, version.ReleaseLevel)
+				self.assertEqual(written, str(version))
+				self.assertEqual("", version.Postfix)
 
 	def test_DevelopmentWithLocalVersion(self) -> None:
 		version = PythonVersion.Parse("1.0-dev+local")
@@ -146,6 +152,74 @@ class Spellings(Testcase):
 
 		self.assertIs(ReleaseLevel.Final, version.ReleaseLevel)
 		self.assertEqual("10.0.0+precise1", str(version))
+
+
+class PEP440Spellings(Testcase):
+	"""Every spelling PEP 440 normalizes, and its normalized form as packaging writes it."""
+
+	SPELLINGS = (
+		# post-release
+		("1.0rev1",         "1.0.post1",       "1.0.post1"),
+		("1.0r1",           "1.0.post1",       "1.0.post1"),
+		("1.0-r1",          "1.0.post1",       "1.0.post1"),
+		("1.0-1",           "1.0.post1",       "1.0.post1"),
+		("1.0.post_1",      "1.0.post1",       "1.0.post1"),
+		("1.0-post-1",      "1.0.post1",       "1.0.post1"),
+		("1.0.post",        "1.0.post0",       "1.0.post0"),
+		("1.0.POST",        "1.0.post0",       "1.0.post0"),
+		# pre-release
+		("1.0.0-rc.1",      "1.0.0rc1",        "1.0.0rc1"),
+		("1.0.0-alpha.2",   "1.0.0alpha2",     "1.0.0a2"),
+		("1.0.0-beta-2",    "1.0.0beta2",      "1.0.0b2"),
+		("1.0_a1",          "1.0a1",           "1.0a1"),
+		("1.0.0.RC1",       "1.0.0rc1",        "1.0.0rc1"),
+		("1.0rc.post",      "1.0rc0.post0",    "1.0rc0.post0"),
+		# development release
+		("10.0.0dev0",      "10.0.0.dev0",     "10.0.0.dev0"),
+		("1.0.dev-3",       "1.0.dev3",        "1.0.dev3"),
+		("1.0-dev1",        "1.0.dev1",        "1.0.dev1"),
+		("1.0.0-rc.1.dev2", "1.0.0rc1.dev2",   "1.0.0rc1.dev2"),
+		("1.0.post1-dev",   "1.0.post1.dev0",  "1.0.post1.dev0"),
+		# local version
+		("1.0+abc.5",       "1.0+abc.5",       "1.0+abc.5"),
+		("1.0+Ubuntu-1",    "1.0+Ubuntu-1",    "1.0+ubuntu.1"),
+		("1.0+ubuntu_1",    "1.0+ubuntu_1",    "1.0+ubuntu.1"),
+		# epoch, all parts
+		("1!2.0.post1.dev3+x.y", "1!2.0.post1.dev3+x.y", "1!2.0.post1.dev3+x.y"),
+	)
+
+	def test_Parse(self) -> None:
+		"""Parsed, a version is written with its release level's spelling and its local version as given."""
+		for spelling, written, _ in self.SPELLINGS:
+			with self.subTest(spelling=spelling):
+				self.assertEqual(written, str(PythonVersion.Parse(spelling)))
+
+	def test_Normalize(self) -> None:
+		for spelling, _, normalized in self.SPELLINGS:
+			with self.subTest(spelling=spelling):
+				self.assertEqual(normalized, str(PythonVersion.Parse(spelling).Normalize()))
+
+	def test_EqualToNormalized(self) -> None:
+		for spelling, _, normalized in self.SPELLINGS:
+			with self.subTest(spelling=spelling):
+				version = PythonVersion.Parse(spelling)
+
+				self.assertEqual(PythonVersion.Parse(normalized), version)
+				self.assertEqual(hash(PythonVersion.Parse(normalized)), hash(version))
+
+	def test_ImplicitPostReleaseNeedsADash(self) -> None:
+		"""PEP 440 knows ``1.0-1`` as post-release, but not ``1.0_1``."""
+		with self.assertRaises(ValueError):
+			PythonVersion.Parse("1.0_1")
+
+	def test_MinorIsKept(self) -> None:
+		"""``rev``/``r`` used to end the version: ``1.0rev1`` was major 1 with the local version ``0rev1``."""
+		version = PythonVersion.Parse("1.2rev3")
+
+		self.assertEqual(1, version.Major)
+		self.assertEqual(2, version.Minor)
+		self.assertEqual(3, version.Post)
+		self.assertEqual("", version.Postfix)
 
 
 class SemanticVersionSpellings(Testcase):
