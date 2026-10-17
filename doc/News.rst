@@ -45,6 +45,8 @@ Version 10.x (2026)
      elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow`, :mod:`pyTooling.Graph` and
      :mod:`pyTooling.Tracing`, and a :class:`~pyTooling.Tree.Node`, derive from it, and reject key-value-pairs given as
      anything but a mapping.
+     :data:`~pyTooling.DataModel.Predicate` is the type of a function selecting elements, ``Predicate[Vertex]`` -
+     the methods filtering what they iterate, reverse or remove use it.
 
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called

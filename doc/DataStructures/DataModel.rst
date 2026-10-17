@@ -63,3 +63,23 @@ The mixin's field becomes a slot of the first slotted class deriving from it. It
 The elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow` and :mod:`pyTooling.Graph` derive from
 :class:`~pyTooling.DataModel.KeyValuePairsMixin` by their root class ``Base``, a :class:`~pyTooling.Tree.Node`
 directly, and those of :mod:`pyTooling.Tracing` by :class:`~pyTooling.Tracing.TraceElement`.
+
+
+.. _STRUCT/DataModel/Predicate:
+
+Predicate
+*********
+
+A method selecting elements - iterating, reversing or removing those a function decides on - takes a **predicate**:
+a function receiving an element and returning a :class:`bool`. :data:`~pyTooling.DataModel.Predicate` is its type,
+generic in the element type.
+
+.. code-block:: Python
+
+   from pyTooling.DataModel import Predicate
+
+   def IterateVertices(self, predicate: Nullable[Predicate[Vertex]] = None) -> Generator[Vertex, None, None]:
+     ...
+
+``Predicate[Vertex]`` is ``Callable[[Vertex], bool]``. It is written with a type variable, not with the ``type``
+statement of Python 3.12, because pyTooling supports Python 3.11.

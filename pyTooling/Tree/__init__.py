@@ -50,7 +50,7 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.DataModel   import KeyValuePairsMixin
+from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 
 
 IDType = TypeVar("IDType", bound=Hashable)
@@ -909,7 +909,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 
 		return self._root._nodesWithID[nodeID]
 
-	def Find(self, predicate: Callable[[Node], bool]) -> Generator[Node, None, None]:
+	def Find(self, predicate: Predicate[Node]) -> Generator[Node, None, None]:
 		"""
 		Search the tree for nodes matching a predicate.
 

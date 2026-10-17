@@ -56,6 +56,7 @@ from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
+from pyTooling.DataModel   import Predicate
 from pyTooling.Warning     import WarningCollector, Warning
 from pyTooling.Stopwatch   import Stopwatch
 from pyTooling.Tree        import Node
@@ -780,7 +781,7 @@ class Directory(Element["Directory"]):
 
 		return dir
 
-	def Collapse(self, func: Callable[[Directory], bool]) -> bool:
+	def Collapse(self, func: Predicate[Directory]) -> bool:
 		"""
 		Collapse this directory's subtree where the given predicate accepts it.
 

@@ -60,10 +60,10 @@ analysis. :meth:`ControlFlowGraph.ToGraph` converts a control flow graph into a 
 from __future__            import annotations
 
 from enum                  import Enum
-from typing                import Any, Callable, Generator, Hashable, Iterator, Mapping, Optional as Nullable
+from typing                import Any, Generator, Hashable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.DataModel   import KeyValuePairsMixin
+from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
@@ -692,7 +692,7 @@ class ControlFlowGraph(Base):
 
 	def IterateBlocks(
 		self,
-		predicate: Nullable[Callable[[BasicBlock], bool]] = None
+		predicate: Nullable[Predicate[BasicBlock]] = None
 	) -> Generator[BasicBlock, None, None]:
 		"""
 		Iterate all or selected blocks of the graph.

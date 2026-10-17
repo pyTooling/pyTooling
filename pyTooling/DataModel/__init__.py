@@ -32,7 +32,8 @@
 Foundations of data models: building blocks the classes of a data model share.
 
 A :class:`KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element of a data model, accessed like a
-dictionary: :pycode:`element["runner.os"] = "Linux"`.
+dictionary: :pycode:`element["runner.os"] = "Linux"`. :data:`Predicate` is the type of a function selecting
+elements, e.g. in an ``Iterate***`` method.
 
 .. hint::
 
@@ -40,11 +41,31 @@ dictionary: :pycode:`element["runner.os"] = "Linux"`.
 """
 from __future__            import annotations
 
-from typing                import Any, Hashable, Iterator, Mapping, Optional as Nullable
+from typing                import Any, Callable, Hashable, Iterator, Mapping, Optional as Nullable, TypeVar
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export
 from pyTooling.MetaClasses import ExtendedType
+
+
+__all__ = ["ElementType", "Predicate"]
+
+
+# WORKAROUND: Python <3.12
+# Obsolete with the 'type' statement for 'Predicate' below, which declares its type parameter itself.
+ElementType = TypeVar("ElementType")
+"""A type variable for the element a :data:`Predicate` decides on."""
+
+# WORKAROUND: Python <3.12
+# The 'type' statement (PEP 695) isn't supported by Python 3.11. Use it when Python 3.11 support gets dropped:
+# type Predicate[ElementType] = Callable[[ElementType], bool]
+Predicate = Callable[[ElementType], bool]
+"""
+A function deciding whether an element is selected.
+
+``Predicate[Vertex]`` is ``Callable[[Vertex], bool]``. Methods filtering what they iterate, reverse or remove take a
+predicate, e.g. :meth:`pyTooling.Graph.BaseGraph.IterateVertices`.
+"""
 
 
 @export

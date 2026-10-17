@@ -31,5 +31,6 @@
 """
 Unit tests for :mod:`pyTooling.DataModel`.
 
-The key-value-pairs are tested in :mod:`tests.unit.DataModel.KeyValuePairs`.
+The key-value-pairs are tested in :mod:`tests.unit.DataModel.KeyValuePairs`, the predicate type in
+:mod:`tests.unit.DataModel.Predicate`.
 """
