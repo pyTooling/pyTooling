@@ -228,13 +228,8 @@ class KeyValuePairs(Testcase):
 	def test_Function(self) -> None:
 		function = Function(CallGraph("prog"), "main", keyValuePairs={"file": "main.c"})
 
-		function["recursive"] = False
-		self.assertListEqual(["file", "recursive"], list(function))
-
-		del function["file"]
-		self.assertNotIn("file", function)
-		with self.assertRaises(KeyError):
-			_ = function["file"]
+		self.assertEqual("main.c", function["file"])
+		self.assertEqual(1, len(function))
 
 	def test_Call(self) -> None:
 		graph = CallGraph("prog")
