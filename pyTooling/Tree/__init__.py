@@ -150,7 +150,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	modified later. Use the property :attr:`Value` to get or set the value.
 
 	Moreover, each node can store various key-value-pairs (:attr:`_dict`). Use the dictionary syntax to get and set
-	key-value-pairs.
+	key-value-pairs: ``in``, :pycode:`len(node)` and iterating a node address the key-value-pairs, not the children.
 	"""
 
 	_id: Nullable[IDType]                       #: Unique identifier of a node. ``None`` if not used.
@@ -316,6 +316,14 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		"""
 		return len(self._dict)
 
+	def __iter__(self) -> Iterator[DictKeyType]:
+		"""
+		Iterate the keys of the node's attached attributes (key-value-pairs).
+
+		:returns: An iterator over the keys, in the order they were added.
+		"""
+		return iter(self._dict)
+
 	@readonly
 	def Root(self) -> Node:
 		"""
@@ -406,7 +414,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		return tuple([node for node in self._parent if node is not self])
+		return tuple([node for node in self._parent._children if node is not self])
 
 	@readonly
 	def LeftSiblings(self) -> tuple[Node, ...]:
@@ -426,7 +434,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise NoSiblingsError("Root node has no siblings.")
 
 		result = []
-		for node in self._parent:
+		for node in self._parent._children:
 			if node is not self:
 				result.append(node)
 			else:
@@ -454,7 +462,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise NoSiblingsError("Root node has no siblings.")
 
 		result = []
-		iterator = iter(self._parent)
+		iterator = iter(self._parent._children)
 		for node in iterator:
 			if node is self:
 				break
@@ -528,6 +536,24 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:returns: ``True``, if node has no children.
 		"""
 		return len(self._children) == 0
+
+	@readonly
+	def Children(self) -> tuple[Node, ...]:
+		"""
+		Read-only property to return a tuple of all direct children (:attr:`_children`).
+
+		:returns: A tuple of all children, in the order they were added.
+		"""
+		return tuple(self._children)
+
+	@readonly
+	def ChildCount(self) -> int:
+		"""
+		Read-only property to return the number of direct children, but not including grand-children.
+
+		:returns: Number of child nodes.
+		"""
+		return len(self._children)
 
 	@readonly
 	def HasChildren(self) -> bool:
@@ -711,7 +737,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		for node in self._parent:
+		for node in self._parent._children:
 			if node is self:
 				continue
 
@@ -731,7 +757,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		for node in self._parent:
+		for node in self._parent._children:
 			if node is self:
 				break
 
@@ -753,7 +779,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		iterator = iter(self._parent)
+		iterator = iter(self._parent._children)
 		for node in iterator:
 			if node is self:
 				break
@@ -950,22 +976,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:raises NotImplementedError: Searching a tree is not implemented yet.
 		"""
 		raise NotImplementedError("Method 'Find' is not yet implemented.")
-
-	def __iter__(self) -> Iterator[Node]:
-		"""
-		Returns an iterator to iterate all child nodes.
-
-		:returns: Children iterator.
-		"""
-		return iter(self._children)
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of children, but not including grand-children.
-
-		:returns: Number of child nodes.
-		"""
-		return len(self._children)
 
 	def __repr__(self) -> str:
 		"""

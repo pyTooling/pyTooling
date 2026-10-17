@@ -457,6 +457,10 @@ Version 10.x (2026)
    * ⚠️ **A slotted secondary base-class has to be a mixin-class**, also without fields:
      :class:`~pyTooling.MetaClasses.ExtendedType` raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`.
      Declare it with ``mixin=True`` or apply :deco:`~pyTooling.MetaClasses.mixin`.
+   * ⚠️ ``len()`` **and iteration of a** :class:`~pyTooling.Tree.Node` **address its key-value-pairs**, like ``[]``
+     and ``in``: :pycode:`len(node)` counts the pairs and iterating a node yields the keys. Both addressed the children
+     before. Use :attr:`~pyTooling.Tree.Node.ChildCount`, :attr:`~pyTooling.Tree.Node.Children` or
+     :meth:`~pyTooling.Tree.Node.GetChildren` instead.
 
    .. rubric:: Changes
 

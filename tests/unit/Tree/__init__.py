@@ -54,7 +54,7 @@ class Construction(Testcase):
 		self.assertIsNone(root.Parent)
 		self.assertIsNone(root.ID)
 		self.assertEqual(0, root.Level)
-		self.assertEqual(0, len(root))
+		self.assertEqual(0, root.ChildCount)
 		self.assertTrue(root.IsRoot)
 		self.assertTrue(root.IsLeaf)
 
@@ -342,11 +342,11 @@ class SplitTree(Testcase):
 		root1.Parent = None
 
 		self.assertTrue(children[0].IsLeaf)
-		self.assertEqual(0, len(children[0]))
+		self.assertEqual(0, children[0].ChildCount)
 
 		self.assertEqual(oldSize, root.Size + root1.Size)
-		self.assertEqual(len(children), len(root))
-		self.assertEqual(len(children1), len(root1))
+		self.assertEqual(len(children), root.ChildCount)
+		self.assertEqual(len(children1), root1.ChildCount)
 
 		self.assertIsNone(root1.Parent)
 		self.assertTrue(root1.IsRoot)
@@ -368,11 +368,11 @@ class SplitTree(Testcase):
 		root1.Parent = None
 
 		self.assertTrue(children[0].IsLeaf)
-		self.assertEqual(0, len(children[0]))
+		self.assertEqual(0, children[0].ChildCount)
 
 		self.assertEqual(oldSize, root.Size + root1.Size)
-		self.assertEqual(len(children), len(root))
-		self.assertEqual(len(children1), len(root1))
+		self.assertEqual(len(children), root.ChildCount)
+		self.assertEqual(len(children1), root1.ChildCount)
 
 		self.assertIsNone(root1.Parent)
 		self.assertTrue(root1.IsRoot)
@@ -470,11 +470,24 @@ class Features(Testcase):
 		with self.assertRaises(KeyError):
 			_ = root["key1"]
 
-	def test_Length(self) -> None:
+	def test_KeyValuePairs(self) -> None:
+		"""``in``, ``len()`` and iterating a node address its key-value-pairs, not its children."""
+		root = Node(1, keyValuePairs={"key1": "value1"})
+		Node(2, parent=root)
+		root["key2"] = "value2"
+
+		self.assertEqual(2, len(root))
+		self.assertListEqual(["key1", "key2"], list(root))
+		self.assertIn("key2", root)
+		self.assertNotIn(2, root)
+
+	def test_ChildCount(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
-		self.assertEqual(len(children), len(root))
+		self.assertEqual(len(children), root.ChildCount)
+		self.assertTupleEqual(tuple(children), root.Children)
+		self.assertEqual(0, len(root))
 
 	def test_Size(self) -> None:
 		root = Node(1)
@@ -492,11 +505,12 @@ class Features(Testcase):
 		size = 1 + len(children) + len(grandChildren) + len(grandGrandChildren)
 		self.assertEqual(size, root.Size)
 
-	def test_Iterator(self) -> None:
+	def test_GetChildren(self) -> None:
 		root = Node(1)
 		children = [Node(2, parent=root), Node(3, parent=root)]
 
-		self.assertListEqual(children, list(root))
+		self.assertListEqual(children, list(root.GetChildren()))
+		self.assertListEqual([], list(root))
 
 	def test_Siblings(self) -> None:
 		root = Node(1)
