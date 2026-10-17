@@ -75,7 +75,7 @@ from datetime              import datetime
 from typing                import Any, ClassVar, Hashable, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
-from pyTooling.DataModel   import BaseWithKeyValuePairs
+from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import AlreadyInHierarchyError, ToolingException
 from pyTooling.Graph       import Graph, Subgraph, Vertex
@@ -172,7 +172,7 @@ class RuleOutcome(StringEnum):
 
 @export
 @abstractclass
-class Base(BaseWithKeyValuePairs):
+class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 	"""
 	Common behaviour of every element of a pipeline.
 
@@ -407,7 +407,7 @@ class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",
 
 
 @export
-class Rule(BaseWithKeyValuePairs):
+class Rule(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 	"""
 	A rule of an element of a pipeline: a condition, and what it decides for the element, if the condition matches.
 

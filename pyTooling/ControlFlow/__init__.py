@@ -63,7 +63,7 @@ from enum                  import Enum
 from typing                import Any, Callable, Generator, Hashable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.DataModel   import BaseWithKeyValuePairs
+from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
@@ -128,7 +128,7 @@ class DuplicateEdgeError(ControlFlowError, DuplicateElementError):
 
 
 @export
-class Base(BaseWithKeyValuePairs):
+class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 	"""
 	Base-class of all control flow graph elements, adding a dictionary of arbitrary key-value-pairs to them.
 

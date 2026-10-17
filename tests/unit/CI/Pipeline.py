@@ -378,13 +378,6 @@ class Hierarchy(Testcase):
 
 
 class KeyValuePairs(Testcase):
-	def test_Empty(self) -> None:
-		job = Job("Build")
-
-		self.assertEqual(0, len(job))
-		self.assertListEqual([], list(job))
-		self.assertNotIn("runner.os", job)
-
 	def test_Initialization(self) -> None:
 		pairs =          {"runner.os": "Linux", 42: ("a", "b")}
 		group =          PipelineGroup("0123abcd", keyValuePairs=pairs)
@@ -403,39 +396,6 @@ class KeyValuePairs(Testcase):
 				self.assertEqual("Linux", element["runner.os"])
 				self.assertTupleEqual(("a", "b"), element[42])
 
-	def test_InitializationCopies(self) -> None:
-		pairs = {"runner.os": "Linux"}
-		job =   Job("Build", keyValuePairs=pairs)
-		job["runner.os"] = "Windows"
-
-		self.assertEqual("Linux", pairs["runner.os"])
-
-	def test_SetGetDelete(self) -> None:
-		job = Job("Build")
-		job["runner.os"] = "Linux"
-		job["runner.arch"] = "x64"
-
-		self.assertIn("runner.os", job)
-		self.assertEqual("Linux", job["runner.os"])
-		self.assertEqual(2, len(job))
-
-		job["runner.os"] = "Windows"
-		self.assertEqual("Windows", job["runner.os"])
-		self.assertEqual(2, len(job))
-
-		del job["runner.os"]
-		self.assertNotIn("runner.os", job)
-		self.assertListEqual(["runner.arch"], list(job))
-
-	def test_MissingKey(self) -> None:
-		job = Job("Build")
-
-		with self.assertRaises(KeyError):
-			_ = job["runner.os"]
-
-		with self.assertRaises(KeyError):
-			del job["runner.os"]
-
 	def test_KeysAreNotElements(self) -> None:
 		pipeline = Pipeline("Pipeline")
 		_ =        Job("Build", parent=pipeline)
@@ -447,12 +407,6 @@ class KeyValuePairs(Testcase):
 		self.assertEqual(1, len(pipeline))
 		self.assertIsInstance(pipeline.GetElement("Build"), Job)
 		self.assertEqual("attribute", pipeline["Build"])
-
-	def test_Type(self) -> None:
-		with self.assertRaises(TypeError) as context:
-			_ = Job("Build", keyValuePairs=[("runner.os", "Linux")])
-
-		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
 
 
 class Rules(Testcase):

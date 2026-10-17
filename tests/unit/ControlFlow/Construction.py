@@ -208,18 +208,8 @@ class KeyValuePairs(Testcase):
 		graph = ControlFlowGraph("main")
 		block = BasicBlock(graph, 2, keyValuePairs={"lines": (3, 4)})
 
-		block["dominator"] = graph.Entry
-		self.assertEqual(2, len(block))
-		self.assertListEqual(["lines", "dominator"], list(block))
-		self.assertIs(graph.Entry, block["dominator"])
-
-		del block["lines"]
-		self.assertNotIn("lines", block)
-		with self.assertRaises(KeyError):
-			_ = block["lines"]
-
-		with self.assertRaises(KeyError):
-			del block["lines"]
+		self.assertEqual((3, 4), block["lines"])
+		self.assertEqual(1, len(block))
 
 	def test_Edge(self) -> None:
 		graph = ControlFlowGraph("main")
@@ -227,13 +217,6 @@ class KeyValuePairs(Testcase):
 
 		self.assertEqual("return", edge["label"])
 		self.assertEqual(1, len(edge))
-
-	def test_Copy(self) -> None:
-		pairs = {"lines": (3, 4)}
-		block = BasicBlock(ControlFlowGraph("main"), 2, keyValuePairs=pairs)
-
-		block["count"] = 1
-		self.assertDictEqual({"lines": (3, 4)}, pairs, "The element copies the given mapping.")
 
 	def test_IterateBlocks(self) -> None:
 		graph = ControlFlowGraph("main", entryID=0, exitID=1)

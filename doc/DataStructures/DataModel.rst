@@ -31,16 +31,16 @@ accessed like a dictionary. A key is any :class:`~typing.Hashable` object.
 The constructor takes the initial pairs as a mapping and copies them. Anything but a mapping - e.g. a list of pairs -
 is rejected with a :exc:`TypeError`.
 
-The mixin is used in one of two ways:
+The mixin's field becomes a slot of the first slotted class deriving from it. It is used in one of two ways:
 
-* :class:`~pyTooling.DataModel.BaseWithKeyValuePairs` is the slotted, abstract base-class of a data model, whose
-  elements all carry key-value-pairs. The mixin's field becomes a slot of this class.
+* The slotted root class of a data model, whose elements all carry key-value-pairs, derives from the mixin alone.
 
   .. code-block:: Python
 
-     from pyTooling.DataModel import BaseWithKeyValuePairs
+     from pyTooling.DataModel   import KeyValuePairsMixin
+     from pyTooling.MetaClasses import ExtendedType
 
-     class Element(BaseWithKeyValuePairs):
+     class Element(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
        _name: str
 
        def __init__(self, name: str, keyValuePairs: Nullable[Mapping[Hashable, Any]] = None) -> None:
@@ -60,4 +60,4 @@ The mixin is used in one of two ways:
          KeyValuePairsMixin.__init__(self, keyValuePairs)
 
 The elements of :mod:`pyTooling.CI` and :mod:`pyTooling.ControlFlow` derive from
-:class:`~pyTooling.DataModel.BaseWithKeyValuePairs`.
+:class:`~pyTooling.DataModel.KeyValuePairsMixin` by their root class ``Base``.

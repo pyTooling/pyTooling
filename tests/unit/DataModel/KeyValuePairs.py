@@ -29,10 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :class:`pyTooling.DataModel.KeyValuePairsMixin` and :class:`pyTooling.DataModel.BaseWithKeyValuePairs`.
+Unit tests for :class:`pyTooling.DataModel.KeyValuePairsMixin`.
 """
-from pyTooling.DataModel   import BaseWithKeyValuePairs, KeyValuePairsMixin
-from pyTooling.MetaClasses import AbstractClassError, ExtendedType
+from pyTooling.DataModel   import KeyValuePairsMixin
+from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Testing     import Testcase
 
 
@@ -42,8 +42,8 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Element(BaseWithKeyValuePairs):
-	"""A data model element carrying key-value-pairs."""
+class Element(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
+	"""The slotted root of a data model, carrying key-value-pairs."""
 
 
 class SlottedRoot(metaclass=ExtendedType, slots=True):
@@ -114,7 +114,3 @@ class KeyValuePairs(Testcase):
 
 		self.assertEqual("Linux", element["runner.os"])
 		self.assertFalse(hasattr(element, "__dict__"))
-
-	def test_Abstract(self) -> None:
-		with self.assertRaises(AbstractClassError):
-			_ = BaseWithKeyValuePairs()
