@@ -48,7 +48,7 @@ from typing                import Any, Callable, Iterator, Generator, Iterable, 
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
 
 
@@ -96,7 +96,7 @@ class NoSiblingsError(TreeError):
 
 
 @export
-class AlreadyInTreeError(TreeError):
+class AlreadyInTreeError(TreeError, AlreadyInHierarchyError):
 	"""
 	The exception is raised when the current node and the other node are already in the same tree.
 
@@ -107,7 +107,7 @@ class AlreadyInTreeError(TreeError):
 
 
 @export
-class NotInSameTreeError(TreeError):
+class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 	"""The exception is raised when the current node and the other node are not in the same tree."""
 
 
