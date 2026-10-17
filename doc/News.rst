@@ -53,7 +53,7 @@ Version 10.x (2026)
      exceptions derive from :exc:`~pyTooling.CI.CIError`.
 
      * Workflows, matrices, jobs and steps carry an **ordered list of rules** (:class:`~pyTooling.CI.RulesMixin`):
-       a :class:`~pyTooling.CI.Rule` holds a condition as written, a :class:`~pyTooling.CI.When` deciding what
+       a :class:`~pyTooling.CI.Rule` holds a condition as written, a :class:`~pyTooling.CI.RuleOutcome` deciding what
        happens to the element if it matches, and key-value-pairs for what only a service's rule has. The first
        matching rule decides. A GitHub ``if:`` is one rule, GitLab's ``rules:`` and ``workflow:rules`` are the list,
        see :ref:`CI/Pipeline/Rules`.

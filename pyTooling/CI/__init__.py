@@ -152,7 +152,7 @@ class Outcome(StringEnum):
 
 
 @export
-class When(StringEnum):
+class RuleOutcome(StringEnum):
 	"""
 	What a rule decides for its element, when the rule is the first one matching.
 
@@ -168,11 +168,6 @@ class When(StringEnum):
 	Never =     "never"       #: It is excluded.
 
 	DEFAULT =   OnSuccess     #: What a rule decides, if it doesn't say.
-
-
-# A class with a property named like a class - ``When`` - can't name that class in the annotation of a field: the class
-# body's namespace, where annotations are evaluated, binds the name to the property.
-_When = When
 
 
 @export
@@ -426,12 +421,12 @@ class Rule(BaseWithKeyValuePairs):
 
 	_parent:    Nullable[RulesMixin]  #: Reference to the element the rule belongs to.
 	_condition: Nullable[str]         #: Condition under which the rule matches, as written.
-	_when:      _When                 #: What the rule decides, if it matches.
+	_when:      RuleOutcome           #: What the rule decides, if it matches.
 
 	def __init__(
 		self,
 		condition:     Nullable[str]                    = None,
-		when:          When                             = When.DEFAULT,
+		when:          RuleOutcome                      = RuleOutcome.DEFAULT,
 		*,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
 		parent:        Nullable[RulesMixin]             = None
@@ -441,7 +436,7 @@ class Rule(BaseWithKeyValuePairs):
 
 		:param condition:     Optional, condition under which the rule matches, as written; ``None`` matches always.
 		                      Default: ``None``.
-		:param when:          Optional, what the rule decides, if it matches. Default: :attr:`When.DEFAULT`.
+		:param when:          Optional, what the rule decides, if it matches. Default: :attr:`RuleOutcome.DEFAULT`.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:        Optional, reference to the element the rule belongs to, which adds it as its last rule.
 		                      Default: ``None``.
@@ -449,7 +444,7 @@ class Rule(BaseWithKeyValuePairs):
 		:raises TypeError:    If parameter 'condition' is not of type :class:`str`.
 		:raises ValueError:   If parameter 'condition' is empty.
 		:raises ValueError:   If parameter 'when' is ``None``.
-		:raises TypeError:    If parameter 'when' is not of type :class:`When`.
+		:raises TypeError:    If parameter 'when' is not of type :class:`RuleOutcome`.
 		:raises TypeError:    If parameter 'parent' is not of type :class:`RulesMixin`.
 		"""
 		super().__init__(keyValuePairs)
@@ -465,8 +460,8 @@ class Rule(BaseWithKeyValuePairs):
 
 		if when is None:
 			raise ValueError("Parameter 'when' is None.")
-		elif not isinstance(when, When):
-			ex = TypeError("Parameter 'when' is not of type 'When'.")
+		elif not isinstance(when, RuleOutcome):
+			ex = TypeError("Parameter 'when' is not of type 'RuleOutcome'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(when)}'.")
 			raise ex
 

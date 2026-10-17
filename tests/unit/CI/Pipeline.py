@@ -34,7 +34,7 @@ Unit tests for :mod:`pyTooling.CI`.
 from datetime              import datetime, timedelta, timezone
 
 from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
-from pyTooling.CI          import BaseWithKeyValuePairs, JobGroup, Step, Rule, When
+from pyTooling.CI          import JobGroup, Step, Rule, RuleOutcome
 from pyTooling.CI          import Outcome, CIError, PipelineError, NeedDependencyError, NeedDependencyCycleError
 from pyTooling.CI          import AlreadyInPipelineError
 from pyTooling.CI          import RulesMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
@@ -70,9 +70,6 @@ class Instantiation(Testcase):
 			with self.subTest(cls=cls.__name__):
 				with self.assertRaises(AbstractClassError):
 					_ = cls("x")
-
-		with self.assertRaises(AbstractClassError):
-			_ = BaseWithKeyValuePairs()
 
 	def test_PipelineGroup(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -460,27 +457,27 @@ class KeyValuePairs(Testcase):
 
 class Rules(Testcase):
 	def test_When(self) -> None:
-		self.assertIs(When.OnSuccess, When.DEFAULT)
-		self.assertIs(When.OnSuccess, When.Parse(None))
-		self.assertIs(When.Never, When.Parse("never"))
+		self.assertIs(RuleOutcome.OnSuccess, RuleOutcome.DEFAULT)
+		self.assertIs(RuleOutcome.OnSuccess, RuleOutcome.Parse(None))
+		self.assertIs(RuleOutcome.Never, RuleOutcome.Parse("never"))
 		self.assertListEqual(
-			["on_success", "on_failure", "always", "manual", "delayed", "never"], [member.value for member in When]
+			["on_success", "on_failure", "always", "manual", "delayed", "never"], [member.value for member in RuleOutcome]
 		)
 
 	def test_Rule(self) -> None:
 		rule = Rule()
 
 		self.assertIsNone(rule.Condition)
-		self.assertIs(When.DEFAULT, rule.When)
+		self.assertIs(RuleOutcome.DEFAULT, rule.When)
 		self.assertIsNone(rule.Parent)
 		self.assertEqual(0, len(rule))
 		self.assertFalse(hasattr(rule, "__dict__"))
 
 	def test_Rule_Values(self) -> None:
-		rule = Rule("$CI_COMMIT_BRANCH == 'main'", When.Manual, keyValuePairs={"allow_failure": True})
+		rule = Rule("$CI_COMMIT_BRANCH == 'main'", RuleOutcome.Manual, keyValuePairs={"allow_failure": True})
 
 		self.assertEqual("$CI_COMMIT_BRANCH == 'main'", rule.Condition)
-		self.assertIs(When.Manual, rule.When)
+		self.assertIs(RuleOutcome.Manual, rule.When)
 		self.assertTrue(rule["allow_failure"])
 
 	def test_Rule_ConditionType(self) -> None:
@@ -505,7 +502,7 @@ class Rules(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Rule(when="never")
 
-		self.assertEqual("Parameter 'when' is not of type 'When'.", str(context.exception))
+		self.assertEqual("Parameter 'when' is not of type 'RuleOutcome'.", str(context.exception))
 
 	def test_Rule_ParentType(self) -> None:
 		with self.assertRaises(TypeError) as context:
@@ -537,11 +534,11 @@ class Rules(Testcase):
 	def test_Order(self) -> None:
 		"""Rules keep the order they are evaluated in: given, added, then created with the element as parent."""
 		first =  Rule("$A")
-		second = Rule("$B", When.Never)
+		second = Rule("$B", RuleOutcome.Never)
 		job =    Job("Build", rules=[first, second])
-		third =  Rule("$C", When.Delayed)
+		third =  Rule("$C", RuleOutcome.Delayed)
 		job.AddRule(third)
-		fourth = Rule(when=When.Manual, parent=job)
+		fourth = Rule(when=RuleOutcome.Manual, parent=job)
 
 		self.assertListEqual([first, second, third, fourth], job.Rules)
 		self.assertListEqual([first, second, third, fourth], list(job.IterateRules()))

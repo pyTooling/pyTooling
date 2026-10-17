@@ -122,25 +122,27 @@ A workflow, a matrix, a job or a step carries an **ordered list of rules** (:cla
 * The rules are evaluated in order, and the **first matching rule decides**. A rule without a condition always
   matches.
 * An element **without rules** runs unconditionally. An element with rules, of which **none matches**, doesn't run.
-* :attr:`When.Never <pyTooling.CI.When.Never>` excludes the element; :attr:`When.Manual <pyTooling.CI.When.Manual>`
-  and :attr:`When.Delayed <pyTooling.CI.When.Delayed>` add it to start by hand or after a delay. A rule not saying
-  decides :attr:`When.DEFAULT <pyTooling.CI.When.DEFAULT>`, which runs the element when nothing it waits for failed.
+* :attr:`RuleOutcome.Never <pyTooling.CI.RuleOutcome.Never>` excludes the element;
+  :attr:`RuleOutcome.Manual <pyTooling.CI.RuleOutcome.Manual>` and
+  :attr:`RuleOutcome.Delayed <pyTooling.CI.RuleOutcome.Delayed>` add it to start by hand or after a delay. A rule not
+  saying decides :attr:`RuleOutcome.DEFAULT <pyTooling.CI.RuleOutcome.DEFAULT>`, which runs the element when nothing
+  it waits for failed.
 
 GitHub gives an element one rule at most - its ``if:``, whose status functions like ``success()`` or ``always()`` are
 part of the condition. GitLab gives it the list of its ``rules:``.
 
 .. code-block:: python
 
-   from pyTooling.CI import Job, Rule, When
+   from pyTooling.CI import Job, Rule, RuleOutcome
 
    deploy = Job("Deploy", rules=[
-     Rule("$CI_PIPELINE_SOURCE == 'schedule'", When.Never),
+     Rule("$CI_PIPELINE_SOURCE == 'schedule'", RuleOutcome.Never),
      Rule("$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"),
-     Rule("$CI_COMMIT_TAG", When.Manual, keyValuePairs={"allow_failure": True})
+     Rule("$CI_COMMIT_TAG", RuleOutcome.Manual, keyValuePairs={"allow_failure": True})
    ])
 
    deploy.RuleCount                  # 3
-   deploy.Rules[2].When              # When.Manual
+   deploy.Rules[2].When              # RuleOutcome.Manual
    deploy.Rules[2]["allow_failure"]  # True
 
 What only a service's rule has - GitLab's ``changes``, ``exists``, ``allow_failure`` or ``variables`` - is attached to
@@ -286,7 +288,7 @@ GitHub Actions
      - :meth:`~pyTooling.CI.DependencyMixin.AddNeed`; needing a matrix job or a calling job needs the group
    * - ``if:``
      - One :class:`~pyTooling.CI.Rule` in :attr:`~pyTooling.CI.RulesMixin.Rules`, the expression as its
-       :attr:`~pyTooling.CI.Rule.Condition`, deciding :attr:`When.DEFAULT <pyTooling.CI.When.DEFAULT>`
+       :attr:`~pyTooling.CI.Rule.Condition`, deciding :attr:`RuleOutcome.DEFAULT <pyTooling.CI.RuleOutcome.DEFAULT>`
    * - ``conclusion``
      - :attr:`~pyTooling.CI.Base.Outcome` (e.g. ``timed_out`` |rarr| ``Timeout``, ``startup_failure``
        |rarr| ``Error``)
