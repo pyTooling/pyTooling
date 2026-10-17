@@ -49,8 +49,14 @@ Version 10.x (2026)
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
      :class:`~pyTooling.CI.Workflow`\ s, :class:`~pyTooling.CI.Matrix`\ es,
      :class:`~pyTooling.CI.Job`\ s and :class:`~pyTooling.CI.Step`\ s, with the times and an
-     :class:`~pyTooling.CI.Outcome` on every element, and a condition on those a definition can give one. Its
+     :class:`~pyTooling.CI.Outcome` on every element, and rules on those a definition can give them. Its
      exceptions derive from :exc:`~pyTooling.CI.CIError`.
+
+     * Workflows, matrices, jobs and steps carry an **ordered list of rules** (:class:`~pyTooling.CI.RulesMixin`):
+       a :class:`~pyTooling.CI.Rule` holds a condition as written, a :class:`~pyTooling.CI.RuleOutcome` deciding what
+       happens to the element if it matches, and key-value-pairs for what only a service's rule has. The first
+       matching rule decides. A GitHub ``if:`` is one rule, GitLab's ``rules:`` and ``workflow:rules`` are the list,
+       see :ref:`CI/Pipeline/Rules`.
 
      * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.DependencyMixin.AddNeed` links
        two siblings, records the reverse link in :attr:`~pyTooling.CI.DependencyMixin.Dependents`, and

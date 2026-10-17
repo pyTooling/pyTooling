@@ -34,9 +34,11 @@ Unit tests for :mod:`pyTooling.CI`.
 from datetime              import datetime, timedelta, timezone
 
 from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
-from pyTooling.CI          import JobGroup, Step
+from pyTooling.CI          import JobGroup, Step, Rule, RuleOutcome
 from pyTooling.CI          import Outcome, CIError, PipelineError, NeedDependencyError, NeedDependencyCycleError
-from pyTooling.CI          import ConditionMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
+from pyTooling.CI          import AlreadyInPipelineError
+from pyTooling.CI          import RulesMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
+from pyTooling.Exceptions  import AlreadyInHierarchyError
 from pyTooling.Graph       import BaseGraph, Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.Tracing.CI  import Result
@@ -91,14 +93,14 @@ class Instantiation(Testcase):
 	def test_Pipeline(self) -> None:
 		group = PipelineGroup("0123abcd")
 		pipeline = Pipeline(
-			"Pipeline", condition="$CI_COMMIT_BRANCH == 'main'", createdAt=_time(0), startedAt=_time(10),
+			"Pipeline", rules=[Rule("$CI_COMMIT_BRANCH == 'main'")], createdAt=_time(0), startedAt=_time(10),
 			completedAt=_time(600), outcome=Outcome.Success, parent=group
 		)
 
 		self.assertEqual("Pipeline", pipeline.Name)
 		self.assertEqual("Pipeline", str(pipeline))
 		self.assertEqual("Pipeline", pipeline.QualifiedName)
-		self.assertEqual("$CI_COMMIT_BRANCH == 'main'", pipeline.Condition)
+		self.assertEqual("$CI_COMMIT_BRANCH == 'main'", pipeline.Rules[0].Condition)
 		self.assertIs(group, pipeline.Parent)
 		self.assertIs(pipeline, pipeline.Pipeline)
 		self.assertListEqual([pipeline], group.Pipelines)
@@ -139,10 +141,10 @@ class Instantiation(Testcase):
 
 	def test_Matrix(self) -> None:
 		pipeline = Pipeline("Pipeline")
-		matrix = Matrix("Unit Tests", condition="inputs.unittest", parent=pipeline)
+		matrix = Matrix("Unit Tests", rules=[Rule("inputs.unittest")], parent=pipeline)
 		instance = MatrixJob("Unit Tests", {"os": "ubuntu-26.04", "python": "3.14"}, parent=matrix)
 
-		self.assertEqual("inputs.unittest", matrix.Condition)
+		self.assertEqual("inputs.unittest", matrix.Rules[0].Condition)
 		self.assertDictEqual({"Unit Tests": matrix}, pipeline.Matrices)
 		self.assertListEqual([instance], matrix.Instances)
 		self.assertListEqual([instance], matrix.Jobs)
@@ -212,20 +214,20 @@ class Instantiation(Testcase):
 	def test_Job(self) -> None:
 		pipeline = Pipeline("Pipeline")
 		job = Job(
-			"Build", condition="success()", createdAt=_time(60), startedAt=_time(70), completedAt=_time(130),
+			"Build", rules=[Rule("success()")], createdAt=_time(60), startedAt=_time(70), completedAt=_time(130),
 			outcome=Outcome.Failure, parent=pipeline
 		)
-		step = Step("Checkout", condition="always()", startedAt=_time(71), completedAt=_time(75), parent=job)
+		step = Step("Checkout", rules=[Rule("always()")], startedAt=_time(71), completedAt=_time(75), parent=job)
 
 		self.assertListEqual([job], pipeline.Jobs)
-		self.assertEqual("success()", job.Condition)
+		self.assertEqual("success()", job.Rules[0].Condition)
 		self.assertEqual(60.0, job.Duration)
 		self.assertIs(Outcome.Failure, job.Outcome)
 		self.assertListEqual([step], job.Steps)
 		self.assertIs(job, step.Parent)
 		self.assertIs(pipeline, step.Pipeline)
 		self.assertIsNone(step.CreatedAt)
-		self.assertEqual("always()", step.Condition)
+		self.assertEqual("always()", step.Rules[0].Condition)
 		self.assertEqual(1, job.StepCount)
 		self.assertTrue(job.ContainsStep("Checkout"))
 		self.assertListEqual([step], list(job.IterateSteps()))
@@ -244,7 +246,7 @@ class Instantiation(Testcase):
 
 	def test_Facts_Type(self) -> None:
 		for parameterName, value in (
-			("condition", 42), ("createdAt", "10:00"), ("startedAt", 0), ("completedAt", 0.0), ("outcome", "success")
+			("createdAt", "10:00"), ("startedAt", 0), ("completedAt", 0.0), ("outcome", "success")
 		):
 			with self.subTest(parameter=parameterName):
 				with self.assertRaises(TypeError) as context:
@@ -252,23 +254,27 @@ class Instantiation(Testcase):
 
 				self.assertIn(f"Parameter '{parameterName}' is not of type", str(context.exception))
 
-	def test_Condition(self) -> None:
-		"""Only an element a definition can give a condition has one."""
-		for cls in (Workflow, Pipeline, Matrix, Job, MatrixJob, Step):
+	def test_Rules(self) -> None:
+		"""Only an element a definition can give rules has them."""
+		for cls in (Workflow, Pipeline, Matrix, MatrixWorkflow, Job, MatrixJob, Step):
 			with self.subTest(cls=cls.__name__):
-				self.assertTrue(issubclass(cls, ConditionMixin))
-				self.assertEqual("always()", cls("x", condition="always()").Condition)
+				rule = Rule("always()")
+				element = cls("x", rules=[rule])
 
-		self.assertFalse(issubclass(PipelineGroup, ConditionMixin))
-		self.assertFalse(hasattr(PipelineGroup("x"), "Condition"))
+				self.assertTrue(issubclass(cls, RulesMixin))
+				self.assertListEqual([rule], element.Rules)
+				self.assertIs(element, rule.Parent)
 
-	def test_Condition_Type(self) -> None:
+		self.assertFalse(issubclass(PipelineGroup, RulesMixin))
+		self.assertFalse(hasattr(PipelineGroup("x"), "Rules"))
+
+	def test_Rules_Type(self) -> None:
 		for cls in (Workflow, Matrix, Job, Step):
 			with self.subTest(cls=cls.__name__):
 				with self.assertRaises(TypeError) as context:
-					_ = cls("x", condition=42)
+					_ = cls("x", rules=42)
 
-				self.assertEqual("Parameter 'condition' is not of type 'str'.", str(context.exception))
+				self.assertEqual("Parameter 'rules' is not iterable.", str(context.exception))
 
 	def test_Parent_Type(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -441,6 +447,153 @@ class KeyValuePairs(Testcase):
 		self.assertEqual(1, len(pipeline))
 		self.assertIsInstance(pipeline.GetElement("Build"), Job)
 		self.assertEqual("attribute", pipeline["Build"])
+
+	def test_Type(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Job("Build", keyValuePairs=[("runner.os", "Linux")])
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+
+
+class Rules(Testcase):
+	def test_When(self) -> None:
+		self.assertIs(RuleOutcome.OnSuccess, RuleOutcome.DEFAULT)
+		self.assertIs(RuleOutcome.OnSuccess, RuleOutcome.Parse(None))
+		self.assertIs(RuleOutcome.Never, RuleOutcome.Parse("never"))
+		self.assertListEqual(
+			["on_success", "on_failure", "always", "manual", "delayed", "never"], [member.value for member in RuleOutcome]
+		)
+
+	def test_Rule(self) -> None:
+		rule = Rule()
+
+		self.assertIsNone(rule.Condition)
+		self.assertIs(RuleOutcome.DEFAULT, rule.When)
+		self.assertIsNone(rule.Parent)
+		self.assertEqual(0, len(rule))
+		self.assertFalse(hasattr(rule, "__dict__"))
+
+	def test_Rule_Values(self) -> None:
+		rule = Rule("$CI_COMMIT_BRANCH == 'main'", RuleOutcome.Manual, keyValuePairs={"allow_failure": True})
+
+		self.assertEqual("$CI_COMMIT_BRANCH == 'main'", rule.Condition)
+		self.assertIs(RuleOutcome.Manual, rule.When)
+		self.assertTrue(rule["allow_failure"])
+
+	def test_Rule_ConditionType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rule(42)
+
+		self.assertEqual("Parameter 'condition' is not of type 'str'.", str(context.exception))
+
+	def test_Rule_ConditionEmpty(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Rule("")
+
+		self.assertEqual("Parameter 'condition' is empty.", str(context.exception))
+
+	def test_Rule_WhenNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Rule(when=None)
+
+		self.assertEqual("Parameter 'when' is None.", str(context.exception))
+
+	def test_Rule_WhenType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rule(when="never")
+
+		self.assertEqual("Parameter 'when' is not of type 'RuleOutcome'.", str(context.exception))
+
+	def test_Rule_ParentType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rule(parent=PipelineGroup("0123abcd"))
+
+		self.assertEqual("Parameter 'parent' is not of type 'RulesMixin'.", str(context.exception))
+
+	def test_Rule_KeyValuePairs(self) -> None:
+		pairs = {"changes": ("doc/**/*",)}
+		rule =  Rule(keyValuePairs=pairs)
+		rule["allow_failure"] = False
+
+		self.assertIn("changes", rule)
+		self.assertTupleEqual(("doc/**/*",), rule["changes"])
+		self.assertListEqual(["changes", "allow_failure"], list(rule))
+		self.assertEqual(1, len(pairs))
+
+		del rule["changes"]
+		self.assertNotIn("changes", rule)
+		self.assertEqual(1, len(rule))
+
+	def test_NoRules(self) -> None:
+		job = Job("Build")
+
+		self.assertListEqual([], job.Rules)
+		self.assertEqual(0, job.RuleCount)
+		self.assertListEqual([], list(job.IterateRules()))
+
+	def test_Order(self) -> None:
+		"""Rules keep the order they are evaluated in: given, added, then created with the element as parent."""
+		first =  Rule("$A")
+		second = Rule("$B", RuleOutcome.Never)
+		job =    Job("Build", rules=[first, second])
+		third =  Rule("$C", RuleOutcome.Delayed)
+		job.AddRule(third)
+		fourth = Rule(when=RuleOutcome.Manual, parent=job)
+
+		self.assertListEqual([first, second, third, fourth], job.Rules)
+		self.assertListEqual([first, second, third, fourth], list(job.IterateRules()))
+		self.assertEqual(4, job.RuleCount)
+
+		for rule in job.Rules:
+			self.assertIs(job, rule.Parent)
+
+	def test_AddRule_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Job("Build").AddRule(None)
+
+		self.assertEqual("Parameter 'rule' is None.", str(context.exception))
+
+	def test_AddRule_Type(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Job("Build").AddRule("$A")
+
+		self.assertEqual("Parameter 'rule' is not of type 'Rule'.", str(context.exception))
+
+	def test_AddRule_Attached(self) -> None:
+		"""A rule belongs to one element only, also when added to the same element again."""
+		job =  Job("Build")
+		rule = Rule("$A", parent=job)
+
+		for element in (job, Step("Checkout")):
+			with self.subTest(element=element.Name):
+				with self.assertRaises(AlreadyInPipelineError) as context:
+					element.AddRule(rule)
+
+				self.assertEqual("Rule belongs to 'Build' already.", str(context.exception))
+				self.assertIsInstance(context.exception, PipelineError)
+				self.assertIsInstance(context.exception, AlreadyInHierarchyError)
+
+		self.assertListEqual([rule], job.Rules)
+
+	def test_Rules_ElementNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Job("Build", rules=[None])
+
+		self.assertEqual("Parameter 'rule' is None.", str(context.exception))
+
+	def test_Rules_ElementType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Job("Build", rules=["$A"])
+
+		self.assertEqual("Parameter 'rule' is not of type 'Rule'.", str(context.exception))
+
+	def test_Rules_Attached(self) -> None:
+		rule = Rule("$A", parent=Job("Build"))
+
+		with self.assertRaises(AlreadyInPipelineError) as context:
+			_ = Job("Test", rules=[rule])
+
+		self.assertEqual("Rule belongs to 'Build' already.", str(context.exception))
 
 
 class Times(Testcase):
