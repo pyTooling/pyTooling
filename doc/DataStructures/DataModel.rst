@@ -59,6 +59,6 @@ The mixin's field becomes a slot of the first slotted class deriving from it. It
          super().__init__()
          KeyValuePairsMixin.__init__(self, keyValuePairs)
 
-The elements of :mod:`pyTooling.CI` and :mod:`pyTooling.ControlFlow` derive from
+The elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow` and :mod:`pyTooling.Graph` derive from
 :class:`~pyTooling.DataModel.KeyValuePairsMixin` by their root class ``Base``, a :class:`~pyTooling.Tree.Node`
 directly.

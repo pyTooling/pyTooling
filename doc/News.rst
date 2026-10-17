@@ -41,8 +41,8 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.DataModel` is a new package for the foundations of data models.
      :class:`~pyTooling.DataModel.KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element, accessed like
-     a dictionary. The elements of :mod:`pyTooling.CI` and :mod:`pyTooling.ControlFlow` and a
-     :class:`~pyTooling.Tree.Node` derive from it, and reject key-value-pairs given as anything but a mapping.
+     a dictionary. The elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow` and :mod:`pyTooling.Graph`, and
+     a :class:`~pyTooling.Tree.Node`, derive from it, and reject key-value-pairs given as anything but a mapping.
 
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
@@ -464,6 +464,17 @@ Version 10.x (2026)
      Its key-value-pairs come from :class:`~pyTooling.DataModel.KeyValuePairsMixin`, keys are
      :class:`~typing.Hashable` and values :data:`~typing.Any`. ``Node[a, b, c, d]`` raises a :exc:`TypeError`; drop the
      last two arguments. Key-value-pairs given as anything but a mapping raise a :exc:`TypeError`.
+   * ⚠️ **The elements of** :mod:`pyTooling.Graph` **take their key-value-pairs from**
+     :class:`~pyTooling.DataModel.KeyValuePairsMixin`: keys are :class:`~typing.Hashable`, values :data:`~typing.Any`.
+     The type parameters for keys and values are removed: :class:`~pyTooling.Graph.Graph` takes 11 instead of 25,
+     :class:`~pyTooling.Graph.Vertex` and :class:`~pyTooling.Graph.Subgraph` 11 instead of 19,
+     :class:`~pyTooling.Graph.View` and :class:`~pyTooling.Graph.Component` 11 instead of 21,
+     :class:`~pyTooling.Graph.Edge` and :class:`~pyTooling.Graph.Link` 4 instead of 6; drop those arguments from a
+     subscript. The 16 ``***DictKeyType`` and ``***DictValueType`` type variables are removed. Key-value-pairs given
+     as anything but a mapping raise a :exc:`TypeError`.
+   * ⚠️ **Iterating a** :class:`~pyTooling.Graph.Graph` **yields its keys**, like ``len()`` already counted its
+     key-value-pairs. It yielded the vertices without an ID, followed by the IDs - not the vertices - of the others.
+     Use :meth:`~pyTooling.Graph.BaseGraph.IterateVertices`.
 
    .. rubric:: Changes
 

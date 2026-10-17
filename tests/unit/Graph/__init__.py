@@ -2106,7 +2106,7 @@ class TypeHints(Testcase):
 		self.assertIs(Component, get_type_hints(Vertex, vars(pyTooling.Graph))["_component"])
 
 	def test_Kind(self) -> None:
-		"""An edge's and a link's kind is a type parameter of its class, before the dictionary's types."""
+		"""An edge's and a link's kind is the last type parameter of its class."""
 		self.assertIs(EdgeKindType, Edge.__parameters__[3])
 		self.assertIs(LinkKindType, Link.__parameters__[3])
 		self.assertIs(EdgeKindType, get_type_hints(BaseEdge.Kind.fget)["return"])
