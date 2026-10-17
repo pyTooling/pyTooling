@@ -51,9 +51,14 @@ from pyTooling.MetaClasses import ExtendedType
 __all__ = ["ElementType", "Predicate"]
 
 
+# WORKAROUND: Python <3.12
+# Obsolete with the 'type' statement for 'Predicate' below, which declares its type parameter itself.
 ElementType = TypeVar("ElementType")
 """A type variable for the element a :data:`Predicate` decides on."""
 
+# WORKAROUND: Python <3.12
+# The 'type' statement (PEP 695) isn't supported by Python 3.11. Use it when Python 3.11 support gets dropped:
+# type Predicate[ElementType] = Callable[[ElementType], bool]
 Predicate = Callable[[ElementType], bool]
 """
 A function deciding whether an element is selected.

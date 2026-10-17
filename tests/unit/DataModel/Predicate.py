@@ -45,6 +45,8 @@ if __name__ == "__main__":  # pragma: no cover
 
 class Predicates(Testcase):
 	def test_Alias(self) -> None:
+		# WORKAROUND: Python <3.12
+		# With the 'type' statement, 'Predicate' is a 'TypeAliasType': compare 'Predicate.__value__' then.
 		self.assertEqual(Callable[[ElementType], bool], Predicate)
 		self.assertEqual(Callable[[int], bool], Predicate[int])
 
