@@ -53,6 +53,7 @@ class KeyValuePairsMixin(metaclass=ExtendedType, mixin=True):
 	Mixin-class adding arbitrary key-value-pairs to an element of a data model, accessed like a dictionary.
 
 	* :pycode:`element[key]` reads a value.
+	* :pycode:`element.get(key, default)` reads a value, or a default value, if the key doesn't exist.
 	* :pycode:`element[key] = value` creates or updates a pair.
 	* :pycode:`del element[key]` removes a pair.
 	* :pycode:`key in element` checks for a key.
@@ -78,6 +79,18 @@ class KeyValuePairsMixin(metaclass=ExtendedType, mixin=True):
 			raise ex
 
 		self._dict = dict(keyValuePairs)
+
+	def get(self, key: Hashable, default: Any = None) -> Any:
+		"""
+		Read an attached attribute (key-value-pair) by key, or a default value, if the key doesn't exist.
+
+		This method is spelled the way :meth:`dict.get` is, because that is the behaviour it offers.
+
+		:param key:     The key to look for.
+		:param default: Optional, the value returned if the key isn't an attached attribute. Default: ``None``.
+		:returns:       The value associated to the given key, otherwise the default value.
+		"""
+		return self._dict.get(key, default)
 
 	def __getitem__(self, key: Hashable) -> Any:
 		"""

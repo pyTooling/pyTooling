@@ -41,8 +41,10 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.DataModel` is a new package for the foundations of data models.
      :class:`~pyTooling.DataModel.KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element, accessed like
-     a dictionary. The elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow` and :mod:`pyTooling.Graph`, and
-     a :class:`~pyTooling.Tree.Node`, derive from it, and reject key-value-pairs given as anything but a mapping.
+     a dictionary, and :meth:`~pyTooling.DataModel.KeyValuePairsMixin.get` reads a key that may be missing. The
+     elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow`, :mod:`pyTooling.Graph` and
+     :mod:`pyTooling.Tracing`, and a :class:`~pyTooling.Tree.Node`, derive from it, and reject key-value-pairs given as
+     anything but a mapping.
 
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
@@ -293,8 +295,12 @@ Version 10.x (2026)
      * :class:`~pyTooling.Tracing.Span` and :class:`~pyTooling.Tracing.Event` are
        :class:`~pyTooling.Tracing.TraceElement`\ s - a **name**, the timespan **enclosing** them, and their
        **attributes**, which each of them declared and validated itself before.
-     * A trace's elements answer :meth:`~pyTooling.Tracing.TraceElement.get`, which reads an attribute that may not
-       be there and returns a default value instead of raising.
+     * A trace's elements take their attributes from :class:`~pyTooling.DataModel.KeyValuePairsMixin` and answer
+       its :meth:`~pyTooling.DataModel.KeyValuePairsMixin.get`, which reads an attribute that may not be there and
+       returns a default value instead of raising.
+     * ⚠️ Iterating a trace's element yields the attribute keys;
+       :meth:`~pyTooling.Tracing.TraceElement.IterateAttributes` yields the :pycode:`(key, value)` pairs that the
+       iteration yielded before.
 
      * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
        :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One

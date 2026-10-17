@@ -23,6 +23,7 @@ accessed like a dictionary. A key is any :class:`~typing.Hashable` object.
 
    element["runner.os"] = "Linux"   # create or update a pair
    os = element["runner.os"]        # read a value; KeyError if the key doesn't exist
+   os = element.get("runner.os")    # read a value; None (or a given default) if the key doesn't exist
    del element["runner.os"]         # remove a pair; KeyError if the key doesn't exist
    if "runner.os" in element: ...   # check for a key
    count = len(element)             # number of pairs
@@ -61,4 +62,4 @@ The mixin's field becomes a slot of the first slotted class deriving from it. It
 
 The elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow` and :mod:`pyTooling.Graph` derive from
 :class:`~pyTooling.DataModel.KeyValuePairsMixin` by their root class ``Base``, a :class:`~pyTooling.Tree.Node`
-directly.
+directly, and those of :mod:`pyTooling.Tracing` by :class:`~pyTooling.Tracing.TraceElement`.
