@@ -39,6 +39,12 @@ Version 10.x (2026)
      * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
        working.
 
+   * :mod:`pyTooling.DataModel` is a new package for the foundations of data models.
+     :class:`~pyTooling.DataModel.KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element, accessed like
+     a dictionary; :class:`~pyTooling.DataModel.BaseWithKeyValuePairs` is the slotted base-class of a data model whose
+     elements all carry them. The elements of :mod:`pyTooling.CI` and :mod:`pyTooling.ControlFlow` derive from it,
+     and reject key-value-pairs given as anything but a mapping.
+
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
      :class:`~pyTooling.CI.Workflow`\ s, :class:`~pyTooling.CI.Matrix`\ es,

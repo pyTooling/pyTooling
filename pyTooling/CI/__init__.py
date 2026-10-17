@@ -74,6 +74,7 @@ from datetime              import datetime
 from typing                import Any, ClassVar, Hashable, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
+from pyTooling.DataModel   import BaseWithKeyValuePairs
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Graph       import Graph, Subgraph, Vertex
@@ -146,7 +147,7 @@ class Outcome(StringEnum):
 
 @export
 @abstractclass
-class Base(metaclass=ExtendedType, slots=True):
+class Base(BaseWithKeyValuePairs):
 	"""
 	Common behaviour of every element of a pipeline.
 
@@ -165,7 +166,6 @@ class Base(metaclass=ExtendedType, slots=True):
 	_startedAt:   Nullable[datetime]   #: Time the element started running.
 	_completedAt: Nullable[datetime]   #: Time the element completed.
 	_outcome:     Nullable[Outcome]    #: How the element ended.
-	_dict:        dict[Hashable, Any]  #: A dictionary to store arbitrary key-value-pairs.
 
 	def __init__(
 		self,
@@ -198,8 +198,11 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises TypeError:    If parameter 'startedAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:    If parameter 'completedAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:    If parameter 'outcome' is not of type :class:`Outcome`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
+		super().__init__(keyValuePairs)
+
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
 		elif not isinstance(name, str):
@@ -232,7 +235,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._startedAt =   startedAt
 		self._completedAt = completedAt
 		self._outcome =     outcome
-		self._dict =        {} if keyValuePairs is None else dict(keyValuePairs)
 
 		if parent is not None:
 			parent._AddElement(self)
@@ -343,61 +345,6 @@ class Base(metaclass=ExtendedType, slots=True):
 			known.append(time)
 
 		return max(known) if len(known) > 0 else None
-
-	def __getitem__(self, key: Hashable) -> Any:
-		"""
-		Read an element's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to look for.
-		:returns:         The value associated to the given key.
-		:raises KeyError: If key doesn't exist in the element's attributes.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: Hashable, value: Any) -> None:
-		"""
-		Create or update an element's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: Hashable) -> None:
-		"""
-		Remove an entry from an element's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the element's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: Hashable) -> bool:
-		"""
-		Check if the key is an attached attribute (key-value-pairs) on this element.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Return the number of attached attributes (key-value-pairs) on this element.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __iter__(self) -> Iterator[Hashable]:
-		"""
-		Iterate the keys of the attached attributes (key-value-pairs) on this element.
-
-		:returns: An iterator over the keys, in the order they were added.
-		"""
-		return iter(self._dict)
 
 	def __str__(self) -> str:
 		"""
