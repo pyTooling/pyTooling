@@ -43,7 +43,7 @@ Data Model
 
 * Every element has a :attr:`~pyTooling.Tracing.TraceElement.Parent` - the enclosing timespan - and attributes,
   read and written with dictionary syntax: ``span["files"] = 12``.
-  :meth:`~pyTooling.Tracing.TraceElement.get` reads one that may not be there.
+  :meth:`~pyTooling.DataModel.KeyValuePairsMixin.get` reads one that may not be there.
 * A :class:`~pyTooling.Tracing.Trace` is a :class:`~pyTooling.Tracing.Span` without a parent. Its
   :attr:`~pyTooling.Tracing.Trace.TraceID` is shared by every timespan below it, and each timespan has its own
   :attr:`~pyTooling.Tracing.Span.SpanID`. Both are drawn when the element is constructed, so exporting a trace twice
@@ -203,10 +203,12 @@ Four details of the encoding are easy to get wrong, and each has a testcase:
 What an attribute may hold
 ==========================
 
-A timespan and an event carry their attributes like a dictionary: :pycode:`span["key"]`, :pycode:`span["key"] = 1`,
-:pycode:`"key" in span`, :pycode:`del span["key"]`, :pycode:`len(span)`, and iteration yielding
-:pycode:`(key, value)` pairs. A key that may not be there is read by
-:meth:`~pyTooling.Tracing.TraceElement.get`, which returns a default value instead of raising a :exc:`KeyError`.
+A timespan and an event carry their attributes like a dictionary (:class:`~pyTooling.DataModel.KeyValuePairsMixin`):
+:pycode:`span["key"]`, :pycode:`span["key"] = 1`, :pycode:`"key" in span`, :pycode:`del span["key"]`,
+:pycode:`len(span)`, and iteration yielding the keys. :meth:`~pyTooling.Tracing.TraceElement.IterateAttributes`
+yields :pycode:`(key, value)` pairs. A key that may not be there is read by
+:meth:`~pyTooling.DataModel.KeyValuePairsMixin.get`, which returns a default value instead of raising a
+:exc:`KeyError`.
 
 Both are :class:`~pyTooling.Tracing.TraceElement`\ s: a name, the timespan enclosing them, and those attributes.
 A :class:`~pyTooling.Tracing.Span` adds the times and what it contains, an :class:`~pyTooling.Tracing.Event` the

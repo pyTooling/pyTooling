@@ -99,6 +99,14 @@ class KeyValuePairs(Testcase):
 		self.assertIn("second", element)
 		self.assertEqual(1, len(element))
 
+	def test_Get(self) -> None:
+		element = Element({"key": "value"})
+
+		self.assertEqual("value", element.get("key"))
+		self.assertIsNone(element.get("missing"))
+		self.assertEqual("default", element.get("missing", "default"))
+		self.assertNotIn("missing", element, "Reading a key doesn't create it.")
+
 	def test_MissingKey(self) -> None:
 		element = Element()
 
