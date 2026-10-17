@@ -1051,6 +1051,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		                                 A session is opened by the package index and handed to the objects it
 		                                 creates.
 		:raises ReleaseNotFoundError:    If the index doesn't know this release.
+		:raises HTTPError:               If the index answers with another HTTP error status.
 		"""
 		if self._session is None:
 			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
@@ -1461,6 +1462,7 @@ class Project(Package, LazyLoadableMixin):
 		                                       A session is opened by the package index and handed to the objects it
 		                                       creates.
 		:raises ProjectNotFoundError:          If the index doesn't know this project.
+		:raises HTTPError:                     If the index answers with another HTTP error status.
 		:raises UnhandledCriticalWarningError: If a release's version isn't supported and no
 		                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 		"""
@@ -1475,6 +1477,8 @@ class Project(Package, LazyLoadableMixin):
 		except HTTPError as ex:
 			if ex.response is not None and ex.response.status_code == 404:
 				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from ex
+
+			raise ex
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 

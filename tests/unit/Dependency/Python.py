@@ -39,6 +39,7 @@ from textwrap                     import dedent
 from typing                       import Optional as Nullable
 
 from pytest                       import mark
+from requests                     import HTTPError, Response
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
@@ -1203,3 +1204,48 @@ class IndexSessionRetries(Testcase):
 
 		self.assertIn("GET", retries.allowed_methods)
 		self.assertNotIn("POST", retries.allowed_methods)
+
+
+class _ServerErrorSession:
+	"""HTTP session answering every request with ``500 Internal Server Error``, so no request leaves the process."""
+
+	def get(self, url: str) -> Response:
+		"""
+		Answer a GET request with ``500 Internal Server Error``.
+
+		:param url: The requested URL.
+		:returns:   A response with status code 500.
+		"""
+		response = Response()
+		response.status_code = 500
+		response.url =         url
+
+		return response
+
+
+class HTTPErrors(Testcase):
+	"""An HTTP error other than ``404 Not Found`` propagates, instead of being parsed as the project's JSON document."""
+
+	def test_Project_ServerError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = _ServerErrorSession()
+		project = Project("project", "https://index.org/project/", index=index)
+
+		with self.assertRaises(HTTPError) as context:
+			project.DownloadDetails()
+
+		self.assertEqual(500, context.exception.response.status_code)
+
+	def test_Release_ServerError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = _ServerErrorSession()
+		project = Project("project", "https://index.org/project/", index=index)
+		release = Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
+
+		with self.assertRaises(HTTPError) as context:
+			release.DownloadDetails()
+
+		self.assertEqual(500, context.exception.response.status_code)
+
