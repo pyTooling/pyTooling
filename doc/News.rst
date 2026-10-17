@@ -625,6 +625,12 @@ Version 10.x (2026)
 
    * ⚠️ :exc:`~pyTooling.Exceptions.ExceptionBase` **has no** ``message`` **field anymore**. Read the message with
      ``str(ex)`` or the new read-only property :attr:`~pyTooling.Exceptions.ExceptionBase.Message`.
+   * ⚠️ :class:`~pyTooling.Dependency.Python.RequirementsFile` **is read by**
+     :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>`: ``RequirementsFile(path)``
+     |rarr| ``RequirementsFile.Parse(path)``. The initializer reads no file anymore; it takes the path, the
+     requirements and referenced files as ``entries``, and a keyword-only ``parent``, so a tree can be built by hand.
+     A requirements file given in ``entries`` joins the tree; one referenced by another file already raises
+     :exc:`~pyTooling.Dependency.AlreadyInRequirementsTreeError`.
 
    * ⚠️ **A program found in** ``PATH`` **is the full path** in :attr:`~pyTooling.CLIAbstraction.Program.Path` and as
      the first item of :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList`, e.g. ``/usr/bin/git`` instead of

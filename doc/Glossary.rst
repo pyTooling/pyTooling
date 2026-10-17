@@ -923,9 +923,9 @@ Glossary
      and optionally an environment marker saying when it applies at all. A *requirements file* lists them, and may
      include another with ``-r``.
 
-     :class:`~pyTooling.Dependency.Python.RequirementsFile` reads such a file as a **tree**: every file knows its
-     parent, its root and the chain between, ``AllRequirements`` yields them in the order the files state them
-     with the nearer statement winning, and a cycle raises rather than being read twice. See
+     :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` reads such a file as a
+     **tree**: every file knows its parent, its root and the chain between, ``AllRequirements`` yields them in the
+     order the files state them with the nearer statement winning, and a cycle raises rather than being read twice. See
      :ref:`DEPENDENCIES/Python`.
 
      .. seealso::

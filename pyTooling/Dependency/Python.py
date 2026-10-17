@@ -89,6 +89,7 @@ from pyTooling.Dependency      import UnsupportedVersionWarning
 from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
 from pyTooling.Dependency      import PackageIndexError
+from pyTooling.Dependency      import AlreadyInRequirementsTreeError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
@@ -134,11 +135,12 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 	It is a **tree**, so every file knows where it sits in one: :attr:`Parent` is the file that referenced it and
 	:attr:`Root` the entrypoint the whole tree was read from. The root alone keeps
-	:attr:`AnalyzedRequirementFiles`, every file of the tree by its resolved path, which is both the answer to
-	*where did this package come from* and what makes a cycle detectable.
+	:attr:`AnalyzedRequirementFiles`, every file of the tree by its resolved path, which is the answer to *where did
+	this package come from*.
 
-	**A cycle raises.** A file referencing itself, directly or through a chain, is a statement nobody wrote on
-	purpose; reading it once and continuing would hide it.
+	:meth:`Parse` reads a file and the files it references; the initializer takes what a file states, so a tree can be
+	built by hand, too. **A cycle raises.** A file referencing itself, directly or through a chain, is a statement
+	nobody wrote on purpose; reading it once and continuing would hide it.
 	"""
 
 	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
@@ -147,40 +149,57 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	_entries:                  list[Union[Requirement, RequirementsFile]]  #: What this file states, in file order.
 	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of the tree, by resolved path.
 
-	def __init__(self, path: Path, parent: Nullable[RequirementsFile] = None) -> None:
+	def __init__(
+		self,
+		path:    Path,
+		entries: Nullable[Iterable[Union[Requirement, RequirementsFile]]] = None,
+		*,
+		parent:  Nullable[RequirementsFile] = None
+	) -> None:
 		"""
-		Read a requirements file and the files it references.
+		Initializes a requirements file from its path and what it states.
 
-		A line that can't be parsed as a requirement is left out and reported as a
-		:exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a
-		collector, it's dropped.
+		A requirements file given in ``entries`` is referenced by this file: it and the files it references join this
+		file's tree.
 
-		:param path:                           Path of the requirements file to read.
-		:param parent:                         Optional, the file referencing this one. Default: ``None``, a root.
-		:raises TypeError:                     If parameter 'path' is not of type :class:`~pathlib.Path`.
-		:raises TypeError:                     If parameter 'parent' is not of type :class:`RequirementsFile`.
-		:raises RequirementsFileNotFoundError: If the requirements file doesn't exist.
-		:raises CircularRequirementsFileError: If a ``-r`` line references a file already being read.
+		:param path:                            Path of the requirements file.
+		:param entries:                         Optional, requirements and referenced files, in the order the file states
+		                                        them. Default: ``None``.
+		:param parent:                          Optional, the file referencing this one, which appends this file to its
+		                                        entries. Default: ``None``, a root.
+		:raises ValueError:                     If parameter 'path' is ``None``.
+		:raises TypeError:                      If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises TypeError:                      If parameter 'entries' is not iterable.
+		:raises TypeError:                      If parameter 'parent' is not of type :class:`RequirementsFile`.
+		:raises ValueError:                     If an element of parameter 'entries' is ``None``.
+		:raises TypeError:                      If an element of parameter 'entries' is not of type
+		                                        :class:`~packaging.requirements.Requirement` or :class:`RequirementsFile`.
+		:raises AlreadyInRequirementsTreeError: If an element of parameter 'entries' is referenced by another file
+		                                        already.
 		"""
-		if not isinstance(path, Path):
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
-		elif not path.exists():
-			raise RequirementsFileNotFoundError(f"Requirements file '{path}' does not exist.") from FileNotFoundError(path)
+
+		if entries is not None and not isinstance(entries, Iterable):
+			ex = TypeError("Parameter 'entries' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(entries)}'.")
+			raise ex
 
 		if parent is not None and not isinstance(parent, RequirementsFile):
 			ex = TypeError("Parameter 'parent' is not of type 'RequirementsFile'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
-		self._path =                     path
-		self._parent =                   parent
-		self._root =                     self if parent is None else parent._root
-		self._entries =                  []
+		self._path =    path
+		self._parent =  parent
+		self._root =    self if parent is None else parent._root
+		self._entries = []
 
-		# resolved as the mapping's key only, not as '_path': the key is compared against a '-r' reference, which is
-		# resolved below, so a file reachable under two spellings has to arrive here as one
+		# resolved as the mapping's key only, not as '_path': a file reachable under two spellings is one key
 		if parent is None:
 			self._analyzedRequirementFiles = {
 				path.resolve(): self
@@ -189,36 +208,111 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			self._analyzedRequirementFiles = None
 			self._root._analyzedRequirementFiles[path.resolve()] = self
 
-		lines = path.read_text(encoding="utf-8").splitlines()
-		for lineNumber, line in enumerate(lines, start=1):
-			if (line := line.split("#")[0].strip()) == "":
-				continue
+		if entries is not None:
+			for entry in entries:
+				if entry is None:
+					raise ValueError("An element of parameter 'entries' is None.")
+				elif isinstance(entry, RequirementsFile):
+					if entry._parent is not None:
+						raise AlreadyInRequirementsTreeError(
+							f"Requirements file '{entry._path}' is referenced by '{entry._parent._path}' already."
+						)
 
-			if line.startswith("-r"):
-				referenced = (path.parent / line[2:].strip()).resolve()
+					entry._parent = self
+					for resolvedPath, requirementsFile in entry._analyzedRequirementFiles.items():
+						requirementsFile._root = self._root
+						self._root._analyzedRequirementFiles[resolvedPath] = requirementsFile
 
-				if referenced in self._root._analyzedRequirementFiles:
-					chain = " → ".join(str(file.Path) for file in self.Hierarchy)
-					ex = CircularRequirementsFileError(
-						f"Requirements file '{referenced}' referenced in '{path}' line {lineNumber} is already being read."
-					)
-					ex.add_note(f"Chain: {chain} → {referenced}")
+					entry._analyzedRequirementFiles = None
+				elif not isinstance(entry, Requirement):
+					ex = TypeError("An element of parameter 'entries' is not of type 'Requirement' or 'RequirementsFile'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(entry)}'.")
 					raise ex
 
-				self._entries.append(RequirementsFile(referenced, self))
-				continue
+				self._entries.append(entry)
 
-			# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
-			if line.startswith("-") or line.startswith("http"):
-				continue
+		if parent is not None:
+			parent._entries.append(self)
 
-			try:
-				self._entries.append(Requirement(line))
-			except InvalidRequirement as ex:
-				WarningCollector.Raise(
-					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {lineNumber} can't be parsed."),
-					ex
-				)
+	@classmethod
+	def Parse(cls, path: Path) -> Self:
+		"""
+		Read a requirements file and the files it references.
+
+		Every ``-r`` line is read into a referenced file first, so a file is initialized after the files it references,
+		and the root is initialized last. A line that can't be parsed as a requirement is left out and reported as a
+		:exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without
+		a collector, it's dropped.
+
+		:param path:                           Path of the requirements file to read.
+		:returns:                              The requirements file, root of the tree of the files it references.
+		:raises ValueError:                    If parameter 'path' is ``None``.
+		:raises TypeError:                     If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises RequirementsFileNotFoundError: If the requirements file doesn't exist.
+		:raises RequirementsFileNotFoundError: If a ``-r`` line references a file that doesn't exist.
+		:raises CircularRequirementsFileError: If a ``-r`` line references a file already being read.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		analyzedRequirementFiles: set[Path] = set()
+		chain:                    list[Path] = []
+
+		def parseFile(file: Path) -> Self:
+			"""
+			Nested function for recursion.
+
+			:param file:                           Path of the requirements file to read.
+			:returns:                              The requirements file, initialized after the files it references.
+			:raises RequirementsFileNotFoundError: If the requirements file doesn't exist.
+			:raises CircularRequirementsFileError: If a ``-r`` line references a file already being read.
+			"""
+			if not file.exists():
+				raise RequirementsFileNotFoundError(f"Requirements file '{file}' does not exist.") from FileNotFoundError(file)
+
+			analyzedRequirementFiles.add(file.resolve())
+			chain.append(file)
+			entries: list[Union[Requirement, RequirementsFile]] = []
+
+			lines = file.read_text(encoding="utf-8").splitlines()
+			for lineNumber, line in enumerate(lines, start=1):
+				if (line := line.split("#")[0].strip()) == "":
+					continue
+
+				if line.startswith("-r"):
+					referenced = (file.parent / line[2:].strip()).resolve()
+
+					if referenced in analyzedRequirementFiles:
+						ex = CircularRequirementsFileError(
+							f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read."
+						)
+						ex.add_note(f"Chain: {' → '.join(str(chainedFile) for chainedFile in chain)} → {referenced}")
+						raise ex
+
+					entries.append(parseFile(referenced))
+					continue
+
+				# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
+				if line.startswith("-") or line.startswith("http"):
+					continue
+
+				try:
+					entries.append(Requirement(line))
+				except InvalidRequirement as ex:
+					WarningCollector.Raise(
+						BrokenRequirementWarning(f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed."),
+						ex
+					)
+
+			chain.pop()
+
+			return cls(file, entries)
+
+		return parseFile(path)
 
 	@readonly
 	def Path(self) -> Path:
@@ -266,9 +360,8 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access every file of this tree, by its resolved path.
 
-		**Only the root's is filled**; ask :attr:`Root` for it. It is what detects a cycle while reading, and what
-		answers which files a tree was read from afterward - the list a documentation build registers so a change
-		to any of them rebuilds the page.
+		**Only the root's is filled**; ask :attr:`Root` for it. It answers which files a tree was read from - the list
+		a documentation build registers so a change to any of them rebuilds the page.
 
 		:returns: Every file of the tree by resolved path, or ``None`` for a referenced file.
 		"""
