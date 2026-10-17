@@ -146,6 +146,10 @@ These warnings are non-critical: they are reported to a :class:`~pyTooling.Warni
 collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see
 :ref:`WARNING`.
 
+A release whose version number the parser doesn't support, like pytz' ``2004d`` from before :pep:`440`, is skipped
+and reported as an :class:`~pyTooling.Dependency.UnsupportedVersionWarning`. It is a critical warning: without a
+collector up the call-hierarchy, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+
 
 .. _DEPENDENCIES/Competitors:
 

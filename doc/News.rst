@@ -483,6 +483,11 @@ Version 10.x (2026)
    * ⚠️ **Iterating a** :class:`~pyTooling.Graph.Graph` **yields its keys**, like ``len()`` already counted its
      key-value-pairs. It yielded the vertices without an ID, followed by the IDs - not the vertices - of the others.
      Use :meth:`~pyTooling.Graph.BaseGraph.IterateVertices`.
+   * :meth:`Project.UpdateDetailsFromPyPIJSON <pyTooling.Dependency.Python.Project.UpdateDetailsFromPyPIJSON>`
+     **reports a release whose version it can't parse as an** :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`,
+     a critical warning naming the project and the version number, e.g. pytz' ``2004d``. It printed a line to the
+     console instead. The release is still skipped, but without a :class:`~pyTooling.Warning.WarningCollector`, reading
+     such a project raises :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`.
 
    .. rubric:: Changes
 
