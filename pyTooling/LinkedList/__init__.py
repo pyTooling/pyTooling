@@ -44,7 +44,7 @@ from collections.abc       import Sized
 from typing                import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Any
 
 from pyTooling.Decorators  import readonly, export
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import NotInSameHierarchyError, ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
 
@@ -74,7 +74,7 @@ class NotInAListError(LinkedListError):
 
 
 @export
-class NotInSameListError(LinkedListError):
+class NotInSameListError(LinkedListError, NotInSameHierarchyError):
 	"""The exception is raised when a node is assigned to a different linked list than expected."""
 
 
