@@ -68,13 +68,13 @@ from collections           import deque
 from enum                  import Enum
 from itertools             import chain
 from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable
-from typing                import Callable, Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
+from typing                import Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import DuplicateElementError, NotInSameHierarchyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.DataModel   import KeyValuePairsMixin
+from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 from pyTooling.Tree        import Node
 
 
@@ -1414,7 +1414,7 @@ class Vertex(
 
 		return vertex
 
-	def IterateOutboundEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge, None, None]:
+	def IterateOutboundEdges(self, predicate: Nullable[Predicate[Edge]] = None) -> Generator[Edge, None, None]:
 		"""
 		Iterate all or selected outbound edges of this vertex.
 
@@ -1431,7 +1431,7 @@ class Vertex(
 				if predicate(edge):
 					yield edge
 
-	def IterateInboundEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge, None, None]:
+	def IterateInboundEdges(self, predicate: Nullable[Predicate[Edge]] = None) -> Generator[Edge, None, None]:
 		"""
 		Iterate all or selected inbound edges of this vertex.
 
@@ -1448,7 +1448,7 @@ class Vertex(
 				if predicate(edge):
 					yield edge
 
-	def IterateOutboundLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link, None, None]:
+	def IterateOutboundLinks(self, predicate: Nullable[Predicate[Link]] = None) -> Generator[Link, None, None]:
 		"""
 		Iterate all or selected outbound links of this vertex.
 
@@ -1465,7 +1465,7 @@ class Vertex(
 				if predicate(link):
 					yield link
 
-	def IterateInboundLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link, None, None]:
+	def IterateInboundLinks(self, predicate: Nullable[Predicate[Link]] = None) -> Generator[Link, None, None]:
 		"""
 		Iterate all or selected inbound links of this vertex.
 
@@ -1482,7 +1482,7 @@ class Vertex(
 				if predicate(link):
 					yield link
 
-	def IterateSuccessorVertices(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Vertex, None, None]:
+	def IterateSuccessorVertices(self, predicate: Nullable[Predicate[Edge]] = None) -> Generator[Vertex, None, None]:
 		"""
 		Iterate all or selected successor vertices of this vertex.
 
@@ -1499,7 +1499,7 @@ class Vertex(
 				if predicate(edge):
 					yield edge.Destination
 
-	def IteratePredecessorVertices(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Vertex, None, None]:
+	def IteratePredecessorVertices(self, predicate: Nullable[Predicate[Edge]] = None) -> Generator[Vertex, None, None]:
 		"""
 		Iterate all or selected predecessor vertices of this vertex.
 
@@ -2333,7 +2333,7 @@ class BaseGraph(
 		:returns: The number of links in this graph."""
 		return len(self._linksWithoutID) + len(self._linksWithID)
 
-	def IterateVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
+	def IterateVertices(self, predicate: Nullable[Predicate[Vertex]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
 		"""
 		Iterate all or selected vertices of a graph.
 
@@ -2355,7 +2355,7 @@ class BaseGraph(
 				if predicate(vertex):
 					yield vertex
 
-	def IterateRoots(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
+	def IterateRoots(self, predicate: Nullable[Predicate[Vertex]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
 		"""
 		Iterate all or selected roots (vertices without inbound edges / without predecessors) of a graph.
 
@@ -2390,7 +2390,7 @@ class BaseGraph(
 				if len(vertex._inboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	def IterateLeafs(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
+	def IterateLeafs(self, predicate: Nullable[Predicate[Vertex]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
 		"""
 		Iterate all or selected leafs (vertices without outbound edges / without successors) of a graph.
 
@@ -2425,13 +2425,13 @@ class BaseGraph(
 				if len(vertex._outboundEdges) == 0 and predicate(vertex):
 					yield vertex
 
-	# def IterateBFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
+	# def IterateBFS(self, predicate: Nullable[Predicate[Vertex]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
 	# 	raise NotImplementedError()
 	#
-	# def IterateDFS(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
+	# def IterateDFS(self, predicate: Nullable[Predicate[Vertex]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
 	# 	raise NotImplementedError()
 
-	def IterateTopologically(self, predicate: Nullable[Callable[[Vertex], bool]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
+	def IterateTopologically(self, predicate: Nullable[Predicate[Vertex]] = None) -> Generator[Vertex[VertexIDType, VertexWeightType, VertexValueType, EdgeIDType, EdgeWeightType, EdgeValueType, EdgeKindType, LinkIDType, LinkWeightType, LinkValueType, LinkKindType], None, None]:
 		"""
 		Iterate all or selected vertices in topological order.
 
@@ -2500,7 +2500,7 @@ class BaseGraph(
 
 		raise InternalError("Graph data structure is corrupted.")  # pragma: no cover
 
-	def IterateEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> Generator[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType], None, None]:
+	def IterateEdges(self, predicate: Nullable[Predicate[Edge]] = None) -> Generator[Edge[EdgeIDType, EdgeValueType, EdgeWeightType, EdgeKindType], None, None]:
 		"""
 		Iterate all or selected edges of a graph.
 
@@ -2522,7 +2522,7 @@ class BaseGraph(
 				if predicate(edge):
 					yield edge
 
-	def IterateLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> Generator[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType], None, None]:
+	def IterateLinks(self, predicate: Nullable[Predicate[Link]] = None) -> Generator[Link[LinkIDType, LinkValueType, LinkWeightType, LinkKindType], None, None]:
 		"""
 		Iterate all or selected links of a graph.
 
@@ -2544,7 +2544,7 @@ class BaseGraph(
 				if predicate(link):
 					yield link
 
-	def ReverseEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> None:
+	def ReverseEdges(self, predicate: Nullable[Predicate[Edge]] = None) -> None:
 		"""
 		Reverse all or selected edges of a graph.
 
@@ -2581,7 +2581,7 @@ class BaseGraph(
 				if predicate(edge):
 					edge.Reverse()
 
-	def ReverseLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> None:
+	def ReverseLinks(self, predicate: Nullable[Predicate[Link]] = None) -> None:
 		"""
 		Reverse all or selected links of a graph.
 
@@ -2618,7 +2618,7 @@ class BaseGraph(
 				if predicate(link):
 					link.Reverse()
 
-	def RemoveEdges(self, predicate: Nullable[Callable[[Edge], bool]] = None) -> None:
+	def RemoveEdges(self, predicate: Nullable[Predicate[Edge]] = None) -> None:
 		"""
 		Remove all or selected edges of a graph.
 
@@ -2661,7 +2661,7 @@ class BaseGraph(
 					edge._destination._inboundEdges.remove(edge)
 					edge._Delete()
 
-	def RemoveLinks(self, predicate: Nullable[Callable[[Link], bool]] = None) -> None:
+	def RemoveLinks(self, predicate: Nullable[Predicate[Link]] = None) -> None:
 		"""
 		Remove all or selected links of a graph.
 
@@ -3281,7 +3281,7 @@ class Graph(
 		"""
 		raise NotImplementedError()
 
-	def CopyVertices(self, predicate: Nullable[Callable[[Vertex], bool]] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> Graph:
+	def CopyVertices(self, predicate: Nullable[Predicate[Vertex]] = None, copyGraphDict: bool = True, copyVertexDict: bool = True) -> Graph:
 		"""
 		Create a new graph and copy all or selected vertices of the original graph.
 

@@ -47,6 +47,7 @@ from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import NotInSameHierarchyError, ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import Predicate
 
 
 _NodeKey =   TypeVar("_NodeKey")
@@ -713,7 +714,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			else:  # pragma: no cover
 				raise InternalError("Node position not found.")
 
-	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
+	def Search(self, predicate: Predicate[Node], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
 		"""
 		Search the list for the first node matching a predicate.
 

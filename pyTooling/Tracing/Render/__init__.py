@@ -51,6 +51,7 @@ from typing                      import Callable, ClassVar, Generic, Iterator, O
 from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common            import getFullyQualifiedName
+from pyTooling.DataModel         import Predicate
 from pyTooling.Diagram.Gantt     import Bar, Diagram, Row
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
@@ -64,7 +65,7 @@ _FigureType = TypeVar("_FigureType")
 LINE_LEGEND_LABEL = "pipeline, called workflow"
 """The legend's label of the line drawn for the pipeline and every called workflow."""
 
-SpanFilter = Callable[[Span], bool]
+SpanFilter = Predicate[Span]
 """A function deciding whether a timespan - and with it, its sub-spans - is shown."""
 
 SpanCategory = Callable[[Span], str]

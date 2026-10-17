@@ -47,13 +47,14 @@ from __future__            import annotations
 from collections.abc       import Iterable as abc_Iterable
 from enum                  import Flag, Enum
 from re                    import compile as re_compile, escape as re_escape, Pattern
-from typing                import Optional as Nullable, Union, Callable, Any, ClassVar, Generic, TypeVar, Iterable
+from typing                import Optional as Nullable, Union, Any, ClassVar, Generic, TypeVar, Iterable
 from typing                import Iterator, Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import Predicate
 
 
 @export
@@ -618,7 +619,7 @@ class Version(metaclass=ExtendedType, slots=True):
 
 	@classmethod
 	@abstractmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> Version:
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Predicate[SemanticVersion]] = None) -> Version:
 		"""
 		Parse a version string and return a Version instance.
 
@@ -1318,7 +1319,7 @@ class SemanticVersion(Version):
 			self._releaseLevelSpelling = spelling
 
 	@classmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> SemanticVersion:
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Predicate[SemanticVersion]] = None) -> SemanticVersion:
 		"""
 		Parse a version string and return a :class:`SemanticVersion` instance.
 
@@ -1664,7 +1665,7 @@ class PythonVersion(SemanticVersion):
 	def Parse(
 		cls,
 		versionString: Nullable[str],
-		validator:     Nullable[Callable[[SemanticVersion], bool]] = None,
+		validator:     Nullable[Predicate[SemanticVersion]] = None,
 		*,
 		normalize:     bool = False
 	) -> PythonVersion:
@@ -1906,7 +1907,7 @@ class CalendarVersion(Version):
 		super().__init__(major, minor, micro, build=build, postfix=postfix, prefix=prefix, flags=flags)
 
 	@classmethod
-	def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[CalendarVersion], bool]] = None) -> CalendarVersion:
+	def Parse(cls, versionString: Nullable[str], validator: Nullable[Predicate[CalendarVersion]] = None) -> CalendarVersion:
 		"""
 		Parse a version string and return a :class:`CalendarVersion` instance.
 
