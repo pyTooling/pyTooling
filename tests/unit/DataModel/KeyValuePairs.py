@@ -1,18 +1,17 @@
 # ==================================================================================================================== #
-#                                                                                                                      #
-#             _____           _ _               _____                    _   _                                         #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  | ____|_  _____ ___ _ __ | |_(_) ___  _ __  ___                         #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | |  _| \ \/ / __/ _ \ '_ \| __| |/ _ \| '_ \/ __|                        #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |___ >  < (_|  __/ |_) | |_| | (_) | | | \__ \                        #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)_____/_/\_\___\___| .__/ \__|_|\___/|_| |_|___/                        #
-# |_|    |___/                          |___/                     |_|                                                  #
+#             _____           _ _               ____        _        __  __           _      _                         #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  |  _ \  __ _| |_ __ _|  \/  | ___   __| | ___| |                        #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` | | | | |/ _` | __/ _` | |\/| |/ _ \ / _` |/ _ \ |                        #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| |_| |_| | (_| | || (_| | |  | | (_) | (_| |  __/ |                        #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____/ \__,_|\__\__,_|_|  |_|\___/ \__,_|\___|_|                        #
+# |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
 #   Patrick Lehmann                                                                                                    #
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2017-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -35,6 +34,7 @@ Unit tests for :class:`pyTooling.DataModel.KeyValuePairsMixin` and :class:`pyToo
 from pyTooling.DataModel   import BaseWithKeyValuePairs, KeyValuePairsMixin
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType
 from pyTooling.Testing     import Testcase
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
