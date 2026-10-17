@@ -137,7 +137,7 @@ Exceptions and Warnings
 :exc:`~pyTooling.Dependency.ProjectNotFoundError` and
 :exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for, and
 :exc:`~pyTooling.Dependency.PackageIndexError` when the index responds with another HTTP error status. The latter is
-caused by the :exc:`requests.HTTPError`.
+caused by the :exc:`~requests.HTTPError`.
 
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or

@@ -194,6 +194,7 @@ extensions = [
 intersphinx_mapping = {
 	"python":       ("https://docs.python.org/3", None),
 	"setup":        ("https://setuptools.pypa.io/en/latest", None),
+	"requests":     ("https://requests.readthedocs.io/en/latest", None),
 	"pyToolSphinx": ("https://pyTooling.github.io/pyTooling.Sphinx/", None),
 	"pyToolGitHub": ("https://pyTooling.github.io/pyTooling.GitHub/", None),
 }

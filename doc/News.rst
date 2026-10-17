@@ -599,7 +599,7 @@ Version 10.x (2026)
      * :meth:`Project.DownloadDetails <pyTooling.Dependency.Python.Project.DownloadDetails>` and
        :meth:`Release.DownloadDetails <pyTooling.Dependency.Python.Release.DownloadDetails>` swallowed every HTTP error
        but ``404 Not Found`` and parsed the error page as JSON document. Both raise a
-       :exc:`~pyTooling.Dependency.PackageIndexError` now, caused by the :exc:`requests.HTTPError`.
+       :exc:`~pyTooling.Dependency.PackageIndexError` now, caused by the :exc:`~requests.HTTPError`.
 
    * :mod:`pyTooling.Filesystem`
 
