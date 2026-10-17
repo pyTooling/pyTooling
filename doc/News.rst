@@ -415,6 +415,15 @@ Version 10.x (2026)
        :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` / :meth:`~pyTooling.Graph.GraphViz.Graph.FromTree` with
        conversion methods a derived class overrides.
 
+   * :mod:`pyTooling.Tree`
+
+     * :meth:`Node.RemoveChild <pyTooling.Tree.Node.RemoveChild>` and
+       :meth:`~pyTooling.Tree.Node.RemoveChildren` remove children from a node, the counterparts of
+       :meth:`~pyTooling.Tree.Node.AddChild` and :meth:`~pyTooling.Tree.Node.AddChildren`. A removed child takes its
+       subtree along and becomes the root node of its own tree, like assigning ``None`` to its
+       :attr:`~pyTooling.Tree.Node.Parent`. A node, which isn't a direct child, raises the new
+       :exc:`~pyTooling.Tree.NotAChildError`.
+
    * :mod:`pyTooling.CLIAbstraction`
 
      * :meth:`Program._CopyParameters <pyTooling.CLIAbstraction.Program._CopyParameters>` copies every argument set on
