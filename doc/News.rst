@@ -41,8 +41,8 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.DataModel` is a new package for the foundations of data models.
      :class:`~pyTooling.DataModel.KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element, accessed like
-     a dictionary. The elements of :mod:`pyTooling.CI` and :mod:`pyTooling.ControlFlow` derive from it, and reject
-     key-value-pairs given as anything but a mapping.
+     a dictionary. The elements of :mod:`pyTooling.CI` and :mod:`pyTooling.ControlFlow` and a
+     :class:`~pyTooling.Tree.Node` derive from it, and reject key-value-pairs given as anything but a mapping.
 
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
@@ -460,6 +460,10 @@ Version 10.x (2026)
      and ``in``: :pycode:`len(node)` counts the pairs and iterating a node yields the keys. Both addressed the children
      before. Use :attr:`~pyTooling.Tree.Node.ChildCount`, :attr:`~pyTooling.Tree.Node.Children` or
      :meth:`~pyTooling.Tree.Node.GetChildren` instead.
+   * ⚠️ :class:`~pyTooling.Tree.Node` **takes two type parameters instead of four**: ``Node[IDType, ValueType]``.
+     Its key-value-pairs come from :class:`~pyTooling.DataModel.KeyValuePairsMixin`, keys are
+     :class:`~typing.Hashable` and values :data:`~typing.Any`. ``Node[a, b, c, d]`` raises a :exc:`TypeError`; drop the
+     last two arguments. Key-value-pairs given as anything but a mapping raise a :exc:`TypeError`.
 
    .. rubric:: Changes
 

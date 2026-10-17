@@ -48,7 +48,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 class Construction(Testcase):
 	def test_SingleNode(self) -> None:
-		root: Node[Nullable[Any], int, str, Any] = Node()
+		root: Node[Nullable[Any], int] = Node()
 
 		self.assertIs(root, root.Root)
 		self.assertIsNone(root.Parent)
@@ -454,21 +454,6 @@ class Features(Testcase):
 
 		root.Value = "2"
 		self.assertIs("2", root.Value)
-
-	def test_NodeWithDictionary(self) -> None:
-		root = Node()
-
-		# set value
-		root["key1"] = "value1"
-
-		# get value
-		self.assertIs("value1", root["key1"])
-
-		# del value
-		del root["key1"]
-
-		with self.assertRaises(KeyError):
-			_ = root["key1"]
 
 	def test_KeyValuePairs(self) -> None:
 		"""``in``, ``len()`` and iterating a node address its key-value-pairs, not its children."""

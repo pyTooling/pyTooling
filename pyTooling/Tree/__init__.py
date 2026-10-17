@@ -44,12 +44,13 @@ from __future__            import annotations
 
 from collections           import deque
 from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
-from typing                import Any, Callable, Iterator, Generator, Iterable, Mapping, Hashable
+from typing                import Any, Callable, Generator, Iterable, Mapping, Hashable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import KeyValuePairsMixin
 
 
 IDType = TypeVar("IDType", bound=Hashable)
@@ -57,12 +58,6 @@ IDType = TypeVar("IDType", bound=Hashable)
 
 ValueType = TypeVar("ValueType")
 """A type variable for a tree's value."""
-
-DictKeyType = TypeVar("DictKeyType")
-"""A type variable for a tree's dictionary keys."""
-
-DictValueType = TypeVar("DictValueType")
-"""A type variable for a tree's dictionary values."""
 
 
 @export
@@ -112,7 +107,7 @@ class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 
 
 @export
-class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=ExtendedType, slots=True):
+class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedType, slots=True):
 	"""
 	A **tree** data structure can be constructed of ``Node`` instances.
 
@@ -149,8 +144,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	Each node can have a **value** (:attr:`_value`), which can be given at node creation time, or it can be assigned and/or
 	modified later. Use the property :attr:`Value` to get or set the value.
 
-	Moreover, each node can store various key-value-pairs (:attr:`_dict`). Use the dictionary syntax to get and set
-	key-value-pairs: ``in``, :pycode:`len(node)` and iterating a node address the key-value-pairs, not the children.
+	Moreover, each node can store arbitrary key-value-pairs (:class:`~pyTooling.DataModel.KeyValuePairsMixin`). Use the
+	dictionary syntax to get and set key-value-pairs: ``in``, :pycode:`len(node)` and iterating a node address the
+	key-value-pairs, not the children.
 	"""
 
 	_id: Nullable[IDType]                       #: Unique identifier of a node. ``None`` if not used.
@@ -163,7 +159,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	_level: int                                 #: Level of the node (distance to the root).
 	_value: Nullable[ValueType]                 #: Field to store the node's value.
-	_dict: dict[DictKeyType, DictValueType]     #: Dictionary to store key-value-pairs attached to the node.
 
 	_format: Nullable[Callable[[Node], str]]    #: A node formatting function returning a one-line representation for tree-rendering.
 
@@ -171,7 +166,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self,
 		nodeID: Nullable[IDType] = None,
 		value: Nullable[ValueType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
 		parent: Nullable[Node] = None,
 		children: Nullable[Iterable[Node]] = None,
 		format: Nullable[Callable[[Node], str]] = None
@@ -187,15 +182,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:param format:        Optional, node formatting function returning a one-line representation for
 		                      tree-rendering.
 
+		:raises TypeError:  If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:  If parameter parent is not an instance of Node.
 		:raises ValueError: If nodeID already exists in the tree.
 		:raises TypeError:  If parameter children is not iterable.
 		:raises ValueError: If an element of children is not an instance of Node.
 		"""
+		super().__init__(keyValuePairs)
 
 		self._id = nodeID
 		self._value = value
-		self._dict = dict(keyValuePairs) if keyValuePairs is not None else {}
 
 		self._format = format
 
@@ -269,60 +265,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	@Value.setter
 	def Value(self, value: Nullable[ValueType]) -> None:
 		self._value = value
-
-	def __getitem__(self, key: DictKeyType) -> DictValueType:
-		"""
-		Read a node's attached attributes (key-value-pairs) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: DictKeyType, value: DictValueType) -> None:
-		"""
-		Create or update a node's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: DictKeyType) -> None:
-		"""
-		Remove an attached attribute (key-value-pair) from the node by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If the key does not exist.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: DictKeyType) -> bool:
-		"""
-		Check if a key exists in the node's attached attributes.
-
-		:param key: The key to look for.
-		:returns:   ``True``, if the key exists.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) on this node.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __iter__(self) -> Iterator[DictKeyType]:
-		"""
-		Iterate the keys of the node's attached attributes (key-value-pairs).
-
-		:returns: An iterator over the keys, in the order they were added.
-		"""
-		return iter(self._dict)
 
 	@readonly
 	def Root(self) -> Node:
