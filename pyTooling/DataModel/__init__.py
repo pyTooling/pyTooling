@@ -32,8 +32,7 @@
 Foundations of data models: building blocks the classes of a data model share.
 
 A :class:`KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element of a data model, accessed like a
-dictionary: :pycode:`element["runner.os"] = "Linux"`. :class:`BaseWithKeyValuePairs` is the slotted base-class of a
-data model, whose elements all carry key-value-pairs.
+dictionary: :pycode:`element["runner.os"] = "Linux"`.
 
 .. hint::
 
@@ -45,7 +44,7 @@ from typing                import Any, Hashable, Iterator, Mapping, Optional as 
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export
-from pyTooling.MetaClasses import ExtendedType, abstractclass
+from pyTooling.MetaClasses import ExtendedType
 
 
 @export
@@ -134,13 +133,3 @@ class KeyValuePairsMixin(metaclass=ExtendedType, mixin=True):
 		:returns: An iterator over the keys, in the order they were added.
 		"""
 		return iter(self._dict)
-
-
-@export
-@abstractclass
-class BaseWithKeyValuePairs(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
-	"""
-	Slotted base-class of a data model, whose elements all carry arbitrary key-value-pairs.
-
-	It materializes the :class:`KeyValuePairsMixin`: its field is a slot of this class.
-	"""
