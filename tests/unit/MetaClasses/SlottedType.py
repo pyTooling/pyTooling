@@ -1299,6 +1299,8 @@ class SlotShadowedByClassMember(Testcase):
 
 		self.assertIn("_data_0", str(context.exception))
 		self.assertIn("Slot '_data_0' is declared in base-class", context.exception.__notes__[0])
+		self.assertEqual("_data_0", context.exception.FieldName)
+		self.assertEqual("Derived", context.exception.ClassName)
 
 	def test_ShadowedMixinSlot(self) -> None:
 		class Mixin(metaclass=ExtendedType, mixin=True):
@@ -1358,6 +1360,8 @@ class DuplicateMixinSlot(Testcase):
 			str(context.exception),
 			r"^Slot '_data' of mixin-class '.*\.Mixin' already exists in base-class '.*\.Primary'\.$"
 		)
+		self.assertEqual("_data", context.exception.FieldName)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_TwoMixins(self) -> None:
 		class Primary(metaclass=ExtendedType, slots=True):
@@ -1378,6 +1382,8 @@ class DuplicateMixinSlot(Testcase):
 			r"^Slot '_data' is declared by mixin-classes '.*\.Mixin1' and '.*\.Mixin2'\.$"
 		)
 		self.assertEqual("Both are base-classes of class 'Final'.", context.exception.__notes__[0])
+		self.assertEqual("_data", context.exception.FieldName)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_OwnField(self) -> None:
 		class Primary(metaclass=ExtendedType, slots=True):
@@ -1394,6 +1400,8 @@ class DuplicateMixinSlot(Testcase):
 			str(context.exception),
 			r"^Slot '_data' declared in class 'Final' already exists in mixin-class '.*\.Mixin'\.$"
 		)
+		self.assertEqual("_data", context.exception.FieldName)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_MixinDerivedFromMixin(self) -> None:
 		class Mixin(metaclass=ExtendedType, mixin=True):
@@ -1466,6 +1474,15 @@ class DuplicateMixinSlot(Testcase):
 
 		self.assertTupleEqual(("_data2", ), Final.__slots__)
 		self.assertSetEqual({"_own", "_common", "_data1", "_data2"}, Final.__allSlots__)
+
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither a field name nor a class name."""
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			raise DuplicateFieldInSlotsError("Duplicate slot.")
+
+		self.assertEqual("Duplicate slot.", str(context.exception))
+		self.assertIsNone(context.exception.FieldName)
+		self.assertIsNone(context.exception.ClassName)
 
 
 class ObjectBaseClass(Testcase):

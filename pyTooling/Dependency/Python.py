@@ -1065,12 +1065,16 @@ class Release(PackageVersion, LazyLoadableMixin):
 		except HTTPError as cause:
 			if cause.response is not None and cause.response.status_code == 404:
 				raise ReleaseNotFoundError(
-					f"Release '{self._version}' of package '{self._package._name}' not found."
+					f"Release '{self._version}' of package '{self._package._name}' not found.",
+					projectName=self._package._name,
+					version=self._version
 				) from cause
 
 			raise PackageIndexError(
 				f"Package index responded {response.status_code} {response.reason} for release '{self._version}' of "
-				f"package '{self._package._name}'."
+				f"package '{self._package._name}'.",
+				projectName=self._package._name,
+				version=self._version
 			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
@@ -1482,10 +1486,11 @@ class Project(Package, LazyLoadableMixin):
 			response.raise_for_status()
 		except HTTPError as cause:
 			if cause.response is not None and cause.response.status_code == 404:
-				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from cause
+				raise ProjectNotFoundError(f"Package '{self._name}' not found.", projectName=self._name) from cause
 
 			raise PackageIndexError(
-				f"Package index responded {response.status_code} {response.reason} for package '{self._name}'."
+				f"Package index responded {response.status_code} {response.reason} for package '{self._name}'.",
+				projectName=self._name
 			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
