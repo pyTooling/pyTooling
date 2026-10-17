@@ -252,6 +252,7 @@ jobs:
       requirements:   '-r dist/requirements.txt'
       artifact:       ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).package_all }}
       pypi_compliant: ${{ needs.Package.outputs.pypi_compliant }}
+      publish_sdist:  'false'
     secrets:
       PYPI_TOKEN:     ${{ secrets.PYPI_TOKEN }}
 
