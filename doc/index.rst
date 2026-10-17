@@ -1140,6 +1140,7 @@ License
    DataStructures/CallGraph
    DataStructures/Cartesian
    DataStructures/ControlFlow
+   DataStructures/DataModel
    DataStructures/Graph
    DataStructures/Path/index
    DataStructures/StateMachine

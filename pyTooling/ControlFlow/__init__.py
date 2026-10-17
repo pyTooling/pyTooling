@@ -63,6 +63,7 @@ from enum                  import Enum
 from typing                import Any, Callable, Generator, Hashable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import BaseWithKeyValuePairs
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
@@ -127,77 +128,13 @@ class DuplicateEdgeError(ControlFlowError, DuplicateElementError):
 
 
 @export
-class Base(metaclass=ExtendedType, slots=True):
+class Base(BaseWithKeyValuePairs):
 	"""
 	Base-class of all control flow graph elements, adding a dictionary of arbitrary key-value-pairs to them.
 
 	Every graph, block and edge can carry data attached by its user, e.g. the results of an analysis under a key of the
 	analysis' choice: :pycode:`block["dominator"] = entry`. The element's dunder methods serve this dictionary.
 	"""
-	_dict: dict[Hashable, Any]  #: A dictionary to store arbitrary key-value-pairs.
-
-	def __init__(self, keyValuePairs: Nullable[Mapping[Hashable, Any]] = None) -> None:
-		"""
-		Initializes the key-value-pairs of an element.
-
-		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		"""
-		self._dict = dict(keyValuePairs) if keyValuePairs is not None else {}
-
-	def __getitem__(self, key: Hashable) -> Any:
-		"""
-		Read an attached attribute (key-value-pair) by key.
-
-		:param key:       The key to look for.
-		:returns:         The value associated to the given key.
-		:raises KeyError: If the key doesn't exist in the element's attributes.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: Hashable, value: Any) -> None:
-		"""
-		Create or update an attached attribute (key-value-pair) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: Hashable) -> None:
-		"""
-		Remove an attached attribute (key-value-pair) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If the key doesn't exist in the element's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: Hashable) -> bool:
-		"""
-		Check if the key is an attached attribute (key-value-pair) of this element.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Return the number of attached attributes (key-value-pairs) of this element.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __iter__(self) -> Iterator[Hashable]:
-		"""
-		Iterate the keys of the attached attributes (key-value-pairs) of this element.
-
-		:returns: An iterator over the keys, in the order they were created.
-		"""
-		return iter(self._dict)
 
 
 @export
