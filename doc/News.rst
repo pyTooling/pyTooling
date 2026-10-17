@@ -445,6 +445,10 @@ Version 10.x (2026)
    * ⚠️ **A slotted secondary base-class has to be a mixin-class**, also without fields:
      :class:`~pyTooling.MetaClasses.ExtendedType` raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`.
      Declare it with ``mixin=True`` or apply :deco:`~pyTooling.MetaClasses.mixin`.
+   * ⚠️ :exc:`~pyTooling.Dependency.BrokenRequirementWarning` and :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`
+     **are critical warnings**: without a :class:`~pyTooling.Warning.WarningCollector`,
+     :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised instead of dropping the warning. Read a
+     requirements file or download from a package index within ``with WarningCollector() as warnings:``.
 
    .. rubric:: Changes
 
@@ -512,6 +516,19 @@ Version 10.x (2026)
    * :class:`~pyTooling.MetaClasses.ExtendedType` no longer searches :class:`object` for methods marked with
      :deco:`~pyTooling.MetaClasses.expects`. The search walks the new class' MRO, which always ends in :class:`object`,
      whose members are never marked. Over pyVHDLModel's 412 classes, the search took 3.7 ms, now 3.2 ms.
+
+   * :mod:`pyTooling.Dependency`
+
+     * :exc:`~pyTooling.Dependency.BrokenRequirementWarning` and :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`
+       derive from :class:`~pyTooling.Warning.CriticalWarning`: the requirement or release they report is left out of
+       the result. Without a :class:`~pyTooling.Warning.WarningCollector`, they were dropped silently.
+       :exc:`~pyTooling.Dependency.UnknownLicenseWarning` stays non-critical.
+     * :meth:`Project.DownloadReleaseDetails <pyTooling.Dependency.Python.Project.DownloadReleaseDetails>` turns the
+       :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` of a release's
+       :exc:`~pyTooling.Dependency.BrokenRequirementWarning` into the cause of a
+       :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`, like any other exception. Without a collector, that one
+       raises :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` after every download finished, and no release is
+       dropped.
 
    * :mod:`pyTooling.Filesystem`
 
@@ -714,9 +731,11 @@ Version 10.x (2026)
      :meth:`~pyTooling.Warning.WarningCollector.Raise` hands a warning to the current collector of the calling thread
      instead of walking the call-stack, a :class:`~pyTooling.Warning.CriticalWarning` must be collected, and an
      escalated warning is collected before :exc:`~pyTooling.Warning.EscalatedWarningError` is raised.
-   * A function reporting a warning names it in its doc-string and says it's dropped without a collector - in
+   * A function reporting a warning names it in its doc-string and says what happens without a collector - in
      :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Dependency` and :class:`~pyTooling.MetaClasses.ExtendedType`. Each
      warning class states whether it's critical.
+   * :ref:`FILESYS/Permissions` explains how a scan reports a directory it can't read, and the examples of
+     :ref:`DEPENDENCIES/Exceptions` collect the warnings.
 
    .. rubric:: Unit Tests
 
@@ -725,6 +744,10 @@ Version 10.x (2026)
    * The :class:`~pyTooling.Stopwatch.Stopwatch` tests allow a sleep to take 4 times as long on GitHub Actions, where a
      shared runner overshot a 0.5 s sleep by up to 3x and failed them at random. A local run keeps the narrow limit.
    * The last 14 f-strings in the tests that interpolate nothing lost their ``f`` prefix.
+   * :exc:`~pyTooling.Dependency.BrokenRequirementWarning` and :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` are
+     tested with and without a collector, with release downloads answered by a replaced ``aiohttp.ClientSession``.
+   * :class:`~pyTooling.Filesystem.PermissionWarning` is tested with and without a collector, scanning a directory that
+     can't be read.
 
 Version 9.x (2026)
 ******************

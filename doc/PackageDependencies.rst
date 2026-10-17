@@ -142,9 +142,22 @@ A malformed requirement or unreadable release metadata does not abort the traver
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
 graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dependency.UnknownLicenseWarning`.
 
-These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
-collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see
-:ref:`WARNING`.
+The warnings are reported to a :class:`~pyTooling.Warning.WarningCollector` (see :ref:`WARNING`).
+:class:`~pyTooling.Dependency.BrokenRequirementWarning` and :class:`~pyTooling.Dependency.ReleaseDetailsWarning` are
+critical: without a collector up the call-hierarchy, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is
+raised. :class:`~pyTooling.Dependency.UnknownLicenseWarning` is non-critical, and dropped without a collector.
+
+.. code-block:: Python
+
+   from pathlib                     import Path
+   from pyTooling.Dependency.Python import RequirementsFile
+   from pyTooling.Warning           import WarningCollector
+
+   with WarningCollector() as warnings:
+     requirements = RequirementsFile(Path("requirements.txt"))
+
+   for warning in warnings:
+     print(f"WARNING: {warning}")
 
 
 .. _DEPENDENCIES/Competitors:

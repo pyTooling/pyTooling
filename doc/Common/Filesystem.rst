@@ -188,6 +188,26 @@ So ``Size - Size2`` is what hard-linking saves, and the counts alongside them te
    the filesystem.
 
 
+.. _FILESYS/Permissions:
+
+Unreadable Directories
+======================
+
+A directory that can't be read is skipped and reported as a :class:`~pyTooling.Filesystem.PermissionWarning`, which
+carries its :attr:`~pyTooling.Filesystem.PermissionWarning.Path`. The scan continues, so the statistics are incomplete
+by exactly that path. It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector`, it's
+dropped silently (see :ref:`WARNING`). To learn which directories are missing from the statistics, collect the
+warnings:
+
+.. code-block:: Python
+
+   from pyTooling.Warning import WarningCollector
+
+   with WarningCollector() as warnings:
+     root = Root(Path("/home/user/project"))
+
+   for warning in warnings:
+     print(f"Not scanned: {warning.Path}")
 
 
 .. _FILESYS/Competitors:
