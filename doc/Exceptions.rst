@@ -9,7 +9,8 @@ Overview
 The :mod:`pyTooling.Exceptions` package provides the base-classes every other exception in ``pyTooling`` derives
 from, and a small set of predefined exceptions for situations that occur in almost every application: a missing
 environment variable, an unsupported platform, an unconfigured setting, an invalid configuration, and an optional
-dependency that was not installed.
+dependency that was not installed. Common bases classify the errors every data structure raises - a duplicate, an
+element already in a hierarchy, an element of another data structure - across packages.
 
 Packages and frameworks building on ``pyTooling`` are meant to derive from these rather than from
 :exc:`Exception <python:Exception>` directly, so an application can catch everything raised by its stack with a
@@ -64,6 +65,58 @@ package-level bases such as :exc:`~pyTooling.Graph.GraphError` and :exc:`~pyTool
 It is the one class that keeps the ``***Exception`` suffix, because it names a package rather than an error.
 Applications deriving their own hierarchy use :exc:`ExceptionBase`; :exc:`ToolingException` marks *"this came out
 of pyTooling itself"*.
+
+
+.. _EXCEPTION/CommonBases:
+
+Common Bases
+############
+
+Some errors occur in every data structure: an element is added twice, an element is added to a hierarchy while it's
+already part of one, or an element is used together with an element of another data structure. A package raises its
+own exception for each - derived from its base-exception - and adds a common base as a second base-class. So a caller
+catches all duplicates of all packages by one clause, all errors of one package by its base-exception, or one error by
+its own class.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Common base
+     - Raised when
+     - In pyTooling
+   * - :exc:`DuplicateElementError`
+     - an element of the same kind and key exists already.
+     - :exc:`~pyTooling.Graph.DuplicateVertexError`, :exc:`~pyTooling.Graph.DuplicateEdgeError`,
+       :exc:`~pyTooling.ControlFlow.DuplicateBlockError`, :exc:`~pyTooling.ControlFlow.DuplicateEdgeError`,
+       :exc:`~pyTooling.CallGraph.DuplicateFunctionError`
+   * - :exc:`AlreadyInHierarchyError`
+     - an element is already part of a hierarchy.
+     - :exc:`~pyTooling.Tree.AlreadyInTreeError`
+   * - :exc:`NotInSameHierarchyError`
+     - an element is used together with an element of another data structure: it's valid, but its ownership is wrong.
+     - :exc:`~pyTooling.Graph.NotInSameGraph`, :exc:`~pyTooling.Tree.NotInSameTreeError`,
+       :exc:`~pyTooling.LinkedList.NotInSameListError`
+
+.. code-block:: Python
+
+   from pyTooling.Exceptions import DuplicateElementError, ExceptionBase
+
+   class ModelError(ExceptionBase):
+     """Base-exception of a data model."""
+
+   class DuplicateItemError(ModelError, DuplicateElementError):
+     """The exception is raised when the model already contains an item of the same ID."""
+
+   try:
+     model.AddItem(item)
+   except DuplicateElementError as ex:
+     print(f"Skipped: {ex}")
+
+.. note::
+
+   The common bases derive from :exc:`Exception <python:Exception>` and have no initializer of their own. The
+   package's base-exception - :exc:`ExceptionBase` or :exc:`ToolingException` - stores the message, as without the
+   common base.
 
 
 .. _EXCEPTION/Predefined:
