@@ -35,11 +35,12 @@ ExceptionBase
 The :exc:`ExceptionBase` is the base-class for all exceptions in ``pyTooling`` as well as derived packages and
 frameworks.
 
-It keeps the message in :pycode:`self.message` and renders it through :meth:`~object.__str__`, and it adds two
-read-only properties for the notes attached with :meth:`~BaseException.add_note`:
+It hands its message to :exc:`Exception <python:Exception>`, so :pycode:`ex.args` is :pycode:`(message, )` and
+:pycode:`str(ex)` returns the message, as for any Python exception. It adds three read-only properties:
 
-* :pycode:`HasNotes` — whether any note is attached. :pycode:`__notes__` only exists once the first note was added,
-  so testing this property is safer than testing the attribute.
+* :pycode:`Message` — the message, the first element of :attr:`~BaseException.args`.
+* :pycode:`HasNotes` — whether any note attached with :meth:`~BaseException.add_note` exists. :pycode:`__notes__`
+  only exists once the first note was added, so testing this property is safer than testing the attribute.
 * :pycode:`Notes` — the attached notes as a tuple, empty when there are none.
 
 .. code-block:: Python
@@ -48,12 +49,6 @@ read-only properties for the notes attached with :meth:`~BaseException.add_note`
 
    class MyPackageError(ExceptionBase):
      """Base-exception of all exceptions raised by 'myPackage'."""
-
-.. attention::
-
-   :exc:`ExceptionBase` does not forward its message to :meth:`Exception.__init__ <python:BaseException>`, so
-   :pycode:`ex.args` is empty while :pycode:`str(ex)` returns the message. Code reading :pycode:`ex.args[0]` has to
-   read :pycode:`str(ex)` instead.
 
 
 ToolingException

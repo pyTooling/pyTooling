@@ -126,7 +126,15 @@ class ExceptionBase(Exception):
 		:param message: Optional, the exception message.
 		"""
 		super().__init__(message)
-		self.message = message
+
+	@readonly
+	def Message(self) -> str:
+		"""
+		Read-only property to return the exception's message (first element of :attr:`~BaseException.args`).
+
+		:returns: The exception's message.
+		"""
+		return self.args[0]
 
 	@readonly
 	def HasNotes(self) -> bool:
@@ -145,14 +153,6 @@ class ExceptionBase(Exception):
 		:returns: Attached notes.
 		"""
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
-
-	def __str__(self) -> str:
-		"""
-		Returns the exception's message text.
-
-		:returns: The exception's message text.
-		"""
-		return self.message
 
 	# @DocumentMemberAttribute(False)
 	# @MethodAlias(pyExceptions.with_traceback)

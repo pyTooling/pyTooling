@@ -118,7 +118,7 @@ class CommonBases(Testcase):
 		ex = EnvironmentVariableError("Environment does not provide 'PATH'.")
 		copy = loads(dumps(ex))
 
-		self.assertEqual("Environment does not provide 'PATH'.", copy.message)
+		self.assertEqual("Environment does not provide 'PATH'.", copy.Message)
 		self.assertEqual(ex.args, copy.args)
 
 	def test_ExceptionBaseMessage(self) -> None:
@@ -130,7 +130,7 @@ class CommonBases(Testcase):
 			raise DuplicateItemError("Item 'A' already exists.")
 
 		self.assertEqual("Item 'A' already exists.", str(context.exception))
-		self.assertEqual("Item 'A' already exists.", context.exception.message)
+		self.assertEqual("Item 'A' already exists.", context.exception.Message)
 
 
 class MissingDependency(Testcase):
