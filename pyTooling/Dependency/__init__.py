@@ -100,6 +100,11 @@ class ReleaseNotFoundError(DependencyError):
 
 
 @export
+class PackageIndexError(DependencyError):
+	"""The package index responded with an HTTP error status other than ``404 Not Found``."""
+
+
+@export
 class BrokenRequirementWarning(Warning):
 	"""
 	A requirement can't be parsed, or names an extra the project doesn't declare.

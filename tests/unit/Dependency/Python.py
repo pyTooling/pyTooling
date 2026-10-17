@@ -47,7 +47,7 @@ from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
 from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
-from pyTooling.Dependency         import UnsupportedVersionWarning
+from pyTooling.Dependency         import PackageIndexError, UnsupportedVersionWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -1218,13 +1218,14 @@ class _ServerErrorSession:
 		"""
 		response = Response()
 		response.status_code = 500
+		response.reason =      "Internal Server Error"
 		response.url =         url
 
 		return response
 
 
 class HTTPErrors(Testcase):
-	"""An HTTP error other than ``404 Not Found`` propagates, instead of being parsed as the project's JSON document."""
+	"""An HTTP error other than ``404 Not Found`` raises a ``PackageIndexError``, instead of being parsed as JSON."""
 
 	def test_Project_ServerError(self) -> None:
 		graph = PythonPackageDependencyGraph("graph")
@@ -1232,10 +1233,11 @@ class HTTPErrors(Testcase):
 		index._session = _ServerErrorSession()
 		project = Project("project", "https://index.org/project/", index=index)
 
-		with self.assertRaises(HTTPError) as context:
+		with self.assertRaises(PackageIndexError) as context:
 			project.DownloadDetails()
 
-		self.assertEqual(500, context.exception.response.status_code)
+		self.assertEqual("Package index responded 500 Internal Server Error for package 'project'.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, HTTPError)
 
 	def test_Release_ServerError(self) -> None:
 		graph = PythonPackageDependencyGraph("graph")
@@ -1244,8 +1246,12 @@ class HTTPErrors(Testcase):
 		project = Project("project", "https://index.org/project/", index=index)
 		release = Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
 
-		with self.assertRaises(HTTPError) as context:
+		with self.assertRaises(PackageIndexError) as context:
 			release.DownloadDetails()
 
-		self.assertEqual(500, context.exception.response.status_code)
+		self.assertEqual(
+			"Package index responded 500 Internal Server Error for release 'v1.0.0' of package 'project'.",
+			str(context.exception)
+		)
+		self.assertIsInstance(context.exception.__cause__, HTTPError)
 

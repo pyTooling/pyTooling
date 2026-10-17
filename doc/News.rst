@@ -596,10 +596,10 @@ Version 10.x (2026)
        reported as *"The package index published no license information."* The
        :exc:`~pyTooling.Dependency.UnknownLicenseWarning` names the override's statement and the override file now,
        which :attr:`LicenseOverrides.Path <pyTooling.Dependency.Python.LicenseOverrides.Path>` keeps.
-     * :meth:`Project.DownloadDetails <pyTooling.Dependency.Python.Project.DownloadDetails>` swallowed every HTTP error
-       but ``404 Not Found`` and parsed the error page as the project's JSON document. It raises the
-       :exc:`~requests.HTTPError` now, as
-       :meth:`Release.DownloadDetails <pyTooling.Dependency.Python.Release.DownloadDetails>` does.
+     * :meth:`Project.DownloadDetails <pyTooling.Dependency.Python.Project.DownloadDetails>` and
+       :meth:`Release.DownloadDetails <pyTooling.Dependency.Python.Release.DownloadDetails>` swallowed every HTTP error
+       but ``404 Not Found`` and parsed the error page as JSON document. Both raise a
+       :exc:`~pyTooling.Dependency.PackageIndexError` now, caused by the :exc:`requests.HTTPError`.
 
    * :mod:`pyTooling.Filesystem`
 

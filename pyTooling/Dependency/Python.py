@@ -88,6 +88,7 @@ from pyTooling.Dependency      import BrokenRequirementWarning, ReleaseDetailsWa
 from pyTooling.Dependency      import UnsupportedVersionWarning
 from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
+from pyTooling.Dependency      import PackageIndexError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
@@ -1051,7 +1052,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		                                 A session is opened by the package index and handed to the objects it
 		                                 creates.
 		:raises ReleaseNotFoundError:    If the index doesn't know this release.
-		:raises HTTPError:               If the index answers with another HTTP error status.
+		:raises PackageIndexError:       If the index responds with another HTTP error status.
 		"""
 		if self._session is None:
 			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
@@ -1061,11 +1062,16 @@ class Release(PackageVersion, LazyLoadableMixin):
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
 		try:
 			response.raise_for_status()
-		except HTTPError as ex:
-			if ex.response is not None and ex.response.status_code == 404:
-				raise ReleaseNotFoundError(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
+		except HTTPError as cause:
+			if cause.response is not None and cause.response.status_code == 404:
+				raise ReleaseNotFoundError(
+					f"Release '{self._version}' of package '{self._package._name}' not found."
+				) from cause
 
-			raise ex
+			raise PackageIndexError(
+				f"Package index responded {response.status_code} {response.reason} for release '{self._version}' of "
+				f"package '{self._package._name}'."
+			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
@@ -1462,7 +1468,7 @@ class Project(Package, LazyLoadableMixin):
 		                                       A session is opened by the package index and handed to the objects it
 		                                       creates.
 		:raises ProjectNotFoundError:          If the index doesn't know this project.
-		:raises HTTPError:                     If the index answers with another HTTP error status.
+		:raises PackageIndexError:             If the index responds with another HTTP error status.
 		:raises UnhandledCriticalWarningError: If a release's version isn't supported and no
 		                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 		"""
@@ -1474,11 +1480,13 @@ class Project(Package, LazyLoadableMixin):
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
 		try:
 			response.raise_for_status()
-		except HTTPError as ex:
-			if ex.response is not None and ex.response.status_code == 404:
-				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from ex
+		except HTTPError as cause:
+			if cause.response is not None and cause.response.status_code == 404:
+				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from cause
 
-			raise ex
+			raise PackageIndexError(
+				f"Package index responded {response.status_code} {response.reason} for package '{self._name}'."
+			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
