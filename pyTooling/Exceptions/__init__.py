@@ -125,7 +125,7 @@ class ExceptionBase(Exception):
 
 		:param message: Optional, the exception message.
 		"""
-		super().__init__()
+		super().__init__(message)
 		self.message = message
 
 	@readonly

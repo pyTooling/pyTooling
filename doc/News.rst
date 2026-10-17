@@ -491,6 +491,8 @@ Version 10.x (2026)
 
    .. rubric:: Changes
 
+   * :exc:`~pyTooling.Exceptions.ExceptionBase` hands its message to :exc:`Exception`, so ``args`` is
+     ``(message, )`` and :func:`repr` shows it, as for any Python exception. ``args`` was empty.
    * An attribute applied to a method files it under *methods* when the decorator runs, recognized by its qualified
      name, instead of under *functions* until :class:`~pyTooling.MetaClasses.ExtendedType` moved it - a search
      through every function the attribute marks, per method. In a class not built by ``ExtendedType``,
