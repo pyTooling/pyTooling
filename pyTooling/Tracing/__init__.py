@@ -423,9 +423,6 @@ class TraceElement(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 	def IterateAttributes(self) -> Iterator[tuple[str, AttributeValue]]:
 		"""
 		Returns an iterator to iterate all attached attributes as :pycode:`(key, value)` tuples.
-
-		Iterating the element itself yields the keys only.
-
 		:returns: Iterator to iterate all attributes.
 		"""
 		return iter(self._dict.items())
