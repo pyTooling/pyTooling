@@ -135,7 +135,9 @@ Exceptions and Warnings
 :exc:`~pyTooling.Dependency.DependencyError` is the base of the module's exceptions:
 :exc:`~pyTooling.Dependency.NoSessionAvailableError` when a query is attempted without an open session,
 :exc:`~pyTooling.Dependency.ProjectNotFoundError` and
-:exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for.
+:exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for, and
+:exc:`~pyTooling.Dependency.PackageIndexError` when the index responds with another HTTP error status. The latter is
+caused by the :exc:`~requests.HTTPError`.
 
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or

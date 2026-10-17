@@ -39,6 +39,7 @@ from textwrap                     import dedent
 from typing                       import Optional as Nullable
 
 from pytest                       import mark
+from requests                     import HTTPError, Response
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
@@ -46,7 +47,7 @@ from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
 from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
-from pyTooling.Dependency         import UnsupportedVersionWarning
+from pyTooling.Dependency         import PackageIndexError, UnsupportedVersionWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -1203,3 +1204,54 @@ class IndexSessionRetries(Testcase):
 
 		self.assertIn("GET", retries.allowed_methods)
 		self.assertNotIn("POST", retries.allowed_methods)
+
+
+class _ServerErrorSession:
+	"""HTTP session answering every request with ``500 Internal Server Error``, so no request leaves the process."""
+
+	def get(self, url: str) -> Response:
+		"""
+		Answer a GET request with ``500 Internal Server Error``.
+
+		:param url: The requested URL.
+		:returns:   A response with status code 500.
+		"""
+		response = Response()
+		response.status_code = 500
+		response.reason =      "Internal Server Error"
+		response.url =         url
+
+		return response
+
+
+class HTTPErrors(Testcase):
+	"""An HTTP error other than ``404 Not Found`` raises a ``PackageIndexError``, instead of being parsed as JSON."""
+
+	def test_Project_ServerError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = _ServerErrorSession()
+		project = Project("project", "https://index.org/project/", index=index)
+
+		with self.assertRaises(PackageIndexError) as context:
+			project.DownloadDetails()
+
+		self.assertEqual("Package index responded 500 Internal Server Error for package 'project'.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, HTTPError)
+
+	def test_Release_ServerError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = _ServerErrorSession()
+		project = Project("project", "https://index.org/project/", index=index)
+		release = Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
+
+		with self.assertRaises(PackageIndexError) as context:
+			release.DownloadDetails()
+
+		self.assertEqual(
+			"Package index responded 500 Internal Server Error for release 'v1.0.0' of package 'project'.",
+			str(context.exception)
+		)
+		self.assertIsInstance(context.exception.__cause__, HTTPError)
+
