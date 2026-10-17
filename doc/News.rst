@@ -664,6 +664,13 @@ Version 10.x (2026)
        parameter of :class:`~pyTooling.LinkedList.LinkedList`, which has two, so :func:`typing.get_type_hints` raised a
        :exc:`TypeError` for :class:`~pyTooling.LinkedList.Node`.
 
+   * :mod:`pyTooling.Tree`
+
+     * Splitting a tree by assigning ``None`` to :attr:`Node.Parent <pyTooling.Tree.Node.Parent>` left the IDs of the
+       split-off nodes registered in the old tree, and the new tree's ID registry stayed empty:
+       :attr:`~pyTooling.Tree.Node.Size` and :meth:`~pyTooling.Tree.Node.GetNodeByID` still found them in the old
+       tree, not in the new one.
+
    * :mod:`pyTooling.CLIAbstraction`
 
      * A program searched in ``PATH`` kept the bare executable name, not the path it was found at. A variant built

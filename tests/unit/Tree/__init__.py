@@ -382,7 +382,10 @@ class SplitTree(Testcase):
 			self.assertIs(root1, node.Root)
 			self.assertEqual(1, node.Level)
 
-		# check if subtree's IDs are not in main tree anymore
+		for node in [root1] + children1:
+			self.assertIs(node, root1.GetNodeByID(node.ID))
+			with self.assertRaises(KeyError):
+				_ = root.GetNodeByID(node.ID)
 
 	@mark.skip(reason="Node has no DeleteChild method yet - the tree offers no way to remove a node.")
 	def test_DeleteChild(self) -> None:
