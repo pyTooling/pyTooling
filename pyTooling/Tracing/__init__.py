@@ -925,7 +925,7 @@ class Span(TraceElement):
 		:attr:`~SpanState.Running` inside the block and :attr:`~SpanState.Complete` after it, exactly as a recorded one
 		is. Only an :attr:`~SpanState.Empty` timespan can be entered.
 
-		:returns: :attr:`~SpanState.Empty`, :attr:`~SpanState.Running` or :attr:`~SpanState.Complete`.
+		:returns: Which of the timespan's times are filled in.
 		"""
 		if self._beginTime is None:
 			return SpanState.Empty

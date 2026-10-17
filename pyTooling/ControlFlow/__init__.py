@@ -64,7 +64,7 @@ from typing                import Any, Callable, Generator, Hashable, Iterator, 
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
 from pyTooling.MetaClasses import ExtendedType
 
@@ -117,12 +117,12 @@ class ControlFlowError(ToolingException):
 
 
 @export
-class DuplicateBlockError(ControlFlowError):
+class DuplicateBlockError(ControlFlowError, DuplicateElementError):
 	"""The exception raised for a block a graph has already: one with the same ID, or a second entry, exit or unwind."""
 
 
 @export
-class DuplicateEdgeError(ControlFlowError):
+class DuplicateEdgeError(ControlFlowError, DuplicateElementError):
 	"""The exception raised for an edge, which connects the same two blocks as an edge of the same kind."""
 
 

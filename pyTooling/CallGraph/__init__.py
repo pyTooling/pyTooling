@@ -63,7 +63,7 @@ from typing                import Any, Callable, Generator, Hashable, Mapping, O
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.ControlFlow import Base, BaseWithCountAndValue, BasicBlock, BlockKind, ControlFlowGraph
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
 from pyTooling.MetaClasses import ExtendedType
 
@@ -115,7 +115,7 @@ class CallGraphError(ToolingException):
 
 
 @export
-class DuplicateFunctionError(CallGraphError):
+class DuplicateFunctionError(CallGraphError, DuplicateElementError):
 	"""The exception raised for a function with an ID, which the graph has already."""
 
 

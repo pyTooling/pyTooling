@@ -72,7 +72,7 @@ from typing                import Callable, Iterator as typing_Iterator, Generat
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import DuplicateElementError, NotInSameHierarchyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Tree        import Node
 
@@ -211,7 +211,7 @@ class InternalError(GraphError):
 
 
 @export
-class NotInSameGraph(GraphError):
+class NotInSameGraph(GraphError, NotInSameHierarchyError):
 	"""The exception is raised when creating an edge between two vertices, but these are not in the same graph."""
 
 
@@ -225,7 +225,7 @@ class NotInDifferentSubgraphs(GraphError):
 
 
 @export
-class DuplicateVertexError(GraphError):
+class DuplicateVertexError(GraphError, DuplicateElementError):
 	"""The exception is raised when the vertex already exists in the graph."""
 
 	_vertexID: Nullable[VertexIDType]  #: ID of the vertex that already exists in the graph.
@@ -251,7 +251,7 @@ class DuplicateVertexError(GraphError):
 
 
 @export
-class DuplicateEdgeError(GraphError):
+class DuplicateEdgeError(GraphError, DuplicateElementError):
 	"""The exception is raised when the edge already exists in the graph."""
 
 	_edgeID: Nullable[EdgeIDType]  #: ID of the edge that already exists in the graph.
