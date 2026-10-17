@@ -308,7 +308,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 				self._root._nodesWithoutID.remove(self)
 			else:
 				self._nodesWithID[self._id] = self
-				del self._nodesWithID[self._id]
+				del self._root._nodesWithID[self._id]
 
 			for sibling in self.GetDescendants():
 				sibling._root = self
@@ -318,7 +318,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 					self._root._nodesWithoutID.remove(sibling)
 				else:
 					self._nodesWithID[sibling._id] = sibling
-					del self._nodesWithID[sibling._id]
+					del self._root._nodesWithID[sibling._id]
 
 			self._parent._children.remove(self)
 
