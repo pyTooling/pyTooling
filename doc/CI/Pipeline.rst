@@ -94,8 +94,8 @@ Definition and Run
 
 The model holds what a pipeline's **definition** says and what a **run** reports, as far as every service has it:
 
-* :attr:`~pyTooling.CI.ConditionMixin.Condition` - the condition under which a workflow, a matrix, a job or
-  a step runs, as written (GitHub ``if:``, GitLab ``rules:if``). It is not evaluated.
+* :attr:`~pyTooling.CI.RulesMixin.Rules` - the rules deciding whether a workflow, a matrix, a job or a step runs,
+  each with its condition as written (GitHub ``if:``, GitLab ``rules:if``), see :ref:`CI/Pipeline/Rules`.
 * :attr:`~pyTooling.CI.Workflow.Reference` - what a called workflow calls, as written.
 * :attr:`~pyTooling.CI.Base.CreatedAt`, :attr:`~pyTooling.CI.Base.StartedAt`,
   :attr:`~pyTooling.CI.Base.CompletedAt` and :attr:`~pyTooling.CI.Base.Outcome` - the times and the
@@ -110,15 +110,55 @@ element below it is still running. The span is available for every group as
 :meth:`Outcome.Combine <pyTooling.CI.Outcome.Combine>` lets the worst outcome win.
 
 
+.. _CI/Pipeline/Rules:
+
+Rules
+*****
+
+A workflow, a matrix, a job or a step carries an **ordered list of rules** (:class:`~pyTooling.CI.RulesMixin`). A
+:class:`~pyTooling.CI.Rule` has a :attr:`~pyTooling.CI.Rule.Condition`, kept as written and not evaluated, and its
+:attr:`~pyTooling.CI.Rule.When` decides what happens to the element, if the rule matches:
+
+* The rules are evaluated in order, and the **first matching rule decides**. A rule without a condition always
+  matches.
+* An element **without rules** runs unconditionally. An element with rules, of which **none matches**, doesn't run.
+* :attr:`When.Never <pyTooling.CI.When.Never>` excludes the element; :attr:`When.Manual <pyTooling.CI.When.Manual>`
+  and :attr:`When.Delayed <pyTooling.CI.When.Delayed>` add it to start by hand or after a delay. A rule not saying
+  decides :attr:`When.DEFAULT <pyTooling.CI.When.DEFAULT>`, which runs the element when nothing it waits for failed.
+
+GitHub gives an element one rule at most - its ``if:``, whose status functions like ``success()`` or ``always()`` are
+part of the condition. GitLab gives it the list of its ``rules:``.
+
+.. code-block:: python
+
+   from pyTooling.CI import Job, Rule, When
+
+   deploy = Job("Deploy", rules=[
+     Rule("$CI_PIPELINE_SOURCE == 'schedule'", When.Never),
+     Rule("$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"),
+     Rule("$CI_COMMIT_TAG", When.Manual, keyValuePairs={"allow_failure": True})
+   ])
+
+   deploy.RuleCount                  # 3
+   deploy.Rules[2].When              # When.Manual
+   deploy.Rules[2]["allow_failure"]  # True
+
+What only a service's rule has - GitLab's ``changes``, ``exists``, ``allow_failure`` or ``variables`` - is attached to
+the rule as key-value-pairs, as to an element. A rule belongs to one element:
+:meth:`~pyTooling.CI.RulesMixin.AddRule` appends it to the element's rules, ``Rule(..., parent=element)`` as well, and
+adding it to a second element raises :exc:`~pyTooling.CI.AlreadyInPipelineError`.
+:meth:`~pyTooling.CI.RulesMixin.IterateRules` and :attr:`~pyTooling.CI.RulesMixin.RuleCount` iterate and count them.
+
+
 .. _CI/Pipeline/KeyValuePairs:
 
 Key-Value Pairs
 ***************
 
-Every element - a pipeline group included - carries a dictionary of **arbitrary key-value-pairs**, like the elements
-of :mod:`pyTooling.Graph`. A consumer attaches what the model has no field for, without deriving its own classes. The
-pairs are given when an element is created, with ``keyValuePairs``, and accessed with the element's dictionary
-operators:
+Every element - a pipeline group included - and every rule carries a dictionary of **arbitrary key-value-pairs**, like
+the elements of :mod:`pyTooling.Graph`. A consumer attaches what the model has no field for, without deriving its own
+classes. The pairs are given when an element is created, with ``keyValuePairs``, and accessed with the element's
+dictionary operators:
 
 .. code-block:: python
 
@@ -245,7 +285,8 @@ GitHub Actions
    * - ``needs:``
      - :meth:`~pyTooling.CI.DependencyMixin.AddNeed`; needing a matrix job or a calling job needs the group
    * - ``if:``
-     - :attr:`~pyTooling.CI.ConditionMixin.Condition`
+     - One :class:`~pyTooling.CI.Rule` in :attr:`~pyTooling.CI.RulesMixin.Rules`, the expression as its
+       :attr:`~pyTooling.CI.Rule.Condition`, deciding :attr:`When.DEFAULT <pyTooling.CI.When.DEFAULT>`
    * - ``conclusion``
      - :attr:`~pyTooling.CI.Base.Outcome` (e.g. ``timed_out`` |rarr| ``Timeout``, ``startup_failure``
        |rarr| ``Error``)
@@ -286,8 +327,16 @@ GitLab CI
        :class:`~pyTooling.CI.MatrixWorkflow` instances for a trigger job
    * - ``parallel: N``
      - :class:`~pyTooling.CI.Matrix` with *N* instances (``test 1/3``)
+   * - ``rules:``, ``workflow:rules``
+     - :attr:`~pyTooling.CI.RulesMixin.Rules` of the job, or of the :class:`~pyTooling.CI.Pipeline`, in their order
    * - ``rules:if``
-     - :attr:`~pyTooling.CI.ConditionMixin.Condition`
+     - :attr:`~pyTooling.CI.Rule.Condition`
+   * - ``rules:when``
+     - :attr:`~pyTooling.CI.Rule.When`; a rule without ``when`` decides the job's ``when``
+   * - Job ``when`` without ``rules:``
+     - One :class:`~pyTooling.CI.Rule` without a condition
+   * - ``rules:changes``, ``rules:exists``, ``rules:allow_failure``, ``rules:variables``, ``rules:needs``
+     - Key-value-pairs of the :class:`~pyTooling.CI.Rule`
    * - Job ``status``
      - :attr:`~pyTooling.CI.Base.Outcome` (e.g. ``canceled`` |rarr| ``Cancellation``); ``manual`` and
        ``created`` haven't ended
