@@ -113,7 +113,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 		_kernel32:      WinDLL
 		_processHandle: Any
 	elif CurrentPlatform.IsNativeLinux:
-		_processStatusFile: ClassVar[Path] = Path(f"/proc/self/statm")
+		_processStatusFile: ClassVar[Path] = Path("/proc/self/statm")
 	elif CurrentPlatform.IsNativeFreeBSD:
 		pass
 
