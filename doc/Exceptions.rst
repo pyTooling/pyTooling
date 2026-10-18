@@ -223,9 +223,10 @@ rejected, while this one means no value was given at all.
 MissingDependencyError
 **********************
 
-The :exc:`MissingDependencyError` is raised when an *optional* dependency is not installed. Unlike the other
-predefined exceptions it derives from :exc:`ImportError <python:ImportError>`, so an ``except ImportError`` around
-an optional import still catches it.
+The :exc:`MissingDependencyError` is raised when an *optional* dependency is not installed. It derives from
+:exc:`ToolingException` **and** :exc:`ImportError <python:ImportError>`: an ``except ImportError`` around an optional
+import still catches it, and so does an ``except ToolingException`` handling pyTooling's own errors. Its
+:attr:`~python:ImportError.name` is the missing package.
 
 Some modules need a package ``pyTooling`` does not install by default. Importing such a module without its
 dependency raises this exception, and it carries what to install and which extra provides it:

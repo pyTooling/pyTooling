@@ -196,15 +196,39 @@ class NotConfiguredError(ExceptionBase):
 
 
 @export
-class MissingDependencyError(ImportError):
+class ToolingException(Exception):
+	"""The exception is raised by pyTooling internal features."""
+
+	@readonly
+	def HasNotes(self) -> bool:
+		"""
+		Read-only property to return if the warning has attached notes.
+
+		:returns: True, if the warning has attached notes.
+		"""
+		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
+
+	@readonly
+	def Notes(self) -> tuple[str, ...]:
+		"""
+		Read-only property to return warning's attached notes.
+
+		:returns: Attached notes.
+		"""
+		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
+
+
+@export
+class MissingDependencyError(ToolingException, ImportError):
 	"""
 	The exception is raised when an optional dependency of pyTooling is not installed.
 
 	Some modules need a package pyTooling doesn't install by default. Importing such a module without its dependency
 	raises this exception instead of the bare :exc:`ImportError`, so the message names the extra that installs it.
 
-	The exception derives from :exc:`ImportError`, because that is what a caller guarding an optional import expects to
-	catch, and it carries the missing package and the extra as :attr:`Dependency` and :attr:`Extra`.
+	The exception is a :exc:`ToolingException` and an :exc:`ImportError`: a caller guarding an optional import catches
+	:exc:`ImportError`, a caller handling pyTooling's own errors catches :exc:`ToolingException`. It carries the missing
+	package and the extra as :attr:`Dependency` and :attr:`Extra`; :attr:`ImportError.name` is the missing package too.
 
 	.. admonition:: ``example.py``
 
@@ -232,7 +256,10 @@ class MissingDependencyError(ImportError):
 		:param extra:      Optional, name of the pyTooling extra installing that package. |br|
 		                   When given, the note offers ``pyTooling[<extra>]`` next to the package itself.
 		"""
-		super().__init__(message if message is not None else f"Optional dependency '{dependency}' not installed.")
+		super().__init__(
+			message if message is not None else f"Optional dependency '{dependency}' not installed.",
+			name=dependency
+		)
 
 		self._dependency = dependency
 		self._extra = extra
@@ -282,29 +309,6 @@ class MissingDependencyError(ImportError):
 
 
 # FIXME: Why not derived from ExceptionBase?
-@export
-class ToolingException(Exception):
-	"""The exception is raised by pyTooling internal features."""
-
-	@readonly
-	def HasNotes(self) -> bool:
-		"""
-		Read-only property to return if the warning has attached notes.
-
-		:returns: True, if the warning has attached notes.
-		"""
-		return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
-
-	@readonly
-	def Notes(self) -> tuple[str, ...]:
-		"""
-		Read-only property to return warning's attached notes.
-
-		:returns: Attached notes.
-		"""
-		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
-
-
 @export
 class DuplicateElementError(Exception):
 	"""

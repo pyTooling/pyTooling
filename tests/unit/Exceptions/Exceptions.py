@@ -174,3 +174,17 @@ class MissingDependency(Testcase):
 		"""A caller guarding an optional import catches :exc:`ImportError`, so the new exception has to be one."""
 		with self.assertRaises(ImportError):
 			raise MissingDependencyError(dependency="lxml")
+
+	def test_IsAToolingException(self) -> None:
+		"""A caller handling pyTooling's own errors catches :exc:`ToolingException`; it isn't an :exc:`ExceptionBase`."""
+		with self.assertRaises(ToolingException) as context:
+			raise MissingDependencyError(dependency="lxml")
+
+		self.assertNotIsInstance(context.exception, ExceptionBase)
+
+	def test_ImportErrorName(self) -> None:
+		""":attr:`ImportError.name` is the missing package, as for Python's own import errors."""
+		ex = MissingDependencyError(dependency="ruamel.yaml", extra="yaml")
+
+		self.assertEqual("ruamel.yaml", ex.name)
+		self.assertEqual("Optional dependency 'ruamel.yaml' not installed.", ex.msg)

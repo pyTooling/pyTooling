@@ -419,6 +419,9 @@ invent them:
      - no overload matches the given arguments
 
 The first four derive from :exc:`~pyTooling.Exceptions.ExceptionBase`.
-:exc:`~pyTooling.Exceptions.MissingDependencyError` deliberately does not - it derives from :exc:`ImportError`,
-because that is what a caller already writes ``except`` for when an optional feature is unavailable. **Deriving from
-the builtin a caller already catches is worth more than a tidy hierarchy**, whenever the two disagree.
+:exc:`~pyTooling.Exceptions.MissingDependencyError` derives from :exc:`~pyTooling.Exceptions.ToolingException`
+**and** :exc:`ImportError`, because ``except ImportError`` is what a caller already writes when an optional feature
+is unavailable. **A builtin a caller already catches belongs among the base-classes** - multiple inheritance keeps
+the hierarchy tidy too. It deliberately isn't an :exc:`~pyTooling.Exceptions.ExceptionBase`: the entry point above
+catches ``ExceptionBase`` before ``MissingDependencyError``, which would turn an installation problem into an
+unexpected error.
