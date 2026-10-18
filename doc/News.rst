@@ -631,6 +631,9 @@ Version 10.x (2026)
      ``(message, )`` and :func:`repr` shows it, as for any Python exception. ``args`` was empty. The ``message`` field
      and the :meth:`~object.__str__` override returning it are removed: the read-only property
      :attr:`~pyTooling.Exceptions.ExceptionBase.Message` returns ``args[0]``, and ``str(ex)`` is Python's own.
+   * :exc:`~pyTooling.Exceptions.MissingDependencyError` is a :exc:`~pyTooling.Exceptions.ToolingException` too, not
+     only an :exc:`ImportError`: ``except ToolingException`` catches a missing optional dependency now as well, and
+     :attr:`~python:ImportError.name` is the missing package. ``except ImportError`` catches it as before.
    * ⚠️ An attribute's scope is checked when the decorator runs (:ghissue:`384`); a function defined in a class body is
      recognized as a method by its qualified name, for any class. It was accepted silently and registered in a list the
      scope said it could never hold. :attr:`~pyTooling.Attributes.Attribute.Scope` is an instance property, and
