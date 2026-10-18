@@ -536,7 +536,7 @@ def expects(*memberNames: str) -> Callable[[M], M]:
 	"""
 	for memberName in memberNames:
 		if not isinstance(memberName, str):
-			ex = TypeError(f"Parameter 'memberNames' contains an element that is not a string.")
+			ex = TypeError("Parameter 'memberNames' contains an element that is not a string.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(memberName)}'.")
 			raise ex
 
@@ -552,7 +552,7 @@ def expects(*memberNames: str) -> Callable[[M], M]:
 		"""
 		if isinstance(method, type):
 			ex = TypeError(f"Decorator 'expects' is applied to class '{method.__name__}' instead of a method.")
-			ex.add_note(f"A class names what it expects with the 'expects' class keyword argument of 'ExtendedType'.")
+			ex.add_note("A class names what it expects with the 'expects' class keyword argument of 'ExtendedType'.")
 			raise ex
 
 		method.__expectedMembers__ = memberNames
@@ -1826,14 +1826,14 @@ class ExtendedType(type):
 		"""
 		# A tuple (the default) skips the slower isinstance check against the abstract base class 'Iterable'.
 		if type(expects) is not tuple and (isinstance(expects, str) or not isinstance(expects, Iterable)):
-			ex = TypeError(f"Parameter 'expects' is not an iterable of strings.")
+			ex = TypeError("Parameter 'expects' is not an iterable of strings.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(expects)}'.")
 			raise ex
 
 		expects = tuple(expects)
 		for memberName in expects:
 			if not isinstance(memberName, str):
-				ex = TypeError(f"Parameter 'expects' contains an element that is not a string.")
+				ex = TypeError("Parameter 'expects' contains an element that is not a string.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(memberName)}'.")
 				raise ex
 
