@@ -74,6 +74,14 @@ class KeyNotFoundError(ConfigurationError, KeyError):
 	writes ``except KeyError``. Catching :exc:`~pyTooling.Exceptions.ConfigurationError` still catches it.
 	"""
 
+	def __str__(self) -> str:
+		"""
+		Return the exception's message.
+
+		:returns: The exception's message.
+		"""
+		return self.Message
+
 
 @export
 class UnsupportedValueTypeError(ConfigurationError):

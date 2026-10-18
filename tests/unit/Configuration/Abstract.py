@@ -114,3 +114,9 @@ class MappingAndSequenceProtocols(Testcase):
 		"""A reader of a mapping writes ``except KeyError``; a reader of a configuration writes its own base."""
 		self.assertTrue(issubclass(KeyNotFoundError, KeyError))
 		self.assertTrue(issubclass(KeyNotFoundError, ConfigurationError))
+
+	def test_KeyNotFoundError_Message(self) -> None:
+		"""The message reads as given, although :exc:`KeyError` would quote it."""
+		ex = KeyNotFoundError("Key 'key_3' not found in node 'dictionary'.")
+
+		self.assertEqual("Key 'key_3' not found in node 'dictionary'.", str(ex))

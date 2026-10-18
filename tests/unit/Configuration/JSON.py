@@ -125,7 +125,7 @@ class Errors(Testcase):
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["dictionary"]["key_3"]
 
-		self.assertIn("Key 'key_3' not found in node 'dictionary'.", str(context.exception))
+		self.assertEqual("Key 'key_3' not found in node 'dictionary'.", str(context.exception))
 		self.assertIn("Available keys: 'key_1', 'key_2'.", context.exception.__notes__)
 
 	def test_IndexOutOfRangeInSequence(self) -> None:
@@ -134,7 +134,7 @@ class Errors(Testcase):
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["sequence"][2]
 
-		self.assertIn("Key '2' not found in node 'sequence'.", str(context.exception))
+		self.assertEqual("Key '2' not found in node 'sequence'.", str(context.exception))
 		self.assertIn("Node 'sequence' is a sequence with indices 0..1.", context.exception.__notes__)
 
 	def test_UnknownKeyInEmptyDictionary(self) -> None:
