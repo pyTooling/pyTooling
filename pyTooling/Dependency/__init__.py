@@ -57,7 +57,7 @@ from pyTooling.GenericPath.URL import URL
 from pyTooling.Graph           import Graph, Vertex
 from pyTooling.Licensing       import LicenseExpression, BaseLicense, UnknownLicense
 from pyTooling.Versioning      import SemanticVersion
-from pyTooling.Warning         import Warning
+from pyTooling.Warning         import CriticalWarning, Warning
 
 
 @export
@@ -100,6 +100,11 @@ class ReleaseNotFoundError(DependencyError):
 
 
 @export
+class PackageIndexError(DependencyError):
+	"""The package index responded with an HTTP error status other than ``404 Not Found``."""
+
+
+@export
 class BrokenRequirementWarning(Warning):
 	"""
 	A requirement can't be parsed, or names an extra the project doesn't declare.
@@ -139,6 +144,54 @@ class ReleaseDetailsWarning(Warning):
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
 	"""
+
+
+@export
+class UnsupportedVersionWarning(CriticalWarning):
+	"""
+	A release's version number has a format the version parser doesn't support, therefore the release was skipped.
+
+	A package index lists every release a project ever published, also those numbered before :pep:`440`, e.g. pytz'
+	``2004d``. A skipped release is missing from the project, so the warning names it.
+
+	.. important::
+
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+	"""
+
+	_projectName: Nullable[str]  #: Name of the project the skipped release belongs to.
+	_version:     Nullable[str]  #: Version number of the skipped release, as published by the package index.
+
+	def __init__(self, message: str, /, *, projectName: Nullable[str] = None, version: Nullable[str] = None) -> None:
+		"""
+		Initializes the warning with the project and the version number that can't be parsed.
+
+		:param message:     The warning's message.
+		:param projectName: Optional, name of the project the skipped release belongs to.
+		:param version:     Optional, version number of the skipped release, as published by the package index.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project the skipped release belongs to (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[str]:
+		"""
+		Read-only property to access the version number of the skipped release (:attr:`_version`).
+
+		:returns: The version number as published by the package index, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
 
 
 @export

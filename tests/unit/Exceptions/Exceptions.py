@@ -32,9 +32,17 @@
 """
 Unit tests for :mod:`pyTooling.Exceptions`.
 """
-from pyTooling.Exceptions import EnvironmentVariableError, PlatformNotSupportedError, NotConfiguredError
-from pyTooling.Exceptions import MissingDependencyError
-from pyTooling.Testing    import Testcase
+from pickle                import dumps, loads
+
+from pyTooling.CallGraph   import DuplicateFunctionError
+from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
+from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, EnvironmentVariableError
+from pyTooling.Exceptions  import ExceptionBase, MissingDependencyError, NotConfiguredError, NotInSameHierarchyError
+from pyTooling.Exceptions  import PlatformNotSupportedError, ToolingException
+from pyTooling.Graph       import DuplicateEdgeError, DuplicateVertexError, NotInSameGraph
+from pyTooling.LinkedList  import NotInSameListError
+from pyTooling.Testing     import Testcase
+from pyTooling.Tree        import AlreadyInTreeError, NotInSameTreeError
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -70,6 +78,59 @@ class Exceptions(Testcase):
 		with self.assertRaises(NotConfiguredError):
 			raise_NotConfiguredError()
 		# self.assertEqual(context.exception.message, "Option 'WorkingDirectory' is not specified in the configuration file.")
+
+
+class CommonBases(Testcase):
+	def test_DuplicateElementError(self) -> None:
+		for exception in (DuplicateVertexError, DuplicateEdgeError, DuplicateBlockError, ControlFlowDuplicateEdgeError,
+		                  DuplicateFunctionError):
+			with self.subTest(exception=exception.__name__):
+				self.assertTrue(issubclass(exception, DuplicateElementError))
+				self.assertTrue(issubclass(exception, ToolingException))
+
+	def test_AlreadyInHierarchyError(self) -> None:
+		self.assertTrue(issubclass(AlreadyInTreeError, AlreadyInHierarchyError))
+		self.assertTrue(issubclass(AlreadyInTreeError, ToolingException))
+
+	def test_NotInSameHierarchyError(self) -> None:
+		for exception in (NotInSameGraph, NotInSameTreeError, NotInSameListError):
+			with self.subTest(exception=exception.__name__):
+				self.assertTrue(issubclass(exception, NotInSameHierarchyError))
+				self.assertTrue(issubclass(exception, ToolingException))
+
+	def test_ToolingExceptionMessage(self) -> None:
+		"""A common base doesn't change how a 'ToolingException' stores its message."""
+		ex = DuplicateVertexError("Vertex ID '1' already exists in this graph.", vertexID=1)
+
+		self.assertEqual("Vertex ID '1' already exists in this graph.", str(ex))
+		self.assertEqual(("Vertex ID '1' already exists in this graph.", ), ex.args)
+		self.assertEqual(1, ex.VertexID)
+
+	def test_ExceptionBaseArgs(self) -> None:
+		"""The message is the exception's only argument, like any Python exception's."""
+		ex = EnvironmentVariableError("Environment does not provide 'PATH'.")
+
+		self.assertEqual(("Environment does not provide 'PATH'.", ), ex.args)
+		self.assertEqual("EnvironmentVariableError(\"Environment does not provide 'PATH'.\")", repr(ex))
+
+	def test_ExceptionBasePickle(self) -> None:
+		"""A pickled exception keeps its message and its arguments."""
+		ex = EnvironmentVariableError("Environment does not provide 'PATH'.")
+		copy = loads(dumps(ex))
+
+		self.assertEqual("Environment does not provide 'PATH'.", copy.Message)
+		self.assertEqual(ex.args, copy.args)
+
+	def test_ExceptionBaseMessage(self) -> None:
+		"""A common base combined with 'ExceptionBase' keeps its message."""
+		class DuplicateItemError(ExceptionBase, DuplicateElementError):
+			"""Nested exception class of a package deriving from 'ExceptionBase'."""
+
+		with self.assertRaises(DuplicateElementError) as context:
+			raise DuplicateItemError("Item 'A' already exists.")
+
+		self.assertEqual("Item 'A' already exists.", str(context.exception))
+		self.assertEqual("Item 'A' already exists.", context.exception.Message)
 
 
 class MissingDependency(Testcase):

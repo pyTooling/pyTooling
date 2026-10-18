@@ -7,6 +7,7 @@ Currently, the following data structures are implemented:
 
 * :ref:`STRUCT/CallGraph`
 * :ref:`STRUCT/ControlFlow`
+* :ref:`STRUCT/DataModel`
 * :ref:`STRUCT/Path/Generic`
 
   * :ref:`STRUCT/Path/URL`

@@ -246,6 +246,14 @@ of key-value-pairs.
    # Delete a key-value-pair
    del node["key"]
 
+   # Check for a key, count the pairs, iterate the keys
+   if "key" in node: ...
+   count = len(node)
+   for key in node: ...
+
+``in``, :pycode:`len(node)` and iterating a node address the key-value-pairs, not the :ref:`children
+<STRUCT/Tree/Children>`.
+
 
 .. _STRUCT/Tree/Parent:
 
@@ -498,6 +506,7 @@ Children
 :term:`Children <Child>` are all direct successors of a :term:`node`.
 
 A node object supports returning children either as a tuple via a property or as a generator via a method call.
+:attr:`~pyTooling.Tree.Node.ChildCount` returns their number.
 
 +-------------------------------+-----------------------------------------------+--------------------------------------------------+
 |                               | Return a Tuple                                | Return a Generator                               |

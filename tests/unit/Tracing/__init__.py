@@ -703,105 +703,20 @@ class TraceElements(Testcase):
 
 
 class Attributes(Testcase):
-	def test_Trace(self) -> None:
-		t = Trace("trace")
-
-		self.assertEqual(0, len(t))
-		self.assertEqual(0, len(list(t)))
-
-		t["id1"] = "value"
-
-		self.assertEqual(1, len(t))
-		self.assertEqual(1, len(list(t)))
-		self.assertIn("id1", t)
-
-		self.assertEqual("value", t["id1"])
-
-		t["id1"] = "value1"
-
-		self.assertEqual(1, len(t))
-		self.assertListEqual([("id1", "value1")], list(t))
-
-		t["id2"] = "value2"
-
-		self.assertEqual(2, len(t))
-		self.assertIn("id2", t)
-		self.assertListEqual([("id1", "value1"), ("id2", "value2")], list(t))
-
-		del t["id1"]
-
-		self.assertEqual(1, len(t))
-		self.assertListEqual([("id2", "value2")], list(t))
-		self.assertIn("id2", t)
-
-	def test_Get(self) -> None:
+	def test_Elements(self) -> None:
 		for element in (Trace("trace"), Span("span"), Event("event")):
 			with self.subTest(element=element.__class__.__name__):
 				element["id1"] = "value1"
+				element["id2"] = 2
 
-				self.assertEqual("value1", element.get("id1"))
-				self.assertIsNone(element.get("id2"))
-				self.assertEqual("default", element.get("id2", "default"))
-				self.assertNotIn("id2", element, "Reading a key doesn't create it.")
+				self.assertEqual("value1", element["id1"])
+				self.assertEqual(2, len(element))
+				self.assertListEqual(["id1", "id2"], list(element))
 
-	def test_Span(self) -> None:
-		s = Span("span")
+	def test_IterateAttributes(self) -> None:
+		for element in (Trace("trace"), Span("span"), Event("event")):
+			with self.subTest(element=element.__class__.__name__):
+				element["id1"] = "value1"
+				element["id2"] = 2
 
-		self.assertEqual(0, len(s))
-		self.assertEqual(0, len(list(s)))
-
-		s["id1"] = "value"
-
-		self.assertEqual(1, len(s))
-		self.assertEqual(1, len(list(s)))
-		self.assertIn("id1", s)
-
-		self.assertEqual("value", s["id1"])
-
-		s["id1"] = "value1"
-
-		self.assertEqual(1, len(s))
-		self.assertListEqual([("id1", "value1")], list(s))
-
-		s["id2"] = "value2"
-
-		self.assertEqual(2, len(s))
-		self.assertIn("id2", s)
-		self.assertListEqual([("id1", "value1"), ("id2", "value2")], list(s))
-
-		del s["id1"]
-
-		self.assertEqual(1, len(s))
-		self.assertListEqual([("id2", "value2")], list(s))
-		self.assertIn("id2", s)
-
-	def test_Event(self) -> None:
-		e = Event("event")
-
-		self.assertEqual(0, len(e))
-		self.assertEqual(0, len(list(e)))
-
-		e["id1"] = "value"
-
-		self.assertEqual(1, len(e))
-		self.assertEqual(1, len(list(e)))
-		self.assertIn("id1", e)
-
-		self.assertEqual("value", e["id1"])
-
-		e["id1"] = "value1"
-
-		self.assertEqual(1, len(e))
-		self.assertListEqual([("id1", "value1")], list(e))
-
-		e["id2"] = "value2"
-
-		self.assertEqual(2, len(e))
-		self.assertIn("id2", e)
-		self.assertListEqual([("id1", "value1"), ("id2", "value2")], list(e))
-
-		del e["id1"]
-
-		self.assertEqual(1, len(e))
-		self.assertListEqual([("id2", "value2")], list(e))
-		self.assertIn("id2", e)
+				self.assertListEqual([("id1", "value1"), ("id2", 2)], list(element.IterateAttributes()))

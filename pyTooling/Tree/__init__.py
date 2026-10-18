@@ -44,12 +44,13 @@ from __future__            import annotations
 
 from collections           import deque
 from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
-from typing                import Any, Callable, Iterator, Generator, Iterable, Mapping, Hashable
+from typing                import Any, Callable, Generator, Iterable, Mapping, Hashable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 
 
 IDType = TypeVar("IDType", bound=Hashable)
@@ -57,12 +58,6 @@ IDType = TypeVar("IDType", bound=Hashable)
 
 ValueType = TypeVar("ValueType")
 """A type variable for a tree's value."""
-
-DictKeyType = TypeVar("DictKeyType")
-"""A type variable for a tree's dictionary keys."""
-
-DictValueType = TypeVar("DictValueType")
-"""A type variable for a tree's dictionary values."""
 
 
 @export
@@ -96,7 +91,7 @@ class NoSiblingsError(TreeError):
 
 
 @export
-class AlreadyInTreeError(TreeError):
+class AlreadyInTreeError(TreeError, AlreadyInHierarchyError):
 	"""
 	The exception is raised when the current node and the other node are already in the same tree.
 
@@ -107,12 +102,12 @@ class AlreadyInTreeError(TreeError):
 
 
 @export
-class NotInSameTreeError(TreeError):
+class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 	"""The exception is raised when the current node and the other node are not in the same tree."""
 
 
 @export
-class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=ExtendedType, slots=True):
+class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedType, slots=True):
 	"""
 	A **tree** data structure can be constructed of ``Node`` instances.
 
@@ -149,8 +144,9 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	Each node can have a **value** (:attr:`_value`), which can be given at node creation time, or it can be assigned and/or
 	modified later. Use the property :attr:`Value` to get or set the value.
 
-	Moreover, each node can store various key-value-pairs (:attr:`_dict`). Use the dictionary syntax to get and set
-	key-value-pairs.
+	Moreover, each node can store arbitrary key-value-pairs (:class:`~pyTooling.DataModel.KeyValuePairsMixin`). Use the
+	dictionary syntax to get and set key-value-pairs: ``in``, :pycode:`len(node)` and iterating a node address the
+	key-value-pairs, not the children.
 	"""
 
 	_id: Nullable[IDType]                       #: Unique identifier of a node. ``None`` if not used.
@@ -163,7 +159,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 	_level: int                                 #: Level of the node (distance to the root).
 	_value: Nullable[ValueType]                 #: Field to store the node's value.
-	_dict: dict[DictKeyType, DictValueType]     #: Dictionary to store key-value-pairs attached to the node.
 
 	_format: Nullable[Callable[[Node], str]]    #: A node formatting function returning a one-line representation for tree-rendering.
 
@@ -171,7 +166,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		self,
 		nodeID: Nullable[IDType] = None,
 		value: Nullable[ValueType] = None,
-		keyValuePairs: Nullable[Mapping[DictKeyType, DictValueType]] = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
 		parent: Nullable[Node] = None,
 		children: Nullable[Iterable[Node]] = None,
 		format: Nullable[Callable[[Node], str]] = None
@@ -187,15 +182,16 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:param format:        Optional, node formatting function returning a one-line representation for
 		                      tree-rendering.
 
+		:raises TypeError:  If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:  If parameter parent is not an instance of Node.
 		:raises ValueError: If nodeID already exists in the tree.
 		:raises TypeError:  If parameter children is not iterable.
 		:raises ValueError: If an element of children is not an instance of Node.
 		"""
+		super().__init__(keyValuePairs)
 
 		self._id = nodeID
 		self._value = value
-		self._dict = dict(keyValuePairs) if keyValuePairs is not None else {}
 
 		self._format = format
 
@@ -270,52 +266,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 	def Value(self, value: Nullable[ValueType]) -> None:
 		self._value = value
 
-	def __getitem__(self, key: DictKeyType) -> DictValueType:
-		"""
-		Read a node's attached attributes (key-value-pairs) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: DictKeyType, value: DictValueType) -> None:
-		"""
-		Create or update a node's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: DictKeyType) -> None:
-		"""
-		Remove an attached attribute (key-value-pair) from the node by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If the key does not exist.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: DictKeyType) -> bool:
-		"""
-		Check if a key exists in the node's attached attributes.
-
-		:param key: The key to look for.
-		:returns:   ``True``, if the key exists.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs) on this node.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
 	@readonly
 	def Root(self) -> Node:
 		"""
@@ -358,7 +308,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 				self._root._nodesWithoutID.remove(self)
 			else:
 				self._nodesWithID[self._id] = self
-				del self._nodesWithID[self._id]
+				del self._root._nodesWithID[self._id]
 
 			for sibling in self.GetDescendants():
 				sibling._root = self
@@ -368,7 +318,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 					self._root._nodesWithoutID.remove(sibling)
 				else:
 					self._nodesWithID[sibling._id] = sibling
-					del self._nodesWithID[sibling._id]
+					del self._root._nodesWithID[sibling._id]
 
 			self._parent._children.remove(self)
 
@@ -406,7 +356,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		return tuple([node for node in self._parent if node is not self])
+		return tuple([node for node in self._parent._children if node is not self])
 
 	@readonly
 	def LeftSiblings(self) -> tuple[Node, ...]:
@@ -426,7 +376,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise NoSiblingsError("Root node has no siblings.")
 
 		result = []
-		for node in self._parent:
+		for node in self._parent._children:
 			if node is not self:
 				result.append(node)
 			else:
@@ -454,7 +404,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 			raise NoSiblingsError("Root node has no siblings.")
 
 		result = []
-		iterator = iter(self._parent)
+		iterator = iter(self._parent._children)
 		for node in iterator:
 			if node is self:
 				break
@@ -528,6 +478,24 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:returns: ``True``, if node has no children.
 		"""
 		return len(self._children) == 0
+
+	@readonly
+	def Children(self) -> tuple[Node, ...]:
+		"""
+		Read-only property to return a tuple of all direct children (:attr:`_children`).
+
+		:returns: A tuple of all children, in the order they were added.
+		"""
+		return tuple(self._children)
+
+	@readonly
+	def ChildCount(self) -> int:
+		"""
+		Read-only property to return the number of direct children, but not including grand-children.
+
+		:returns: Number of child nodes.
+		"""
+		return len(self._children)
 
 	@readonly
 	def HasChildren(self) -> bool:
@@ -711,7 +679,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		for node in self._parent:
+		for node in self._parent._children:
 			if node is self:
 				continue
 
@@ -731,7 +699,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		for node in self._parent:
+		for node in self._parent._children:
 			if node is self:
 				break
 
@@ -753,7 +721,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		if self._parent is None:
 			raise NoSiblingsError("Root node has no siblings.")
 
-		iterator = iter(self._parent)
+		iterator = iter(self._parent._children)
 		for node in iterator:
 			if node is self:
 				break
@@ -941,7 +909,7 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 
 		return self._root._nodesWithID[nodeID]
 
-	def Find(self, predicate: Callable[[Node], bool]) -> Generator[Node, None, None]:
+	def Find(self, predicate: Predicate[Node]) -> Generator[Node, None, None]:
 		"""
 		Search the tree for nodes matching a predicate.
 
@@ -950,22 +918,6 @@ class Node(Generic[IDType, ValueType, DictKeyType, DictValueType], metaclass=Ext
 		:raises NotImplementedError: Searching a tree is not implemented yet.
 		"""
 		raise NotImplementedError("Method 'Find' is not yet implemented.")
-
-	def __iter__(self) -> Iterator[Node]:
-		"""
-		Returns an iterator to iterate all child nodes.
-
-		:returns: Children iterator.
-		"""
-		return iter(self._children)
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of children, but not including grand-children.
-
-		:returns: Number of child nodes.
-		"""
-		return len(self._children)
 
 	def __repr__(self) -> str:
 		"""

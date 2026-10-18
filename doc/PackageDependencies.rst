@@ -135,7 +135,9 @@ Exceptions and Warnings
 :exc:`~pyTooling.Dependency.DependencyError` is the base of the module's exceptions:
 :exc:`~pyTooling.Dependency.NoSessionAvailableError` when a query is attempted without an open session,
 :exc:`~pyTooling.Dependency.ProjectNotFoundError` and
-:exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for.
+:exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for, and
+:exc:`~pyTooling.Dependency.PackageIndexError` when the index responds with another HTTP error status. The latter is
+caused by the :exc:`~requests.HTTPError`.
 
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
@@ -145,6 +147,10 @@ graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dep
 These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
 collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see
 :ref:`WARNING`.
+
+A release whose version number the parser doesn't support, like pytz' ``2004d`` from before :pep:`440`, is skipped
+and reported as an :class:`~pyTooling.Dependency.UnsupportedVersionWarning`. It is a critical warning: without a
+collector up the call-hierarchy, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 
 
 .. _DEPENDENCIES/Competitors:

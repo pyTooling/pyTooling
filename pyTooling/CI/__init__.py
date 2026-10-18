@@ -52,7 +52,8 @@ The service-independent pipeline:
 Every element knows its parent and the pipeline it belongs to. The elements one level below a workflow - its jobs,
 matrices and called workflows - can **need** each other: :meth:`DependencyMixin.AddNeed` links two siblings, and
 :meth:`JobGroup.Validate` checks a completed pipeline for cycles. :meth:`Workflow.ToGraph` converts it into a
-:class:`~pyTooling.Graph.Graph`.
+:class:`~pyTooling.Graph.Graph`. Workflows, matrices, jobs and steps carry an ordered list of
+rules (:class:`RulesMixin`): the first matching :class:`Rule` decides whether - and how - the element runs.
 
 A service's model derives from these classes and adds what only that service has: identifiers, URLs, its own status
 values, the interface of a reusable workflow.
@@ -74,8 +75,9 @@ from datetime              import datetime
 from typing                import Any, ClassVar, Hashable, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
+from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import AlreadyInHierarchyError, ToolingException
 from pyTooling.Graph       import Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import ExtendedType, ThisClass, abstractclass
 from pyTooling.REST        import JSONObject
@@ -99,6 +101,11 @@ class NeedDependencyError(PipelineError):
 @export
 class NeedDependencyCycleError(NeedDependencyError):
 	"""The exception raised for a need which would close a cycle of dependencies."""
+
+
+@export
+class AlreadyInPipelineError(PipelineError, AlreadyInHierarchyError):
+	"""The exception raised for an element given to an element of a pipeline, but belonging to another one already."""
 
 
 @export
@@ -145,8 +152,27 @@ class Outcome(StringEnum):
 
 
 @export
+class RuleOutcome(StringEnum):
+	"""
+	What a rule decides for its element, when the rule is the first one matching.
+
+	The members and values are those of GitLab's ``rules:when``. GitHub has no counterpart: its status functions -
+	``success()``, ``always()`` - are part of the ``if:`` expression, so a GitHub rule decides :attr:`DEFAULT`.
+	"""
+
+	OnSuccess = "on_success"  #: It runs, when no element it waits for failed.
+	OnFailure = "on_failure"  #: It runs, when an element it waits for failed.
+	Always =    "always"      #: It runs, whatever the elements it waits for did.
+	Manual =    "manual"      #: It is added, and runs when started by hand.
+	Delayed =   "delayed"     #: It is added, and runs after a delay.
+	Never =     "never"       #: It is excluded.
+
+	DEFAULT =   OnSuccess     #: What a rule decides, if it doesn't say.
+
+
+@export
 @abstractclass
-class Base(metaclass=ExtendedType, slots=True):
+class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 	"""
 	Common behaviour of every element of a pipeline.
 
@@ -165,7 +191,6 @@ class Base(metaclass=ExtendedType, slots=True):
 	_startedAt:   Nullable[datetime]   #: Time the element started running.
 	_completedAt: Nullable[datetime]   #: Time the element completed.
 	_outcome:     Nullable[Outcome]    #: How the element ended.
-	_dict:        dict[Hashable, Any]  #: A dictionary to store arbitrary key-value-pairs.
 
 	def __init__(
 		self,
@@ -198,8 +223,11 @@ class Base(metaclass=ExtendedType, slots=True):
 		:raises TypeError:    If parameter 'startedAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:    If parameter 'completedAt' is not of type :class:`~datetime.datetime`.
 		:raises TypeError:    If parameter 'outcome' is not of type :class:`Outcome`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'parent' is not of the type this class declares in :attr:`_PARENT_TYPE`.
 		"""
+		super().__init__(keyValuePairs)
+
 		if name is None:
 			raise ValueError("Parameter 'name' is None.")
 		elif not isinstance(name, str):
@@ -232,7 +260,6 @@ class Base(metaclass=ExtendedType, slots=True):
 		self._startedAt =   startedAt
 		self._completedAt = completedAt
 		self._outcome =     outcome
-		self._dict =        {} if keyValuePairs is None else dict(keyValuePairs)
 
 		if parent is not None:
 			parent._AddElement(self)
@@ -344,61 +371,6 @@ class Base(metaclass=ExtendedType, slots=True):
 
 		return max(known) if len(known) > 0 else None
 
-	def __getitem__(self, key: Hashable) -> Any:
-		"""
-		Read an element's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to look for.
-		:returns:         The value associated to the given key.
-		:raises KeyError: If key doesn't exist in the element's attributes.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: Hashable, value: Any) -> None:
-		"""
-		Create or update an element's attached attributes (key-value-pairs) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: Hashable) -> None:
-		"""
-		Remove an entry from an element's attached attributes (key-value-pairs) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the element's attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: Hashable) -> bool:
-		"""
-		Check if the key is an attached attribute (key-value-pairs) on this element.
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __len__(self) -> int:
-		"""
-		Return the number of attached attributes (key-value-pairs) on this element.
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
-
-	def __iter__(self) -> Iterator[Hashable]:
-		"""
-		Iterate the keys of the attached attributes (key-value-pairs) on this element.
-
-		:returns: An iterator over the keys, in the order they were added.
-		"""
-		return iter(self._dict)
-
 	def __str__(self) -> str:
 		"""
 		Return a string representation of the element.
@@ -435,37 +407,184 @@ class QualifiedNameMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",
 
 
 @export
-class ConditionMixin(metaclass=ExtendedType, mixin=True):
+class Rule(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 	"""
-	Mixin-class for elements a definition can give a condition: workflows, matrices, jobs and steps.
+	A rule of an element of a pipeline: a condition, and what it decides for the element, if the condition matches.
 
-	The condition is kept as written - a GitHub ``if:`` expression or a GitLab ``rules:if`` - and not evaluated.
+	An element's rules are evaluated in order, and the first rule matching decides by its :attr:`When`. An element
+	none of whose rules matches doesn't run. The condition is kept as written - a GitHub ``if:`` expression or a GitLab
+	``rules:if`` - and not evaluated.
+
+	What else a service's rule holds - GitLab's ``changes``, ``exists``, ``allow_failure`` or ``variables`` - is
+	attached as key-value-pairs.
 	"""
 
-	_condition: Nullable[str]  #: Condition under which the element runs, as written.
+	_parent:    Nullable[RulesMixin]  #: Reference to the element the rule belongs to.
+	_condition: Nullable[str]         #: Condition under which the rule matches, as written.
+	_when:      RuleOutcome           #: What the rule decides, if it matches.
 
-	def __init__(self, condition: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		condition:     Nullable[str]                    = None,
+		when:          RuleOutcome                      = RuleOutcome.DEFAULT,
+		*,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[RulesMixin]             = None
+	) -> None:
 		"""
-		Initializes the condition of an element.
+		Initializes a rule.
 
-		:param condition:  Optional, condition under which the element runs, as written. Default: ``None``.
-		:raises TypeError: If parameter 'condition' is not of type :class:`str`.
+		:param condition:     Optional, condition under which the rule matches, as written; ``None`` matches always.
+		                      Default: ``None``.
+		:param when:          Optional, what the rule decides, if it matches. Default: :attr:`RuleOutcome.DEFAULT`.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, reference to the element the rule belongs to, which adds it as its last rule.
+		                      Default: ``None``.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'condition' is not of type :class:`str`.
+		:raises ValueError:   If parameter 'condition' is empty.
+		:raises ValueError:   If parameter 'when' is ``None``.
+		:raises TypeError:    If parameter 'when' is not of type :class:`RuleOutcome`.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`RulesMixin`.
 		"""
-		if condition is not None and not isinstance(condition, str):
+		super().__init__(keyValuePairs)
+
+		if condition is None:
+			pass
+		elif not isinstance(condition, str):
 			ex = TypeError("Parameter 'condition' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(condition)}'.")
 			raise ex
+		elif condition == "":
+			raise ValueError("Parameter 'condition' is empty.")
 
+		if when is None:
+			raise ValueError("Parameter 'when' is None.")
+		elif not isinstance(when, RuleOutcome):
+			ex = TypeError("Parameter 'when' is not of type 'RuleOutcome'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(when)}'.")
+			raise ex
+
+		if parent is not None and not isinstance(parent, RulesMixin):
+			ex = TypeError("Parameter 'parent' is not of type 'RulesMixin'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		self._parent =    None
 		self._condition = condition
+		self._when =      when
+
+		if parent is not None:
+			parent.AddRule(self)
+
+	@readonly
+	def Parent(self) -> Nullable[RulesMixin]:
+		"""
+		Read-only property to access the element the rule belongs to (:attr:`_parent`).
+
+		:returns: The element, or ``None`` for a rule not yet added to one.
+		"""
+		return self._parent
 
 	@readonly
 	def Condition(self) -> Nullable[str]:
 		"""
-		Read-only property to access the condition under which the element runs (:attr:`_condition`).
+		Read-only property to access the condition under which the rule matches (:attr:`_condition`).
 
-		:returns: The condition, or ``None`` if the element has none, or it isn't known.
+		:returns: The condition, as written, or ``None`` for a rule matching always.
 		"""
 		return self._condition
+
+	@readonly
+	def When(self) -> When:
+		"""
+		Read-only property to access what the rule decides, if it matches (:attr:`_when`).
+
+		:returns: What the rule decides for its element.
+		"""
+		return self._when
+
+
+@export
+class RulesMixin(metaclass=ExtendedType, mixin=True):
+	"""
+	Mixin-class for elements a definition can give rules: workflows, matrices, jobs and steps.
+
+	The rules are kept in the order they are evaluated. An element without rules runs unconditionally; an element with
+	rules runs as the first matching rule decides, and doesn't run if none matches. A GitHub element has one rule at
+	most - its ``if:`` - a GitLab element the list of its ``rules:``.
+	"""
+
+	_rules: list[Rule]  #: Rules of the element, in the order they are evaluated.
+
+	def __init__(self, rules: Nullable[Iterable[Rule]] = None) -> None:
+		"""
+		Initializes the rules of an element.
+
+		:param rules:                   Optional, rules of the element, in the order they are evaluated. Default:
+		                                ``None``.
+		:raises TypeError:              If parameter 'rules' is not iterable.
+		:raises ValueError:             If an element of parameter 'rules' is ``None``.
+		:raises TypeError:              If an element of parameter 'rules' is not of type :class:`Rule`.
+		:raises AlreadyInPipelineError: If an element of parameter 'rules' belongs to an element already.
+		"""
+		self._rules = []
+		if rules is None:
+			return
+		elif not isinstance(rules, Iterable):
+			ex = TypeError("Parameter 'rules' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(rules)}'.")
+			raise ex
+
+		for rule in rules:
+			self.AddRule(rule)
+
+	@readonly
+	def Rules(self) -> list[Rule]:
+		"""
+		Read-only property to access the element's rules (:attr:`_rules`).
+
+		:returns: The rules, in the order they are evaluated.
+		"""
+		return self._rules
+
+	@readonly
+	def RuleCount(self) -> int:
+		"""
+		Read-only property to return the number of rules of the element.
+
+		:returns: Number of rules.
+		"""
+		return len(self._rules)
+
+	def AddRule(self, rule: Rule) -> None:
+		"""
+		Add a rule, which is evaluated after the rules the element has already.
+
+		:param rule:                    The rule.
+		:raises ValueError:             If parameter 'rule' is ``None``.
+		:raises TypeError:              If parameter 'rule' is not of type :class:`Rule`.
+		:raises AlreadyInPipelineError: If parameter 'rule' belongs to an element already.
+		"""
+		if rule is None:
+			raise ValueError("Parameter 'rule' is None.")
+		elif not isinstance(rule, Rule):
+			ex = TypeError("Parameter 'rule' is not of type 'Rule'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(rule)}'.")
+			raise ex
+		elif rule._parent is not None:
+			raise AlreadyInPipelineError(f"Rule belongs to '{rule._parent}' already.")
+
+		self._rules.append(rule)
+		rule._parent = self
+
+	def IterateRules(self) -> Iterator[Rule]:
+		"""
+		Iterate the element's rules.
+
+		:returns: An iterator over the rules, in the order they are evaluated.
+		"""
+		return iter(self._rules)
 
 
 @export
@@ -1048,7 +1167,7 @@ class JobGroup(Base):
 
 
 @export
-class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
+class Workflow(JobGroup, QualifiedNameMixin, RulesMixin, DependencyMixin):
 	"""
 	A called workflow or a child pipeline, grouping the elements it contains.
 
@@ -1070,7 +1189,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		name:          str,
 		*,
 		reference:     Nullable[str]                       = None,
-		condition:     Nullable[str]                       = None,
+		rules:         Nullable[Iterable[Rule]]            = None,
 		createdAt:     Nullable[datetime]                  = None,
 		startedAt:     Nullable[datetime]                  = None,
 		completedAt:   Nullable[datetime]                  = None,
@@ -1085,7 +1204,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 
 		:param name:           Name of the workflow.
 		:param reference:      Optional, what the workflow calls, as written. Default: ``None``.
-		:param condition:      Optional, condition under which the workflow is called, as written. Default: ``None``.
+		:param rules:          Optional, rules deciding whether the workflow is called. Default: ``None``.
 		:param createdAt:      Optional, time the workflow was created, if the service reports it. Default: ``None``.
 		:param startedAt:      Optional, time the workflow started, if the service reports it. Default: ``None``.
 		:param completedAt:    Optional, time the workflow completed, if the service reports it. Default: ``None``.
@@ -1106,7 +1225,7 @@ class Workflow(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
 			keyValuePairs=keyValuePairs, parent=parent
 		)
-		ConditionMixin.__init__(self, condition)
+		RulesMixin.__init__(self, rules)
 		DependencyMixin.__init__(self, needs, dependents)
 
 		self._reference = reference
@@ -1274,7 +1393,7 @@ class Pipeline(Workflow):
 		self,
 		name:          str,
 		*,
-		condition:     Nullable[str]                       = None,
+		rules:         Nullable[Iterable[Rule]]            = None,
 		createdAt:     Nullable[datetime]                  = None,
 		startedAt:     Nullable[datetime]                  = None,
 		completedAt:   Nullable[datetime]                  = None,
@@ -1288,7 +1407,7 @@ class Pipeline(Workflow):
 		Initializes a pipeline.
 
 		:param name:          Name of the pipeline.
-		:param condition:     Optional, condition under which the pipeline runs, as written. Default: ``None``.
+		:param rules:         Optional, rules deciding whether the pipeline runs. Default: ``None``.
 		:param createdAt:     Optional, time the pipeline was created. Default: ``None``.
 		:param startedAt:     Optional, time the pipeline started. Default: ``None``.
 		:param completedAt:   Optional, time the pipeline completed. Default: ``None``.
@@ -1299,7 +1418,7 @@ class Pipeline(Workflow):
 		:param dependents:    Optional, siblings needing this pipeline. Default: ``None``.
 		"""
 		super().__init__(
-			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
+			name, rules=rules, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
 			keyValuePairs=keyValuePairs, parent=parent, needs=needs, dependents=dependents
 		)
 
@@ -1308,7 +1427,7 @@ class Pipeline(Workflow):
 
 
 @export
-class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
+class Matrix(JobGroup, QualifiedNameMixin, RulesMixin, DependencyMixin):
 	"""
 	A matrix, grouping the instances it produced: jobs, or called workflows.
 
@@ -1322,7 +1441,7 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		self,
 		name:          str,
 		*,
-		condition:     Nullable[str]                       = None,
+		rules:         Nullable[Iterable[Rule]]            = None,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]]    = None,
 		parent:        Nullable[Workflow]                  = None,
 		needs:         Nullable[Iterable[DependencyMixin]] = None,
@@ -1332,7 +1451,7 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		Initializes a matrix.
 
 		:param name:           Name of the matrix, which its instances share.
-		:param condition:      Optional, condition under which the instances run, as written. Default: ``None``.
+		:param rules:          Optional, rules deciding whether the instances run. Default: ``None``.
 		:param keyValuePairs:  Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:         Optional, reference to the workflow containing the matrix. Default: ``None``.
 		:param needs:          Optional, siblings this matrix needs. Default: ``None``.
@@ -1340,7 +1459,7 @@ class Matrix(JobGroup, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		:raises PipelineError: If the workflow contains a matrix of that name already.
 		"""
 		super().__init__(name, keyValuePairs=keyValuePairs, parent=parent)
-		ConditionMixin.__init__(self, condition)
+		RulesMixin.__init__(self, rules)
 		DependencyMixin.__init__(self, needs, dependents)
 
 	@readonly
@@ -1369,7 +1488,7 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 		dimensions:    Nullable[Mapping[str, Any]]         = None,
 		*,
 		reference:     Nullable[str]                       = None,
-		condition:     Nullable[str]                       = None,
+		rules:         Nullable[Iterable[Rule]]            = None,
 		createdAt:     Nullable[datetime]                  = None,
 		startedAt:     Nullable[datetime]                  = None,
 		completedAt:   Nullable[datetime]                  = None,
@@ -1385,7 +1504,7 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 		:param name:          Name of the workflow, without the dimensions' values.
 		:param dimensions:    Optional, the dimensions' names and values this instance ran with. Default: ``None``.
 		:param reference:     Optional, what the workflow calls, as written. Default: ``None``.
-		:param condition:     Optional, condition under which the workflow is called, as written. Default: ``None``.
+		:param rules:         Optional, rules deciding whether the workflow is called. Default: ``None``.
 		:param createdAt:     Optional, time the workflow was created, if the service reports it. Default: ``None``.
 		:param startedAt:     Optional, time the workflow started, if the service reports it. Default: ``None``.
 		:param completedAt:   Optional, time the workflow completed, if the service reports it. Default: ``None``.
@@ -1396,7 +1515,7 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 		:param dependents:    Optional, siblings needing this instance. Default: ``None``.
 		"""
 		super().__init__(
-			name, reference=reference, condition=condition, createdAt=createdAt, startedAt=startedAt,
+			name, reference=reference, rules=rules, createdAt=createdAt, startedAt=startedAt,
 			completedAt=completedAt, outcome=outcome, keyValuePairs=keyValuePairs, parent=parent
 		)
 		MatrixInstanceMixin.__init__(self, dimensions)
@@ -1415,7 +1534,7 @@ class MatrixWorkflow(Workflow, MatrixInstanceMixin):
 
 
 @export
-class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
+class Job(Base, QualifiedNameMixin, RulesMixin, DependencyMixin):
 	"""A job, which runs its steps on a worker."""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = JobGroup  #: A job is contained in a job group.
@@ -1426,7 +1545,7 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		self,
 		name:          str,
 		*,
-		condition:     Nullable[str]                       = None,
+		rules:         Nullable[Iterable[Rule]]            = None,
 		createdAt:     Nullable[datetime]                  = None,
 		startedAt:     Nullable[datetime]                  = None,
 		completedAt:   Nullable[datetime]                  = None,
@@ -1440,7 +1559,7 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 		Initializes a job.
 
 		:param name:          Name of the job.
-		:param condition:     Optional, condition under which the job runs, as written. Default: ``None``.
+		:param rules:         Optional, rules deciding whether the job runs. Default: ``None``.
 		:param createdAt:     Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
 		:param startedAt:     Optional, time the job started running on a worker. Default: ``None``.
 		:param completedAt:   Optional, time the job completed. Default: ``None``.
@@ -1454,7 +1573,7 @@ class Job(Base, QualifiedNameMixin, ConditionMixin, DependencyMixin):
 			name, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
 			keyValuePairs=keyValuePairs, parent=parent
 		)
-		ConditionMixin.__init__(self, condition)
+		RulesMixin.__init__(self, rules)
 		DependencyMixin.__init__(self, needs, dependents)
 
 		self._steps = []
@@ -1514,7 +1633,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		name:          str,
 		dimensions:    Nullable[Mapping[str, Any]]         = None,
 		*,
-		condition:     Nullable[str]                       = None,
+		rules:         Nullable[Iterable[Rule]]            = None,
 		createdAt:     Nullable[datetime]                  = None,
 		startedAt:     Nullable[datetime]                  = None,
 		completedAt:   Nullable[datetime]                  = None,
@@ -1529,7 +1648,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 
 		:param name:          Name of the job, without the dimensions' values.
 		:param dimensions:    Optional, the dimensions' names and values this instance ran with. Default: ``None``.
-		:param condition:     Optional, condition under which the job runs, as written. Default: ``None``.
+		:param rules:         Optional, rules deciding whether the job runs. Default: ``None``.
 		:param createdAt:     Optional, time the job was created, i.e. queued for a worker. Default: ``None``.
 		:param startedAt:     Optional, time the job started running on a worker. Default: ``None``.
 		:param completedAt:   Optional, time the job completed. Default: ``None``.
@@ -1540,7 +1659,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 		:param dependents:    Optional, siblings needing this instance. Default: ``None``.
 		"""
 		super().__init__(
-			name, condition=condition, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
+			name, rules=rules, createdAt=createdAt, startedAt=startedAt, completedAt=completedAt, outcome=outcome,
 			keyValuePairs=keyValuePairs, parent=parent
 		)
 		MatrixInstanceMixin.__init__(self, dimensions)
@@ -1559,7 +1678,7 @@ class MatrixJob(Job, MatrixInstanceMixin):
 
 
 @export
-class Step(Base, ConditionMixin):
+class Step(Base, RulesMixin):
 	"""A step within a job."""
 
 	_PARENT_TYPE: ClassVar[Nullable[type]] = Job  #: A step is contained in a job.
@@ -1568,7 +1687,7 @@ class Step(Base, ConditionMixin):
 		self,
 		name:          str,
 		*,
-		condition:     Nullable[str]                    = None,
+		rules:         Nullable[Iterable[Rule]]         = None,
 		startedAt:     Nullable[datetime]               = None,
 		completedAt:   Nullable[datetime]               = None,
 		outcome:       Nullable[Outcome]                = None,
@@ -1579,7 +1698,7 @@ class Step(Base, ConditionMixin):
 		Initializes a step within a job.
 
 		:param name:          Name of the step.
-		:param condition:     Optional, condition under which the step runs, as written. Default: ``None``.
+		:param rules:         Optional, rules deciding whether the step runs. Default: ``None``.
 		:param startedAt:     Optional, time the step started running. Default: ``None``.
 		:param completedAt:   Optional, time the step completed. Default: ``None``.
 		:param outcome:       Optional, how the step ended. Default: ``None``.
@@ -1589,4 +1708,4 @@ class Step(Base, ConditionMixin):
 		super().__init__(
 			name, startedAt=startedAt, completedAt=completedAt, outcome=outcome, keyValuePairs=keyValuePairs, parent=parent
 		)
-		ConditionMixin.__init__(self, condition)
+		RulesMixin.__init__(self, rules)

@@ -51,6 +51,7 @@ from typing                      import Callable, ClassVar, Generic, Iterator, O
 from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common            import getFullyQualifiedName
+from pyTooling.DataModel         import Predicate
 from pyTooling.Diagram.Gantt     import Bar, Diagram, Row
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
@@ -64,7 +65,7 @@ _FigureType = TypeVar("_FigureType")
 LINE_LEGEND_LABEL = "pipeline, called workflow"
 """The legend's label of the line drawn for the pipeline and every called workflow."""
 
-SpanFilter = Callable[[Span], bool]
+SpanFilter = Predicate[Span]
 """A function deciding whether a timespan - and with it, its sub-spans - is shown."""
 
 SpanCategory = Callable[[Span], str]
@@ -95,9 +96,8 @@ def ciSpanFilter(
 	Steps outnumber jobs by far - a pipeline of 74 jobs has more than 1600 steps, of which a third were skipped - and a
 	skipped job has neither waited nor run.
 
-	:param excludeSteps:       Optional, which steps to hide: ``True`` or :attr:`StepExclusion.All` hides every step,
-	                           ``False`` or :attr:`StepExclusion.Nothing` none, and :attr:`StepExclusion.Skipped` the
-	                           skipped ones. Default: :attr:`StepExclusion.All`.
+	:param excludeSteps:       Optional, which steps to hide; ``True`` stands for :attr:`StepExclusion.All`, ``False`` for
+	                           :attr:`StepExclusion.Nothing`. Default: :attr:`StepExclusion.All`.
 	:param excludeSkippedJobs: Optional, hide the jobs that were skipped. Default: ``True``.
 	:returns:                  The span filter.
 	:raises TypeError:         If parameter 'excludeSteps' is neither of type :class:`bool` nor :class:`StepExclusion`.

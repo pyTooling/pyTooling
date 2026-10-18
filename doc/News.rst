@@ -39,12 +39,27 @@ Version 10.x (2026)
      * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
        working.
 
+   * :mod:`pyTooling.DataModel` is a new package for the foundations of data models.
+     :class:`~pyTooling.DataModel.KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element, accessed like
+     a dictionary, and :meth:`~pyTooling.DataModel.KeyValuePairsMixin.get` reads a key that may be missing. The
+     elements of :mod:`pyTooling.CI`, :mod:`pyTooling.ControlFlow`, :mod:`pyTooling.Graph` and
+     :mod:`pyTooling.Tracing`, and a :class:`~pyTooling.Tree.Node`, derive from it, and reject key-value-pairs given as
+     anything but a mapping.
+     :data:`~pyTooling.DataModel.Predicate` is the type of a function selecting elements, ``Predicate[Vertex]`` -
+     the methods filtering what they iterate, reverse or remove use it.
+
    * :mod:`pyTooling.CI` models a CI pipeline independently of the service running it: a
      :class:`~pyTooling.CI.PipelineGroup` of :class:`~pyTooling.CI.Pipeline`\ s holding called
      :class:`~pyTooling.CI.Workflow`\ s, :class:`~pyTooling.CI.Matrix`\ es,
      :class:`~pyTooling.CI.Job`\ s and :class:`~pyTooling.CI.Step`\ s, with the times and an
-     :class:`~pyTooling.CI.Outcome` on every element, and a condition on those a definition can give one. Its
+     :class:`~pyTooling.CI.Outcome` on every element, and rules on those a definition can give them. Its
      exceptions derive from :exc:`~pyTooling.CI.CIError`.
+
+     * Workflows, matrices, jobs and steps carry an **ordered list of rules** (:class:`~pyTooling.CI.RulesMixin`):
+       a :class:`~pyTooling.CI.Rule` holds a condition as written, a :class:`~pyTooling.CI.RuleOutcome` deciding what
+       happens to the element if it matches, and key-value-pairs for what only a service's rule has. The first
+       matching rule decides. A GitHub ``if:`` is one rule, GitLab's ``rules:`` and ``workflow:rules`` are the list,
+       see :ref:`CI/Pipeline/Rules`.
 
      * The elements of a workflow **need** each other: :meth:`~pyTooling.CI.DependencyMixin.AddNeed` links
        two siblings, records the reverse link in :attr:`~pyTooling.CI.DependencyMixin.Dependents`, and
@@ -75,8 +90,7 @@ Version 10.x (2026)
        jobs first and called workflows last. The sort is stable, so elements reporting no time keep the order
        they were listed in.
      * A group's times span what it holds - its jobs, and for a :class:`~pyTooling.CI.Workflow` the matrices
-       and called workflows below it as well. :class:`~pyTooling.CI.Workflow` needed three overrides to say
-       that and has none now.
+       and called workflows below it as well.
      * :meth:`~pyTooling.CI.JobGroup.IterateElements` of a :class:`~pyTooling.CI.Workflow` yields its jobs,
        its matrices **and** the workflows it calls, so the containers one level below it are reachable without
        asking for each kind separately. :meth:`~pyTooling.CI.JobGroup.IterateJobs` remains the way to reach every
@@ -147,11 +161,11 @@ Version 10.x (2026)
      the first path element, :rfc:`3986`'s ``path-noscheme``), and holds none of the characters the RFC forbids -
      ``URL.Parse("https://example.org/api") / "https://elsewhere.org/things"`` raises instead of appending a URL to a
      path.
-   * A path flavour names the type of its elements - ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and
-     ``ROOT_DELIMITER``. :meth:`~pyTooling.GenericPath.PathMixin.Parse` reads that instead of being handed the path
-     and element classes as parameters, so its signature is ``Parse(path, root=None)`` and a flavour needs no
-     ``Parse`` of its own - :class:`~pyTooling.GenericPath.URL.Path` lost the one it had. **A flavour outside
-     pyTooling passing ``pathCls`` and ``elementCls`` has to drop them and declare ``ELEMENT_TYPE``.**
+   * ⚠️ A path flavour names the type of its elements - ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and
+     ``ROOT_DELIMITER``. :meth:`~pyTooling.GenericPath.PathMixin.Parse` reads that instead of being handed the path and
+     element classes as parameters, so its signature is ``Parse(path, root=None)`` and a flavour needs no ``Parse`` of
+     its own - :class:`~pyTooling.GenericPath.URL.Path` lost the one it had. **A flavour outside pyTooling passing
+     ``pathCls`` and ``elementCls`` has to drop them and declare ``ELEMENT_TYPE``.**
    * :meth:`~pyTooling.GenericPath.PathMixin.Parse` strips ``ROOT_DELIMITER`` from an absolute path, not as many
      characters as ``ELEMENT_DELIMITER`` is long. The two are the same in a URL, so nothing parses differently today,
      but a path flavour marking its root differently - a drive letter, a host separated by a colon - would have lost
@@ -163,7 +177,7 @@ Version 10.x (2026)
      * :exc:`~pyTooling.GenericPath.URL.URLError` replaces the bare
        :exc:`~pyTooling.Exceptions.ToolingException` the module raised, so a consumer can catch a URL problem
        without catching everything pyTooling raises. It still derives from it.
-     * :class:`~pyTooling.GenericPath.URL.Host` rejects a host name that is ``None`` or empty with a
+     * ⚠️ :class:`~pyTooling.GenericPath.URL.Host` rejects a host name that is ``None`` or empty with a
        :exc:`ValueError`, as its doc-string always said; ``None`` was a :exc:`TypeError`.
      * A rejected URL holding a character :rfc:`3986` forbids - a space, a control character, ``<``, ``|``,
        ... - gets a note naming it and its percent-encoding, e.g. *"Character ' ' is not allowed in a URL.
@@ -196,9 +210,13 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.MetaClasses`
 
-     * A class or a mixin-class can name the members it expects from wherever it ends up, with the new ``expects``
-       class keyword argument. The contract is checked at class construction and reported on instantiation, like an
-       abstract class.
+     * A class or a mixin-class can name the members it expects from wherever it ends up, with the new ``expects`` class
+       keyword argument. The contract is checked at class construction and reported on instantiation, like an abstract
+       class. An override expects only what its own marker names, a class fulfilling an expectation its base-class
+       missed can be instantiated with parameters, and the search for marked methods skips :class:`object`.
+     * A slotted class can be referenced weakly, with the new ``weakref`` class keyword argument (:ghissue:`49`):
+       ``weakref=True`` adds ``__weakref__`` to the class' slots like any other field; a derived class inherits it, and
+       a mixin-class passes it on to the class it is mixed into.
 
    * :mod:`pyTooling.Documentation` is a new module holding the helpers that work on doc-strings.
 
@@ -224,7 +242,8 @@ Version 10.x (2026)
      * :mod:`pyTooling.Testing.PyTest` is a new pytest plugin collecting what the markers mark. Node IDs are left
        untouched, so test selection, ``pytest-xdist``, ``--last-failed`` and IDE integration are unaffected. A marked
        method of a :class:`unittest.TestCase` class keeps its own name as its ID, though :mod:`unittest` collects
-       only methods named ``test*``.
+       only methods named ``test*``. The markers themselves aren't collected as testcases, and a summary longer than
+       200 characters is left out of the report with a :class:`~pytest.PytestCollectionWarning` naming the item.
      * :mod:`pyTooling.Testing.ReportWriter` is a second plugin writing a **test report format of our own**,
        opt-in through ``--pytooling-xml=PATH`` and additional - it runs in the same session as ``--junit-xml``, so
        a pipeline keeps the format its dashboard understands while the richer file appears beside it. Test suites
@@ -248,6 +267,13 @@ Version 10.x (2026)
        disagree.
      * A :class:`~pyTooling.Licensing.License` is hashable and compares equal to its SPDX identifier as a string,
        so it can be a dictionary key and be looked up by what a user writes.
+     * An **SPDX license expression** is a tree: :class:`~pyTooling.Licensing.LicenseExpression` is the base of
+       :class:`~pyTooling.Licensing.SPDXLicense`, :class:`~pyTooling.Licensing.AndOperator`,
+       :class:`~pyTooling.Licensing.OrOperator`, :class:`~pyTooling.Licensing.WithOperator` and
+       :class:`~pyTooling.Licensing.OrLaterOperator`, so ``Apache-2.0 OR MIT`` or ``GPL-2.0-only WITH
+       Classpath-exception-2.0`` can be stated. A malformed expression raises
+       :exc:`~pyTooling.Licensing.LicenseExpressionError`.
+     * ``LICENSE_TEXT_URLS`` and ``LICENSE_URLS`` name the GNU licenses' texts in every format gnu.org publishes.
 
    * :mod:`pyTooling.Attributes`
 
@@ -262,6 +288,8 @@ Version 10.x (2026)
        format is more than one character long and holds no path separator, so a Windows drive and a colon deeper
        down a path stay part of the path. The formats are a :class:`~pyTooling.Common.StringEnum`, and a value
        naming none gets its ``DEFAULT`` - or raises a :exc:`ValueError`, if the enumeration declares none.
+     * ``NamedAndValuedArgument`` and ``NamedTupledArgument`` are exported from
+       :mod:`pyTooling.Attributes.ArgParse.Argument`.
 
    * :mod:`pyTooling.TerminalUI`
 
@@ -282,8 +310,12 @@ Version 10.x (2026)
      * :class:`~pyTooling.Tracing.Span` and :class:`~pyTooling.Tracing.Event` are
        :class:`~pyTooling.Tracing.TraceElement`\ s - a **name**, the timespan **enclosing** them, and their
        **attributes**, which each of them declared and validated itself before.
-     * A trace's elements answer :meth:`~pyTooling.Tracing.TraceElement.get`, which reads an attribute that may not
-       be there and returns a default value instead of raising.
+     * A trace's elements take their attributes from :class:`~pyTooling.DataModel.KeyValuePairsMixin` and answer
+       its :meth:`~pyTooling.DataModel.KeyValuePairsMixin.get`, which reads an attribute that may not be there and
+       returns a default value instead of raising.
+     * ⚠️ Iterating a trace's element yields the attribute keys;
+       :meth:`~pyTooling.Tracing.TraceElement.IterateAttributes` yields the :pycode:`(key, value)` pairs that the
+       iteration yielded before.
 
      * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
        :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
@@ -294,7 +326,7 @@ Version 10.x (2026)
        :class:`~pyTooling.Tracing.OTLPAnyValue`.
      * A trace and each of its timespans draw their identifiers when they are **constructed**, so exporting one
        trace twice reports the same ``traceId``, and :attr:`~pyTooling.Tracing.Trace.TraceID` can be handed to
-       another process.
+       another process. A timestamp is exact to the microsecond a :class:`~datetime.datetime` holds.
      * An attribute's value is a :data:`~pyTooling.Tracing.AttributeValue` - the types OTLP's ``AnyValue`` carries,
        nested as deeply as needed. A value of any other type is rejected rather than stringified.
      * A trace and its timespans can be constructed with **recorded times** - ``beginTime`` and ``endTime`` - for
@@ -320,11 +352,6 @@ Version 10.x (2026)
        the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
      * A Gantt chart written as SVG can be **collapsible**: a click on a called workflow or a job hides or shows the
        rows below it.
-     * A timestamp is exported exact to the microsecond it holds. It was converted through :class:`float` seconds,
-       which left its nanoseconds up to a few hundred off.
-     * :meth:`Span.Format() <pyTooling.Tracing.Span.Format>` and :meth:`Trace.Format() <pyTooling.Tracing.Trace.Format>`
-       show ``--`` for a timespan that never started. They raised :exc:`~pyTooling.Tracing.TracingError`, because
-       such a timespan has no duration.
      * A timespan left by an exception records it - :attr:`~pyTooling.Tracing.Span.Exception` - and the exception
        propagates as before. The OTLP/JSON export reports such a span with ``STATUS_CODE_ERROR``
        (:class:`~pyTooling.Tracing.OTLPStatus`); a failed span looked like a successful one.
@@ -334,13 +361,15 @@ Version 10.x (2026)
      * :func:`~pyTooling.Packaging.DescribePythonPackage` declares ``consoleScripts``, ``guiScripts`` and
        ``pytestPlugins``, each knowing the entry point group it belongs to. Previously only ``console_scripts`` was
        reachable.
-     * A package's **short description is the first paragraph of its module doc-string**, so a package is described
-       in one place instead of two. The paragraph is folded into a single line and emphasis around the whole of it
-       is removed, because nothing renders ReST where a short description is displayed.
+     * ⚠️ A package's **short description is the first paragraph of its module doc-string**, so a package is described
+       in one place instead of two. The paragraph is folded into a single line and emphasis around the whole of it is
+       removed, because nothing renders ReST where a short description is displayed. Without ``description`` and without
+       a module doc-string, :func:`~pyTooling.Packaging.DescribePythonPackage` raises a
+       :exc:`~pyTooling.Packaging.PackagingError`; ``description`` moved behind the required parameters.
      * The module raises its own :exc:`~pyTooling.Packaging.PackagingError`, so a caller can catch what this module
        reports without catching everything derived from :exc:`~pyTooling.Exceptions.ToolingException`.
-     * :func:`~pyTooling.Packaging.DescribePythonPackage` leaves requirements with a direct reference (``name @ URL``)
-       out of every extra and reports each as a critical :exc:`~pyTooling.Packaging.DirectReferenceWarning` to a
+     * ⚠️ :func:`~pyTooling.Packaging.DescribePythonPackage` leaves requirements with a direct reference (``name @
+       URL``) out of every extra and reports each as a critical :exc:`~pyTooling.Packaging.DirectReferenceWarning` to a
        :class:`~pyTooling.Warning.WarningCollector`: the Python Package Index rejects a package whose metadata contains
        one. pyTooling itself names pyTooling.Sphinx, which isn't on PyPI yet, by its repository in
        :file:`doc/requirements.txt`; its ``doc`` and ``all`` extras carried it, so v10.0.0-rc1 couldn't be uploaded.
@@ -358,12 +387,6 @@ Version 10.x (2026)
        member the enumeration declares as ``DEFAULT`` - an alias, so it isn't iterated - or with ``None`` where
        there is none. :class:`~pyTooling.REST.MediaType`, :class:`~pyTooling.Tracing.CI.SpanKind` and
        :class:`~pyTooling.Tracing.CI.Result` derive from it.
-
-   * :mod:`pyTooling.Decorators`
-
-     * :deco:`~pyTooling.Decorators.InheritDocString` takes one ``strategy`` argument of the new
-       :class:`~pyTooling.Decorators.DocStringMergeStrategy`, replacing the ``merge``, ``summaryOnly`` and
-       ``order`` parameters. A new strategy inherits just the base-class' summary.
 
    * :mod:`pyTooling.LinkedList` and :mod:`pyTooling.Graph`
 
@@ -403,6 +426,50 @@ Version 10.x (2026)
      * :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts a package dependency graph into a
        :class:`pyTooling.Graph.Graph`: a vertex per package version, with its license, release time and URLs as
        key-value pairs, and an edge per dependency.
+     * :class:`~pyTooling.Dependency.Python.RequirementsFile` reads a requirements file as a tree: a ``-r`` line is
+       followed, every file knows its ``Parent``, its ``Root`` and its ``Hierarchy``, and ``AllRequirements`` yields the
+       requirements in the order the files state them, the nearer statement winning. A cycle raises instead of being
+       read once and hidden.
+     * :exc:`~pyTooling.Dependency.PackageIndexError` reports an HTTP error status of the package index other than ``404
+       Not Found``, caused by the :exc:`~requests.HTTPError`.
+
+   * :mod:`pyTooling.Configuration`
+
+     * A configuration node answers the mapping and sequence protocols: a dictionary node's ``keys()``, ``values()``,
+       ``items()`` and ``get()``, a sequence node's :func:`len` and indexing.
+     * A :class:`~pyTooling.Configuration.Dictionary` is iterated by keys and by items too -
+       :meth:`~pyTooling.Configuration.Dictionary.IterateKeys`, ``IterateValues()`` and ``IterateItems()``. Iterating a
+       node still yields its values.
+
+   * :mod:`pyTooling.Exceptions`
+
+     * Common bases for the errors every data structure raises: :exc:`~pyTooling.Exceptions.DuplicateElementError`,
+       :exc:`~pyTooling.Exceptions.AlreadyInHierarchyError` and :exc:`~pyTooling.Exceptions.NotInSameHierarchyError`. A
+       package's own exception derives from its base exception and a common base, so one ``except`` clause catches e.g.
+       all duplicates of all packages - as do the errors of :mod:`pyTooling.Graph`, :mod:`pyTooling.ControlFlow`,
+       :mod:`pyTooling.CallGraph`, :mod:`pyTooling.Tree` and :mod:`pyTooling.LinkedList`.
+
+   * :mod:`pyTooling.Versioning`
+
+     * ⚠️ :class:`~pyTooling.Versioning.PythonVersion` understands the spellings :pep:`440` normalizes, and keeps them:
+       ``10.0.0-pre1``, ``-preview1`` and ``c1`` are release candidates, ``10.0.0-dev``, ``.dev`` and ``dev`` are
+       ``.dev0``. A parsed version is written as parsed and compares and hashes like its normal form, which
+       :meth:`~pyTooling.Versioning.PythonVersion.Normalize` returns and ``Parse(..., normalize=True)`` returns
+       directly. :class:`~pyTooling.Versioning.SemanticVersion` keeps the release level's spelling too. Before, ``pre``
+       and ``preview`` became a local version (``10.0.0+pre1``).
+     * :class:`~pyTooling.Versioning.VersionExpression` parses and matches what a requirement file writes, in four
+       dialects: the neutral base, :class:`~pyTooling.Versioning.PythonVersionExpression`,
+       :class:`~pyTooling.Versioning.NPMVersionExpression` and :class:`~pyTooling.Versioning.DebianVersionExpression`. A
+       :class:`~pyTooling.Versioning.VersionConstraint` is one comparison and a container of the versions satisfying it,
+       so membership is asked with ``in``; :pep:`440`'s ``~=`` and npm's ``^`` and ``~`` derive an upper bound. An empty
+       expression matches every version. A constraint and an expression convert with ``ToVersionRange()`` where they
+       describe a single interval.
+     * ⚠️ A version number can carry an **epoch** - ``SemanticVersion.Parse("2:1.0.0")``,
+       ``PythonVersion.Parse("2!1.0.0")`` - which orders before every other part. The separator is the class variable
+       ``_EPOCH_SEPARATOR``, :attr:`~pyTooling.Versioning.Version.Epoch` reads the epoch, and ``Parts.Epoch`` says it is
+       present.
+     * A :class:`~pyTooling.Versioning.VersionRange` can be open at either end: a bound of ``None`` is unbounded, so
+       ``>=1.0`` is expressible.
 
    .. rubric:: Breaking Changes
 
@@ -413,50 +480,170 @@ Version 10.x (2026)
      :class:`~pyTooling.GenericPath.SystemMixin`. They were the last four spelled ``MixIn``, and the old names are
      gone rather than kept as aliases - the same rule the renamed exceptions follow.
 
-   * **A membership test is named** ``Contains***``: ``Has***`` asks for a property of the object itself, like
+   * ⚠️ :meth:`~pyTooling.GenericPath.PathMixin.Parse` **reads the flavour's** ``ELEMENT_TYPE``, so its signature is
+     ``Parse(path, root=None)``. A flavour outside pyTooling passing ``pathCls`` and ``elementCls`` drops them and
+     declares ``ELEMENT_TYPE``.
+
+   * ⚠️ :class:`~pyTooling.GenericPath.URL.Host` **rejects a host name that is** ``None`` **or empty** with a
+     :exc:`ValueError`. An empty name was accepted, and ``None`` raised a :exc:`TypeError`.
+     :meth:`~pyTooling.GenericPath.URL.URL.Parse` is unchanged.
+
+   * ⚠️ **A membership test is named** ``Contains***``: ``Has***`` asks for a property of the object itself, like
      :meth:`~pyTooling.Graph.BaseGraph.HasCycle`. ``Graph.HasVertexByID`` |rarr|
      :meth:`~pyTooling.Graph.Graph.ContainsVertexByID`, ``Graph.HasVertexByValue`` |rarr|
      :meth:`~pyTooling.Graph.Graph.ContainsVertexByValue` and ``GraphMLDocument.HasKey`` |rarr|
      :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.ContainsKey`, without aliases.
      :meth:`~pyTooling.Graph.GraphViz.BaseGraph.ContainsNode` is new in this release.
 
-   * **An attribute's scope is enforced**: applying an attribute to a class, method or function its
+   * ⚠️ **An attribute's scope is enforced**: applying an attribute to a class, method or function its
      :attr:`~pyTooling.Attributes.Attribute.Scope` doesn't allow raises
-     :exc:`~pyTooling.Attributes.AttributeScopeError` - it was accepted silently and registered in a list the scope
-     said it could never hold (:ghissue:`384`). :attr:`~pyTooling.Attributes.Attribute.Scope` is an instance property,
-     and :meth:`~pyTooling.Attributes.Attribute.GetAttributes` honours ``includeSubClasses=False``.
+     :exc:`~pyTooling.Attributes.AttributeScopeError`. Apply an attribute only where its scope allows it; pyTooling's
+     own attributes keep the scope ``Any``.
 
-   * :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` and
+   * ⚠️ **In a class not built by** :class:`~pyTooling.MetaClasses.ExtendedType`,
+     :meth:`~pyTooling.Attributes.Attribute.GetFunctions` **no longer returns marked methods**;
+     :meth:`~pyTooling.Attributes.Attribute.GetMethods` does.
+
+   * ⚠️ :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` and
      :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` **merge** ``environment`` into this process's
      environment instead of replacing it; a value of ``None`` removes a variable. A program given only the variables a
      test named lost the rest - on Windows ``SystemRoot``, without which it can't open a network connection.
 
-   * **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
-     :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. The old
-     names were briefly kept as aliases and are removed in the same release, so an ``import`` or an ``except``
-     clause naming one has to be updated.
-   * ``TerminalApplication._PrintHelp`` moved to
-     :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which owns the parsers it prints.
-   * :func:`~pyTooling.Packaging.DescribePythonPackage` **raises when it can find no description**, instead of
-     publishing a package without one. Either pass ``description``, or give the file named by
-     ``sourceFileWithVersion`` a module doc-string.
-   * The ``description`` parameter of both ``Describe***`` functions moved behind the required parameters, so a
-     caller passing it positionally has to name it.
+   * ⚠️ **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
+     :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. There are no
+     aliases of the old names, so an ``import`` or an ``except`` clause naming one has to be updated.
+
+   * ⚠️ ``TerminalApplication._PrintHelp`` moved to :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which
+     owns the parsers it prints. An application calling it derives from both classes.
+
+   * ⚠️ ``TerminalBaseApplication.PrintMissingDependencyException()`` **is renamed to**
+     :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError`, after the exception it prints.
+     Rename the call; there is no alias.
+
+   * ⚠️ :func:`~pyTooling.Packaging.DescribePythonPackage` **raises when it can find no description**, instead of
+     publishing a package without one. Either pass ``description``, or give the file named by ``sourceFileWithVersion``
+     a module doc-string. The ``description`` parameter of both ``Describe***`` functions moved behind the required
+     parameters, so a caller passing it positionally has to name it.
+
+   * ⚠️ **A direct reference in an extra raises** :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`, unless a
+     :class:`~pyTooling.Warning.WarningCollector` collects the :exc:`~pyTooling.Packaging.DirectReferenceWarning`: a
+     :file:`setup.py` whose extras contain or might contain one wraps ``setup(...)`` in ``with WarningCollector() as
+     warnings:``.
+
+   * ⚠️ **A package described with** :func:`~pyTooling.Packaging.DescribePythonPackage` **carries no** ``License ::``
+     **classifier**; its license is the SPDX expression in ``license`` only. A consumer reading the license from the
+     classifiers reads ``license`` instead.
+
+   * ⚠️ :deco:`~pyTooling.Decorators.InheritDocString` **loses** ``merge``, ``summaryOnly`` **and** ``order``; it takes
+     one :class:`~pyTooling.Decorators.DocStringMergeStrategy`. ``merge=True`` is ``DocStringMergeStrategy.BaseFirst``.
+     The default changes with it: ``@InheritDocString(Base)`` on an entity that has a doc-string replaced it and now
+     appends the base's underneath.
+
+   * ⚠️ :class:`pyTooling.Configuration.Configuration` **takes only** ``configFile``, no ``root`` and ``parent``. A
+     format implementation drops both arguments.
+
    * ⚠️ **A slotted secondary base-class has to be a mixin-class**, also without fields:
      :class:`~pyTooling.MetaClasses.ExtendedType` raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`.
      Declare it with ``mixin=True`` or apply :deco:`~pyTooling.MetaClasses.mixin`.
 
+   * ⚠️ **A mixin-class' slot that exists already raises** :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`: a
+     field of the class itself, a slot of the primary inheritance line, or a slot of a second mixin-class. Rename the
+     field, or drop one of the slots.
+
+   * ⚠️ **A** ``ClassVar`` **naming a mixin-class' slot raises**
+     :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` at class creation. Annotating it as ``ClassVar`` is not
+     the fix; rename the class variable, or drop the slot.
+
+   * ⚠️ **Annotating** ``__weakref__`` **or** ``__dict__`` **raises an**
+     :exc:`~pyTooling.MetaClasses.ExtendedTypeError`. Pass ``weakref=True`` instead of annotating ``__weakref__``; a
+     class whose instances need a ``__dict__`` uses ``slots=False``.
+
+   * ⚠️ ``len()`` **and iteration of a** :class:`~pyTooling.Tree.Node` **address its key-value-pairs**, like ``[]``
+     and ``in``: :pycode:`len(node)` counts the pairs and iterating a node yields the keys. Both addressed the children
+     before. Use :attr:`~pyTooling.Tree.Node.ChildCount`, :attr:`~pyTooling.Tree.Node.Children` or
+     :meth:`~pyTooling.Tree.Node.GetChildren` instead.
+
+   * ⚠️ :class:`~pyTooling.Tree.Node` **takes two type parameters instead of four**: ``Node[IDType, ValueType]``.
+     Its key-value-pairs come from :class:`~pyTooling.DataModel.KeyValuePairsMixin`, keys are
+     :class:`~typing.Hashable` and values :data:`~typing.Any`. ``Node[a, b, c, d]`` raises a :exc:`TypeError`; drop the
+     last two arguments. Key-value-pairs given as anything but a mapping raise a :exc:`TypeError`.
+
+   * ⚠️ **The elements of** :mod:`pyTooling.Graph` **take their key-value-pairs from**
+     :class:`~pyTooling.DataModel.KeyValuePairsMixin`: keys are :class:`~typing.Hashable`, values :data:`~typing.Any`.
+     The type parameters for keys and values are removed and the kinds of edges and links are type parameters:
+     :class:`~pyTooling.Graph.Graph` takes 11 instead of 23, :class:`~pyTooling.Graph.Vertex` and
+     :class:`~pyTooling.Graph.Subgraph` 11 instead of 17, :class:`~pyTooling.Graph.View` and
+     :class:`~pyTooling.Graph.Component` 11 instead of 19, :class:`~pyTooling.Graph.Edge` and
+     :class:`~pyTooling.Graph.Link` 4 instead of 5; adapt every subscript. The 16 ``***DictKeyType`` and
+     ``***DictValueType`` type variables are removed. Key-value-pairs given as anything but a mapping raise a
+     :exc:`TypeError`.
+
+   * ⚠️ **Iterating a** :class:`~pyTooling.Graph.Graph` **yields its keys**, like ``len()`` already counted its
+     key-value-pairs. It yielded the vertices without an ID, followed by the IDs - not the vertices - of the others.
+     Use :meth:`~pyTooling.Graph.BaseGraph.IterateVertices`.
+
+   * ⚠️ **The kind of an edge or link precedes** ``keyValuePairs`` in :meth:`~pyTooling.Graph.Vertex.EdgeToVertex`,
+     ``EdgeFromVertex``, ``LinkToVertex``, ``LinkFromVertex`` and the constructors of :class:`~pyTooling.Graph.Edge` and
+     :class:`~pyTooling.Graph.Link`: a key-value mapping passed positionally lands in the kind. Pass ``keyValuePairs``
+     by keyword.
+
+   * ⚠️ **Iterating a** :class:`~pyTooling.Tracing.Trace`, :class:`~pyTooling.Tracing.Span` **or**
+     :class:`~pyTooling.Tracing.Event` **yields the attribute keys**;
+     :meth:`~pyTooling.Tracing.TraceElement.IterateAttributes` yields the :pycode:`(key, value)` pairs the iteration
+     yielded before.
+
+   * ⚠️ :meth:`Project.UpdateDetailsFromPyPIJSON <pyTooling.Dependency.Python.Project.UpdateDetailsFromPyPIJSON>`
+     **reports a release whose version it can't parse as an** :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`,
+     a critical warning naming the project and the version number, e.g. pytz' ``2004d``. It printed a line to the
+     console instead. The release is still skipped, but without a :class:`~pyTooling.Warning.WarningCollector`, reading
+     such a project raises :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`.
+
+   * ⚠️ :exc:`~pyTooling.Exceptions.ExceptionBase` **has no** ``message`` **field anymore**. Read the message with
+     ``str(ex)`` or the new read-only property :attr:`~pyTooling.Exceptions.ExceptionBase.Message`.
+
+   * ⚠️ **A program found in** ``PATH`` **is the full path** in :attr:`~pyTooling.CLIAbstraction.Program.Path` and as
+     the first item of :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList`, e.g. ``/usr/bin/git`` instead of
+     ``git``.
+
+   * ⚠️ ``str()`` **of a** :class:`~pyTooling.CLIAbstraction.Program` **or an argument is a command line escaped for the
+     platform**, instead of every argument in double quotes. Code parsing or comparing that text adapts to it;
+     :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` returns the arguments as a list.
+
+   * ⚠️ ``SemanticVersion.Parse("1.0a1")`` **is written** ``1.0.a1``, as parsed, not ``1.0.alpha1``. A version
+     constructed without a spelling is written as before.
+
+   * ⚠️ **A dev or post part counts when it's present**: ``1.0.dev0 == 1.0`` and ``1.0.post0 == 1.0`` are ``False``, as
+     :pep:`440` orders them.
+
+   * ⚠️ **A release level without a number is a pre-release**: ``SemanticVersion.Parse("1.0.0-alpha")`` was a final
+     release with the postfix ``alpha``; it is ``1.0.0.alpha0``.
+
+   * ⚠️ **Every member of** ``pyTooling.Versioning.Parts`` **has a new value**: ``Epoch = 1`` takes the lowest bit, so
+     each of the other members doubled. Code using the members by name is unaffected; a persisted ``Parts`` value, or a
+     comparison against a literal, has to be re-read.
+
+   * ⚠️ :meth:`VersionRange.__and__ <pyTooling.Versioning.VersionRange.__and__>` **no longer includes bounds the
+     operands exclude** - see *Bug Fixes*.
+
    .. rubric:: Changes
 
-   * An attribute applied to a method files it under *methods* when the decorator runs, recognized by its qualified
-     name, instead of under *functions* until :class:`~pyTooling.MetaClasses.ExtendedType` moved it - a search
-     through every function the attribute marks, per method. In a class not built by ``ExtendedType``,
+   * ⚠️ :exc:`~pyTooling.Exceptions.ExceptionBase` hands its message to :exc:`Exception`, so ``args`` is
+     ``(message, )`` and :func:`repr` shows it, as for any Python exception. ``args`` was empty. The ``message`` field
+     and the :meth:`~object.__str__` override returning it are removed: the read-only property
+     :attr:`~pyTooling.Exceptions.ExceptionBase.Message` returns ``args[0]``, and ``str(ex)`` is Python's own.
+   * ⚠️ An attribute's scope is checked when the decorator runs (:ghissue:`384`); a function defined in a class body is
+     recognized as a method by its qualified name, for any class. It was accepted silently and registered in a list the
+     scope said it could never hold. :attr:`~pyTooling.Attributes.Attribute.Scope` is an instance property, and
+     :meth:`~pyTooling.Attributes.Attribute.GetAttributes` honours ``includeSubClasses=False``.
+   * ⚠️ An attribute applied to a method files it under *methods* when the decorator runs, recognized by its qualified
+     name, instead of under *functions* until :class:`~pyTooling.MetaClasses.ExtendedType` moved it - a search through
+     every function the attribute marks, per method. In a class not built by ``ExtendedType``,
      :meth:`~pyTooling.Attributes.Attribute.GetMethods` finds the method now, and
      :meth:`~pyTooling.Attributes.Attribute.GetFunctions` no longer does.
-   * **A package's license is stated as an SPDX expression only; no** ``License ::`` **classifier is added.**
+   * ⚠️ **A package's license is stated as an SPDX expression only; no** ``License ::`` **classifier is added.**
      setuptools deprecated them, and the expression was already there - ``license`` has always been filled from
-     :attr:`~pyTooling.Licensing.License.SPDXIdentifier`. A classifier passed by the caller is kept, because it is
-     their statement, and reported on the console.
+     :attr:`~pyTooling.Licensing.License.SPDXIdentifier`. A classifier passed by the caller is kept, because it is their
+     statement, and reported on the console.
    * 339 f-strings that interpolate nothing lost their ``f`` prefix, across 33 modules.
    * An edge joining two components of a :class:`~pyTooling.Graph.Graph` moves the smaller component's vertices into the
      larger one. It moved the destination's vertices into the source's component whatever their sizes, so an edge from
@@ -464,15 +651,15 @@ Version 10.x (2026)
      list took 633 ms, now 55 ms; 10000 calls of :meth:`~pyTooling.Graph.Vertex.EdgeFromNewVertex` 1830 ms, now 39 ms.
      So the component kept is the larger one, not always the source's; of two of equal size, still the source's. The
      other one is dropped with its name and key-value pairs, as before.
-   * ``str()`` of a :class:`~pyTooling.CLIAbstraction.Program` or an argument is a command line escaped for the
+   * ⚠️ ``str()`` of a :class:`~pyTooling.CLIAbstraction.Program` or an argument is a command line escaped for the
      current platform. It put each argument in double quotes without escaping the quotes inside: the two arguments
-     ``-m`` and ``a "b" c`` came out as ``"-m" "a "b" c"``. Now they are ``-m 'a "b" c'`` for a POSIX shell and
-     ``-m "a \"b\" c"`` on Windows. ``repr()`` is a Python literal with strings in double quotes.
+     ``-m`` and ``a "b" c`` came out as ``"-m" "a "b" c"``. Now they are ``-m 'a "b" c'`` for a POSIX shell and ``-m "a
+     \"b\" c"`` on Windows. ``repr()`` is a Python literal with strings in double quotes.
    * :mod:`pyTooling.MetaClasses` imports :data:`~pyTooling.Attributes.TAttr` and
      :data:`~pyTooling.Attributes.TAttributeFilter` from :mod:`pyTooling.Attributes`. It declared its own copies, and
      its filter was a union of attribute *instances*, while the predicate of ``GetMethodsWithAttributes`` takes
      attribute classes.
-   * A secondary base-class built by :class:`~pyTooling.MetaClasses.ExtendedType` with ``slots=True``, but without
+   * ⚠️ A secondary base-class built by :class:`~pyTooling.MetaClasses.ExtendedType` with ``slots=True``, but without
      ``mixin=True``, raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`, which was declared but never
      raised. One with fields raised :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError`, one without fields
      was accepted. A plain class with non-empty ``__slots__`` still raises
@@ -487,9 +674,8 @@ Version 10.x (2026)
      built by ``ExtendedType`` (or :class:`~typing.Generic`): those passed the same check when they were created. A
      class below a hierarchy of depth 6 computes its slots in 7.6 µs instead of 10.7 µs on Python 3.14.
    * :class:`~pyTooling.MetaClasses.ExtendedType` finds out whether a class' ``__new__`` is the replacement an abstract
-     base-class put in place without raising and catching an :exc:`AttributeError`, and accepts a tuple as ``expects``
-     without the slower check against :class:`~collections.abc.Iterable`. Both ran for every class; creating one takes
-     0.8 µs less on Python 3.14, 0.6 µs on 3.13.
+     base-class put in place without raising and catching an :exc:`AttributeError`. It ran for every class; creating
+     one takes 0.4 µs less on Python 3.14, 0.3 µs on 3.13.
 
    * :mod:`pyTooling.Decorators`
 
@@ -509,10 +695,6 @@ Version 10.x (2026)
      evaluated in the namespaces of each class being created, as before. Resolving a text seen before takes 1.0 µs
      instead of 11.4 µs (Python 3.14), and creating a class with postponed annotations takes 26 to 59 % less time.
 
-   * :class:`~pyTooling.MetaClasses.ExtendedType` no longer searches :class:`object` for methods marked with
-     :deco:`~pyTooling.MetaClasses.expects`. The search walks the new class' MRO, which always ends in :class:`object`,
-     whose members are never marked. Over pyVHDLModel's 412 classes, the search took 3.7 ms, now 3.2 ms.
-
    * :mod:`pyTooling.Filesystem`
 
      * :attr:`Element.Path <pyTooling.Filesystem.Element.Path>` is an abstract property, so
@@ -525,7 +707,118 @@ Version 10.x (2026)
        ``ToTree`` raises an :exc:`~pyTooling.MetaClasses.AbstractClassError` when instantiated, instead of a
        :exc:`NotImplementedError` when called.
 
+   * :mod:`pyTooling.Attributes.ArgParse`
+
+     * ⚠️ ``_PrintHelp`` is a method of :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, the mixin-class
+       owning the parsers it prints, instead of :class:`~pyTooling.TerminalUI.TerminalApplication`; it writes through
+       ``TerminalApplication``'s ``Write***`` methods.
+
+   * :mod:`pyTooling.Configuration`
+
+     * ⚠️ :class:`pyTooling.Configuration.Configuration` takes only ``configFile``. A configuration is the root node, so
+       it initializes :class:`~pyTooling.Configuration.Node` as one itself: its root is itself, and it has no parent.
+     * A configuration node's length is its raw node's length, not a copy taken at construction.
+
+   * :mod:`pyTooling.Decorators`
+
+     * ⚠️ :deco:`~pyTooling.Decorators.InheritDocString` takes one ``strategy`` argument of the new
+       :class:`~pyTooling.Decorators.DocStringMergeStrategy`, replacing the ``merge``, ``summaryOnly`` and ``order``
+       parameters. A new strategy inherits just the base-class' summary. The default, ``BaseLast``, appends the
+       base-class' doc-string below the entity's own.
+
+   * :mod:`pyTooling.Dependency`
+
+     * ⚠️ A release version the parser can't read is reported as a critical
+       :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, carrying ``ProjectName`` and ``Version``, instead of a
+       line written by :func:`print`. The release is still skipped.
+
+   * :mod:`pyTooling.GenericPath`
+
+     * ⚠️ ``PathMixin``, ``ElementMixin``, ``RootMixin`` and ``SystemMixin`` were spelled ``***MixIn``.
+
+   * :mod:`pyTooling.Graph`
+
+     * ⚠️ The elements take their key-value-pairs from :class:`~pyTooling.DataModel.KeyValuePairsMixin` instead of each
+       defining the same dictionary methods, so the key and value type parameters are gone.
+     * ⚠️ Iterating a :class:`~pyTooling.Graph.Graph` yields its keys, like every element with key-value-pairs.
+     * ⚠️ An edge or link takes its kind as a parameter before ``keyValuePairs``: ``edgeKind`` / ``linkKind`` in
+       ``EdgeToVertex``, ``EdgeFromVertex``, ``LinkToVertex`` and ``LinkFromVertex``, ``kind`` in the constructors of
+       :class:`~pyTooling.Graph.Edge` and :class:`~pyTooling.Graph.Link`.
+
+   * :mod:`pyTooling.MetaClasses`
+
+     * ⚠️ Annotating ``__weakref__`` or ``__dict__`` raises an :exc:`~pyTooling.MetaClasses.ExtendedTypeError`. Both
+       became slots silently: a ``__dict__`` slot accepted any attribute on an instance again, and a ``__weakref__``
+       slot is requested with ``weakref=True`` now.
+     * :class:`~pyTooling.MetaClasses.ExtendedType` binds an annotated class variable before
+       :meth:`~object.__init_subclass__` runs. A derived class overriding a class variable with an annotation was
+       invisible to that hook, which read the inherited value.
+
+   * :mod:`pyTooling.Packaging`
+
+     * :const:`~pyTooling.Packaging.DEFAULT_PY_VERSIONS` is 3.11 to 3.15, the maintained CPython versions - 3.10 reaches
+       its end of life in October 2026, 3.15 was released in October 2026. A package not stating ``pythonVersions`` gets
+       ``python_requires >=3.11`` and a classifier for each of them.
+
+   * :mod:`pyTooling.Platform`
+
+     * FreeBSD is a supported platform: ``IsNativeFreeBSD`` no longer implies x86-64, AArch64 is recognized, and
+       ``GetMemoryUsage`` reports the resident size through :func:`resource.getrusage`.
+
+   * :mod:`pyTooling.TerminalUI`
+
+     * ⚠️ :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` is named after the exception
+       it prints, :exc:`~pyTooling.Exceptions.MissingDependencyError`; it was ``PrintMissingDependencyException()``.
+
+   * :mod:`pyTooling.Testing`
+
+     * ⚠️ :class:`~pyTooling.Testing.ApplicationTestcase` handed a test's ``environment`` to the program as its whole
+       environment, so every caller wrote ``{**environ, ...}``. The variables it names are set, ``None`` removes one,
+       the rest is inherited.
+
+   * :mod:`pyTooling.Tracing`
+
+     * :meth:`Span.Format() <pyTooling.Tracing.Span.Format>` and :meth:`Trace.Format() <pyTooling.Tracing.Trace.Format>`
+       show ``--`` for a timespan that never started. They raised a :exc:`TypeError`, so one span that was never entered
+       made the whole trace unprintable. :attr:`~pyTooling.Tracing.Span.Duration` still raises.
+
+   * :mod:`pyTooling.Tree`
+
+     * ⚠️ ``len()`` and iteration of a :class:`~pyTooling.Tree.Node` address its key-value-pairs; the new
+       :attr:`~pyTooling.Tree.Node.ChildCount` and :attr:`~pyTooling.Tree.Node.Children` address the children.
+     * ⚠️ A :class:`~pyTooling.Tree.Node` takes its key-value-pairs from
+       :class:`~pyTooling.DataModel.KeyValuePairsMixin`, so its key and value type parameters are gone.
+
+   * General
+
+     * ⚠️ Membership tests are named ``Contains***``; ``Has***`` checks a property or feature of an object.
+     * ⚠️ 32 exception classes carry the ``***Error`` suffix; ``***Exception`` is reserved for a package's own base
+       exception, :exc:`~pyTooling.Exceptions.ToolingException`.
+
    .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.CLIAbstraction`
+
+     * A program in dry-run mode raised an :exc:`AttributeError` instead of skipping a missing executable or a
+       process start: ``LogDryRun`` was called, but defined nowhere.
+       :meth:`~pyTooling.CLIAbstraction.Program.LogDryRun` records the skipped action in
+       :attr:`~pyTooling.CLIAbstraction.Program.DryRunMessages`; a derived class may override it to write the message.
+     * ⚠️ A program searched in ``PATH`` kept the bare executable name, not the path it was found at. A variant built
+       with ``executablePath=program.Path`` raised :exc:`~pyTooling.CLIAbstraction.CLIAbstractionError`, unless the
+       working directory had a file of that name. :attr:`~pyTooling.CLIAbstraction.Program.Path` and the first item of
+       :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` are the full path now.
+
+   * :mod:`pyTooling.Configuration`
+
+     * A key stated without a value - ``key:`` in YAML, ``null`` in JSON - raised
+       :exc:`~pyTooling.Configuration.UnsupportedValueTypeError`. It reads as ``None`` now, and a variable referencing
+       it raises :exc:`~pyTooling.Configuration.PathExpressionError` instead of being replaced by ``"None"``.
+     * An empty YAML file crashed instead of reading as an empty configuration: the ``None`` the YAML reader returns for
+       it was read as a mapping.
+     * ``..`` above a configuration's root crashed with an :exc:`AttributeError`, from ``QueryPath("..:key")`` as well
+       as from a ``${..:key}`` reference in a top-level value. It raises a
+       :exc:`~pyTooling.Configuration.PathExpressionError` now. The root node referred to no root, and a nested node to
+       its parent as its root; every node refers to the configuration now.
 
    * :mod:`pyTooling.Decorators`
 
@@ -534,25 +827,20 @@ Version 10.x (2026)
        :class:`~collections.abc.Callable`. It is bound to :class:`type` or :class:`~collections.abc.Callable` now, and
        the decorated function or class keeps its signature.
 
-   * :mod:`pyTooling.CLIAbstraction`
-
-     * A program in dry-run mode raised an :exc:`AttributeError` instead of skipping a missing executable or a
-       process start: ``LogDryRun`` was called, but defined nowhere.
-       :meth:`~pyTooling.CLIAbstraction.Program.LogDryRun` records the skipped action in
-       :attr:`~pyTooling.CLIAbstraction.Program.DryRunMessages`; a derived class may override it to write the message.
-
-   * :mod:`pyTooling.Configuration`
-
-     * A key stated without a value - ``key:`` in YAML, ``null`` in JSON - raised
-       :exc:`~pyTooling.Configuration.UnsupportedValueTypeError`. It reads as ``None`` now, and a variable referencing
-       it raises :exc:`~pyTooling.Configuration.PathExpressionError` instead of being replaced by ``"None"``.
-
    * :mod:`pyTooling.Dependency`
 
-     * A license override :class:`~pyTooling.Licensing.LicenseExpression` can't parse (``BSD-2-Clause-Views``) was
-       reported as *"The package index published no license information."* The
-       :exc:`~pyTooling.Dependency.UnknownLicenseWarning` names the override's statement and the override file now,
-       which :attr:`LicenseOverrides.Path <pyTooling.Dependency.Python.LicenseOverrides.Path>` keeps.
+     * :meth:`Project.DownloadDetails <pyTooling.Dependency.Python.Project.DownloadDetails>` and
+       :meth:`Release.DownloadDetails <pyTooling.Dependency.Python.Release.DownloadDetails>` swallowed every HTTP error
+       but ``404 Not Found`` and parsed the error page as JSON document. Both raise a
+       :exc:`~pyTooling.Dependency.PackageIndexError` now, caused by the :exc:`~requests.HTTPError`.
+     * Every release of a project was described by the latest release's metadata:
+       :meth:`~pyTooling.Dependency.Python.Project.DownloadReleaseDetails` fetched the project's document for every
+       release. On ``requests``, release 2.20.0 reported 2.32.0's dependencies.
+     * An environment marker was read as a broken extra, and releases predating core-metadata 2.1 lost every ``extra ==
+       "…"`` requirement. Extras are recovered from the markers naming them; a declared ``provides_extra`` stays
+       authoritative.
+     * ``Release.__init__`` couldn't copy its ``requirements``: it iterated the mapping's keys and unpacked each into
+       two, so ``{"test": [...]}`` raised a :exc:`ValueError`.
 
    * :mod:`pyTooling.Filesystem`
 
@@ -563,15 +851,6 @@ Version 10.x (2026)
        :meth:`Filename.ToTree <pyTooling.Filesystem.Filename.ToTree>` and
        :meth:`SymbolicLink.ToTree <pyTooling.Filesystem.SymbolicLink.ToTree>` take the optional ``format`` as well, so
        a user defined format renders the whole tree.
-
-   * :mod:`pyTooling.Packaging`
-
-     * :func:`~pyTooling.Packaging.loadRequirementsFile` kept a comment behind a requirement, so an extra's metadata
-       carried e.g. ``colorama ~= 0.4.6    # 'terminal'``. A comment starts a line or follows whitespace; a ``#``
-       inside a word stays, as the package name of ``URL#name``.
-     * :const:`~pyTooling.Packaging.DEFAULT_PY_VERSIONS` is 3.11 to 3.15, the maintained CPython versions - 3.10
-       reaches its end of life in October 2026, 3.15 was released in October 2026. A package not stating
-       ``pythonVersions`` gets ``python_requires >=3.11`` and a classifier for each of them.
 
    * :mod:`pyTooling.Graph`
 
@@ -603,22 +882,6 @@ Version 10.x (2026)
        up under another ID than it was declared with, so it was declared again for every vertex or edge.
      * IDs and key names weren't escaped, so an ID with ``&``, ``<`` or ``"`` made the document invalid XML.
 
-   * :mod:`pyTooling.Testing`
-
-     * The markers were collected as testcases themselves. :deco:`~pyTooling.Testing.testsuite` and
-       :deco:`~pyTooling.Testing.testcase` are module-level callables whose names start with ``test``, which is
-       what pytest's **default** ``python_functions = ["test*"]`` matches - so importing them put two phantom
-       testcases into every module that used them. They passed, which is why nothing looked wrong.
-     * A package, module or class of the test suite whose doc-string starts with a paragraph longer than 200
-       characters stopped pytest's collection with an ``INTERNALERROR``: the plugin read the paragraph as the level's
-       summary, and :func:`~pyTooling.Documentation.splitDocString` rejects one that long. The summary is left out of
-       the report now, and a :class:`~pytest.PytestCollectionWarning` names the item.
-
-   * :mod:`pyTooling.TerminalUI`
-
-     * A message's indentation was recorded and never printed. ``BaseIndent`` and the ``indent`` parameter of every
-       ``Write*`` method reached :attr:`~pyTooling.TerminalUI.Line.Indent` and got lost on the way to the terminal.
-
    * :mod:`pyTooling.LinkedList`
 
      * A :class:`~pyTooling.LinkedList.Node` stored its value as its key, ignoring the parameter ``key``.
@@ -626,12 +889,73 @@ Version 10.x (2026)
        parameter of :class:`~pyTooling.LinkedList.LinkedList`, which has two, so :func:`typing.get_type_hints` raised a
        :exc:`TypeError` for :class:`~pyTooling.LinkedList.Node`.
 
-   * :mod:`pyTooling.CLIAbstraction`
+   * :mod:`pyTooling.MetaClasses`
 
-     * A program searched in ``PATH`` kept the bare executable name, not the path it was found at. A variant built
-       with ``executablePath=program.Path`` raised :exc:`~pyTooling.CLIAbstraction.CLIAbstractionError`, unless
-       the working directory had a file of that name. :attr:`~pyTooling.CLIAbstraction.Program.Path` and the
-       first item of :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList` are the full path now.
+     * A class or static method marked with :deco:`~pyTooling.MetaClasses.abstractmethod` or
+       :deco:`~pyTooling.MetaClasses.mustoverride` didn't make its class abstract: the class could be instantiated.
+       :class:`~pyTooling.MetaClasses.ExtendedType` looked for the marker on the :class:`classmethod` or
+       :class:`staticmethod` object instead of the function it wraps.
+     * The same for a property: :deco:`~pyTooling.MetaClasses.abstractmethod` below :class:`property` or
+       :deco:`~pyTooling.Decorators.readonly` was ignored silently. And a property overriding an abstract method didn't
+       count as its implementation, so the derived class stayed abstract. :class:`~pyTooling.Licensing.BaseLicense`
+       is abstract now, as its abstract properties ``Identifier`` and ``Name`` say.
+     * The initial value of a slotted field (``_name: str = "root"`` in a class with ``slots=True`` or ``mixin=True``)
+       was dropped: reading the field before ``__init__`` assigned it raised an :exc:`AttributeError`.
+       :class:`~pyTooling.MetaClasses.ExtendedType` collected the values, but never used them. An intermediate
+       ``__init__`` assigns them now - those of every base-class and mixin-class too - before it calls the class' own
+       ``__init__``, also if a derived class' ``__init__`` doesn't call ``super().__init__()``. A class keeps the
+       initial values of its hierarchy in ``__allSlotDefaults__``, so a hierarchy without any costs no wrapper.
+     * ⚠️ A mixin-class' field was added to the slots of the class it is mixed into, even if that name was a slot
+       already: of the primary inheritance line, of the class itself, or of a second mixin-class. The class got two
+       slots of one name, or for ``__weakref__`` Python's ``TypeError: __weakref__ slot disallowed``. These raise a
+       :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now. Two mixin-classes deriving from one mixin-class
+       passed its field on twice; it is one slot now.
+     * A slotted class or mixin-class naming :class:`object` as its base-class (``class C(object,
+       metaclass=ExtendedType, slots=True)``) raised an :exc:`IndexError`: an inheritance path ending in
+       :class:`object` was collected for every base-class, except for :class:`object` itself. An explicit
+       :class:`object` base-class behaves like none.
+     * ⚠️ A ``ClassVar`` naming a mixin-class' slot produced a broken class: the name was in ``__slots__`` *and* a class
+       attribute, so the field was read-only on every instance. It raises
+       :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now.
+
+   * :mod:`pyTooling.Packaging`
+
+     * :func:`~pyTooling.Packaging.loadRequirementsFile` kept a comment behind a requirement, so an extra's metadata
+       carried e.g. ``colorama ~= 0.4.6    # 'terminal'``. A comment starts a line or follows whitespace; a ``#``
+       inside a word stays, as the package name of ``URL#name``.
+
+   * :mod:`pyTooling.Stopwatch`
+
+     * :meth:`Stopwatch.Exclude <pyTooling.Stopwatch.Stopwatch.Exclude>` raised an :exc:`UnboundLocalError` on its
+       second use, so a stopwatch could exclude exactly one timespan.
+
+   * :mod:`pyTooling.TerminalUI`
+
+     * A message's indentation was recorded and never printed. ``BaseIndent`` and the ``indent`` parameter of every
+       ``Write*`` method reached :attr:`~pyTooling.TerminalUI.Line.Indent` and got lost on the way to the terminal.
+
+   * :mod:`pyTooling.Testing`
+
+     * pytest tried to collect :exc:`~pyTooling.Testing.TestingError`, as its name starts with ``Test``.
+
+   * :mod:`pyTooling.Tree`
+
+     * Splitting a tree by assigning ``None`` to :attr:`Node.Parent <pyTooling.Tree.Node.Parent>` left the IDs of the
+       split-off nodes registered in the old tree, and the new tree's ID registry stayed empty:
+       :attr:`~pyTooling.Tree.Node.Size` and :meth:`~pyTooling.Tree.Node.GetNodeByID` still found them in the old
+       tree, not in the new one.
+
+   * :mod:`pyTooling.Versioning`
+
+     * ⚠️ A release level without a number wasn't one: ``PythonVersion.Parse("1.0a")`` didn't parse, and
+       :class:`~pyTooling.Versioning.SemanticVersion` read ``-alpha`` as a postfix. :pep:`440` normalizes ``1.0a`` to
+       ``1.0a0``, and SemVer reads ``-alpha`` as a pre-release. :class:`~pyTooling.Versioning.PythonVersion` also wrote
+       a fourth numeric component (``1.2.3.4``) as ``1.2.3``.
+     * ⚠️ :class:`~pyTooling.Versioning.Version` compared a dev or post part's number, but not whether it was present,
+       so ``1.0.dev0 == 1.0``. :pep:`440` orders ``1.0.dev0 < 1.0 < 1.0.post0``.
+     * ⚠️ :meth:`VersionRange.__and__ <pyTooling.Versioning.VersionRange.__and__>` discarded both operands' bound
+       handling, so intersecting two ranges that exclude their bounds returned a range including them. Each bound keeps
+       the handling of the range it came from; where both contribute the same value, the stricter one wins.
 
    * :mod:`pyTooling.Warning`
 
@@ -644,46 +968,11 @@ Version 10.x (2026)
        :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` or :exc:`~pyTooling.Warning.UnhandledExceptionError` for
        a critical warning or an exception. It propagates now.
 
-   * :mod:`pyTooling.MetaClasses`
-
-     * A class or static method marked with :deco:`~pyTooling.MetaClasses.abstractmethod` or
-       :deco:`~pyTooling.MetaClasses.mustoverride` didn't make its class abstract: the class could be instantiated.
-       :class:`~pyTooling.MetaClasses.ExtendedType` looked for the marker on the :class:`classmethod` or
-       :class:`staticmethod` object instead of the function it wraps.
-     * The same for a property: :deco:`~pyTooling.MetaClasses.abstractmethod` below :class:`property` or
-       :deco:`~pyTooling.Decorators.readonly` was ignored silently. And a property overriding an abstract method didn't
-       count as its implementation, so the derived class stayed abstract. :class:`~pyTooling.Licensing.BaseLicense`
-       is abstract now, as its abstract properties ``Identifier`` and ``Name`` say.
-     * A class that fulfilled an expectation its base-class missed - a mixin-class' ``expects`` naming a member only
-       the derived class defines - couldn't be instantiated with parameters, and neither could a class derived from
-       it: ``TypeError: object.__new__() takes exactly one argument``. :class:`~pyTooling.MetaClasses.ExtendedType`
-       put :meth:`object.__new__` back into the class, which rejects every parameter there
-       (:gh:`python/cpython#105888 <python/cpython/issues/105888>`). It puts back the replacement a class that isn't
-       abstract anymore already got, which calls :meth:`object.__new__` with the class only.
-     * A method overriding one marked with :deco:`~pyTooling.MetaClasses.expects`, without the marker itself, was
-       replaced by the overridden method's replacement while the class missed what *that* method expected:
-       calling the override raised :exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError`, and the class lost its
-       own method. The same for an override contributed by a mixin-class, and for a marked method of a mixin-class
-       shadowed by an unmarked one on the primary inheritance line. An override expects only what its own marker
-       names.
-     * The initial value of a slotted field (``_name: str = "root"`` in a class with ``slots=True`` or ``mixin=True``)
-       was dropped: reading the field before ``__init__`` assigned it raised an :exc:`AttributeError`.
-       :class:`~pyTooling.MetaClasses.ExtendedType` collected the values, but never used them. An intermediate
-       ``__init__`` assigns them now - those of every base-class and mixin-class too - before it calls the class' own
-       ``__init__``, also if a derived class' ``__init__`` doesn't call ``super().__init__()``. A class keeps the
-       initial values of its hierarchy in ``__allSlotDefaults__``, so a hierarchy without any costs no wrapper.
-     * A mixin-class' field was added to the slots of the class it is mixed into, even if that name was a slot
-       already: of the primary inheritance line, of the class itself, or of a second mixin-class. The class got two
-       slots of one name, or for ``__weakref__`` Python's ``TypeError: __weakref__ slot disallowed``. These raise a
-       :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now. Two mixin-classes deriving from one mixin-class
-       passed its field on twice; it is one slot now.
-     * A slotted class or mixin-class naming :class:`object` as its base-class (``class C(object,
-       metaclass=ExtendedType, slots=True)``) raised an :exc:`IndexError`: an inheritance path ending in
-       :class:`object` was collected for every base-class, except for :class:`object` itself. An explicit
-       :class:`object` base-class behaves like none.
-
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
+   * 22 parameters were annotated non-optional and defaulted to ``None``, in :mod:`~pyTooling.Packaging`,
+     :mod:`~pyTooling.Configuration`, :mod:`~pyTooling.Graph`, :mod:`~pyTooling.Stopwatch` and :mod:`~pyTooling.Tree`.
+     :pep:`484` prohibits implicit ``Optional``; they are ``Nullable[...]`` now.
 
    .. rubric:: Documentation
 
@@ -717,6 +1006,15 @@ Version 10.x (2026)
    * A function reporting a warning names it in its doc-string and says it's dropped without a collector - in
      :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Dependency` and :class:`~pyTooling.MetaClasses.ExtendedType`. Each
      warning class states whether it's critical.
+   * Most ``tbd`` pages are written: the Attributes, Configuration, ArgParse, Cartesian, Program, Stopwatch and
+     filesystem pages, the Meta-Classes background page and :class:`~pyTooling.MetaClasses.ExtendedType`'s reference,
+     and tutorials on attributes, the CLI abstraction and exception hierarchies.
+   * The glossary has 122 terms instead of 47, and none of them is a placeholder.
+   * Pages compare pyTooling with competing solutions: the pipeline model, tracing, warnings, the terminal UI,
+     ``ExtendedType``, attributes, REST, licensing, configuration, dependencies, versioning, test annotations, the
+     stopwatch, the linked list and the CLI abstraction.
+   * The *Dependency* page renders every extra's table from the package index, with pyTooling.Sphinx'
+     ``dependency-table`` directive.
 
    .. rubric:: Unit Tests
 
@@ -725,6 +1023,24 @@ Version 10.x (2026)
    * The :class:`~pyTooling.Stopwatch.Stopwatch` tests allow a sleep to take 4 times as long on GitHub Actions, where a
      shared runner overshot a 0.5 s sleep by up to 3x and failed them at random. A local run keeps the narrow limit.
    * The last 14 f-strings in the tests that interpolate nothing lost their ``f`` prefix.
+   * 2641 testcases instead of 1326. The suite runs in parallel with pytest-xdist, also in CI, and Coverage.py follows
+     the workers.
+
+   .. rubric:: CI Pipeline
+
+   * The pipelines use ``pyTooling/Actions@r9`` instead of ``@r7``. MSYS2 runs on UCRT64 and Clang64 only.
+   * CPython 3.11 to 3.15 and PyPy 3.11 and 3.12 are tested.
+   * A package PyPI would reject is neither tagged nor uploaded, a pre-release's release page is published as a
+     pre-release, and only the wheel is published on PyPI.
+
+.. topic:: :gh:`v10.0.0-rc2 - 13.10.2026 <pyTooling/pyTooling/releases/v10.0.0-rc2>`
+
+   Release candidate published on PyPI. Its changes are listed in v10.0.0.
+
+.. topic:: :gh:`v10.0.0-rc1 - 12.10.2026 <pyTooling/pyTooling/releases/v10.0.0-rc1>`
+
+   Release candidate published on GitHub only; PyPI rejected its upload. Its changes are listed in v10.0.0.
+
 
 Version 9.x (2026)
 ******************

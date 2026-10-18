@@ -194,6 +194,7 @@ extensions = [
 intersphinx_mapping = {
 	"python":       ("https://docs.python.org/3", None),
 	"setup":        ("https://setuptools.pypa.io/en/latest", None),
+	"requests":     ("https://requests.readthedocs.io/en/latest", None),
 	"pyToolSphinx": ("https://pyTooling.github.io/pyTooling.Sphinx/", None),
 	"pyToolGitHub": ("https://pyTooling.github.io/pyTooling.GitHub/", None),
 }
@@ -285,6 +286,9 @@ pyTooling_Dependency_Requirements = {
 	"packaging":     {"package":  "pyTooling[packaging]"},
 	"terminal":      {"package":  "pyTooling[terminal]"},
 	"yaml":          {"package":  "pyTooling[yaml]"},
+	"diagram":       {"package":  "pyTooling[diagram]"},
+	"pypi":          {"package":  "pyTooling[pypi]"},
+	"testing":       {"package":  "pyTooling[testing]"},
 	"unittest":      {"file":     "../tests/unit/requirements.txt"},
 	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
 	"performance":   {"file":     "../tests/performance/requirements.txt"},

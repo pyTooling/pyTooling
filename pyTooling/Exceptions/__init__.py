@@ -125,8 +125,16 @@ class ExceptionBase(Exception):
 
 		:param message: Optional, the exception message.
 		"""
-		super().__init__()
-		self.message = message
+		super().__init__(message)
+
+	@readonly
+	def Message(self) -> str:
+		"""
+		Read-only property to return the exception's message (first element of :attr:`~BaseException.args`).
+
+		:returns: The exception's message.
+		"""
+		return self.args[0]
 
 	@readonly
 	def HasNotes(self) -> bool:
@@ -145,14 +153,6 @@ class ExceptionBase(Exception):
 		:returns: Attached notes.
 		"""
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
-
-	def __str__(self) -> str:
-		"""
-		Returns the exception's message text.
-
-		:returns: The exception's message text.
-		"""
-		return self.message
 
 	# @DocumentMemberAttribute(False)
 	# @MethodAlias(pyExceptions.with_traceback)
@@ -303,3 +303,37 @@ class ToolingException(Exception):
 		:returns: Attached notes.
 		"""
 		return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
+
+
+@export
+class DuplicateElementError(Exception):
+	"""
+	The exception is raised when an element is added to a data structure, which already contains an element of the same
+	kind and key.
+
+	It's a common base: a package's own exception derives from it and from the package's base-exception, e.g.
+	``class DuplicateVertexError(GraphError, DuplicateElementError)``. It has no initializer of its own, so the
+	package's base-exception decides how the message is stored.
+	"""
+
+
+@export
+class AlreadyInHierarchyError(Exception):
+	"""
+	The exception is raised when an element is added to a hierarchy, but it's already part of one.
+
+	It's a common base: a package's own exception derives from it and from the package's base-exception, e.g.
+	``class AlreadyInTreeError(TreeError, AlreadyInHierarchyError)``. It has no initializer of its own, so the
+	package's base-exception decides how the message is stored.
+	"""
+
+
+@export
+class NotInSameHierarchyError(Exception):
+	"""
+	The exception is raised when an element is used together with an element of another data structure.
+
+	The element itself is valid, only its ownership is wrong. It's a common base: a package's own exception derives from
+	it and from the package's base-exception, e.g. ``class NotInSameTreeError(TreeError, NotInSameHierarchyError)``. It
+	has no initializer of its own, so the package's base-exception decides how the message is stored.
+	"""

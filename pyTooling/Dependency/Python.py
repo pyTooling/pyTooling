@@ -85,8 +85,10 @@ from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
 from pyTooling.Dependency      import BrokenRequirementWarning, ReleaseDetailsWarning, UnknownLicenseWarning
+from pyTooling.Dependency      import UnsupportedVersionWarning
 from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
+from pyTooling.Dependency      import PackageIndexError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Warning         import WarningCollector
@@ -1050,6 +1052,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		                                 A session is opened by the package index and handed to the objects it
 		                                 creates.
 		:raises ReleaseNotFoundError:    If the index doesn't know this release.
+		:raises PackageIndexError:       If the index responds with another HTTP error status.
 		"""
 		if self._session is None:
 			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
@@ -1059,11 +1062,16 @@ class Release(PackageVersion, LazyLoadableMixin):
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
 		try:
 			response.raise_for_status()
-		except HTTPError as ex:
-			if ex.response is not None and ex.response.status_code == 404:
-				raise ReleaseNotFoundError(f"Release '{self._version}' of package '{self._package._name}' not found.") from ex
+		except HTTPError as cause:
+			if cause.response is not None and cause.response.status_code == 404:
+				raise ReleaseNotFoundError(
+					f"Release '{self._version}' of package '{self._package._name}' not found."
+				) from cause
 
-			raise ex
+			raise PackageIndexError(
+				f"Package index responded {response.status_code} {response.reason} for release '{self._version}' of "
+				f"package '{self._package._name}'."
+			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
@@ -1451,13 +1459,18 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download this project's details and its list of releases from the package index.
 
-		If this project is loaded already, the releases fetch their details right away, which reports the warnings of
+		A release whose version the parser doesn't support is skipped and reported as a
+		:exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, see :meth:`UpdateDetailsFromPyPIJSON`. If this project is
+		loaded already, the releases fetch their details right away, which reports the warnings of
 		:meth:`Release.UpdateDetailsFromPyPIJSON`.
 
-		:raises NoSessionAvailableError: If the project wasn't created by a package index, so it has no session. |br|
-		                                 A session is opened by the package index and handed to the objects it
-		                                 creates.
-		:raises ProjectNotFoundError:    If the index doesn't know this project.
+		:raises NoSessionAvailableError:       If the project wasn't created by a package index, so it has no session. |br|
+		                                       A session is opened by the package index and handed to the objects it
+		                                       creates.
+		:raises ProjectNotFoundError:          If the index doesn't know this project.
+		:raises PackageIndexError:             If the index responds with another HTTP error status.
+		:raises UnhandledCriticalWarningError: If a release's version isn't supported and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 		"""
 		if self._session is None:
 			ex = NoSessionAvailableError(f"No session available to download details of package '{self._name}'.")
@@ -1467,9 +1480,13 @@ class Project(Package, LazyLoadableMixin):
 		response = self._session.get(url=f"{self._api}{self._GetPyPIEndpoint()}")
 		try:
 			response.raise_for_status()
-		except HTTPError as ex:
-			if ex.response is not None and ex.response.status_code == 404:
-				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from ex
+		except HTTPError as cause:
+			if cause.response is not None and cause.response.status_code == 404:
+				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from cause
+
+			raise PackageIndexError(
+				f"Package index responded {response.status_code} {response.reason} for package '{self._name}'."
+			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
@@ -1477,11 +1494,15 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Fill this project from the JSON document the package index returned.
 
-		Releases without a distribution are skipped, and a version the parser doesn't understand is reported as a
-		warning rather than failing the whole project. If this project is loaded already, the releases fetch their
-		details right away, which reports the warnings of :meth:`Release.UpdateDetailsFromPyPIJSON`.
+		Releases without a distribution are skipped. A release whose version the parser doesn't support is skipped too,
+		rather than failing the whole project, and reported as a :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`
+		to a :class:`~pyTooling.Warning.WarningCollector`. It's a critical warning: without a collector,
+		:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised. If this project is loaded already, the releases
+		fetch their details right away, which reports the warnings of :meth:`Release.UpdateDetailsFromPyPIJSON`.
 
-		:param json: The parsed JSON document describing this project.
+		:param json:                           The parsed JSON document describing this project.
+		:raises UnhandledCriticalWarningError: If a release's version isn't supported and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 		"""
 		infoNode = json["info"]
 		releasesNode = json["releases"]
@@ -1499,7 +1520,14 @@ class Project(Package, LazyLoadableMixin):
 				version = PythonVersion.Parse(k)
 				convertedReleasesNode[version] = v
 			except ValueError as ex:
-				print(f"Unsupported version format '{k}' - {ex}")
+				WarningCollector.Raise(
+					UnsupportedVersionWarning(
+						f"Skipping release '{k}' of package '{self._name}': version format isn't supported.",
+						projectName=self._name,
+						version=k
+					),
+					ex
+				)
 
 		for version, releaseNode in sorted(convertedReleasesNode.items(), key=lambda t: t[0]):
 			if Parts.Postfix in version._parts:
@@ -1716,12 +1744,17 @@ class PythonPackageIndex(PackageStorage):
 		"""
 		Look up a project on this package index.
 
-		If ``lazy`` asks for :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, the details of every
+		Loading the project's details skips a release whose version the parser doesn't support and reports it as a
+		:exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, see :meth:`Project.UpdateDetailsFromPyPIJSON`. If
+		``lazy`` asks for :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, the details of every
 		release are fetched right away, which reports the warnings of :meth:`Project.DownloadReleaseDetails`.
 
-		:param projectName: Name of the project on the package index.
-		:param lazy:        Optional, state the project should be loaded to immediately.
-		:returns:           The project, loaded as far as ``lazy`` demands.
+		:param projectName:                    Name of the project on the package index.
+		:param lazy:                           Optional, state the project should be loaded to immediately.
+		:returns:                              The project, loaded as far as ``lazy`` demands.
+		:raises UnhandledCriticalWarningError: If ``lazy`` asks for the project's details, a release's version isn't
+		                                       supported and no :class:`~pyTooling.Warning.WarningCollector` collects
+		                                       the warning.
 		"""
 		project = Project(projectName, "", index=self, lazy=lazy)
 

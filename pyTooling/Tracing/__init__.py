@@ -60,6 +60,7 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import __version__, getFullyQualifiedName
+from pyTooling.DataModel   import KeyValuePairsMixin
 
 
 __all__ = ["_threadLocalData", "OTLP_SCOPE_NAME"]
@@ -356,7 +357,7 @@ def _newIdentifier(bits: int) -> str:
 
 
 @export
-class TraceElement(metaclass=ExtendedType, slots=True):
+class TraceElement(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 	"""
 	Base-class of a trace's elements: a named thing within a timespan, carrying arbitrary attributes
 	(key-value-pairs).
@@ -366,11 +367,11 @@ class TraceElement(metaclass=ExtendedType, slots=True):
 	parent**, because where it goes differs: a sub-span joins :attr:`Span._spans` and an event
 	:attr:`Span._events`, and neither may happen before the derived class has validated the rest of its parameters.
 
-	The attributes are read, written and removed like a dictionary's items.
+	The attributes are read, written and removed like a dictionary's items
+	(:class:`~pyTooling.DataModel.KeyValuePairsMixin`); :meth:`IterateAttributes` yields them as pairs.
 	"""
-	_name:   str                        #: Name of the element.
-	_parent: Nullable[Span]             #: Reference to the enclosing timespan (or trace).
-	_dict:   dict[str, AttributeValue]  #: Dictionary of associated attributes.
+	_name:   str             #: Name of the element.
+	_parent: Nullable[Span]  #: Reference to the enclosing timespan (or trace).
 
 	def __init__(self, name: str, parent: Nullable[Span] = None) -> None:
 		"""
@@ -382,6 +383,8 @@ class TraceElement(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'name' is empty.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
 		"""
+		super().__init__()
+
 		if isinstance(name, str):
 			if name == "":
 				raise ValueError("Parameter 'name' is empty.")
@@ -398,7 +401,6 @@ class TraceElement(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._parent = parent
-		self._dict =   {}
 
 	@readonly
 	def Name(self) -> str:
@@ -418,71 +420,13 @@ class TraceElement(metaclass=ExtendedType, slots=True):
 		"""
 		return self._parent
 
-	def get(self, key: str, default: Nullable[AttributeValue] = None) -> Nullable[AttributeValue]:
-		"""
-		Read an attached attribute (key-value-pair) by key, or a default value, if the key doesn't exist.
-
-		This method is spelled the way :meth:`dict.get` is, because that is the behaviour it offers.
-
-		:param key:     The key to look for.
-		:param default: Optional, the value returned if the key isn't an attached attribute. Default: ``None``.
-		:returns:       The value associated to the given key, otherwise the default value.
-		"""
-		return self._dict.get(key, default)
-
-	def __getitem__(self, key: str) -> AttributeValue:
-		"""
-		Read an attached attribute (key-value-pair) by key.
-
-		:param key: The key to look for.
-		:returns:   The value associated to the given key.
-		"""
-		return self._dict[key]
-
-	def __setitem__(self, key: str, value: AttributeValue) -> None:
-		"""
-		Create or update an attached attribute (key-value-pair) by key.
-
-		If a key doesn't exist yet, a new key-value-pair is created.
-
-		:param key:   The key to create or update.
-		:param value: The value to associate to the given key.
-		"""
-		self._dict[key] = value
-
-	def __delitem__(self, key: str) -> None:
-		"""
-		Remove an attached attribute (key-value-pair) by key.
-
-		:param key:       The key to remove.
-		:raises KeyError: If key doesn't exist in the attributes.
-		"""
-		del self._dict[key]
-
-	def __contains__(self, key: str) -> bool:
-		"""
-		Checks if the key is an attached attribute (key-value-pairs).
-
-		:param key: The key to check.
-		:returns:   ``True``, if the key is an attached attribute.
-		"""
-		return key in self._dict
-
-	def __iter__(self) -> Iterator[tuple[str, AttributeValue]]:
+	def IterateAttributes(self) -> Iterator[tuple[str, AttributeValue]]:
 		"""
 		Returns an iterator to iterate all attached attributes as :pycode:`(key, value)` tuples.
 
 		:returns: Iterator to iterate all attributes.
 		"""
 		return iter(self._dict.items())
-
-	def __len__(self) -> int:
-		"""
-		Returns the number of attached attributes (key-value-pairs).
-
-		:returns: Number of attached attributes.
-		"""
-		return len(self._dict)
 
 
 @export
@@ -925,7 +869,7 @@ class Span(TraceElement):
 		:attr:`~SpanState.Running` inside the block and :attr:`~SpanState.Complete` after it, exactly as a recorded one
 		is. Only an :attr:`~SpanState.Empty` timespan can be entered.
 
-		:returns: :attr:`~SpanState.Empty`, :attr:`~SpanState.Running` or :attr:`~SpanState.Complete`.
+		:returns: Which of the timespan's times are filled in.
 		"""
 		if self._beginTime is None:
 			return SpanState.Empty

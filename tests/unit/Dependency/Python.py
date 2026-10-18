@@ -39,6 +39,7 @@ from textwrap                     import dedent
 from typing                       import Optional as Nullable
 
 from pytest                       import mark
+from requests                     import HTTPError, Response
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
@@ -46,13 +47,14 @@ from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
 from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
+from pyTooling.Dependency         import PackageIndexError, UnsupportedVersionWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 from pyTooling.Licensing          import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
 from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperator
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
-from pyTooling.Warning            import WarningCollector
+from pyTooling.Warning            import UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase
 
 
@@ -283,6 +285,59 @@ class ReleaseDetails(Testcase):
 		self.assertIn("importlib-resources", oldestRequirements)
 		self.assertNotIn("importlib-resources", latestRequirements)
 		self.assertNotEqual(oldestRequirements, latestRequirements)
+
+
+class ProjectReleases(Testcase):
+	"""How UpdateDetailsFromPyPIJSON fills a project with its releases."""
+
+	@staticmethod
+	def _project() -> Project:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+
+		return Project("project", "https://index.org/project/", index=index)
+
+	@staticmethod
+	def _json(*versions: str) -> dict:
+		releases = {}
+		for version in versions:
+			releases[version] = [{
+				"filename":             f"project-{version}.tar.gz",
+				"url":                  f"https://files.index.org/project-{version}.tar.gz",
+				"upload_time_iso_8601": "2026-01-01T00:00:00.000000Z"
+			}]
+
+		return {"info": {"project_url": "https://index.org/project/"}, "releases": releases}
+
+	def test_UnsupportedVersion(self) -> None:
+		"""A release whose version can't be parsed is skipped and reported as a critical warning."""
+		project = self._project()
+
+		with WarningCollector() as collector:
+			project.UpdateDetailsFromPyPIJSON(self._json("1.0.0", "2004d"))
+
+		self.assertEqual(1, len(collector))
+
+		warning = collector[0]
+		self.assertIsInstance(warning, UnsupportedVersionWarning)
+		self.assertEqual("Skipping release '2004d' of package 'project': version format isn't supported.", str(warning))
+		self.assertEqual("project", warning.ProjectName)
+		self.assertEqual("2004d", warning.Version)
+		self.assertIsInstance(warning.__cause__, ValueError)
+		self.assertEqual([PythonVersion.Parse("1.0.0")], list(project.Releases))
+
+	def test_UnsupportedVersion_Uncollected(self) -> None:
+		"""Without a collector, the critical warning stops filling the project."""
+		project = self._project()
+
+		with self.assertRaises(UnhandledCriticalWarningError) as context:
+			project.UpdateDetailsFromPyPIJSON(self._json("1.0.0", "2004d"))
+
+		self.assertEqual(
+			"Unhandled Critical Warning: Skipping release '2004d' of package 'project': version format isn't supported.",
+			str(context.exception)
+		)
+		self.assertIsInstance(context.exception.__cause__, UnsupportedVersionWarning)
 
 
 class ProjectURLs(Testcase):
@@ -1149,3 +1204,54 @@ class IndexSessionRetries(Testcase):
 
 		self.assertIn("GET", retries.allowed_methods)
 		self.assertNotIn("POST", retries.allowed_methods)
+
+
+class _ServerErrorSession:
+	"""HTTP session answering every request with ``500 Internal Server Error``, so no request leaves the process."""
+
+	def get(self, url: str) -> Response:
+		"""
+		Answer a GET request with ``500 Internal Server Error``.
+
+		:param url: The requested URL.
+		:returns:   A response with status code 500.
+		"""
+		response = Response()
+		response.status_code = 500
+		response.reason =      "Internal Server Error"
+		response.url =         url
+
+		return response
+
+
+class HTTPErrors(Testcase):
+	"""An HTTP error other than ``404 Not Found`` raises a ``PackageIndexError``, instead of being parsed as JSON."""
+
+	def test_Project_ServerError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = _ServerErrorSession()
+		project = Project("project", "https://index.org/project/", index=index)
+
+		with self.assertRaises(PackageIndexError) as context:
+			project.DownloadDetails()
+
+		self.assertEqual("Package index responded 500 Internal Server Error for package 'project'.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, HTTPError)
+
+	def test_Release_ServerError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = _ServerErrorSession()
+		project = Project("project", "https://index.org/project/", index=index)
+		release = Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
+
+		with self.assertRaises(PackageIndexError) as context:
+			release.DownloadDetails()
+
+		self.assertEqual(
+			"Package index responded 500 Internal Server Error for release 'v1.0.0' of package 'project'.",
+			str(context.exception)
+		)
+		self.assertIsInstance(context.exception.__cause__, HTTPError)
+

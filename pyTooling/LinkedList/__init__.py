@@ -44,9 +44,10 @@ from collections.abc       import Sized
 from typing                import Generic, TypeVar, Optional as Nullable, Callable, Iterable, Generator, Any
 
 from pyTooling.Decorators  import readonly, export
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import NotInSameHierarchyError, ToolingException
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import Predicate
 
 
 _NodeKey =   TypeVar("_NodeKey")
@@ -74,7 +75,7 @@ class NotInAListError(LinkedListError):
 
 
 @export
-class NotInSameListError(LinkedListError):
+class NotInSameListError(LinkedListError, NotInSameHierarchyError):
 	"""The exception is raised when a node is assigned to a different linked list than expected."""
 
 
@@ -713,7 +714,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			else:  # pragma: no cover
 				raise InternalError("Node position not found.")
 
-	def Search(self, predicate: Callable[[Node], bool], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
+	def Search(self, predicate: Predicate[Node], reverse: bool = False) -> Node[_NodeKey, _NodeValue]:
 		"""
 		Search the list for the first node matching a predicate.
 

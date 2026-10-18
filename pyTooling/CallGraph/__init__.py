@@ -58,12 +58,13 @@ graph the call is made from. Call graphs, functions and calls carry key-value-pa
 from __future__            import annotations
 
 from enum                  import Enum
-from typing                import Any, Callable, Generator, Hashable, Mapping, Optional as Nullable
+from typing                import Any, Generator, Hashable, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import Predicate
 from pyTooling.ControlFlow import Base, BaseWithCountAndValue, BasicBlock, BlockKind, ControlFlowGraph
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
 from pyTooling.MetaClasses import ExtendedType
 
@@ -115,7 +116,7 @@ class CallGraphError(ToolingException):
 
 
 @export
-class DuplicateFunctionError(CallGraphError):
+class DuplicateFunctionError(CallGraphError, DuplicateElementError):
 	"""The exception raised for a function with an ID, which the graph has already."""
 
 
@@ -586,7 +587,7 @@ class CallGraph(Base):
 
 	def IterateFunctions(
 		self,
-		predicate: Nullable[Callable[[Function], bool]] = None
+		predicate: Nullable[Predicate[Function]] = None
 	) -> Generator[Function, None, None]:
 		"""
 		Iterate all or selected functions of the graph.
