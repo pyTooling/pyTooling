@@ -44,7 +44,7 @@ from __future__                  import annotations
 
 from asyncio                     import run as asyncio_run, gather as asyncio_gather
 from enum                        import Enum
-from typing                      import Any, Callable, Iterable, Iterator, Optional as Nullable
+from typing                      import Any, Callable, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Exceptions        import MissingDependencyError
 
@@ -54,6 +54,7 @@ except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
 
 try:
+	from packaging.markers         import default_environment
 	from packaging.requirements    import Requirement
 	from packaging.utils           import canonicalize_name
 except ImportError as ex:  # pragma: no cover
@@ -63,8 +64,9 @@ from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import StringEnum, getFullyQualifiedName
 from pyTooling.Warning           import WarningCollector
-from pyTooling.Dependency        import PackageIndexFailureWarning, UnresolvedRequirementWarning
-from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release
+from pyTooling.Dependency        import BrokenRequirementWarning, ExtraNotFoundError, PackageIndexFailureWarning
+from pyTooling.Dependency        import UnresolvedRequirementWarning
+from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release, RequirementsFile
 
 _Requirement = Requirement
 _Project =     Project
@@ -101,12 +103,13 @@ class ResolutionStatus(Enum):
 	"""What resolving a requirement came to."""
 
 	Resolved =           1  #: A release matching the requirement was selected, and its details were downloaded.
-	UnknownProject =     2  #: The package index doesn't know the required project.
-	NoMatchingRelease =  3  #: No release of the project matches the requirement's specifier.
-	UndescribedRelease = 4  #: The package index can't describe the selected release.
-	Cycle =              5  #: The project is required further up the path already, so it isn't followed again.
-	LimitReached =       6  #: The requirement is below the resolver's limit, so it wasn't resolved.
-	IndexFailure =       7  #: The package index failed to answer for the project or the selected release.
+	MarkerNotApplying =  2  #: The requirement's environment marker doesn't apply to the resolver's environment.
+	UnknownProject =     3  #: The package index doesn't know the required project.
+	NoMatchingRelease =  4  #: No release of the project matches the requirement's specifier.
+	UndescribedRelease = 5  #: The package index can't describe the selected release.
+	Cycle =              6  #: The project is required further up the path already, so it isn't followed again.
+	LimitReached =       7  #: The requirement is below the resolver's limit, so it wasn't resolved.
+	IndexFailure =       8  #: The package index failed to answer for the project or the selected release.
 
 
 @export
@@ -121,6 +124,7 @@ class ResolvedRequirement(metaclass=ExtendedType, slots=True):
 	_resolution:   Resolution                           #: The resolution this requirement belongs to.
 	_parent:       Nullable[ResolvedRequirement]        #: The requirement whose release requires this one.
 	_requirement:  _Requirement                         #: The requirement as stated.
+	_extra:        Nullable[str]                        #: The extra the requirement belongs to, if any.
 	_level:        int                                  #: Number of requirements above this one.
 	_status:       Nullable[ResolutionStatus]           #: What resolving the requirement came to.
 	_project:      Nullable[_Project]                   #: The required project, if the index knows it.
@@ -132,7 +136,8 @@ class ResolvedRequirement(metaclass=ExtendedType, slots=True):
 		requirement: Requirement,
 		resolution: Resolution,
 		*,
-		parent: Nullable[ResolvedRequirement] = None
+		parent: Nullable[ResolvedRequirement] = None,
+		extra: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a requirement to resolve.
@@ -141,11 +146,13 @@ class ResolvedRequirement(metaclass=ExtendedType, slots=True):
 		:param resolution:  The resolution this requirement belongs to.
 		:param parent:      Optional, the requirement whose release requires this one. Default: ``None``, a requirement
 		                    given to the resolver.
+		:param extra:       Optional, the extra the requirement belongs to. Default: ``None``.
 		:raises ValueError: If parameter 'requirement' is ``None``.
 		:raises TypeError:  If parameter 'requirement' is not of type :class:`~packaging.requirements.Requirement`.
 		:raises ValueError: If parameter 'resolution' is ``None``.
 		:raises TypeError:  If parameter 'resolution' is not of type :class:`Resolution`.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`ResolvedRequirement`.
+		:raises TypeError:  If parameter 'extra' is not of type :class:`str`.
 		"""
 		if requirement is None:
 			raise ValueError("Parameter 'requirement' is None.")
@@ -166,9 +173,15 @@ class ResolvedRequirement(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
+		if extra is not None and not isinstance(extra, str):
+			ex = TypeError("Parameter 'extra' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(extra)}'.")
+			raise ex
+
 		self._resolution =   resolution
 		self._parent =       parent
 		self._requirement =  requirement
+		self._extra =        extra
 		self._level =        0 if parent is None else parent._level + 1
 		self._status =       None
 		self._project =      None
@@ -192,6 +205,15 @@ class ResolvedRequirement(metaclass=ExtendedType, slots=True):
 		:returns: The requiring requirement, or ``None`` for a requirement given to the resolver.
 		"""
 		return self._parent
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Read-only property to access the extra the requirement belongs to (:attr:`_extra`).
+
+		:returns: The extra's name, or ``None`` for an unconditional requirement.
+		"""
+		return self._extra
 
 	@readonly
 	def Level(self) -> int:
@@ -356,9 +378,10 @@ class Resolver(metaclass=ExtendedType, slots=True):
 
 	For each requirement, the newest release matching its specifier is selected, and its details are downloaded. Whether
 	a pre-release can be selected is the :class:`PreReleasePolicy`; a requirement naming a pre-release selects one with
-	either policy. The release's requirements are resolved the same way, as deep as the limit allows, either up front or
-	when they are first asked for (:class:`ResolutionStrategy`). A project required again further up the path closes a
-	cycle and isn't followed. The downloads of one level run in parallel.
+	either policy. A requirement naming extras (``pyTooling[yaml]``) brings in those extras' requirements as well, and
+	their own requirements in turn. The release's requirements are resolved the same way, as deep as the limit allows,
+	either up front or when they are first asked for (:class:`ResolutionStrategy`). A project required again further
+	up the path closes a cycle and isn't followed. The downloads of one level run in parallel.
 
 	Each requirement keeps what resolving it came to (:class:`ResolutionStatus`): a requirement whose project the index
 	doesn't know, or whose selected release it can't describe, is reported as an
@@ -371,12 +394,18 @@ class Resolver(metaclass=ExtendedType, slots=True):
 
 	   It is no installer's solver: every requirement is resolved on its own. Two requirements of the same project with
 	   conflicting specifiers select two releases; nothing is backtracked.
+
+	Environment markers are evaluated if an environment is given (a mapping as
+	:func:`packaging.markers.default_environment` returns it); a requirement whose marker doesn't apply gets the status
+	:attr:`~ResolutionStatus.MarkerNotApplying`. Without an environment, markers aren't evaluated and every requirement
+	is resolved. :class:`CurrentEnvironmentResolver` uses the running interpreter's environment.
 	"""
 
 	_index:       PythonPackageIndex        #: The package index the requirements are resolved against.
 	_strategy:    ResolutionStrategy        #: When the requirements of a selected release are resolved.
 	_limit:       Nullable[int]             #: Number of levels resolved below the given requirements.
 	_preReleases: PreReleasePolicy          #: Whether pre-releases are selected.
+	_environment: Nullable[dict[str, str]]  #: Environment markers are evaluated against, if any.
 	_undescribed: set[Release]              #: Releases the index couldn't describe.
 	_failed:      set[Project | Release]    #: Projects and releases the index failed to answer for.
 
@@ -386,7 +415,8 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		*,
 		strategy: ResolutionStrategy = ResolutionStrategy.DEFAULT,
 		limit: Nullable[int] = None,
-		preReleases: PreReleasePolicy = PreReleasePolicy.DEFAULT
+		preReleases: PreReleasePolicy = PreReleasePolicy.DEFAULT,
+		environment: Nullable[Mapping[str, str]] = None
 	) -> None:
 		"""
 		Initializes a resolver.
@@ -397,6 +427,8 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		:param limit:       Optional, number of levels resolved below the given requirements; ``0`` resolves only the
 		                    given requirements. Default: ``None``, unlimited.
 		:param preReleases: Optional, whether pre-releases are selected. Default: :attr:`~PreReleasePolicy.Exclude`.
+		:param environment: Optional, the environment markers are evaluated against. Default: ``None``, markers aren't
+		                    evaluated.
 		:raises ValueError: If parameter 'index' is ``None``.
 		:raises TypeError:  If parameter 'index' is not of type :class:`~pyTooling.Dependency.Python.PythonPackageIndex`.
 		:raises ValueError: If parameter 'strategy' is ``None``.
@@ -405,6 +437,7 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'limit' is negative.
 		:raises ValueError: If parameter 'preReleases' is ``None``.
 		:raises TypeError:  If parameter 'preReleases' is not of type :class:`PreReleasePolicy`.
+		:raises TypeError:  If parameter 'environment' is not a mapping.
 		"""
 		if index is None:
 			raise ValueError("Parameter 'index' is None.")
@@ -436,10 +469,16 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(preReleases)}'.")
 			raise ex
 
+		if environment is not None and not isinstance(environment, Mapping):
+			ex = TypeError("Parameter 'environment' is not a mapping.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(environment)}'.")
+			raise ex
+
 		self._index =       index
 		self._strategy =    strategy
 		self._limit =       limit
 		self._preReleases = preReleases
+		self._environment = None if environment is None else dict(environment)
 		self._undescribed = set()
 		self._failed =      set()
 
@@ -479,6 +518,15 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		"""
 		return self._preReleases
 
+	@readonly
+	def Environment(self) -> Nullable[dict[str, str]]:
+		"""
+		Read-only property to access the environment markers are evaluated against (:attr:`_environment`).
+
+		:returns: The environment, or ``None`` if markers aren't evaluated.
+		"""
+		return self._environment
+
 	def ResolveRequirements(self, requirements: Iterable[Requirement]) -> Resolution:
 		"""
 		Resolve requirements.
@@ -500,27 +548,107 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(requirements)}'.")
 			raise ex
 
-		flattened: dict[str, Requirement] = {}
+		flattened: dict[str, tuple[Requirement, Nullable[str]]] = {}
 		for requirement in requirements:
 			if not isinstance(requirement, Requirement):
 				ex = TypeError("An element of parameter 'requirements' is not of type 'Requirement'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(requirement)}'.")
 				raise ex
 
-			flattened[canonicalize_name(requirement.name)] = requirement
+			flattened[canonicalize_name(requirement.name)] = (requirement, None)
 
 		return self._Resolve(flattened.values())
 
-	def _Resolve(self, requirements: Iterable[Requirement]) -> Resolution:
+	def ResolveRequirementsFile(self, requirementsFile: RequirementsFile) -> Resolution:
+		"""
+		Resolve what a requirements file and the files it references require.
+
+		The requirements are taken from :attr:`~pyTooling.Dependency.Python.RequirementsFile.AllRequirements`, so the
+		nearer statement of a project wins.
+
+		:param requirementsFile: The requirements file, e.g. read by
+		                         :meth:`~pyTooling.Dependency.Python.RequirementsFile.Parse`.
+		:returns:                The resolution.
+		:raises ValueError:      If parameter 'requirementsFile' is ``None``.
+		:raises TypeError:       If parameter 'requirementsFile' is not of type
+		                         :class:`~pyTooling.Dependency.Python.RequirementsFile`.
+		"""
+		if requirementsFile is None:
+			raise ValueError("Parameter 'requirementsFile' is None.")
+		elif not isinstance(requirementsFile, RequirementsFile):
+			ex = TypeError("Parameter 'requirementsFile' is not of type 'RequirementsFile'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(requirementsFile)}'.")
+			raise ex
+
+		return self.ResolveRequirements(requirementsFile.AllRequirements)
+
+	def ResolvePackages(self, packages: Iterable[tuple[str, Nullable[str]]]) -> Resolution:
+		"""
+		Resolve what the latest releases of packages require, or the requirements of one of their extras.
+
+		The packages' requirements are flattened in the order the packages are given, a later package's requirement of a
+		project replacing an earlier one's.
+
+		:param packages:                 Pairs of a package name and an extra's name, or ``None`` for the package's own
+		                                 requirements.
+		:returns:                        The resolution.
+		:raises ValueError:              If parameter 'packages' is ``None``.
+		:raises TypeError:               If parameter 'packages' is not iterable.
+		:raises TypeError:               If an element of parameter 'packages' is not a pair of a :class:`str` and an
+		                                 optional :class:`str`.
+		:raises ProjectNotFoundError:    If the index doesn't know a package.
+		:raises ReleaseNotFoundError:    If the index can't describe a package's latest release.
+		:raises ExtraNotFoundError:      If a package's latest release doesn't declare the extra.
+		"""
+		if packages is None:
+			raise ValueError("Parameter 'packages' is None.")
+		elif not isinstance(packages, Iterable):
+			ex = TypeError("Parameter 'packages' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(packages)}'.")
+			raise ex
+
+		flattened: dict[str, tuple[Requirement, Nullable[str]]] = {}
+		for package in packages:
+			if (
+				not isinstance(package, tuple) or len(package) != 2 or not isinstance(package[0], str)
+				or (package[1] is not None and not isinstance(package[1], str))
+			):
+				ex = TypeError("An element of parameter 'packages' is not a pair of a 'str' and an optional 'str'.")
+				ex.add_note(f"Got '{package!r}'.")
+				raise ex
+
+			packageName, extra = package
+			release =  self._index.DownloadProject(packageName).LatestRelease
+			declared = {canonicalize_name(name): name for name in release.Requirements if name is not None}
+			if extra is None:
+				requirements = release.Requirements[None]
+			elif (declaredExtra := declared.get(canonicalize_name(extra), None)) is not None:
+				requirements = release.Requirements[declaredExtra]
+			else:
+				ex = ExtraNotFoundError(
+					f"Package '{packageName}' has no extra '{extra}'.",
+					projectName=packageName,
+					version=release.Version,
+					extra=extra
+				)
+				ex.add_note(f"Known are: {', '.join(sorted(declared.values())) or 'none'}.")
+				raise ex
+
+			for requirement in requirements:
+				flattened[canonicalize_name(requirement.name)] = (requirement, extra)
+
+		return self._Resolve(flattened.values())
+
+	def _Resolve(self, requirements: Iterable[tuple[Requirement, Nullable[str]]]) -> Resolution:
 		"""
 		Resolve the given requirements and, with the strategy :attr:`~ResolutionStrategy.Eager`, everything below them.
 
-		:param requirements: The requirements to resolve.
+		:param requirements: Pairs of a requirement and the extra it belongs to.
 		:returns:            The resolution.
 		"""
 		resolution = Resolution(self)
-		for requirement in requirements:
-			resolution._requirements.append(ResolvedRequirement(requirement, resolution))
+		for requirement, extra in requirements:
+			resolution._requirements.append(ResolvedRequirement(requirement, resolution, extra=extra))
 
 		self._ResolveLevel(resolution._requirements)
 
@@ -536,7 +664,9 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		"""
 		Create the dependencies of resolved requirements and resolve them, all downloads together.
 
-		A release's dependencies are its unconditional requirements.
+		A release's dependencies are its unconditional requirements, followed by the requirements of each extra the
+		requirement names (``pyTooling[yaml]``). An extra the release doesn't declare is reported as a
+		:exc:`~pyTooling.Dependency.BrokenRequirementWarning`.
 
 		:param requirements: Requirements resolved already, whose dependencies aren't created yet.
 		"""
@@ -546,22 +676,43 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			if requirement._status is not ResolutionStatus.Resolved:
 				continue
 
-			for dependency in requirement._release.Requirements[None]:
-				resolvedDependency = ResolvedRequirement(dependency, requirement._resolution, parent=requirement)
-				requirement._dependencies.append(resolvedDependency)
-				dependencies.append(resolvedDependency)
+			release =  requirement._release
+			declared = {canonicalize_name(extra): extra for extra in release.Requirements if extra is not None}
+			groups: list[tuple[Nullable[str], list[Requirement]]] = [(None, release.Requirements[None])]
+			for extra in sorted(requirement._requirement.extras):
+				if (declaredExtra := declared.get(canonicalize_name(extra), None)) is None:
+					WarningCollector.Raise(BrokenRequirementWarning(
+						f"Requirement '{requirement._requirement}' names extra '{extra}', which release '{release.Version}' of "
+						f"package '{release.Package.Name}' doesn't declare."
+					))
+					continue
+
+				groups.append((declaredExtra, release.Requirements[declaredExtra]))
+
+			for extra, group in groups:
+				for dependency in group:
+					resolvedDependency = ResolvedRequirement(dependency, requirement._resolution, parent=requirement, extra=extra)
+					requirement._dependencies.append(resolvedDependency)
+					dependencies.append(resolvedDependency)
 
 		self._ResolveLevel(dependencies)
 
 	def _ResolveLevel(self, requirements: list[ResolvedRequirement]) -> None:
 		"""
-		Resolve requirements: check cycle and limit, then look up the projects and describe the selected releases, the
-		downloads of each step in parallel.
+		Resolve requirements: check marker, cycle and limit, then look up the projects and describe the selected
+		releases, the downloads of each step in parallel.
 
 		:param requirements: The requirements to resolve.
 		"""
 		toLookUp: list[ResolvedRequirement] = []
 		for requirement in requirements:
+			if self._environment is not None and requirement._requirement.marker is not None:
+				environment = dict(self._environment)
+				environment["extra"] = requirement._extra if requirement._extra is not None else ""
+				if not requirement._requirement.marker.evaluate(environment):
+					requirement._status = ResolutionStatus.MarkerNotApplying
+					continue
+
 			name = canonicalize_name(requirement._requirement.name)
 			ancestor = requirement._parent
 			while ancestor is not None and canonicalize_name(ancestor._requirement.name) != name:
@@ -754,3 +905,34 @@ class Resolver(metaclass=ExtendedType, slots=True):
 
 _Resolver = Resolver
 
+
+@export
+class CurrentEnvironmentResolver(Resolver):
+	"""
+	A :class:`Resolver` evaluating environment markers against the running interpreter
+	(:func:`packaging.markers.default_environment`).
+	"""
+
+	def __init__(
+		self,
+		index: PythonPackageIndex,
+		*,
+		strategy: ResolutionStrategy = ResolutionStrategy.DEFAULT,
+		limit: Nullable[int] = None
+	) -> None:
+		"""
+		Initializes a resolver for the running interpreter's environment.
+
+		:param index:       The package index the requirements are resolved against.
+		:param strategy:    Optional, when the requirements of a selected release are resolved. Default:
+		                    :attr:`~ResolutionStrategy.Lazy`.
+		:param limit:       Optional, number of levels resolved below the given requirements; ``0`` resolves only the
+		                    given requirements. Default: ``None``, unlimited.
+		:raises ValueError: If parameter 'index' is ``None``.
+		:raises TypeError:  If parameter 'index' is not of type :class:`~pyTooling.Dependency.Python.PythonPackageIndex`.
+		:raises ValueError: If parameter 'strategy' is ``None``.
+		:raises TypeError:  If parameter 'strategy' is not of type :class:`ResolutionStrategy`.
+		:raises TypeError:  If parameter 'limit' is not of type :class:`int`.
+		:raises ValueError: If parameter 'limit' is negative.
+		"""
+		super().__init__(index, strategy=strategy, limit=limit, environment=default_environment())

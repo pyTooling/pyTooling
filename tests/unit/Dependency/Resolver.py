@@ -30,16 +30,20 @@
 """
 Unit tests for :mod:`pyTooling.Dependency.Resolver`, against a package index answering from documents in memory.
 """
+from pathlib                       import Path
+from tempfile                      import TemporaryDirectory
 from typing                        import Any, Optional as Nullable
 from unittest.mock                 import patch
 
 from aiohttp                       import ClientConnectionError
+from packaging.markers             import default_environment
 from packaging.requirements        import Requirement
 
-from pyTooling.Dependency          import PackageIndexFailureWarning, UnresolvedRequirementWarning
-from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex
-from pyTooling.Dependency.Resolver import PreReleasePolicy, ResolutionStatus, ResolutionStrategy, ResolvedRequirement
-from pyTooling.Dependency.Resolver import Resolver
+from pyTooling.Dependency          import BrokenRequirementWarning, ExtraNotFoundError, PackageIndexFailureWarning
+from pyTooling.Dependency          import UnresolvedRequirementWarning
+from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex, RequirementsFile
+from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, PreReleasePolicy, Resolution, ResolutionStatus
+from pyTooling.Dependency.Resolver import ResolutionStrategy, ResolvedRequirement, Resolver
 from pyTooling.Warning             import UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing             import Testcase
 
@@ -385,6 +389,113 @@ class Limit(ResolverTestcase):
 		self.assertIs(ResolutionStatus.Resolved, lib.Dependencies[0].Status)
 
 
+class Markers(ResolverTestcase):
+	def _WinOnly(self, resolver: Resolver) -> ResolvedRequirement:
+		app = resolver.ResolveRequirements([Requirement("app")]).Requirements[0]
+		return next(app.IterateDependencies(lambda requirement: requirement.Requirement.name == "winonly"))
+
+	def test_NotEvaluated(self) -> None:
+		self.assertIs(ResolutionStatus.Resolved, self._WinOnly(Resolver(self._Index())).Status)
+
+	def test_NotApplying(self) -> None:
+		environment = dict(default_environment())
+		environment["sys_platform"] = "linux"
+
+		winonly = self._WinOnly(Resolver(self._Index(), environment=environment))
+
+		self.assertIs(ResolutionStatus.MarkerNotApplying, winonly.Status)
+		self.assertIsNone(winonly.Project)
+
+	def test_Applying(self) -> None:
+		environment = dict(default_environment())
+		environment["sys_platform"] = "win32"
+
+		self.assertIs(ResolutionStatus.Resolved, self._WinOnly(Resolver(self._Index(), environment=environment)).Status)
+
+	def test_CurrentEnvironment(self) -> None:
+		resolver = CurrentEnvironmentResolver(self._Index())
+		if default_environment()["sys_platform"] == "win32":
+			expected = ResolutionStatus.Resolved
+		else:
+			expected = ResolutionStatus.MarkerNotApplying
+
+		self.assertDictEqual(dict(default_environment()), resolver.Environment)
+		self.assertIs(expected, self._WinOnly(resolver).Status)
+
+
+class Inputs(ResolverTestcase):
+	def test_Packages(self) -> None:
+		resolution = Resolver(self._Index()).ResolvePackages([("app", None)])
+
+		self.assertListEqual(
+			["lib", "util", "winonly"],
+			[requirement.Requirement.name for requirement in resolution.Requirements]
+		)
+
+	def test_Packages_Extra(self) -> None:
+		"""An extra's requirements are resolved; their marker names the extra, which is evaluated as given."""
+		environment = dict(default_environment())
+
+		resolution = Resolver(self._Index(), environment=environment).ResolvePackages([("app", "test")])
+		checker = resolution.Requirements[0]
+
+		self.assertEqual("checker", checker.Requirement.name)
+		self.assertEqual("test", checker.Extra)
+		self.assertIs(ResolutionStatus.Resolved, checker.Status)
+
+	def test_Packages_ExtraSpelling(self) -> None:
+		"""An extra is matched by its canonical name."""
+		resolution = Resolver(self._Index()).ResolvePackages([("app", "Test")])
+
+		self.assertEqual("checker", resolution.Requirements[0].Requirement.name)
+
+	def test_Packages_UnknownExtra(self) -> None:
+		with self.assertRaises(ExtraNotFoundError) as context:
+			Resolver(self._Index()).ResolvePackages([("app", "docs")])
+
+		self.assertEqual("Package 'app' has no extra 'docs'.", str(context.exception))
+		self.assertEqual("app", context.exception.ProjectName)
+		self.assertEqual("docs", context.exception.Extra)
+		self.assertListEqual(["Known are: test."], context.exception.__notes__)
+
+	def test_RequirementExtra(self) -> None:
+		"""An extra a requirement names adds that extra's requirements to the dependencies."""
+		resolution = Resolver(self._Index()).ResolveRequirements([Requirement("tool[fast]")])
+		speedup = resolution.Requirements[0].Dependencies[0]
+
+		self.assertEqual("speedup", speedup.Requirement.name)
+		self.assertEqual("fast", speedup.Extra)
+		self.assertIs(ResolutionStatus.Resolved, speedup.Status)
+
+	def test_RequirementExtra_Markers(self) -> None:
+		"""The extra's marker applies to its own requirements when markers are evaluated."""
+		resolver = Resolver(self._Index(), environment=default_environment())
+		speedup = resolver.ResolveRequirements([Requirement("tool[fast]")]).Requirements[0].Dependencies[0]
+
+		self.assertIs(ResolutionStatus.Resolved, speedup.Status)
+
+	def test_RequirementExtra_Undeclared(self) -> None:
+		with WarningCollector() as warnings:
+			resolution = Resolver(self._Index()).ResolveRequirements([Requirement("tool[slow]")])
+			dependencies = resolution.Requirements[0].Dependencies
+
+		self.assertTupleEqual((), dependencies)
+		broken = [warning for warning in warnings.Warnings if isinstance(warning, BrokenRequirementWarning)]
+		self.assertEqual(1, len(broken))
+		self.assertIn("names extra 'slow'", str(broken[0]))
+
+	def test_RequirementsFile(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "requirements.txt"
+			path.write_text("lib >= 1.0\nutil\n")
+
+			resolution = Resolver(self._Index()).ResolveRequirementsFile(RequirementsFile.Parse(path))
+
+		self.assertIsInstance(resolution, Resolution)
+		self.assertEqual(2, resolution.RequirementCount)
+		self.assertTrue(all(requirement.Status is ResolutionStatus.Resolved for requirement in resolution.Requirements))
+
+
 class ParameterChecks(ResolverTestcase):
 	def test_Index(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -427,6 +538,10 @@ class ParameterChecks(ResolverTestcase):
 
 		self.assertEqual("Parameter 'preReleases' is not of type 'PreReleasePolicy'.", str(context.exception))
 
+	def test_Environment(self) -> None:
+		with self.assertRaises(TypeError):
+			Resolver(self._Index(), environment=["linux"])
+
 	def test_Requirements(self) -> None:
 		resolver = Resolver(self._Index())
 
@@ -438,3 +553,22 @@ class ParameterChecks(ResolverTestcase):
 
 		with self.assertRaises(TypeError):
 			resolver.ResolveRequirements(["lib"])
+
+	def test_RequirementsFile(self) -> None:
+		with self.assertRaises(ValueError):
+			Resolver(self._Index()).ResolveRequirementsFile(None)
+
+		with self.assertRaises(TypeError):
+			Resolver(self._Index()).ResolveRequirementsFile(Path("requirements.txt"))
+
+	def test_Packages(self) -> None:
+		resolver = Resolver(self._Index())
+
+		with self.assertRaises(ValueError):
+			resolver.ResolvePackages(None)
+
+		with self.assertRaises(TypeError):
+			resolver.ResolvePackages(5)
+
+		with self.assertRaises(TypeError):
+			resolver.ResolvePackages(["app"])

@@ -450,16 +450,19 @@ Version 10.x (2026)
        read once and hidden.
      * :exc:`~pyTooling.Dependency.PackageIndexError` reports an HTTP error status of the package index other than ``404
        Not Found``, caused by the :exc:`~requests.HTTPError`.
-     * :class:`~pyTooling.Dependency.Resolver.Resolver` resolves requirements into the newest matching releases of a
-       package index, following their requirements. It takes a
-       :class:`~pyTooling.Dependency.Resolver.ResolutionStrategy` (lazy or eager), a limit (``None`` is unlimited) and
-       a :class:`~pyTooling.Dependency.Resolver.PreReleasePolicy` (a requirement naming a pre-release selects it also
-       with pre-releases excluded).
-       The result is a tree of :class:`~pyTooling.Dependency.Resolver.ResolvedRequirement` objects, each with the
-       selected release or the reason there is none, and the selected releases are connected in the dependency graph.
-       The downloads of one level run in parallel. A requirement it can't resolve is reported as the new
-       :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; a server error or a failed connection of the index
-       as the new critical :class:`~pyTooling.Dependency.PackageIndexFailureWarning`.
+     * :class:`~pyTooling.Dependency.Resolver.Resolver` resolves requirements - given directly, from a requirements file
+       or from packages and their extras - into the newest matching releases of a package index, following their
+       requirements and the requirements of the extras they name. It takes a
+       :class:`~pyTooling.Dependency.Resolver.ResolutionStrategy` (lazy or eager), a limit (``None`` is unlimited), a
+       :class:`~pyTooling.Dependency.Resolver.PreReleasePolicy` (a requirement naming a pre-release selects it also with
+       pre-releases excluded) and an environment to evaluate markers against (``None`` evaluates none);
+       :class:`~pyTooling.Dependency.Resolver.CurrentEnvironmentResolver` uses the running interpreter's. The result
+       is a tree of :class:`~pyTooling.Dependency.Resolver.ResolvedRequirement` objects, each with the selected release
+       or the reason there is none, and the selected releases are connected in the dependency graph. The downloads of
+       one level run in parallel. New: :exc:`~pyTooling.Dependency.ExtraNotFoundError`,
+       :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`, and the critical
+       :class:`~pyTooling.Dependency.PackageIndexFailureWarning` for a server error or a failed connection of the
+       index.
 
    * :mod:`pyTooling.Configuration`
 
