@@ -272,7 +272,10 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			:raises CircularRequirementsFileError: If a ``-r`` line references a file already being read.
 			"""
 			if not file.exists():
-				raise RequirementsFileNotFoundError(f"Requirements file '{file}' does not exist.") from FileNotFoundError(file)
+				raise RequirementsFileNotFoundError(
+					f"Requirements file '{file}' does not exist.",
+					filePath=file
+				) from FileNotFoundError(file)
 
 			analyzedRequirementFiles.add(file.resolve())
 			chain.append(file)
@@ -288,7 +291,10 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 					if referenced in analyzedRequirementFiles:
 						ex = CircularRequirementsFileError(
-							f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read."
+							f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read.",
+							filePath=referenced,
+							referencedIn=file,
+							lineNumber=lineNumber
 						)
 						ex.add_note(f"Chain: {' → '.join(str(chainedFile) for chainedFile in chain)} → {referenced}")
 						raise ex

@@ -1208,6 +1208,9 @@ class RequirementsFiles(Testcase):
 			str(context.exception)
 		)
 		self.assertEqual([f"Chain: {path} → {path.resolve()}"], context.exception.__notes__)
+		self.assertEqual(path.resolve(), context.exception.FilePath)
+		self.assertEqual(path, context.exception.ReferencedIn)
+		self.assertEqual(1, context.exception.LineNumber)
 
 	def test_BrokenRequirement(self) -> None:
 		"""A line that isn't a requirement is reported, and the rest of the file is still read."""
@@ -1245,6 +1248,21 @@ class RequirementsFiles(Testcase):
 			f"Requirements file '{(path.parent / 'nothing.txt').resolve()}' does not exist.",
 			str(context.exception)
 		)
+		self.assertEqual((path.parent / 'nothing.txt').resolve(), context.exception.FilePath)
+
+	def test_RequirementsFileErrors_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no path."""
+		with self.assertRaises(RequirementsFileNotFoundError) as notFoundCapture:
+			raise RequirementsFileNotFoundError("Missing file.")
+
+		self.assertIsNone(notFoundCapture.exception.FilePath)
+
+		with self.assertRaises(CircularRequirementsFileError) as circularCapture:
+			raise CircularRequirementsFileError("Cycle.")
+
+		self.assertIsNone(circularCapture.exception.FilePath)
+		self.assertIsNone(circularCapture.exception.ReferencedIn)
+		self.assertIsNone(circularCapture.exception.LineNumber)
 
 	def test_Parse_PathIsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:

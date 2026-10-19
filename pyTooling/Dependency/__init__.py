@@ -47,6 +47,7 @@ Implementation of package dependencies.
 from __future__            import annotations
 
 from datetime              import datetime
+from pathlib               import Path
 from typing                import Optional as Nullable, Iterable, Self, Iterator
 
 from pyTooling.Decorators      import export, readonly
@@ -117,6 +118,27 @@ class NoSessionAvailableError(DependencyError):
 class RequirementsFileNotFoundError(DependencyError):
 	"""A requirements file doesn't exist, or a ``-r`` line references one that doesn't."""
 
+	_filePath: Nullable[Path]  #: Path of the requirements file that doesn't exist.
+
+	def __init__(self, message: str, /, *, filePath: Nullable[Path] = None) -> None:
+		"""
+		Initializes the exception with the path of the requirements file that doesn't exist.
+
+		:param message:  The exception's message.
+		:param filePath: Optional, the path of the requirements file that doesn't exist.
+		"""
+		super().__init__(message)
+		self._filePath = filePath
+
+	@readonly
+	def FilePath(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the requirements file that doesn't exist (:attr:`_filePath`).
+
+		:returns: The path, or ``None`` if it wasn't recorded.
+		"""
+		return self._filePath
+
 
 @export
 class CircularRequirementsFileError(DependencyError):
@@ -126,6 +148,58 @@ class CircularRequirementsFileError(DependencyError):
 	A cycle isn't read once and ignored: a file including itself is a statement nobody wrote on purpose, and reading
 	it silently would hide it. The exception names the chain, so the ``-r`` line to delete is in the message.
 	"""
+
+	_filePath:     Nullable[Path]  #: Path of the requirements file that is already being read.
+	_referencedIn: Nullable[Path]  #: Path of the file whose ``-r`` line references it again.
+	_lineNumber:   Nullable[int]   #: Number of that ``-r`` line.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		filePath: Nullable[Path] = None,
+		referencedIn: Nullable[Path] = None,
+		lineNumber: Nullable[int] = None
+	) -> None:
+		"""
+		Initializes the exception with the file read again and the ``-r`` line referencing it.
+
+		:param message:      The exception's message.
+		:param filePath:     Optional, the path of the requirements file that is already being read.
+		:param referencedIn: Optional, the path of the file whose ``-r`` line references it again.
+		:param lineNumber:   Optional, the number of that ``-r`` line.
+		"""
+		super().__init__(message)
+		self._filePath =     filePath
+		self._referencedIn = referencedIn
+		self._lineNumber =   lineNumber
+
+	@readonly
+	def FilePath(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the requirements file that is already being read (:attr:`_filePath`).
+
+		:returns: The path, or ``None`` if it wasn't recorded.
+		"""
+		return self._filePath
+
+	@readonly
+	def ReferencedIn(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the file whose ``-r`` line references it again (:attr:`_referencedIn`).
+
+		:returns: The path, or ``None`` if it wasn't recorded.
+		"""
+		return self._referencedIn
+
+	@readonly
+	def LineNumber(self) -> Nullable[int]:
+		"""
+		Read-only property to access the number of that ``-r`` line (:attr:`_lineNumber`).
+
+		:returns: The line number, or ``None`` if it wasn't recorded.
+		"""
+		return self._lineNumber
 
 
 @export

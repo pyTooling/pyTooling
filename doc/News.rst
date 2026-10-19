@@ -531,7 +531,10 @@ Version 10.x (2026)
        (``Value``, ``Position``); :exc:`~pyTooling.Licensing.LicenseExpressionError` the expression and, for an unknown
        license, its identifier (``Expression``, ``Identifier``); :exc:`~pyTooling.Dependency.NoSessionAvailableError`
        the project's name and, for a release, its version (``ProjectName``, ``Version``);
-       :exc:`~pyTooling.Platform.UnknownPlatformError` the value the system reported (``UnknownValue``);
+       :exc:`~pyTooling.Dependency.RequirementsFileNotFoundError` the missing file (``FilePath``);
+       :exc:`~pyTooling.Dependency.CircularRequirementsFileError` the file read again and the ``-r`` line referencing it
+       (``FilePath``, ``ReferencedIn``, ``LineNumber``); :exc:`~pyTooling.Platform.UnknownPlatformError` the value
+       the system reported (``UnknownValue``);
        :exc:`~pyTooling.Attributes.AttributeScopeError` the attribute and the entity (``AppliedAttribute``,
        ``Entity``).
 
