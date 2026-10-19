@@ -97,6 +97,45 @@ class AttributeScopeError(ToolingException):
 	An attribute is applied to a language entity its :class:`AttributeScope` doesn't allow.
 	"""
 
+	_appliedAttribute: Nullable[Attribute]                  #: Attribute applied outside its scope.
+	_entity:           Nullable[Callable[..., Any] | type]  #: Function, method or class the attribute was applied to.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		appliedAttribute: Nullable[Attribute] = None,
+		entity: Nullable[Callable[..., Any] | type] = None
+	) -> None:
+		"""
+		Initializes the exception with the attribute and the language entity it was applied to.
+
+		:param message:          The exception's message.
+		:param appliedAttribute: Optional, the attribute applied outside its scope.
+		:param entity:           Optional, the language entity (function, method or class) the attribute was applied to.
+		"""
+		super().__init__(message)
+		self._appliedAttribute = appliedAttribute
+		self._entity =           entity
+
+	@readonly
+	def AppliedAttribute(self) -> Nullable[Attribute]:
+		"""
+		Read-only property to access the attribute applied outside its scope (:attr:`_appliedAttribute`).
+
+		:returns: The attribute, or ``None`` if it wasn't recorded.
+		"""
+		return self._appliedAttribute
+
+	@readonly
+	def Entity(self) -> Nullable[Callable[..., Any] | type]:
+		"""
+		Read-only property to access the language entity the attribute was applied to (:attr:`_entity`).
+
+		:returns: The entity, or ``None`` if it wasn't recorded.
+		"""
+		return self._entity
+
 
 @export
 class Attribute:  # (metaclass=ExtendedType, slots=True):
@@ -202,7 +241,9 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 		if kind not in attribute._scope:
 			ex = AttributeScopeError(
-				f"Attribute '{getTypeName(attribute)}' can't be applied to {kind.name.lower()} '{entity.__qualname__}'."
+				f"Attribute '{getTypeName(attribute)}' can't be applied to {kind.name.lower()} '{entity.__qualname__}'.",
+				appliedAttribute=attribute,
+				entity=entity
 			)
 			ex.add_note(f"Its scope is '{attribute._scope.name}'.")
 			raise ex

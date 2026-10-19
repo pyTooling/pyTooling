@@ -189,6 +189,8 @@ class Errors(Testcase):
 			_ = config["unclosedVariable"]
 
 		self.assertIn("Unclosed variable reference in value '${unclosed'.", str(context.exception))
+		self.assertEqual("${unclosed", context.exception.Value)
+		self.assertEqual(0, context.exception.Position)
 
 	def test_DanglingDollarSign(self) -> None:
 		config = Configuration(self._configFile)
@@ -197,6 +199,8 @@ class Errors(Testcase):
 			_ = config["danglingDollar"]
 
 		self.assertIn("Dangling '$' at the end of value 'prefix$'.", str(context.exception))
+		self.assertEqual("prefix$", context.exception.Value)
+		self.assertEqual(6, context.exception.Position)
 
 	def test_PathExpressionResolvingToDictionary(self) -> None:
 		config = Configuration(self._configFile)

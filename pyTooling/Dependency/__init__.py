@@ -73,6 +73,45 @@ class NoSessionAvailableError(DependencyError):
 	A session is created by the package index and handed to the objects it creates.
 	"""
 
+	_projectName: Nullable[str]              #: Name of the project that was to be requested.
+	_version:     Nullable[SemanticVersion]  #: Version of the release that was to be requested.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the exception with the project and, for a release, the version that was to be requested.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project that was to be requested.
+		:param version:     Optional, the version of the release that was to be requested; ``None`` for the project itself.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project that was to be requested (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release that was to be requested (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
+
 
 @export
 class RequirementsFileNotFoundError(DependencyError):

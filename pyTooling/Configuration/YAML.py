@@ -259,7 +259,7 @@ class Node(Abstract_Node):
 			else:
 				result += rawValue[:beginPos]
 				if beginPos + 1 >= len(rawValue):
-					ex = InterpolationError(f"Dangling '$' at the end of value '{value}'.")
+					ex = InterpolationError(f"Dangling '$' at the end of value '{value}'.", value=value, position=beginPos)
 					ex.add_note("Use '$$' to escape a literal dollar sign.")
 					raise ex
 				elif rawValue[beginPos + 1] == "$":
@@ -269,7 +269,7 @@ class Node(Abstract_Node):
 					endPos =  rawValue.find("}", beginPos)
 					nextPos =  rawValue.rfind("$", beginPos, endPos)
 					if endPos < 0:
-						ex = InterpolationError(f"Unclosed variable reference in value '{value}'.")
+						ex = InterpolationError(f"Unclosed variable reference in value '{value}'.", value=value, position=beginPos)
 						ex.add_note(f"Missing closing '}}' for the '${{' at position {beginPos}.")
 						raise ex
 

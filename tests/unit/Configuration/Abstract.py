@@ -37,7 +37,7 @@ rejected at class-creation time instead of raising :exc:`NotImplementedError` at
 from pathlib import Path
 
 from pyTooling.Configuration import KeyNotFoundError, Node, Dictionary, Sequence
-from pyTooling.Configuration import PathExpressionError, UnsupportedValueTypeError
+from pyTooling.Configuration import InterpolationError, PathExpressionError, UnsupportedValueTypeError
 from pyTooling.Exceptions    import ConfigurationError
 from pyTooling.MetaClasses   import AbstractClassError
 from pyTooling.Testing       import Testcase
@@ -153,3 +153,11 @@ class Exceptions(Testcase):
 
 		self.assertEqual("Invalid path expression.", str(context.exception))
 		self.assertIsNone(context.exception.PathExpression)
+
+	def test_InterpolationError(self) -> None:
+		with self.assertRaises(InterpolationError) as context:
+			raise InterpolationError("Malformed variable reference.")
+
+		self.assertEqual("Malformed variable reference.", str(context.exception))
+		self.assertIsNone(context.exception.Value)
+		self.assertIsNone(context.exception.Position)

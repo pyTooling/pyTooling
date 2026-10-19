@@ -506,6 +506,34 @@ Version 10.x (2026)
      * :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` carries the slot's name and the name of the class
        under construction in :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.FieldName` and
        :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.ClassName`.
+     * :mod:`pyTooling.MetaClasses`: the new common base :exc:`~pyTooling.MetaClasses.InvalidBaseClassError` of
+       :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`,
+       :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError` and
+       :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError` carries the base-class and the name of the class under
+       construction (``BaseClass``, ``ClassName``); :exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError`
+       the class and the missing members (``IncompleteClass``, ``MissingMembers``);
+       :exc:`~pyTooling.MetaClasses.IncompatibleMetaClassError` the decorated class and its meta-class
+       (``DecoratedClass``, ``MetaClass``); :exc:`~pyTooling.MetaClasses.AbstractClassError` the class and the methods
+       to override (``AbstractClass``, ``AbstractMethods``).
+     * :mod:`pyTooling.Graph`: :exc:`~pyTooling.Graph.EdgeNotFoundError` and :exc:`~pyTooling.Graph.LinkNotFoundError`
+       carry both vertices (``Source``, ``Destination``), :exc:`~pyTooling.Graph.SameGraphError` the graph
+       (``Graph``), :exc:`~pyTooling.Graph.CycleError` the path closing the loop (``Path``).
+     * :mod:`pyTooling.CI`: :exc:`~pyTooling.CI.NeedDependencyError` carries both elements (``Element``, ``Need``),
+       :exc:`~pyTooling.CI.NeedDependencyCycleError` also the cycle (``Cycle``),
+       :exc:`~pyTooling.CI.AlreadyInPipelineError` the rule (``Element``).
+     * :exc:`~pyTooling.CallGraph.DuplicateFunctionError` carries the function's ID (``FunctionID``),
+       :exc:`~pyTooling.ControlFlow.DuplicateBlockError` the block's ID and kind (``BlockID``, ``Kind``),
+       :exc:`~pyTooling.ControlFlow.DuplicateEdgeError` the edge connecting the blocks already (``ExistingEdge``).
+     * :exc:`~pyTooling.LinkedList.NotInAListError` carries the node (``UnlinkedNode``);
+       :exc:`~pyTooling.Tree.AlreadyInTreeError` and :exc:`~pyTooling.Tree.NotInSameTreeError` the other node
+       (``OtherNode``).
+     * :exc:`~pyTooling.Configuration.InterpolationError` carries the value and the position of the malformed ``$``
+       (``Value``, ``Position``); :exc:`~pyTooling.Licensing.LicenseExpressionError` the expression and, for an unknown
+       license, its identifier (``Expression``, ``Identifier``); :exc:`~pyTooling.Dependency.NoSessionAvailableError`
+       the project's name and, for a release, its version (``ProjectName``, ``Version``);
+       :exc:`~pyTooling.Platform.UnknownPlatformError` the value the system reported (``UnknownValue``);
+       :exc:`~pyTooling.Attributes.AttributeScopeError` the attribute and the entity (``AppliedAttribute``,
+       ``Entity``).
 
    .. rubric:: Breaking Changes
 

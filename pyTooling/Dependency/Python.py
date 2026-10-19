@@ -1148,7 +1148,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:raises PackageIndexError:       If the index responds with another HTTP error status.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
+			ex = NoSessionAvailableError(
+				f"No session available to download release '{self._version}' of package '{self._package._name}'.",
+				projectName=self._package._name,
+				version=self._version
+			)
 			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
@@ -1570,7 +1574,10 @@ class Project(Package, LazyLoadableMixin):
 		                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableError(f"No session available to download details of package '{self._name}'.")
+			ex = NoSessionAvailableError(
+				f"No session available to download details of package '{self._name}'.",
+				projectName=self._name
+			)
 			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 

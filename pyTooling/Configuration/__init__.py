@@ -154,6 +154,39 @@ class UnsupportedValueTypeError(ConfigurationError, TypeError):
 class InterpolationError(ConfigurationError):
 	"""A variable reference (``${...}``) in a configuration value is malformed or can't be resolved."""
 
+	_value:    Nullable[str]  #: Configuration value containing the malformed variable reference.
+	_position: Nullable[int]  #: Position of the malformed ``$`` in the value.
+
+	def __init__(self, message: str, /, *, value: Nullable[str] = None, position: Nullable[int] = None) -> None:
+		"""
+		Initializes the exception with the value and the position of the malformed variable reference.
+
+		:param message:  The exception's message.
+		:param value:    Optional, the configuration value containing the malformed variable reference.
+		:param position: Optional, the position of the malformed ``$`` in the value.
+		"""
+		super().__init__(message)
+		self._value =    value
+		self._position = position
+
+	@readonly
+	def Value(self) -> Nullable[str]:
+		"""
+		Read-only property to access the configuration value containing the malformed variable reference (:attr:`_value`).
+
+		:returns: The value, or ``None`` if it wasn't recorded.
+		"""
+		return self._value
+
+	@readonly
+	def Position(self) -> Nullable[int]:
+		"""
+		Read-only property to access the position of the malformed ``$`` in the value (:attr:`_position`).
+
+		:returns: The position, or ``None`` if it wasn't recorded.
+		"""
+		return self._position
+
 
 @export
 class PathExpressionError(ConfigurationError):
