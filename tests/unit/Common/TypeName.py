@@ -87,7 +87,21 @@ class TypeName(Testcase):
 
 	def test_Function(self) -> None:
 		self.assertEqual("function", getTypeName(function))
+		self.assertEqual("<lambda>", getTypeName(lambda: None))
+
+	def test_Method(self) -> None:
 		self.assertEqual("Method", getTypeName(Outer.Method))
+		self.assertEqual("Method", getTypeName(Outer().Method))
+
+	def test_BuiltinFunction(self) -> None:
+		self.assertEqual("len", getTypeName(len))
+		self.assertEqual("append", getTypeName([].append))
+
+	def test_BuiltinMethodDescriptor(self) -> None:
+		self.assertEqual("upper", getTypeName(str.upper))
+		self.assertEqual("__init__", getTypeName(object.__init__))
+		self.assertEqual("__init__", getTypeName(object().__init__))
+		self.assertEqual("fromkeys", getTypeName(dict.__dict__["fromkeys"]))
 
 	def test_Builtin(self) -> None:
 		self.assertEqual("int", getTypeName(5))
