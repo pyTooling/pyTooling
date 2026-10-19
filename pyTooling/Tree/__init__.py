@@ -101,10 +101,52 @@ class AlreadyInTreeError(TreeError, AlreadyInHierarchyError):
 	   A tree a an acyclic graph without cross-edges. Thus backward edges and cross edges are permitted.
 	"""
 
+	_otherNode: Nullable[Node]  #: Other node, which is in the same tree already.
+
+	def __init__(self, message: str, /, *, otherNode: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the other node, which is in the same tree already.
+
+		:param message:   The exception's message.
+		:param otherNode: Optional, the other node, which is in the same tree already.
+		"""
+		super().__init__(message)
+		self._otherNode = otherNode
+
+	@readonly
+	def OtherNode(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the other node, which is in the same tree already (:attr:`_otherNode`).
+
+		:returns: The other node, or ``None`` if it wasn't recorded.
+		"""
+		return self._otherNode
+
 
 @export
 class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 	"""The exception is raised when the current node and the other node are not in the same tree."""
+
+	_otherNode: Nullable[Node]  #: Other node, which is in another tree.
+
+	def __init__(self, message: str, /, *, otherNode: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the other node, which is in another tree.
+
+		:param message:   The exception's message.
+		:param otherNode: Optional, the other node, which is in another tree.
+		"""
+		super().__init__(message)
+		self._otherNode = otherNode
+
+	@readonly
+	def OtherNode(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the other node, which is in another tree (:attr:`_otherNode`).
+
+		:returns: The other node, or ``None`` if it wasn't recorded.
+		"""
+		return self._otherNode
 
 
 @export
@@ -363,7 +405,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 			raise ex
 		else:
 			if parent._root is self._root:
-				raise AlreadyInTreeError(f"Parent '{parent}' is already a child node in this tree.")
+				raise AlreadyInTreeError(f"Parent '{parent}' is already a child node in this tree.", otherNode=parent)
 
 			self._root = parent._root
 			self._parent = parent
@@ -582,7 +624,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 			raise ex
 
 		if child._root is self._root:
-			raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.")
+			raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.", otherNode=child)
 
 		child._root = self._root
 		child._parent = self
@@ -616,7 +658,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 
 			if child._root is self._root:
 				# TODO: create a more specific exception
-				raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.")
+				raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.", otherNode=child)
 
 			child._root = self._root
 			child._parent = self
@@ -746,7 +788,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 
 			# Check if both are in the same tree.
 			if self._root is not others._root:
-				raise NotInSameTreeError("Node 'others' is not in the same tree.")
+				raise NotInSameTreeError("Node 'others' is not in the same tree.", otherNode=others)
 
 			# Compute paths top-down and walk both paths until they deviate
 			for left, right in zip(self.Path, others.Path):
@@ -988,7 +1030,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 
 		# Check if both are in the same tree.
 		if self._root is not other._root:
-			raise NotInSameTreeError("Node 'other' is not in the same tree.")
+			raise NotInSameTreeError("Node 'other' is not in the same tree.", otherNode=other)
 
 		# Compute both paths to the root.
 		# 1. Walk from self to root, until a first common ancestor is found.

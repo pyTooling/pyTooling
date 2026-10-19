@@ -34,7 +34,7 @@ from and to Python's own sequence types.
 """
 from typing               import get_type_hints
 
-from pyTooling.LinkedList import Node, LinkedList, LinkedListError
+from pyTooling.LinkedList import Node, LinkedList, LinkedListError, NotInAListError
 from pyTooling.Testing    import Testcase
 
 
@@ -296,6 +296,29 @@ class Insert(Testcase):
 			ll.InsertAfterLast("0")
 
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_InsertNodeBefore_NotInAList(self) -> None:
+		node = Node(1)
+
+		with self.assertRaises(NotInAListError) as context:
+			node.InsertNodeBefore(Node(0))
+
+		self.assertIs(node, context.exception.UnlinkedNode)
+
+	def test_InsertNodeAfter_NotInAList(self) -> None:
+		node = Node(1)
+
+		with self.assertRaises(NotInAListError) as context:
+			node.InsertNodeAfter(Node(2))
+
+		self.assertIs(node, context.exception.UnlinkedNode)
+
+	def test_NotInAListError_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no node."""
+		with self.assertRaises(NotInAListError) as context:
+			raise NotInAListError("Not in a list.")
+
+		self.assertIsNone(context.exception.UnlinkedNode)
 
 	def test_InsertNodeBefore_WrongType(self) -> None:
 		with self.assertRaises(TypeError) as context:

@@ -97,15 +97,105 @@ class PipelineError(CIError):
 class NeedDependencyError(PipelineError):
 	"""The exception raised for a need - a dependency - two elements of a pipeline can't have."""
 
+	_element: Nullable[DependencyMixin]  #: Element that would need the other one.
+	_need:    Nullable[DependencyMixin]  #: Element that would be needed.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		element: Nullable[DependencyMixin] = None,
+		need: Nullable[DependencyMixin] = None
+	) -> None:
+		"""
+		Initializes the exception with the element and the element it would need.
+
+		:param message: The exception's message.
+		:param element: Optional, the element that would need the other one.
+		:param need:    Optional, the element that would be needed.
+		"""
+		super().__init__(message)
+		self._element = element
+		self._need =    need
+
+	@readonly
+	def Element(self) -> Nullable[DependencyMixin]:
+		"""
+		Read-only property to access the element that would need the other one (:attr:`_element`).
+
+		:returns: The needing element, or ``None`` if it wasn't recorded.
+		"""
+		return self._element
+
+	@readonly
+	def Need(self) -> Nullable[DependencyMixin]:
+		"""
+		Read-only property to access the element that would be needed (:attr:`_need`).
+
+		:returns: The needed element, or ``None`` if it wasn't recorded.
+		"""
+		return self._need
+
 
 @export
 class NeedDependencyCycleError(NeedDependencyError):
 	"""The exception raised for a need which would close a cycle of dependencies."""
 
+	_cycle: Nullable[tuple[DependencyMixin, ...]]  #: Elements forming the cycle, in the order they need each other.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		element: Nullable[DependencyMixin] = None,
+		need: Nullable[DependencyMixin] = None,
+		cycle: Nullable[Iterable[DependencyMixin]] = None
+	) -> None:
+		"""
+		Initializes the exception with the elements forming the cycle.
+
+		:param message: The exception's message.
+		:param element: Optional, the element that would need the other one.
+		:param need:    Optional, the element that would be needed.
+		:param cycle:   Optional, the elements forming the cycle, in the order they need each other.
+		"""
+		super().__init__(message, element=element, need=need)
+		self._cycle = None if cycle is None else tuple(cycle)
+
+	@readonly
+	def Cycle(self) -> Nullable[tuple[DependencyMixin, ...]]:
+		"""
+		Read-only property to access the elements forming the cycle (:attr:`_cycle`).
+
+		:returns: Tuple of elements in the order they need each other, or ``None`` if they weren't recorded.
+		"""
+		return self._cycle
+
 
 @export
 class AlreadyInPipelineError(PipelineError, AlreadyInHierarchyError):
 	"""The exception raised for an element given to an element of a pipeline, but belonging to another one already."""
+
+	_element: Any  #: Element belonging to another element of a pipeline already.
+
+	def __init__(self, message: str, /, *, element: Any = None) -> None:
+		"""
+		Initializes the exception with the element belonging to another one already.
+
+		:param message: The exception's message.
+		:param element: Optional, the element belonging to another element of a pipeline already.
+		"""
+		super().__init__(message)
+		self._element = element
+
+	@readonly
+	def Element(self) -> Any:
+		"""
+		Read-only property to access the element belonging to another element of a pipeline already (:attr:`_element`).
+
+		:returns: The element, or ``None`` if it wasn't recorded.
+		"""
+		return self._element
 
 
 @export
@@ -573,7 +663,7 @@ class RulesMixin(metaclass=ExtendedType, mixin=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(rule)}'.")
 			raise ex
 		elif rule._parent is not None:
-			raise AlreadyInPipelineError(f"Rule belongs to '{rule._parent}' already.")
+			raise AlreadyInPipelineError(f"Rule belongs to '{rule._parent}' already.", element=rule)
 
 		self._rules.append(rule)
 		rule._parent = self
@@ -682,13 +772,17 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 			ex.add_note(f"Got type '{getFullyQualifiedName(need)}'.")
 			raise ex
 		elif need is self:
-			raise NeedDependencyCycleError(f"'{self}' can't need itself.")
+			raise NeedDependencyCycleError(f"'{self}' can't need itself.", element=self, need=need, cycle=(self, self))
 		elif self._parent is None or need._parent is not self._parent:
-			ex = NeedDependencyError(f"'{self}' can't need '{need}', which isn't contained in the same group.")
+			ex = NeedDependencyError(
+				f"'{self}' can't need '{need}', which isn't contained in the same group.",
+				element=self,
+				need=need
+			)
 			ex.add_note(f"'{self}' is contained in '{self._parent}', '{need}' in '{need._parent}'.")
 			raise ex
 		elif need in self._needs:
-			raise NeedDependencyError(f"'{self}' needs '{need}' already.")
+			raise NeedDependencyError(f"'{self}' needs '{need}' already.", element=self, need=need)
 
 		self._needs.append(need)
 		need._dependents.append(self)
@@ -888,7 +982,7 @@ class PipelineGroup(Base):
 		                                  The note names the cycle.
 		"""
 		if (cycle := DependencyMixin._FindCycle(self._pipelines)) is not None:
-			ex = NeedDependencyCycleError(f"The needs of the pipelines of '{self}' form a cycle.")
+			ex = NeedDependencyCycleError(f"The needs of the pipelines of '{self}' form a cycle.", cycle=cycle)
 			ex.add_note(f"Cycle: {' -> '.join(str(pipeline) for pipeline in cycle)}.")
 			raise ex
 
@@ -1018,7 +1112,7 @@ class JobGroup(Base):
 			group = groups.pop()
 			elements = (element for element in group._elements if isinstance(element, DependencyMixin))
 			if (cycle := DependencyMixin._FindCycle(elements)) is not None:
-				ex = NeedDependencyCycleError(f"The needs of the elements of '{group}' form a cycle.")
+				ex = NeedDependencyCycleError(f"The needs of the elements of '{group}' form a cycle.", cycle=cycle)
 				ex.add_note(f"Cycle: {' -> '.join(str(element) for element in cycle)}.")
 				raise ex
 

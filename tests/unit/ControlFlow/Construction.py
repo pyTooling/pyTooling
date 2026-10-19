@@ -292,6 +292,8 @@ class Checks(Testcase):
 			_ = BasicBlock(graph, 2)
 
 		self.assertEqual("Control flow graph 'main' has a block '2' already.", str(context.exception))
+		self.assertEqual(2, context.exception.BlockID)
+		self.assertIsNone(context.exception.Kind)
 		self.assertEqual(3, graph.BlockCount)
 
 	def test_BasicBlock_Kind(self) -> None:
@@ -318,8 +320,23 @@ class Checks(Testcase):
 					_ = BasicBlock(graph, 2, kind=kind)
 
 				self.assertEqual(message, str(context.exception))
+				self.assertEqual(2, context.exception.BlockID)
+				self.assertIs(kind, context.exception.Kind)
 
 		self.assertEqual(3, graph.BlockCount)
+
+	def test_DuplicateErrors_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no object."""
+		with self.assertRaises(DuplicateBlockError) as blockCapture:
+			raise DuplicateBlockError("Duplicate block.")
+
+		self.assertIsNone(blockCapture.exception.BlockID)
+		self.assertIsNone(blockCapture.exception.Kind)
+
+		with self.assertRaises(DuplicateEdgeError) as edgeCapture:
+			raise DuplicateEdgeError("Duplicate edge.")
+
+		self.assertIsNone(edgeCapture.exception.ExistingEdge)
 
 	def test_Count(self) -> None:
 		graph = ControlFlowGraph("main")
@@ -420,3 +437,4 @@ class Checks(Testcase):
 		self.assertEqual("Blocks 'entry' and 'exit' are connected by such an edge already.", str(context.exception))
 		self.assertEqual(1, len(graph.Edges))
 		self.assertEqual(1, len(graph.Exit.InboundEdges))
+		self.assertIs(graph.Exit.InboundEdges[0], context.exception.ExistingEdge)

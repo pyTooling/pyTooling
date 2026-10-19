@@ -121,10 +121,66 @@ class ControlFlowError(ToolingException):
 class DuplicateBlockError(ControlFlowError, DuplicateElementError):
 	"""The exception raised for a block a graph has already: one with the same ID, or a second entry, exit or unwind."""
 
+	_blockID: Nullable[Hashable]   #: ID of the rejected block.
+	_kind:    Nullable[BlockKind]  #: Kind of the rejected block, if a graph has one block of that kind at most.
+
+	def __init__(self, message: str, /, *, blockID: Nullable[Hashable] = None, kind: Nullable[BlockKind] = None) -> None:
+		"""
+		Initializes the exception with the ID and kind of the rejected block.
+
+		:param message: The exception's message.
+		:param blockID: Optional, the ID of the rejected block.
+		:param kind:    Optional, the kind of the rejected block, if a graph has one block of that kind at most.
+		"""
+		super().__init__(message)
+		self._blockID = blockID
+		self._kind =    kind
+
+	@readonly
+	def BlockID(self) -> Nullable[Hashable]:
+		"""
+		Read-only property to access the ID of the rejected block (:attr:`_blockID`).
+
+		:returns: The block's ID, or ``None`` if it wasn't recorded.
+		"""
+		return self._blockID
+
+	@readonly
+	def Kind(self) -> Nullable[BlockKind]:
+		"""
+		Read-only property to access the kind of the rejected block, if a graph has one block of that kind at most
+		(:attr:`_kind`).
+
+		:returns: The block's kind (``None`` for a duplicate ID), or ``None`` if it wasn't recorded.
+		"""
+		return self._kind
+
 
 @export
 class DuplicateEdgeError(ControlFlowError, DuplicateElementError):
 	"""The exception raised for an edge, which connects the same two blocks as an edge of the same kind."""
+
+	_existingEdge: Nullable[Edge]  #: Edge connecting the same two blocks with the same kind already.
+
+	def __init__(self, message: str, /, *, existingEdge: Nullable[Edge] = None) -> None:
+		"""
+		Initializes the exception with the edge connecting the same two blocks already.
+
+		:param message:      The exception's message.
+		:param existingEdge: Optional, the edge connecting the same two blocks with the same kind already.
+		"""
+		super().__init__(message)
+		self._existingEdge = existingEdge
+
+	@readonly
+	def ExistingEdge(self) -> Nullable[Edge]:
+		"""
+		Read-only property to access the edge connecting the same two blocks with the same kind already
+		(:attr:`_existingEdge`).
+
+		:returns: The existing edge, or ``None`` if it wasn't recorded.
+		"""
+		return self._existingEdge
 
 
 @export
@@ -269,7 +325,10 @@ class BasicBlock(BaseWithCountAndValue):
 			ex.add_note(f"Got type '{getFullyQualifiedName(blockID)}'.")
 			raise ex
 		elif blockID in controlFlowGraph._blocks:
-			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has a block '{blockID}' already.")
+			raise DuplicateBlockError(
+				f"Control flow graph '{controlFlowGraph._name}' has a block '{blockID}' already.",
+				blockID=blockID
+			)
 
 		if kind is None:
 			raise ValueError("Parameter 'kind' is None.")
@@ -278,11 +337,23 @@ class BasicBlock(BaseWithCountAndValue):
 			ex.add_note(f"Got type '{getFullyQualifiedName(kind)}'.")
 			raise ex
 		elif kind is BlockKind.Entry and len(controlFlowGraph._blocks) > 0:
-			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has an entry block already.")
+			raise DuplicateBlockError(
+				f"Control flow graph '{controlFlowGraph._name}' has an entry block already.",
+				blockID=blockID,
+				kind=kind
+			)
 		elif kind is BlockKind.Exit and len(controlFlowGraph._blocks) > 1:
-			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has an exit block already.")
+			raise DuplicateBlockError(
+				f"Control flow graph '{controlFlowGraph._name}' has an exit block already.",
+				blockID=blockID,
+				kind=kind
+			)
 		elif kind is BlockKind.Unwind and controlFlowGraph._unwind is not None:
-			raise DuplicateBlockError(f"Control flow graph '{controlFlowGraph._name}' has an unwind block already.")
+			raise DuplicateBlockError(
+				f"Control flow graph '{controlFlowGraph._name}' has an unwind block already.",
+				blockID=blockID,
+				kind=kind
+			)
 
 		self._controlFlowGraph = controlFlowGraph
 		self._id =               blockID
@@ -491,7 +562,10 @@ class Edge(BaseWithCountAndValue):
 
 		for edge in source._outboundEdges:
 			if edge._destination is destination and edge._kind is kind:
-				ex = DuplicateEdgeError(f"Blocks '{source._id}' and '{destination._id}' are connected by such an edge already.")
+				ex = DuplicateEdgeError(
+					f"Blocks '{source._id}' and '{destination._id}' are connected by such an edge already.",
+					existingEdge=edge
+				)
 				ex.add_note(f"Got edge kind '{kind}'.")
 				raise ex
 

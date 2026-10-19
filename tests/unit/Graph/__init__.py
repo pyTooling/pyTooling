@@ -41,7 +41,7 @@ from pyTooling.Graph      import BaseWithVertices, Component
 from pyTooling.Graph      import EdgeKind, EdgeKindType, LinkKind, LinkKindType, CycleError
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
-from pyTooling.Graph      import NotInDifferentSubgraphs
+from pyTooling.Graph      import NotInDifferentSubgraphs, EdgeNotFoundError, LinkNotFoundError, SameGraphError
 from pyTooling.Testing    import Testcase
 
 
@@ -1700,8 +1700,10 @@ class VertexOperations(Iterate):
 		graph1 = Graph()
 		vertex1 = Vertex(graph=graph1)
 
-		with self.assertRaises(GraphError):
+		with self.assertRaises(SameGraphError) as context:
 			vertex1.Copy(graph1)
+
+		self.assertIs(graph1, context.exception.Graph)
 
 	def test_Copy(self) -> None:
 		graph1 = Graph()
@@ -1813,9 +1815,12 @@ class IterateStartingFromVertex(Iterate):
 		self.assertTupleEqual((source,), paths[0])
 
 		source = vList[7]
-		with self.assertRaises(CycleError):
+		with self.assertRaises(CycleError) as context:
 			for path in source.IterateAllOutboundPathsAsVertexList():
 				pass
+
+		self.assertIs(source, context.exception.Path[0])
+		self.assertIn(context.exception.Path[-1], context.exception.Path[:-1])
 
 		# Removing a reverse edge to avoid cycles.
 		vList[11].DeleteEdgeTo(vList[4])
@@ -1907,6 +1912,76 @@ class DuplicateIdentifiers(Testcase):
 
 class Deletion(Testcase):
 	"""Deleting a vertex, an edge or a link unregisters it everywhere it was registered."""
+
+	def test_DeleteEdgeTo_NotFound(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+
+		with self.assertRaises(EdgeNotFoundError) as context:
+			first.DeleteEdgeTo(second)
+
+		self.assertIs(first, context.exception.Source)
+		self.assertIs(second, context.exception.Destination)
+
+	def test_DeleteEdgeFrom_NotFound(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+
+		with self.assertRaises(EdgeNotFoundError) as context:
+			second.DeleteEdgeFrom(first)
+
+		self.assertTrue(str(context.exception).startswith("No inbound edge found from "))
+		self.assertIs(first, context.exception.Source)
+		self.assertIs(second, context.exception.Destination)
+
+	def test_DeleteLinkTo_NotFound(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", subgraph=Subgraph(graph=graph))
+		second = Vertex(vertexID="v2", subgraph=Subgraph(graph=graph))
+
+		with self.assertRaises(LinkNotFoundError) as context:
+			first.DeleteLinkTo(second)
+
+		self.assertIs(first, context.exception.Source)
+		self.assertIs(second, context.exception.Destination)
+
+	def test_DeleteLinkFrom_NotFound(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", subgraph=Subgraph(graph=graph))
+		second = Vertex(vertexID="v2", subgraph=Subgraph(graph=graph))
+
+		with self.assertRaises(LinkNotFoundError) as context:
+			second.DeleteLinkFrom(first)
+
+		self.assertTrue(str(context.exception).startswith("No inbound link found from "))
+		self.assertIs(first, context.exception.Source)
+		self.assertIs(second, context.exception.Destination)
+
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no object."""
+		with self.assertRaises(EdgeNotFoundError) as edgeCapture:
+			raise EdgeNotFoundError("No edge.")
+
+		self.assertIsNone(edgeCapture.exception.Source)
+		self.assertIsNone(edgeCapture.exception.Destination)
+
+		with self.assertRaises(LinkNotFoundError) as linkCapture:
+			raise LinkNotFoundError("No link.")
+
+		self.assertIsNone(linkCapture.exception.Source)
+		self.assertIsNone(linkCapture.exception.Destination)
+
+		with self.assertRaises(SameGraphError) as graphCapture:
+			raise SameGraphError("Same graph.")
+
+		self.assertIsNone(graphCapture.exception.Graph)
+
+		with self.assertRaises(CycleError) as cycleCapture:
+			raise CycleError("Cycle.")
+
+		self.assertIsNone(cycleCapture.exception.Path)
 
 	def test_Edge(self) -> None:
 		graph = Graph()

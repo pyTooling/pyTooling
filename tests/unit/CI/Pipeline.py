@@ -524,6 +524,7 @@ class Rules(Testcase):
 					element.AddRule(rule)
 
 				self.assertEqual("Rule belongs to 'Build' already.", str(context.exception))
+				self.assertIs(rule, context.exception.Element)
 				self.assertIsInstance(context.exception, PipelineError)
 				self.assertIsInstance(context.exception, AlreadyInHierarchyError)
 
@@ -699,6 +700,8 @@ class Dependencies(Testcase):
 			deep.AddNeed(prepare)
 
 		self.assertEqual("'Deep' can't need 'Prepare', which isn't contained in the same group.", str(context.exception))
+		self.assertIs(deep, context.exception.Element)
+		self.assertIs(prepare, context.exception.Need)
 		self.assertListEqual(["'Deep' is contained in 'Called', 'Prepare' in 'Pipeline'."], context.exception.__notes__)
 		self.assertListEqual([], deep.Needs)
 		self.assertListEqual([], prepare.Dependents)
@@ -718,6 +721,8 @@ class Dependencies(Testcase):
 			build.AddNeed(prepare)
 
 		self.assertEqual("'Build' needs 'Prepare' already.", str(context.exception))
+		self.assertIs(build, context.exception.Element)
+		self.assertIs(prepare, context.exception.Need)
 		self.assertListEqual([prepare], build.Needs)
 
 	def test_AddNeed_Itself(self) -> None:
@@ -727,6 +732,18 @@ class Dependencies(Testcase):
 			job.AddNeed(job)
 
 		self.assertEqual("'Build' can't need itself.", str(context.exception))
+		self.assertIs(job, context.exception.Element)
+		self.assertIs(job, context.exception.Need)
+		self.assertTupleEqual((job, job), context.exception.Cycle)
+
+	def test_NeedDependencyErrors_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no element."""
+		with self.assertRaises(NeedDependencyCycleError) as context:
+			raise NeedDependencyCycleError("Cycle.")
+
+		self.assertIsNone(context.exception.Element)
+		self.assertIsNone(context.exception.Need)
+		self.assertIsNone(context.exception.Cycle)
 
 	def test_AddNeed_Cycle(self) -> None:
 		"""Adding a need doesn't search for cycles; validating the completed pipeline does."""
@@ -745,6 +762,8 @@ class Dependencies(Testcase):
 
 		self.assertEqual("The needs of the elements of 'Pipeline' form a cycle.", str(context.exception))
 		self.assertListEqual(["Cycle: A -> D -> C -> B -> A."], context.exception.__notes__)
+		self.assertTupleEqual((a, d, c, b, a), context.exception.Cycle)
+		self.assertIsNone(context.exception.Element)
 
 	def test_Validate_DirectCycle(self) -> None:
 		pipeline = Pipeline("Pipeline")
@@ -793,6 +812,7 @@ class Dependencies(Testcase):
 			group.Validate()
 
 		self.assertListEqual(["Cycle: First -> Second -> First."], context.exception.__notes__)
+		self.assertTupleEqual((first, second, first), context.exception.Cycle)
 
 	def test_Constructor(self) -> None:
 		"""Needs and dependents can be given when an element is created."""

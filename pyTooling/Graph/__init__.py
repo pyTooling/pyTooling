@@ -247,20 +247,128 @@ class NotATreeError(GraphError):
 class EdgeNotFoundError(GraphError):
 	"""The exception is raised when no edge matching the given source or destination vertex was found."""
 
+	_source:      Nullable[Vertex]  #: Vertex the edge was searched from.
+	_destination: Nullable[Vertex]  #: Vertex the edge was searched to.
+
+	def __init__(self, message: str, /, *, source: Nullable[Vertex] = None, destination: Nullable[Vertex] = None) -> None:
+		"""
+		Initializes the exception with the two vertices no edge was found between.
+
+		:param message:     The exception's message.
+		:param source:      Optional, the vertex the edge was searched from.
+		:param destination: Optional, the vertex the edge was searched to.
+		"""
+		super().__init__(message)
+		self._source =      source
+		self._destination = destination
+
+	@readonly
+	def Source(self) -> Nullable[Vertex]:
+		"""
+		Read-only property to access the vertex the edge was searched from (:attr:`_source`).
+
+		:returns: The source vertex, or ``None`` if it wasn't recorded.
+		"""
+		return self._source
+
+	@readonly
+	def Destination(self) -> Nullable[Vertex]:
+		"""
+		Read-only property to access the vertex the edge was searched to (:attr:`_destination`).
+
+		:returns: The destination vertex, or ``None`` if it wasn't recorded.
+		"""
+		return self._destination
+
 
 @export
 class LinkNotFoundError(GraphError):
 	"""The exception is raised when no link matching the given source or destination vertex was found."""
+
+	_source:      Nullable[Vertex]  #: Vertex the link was searched from.
+	_destination: Nullable[Vertex]  #: Vertex the link was searched to.
+
+	def __init__(self, message: str, /, *, source: Nullable[Vertex] = None, destination: Nullable[Vertex] = None) -> None:
+		"""
+		Initializes the exception with the two vertices no link was found between.
+
+		:param message:     The exception's message.
+		:param source:      Optional, the vertex the link was searched from.
+		:param destination: Optional, the vertex the link was searched to.
+		"""
+		super().__init__(message)
+		self._source =      source
+		self._destination = destination
+
+	@readonly
+	def Source(self) -> Nullable[Vertex]:
+		"""
+		Read-only property to access the vertex the link was searched from (:attr:`_source`).
+
+		:returns: The source vertex, or ``None`` if it wasn't recorded.
+		"""
+		return self._source
+
+	@readonly
+	def Destination(self) -> Nullable[Vertex]:
+		"""
+		Read-only property to access the vertex the link was searched to (:attr:`_destination`).
+
+		:returns: The destination vertex, or ``None`` if it wasn't recorded.
+		"""
+		return self._destination
 
 
 @export
 class SameGraphError(GraphError):
 	"""The exception is raised when a vertex is copied into the graph it already belongs to."""
 
+	_graph: Nullable[Graph]  #: Graph the vertex belongs to already.
+
+	def __init__(self, message: str, /, *, graph: Nullable[Graph] = None) -> None:
+		"""
+		Initializes the exception with the graph the vertex belongs to already.
+
+		:param message: The exception's message.
+		:param graph:   Optional, the graph the vertex belongs to already.
+		"""
+		super().__init__(message)
+		self._graph = graph
+
+	@readonly
+	def Graph(self) -> Nullable[Graph]:
+		"""
+		Read-only property to access the graph the vertex belongs to already (:attr:`_graph`).
+
+		:returns: The graph, or ``None`` if it wasn't recorded.
+		"""
+		return self._graph
+
 
 @export
 class CycleError(GraphError):
 	"""The exception is raised when a not permitted cycle is found."""
+
+	_path: Nullable[tuple[Vertex, ...]]  #: Path of vertices ending in the vertex reached a second time.
+
+	def __init__(self, message: str, /, *, path: Nullable[tuple[Vertex, ...]] = None) -> None:
+		"""
+		Initializes the exception with the path closing the cycle.
+
+		:param message: The exception's message.
+		:param path:    Optional, the path of vertices ending in the vertex reached a second time.
+		"""
+		super().__init__(message)
+		self._path = path
+
+	@readonly
+	def Path(self) -> Nullable[tuple[Vertex, ...]]:
+		"""
+		Read-only property to access the path of vertices ending in the vertex reached a second time (:attr:`_path`).
+
+		:returns: Tuple of vertices, or ``None`` if it wasn't recorded.
+		"""
+		return self._path
 
 
 @export
@@ -1334,7 +1442,7 @@ class Vertex(
 			if edge._destination is destination:
 				break
 		else:
-			raise EdgeNotFoundError(f"No outbound edge found to '{destination!r}'.")
+			raise EdgeNotFoundError(f"No outbound edge found to '{destination!r}'.", source=self, destination=destination)
 
 		edge.Delete()
 
@@ -1349,7 +1457,7 @@ class Vertex(
 			if edge._source is source:
 				break
 		else:
-			raise EdgeNotFoundError(f"No inbound edge found to '{source!r}'.")
+			raise EdgeNotFoundError(f"No inbound edge found from '{source!r}'.", source=source, destination=self)
 
 		edge.Delete()
 
@@ -1364,7 +1472,7 @@ class Vertex(
 			if link._destination is destination:
 				break
 		else:
-			raise LinkNotFoundError(f"No outbound link found to '{destination!r}'.")
+			raise LinkNotFoundError(f"No outbound link found to '{destination!r}'.", source=self, destination=destination)
 
 		link.Delete()
 
@@ -1379,7 +1487,7 @@ class Vertex(
 			if link._source is source:
 				break
 		else:
-			raise LinkNotFoundError(f"No inbound link found to '{source!r}'.")
+			raise LinkNotFoundError(f"No inbound link found from '{source!r}'.", source=source, destination=self)
 
 		link.Delete()
 
@@ -1400,7 +1508,7 @@ class Vertex(
 		:raises SameGraphError:              If source graph and destination graph are the same.
 		"""
 		if graph is self._graph:
-			raise SameGraphError("Graph to copy this vertex to, is the same graph.")
+			raise SameGraphError("Graph to copy this vertex to, is the same graph.", graph=graph)
 
 		vertex = Vertex(self._id, self._value, self._weight, graph=graph)
 		if copyDict:
@@ -1609,7 +1717,7 @@ class Vertex(
 				edge = next(iteratorStack[-1])
 				nextVertex = edge._destination
 				if nextVertex in visited:
-					ex = CycleError("Loop detected.")
+					ex = CycleError("Loop detected.", path=(*vertexStack, nextVertex))
 					ex.add_note("First loop is:")
 					for i, vertex in enumerate(vertexStack):
 						ex.add_note(f"  {i}: {vertex!r}")
