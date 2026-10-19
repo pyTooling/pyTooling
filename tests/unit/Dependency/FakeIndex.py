@@ -89,3 +89,86 @@ def ProjectDocument(name: str, *versions: str) -> dict:
 		}]
 
 	return {"info": {"project_url": f"https://index.org/project/{name}/"}, "releases": releases}
+
+
+class DocumentResponse:
+	"""Response of a :class:`DocumentClientSession`, used as an asynchronous context manager like :mod:`aiohttp`'s."""
+
+	def __init__(self, document: dict | None) -> None:
+		"""
+		Initializes the response.
+
+		:param document: The JSON document answered, or ``None`` for ``404 Not Found``.
+		"""
+		self._document = document
+		self.status =    404 if document is None else 200
+
+	async def __aenter__(self) -> "DocumentResponse":
+		"""
+		Enter the context and hand out the response.
+
+		:returns: The response itself.
+		"""
+		return self
+
+	async def __aexit__(self, *_) -> None:
+		"""
+		Exit the context; nothing to release.
+
+		:returns: ``None``
+		"""
+		return None
+
+	def raise_for_status(self) -> None:
+		"""Do nothing: a response with a document is ``200 OK``, and ``404 Not Found`` is checked before."""
+
+	async def json(self) -> dict:
+		"""
+		Return the document.
+
+		:returns: The JSON document.
+		"""
+		return self._document
+
+
+class DocumentClientSession:
+	"""
+	Stand-in for :class:`aiohttp.ClientSession`, answering from a dictionary of JSON documents by endpoint.
+
+	Each instance records the endpoints requested through it in :attr:`Requests`; :attr:`Sessions` of the class
+	collects the instances, so a test sees which requests ran together.
+	"""
+
+	Documents: dict[str, dict]                = {}  #: JSON documents by endpoint, shared by all instances.
+	Sessions:  list["DocumentClientSession"] = []  #: Every session opened, in order.
+
+	def __init__(self, **_) -> None:
+		"""Initializes a session; the arguments of :class:`aiohttp.ClientSession` are ignored."""
+		self.Requests = []
+		DocumentClientSession.Sessions.append(self)
+
+	async def __aenter__(self) -> "DocumentClientSession":
+		"""
+		Enter the context and hand out the session.
+
+		:returns: The session itself.
+		"""
+		return self
+
+	async def __aexit__(self, *_) -> None:
+		"""
+		Exit the context; nothing to release.
+
+		:returns: ``None``
+		"""
+		return None
+
+	def get(self, endpoint: str) -> DocumentResponse:
+		"""
+		Answer a GET request with the endpoint's document, or with ``404 Not Found``.
+
+		:param endpoint: The requested endpoint, relative to the base URL.
+		:returns:        The response.
+		"""
+		self.Requests.append(endpoint)
+		return DocumentResponse(DocumentClientSession.Documents.get(endpoint, None))

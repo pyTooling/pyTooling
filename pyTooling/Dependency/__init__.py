@@ -366,6 +366,60 @@ class ReleaseDetailsWarning(Warning):
 
 
 @export
+class UnresolvedRequirementWarning(Warning):
+	"""
+	A requirement couldn't be resolved: the package index doesn't know its project, or can't describe the release
+	selected for it.
+
+	The requirement stays in the resolution, with the reason as its status.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+
+	_projectName: Nullable[str]              #: Name of the required project.
+	_version:     Nullable[SemanticVersion]  #: Version of the selected release, or ``None`` for an unknown project.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the warning with the required project and, if one was selected, the release.
+
+		:param message:     The warning's message.
+		:param projectName: Optional, the name of the required project.
+		:param version:     Optional, the version of the selected release; ``None`` for an unknown project.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the required project (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release selected for the requirement (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` for an unknown project or if it wasn't recorded.
+		"""
+		return self._version
+
+
+@export
 class UnsupportedVersionWarning(CriticalWarning):
 	"""
 	A release's version number has a format the version parser doesn't support, therefore the release was skipped.

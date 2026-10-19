@@ -1918,12 +1918,21 @@ class PythonPackageIndex(PackageStorage):
 					if project.__lazy_state__ < lazy:
 						project.__lazy_loader__(lazy)
 			except ProjectNotFoundError:
-				self._packages.pop(project._name, None)
-				del self._projectCache[key]
-				self._unknownProjects.add(key)
+				self._ForgetProject(project)
 				raise
 
 		return project
+
+	def _ForgetProject(self, project: Project) -> None:
+		"""
+		Remove a project the index answered ``404 Not Found`` for, and remember its name as unknown.
+
+		:param project: The project, which registered itself in this index before its download failed.
+		"""
+		key = canonicalize_name(project._name)
+		self._packages.pop(project._name, None)
+		self._projectCache.pop(key, None)
+		self._unknownProjects.add(key)
 
 	def __repr__(self) -> str:
 		"""
