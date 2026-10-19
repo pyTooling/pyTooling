@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
 need network access.
 """
-from datetime                     import date, datetime, timezone
+from datetime                     import date, datetime, timedelta, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
@@ -1151,6 +1151,25 @@ class RequirementsFiles(Testcase):
 		self.assertEqual([], list(requirementsFile.ReferencedFiles))
 		self.assertEqual(2, len(requirementsFile))
 
+	def test_AnalysisDuration(self) -> None:
+		"""Each file read measures its duration, the files it references included."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			requirementsFile = RequirementsFile.Parse(path)
+
+		base = tuple(requirementsFile.ReferencedFiles)[0]
+
+		self.assertIsInstance(requirementsFile.AnalysisDuration, timedelta)
+		self.assertIsInstance(base.AnalysisDuration, timedelta)
+		self.assertGreater(base.AnalysisDuration, timedelta(0))
+		self.assertGreaterEqual(requirementsFile.AnalysisDuration, base.AnalysisDuration)
+
 	def test_Includes_KeepTheTree(self) -> None:
 		"""``-r`` references another file, and which file a requirement came from is not flattened away."""
 		with TemporaryDirectory() as directory:
@@ -1475,7 +1494,21 @@ class RequirementsFileInstantiation(Testcase):
 		self.assertIs(requirementsFile, requirementsFile.Root)
 		self.assertEqual([], requirementsFile.Entries)
 		self.assertEqual({path.resolve(): requirementsFile}, requirementsFile.AnalyzedRequirementFiles)
+		self.assertIsNone(requirementsFile.AnalysisDuration)
 		self.assertEqual(0, len(requirementsFile))
+
+	def test_AnalysisDuration(self) -> None:
+		duration =         timedelta(milliseconds=5)
+		requirementsFile = RequirementsFile(Path("requirements.txt"), analysisDuration=duration)
+
+		self.assertEqual(duration, requirementsFile.AnalysisDuration)
+
+	def test_AnalysisDurationWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = RequirementsFile(Path("requirements.txt"), analysisDuration=0.005)
+
+		self.assertEqual("Parameter 'analysisDuration' is not of type 'timedelta'.", str(context.exception))
+		self.assertListEqual(["Got type 'float'."], context.exception.__notes__)
 
 	def test_Entries(self) -> None:
 		pytest =           Requirement("pytest ~= 9.1")

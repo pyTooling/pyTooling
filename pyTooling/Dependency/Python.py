@@ -51,7 +51,7 @@ from __future__           import annotations
 
 from asyncio              import run as asyncio_run, gather as asyncio_gather
 from collections          import deque
-from datetime             import date, datetime
+from datetime             import date, datetime, timedelta
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from pathlib              import Path
@@ -92,6 +92,7 @@ from pyTooling.Dependency      import PackageIndexError
 from pyTooling.Dependency      import AlreadyInRequirementsTreeError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
+from pyTooling.Stopwatch       import Stopwatch
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
@@ -141,8 +142,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	:attr:`AnalyzedRequirementFiles`, every file of the tree by its resolved path, which is the answer to *where did
 	this package come from*.
 
-	:meth:`Parse` reads a file and the files it references; the initializer takes what a file states, so a tree can be
-	built by hand, too. **A cycle raises.** A file referencing itself, directly or through a chain, is a statement
+	:meth:`Parse` reads a file and the files it references and measures how long reading took
+	(:attr:`AnalysisDuration`); the initializer takes what a file states, so a tree can be built by hand, too.
+	**A cycle raises.** A file referencing itself, directly or through a chain, is a statement
 	nobody wrote on purpose; reading it once and continuing would hide it.
 
 	**A file referenced twice is read once.** Two files may reference the same third one, as pip accepts it -
@@ -157,13 +159,15 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	_path:                     Path                                        #: Path of this requirements file.
 	_entries:                  list[RequirementsFileEntryT]                #: What this file states, in file order.
 	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of the tree, by resolved path.
+	_analysisDuration:         Nullable[timedelta]                         #: Time :meth:`Parse` took to read the file.
 
 	def __init__(
 		self,
-		path:    Path,
-		entries: Nullable[Iterable[RequirementsFileEntryT]] = None,
+		path:             Path,
+		entries:          Nullable[Iterable[RequirementsFileEntryT]] = None,
 		*,
-		parent:  Nullable[RequirementsFile] = None
+		parent:           Nullable[RequirementsFile] = None,
+		analysisDuration: Nullable[timedelta] = None
 	) -> None:
 		"""
 		Initializes a requirements file from its path and what it states.
@@ -177,10 +181,13 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		                                        before, in the order the file states them. Default: ``None``.
 		:param parent:                          Optional, the file referencing this one, which appends this file to its
 		                                        entries. Default: ``None``, a root.
+		:param analysisDuration:                Optional, the time reading the file took, including the files it
+		                                        references. Default: ``None``, not measured.
 		:raises ValueError:                     If parameter 'path' is ``None``.
 		:raises TypeError:                      If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:                      If parameter 'entries' is not iterable.
 		:raises TypeError:                      If parameter 'parent' is not of type :class:`RequirementsFile`.
+		:raises TypeError:                      If parameter 'analysisDuration' is not of type :class:`~datetime.timedelta`.
 		:raises ValueError:                     If an element of parameter 'entries' is ``None``.
 		:raises TypeError:                      If an element of parameter 'entries' is not of type
 		                                        :class:`~packaging.requirements.Requirement`, :class:`RequirementsFile`
@@ -207,10 +214,16 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
-		self._path =    path
-		self._parent =  parent
-		self._root =    self if parent is None else parent._root
-		self._entries = []
+		if analysisDuration is not None and not isinstance(analysisDuration, timedelta):
+			ex = TypeError("Parameter 'analysisDuration' is not of type 'timedelta'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(analysisDuration)}'.")
+			raise ex
+
+		self._path =             path
+		self._parent =           parent
+		self._root =             self if parent is None else parent._root
+		self._entries =          []
+		self._analysisDuration = analysisDuration
 
 		# resolved as the mapping's key only, not as '_path': a file reachable under two spellings is one key
 		if parent is None:
@@ -268,6 +281,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		is left out and reported as a :exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a
 		:class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
 
+		Each file measures how long reading it took with a :class:`~pyTooling.Stopwatch.Stopwatch`, the files it
+		references included (:attr:`AnalysisDuration`).
+
 		:param path:                           Path of the requirements file to read.
 		:returns:                              The requirements file, root of the tree of the files it references.
 		:raises ValueError:                    If parameter 'path' is ``None``.
@@ -303,50 +319,51 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 					filePath=file
 				) from FileNotFoundError(file)
 
-			readingFiles.add(file.resolve())
-			chain.append(file)
-			entries: list[RequirementsFileEntryT] = []
+			with Stopwatch() as sw:
+				readingFiles.add(file.resolve())
+				chain.append(file)
+				entries: list[RequirementsFileEntryT] = []
 
-			lines = file.read_text(encoding="utf-8").splitlines()
-			for lineNumber, line in enumerate(lines, start=1):
-				if (line := line.split("#")[0].strip()) == "":
-					continue
+				lines = file.read_text(encoding="utf-8").splitlines()
+				for lineNumber, line in enumerate(lines, start=1):
+					if (line := line.split("#")[0].strip()) == "":
+						continue
 
-				if line.startswith("-r"):
-					referenced = (file.parent / line[2:].strip()).resolve()
+					if line.startswith("-r"):
+						referenced = (file.parent / line[2:].strip()).resolve()
 
-					if referenced in readingFiles:
-						ex = CircularRequirementsFileError(
-							f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read.",
-							filePath=referenced,
-							referencedIn=file,
-							lineNumber=lineNumber
+						if referenced in readingFiles:
+							ex = CircularRequirementsFileError(
+								f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read.",
+								filePath=referenced,
+								referencedIn=file,
+								lineNumber=lineNumber
+							)
+							ex.add_note(f"Chain: {' → '.join(str(chainedFile) for chainedFile in chain)} → {referenced}")
+							raise ex
+						elif (target := readFiles.get(referenced, None)) is not None:
+							entries.append(RequirementsFileReference(referenced, target))
+						else:
+							entries.append(parseFile(referenced))
+
+						continue
+
+					# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
+					if line.startswith("-") or line.startswith("http"):
+						continue
+
+					try:
+						entries.append(Requirement(line))
+					except InvalidRequirement as ex:
+						WarningCollector.Raise(
+							BrokenRequirementWarning(f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed."),
+							ex
 						)
-						ex.add_note(f"Chain: {' → '.join(str(chainedFile) for chainedFile in chain)} → {referenced}")
-						raise ex
-					elif (target := readFiles.get(referenced, None)) is not None:
-						entries.append(RequirementsFileReference(referenced, target))
-					else:
-						entries.append(parseFile(referenced))
 
-					continue
+				chain.pop()
+				readingFiles.discard(file.resolve())
 
-				# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
-				if line.startswith("-") or line.startswith("http"):
-					continue
-
-				try:
-					entries.append(Requirement(line))
-				except InvalidRequirement as ex:
-					WarningCollector.Raise(
-						BrokenRequirementWarning(f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed."),
-						ex
-					)
-
-			chain.pop()
-			readingFiles.discard(file.resolve())
-
-			requirementsFile = cls(file, entries)
+			requirementsFile = cls(file, entries, analysisDuration=sw.Duration)
 			readFiles[file.resolve()] = requirementsFile
 
 			return requirementsFile
@@ -405,6 +422,18 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		:returns: Every file of the tree by resolved path, or ``None`` for a referenced file.
 		"""
 		return self._analyzedRequirementFiles
+
+	@readonly
+	def AnalysisDuration(self) -> Nullable[timedelta]:
+		"""
+		Read-only property to access the time :meth:`Parse` took to read this file (:attr:`_analysisDuration`).
+
+		It includes reading the files this file references, so the root's duration is the whole :meth:`Parse` call.
+
+		:returns: Duration of reading this file and the files it references, or ``None`` if the file wasn't read by
+		          :meth:`Parse`.
+		"""
+		return self._analysisDuration
 
 	@readonly
 	def Entries(self) -> list[RequirementsFileEntryT]:
