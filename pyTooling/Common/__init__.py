@@ -67,7 +67,6 @@ from os                  import chdir
 from pathlib             import Path
 from types               import ModuleType, TracebackType, FunctionType, MethodType, BuiltinFunctionType
 from types               import MethodWrapperType, MethodDescriptorType, WrapperDescriptorType
-from types               import ClassMethodDescriptorType
 from typing              import TypeVar, Callable, Generator, Hashable, Self
 from typing              import Any, Union, Mapping, Iterable, Optional as Nullable
 
@@ -105,8 +104,7 @@ def getFullyQualifiedName(obj: Any) -> str:
 
 
 _NAMED_TYPES = (
-	type, FunctionType, MethodType, BuiltinFunctionType, MethodDescriptorType, WrapperDescriptorType, MethodWrapperType,
-	ClassMethodDescriptorType
+	type, FunctionType, MethodType, BuiltinFunctionType, MethodDescriptorType, WrapperDescriptorType, MethodWrapperType
 )  #: Types of objects carrying their own name: classes, functions and methods, incl. built-in ones.
 
 
