@@ -68,6 +68,16 @@ class Enforcement(Testcase):
 			str(context.exception)
 		)
 		self.assertIn("Its scope is 'Class'.", context.exception.__notes__)
+		self.assertIsInstance(context.exception.AppliedAttribute, ClassOnly)
+		self.assertEqual("function", context.exception.Entity.__name__)
+
+	def test_AttributeScopeError_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither an attribute nor an entity."""
+		with self.assertRaises(AttributeScopeError) as context:
+			raise AttributeScopeError("Out of scope.")
+
+		self.assertIsNone(context.exception.AppliedAttribute)
+		self.assertIsNone(context.exception.Entity)
 
 	def test_FunctionScopedOnAClass(self) -> None:
 		with self.assertRaises(AttributeScopeError):

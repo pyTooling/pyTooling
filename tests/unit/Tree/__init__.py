@@ -34,7 +34,7 @@ iteration methods, and the rendering of a tree.
 """
 from typing            import Any, Optional as Nullable, List, Tuple, Dict
 
-from pyTooling.Tree    import Node, AlreadyInTreeError, NoSiblingsError, NotAChildError
+from pyTooling.Tree    import Node, AlreadyInTreeError, NoSiblingsError, NotAChildError, NotInSameTreeError
 from pyTooling.Testing import Testcase
 
 
@@ -317,8 +317,45 @@ class MergeTree(Testcase):
 		root = Node(1)
 		child = Node(11, parent=root)
 
-		with self.assertRaises(AlreadyInTreeError):
+		with self.assertRaises(AlreadyInTreeError) as context:
 			root.AddChildren((Node(2), child))
+
+		self.assertIs(child, context.exception.OtherNode)
+
+	def test_Parent_AlreadyInTree(self) -> None:
+		root = Node(1)
+		child = Node(11, parent=root)
+
+		with self.assertRaises(AlreadyInTreeError) as context:
+			root.Parent = child
+
+		self.assertIs(child, context.exception.OtherNode)
+
+	def test_NotInSameTree(self) -> None:
+		root = Node(1)
+		other = Node(2)
+
+		with self.assertRaises(NotInSameTreeError) as context:
+			list(root.WalkTo(other))
+
+		self.assertIs(other, context.exception.OtherNode)
+
+		with self.assertRaises(NotInSameTreeError) as context:
+			list(root.GetCommonAncestors(other))
+
+		self.assertIs(other, context.exception.OtherNode)
+
+	def test_TreeErrors_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no node."""
+		with self.assertRaises(AlreadyInTreeError) as alreadyCapture:
+			raise AlreadyInTreeError("Already in tree.")
+
+		self.assertIsNone(alreadyCapture.exception.OtherNode)
+
+		with self.assertRaises(NotInSameTreeError) as notInSameCapture:
+			raise NotInSameTreeError("Not in the same tree.")
+
+		self.assertIsNone(notInSameCapture.exception.OtherNode)
 
 	def test_AddChildren_TypeError(self) -> None:
 		root = Node(1)

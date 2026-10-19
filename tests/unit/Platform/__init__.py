@@ -37,7 +37,7 @@ platform only.
 from os       import getenv as os_getenv, environ as os_environ
 from pytest   import mark
 
-from pyTooling.Platform import Platforms, Platform, CurrentPlatform
+from pyTooling.Platform import Platforms, Platform, CurrentPlatform, UnknownPlatformError
 from pyTooling.Testing  import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -507,3 +507,19 @@ class AnyPlatform(Testcase):
 		self.assertNotIn(Platforms.MSYS2_Runtime, platform.HostOperatingSystem)
 
 # TODO: FreeBSD
+
+
+class Errors(Testcase):
+	def test_UnknownPlatformError(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownPlatformError("Unknown architecture 'z80' for FreeBSD.", unknownValue="z80")
+
+		self.assertEqual("Unknown architecture 'z80' for FreeBSD.", str(context.exception))
+		self.assertEqual("z80", context.exception.UnknownValue)
+		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
+
+	def test_UnknownPlatformError_MessageOnly(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownPlatformError("Unknown platform.")
+
+		self.assertIsNone(context.exception.UnknownValue)

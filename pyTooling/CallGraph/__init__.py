@@ -119,6 +119,27 @@ class CallGraphError(ToolingException):
 class DuplicateFunctionError(CallGraphError, DuplicateElementError):
 	"""The exception raised for a function with an ID, which the graph has already."""
 
+	_functionID: Nullable[Hashable]  #: ID of the function the graph has already.
+
+	def __init__(self, message: str, /, *, functionID: Nullable[Hashable] = None) -> None:
+		"""
+		Initializes the exception with the ID of the function the graph has already.
+
+		:param message:    The exception's message.
+		:param functionID: Optional, the ID of the function the graph has already.
+		"""
+		super().__init__(message)
+		self._functionID = functionID
+
+	@readonly
+	def FunctionID(self) -> Nullable[Hashable]:
+		"""
+		Read-only property to access the ID of the function the graph has already (:attr:`_functionID`).
+
+		:returns: The function's ID, or ``None`` if it wasn't recorded.
+		"""
+		return self._functionID
+
 
 @export
 class Function(BaseWithCountAndValue):
@@ -187,7 +208,10 @@ class Function(BaseWithCountAndValue):
 			ex.add_note(f"Got type '{getFullyQualifiedName(functionID)}'.")
 			raise ex
 		elif functionID in callGraph._functions:
-			raise DuplicateFunctionError(f"Call graph '{callGraph._name}' has a function '{functionID}' already.")
+			raise DuplicateFunctionError(
+				f"Call graph '{callGraph._name}' has a function '{functionID}' already.",
+				functionID=functionID
+			)
 
 		if kind is None:
 			raise ValueError("Parameter 'kind' is None.")

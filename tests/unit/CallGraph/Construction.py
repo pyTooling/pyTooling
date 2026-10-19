@@ -297,8 +297,16 @@ class Checks(Testcase):
 			_ = Function(graph, "main", kind=FunctionKind.External)
 
 		self.assertEqual("Call graph 'prog' has a function 'main' already.", str(context.exception))
+		self.assertEqual("main", context.exception.FunctionID)
 		self.assertEqual(1, graph.FunctionCount)
 		self.assertIs(FunctionKind.Defined, graph.GetFunction("main").Kind)
+
+	def test_DuplicateFunctionError_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no function ID."""
+		with self.assertRaises(DuplicateFunctionError) as context:
+			raise DuplicateFunctionError("Duplicate function.")
+
+		self.assertIsNone(context.exception.FunctionID)
 
 	def test_Function_Kind(self) -> None:
 		graph = CallGraph("prog")

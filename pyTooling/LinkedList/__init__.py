@@ -73,6 +73,27 @@ class InternalError(LinkedListError):
 class NotInAListError(LinkedListError):
 	"""The exception is raised when a node is not assigned to any linked list."""
 
+	_unlinkedNode: Nullable[Node]  #: Node that isn't part of a linked list.
+
+	def __init__(self, message: str, /, *, unlinkedNode: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the node that isn't part of a linked list.
+
+		:param message:      The exception's message.
+		:param unlinkedNode: Optional, the node that isn't part of a linked list.
+		"""
+		super().__init__(message)
+		self._unlinkedNode = unlinkedNode
+
+	@readonly
+	def UnlinkedNode(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the node that isn't part of a linked list (:attr:`_unlinkedNode`).
+
+		:returns: The node, or ``None`` if it wasn't recorded.
+		"""
+		return self._unlinkedNode
+
 
 @export
 class NotInSameListError(LinkedListError, NotInSameHierarchyError):
@@ -272,14 +293,14 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:
 			raise NotInSameListError("Parameter 'node' belongs to another linked list.")
 
 		if self._linkedList is None:
-			raise NotInAListError("Node is not part of a linked list.")
+			raise NotInAListError("Node is not part of a linked list.", unlinkedNode=self)
 
 		node._linkedList = self._linkedList
 		node._nextNode = self
@@ -306,14 +327,14 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:
 			raise NotInSameListError("Parameter 'node' belongs to another linked list.")
 
 		if self._linkedList is None:
-			raise NotInAListError("Node is not part of a linked list.")
+			raise NotInAListError("Node is not part of a linked list.", unlinkedNode=self)
 
 		node._linkedList = self._linkedList
 		node._previousNode = self
@@ -458,7 +479,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			self._count = 0
 		elif not isinstance(nodes, Iterable):
 			ex = TypeError("Parameter 'nodes' is not an iterable.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(nodes)}'.")
 			raise ex
 		else:
 			if isinstance(nodes, Sized) and len(nodes) == 0:
@@ -570,7 +591,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -600,7 +621,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:

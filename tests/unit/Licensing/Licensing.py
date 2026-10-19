@@ -496,22 +496,40 @@ class MalformedExpressions(Testcase):
 			LicenseExpression.Parse("   ")
 
 	def test_UnknownLicense(self) -> None:
-		with self.assertRaises(LicenseExpressionError):
+		with self.assertRaises(LicenseExpressionError) as context:
 			LicenseExpression.Parse("Definitely-Not-A-License")
+
+		self.assertEqual("Definitely-Not-A-License", context.exception.Expression)
+		self.assertEqual("Definitely-Not-A-License", context.exception.Identifier)
 
 	def test_UnbalancedParentheses(self) -> None:
 		for expression in ("(MIT AND Apache-2.0", "MIT AND Apache-2.0)", ")MIT("):
-			with self.assertRaises(LicenseExpressionError):
+			with self.assertRaises(LicenseExpressionError) as context:
 				LicenseExpression.Parse(expression)
+
+			self.assertEqual(expression, context.exception.Expression)
 
 	def test_DanglingOperator(self) -> None:
 		for expression in ("MIT AND", "MIT OR", "Apache-2.0 WITH"):
-			with self.assertRaises(LicenseExpressionError):
+			with self.assertRaises(LicenseExpressionError) as context:
 				LicenseExpression.Parse(expression)
 
+			self.assertEqual(expression, context.exception.Expression)
+
 	def test_TrailingInput(self) -> None:
-		with self.assertRaises(LicenseExpressionError):
+		with self.assertRaises(LicenseExpressionError) as context:
 			LicenseExpression.Parse("MIT Apache-2.0")
+
+		self.assertEqual("MIT Apache-2.0", context.exception.Expression)
+		self.assertIsNone(context.exception.Identifier)
+
+	def test_LicenseExpressionError_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither an expression nor an identifier."""
+		with self.assertRaises(LicenseExpressionError) as context:
+			raise LicenseExpressionError("Malformed expression.")
+
+		self.assertIsNone(context.exception.Expression)
+		self.assertIsNone(context.exception.Identifier)
 
 	def test_AMalformedExpressionIsALicensingError(self) -> None:
 		"""The dedicated exception stays catchable through the module's base exception."""

@@ -272,7 +272,10 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			:raises CircularRequirementsFileError: If a ``-r`` line references a file already being read.
 			"""
 			if not file.exists():
-				raise RequirementsFileNotFoundError(f"Requirements file '{file}' does not exist.") from FileNotFoundError(file)
+				raise RequirementsFileNotFoundError(
+					f"Requirements file '{file}' does not exist.",
+					filePath=file
+				) from FileNotFoundError(file)
 
 			analyzedRequirementFiles.add(file.resolve())
 			chain.append(file)
@@ -288,7 +291,10 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 					if referenced in analyzedRequirementFiles:
 						ex = CircularRequirementsFileError(
-							f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read."
+							f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read.",
+							filePath=referenced,
+							referencedIn=file,
+							lineNumber=lineNumber
 						)
 						ex.add_note(f"Chain: {' → '.join(str(chainedFile) for chainedFile in chain)} → {referenced}")
 						raise ex
@@ -1148,7 +1154,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:raises PackageIndexError:       If the index responds with another HTTP error status.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
+			ex = NoSessionAvailableError(
+				f"No session available to download release '{self._version}' of package '{self._package._name}'.",
+				projectName=self._package._name,
+				version=self._version
+			)
 			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
@@ -1570,7 +1580,10 @@ class Project(Package, LazyLoadableMixin):
 		                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableError(f"No session available to download details of package '{self._name}'.")
+			ex = NoSessionAvailableError(
+				f"No session available to download details of package '{self._name}'.",
+				projectName=self._name
+			)
 			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 

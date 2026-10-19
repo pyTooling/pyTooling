@@ -49,7 +49,7 @@ from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_ST
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
 from pyTooling.Dependency         import PackageIndexError, ProjectNotFoundError, ReleaseNotFoundError
-from pyTooling.Dependency         import UnsupportedVersionWarning
+from pyTooling.Dependency         import NoSessionAvailableError, UnsupportedVersionWarning
 from pyTooling.Dependency         import AlreadyInRequirementsTreeError
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
@@ -1208,6 +1208,9 @@ class RequirementsFiles(Testcase):
 			str(context.exception)
 		)
 		self.assertEqual([f"Chain: {path} → {path.resolve()}"], context.exception.__notes__)
+		self.assertEqual(path.resolve(), context.exception.FilePath)
+		self.assertEqual(path, context.exception.ReferencedIn)
+		self.assertEqual(1, context.exception.LineNumber)
 
 	def test_BrokenRequirement(self) -> None:
 		"""A line that isn't a requirement is reported, and the rest of the file is still read."""
@@ -1245,6 +1248,21 @@ class RequirementsFiles(Testcase):
 			f"Requirements file '{(path.parent / 'nothing.txt').resolve()}' does not exist.",
 			str(context.exception)
 		)
+		self.assertEqual((path.parent / 'nothing.txt').resolve(), context.exception.FilePath)
+
+	def test_RequirementsFileErrors_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no path."""
+		with self.assertRaises(RequirementsFileNotFoundError) as notFoundCapture:
+			raise RequirementsFileNotFoundError("Missing file.")
+
+		self.assertIsNone(notFoundCapture.exception.FilePath)
+
+		with self.assertRaises(CircularRequirementsFileError) as circularCapture:
+			raise CircularRequirementsFileError("Cycle.")
+
+		self.assertIsNone(circularCapture.exception.FilePath)
+		self.assertIsNone(circularCapture.exception.ReferencedIn)
+		self.assertIsNone(circularCapture.exception.LineNumber)
 
 	def test_Parse_PathIsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -1423,6 +1441,41 @@ class _ServerErrorSession:
 		response.url =         url
 
 		return response
+
+
+class NoSession(Testcase):
+	"""Downloading details without a session raises, naming the project and, for a release, its version."""
+
+	def _Project(self) -> Project:
+		graph =   PythonPackageDependencyGraph("graph")
+		index =   PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		project = Project("demo", "https://index.org/demo/", index=index)
+		project._session = None
+		return project
+
+	def test_Project(self) -> None:
+		with self.assertRaises(NoSessionAvailableError) as context:
+			self._Project().DownloadDetails()
+
+		self.assertEqual("demo", context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
+
+	def test_Release(self) -> None:
+		release = Release(PythonVersion.Parse("1.0"), datetime.now(), project=self._Project())
+		release._session = None
+
+		with self.assertRaises(NoSessionAvailableError) as context:
+			release.DownloadDetails()
+
+		self.assertEqual("demo", context.exception.ProjectName)
+		self.assertEqual(PythonVersion.Parse("1.0"), context.exception.Version)
+
+	def test_MessageOnly(self) -> None:
+		with self.assertRaises(NoSessionAvailableError) as context:
+			raise NoSessionAvailableError("No session.")
+
+		self.assertIsNone(context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
 
 
 class HTTPErrors(Testcase):

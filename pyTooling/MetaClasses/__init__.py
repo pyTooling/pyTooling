@@ -99,7 +99,51 @@ class ExtendedTypeError(ToolingException):
 
 
 @export
-class BaseClassWithoutSlotsError(ExtendedTypeError):
+class InvalidBaseClassError(ExtendedTypeError):
+	"""
+	Common base of the exceptions raised when a base-class can't be combined with the class under construction.
+
+	It carries the base-class and the name of the class under construction. The class itself doesn't exist yet when the
+	error is raised, so it is identified by its name.
+	"""
+
+	_baseClass: Nullable[type]  #: Base-class that can't be combined with the class under construction.
+	_className: Nullable[str]   #: Name of the class under construction.
+
+	def __init__(self, message: str, /, *, baseClass: Nullable[type] = None, className: Nullable[str] = None) -> None:
+		"""
+		Initializes the exception with the base-class and the name of the class under construction.
+
+		:param message:   The exception's message.
+		:param baseClass: Optional, the base-class that can't be combined with the class under construction.
+		:param className: Optional, the name of the class under construction.
+		"""
+		super().__init__(message)
+		self._baseClass = baseClass
+		self._className = className
+
+	@readonly
+	def BaseClass(self) -> Nullable[type]:
+		"""
+		Read-only property to access the base-class that can't be combined with the class under construction
+		(:attr:`_baseClass`).
+
+		:returns: The base-class, or ``None`` if it wasn't recorded.
+		"""
+		return self._baseClass
+
+	@readonly
+	def ClassName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the class under construction (:attr:`_className`).
+
+		:returns: The class' name, or ``None`` if it wasn't recorded.
+		"""
+		return self._className
+
+
+@export
+class BaseClassWithoutSlotsError(InvalidBaseClassError):
 	"""
 	This exception is raised when a class using ``__slots__`` inherits from at-least one base-class not using ``__slots__``.
 
@@ -113,7 +157,7 @@ class BaseClassWithoutSlotsError(ExtendedTypeError):
 
 
 @export
-class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
+class BaseClassWithNonEmptySlotsError(InvalidBaseClassError):
 	"""
 	This exception is raised when a mixin-class uses slots, but Python prohibits slots.
 
@@ -126,7 +170,7 @@ class BaseClassWithNonEmptySlotsError(ExtendedTypeError):
 
 
 @export
-class BaseClassIsNotAMixinError(ExtendedTypeError):
+class BaseClassIsNotAMixinError(InvalidBaseClassError):
 	"""
 	This exception is raised when a secondary base-class is a slotted class, but not declared as a mixin.
 
@@ -217,6 +261,45 @@ class UnfulfilledExpectationError(ExtendedTypeError):
 	      |rarr| The meta-class implementing the check.
 	"""
 
+	_incompleteClass: Nullable[type]            #: Class that doesn't provide every expected member.
+	_missingMembers:  Nullable[tuple[str, ...]]  #: Names of the expected members the class doesn't provide.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		incompleteClass: Nullable[type] = None,
+		missingMembers: Nullable[Iterable[str]] = None
+	) -> None:
+		"""
+		Initializes the exception with the class and the names of the members it doesn't provide.
+
+		:param message:         The exception's message.
+		:param incompleteClass: Optional, the class that doesn't provide every expected member.
+		:param missingMembers:  Optional, the names of the expected members the class doesn't provide.
+		"""
+		super().__init__(message)
+		self._incompleteClass = incompleteClass
+		self._missingMembers =  None if missingMembers is None else tuple(missingMembers)
+
+	@readonly
+	def IncompleteClass(self) -> Nullable[type]:
+		"""
+		Read-only property to access the class that doesn't provide every expected member (:attr:`_incompleteClass`).
+
+		:returns: The class, or ``None`` if it wasn't recorded.
+		"""
+		return self._incompleteClass
+
+	@readonly
+	def MissingMembers(self) -> Nullable[tuple[str, ...]]:
+		"""
+		Read-only property to access the names of the expected members the class doesn't provide (:attr:`_missingMembers`).
+
+		:returns: Tuple of member names, or ``None`` if they weren't recorded.
+		"""
+		return self._missingMembers
+
 
 @export
 class IncompatibleMetaClassError(ExtendedTypeError):
@@ -224,6 +307,45 @@ class IncompatibleMetaClassError(ExtendedTypeError):
 	This exception is raised when a class decorated with :deco:`slotted`, :deco:`mixin` or :deco:`singleton` uses a
 	meta-class that is neither :class:`type` nor derived from :class:`~pyTooling.MetaClasses.ExtendedType`.
 	"""
+
+	_decoratedClass: Nullable[type]  #: Class decorated with :deco:`slotted`, :deco:`mixin` or :deco:`singleton`.
+	_metaClass:      Nullable[type]  #: Incompatible meta-class of the decorated class.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		decoratedClass: Nullable[type] = None,
+		metaClass: Nullable[type] = None
+	) -> None:
+		"""
+		Initializes the exception with the decorated class and its incompatible meta-class.
+
+		:param message:        The exception's message.
+		:param decoratedClass: Optional, the decorated class.
+		:param metaClass:      Optional, the incompatible meta-class of the decorated class.
+		"""
+		super().__init__(message)
+		self._decoratedClass = decoratedClass
+		self._metaClass =      metaClass
+
+	@readonly
+	def DecoratedClass(self) -> Nullable[type]:
+		"""
+		Read-only property to access the decorated class (:attr:`_decoratedClass`).
+
+		:returns: The decorated class, or ``None`` if it wasn't recorded.
+		"""
+		return self._decoratedClass
+
+	@readonly
+	def MetaClass(self) -> Nullable[type]:
+		"""
+		Read-only property to access the incompatible meta-class of the decorated class (:attr:`_metaClass`).
+
+		:returns: The meta-class, or ``None`` if it wasn't recorded.
+		"""
+		return self._metaClass
 
 
 @export
@@ -240,6 +362,47 @@ class AbstractClassError(ExtendedTypeError):
 	   :exc:`~MustOverrideClassError`
 	      |rarr| Exception raised, if a method is marked as *must-override*.
 	"""
+
+	_abstractClass:   Nullable[type]            #: Abstract class an instance was requested of.
+	_abstractMethods: Nullable[tuple[str, ...]]  #: Names of the methods that need to be overridden.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		abstractClass: Nullable[type] = None,
+		abstractMethods: Nullable[Iterable[str]] = None
+	) -> None:
+		"""
+		Initializes the exception with the abstract class and the names of the methods to override.
+
+		:param message:         The exception's message.
+		:param abstractClass:   Optional, the abstract class an instance was requested of.
+		:param abstractMethods: Optional, the names of the methods that need to be overridden. Empty for a class declared
+		                        abstract without abstract methods.
+		"""
+		super().__init__(message)
+		self._abstractClass =   abstractClass
+		self._abstractMethods = None if abstractMethods is None else tuple(abstractMethods)
+
+	@readonly
+	def AbstractClass(self) -> Nullable[type]:
+		"""
+		Read-only property to access the abstract class an instance was requested of (:attr:`_abstractClass`).
+
+		:returns: The abstract class, or ``None`` if it wasn't recorded.
+		"""
+		return self._abstractClass
+
+	@readonly
+	def AbstractMethods(self) -> Nullable[tuple[str, ...]]:
+		"""
+		Read-only property to access the names of the methods that need to be overridden (:attr:`_abstractMethods`).
+
+		:returns: Tuple of method names (empty for a class declared abstract without abstract methods), or ``None`` if they
+		          weren't recorded.
+		"""
+		return self._abstractMethods
 
 
 @export
@@ -292,7 +455,11 @@ def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 			delattr(method, "__classobj__")
 	else:
 		metaClass = cls.__class__
-		ex = IncompatibleMetaClassError(f"Class '{cls.__name__}' decorated with '@{decoratorName}' uses an incompatible meta-class.")
+		ex = IncompatibleMetaClassError(
+			f"Class '{cls.__name__}' decorated with '@{decoratorName}' uses an incompatible meta-class.",
+			decoratedClass=cls,
+			metaClass=metaClass
+		)
 		ex.add_note(f"Meta-class is '{metaClass.__module__}.{metaClass.__name__}'.")
 		ex.add_note("A decorated class must use 'type' or a meta-class derived from 'pyTooling.MetaClasses.ExtendedType'.")
 		raise ex
@@ -1271,7 +1438,11 @@ class ExtendedType(type):
 						continue
 
 					if not hasattr(baseClass, "__slots__"):
-						ex = BaseClassWithoutSlotsError(f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.")
+						ex = BaseClassWithoutSlotsError(
+							f"Base-classes '{baseClass.__name__}' doesn't use '__slots__'.",
+							baseClass=baseClass,
+							className=className
+						)
 						ex.add_note("All base-classes of a class using '__slots__' must use '__slots__' itself.")
 						raise ex
 
@@ -1440,7 +1611,9 @@ class ExtendedType(type):
 			for baseClass in baseClasses[1:]:
 				if isinstance(baseClass, ExtendedType) and baseClass.__slotted__ and not baseClass.__isMixin__:
 					ex = BaseClassIsNotAMixinError(
-						f"Secondary base-class '{getFullyQualifiedName(baseClass)}' of class '{className}' is not a mixin-class."
+						f"Secondary base-class '{getFullyQualifiedName(baseClass)}' of class '{className}' is not a mixin-class.",
+						baseClass=baseClass,
+						className=className
 					)
 					ex.add_note("Only the primary base-class may be a slotted class; every further base-class is a mixin-class.")
 					ex.add_note(f"Declare it as 'class {baseClass.__name__}(..., mixin=True)' or apply the '@mixin' decorator.")
@@ -1453,7 +1626,12 @@ class ExtendedType(type):
 			for typePath in inheritancePaths[1:]:
 				for t in typePath:
 					if t not in primaryInharitancePath and hasattr(t, "__slots__") and len(t.__slots__) != 0:
-						ex = BaseClassWithNonEmptySlotsError(f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class for '{className}'.")
+						ex = BaseClassWithNonEmptySlotsError(
+							f"Base-class '{t.__name__}' has non-empty __slots__ and can't be used as a direct or indirect base-class "
+							f"for '{className}'.",
+							baseClass=t,
+							className=className
+						)
 						ex.add_note("In Python, only one inheritance branch can use non-empty __slots__.")
 						raise ex
 
@@ -1947,7 +2125,11 @@ class ExtendedType(type):
 			:param cls:                          The class an instance was requested of.
 			:raises UnfulfilledExpectationError: Always, because the class doesn't provide every expected member.
 			"""
-			ex = UnfulfilledExpectationError(f"Class '{cls.__name__}' doesn't provide every expected member.")
+			ex = UnfulfilledExpectationError(
+				f"Class '{cls.__name__}' doesn't provide every expected member.",
+				incompleteClass=cls,
+				missingMembers=newClass.__missingMembers__
+			)
 			for memberName in newClass.__missingMembers__:
 				ex.add_note(f"Missing '{memberName}', expected by '{newClass.__expectedMembers__[memberName]}'.")
 			raise ex
@@ -2019,7 +2201,7 @@ class ExtendedType(type):
 					:raises UnfulfilledExpectationError: Always, because the class doesn't provide every expected member.
 					"""
 					message = f"Method '{type(self).__name__}.{methodName}()' expects members this class doesn't provide."
-					ex = UnfulfilledExpectationError(message)
+					ex = UnfulfilledExpectationError(message, incompleteClass=type(self), missingMembers=missingMembers)
 					for memberName in missingMembers:
 						ex.add_note(f"Missing '{memberName}'.")
 					raise ex
@@ -2096,9 +2278,19 @@ class ExtendedType(type):
 				:raises AbstractClassError: Always, because an abstract class can't be instantiated.
 				"""
 				if len(newClass.__abstractMethods__) > 0:
-					raise AbstractClassError(f"""Class '{cls.__name__}' is abstract. The following methods: '{"', '".join(newClass.__abstractMethods__)}' need to be overridden in a derived class.""")
+					methodNames = "', '".join(newClass.__abstractMethods__)
+					raise AbstractClassError(
+						f"Class '{cls.__name__}' is abstract. The following methods: '{methodNames}' need to be overridden in a "
+						f"derived class.",
+						abstractClass=cls,
+						abstractMethods=newClass.__abstractMethods__
+					)
 				else:
-					raise AbstractClassError(f"Class '{cls.__name__}' is abstract and needs to be derived.")
+					raise AbstractClassError(
+						f"Class '{cls.__name__}' is abstract and needs to be derived.",
+						abstractClass=cls,
+						abstractMethods=()
+					)
 
 			abstract_new.__raises_abstract_class_error__ = True
 
