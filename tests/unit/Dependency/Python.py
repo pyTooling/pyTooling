@@ -47,7 +47,8 @@ from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
 from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
-from pyTooling.Dependency         import PackageIndexError, UnsupportedVersionWarning
+from pyTooling.Dependency         import PackageIndexError, ProjectNotFoundError, ReleaseNotFoundError
+from pyTooling.Dependency         import UnsupportedVersionWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -102,6 +103,67 @@ class Instantiation(Testcase):
 		# 'Requirements' would load the release's details from the index first; the field holds what was passed.
 		self.assertEqual({"ab": [], "test": []}, release._requirements)
 		self.assertIsNot(requirements, release._requirements)
+
+
+class NotFoundSession:
+	"""HTTP session answering every request with ``404 Not Found``, so no request leaves the process."""
+
+	def get(self, url: str) -> Response:
+		"""
+		Answer a GET request with ``404 Not Found``.
+
+		:param url: The requested URL.
+		:returns:   A response with status code 404.
+		"""
+		response = Response()
+		response.status_code = 404
+		response.url =         url
+
+		return response
+
+
+class NotFound(Testcase):
+	"""A project or release the package index doesn't know raises an exception carrying what was requested."""
+
+	def test_ProjectNotFoundError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = NotFoundSession()
+		project = Project("project", "https://index.org/project/", index=index)
+
+		with self.assertRaises(ProjectNotFoundError) as context:
+			project.DownloadDetails()
+
+		self.assertEqual("Package 'project' not found.", str(context.exception))
+		self.assertEqual("project", context.exception.ProjectName)
+
+	def test_ProjectNotFoundError_MessageOnly(self) -> None:
+		with self.assertRaises(ProjectNotFoundError) as context:
+			raise ProjectNotFoundError("Project not found.")
+
+		self.assertEqual("Project not found.", str(context.exception))
+		self.assertIsNone(context.exception.ProjectName)
+
+	def test_ReleaseNotFoundError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = NotFoundSession()
+		project = Project("project", "https://index.org/project/", index=index)
+		release = Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
+
+		with self.assertRaises(ReleaseNotFoundError) as context:
+			release.DownloadDetails()
+
+		self.assertEqual("project", context.exception.ProjectName)
+		self.assertIs(release.Version, context.exception.Version)
+
+	def test_ReleaseNotFoundError_MessageOnly(self) -> None:
+		with self.assertRaises(ReleaseNotFoundError) as context:
+			raise ReleaseNotFoundError("Release not found.")
+
+		self.assertEqual("Release not found.", str(context.exception))
+		self.assertIsNone(context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
 
 
 class PyPI(Testcase):
@@ -1238,6 +1300,8 @@ class HTTPErrors(Testcase):
 
 		self.assertEqual("Package index responded 500 Internal Server Error for package 'project'.", str(context.exception))
 		self.assertIsInstance(context.exception.__cause__, HTTPError)
+		self.assertEqual("project", context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
 
 	def test_Release_ServerError(self) -> None:
 		graph = PythonPackageDependencyGraph("graph")
@@ -1254,4 +1318,6 @@ class HTTPErrors(Testcase):
 			str(context.exception)
 		)
 		self.assertIsInstance(context.exception.__cause__, HTTPError)
+		self.assertEqual("project", context.exception.ProjectName)
+		self.assertEqual(PythonVersion.Parse("v1.0.0"), context.exception.Version)
 

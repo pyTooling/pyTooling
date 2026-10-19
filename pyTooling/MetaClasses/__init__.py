@@ -141,6 +141,39 @@ class DuplicateFieldInSlotsError(ExtendedTypeError):
 	This exception is raised when a slot name is used multiple times within the inheritance hierarchy.
 	"""
 
+	_fieldName: Nullable[str]  #: Name of the slot that is used multiple times.
+	_className: Nullable[str]  #: Name of the class under construction, whose hierarchy uses the slot name multiple times.
+
+	def __init__(self, message: str, /, *, fieldName: Nullable[str] = None, className: Nullable[str] = None) -> None:
+		"""
+		Initializes the exception with the slot name used multiple times and the class under construction.
+
+		:param message:   The exception's message.
+		:param fieldName: Optional, the name of the slot that is used multiple times.
+		:param className: Optional, the name of the class under construction.
+		"""
+		super().__init__(message)
+		self._fieldName = fieldName
+		self._className = className
+
+	@readonly
+	def FieldName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the slot that is used multiple times (:attr:`_fieldName`).
+
+		:returns: The slot's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._fieldName
+
+	@readonly
+	def ClassName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the class under construction (:attr:`_className`).
+
+		:returns: The class' name, or ``None`` if it wasn't recorded.
+		"""
+		return self._className
+
 
 @export
 class UnannotatedFieldWarning(Warning):
@@ -1296,7 +1329,9 @@ class ExtendedType(type):
 				mixinName = getFullyQualifiedName(declaringClass)
 				if fieldName in slottedFields:
 					ex = DuplicateFieldInSlotsError(
-						f"Slot '{fieldName}' declared in class '{className}' already exists in mixin-class '{mixinName}'."
+						f"Slot '{fieldName}' declared in class '{className}' already exists in mixin-class '{mixinName}'.",
+						fieldName=fieldName,
+						className=className
 					)
 					ex.add_note("Remove the annotation; the mixin-class' field becomes a slot of this class.")
 					raise ex
@@ -1308,7 +1343,9 @@ class ExtendedType(type):
 
 					baseName = getFullyQualifiedName(baseClass)
 					ex = DuplicateFieldInSlotsError(
-						f"Slot '{fieldName}' of mixin-class '{mixinName}' already exists in base-class '{baseName}'."
+						f"Slot '{fieldName}' of mixin-class '{mixinName}' already exists in base-class '{baseName}'.",
+						fieldName=fieldName,
+						className=className
 					)
 					if fieldName == "__weakref__":
 						ex.add_note("Set 'weakref=True' in one class of a hierarchy; derived classes inherit '__weakref__'.")
@@ -1321,7 +1358,11 @@ class ExtendedType(type):
 			# Report it here instead of letting the first assignment fail with a bare AttributeError.
 			shadowedSlots = {**inheritedSlottedFields, **{fieldName: None for fieldName in mixinSlots}}
 			for fieldName in shadowedSlots.keys() & members.keys():
-				ex = DuplicateFieldInSlotsError(f"Slot '{fieldName}' is shadowed by a class member in class '{className}'.")
+				ex = DuplicateFieldInSlotsError(
+					f"Slot '{fieldName}' is shadowed by a class member in class '{className}'.",
+					fieldName=fieldName,
+					className=className
+				)
 				if (baseClass := shadowedSlots[fieldName]) is not None:
 					ex.add_note(f"Slot '{fieldName}' is declared in base-class '{baseClass.__module__}.{baseClass.__name__}'.")
 					ex.add_note("An assignment without a type annotation creates a class attribute, which hides the slot's descriptor.")
@@ -1434,7 +1475,9 @@ class ExtendedType(type):
 							firstName =  getFullyQualifiedName(mixinSlots[fieldName])
 							secondName = getFullyQualifiedName(declaringClass)
 							ex = DuplicateFieldInSlotsError(
-								f"Slot '{fieldName}' is declared by mixin-classes '{firstName}' and '{secondName}'."
+								f"Slot '{fieldName}' is declared by mixin-classes '{firstName}' and '{secondName}'.",
+								fieldName=fieldName,
+								className=className
 							)
 							ex.add_note(f"Both are base-classes of class '{className}'.")
 							if fieldName == "__weakref__":

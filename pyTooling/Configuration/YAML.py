@@ -155,7 +155,7 @@ class Node(Abstract_Node):
 			except (KeyError, IndexError, TypeError):
 				pass
 
-		ex = KeyNotFoundError(f"Key '{key}' not found in node '{self._key}'.")
+		ex = KeyNotFoundError(f"Key '{key}' not found in node '{self._key}'.", key=key)
 		ex.add_note(self._DescribeKeys())
 		raise ex
 
@@ -216,7 +216,10 @@ class Node(Abstract_Node):
 				value = self.SEQ_TYPE(self._root, self, key, value)
 			else:
 				typeName = getFullyQualifiedName(value)
-				ex = UnsupportedValueTypeError(f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.")
+				ex = UnsupportedValueTypeError(
+					f"Unsupported type '{typeName}' for key '{key}' in node '{self._key}'.",
+					value=value
+				)
 				ex.add_note("The YAML parser returned a value that is neither a scalar (str, int, float, date, "
 				            "datetime), nor a map or sequence.")
 				raise ex
@@ -302,7 +305,10 @@ class Node(Abstract_Node):
 			if p == "..":
 				if node._parent is None:
 					pathExpression = ":".join(str(element) for element in path)
-					ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
+					ex = PathExpressionError(
+						f"Path expression '{pathExpression}' navigates beyond the root node.",
+						pathExpression=pathExpression
+					)
 					ex.add_note("Element '..' was applied to the root node, which has no parent node.")
 					raise ex
 
@@ -312,12 +318,18 @@ class Node(Abstract_Node):
 
 		if node is None:
 			pathExpression = ":".join(str(element) for element in path)
-			ex = PathExpressionError(f"Path expression '{pathExpression}' resolves to a null value.")
+			ex = PathExpressionError(
+				f"Path expression '{pathExpression}' resolves to a null value.",
+				pathExpression=pathExpression
+			)
 			ex.add_note("A variable can't be replaced by a value the document doesn't state.")
 			raise ex
 		elif isinstance(node, Dictionary):
 			pathExpression = ":".join(str(element) for element in path)
-			ex = PathExpressionError(f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.")
+			ex = PathExpressionError(
+				f"Path expression '{pathExpression}' resolves to a dictionary, not to a value.",
+				pathExpression=pathExpression
+			)
 			ex.add_note(f"Element '{p}' is a dictionary. Extend the path expression to address a scalar value.")
 			raise ex
 
@@ -337,7 +349,10 @@ class Node(Abstract_Node):
 			if p == "..":
 				if node._parent is None:
 					pathExpression = ":".join(str(element) for element in path)
-					ex = PathExpressionError(f"Path expression '{pathExpression}' navigates beyond the root node.")
+					ex = PathExpressionError(
+						f"Path expression '{pathExpression}' navigates beyond the root node.",
+						pathExpression=pathExpression
+					)
 					ex.add_note("Element '..' was applied to the root node, which has no parent node.")
 					raise ex
 

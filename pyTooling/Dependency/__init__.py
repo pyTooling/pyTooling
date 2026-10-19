@@ -93,15 +93,116 @@ class CircularRequirementsFileError(DependencyError):
 class ProjectNotFoundError(DependencyError):
 	"""The package index doesn't know a project of that name."""
 
+	_projectName: Nullable[str]  #: Name of the project the package index doesn't know.
+
+	def __init__(self, message: str, /, *, projectName: Nullable[str] = None) -> None:
+		"""
+		Initializes the exception with the name of the project that wasn't found.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project the package index doesn't know.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project that wasn't found (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
 
 @export
 class ReleaseNotFoundError(DependencyError):
 	"""The project exists in the package index, but not in the requested version."""
 
+	_projectName: Nullable[str]              #: Name of the project the release was requested of.
+	_version:     Nullable[SemanticVersion]  #: Version of the release the package index doesn't know.
+
+	def __init__(
+		self,
+		message:     str,
+		/,
+		*,
+		projectName: Nullable[str] = None,
+		version:     Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the exception with the project and the version of the release that wasn't found.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project the release was requested of.
+		:param version:     Optional, the version of the release the package index doesn't know.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project the release was requested of (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release that wasn't found (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
+
 
 @export
 class PackageIndexError(DependencyError):
 	"""The package index responded with an HTTP error status other than ``404 Not Found``."""
+
+	_projectName: Nullable[str]              #: Name of the project requested from the package index.
+	_version:     Nullable[SemanticVersion]  #: Version of the release requested, or ``None`` for the project itself.
+
+	def __init__(
+		self,
+		message:     str,
+		/,
+		*,
+		projectName: Nullable[str] = None,
+		version:     Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the exception with the project and, for a release, the version requested from the package index.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project requested from the package index.
+		:param version:     Optional, the version of the release requested; ``None`` for the project itself.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project requested from the package index (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release requested (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` for a request of the project itself or if it wasn't recorded.
+		"""
+		return self._version
 
 
 @export

@@ -473,6 +473,29 @@ Version 10.x (2026)
      * A :class:`~pyTooling.Versioning.VersionRange` can be open at either end: a bound of ``None`` is unbounded, so
        ``>=1.0`` is expressible.
 
+   * Exceptions carry the object they are about, so a caller can react without parsing the message. The new
+     parameters are keyword-only and default to ``None``, so an exception raised with a message only keeps working.
+
+     * :exc:`~pyTooling.Configuration.KeyNotFoundError` carries the missing key or index in
+       :attr:`~pyTooling.Configuration.KeyNotFoundError.Key`.
+     * :exc:`~pyTooling.Configuration.UnsupportedValueTypeError` carries the value the parser returned in
+       :attr:`~pyTooling.Configuration.UnsupportedValueTypeError.Value`, its type in
+       :attr:`~pyTooling.Configuration.UnsupportedValueTypeError.ValueType`. It is a :exc:`TypeError` too, as
+       :exc:`~pyTooling.Configuration.KeyNotFoundError` is a :exc:`KeyError`.
+     * :exc:`~pyTooling.Configuration.PathExpressionError` carries the path expression in
+       :attr:`~pyTooling.Configuration.PathExpressionError.PathExpression`.
+     * :exc:`~pyTooling.Dependency.ProjectNotFoundError` carries the project's name in
+       :attr:`~pyTooling.Dependency.ProjectNotFoundError.ProjectName`.
+     * :exc:`~pyTooling.Dependency.ReleaseNotFoundError` carries the project's name and the release's version in
+       :attr:`~pyTooling.Dependency.ReleaseNotFoundError.ProjectName` and
+       :attr:`~pyTooling.Dependency.ReleaseNotFoundError.Version`.
+     * :exc:`~pyTooling.Dependency.PackageIndexError` carries the project's name and, for a release, its version in
+       :attr:`~pyTooling.Dependency.PackageIndexError.ProjectName` and
+       :attr:`~pyTooling.Dependency.PackageIndexError.Version`.
+     * :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` carries the slot's name and the name of the class
+       under construction in :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.FieldName` and
+       :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.ClassName`.
+
    .. rubric:: Breaking Changes
 
    * ⚠️ **The four mixin-classes of** :mod:`pyTooling.GenericPath` **are renamed to the** ``***Mixin`` **spelling**
