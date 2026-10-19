@@ -79,6 +79,11 @@ def getFullyQualifiedName(obj: Any) -> str:
 
 	:param obj: The object for with the fully qualified type is to be assembled.
 	:returns:   The fully qualified name of obj's type.
+
+	.. seealso::
+
+	   :func:`~pyTooling.Common.getTypeName`
+	      |rarr| Return the name of a type without its module.
 	"""
 	try:
 		module = obj.__module__             # for class or function
@@ -95,6 +100,30 @@ def getFullyQualifiedName(obj: Any) -> str:
 		return name
 
 	return f"{module}.{name}"
+
+
+@export
+def getTypeName(obj: Any) -> str:
+	"""
+	Return the name of a type without its module.
+
+	A class or a function returns its own name, every other object the name of its class, like
+	:pycode:`obj.__class__.__name__`. It's the name, not the qualified name: a nested class ``Outer.Inner`` returns
+	``Inner``. Exception messages name a class by its name, while a note reporting a wrong type uses
+	:func:`~pyTooling.Common.getFullyQualifiedName`.
+
+	:param obj: The object whose type name is returned.
+	:returns:   The name of obj's type.
+
+	.. seealso::
+
+	   :func:`~pyTooling.Common.getFullyQualifiedName`
+	      |rarr| Assemble the fully qualified name of a type.
+	"""
+	try:
+		return obj.__name__                 # for class or function
+	except AttributeError:
+		return obj.__class__.__name__
 
 
 @export
