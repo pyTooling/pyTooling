@@ -49,6 +49,7 @@ from __future__            import annotations
 from pathlib               import Path
 from typing                import Union, ClassVar, Generator, Iterator, Optional as Nullable, Tuple
 
+from pyTooling.Common      import getTypeName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
 from pyTooling.Exceptions  import ConfigurationError
@@ -168,7 +169,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		:returns:                    Key of the node.
 		:raises NotImplementedError: If a deriving class doesn't implement this property.
 		"""
-		raise NotImplementedError(f"Property 'Key' is abstract and not implemented by '{self.__class__.__name__}'.")
+		raise NotImplementedError(f"Property 'Key' is abstract and not implemented by '{getTypeName(self)}'.")
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:
