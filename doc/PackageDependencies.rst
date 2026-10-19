@@ -232,10 +232,12 @@ Source: :gh:`requirements-parser <madpah/requirements-parser>`, on PyPI as
 .. rubric:: Disadvantages
 
 * Options traversing the local file system are not handled, so a ``-r`` reference to another file isn't followed.
-  :class:`~pyTooling.Dependency.Python.RequirementsFile` reads the referenced files as a tree, keeps which file a
-  requirement was stated in, and raises a :exc:`~pyTooling.Dependency.CircularRequirementsFileError` for a cycle.
+  :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` reads the referenced files as
+  a tree, keeps which file a requirement was stated in, and raises a
+  :exc:`~pyTooling.Dependency.CircularRequirementsFileError` for a cycle.
 
 .. rubric:: Advantages
 
 * Parses editables, version control URIs, hashes and URLs, which
-  :class:`~pyTooling.Dependency.Python.RequirementsFile` skips as instructions to the installer.
+  :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` skips as instructions to the
+  installer.

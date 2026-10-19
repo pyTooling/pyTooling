@@ -51,7 +51,7 @@ from typing                import Optional as Nullable, Iterable, Self, Iterator
 
 from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Exceptions      import ToolingException
+from pyTooling.Exceptions      import AlreadyInHierarchyError, ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Graph           import Graph, Vertex
@@ -87,6 +87,11 @@ class CircularRequirementsFileError(DependencyError):
 	A cycle isn't read once and ignored: a file including itself is a statement nobody wrote on purpose, and reading
 	it silently would hide it. The exception names the chain, so the ``-r`` line to delete is in the message.
 	"""
+
+
+@export
+class AlreadyInRequirementsTreeError(DependencyError, AlreadyInHierarchyError):
+	"""A requirements file is given as an entry to another one, but a third file references it already."""
 
 
 @export
