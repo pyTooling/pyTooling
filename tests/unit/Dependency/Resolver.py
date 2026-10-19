@@ -40,7 +40,7 @@ from packaging.markers             import default_environment
 from packaging.requirements        import Requirement
 
 from pyTooling.Dependency          import BrokenRequirementWarning, ExtraNotFoundError, PackageIndexFailureWarning
-from pyTooling.Dependency          import UnresolvedRequirementWarning
+from pyTooling.Dependency          import ReleaseNotFoundError, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex, RequirementsFile
 from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, PreReleasePolicy, Resolution, ResolutionStatus
 from pyTooling.Dependency.Resolver import ResolutionStrategy, ResolvedRequirement, Resolver
@@ -73,7 +73,7 @@ def _ReleaseDocument(requirements: list[str], extras: Nullable[list[str]] = None
 # app 1.0 -> lib >= 1.0, util, winonly (Windows only); extra "test" -> checker
 # lib 1.0, 2.0, 3.0rc1; lib 2.0 -> util >= 1.0; util 1.0 -> nothing
 # ping 1.0 -> pong; pong 1.0 -> ping (cycle); old 1.0 only; broken 1.0 can't be described; ghost is unknown
-# tool 1.0, extra "fast" -> speedup
+# tool 1.0, extra "fast" -> speedup; speedup 1.0 -> accel; empty has no release
 # flaky answers 503, offline fails to connect; shaky 1.0 answers 500 for its release
 DOCUMENTS = {
 	"app/json":          ProjectDocument("app", "1.0"),
@@ -99,7 +99,10 @@ DOCUMENTS = {
 	"tool/json":         ProjectDocument("tool", "1.0"),
 	"tool/1.0/json":     _ReleaseDocument(['speedup; extra == "fast"'], ["fast"]),
 	"speedup/json":      ProjectDocument("speedup", "1.0"),
-	"speedup/1.0/json":  _ReleaseDocument([]),
+	"speedup/1.0/json":  _ReleaseDocument(["accel"]),
+	"accel/json":        ProjectDocument("accel", "1.0"),
+	"accel/1.0/json":    _ReleaseDocument([]),
+	"empty/json":        ProjectDocument("empty"),
 	"flaky/json":        503,
 	"offline/json":      ClientConnectionError("Connection refused"),
 	"shaky/json":        ProjectDocument("shaky", "1.0"),
@@ -413,13 +416,14 @@ class Markers(ResolverTestcase):
 		self.assertIs(ResolutionStatus.Resolved, self._WinOnly(Resolver(self._Index(), environment=environment)).Status)
 
 	def test_CurrentEnvironment(self) -> None:
-		resolver = CurrentEnvironmentResolver(self._Index())
+		resolver = CurrentEnvironmentResolver(self._Index(), preReleases=PreReleasePolicy.Include)
 		if default_environment()["sys_platform"] == "win32":
 			expected = ResolutionStatus.Resolved
 		else:
 			expected = ResolutionStatus.MarkerNotApplying
 
 		self.assertDictEqual(dict(default_environment()), resolver.Environment)
+		self.assertIs(PreReleasePolicy.Include, resolver.PreReleases)
 		self.assertIs(expected, self._WinOnly(resolver).Status)
 
 
@@ -431,6 +435,24 @@ class Inputs(ResolverTestcase):
 			["lib", "util", "winonly"],
 			[requirement.Requirement.name for requirement in resolution.Requirements]
 		)
+
+	def test_Packages_PreReleaseExcluded(self) -> None:
+		"""The newest release the policy admits: lib 2.0 (requires util), not 3.0rc1 (requires nothing)."""
+		resolution = Resolver(self._Index()).ResolvePackages([("lib", None)])
+
+		self.assertListEqual(["util"], [requirement.Requirement.name for requirement in resolution.Requirements])
+
+	def test_Packages_PreReleaseIncluded(self) -> None:
+		resolution = Resolver(self._Index(), preReleases=PreReleasePolicy.Include).ResolvePackages([("lib", None)])
+
+		self.assertListEqual([], [requirement.Requirement.name for requirement in resolution.Requirements])
+
+	def test_Packages_NoRelease(self) -> None:
+		with self.assertRaises(ReleaseNotFoundError) as context:
+			Resolver(self._Index()).ResolvePackages([("empty", None)])
+
+		self.assertEqual("Package 'empty' has no release.", str(context.exception))
+		self.assertEqual("empty", context.exception.ProjectName)
 
 	def test_Packages_Extra(self) -> None:
 		"""An extra's requirements are resolved; their marker names the extra, which is evaluated as given."""
@@ -466,6 +488,16 @@ class Inputs(ResolverTestcase):
 		self.assertEqual("speedup", speedup.Requirement.name)
 		self.assertEqual("fast", speedup.Extra)
 		self.assertIs(ResolutionStatus.Resolved, speedup.Status)
+
+	def test_RequirementExtra_Subtree(self) -> None:
+		"""An extra's dependency is followed further: its own requirements are resolved, too."""
+		resolution = Resolver(self._Index()).ResolveRequirements([Requirement("tool[fast]")])
+		speedup = resolution.Requirements[0].Dependencies[0]
+		accel = speedup.Dependencies[0]
+
+		self.assertEqual("accel", accel.Requirement.name)
+		self.assertIs(ResolutionStatus.Resolved, accel.Status)
+		self.assertEqual("1.0", str(accel.Release.Version))
 
 	def test_RequirementExtra_Markers(self) -> None:
 		"""The extra's marker applies to its own requirements when markers are evaluated."""

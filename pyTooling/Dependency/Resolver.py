@@ -56,6 +56,7 @@ except ImportError as ex:  # pragma: no cover
 try:
 	from packaging.markers         import default_environment
 	from packaging.requirements    import Requirement
+	from packaging.specifiers      import SpecifierSet
 	from packaging.utils           import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
@@ -65,7 +66,7 @@ from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import StringEnum, getFullyQualifiedName
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Dependency        import BrokenRequirementWarning, ExtraNotFoundError, PackageIndexFailureWarning
-from pyTooling.Dependency        import UnresolvedRequirementWarning
+from pyTooling.Dependency        import ReleaseNotFoundError, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release, RequirementsFile
 
 _Requirement = Requirement
@@ -584,7 +585,9 @@ class Resolver(metaclass=ExtendedType, slots=True):
 
 	def ResolvePackages(self, packages: Iterable[tuple[str, Nullable[str]]]) -> Resolution:
 		"""
-		Resolve what the latest releases of packages require, or the requirements of one of their extras.
+		Resolve what the newest releases of packages require, or the requirements of one of their extras.
+
+		The newest release is the newest one the :class:`PreReleasePolicy` admits.
 
 		The packages' requirements are flattened in the order the packages are given, a later package's requirement of a
 		project replacing an earlier one's.
@@ -597,8 +600,9 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		:raises TypeError:               If an element of parameter 'packages' is not a pair of a :class:`str` and an
 		                                 optional :class:`str`.
 		:raises ProjectNotFoundError:    If the index doesn't know a package.
-		:raises ReleaseNotFoundError:    If the index can't describe a package's latest release.
-		:raises ExtraNotFoundError:      If a package's latest release doesn't declare the extra.
+		:raises ReleaseNotFoundError:    If a package has no release.
+		:raises ReleaseNotFoundError:    If the index can't describe a package's newest release.
+		:raises ExtraNotFoundError:      If a package's newest release doesn't declare the extra.
 		"""
 		if packages is None:
 			raise ValueError("Parameter 'packages' is None.")
@@ -618,7 +622,9 @@ class Resolver(metaclass=ExtendedType, slots=True):
 				raise ex
 
 			packageName, extra = package
-			release =  self._index.DownloadProject(packageName).LatestRelease
+			if (release := self._SelectRelease(self._index.DownloadProject(packageName), SpecifierSet())) is None:
+				raise ReleaseNotFoundError(f"Package '{packageName}' has no release.", projectName=packageName)
+
 			declared = {canonicalize_name(name): name for name in release.Requirements if name is not None}
 			if extra is None:
 				requirements = release.Requirements[None]
@@ -744,14 +750,11 @@ class Resolver(metaclass=ExtendedType, slots=True):
 				requirement._status = ResolutionStatus.IndexFailure
 				continue
 
-			preReleases = True if self._preReleases is PreReleasePolicy.Include else None
-			releases =    {str(version): release for version, release in requirement._project.Releases.items()}
-			matching =    [releases[version] for version in requirement._requirement.specifier.filter(releases, preReleases)]
-			if len(matching) == 0:
+			if (release := self._SelectRelease(requirement._project, requirement._requirement.specifier)) is None:
 				requirement._status = ResolutionStatus.NoMatchingRelease
 				continue
 
-			requirement._release = max(matching, key=lambda release: release.Version)
+			requirement._release = release
 			toDescribe.append(requirement)
 
 		self._DescribeReleases(toDescribe)
@@ -866,6 +869,20 @@ class Resolver(metaclass=ExtendedType, slots=True):
 					ex
 				)
 
+	def _SelectRelease(self, project: Project, specifier: SpecifierSet) -> Nullable[Release]:
+		"""
+		Select the newest release of a project matching a specifier, as far as the pre-release policy admits it.
+
+		:param project:   The project to select a release of.
+		:param specifier: The specifier the release has to match.
+		:returns:         The newest matching release, or ``None`` if none matches.
+		"""
+		preReleases = True if self._preReleases is PreReleasePolicy.Include else None
+		releases =    {str(version): release for version, release in project.Releases.items()}
+		matching =    [releases[version] for version in specifier.filter(releases, preReleases)]
+
+		return max(matching, key=lambda release: release.Version) if len(matching) > 0 else None
+
 	def _Download(self, endpoints: list[str]) -> list[Any]:
 		"""
 		Download JSON documents from the package index's API in parallel, over one session.
@@ -918,7 +935,8 @@ class CurrentEnvironmentResolver(Resolver):
 		index: PythonPackageIndex,
 		*,
 		strategy: ResolutionStrategy = ResolutionStrategy.DEFAULT,
-		limit: Nullable[int] = None
+		limit: Nullable[int] = None,
+		preReleases: PreReleasePolicy = PreReleasePolicy.DEFAULT
 	) -> None:
 		"""
 		Initializes a resolver for the running interpreter's environment.
@@ -928,11 +946,20 @@ class CurrentEnvironmentResolver(Resolver):
 		                    :attr:`~ResolutionStrategy.Lazy`.
 		:param limit:       Optional, number of levels resolved below the given requirements; ``0`` resolves only the
 		                    given requirements. Default: ``None``, unlimited.
+		:param preReleases: Optional, whether pre-releases are selected. Default: :attr:`~PreReleasePolicy.Exclude`.
 		:raises ValueError: If parameter 'index' is ``None``.
 		:raises TypeError:  If parameter 'index' is not of type :class:`~pyTooling.Dependency.Python.PythonPackageIndex`.
 		:raises ValueError: If parameter 'strategy' is ``None``.
 		:raises TypeError:  If parameter 'strategy' is not of type :class:`ResolutionStrategy`.
 		:raises TypeError:  If parameter 'limit' is not of type :class:`int`.
 		:raises ValueError: If parameter 'limit' is negative.
+		:raises ValueError: If parameter 'preReleases' is ``None``.
+		:raises TypeError:  If parameter 'preReleases' is not of type :class:`PreReleasePolicy`.
 		"""
-		super().__init__(index, strategy=strategy, limit=limit, environment=default_environment())
+		super().__init__(
+			index,
+			strategy=strategy,
+			limit=limit,
+			preReleases=preReleases,
+			environment=default_environment()
+		)

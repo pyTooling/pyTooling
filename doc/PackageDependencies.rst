@@ -141,7 +141,7 @@ in turn - an extra can pull in a whole subtree, with licenses of its own. It tak
   (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirements`),
 * a requirements file read by :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>`
   (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirementsFile`), or
-* the latest releases of packages, optionally one of their extras
+* the newest releases of packages the pre-release policy admits, optionally one of their extras
   (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolvePackages`).
 
 The result is a :class:`~pyTooling.Dependency.Resolver.Resolution`, a tree of
