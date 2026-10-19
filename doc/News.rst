@@ -415,6 +415,15 @@ Version 10.x (2026)
        :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` / :meth:`~pyTooling.Graph.GraphViz.Graph.FromTree` with
        conversion methods a derived class overrides.
 
+   * :mod:`pyTooling.Tree`
+
+     * :meth:`Node.RemoveChild <pyTooling.Tree.Node.RemoveChild>` and
+       :meth:`~pyTooling.Tree.Node.RemoveChildren` remove children from a node, the counterparts of
+       :meth:`~pyTooling.Tree.Node.AddChild` and :meth:`~pyTooling.Tree.Node.AddChildren`. A removed child takes its
+       subtree along and becomes the root node of its own tree, like assigning ``None`` to its
+       :attr:`~pyTooling.Tree.Node.Parent`. A node, which isn't a direct child, raises the new
+       :exc:`~pyTooling.Tree.NotAChildError`, which carries it in :attr:`~pyTooling.Tree.NotAChildError.Child`.
+
    * :mod:`pyTooling.CLIAbstraction`
 
      * :meth:`Program._CopyParameters <pyTooling.CLIAbstraction.Program._CopyParameters>` copies every argument set on
@@ -450,6 +459,8 @@ Version 10.x (2026)
        package's own exception derives from its base exception and a common base, so one ``except`` clause catches e.g.
        all duplicates of all packages - as do the errors of :mod:`pyTooling.Graph`, :mod:`pyTooling.ControlFlow`,
        :mod:`pyTooling.CallGraph`, :mod:`pyTooling.Tree` and :mod:`pyTooling.LinkedList`.
+     * Common base :exc:`~pyTooling.Exceptions.NotAChildError`: an element isn't a direct child of the element it's
+       removed from. :exc:`pyTooling.Tree.NotAChildError` derives from it.
 
    * :mod:`pyTooling.Versioning`
 

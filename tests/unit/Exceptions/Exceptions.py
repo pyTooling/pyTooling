@@ -37,12 +37,13 @@ from pickle                import dumps, loads
 from pyTooling.CallGraph   import DuplicateFunctionError
 from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
 from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, EnvironmentVariableError
-from pyTooling.Exceptions  import ExceptionBase, MissingDependencyError, NotConfiguredError, NotInSameHierarchyError
+from pyTooling.Exceptions  import ExceptionBase, MissingDependencyError, NotAChildError, NotConfiguredError
+from pyTooling.Exceptions  import NotInSameHierarchyError
 from pyTooling.Exceptions  import PlatformNotSupportedError, ToolingException
 from pyTooling.Graph       import DuplicateEdgeError, DuplicateVertexError, NotInSameGraph
 from pyTooling.LinkedList  import NotInSameListError
 from pyTooling.Testing     import Testcase
-from pyTooling.Tree        import AlreadyInTreeError, NotInSameTreeError
+from pyTooling.Tree        import AlreadyInTreeError, NotAChildError as TreeNotAChildError, NotInSameTreeError
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -97,6 +98,10 @@ class CommonBases(Testcase):
 			with self.subTest(exception=exception.__name__):
 				self.assertTrue(issubclass(exception, NotInSameHierarchyError))
 				self.assertTrue(issubclass(exception, ToolingException))
+
+	def test_NotAChildError(self) -> None:
+		self.assertTrue(issubclass(TreeNotAChildError, NotAChildError))
+		self.assertTrue(issubclass(TreeNotAChildError, ToolingException))
 
 	def test_ToolingExceptionMessage(self) -> None:
 		"""A common base doesn't change how a 'ToolingException' stores its message."""

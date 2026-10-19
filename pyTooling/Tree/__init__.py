@@ -49,6 +49,7 @@ from typing                import Any, Callable, Generator, Iterable, Mapping, H
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
+from pyTooling.Exceptions  import NotAChildError as CommonNotAChildError
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 
@@ -104,6 +105,38 @@ class AlreadyInTreeError(TreeError, AlreadyInHierarchyError):
 @export
 class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 	"""The exception is raised when the current node and the other node are not in the same tree."""
+
+
+@export
+class NotAChildError(TreeError, CommonNotAChildError):
+	"""
+	The exception is raised when a node is not a direct child of the current node.
+
+	.. hint::
+
+	   A grandchild is in the same tree, but it's a child of another node.
+	"""
+
+	_child: Nullable[Node]  #: Node that isn't a direct child of the current node.
+
+	def __init__(self, message: str, /, *, child: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the node that isn't a direct child of the current node.
+
+		:param message: The exception's message.
+		:param child:   Optional, the node that isn't a direct child of the current node.
+		"""
+		super().__init__(message)
+		self._child = child
+
+	@readonly
+	def Child(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the node that isn't a direct child of the current node (:attr:`_child`).
+
+		:returns: The node, or ``None`` if it wasn't recorded.
+		"""
+		return self._child
 
 
 @export
@@ -593,6 +626,83 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 			self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
 			child._nodesWithID = child._nodesWithoutID = None
 			self._children.append(child)
+
+	def RemoveChild(self, child: Node) -> None:
+		"""
+		Remove a child node from the current node of the tree.
+
+		The child is detached together with its subtree: it becomes the root node of its own tree, like assigning
+		``None`` to its :attr:`Parent`. All nodes of that subtree get the child as new :attr:`_root` assigned and their
+		IDs are moved from the node's root's ID lists (:attr:`_nodesWithID`) into the child's.
+
+		:param child:           The child node to be removed from the tree.
+		:raises ValueError:     If parameter 'child' is ``None``.
+		:raises TypeError:      If parameter 'child' is not of type :class:`Node`.
+		:raises NotAChildError: If parameter 'child' is not a direct child of the current node.
+
+		.. seealso::
+
+		   :attr:`Parent`
+		      |rarr| Set the parent of a node.
+		   :meth:`RemoveChildren`
+		      |rarr| Remove multiple children at once.
+		   :meth:`AddChild`
+		      |rarr| Add a child node to the tree.
+		"""
+		if child is None:
+			raise ValueError("Parameter 'child' is None.")
+		elif not isinstance(child, Node):
+			ex = TypeError("Parameter 'child' is not of type 'Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+			raise ex
+		elif child._parent is not self:
+			raise NotAChildError(f"Node '{child}' is not a child of this node.", child=child)
+
+		child.Parent = None
+
+	def RemoveChildren(self, children: Iterable[Node]) -> None:
+		"""
+		Remove multiple children nodes from the current node of the tree.
+
+		Each child is detached together with its subtree, like :meth:`RemoveChild` does. The children are collected
+		before the first one is removed, so 'children' may iterate the current node's children, e.g.
+		:meth:`GetChildren`.
+
+		:param children:        The list of children nodes to be removed from the tree.
+		:raises ValueError:     If parameter 'children' is ``None``.
+		:raises TypeError:      If parameter 'children' is not iterable.
+		:raises ValueError:     If parameter 'children' contains ``None``.
+		:raises TypeError:      If parameter 'children' contains an item, which is not of type :class:`Node`.
+		:raises NotAChildError: If parameter 'children' contains an item, which is not a direct child of the current
+		                        node.
+
+		.. seealso::
+
+		   :attr:`Parent`
+		      |rarr| Set the parent of a node.
+		   :meth:`RemoveChild`
+		      |rarr| Remove a child node from the tree.
+		   :meth:`AddChildren`
+		      |rarr| Add multiple children at once.
+		"""
+		if children is None:
+			raise ValueError("Parameter 'children' is None.")
+		elif not isinstance(children, Iterable):
+			ex = TypeError("Parameter 'children' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(children)}'.")
+			raise ex
+
+		for child in tuple(children):
+			if child is None:
+				raise ValueError("Item in parameter 'children' is None.")
+			elif not isinstance(child, Node):
+				ex = TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+				raise ex
+			elif child._parent is not self:
+				raise NotAChildError(f"Item '{child}' in parameter 'children' is not a child of this node.", child=child)
+
+			child.Parent = None
 
 	def GetPath(self) -> Generator[Node, None, None]:
 		"""

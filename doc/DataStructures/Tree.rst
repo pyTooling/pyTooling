@@ -113,6 +113,7 @@ Features
 * A node can have a value.
 * A node can store key-value-pairs via dictionary syntax.
 * A node has a reference to its parent node.
+* A node can add and remove children; a removed child takes its subtree along.
 * A node has a reference to the root node in a tree (representative node).
 * Rendering to simple ASCII art for debugging purposes.
 
@@ -313,6 +314,19 @@ the tree gets split into 2 trees.
 
    # Split the tree between node1 and root2
    root2.Parent = None
+
+A parent node can remove its children, too: :meth:`~pyTooling.Tree.Node.RemoveChild` removes one child and
+:meth:`~pyTooling.Tree.Node.RemoveChildren` removes several, the counterparts of :meth:`~pyTooling.Tree.Node.AddChild`
+and :meth:`~pyTooling.Tree.Node.AddChildren`. Each removed child takes its subtree along and becomes the root node of
+its own tree.
+
+.. code-block:: python
+
+   # Split the tree between node1 and root2
+   node1.RemoveChild(root2)
+
+   # Remove all children of root1
+   root1.RemoveChildren(root1.GetChildren())
 
 .. seealso::
 
@@ -809,7 +823,23 @@ The following operations are executed on all nodes in tree **B**:
 Splitting Trees
 ===============
 
-.. todo:: TREE: splitting a tree
+A subtree **B** is split from its tree **A**, when **B**'s parent relation is set to :data:`None`. Therefore use the
+:attr:`B.Parent <pyTooling.Tree.Node.Parent>` property and set it to :data:`None`: :pycode:`B.Parent = None`, or remove
+**B** from its parent node **P**: :pycode:`P.RemoveChild(B)`.
+
+The following operations are executed on the subtree **B**:
+
+1. create the list and dictionary objects for nodes with and without IDs in **B**, then
+2. move all nodes of **B** with and without ID from **A** to **B**, then
+3. remove **B** from the children of **P**.
+
+The following operations are executed on all nodes in subtree **B**:
+
+* set root reference to **B**.
+* recompute the level within **B**.
+
+Afterwards, :attr:`~pyTooling.Tree.Node.Size` and :meth:`~pyTooling.Tree.Node.GetNodeByID` of **A** no longer see the
+nodes of **B**, and :attr:`~pyTooling.Tree.Node.ChildCount` of **P** no longer counts **B**.
 
 
 .. _STRUCT/Tree/Rendering:
