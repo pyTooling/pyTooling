@@ -14,6 +14,12 @@ Version 10.x (2026)
 
    .. rubric:: New Features
 
+   * :mod:`pyTooling.Timeout` is a new package: a :class:`~pyTooling.Timeout.Timeout` is the current timeout of the
+     calling thread while its ``with`` block runs, as a :class:`~pyTooling.Warning.WarningCollector` is the current
+     collector. Code below in the call hierarchy asks :meth:`~pyTooling.Timeout.Timeout.Remaining` for the seconds
+     left - to hand them to a blocking call - and :meth:`~pyTooling.Timeout.Timeout.IsExpired`, to abort a loop by
+     raising :exc:`~pyTooling.Timeout.TimeoutExpiredError`. A nested timeout can only shorten the time left. The
+     timeout is cooperative: nothing interrupts a thread from outside.
    * :mod:`pyTooling.REST` is a new package: a small client for JSON REST APIs, built on the standard library, so
      nothing building on it drags an HTTP stack into every consumer.
 
