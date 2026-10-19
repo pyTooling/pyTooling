@@ -239,8 +239,10 @@ class Insert(Testcase):
 	def test_InsertFirst_WrongType(self) -> None:
 		ll = LinkedList()
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			ll.InsertBeforeFirst("0")
+
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_InsertFirst_UsedNode(self) -> None:
 		ll = LinkedList()
@@ -290,8 +292,29 @@ class Insert(Testcase):
 	def test_InsertLast_WrongType(self) -> None:
 		ll = LinkedList()
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			ll.InsertAfterLast("0")
+
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_InsertNodeBefore_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Node(1).InsertNodeBefore("0")
+
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_InsertNodeAfter_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Node(1).InsertNodeAfter("0")
+
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Nodes_NotIterable(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = LinkedList(5)
+
+		self.assertEqual("Parameter 'nodes' is not an iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_InsertLast_UsedNode(self) -> None:
 		ll = LinkedList()

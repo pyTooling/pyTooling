@@ -272,7 +272,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -306,7 +306,7 @@ class Node(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=True):
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -458,7 +458,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 			self._count = 0
 		elif not isinstance(nodes, Iterable):
 			ex = TypeError("Parameter 'nodes' is not an iterable.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(nodes)}'.")
 			raise ex
 		else:
 			if isinstance(nodes, Sized) and len(nodes) == 0:
@@ -570,7 +570,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:
@@ -600,7 +600,7 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 
 		if not isinstance(node, Node):
 			ex = TypeError("Parameter 'node' is not of type Node.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(next)}'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(node)}'.")
 			raise ex
 
 		if node._linkedList is not None:
