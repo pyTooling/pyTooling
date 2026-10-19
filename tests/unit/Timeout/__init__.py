@@ -92,7 +92,7 @@ class CurrentTimeout(Testcase):
 	def test_Remaining(self) -> None:
 		with Timeout(10.0) as timeout:
 			first = Timeout.Remaining()
-			sleep(0.01)
+			sleep(0.05)
 			second = Timeout.Remaining()
 
 			self.assertIsNotNone(timeout.Deadline)
