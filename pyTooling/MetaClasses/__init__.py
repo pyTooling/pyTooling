@@ -55,7 +55,7 @@ from types                import BuiltinFunctionType, CodeType, FunctionType, Me
 from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Self
 from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
 
-from pyTooling.Common     import getFullyQualifiedName
+from pyTooling.Common     import getFullyQualifiedName, getTypeName
 from pyTooling.Exceptions import ToolingException
 from pyTooling.Decorators import export, readonly
 from pyTooling.Warning    import Warning, WarningCollector
@@ -822,7 +822,9 @@ class ExtendedType(type):
 					try:
 						return {slotName: getattr(self, slotName) for slotName in self.__allSlots__}
 					except AttributeError as ex:
-						raise ExtendedTypeError(f"Unassigned field '{ex.name}' in object '{self}' of type '{self.__class__.__name__}'.") from ex
+						raise ExtendedTypeError(
+							f"Unassigned field '{ex.name}' in object '{self}' of type '{getTypeName(self)}'."
+						) from ex
 
 				newClass.__getstate__ = __getstate__
 

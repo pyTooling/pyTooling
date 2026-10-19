@@ -379,6 +379,8 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Common`
 
+     * :func:`~pyTooling.Common.getTypeName` returns the name of an object's type without its module, the counterpart
+       of :func:`~pyTooling.Common.getFullyQualifiedName` for exception messages.
      * :func:`~pyTooling.Common.parseISO8601Timestamp` parses an ISO 8601 timestamp. Whether a timestamp carrying no
        UTC offset stays naive is the caller's decision, given as ``defaultTimeZone``.
      * :class:`~pyTooling.Common.StringEnum` is a :class:`~enum.StrEnum` that converts a string to the member of

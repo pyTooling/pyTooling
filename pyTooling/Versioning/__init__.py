@@ -53,7 +53,7 @@ from typing                import Iterator, Self
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.Common      import getFullyQualifiedName, getTypeName
 from pyTooling.DataModel   import Predicate
 
 
@@ -136,7 +136,7 @@ class ReleaseLevel(Enum):
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)} or 'str'.")
 			raise ex
 
 		return self is other
@@ -155,7 +155,7 @@ class ReleaseLevel(Enum):
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)} or 'str'.")
 			raise ex
 
 		return self is not other
@@ -174,7 +174,7 @@ class ReleaseLevel(Enum):
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)} or 'str'.")
 			raise ex
 
 		return self.value < other.value
@@ -193,7 +193,7 @@ class ReleaseLevel(Enum):
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError("Second operand is not supported by <=>= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)} or 'str'.")
 			raise ex
 
 		return self.value <= other.value
@@ -212,7 +212,7 @@ class ReleaseLevel(Enum):
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)} or 'str'.")
 			raise ex
 
 		return self.value > other.value
@@ -231,7 +231,7 @@ class ReleaseLevel(Enum):
 		if not isinstance(other, ReleaseLevel):
 			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__} or 'str'.")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)} or 'str'.")
 			raise ex
 
 		return self.value >= other.value
@@ -936,7 +936,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)}, str, int")
 			raise ex
 
 		return self._equal(self, other)
@@ -969,7 +969,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)}, str, int")
 			raise ex
 
 		return not self._equal(self, other)
@@ -1008,7 +1008,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is True
@@ -1049,7 +1049,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError("Second operand is not supported by <= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		result = self._compare(self, other)
@@ -1089,7 +1089,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		return self._compare(self, other) is False
@@ -1130,7 +1130,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, VersionRange, VersionSet, str, int")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)}, VersionRange, VersionSet, str, int")
 			raise ex
 
 		result = self._compare(self, other)
@@ -1156,7 +1156,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		else:
 			ex = TypeError("Second operand is not supported by >> operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note(f"Supported types for second operand: {self.__class__.__name__}, str, int")
+			ex.add_note(f"Supported types for second operand: {getTypeName(self)}, str, int")
 			raise ex
 
 		return self._minimum(self, other)

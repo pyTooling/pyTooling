@@ -65,7 +65,9 @@ from importlib.resources import files
 from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
-from types               import ModuleType, TracebackType
+from types               import ModuleType, TracebackType, FunctionType, MethodType, BuiltinFunctionType
+from types               import MethodWrapperType, MethodDescriptorType, WrapperDescriptorType
+from types               import ClassMethodDescriptorType
 from typing              import TypeVar, Callable, Generator, Hashable, Self
 from typing              import Any, Union, Mapping, Iterable, Optional as Nullable
 
@@ -79,6 +81,11 @@ def getFullyQualifiedName(obj: Any) -> str:
 
 	:param obj: The object for with the fully qualified type is to be assembled.
 	:returns:   The fully qualified name of obj's type.
+
+	.. seealso::
+
+	   :func:`~pyTooling.Common.getTypeName`
+	      |rarr| Return the name of a type without its module.
 	"""
 	try:
 		module = obj.__module__             # for class or function
@@ -95,6 +102,36 @@ def getFullyQualifiedName(obj: Any) -> str:
 		return name
 
 	return f"{module}.{name}"
+
+
+_NAMED_TYPES = (
+	type, FunctionType, MethodType, BuiltinFunctionType, MethodDescriptorType, WrapperDescriptorType, MethodWrapperType,
+	ClassMethodDescriptorType
+)  #: Types of objects carrying their own name: classes, functions and methods, incl. built-in ones.
+
+
+@export
+def getTypeName(obj: Any) -> str:
+	"""
+	Return the name of a type without its module.
+
+	A class, a function or a method (built-in ones included) returns its own name, every other object the name of its
+	class, like :pycode:`obj.__class__.__name__`. It's the name, not the qualified name: a nested class ``Outer.Inner``
+	returns ``Inner``. Exception messages name a class by its name, while a note reporting a wrong type uses
+	:func:`~pyTooling.Common.getFullyQualifiedName`.
+
+	:param obj: The object whose type name is returned.
+	:returns:   The name of obj's type.
+
+	.. seealso::
+
+	   :func:`~pyTooling.Common.getFullyQualifiedName`
+	      |rarr| Assemble the fully qualified name of a type.
+	"""
+	if isinstance(obj, _NAMED_TYPES):
+		return obj.__name__
+
+	return obj.__class__.__name__
 
 
 @export

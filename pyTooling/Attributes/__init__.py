@@ -57,7 +57,7 @@ from typing               import Callable, TypeVar, Any, Iterable, Union, Genera
 from typing               import Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
-from pyTooling.Common     import getFullyQualifiedName
+from pyTooling.Common     import getFullyQualifiedName, getTypeName
 from pyTooling.Exceptions import ToolingException
 
 
@@ -202,7 +202,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 
 		if kind not in attribute._scope:
 			ex = AttributeScopeError(
-				f"Attribute '{attribute.__class__.__name__}' can't be applied to {kind.name.lower()} '{entity.__qualname__}'."
+				f"Attribute '{getTypeName(attribute)}' can't be applied to {kind.name.lower()} '{entity.__qualname__}'."
 			)
 			ex.add_note(f"Its scope is '{attribute._scope.name}'.")
 			raise ex

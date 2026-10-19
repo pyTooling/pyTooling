@@ -59,7 +59,7 @@ from typing                import Optional as Nullable, Iterator, Self, Iterable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import ToolingException
-from pyTooling.Common      import __version__, getFullyQualifiedName
+from pyTooling.Common      import __version__, getFullyQualifiedName, getTypeName
 from pyTooling.DataModel   import KeyValuePairsMixin
 
 
@@ -759,15 +759,15 @@ class Span(TraceElement):
 	@StopTime.setter
 	def StopTime(self, value: datetime) -> None:
 		if self._beginTime is None:
-			ex = TracingError(f"{self.__class__.__name__} '{self._name}' has no begin time and can't be stopped.")
+			ex = TracingError(f"{getTypeName(self)} '{self._name}' has no begin time and can't be stopped.")
 			ex.add_note("Construct it with a 'beginTime' to record a timespan whose end is reported later.")
 			raise ex
 		elif self._startTime is not None:
-			ex = TracingError(f"{self.__class__.__name__} '{self._name}' is timed by a with-statement.")
+			ex = TracingError(f"{getTypeName(self)} '{self._name}' is timed by a with-statement.")
 			ex.add_note("It is stopped by leaving that block.")
 			raise ex
 		elif self._endTime is not None:
-			ex = TracingError(f"{self.__class__.__name__} '{self._name}' already has an end time.")
+			ex = TracingError(f"{getTypeName(self)} '{self._name}' already has an end time.")
 			ex.add_note(f"Got '{self._endTime}'.")
 			raise ex
 		elif not isinstance(value, datetime):
@@ -799,7 +799,7 @@ class Span(TraceElement):
 		:raises TracingError: When the timespan is timed by a ``with``-statement.
 		"""
 		if self._beginTime is None:
-			ex = TracingError(f"{self.__class__.__name__} '{self._name}' has no begin time and can't be stopped.")
+			ex = TracingError(f"{getTypeName(self)} '{self._name}' has no begin time and can't be stopped.")
 			ex.add_note("Construct it with a 'beginTime' to record a timespan that is stopped later.")
 			raise ex
 
@@ -858,7 +858,7 @@ class Span(TraceElement):
 		elif self._beginTime is not None:
 			return (datetime.now(self._beginTime.tzinfo) - self._beginTime).total_seconds()
 
-		raise TracingError(f"{self.__class__.__name__} was never started.")
+		raise TracingError(f"{getTypeName(self)} was never started.")
 
 	@readonly
 	def State(self) -> SpanState:
