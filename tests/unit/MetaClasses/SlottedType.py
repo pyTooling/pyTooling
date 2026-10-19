@@ -37,7 +37,7 @@ from typing                import ClassVar, Generic, TypeVar, Optional as Nullab
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning, mixin
+from pyTooling.MetaClasses import DuplicateFieldInSlotsError, InvalidBaseClassError, UnannotatedFieldWarning, mixin
 from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
@@ -1089,6 +1089,8 @@ class NonEmptySlotsOnSecondaryBaseClass(Testcase):
 				_data_2: int
 
 		self.assertIn("Plain", str(context.exception))
+		self.assertIs(Plain, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_IndirectlyInheritedNonEmptySlots(self) -> None:
 		"""A mixin-class may not drag in a non-mixin base-class using non-empty slots."""
@@ -1214,6 +1216,8 @@ class BaseClassWithoutSlots(Testcase):
 				_data_2: int
 
 		self.assertEqual("Base-classes 'Plain' doesn't use '__slots__'.", str(context.exception))
+		self.assertIs(Plain, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
 
 
 class SecondaryBaseClassIsNotAMixin(Testcase):
@@ -1238,6 +1242,8 @@ class SecondaryBaseClassIsNotAMixin(Testcase):
 			"Declare it as 'class Secondary(..., mixin=True)' or apply the '@mixin' decorator.",
 			context.exception.__notes__[1]
 		)
+		self.assertIs(Secondary, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_SlottedClassWithoutFields(self) -> None:
 		"""Empty slots don't make it a mixin-class."""
@@ -1275,6 +1281,24 @@ class SecondaryBaseClassIsNotAMixin(Testcase):
 			pass
 
 		self.assertTupleEqual(("_data_R1", ), Final.__slots__)
+
+
+class InvalidBaseClass(Testcase):
+	"""The errors about a base-class share a base carrying the base-class and the name of the class under construction."""
+
+	def test_CommonBase(self) -> None:
+		self.assertTrue(issubclass(BaseClassWithoutSlotsError, InvalidBaseClassError))
+		self.assertTrue(issubclass(BaseClassWithNonEmptySlotsError, InvalidBaseClassError))
+		self.assertTrue(issubclass(BaseClassIsNotAMixinError, InvalidBaseClassError))
+
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither a base-class nor a class name."""
+		with self.assertRaises(InvalidBaseClassError) as context:
+			raise BaseClassIsNotAMixinError("Not a mixin-class.")
+
+		self.assertEqual("Not a mixin-class.", str(context.exception))
+		self.assertIsNone(context.exception.BaseClass)
+		self.assertIsNone(context.exception.ClassName)
 
 
 class SlotShadowedByClassMember(Testcase):

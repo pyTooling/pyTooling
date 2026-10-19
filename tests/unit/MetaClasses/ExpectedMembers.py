@@ -97,6 +97,16 @@ class ExpectedMembers(Testcase):
 
 		self.assertEqual("Class 'Application' doesn't provide every expected member.", str(exceptionCapture.exception))
 		self.assertIn("Missing 'Write', expected by 'Mixin'.", exceptionCapture.exception.__notes__)
+		self.assertIs(Application, exceptionCapture.exception.IncompleteClass)
+		self.assertEqual(("Write", ), exceptionCapture.exception.MissingMembers)
+
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither a class nor member names."""
+		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+			raise UnfulfilledExpectationError("Unfulfilled expectation.")
+
+		self.assertIsNone(exceptionCapture.exception.IncompleteClass)
+		self.assertIsNone(exceptionCapture.exception.MissingMembers)
 
 	def test_MissingField(self) -> None:
 		class NoCounter(metaclass=ExtendedType, slots=True):
@@ -411,6 +421,8 @@ class ExpectingMethods(Testcase):
 		)
 		self.assertIn("Missing 'MainParser'.", exceptionCapture.exception.__notes__)
 		self.assertIn("Missing 'SubParsers'.", exceptionCapture.exception.__notes__)
+		self.assertIs(Terminal, exceptionCapture.exception.IncompleteClass)
+		self.assertEqual(("MainParser", "SubParsers"), exceptionCapture.exception.MissingMembers)
 
 	def test_TheMarkerIsOnTheMethod(self) -> None:
 		self.assertEqual(("MainParser", "SubParsers"), Terminal.PrintHelp.__wrapped__.__expectedMembers__)
