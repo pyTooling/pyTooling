@@ -146,7 +146,8 @@ class CircularRequirementsFileError(DependencyError):
 	A ``-r`` line references a requirements file that is already being read further up the include chain.
 
 	A cycle isn't read once and ignored: a file including itself is a statement nobody wrote on purpose, and reading
-	it silently would hide it. The exception names the chain, so the ``-r`` line to delete is in the message.
+	it silently would hide it. The exception names the chain, so the ``-r`` line to delete is in the message. A file
+	two files reference, without one being read inside the other, is no cycle.
 	"""
 
 	_filePath:     Nullable[Path]  #: Path of the requirements file that is already being read.

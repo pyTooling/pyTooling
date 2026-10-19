@@ -44,7 +44,7 @@ from requests                     import HTTPError, Response
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
-from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
+from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile, RequirementsFileReference
 from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
@@ -1212,6 +1212,75 @@ class RequirementsFiles(Testcase):
 		self.assertEqual(path, context.exception.ReferencedIn)
 		self.assertEqual(1, context.exception.LineNumber)
 
+	def test_Includes_Diamond(self) -> None:
+		"""Two files referencing the same third one is no cycle: it's read once, the second ``-r`` is a reference."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			common = self._write(root, "requirements.txt", "packaging >= 25.0\n")
+			self._write(root, "tests/unit/requirements.txt", "-r ../../requirements.txt\npytest ~= 9.0\n")
+			self._write(root, "tests/typing/requirements.txt", "-r ../../requirements.txt\nmypy ~= 2.3\n")
+			path = self._write(root, "tests/requirements.txt", """
+				-r unit/requirements.txt
+				-r typing/requirements.txt
+			""")
+
+			requirementsFile = RequirementsFile.Parse(path)
+
+			unit, typing = requirementsFile.ReferencedFiles
+			shared, = unit.ReferencedFiles
+			reference, = typing.FileReferences
+
+			self.assertEqual(["packaging", "pytest", "mypy"], [req.name for req in requirementsFile.AllRequirements])
+			self.assertEqual(4, len(requirementsFile.AnalyzedRequirementFiles))
+			self.assertIs(shared, requirementsFile.AnalyzedRequirementFiles[common.resolve()])
+			self.assertIs(unit, shared.Parent)
+			self.assertEqual([], list(typing.ReferencedFiles))
+			self.assertIs(shared, reference.Target)
+			self.assertIs(typing, reference.Parent)
+			self.assertEqual(common.resolve(), reference.Path)
+			self.assertEqual(["packaging", "mypy"], [req.name for req in typing.AllRequirements])
+			self.assertEqual([requirementsFile, unit, shared, typing], list(requirementsFile.IterateTree()))
+
+	def test_Includes_ThreeTimes(self) -> None:
+		"""Every inclusion after the first one is a reference to the same file, also one in the root itself."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 10.0\n")
+			self._write(root, "a.txt", "-r base.txt\n")
+			self._write(root, "b.txt", "-r base.txt\n")
+			path = self._write(root, "requirements.txt", """
+				-r a.txt
+				-r b.txt
+				-r base.txt
+				pyTooling >= 10.0.0rc4
+			""")
+
+			requirementsFile = RequirementsFile.Parse(path)
+
+			a, b = requirementsFile.ReferencedFiles
+			base, = a.ReferencedFiles
+			bReference, = b.FileReferences
+			rootReference, = requirementsFile.FileReferences
+
+			self.assertIs(base, bReference.Target)
+			self.assertIs(base, rootReference.Target)
+			self.assertEqual(4, len(requirementsFile.AnalyzedRequirementFiles))
+			requirement, = requirementsFile.AllRequirements
+			self.assertEqual(">=10.0.0rc4", str(requirement.specifier))
+
+	def test_Includes_CycleThroughDiamond(self) -> None:
+		"""A file referenced while it's still being read is a cycle, also next to a diamond."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "-r requirements.txt\n")
+			self._write(root, "a.txt", "-r base.txt\n")
+			path = self._write(root, "requirements.txt", "-r a.txt\n")
+
+			with self.assertRaises(CircularRequirementsFileError) as context:
+				RequirementsFile.Parse(path)
+
+		self.assertEqual(path.resolve(), context.exception.FilePath)
+
 	def test_BrokenRequirement(self) -> None:
 		"""A line that isn't a requirement is reported, and the rest of the file is still read."""
 		with TemporaryDirectory() as directory:
@@ -1367,7 +1436,8 @@ class RequirementsFileInstantiation(Testcase):
 			RequirementsFile(Path("requirements.txt"), ["pytest ~= 9.1"])
 
 		self.assertEqual(
-			"An element of parameter 'entries' is not of type 'Requirement' or 'RequirementsFile'.",
+			"An element of parameter 'entries' is not of type 'Requirement', 'RequirementsFile' or "
+			"'RequirementsFileReference'.",
 			str(context.exception)
 		)
 		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
@@ -1391,6 +1461,79 @@ class RequirementsFileInstantiation(Testcase):
 
 		self.assertEqual("Parameter 'parent' is not of type 'RequirementsFile'.", str(context.exception))
 		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Entries_Reference(self) -> None:
+		"""A reference given in ``entries`` is stated by that file; ``AllRequirements`` yields its target once."""
+		base =      RequirementsFile(Path("base.txt"), [Requirement("pyTooling >= 10.0")])
+		unit =      RequirementsFile(Path("unit.txt"), [base])
+		reference = RequirementsFileReference(Path("base.txt"), base)
+		typing =    RequirementsFile(Path("typing.txt"), [reference, Requirement("mypy ~= 2.3")])
+		root =      RequirementsFile(Path("requirements.txt"), [unit, typing])
+
+		self.assertIs(typing, reference.Parent)
+		self.assertIs(base, reference.Target)
+		self.assertEqual([reference], list(typing.FileReferences))
+		self.assertEqual(["pyTooling", "mypy"], [req.name for req in root.AllRequirements])
+		self.assertEqual("base.txt (referenced before)", str(reference))
+		self.assertEqual("typing.txt: 1 requirement(s), 1 referenced file(s)", str(typing))
+
+	def test_Reference_Parent(self) -> None:
+		base =      RequirementsFile(Path("base.txt"))
+		parent =    RequirementsFile(Path("requirements.txt"))
+		reference = RequirementsFileReference(Path("base.txt"), base, parent=parent)
+
+		self.assertIs(parent, reference.Parent)
+		self.assertEqual([reference], parent.Entries)
+
+	def test_Reference_Unstated(self) -> None:
+		reference = RequirementsFileReference(Path("base.txt"), RequirementsFile(Path("base.txt")))
+
+		self.assertIsNone(reference.Parent)
+
+	def test_Reference_PathIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RequirementsFileReference(None, RequirementsFile(Path("base.txt")))
+
+		self.assertEqual("Parameter 'path' is None.", str(context.exception))
+
+	def test_Reference_PathWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFileReference("base.txt", RequirementsFile(Path("base.txt")))
+
+		self.assertEqual("Parameter 'path' is not of type 'Path'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Reference_TargetIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RequirementsFileReference(Path("base.txt"), None)
+
+		self.assertEqual("Parameter 'target' is None.", str(context.exception))
+
+	def test_Reference_TargetWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFileReference(Path("base.txt"), "base.txt")
+
+		self.assertEqual("Parameter 'target' is not of type 'RequirementsFile'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Reference_ParentWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFileReference(Path("base.txt"), RequirementsFile(Path("base.txt")), parent="requirements.txt")
+
+		self.assertEqual("Parameter 'parent' is not of type 'RequirementsFile'.", str(context.exception))
+
+	def test_EntriesElementAlreadyStated(self) -> None:
+		"""A reference belongs to one file; giving it to a second one is an error."""
+		reference = RequirementsFileReference(Path("base.txt"), RequirementsFile(Path("base.txt")))
+		RequirementsFile(Path("unit.txt"), [reference])
+
+		with self.assertRaises(AlreadyInRequirementsTreeError) as context:
+			RequirementsFile(Path("typing.txt"), [reference])
+
+		self.assertEqual(
+			"Reference to requirements file 'base.txt' is stated by 'unit.txt' already.",
+			str(context.exception)
+		)
 
 
 class IndexSessionRetries(Testcase):

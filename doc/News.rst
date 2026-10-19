@@ -440,7 +440,8 @@ Version 10.x (2026)
      * :class:`~pyTooling.Dependency.Python.RequirementsFile` reads a requirements file as a tree: a ``-r`` line is
        followed, every file knows its ``Parent``, its ``Root`` and its ``Hierarchy``, and ``AllRequirements`` yields the
        requirements in the order the files state them, the nearer statement winning. A cycle raises instead of being
-       read once and hidden.
+       read once and hidden. A file two files reference is read once; the second ``-r`` line is a
+       :class:`~pyTooling.Dependency.Python.RequirementsFileReference` to it.
      * :exc:`~pyTooling.Dependency.PackageIndexError` reports an HTTP error status of the package index other than ``404
        Not Found``, caused by the :exc:`~requests.HTTPError`.
 
