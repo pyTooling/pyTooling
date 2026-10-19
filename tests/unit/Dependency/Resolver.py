@@ -33,12 +33,14 @@ Unit tests for :mod:`pyTooling.Dependency.Resolver`, against a package index ans
 from typing                        import Any, Optional as Nullable
 from unittest.mock                 import patch
 
+from aiohttp                       import ClientConnectionError
 from packaging.requirements        import Requirement
 
-from pyTooling.Dependency          import UnresolvedRequirementWarning
+from pyTooling.Dependency          import PackageIndexFailureWarning, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex
-from pyTooling.Dependency.Resolver import ResolutionStatus, ResolutionStrategy, ResolvedRequirement, Resolver
-from pyTooling.Warning             import WarningCollector
+from pyTooling.Dependency.Resolver import PreReleasePolicy, ResolutionStatus, ResolutionStrategy, ResolvedRequirement
+from pyTooling.Dependency.Resolver import Resolver
+from pyTooling.Warning             import UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing             import Testcase
 
 from tests.unit.Dependency.FakeIndex import DocumentClientSession, DocumentSession, ProjectDocument
@@ -68,6 +70,7 @@ def _ReleaseDocument(requirements: list[str], extras: Nullable[list[str]] = None
 # lib 1.0, 2.0, 3.0rc1; lib 2.0 -> util >= 1.0; util 1.0 -> nothing
 # ping 1.0 -> pong; pong 1.0 -> ping (cycle); old 1.0 only; broken 1.0 can't be described; ghost is unknown
 # tool 1.0, extra "fast" -> speedup
+# flaky answers 503, offline fails to connect; shaky 1.0 answers 500 for its release
 DOCUMENTS = {
 	"app/json":          ProjectDocument("app", "1.0"),
 	"app/1.0/json":      _ReleaseDocument(
@@ -92,7 +95,11 @@ DOCUMENTS = {
 	"tool/json":         ProjectDocument("tool", "1.0"),
 	"tool/1.0/json":     _ReleaseDocument(['speedup; extra == "fast"'], ["fast"]),
 	"speedup/json":      ProjectDocument("speedup", "1.0"),
-	"speedup/1.0/json":  _ReleaseDocument([])
+	"speedup/1.0/json":  _ReleaseDocument([]),
+	"flaky/json":        503,
+	"offline/json":      ClientConnectionError("Connection refused"),
+	"shaky/json":        ProjectDocument("shaky", "1.0"),
+	"shaky/1.0/json":    500
 }
 
 
@@ -197,6 +204,30 @@ class Selection(ResolverTestcase):
 
 		self.assertEqual("3.0rc1", str(resolution.Requirements[0].Release.Version))
 
+	def test_PreReleasePolicy_Parse(self) -> None:
+		self.assertIs(PreReleasePolicy.Exclude, PreReleasePolicy.Parse("exclude"))
+		self.assertIs(PreReleasePolicy.Include, PreReleasePolicy.Parse("include"))
+		self.assertIs(PreReleasePolicy.Exclude, PreReleasePolicy.DEFAULT)
+
+	def test_PreReleasePolicy_Exclude(self) -> None:
+		"""A requirement naming a pre-release selects it, also with pre-releases excluded."""
+		resolver = Resolver(self._Index(), preReleases=PreReleasePolicy.Exclude)
+		resolution = resolver.ResolveRequirements([Requirement("lib")])
+
+		self.assertIs(PreReleasePolicy.Exclude, resolver.PreReleases)
+		self.assertEqual("2.0", str(resolution.Requirements[0].Release.Version))
+
+		resolution = resolver.ResolveRequirements([Requirement("lib >= 3.0rc1")])
+
+		self.assertEqual("3.0rc1", str(resolution.Requirements[0].Release.Version))
+
+	def test_PreReleasePolicy_Include(self) -> None:
+		resolver = Resolver(self._Index(), preReleases=PreReleasePolicy.Include)
+		resolution = resolver.ResolveRequirements([Requirement("lib")])
+
+		self.assertIs(PreReleasePolicy.Include, resolver.PreReleases)
+		self.assertEqual("3.0rc1", str(resolution.Requirements[0].Release.Version))
+
 	def test_NoMatchingRelease(self) -> None:
 		resolution = Resolver(self._Index()).ResolveRequirements([Requirement("old >= 2.0")])
 		old = resolution.Requirements[0]
@@ -254,6 +285,52 @@ class Unresolved(ResolverTestcase):
 		self.assertEqual(1, len(unresolved))
 		self.assertEqual("broken", unresolved[0].ProjectName)
 		self.assertEqual("1.0", str(unresolved[0].Version))
+
+	def test_IndexFailure_Project(self) -> None:
+		"""A server error for a project is a status and a critical warning carrying the status code."""
+		with WarningCollector() as warnings:
+			resolution = Resolver(self._Index()).ResolveRequirements([Requirement("flaky")])
+
+		flaky = resolution.Requirements[0]
+		self.assertIs(ResolutionStatus.IndexFailure, flaky.Status)
+		self.assertIsNone(flaky.Release)
+
+		failures = [warning for warning in warnings.Warnings if isinstance(warning, PackageIndexFailureWarning)]
+		self.assertEqual(1, len(failures))
+		self.assertEqual("flaky", failures[0].ProjectName)
+		self.assertIsNone(failures[0].Version)
+		self.assertEqual(503, failures[0].StatusCode)
+
+	def test_IndexFailure_Network(self) -> None:
+		"""A failed connection is a status and a critical warning without a status code, caused by the exception."""
+		with WarningCollector() as warnings:
+			resolution = Resolver(self._Index()).ResolveRequirements([Requirement("offline")])
+
+		self.assertIs(ResolutionStatus.IndexFailure, resolution.Requirements[0].Status)
+
+		failures = [warning for warning in warnings.Warnings if isinstance(warning, PackageIndexFailureWarning)]
+		self.assertEqual(1, len(failures))
+		self.assertIsNone(failures[0].StatusCode)
+		self.assertIsInstance(failures[0].__cause__, ClientConnectionError)
+
+	def test_IndexFailure_Release(self) -> None:
+		with WarningCollector() as warnings:
+			resolution = Resolver(self._Index()).ResolveRequirements([Requirement("shaky")])
+
+		shaky = resolution.Requirements[0]
+		self.assertIs(ResolutionStatus.IndexFailure, shaky.Status)
+		self.assertEqual("1.0", str(shaky.Release.Version))
+
+		failures = [warning for warning in warnings.Warnings if isinstance(warning, PackageIndexFailureWarning)]
+		self.assertEqual(1, len(failures))
+		self.assertEqual("shaky", failures[0].ProjectName)
+		self.assertEqual("1.0", str(failures[0].Version))
+		self.assertEqual(500, failures[0].StatusCode)
+
+	def test_IndexFailure_Uncollected(self) -> None:
+		"""Without a collector, the critical warning raises."""
+		with self.assertRaises(UnhandledCriticalWarningError):
+			Resolver(self._Index()).ResolveRequirements([Requirement("flaky")])
 
 	def test_Cycle(self) -> None:
 		resolution = Resolver(self._Index()).ResolveRequirements([Requirement("ping")])
@@ -338,6 +415,17 @@ class ParameterChecks(ResolverTestcase):
 			Resolver(self._Index(), limit=-1)
 
 		self.assertEqual("Parameter 'limit' is negative.", str(context.exception))
+
+	def test_PreReleases(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Resolver(self._Index(), preReleases=None)
+
+		self.assertEqual("Parameter 'preReleases' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			Resolver(self._Index(), preReleases="include")
+
+		self.assertEqual("Parameter 'preReleases' is not of type 'PreReleasePolicy'.", str(context.exception))
 
 	def test_Requirements(self) -> None:
 		resolver = Resolver(self._Index())

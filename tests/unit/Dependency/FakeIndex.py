@@ -33,7 +33,9 @@ Fake package-index sessions for the :mod:`pyTooling.Dependency` tests: they answ
 memory, so no request leaves the process.
 """
 from json     import dumps
+from types    import SimpleNamespace
 
+from aiohttp  import ClientResponseError
 from requests import Response
 
 
@@ -94,14 +96,22 @@ def ProjectDocument(name: str, *versions: str) -> dict:
 class DocumentResponse:
 	"""Response of a :class:`DocumentClientSession`, used as an asynchronous context manager like :mod:`aiohttp`'s."""
 
-	def __init__(self, document: dict | None) -> None:
+	def __init__(self, document: dict | int | None) -> None:
 		"""
 		Initializes the response.
 
-		:param document: The JSON document answered, or ``None`` for ``404 Not Found``.
+		:param document: The JSON document answered, an HTTP status code to answer with instead (e.g. ``503``), or
+		                 ``None`` for ``404 Not Found``.
 		"""
-		self._document = document
-		self.status =    404 if document is None else 200
+		if document is None:
+			self._document = None
+			self.status =    404
+		elif isinstance(document, int):
+			self._document = None
+			self.status =    document
+		else:
+			self._document = document
+			self.status =    200
 
 	async def __aenter__(self) -> "DocumentResponse":
 		"""
@@ -120,7 +130,15 @@ class DocumentResponse:
 		return None
 
 	def raise_for_status(self) -> None:
-		"""Do nothing: a response with a document is ``200 OK``, and ``404 Not Found`` is checked before."""
+		"""
+		Raise for an error status other than ``404 Not Found``, which the caller checks before, like :mod:`aiohttp` does.
+
+		:raises ClientResponseError: If the status is ``400`` or above.
+		"""
+		if self.status >= 400:
+			raise ClientResponseError(
+				SimpleNamespace(real_url="https://api.index.org/"), (), status=self.status, message="Server error"
+			)
 
 	async def json(self) -> dict:
 		"""
@@ -165,10 +183,15 @@ class DocumentClientSession:
 
 	def get(self, endpoint: str) -> DocumentResponse:
 		"""
-		Answer a GET request with the endpoint's document, or with ``404 Not Found``.
+		Answer a GET request with the endpoint's document or status code, or with ``404 Not Found``.
+
+		An exception listed for the endpoint is raised, as a failed connection raises in :mod:`aiohttp`.
 
 		:param endpoint: The requested endpoint, relative to the base URL.
 		:returns:        The response.
 		"""
 		self.Requests.append(endpoint)
-		return DocumentResponse(DocumentClientSession.Documents.get(endpoint, None))
+		if isinstance(document := DocumentClientSession.Documents.get(endpoint, None), BaseException):
+			raise document
+
+		return DocumentResponse(document)

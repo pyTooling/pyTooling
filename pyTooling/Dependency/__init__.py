@@ -420,6 +420,75 @@ class UnresolvedRequirementWarning(Warning):
 
 
 @export
+class PackageIndexFailureWarning(CriticalWarning):
+	"""
+	The package index failed to answer for a project or a release: it responded with a server error (``5xx``), or the
+	request failed on the network.
+
+	The requirement stays in the resolution, with the status
+	:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.IndexFailure`. The exception raised by the request is the
+	warning's cause.
+
+	.. important::
+
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+	"""
+
+	_projectName: Nullable[str]              #: Name of the project requested.
+	_version:     Nullable[SemanticVersion]  #: Version of the release requested, or ``None`` for the project itself.
+	_statusCode:  Nullable[int]              #: HTTP status code of the response, or ``None`` for a network failure.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None,
+		statusCode: Nullable[int] = None
+	) -> None:
+		"""
+		Initializes the warning with the project and, for a release, the version requested, and the response's status.
+
+		:param message:     The warning's message.
+		:param projectName: Optional, the name of the project requested.
+		:param version:     Optional, the version of the release requested; ``None`` for the project itself.
+		:param statusCode:  Optional, the HTTP status code of the response; ``None`` for a network failure.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+		self._statusCode =  statusCode
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project requested (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release requested (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` for a request of the project itself or if it wasn't recorded.
+		"""
+		return self._version
+
+	@readonly
+	def StatusCode(self) -> Nullable[int]:
+		"""
+		Read-only property to access the HTTP status code of the response (:attr:`_statusCode`).
+
+		:returns: The status code, or ``None`` for a network failure or if it wasn't recorded.
+		"""
+		return self._statusCode
+
+
+@export
 class UnsupportedVersionWarning(CriticalWarning):
 	"""
 	A release's version number has a format the version parser doesn't support, therefore the release was skipped.

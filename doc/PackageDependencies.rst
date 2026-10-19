@@ -133,19 +133,18 @@ Resolving Requirements
 ######################
 
 :class:`~pyTooling.Dependency.Resolver.Resolver` turns requirements into releases. For each requirement it selects
-the newest release matching the specifier, downloads that release's details and follows its requirements. A
-pre-release is selected only if the specifier asks for one, or if no final release matches - what an installer would
-pick. :meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirements` takes the requirements as
+the newest release matching the specifier, downloads that release's details and follows its requirements.
+:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirements` takes the requirements as
 :class:`~packaging.requirements.Requirement` objects.
 
 The result is a :class:`~pyTooling.Dependency.Resolver.Resolution`, a tree of
 :class:`~pyTooling.Dependency.Resolver.ResolvedRequirement` objects. Each one carries the selected release, or the
 reason there is none as its :class:`~pyTooling.Dependency.Resolver.ResolutionStatus`: the index doesn't know the
-project, no release matches, the index can't describe the selected release, the project closes a cycle, or the
-requirement is below the limit. The selected releases are connected in the index's
+project, no release matches, the index can't describe the selected release, the index failed to answer, the project
+closes a cycle, or the requirement is below the limit. The selected releases are connected in the index's
 dependency graph, too, so :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` shows them.
 
-The resolver is configured by two parameters:
+The resolver is configured by three parameters:
 
 ``strategy``
    :attr:`~pyTooling.Dependency.Resolver.ResolutionStrategy.Lazy` (the default) resolves a release's requirements
@@ -155,6 +154,16 @@ The resolver is configured by two parameters:
 ``limit``
    The number of levels resolved below the given requirements; ``0`` resolves only the given requirements, ``None``
    (the default) everything.
+``preReleases``
+   :attr:`~pyTooling.Dependency.Resolver.PreReleasePolicy.Exclude` (the default) selects a pre-release only if the
+   requirement names one (``pyTooling >= 10.0.0rc3``) or if no final release matches - what an installer would pick
+   (:pep:`440`); :attr:`~pyTooling.Dependency.Resolver.PreReleasePolicy.Include` selects pre-releases like final
+   releases.
+
+A project or release the index fails to answer for - a server error (``5xx``) or a failed connection - gets the status
+:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.IndexFailure` and is reported as a critical
+:class:`~pyTooling.Dependency.PackageIndexFailureWarning`: the resolution continues, but a
+:class:`~pyTooling.Warning.WarningCollector` has to collect the warning, otherwise it raises.
 
 .. code-block:: Python
 
@@ -162,11 +171,14 @@ The resolver is configured by two parameters:
 
    from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex
    from pyTooling.Dependency.Resolver import Resolver, ResolutionStatus
+   from pyTooling.Warning             import WarningCollector
 
    graph = PythonPackageDependencyGraph("documentation")
    index = PythonPackageIndex("PyPI", "https://pypi.org/", "https://pypi.org/pypi/", graph)
 
-   resolution = Resolver(index, limit=2).ResolveRequirements([Requirement("pyTooling")])
+   with WarningCollector() as warnings:
+     resolution = Resolver(index, limit=2).ResolveRequirements([Requirement("pyTooling")])
+
    for requirement in resolution.Requirements:
      if requirement.Status is ResolutionStatus.Resolved:
        print(f"{requirement.Requirement} -> {requirement.Release.Version}")

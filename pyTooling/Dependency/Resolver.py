@@ -49,7 +49,7 @@ from typing                      import Any, Callable, Iterable, Iterator, Optio
 from pyTooling.Exceptions        import MissingDependencyError
 
 try:
-	from aiohttp                   import ClientSession
+	from aiohttp                   import ClientResponseError, ClientSession
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
 
@@ -63,7 +63,7 @@ from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import StringEnum, getFullyQualifiedName
 from pyTooling.Warning           import WarningCollector
-from pyTooling.Dependency        import PackageIndexError, UnresolvedRequirementWarning
+from pyTooling.Dependency        import PackageIndexFailureWarning, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release
 
 _Requirement = Requirement
@@ -82,6 +82,21 @@ class ResolutionStrategy(StringEnum):
 
 
 @export
+class PreReleasePolicy(StringEnum):
+	"""
+	Whether a :class:`Resolver` selects pre-releases.
+
+	A requirement naming a pre-release (``pyTooling >= 10.0.0rc3``) admits pre-releases with either policy, as does a
+	requirement only pre-releases match (:pep:`440`, as :mod:`packaging` and pip apply it).
+	"""
+
+	Exclude = "exclude"  #: Pre-releases only if the requirement names one, or if nothing else matches.
+	Include = "include"  #: Pre-releases are selected like final releases.
+
+	DEFAULT = Exclude    #: The policy used if none is given.
+
+
+@export
 class ResolutionStatus(Enum):
 	"""What resolving a requirement came to."""
 
@@ -91,6 +106,7 @@ class ResolutionStatus(Enum):
 	UndescribedRelease = auto()  #: The package index can't describe the selected release.
 	Cycle =              auto()  #: The project is required further up the path already, so it isn't followed again.
 	LimitReached =       auto()  #: The requirement is below the resolver's limit, so it wasn't resolved.
+	IndexFailure =       auto()  #: The package index failed to answer for the project or the selected release.
 
 
 @export
@@ -338,17 +354,18 @@ class Resolver(metaclass=ExtendedType, slots=True):
 	"""
 	Resolves requirements into releases of a Python package index.
 
-	For each requirement, the newest release matching its specifier is selected, and its details are downloaded.
-	A pre-release is selected only if the specifier asks for one, or if no final release matches - what an installer
-	would resolve to (:meth:`packaging.specifiers.SpecifierSet.filter`). The release's
-	requirements are resolved the same way, as deep as the limit allows, either up front or when they are first asked
-	for (:class:`ResolutionStrategy`). A project required again further up the path closes a cycle and isn't followed.
-	The downloads of one level run in parallel.
+	For each requirement, the newest release matching its specifier is selected, and its details are downloaded. Whether
+	a pre-release can be selected is the :class:`PreReleasePolicy`; a requirement naming a pre-release selects one with
+	either policy. The release's requirements are resolved the same way, as deep as the limit allows, either up front or
+	when they are first asked for (:class:`ResolutionStrategy`). A project required again further up the path closes a
+	cycle and isn't followed. The downloads of one level run in parallel.
 
 	Each requirement keeps what resolving it came to (:class:`ResolutionStatus`): a requirement whose project the index
 	doesn't know, or whose selected release it can't describe, is reported as an
 	:exc:`~pyTooling.Dependency.UnresolvedRequirementWarning` to a :class:`~pyTooling.Warning.WarningCollector`, and
-	stays in the resolution. The selected releases are connected in the index's dependency graph.
+	stays in the resolution. A server error or a failed connection of the index is reported as a critical
+	:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`. The selected releases are connected in the index's
+	dependency graph.
 
 	.. attention::
 
@@ -359,14 +376,17 @@ class Resolver(metaclass=ExtendedType, slots=True):
 	_index:       PythonPackageIndex        #: The package index the requirements are resolved against.
 	_strategy:    ResolutionStrategy        #: When the requirements of a selected release are resolved.
 	_limit:       Nullable[int]             #: Number of levels resolved below the given requirements.
+	_preReleases: PreReleasePolicy          #: Whether pre-releases are selected.
 	_undescribed: set[Release]              #: Releases the index couldn't describe.
+	_failed:      set[Project | Release]    #: Projects and releases the index failed to answer for.
 
 	def __init__(
 		self,
 		index: PythonPackageIndex,
 		*,
 		strategy: ResolutionStrategy = ResolutionStrategy.DEFAULT,
-		limit: Nullable[int] = None
+		limit: Nullable[int] = None,
+		preReleases: PreReleasePolicy = PreReleasePolicy.DEFAULT
 	) -> None:
 		"""
 		Initializes a resolver.
@@ -376,12 +396,15 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		                    :attr:`~ResolutionStrategy.Lazy`.
 		:param limit:       Optional, number of levels resolved below the given requirements; ``0`` resolves only the
 		                    given requirements. Default: ``None``, unlimited.
+		:param preReleases: Optional, whether pre-releases are selected. Default: :attr:`~PreReleasePolicy.Exclude`.
 		:raises ValueError: If parameter 'index' is ``None``.
 		:raises TypeError:  If parameter 'index' is not of type :class:`~pyTooling.Dependency.Python.PythonPackageIndex`.
 		:raises ValueError: If parameter 'strategy' is ``None``.
 		:raises TypeError:  If parameter 'strategy' is not of type :class:`ResolutionStrategy`.
 		:raises TypeError:  If parameter 'limit' is not of type :class:`int`.
 		:raises ValueError: If parameter 'limit' is negative.
+		:raises ValueError: If parameter 'preReleases' is ``None``.
+		:raises TypeError:  If parameter 'preReleases' is not of type :class:`PreReleasePolicy`.
 		"""
 		if index is None:
 			raise ValueError("Parameter 'index' is None.")
@@ -406,10 +429,19 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got value '{limit}'.")
 			raise ex
 
+		if preReleases is None:
+			raise ValueError("Parameter 'preReleases' is None.")
+		elif not isinstance(preReleases, PreReleasePolicy):
+			ex = TypeError("Parameter 'preReleases' is not of type 'PreReleasePolicy'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(preReleases)}'.")
+			raise ex
+
 		self._index =       index
 		self._strategy =    strategy
 		self._limit =       limit
+		self._preReleases = preReleases
 		self._undescribed = set()
+		self._failed =      set()
 
 	@readonly
 	def Index(self) -> PythonPackageIndex:
@@ -437,6 +469,15 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		:returns: The limit, or ``None`` for unlimited.
 		"""
 		return self._limit
+
+	@readonly
+	def PreReleases(self) -> PreReleasePolicy:
+		"""
+		Read-only property to access whether pre-releases are selected (:attr:`_preReleases`).
+
+		:returns: The pre-release policy.
+		"""
+		return self._preReleases
 
 	def ResolveRequirements(self, requirements: Iterable[Requirement]) -> Resolution:
 		"""
@@ -548,8 +589,13 @@ class Resolver(metaclass=ExtendedType, slots=True):
 				))
 				continue
 
-			releases = {str(version): release for version, release in requirement._project.Releases.items()}
-			matching = [releases[version] for version in requirement._requirement.specifier.filter(releases)]
+			if requirement._project in self._failed:
+				requirement._status = ResolutionStatus.IndexFailure
+				continue
+
+			preReleases = True if self._preReleases is PreReleasePolicy.Include else None
+			releases =    {str(version): release for version, release in requirement._project.Releases.items()}
+			matching =    [releases[version] for version in requirement._requirement.specifier.filter(releases, preReleases)]
 			if len(matching) == 0:
 				requirement._status = ResolutionStatus.NoMatchingRelease
 				continue
@@ -560,7 +606,10 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		self._DescribeReleases(toDescribe)
 
 		for requirement in toDescribe:
-			if requirement._release in self._undescribed:
+			if requirement._release in self._failed:
+				requirement._status = ResolutionStatus.IndexFailure
+				continue
+			elif requirement._release in self._undescribed:
 				requirement._status = ResolutionStatus.UndescribedRelease
 				WarningCollector.Raise(UnresolvedRequirementWarning(
 					f"The package index can't describe release '{requirement._release.Version}' of package "
@@ -578,10 +627,11 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		"""
 		Look up the required projects on the index, downloading those not loaded yet in parallel.
 
-		A project the index answers ``404 Not Found`` for is forgotten by the index and left ``None``.
+		A project the index answers ``404 Not Found`` for is forgotten by the index and left ``None``. A project the index
+		fails to answer for is remembered as failed and reported as a critical
+		:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`.
 
-		:param requirements:       The requirements whose project is looked up.
-		:raises PackageIndexError: If a request fails otherwise.
+		:param requirements: The requirements whose project is looked up.
 		"""
 		toDownload: dict[str, Project] = {}
 		for requirement in requirements:
@@ -590,17 +640,22 @@ class Resolver(metaclass=ExtendedType, slots=True):
 				continue
 
 			project = self._index.DownloadProject(name, LazyLoaderState.Initialized)
-			if project.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
+			if project not in self._failed and project.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 				toDownload[canonicalize_name(name)] = project
 
 		projects = list(toDownload.values())
 		documents = self._Download([project._GetPyPIEndpoint() for project in projects])
 		for project, document in zip(projects, documents):
 			if isinstance(document, BaseException):
-				raise PackageIndexError(
-					f"Request for package '{project.Name}' failed: {document}",
-					projectName=project.Name
-				) from document
+				self._failed.add(project)
+				WarningCollector.Raise(
+					PackageIndexFailureWarning(
+						f"Package index failed to answer for package '{project.Name}': {document}",
+						projectName=project.Name,
+						statusCode=document.status if isinstance(document, ClientResponseError) else None
+					),
+					document
+				)
 			elif document is None:
 				self._index._ForgetProject(project)
 			else:
@@ -614,26 +669,35 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		Download the details of the selected releases not described yet, in parallel.
 
 		A release the index can't describe - it answers ``404 Not Found``, or the details can't be read - is remembered
-		as undescribed.
+		as undescribed. A release the index fails to answer for is remembered as failed and reported as a critical
+		:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`.
 
-		:param requirements:       The requirements whose selected release is described.
-		:raises PackageIndexError: If a request fails otherwise.
+		:param requirements: The requirements whose selected release is described.
 		"""
 		toDownload: dict[int, Release] = {}
 		for requirement in requirements:
 			release = requirement._release
-			if release not in self._undescribed and release.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
+			if release in self._undescribed or release in self._failed:
+				continue
+			elif release.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 				toDownload[id(release)] = release
 
 		releases = list(toDownload.values())
 		documents = self._Download([release._GetPyPIEndpoint() for release in releases])
 		for release, document in zip(releases, documents):
 			if isinstance(document, BaseException):
-				raise PackageIndexError(
-					f"Request for release '{release.Version}' of package '{release.Package.Name}' failed: {document}",
-					projectName=release.Package.Name,
-					version=release.Version
-				) from document
+				self._failed.add(release)
+				WarningCollector.Raise(
+					PackageIndexFailureWarning(
+						f"Package index failed to answer for release '{release.Version}' of package '{release.Package.Name}': "
+						f"{document}",
+						projectName=release.Package.Name,
+						version=release.Version,
+						statusCode=document.status if isinstance(document, ClientResponseError) else None
+					),
+					document
+				)
+				continue
 			elif document is None:
 				self._undescribed.add(release)
 				continue
