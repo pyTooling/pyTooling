@@ -45,7 +45,7 @@ A cooperative timeout for loops and blocking calls, valid for a ``with`` block.
 from __future__            import annotations
 
 from threading             import local
-from time                  import monotonic
+from time                  import perf_counter_ns
 from types                 import TracebackType
 from typing                import Optional as Nullable, Self
 
@@ -155,7 +155,7 @@ class Timeout(metaclass=ExtendedType, slots=True):
 	"""
 
 	_seconds:  float              #: The timeout in seconds.
-	_deadline: Nullable[float]    #: Effective deadline (:func:`time.monotonic`) while the context is entered.
+	_deadline: Nullable[int]      #: Effective deadline (:func:`time.perf_counter_ns`) while the context is entered.
 	_parent:   Nullable[Timeout]  #: The timeout, which was current when this one was entered.
 
 	def __init__(self, seconds: float) -> None:
@@ -194,13 +194,13 @@ class Timeout(metaclass=ExtendedType, slots=True):
 		return self._seconds
 
 	@readonly
-	def Deadline(self) -> Nullable[float]:
+	def Deadline(self) -> Nullable[int]:
 		"""
 		Read-only property to access the effective deadline (:attr:`_deadline`).
 
-		The deadline is a :func:`time.monotonic` value: the earlier of this timeout's own deadline and its parent's.
+		The deadline is a :func:`time.perf_counter_ns` value: the earlier of this timeout's own deadline and its parent's.
 
-		:returns: The deadline while the context is entered, otherwise ``None``.
+		:returns: The deadline in nanoseconds while the context is entered, otherwise ``None``.
 		"""
 		return self._deadline
 
@@ -232,7 +232,7 @@ class Timeout(metaclass=ExtendedType, slots=True):
 		if (timeout := getattr(_threadLocalData, "timeout", None)) is None:
 			return None
 
-		return max(0.0, timeout._deadline - monotonic())
+		return max(0.0, (timeout._deadline - perf_counter_ns()) / 1e9)
 
 	@classmethod
 	def RaiseIfExpired(cls, message: str) -> None:
@@ -258,8 +258,8 @@ class Timeout(metaclass=ExtendedType, slots=True):
 		if (timeout := getattr(_threadLocalData, "timeout", None)) is None:
 			return
 
-		if (overrun := monotonic() - timeout._deadline) >= 0.0:
-			raise TimeoutExpiredError(message, seconds=timeout._seconds, overrun=overrun)
+		if (overrun := perf_counter_ns() - timeout._deadline) >= 0:
+			raise TimeoutExpiredError(message, seconds=timeout._seconds, overrun=overrun / 1e9)
 
 	@classmethod
 	def IsExpired(cls) -> bool:
@@ -271,7 +271,7 @@ class Timeout(metaclass=ExtendedType, slots=True):
 		if (timeout := getattr(_threadLocalData, "timeout", None)) is None:
 			return False
 
-		return monotonic() >= timeout._deadline
+		return perf_counter_ns() >= timeout._deadline
 
 	def __enter__(self) -> Self:
 		"""
@@ -288,7 +288,7 @@ class Timeout(metaclass=ExtendedType, slots=True):
 
 		self._parent = getattr(_threadLocalData, "timeout", None)
 
-		deadline = monotonic() + self._seconds
+		deadline = perf_counter_ns() + round(self._seconds * 1e9)
 		if self._parent is not None and self._parent._deadline < deadline:
 			deadline = self._parent._deadline
 

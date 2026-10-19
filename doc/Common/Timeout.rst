@@ -55,8 +55,8 @@ once per iteration and so aborts itself with a :exc:`~pyTooling.Timeout.TimeoutE
 (:attr:`~pyTooling.Timeout.TimeoutExpiredError.Overrun`) - how long the last iteration ran past it. A loop that needs to
 clean up first asks :meth:`~pyTooling.Timeout.Timeout.IsExpired` and raises itself.
 
-The time runs from entering the context; the deadline is a :func:`time.monotonic` value, so a change of the system's
-clock doesn't shorten or extend it.
+The time runs from entering the context; the deadline is a :func:`time.perf_counter_ns` value, so a change of the
+system's clock doesn't shorten or extend it.
 
 
 .. _COMMON/Timeout/Nesting:
