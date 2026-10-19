@@ -148,6 +148,10 @@ class NotFound(Testcase):
 		self.assertEqual("Project not found.", str(context.exception))
 		self.assertIsNone(context.exception.ProjectName)
 
+	def test_ProjectNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(ProjectNotFoundError, LookupError))
+		self.assertTrue(issubclass(ProjectNotFoundError, DependencyError))
+
 	def test_ReleaseNotFoundError(self) -> None:
 		graph = PythonPackageDependencyGraph("graph")
 		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
@@ -168,6 +172,10 @@ class NotFound(Testcase):
 		self.assertEqual("Release not found.", str(context.exception))
 		self.assertIsNone(context.exception.ProjectName)
 		self.assertIsNone(context.exception.Version)
+
+	def test_ReleaseNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(ReleaseNotFoundError, LookupError))
+		self.assertTrue(issubclass(ReleaseNotFoundError, DependencyError))
 
 
 class ProjectCache(Testcase):
@@ -1339,6 +1347,10 @@ class RequirementsFiles(Testcase):
 				RequirementsFile.Parse(Path(directory) / "nothing.txt")
 
 		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)
+
+	def test_RequirementsFileNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(RequirementsFileNotFoundError, FileNotFoundError))
+		self.assertTrue(issubclass(RequirementsFileNotFoundError, DependencyError))
 
 	def test_MissingReferencedFile(self) -> None:
 		"""A ``-r`` line referencing a file that doesn't exist is an error, too."""

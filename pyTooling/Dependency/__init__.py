@@ -115,8 +115,13 @@ class NoSessionAvailableError(DependencyError):
 
 
 @export
-class RequirementsFileNotFoundError(DependencyError):
-	"""A requirements file doesn't exist, or a ``-r`` line references one that doesn't."""
+class RequirementsFileNotFoundError(DependencyError, FileNotFoundError):
+	"""
+	A requirements file doesn't exist, or a ``-r`` line references one that doesn't.
+
+	It is a :exc:`FileNotFoundError` as well (and so an :exc:`OSError`), because the file doesn't exist; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
 
 	_filePath: Nullable[Path]  #: Path of the requirements file that doesn't exist.
 
@@ -208,8 +213,13 @@ class AlreadyInRequirementsTreeError(DependencyError, AlreadyInHierarchyError):
 
 
 @export
-class ProjectNotFoundError(DependencyError):
-	"""The package index doesn't know a project of that name."""
+class ProjectNotFoundError(DependencyError, LookupError):
+	"""
+	The package index doesn't know a project of that name.
+
+	It is a :exc:`LookupError` as well, because the project is looked up by name; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
 
 	_projectName: Nullable[str]  #: Name of the project the package index doesn't know.
 
@@ -234,8 +244,13 @@ class ProjectNotFoundError(DependencyError):
 
 
 @export
-class ReleaseNotFoundError(DependencyError):
-	"""The project exists in the package index, but not in the requested version."""
+class ReleaseNotFoundError(DependencyError, LookupError):
+	"""
+	The project exists in the package index, but not in the requested version.
+
+	It is a :exc:`LookupError` as well, because the release is looked up by version; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
 
 	_projectName: Nullable[str]              #: Name of the project the release was requested of.
 	_version:     Nullable[SemanticVersion]  #: Version of the release the package index doesn't know.

@@ -1959,6 +1959,14 @@ class Deletion(Testcase):
 		self.assertIs(first, context.exception.Source)
 		self.assertIs(second, context.exception.Destination)
 
+	def test_EdgeNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(EdgeNotFoundError, LookupError))
+		self.assertTrue(issubclass(EdgeNotFoundError, GraphError))
+
+	def test_LinkNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(LinkNotFoundError, LookupError))
+		self.assertTrue(issubclass(LinkNotFoundError, GraphError))
+
 	def test_MessageOnly(self) -> None:
 		"""An exception raised with a message only carries no object."""
 		with self.assertRaises(EdgeNotFoundError) as edgeCapture:
