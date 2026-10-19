@@ -127,6 +127,72 @@ dependency graph is otherwise thousands of HTTP requests wide.
    Without it, importing :mod:`pyTooling.Dependency.Python` raises an exception naming the extra. The generic data
    model in :mod:`pyTooling.Dependency` has no such requirement.
 
+.. _DEPENDENCIES/Resolver:
+
+Resolving Requirements
+######################
+
+:class:`~pyTooling.Dependency.Resolver.Resolver` turns requirements into releases. For each requirement it selects
+the newest release matching the specifier, downloads that release's details and follows its requirements.
+:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirements` takes the requirements as
+:class:`~packaging.requirements.Requirement` objects.
+
+The result is a :class:`~pyTooling.Dependency.Resolver.Resolution`, a tree of
+:class:`~pyTooling.Dependency.Resolver.ResolvedRequirement` objects. Each one carries the selected release, or the
+reason there is none as its :class:`~pyTooling.Dependency.Resolver.ResolutionStatus`: the index doesn't know the
+project, no release matches, the index can't describe the selected release, the index failed to answer, the project
+closes a cycle, or the requirement is below the limit. The selected releases are connected in the index's
+dependency graph, too, so :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` shows them.
+
+The resolver is configured by three parameters:
+
+``strategy``
+   :attr:`~pyTooling.Dependency.Resolver.ResolutionStrategy.Lazy` (the default) resolves a release's requirements
+   when its :attr:`~pyTooling.Dependency.Resolver.ResolvedRequirement.Dependencies` are first asked for;
+   :attr:`~pyTooling.Dependency.Resolver.ResolutionStrategy.Eager` resolves everything up front, one level at a
+   time. Either way, the downloads of one level run in parallel.
+``limit``
+   The number of levels resolved below the given requirements; ``0`` resolves only the given requirements, ``None``
+   (the default) everything.
+``preReleases``
+   :attr:`~pyTooling.Dependency.Resolver.PreReleasePolicy.Exclude` (the default) selects a pre-release only if the
+   requirement names one (``pyTooling >= 10.0.0rc3``) or if no final release matches - what an installer would pick
+   (:pep:`440`); :attr:`~pyTooling.Dependency.Resolver.PreReleasePolicy.Include` selects pre-releases like final
+   releases.
+
+A project or release the index fails to answer for - a server error (``5xx``) or a failed connection - gets the status
+:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.IndexFailure` and is reported as a critical
+:class:`~pyTooling.Dependency.PackageIndexFailureWarning`: the resolution continues, but a
+:class:`~pyTooling.Warning.WarningCollector` has to collect the warning, otherwise it raises.
+
+.. code-block:: Python
+
+   from packaging.requirements import Requirement
+
+   from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex
+   from pyTooling.Dependency.Resolver import Resolver, ResolutionStatus
+   from pyTooling.Warning             import WarningCollector
+
+   graph = PythonPackageDependencyGraph("documentation")
+   index = PythonPackageIndex("PyPI", "https://pypi.org/", "https://pypi.org/pypi/", graph)
+
+   with WarningCollector() as warnings:
+     resolution = Resolver(index, limit=2).ResolveRequirements([Requirement("pyTooling")])
+
+   for requirement in resolution.Requirements:
+     if requirement.Status is ResolutionStatus.Resolved:
+       print(f"{requirement.Requirement} -> {requirement.Release.Version}")
+
+.. attention::
+
+   It is no installer's solver: every requirement is resolved on its own, and two requirements of one project with
+   conflicting specifiers select two releases. Nothing is backtracked.
+
+:meth:`Release.PostProcess <pyTooling.Dependency.Python.Release.PostProcess>` (behind
+:attr:`~pyTooling.Dependency.PackageVersion.DependsOn`) stays what it was: it attaches *every* release matching a
+requirement, not the one a resolver selects.
+
+
 .. _DEPENDENCIES/Exceptions:
 
 Exceptions and Warnings
@@ -142,7 +208,11 @@ caused by the :exc:`~requests.HTTPError`.
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
-graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dependency.UnknownLicenseWarning`.
+graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dependency.UnknownLicenseWarning`. A
+requirement a :class:`~pyTooling.Dependency.Resolver.Resolver` can't resolve, because the index doesn't know its
+project or can't describe the selected release, is reported as an
+:class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its
+status.
 
 These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
 collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see

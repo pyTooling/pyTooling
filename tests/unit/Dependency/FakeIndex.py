@@ -33,7 +33,9 @@ Fake package-index sessions for the :mod:`pyTooling.Dependency` tests: they answ
 memory, so no request leaves the process.
 """
 from json     import dumps
+from types    import SimpleNamespace
 
+from aiohttp  import ClientResponseError
 from requests import Response
 
 
@@ -89,3 +91,107 @@ def ProjectDocument(name: str, *versions: str) -> dict:
 		}]
 
 	return {"info": {"project_url": f"https://index.org/project/{name}/"}, "releases": releases}
+
+
+class DocumentResponse:
+	"""Response of a :class:`DocumentClientSession`, used as an asynchronous context manager like :mod:`aiohttp`'s."""
+
+	def __init__(self, document: dict | int | None) -> None:
+		"""
+		Initializes the response.
+
+		:param document: The JSON document answered, an HTTP status code to answer with instead (e.g. ``503``), or
+		                 ``None`` for ``404 Not Found``.
+		"""
+		if document is None:
+			self._document = None
+			self.status =    404
+		elif isinstance(document, int):
+			self._document = None
+			self.status =    document
+		else:
+			self._document = document
+			self.status =    200
+
+	async def __aenter__(self) -> "DocumentResponse":
+		"""
+		Enter the context and hand out the response.
+
+		:returns: The response itself.
+		"""
+		return self
+
+	async def __aexit__(self, *_) -> None:
+		"""
+		Exit the context; nothing to release.
+
+		:returns: ``None``
+		"""
+		return None
+
+	def raise_for_status(self) -> None:
+		"""
+		Raise for an error status other than ``404 Not Found``, which the caller checks before, like :mod:`aiohttp` does.
+
+		:raises ClientResponseError: If the status is ``400`` or above.
+		"""
+		if self.status >= 400:
+			raise ClientResponseError(
+				SimpleNamespace(real_url="https://api.index.org/"), (), status=self.status, message="Server error"
+			)
+
+	async def json(self) -> dict:
+		"""
+		Return the document.
+
+		:returns: The JSON document.
+		"""
+		return self._document
+
+
+class DocumentClientSession:
+	"""
+	Stand-in for :class:`aiohttp.ClientSession`, answering from a dictionary of JSON documents by endpoint.
+
+	Each instance records the endpoints requested through it in :attr:`Requests`; :attr:`Sessions` of the class
+	collects the instances, so a test sees which requests ran together.
+	"""
+
+	Documents: dict[str, dict]                = {}  #: JSON documents by endpoint, shared by all instances.
+	Sessions:  list["DocumentClientSession"] = []  #: Every session opened, in order.
+
+	def __init__(self, **_) -> None:
+		"""Initializes a session; the arguments of :class:`aiohttp.ClientSession` are ignored."""
+		self.Requests = []
+		DocumentClientSession.Sessions.append(self)
+
+	async def __aenter__(self) -> "DocumentClientSession":
+		"""
+		Enter the context and hand out the session.
+
+		:returns: The session itself.
+		"""
+		return self
+
+	async def __aexit__(self, *_) -> None:
+		"""
+		Exit the context; nothing to release.
+
+		:returns: ``None``
+		"""
+		return None
+
+	def get(self, endpoint: str) -> DocumentResponse:
+		"""
+		Answer a GET request with the endpoint's document or status code, or with ``404 Not Found``.
+
+		An exception listed for the endpoint is raised, as a failed connection raises in :mod:`aiohttp`.
+
+		:param endpoint: The requested endpoint, relative to the base URL.
+		:returns:        The response.
+		"""
+		self.Requests.append(endpoint)
+		if isinstance(document := DocumentClientSession.Documents.get(endpoint, None), BaseException):
+			raise document
+
+		return DocumentResponse(document)
