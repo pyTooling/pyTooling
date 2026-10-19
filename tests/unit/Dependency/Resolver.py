@@ -39,8 +39,8 @@ from aiohttp                       import ClientConnectionError
 from packaging.markers             import default_environment
 from packaging.requirements        import Requirement
 
-from pyTooling.Dependency          import BrokenRequirementWarning, ExtraNotFoundError, PackageIndexFailureWarning
-from pyTooling.Dependency          import ReleaseNotFoundError, UnresolvedRequirementWarning
+from pyTooling.Dependency          import BrokenRequirementWarning, DependencyError, ExtraNotFoundError
+from pyTooling.Dependency          import PackageIndexFailureWarning, ReleaseNotFoundError, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex, RequirementsFile
 from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, PreReleasePolicy, Resolution, ResolutionStatus
 from pyTooling.Dependency.Resolver import ResolutionStrategy, ResolvedRequirement, Resolver
@@ -479,6 +479,11 @@ class Inputs(ResolverTestcase):
 		self.assertEqual("app", context.exception.ProjectName)
 		self.assertEqual("docs", context.exception.Extra)
 		self.assertListEqual(["Known are: test."], context.exception.__notes__)
+
+	def test_ExtraNotFoundError_Bases(self) -> None:
+		"""Code looking up an extra catches it as a :exc:`LookupError`, code using the package as a ``DependencyError``."""
+		self.assertTrue(issubclass(ExtraNotFoundError, LookupError))
+		self.assertTrue(issubclass(ExtraNotFoundError, DependencyError))
 
 	def test_RequirementExtra(self) -> None:
 		"""An extra a requirement names adds that extra's requirements to the dependencies."""

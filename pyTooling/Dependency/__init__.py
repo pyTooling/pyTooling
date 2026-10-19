@@ -324,8 +324,13 @@ class PackageIndexError(DependencyError):
 
 
 @export
-class ExtraNotFoundError(DependencyError):
-	"""A release doesn't declare the extra whose requirements were asked for."""
+class ExtraNotFoundError(DependencyError, LookupError):
+	"""
+	A release doesn't declare the extra whose requirements were asked for.
+
+	It is a :exc:`LookupError` as well, because the extra is looked up by name; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
 
 	_projectName: Nullable[str]              #: Name of the project the release belongs to.
 	_version:     Nullable[SemanticVersion]  #: Version of the release.
