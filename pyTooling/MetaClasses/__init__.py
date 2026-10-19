@@ -261,7 +261,7 @@ class UnfulfilledExpectationError(ExtendedTypeError):
 	      |rarr| The meta-class implementing the check.
 	"""
 
-	_incompleteClass: Nullable[type]            #: Class that doesn't provide every expected member.
+	_incompleteClass: Nullable[type]             #: Class that doesn't provide every expected member.
 	_missingMembers:  Nullable[tuple[str, ...]]  #: Names of the expected members the class doesn't provide.
 
 	def __init__(
@@ -363,7 +363,7 @@ class AbstractClassError(ExtendedTypeError):
 	      |rarr| Exception raised, if a method is marked as *must-override*.
 	"""
 
-	_abstractClass:   Nullable[type]            #: Abstract class an instance was requested of.
+	_abstractClass:   Nullable[type]             #: Abstract class an instance was requested of.
 	_abstractMethods: Nullable[tuple[str, ...]]  #: Names of the methods that need to be overridden.
 
 	def __init__(
