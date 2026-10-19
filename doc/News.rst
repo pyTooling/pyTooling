@@ -575,6 +575,16 @@ Version 10.x (2026)
      :class:`~pyTooling.GenericPath.RootMixin` and ``SystemMixIn`` |rarr|
      :class:`~pyTooling.GenericPath.SystemMixin`. They were the last four spelled ``MixIn``, and the old names are
      gone rather than kept as aliases - the same rule the renamed exceptions follow.
+   * ⚠️ :attr:`Stopwatch.Duration <pyTooling.Stopwatch.Stopwatch.Duration>`,
+     :attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` return a
+     :class:`~datetime.timedelta` instead of a :class:`float` of seconds. Arithmetic with a number or a float format
+     spec (``f"{sw.Duration:.3f}"``) raises a :exc:`TypeError`; use
+     :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds`, :attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds`
+     or :attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds` for the number.
+   * ⚠️ :attr:`Directory.ScanDuration <pyTooling.Filesystem.Directory.ScanDuration>`,
+     :attr:`~pyTooling.Filesystem.Directory.AggregateDuration` and
+     :attr:`LayerCake.SlicingDuration <pyTooling.Filesystem.Docker.LayerCake.SlicingDuration>` return a
+     :class:`~datetime.timedelta` instead of a :class:`float` of seconds; ``.total_seconds()`` gives the number.
 
    * ⚠️ :meth:`~pyTooling.GenericPath.PathMixin.Parse` **reads the flavour's** ``ELEMENT_TYPE``, so its signature is
      ``Parse(path, root=None)``. A flavour outside pyTooling passing ``pathCls`` and ``elementCls`` drops them and
@@ -802,6 +812,11 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Filesystem`
 
+     * ⚠️ :attr:`Directory.ScanDuration <pyTooling.Filesystem.Directory.ScanDuration>`,
+       :attr:`~pyTooling.Filesystem.Directory.AggregateDuration` and
+       :attr:`LayerCake.SlicingDuration <pyTooling.Filesystem.Docker.LayerCake.SlicingDuration>` store the stopwatch's
+       :class:`~datetime.timedelta`, which prints as hours, minutes and seconds. They returned seconds as a
+       :class:`float`.
      * :attr:`Element.Path <pyTooling.Filesystem.Element.Path>` is an abstract property, so
        :class:`~pyTooling.Filesystem.Element` and a derived class without its own ``Path`` raise an
        :exc:`~pyTooling.MetaClasses.AbstractClassError` when instantiated. The property raised a
@@ -875,6 +890,16 @@ Version 10.x (2026)
 
      * FreeBSD is a supported platform: ``IsNativeFreeBSD`` no longer implies x86-64, AArch64 is recognized, and
        ``GetMemoryUsage`` reports the resident size through :func:`resource.getrusage`.
+
+   * :mod:`pyTooling.Stopwatch`
+
+     * ⚠️ :attr:`Stopwatch.Duration <pyTooling.Stopwatch.Stopwatch.Duration>`,
+       :attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` return a
+       :class:`~datetime.timedelta`, which prints and formats as hours, minutes and seconds - the type a data model
+       stores a measured duration as. The new :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds`,
+       :attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds` and
+       :attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds` return the :class:`float` of seconds the three
+       returned before. A stopped stopwatch computes its :class:`~datetime.timedelta` once.
 
    * :mod:`pyTooling.TerminalUI`
 

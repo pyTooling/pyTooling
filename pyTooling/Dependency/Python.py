@@ -363,7 +363,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 				chain.pop()
 				readingFiles.discard(file.resolve())
 
-			requirementsFile = cls(file, entries, analysisDuration=timedelta(seconds=sw.Duration))
+			requirementsFile = cls(file, entries, analysisDuration=sw.Duration)
 			readFiles[file.resolve()] = requirementsFile
 
 			return requirementsFile

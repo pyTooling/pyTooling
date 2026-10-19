@@ -272,9 +272,9 @@ records four spans:
    sw.SplitCount     # 4
    sw.ActiveCount    # 3
    sw.InactiveCount  # 1
-   sw.Activity       # 0.3
-   sw.Inactivity     # 0.2
-   sw.Duration       # 0.5
+   sw.Activity       # timedelta(microseconds=300000)
+   sw.Inactivity     # timedelta(microseconds=200000)
+   sw.Duration       # timedelta(microseconds=500000)
 
 :attr:`~pyTooling.Stopwatch.Stopwatch.HasSplitTimes` reports whether at least one split time was recorded, and
 :attr:`~pyTooling.Stopwatch.Stopwatch.SplitCount` how many.
@@ -487,28 +487,40 @@ otherwise. Testing the state first is how a stopwatch is driven from code that d
 
 .. _COMMON/Stopwatch/Durations:
 
-The Two Durations
-=================
+The Three Durations
+===================
 
-:attr:`~pyTooling.Stopwatch.Stopwatch.Duration` is the measurement in **seconds**, as a :class:`float`.
-:attr:`~pyTooling.Stopwatch.Stopwatch.DurationInNanoseconds` is the same measurement in **whole nanoseconds**, as an
-:class:`int` - which is how :func:`time.perf_counter_ns` took it in the first place.
+:attr:`~pyTooling.Stopwatch.Stopwatch.Duration` is the measurement as a :class:`~datetime.timedelta`.
+:attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds` is the same measurement in **seconds**, as a :class:`float`,
+and :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInNanoseconds` in **whole nanoseconds**, as an :class:`int` - which
+is how :func:`time.perf_counter_ns` took it in the first place.
 
 .. code-block:: python
 
-   sw.Duration               # 0.250294020
+   sw.Duration               # timedelta(microseconds=250294)
+   print(sw.Duration)        # 0:00:00.250294
+   sw.DurationInSeconds      # 0.250294020
    sw.DurationInNanoseconds  # 250294020
 
-Both answer for the whole measurement: start to stop, or start to now while the stopwatch runs, and ``0`` when it was
-never started. Reach for the nanoseconds when a duration has to be divided into parts or compared exactly - that is
-what :meth:`~pyTooling.Stopwatch.Stopwatch.__format__` does - and for seconds everywhere else.
+All three answer for the whole measurement: start to stop, or start to now while the stopwatch runs, and zero when it
+was never started. A data model stores the :class:`~datetime.timedelta`: it prints and formats as hours, minutes and
+seconds, and :meth:`~datetime.timedelta.total_seconds` still gives the number. A stopped stopwatch computes it once.
+Reach for the nanoseconds when a duration has to be divided into parts or compared exactly - that is what
+:meth:`~pyTooling.Stopwatch.Stopwatch.__format__` does - and for seconds where a number is needed.
+:attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` follow the same
+scheme, with :attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds` and
+:attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds`.
 
 .. note::
 
-   Precision is not what separates them. A :class:`float` holds a duration in seconds exactly, to the nanosecond, up
-   to :math:`2^{53}` nanoseconds - a little over 104 days - so at any length a stopwatch measures the two are
-   interchangeable, and ``DurationInNanoseconds / 1e9`` equals
-   :attr:`~pyTooling.Stopwatch.Stopwatch.Duration` exactly.
+   A :class:`~datetime.timedelta` resolves **microseconds**; the nanoseconds of the measurement are in the two numbers.
+
+.. note::
+
+   Precision is not what separates the two numbers. A :class:`float` holds a duration in seconds exactly, to the
+   nanosecond, up to :math:`2^{53}` nanoseconds - a little over 104 days - so at any length a stopwatch measures the two
+   are interchangeable, and ``DurationInNanoseconds / 1e9`` equals
+   :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds` exactly.
 
 
 .. _COMMON/Stopwatch/Formatting:

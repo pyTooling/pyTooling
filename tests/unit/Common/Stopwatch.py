@@ -32,6 +32,7 @@
 Unit tests for :class:`pyTooling.Stopwatch.Stopwatch`: starting, pausing, resuming, splitting and stopping,
 the formatting of the results, and its use as a context manager.
 """
+from datetime             import timedelta
 from time                 import sleep
 
 from pyTooling.Exceptions import ToolingException
@@ -119,7 +120,7 @@ class Operations(Testcase):
 		diff1 = sw.Pause()
 		sleep(self.PAUSE)  # 200 ms
 		diff2 = sw.Stop()
-		total = sw.Duration
+		total = sw.DurationInSeconds
 
 		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:0.6f} us")
 		self.assertLessEqual(diff1, self.DELAY * self.INACCURACY)
@@ -148,7 +149,7 @@ class Operations(Testcase):
 		diff2 = sw.Resume()
 		sleep(self.DELAY)  # 500 ms
 		diff3 = sw.Stop()
-		total = sw.Duration
+		total = sw.DurationInSeconds
 
 		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:0.6f} us")
 		self.assertLessEqual(diff1, self.DELAY * self.INACCURACY)
@@ -256,8 +257,8 @@ class ContextManagerProtocol(Testcase):
 		with Stopwatch() as sw:
 			sleep(self.DELAY)  # 500 ms
 
-		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.Duration:0.6f} us")
-		self.assertLessEqual(sw.Duration, self.DELAY * self.INACCURACY)
+		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.DurationInSeconds:0.6f} us")
+		self.assertLessEqual(sw.DurationInSeconds, self.DELAY * self.INACCURACY)
 
 	def test_PreCreated(self) -> None:
 		print()
@@ -267,8 +268,8 @@ class ContextManagerProtocol(Testcase):
 		with sw:
 			sleep(self.DELAY)  # 500 ms
 
-		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.Duration:0.6f} us")
-		self.assertLessEqual(sw.Duration, self.DELAY * self.INACCURACY)
+		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.DurationInSeconds:0.6f} us")
+		self.assertLessEqual(sw.DurationInSeconds, self.DELAY * self.INACCURACY)
 
 	def test_ReuseContext_StartStop(self) -> None:
 		print()
@@ -278,10 +279,10 @@ class ContextManagerProtocol(Testcase):
 		with sw:
 			sleep(self.DELAY)  # 500 ms
 
-		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.Duration:0.6f} us")
+		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.DurationInSeconds:0.6f} us")
 		self.assertEqual(1, sw.ActiveCount)
-		self.assertLessEqual(sw.Activity, self.DELAY * self.INACCURACY)
-		self.assertLessEqual(sw.Duration, self.DELAY * self.INACCURACY)
+		self.assertLessEqual(sw.ActivityInSeconds, self.DELAY * self.INACCURACY)
+		self.assertLessEqual(sw.DurationInSeconds, self.DELAY * self.INACCURACY)
 
 		with self.assertRaises(StopwatchError):
 			with sw:
@@ -295,21 +296,21 @@ class ContextManagerProtocol(Testcase):
 		with sw:
 			sleep(self.DELAY)  # 500 ms
 
-		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.Duration:0.6f} us")
+		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {sw.DurationInSeconds:0.6f} us")
 		self.assertEqual(1, sw.ActiveCount)
 		# the stopwatch is paused, so it is inside an inactive span that would be recorded if it stopped now
 		self.assertEqual(1, sw.InactiveCount)
-		self.assertLessEqual(sw.Activity, self.DELAY * self.INACCURACY)
-		self.assertLessEqual(sw.Duration, self.DELAY * self.INACCURACY)
+		self.assertLessEqual(sw.ActivityInSeconds, self.DELAY * self.INACCURACY)
+		self.assertLessEqual(sw.DurationInSeconds, self.DELAY * self.INACCURACY)
 
 		with sw:
 			sleep(self.DELAY)  # 500 ms
 
-		print(f"Duration for '2st sleep({self.DELAY:0.3f})': {sw.Duration:0.6f} us")
+		print(f"Duration for '2st sleep({self.DELAY:0.3f})': {sw.DurationInSeconds:0.6f} us")
 		self.assertEqual(3, len(sw))
 		self.assertEqual(2, sw.ActiveCount)
 		self.assertEqual(2, sw.InactiveCount)
-		self.assertLessEqual(sw.Activity, 2 * self.DELAY * self.INACCURACY)
+		self.assertLessEqual(sw.ActivityInSeconds, 2 * self.DELAY * self.INACCURACY)
 
 	def test_ReuseContext_Loop(self) -> None:
 		print()
@@ -322,8 +323,8 @@ class ContextManagerProtocol(Testcase):
 			sleep(self.PAUSE / 2)  # 450 ms
 		sw.Stop()
 
-		print(f"Start/Stop/Diff: {sw.StartTime}/{sw.StopTime}/{sw.StopTime - sw.StartTime}/{sw.Duration}")
-		print(f"Activity/Inactivity: {sw.Activity}/{sw.Inactivity}")
+		print(f"Start/Stop/Diff: {sw.StartTime}/{sw.StopTime}/{sw.StopTime - sw.StartTime}/{sw.DurationInSeconds}")
+		print(f"Activity/Inactivity: {sw.ActivityInSeconds}/{sw.InactivityInSeconds}")
 		print("Iterator: __iter__")
 		for duration, activity in sw:
 			print(f"  {duration} {'running' if activity else 'paused'}")
@@ -341,14 +342,14 @@ class ContextManagerProtocol(Testcase):
 			sw.Split()
 			sleep(self.DELAY)  # 500 ms
 
-		print(f"Start/Stop/Diff: {sw.StartTime}/{sw.StopTime}/{sw.StopTime - sw.StartTime}/{sw.Duration}")
-		print(f"Activity/Inactivity: {sw.Activity}/{sw.Inactivity}")
+		print(f"Start/Stop/Diff: {sw.StartTime}/{sw.StopTime}/{sw.StopTime - sw.StartTime}/{sw.DurationInSeconds}")
+		print(f"Activity/Inactivity: {sw.ActivityInSeconds}/{sw.InactivityInSeconds}")
 		print("Iterator: __iter__")
 		for duration, activity in sw:
 			print(f"  {duration} {'running' if activity else 'paused'}")
 
-		self.assertAlmostEqual(sw.Duration, sw.Activity)
-		self.assertEqual(0, sw.Inactivity)
+		self.assertAlmostEqual(sw.DurationInSeconds, sw.ActivityInSeconds)
+		self.assertEqual(0, sw.InactivityInSeconds)
 		self.assertEqual(0, sw.InactiveCount)
 
 
@@ -420,10 +421,10 @@ class Excluding(Testcase):
 		self.assertEqual(1, sw.InactiveCount)
 
 		# a sleep lasts at least as long as asked, and on a loaded runner considerably longer
-		self.assertGreaterEqual(sw.Activity, 2 * self.DELAY)
-		self.assertLessEqual(sw.Activity, 2 * self.DELAY * self.INACCURACY)
-		self.assertGreaterEqual(sw.Inactivity, self.DELAY)
-		self.assertLessEqual(sw.Inactivity, self.DELAY * self.INACCURACY)
+		self.assertGreaterEqual(sw.ActivityInSeconds, 2 * self.DELAY)
+		self.assertLessEqual(sw.ActivityInSeconds, 2 * self.DELAY * self.INACCURACY)
+		self.assertGreaterEqual(sw.InactivityInSeconds, self.DELAY)
+		self.assertLessEqual(sw.InactivityInSeconds, self.DELAY * self.INACCURACY)
 
 	def test_ExcludeIsReusable(self) -> None:
 		"""
@@ -510,15 +511,15 @@ class Counting(Testcase):
 		sleep(self.DELAY)
 
 		self.assertEqual(1, sw.ActiveCount)
-		self.assertGreater(sw.Activity, 0.0)
+		self.assertGreater(sw.ActivityInSeconds, 0.0)
 		self.assertEqual(0, sw.InactiveCount)
-		self.assertEqual(0.0, sw.Inactivity)
+		self.assertEqual(0.0, sw.InactivityInSeconds)
 
 		sw.Pause()
 		sleep(self.DELAY)
 
 		self.assertEqual(1, sw.InactiveCount)
-		self.assertGreater(sw.Inactivity, 0.0)
+		self.assertGreater(sw.InactivityInSeconds, 0.0)
 
 		sw.Stop()
 
@@ -545,7 +546,7 @@ class Counting(Testcase):
 
 
 class Durations(Testcase):
-	"""The duration in seconds and in whole nanoseconds."""
+	"""The duration as a timedelta, in seconds and in whole nanoseconds."""
 
 	DELAY = 0.25
 
@@ -553,7 +554,35 @@ class Durations(Testcase):
 		sw = Stopwatch()
 
 		self.assertEqual(0, sw.DurationInNanoseconds)
-		self.assertEqual(0.0, sw.Duration)
+		self.assertEqual(0.0, sw.DurationInSeconds)
+		self.assertEqual(timedelta(), sw.Duration)
+		self.assertEqual(timedelta(), sw.Activity)
+		self.assertEqual(timedelta(), sw.Inactivity)
+
+	def test_Timedelta(self) -> None:
+		"""Duration, Activity and Inactivity are timedeltas of the same measurement as their ...InSeconds floats."""
+		sw = Stopwatch(started=True)
+		sleep(self.DELAY)
+		sw.Pause()
+		sleep(self.DELAY)
+		sw.Stop()
+
+		self.assertIsInstance(sw.Duration, timedelta)
+		self.assertIsInstance(sw.Activity, timedelta)
+		self.assertIsInstance(sw.Inactivity, timedelta)
+		self.assertAlmostEqual(sw.DurationInSeconds, sw.Duration.total_seconds(), delta=1e-6)
+		self.assertAlmostEqual(sw.ActivityInSeconds, sw.Activity.total_seconds(), delta=1e-6)
+		self.assertAlmostEqual(sw.InactivityInSeconds, sw.Inactivity.total_seconds(), delta=1e-6)
+
+	def test_Timedelta_StoppedIsCached(self) -> None:
+		"""A stopped stopwatch converts its duration once; a running one on every access."""
+		sw = Stopwatch(started=True)
+
+		self.assertIsNot(sw.Duration, sw.Duration)
+
+		sw.Stop()
+
+		self.assertIs(sw.Duration, sw.Duration)
 
 	def test_Running(self) -> None:
 		sw = Stopwatch(started=True)
@@ -581,8 +610,8 @@ class Durations(Testcase):
 		sleep(self.DELAY)
 		sw.Stop()
 
-		self.assertEqual(sw.DurationInNanoseconds / 1e9, sw.Duration)
-		self.assertEqual(sw.DurationInNanoseconds, round(sw.Duration * 1e9))
+		self.assertEqual(sw.DurationInNanoseconds / 1e9, sw.DurationInSeconds)
+		self.assertEqual(sw.DurationInNanoseconds, round(sw.DurationInSeconds * 1e9))
 
 
 class Digits(Testcase):
