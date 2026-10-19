@@ -324,6 +324,68 @@ class PackageIndexError(DependencyError):
 
 
 @export
+class ExtraNotFoundError(DependencyError, LookupError):
+	"""
+	A release doesn't declare the extra whose requirements were asked for.
+
+	It is a :exc:`LookupError` as well, because the extra is looked up by name; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
+
+	_projectName: Nullable[str]              #: Name of the project the release belongs to.
+	_version:     Nullable[SemanticVersion]  #: Version of the release.
+	_extra:       Nullable[str]              #: Name of the extra the release doesn't declare.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None,
+		extra: Nullable[str] = None
+	) -> None:
+		"""
+		Initializes the exception with the release and the extra it doesn't declare.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project the release belongs to.
+		:param version:     Optional, the version of the release.
+		:param extra:       Optional, the name of the extra the release doesn't declare.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+		self._extra =       extra
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project the release belongs to (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the extra the release doesn't declare (:attr:`_extra`).
+
+		:returns: The extra's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._extra
+
+
+@export
 class BrokenRequirementWarning(Warning):
 	"""
 	A requirement can't be parsed, or names an extra the project doesn't declare.
