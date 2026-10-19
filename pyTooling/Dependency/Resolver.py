@@ -43,7 +43,7 @@ Importing this module needs the ``pypi`` extra (:mod:`aiohttp`, :mod:`packaging`
 from __future__                  import annotations
 
 from asyncio                     import run as asyncio_run, gather as asyncio_gather
-from enum                        import Enum, auto
+from enum                        import Enum
 from typing                      import Any, Callable, Iterable, Iterator, Optional as Nullable
 
 from pyTooling.Exceptions        import MissingDependencyError
@@ -100,13 +100,13 @@ class PreReleasePolicy(StringEnum):
 class ResolutionStatus(Enum):
 	"""What resolving a requirement came to."""
 
-	Resolved =           auto()  #: A release matching the requirement was selected, and its details were downloaded.
-	UnknownProject =     auto()  #: The package index doesn't know the required project.
-	NoMatchingRelease =  auto()  #: No release of the project matches the requirement's specifier.
-	UndescribedRelease = auto()  #: The package index can't describe the selected release.
-	Cycle =              auto()  #: The project is required further up the path already, so it isn't followed again.
-	LimitReached =       auto()  #: The requirement is below the resolver's limit, so it wasn't resolved.
-	IndexFailure =       auto()  #: The package index failed to answer for the project or the selected release.
+	Resolved =           1  #: A release matching the requirement was selected, and its details were downloaded.
+	UnknownProject =     2  #: The package index doesn't know the required project.
+	NoMatchingRelease =  3  #: No release of the project matches the requirement's specifier.
+	UndescribedRelease = 4  #: The package index can't describe the selected release.
+	Cycle =              5  #: The project is required further up the path already, so it isn't followed again.
+	LimitReached =       6  #: The requirement is below the resolver's limit, so it wasn't resolved.
+	IndexFailure =       7  #: The package index failed to answer for the project or the selected release.
 
 
 @export
