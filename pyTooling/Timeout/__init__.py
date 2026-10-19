@@ -91,6 +91,16 @@ class TimeoutExpiredError(ToolingException, TimeoutError):
 
 
 @export
+class TimeoutUsageError(ToolingException):
+	"""
+	The exception is raised when a :class:`Timeout` is used in a way it doesn't support.
+
+	A timeout is current for one ``with`` block at a time: entering it again while it's entered would overwrite its
+	parent and its deadline.
+	"""
+
+
+@export
 class Timeout(metaclass=ExtendedType, slots=True):
 	"""
 	A timeout, which is current for the thread while its ``with`` block runs.
@@ -98,7 +108,8 @@ class Timeout(metaclass=ExtendedType, slots=True):
 	Entering the context makes the timeout the current one of the calling thread; the previous current timeout becomes
 	its parent, and leaving the context restores it - as a :class:`~pyTooling.Warning.WarningCollector` is made current.
 	Code inside the block, how deep down the call hierarchy it may be, asks the classmethods :meth:`Remaining` and
-	:meth:`IsExpired` without the timeout being passed along.
+	:meth:`IsExpired` without the timeout being passed along; :meth:`Current` returns the timeout itself. A timeout is
+	entered once at a time: entering it again inside its own block raises :exc:`TimeoutUsageError`.
 
 	A nested timeout can only shorten the time left, never extend it: its deadline is the earlier of its own and the
 	parent's.
@@ -188,6 +199,15 @@ class Timeout(metaclass=ExtendedType, slots=True):
 		return self._parent
 
 	@classmethod
+	def Current(cls) -> Nullable[Timeout]:
+		"""
+		Return the current timeout of the calling thread, like :func:`threading.current_thread` returns the thread.
+
+		:returns: The current timeout, or ``None`` if no timeout is current.
+		"""
+		return getattr(_threadLocalData, "timeout", None)
+
+	@classmethod
 	def Remaining(cls) -> Nullable[float]:
 		"""
 		Return the seconds left of the current timeout of the calling thread.
@@ -218,8 +238,12 @@ class Timeout(metaclass=ExtendedType, slots=True):
 		The previous current timeout becomes its parent. The deadline is the earlier of this timeout's own and the
 		parent's.
 
-		:returns: The timeout instance.
+		:returns:                  The timeout instance.
+		:raises TimeoutUsageError: If the timeout is entered already.
 		"""
+		if self._deadline is not None:
+			raise TimeoutUsageError(f"Timeout of {self._seconds} seconds is entered already.")
+
 		self._parent = getattr(_threadLocalData, "timeout", None)
 
 		deadline = monotonic() + self._seconds

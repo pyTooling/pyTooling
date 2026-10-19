@@ -37,7 +37,7 @@ from time                 import sleep
 from typing               import Optional as Nullable
 
 from pyTooling.Exceptions import ToolingException
-from pyTooling.Timeout    import Timeout, TimeoutExpiredError
+from pyTooling.Timeout    import Timeout, TimeoutExpiredError, TimeoutUsageError
 from pyTooling.Testing    import Testcase
 
 
@@ -153,6 +153,36 @@ class Nesting(Testcase):
 
 			self.assertGreater(Timeout.Remaining(), 1.0)
 			self.assertIsNotNone(outer.Deadline)
+
+	def test_Current(self) -> None:
+		"""The current timeout is the innermost entered one, like the current thread."""
+		self.assertIsNone(Timeout.Current())
+
+		with Timeout(10.0) as outer:
+			self.assertIs(outer, Timeout.Current())
+
+			with Timeout(1.0) as inner:
+				self.assertIs(inner, Timeout.Current())
+				self.assertIs(outer, inner.Parent)
+
+			self.assertIs(outer, Timeout.Current())
+
+		self.assertIsNone(Timeout.Current())
+
+	def test_ReEnter(self) -> None:
+		"""A timeout is entered once at a time; after leaving it, it can be entered again."""
+		timeout = Timeout(10.0)
+
+		with timeout:
+			with self.assertRaises(TimeoutUsageError) as context:
+				with timeout:
+					pass
+
+			self.assertEqual("Timeout of 10.0 seconds is entered already.", str(context.exception))
+			self.assertIs(timeout, Timeout.Current())
+
+		with timeout:
+			self.assertIs(timeout, Timeout.Current())
 
 
 class Threads(Testcase):

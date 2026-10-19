@@ -32,13 +32,20 @@ being passed along as a parameter.
 Asking for the Time Left
 ************************
 
-Two classmethods answer for the current timeout of the calling thread:
+Three classmethods answer for the current timeout of the calling thread:
 
 :meth:`~pyTooling.Timeout.Timeout.Remaining`
   The seconds left as a :class:`float`, ``0.0`` once the timeout expired, and ``None`` when no timeout is current.
 
 :meth:`~pyTooling.Timeout.Timeout.IsExpired`
   ``True`` once the timeout expired; ``False`` before, and when no timeout is current.
+
+:meth:`~pyTooling.Timeout.Timeout.Current`
+  The current timeout itself - like :func:`threading.current_thread` returns the thread - or ``None``. Its
+  :attr:`~pyTooling.Timeout.Timeout.Seconds` and :attr:`~pyTooling.Timeout.Timeout.Parent` tell how it was set up.
+
+A timeout is entered once at a time: entering it again inside its own ``with`` block raises
+:exc:`~pyTooling.Timeout.TimeoutUsageError`. After its block, it can be entered again.
 
 The time left is what a blocking call gets as its own timeout - a request (``requests``: ``timeout=``, ``aiohttp``:
 ``ClientTimeout(total=...)``), :meth:`threading.Thread.join`, :meth:`concurrent.futures.Future.result`,
