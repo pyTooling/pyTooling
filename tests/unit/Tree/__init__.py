@@ -455,6 +455,7 @@ class SplitTree(Testcase):
 			root.RemoveChild(grandChild)
 
 		self.assertEqual("Node '3' is not a child of this node.", str(context.exception))
+		self.assertIs(grandChild, context.exception.Child)
 		self.assertIs(child, grandChild.Parent)
 		self.assertEqual(3, root.Size)
 
@@ -525,10 +526,21 @@ class SplitTree(Testcase):
 		root = Node(1)
 		child = Node(2, parent=root)
 
+		other = Node(3)
+
 		with self.assertRaises(NotAChildError) as context:
-			root.RemoveChildren((child, Node(3)))
+			root.RemoveChildren((child, other))
 
 		self.assertEqual("Item '3' in parameter 'children' is not a child of this node.", str(context.exception))
+		self.assertIs(other, context.exception.Child)
+
+	def test_NotAChildError_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no node."""
+		with self.assertRaises(NotAChildError) as context:
+			raise NotAChildError("Not a child.")
+
+		self.assertEqual("Not a child.", str(context.exception))
+		self.assertIsNone(context.exception.Child)
 
 
 class Loops(Testcase):

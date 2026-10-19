@@ -341,3 +341,15 @@ class NotInSameHierarchyError(Exception):
 	it and from the package's base-exception, e.g. ``class NotInSameTreeError(TreeError, NotInSameHierarchyError)``. It
 	has no initializer of its own, so the package's base-exception decides how the message is stored.
 	"""
+
+
+@export
+class NotAChildError(Exception):
+	"""
+	The exception is raised when an element is not a direct child of the element it's removed from or looked up in.
+
+	It's about the direct parent/child relation, not about the whole hierarchy: a grandchild is in the same hierarchy,
+	but it's a child of another element. It's a common base: a package's own exception derives from it and from the
+	package's base-exception, e.g. ``class NotAChildError(TreeError, NotAChildError)`` in :mod:`pyTooling.Tree`. It has
+	no initializer of its own, so the package's base-exception decides how the message is stored.
+	"""

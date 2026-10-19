@@ -49,6 +49,7 @@ from typing                import Any, Callable, Generator, Iterable, Mapping, H
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
+from pyTooling.Exceptions  import NotAChildError as CommonNotAChildError
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 
@@ -107,7 +108,7 @@ class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 
 
 @export
-class NotAChildError(TreeError):
+class NotAChildError(TreeError, CommonNotAChildError):
 	"""
 	The exception is raised when a node is not a direct child of the current node.
 
@@ -115,6 +116,27 @@ class NotAChildError(TreeError):
 
 	   A grandchild is in the same tree, but it's a child of another node.
 	"""
+
+	_child: Nullable[Node]  #: Node that isn't a direct child of the current node.
+
+	def __init__(self, message: str, /, *, child: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the node that isn't a direct child of the current node.
+
+		:param message: The exception's message.
+		:param child:   Optional, the node that isn't a direct child of the current node.
+		"""
+		super().__init__(message)
+		self._child = child
+
+	@readonly
+	def Child(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the node that isn't a direct child of the current node (:attr:`_child`).
+
+		:returns: The node, or ``None`` if it wasn't recorded.
+		"""
+		return self._child
 
 
 @export
@@ -634,7 +656,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 			ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 			raise ex
 		elif child._parent is not self:
-			raise NotAChildError(f"Node '{child}' is not a child of this node.")
+			raise NotAChildError(f"Node '{child}' is not a child of this node.", child=child)
 
 		child.Parent = None
 
@@ -678,7 +700,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 				raise ex
 			elif child._parent is not self:
-				raise NotAChildError(f"Item '{child}' in parameter 'children' is not a child of this node.")
+				raise NotAChildError(f"Item '{child}' in parameter 'children' is not a child of this node.", child=child)
 
 			child.Parent = None
 
