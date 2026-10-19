@@ -448,7 +448,10 @@ Version 10.x (2026)
        followed, every file knows its ``Parent``, its ``Root`` and its ``Hierarchy``, and ``AllRequirements`` yields the
        requirements in the order the files state them, the nearer statement winning. A cycle raises instead of being
        read once and hidden. A file two files reference is read once; the second ``-r`` line is a
-       :class:`~pyTooling.Dependency.Python.RequirementsFileReference` to it.
+       :class:`~pyTooling.Dependency.Python.RequirementsFileReference` to it. Each file read by
+       :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` measures its duration with a
+       :class:`~pyTooling.Stopwatch.Stopwatch`, the files it references included:
+       :attr:`~pyTooling.Dependency.Python.RequirementsFile.AnalysisDuration`.
      * :exc:`~pyTooling.Dependency.PackageIndexError` reports an HTTP error status of the package index other than ``404
        Not Found``, caused by the :exc:`~requests.HTTPError`.
      * :class:`~pyTooling.Dependency.Resolver.Resolver` resolves requirements - given directly, from a requirements file
