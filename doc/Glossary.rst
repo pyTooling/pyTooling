@@ -925,7 +925,8 @@ Glossary
 
      :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` reads such a file as a
      **tree**: every file knows its parent, its root and the chain between, ``AllRequirements`` yields them in the
-     order the files state them with the nearer statement winning, and a cycle raises rather than being read twice. See
+     order the files state them with the nearer statement winning, and a cycle raises rather than being read twice. A
+     file referenced by two files is read once; the second ``-r`` line refers to it. See
      :ref:`DEPENDENCIES/Python`.
 
      .. seealso::

@@ -317,7 +317,8 @@ Source: :gh:`requirements-parser <madpah/requirements-parser>`, on PyPI as
 * Options traversing the local file system are not handled, so a ``-r`` reference to another file isn't followed.
   :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` reads the referenced files as
   a tree, keeps which file a requirement was stated in, and raises a
-  :exc:`~pyTooling.Dependency.CircularRequirementsFileError` for a cycle.
+  :exc:`~pyTooling.Dependency.CircularRequirementsFileError` for a cycle. A file two files reference is read once; the
+  second ``-r`` line is a :class:`~pyTooling.Dependency.Python.RequirementsFileReference` to it.
 
 .. rubric:: Advantages
 
