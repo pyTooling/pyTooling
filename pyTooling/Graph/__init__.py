@@ -244,8 +244,13 @@ class NotATreeError(GraphError):
 
 
 @export
-class EdgeNotFoundError(GraphError):
-	"""The exception is raised when no edge matching the given source or destination vertex was found."""
+class EdgeNotFoundError(GraphError, LookupError):
+	"""
+	The exception is raised when no edge matching the given source or destination vertex was found.
+
+	It is a :exc:`LookupError` as well, because the edge is looked up by its vertices; catching
+	:exc:`~pyTooling.Graph.GraphError` still catches it.
+	"""
 
 	_source:      Nullable[Vertex]  #: Vertex the edge was searched from.
 	_destination: Nullable[Vertex]  #: Vertex the edge was searched to.
@@ -282,8 +287,13 @@ class EdgeNotFoundError(GraphError):
 
 
 @export
-class LinkNotFoundError(GraphError):
-	"""The exception is raised when no link matching the given source or destination vertex was found."""
+class LinkNotFoundError(GraphError, LookupError):
+	"""
+	The exception is raised when no link matching the given source or destination vertex was found.
+
+	It is a :exc:`LookupError` as well, because the link is looked up by its vertices; catching
+	:exc:`~pyTooling.Graph.GraphError` still catches it.
+	"""
 
 	_source:      Nullable[Vertex]  #: Vertex the link was searched from.
 	_destination: Nullable[Vertex]  #: Vertex the link was searched to.

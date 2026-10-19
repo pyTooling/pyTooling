@@ -554,6 +554,11 @@ Version 10.x (2026)
        the system reported (``UnknownValue``);
        :exc:`~pyTooling.Attributes.AttributeScopeError` the attribute and the entity (``AppliedAttribute``,
        ``Entity``).
+     * A lookup that finds nothing raises an exception that is a :exc:`LookupError` too, as
+       :exc:`~pyTooling.Configuration.KeyNotFoundError` is a :exc:`KeyError`:
+       :exc:`~pyTooling.Dependency.ProjectNotFoundError`, :exc:`~pyTooling.Dependency.ReleaseNotFoundError`,
+       :exc:`~pyTooling.Graph.EdgeNotFoundError` and :exc:`~pyTooling.Graph.LinkNotFoundError`.
+       :exc:`~pyTooling.Dependency.RequirementsFileNotFoundError` is a :exc:`FileNotFoundError` too.
 
    .. rubric:: Breaking Changes
 
