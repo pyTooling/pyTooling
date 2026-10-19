@@ -101,7 +101,15 @@ class TypeName(Testcase):
 		self.assertEqual("upper", getTypeName(str.upper))
 		self.assertEqual("__init__", getTypeName(object.__init__))
 		self.assertEqual("__init__", getTypeName(object().__init__))
-		self.assertEqual("fromkeys", getTypeName(dict.__dict__["fromkeys"]))
+
+	def test_BuiltinClassMethod(self) -> None:
+		self.assertEqual("fromkeys", getTypeName(dict.fromkeys))
+
+	def test_ClassMethodDescriptor(self) -> None:
+		"""A class method read from a class' ``__dict__`` is unbound: the name of its class is returned."""
+		descriptor = dict.__dict__["fromkeys"]
+
+		self.assertEqual(descriptor.__class__.__name__, getTypeName(descriptor))
 
 	def test_Builtin(self) -> None:
 		self.assertEqual("int", getTypeName(5))
