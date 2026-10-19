@@ -10,12 +10,11 @@ being passed along as a parameter.
 
 .. code-block:: Python
 
-   from pyTooling.Timeout import Timeout, TimeoutExpiredError
+   from pyTooling.Timeout import Timeout
 
    with Timeout(20.0):
      for package in packages:
-       if Timeout.IsExpired():
-         raise TimeoutExpiredError("Scanning the dependencies took longer than 20 seconds.", seconds=20.0)
+       Timeout.RaiseIfExpired("Scanning the dependencies took longer than 20 seconds.")
 
        response = session.get(package.URL, timeout=Timeout.Remaining())
 
@@ -49,8 +48,12 @@ A timeout is entered once at a time: entering it again inside its own ``with`` b
 
 The time left is what a blocking call gets as its own timeout - a request (``requests``: ``timeout=``, ``aiohttp``:
 ``ClientTimeout(total=...)``), :meth:`threading.Thread.join`, :meth:`concurrent.futures.Future.result`,
-:func:`asyncio.timeout` or :func:`asyncio.wait_for`. A loop checks :meth:`~pyTooling.Timeout.Timeout.IsExpired` and
-aborts itself by raising :exc:`~pyTooling.Timeout.TimeoutExpiredError`, which is a :exc:`TimeoutError` too.
+:func:`asyncio.timeout` or :func:`asyncio.wait_for`. A loop calls :meth:`~pyTooling.Timeout.Timeout.RaiseIfExpired`
+once per iteration and so aborts itself with a :exc:`~pyTooling.Timeout.TimeoutExpiredError`, which is a
+:exc:`TimeoutError` too. The error carries the configured timeout
+(:attr:`~pyTooling.Timeout.TimeoutExpiredError.Seconds`) and by how many seconds the deadline was overrun
+(:attr:`~pyTooling.Timeout.TimeoutExpiredError.Overrun`) - how long the last iteration ran past it. A loop that needs to
+clean up first asks :meth:`~pyTooling.Timeout.Timeout.IsExpired` and raises itself.
 
 The time runs from entering the context; the deadline is a :func:`time.monotonic` value, so a change of the system's
 clock doesn't shorten or extend it.

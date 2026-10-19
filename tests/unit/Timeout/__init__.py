@@ -235,6 +235,42 @@ class ExpiredError(Testcase):
 			raise TimeoutExpiredError("Expired.")
 
 		self.assertIsNone(context.exception.Seconds)
+		self.assertIsNone(context.exception.Overrun)
+
+	def test_RaiseIfExpired(self) -> None:
+		"""A loop calls RaiseIfExpired once per iteration; the error carries the timeout and the overrun."""
+		iterations = 0
+
+		with self.assertRaises(TimeoutExpiredError) as context:
+			with Timeout(0.05):
+				while True:
+					Timeout.RaiseIfExpired("Loop took too long.")
+
+					iterations += 1
+					sleep(0.01)
+
+		self.assertGreater(iterations, 0)
+		self.assertEqual("Loop took too long.", str(context.exception))
+		self.assertEqual(0.05, context.exception.Seconds)
+		self.assertGreaterEqual(context.exception.Overrun, 0.0)
+		self.assertLess(context.exception.Overrun, 1.0)
+
+	def test_RaiseIfExpired_NotExpired(self) -> None:
+		Timeout.RaiseIfExpired("No timeout is current.")
+
+		with Timeout(10.0):
+			Timeout.RaiseIfExpired("Not expired yet.")
+
+	def test_RaiseIfExpired_Message(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Timeout.RaiseIfExpired(None)
+
+		self.assertEqual("Parameter 'message' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			Timeout.RaiseIfExpired(5)
+
+		self.assertEqual("Parameter 'message' is not of type 'str'.", str(context.exception))
 
 	def test_AbortingLoop(self) -> None:
 		"""A loop checks the timeout and aborts itself."""

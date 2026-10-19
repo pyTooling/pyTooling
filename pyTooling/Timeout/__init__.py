@@ -69,16 +69,19 @@ class TimeoutExpiredError(ToolingException, TimeoutError):
 	"""
 
 	_seconds: Nullable[float]  #: The configured timeout in seconds.
+	_overrun: Nullable[float]  #: Seconds by which the deadline was overrun when the error was raised.
 
-	def __init__(self, message: str, /, *, seconds: Nullable[float] = None) -> None:
+	def __init__(self, message: str, /, *, seconds: Nullable[float] = None, overrun: Nullable[float] = None) -> None:
 		"""
-		Initializes the exception with the timeout, which expired.
+		Initializes the exception with the timeout, which expired, and by how much it was overrun.
 
 		:param message: The exception's message.
 		:param seconds: Optional, the configured timeout in seconds.
+		:param overrun: Optional, the seconds by which the deadline was overrun when the error was raised.
 		"""
 		super().__init__(message)
 		self._seconds = seconds
+		self._overrun = overrun
 
 	@readonly
 	def Seconds(self) -> Nullable[float]:
@@ -88,6 +91,19 @@ class TimeoutExpiredError(ToolingException, TimeoutError):
 		:returns: The timeout in seconds, or ``None`` if it wasn't recorded.
 		"""
 		return self._seconds
+
+	@readonly
+	def Overrun(self) -> Nullable[float]:
+		"""
+		Read-only property to access the seconds by which the deadline was overrun when the error was raised
+		(:attr:`_overrun`).
+
+		A loop checking its timeout once per iteration notices the expiry only at its next check, so the overrun tells how
+		long the last iteration ran past the deadline.
+
+		:returns: The overrun in seconds, or ``None`` if it wasn't recorded.
+		"""
+		return self._overrun
 
 
 @export
@@ -118,8 +134,7 @@ class Timeout(metaclass=ExtendedType, slots=True):
 
 	   with Timeout(20.0):
 	     for package in packages:
-	       if Timeout.IsExpired():
-	         raise TimeoutExpiredError("Scanning the dependencies took longer than 20 seconds.", seconds=20.0)
+	       Timeout.RaiseIfExpired("Scanning the dependencies took longer than 20 seconds.")
 
 	       response = session.get(package.URL, timeout=Timeout.Remaining())
 
@@ -218,6 +233,33 @@ class Timeout(metaclass=ExtendedType, slots=True):
 			return None
 
 		return max(0.0, timeout._deadline - monotonic())
+
+	@classmethod
+	def RaiseIfExpired(cls, message: str) -> None:
+		"""
+		Raise a :exc:`TimeoutExpiredError` if the current timeout of the calling thread has expired.
+
+		This is the check a loop calls once per iteration instead of asking :meth:`IsExpired` and raising itself. The
+		error carries the configured timeout (:attr:`~TimeoutExpiredError.Seconds`) and by how much its deadline was
+		overrun (:attr:`~TimeoutExpiredError.Overrun`). Without a current timeout, nothing happens.
+
+		:param message:              The message of the error, if the timeout expired.
+		:raises ValueError:          If parameter 'message' is ``None``.
+		:raises TypeError:           If parameter 'message' is not of type :class:`str`.
+		:raises TimeoutExpiredError: If the current timeout has expired.
+		"""
+		if message is None:
+			raise ValueError("Parameter 'message' is None.")
+		elif not isinstance(message, str):
+			ex = TypeError("Parameter 'message' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(message)}'.")
+			raise ex
+
+		if (timeout := getattr(_threadLocalData, "timeout", None)) is None:
+			return
+
+		if (overrun := monotonic() - timeout._deadline) >= 0.0:
+			raise TimeoutExpiredError(message, seconds=timeout._seconds, overrun=overrun)
 
 	@classmethod
 	def IsExpired(cls) -> bool:
