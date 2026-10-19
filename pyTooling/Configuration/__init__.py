@@ -106,11 +106,14 @@ class KeyNotFoundError(ConfigurationError, KeyError):
 
 
 @export
-class UnsupportedValueTypeError(ConfigurationError):
+class UnsupportedValueTypeError(ConfigurationError, TypeError):
 	"""
 	The configuration file parser returned a value of a type that isn't supported by :mod:`pyTooling.Configuration`.
 
 	Supported are scalars (:class:`str`, :class:`int`, :class:`float`) and the parser's dictionary and sequence types.
+
+	It is a :exc:`TypeError` as well, because the value's type is what's wrong. Catching
+	:exc:`~pyTooling.Exceptions.ConfigurationError` still catches it.
 	"""
 
 	_value: Any  #: Value of the unsupported type, as returned by the parser.
@@ -133,6 +136,18 @@ class UnsupportedValueTypeError(ConfigurationError):
 		:returns: The value as returned by the parser, or ``None`` if it wasn't recorded.
 		"""
 		return self._value
+
+	@readonly
+	def ValueType(self) -> Nullable[type]:
+		"""
+		Read-only property to return the unsupported type, the type of :attr:`_value`.
+
+		:returns: The type of the value, or ``None`` if the value wasn't recorded.
+		"""
+		if self._value is None:
+			return None
+
+		return type(self._value)
 
 
 @export

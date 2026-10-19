@@ -138,6 +138,14 @@ class Exceptions(Testcase):
 
 		self.assertEqual("Unsupported type.", str(context.exception))
 		self.assertIsNone(context.exception.Value)
+		self.assertIsNone(context.exception.ValueType)
+
+	def test_UnsupportedValueTypeError_TypeError(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			raise UnsupportedValueTypeError("Unsupported type.", value=b"hello")
+
+		self.assertIsInstance(context.exception, UnsupportedValueTypeError)
+		self.assertIs(bytes, context.exception.ValueType)
 
 	def test_PathExpressionError(self) -> None:
 		with self.assertRaises(PathExpressionError) as context:

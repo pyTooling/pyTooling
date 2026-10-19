@@ -180,6 +180,7 @@ class Errors(Testcase):
 
 		self.assertIn("Unsupported type 'bytes' for key 'binaryValue'", str(context.exception))
 		self.assertEqual(b"hello", context.exception.Value)
+		self.assertIs(bytes, context.exception.ValueType)
 
 	def test_UnclosedVariableReference(self) -> None:
 		config = Configuration(self._configFile)

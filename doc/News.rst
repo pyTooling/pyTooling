@@ -479,7 +479,9 @@ Version 10.x (2026)
      * :exc:`~pyTooling.Configuration.KeyNotFoundError` carries the missing key or index in
        :attr:`~pyTooling.Configuration.KeyNotFoundError.Key`.
      * :exc:`~pyTooling.Configuration.UnsupportedValueTypeError` carries the value the parser returned in
-       :attr:`~pyTooling.Configuration.UnsupportedValueTypeError.Value`.
+       :attr:`~pyTooling.Configuration.UnsupportedValueTypeError.Value`, its type in
+       :attr:`~pyTooling.Configuration.UnsupportedValueTypeError.ValueType`. It is a :exc:`TypeError` too, as
+       :exc:`~pyTooling.Configuration.KeyNotFoundError` is a :exc:`KeyError`.
      * :exc:`~pyTooling.Configuration.PathExpressionError` carries the path expression in
        :attr:`~pyTooling.Configuration.PathExpressionError.PathExpression`.
      * :exc:`~pyTooling.Dependency.ProjectNotFoundError` carries the project's name in
