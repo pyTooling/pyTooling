@@ -807,6 +807,12 @@ Version 10.x (2026)
      * ⚠️ A release version the parser can't read is reported as a critical
        :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, carrying ``ProjectName`` and ``Version``, instead of a
        line written by :func:`print`. The release is still skipped.
+     * :meth:`PythonPackageIndex.DownloadProject <pyTooling.Dependency.Python.PythonPackageIndex.DownloadProject>`
+       downloads a project once and returns the same project for every later lookup, also for another spelling of its
+       name; a project the index doesn't know is remembered
+       (:attr:`~pyTooling.Dependency.Python.PythonPackageIndex.UnknownProjects`) and raises
+       :exc:`~pyTooling.Dependency.ProjectNotFoundError` again without a request. It created a new project and
+       downloaded it again on every call.
 
    * :mod:`pyTooling.GenericPath`
 
@@ -917,6 +923,10 @@ Version 10.x (2026)
        authoritative.
      * ``Release.__init__`` couldn't copy its ``requirements``: it iterated the mapping's keys and unpacked each into
        two, so ``{"test": [...]}`` raised a :exc:`ValueError`.
+     * :meth:`Release.DownloadDetails <pyTooling.Dependency.Python.Release.DownloadDetails>` registered an unloaded
+       project for each requirement and replaced a project the index had loaded already, and a project whose download
+       failed with ``404 Not Found`` stayed registered in the index. A lazily loaded project or release asked for a
+       higher loading state downloaded what it had loaded already again.
 
    * :mod:`pyTooling.Filesystem`
 

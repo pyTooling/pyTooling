@@ -60,6 +60,8 @@ from pyTooling.Versioning         import PythonVersion, SemanticVersion
 from pyTooling.Warning            import UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase
 
+from tests.unit.Dependency.FakeIndex import DocumentSession, ProjectDocument
+
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -166,6 +168,108 @@ class NotFound(Testcase):
 		self.assertEqual("Release not found.", str(context.exception))
 		self.assertIsNone(context.exception.ProjectName)
 		self.assertIsNone(context.exception.Version)
+
+
+class ProjectCache(Testcase):
+	"""The index downloads a project once and remembers a project it doesn't know."""
+
+	API = "https://api.index.org/v4/"
+
+	def _Index(self, documents: dict[str, dict]) -> PythonPackageIndex:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", self.API, graph=graph)
+		index._session = DocumentSession(self.API, documents)
+		return index
+
+	def test_SameProject(self) -> None:
+		index = self._Index({"demo/json": ProjectDocument("demo", "1.0", "2.0")})
+
+		first =  index.DownloadProject("demo")
+		second = index.DownloadProject("demo")
+
+		self.assertIs(first, second)
+		self.assertListEqual(["demo/json"], index._session.Requests)
+		self.assertEqual(1, index.ProjectCount)
+
+	def test_OtherSpelling(self) -> None:
+		"""Names are compared in their canonical form (PEP 503)."""
+		index = self._Index({"demo_package/json": ProjectDocument("demo_package", "1.0")})
+
+		first =  index.DownloadProject("demo_package")
+		second = index.DownloadProject("Demo-Package")
+
+		self.assertIs(first, second)
+		self.assertEqual(1, len(index._session.Requests))
+
+	def test_LoadedFurther(self) -> None:
+		"""A project looked up without loading is loaded when a later lookup asks for its details."""
+		index = self._Index({"demo/json": ProjectDocument("demo", "1.0")})
+
+		project = index.DownloadProject("demo", LazyLoaderState.Initialized)
+		self.assertListEqual([], index._session.Requests)
+
+		self.assertIs(project, index.DownloadProject("demo", LazyLoaderState.PartiallyLoaded))
+		self.assertListEqual(["demo/json"], index._session.Requests)
+		self.assertEqual(1, len(project.Releases))
+
+	def test_NotDownloadedTwice(self) -> None:
+		"""A loaded project asked for its details again isn't downloaded again."""
+		index = self._Index({"demo/json": ProjectDocument("demo", "1.0")})
+
+		project = index.DownloadProject("demo", LazyLoaderState.PartiallyLoaded)
+		project.__lazy_loader__(LazyLoaderState.FullyLoaded)
+
+		self.assertListEqual(["demo/json"], index._session.Requests)
+
+	def test_UnknownProject(self) -> None:
+		index = self._Index({})
+
+		with self.assertRaises(ProjectNotFoundError):
+			index.DownloadProject("unknown")
+
+		with self.assertRaises(ProjectNotFoundError) as context:
+			index.DownloadProject("Unknown")
+
+		self.assertEqual("Unknown", context.exception.ProjectName)
+		self.assertIn(
+			"The package index answered '404 Not Found' for it before; it isn't asked again.",
+			context.exception.__notes__
+		)
+		self.assertListEqual(["unknown/json"], index._session.Requests)
+		self.assertTupleEqual(("unknown", ), index.UnknownProjects)
+		self.assertEqual(0, index.ProjectCount)
+
+	def test_UnknownProject_LoadedFurther(self) -> None:
+		"""A project looked up without loading, which turns out to be unknown, is removed from the index."""
+		index = self._Index({})
+
+		index.DownloadProject("unknown", LazyLoaderState.Initialized)
+		self.assertEqual(1, index.ProjectCount)
+
+		with self.assertRaises(ProjectNotFoundError):
+			index.DownloadProject("unknown", LazyLoaderState.PartiallyLoaded)
+
+		self.assertEqual(0, index.ProjectCount)
+		self.assertTupleEqual(("unknown", ), index.UnknownProjects)
+
+	def test_ReleaseKeepsRequiredProject(self) -> None:
+		"""Downloading a release's details doesn't replace a project it requires, which was looked up before."""
+		release = {"info": {"provides_extra": None, "requires_dist": ["dep >= 1.0", "unknown"]}}
+		index =   self._Index({
+			"demo/json":     ProjectDocument("demo", "1.0"),
+			"demo/1.0/json": release,
+			"dep/json":      ProjectDocument("dep", "1.0")
+		})
+		dep = index.DownloadProject("dep")
+		with self.assertRaises(ProjectNotFoundError):
+			index.DownloadProject("unknown")
+
+		demo = index.DownloadProject("demo")
+		demo.LatestRelease.DownloadDetails()
+
+		self.assertIs(dep, index.DownloadProject("dep"))
+		self.assertIs(dep, index.Projects["dep"])
+		self.assertNotIn("unknown", index.Projects)
 
 
 class PyPI(Testcase):

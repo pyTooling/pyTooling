@@ -1084,9 +1084,12 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download the release's details and post-process them, as far as the target state demands.
 
+		A step reached already isn't repeated: a release with its details asked to be post-processed doesn't download
+		them again.
+
 		:param targetLevel: State the release needs to be loaded to.
 		"""
-		if targetLevel >= LazyLoaderState.PartiallyLoaded:
+		if targetLevel >= LazyLoaderState.PartiallyLoaded and self.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
 
 		if targetLevel >= LazyLoaderState.PostProcessed:
@@ -1184,8 +1187,9 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 		index: PythonPackageIndex = self._package._storage
 		for requirement in self._requirements[None]:
-			packageName = requirement.name
-			index.DownloadProject(packageName, True)
+			# a project the index reported as unknown before stays a requirement of this release; it isn't registered
+			if canonicalize_name(requirement.name) not in index._unknownProjects:
+				index.DownloadProject(requirement.name, LazyLoaderState.Initialized)
 
 	def UpdateDetailsFromPyPIJSON(self, json) -> None:
 		"""
@@ -1497,9 +1501,12 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download the project's details and its releases' details, as far as the target state demands.
 
+		A step reached already isn't repeated: a project with its list of releases asked for its releases' details
+		doesn't download the list again.
+
 		:param targetLevel: State the project needs to be loaded to.
 		"""
-		if targetLevel >= LazyLoaderState.PartiallyLoaded:
+		if targetLevel >= LazyLoaderState.PartiallyLoaded and self.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
 
 		if targetLevel >= LazyLoaderState.PostProcessed:
@@ -1738,10 +1745,12 @@ class PythonPackageIndex(PackageStorage):
 	It is the entry point of the dependency graph: projects are looked up here, and every request to the index reuses
 	the same HTTP session.
 	"""
-	_url:              URL               #: URL of the package index's website.
-	_api:              URL               #: URL of the package index's API.
-	_session:          Session           #: HTTP session reused for every request to this index.
-	_licenseOverrides: LicenseOverrides  #: Licenses stated by hand, for what this index can't answer for.
+	_url:              URL                 #: URL of the package index's website.
+	_api:              URL                 #: URL of the package index's API.
+	_session:          Session             #: HTTP session reused for every request to this index.
+	_licenseOverrides: LicenseOverrides    #: Licenses stated by hand, for what this index can't answer for.
+	_projectCache:     dict[str, Project]  #: Projects looked up on this index, by canonical name.
+	_unknownProjects:  set[str]            #: Canonical names of the projects this index doesn't know.
 
 	def __init__(
 		self,
@@ -1765,6 +1774,8 @@ class PythonPackageIndex(PackageStorage):
 		super().__init__(name, graph)
 
 		self._licenseOverrides = licenseOverrides if licenseOverrides is not None else LicenseOverrides()
+		self._projectCache =     {}
+		self._unknownProjects =  set()
 
 		if isinstance(url, str):
 			url = URL.Parse(url)
@@ -1842,6 +1853,17 @@ class PythonPackageIndex(PackageStorage):
 		"""
 		return len(self._packages)
 
+	@readonly
+	def UnknownProjects(self) -> tuple[str, ...]:
+		"""
+		Read-only property to return the canonical names of the projects this index answered ``404 Not Found`` for.
+
+		:meth:`DownloadProject` doesn't ask the index for them again.
+
+		:returns: Tuple of canonical project names.
+		"""
+		return tuple(self._unknownProjects)
+
 	def _GetPyPIEndpoint(self, projectName: str) -> str:
 		"""
 		Return the API endpoint describing a project.
@@ -1855,6 +1877,11 @@ class PythonPackageIndex(PackageStorage):
 		"""
 		Look up a project on this package index.
 
+		The index downloads a project once: a later call, also with another spelling of the name (``Sphinx_RTD_Theme``
+		and ``sphinx-rtd-theme``), returns the same project, loaded further if ``lazy`` asks for more than it has. A
+		project the index answers ``404 Not Found`` for is remembered (:attr:`UnknownProjects`) and raises again
+		without a request.
+
 		Loading the project's details skips a release whose version the parser doesn't support and reports it as a
 		:exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, see :meth:`Project.UpdateDetailsFromPyPIJSON`. If
 		``lazy`` asks for :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, the details of every
@@ -1866,8 +1893,35 @@ class PythonPackageIndex(PackageStorage):
 		:raises UnhandledCriticalWarningError: If ``lazy`` asks for the project's details, a release's version isn't
 		                                       supported and no :class:`~pyTooling.Warning.WarningCollector` collects
 		                                       the warning.
+		:raises ProjectNotFoundError:          If the index doesn't know the project - also when it answered so before,
+		                                       without asking it again.
 		"""
-		project = Project(projectName, "", index=self, lazy=lazy)
+		key = canonicalize_name(projectName)
+		if key in self._unknownProjects:
+			ex = ProjectNotFoundError(f"Package '{projectName}' not found.", projectName=projectName)
+			ex.add_note("The package index answered '404 Not Found' for it before; it isn't asked again.")
+			raise ex
+
+		if (project := self._projectCache.get(key, None)) is None:
+			try:
+				project = Project(projectName, "", index=self, lazy=lazy)
+			except ProjectNotFoundError:
+				# the project registered itself in the index before its download failed
+				self._packages.pop(projectName, None)
+				self._unknownProjects.add(key)
+				raise
+
+			self._projectCache[key] = project
+		else:
+			try:
+				with project.__lazy_lock__:
+					if project.__lazy_state__ < lazy:
+						project.__lazy_loader__(lazy)
+			except ProjectNotFoundError:
+				self._packages.pop(project._name, None)
+				del self._projectCache[key]
+				self._unknownProjects.add(key)
+				raise
 
 		return project
 
