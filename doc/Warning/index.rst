@@ -349,7 +349,11 @@ Designing Warning Classes
 *************************
 
 * Derive a class per situation a caller might react to, and let it carry typed data - e.g.
-  :class:`~pyTooling.Filesystem.PermissionWarning` carries the path, which couldn't be read.
+  :class:`~pyTooling.Filesystem.PermissionWarning` carries the directory, which couldn't be read. Carry the object
+  where it exists, not its name; the name is reachable from the object. The data are keyword-only parameters after the
+  message, defaulting to ``None``, and read-only properties.
+* Group the situations of one kind under a common base class a caller can collect at once - e.g.
+  :class:`~pyTooling.Dependency.BrokenRequirementWarning` for an unparsable requirement and for an undeclared extra.
 * Make a warning **critical**, if a caller who doesn't see it gets a wrong result, e.g.
   :exc:`~pyTooling.Packaging.DirectReferenceWarning`: a requirement left out of an extra changes the package. A caller
   must collect a critical warning.
@@ -358,6 +362,27 @@ Designing Warning Classes
 * Turning a non-critical warning into a critical one is a breaking change: a caller without a collector gets an
   exception.
 * State the criticality in the class' doc-string (see :ref:`WARNING/Documenting`).
+
+.. admonition:: Warning or critical warning?
+   :class: hint
+
+   Ask what happens to a caller who never sees the warning:
+
+   * Its result is still **complete and correct**, just less detailed or less polished: derive from
+     :class:`~pyTooling.Warning.Warning`. A filesystem scan skipping an unreadable directory still returns usable
+     statistics (:class:`~pyTooling.Filesystem.PermissionWarning`); a license that can't be resolved is still shown as
+     published (:class:`~pyTooling.Dependency.UnknownLicenseWarning`); a requirement a release states under an extra it
+     doesn't declare is a defect of that release's metadata, which no installer installs either
+     (:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`).
+   * Its result **silently lacks something** it relies on: derive from :class:`~pyTooling.Warning.CriticalWarning`.
+     Data must never disappear without a report. In :mod:`pyTooling.Dependency`, a requirement line that can't be
+     parsed, a requirement naming an extra the release doesn't declare, or a release whose details can't be read makes
+     a dependency vanish - and a suddenly missing dependency is a serious issue. So
+     :class:`~pyTooling.Dependency.BrokenRequirementWarning`, :class:`~pyTooling.Dependency.ReleaseDetailsWarning`
+     and :class:`~pyTooling.Packaging.DirectReferenceWarning` are critical.
+
+   A critical warning costs nothing while everything is fine: no warning is raised, and nothing has to be handled.
+   Only a caller that can run into the finding has to collect it - and then knows about it.
 
 .. seealso::
 

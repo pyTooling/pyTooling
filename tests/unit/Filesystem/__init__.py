@@ -31,15 +31,24 @@
 """
 Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the statistics collected for it.
 """
-from datetime import timedelta
-from pathlib  import Path
+from datetime              import timedelta
+from os                    import DirEntry, scandir
+from pathlib               import Path
+from sys                   import platform as sys_platform
+from tempfile              import TemporaryDirectory
+from typing                import Iterator
+from unittest.mock         import patch
 
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import count
 from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError
-from pyTooling.Filesystem  import NodeKind
+from pyTooling.Filesystem  import NodeKind, PermissionWarning
 from pyTooling.MetaClasses import AbstractClassError
+from pyTooling.Warning     import WarningCollector
 from pyTooling.Testing     import Testcase
+
+if sys_platform != "win32":
+	from os                  import geteuid
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -392,3 +401,61 @@ class Scanning(Testcase):
 
 		self.assertIsInstance(root.ScanDuration, timedelta)
 		self.assertIsInstance(root.AggregateDuration, timedelta)
+
+
+class PermissionDenied(Testcase):
+	"""A directory that can't be read is skipped and reported as a :exc:`~pyTooling.Filesystem.PermissionWarning`."""
+
+	_root:   Path
+	_locked: Path
+
+	def setUp(self) -> None:
+		super().setUp()
+
+		self._root =   Path(self.enterContext(TemporaryDirectory()))
+		self._locked = self._root / "locked"
+
+		(self._root / "readable").mkdir()
+		(self._root / "readable" / "file.txt").write_text("content")
+		self._locked.mkdir()
+
+		if sys_platform == "win32" or geteuid() == 0:
+			locked = self._locked
+
+			def denyLocked(path: Path) -> Iterator[DirEntry]:
+				if path == locked:
+					raise PermissionError(13, "Permission denied", str(path))
+
+				return scandir(path)
+
+			self.enterContext(patch("pyTooling.Filesystem.scandir", denyLocked))
+		else:
+			self._locked.chmod(0o000)
+			self.addCleanup(self._locked.chmod, 0o700)
+
+	def test_Scan_Uncollected(self) -> None:
+		"""Without a collector, the warning is dropped and the scan continues."""
+		root = Root(self._root)
+
+		self.assertEqual(2, root.TotalSubdirectoryCount)
+		self.assertEqual(1, root.TotalFileCount)
+
+	def test_Scan_Collected(self) -> None:
+		"""With a collector, the warning carries the directory that couldn't be read, and the scan continues."""
+		with WarningCollector() as warnings:
+			root = Root(self._root)
+
+		self.assertEqual(1, len(warnings))
+		warning = warnings[0]
+		self.assertIsInstance(warning, PermissionWarning)
+		self.assertEqual(f"Directory '{self._locked}' can't be read.", str(warning))
+		self.assertIsInstance(warning.Directory, Directory)
+		self.assertEqual(self._locked, warning.Directory.Path)
+		self.assertIsInstance(warning.__cause__, PermissionError)
+		self.assertEqual(2, root.TotalSubdirectoryCount)
+		self.assertEqual(1, root.TotalFileCount)
+
+	def test_MessageOnly(self) -> None:
+		warning = PermissionWarning("Directory can't be read.")
+
+		self.assertIsNone(warning.Directory)

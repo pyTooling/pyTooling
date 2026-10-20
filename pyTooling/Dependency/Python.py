@@ -84,7 +84,8 @@ from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import BrokenRequirementWarning, ReleaseDetailsWarning, UnknownLicenseWarning
+from pyTooling.Dependency      import ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning
+from pyTooling.Dependency      import UnparsableRequirementWarning
 from pyTooling.Dependency      import UnsupportedVersionWarning
 from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
@@ -278,8 +279,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		Every ``-r`` line is read into a referenced file first, so a file is initialized after the files it references,
 		and the root is initialized last. A ``-r`` line referencing a file read before becomes a
 		:class:`RequirementsFileReference` to it; the file isn't read again. A line that can't be parsed as a requirement
-		is left out and reported as a :exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a
-		:class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
+		is left out and reported as a critical :exc:`~pyTooling.Dependency.UnparsableRequirementWarning` to a
+		:class:`~pyTooling.Warning.WarningCollector`; without a collector,
+		:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 
 		Each file measures how long reading it took with a :class:`~pyTooling.Stopwatch.Stopwatch`, the files it
 		references included (:attr:`AnalysisDuration`).
@@ -292,6 +294,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		:raises RequirementsFileNotFoundError: If a ``-r`` line references a file that doesn't exist.
 		:raises CircularRequirementsFileError: If a ``-r`` line references a file still being read, on the chain from the
 		                                       root down to the referencing file.
+		:raises UnhandledCriticalWarningError: If a line can't be parsed as a requirement and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :exc:`~pyTooling.Dependency.UnparsableRequirementWarning`.
 		"""
 		if path is None:
 			raise ValueError("Parameter 'path' is None.")
@@ -356,7 +361,12 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 						entries.append(Requirement(line))
 					except InvalidRequirement as ex:
 						WarningCollector.Raise(
-							BrokenRequirementWarning(f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed."),
+							UnparsableRequirementWarning(
+								f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed.",
+								line=line,
+								filePath=file,
+								lineNumber=lineNumber
+							),
 							ex
 						)
 
@@ -1332,7 +1342,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download this release's details from the package index and load the projects it requires.
 
-		Reading the details reports a :exc:`~pyTooling.Dependency.BrokenRequirementWarning` or an
+		Reading the details reports an :exc:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` or an
 		:exc:`~pyTooling.Dependency.UnknownLicenseWarning` to a :class:`~pyTooling.Warning.WarningCollector`, see
 		:meth:`UpdateDetailsFromPyPIJSON`; without a collector, they're dropped.
 
@@ -1384,10 +1394,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 		The requirements are sorted into the extras they belong to. A requirement lands under ``None`` when it has no
 		marker at all, and also when its marker conditions it on the *environment* rather than on an extra -
 		``importlib-resources; python_version < "3.7"`` is required unconditionally, just not everywhere. A
-		requirement naming an extra the release does not declare is reported as a
-		:exc:`~pyTooling.Dependency.BrokenRequirementWarning`, and a license that can't be resolved as an
+		requirement naming an extra the release does not declare is reported as an
+		:exc:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`, and a license that can't be resolved as an
 		:exc:`~pyTooling.Dependency.UnknownLicenseWarning` (see :meth:`_ResolveLicense`), each to a
-		:class:`~pyTooling.Warning.WarningCollector`; without a collector, they're dropped.
+		:class:`~pyTooling.Warning.WarningCollector`; without a collector, they're dropped. pip doesn't install such a
+		requirement either: it installs the requirements of the extras a release declares only.
 
 		Metadata older than core-metadata 2.1 has no ``provides_extra`` field. Its extras are recovered from the
 		markers naming them, because dropping every conditional requirement of an old release would empty exactly the
@@ -1435,7 +1446,12 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 			if len(brokenRequirements) > 0:
 				WarningCollector.Raise(
-					BrokenRequirementWarning(f"Package '{self._package._name}' has {len(brokenRequirements)} requirement(s) whose marker matches no declared extra."),
+					UndeclaredExtraMarkerWarning(
+						f"Package '{self._package._name}' has {len(brokenRequirements)} requirement(s) whose marker matches no "
+						"declared extra.",
+						release=self,
+						requirements=brokenRequirements
+					),
 					notes=[f"Broken requirement: {req}" for req in brokenRequirements]
 				)
 				# Preserving the broken requirements under the special index 0 makes 'Requirements' a dictionary of mixed
@@ -1539,7 +1555,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 				notes = ["The package index published no license information."]
 
 			WarningCollector.Raise(
-				UnknownLicenseWarning(f"License of '{self._package._name}' {self._version} couldn't be resolved."),
+				UnknownLicenseWarning(
+					f"License of '{self._package._name}' {self._version} couldn't be resolved.",
+					projectName=self._package._name,
+					version=self._version
+				),
 				notes=notes
 			)
 
@@ -1657,11 +1677,16 @@ class Project(Package, LazyLoadableMixin):
 		``lazy`` asks for :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, the details of every
 		release are fetched right away, which reports the warnings of :meth:`DownloadReleaseDetails`.
 
-		:param name:     Name of the project on the package index.
-		:param url:      URL of the project's page, as a string or a parsed URL.
-		:param releases: Optional, releases of this project.
-		:param index:    Optional, package index this project is hosted on.
-		:param lazy:     Optional, state the project should be loaded to immediately.
+		:param name:                           Name of the project on the package index.
+		:param url:                            URL of the project's page, as a string or a parsed URL.
+		:param releases:                       Optional, releases of this project.
+		:param index:                          Optional, package index this project is hosted on.
+		:param lazy:                           Optional, state the project should be loaded to immediately.
+		:raises UnhandledCriticalWarningError: If ``lazy`` asks for
+		                                       :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, a
+		                                       release's details can't be downloaded or read, and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`.
 		"""
 		if index is not None:
 			self._api =     index._api
@@ -1690,7 +1715,12 @@ class Project(Package, LazyLoadableMixin):
 		A step reached already isn't repeated: a project with its list of releases asked for its releases' details
 		doesn't download the list again.
 
-		:param targetLevel: State the project needs to be loaded to.
+		:param targetLevel:                    State the project needs to be loaded to.
+		:raises UnhandledCriticalWarningError: If the target state is
+		                                       :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, a
+		                                       release's details can't be downloaded or read, and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`.
 		"""
 		if targetLevel >= LazyLoaderState.PartiallyLoaded and self.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
@@ -1860,10 +1890,18 @@ class Project(Package, LazyLoadableMixin):
 
 		The event loop runs in the calling thread, so the warnings of :meth:`Release.UpdateDetailsFromPyPIJSON` reach the
 		caller's :class:`~pyTooling.Warning.WarningCollector`. A release whose details can't be downloaded or read is
-		dropped and reported as a :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`; without a collector, the warnings
-		are dropped. An exception raised while reading a release's details doesn't propagate, not even an
-		:exc:`~pyTooling.Warning.EscalatedWarningError` from a collector's handler: the release is dropped and the
-		exception becomes the cause of its :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`.
+		dropped and reported as a critical :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`. An exception raised while
+		reading a release's details doesn't propagate: the release is dropped and the exception becomes the cause of its
+		:exc:`~pyTooling.Dependency.ReleaseDetailsWarning`. That's also the case for an
+		:exc:`~pyTooling.Warning.EscalatedWarningError` from a collector's handler.
+
+		Without a collector, the first :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` raises
+		:exc:`~pyTooling.Warning.UnhandledCriticalWarningError`, after every download finished. No release is dropped
+		then.
+
+		:raises UnhandledCriticalWarningError: If a release's details can't be downloaded or read, and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`.
 		"""
 		async def ParallelDownloadReleaseDetails():
 			"""
@@ -1873,8 +1911,8 @@ class Project(Package, LazyLoadableMixin):
 				"""
 				Nested coroutine downloading the details of a single release.
 
-				:param session: The HTTP session shared by all requests of this download.
-				:param release: The release to download the details for.
+				:param session:                        The HTTP session shared by all requests of this download.
+				:param release:                        The release to download the details for.
 				"""
 				if Parts.Postfix in release._version._parts:
 					pass
@@ -1898,7 +1936,12 @@ class Project(Package, LazyLoadableMixin):
 
 				for release, ex in delList:
 					WarningCollector.Raise(
-						ReleaseDetailsWarning(f"Dropping release '{release.Version}' of package '{release.Project._name}': details couldn't be downloaded."),
+						ReleaseDetailsWarning(
+							f"Dropping release '{release.Version}' of package '{release.Project._name}': details couldn't be "
+							"downloaded.",
+							projectName=release.Project._name,
+							version=release.Version
+						),
 						ex
 					)
 					del self.Releases[release.Version]
@@ -2081,6 +2124,11 @@ class PythonPackageIndex(PackageStorage):
 		                                       the warning.
 		:raises ProjectNotFoundError:          If the index doesn't know the project - also when it answered so before,
 		                                       without asking it again.
+		:raises UnhandledCriticalWarningError: If ``lazy`` asks for
+		                                       :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, a
+		                                       release's details can't be downloaded or read, and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects the
+		                                       :exc:`~pyTooling.Dependency.ReleaseDetailsWarning`.
 		"""
 		key = canonicalize_name(projectName)
 		if key in self._unknownProjects:

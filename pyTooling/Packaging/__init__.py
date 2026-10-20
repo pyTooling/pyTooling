@@ -87,6 +87,59 @@ class DirectReferenceWarning(CriticalWarning):
 	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
+	_requirement: Nullable[str]   #: The requirement left out, as stated.
+	_extra:       Nullable[str]   #: The extra the requirement was left out of.
+	_filePath:    Nullable[Path]  #: The requirements file stating it; ``None`` for parameter 'additionalRequirements'.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		requirement: Nullable[str] = None,
+		extra: Nullable[str] = None,
+		filePath: Nullable[Path] = None
+	) -> None:
+		"""
+		Initializes the warning with the requirement left out, its extra and where it was stated.
+
+		:param message:     The warning's message.
+		:param requirement: Optional, the requirement left out, as stated.
+		:param extra:       Optional, the extra the requirement was left out of.
+		:param filePath:    Optional, the requirements file stating it; ``None`` for parameter 'additionalRequirements'.
+		"""
+		super().__init__(message)
+		self._requirement = requirement
+		self._extra =       extra
+		self._filePath =    filePath
+
+	@readonly
+	def Requirement(self) -> Nullable[str]:
+		"""
+		Read-only property to access the requirement left out, as stated (:attr:`_requirement`).
+
+		:returns: The requirement, or ``None`` if it wasn't recorded.
+		"""
+		return self._requirement
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Read-only property to access the extra the requirement was left out of (:attr:`_extra`).
+
+		:returns: The extra's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._extra
+
+	@readonly
+	def FilePath(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the requirements file stating the requirement (:attr:`_filePath`).
+
+		:returns: The file's path, or ``None`` for a requirement from parameter 'additionalRequirements' or if it wasn't
+		          recorded.
+		"""
+		return self._filePath
+
 
 @export
 class Readme:
@@ -578,7 +631,7 @@ DEFAULT_VERSION_FILE = Path("__init__.py")
 _DIRECT_REFERENCE_PATTERN = re_compile(r"^\s*[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?\s*(?:\[[^\]]*\])?\s*@")
 
 
-def _removeDirectReferences(requirements: Iterable[str], extra: str, source: str) -> list[str]:
+def _removeDirectReferences(requirements: Iterable[str], extra: str, filePath: Nullable[Path]) -> list[str]:
 	"""
 	Remove direct references (``name @ URL``) from the requirements of an extra.
 
@@ -587,11 +640,14 @@ def _removeDirectReferences(requirements: Iterable[str], extra: str, source: str
 
 	:param requirements:                   Requirements of the extra.
 	:param extra:                          Name of the extra.
-	:param source:                         Where the requirements were read from, e.g. the requirements file.
+	:param filePath:                       The requirements file the requirements were read from, or ``None`` for
+	                                       parameter 'additionalRequirements'.
 	:returns:                              The requirements, which aren't direct references.
 	:raises UnhandledCriticalWarningError: If a requirement is a direct reference and no
 	                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 	"""
+	source = "parameter 'additionalRequirements'" if filePath is None else f"'{filePath}'"
+
 	result = []
 	for requirement in requirements:
 		if _DIRECT_REFERENCE_PATTERN.match(requirement) is None:
@@ -600,7 +656,10 @@ def _removeDirectReferences(requirements: Iterable[str], extra: str, source: str
 
 		WarningCollector.Raise(DirectReferenceWarning(
 			f"Requirement '{requirement}' (extra '{extra}', from {source}) is a direct reference, which PyPI rejects; "
-			f"it's left out of the extra."
+			f"it's left out of the extra.",
+			requirement=requirement,
+			extra=extra,
+			filePath=filePath
 		))
 
 	return result
@@ -870,7 +929,7 @@ def DescribePythonPackage(
 			extraRequirements["doc"] = _removeDirectReferences(
 				list(set(loadRequirementsFile(documentationRequirementsFile, debug=debug))),
 				"doc",
-				f"'{documentationRequirementsFile}'"
+				documentationRequirementsFile
 			)
 
 	if unittestRequirementsFile is not None:
@@ -887,7 +946,7 @@ def DescribePythonPackage(
 			extraRequirements["test"] = _removeDirectReferences(
 				list(set(loadRequirementsFile(unittestRequirementsFile, debug=debug))),
 				"test",
-				f"'{unittestRequirementsFile}'"
+				unittestRequirementsFile
 			)
 
 	if packagingRequirementsFile is not None:
@@ -904,12 +963,12 @@ def DescribePythonPackage(
 			extraRequirements["build"] = _removeDirectReferences(
 				list(set(loadRequirementsFile(packagingRequirementsFile, debug=debug))),
 				"build",
-				f"'{packagingRequirementsFile}'"
+				packagingRequirementsFile
 			)
 
 	if additionalRequirements is not None:
 		for key, value in additionalRequirements.items():
-			extraRequirements[key] = _removeDirectReferences(value, key, "parameter 'additionalRequirements'")
+			extraRequirements[key] = _removeDirectReferences(value, key, None)
 
 	if len(extraRequirements) > 0:
 		extraRequirements["all"] = list(set([dep for deps in extraRequirements.values() for dep in deps]))

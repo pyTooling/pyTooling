@@ -78,35 +78,37 @@ class FilesystemError(ToolingException):
 @export
 class PermissionWarning(Warning):
 	"""
-	Warning emitted when a directory or file couldn't be read while scanning a filesystem.
+	Warning emitted when a directory couldn't be read while scanning a filesystem.
 
-	The scan continues, so the collected statistics are incomplete by exactly the path this warning carries.
+	The scan continues, so the collected statistics are incomplete by exactly the directory this warning carries.
 
 	.. attention::
 
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
 	"""
-	_path: Path  #: Path that couldn't be read.
+	_directory: Nullable[_Directory]  #: The directory that couldn't be read.
 
-	def __init__(self, path: Path, *args: Any) -> None:
+	def __init__(self, message: str, /, *, directory: Nullable[_Directory] = None) -> None:
 		"""
-		Initialize a permission warning for the path that couldn't be read.
+		Initializes the warning with the directory that couldn't be read.
 
-		:param path: The path that raised a :exc:`PermissionError`.
-		:param args: Positional parameters forwarded to the base-class.
+		:param message:   The warning's message.
+		:param directory: Optional, the directory whose scan raised a :exc:`PermissionError`.
 		"""
-		super().__init__(*args)
-		self._path = path
+		super().__init__(message)
+		self._directory = directory
 
 	@readonly
-	def Path(self) -> Path:
+	def Directory(self) -> Nullable[_Directory]:
 		"""
-		Read-only property to access the path that couldn't be read (:attr:`_path`).
+		Read-only property to access the directory that couldn't be read (:attr:`_directory`).
 
-		:returns: The path that raised a :exc:`PermissionError`.
+		Its path is :attr:`Directory.Path <pyTooling.Filesystem.Directory.Path>`.
+
+		:returns: The directory, or ``None`` if it wasn't recorded.
 		"""
-		return self._path
+		return self._directory
 
 
 @export
@@ -421,7 +423,7 @@ class Directory(Element["Directory"]):
 			try:
 				items = scandir(directoryPath := self.Path)
 			except PermissionError as ex:
-				WarningCollector.Raise(PermissionWarning(self.Path), ex)
+				WarningCollector.Raise(PermissionWarning(f"Directory '{directoryPath}' can't be read.", directory=self), ex)
 				return
 
 			for dirEntry in items:
@@ -913,6 +915,10 @@ class Directory(Element["Directory"]):
 		:returns: The element's name, without any path.
 		"""
 		return self._name
+
+
+#: Alias of :class:`Directory` for annotations in :class:`PermissionWarning`, whose property has the same name.
+_Directory = Directory
 
 
 @export

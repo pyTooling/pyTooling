@@ -41,6 +41,7 @@ from packaging.markers             import default_environment
 from packaging.requirements        import Requirement
 
 from pyTooling.Dependency          import BrokenRequirementWarning, DependencyError, ExtraNotFoundError
+from pyTooling.Dependency          import UndeclaredExtraWarning
 from pyTooling.Dependency          import PackageIndexFailureWarning, ReleaseNotFoundError, ResolutionTimeoutWarning
 from pyTooling.Dependency          import UnresolvedRequirementWarning
 from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex, RequirementsFile
@@ -644,7 +645,18 @@ class Inputs(ResolverTestcase):
 		self.assertTupleEqual((), dependencies)
 		broken = [warning for warning in warnings.Warnings if isinstance(warning, BrokenRequirementWarning)]
 		self.assertEqual(1, len(broken))
+		self.assertIsInstance(broken[0], UndeclaredExtraWarning)
 		self.assertIn("names extra 'slow'", str(broken[0]))
+		self.assertIs(resolution.Requirements[0], broken[0].Requirement)
+		self.assertEqual("slow", broken[0].Extra)
+		self.assertIs(resolution.Requirements[0].Release, broken[0].Release)
+
+	def test_RequirementExtra_Undeclared_Uncollected(self) -> None:
+		"""Without a collector, the critical warning stops the resolution."""
+		with self.assertRaises(UnhandledCriticalWarningError) as context:
+			Resolver(self._Index(), strategy=ResolutionStrategy.Eager).ResolveRequirements([Requirement("tool[slow]")])
+
+		self.assertIsInstance(context.exception.__cause__, UndeclaredExtraWarning)
 
 	def test_RequirementsFile(self) -> None:
 		with TemporaryDirectory() as directory:

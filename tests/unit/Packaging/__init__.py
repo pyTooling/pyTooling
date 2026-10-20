@@ -458,6 +458,31 @@ class DirectReferences(Testcase):
 		self.assertIn(f"extra 'test', from '{self._directory / 'requirements.Test.txt'}'", messages[1])
 		self.assertIn("extra 'dist', from parameter 'additionalRequirements'", messages[0])
 
+	def test_WarningFields(self) -> None:
+		"""Each warning carries the requirement left out, its extra and the requirements file stating it."""
+		_, warnings = self._describe()
+
+		fields = sorted((warning.Extra, warning.Requirement, warning.FilePath) for warning in warnings)
+
+		self.assertEqual(
+			[
+				("dist", "pyEDAA.Reports @ git+https://github.com/edaa-org/pyEDAA.Reports.git@dev", None),
+				("doc", "pyTooling.Sphinx[reports] @ git+https://github.com/pyTooling/pyTooling.Sphinx.git@dev",
+				 self._directory / "requirements.Doc.txt"),
+				("test", "pyGHDL @ https://github.com/ghdl/ghdl/archive/master.zip", self._directory / "requirements.Test.txt"),
+			],
+			fields
+		)
+
+	def test_DirectReferenceWarning_MessageOnly(self) -> None:
+		from pyTooling.Packaging import DirectReferenceWarning
+
+		warning = DirectReferenceWarning("Requirement is a direct reference.")
+
+		self.assertIsNone(warning.Requirement)
+		self.assertIsNone(warning.Extra)
+		self.assertIsNone(warning.FilePath)
+
 
 class EntryPoints(CollectingTestcase):
 	"""A package advertises what it offers; the describe-functions know which group it is declared in."""

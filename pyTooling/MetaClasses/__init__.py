@@ -233,6 +233,47 @@ class UnannotatedFieldWarning(Warning):
 	   dropped silently.
 	"""
 
+	_className:  Nullable[str]         #: Name of the class under construction.
+	_fieldNames: tuple[str, ...]       #: Names of the fields without a type annotation.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		className: Nullable[str] = None,
+		fieldNames: Nullable[Iterable[str]] = None
+	) -> None:
+		"""
+		Initializes the warning with the class and its fields without a type annotation.
+
+		:param message:    The warning's message.
+		:param className:  Optional, the name of the class under construction.
+		:param fieldNames: Optional, the names of the fields without a type annotation.
+		"""
+		super().__init__(message)
+		self._className =  className
+		self._fieldNames = () if fieldNames is None else tuple(fieldNames)
+
+	@readonly
+	def ClassName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the class under construction (:attr:`_className`).
+
+		The class isn't created yet when the warning is reported, so it carries the name.
+
+		:returns: The class' name, or ``None`` if it wasn't recorded.
+		"""
+		return self._className
+
+	@readonly
+	def FieldNames(self) -> tuple[str, ...]:
+		"""
+		Read-only property to access the names of the fields without a type annotation (:attr:`_fieldNames`).
+
+		:returns: Tuple of field names; empty if they weren't recorded.
+		"""
+		return self._fieldNames
+
 
 @export
 class UnfulfilledExpectationError(ExtendedTypeError):
@@ -1350,7 +1391,11 @@ class ExtendedType(type):
 		if len(unannotatedFields) > 0:
 			fieldNames = "', '".join(unannotatedFields)
 			WarningCollector.Raise(
-				UnannotatedFieldWarning(f"Class '{className}' declares {len(unannotatedFields)} field(s) without a type annotation."),
+				UnannotatedFieldWarning(
+					f"Class '{className}' declares {len(unannotatedFields)} field(s) without a type annotation.",
+					className=className,
+					fieldNames=unannotatedFields
+				),
 				notes=(
 					f"Field(s) without a type annotation: '{fieldNames}'.",
 					"Annotate a class variable as 'ClassVar[...]' or an object field with its type.",
