@@ -1539,7 +1539,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 				notes = ["The package index published no license information."]
 
 			WarningCollector.Raise(
-				UnknownLicenseWarning(f"License of '{self._package._name}' {self._version} couldn't be resolved."),
+				UnknownLicenseWarning(
+					f"License of '{self._package._name}' {self._version} couldn't be resolved.",
+					projectName=self._package._name,
+					version=self._version
+				),
 				notes=notes
 			)
 
@@ -1898,7 +1902,12 @@ class Project(Package, LazyLoadableMixin):
 
 				for release, ex in delList:
 					WarningCollector.Raise(
-						ReleaseDetailsWarning(f"Dropping release '{release.Version}' of package '{release.Project._name}': details couldn't be downloaded."),
+						ReleaseDetailsWarning(
+							f"Dropping release '{release.Version}' of package '{release.Project._name}': details couldn't be "
+							"downloaded.",
+							projectName=release.Project._name,
+							version=release.Version
+						),
 						ex
 					)
 					del self.Releases[release.Version]
