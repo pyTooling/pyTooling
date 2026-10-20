@@ -430,6 +430,45 @@ class UnknownLicenseWarning(Warning):
 	   dropped silently.
 	"""
 
+	_projectName: Nullable[str]              #: Name of the release's project.
+	_version:     Nullable[SemanticVersion]  #: Version of the release.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the warning with the release whose license couldn't be resolved.
+
+		:param message:     The warning's message.
+		:param projectName: Optional, the name of the release's project.
+		:param version:     Optional, the version of the release.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the release's project (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
+
 
 @export
 class ReleaseDetailsWarning(Warning):
@@ -441,6 +480,45 @@ class ReleaseDetailsWarning(Warning):
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
 	"""
+
+	_projectName: Nullable[str]              #: Name of the release's project.
+	_version:     Nullable[SemanticVersion]  #: Version of the release.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the warning with the release that was dropped.
+
+		:param message:     The warning's message.
+		:param projectName: Optional, the name of the release's project.
+		:param version:     Optional, the version of the release.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the release's project (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
 
 
 @export

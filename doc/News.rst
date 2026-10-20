@@ -532,6 +532,9 @@ Version 10.x (2026)
      * :exc:`~pyTooling.Dependency.PackageIndexError` carries the project's name and, for a release, its version in
        :attr:`~pyTooling.Dependency.PackageIndexError.ProjectName` and
        :attr:`~pyTooling.Dependency.PackageIndexError.Version`.
+     * The warnings :exc:`~pyTooling.Dependency.UnknownLicenseWarning` and
+       :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` carry the release's project name and version in
+       ``ProjectName`` and ``Version``, as :exc:`~pyTooling.Dependency.UnresolvedRequirementWarning` does.
      * :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` carries the slot's name and the name of the class
        under construction in :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.FieldName` and
        :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.ClassName`.

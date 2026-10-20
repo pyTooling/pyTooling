@@ -49,7 +49,7 @@ from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_ST
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
 from pyTooling.Dependency         import PackageIndexError, ProjectNotFoundError, ReleaseNotFoundError
-from pyTooling.Dependency         import NoSessionAvailableError, UnsupportedVersionWarning
+from pyTooling.Dependency         import NoSessionAvailableError, ReleaseDetailsWarning, UnsupportedVersionWarning
 from pyTooling.Dependency         import AlreadyInRequirementsTreeError
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
@@ -176,6 +176,46 @@ class NotFound(Testcase):
 	def test_ReleaseNotFoundError_Bases(self) -> None:
 		self.assertTrue(issubclass(ReleaseNotFoundError, LookupError))
 		self.assertTrue(issubclass(ReleaseNotFoundError, DependencyError))
+
+
+class ReleaseWarnings(Testcase):
+	"""A warning about one release carries the release's project name and version."""
+
+	def test_UnknownLicenseWarning(self) -> None:
+		version = PythonVersion.Parse("1.2.3")
+		warning = UnknownLicenseWarning(
+			"License of 'project' 1.2.3 couldn't be resolved.",
+			projectName="project",
+			version=version
+		)
+
+		self.assertEqual("License of 'project' 1.2.3 couldn't be resolved.", str(warning))
+		self.assertEqual("project", warning.ProjectName)
+		self.assertIs(version, warning.Version)
+
+	def test_UnknownLicenseWarning_MessageOnly(self) -> None:
+		warning = UnknownLicenseWarning("License couldn't be resolved.")
+
+		self.assertIsNone(warning.ProjectName)
+		self.assertIsNone(warning.Version)
+
+	def test_ReleaseDetailsWarning(self) -> None:
+		version = PythonVersion.Parse("1.2.3")
+		warning = ReleaseDetailsWarning(
+			"Dropping release '1.2.3' of package 'project'.",
+			projectName="project",
+			version=version
+		)
+
+		self.assertEqual("Dropping release '1.2.3' of package 'project'.", str(warning))
+		self.assertEqual("project", warning.ProjectName)
+		self.assertIs(version, warning.Version)
+
+	def test_ReleaseDetailsWarning_MessageOnly(self) -> None:
+		warning = ReleaseDetailsWarning("Dropping a release.")
+
+		self.assertIsNone(warning.ProjectName)
+		self.assertIsNone(warning.Version)
 
 
 class ProjectCache(Testcase):
@@ -702,6 +742,8 @@ class Licenses(Testcase):
 		warnings = self._resolve(release, self._json(license_expression="Definitely-Not-A-License"))
 
 		self.assertEqual(1, len(warnings))
+		self.assertEqual("project", warnings[0].ProjectName)
+		self.assertIs(release.Version, warnings[0].Version)
 		self.assertEqual(["NOASSERTION"], [lic.Identifier for lic in release.Licenses])
 		self.assertIsInstance(release.LicenseExpression, UnknownLicense)
 		self.assertEqual("Definitely-Not-A-License", release.PublishedLicense)
