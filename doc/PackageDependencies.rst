@@ -256,6 +256,8 @@ dropped silently. A caller collects the warnings to learn what was left out, see
 
 .. code-block:: Python
 
+   from pathlib                     import Path
+
    from pyTooling.Dependency.Python import RequirementsFile
    from pyTooling.Warning           import WarningCollector
 
@@ -264,6 +266,18 @@ dropped silently. A caller collects the warnings to learn what was left out, see
 
    for warning in warnings:
      print(f"WARNING: {warning}")
+
+.. admonition:: Why these warnings are critical
+   :class: note
+
+   Data must never disappear without a report. A requirement left out of a requirements file, an extra a release
+   doesn't declare, or a release whose details can't be read makes a dependency vanish from the result - and a
+   suddenly missing dependency is a serious issue: the package described, the dependency table rendered or the
+   environment resolved is incomplete, and nobody notices. Therefore pyTooling doesn't drop such a finding silently.
+   As long as nothing is wrong, no warning is raised and nothing has to be done. Where a warning can be raised, the
+   caller encloses the call in a :class:`~pyTooling.Warning.WarningCollector` and decides what the finding means for
+   its result; a call left without a collector stops with an :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`
+   instead of returning an incomplete result.
 
 A release whose version number the parser doesn't support, like pytz' ``2004d`` from before :pep:`440`, is skipped
 and reported as an :class:`~pyTooling.Dependency.UnsupportedVersionWarning`. It is a critical warning: without a
