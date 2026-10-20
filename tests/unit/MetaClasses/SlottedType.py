@@ -1578,6 +1578,8 @@ class UnannotatedFields(Testcase):
 		self.assertEqual(1, len(warnings))
 		self.assertIn("Class 'Base' declares 1 field(s) without a type annotation.", str(warnings[0]))
 		self.assertIn("'LIMIT'", warnings[0].__notes__[0])
+		self.assertEqual("Base", warnings[0].ClassName)
+		self.assertTupleEqual(("LIMIT", ), warnings[0].FieldNames)
 
 	def test_UnannotatedFieldWithoutSlots(self) -> None:
 		"""The check doesn't depend on slots - it's about type information, not about the slot machinery."""
@@ -1636,6 +1638,13 @@ class UnannotatedFields(Testcase):
 		self.assertEqual(1, len(warnings))
 		self.assertIn("declares 2 field(s)", str(warnings[0]))
 		self.assertIn("'LIMIT', 'NAME'", warnings[0].__notes__[0])
+		self.assertTupleEqual(("LIMIT", "NAME"), warnings[0].FieldNames)
+
+	def test_UnannotatedFieldWarning_MessageOnly(self) -> None:
+		warning = UnannotatedFieldWarning("Class declares fields without a type annotation.")
+
+		self.assertIsNone(warning.ClassName)
+		self.assertTupleEqual((), warning.FieldNames)
 
 
 class Hierarchy(Testcase):

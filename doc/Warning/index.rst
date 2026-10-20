@@ -349,7 +349,11 @@ Designing Warning Classes
 *************************
 
 * Derive a class per situation a caller might react to, and let it carry typed data - e.g.
-  :class:`~pyTooling.Filesystem.PermissionWarning` carries the path, which couldn't be read.
+  :class:`~pyTooling.Filesystem.PermissionWarning` carries the directory, which couldn't be read. Carry the object
+  where it exists, not its name; the name is reachable from the object. The data are keyword-only parameters after the
+  message, defaulting to ``None``, and read-only properties.
+* Group the situations of one kind under a common base class a caller can collect at once - e.g.
+  :class:`~pyTooling.Dependency.BrokenRequirementWarning` for an unparsable requirement and for an undeclared extra.
 * Make a warning **critical**, if a caller who doesn't see it gets a wrong result, e.g.
   :exc:`~pyTooling.Packaging.DirectReferenceWarning`: a requirement left out of an extra changes the package. A caller
   must collect a critical warning.

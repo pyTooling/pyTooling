@@ -84,7 +84,8 @@ from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
 from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import BrokenRequirementWarning, ReleaseDetailsWarning, UnknownLicenseWarning
+from pyTooling.Dependency      import ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning
+from pyTooling.Dependency      import UnparsableRequirementWarning
 from pyTooling.Dependency      import UnsupportedVersionWarning
 from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
@@ -278,7 +279,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		Every ``-r`` line is read into a referenced file first, so a file is initialized after the files it references,
 		and the root is initialized last. A ``-r`` line referencing a file read before becomes a
 		:class:`RequirementsFileReference` to it; the file isn't read again. A line that can't be parsed as a requirement
-		is left out and reported as a :exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a
+		is left out and reported as a :exc:`~pyTooling.Dependency.UnparsableRequirementWarning` to a
 		:class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
 
 		Each file measures how long reading it took with a :class:`~pyTooling.Stopwatch.Stopwatch`, the files it
@@ -356,7 +357,12 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 						entries.append(Requirement(line))
 					except InvalidRequirement as ex:
 						WarningCollector.Raise(
-							BrokenRequirementWarning(f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed."),
+							UnparsableRequirementWarning(
+								f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed.",
+								line=line,
+								filePath=file,
+								lineNumber=lineNumber
+							),
 							ex
 						)
 
@@ -1332,7 +1338,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download this release's details from the package index and load the projects it requires.
 
-		Reading the details reports a :exc:`~pyTooling.Dependency.BrokenRequirementWarning` or an
+		Reading the details reports a :exc:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` or an
 		:exc:`~pyTooling.Dependency.UnknownLicenseWarning` to a :class:`~pyTooling.Warning.WarningCollector`, see
 		:meth:`UpdateDetailsFromPyPIJSON`; without a collector, they're dropped.
 
@@ -1385,7 +1391,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		marker at all, and also when its marker conditions it on the *environment* rather than on an extra -
 		``importlib-resources; python_version < "3.7"`` is required unconditionally, just not everywhere. A
 		requirement naming an extra the release does not declare is reported as a
-		:exc:`~pyTooling.Dependency.BrokenRequirementWarning`, and a license that can't be resolved as an
+		:exc:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`, and a license that can't be resolved as an
 		:exc:`~pyTooling.Dependency.UnknownLicenseWarning` (see :meth:`_ResolveLicense`), each to a
 		:class:`~pyTooling.Warning.WarningCollector`; without a collector, they're dropped.
 
@@ -1435,7 +1441,12 @@ class Release(PackageVersion, LazyLoadableMixin):
 
 			if len(brokenRequirements) > 0:
 				WarningCollector.Raise(
-					BrokenRequirementWarning(f"Package '{self._package._name}' has {len(brokenRequirements)} requirement(s) whose marker matches no declared extra."),
+					UndeclaredExtraMarkerWarning(
+						f"Package '{self._package._name}' has {len(brokenRequirements)} requirement(s) whose marker matches no "
+						"declared extra.",
+						release=self,
+						requirements=brokenRequirements
+					),
 					notes=[f"Broken requirement: {req}" for req in brokenRequirements]
 				)
 				# Preserving the broken requirements under the special index 0 makes 'Requirements' a dictionary of mixed

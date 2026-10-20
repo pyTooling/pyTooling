@@ -535,6 +535,19 @@ Version 10.x (2026)
      * The warnings :exc:`~pyTooling.Dependency.UnknownLicenseWarning` and
        :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` carry the release's project name and version in
        ``ProjectName`` and ``Version``, as :exc:`~pyTooling.Dependency.UnresolvedRequirementWarning` does.
+     * :exc:`~pyTooling.Dependency.BrokenRequirementWarning` is the base of three warnings, each carrying what it is
+       about: :exc:`~pyTooling.Dependency.UnparsableRequirementWarning` the line of a requirements file (``Line``,
+       ``FilePath``, ``LineNumber``), :exc:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` the release and its
+       requirements whose marker names an undeclared extra (``Release``, ``Requirements``),
+       :exc:`~pyTooling.Dependency.UndeclaredExtraWarning` the resolved requirement naming an extra the selected
+       release doesn't declare (``Requirement``, ``Extra``, ``Release``).
+     * :exc:`~pyTooling.Packaging.DirectReferenceWarning` carries the requirement left out, its extra and the
+       requirements file (``Requirement``, ``Extra``, ``FilePath``);
+       :exc:`~pyTooling.MetaClasses.UnannotatedFieldWarning` the class' name and the fields without a type annotation
+       (``ClassName``, ``FieldNames``).
+     * ⚠️ :exc:`~pyTooling.Filesystem.PermissionWarning` takes a message and carries the directory that couldn't be
+       read in :attr:`~pyTooling.Filesystem.PermissionWarning.Directory`, instead of taking the path as first
+       parameter and returning it as ``Path``; it had no message.
      * :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` carries the slot's name and the name of the class
        under construction in :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.FieldName` and
        :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.ClassName`.
@@ -589,6 +602,9 @@ Version 10.x (2026)
      spec (``f"{sw.Duration:.3f}"``) raises a :exc:`TypeError`; use
      :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds`, :attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds`
      or :attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds` for the number.
+   * ⚠️ :exc:`~pyTooling.Filesystem.PermissionWarning` **takes a message and carries the directory**:
+     ``PermissionWarning(path)`` becomes ``PermissionWarning(message, directory=...)``, and ``warning.Path`` becomes
+     ``warning.Directory.Path``.
    * ⚠️ :attr:`Directory.ScanDuration <pyTooling.Filesystem.Directory.ScanDuration>`,
      :attr:`~pyTooling.Filesystem.Directory.AggregateDuration` and
      :attr:`LayerCake.SlicingDuration <pyTooling.Filesystem.Docker.LayerCake.SlicingDuration>` return a
