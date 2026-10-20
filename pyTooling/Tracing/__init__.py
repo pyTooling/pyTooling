@@ -841,12 +841,27 @@ class Span(TraceElement):
 			raise ex
 
 	@readonly
-	def Duration(self) -> float:
+	def Duration(self) -> timedelta:
 		"""
 		Read-only property accessing the duration from start operation to stop operation.
 
 		If the span is not yet stopped, the duration from start to now is returned. For a timespan with recorded times,
-		the duration is the difference of both times, or the time since its recorded begin while it has no end.
+		the duration is the difference of both times, or the time since its recorded begin while it has no end. A
+		:class:`~datetime.timedelta` resolves microseconds; :attr:`DurationInSeconds` keeps the nanoseconds a performance
+		counter measured.
+
+		:returns:             Duration since span was started.
+		:raises TracingError: When span was never started.
+		"""
+		return timedelta(seconds=self.DurationInSeconds)
+
+	@readonly
+	def DurationInSeconds(self) -> float:
+		"""
+		Read-only property accessing the duration from start operation to stop operation in seconds.
+
+		It is :attr:`Duration` as a number: from a performance counter's nanoseconds, or from the difference of the
+		recorded times.
 
 		:returns:             Duration since span was started in seconds.
 		:raises TracingError: When span was never started.
@@ -991,8 +1006,8 @@ class Span(TraceElement):
 
 			# The wall clock has microsecond resolution while the duration comes from a nanosecond performance
 			# counter, so the end is computed from the duration rather than read from a second wall-clock sample.
-			# A finished timespan's total is already in nanoseconds; 'Duration' of a running one is in seconds.
-			totalTime = int(self.Duration * 1_000_000_000) if self._totalTime is None else self._totalTime
+			# A finished timespan's total is already in nanoseconds; 'DurationInSeconds' of a running one is in seconds.
+			totalTime = int(self.DurationInSeconds * 1_000_000_000) if self._totalTime is None else self._totalTime
 			converted["endTimeUnixNano"] = str(startTimeUnixNano + totalTime)
 
 		if len(attributes := _toAttributes(self._dict.items())) != 0:
@@ -1018,7 +1033,7 @@ class Span(TraceElement):
 		if self.State is SpanState.Empty:
 			return f"{'--':>8} ms"
 
-		return f"{self.Duration * 1e3:8.3f} ms"
+		return f"{self.DurationInSeconds * 1e3:8.3f} ms"
 
 	def Format(self, indent: int = 1, columnSize: int = 25) -> Iterable[str]:
 		"""

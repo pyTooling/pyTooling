@@ -107,7 +107,7 @@ class Instantiation(Testcase):
 		self.assertEqual(_time(0), pipeline.CreatedAt)
 		self.assertEqual(_time(10), pipeline.StartedAt)
 		self.assertEqual(_time(600), pipeline.CompletedAt)
-		self.assertEqual(590.0, pipeline.Duration)
+		self.assertEqual(590.0, pipeline.DurationInSeconds)
 		self.assertIs(Outcome.Success, pipeline.Outcome)
 		self.assertIsNone(pipeline.Reference)
 		self.assertEqual(0, pipeline.ElementCount)
@@ -221,7 +221,8 @@ class Instantiation(Testcase):
 
 		self.assertListEqual([job], pipeline.Jobs)
 		self.assertEqual("success()", job.Rules[0].Condition)
-		self.assertEqual(60.0, job.Duration)
+		self.assertEqual(timedelta(seconds=60), job.Duration)
+		self.assertEqual(60.0, job.DurationInSeconds)
 		self.assertIs(Outcome.Failure, job.Outcome)
 		self.assertListEqual([step], job.Steps)
 		self.assertIs(job, step.Parent)
@@ -562,7 +563,7 @@ class Times(Testcase):
 		self.assertEqual(_time(50), workflow.CreatedAt)
 		self.assertEqual(_time(70), workflow.StartedAt)
 		self.assertEqual(_time(300), workflow.CompletedAt)
-		self.assertEqual(230.0, workflow.Duration)
+		self.assertEqual(230.0, workflow.DurationInSeconds)
 
 	def test_ReportedGroup(self) -> None:
 		"""A pipeline, or a child pipeline a service reports, keeps its own times beside the span of its contents."""
@@ -609,7 +610,7 @@ class Times(Testcase):
 		self.assertEqual(_time(0), group.CreatedAt)
 		self.assertEqual(_time(8), group.StartedAt)
 		self.assertEqual(_time(200), group.CompletedAt)
-		self.assertEqual(192.0, group.Duration)
+		self.assertEqual(192.0, group.DurationInSeconds)
 
 
 class Outcomes(Testcase):

@@ -87,12 +87,14 @@ constructed with them, and attached to its parent by the ``parent`` parameter in
                                              endTime=datetime(2026, 9, 15, 6, 37, 10, tzinfo=timezone.utc))
    job["runner"] = "ubuntu-26.04"
 
-   print(job.Duration)   # 98.0
+   print(job.Duration)            # 0:01:38
+   print(job.DurationInSeconds)   # 98.0
 
 * ``endTime`` requires ``beginTime``, can't precede it, and both are either time zone aware or naive.
 * A source reporting a length instead of an end gives ``duration`` in place of ``endTime``, as a
-  :class:`~datetime.timedelta` or as a number of seconds - :class:`int` for whole, :class:`float` for
-  fractional seconds, the unit :attr:`~pyTooling.Tracing.Span.Duration` reports. It is converted to
+  :class:`~datetime.timedelta` - what :attr:`~pyTooling.Tracing.Span.Duration` reports - or as a number of
+  seconds - :class:`int` for whole, :class:`float` for fractional seconds, as
+  :attr:`~pyTooling.Tracing.Span.DurationInSeconds` reports them. It is converted to
   ``endTime``, so every form is stored alike. Giving both ``endTime`` and ``duration`` raises an exception.
 * A sub-timespan attached with ``parent`` has to lie within its parent's range. Only the direct parent is checked,
   because containment is transitive.
@@ -175,7 +177,7 @@ How a trace is mapped
      - ``traceId`` on every span of the trace
    * - :attr:`~pyTooling.Tracing.Span.SpanID`, drawn when the timespan is constructed
      - ``spanId``, and the ``parentSpanId`` of everything below it
-   * - :attr:`~pyTooling.Tracing.Span.StartTime` and :attr:`~pyTooling.Tracing.Span.Duration`
+   * - :attr:`~pyTooling.Tracing.Span.StartTime` and :attr:`~pyTooling.Tracing.Span.DurationInSeconds`
      - ``startTimeUnixNano`` and ``endTimeUnixNano``
    * - a span's attributes
      - ``attributes``, each value wrapped by its type
@@ -191,9 +193,9 @@ Four details of the encoding are easy to get wrong, and each has a testcase:
   and ``spanId`` (8 bytes), and writes them as lower-case hex.
 * **64-bit integers are strings.** A JSON number cannot carry 64 bits exactly, so timestamps and ``intValue``
   attributes are strings - that part *is* proto3's mapping.
-* **A duration is nanoseconds.** :attr:`~pyTooling.Tracing.Span.Duration` is in seconds, and the end timestamp is
-  computed from it rather than from :attr:`~pyTooling.Tracing.Span.StopTime`, because the duration comes from a
-  nanosecond performance counter while the wall clock has microsecond resolution.
+* **A duration is nanoseconds.** :attr:`~pyTooling.Tracing.Span.DurationInSeconds` is in seconds, and the end
+  timestamp is computed from it rather than from :attr:`~pyTooling.Tracing.Span.StopTime`, because the duration
+  comes from a nanosecond performance counter while the wall clock has microsecond resolution.
 * **A timestamp is converted with integers.** ``timestamp() * 1e9`` goes through a :class:`float`, whose 16
   significant digits leave the nanoseconds of a current timestamp off by up to a few hundred. Seconds and microseconds
   are converted separately, so a timestamp is exact to the microsecond.

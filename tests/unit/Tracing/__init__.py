@@ -65,6 +65,9 @@ class Instantiation(Testcase):
 		with self.assertRaises(TracingError) as ex:
 			_ = t.Duration
 
+		with self.assertRaises(TracingError) as ex:
+			_ = t.DurationInSeconds
+
 	def test_Span(self) -> None:
 		s = Span("span")
 
@@ -116,17 +119,23 @@ class RecordedTimes(Testcase):
 
 		self.assertEqual(self._begin, s.StartTime)
 		self.assertEqual(self._begin + timedelta(seconds=1.5), s.StopTime)
-		self.assertEqual(1.5, s.Duration)
+		self.assertEqual(1.5, s.DurationInSeconds)
+
+	def test_Span_Timedelta(self) -> None:
+		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(seconds=1, microseconds=500_000))
+
+		self.assertIs(timedelta, type(s.Duration))
+		self.assertEqual(timedelta(seconds=1.5), s.Duration)
 
 	def test_Span_Microsecond(self) -> None:
 		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(microseconds=1))
 
-		self.assertEqual(1e-6, s.Duration)
+		self.assertEqual(1e-6, s.DurationInSeconds)
 
 	def test_Span_Days(self) -> None:
 		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(days=2, seconds=3))
 
-		self.assertEqual(2 * 86_400 + 3, s.Duration)
+		self.assertEqual(2 * 86_400 + 3, s.DurationInSeconds)
 
 	def test_Span_Running(self) -> None:
 		"""A recorded timespan without an end is still running, so its duration grows until now."""
@@ -134,13 +143,13 @@ class RecordedTimes(Testcase):
 		s = Span("span", beginTime=begin)
 
 		self.assertIsNone(s.StopTime)
-		self.assertGreaterEqual(s.Duration, 2.0)
+		self.assertGreaterEqual(s.DurationInSeconds, 2.0)
 
 	def test_Span_Naive(self) -> None:
 		begin = datetime(2026, 9, 15, 8, 35, 24)
 		s = Span("span", beginTime=begin, endTime=begin + timedelta(seconds=3))
 
-		self.assertEqual(3.0, s.Duration)
+		self.assertEqual(3.0, s.DurationInSeconds)
 
 	def test_Trace(self) -> None:
 		begin = self._begin
@@ -149,12 +158,12 @@ class RecordedTimes(Testcase):
 		job =  Span("job", parent=t, beginTime=begin + timedelta(seconds=11), endTime=begin + timedelta(minutes=2))
 		step = Span("step", parent=job, beginTime=begin + timedelta(seconds=12), endTime=begin + timedelta(seconds=20))
 
-		self.assertEqual(540.0, t.Duration)
+		self.assertEqual(540.0, t.DurationInSeconds)
 		self.assertIs(t, job.Trace)
 		self.assertIs(t, step.Trace)
 		self.assertListEqual([job], list(t.IterateSubSpans()))
 		self.assertListEqual([step], list(job.IterateSubSpans()))
-		self.assertEqual(8.0, step.Duration)
+		self.assertEqual(8.0, step.DurationInSeconds)
 
 	def test_Trace_Format(self) -> None:
 		t = Trace("pipeline", beginTime=self._begin, endTime=self._begin + timedelta(seconds=2))
@@ -285,14 +294,14 @@ class RecordedTimes(Testcase):
 		span = Span("span", beginTime=self._begin, duration=timedelta(seconds=90))
 
 		self.assertEqual(self._begin + timedelta(seconds=90), span.StopTime)
-		self.assertEqual(90.0, span.Duration)
+		self.assertEqual(90.0, span.DurationInSeconds)
 		self.assertIs(SpanState.Complete, span.State)
 
 	def test_DurationOnTrace(self) -> None:
 		trace = Trace("trace", beginTime=self._begin, duration=timedelta(minutes=2))
 
 		self.assertEqual(self._begin + timedelta(minutes=2), trace.StopTime)
-		self.assertEqual(120.0, trace.Duration)
+		self.assertEqual(120.0, trace.DurationInSeconds)
 
 	def test_DurationWithoutBeginTime(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -324,18 +333,18 @@ class RecordedTimes(Testcase):
 		span = Span("span", beginTime=self._begin, duration=98)
 
 		self.assertEqual(self._begin + timedelta(seconds=98), span.StopTime)
-		self.assertEqual(98.0, span.Duration)
+		self.assertEqual(98.0, span.DurationInSeconds)
 
 	def test_DurationAsFractionalSeconds(self) -> None:
 		span = Span("span", beginTime=self._begin, duration=98.5)
 
 		self.assertEqual(self._begin + timedelta(seconds=98.5), span.StopTime)
-		self.assertEqual(98.5, span.Duration)
+		self.assertEqual(98.5, span.DurationInSeconds)
 
 	def test_DurationAsSecondsOnTrace(self) -> None:
 		trace = Trace("trace", beginTime=self._begin, duration=120)
 
-		self.assertEqual(120.0, trace.Duration)
+		self.assertEqual(120.0, trace.DurationInSeconds)
 
 	def test_DurationType(self) -> None:
 		with self.assertRaises(TypeError) as context:
@@ -371,7 +380,7 @@ class RecordedTimes(Testcase):
 		span.Stop()
 
 		self.assertIs(SpanState.Complete, span.State)
-		self.assertGreaterEqual(span.Duration, 0.0)
+		self.assertGreaterEqual(span.DurationInSeconds, 0.0)
 
 	def test_StopReturnsSelf(self) -> None:
 		span = Span("span", beginTime=datetime.now())
@@ -382,7 +391,7 @@ class RecordedTimes(Testcase):
 		span = Span("span", beginTime=self._begin)
 		span.StopTime = self._begin + timedelta(seconds=3)
 
-		self.assertEqual(3.0, span.Duration)
+		self.assertEqual(3.0, span.DurationInSeconds)
 
 	def test_StopTwice(self) -> None:
 		span = Span("span", beginTime=datetime.now())
@@ -482,7 +491,7 @@ class Context(Testcase):
 		self.assertEqual(0, len(t))
 		self.assertEqual(0, len(list(t)))
 
-		print(f"Duration: {t.Duration*1e3:.3f} ms")
+		print(f"Duration: {t.DurationInSeconds*1e3:.3f} ms")
 		for line in t.Format():
 			print(line)
 

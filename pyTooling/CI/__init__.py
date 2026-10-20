@@ -71,7 +71,7 @@ values, the interface of a reusable workflow.
 """
 from __future__            import annotations
 
-from datetime              import datetime
+from datetime              import datetime, timedelta
 from typing                import Any, ClassVar, Hashable, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
@@ -418,19 +418,33 @@ class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		return self._outcome
 
 	@readonly
-	def Duration(self) -> Nullable[float]:
+	def Duration(self) -> Nullable[timedelta]:
 		"""
 		Read-only property to return how long the element ran.
 
 		The times are read through :attr:`StartedAt` and :attr:`CompletedAt`, so a group deriving its times from what
 		it holds reports a duration too.
 
-		:returns: Seconds from starting to completing, or ``None`` while either time is unknown.
+		:returns: Time from starting to completing, or ``None`` while either time is unknown.
 		"""
 		if self.StartedAt is None or self.CompletedAt is None:
 			return None
 
-		return (self.CompletedAt - self.StartedAt).total_seconds()
+		return self.CompletedAt - self.StartedAt
+
+	@readonly
+	def DurationInSeconds(self) -> Nullable[float]:
+		"""
+		Read-only property to return how long the element ran, in seconds.
+
+		It is :attr:`Duration` as a number.
+
+		:returns: Seconds from starting to completing, or ``None`` while either time is unknown.
+		"""
+		if (duration := self.Duration) is None:
+			return None
+
+		return duration.total_seconds()
 
 	@staticmethod
 	def _Earliest(times: Iterable[Nullable[datetime]]) -> Nullable[datetime]:
