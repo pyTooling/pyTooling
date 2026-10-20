@@ -687,7 +687,16 @@ class GanttLayout(Diagram):
 		return sum(statistics.JobCount for statistics in self._statistics.values())
 
 	@readonly
-	def Duration(self) -> float:
+	def Duration(self) -> timedelta:
+		"""
+		Read-only property to return the end of the last bar (:attr:`_duration`) as a time after the trace began.
+
+		:returns: The end after the trace began.
+		"""
+		return timedelta(seconds=self._duration)
+
+	@readonly
+	def DurationInSeconds(self) -> float:
 		"""
 		Read-only property to access the end of the last bar (:attr:`_duration`).
 

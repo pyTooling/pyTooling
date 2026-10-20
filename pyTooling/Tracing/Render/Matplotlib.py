@@ -278,7 +278,7 @@ class MatplotlibRenderer(Renderer[Figure]):
 		"""
 		layout = self._layout
 		rows = list(layout.IterateRows())
-		duration = max(layout.Duration, 1.0)
+		duration = max(layout.DurationInSeconds, 1.0)
 		minimumWidth = duration / 1000
 		rcParameters = {"font.size": self._fontSize}
 		if len(self._families) > 0:

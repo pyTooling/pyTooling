@@ -282,8 +282,9 @@ class Layout(Testcase):
 		self.assertEqual((_at(1), _at(30)), (row.Begin, row.End))
 
 	def test_Duration(self) -> None:
-		self.assertEqual(100.0, self._Layout().Duration)
-		self.assertEqual(120.0, GanttLayout(_pipeline()["Pipeline"], now=_at(120)).Duration)
+		self.assertEqual(timedelta(seconds=100), self._Layout().Duration)
+		self.assertEqual(100.0, self._Layout().DurationInSeconds)
+		self.assertEqual(120.0, GanttLayout(_pipeline()["Pipeline"], now=_at(120)).DurationInSeconds)
 
 	def test_Times(self) -> None:
 		layout = self._Layout()

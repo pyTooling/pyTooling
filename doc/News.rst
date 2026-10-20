@@ -60,7 +60,8 @@ Version 10.x (2026)
      :class:`~pyTooling.CI.Workflow`\ s, :class:`~pyTooling.CI.Matrix`\ es,
      :class:`~pyTooling.CI.Job`\ s and :class:`~pyTooling.CI.Step`\ s, with the times and an
      :class:`~pyTooling.CI.Outcome` on every element, and rules on those a definition can give them. Its
-     exceptions derive from :exc:`~pyTooling.CI.CIError`.
+     exceptions derive from :exc:`~pyTooling.CI.CIError`. An element's ``Duration`` is a
+     :class:`~datetime.timedelta`, ``DurationInSeconds`` the same as a :class:`float`.
 
      * Workflows, matrices, jobs and steps carry an **ordered list of rules** (:class:`~pyTooling.CI.RulesMixin`):
        a :class:`~pyTooling.CI.Rule` holds a condition as written, a :class:`~pyTooling.CI.RuleOutcome` deciding what
@@ -356,7 +357,9 @@ Version 10.x (2026)
        in rows independently of a drawing library, and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it
        arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
        PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
-       the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
+       the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it. The
+       layout's ``Duration`` - the end of the last bar - is a :class:`~datetime.timedelta`, ``DurationInSeconds`` the
+       same as a :class:`float`.
      * A Gantt chart written as SVG can be **collapsible**: a click on a called workflow or a job hides or shows the
        rows below it.
      * A timespan left by an exception records it - :attr:`~pyTooling.Tracing.Span.Exception` - and the exception
@@ -585,6 +588,8 @@ Version 10.x (2026)
      :attr:`~pyTooling.Filesystem.Directory.AggregateDuration` and
      :attr:`LayerCake.SlicingDuration <pyTooling.Filesystem.Docker.LayerCake.SlicingDuration>` return a
      :class:`~datetime.timedelta` instead of a :class:`float` of seconds; ``.total_seconds()`` gives the number.
+   * ⚠️ :attr:`Span.Duration <pyTooling.Tracing.Span.Duration>` returns a :class:`~datetime.timedelta` instead of a
+     :class:`float` of seconds; use :attr:`~pyTooling.Tracing.Span.DurationInSeconds` for the number.
 
    * ⚠️ :meth:`~pyTooling.GenericPath.PathMixin.Parse` **reads the flavour's** ``ELEMENT_TYPE``, so its signature is
      ``Parse(path, root=None)``. A flavour outside pyTooling passing ``pathCls`` and ``elementCls`` drops them and
@@ -914,6 +919,10 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Tracing`
 
+     * ⚠️ :attr:`Span.Duration <pyTooling.Tracing.Span.Duration>` returns a :class:`~datetime.timedelta`, as
+       :attr:`Stopwatch.Duration <pyTooling.Stopwatch.Stopwatch.Duration>` does; the new
+       :attr:`~pyTooling.Tracing.Span.DurationInSeconds` returns the :class:`float` of seconds it returned before,
+       with the nanoseconds a performance counter measured.
      * :meth:`Span.Format() <pyTooling.Tracing.Span.Format>` and :meth:`Trace.Format() <pyTooling.Tracing.Trace.Format>`
        show ``--`` for a timespan that never started. They raised a :exc:`TypeError`, so one span that was never entered
        made the whole trace unprintable. :attr:`~pyTooling.Tracing.Span.Duration` still raises.
