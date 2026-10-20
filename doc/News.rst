@@ -466,7 +466,9 @@ Version 10.x (2026)
        one level run in parallel. New: :exc:`~pyTooling.Dependency.ExtraNotFoundError`,
        :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`, and the critical
        :class:`~pyTooling.Dependency.PackageIndexFailureWarning` for a server error or a failed connection of the
-       index.
+       index. A resolution honours the current :class:`~pyTooling.Timeout.Timeout`: requirements left unresolved when
+       it expires get the status :attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired` and are
+       reported as the critical :class:`~pyTooling.Dependency.ResolutionTimeoutWarning`.
 
    * :mod:`pyTooling.Configuration`
 

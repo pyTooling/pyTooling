@@ -567,6 +567,60 @@ class PackageIndexFailureWarning(CriticalWarning):
 
 
 @export
+class ResolutionTimeoutWarning(CriticalWarning):
+	"""
+	The current :class:`~pyTooling.Timeout.Timeout` expired while a resolver resolved requirements.
+
+	The requirements it didn't get to stay in the resolution, with the status
+	:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired`; the resolution returned is partial.
+
+	.. important::
+
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+	"""
+
+	_seconds:      Nullable[float]            #: The configured timeout in seconds.
+	_projectNames: Nullable[tuple[str, ...]]  #: Names of the projects whose requirements weren't resolved.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		seconds: Nullable[float] = None,
+		projectNames: Nullable[Iterable[str]] = None
+	) -> None:
+		"""
+		Initializes the warning with the configured timeout and the projects whose requirements weren't resolved.
+
+		:param message:      The warning's message.
+		:param seconds:      Optional, the configured timeout in seconds.
+		:param projectNames: Optional, the names of the projects whose requirements weren't resolved.
+		"""
+		super().__init__(message)
+		self._seconds =      seconds
+		self._projectNames = None if projectNames is None else tuple(projectNames)
+
+	@readonly
+	def Seconds(self) -> Nullable[float]:
+		"""
+		Read-only property to access the configured timeout in seconds (:attr:`_seconds`).
+
+		:returns: The timeout in seconds, or ``None`` if it wasn't recorded.
+		"""
+		return self._seconds
+
+	@readonly
+	def ProjectNames(self) -> Nullable[tuple[str, ...]]:
+		"""
+		Read-only property to access the names of the projects whose requirements weren't resolved (:attr:`_projectNames`).
+
+		:returns: The project names, or ``None`` if they weren't recorded.
+		"""
+		return self._projectNames
+
+
+@export
 class UnsupportedVersionWarning(CriticalWarning):
 	"""
 	A release's version number has a format the version parser doesn't support, therefore the release was skipped.

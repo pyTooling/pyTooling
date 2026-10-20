@@ -32,6 +32,7 @@ Unit tests for :mod:`pyTooling.Dependency.Resolver`, against a package index ans
 """
 from pathlib                       import Path
 from tempfile                      import TemporaryDirectory
+from time                          import sleep
 from typing                        import Any, Optional as Nullable
 from unittest.mock                 import patch
 
@@ -40,10 +41,12 @@ from packaging.markers             import default_environment
 from packaging.requirements        import Requirement
 
 from pyTooling.Dependency          import BrokenRequirementWarning, DependencyError, ExtraNotFoundError
-from pyTooling.Dependency          import PackageIndexFailureWarning, ReleaseNotFoundError, UnresolvedRequirementWarning
+from pyTooling.Dependency          import PackageIndexFailureWarning, ReleaseNotFoundError, ResolutionTimeoutWarning
+from pyTooling.Dependency          import UnresolvedRequirementWarning
 from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex, RequirementsFile
 from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, PreReleasePolicy, Resolution, ResolutionStatus
 from pyTooling.Dependency.Resolver import ResolutionStrategy, ResolvedRequirement, Resolver
+from pyTooling.Timeout             import Timeout
 from pyTooling.Warning             import UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing             import Testcase
 
@@ -75,6 +78,7 @@ def _ReleaseDocument(requirements: list[str], extras: Nullable[list[str]] = None
 # ping 1.0 -> pong; pong 1.0 -> ping (cycle); old 1.0 only; broken 1.0 can't be described; ghost is unknown
 # tool 1.0, extra "fast" -> speedup; speedup 1.0 -> accel; empty has no release
 # flaky answers 503, offline fails to connect; shaky 1.0 answers 500 for its release
+# slow times out; lagging 1.0 times out for its release
 DOCUMENTS = {
 	"app/json":          ProjectDocument("app", "1.0"),
 	"app/1.0/json":      _ReleaseDocument(
@@ -106,7 +110,10 @@ DOCUMENTS = {
 	"flaky/json":        503,
 	"offline/json":      ClientConnectionError("Connection refused"),
 	"shaky/json":        ProjectDocument("shaky", "1.0"),
-	"shaky/1.0/json":    500
+	"shaky/1.0/json":    500,
+	"slow/json":         TimeoutError("Timed out."),
+	"lagging/json":      ProjectDocument("lagging", "1.0"),
+	"lagging/1.0/json":  TimeoutError("Timed out.")
 }
 
 
@@ -350,6 +357,124 @@ class Unresolved(ResolverTestcase):
 		self.assertIs(ping.Release, cycle.Release)
 		self.assertTupleEqual((), cycle.Dependencies)
 		self.assertIn(ping.Release, pong.Release._dependsOn[ping.Project].values())
+
+
+class Timeouts(ResolverTestcase):
+	"""The current timeout limits a resolution; what it cuts off is a status and one critical warning per level."""
+
+	def test_ExpiredBeforeLevel(self) -> None:
+		"""An expired timeout resolves nothing more: no request is sent, every requirement left gets the status."""
+		with Timeout(0.01):
+			sleep(0.05)
+			with WarningCollector() as warnings:
+				resolution = Resolver(self._Index()).ResolveRequirements([Requirement("app"), Requirement("lib")])
+
+		for requirement in resolution.Requirements:
+			self.assertIs(ResolutionStatus.TimeoutExpired, requirement.Status)
+			self.assertIsNone(requirement.Project)
+
+		self.assertListEqual([], DocumentClientSession.Sessions)
+		self.assertEqual(1, len(warnings.Warnings))
+		self.assertIsInstance(warnings.Warnings[0], ResolutionTimeoutWarning)
+		self.assertEqual(0.01, warnings.Warnings[0].Seconds)
+		self.assertTupleEqual(("app", "lib"), warnings.Warnings[0].ProjectNames)
+
+	def test_ExpiredKeepsMarkerStatus(self) -> None:
+		"""Checks without a download still apply: a marker that doesn't apply keeps its status."""
+		environment = dict(default_environment())
+		environment["sys_platform"] = "linux"
+
+		with Timeout(0.01):
+			sleep(0.05)
+			with WarningCollector():
+				resolution = Resolver(self._Index(), environment=environment).ResolveRequirements([
+					Requirement('winonly; sys_platform == "win32"')
+				])
+
+		self.assertIs(ResolutionStatus.MarkerNotApplying, resolution.Requirements[0].Status)
+
+	def test_ProjectTimedOut(self) -> None:
+		"""A project download cut off by the timeout is no index failure."""
+		resolver = Resolver(self._Index())
+		with Timeout(10.0):
+			with WarningCollector() as warnings:
+				resolution = resolver.ResolveRequirements([Requirement("slow")])
+
+		slow = resolution.Requirements[0]
+		self.assertIs(ResolutionStatus.TimeoutExpired, slow.Status)
+		self.assertIsNone(slow.Project)
+		self.assertSetEqual(set(), resolver._failed)
+		self.assertEqual(1, len(warnings.Warnings))
+		self.assertIsInstance(warnings.Warnings[0], ResolutionTimeoutWarning)
+		self.assertEqual(10.0, warnings.Warnings[0].Seconds)
+		self.assertTupleEqual(("slow",), warnings.Warnings[0].ProjectNames)
+
+	def test_ReleaseTimedOut(self) -> None:
+		"""A release download cut off by the timeout keeps the project, but selects no release."""
+		with Timeout(10.0):
+			with WarningCollector() as warnings:
+				resolution = Resolver(self._Index()).ResolveRequirements([Requirement("lagging")])
+
+		lagging = resolution.Requirements[0]
+		self.assertIs(ResolutionStatus.TimeoutExpired, lagging.Status)
+		self.assertEqual("lagging", lagging.Project.Name)
+		self.assertIsNone(lagging.Release)
+		self.assertTupleEqual(("lagging",), warnings.Warnings[0].ProjectNames)
+
+	def test_TimedOutWithoutTimeout(self) -> None:
+		"""Without a current timeout, a request timing out is an index failure, as any other failed request."""
+		with WarningCollector() as warnings:
+			resolution = Resolver(self._Index()).ResolveRequirements([Requirement("slow")])
+
+		self.assertIs(ResolutionStatus.IndexFailure, resolution.Requirements[0].Status)
+		self.assertIsInstance(warnings.Warnings[0], PackageIndexFailureWarning)
+		self.assertIsInstance(warnings.Warnings[0].__cause__, TimeoutError)
+
+	def test_SessionTimeout(self) -> None:
+		"""The downloads get the time left as the session's total timeout."""
+		with Timeout(10.0):
+			Resolver(self._Index()).ResolveRequirements([Requirement("util")])
+
+		for session in DocumentClientSession.Sessions:
+			self.assertGreater(session.Arguments["timeout"].total, 0.0)
+			self.assertLessEqual(session.Arguments["timeout"].total, 10.0)
+
+	def test_SessionWithoutTimeout(self) -> None:
+		"""Without a current timeout, the session keeps aiohttp's default timeout."""
+		Resolver(self._Index()).ResolveRequirements([Requirement("util")])
+
+		for session in DocumentClientSession.Sessions:
+			self.assertNotIn("timeout", session.Arguments)
+
+	def test_Lazy(self) -> None:
+		"""A lazily resolved level uses the timeout current when its dependencies are asked for."""
+		resolution = Resolver(self._Index()).ResolveRequirements([Requirement("app")])
+
+		with Timeout(0.01):
+			sleep(0.05)
+			with WarningCollector() as warnings:
+				dependencies = resolution.Requirements[0].Dependencies
+
+		self.assertIs(ResolutionStatus.Resolved, resolution.Requirements[0].Status)
+		for dependency in dependencies:
+			self.assertIs(ResolutionStatus.TimeoutExpired, dependency.Status)
+
+		self.assertEqual(1, len(warnings.Warnings))
+
+	def test_Warning_MessageOnly(self) -> None:
+		"""A warning raised with a message only carries no timeout and no projects."""
+		warning = ResolutionTimeoutWarning("Timeout expired.")
+
+		self.assertEqual("Timeout expired.", str(warning))
+		self.assertIsNone(warning.Seconds)
+		self.assertIsNone(warning.ProjectNames)
+
+	def test_Uncollected(self) -> None:
+		"""Without a collector, the critical warning raises."""
+		with Timeout(0.01):
+			sleep(0.05)
+			with self.assertRaises(UnhandledCriticalWarningError):
+				Resolver(self._Index()).ResolveRequirements([Requirement("app")])
 
 
 class Limit(ResolverTestcase):
