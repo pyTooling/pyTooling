@@ -247,9 +247,23 @@ selected release doesn't declare). A license that can't be resolved is reported 
 can't resolve, because the index doesn't know its project or can't describe the selected release, is reported as an
 :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its status.
 
-These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
-collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see
-:ref:`WARNING`.
+:class:`~pyTooling.Dependency.BrokenRequirementWarning` (with its derived warnings) and
+:class:`~pyTooling.Dependency.ReleaseDetailsWarning` are critical: something was left out, so a caller who doesn't
+see the warning gets a wrong result. Without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy,
+:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised. :class:`~pyTooling.Dependency.UnknownLicenseWarning`
+and :class:`~pyTooling.Dependency.UnresolvedRequirementWarning` are non-critical: without a collector, they are
+dropped silently. A caller collects the warnings to learn what was left out, see :ref:`WARNING`:
+
+.. code-block:: Python
+
+   from pyTooling.Dependency.Python import RequirementsFile
+   from pyTooling.Warning           import WarningCollector
+
+   with WarningCollector() as warnings:
+     requirements = RequirementsFile.Parse(Path("requirements.txt"))
+
+   for warning in warnings:
+     print(f"WARNING: {warning}")
 
 A release whose version number the parser doesn't support, like pytz' ``2004d`` from before :pep:`440`, is skipped
 and reported as an :class:`~pyTooling.Dependency.UnsupportedVersionWarning`. It is a critical warning: without a

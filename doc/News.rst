@@ -730,6 +730,14 @@ Version 10.x (2026)
      console instead. The release is still skipped, but without a :class:`~pyTooling.Warning.WarningCollector`, reading
      such a project raises :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`.
 
+   * ⚠️ :exc:`~pyTooling.Dependency.BrokenRequirementWarning` **(with its derived warnings) and**
+     :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` **are critical warnings.** Without a
+     :class:`~pyTooling.Warning.WarningCollector`, :meth:`RequirementsFile.Parse
+     <pyTooling.Dependency.Python.RequirementsFile.Parse>`, reading a release's details, downloading a project's
+     release details and the :class:`~pyTooling.Dependency.Resolver.Resolver` raise
+     :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` (the warning is its ``__cause__``) instead of dropping the
+     warning silently. Wrap such a call in a collector and handle the warnings it returns.
+
    * ⚠️ :exc:`~pyTooling.Exceptions.ExceptionBase` **has no** ``message`` **field anymore**. Read the message with
      ``str(ex)`` or the new read-only property :attr:`~pyTooling.Exceptions.ExceptionBase.Message`.
    * ⚠️ :class:`~pyTooling.Dependency.Python.RequirementsFile` **is read by**
@@ -877,6 +885,15 @@ Version 10.x (2026)
      * ⚠️ A release version the parser can't read is reported as a critical
        :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, carrying ``ProjectName`` and ``Version``, instead of a
        line written by :func:`print`. The release is still skipped.
+     * ⚠️ :exc:`~pyTooling.Dependency.BrokenRequirementWarning` (and so
+       :exc:`~pyTooling.Dependency.UnparsableRequirementWarning`,
+       :exc:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` and
+       :exc:`~pyTooling.Dependency.UndeclaredExtraWarning`)
+       and :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` derive from :class:`~pyTooling.Warning.CriticalWarning`:
+       a requirement left out of a file, a release or a resolution, and a release dropped from a project, went
+       unnoticed without a collector. :exc:`~pyTooling.Dependency.UnknownLicenseWarning` stays non-critical.
+       :meth:`Project.DownloadReleaseDetails <pyTooling.Dependency.Python.Project.DownloadReleaseDetails>` without a
+       collector raises for the first release it can't read once every download finished, and drops no release then.
      * :meth:`PythonPackageIndex.DownloadProject <pyTooling.Dependency.Python.PythonPackageIndex.DownloadProject>`
        downloads a project once and returns the same project for every later lookup, also for another spelling of its
        name; a project the index doesn't know is remembered

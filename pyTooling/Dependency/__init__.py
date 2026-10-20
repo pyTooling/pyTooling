@@ -406,17 +406,17 @@ class ExtraNotFoundError(DependencyError, LookupError):
 
 
 @export
-class BrokenRequirementWarning(Warning):
+class BrokenRequirementWarning(CriticalWarning):
 	"""
 	Base-class of the warnings about a requirement that can't be used as stated.
 
 	A requirement can't be parsed, or names an extra that isn't declared. Such a requirement is left out. Catch this
 	class to handle every kind; each derived class carries what it is about.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 
@@ -425,10 +425,10 @@ class UnparsableRequirementWarning(BrokenRequirementWarning):
 	"""
 	A line of a requirements file can't be parsed as a requirement, so it's left out of the file.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 	_line:       Nullable[str]   #: The line's text.
@@ -492,10 +492,10 @@ class UndeclaredExtraMarkerWarning(BrokenRequirementWarning):
 	Such a requirement can't be assigned to an extra, so it's not reachable through
 	:attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 	_release:      Nullable[PackageVersion]  #: The release stating the requirements.
@@ -545,10 +545,10 @@ class UndeclaredExtraWarning(BrokenRequirementWarning):
 
 	The extra isn't followed; the release's other requirements are.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 	_requirement: Nullable[ResolvedRequirement]  #: The requirement naming the extra.
@@ -659,14 +659,14 @@ class UnknownLicenseWarning(Warning):
 
 
 @export
-class ReleaseDetailsWarning(Warning):
+class ReleaseDetailsWarning(CriticalWarning):
 	"""
 	Downloading the details of a release failed, therefore the release was dropped from the project.
 
-	.. attention::
+	.. important::
 
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
 	_projectName: Nullable[str]              #: Name of the release's project.
