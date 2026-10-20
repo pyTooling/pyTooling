@@ -651,6 +651,13 @@ class Inputs(ResolverTestcase):
 		self.assertEqual("slow", broken[0].Extra)
 		self.assertIs(resolution.Requirements[0].Release, broken[0].Release)
 
+	def test_RequirementExtra_Undeclared_Uncollected(self) -> None:
+		"""Without a collector, the critical warning stops the resolution."""
+		with self.assertRaises(UnhandledCriticalWarningError) as context:
+			Resolver(self._Index(), strategy=ResolutionStrategy.Eager).ResolveRequirements([Requirement("tool[slow]")])
+
+		self.assertIsInstance(context.exception.__cause__, UndeclaredExtraWarning)
+
 	def test_RequirementsFile(self) -> None:
 		with TemporaryDirectory() as directory:
 			path = Path(directory) / "requirements.txt"

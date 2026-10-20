@@ -363,6 +363,27 @@ Designing Warning Classes
   exception.
 * State the criticality in the class' doc-string (see :ref:`WARNING/Documenting`).
 
+.. admonition:: Warning or critical warning?
+   :class: hint
+
+   Ask what happens to a caller who never sees the warning:
+
+   * Its result is still **complete and correct**, just less detailed or less polished: derive from
+     :class:`~pyTooling.Warning.Warning`. A filesystem scan skipping an unreadable directory still returns usable
+     statistics (:class:`~pyTooling.Filesystem.PermissionWarning`); a license that can't be resolved is still shown as
+     published (:class:`~pyTooling.Dependency.UnknownLicenseWarning`); a requirement a release states under an extra it
+     doesn't declare is a defect of that release's metadata, which no installer installs either
+     (:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`).
+   * Its result **silently lacks something** it relies on: derive from :class:`~pyTooling.Warning.CriticalWarning`.
+     Data must never disappear without a report. In :mod:`pyTooling.Dependency`, a requirement line that can't be
+     parsed, a requirement naming an extra the release doesn't declare, or a release whose details can't be read makes
+     a dependency vanish - and a suddenly missing dependency is a serious issue. So
+     :class:`~pyTooling.Dependency.BrokenRequirementWarning`, :class:`~pyTooling.Dependency.ReleaseDetailsWarning`
+     and :class:`~pyTooling.Packaging.DirectReferenceWarning` are critical.
+
+   A critical warning costs nothing while everything is fine: no warning is raised, and nothing has to be handled.
+   Only a caller that can run into the finding has to collect it - and then knows about it.
+
 .. seealso::
 
    :ref:`TUTORIAL/ExceptionHierarchy/Warnings`

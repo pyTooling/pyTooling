@@ -36,7 +36,8 @@ from datetime                     import date, datetime, timedelta, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
-from typing                       import Optional as Nullable
+from typing                       import Any, Optional as Nullable, Self
+from unittest.mock                import patch
 
 from packaging.requirements       import Requirement
 from pytest                       import mark
@@ -59,7 +60,7 @@ from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 from pyTooling.Licensing          import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
 from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperator
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
-from pyTooling.Warning            import UnhandledCriticalWarningError, WarningCollector
+from pyTooling.Warning            import CriticalWarning, UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase
 
 from tests.unit.Dependency.FakeIndex import DocumentSession, ProjectDocument
@@ -224,8 +225,14 @@ class BrokenRequirementWarnings(Testcase):
 	"""The warnings about a broken requirement share a base class and carry what they are about."""
 
 	def test_Bases(self) -> None:
-		for warningClass in (UnparsableRequirementWarning, UndeclaredExtraMarkerWarning, UndeclaredExtraWarning):
+		for warningClass in (UnparsableRequirementWarning, UndeclaredExtraWarning):
 			self.assertTrue(issubclass(warningClass, BrokenRequirementWarning))
+			self.assertTrue(issubclass(warningClass, CriticalWarning))
+
+	def test_UndeclaredExtraMarkerWarning_Base(self) -> None:
+		"""A requirement under an undeclared extra is a defect of third-party metadata, not a missing dependency."""
+		self.assertFalse(issubclass(UndeclaredExtraMarkerWarning, BrokenRequirementWarning))
+		self.assertFalse(issubclass(UndeclaredExtraMarkerWarning, CriticalWarning))
 
 	def test_UnparsableRequirementWarning_MessageOnly(self) -> None:
 		warning = UnparsableRequirementWarning("Requirement can't be parsed.")
@@ -494,13 +501,22 @@ class Requirements(Testcase):
 		with WarningCollector(handler=lambda warning: False) as collector:
 			release.UpdateDetailsFromPyPIJSON(json)
 
-		broken = [warning for warning in collector.Warnings if isinstance(warning, BrokenRequirementWarning)]
+		broken = [warning for warning in collector.Warnings if isinstance(warning, UndeclaredExtraMarkerWarning)]
 
 		self.assertEqual(1, len(broken))
-		self.assertIsInstance(broken[0], UndeclaredExtraMarkerWarning)
 		self.assertIs(release, broken[0].Release)
 		self.assertEqual(["lxml>=6.1; extra == \"xml\""], [str(requirement) for requirement in broken[0].Requirements])
 		self.assertEqual(["Broken requirement: lxml>=6.1; extra == \"xml\""], broken[0].__notes__)
+
+	def test_Requirement_UnknownExtra_Uncollected(self) -> None:
+		"""Without a collector, the non-critical warning is dropped and the requirement is left out."""
+		release = self._release()
+		json = self._json(["terminal"], ['lxml >= 6.1; extra == "xml"'])
+
+		release.UpdateDetailsFromPyPIJSON(json)
+
+		self.assertSetEqual({None, "terminal"}, set(release.Requirements))
+		self.assertEqual(0, sum(len(requirements) for requirements in release.Requirements.values()))
 
 
 class ReleaseDetails(Testcase):
@@ -534,6 +550,111 @@ class ReleaseDetails(Testcase):
 		self.assertIn("importlib-resources", oldestRequirements)
 		self.assertNotIn("importlib-resources", latestRequirements)
 		self.assertNotEqual(oldestRequirements, latestRequirements)
+
+
+class _Response:
+	"""Response of :class:`_Session`: a JSON document, or ``None`` for a failed request."""
+
+	_json: Nullable[dict[str, Any]]
+
+	def __init__(self, json: Nullable[dict[str, Any]]) -> None:
+		self._json = json
+
+	async def __aenter__(self) -> Self:
+		return self
+
+	async def __aexit__(self, *_: Any) -> bool:
+		return False
+
+	async def json(self) -> Nullable[dict[str, Any]]:
+		return self._json
+
+	def raise_for_status(self) -> None:
+		if self._json is None:
+			raise ConnectionError("Request failed.")
+
+
+class _Session:
+	"""Replaces :class:`aiohttp.ClientSession` and answers each endpoint from a dictionary."""
+
+	_responses: dict[str, Nullable[dict[str, Any]]]
+
+	def __init__(self, responses: dict[str, Nullable[dict[str, Any]]]) -> None:
+		self._responses = responses
+
+	async def __aenter__(self) -> Self:
+		return self
+
+	async def __aexit__(self, *_: Any) -> bool:
+		return False
+
+	def get(self, endpoint: str) -> _Response:
+		return _Response(self._responses[endpoint])
+
+
+class ReleaseDetailsWarnings(Testcase):
+	"""How :meth:`~pyTooling.Dependency.Python.Project.DownloadReleaseDetails` reports a release it can't read."""
+
+	_project: Project
+
+	def setUp(self) -> None:
+		super().setUp()
+
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		self._project = Project("project", "https://index.org/project/", index=index)
+
+		file = {
+			"filename":             "project.whl",
+			"url":                  "https://index.org/project.whl",
+			"upload_time_iso_8601": "2026-01-01T00:00:00"
+		}
+		self._project.UpdateDetailsFromPyPIJSON({
+			"info":     {"project_url": "https://index.org/project/"},
+			"releases": {"1.0.0": [file], "2.0.0": [file]}
+		})
+
+	def _download(self, broken: Nullable[dict[str, Any]]) -> None:
+		"""Download the details of both releases; release 1.0.0 answers with ``broken``."""
+		valid = {"info": {"provides_extra": None, "requires_dist": None}}
+		responses = {"project/1.0.0/json": broken, "project/2.0.0/json": valid}
+
+		with patch("pyTooling.Dependency.Python.ClientSession", lambda **_: _Session(responses)):
+			self._project.DownloadReleaseDetails()
+
+	def test_BrokenRequirement_Collected(self) -> None:
+		"""The warning is collected and the release is kept."""
+		with WarningCollector() as warnings:
+			self._download({"info": {"provides_extra": [], "requires_dist": ['lxml >= 6.1; extra == "xml"']}})
+
+		self.assertEqual(1, len([warning for warning in warnings if isinstance(warning, UndeclaredExtraMarkerWarning)]))
+		self.assertEqual(0, len([warning for warning in warnings if isinstance(warning, ReleaseDetailsWarning)]))
+		self.assertSetEqual({"1.0.0", "2.0.0"}, {str(version) for version in self._project.Releases})
+
+	def test_BrokenRequirement_Uncollected(self) -> None:
+		"""Without a collector, the non-critical warning is dropped and both releases are kept."""
+		self._download({"info": {"provides_extra": [], "requires_dist": ['lxml >= 6.1; extra == "xml"']}})
+
+		self.assertSetEqual({"1.0.0", "2.0.0"}, {str(version) for version in self._project.Releases})
+
+	def test_DownloadFailed_Collected(self) -> None:
+		"""The warning is collected and the release is dropped."""
+		with WarningCollector() as warnings:
+			self._download(None)
+
+		dropped = [warning for warning in warnings if isinstance(warning, ReleaseDetailsWarning)]
+		self.assertEqual(1, len(dropped))
+		self.assertIsInstance(dropped[0].__cause__, ConnectionError)
+		self.assertEqual(["2.0.0"], [str(version) for version in self._project.Releases])
+
+	def test_DownloadFailed_Uncollected(self) -> None:
+		"""Without a collector, the warning raises an :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`."""
+		with self.assertRaises(UnhandledCriticalWarningError) as context:
+			self._download(None)
+
+		warning = context.exception.__cause__
+		self.assertIsInstance(warning, ReleaseDetailsWarning)
+		self.assertIsInstance(warning.__cause__, ConnectionError)
 
 
 class ProjectReleases(Testcase):
@@ -1507,6 +1628,19 @@ class RequirementsFiles(Testcase):
 		self.assertEqual("this is not a requirement", warning.Line)
 		self.assertEqual(path, warning.FilePath)
 		self.assertEqual(2, warning.LineNumber)
+
+	def test_BrokenRequirement_Uncollected(self) -> None:
+		"""Without a collector, the critical warning raises an :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", """
+				pytest ~= 9.1
+				this is not a requirement
+			""")
+
+			with self.assertRaises(UnhandledCriticalWarningError) as context:
+				RequirementsFile.Parse(path)
+
+		self.assertIsInstance(context.exception.__cause__, UnparsableRequirementWarning)
 
 	def test_MissingFile(self) -> None:
 		"""A requirements file that doesn't exist is an error, not an empty list."""

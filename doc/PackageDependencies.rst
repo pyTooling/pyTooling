@@ -238,18 +238,47 @@ requirements of an extra are asked for, which a release doesn't declare.
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
-graph. :class:`~pyTooling.Dependency.BrokenRequirementWarning` is the base of three warnings, each carrying what it is
-about: :class:`~pyTooling.Dependency.UnparsableRequirementWarning` (a line of a requirements file),
-:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` (requirements of a release whose marker names an extra the
-release doesn't declare) and :class:`~pyTooling.Dependency.UndeclaredExtraWarning` (a requirement naming an extra the
-selected release doesn't declare). A license that can't be resolved is reported as an
+graph. :class:`~pyTooling.Dependency.BrokenRequirementWarning` is the base of two warnings, each carrying what it is
+about: :class:`~pyTooling.Dependency.UnparsableRequirementWarning` (a line of a requirements file) and
+:class:`~pyTooling.Dependency.UndeclaredExtraWarning` (a requirement naming an extra the selected release doesn't
+declare). Requirements of a release whose marker names an extra the release doesn't declare are reported as an
+:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`. A license that can't be resolved is reported as an
 :class:`~pyTooling.Dependency.UnknownLicenseWarning`. A requirement a :class:`~pyTooling.Dependency.Resolver.Resolver`
 can't resolve, because the index doesn't know its project or can't describe the selected release, is reported as an
 :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its status.
 
-These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
-collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see
-:ref:`WARNING`.
+:class:`~pyTooling.Dependency.BrokenRequirementWarning` (with its derived warnings) and
+:class:`~pyTooling.Dependency.ReleaseDetailsWarning` are critical: something was left out, so a caller who doesn't
+see the warning gets a wrong result. Without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy,
+:exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised. :class:`~pyTooling.Dependency.UnknownLicenseWarning`,
+:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` and
+:class:`~pyTooling.Dependency.UnresolvedRequirementWarning` are non-critical: without a collector, they are dropped
+silently. A caller collects the warnings to learn what was left out, see :ref:`WARNING`:
+
+.. code-block:: Python
+
+   from pathlib                     import Path
+
+   from pyTooling.Dependency.Python import RequirementsFile
+   from pyTooling.Warning           import WarningCollector
+
+   with WarningCollector() as warnings:
+     requirements = RequirementsFile.Parse(Path("requirements.txt"))
+
+   for warning in warnings:
+     print(f"WARNING: {warning}")
+
+.. admonition:: Why these warnings are critical
+   :class: note
+
+   Data must never disappear without a report. A requirement left out of a requirements file, a requirement naming an
+   extra the release doesn't declare, or a release whose details can't be read makes a dependency vanish from the result
+   - and a suddenly missing dependency is a serious issue: the package described, the dependency table rendered or the
+   environment resolved is incomplete, and nobody notices. Therefore pyTooling doesn't drop such a finding silently. As
+   long as nothing is wrong, no warning is raised and nothing has to be done. Where a warning can be raised, the caller
+   encloses the call in a :class:`~pyTooling.Warning.WarningCollector` and decides what the finding means for its
+   result; a call left without a collector stops with an :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` instead
+   of returning an incomplete result.
 
 A release whose version number the parser doesn't support, like pytz' ``2004d`` from before :pep:`440`, is skipped
 and reported as an :class:`~pyTooling.Dependency.UnsupportedVersionWarning`. It is a critical warning: without a

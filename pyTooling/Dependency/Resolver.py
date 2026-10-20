@@ -264,8 +264,11 @@ class ResolvedRequirement(metaclass=ExtendedType, slots=True):
 		With the strategy :attr:`~ResolutionStrategy.Lazy`, the first access resolves them. Below the resolver's limit,
 		they carry the status :attr:`~ResolutionStatus.LimitReached`.
 
-		:returns: Tuple of resolved requirements; empty if the requirement wasn't resolved to a release, or closes a
-		          cycle.
+		:returns:                              Tuple of resolved requirements; empty if the requirement wasn't resolved to
+		                                       a release, or closes a cycle.
+		:raises UnhandledCriticalWarningError: If the dependencies are resolved now, a critical warning (see
+		                                       :class:`Resolver`) is reported and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects it.
 		"""
 		if self._dependencies is None:
 			self._resolution._resolver._ResolveDependencies((self, ))
@@ -392,6 +395,15 @@ class Resolver(metaclass=ExtendedType, slots=True):
 	stays in the resolution. A server error or a failed connection of the index is reported as a critical
 	:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`. The selected releases are connected in the index's
 	dependency graph.
+
+	.. important::
+
+	   The critical warnings must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised and resolving
+	   stops: :exc:`~pyTooling.Dependency.PackageIndexFailureWarning`,
+	   :exc:`~pyTooling.Dependency.ResolutionTimeoutWarning`, :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`
+	   (a release whose version can't be parsed) and :exc:`~pyTooling.Dependency.UndeclaredExtraWarning` (a
+	   requirement naming an extra the selected release doesn't declare).
 
 	.. attention::
 
@@ -543,12 +555,14 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		A project required twice is resolved once: the later requirement replaces the earlier one, in the earlier one's
 		position.
 
-		:param requirements: The requirements to resolve.
-		:returns:            The resolution.
-		:raises ValueError:  If parameter 'requirements' is ``None``.
-		:raises TypeError:   If parameter 'requirements' is not iterable.
-		:raises TypeError:   If an element of parameter 'requirements' is not of type
-		                     :class:`~packaging.requirements.Requirement`.
+		:param requirements:                   The requirements to resolve.
+		:returns:                              The resolution.
+		:raises ValueError:                    If parameter 'requirements' is ``None``.
+		:raises TypeError:                     If parameter 'requirements' is not iterable.
+		:raises TypeError:                     If an element of parameter 'requirements' is not of type
+		                                       :class:`~packaging.requirements.Requirement`.
+		:raises UnhandledCriticalWarningError: If a critical warning (see :class:`Resolver`) is reported and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects it.
 		"""
 		if requirements is None:
 			raise ValueError("Parameter 'requirements' is None.")
@@ -575,12 +589,14 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		The requirements are taken from :attr:`~pyTooling.Dependency.Python.RequirementsFile.AllRequirements`, so the
 		nearer statement of a project wins.
 
-		:param requirementsFile: The requirements file, e.g. read by
-		                         :meth:`~pyTooling.Dependency.Python.RequirementsFile.Parse`.
-		:returns:                The resolution.
-		:raises ValueError:      If parameter 'requirementsFile' is ``None``.
-		:raises TypeError:       If parameter 'requirementsFile' is not of type
-		                         :class:`~pyTooling.Dependency.Python.RequirementsFile`.
+		:param requirementsFile:               The requirements file, e.g. read by
+		                                       :meth:`~pyTooling.Dependency.Python.RequirementsFile.Parse`.
+		:returns:                              The resolution.
+		:raises ValueError:                    If parameter 'requirementsFile' is ``None``.
+		:raises TypeError:                     If parameter 'requirementsFile' is not of type
+		                                       :class:`~pyTooling.Dependency.Python.RequirementsFile`.
+		:raises UnhandledCriticalWarningError: If a critical warning (see :class:`Resolver`) is reported and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects it.
 		"""
 		if requirementsFile is None:
 			raise ValueError("Parameter 'requirementsFile' is None.")
@@ -600,17 +616,19 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		The packages' requirements are flattened in the order the packages are given, a later package's requirement of a
 		project replacing an earlier one's.
 
-		:param packages:                 Pairs of a package name and an extra's name, or ``None`` for the package's own
-		                                 requirements.
-		:returns:                        The resolution.
-		:raises ValueError:              If parameter 'packages' is ``None``.
-		:raises TypeError:               If parameter 'packages' is not iterable.
-		:raises TypeError:               If an element of parameter 'packages' is not a pair of a :class:`str` and an
-		                                 optional :class:`str`.
-		:raises ProjectNotFoundError:    If the index doesn't know a package.
-		:raises ReleaseNotFoundError:    If a package has no release.
-		:raises ReleaseNotFoundError:    If the index can't describe a package's newest release.
-		:raises ExtraNotFoundError:      If a package's newest release doesn't declare the extra.
+		:param packages:                       Pairs of a package name and an extra's name, or ``None`` for the package's
+		                                       own requirements.
+		:returns:                              The resolution.
+		:raises ValueError:                    If parameter 'packages' is ``None``.
+		:raises TypeError:                     If parameter 'packages' is not iterable.
+		:raises TypeError:                     If an element of parameter 'packages' is not a pair of a :class:`str` and an
+		                                       optional :class:`str`.
+		:raises ProjectNotFoundError:          If the index doesn't know a package.
+		:raises ReleaseNotFoundError:          If a package has no release.
+		:raises ReleaseNotFoundError:          If the index can't describe a package's newest release.
+		:raises ExtraNotFoundError:            If a package's newest release doesn't declare the extra.
+		:raises UnhandledCriticalWarningError: If a critical warning (see :class:`Resolver`) is reported and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects it.
 		"""
 		if packages is None:
 			raise ValueError("Parameter 'packages' is None.")
