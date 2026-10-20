@@ -47,6 +47,8 @@ from pyTooling.Dependency.Python  import PythonPackageIndex, Release
 from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile, RequirementsFileReference
 from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
+from pyTooling.Dependency         import UndeclaredExtraMarkerWarning, UndeclaredExtraWarning
+from pyTooling.Dependency         import UnparsableRequirementWarning
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
 from pyTooling.Dependency         import PackageIndexError, ProjectNotFoundError, ReleaseNotFoundError
 from pyTooling.Dependency         import NoSessionAvailableError, ReleaseDetailsWarning, UnsupportedVersionWarning
@@ -216,6 +218,34 @@ class ReleaseWarnings(Testcase):
 
 		self.assertIsNone(warning.ProjectName)
 		self.assertIsNone(warning.Version)
+
+
+class BrokenRequirementWarnings(Testcase):
+	"""The warnings about a broken requirement share a base class and carry what they are about."""
+
+	def test_Bases(self) -> None:
+		for warningClass in (UnparsableRequirementWarning, UndeclaredExtraMarkerWarning, UndeclaredExtraWarning):
+			self.assertTrue(issubclass(warningClass, BrokenRequirementWarning))
+
+	def test_UnparsableRequirementWarning_MessageOnly(self) -> None:
+		warning = UnparsableRequirementWarning("Requirement can't be parsed.")
+
+		self.assertIsNone(warning.Line)
+		self.assertIsNone(warning.FilePath)
+		self.assertIsNone(warning.LineNumber)
+
+	def test_UndeclaredExtraMarkerWarning_MessageOnly(self) -> None:
+		warning = UndeclaredExtraMarkerWarning("Requirements name an undeclared extra.")
+
+		self.assertIsNone(warning.Release)
+		self.assertTupleEqual((), warning.Requirements)
+
+	def test_UndeclaredExtraWarning_MessageOnly(self) -> None:
+		warning = UndeclaredExtraWarning("Requirement names an undeclared extra.")
+
+		self.assertIsNone(warning.Requirement)
+		self.assertIsNone(warning.Extra)
+		self.assertIsNone(warning.Release)
 
 
 class ProjectCache(Testcase):
@@ -467,6 +497,9 @@ class Requirements(Testcase):
 		broken = [warning for warning in collector.Warnings if isinstance(warning, BrokenRequirementWarning)]
 
 		self.assertEqual(1, len(broken))
+		self.assertIsInstance(broken[0], UndeclaredExtraMarkerWarning)
+		self.assertIs(release, broken[0].Release)
+		self.assertEqual(["lxml>=6.1; extra == \"xml\""], [str(requirement) for requirement in broken[0].Requirements])
 		self.assertEqual(["Broken requirement: lxml>=6.1; extra == \"xml\""], broken[0].__notes__)
 
 
@@ -1468,7 +1501,12 @@ class RequirementsFiles(Testcase):
 
 		self.assertEqual(["pytest", "colorama"], [req.name for req in requirementsFile.Requirements])
 		self.assertEqual(1, len(collector.Warnings))
-		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
+		warning = collector.Warnings[0]
+		self.assertIsInstance(warning, UnparsableRequirementWarning)
+		self.assertIsInstance(warning, BrokenRequirementWarning)
+		self.assertEqual("this is not a requirement", warning.Line)
+		self.assertEqual(path, warning.FilePath)
+		self.assertEqual(2, warning.LineNumber)
 
 	def test_MissingFile(self) -> None:
 		"""A requirements file that doesn't exist is an error, not an empty list."""

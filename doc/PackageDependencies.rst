@@ -238,11 +238,14 @@ requirements of an extra are asked for, which a release doesn't declare.
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
-graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dependency.UnknownLicenseWarning`. A
-requirement a :class:`~pyTooling.Dependency.Resolver.Resolver` can't resolve, because the index doesn't know its
-project or can't describe the selected release, is reported as an
-:class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its
-status.
+graph. :class:`~pyTooling.Dependency.BrokenRequirementWarning` is the base of three warnings, each carrying what it is
+about: :class:`~pyTooling.Dependency.UnparsableRequirementWarning` (a line of a requirements file),
+:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` (requirements of a release whose marker names an extra the
+release doesn't declare) and :class:`~pyTooling.Dependency.UndeclaredExtraWarning` (a requirement naming an extra the
+selected release doesn't declare). A license that can't be resolved is reported as an
+:class:`~pyTooling.Dependency.UnknownLicenseWarning`. A requirement a :class:`~pyTooling.Dependency.Resolver.Resolver`
+can't resolve, because the index doesn't know its project or can't describe the selected release, is reported as an
+:class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its status.
 
 These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
 collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see

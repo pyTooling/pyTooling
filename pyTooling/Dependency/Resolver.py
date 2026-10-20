@@ -66,7 +66,7 @@ from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import StringEnum, getFullyQualifiedName
 from pyTooling.Timeout           import Timeout
 from pyTooling.Warning           import WarningCollector
-from pyTooling.Dependency        import BrokenRequirementWarning, ExtraNotFoundError, PackageIndexFailureWarning
+from pyTooling.Dependency        import ExtraNotFoundError, PackageIndexFailureWarning, UndeclaredExtraWarning
 from pyTooling.Dependency        import ReleaseNotFoundError, ResolutionTimeoutWarning, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release, RequirementsFile
 
@@ -680,7 +680,7 @@ class Resolver(metaclass=ExtendedType, slots=True):
 
 		A release's dependencies are its unconditional requirements, followed by the requirements of each extra the
 		requirement names (``pyTooling[yaml]``). An extra the release doesn't declare is reported as a
-		:exc:`~pyTooling.Dependency.BrokenRequirementWarning`.
+		:exc:`~pyTooling.Dependency.UndeclaredExtraWarning`.
 
 		:param requirements: Requirements resolved already, whose dependencies aren't created yet.
 		"""
@@ -695,9 +695,12 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			groups: list[tuple[Nullable[str], list[Requirement]]] = [(None, release.Requirements[None])]
 			for extra in sorted(requirement._requirement.extras):
 				if (declaredExtra := declared.get(canonicalize_name(extra), None)) is None:
-					WarningCollector.Raise(BrokenRequirementWarning(
+					WarningCollector.Raise(UndeclaredExtraWarning(
 						f"Requirement '{requirement._requirement}' names extra '{extra}', which release '{release.Version}' of "
-						f"package '{release.Package.Name}' doesn't declare."
+						f"package '{release.Package.Name}' doesn't declare.",
+						requirement=requirement,
+						extra=extra,
+						release=release
 					))
 					continue
 

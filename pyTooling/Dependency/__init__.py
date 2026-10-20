@@ -44,21 +44,25 @@ Implementation of package dependencies.
    :mod:`pyTooling.Graph`
       |rarr| The graph a dependency graph converts to (:meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph`).
 """
-from __future__            import annotations
+from __future__                      import annotations
 
-from datetime              import datetime
-from pathlib               import Path
-from typing                import Optional as Nullable, Iterable, Self, Iterator
+from datetime                        import datetime
+from pathlib                         import Path
+from typing                          import TYPE_CHECKING, Optional as Nullable, Iterable, Self, Iterator
 
-from pyTooling.Decorators      import export, readonly
-from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Exceptions      import AlreadyInHierarchyError, ToolingException
-from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
-from pyTooling.GenericPath.URL import URL
-from pyTooling.Graph           import Graph, Vertex
-from pyTooling.Licensing       import LicenseExpression, BaseLicense, UnknownLicense
-from pyTooling.Versioning      import SemanticVersion
-from pyTooling.Warning         import CriticalWarning, Warning
+from pyTooling.Decorators            import export, readonly
+from pyTooling.MetaClasses           import ExtendedType
+from pyTooling.Exceptions            import AlreadyInHierarchyError, ToolingException
+from pyTooling.Common                import getFullyQualifiedName, firstKey, firstValue
+from pyTooling.GenericPath.URL       import URL
+from pyTooling.Graph                 import Graph, Vertex
+from pyTooling.Licensing             import LicenseExpression, BaseLicense, UnknownLicense
+from pyTooling.Versioning            import SemanticVersion
+from pyTooling.Warning               import CriticalWarning, Warning
+
+if TYPE_CHECKING:  # pragma: no cover
+	from packaging.requirements        import Requirement
+	from pyTooling.Dependency.Resolver import ResolvedRequirement
 
 
 @export
@@ -404,16 +408,200 @@ class ExtraNotFoundError(DependencyError, LookupError):
 @export
 class BrokenRequirementWarning(Warning):
 	"""
-	A requirement can't be parsed, or names an extra the project doesn't declare.
+	Base-class of the warnings about a requirement that can't be used as stated.
 
-	Such a requirement is left out. One naming an undeclared extra can't be assigned to an extra, so it's not reachable
-	through :attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`.
+	A requirement can't be parsed, or names an extra that isn't declared. Such a requirement is left out. Catch this
+	class to handle every kind; each derived class carries what it is about.
 
 	.. attention::
 
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
 	"""
+
+
+@export
+class UnparsableRequirementWarning(BrokenRequirementWarning):
+	"""
+	A line of a requirements file can't be parsed as a requirement, so it's left out of the file.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+
+	_line:       Nullable[str]   #: The line's text.
+	_filePath:   Nullable[Path]  #: Path of the requirements file.
+	_lineNumber: Nullable[int]   #: Number of the line in the requirements file.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		line: Nullable[str] = None,
+		filePath: Nullable[Path] = None,
+		lineNumber: Nullable[int] = None
+	) -> None:
+		"""
+		Initializes the warning with the line that can't be parsed and where it is.
+
+		:param message:    The warning's message.
+		:param line:       Optional, the line's text.
+		:param filePath:   Optional, the path of the requirements file.
+		:param lineNumber: Optional, the number of the line in the requirements file.
+		"""
+		super().__init__(message)
+		self._line =       line
+		self._filePath =   filePath
+		self._lineNumber = lineNumber
+
+	@readonly
+	def Line(self) -> Nullable[str]:
+		"""
+		Read-only property to access the line's text (:attr:`_line`).
+
+		:returns: The line, or ``None`` if it wasn't recorded.
+		"""
+		return self._line
+
+	@readonly
+	def FilePath(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the requirements file (:attr:`_filePath`).
+
+		:returns: The file's path, or ``None`` if it wasn't recorded.
+		"""
+		return self._filePath
+
+	@readonly
+	def LineNumber(self) -> Nullable[int]:
+		"""
+		Read-only property to access the number of the line in the requirements file (:attr:`_lineNumber`).
+
+		:returns: The line number, or ``None`` if it wasn't recorded.
+		"""
+		return self._lineNumber
+
+
+@export
+class UndeclaredExtraMarkerWarning(BrokenRequirementWarning):
+	"""
+	Requirements of a release have a marker naming an extra the release doesn't declare.
+
+	Such a requirement can't be assigned to an extra, so it's not reachable through
+	:attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+
+	_release:      Nullable[PackageVersion]  #: The release stating the requirements.
+	_requirements: tuple[Requirement, ...]   #: The requirements whose marker names an undeclared extra.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		release: Nullable[PackageVersion] = None,
+		requirements: Nullable[Iterable[Requirement]] = None
+	) -> None:
+		"""
+		Initializes the warning with the release and the requirements it can't assign to an extra.
+
+		:param message:      The warning's message.
+		:param release:      Optional, the release stating the requirements.
+		:param requirements: Optional, the requirements whose marker names an undeclared extra.
+		"""
+		super().__init__(message)
+		self._release =      release
+		self._requirements = () if requirements is None else tuple(requirements)
+
+	@readonly
+	def Release(self) -> Nullable[PackageVersion]:
+		"""
+		Read-only property to access the release stating the requirements (:attr:`_release`).
+
+		:returns: The release, or ``None`` if it wasn't recorded.
+		"""
+		return self._release
+
+	@readonly
+	def Requirements(self) -> tuple[Requirement, ...]:
+		"""
+		Read-only property to access the requirements whose marker names an undeclared extra (:attr:`_requirements`).
+
+		:returns: Tuple of requirements; empty if they weren't recorded.
+		"""
+		return self._requirements
+
+
+@export
+class UndeclaredExtraWarning(BrokenRequirementWarning):
+	"""
+	A requirement names an extra (``pyTooling[terminal]``) the selected release doesn't declare.
+
+	The extra isn't followed; the release's other requirements are.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+
+	_requirement: Nullable[ResolvedRequirement]  #: The requirement naming the extra.
+	_extra:       Nullable[str]                  #: The extra's name, as the requirement states it.
+	_release:     Nullable[PackageVersion]       #: The release selected for the requirement.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		requirement: Nullable[ResolvedRequirement] = None,
+		extra: Nullable[str] = None,
+		release: Nullable[PackageVersion] = None
+	) -> None:
+		"""
+		Initializes the warning with the requirement, the extra it names and the release not declaring it.
+
+		:param message:     The warning's message.
+		:param requirement: Optional, the requirement naming the extra.
+		:param extra:       Optional, the extra's name, as the requirement states it.
+		:param release:     Optional, the release selected for the requirement.
+		"""
+		super().__init__(message)
+		self._requirement = requirement
+		self._extra =       extra
+		self._release =     release
+
+	@readonly
+	def Requirement(self) -> Nullable[ResolvedRequirement]:
+		"""
+		Read-only property to access the requirement naming the extra (:attr:`_requirement`).
+
+		:returns: The resolved requirement, or ``None`` if it wasn't recorded.
+		"""
+		return self._requirement
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Read-only property to access the extra's name, as the requirement states it (:attr:`_extra`).
+
+		:returns: The extra's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._extra
+
+	@readonly
+	def Release(self) -> Nullable[PackageVersion]:
+		"""
+		Read-only property to access the release selected for the requirement (:attr:`_release`).
+
+		:returns: The release, or ``None`` if it wasn't recorded.
+		"""
+		return self._release
 
 
 @export
