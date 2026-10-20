@@ -408,10 +408,11 @@ class ExtraNotFoundError(DependencyError, LookupError):
 @export
 class BrokenRequirementWarning(CriticalWarning):
 	"""
-	Base-class of the warnings about a requirement that can't be used as stated.
+	Base-class of the warnings about a stated requirement that can't be used as stated.
 
-	A requirement can't be parsed, or names an extra that isn't declared. Such a requirement is left out. Catch this
-	class to handle every kind; each derived class carries what it is about.
+	A line of a requirements file can't be parsed, or a requirement names an extra the selected release doesn't
+	declare. The requirement is left out, so a dependency the caller relies on is missing. Catch this class to handle
+	both; each derived class carries what it is about.
 
 	.. important::
 
@@ -485,60 +486,6 @@ class UnparsableRequirementWarning(BrokenRequirementWarning):
 
 
 @export
-class UndeclaredExtraMarkerWarning(BrokenRequirementWarning):
-	"""
-	Requirements of a release have a marker naming an extra the release doesn't declare.
-
-	Such a requirement can't be assigned to an extra, so it's not reachable through
-	:attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`.
-
-	.. important::
-
-	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
-	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
-	"""
-
-	_release:      Nullable[PackageVersion]  #: The release stating the requirements.
-	_requirements: tuple[Requirement, ...]   #: The requirements whose marker names an undeclared extra.
-
-	def __init__(
-		self,
-		message: str,
-		/, *,
-		release: Nullable[PackageVersion] = None,
-		requirements: Nullable[Iterable[Requirement]] = None
-	) -> None:
-		"""
-		Initializes the warning with the release and the requirements it can't assign to an extra.
-
-		:param message:      The warning's message.
-		:param release:      Optional, the release stating the requirements.
-		:param requirements: Optional, the requirements whose marker names an undeclared extra.
-		"""
-		super().__init__(message)
-		self._release =      release
-		self._requirements = () if requirements is None else tuple(requirements)
-
-	@readonly
-	def Release(self) -> Nullable[PackageVersion]:
-		"""
-		Read-only property to access the release stating the requirements (:attr:`_release`).
-
-		:returns: The release, or ``None`` if it wasn't recorded.
-		"""
-		return self._release
-
-	@readonly
-	def Requirements(self) -> tuple[Requirement, ...]:
-		"""
-		Read-only property to access the requirements whose marker names an undeclared extra (:attr:`_requirements`).
-
-		:returns: Tuple of requirements; empty if they weren't recorded.
-		"""
-		return self._requirements
-
-
-@export
 class UndeclaredExtraWarning(BrokenRequirementWarning):
 	"""
 	A requirement names an extra (``pyTooling[terminal]``) the selected release doesn't declare.
@@ -602,6 +549,62 @@ class UndeclaredExtraWarning(BrokenRequirementWarning):
 		:returns: The release, or ``None`` if it wasn't recorded.
 		"""
 		return self._release
+
+
+@export
+class UndeclaredExtraMarkerWarning(Warning):
+	"""
+	Requirements of a release have a marker naming an extra the release doesn't declare.
+
+	Such a requirement can't be assigned to an extra, so it's not reachable through
+	:attr:`Release.Requirements <pyTooling.Dependency.Python.Release.Requirements>`. It's a defect of the release's
+	metadata, not a dependency missing from the result: pip doesn't install such a requirement either, as it installs
+	the requirements of the extras a release declares only.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+
+	_release:      Nullable[PackageVersion]  #: The release stating the requirements.
+	_requirements: tuple[Requirement, ...]   #: The requirements whose marker names an undeclared extra.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		release: Nullable[PackageVersion] = None,
+		requirements: Nullable[Iterable[Requirement]] = None
+	) -> None:
+		"""
+		Initializes the warning with the release and the requirements it can't assign to an extra.
+
+		:param message:      The warning's message.
+		:param release:      Optional, the release stating the requirements.
+		:param requirements: Optional, the requirements whose marker names an undeclared extra.
+		"""
+		super().__init__(message)
+		self._release =      release
+		self._requirements = () if requirements is None else tuple(requirements)
+
+	@readonly
+	def Release(self) -> Nullable[PackageVersion]:
+		"""
+		Read-only property to access the release stating the requirements (:attr:`_release`).
+
+		:returns: The release, or ``None`` if it wasn't recorded.
+		"""
+		return self._release
+
+	@readonly
+	def Requirements(self) -> tuple[Requirement, ...]:
+		"""
+		Read-only property to access the requirements whose marker names an undeclared extra (:attr:`_requirements`).
+
+		:returns: Tuple of requirements; empty if they weren't recorded.
+		"""
+		return self._requirements
 
 
 @export

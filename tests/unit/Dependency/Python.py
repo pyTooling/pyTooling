@@ -60,7 +60,7 @@ from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 from pyTooling.Licensing          import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
 from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperator
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
-from pyTooling.Warning            import UnhandledCriticalWarningError, WarningCollector
+from pyTooling.Warning            import CriticalWarning, UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase
 
 from tests.unit.Dependency.FakeIndex import DocumentSession, ProjectDocument
@@ -225,8 +225,14 @@ class BrokenRequirementWarnings(Testcase):
 	"""The warnings about a broken requirement share a base class and carry what they are about."""
 
 	def test_Bases(self) -> None:
-		for warningClass in (UnparsableRequirementWarning, UndeclaredExtraMarkerWarning, UndeclaredExtraWarning):
+		for warningClass in (UnparsableRequirementWarning, UndeclaredExtraWarning):
 			self.assertTrue(issubclass(warningClass, BrokenRequirementWarning))
+			self.assertTrue(issubclass(warningClass, CriticalWarning))
+
+	def test_UndeclaredExtraMarkerWarning_Base(self) -> None:
+		"""A requirement under an undeclared extra is a defect of third-party metadata, not a missing dependency."""
+		self.assertFalse(issubclass(UndeclaredExtraMarkerWarning, BrokenRequirementWarning))
+		self.assertFalse(issubclass(UndeclaredExtraMarkerWarning, CriticalWarning))
 
 	def test_UnparsableRequirementWarning_MessageOnly(self) -> None:
 		warning = UnparsableRequirementWarning("Requirement can't be parsed.")
@@ -495,23 +501,22 @@ class Requirements(Testcase):
 		with WarningCollector(handler=lambda warning: False) as collector:
 			release.UpdateDetailsFromPyPIJSON(json)
 
-		broken = [warning for warning in collector.Warnings if isinstance(warning, BrokenRequirementWarning)]
+		broken = [warning for warning in collector.Warnings if isinstance(warning, UndeclaredExtraMarkerWarning)]
 
 		self.assertEqual(1, len(broken))
-		self.assertIsInstance(broken[0], UndeclaredExtraMarkerWarning)
 		self.assertIs(release, broken[0].Release)
 		self.assertEqual(["lxml>=6.1; extra == \"xml\""], [str(requirement) for requirement in broken[0].Requirements])
 		self.assertEqual(["Broken requirement: lxml>=6.1; extra == \"xml\""], broken[0].__notes__)
 
 	def test_Requirement_UnknownExtra_Uncollected(self) -> None:
-		"""Without a collector, the critical warning raises an :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`."""
+		"""Without a collector, the non-critical warning is dropped and the requirement is left out."""
 		release = self._release()
 		json = self._json(["terminal"], ['lxml >= 6.1; extra == "xml"'])
 
-		with self.assertRaises(UnhandledCriticalWarningError) as context:
-			release.UpdateDetailsFromPyPIJSON(json)
+		release.UpdateDetailsFromPyPIJSON(json)
 
-		self.assertIsInstance(context.exception.__cause__, UndeclaredExtraMarkerWarning)
+		self.assertSetEqual({None, "terminal"}, set(release.Requirements))
+		self.assertEqual(0, sum(len(requirements) for requirements in release.Requirements.values()))
 
 
 class ReleaseDetails(Testcase):
@@ -627,17 +632,9 @@ class ReleaseDetailsWarnings(Testcase):
 		self.assertSetEqual({"1.0.0", "2.0.0"}, {str(version) for version in self._project.Releases})
 
 	def test_BrokenRequirement_Uncollected(self) -> None:
-		"""
-		The release's :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` becomes the cause of a
-		:exc:`~pyTooling.Dependency.ReleaseDetailsWarning`, which raises one again.
-		"""
-		with self.assertRaises(UnhandledCriticalWarningError) as context:
-			self._download({"info": {"provides_extra": [], "requires_dist": ['lxml >= 6.1; extra == "xml"']}})
+		"""Without a collector, the non-critical warning is dropped and both releases are kept."""
+		self._download({"info": {"provides_extra": [], "requires_dist": ['lxml >= 6.1; extra == "xml"']}})
 
-		warning = context.exception.__cause__
-		self.assertIsInstance(warning, ReleaseDetailsWarning)
-		self.assertIsInstance(warning.__cause__, UnhandledCriticalWarningError)
-		self.assertIsInstance(warning.__cause__.__cause__, UndeclaredExtraMarkerWarning)
 		self.assertSetEqual({"1.0.0", "2.0.0"}, {str(version) for version in self._project.Releases})
 
 	def test_DownloadFailed_Collected(self) -> None:

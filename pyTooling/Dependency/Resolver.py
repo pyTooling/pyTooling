@@ -402,10 +402,8 @@ class Resolver(metaclass=ExtendedType, slots=True):
 	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised and resolving
 	   stops: :exc:`~pyTooling.Dependency.PackageIndexFailureWarning`,
 	   :exc:`~pyTooling.Dependency.ResolutionTimeoutWarning`, :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`
-	   (a release whose version can't be parsed), :exc:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` (a
-	   release's requirement whose marker names an extra the release doesn't declare) and
-	   :exc:`~pyTooling.Dependency.UndeclaredExtraWarning` (a requirement naming an extra the selected release doesn't
-	   declare).
+	   (a release whose version can't be parsed) and :exc:`~pyTooling.Dependency.UndeclaredExtraWarning` (a
+	   requirement naming an extra the selected release doesn't declare).
 
 	.. attention::
 
