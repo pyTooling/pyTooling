@@ -51,7 +51,7 @@ from __future__           import annotations
 
 from asyncio              import run as asyncio_run, gather as asyncio_gather
 from collections          import deque
-from datetime             import date, datetime
+from datetime             import date, datetime, timedelta
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from pathlib              import Path
@@ -89,8 +89,10 @@ from pyTooling.Dependency      import UnsupportedVersionWarning
 from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
 from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
 from pyTooling.Dependency      import PackageIndexError
+from pyTooling.Dependency      import AlreadyInRequirementsTreeError
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
 from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
+from pyTooling.Stopwatch       import Stopwatch
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
@@ -122,6 +124,9 @@ RETRY_BACKOFF = 0.5
 #: Status codes worth retrying: a rate-limit and the transient server-side failures.
 RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
 
+#: What a requirements file states: a requirement, a referenced file, or a reference to a file read before.
+RequirementsFileEntryT = Union[Requirement, "RequirementsFile", "RequirementsFileReference"]
+
 
 @export
 class RequirementsFile(metaclass=ExtendedType, slots=True):
@@ -134,53 +139,93 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 	It is a **tree**, so every file knows where it sits in one: :attr:`Parent` is the file that referenced it and
 	:attr:`Root` the entrypoint the whole tree was read from. The root alone keeps
-	:attr:`AnalyzedRequirementFiles`, every file of the tree by its resolved path, which is both the answer to
-	*where did this package come from* and what makes a cycle detectable.
+	:attr:`AnalyzedRequirementFiles`, every file of the tree by its resolved path, which is the answer to *where did
+	this package come from*.
 
-	**A cycle raises.** A file referencing itself, directly or through a chain, is a statement nobody wrote on
-	purpose; reading it once and continuing would hide it.
+	:meth:`Parse` reads a file and the files it references and measures how long reading took
+	(:attr:`AnalysisDuration`); the initializer takes what a file states, so a tree can be built by hand, too.
+	**A cycle raises.** A file referencing itself, directly or through a chain, is a statement
+	nobody wrote on purpose; reading it once and continuing would hide it.
+
+	**A file referenced twice is read once.** Two files may reference the same third one, as pip accepts it -
+	``unit/requirements.txt`` and ``typing/requirements.txt`` both referencing ``../../requirements.txt``. The first
+	``-r`` line reads the file into the tree; every later one is a :class:`RequirementsFileReference` to it. So a file
+	is one object with one parent, and :attr:`AnalyzedRequirementFiles` keeps one per path. Only a file referenced
+	while it's still being read - one on the chain from the root down to the referencing file - is a cycle.
 	"""
 
 	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
 	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
 	_path:                     Path                                        #: Path of this requirements file.
-	_entries:                  list[Union[Requirement, RequirementsFile]]  #: What this file states, in file order.
+	_entries:                  list[RequirementsFileEntryT]                #: What this file states, in file order.
 	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of the tree, by resolved path.
+	_analysisDuration:         Nullable[timedelta]                         #: Time :meth:`Parse` took to read the file.
 
-	def __init__(self, path: Path, parent: Nullable[RequirementsFile] = None) -> None:
+	def __init__(
+		self,
+		path:             Path,
+		entries:          Nullable[Iterable[RequirementsFileEntryT]] = None,
+		*,
+		parent:           Nullable[RequirementsFile] = None,
+		analysisDuration: Nullable[timedelta] = None
+	) -> None:
 		"""
-		Read a requirements file and the files it references.
+		Initializes a requirements file from its path and what it states.
 
-		A line that can't be parsed as a requirement is left out and reported as a
-		:exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a :class:`~pyTooling.Warning.WarningCollector`; without a
-		collector, it's dropped.
+		A requirements file given in ``entries`` is referenced by this file: it and the files it references join this
+		file's tree. A :class:`RequirementsFileReference` given in ``entries`` is stated by this file; its target isn't
+		checked to be in the same tree, because :meth:`Parse` initializes a file before the root joining both exists.
 
-		:param path:                           Path of the requirements file to read.
-		:param parent:                         Optional, the file referencing this one. Default: ``None``, a root.
-		:raises TypeError:                     If parameter 'path' is not of type :class:`~pathlib.Path`.
-		:raises TypeError:                     If parameter 'parent' is not of type :class:`RequirementsFile`.
-		:raises RequirementsFileNotFoundError: If the requirements file doesn't exist.
-		:raises CircularRequirementsFileError: If a ``-r`` line references a file already being read.
+		:param path:                            Path of the requirements file.
+		:param entries:                         Optional, requirements, referenced files and references to files read
+		                                        before, in the order the file states them. Default: ``None``.
+		:param parent:                          Optional, the file referencing this one, which appends this file to its
+		                                        entries. Default: ``None``, a root.
+		:param analysisDuration:                Optional, the time reading the file took, including the files it
+		                                        references. Default: ``None``, not measured.
+		:raises ValueError:                     If parameter 'path' is ``None``.
+		:raises TypeError:                      If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises TypeError:                      If parameter 'entries' is not iterable.
+		:raises TypeError:                      If parameter 'parent' is not of type :class:`RequirementsFile`.
+		:raises TypeError:                      If parameter 'analysisDuration' is not of type :class:`~datetime.timedelta`.
+		:raises ValueError:                     If an element of parameter 'entries' is ``None``.
+		:raises TypeError:                      If an element of parameter 'entries' is not of type
+		                                        :class:`~packaging.requirements.Requirement`, :class:`RequirementsFile`
+		                                        or :class:`RequirementsFileReference`.
+		:raises AlreadyInRequirementsTreeError: If an element of parameter 'entries' is referenced by another file
+		                                        already.
+		:raises AlreadyInRequirementsTreeError: If an element of parameter 'entries' is a reference another file states
+		                                        already.
 		"""
-		if not isinstance(path, Path):
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
 			ex = TypeError("Parameter 'path' is not of type 'Path'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
 			raise ex
-		elif not path.exists():
-			raise RequirementsFileNotFoundError(f"Requirements file '{path}' does not exist.") from FileNotFoundError(path)
+
+		if entries is not None and not isinstance(entries, Iterable):
+			ex = TypeError("Parameter 'entries' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(entries)}'.")
+			raise ex
 
 		if parent is not None and not isinstance(parent, RequirementsFile):
 			ex = TypeError("Parameter 'parent' is not of type 'RequirementsFile'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
-		self._path =                     path
-		self._parent =                   parent
-		self._root =                     self if parent is None else parent._root
-		self._entries =                  []
+		if analysisDuration is not None and not isinstance(analysisDuration, timedelta):
+			ex = TypeError("Parameter 'analysisDuration' is not of type 'timedelta'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(analysisDuration)}'.")
+			raise ex
 
-		# resolved as the mapping's key only, not as '_path': the key is compared against a '-r' reference, which is
-		# resolved below, so a file reachable under two spellings has to arrive here as one
+		self._path =             path
+		self._parent =           parent
+		self._root =             self if parent is None else parent._root
+		self._entries =          []
+		self._analysisDuration = analysisDuration
+
+		# resolved as the mapping's key only, not as '_path': a file reachable under two spellings is one key
 		if parent is None:
 			self._analyzedRequirementFiles = {
 				path.resolve(): self
@@ -189,36 +234,141 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 			self._analyzedRequirementFiles = None
 			self._root._analyzedRequirementFiles[path.resolve()] = self
 
-		lines = path.read_text(encoding="utf-8").splitlines()
-		for lineNumber, line in enumerate(lines, start=1):
-			if (line := line.split("#")[0].strip()) == "":
-				continue
+		if entries is not None:
+			for entry in entries:
+				if entry is None:
+					raise ValueError("An element of parameter 'entries' is None.")
+				elif isinstance(entry, RequirementsFile):
+					if entry._parent is not None:
+						raise AlreadyInRequirementsTreeError(
+							f"Requirements file '{entry._path}' is referenced by '{entry._parent._path}' already."
+						)
 
-			if line.startswith("-r"):
-				referenced = (path.parent / line[2:].strip()).resolve()
+					entry._parent = self
+					for resolvedPath, requirementsFile in entry._analyzedRequirementFiles.items():
+						requirementsFile._root = self._root
+						self._root._analyzedRequirementFiles[resolvedPath] = requirementsFile
 
-				if referenced in self._root._analyzedRequirementFiles:
-					chain = " → ".join(str(file.Path) for file in self.Hierarchy)
-					ex = CircularRequirementsFileError(
-						f"Requirements file '{referenced}' referenced in '{path}' line {lineNumber} is already being read."
+					entry._analyzedRequirementFiles = None
+				elif isinstance(entry, RequirementsFileReference):
+					if entry._parent is not None:
+						raise AlreadyInRequirementsTreeError(
+							f"Reference to requirements file '{entry._path}' is stated by '{entry._parent._path}' already."
+						)
+
+					entry._parent = self
+				elif not isinstance(entry, Requirement):
+					ex = TypeError(
+						"An element of parameter 'entries' is not of type 'Requirement', 'RequirementsFile' or "
+						"'RequirementsFileReference'."
 					)
-					ex.add_note(f"Chain: {chain} → {referenced}")
+					ex.add_note(f"Got type '{getFullyQualifiedName(entry)}'.")
 					raise ex
 
-				self._entries.append(RequirementsFile(referenced, self))
-				continue
+				self._entries.append(entry)
 
-			# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
-			if line.startswith("-") or line.startswith("http"):
-				continue
+		if parent is not None:
+			parent._entries.append(self)
 
-			try:
-				self._entries.append(Requirement(line))
-			except InvalidRequirement as ex:
-				WarningCollector.Raise(
-					BrokenRequirementWarning(f"Requirement '{line}' in '{path}' line {lineNumber} can't be parsed."),
-					ex
-				)
+	@classmethod
+	def Parse(cls, path: Path) -> Self:
+		"""
+		Read a requirements file and the files it references.
+
+		Every ``-r`` line is read into a referenced file first, so a file is initialized after the files it references,
+		and the root is initialized last. A ``-r`` line referencing a file read before becomes a
+		:class:`RequirementsFileReference` to it; the file isn't read again. A line that can't be parsed as a requirement
+		is left out and reported as a :exc:`~pyTooling.Dependency.BrokenRequirementWarning` to a
+		:class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
+
+		Each file measures how long reading it took with a :class:`~pyTooling.Stopwatch.Stopwatch`, the files it
+		references included (:attr:`AnalysisDuration`).
+
+		:param path:                           Path of the requirements file to read.
+		:returns:                              The requirements file, root of the tree of the files it references.
+		:raises ValueError:                    If parameter 'path' is ``None``.
+		:raises TypeError:                     If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises RequirementsFileNotFoundError: If the requirements file doesn't exist.
+		:raises RequirementsFileNotFoundError: If a ``-r`` line references a file that doesn't exist.
+		:raises CircularRequirementsFileError: If a ``-r`` line references a file still being read, on the chain from the
+		                                       root down to the referencing file.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		readFiles:    dict[Path, RequirementsFile] = {}  # by resolved path
+		readingFiles: set[Path] =                    set()
+		chain:        list[Path] =                   []
+
+		def parseFile(file: Path) -> Self:
+			"""
+			Nested function for recursion.
+
+			:param file:                           Path of the requirements file to read.
+			:returns:                              The requirements file, initialized after the files it references.
+			:raises RequirementsFileNotFoundError: If the requirements file doesn't exist.
+			:raises CircularRequirementsFileError: If a ``-r`` line references a file still being read.
+			"""
+			if not file.exists():
+				raise RequirementsFileNotFoundError(
+					f"Requirements file '{file}' does not exist.",
+					filePath=file
+				) from FileNotFoundError(file)
+
+			with Stopwatch() as sw:
+				readingFiles.add(file.resolve())
+				chain.append(file)
+				entries: list[RequirementsFileEntryT] = []
+
+				lines = file.read_text(encoding="utf-8").splitlines()
+				for lineNumber, line in enumerate(lines, start=1):
+					if (line := line.split("#")[0].strip()) == "":
+						continue
+
+					if line.startswith("-r"):
+						referenced = (file.parent / line[2:].strip()).resolve()
+
+						if referenced in readingFiles:
+							ex = CircularRequirementsFileError(
+								f"Requirements file '{referenced}' referenced in '{file}' line {lineNumber} is already being read.",
+								filePath=referenced,
+								referencedIn=file,
+								lineNumber=lineNumber
+							)
+							ex.add_note(f"Chain: {' → '.join(str(chainedFile) for chainedFile in chain)} → {referenced}")
+							raise ex
+						elif (target := readFiles.get(referenced, None)) is not None:
+							entries.append(RequirementsFileReference(referenced, target))
+						else:
+							entries.append(parseFile(referenced))
+
+						continue
+
+					# '--index-url', '-e' and a bare URL are instructions to the installer, not requirements
+					if line.startswith("-") or line.startswith("http"):
+						continue
+
+					try:
+						entries.append(Requirement(line))
+					except InvalidRequirement as ex:
+						WarningCollector.Raise(
+							BrokenRequirementWarning(f"Requirement '{line}' in '{file}' line {lineNumber} can't be parsed."),
+							ex
+						)
+
+				chain.pop()
+				readingFiles.discard(file.resolve())
+
+			requirementsFile = cls(file, entries, analysisDuration=sw.Duration)
+			readFiles[file.resolve()] = requirementsFile
+
+			return requirementsFile
+
+		return parseFile(path)
 
 	@readonly
 	def Path(self) -> Path:
@@ -266,23 +416,35 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access every file of this tree, by its resolved path.
 
-		**Only the root's is filled**; ask :attr:`Root` for it. It is what detects a cycle while reading, and what
-		answers which files a tree was read from afterward - the list a documentation build registers so a change
-		to any of them rebuilds the page.
+		**Only the root's is filled**; ask :attr:`Root` for it. It answers which files a tree was read from - the list
+		a documentation build registers so a change to any of them rebuilds the page.
 
 		:returns: Every file of the tree by resolved path, or ``None`` for a referenced file.
 		"""
 		return self._analyzedRequirementFiles
 
 	@readonly
-	def Entries(self) -> list[Union[Requirement, RequirementsFile]]:
+	def AnalysisDuration(self) -> Nullable[timedelta]:
+		"""
+		Read-only property to access the time :meth:`Parse` took to read this file (:attr:`_analysisDuration`).
+
+		It includes reading the files this file references, so the root's duration is the whole :meth:`Parse` call.
+
+		:returns: Duration of reading this file and the files it references, or ``None`` if the file wasn't read by
+		          :meth:`Parse`.
+		"""
+		return self._analysisDuration
+
+	@readonly
+	def Entries(self) -> list[RequirementsFileEntryT]:
 		"""
 		Read-only property to access what this file states, in the order it states it (:attr:`_entries`).
 
-		Requirements and referenced files are kept in one list, because a file states them interleaved.
-		:attr:`Requirements` and :attr:`ReferencedFiles` are the two filtered views of it.
+		Requirements, referenced files and references to files read before are kept in one list, because a file states
+		them interleaved. :attr:`Requirements`, :attr:`ReferencedFiles` and :attr:`FileReferences` are the filtered
+		views of it.
 
-		:returns: This file's requirements and referenced files.
+		:returns: This file's requirements, referenced files and references.
 		"""
 		return self._entries
 
@@ -301,11 +463,26 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	@readonly
 	def ReferencedFiles(self) -> Iterator[RequirementsFile]:
 		"""
-		Read-only property to iterate the files referenced with ``-r``.
+		Read-only property to iterate the files referenced with ``-r`` and read here.
+
+		These are the children of this file in the tree. A file read before, where another file referenced it first, is in
+		:attr:`FileReferences` instead.
 
 		:returns: An iterator of the referenced files, in the order they are referenced.
 		"""
 		return (entry for entry in self._entries if isinstance(entry, RequirementsFile))
+
+	@readonly
+	def FileReferences(self) -> Iterator[RequirementsFileReference]:
+		"""
+		Read-only property to iterate the ``-r`` lines referencing a file read before.
+
+		The file itself is a child of the file referencing it first (:attr:`ReferencedFiles`); here it's a
+		:class:`RequirementsFileReference`, whose :attr:`~RequirementsFileReference.Target` is that file.
+
+		:returns: An iterator of the references, in the order they are written.
+		"""
+		return (entry for entry in self._entries if isinstance(entry, RequirementsFileReference))
 
 	def IterateTree(self) -> Iterator[RequirementsFile]:
 		"""
@@ -333,23 +510,40 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		   sphinx ~= 9.1       -r base.txt               sphinx ~= 9.1
 		                       colorama ~= 0.4.6         colorama ~= 0.4.6
 
+		A :class:`RequirementsFileReference` contributes its target's requirements, unless the target was collected
+		already in this call: a file referenced twice is collected where it's referenced first. So the tree's root yields
+		a shared file once, and a referencing file asked on its own still yields what it references.
+
 		:returns: A generator of requirements, deduplicated by canonical package name, in the order stated.
 		"""
-		requirements: dict[str, Requirement] = {}
-		stated:       dict[str, Requirement] = {}
+		collected: set[RequirementsFile] = set()
 
-		for entry in self._entries:
-			if isinstance(entry, RequirementsFile):
-				for requirement in entry.AllRequirements:
-					requirements[canonicalize_name(requirement.name)] = requirement
-			else:
-				name = canonicalize_name(entry.name)
-				requirements[name] = stated[name] = entry
+		def collect(requirementsFile: RequirementsFile) -> dict[str, Requirement]:
+			"""
+			Nested function for recursion.
 
-		# a key keeps the position of its first insertion, so this overrides the value without moving the package
-		requirements.update(stated)
+			:param requirementsFile: The file to collect the requirements of.
+			:returns:                The file's requirements and the ones it references, by canonical package name.
+			"""
+			collected.add(requirementsFile)
+			requirements: dict[str, Requirement] = {}
+			stated:       dict[str, Requirement] = {}
 
-		yield from requirements.values()
+			for entry in requirementsFile._entries:
+				if isinstance(entry, Requirement):
+					name = canonicalize_name(entry.name)
+					requirements[name] = stated[name] = entry
+				else:
+					referenced = entry if isinstance(entry, RequirementsFile) else entry._target
+					if referenced not in collected:
+						requirements.update(collect(referenced))
+
+			# a key keeps the position of its first insertion, so this overrides the value without moving the package
+			requirements.update(stated)
+
+			return requirements
+
+		yield from collect(self).values()
 
 	def __len__(self) -> int:
 		"""
@@ -373,9 +567,100 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 		:returns: A string representation of this requirements file.
 		"""
-		referenced = sum(1 for _ in self.ReferencedFiles)
+		referenced = sum(1 for entry in self._entries if not isinstance(entry, Requirement))
 
 		return f"{self._path}: {len(self)} requirement(s), {referenced} referenced file(s)"
+
+
+@export
+class RequirementsFileReference(metaclass=ExtendedType, slots=True):
+	"""
+	A ``-r`` line referencing a requirements file read before, where another file referenced it first.
+
+	Two files may reference the same third one - ``unit/requirements.txt`` and ``typing/requirements.txt`` both
+	referencing ``../../requirements.txt``. The file is read once: the first ``-r`` line makes it a
+	:class:`RequirementsFile` in the tree, every later one is this reference to it. A reference is no node of the tree:
+	it has a :attr:`Parent`, the file stating the line, and its :attr:`Target` is the file read before.
+	"""
+
+	_parent: Nullable[RequirementsFile]  #: File stating the ``-r`` line; ``None`` until a file states it.
+	_path:   Path                        #: Path of the referenced file.
+	_target: RequirementsFile            #: The referenced file, read where it was referenced first.
+
+	def __init__(self, path: Path, target: RequirementsFile, *, parent: Nullable[RequirementsFile] = None) -> None:
+		"""
+		Initializes a reference to a requirements file read before.
+
+		:param path:        Path of the referenced file.
+		:param target:      The referenced file, read where it was referenced first.
+		:param parent:      Optional, the file stating the ``-r`` line, which appends this reference to its entries.
+		                    Default: ``None``.
+		:raises ValueError: If parameter 'path' is ``None``.
+		:raises TypeError:  If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises ValueError: If parameter 'target' is ``None``.
+		:raises TypeError:  If parameter 'target' is not of type :class:`RequirementsFile`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`RequirementsFile`.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		if target is None:
+			raise ValueError("Parameter 'target' is None.")
+		elif not isinstance(target, RequirementsFile):
+			ex = TypeError("Parameter 'target' is not of type 'RequirementsFile'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(target)}'.")
+			raise ex
+
+		if parent is not None and not isinstance(parent, RequirementsFile):
+			ex = TypeError("Parameter 'parent' is not of type 'RequirementsFile'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		self._path =   path
+		self._target = target
+		self._parent = parent
+
+		if parent is not None:
+			parent._entries.append(self)
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access the referenced file's path (:attr:`_path`).
+
+		:returns: Path of the referenced file, spelled the way it was handed in.
+		"""
+		return self._path
+
+	@readonly
+	def Parent(self) -> Nullable[RequirementsFile]:
+		"""
+		Read-only property to access the file stating the ``-r`` line (:attr:`_parent`).
+
+		:returns: The referencing file, or ``None`` if no file states the reference yet.
+		"""
+		return self._parent
+
+	@readonly
+	def Target(self) -> RequirementsFile:
+		"""
+		Read-only property to access the referenced file, read where it was referenced first (:attr:`_target`).
+
+		:returns: The referenced requirements file.
+		"""
+		return self._target
+
+	def __str__(self) -> str:
+		"""
+		Return the referenced file's path, marked as a reference.
+
+		:returns: A string representation of this reference.
+		"""
+		return f"{self._path} (referenced before)"
 
 
 @export
@@ -985,9 +1270,12 @@ class Release(PackageVersion, LazyLoadableMixin):
 		"""
 		Download the release's details and post-process them, as far as the target state demands.
 
+		A step reached already isn't repeated: a release with its details asked to be post-processed doesn't download
+		them again.
+
 		:param targetLevel: State the release needs to be loaded to.
 		"""
-		if targetLevel >= LazyLoaderState.PartiallyLoaded:
+		if targetLevel >= LazyLoaderState.PartiallyLoaded and self.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
 
 		if targetLevel >= LazyLoaderState.PostProcessed:
@@ -1055,7 +1343,11 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:raises PackageIndexError:       If the index responds with another HTTP error status.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableError(f"No session available to download release '{self._version}' of package '{self._package._name}'.")
+			ex = NoSessionAvailableError(
+				f"No session available to download release '{self._version}' of package '{self._package._name}'.",
+				projectName=self._package._name,
+				version=self._version
+			)
 			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
@@ -1065,20 +1357,25 @@ class Release(PackageVersion, LazyLoadableMixin):
 		except HTTPError as cause:
 			if cause.response is not None and cause.response.status_code == 404:
 				raise ReleaseNotFoundError(
-					f"Release '{self._version}' of package '{self._package._name}' not found."
+					f"Release '{self._version}' of package '{self._package._name}' not found.",
+					projectName=self._package._name,
+					version=self._version
 				) from cause
 
 			raise PackageIndexError(
 				f"Package index responded {response.status_code} {response.reason} for release '{self._version}' of "
-				f"package '{self._package._name}'."
+				f"package '{self._package._name}'.",
+				projectName=self._package._name,
+				version=self._version
 			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
 
 		index: PythonPackageIndex = self._package._storage
 		for requirement in self._requirements[None]:
-			packageName = requirement.name
-			index.DownloadProject(packageName, True)
+			# a project the index reported as unknown before stays a requirement of this release; it isn't registered
+			if canonicalize_name(requirement.name) not in index._unknownProjects:
+				index.DownloadProject(requirement.name, LazyLoaderState.Initialized)
 
 	def UpdateDetailsFromPyPIJSON(self, json) -> None:
 		"""
@@ -1390,9 +1687,12 @@ class Project(Package, LazyLoadableMixin):
 		"""
 		Download the project's details and its releases' details, as far as the target state demands.
 
+		A step reached already isn't repeated: a project with its list of releases asked for its releases' details
+		doesn't download the list again.
+
 		:param targetLevel: State the project needs to be loaded to.
 		"""
-		if targetLevel >= LazyLoaderState.PartiallyLoaded:
+		if targetLevel >= LazyLoaderState.PartiallyLoaded and self.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 			self.DownloadDetails()
 
 		if targetLevel >= LazyLoaderState.PostProcessed:
@@ -1473,7 +1773,10 @@ class Project(Package, LazyLoadableMixin):
 		                                       :class:`~pyTooling.Warning.WarningCollector` collects the warning.
 		"""
 		if self._session is None:
-			ex = NoSessionAvailableError(f"No session available to download details of package '{self._name}'.")
+			ex = NoSessionAvailableError(
+				f"No session available to download details of package '{self._name}'.",
+				projectName=self._name
+			)
 			ex.add_note("A session is opened by the package index and handed to the objects it creates.")
 			raise ex
 
@@ -1482,10 +1785,11 @@ class Project(Package, LazyLoadableMixin):
 			response.raise_for_status()
 		except HTTPError as cause:
 			if cause.response is not None and cause.response.status_code == 404:
-				raise ProjectNotFoundError(f"Package '{self._name}' not found.") from cause
+				raise ProjectNotFoundError(f"Package '{self._name}' not found.", projectName=self._name) from cause
 
 			raise PackageIndexError(
-				f"Package index responded {response.status_code} {response.reason} for package '{self._name}'."
+				f"Package index responded {response.status_code} {response.reason} for package '{self._name}'.",
+				projectName=self._name
 			) from cause
 
 		self.UpdateDetailsFromPyPIJSON(response.json())
@@ -1627,10 +1931,12 @@ class PythonPackageIndex(PackageStorage):
 	It is the entry point of the dependency graph: projects are looked up here, and every request to the index reuses
 	the same HTTP session.
 	"""
-	_url:              URL               #: URL of the package index's website.
-	_api:              URL               #: URL of the package index's API.
-	_session:          Session           #: HTTP session reused for every request to this index.
-	_licenseOverrides: LicenseOverrides  #: Licenses stated by hand, for what this index can't answer for.
+	_url:              URL                 #: URL of the package index's website.
+	_api:              URL                 #: URL of the package index's API.
+	_session:          Session             #: HTTP session reused for every request to this index.
+	_licenseOverrides: LicenseOverrides    #: Licenses stated by hand, for what this index can't answer for.
+	_projectCache:     dict[str, Project]  #: Projects looked up on this index, by canonical name.
+	_unknownProjects:  set[str]            #: Canonical names of the projects this index doesn't know.
 
 	def __init__(
 		self,
@@ -1654,6 +1960,8 @@ class PythonPackageIndex(PackageStorage):
 		super().__init__(name, graph)
 
 		self._licenseOverrides = licenseOverrides if licenseOverrides is not None else LicenseOverrides()
+		self._projectCache =     {}
+		self._unknownProjects =  set()
 
 		if isinstance(url, str):
 			url = URL.Parse(url)
@@ -1731,6 +2039,17 @@ class PythonPackageIndex(PackageStorage):
 		"""
 		return len(self._packages)
 
+	@readonly
+	def UnknownProjects(self) -> tuple[str, ...]:
+		"""
+		Read-only property to return the canonical names of the projects this index answered ``404 Not Found`` for.
+
+		:meth:`DownloadProject` doesn't ask the index for them again.
+
+		:returns: Tuple of canonical project names.
+		"""
+		return tuple(self._unknownProjects)
+
 	def _GetPyPIEndpoint(self, projectName: str) -> str:
 		"""
 		Return the API endpoint describing a project.
@@ -1744,6 +2063,11 @@ class PythonPackageIndex(PackageStorage):
 		"""
 		Look up a project on this package index.
 
+		The index downloads a project once: a later call, also with another spelling of the name (``Sphinx_RTD_Theme``
+		and ``sphinx-rtd-theme``), returns the same project, loaded further if ``lazy`` asks for more than it has. A
+		project the index answers ``404 Not Found`` for is remembered (:attr:`UnknownProjects`) and raises again
+		without a request.
+
 		Loading the project's details skips a release whose version the parser doesn't support and reports it as a
 		:exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, see :meth:`Project.UpdateDetailsFromPyPIJSON`. If
 		``lazy`` asks for :attr:`~pyTooling.Dependency.Python.LazyLoaderState.PostProcessed`, the details of every
@@ -1755,10 +2079,46 @@ class PythonPackageIndex(PackageStorage):
 		:raises UnhandledCriticalWarningError: If ``lazy`` asks for the project's details, a release's version isn't
 		                                       supported and no :class:`~pyTooling.Warning.WarningCollector` collects
 		                                       the warning.
+		:raises ProjectNotFoundError:          If the index doesn't know the project - also when it answered so before,
+		                                       without asking it again.
 		"""
-		project = Project(projectName, "", index=self, lazy=lazy)
+		key = canonicalize_name(projectName)
+		if key in self._unknownProjects:
+			ex = ProjectNotFoundError(f"Package '{projectName}' not found.", projectName=projectName)
+			ex.add_note("The package index answered '404 Not Found' for it before; it isn't asked again.")
+			raise ex
+
+		if (project := self._projectCache.get(key, None)) is None:
+			try:
+				project = Project(projectName, "", index=self, lazy=lazy)
+			except ProjectNotFoundError:
+				# the project registered itself in the index before its download failed
+				self._packages.pop(projectName, None)
+				self._unknownProjects.add(key)
+				raise
+
+			self._projectCache[key] = project
+		else:
+			try:
+				with project.__lazy_lock__:
+					if project.__lazy_state__ < lazy:
+						project.__lazy_loader__(lazy)
+			except ProjectNotFoundError:
+				self._ForgetProject(project)
+				raise
 
 		return project
+
+	def _ForgetProject(self, project: Project) -> None:
+		"""
+		Remove a project the index answered ``404 Not Found`` for, and remember its name as unknown.
+
+		:param project: The project, which registered itself in this index before its download failed.
+		"""
+		key = canonicalize_name(project._name)
+		self._packages.pop(project._name, None)
+		self._projectCache.pop(key, None)
+		self._unknownProjects.add(key)
 
 	def __repr__(self) -> str:
 		"""

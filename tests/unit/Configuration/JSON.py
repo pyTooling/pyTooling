@@ -125,7 +125,8 @@ class Errors(Testcase):
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["dictionary"]["key_3"]
 
-		self.assertIn("Key 'key_3' not found in node 'dictionary'.", str(context.exception))
+		self.assertEqual("Key 'key_3' not found in node 'dictionary'.", str(context.exception))
+		self.assertEqual("key_3", context.exception.Key)
 		self.assertIn("Available keys: 'key_1', 'key_2'.", context.exception.__notes__)
 
 	def test_IndexOutOfRangeInSequence(self) -> None:
@@ -134,7 +135,8 @@ class Errors(Testcase):
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["sequence"][2]
 
-		self.assertIn("Key '2' not found in node 'sequence'.", str(context.exception))
+		self.assertEqual("Key '2' not found in node 'sequence'.", str(context.exception))
+		self.assertEqual("2", context.exception.Key)
 		self.assertIn("Node 'sequence' is a sequence with indices 0..1.", context.exception.__notes__)
 
 	def test_UnknownKeyInEmptyDictionary(self) -> None:
@@ -166,6 +168,7 @@ class Errors(Testcase):
 			_ = config["nullReference"]
 
 		self.assertIn("Path expression 'nullValue' resolves to a null value.", str(context.exception))
+		self.assertEqual("nullValue", context.exception.PathExpression)
 
 	def test_UnclosedVariableReference(self) -> None:
 		config = Configuration(self._configFile)
@@ -174,6 +177,8 @@ class Errors(Testcase):
 			_ = config["unclosedVariable"]
 
 		self.assertIn("Unclosed variable reference in value '${unclosed'.", str(context.exception))
+		self.assertEqual("${unclosed", context.exception.Value)
+		self.assertEqual(0, context.exception.Position)
 
 	def test_DanglingDollarSign(self) -> None:
 		config = Configuration(self._configFile)
@@ -182,6 +187,8 @@ class Errors(Testcase):
 			_ = config["danglingDollar"]
 
 		self.assertIn("Dangling '$' at the end of value 'prefix$'.", str(context.exception))
+		self.assertEqual("prefix$", context.exception.Value)
+		self.assertEqual(6, context.exception.Position)
 
 	def test_PathExpressionResolvingToDictionary(self) -> None:
 		config = Configuration(self._configFile)
@@ -190,6 +197,7 @@ class Errors(Testcase):
 			_ = config["dictionaryReference"]
 
 		self.assertIn("resolves to a dictionary, not to a value", str(context.exception))
+		self.assertEqual("dictionary", context.exception.PathExpression)
 
 	def test_PathExpressionAboveRoot(self) -> None:
 		config = Configuration(self._configFile)
@@ -198,6 +206,7 @@ class Errors(Testcase):
 			_ = config["aboveRoot"]
 
 		self.assertIn("Path expression '..:dictionary' navigates beyond the root node.", str(context.exception))
+		self.assertEqual("..:dictionary", context.exception.PathExpression)
 		self.assertIn("Element '..' was applied to the root node, which has no parent node.", context.exception.__notes__)
 
 	def test_QueryPathAboveRoot(self) -> None:
@@ -207,6 +216,7 @@ class Errors(Testcase):
 			_ = config.QueryPath("..:dictionary")
 
 		self.assertIn("Path expression '..:dictionary' navigates beyond the root node.", str(context.exception))
+		self.assertEqual("..:dictionary", context.exception.PathExpression)
 
 	def test_AboveRootRaisesWhereThePathIsResolved(self) -> None:
 		"""The traceback ends in the method resolving the path, not in a helper it calls."""

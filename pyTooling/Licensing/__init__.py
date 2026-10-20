@@ -106,6 +106,39 @@ class LicenseExpressionError(LicensingError):
 	The exception is raised when an SPDX license expression is malformed or names a license SPDX doesn't define.
 	"""
 
+	_expression: Nullable[str]  #: License expression that can't be parsed.
+	_identifier: Nullable[str]  #: License identifier SPDX doesn't define.
+
+	def __init__(self, message: str, /, *, expression: Nullable[str] = None, identifier: Nullable[str] = None) -> None:
+		"""
+		Initializes the exception with the license expression and, for an unknown license, its identifier.
+
+		:param message:    The exception's message.
+		:param expression: Optional, the license expression that can't be parsed.
+		:param identifier: Optional, the license identifier SPDX doesn't define, if that's the reason.
+		"""
+		super().__init__(message)
+		self._expression = expression
+		self._identifier = identifier
+
+	@readonly
+	def Expression(self) -> Nullable[str]:
+		"""
+		Read-only property to access the license expression that can't be parsed (:attr:`_expression`).
+
+		:returns: The expression, or ``None`` if it wasn't recorded.
+		"""
+		return self._expression
+
+	@readonly
+	def Identifier(self) -> Nullable[str]:
+		"""
+		Read-only property to access the license identifier SPDX doesn't define (:attr:`_identifier`).
+
+		:returns: The identifier, or ``None`` if it wasn't recorded.
+		"""
+		return self._identifier
+
 
 @export
 @unique
@@ -1641,7 +1674,7 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		self._position = 0
 
 		if len(self._tokens) == 0:
-			raise LicenseExpressionError(f"License expression '{expression}' is empty.")
+			raise LicenseExpressionError(f"License expression '{expression}' is empty.", expression=expression)
 
 	def Parse(self) -> LicenseExpression:
 		"""
@@ -1664,7 +1697,8 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 
 		if self._position < len(self._tokens):
 			raise LicenseExpressionError(
-				f"License expression '{self._expression}' has trailing input at '{self._tokens[self._position]}'."
+				f"License expression '{self._expression}' has trailing input at '{self._tokens[self._position]}'.",
+				expression=self._expression
 			)
 
 		return result
@@ -1703,7 +1737,10 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		left = self._ParseSimple()
 		if self._Accept(WithOperator.KEYWORD):
 			if (identifier := self._Next()) is None:
-				raise LicenseExpressionError(f"License expression '{self._expression}' ends after 'WITH'.")
+				raise LicenseExpressionError(
+					f"License expression '{self._expression}' ends after 'WITH'.",
+					expression=self._expression
+				)
 
 			left = WithOperator(left, LicenseException(identifier))
 
@@ -1717,17 +1754,26 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		:raises LicenseExpressionError: If the expression ends early, a parenthesis is unbalanced, or a license is unknown.
 		"""
 		if (token := self._Next()) is None:
-			raise LicenseExpressionError(f"License expression '{self._expression}' ends unexpectedly.")
+			raise LicenseExpressionError(
+				f"License expression '{self._expression}' ends unexpectedly.",
+				expression=self._expression
+			)
 
 		if token == "(":
 			inner = self._ParseOr()
 			if not self._Accept(")"):
-				raise LicenseExpressionError(f"License expression '{self._expression}' is missing a closing parenthesis.")
+				raise LicenseExpressionError(
+					f"License expression '{self._expression}' is missing a closing parenthesis.",
+					expression=self._expression
+				)
 
 			return inner
 
 		if token == ")":
-			raise LicenseExpressionError(f"License expression '{self._expression}' has an unmatched closing parenthesis.")
+			raise LicenseExpressionError(
+				f"License expression '{self._expression}' has an unmatched closing parenthesis.",
+				expression=self._expression
+			)
 
 		# 'GPL-2.0+' is the deprecated spelling of 'GPL-2.0-or-later' and is still legal grammar
 		orLater = token.endswith("+")
@@ -1741,7 +1787,11 @@ class _LicenseExpressionParser(metaclass=ExtendedType, slots=True):
 		elif (spdxLicense := SPDX_INDEX.get(identifier, None)) is not None:
 			expression = SPDXLicense(spdxLicense)
 		else:
-			ex = LicenseExpressionError(f"License expression '{self._expression}' names unknown license '{identifier}'.")
+			ex = LicenseExpressionError(
+				f"License expression '{self._expression}' names unknown license '{identifier}'.",
+				expression=self._expression,
+				identifier=identifier
+			)
 
 			if any(identifier == absence.value for absence in LicenseAbsence):
 				ex.add_note(f"'{identifier}' is a value a license field may hold instead of an expression.")

@@ -31,7 +31,8 @@
 """
 Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the statistics collected for it.
 """
-from pathlib import Path
+from datetime import timedelta
+from pathlib  import Path
 
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import count
@@ -383,3 +384,11 @@ class Scanning(Testcase):
 
 		self.assertIn("not attached to a filesystem root", str(context.exception))
 
+
+
+	def test_Durations(self) -> None:
+		"""Scanning and aggregating measure their durations as timedeltas."""
+		root = Root(Path("tests/data"))
+
+		self.assertIsInstance(root.ScanDuration, timedelta)
+		self.assertIsInstance(root.AggregateDuration, timedelta)

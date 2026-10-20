@@ -122,6 +122,8 @@ class IncompatibleMetaClass(Testcase):
 
 		self.assertIn("'@slotted'", str(context.exception))
 		self.assertIn("OtherMeta", context.exception.__notes__[0])
+		self.assertIs(Data, context.exception.DecoratedClass)
+		self.assertIs(self.OtherMeta, context.exception.MetaClass)
 
 	def test_Mixin(self) -> None:
 		class Data(metaclass=self.OtherMeta):
@@ -140,6 +142,14 @@ class IncompatibleMetaClass(Testcase):
 			_ = singleton(Data)
 
 		self.assertIn("'@singleton'", str(context.exception))
+
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither a class nor a meta-class."""
+		with self.assertRaises(IncompatibleMetaClassError) as context:
+			raise IncompatibleMetaClassError("Incompatible meta-class.")
+
+		self.assertIsNone(context.exception.DecoratedClass)
+		self.assertIsNone(context.exception.MetaClass)
 
 
 class ClassKeywordArguments(Testcase):

@@ -414,7 +414,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		exceptionType = getFullyQualifiedName(ex)
 
-		message  = f"{{RED}}[FATAL] An unknown or unhandled exception reached the topmost exception handler!{{NOCOLOR}}\n"
+		message  = "{RED}[FATAL] An unknown or unhandled exception reached the topmost exception handler!{NOCOLOR}\n"
 		message += f"{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{exceptionType}{{NOCOLOR}}\n"
 		message += f"{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}\n"
 
@@ -486,7 +486,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		   :meth:`PrintNotImplementedError`
 		      |rarr| Print a call to an unimplemented function or abstract method.
 		"""
-		message  = f"{{RED}}[MISSING DEPENDENCY] An optional dependency is not installed!{{NOCOLOR}}\n"
+		message  = "{RED}[MISSING DEPENDENCY] An optional dependency is not installed!{NOCOLOR}\n"
 		message += f"{{indent}}{{YELLOW}}Missing package:{{NOCOLOR}}      {{DARK_RED}}{ex.Dependency}{{NOCOLOR}}\n"
 
 		commands = iter(ex.InstallCommands)
@@ -514,7 +514,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		filename = frame.f_code.co_filename
 		funcName = frame.f_code.co_name
 
-		message  = f"{{RED}}[NOT IMPLEMENTED] An unimplemented function or abstract method was called!{{NOCOLOR}}\n"
+		message  = "{RED}[NOT IMPLEMENTED] An unimplemented function or abstract method was called!{NOCOLOR}\n"
 		message += f"{{indent}}{{YELLOW}}Function or method:{{NOCOLOR}}   {{DARK_RED}}{funcName}(...){{NOCOLOR}}\n"
 		message += f"{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}\n"
 

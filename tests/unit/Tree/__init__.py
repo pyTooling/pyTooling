@@ -32,11 +32,9 @@
 Unit tests for :mod:`pyTooling.Tree`: construction, merging and splitting of trees, the loop detection, the
 iteration methods, and the rendering of a tree.
 """
-from typing   import Any, Optional as Nullable, List, Tuple, Dict
+from typing            import Any, Optional as Nullable, List, Tuple, Dict
 
-from pytest   import mark
-
-from pyTooling.Tree    import Node, AlreadyInTreeError, NoSiblingsError
+from pyTooling.Tree    import Node, AlreadyInTreeError, NoSiblingsError, NotAChildError, NotInSameTreeError
 from pyTooling.Testing import Testcase
 
 
@@ -319,8 +317,45 @@ class MergeTree(Testcase):
 		root = Node(1)
 		child = Node(11, parent=root)
 
-		with self.assertRaises(AlreadyInTreeError):
+		with self.assertRaises(AlreadyInTreeError) as context:
 			root.AddChildren((Node(2), child))
+
+		self.assertIs(child, context.exception.OtherNode)
+
+	def test_Parent_AlreadyInTree(self) -> None:
+		root = Node(1)
+		child = Node(11, parent=root)
+
+		with self.assertRaises(AlreadyInTreeError) as context:
+			root.Parent = child
+
+		self.assertIs(child, context.exception.OtherNode)
+
+	def test_NotInSameTree(self) -> None:
+		root = Node(1)
+		other = Node(2)
+
+		with self.assertRaises(NotInSameTreeError) as context:
+			list(root.WalkTo(other))
+
+		self.assertIs(other, context.exception.OtherNode)
+
+		with self.assertRaises(NotInSameTreeError) as context:
+			list(root.GetCommonAncestors(other))
+
+		self.assertIs(other, context.exception.OtherNode)
+
+	def test_TreeErrors_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no node."""
+		with self.assertRaises(AlreadyInTreeError) as alreadyCapture:
+			raise AlreadyInTreeError("Already in tree.")
+
+		self.assertIsNone(alreadyCapture.exception.OtherNode)
+
+		with self.assertRaises(NotInSameTreeError) as notInSameCapture:
+			raise NotInSameTreeError("Not in the same tree.")
+
+		self.assertIsNone(notInSameCapture.exception.OtherNode)
 
 	def test_AddChildren_TypeError(self) -> None:
 		root = Node(1)
@@ -387,9 +422,162 @@ class SplitTree(Testcase):
 			with self.assertRaises(KeyError):
 				_ = root.GetNodeByID(node.ID)
 
-	@mark.skip(reason="Node has no DeleteChild method yet - the tree offers no way to remove a node.")
-	def test_DeleteChild(self) -> None:
-		pass
+	def test_RemoveChild(self) -> None:
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root)]
+
+		root1 = Node(11, parent=children[0])
+		children1 = [Node(12, parent=root1), Node(13, parent=root1)]
+
+		oldSize = root.Size
+
+		children[0].RemoveChild(root1)
+
+		self.assertTrue(children[0].IsLeaf)
+		self.assertEqual(0, children[0].ChildCount)
+
+		self.assertEqual(oldSize - 3, root.Size)
+		self.assertEqual(3, root1.Size)
+		self.assertEqual(len(children), root.ChildCount)
+		self.assertEqual(len(children1), root1.ChildCount)
+
+		self.assertIsNone(root1.Parent)
+		self.assertTrue(root1.IsRoot)
+		self.assertIs(root1, root1.Root)
+		self.assertEqual(0, root1.Level)
+		for node in children1:
+			self.assertIs(root1, node.Root)
+			self.assertEqual(1, node.Level)
+
+		for node in [root1] + children1:
+			self.assertIs(node, root1.GetNodeByID(node.ID))
+			with self.assertRaises(KeyError):
+				_ = root.GetNodeByID(node.ID)
+
+	def test_RemoveChild_WithoutIDs(self) -> None:
+		root = Node()
+		child = Node(parent=root)
+		grandChild = Node(parent=child)
+
+		root.RemoveChild(child)
+
+		self.assertEqual(1, root.Size)
+		self.assertEqual(2, child.Size)
+		self.assertIs(child, child.Root)
+		self.assertIs(child, grandChild.Root)
+		self.assertEqual(1, grandChild.Level)
+
+	def test_RemoveChild_None(self) -> None:
+		root = Node()
+
+		with self.assertRaises(ValueError) as context:
+			root.RemoveChild(None)
+
+		self.assertEqual("Parameter 'child' is None.", str(context.exception))
+
+	def test_RemoveChild_TypeError(self) -> None:
+		root = Node()
+
+		with self.assertRaises(TypeError) as context:
+			root.RemoveChild(2)
+
+		self.assertEqual("Parameter 'child' is not of type 'Node'.", str(context.exception))
+
+	def test_RemoveChild_NotAChild(self) -> None:
+		root = Node(1)
+		child = Node(2, parent=root)
+		grandChild = Node(3, parent=child)
+
+		with self.assertRaises(NotAChildError) as context:
+			root.RemoveChild(grandChild)
+
+		self.assertEqual("Node '3' is not a child of this node.", str(context.exception))
+		self.assertIs(grandChild, context.exception.Child)
+		self.assertIs(child, grandChild.Parent)
+		self.assertEqual(3, root.Size)
+
+	def test_RemoveChildren(self) -> None:
+		root = Node(1)
+		children = [Node(2, parent=root), Node(3, parent=root), Node(4, parent=root)]
+		grandChild = Node(21, parent=children[0])
+
+		root.RemoveChildren((children[0], children[2]))
+
+		self.assertEqual(2, root.Size)
+		self.assertEqual(1, root.ChildCount)
+		self.assertIs(children[1], root.Children[0])
+		for child in (children[0], children[2]):
+			self.assertIsNone(child.Parent)
+			self.assertIs(child, child.Root)
+			self.assertEqual(0, child.Level)
+
+		self.assertIs(children[0], grandChild.Root)
+		self.assertEqual(1, grandChild.Level)
+
+	def test_RemoveChildren_GetChildren(self) -> None:
+		root = Node()
+		children = [Node(parent=root), Node(parent=root), Node(parent=root)]
+
+		root.RemoveChildren(root.GetChildren())
+
+		self.assertTrue(root.IsLeaf)
+		self.assertEqual(1, root.Size)
+		for child in children:
+			self.assertTrue(child.IsRoot)
+
+	def test_RemoveChildren_None(self) -> None:
+		root = Node()
+
+		with self.assertRaises(ValueError) as context:
+			root.RemoveChildren(None)
+
+		self.assertEqual("Parameter 'children' is None.", str(context.exception))
+
+	def test_RemoveChildren_NotIterable(self) -> None:
+		root = Node()
+
+		with self.assertRaises(TypeError) as context:
+			root.RemoveChildren(2)
+
+		self.assertEqual("Parameter 'children' is not iterable.", str(context.exception))
+
+	def test_RemoveChildren_ItemNone(self) -> None:
+		root = Node()
+		child = Node(parent=root)
+
+		with self.assertRaises(ValueError) as context:
+			root.RemoveChildren((child, None))
+
+		self.assertEqual("Item in parameter 'children' is None.", str(context.exception))
+
+	def test_RemoveChildren_ItemTypeError(self) -> None:
+		root = Node()
+		child = Node(parent=root)
+
+		with self.assertRaises(TypeError) as context:
+			root.RemoveChildren((child, 2))
+
+		self.assertEqual("Item '2' in parameter 'children' is not of type 'Node'.", str(context.exception))
+
+	def test_RemoveChildren_NotAChild(self) -> None:
+		root = Node(1)
+		child = Node(2, parent=root)
+
+		other = Node(3)
+
+		with self.assertRaises(NotAChildError) as context:
+			root.RemoveChildren((child, other))
+
+		self.assertEqual("Item '3' in parameter 'children' is not a child of this node.", str(context.exception))
+		self.assertIs(other, context.exception.Child)
+
+	def test_NotAChildError_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no node."""
+		with self.assertRaises(NotAChildError) as context:
+			raise NotAChildError("Not a child.")
+
+		self.assertEqual("Not a child.", str(context.exception))
+		self.assertIsNone(context.exception.Child)
 
 
 class Loops(Testcase):

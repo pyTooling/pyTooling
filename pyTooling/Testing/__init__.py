@@ -49,7 +49,7 @@ from unittest   import TestCase
 from sys        import executable as PythonExecutable, version_info
 from typing     import Any, Callable, ClassVar, Mapping, Union, Optional as Nullable
 
-from pyTooling.Common        import getFullyQualifiedName
+from pyTooling.Common        import getFullyQualifiedName, getTypeName
 from pyTooling.Decorators    import export
 from pyTooling.Documentation import splitDocString
 from pyTooling.Exceptions    import ToolingException
@@ -401,7 +401,7 @@ class ApplicationTestcase(Testcase):
 		:raises ApplicationTestingError: If the test class named no runnable module.
 		"""
 		if self._runnableModule is None:
-			ex = ApplicationTestingError(f"Testcase '{self.__class__.__name__}' has no runnable module.")
+			ex = ApplicationTestingError(f"Testcase '{getTypeName(self)}' has no runnable module.")
 			ex.add_note("Set '_runnableModule' to run the program with 'python -m'.")
 			raise ex
 

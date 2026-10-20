@@ -32,22 +32,25 @@
 Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
 need network access.
 """
-from datetime                     import date, datetime, timezone
+from datetime                     import date, datetime, timedelta, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
 from typing                       import Optional as Nullable
 
+from packaging.requirements       import Requirement
 from pytest                       import mark
 from requests                     import HTTPError, Response
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
 from pyTooling.Dependency.Python  import PythonPackageIndex, Release
-from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile
+from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile, RequirementsFileReference
 from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
 from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
-from pyTooling.Dependency         import PackageIndexError, UnsupportedVersionWarning
+from pyTooling.Dependency         import PackageIndexError, ProjectNotFoundError, ReleaseNotFoundError
+from pyTooling.Dependency         import NoSessionAvailableError, UnsupportedVersionWarning
+from pyTooling.Dependency         import AlreadyInRequirementsTreeError
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -56,6 +59,8 @@ from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperat
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
 from pyTooling.Warning            import UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase
+
+from tests.unit.Dependency.FakeIndex import DocumentSession, ProjectDocument
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -102,6 +107,177 @@ class Instantiation(Testcase):
 		# 'Requirements' would load the release's details from the index first; the field holds what was passed.
 		self.assertEqual({"ab": [], "test": []}, release._requirements)
 		self.assertIsNot(requirements, release._requirements)
+
+
+class NotFoundSession:
+	"""HTTP session answering every request with ``404 Not Found``, so no request leaves the process."""
+
+	def get(self, url: str) -> Response:
+		"""
+		Answer a GET request with ``404 Not Found``.
+
+		:param url: The requested URL.
+		:returns:   A response with status code 404.
+		"""
+		response = Response()
+		response.status_code = 404
+		response.url =         url
+
+		return response
+
+
+class NotFound(Testcase):
+	"""A project or release the package index doesn't know raises an exception carrying what was requested."""
+
+	def test_ProjectNotFoundError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = NotFoundSession()
+		project = Project("project", "https://index.org/project/", index=index)
+
+		with self.assertRaises(ProjectNotFoundError) as context:
+			project.DownloadDetails()
+
+		self.assertEqual("Package 'project' not found.", str(context.exception))
+		self.assertEqual("project", context.exception.ProjectName)
+
+	def test_ProjectNotFoundError_MessageOnly(self) -> None:
+		with self.assertRaises(ProjectNotFoundError) as context:
+			raise ProjectNotFoundError("Project not found.")
+
+		self.assertEqual("Project not found.", str(context.exception))
+		self.assertIsNone(context.exception.ProjectName)
+
+	def test_ProjectNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(ProjectNotFoundError, LookupError))
+		self.assertTrue(issubclass(ProjectNotFoundError, DependencyError))
+
+	def test_ReleaseNotFoundError(self) -> None:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		index._session = NotFoundSession()
+		project = Project("project", "https://index.org/project/", index=index)
+		release = Release(PythonVersion.Parse("v1.0.0"), datetime.now(), project=project)
+
+		with self.assertRaises(ReleaseNotFoundError) as context:
+			release.DownloadDetails()
+
+		self.assertEqual("project", context.exception.ProjectName)
+		self.assertIs(release.Version, context.exception.Version)
+
+	def test_ReleaseNotFoundError_MessageOnly(self) -> None:
+		with self.assertRaises(ReleaseNotFoundError) as context:
+			raise ReleaseNotFoundError("Release not found.")
+
+		self.assertEqual("Release not found.", str(context.exception))
+		self.assertIsNone(context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
+
+	def test_ReleaseNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(ReleaseNotFoundError, LookupError))
+		self.assertTrue(issubclass(ReleaseNotFoundError, DependencyError))
+
+
+class ProjectCache(Testcase):
+	"""The index downloads a project once and remembers a project it doesn't know."""
+
+	API = "https://api.index.org/v4/"
+
+	def _Index(self, documents: dict[str, dict]) -> PythonPackageIndex:
+		graph = PythonPackageDependencyGraph("graph")
+		index = PythonPackageIndex("index", "https://index.org/", self.API, graph=graph)
+		index._session = DocumentSession(self.API, documents)
+		return index
+
+	def test_SameProject(self) -> None:
+		index = self._Index({"demo/json": ProjectDocument("demo", "1.0", "2.0")})
+
+		first =  index.DownloadProject("demo")
+		second = index.DownloadProject("demo")
+
+		self.assertIs(first, second)
+		self.assertListEqual(["demo/json"], index._session.Requests)
+		self.assertEqual(1, index.ProjectCount)
+
+	def test_OtherSpelling(self) -> None:
+		"""Names are compared in their canonical form (PEP 503)."""
+		index = self._Index({"demo_package/json": ProjectDocument("demo_package", "1.0")})
+
+		first =  index.DownloadProject("demo_package")
+		second = index.DownloadProject("Demo-Package")
+
+		self.assertIs(first, second)
+		self.assertEqual(1, len(index._session.Requests))
+
+	def test_LoadedFurther(self) -> None:
+		"""A project looked up without loading is loaded when a later lookup asks for its details."""
+		index = self._Index({"demo/json": ProjectDocument("demo", "1.0")})
+
+		project = index.DownloadProject("demo", LazyLoaderState.Initialized)
+		self.assertListEqual([], index._session.Requests)
+
+		self.assertIs(project, index.DownloadProject("demo", LazyLoaderState.PartiallyLoaded))
+		self.assertListEqual(["demo/json"], index._session.Requests)
+		self.assertEqual(1, len(project.Releases))
+
+	def test_NotDownloadedTwice(self) -> None:
+		"""A loaded project asked for its details again isn't downloaded again."""
+		index = self._Index({"demo/json": ProjectDocument("demo", "1.0")})
+
+		project = index.DownloadProject("demo", LazyLoaderState.PartiallyLoaded)
+		project.__lazy_loader__(LazyLoaderState.FullyLoaded)
+
+		self.assertListEqual(["demo/json"], index._session.Requests)
+
+	def test_UnknownProject(self) -> None:
+		index = self._Index({})
+
+		with self.assertRaises(ProjectNotFoundError):
+			index.DownloadProject("unknown")
+
+		with self.assertRaises(ProjectNotFoundError) as context:
+			index.DownloadProject("Unknown")
+
+		self.assertEqual("Unknown", context.exception.ProjectName)
+		self.assertIn(
+			"The package index answered '404 Not Found' for it before; it isn't asked again.",
+			context.exception.__notes__
+		)
+		self.assertListEqual(["unknown/json"], index._session.Requests)
+		self.assertTupleEqual(("unknown", ), index.UnknownProjects)
+		self.assertEqual(0, index.ProjectCount)
+
+	def test_UnknownProject_LoadedFurther(self) -> None:
+		"""A project looked up without loading, which turns out to be unknown, is removed from the index."""
+		index = self._Index({})
+
+		index.DownloadProject("unknown", LazyLoaderState.Initialized)
+		self.assertEqual(1, index.ProjectCount)
+
+		with self.assertRaises(ProjectNotFoundError):
+			index.DownloadProject("unknown", LazyLoaderState.PartiallyLoaded)
+
+		self.assertEqual(0, index.ProjectCount)
+		self.assertTupleEqual(("unknown", ), index.UnknownProjects)
+
+	def test_ReleaseKeepsRequiredProject(self) -> None:
+		"""Downloading a release's details doesn't replace a project it requires, which was looked up before."""
+		release = {"info": {"provides_extra": None, "requires_dist": ["dep >= 1.0", "unknown"]}}
+		index =   self._Index({
+			"demo/json":     ProjectDocument("demo", "1.0"),
+			"demo/1.0/json": release,
+			"dep/json":      ProjectDocument("dep", "1.0")
+		})
+		dep = index.DownloadProject("dep")
+		with self.assertRaises(ProjectNotFoundError):
+			index.DownloadProject("unknown")
+
+		demo = index.DownloadProject("demo")
+		demo.LatestRelease.DownloadDetails()
+
+		self.assertIs(dep, index.DownloadProject("dep"))
+		self.assertIs(dep, index.Projects["dep"])
+		self.assertNotIn("unknown", index.Projects)
 
 
 class PyPI(Testcase):
@@ -969,11 +1145,30 @@ class RequirementsFiles(Testcase):
 				--index-url https://example.org/simple
 			""")
 
-			requirementsFile = RequirementsFile(path)
+			requirementsFile = RequirementsFile.Parse(path)
 
 		self.assertEqual(["pyTooling", "colorama"], [req.name for req in requirementsFile.Requirements])
 		self.assertEqual([], list(requirementsFile.ReferencedFiles))
 		self.assertEqual(2, len(requirementsFile))
+
+	def test_AnalysisDuration(self) -> None:
+		"""Each file read measures its duration, the files it references included."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 8.0\n")
+			path = self._write(root, "requirements.txt", """
+				-r base.txt
+				pytest ~= 9.1
+			""")
+
+			requirementsFile = RequirementsFile.Parse(path)
+
+		base = tuple(requirementsFile.ReferencedFiles)[0]
+
+		self.assertIsInstance(requirementsFile.AnalysisDuration, timedelta)
+		self.assertIsInstance(base.AnalysisDuration, timedelta)
+		self.assertGreater(base.AnalysisDuration, timedelta(0))
+		self.assertGreaterEqual(requirementsFile.AnalysisDuration, base.AnalysisDuration)
 
 	def test_Includes_KeepTheTree(self) -> None:
 		"""``-r`` references another file, and which file a requirement came from is not flattened away."""
@@ -987,7 +1182,7 @@ class RequirementsFiles(Testcase):
 				pytest ~= 9.1
 			""")
 
-			requirementsFile = RequirementsFile(path)
+			requirementsFile = RequirementsFile.Parse(path)
 			referenced = tuple(requirementsFile.ReferencedFiles)
 
 			self.assertEqual(["pytest"], [req.name for req in requirementsFile.Requirements])
@@ -1010,7 +1205,7 @@ class RequirementsFiles(Testcase):
 				colorama ~= 0.4.6
 			""")
 
-			entries = RequirementsFile(path).Entries
+			entries = RequirementsFile.Parse(path).Entries
 
 		self.assertEqual(
 			["pytest", "base.txt", "colorama"],
@@ -1025,7 +1220,7 @@ class RequirementsFiles(Testcase):
 			self._write(root, "base.txt", "-r leaf.txt\n")
 			path = self._write(root, "requirements.txt", "-r base.txt\n")
 
-			requirementsFile = RequirementsFile(path)
+			requirementsFile = RequirementsFile.Parse(path)
 			base = next(iter(requirementsFile.ReferencedFiles))
 			leaf = next(iter(base.ReferencedFiles))
 
@@ -1042,7 +1237,7 @@ class RequirementsFiles(Testcase):
 			self._write(root, "base.txt", "-r leaf.txt\n")
 			path = self._write(root, "requirements.txt", "-r base.txt\n")
 
-			requirementsFile = RequirementsFile(path)
+			requirementsFile = RequirementsFile.Parse(path)
 			base = next(iter(requirementsFile.ReferencedFiles))
 			leaf = next(iter(base.ReferencedFiles))
 
@@ -1063,7 +1258,7 @@ class RequirementsFiles(Testcase):
 				-r sub/leaf.txt
 			""")
 
-			requirementsFile = RequirementsFile(path)
+			requirementsFile = RequirementsFile.Parse(path)
 
 		self.assertEqual(
 			{path.resolve(), (root / "base.txt").resolve(), (root / "sub/leaf.txt").resolve()},
@@ -1081,7 +1276,7 @@ class RequirementsFiles(Testcase):
 				pytest ~= 9.1
 			""")
 
-			requirements = {req.name: req for req in RequirementsFile(path).AllRequirements}
+			requirements = {req.name: req for req in RequirementsFile.Parse(path).AllRequirements}
 
 		self.assertEqual("~=9.1", str(requirements["pytest"].specifier))
 
@@ -1096,7 +1291,7 @@ class RequirementsFiles(Testcase):
 				colorama ~= 0.4.6
 			""")
 
-			allRequirements = [req.name for req in RequirementsFile(path).AllRequirements]
+			allRequirements = [req.name for req in RequirementsFile.Parse(path).AllRequirements]
 
 		self.assertEqual(["pytest", "pyTooling", "sphinx", "colorama"], allRequirements)
 
@@ -1111,7 +1306,7 @@ class RequirementsFiles(Testcase):
 				pytest ~= 9.1
 			""")
 
-			allRequirements = list(RequirementsFile(path).AllRequirements)
+			allRequirements = list(RequirementsFile.Parse(path).AllRequirements)
 
 		self.assertEqual(["pytest", "sphinx", "colorama"], [req.name for req in allRequirements])
 		self.assertEqual("~=9.1", str(allRequirements[0].specifier))
@@ -1127,7 +1322,7 @@ class RequirementsFiles(Testcase):
 			""")
 
 			with self.assertRaises(CircularRequirementsFileError) as exceptionCapture:
-				RequirementsFile(path)
+				RequirementsFile.Parse(path)
 
 		self.assertIn("other.txt", str(exceptionCapture.exception))
 
@@ -1136,8 +1331,86 @@ class RequirementsFiles(Testcase):
 		with TemporaryDirectory() as directory:
 			path = self._write(Path(directory), "requirements.txt", "-r requirements.txt\n")
 
-			with self.assertRaises(CircularRequirementsFileError):
-				RequirementsFile(path)
+			with self.assertRaises(CircularRequirementsFileError) as context:
+				RequirementsFile.Parse(path)
+
+		self.assertEqual(
+			f"Requirements file '{path.resolve()}' referenced in '{path}' line 1 is already being read.",
+			str(context.exception)
+		)
+		self.assertEqual([f"Chain: {path} → {path.resolve()}"], context.exception.__notes__)
+		self.assertEqual(path.resolve(), context.exception.FilePath)
+		self.assertEqual(path, context.exception.ReferencedIn)
+		self.assertEqual(1, context.exception.LineNumber)
+
+	def test_Includes_Diamond(self) -> None:
+		"""Two files referencing the same third one is no cycle: it's read once, the second ``-r`` is a reference."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			common = self._write(root, "requirements.txt", "packaging >= 25.0\n")
+			self._write(root, "tests/unit/requirements.txt", "-r ../../requirements.txt\npytest ~= 9.0\n")
+			self._write(root, "tests/typing/requirements.txt", "-r ../../requirements.txt\nmypy ~= 2.3\n")
+			path = self._write(root, "tests/requirements.txt", """
+				-r unit/requirements.txt
+				-r typing/requirements.txt
+			""")
+
+			requirementsFile = RequirementsFile.Parse(path)
+
+			unit, typing = requirementsFile.ReferencedFiles
+			shared, = unit.ReferencedFiles
+			reference, = typing.FileReferences
+
+			self.assertEqual(["packaging", "pytest", "mypy"], [req.name for req in requirementsFile.AllRequirements])
+			self.assertEqual(4, len(requirementsFile.AnalyzedRequirementFiles))
+			self.assertIs(shared, requirementsFile.AnalyzedRequirementFiles[common.resolve()])
+			self.assertIs(unit, shared.Parent)
+			self.assertEqual([], list(typing.ReferencedFiles))
+			self.assertIs(shared, reference.Target)
+			self.assertIs(typing, reference.Parent)
+			self.assertEqual(common.resolve(), reference.Path)
+			self.assertEqual(["packaging", "mypy"], [req.name for req in typing.AllRequirements])
+			self.assertEqual([requirementsFile, unit, shared, typing], list(requirementsFile.IterateTree()))
+
+	def test_Includes_ThreeTimes(self) -> None:
+		"""Every inclusion after the first one is a reference to the same file, also one in the root itself."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "pyTooling >= 10.0\n")
+			self._write(root, "a.txt", "-r base.txt\n")
+			self._write(root, "b.txt", "-r base.txt\n")
+			path = self._write(root, "requirements.txt", """
+				-r a.txt
+				-r b.txt
+				-r base.txt
+				pyTooling >= 10.0.0rc4
+			""")
+
+			requirementsFile = RequirementsFile.Parse(path)
+
+			a, b = requirementsFile.ReferencedFiles
+			base, = a.ReferencedFiles
+			bReference, = b.FileReferences
+			rootReference, = requirementsFile.FileReferences
+
+			self.assertIs(base, bReference.Target)
+			self.assertIs(base, rootReference.Target)
+			self.assertEqual(4, len(requirementsFile.AnalyzedRequirementFiles))
+			requirement, = requirementsFile.AllRequirements
+			self.assertEqual(">=10.0.0rc4", str(requirement.specifier))
+
+	def test_Includes_CycleThroughDiamond(self) -> None:
+		"""A file referenced while it's still being read is a cycle, also next to a diamond."""
+		with TemporaryDirectory() as directory:
+			root = Path(directory)
+			self._write(root, "base.txt", "-r requirements.txt\n")
+			self._write(root, "a.txt", "-r base.txt\n")
+			path = self._write(root, "requirements.txt", "-r a.txt\n")
+
+			with self.assertRaises(CircularRequirementsFileError) as context:
+				RequirementsFile.Parse(path)
+
+		self.assertEqual(path.resolve(), context.exception.FilePath)
 
 	def test_BrokenRequirement(self) -> None:
 		"""A line that isn't a requirement is reported, and the rest of the file is still read."""
@@ -1149,29 +1422,267 @@ class RequirementsFiles(Testcase):
 			""")
 
 			with WarningCollector(handler=lambda warning: False) as collector:
-				requirementsFile = RequirementsFile(path)
+				requirementsFile = RequirementsFile.Parse(path)
 
 		self.assertEqual(["pytest", "colorama"], [req.name for req in requirementsFile.Requirements])
 		self.assertEqual(1, len(collector.Warnings))
 		self.assertIsInstance(collector.Warnings[0], BrokenRequirementWarning)
 
-	def test_WrongParentType(self) -> None:
-		"""'parent' is a real parameter, so it is type-checked like 'path'."""
-		with TemporaryDirectory() as directory:
-			path = self._write(Path(directory), "requirements.txt", "pytest ~= 9.1\n")
-
-			with self.assertRaises(TypeError) as exceptionCapture:
-				RequirementsFile(path, "not a requirements file")
-
-		self.assertIn("'parent'", str(exceptionCapture.exception))
-
 	def test_MissingFile(self) -> None:
 		"""A requirements file that doesn't exist is an error, not an empty list."""
 		with TemporaryDirectory() as directory:
 			with self.assertRaises(RequirementsFileNotFoundError) as exceptionCapture:
-				RequirementsFile(Path(directory) / "nothing.txt")
+				RequirementsFile.Parse(Path(directory) / "nothing.txt")
 
 		self.assertIsInstance(exceptionCapture.exception.__cause__, FileNotFoundError)
+
+	def test_RequirementsFileNotFoundError_Bases(self) -> None:
+		self.assertTrue(issubclass(RequirementsFileNotFoundError, FileNotFoundError))
+		self.assertTrue(issubclass(RequirementsFileNotFoundError, DependencyError))
+
+	def test_MissingReferencedFile(self) -> None:
+		"""A ``-r`` line referencing a file that doesn't exist is an error, too."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), "requirements.txt", "-r nothing.txt\n")
+
+			with self.assertRaises(RequirementsFileNotFoundError) as context:
+				RequirementsFile.Parse(path)
+
+		self.assertEqual(
+			f"Requirements file '{(path.parent / 'nothing.txt').resolve()}' does not exist.",
+			str(context.exception)
+		)
+		self.assertEqual((path.parent / 'nothing.txt').resolve(), context.exception.FilePath)
+
+	def test_RequirementsFileErrors_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries no path."""
+		with self.assertRaises(RequirementsFileNotFoundError) as notFoundCapture:
+			raise RequirementsFileNotFoundError("Missing file.")
+
+		self.assertIsNone(notFoundCapture.exception.FilePath)
+
+		with self.assertRaises(CircularRequirementsFileError) as circularCapture:
+			raise CircularRequirementsFileError("Cycle.")
+
+		self.assertIsNone(circularCapture.exception.FilePath)
+		self.assertIsNone(circularCapture.exception.ReferencedIn)
+		self.assertIsNone(circularCapture.exception.LineNumber)
+
+	def test_Parse_PathIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RequirementsFile.Parse(None)
+
+		self.assertEqual("Parameter 'path' is None.", str(context.exception))
+
+	def test_Parse_PathWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFile.Parse("requirements.txt")
+
+		self.assertEqual("Parameter 'path' is not of type 'Path'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+
+class RequirementsFileInstantiation(Testcase):
+	"""Building a requirements file by hand, without reading one."""
+
+	def test_Empty(self) -> None:
+		path =             Path("requirements.txt")
+		requirementsFile = RequirementsFile(path)
+
+		self.assertIs(path, requirementsFile.Path)
+		self.assertIsNone(requirementsFile.Parent)
+		self.assertIs(requirementsFile, requirementsFile.Root)
+		self.assertEqual([], requirementsFile.Entries)
+		self.assertEqual({path.resolve(): requirementsFile}, requirementsFile.AnalyzedRequirementFiles)
+		self.assertIsNone(requirementsFile.AnalysisDuration)
+		self.assertEqual(0, len(requirementsFile))
+
+	def test_AnalysisDuration(self) -> None:
+		duration =         timedelta(milliseconds=5)
+		requirementsFile = RequirementsFile(Path("requirements.txt"), analysisDuration=duration)
+
+		self.assertEqual(duration, requirementsFile.AnalysisDuration)
+
+	def test_AnalysisDurationWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = RequirementsFile(Path("requirements.txt"), analysisDuration=0.005)
+
+		self.assertEqual("Parameter 'analysisDuration' is not of type 'timedelta'.", str(context.exception))
+		self.assertListEqual(["Got type 'float'."], context.exception.__notes__)
+
+	def test_Entries(self) -> None:
+		pytest =           Requirement("pytest ~= 9.1")
+		colorama =         Requirement("colorama ~= 0.4.6")
+		requirementsFile = RequirementsFile(Path("requirements.txt"), [pytest, colorama])
+
+		self.assertEqual([pytest, colorama], requirementsFile.Entries)
+		self.assertEqual([pytest, colorama], list(requirementsFile.Requirements))
+		self.assertEqual(2, len(requirementsFile))
+
+	def test_Entries_ReferencedFile(self) -> None:
+		"""A file given as an entry is referenced: it and the files it references join the tree."""
+		leaf =             RequirementsFile(Path("leaf.txt"), [Requirement("colorama ~= 0.4.6")])
+		base =             RequirementsFile(Path("base.txt"), [leaf])
+		pytest =           Requirement("pytest ~= 9.1")
+		requirementsFile = RequirementsFile(Path("requirements.txt"), [pytest, base])
+
+		self.assertEqual([pytest, base], requirementsFile.Entries)
+		self.assertIs(requirementsFile, base.Parent)
+		self.assertIs(base, leaf.Parent)
+		self.assertIs(requirementsFile, base.Root)
+		self.assertIs(requirementsFile, leaf.Root)
+		self.assertIsNone(base.AnalyzedRequirementFiles)
+		self.assertIsNone(leaf.AnalyzedRequirementFiles)
+		self.assertEqual(
+			{
+				Path("requirements.txt").resolve(): requirementsFile,
+				Path("base.txt").resolve():         base,
+				Path("leaf.txt").resolve():         leaf
+			},
+			requirementsFile.AnalyzedRequirementFiles
+		)
+		self.assertEqual((requirementsFile, base, leaf), leaf.Hierarchy)
+
+	def test_Parent(self) -> None:
+		"""A file naming its parent is referenced by it."""
+		requirementsFile = RequirementsFile(Path("requirements.txt"))
+		base =             RequirementsFile(Path("base.txt"), parent=requirementsFile)
+
+		self.assertIs(requirementsFile, base.Parent)
+		self.assertIs(requirementsFile, base.Root)
+		self.assertEqual([base], requirementsFile.Entries)
+		self.assertIsNone(base.AnalyzedRequirementFiles)
+		self.assertIs(base, requirementsFile.AnalyzedRequirementFiles[Path("base.txt").resolve()])
+
+	def test_PathIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RequirementsFile(None)
+
+		self.assertEqual("Parameter 'path' is None.", str(context.exception))
+
+	def test_PathWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFile("requirements.txt")
+
+		self.assertEqual("Parameter 'path' is not of type 'Path'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_EntriesNotIterable(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFile(Path("requirements.txt"), 42)
+
+		self.assertEqual("Parameter 'entries' is not iterable.", str(context.exception))
+		self.assertEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_EntriesElementIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RequirementsFile(Path("requirements.txt"), [None])
+
+		self.assertEqual("An element of parameter 'entries' is None.", str(context.exception))
+
+	def test_EntriesElementWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFile(Path("requirements.txt"), ["pytest ~= 9.1"])
+
+		self.assertEqual(
+			"An element of parameter 'entries' is not of type 'Requirement', 'RequirementsFile' or "
+			"'RequirementsFileReference'.",
+			str(context.exception)
+		)
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_EntriesElementAlreadyReferenced(self) -> None:
+		"""A file belongs to one tree; giving a referenced file to a second one is an error."""
+		base = RequirementsFile(Path("base.txt"))
+		RequirementsFile(Path("requirements.txt"), [base])
+
+		with self.assertRaises(AlreadyInRequirementsTreeError) as context:
+			RequirementsFile(Path("other.txt"), [base])
+
+		self.assertEqual(
+			"Requirements file 'base.txt' is referenced by 'requirements.txt' already.",
+			str(context.exception)
+		)
+
+	def test_ParentWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFile(Path("requirements.txt"), parent="requirements.txt")
+
+		self.assertEqual("Parameter 'parent' is not of type 'RequirementsFile'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Entries_Reference(self) -> None:
+		"""A reference given in ``entries`` is stated by that file; ``AllRequirements`` yields its target once."""
+		base =      RequirementsFile(Path("base.txt"), [Requirement("pyTooling >= 10.0")])
+		unit =      RequirementsFile(Path("unit.txt"), [base])
+		reference = RequirementsFileReference(Path("base.txt"), base)
+		typing =    RequirementsFile(Path("typing.txt"), [reference, Requirement("mypy ~= 2.3")])
+		root =      RequirementsFile(Path("requirements.txt"), [unit, typing])
+
+		self.assertIs(typing, reference.Parent)
+		self.assertIs(base, reference.Target)
+		self.assertEqual([reference], list(typing.FileReferences))
+		self.assertEqual(["pyTooling", "mypy"], [req.name for req in root.AllRequirements])
+		self.assertEqual("base.txt (referenced before)", str(reference))
+		self.assertEqual("typing.txt: 1 requirement(s), 1 referenced file(s)", str(typing))
+
+	def test_Reference_Parent(self) -> None:
+		base =      RequirementsFile(Path("base.txt"))
+		parent =    RequirementsFile(Path("requirements.txt"))
+		reference = RequirementsFileReference(Path("base.txt"), base, parent=parent)
+
+		self.assertIs(parent, reference.Parent)
+		self.assertEqual([reference], parent.Entries)
+
+	def test_Reference_Unstated(self) -> None:
+		reference = RequirementsFileReference(Path("base.txt"), RequirementsFile(Path("base.txt")))
+
+		self.assertIsNone(reference.Parent)
+
+	def test_Reference_PathIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RequirementsFileReference(None, RequirementsFile(Path("base.txt")))
+
+		self.assertEqual("Parameter 'path' is None.", str(context.exception))
+
+	def test_Reference_PathWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFileReference("base.txt", RequirementsFile(Path("base.txt")))
+
+		self.assertEqual("Parameter 'path' is not of type 'Path'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Reference_TargetIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			RequirementsFileReference(Path("base.txt"), None)
+
+		self.assertEqual("Parameter 'target' is None.", str(context.exception))
+
+	def test_Reference_TargetWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFileReference(Path("base.txt"), "base.txt")
+
+		self.assertEqual("Parameter 'target' is not of type 'RequirementsFile'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Reference_ParentWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			RequirementsFileReference(Path("base.txt"), RequirementsFile(Path("base.txt")), parent="requirements.txt")
+
+		self.assertEqual("Parameter 'parent' is not of type 'RequirementsFile'.", str(context.exception))
+
+	def test_EntriesElementAlreadyStated(self) -> None:
+		"""A reference belongs to one file; giving it to a second one is an error."""
+		reference = RequirementsFileReference(Path("base.txt"), RequirementsFile(Path("base.txt")))
+		RequirementsFile(Path("unit.txt"), [reference])
+
+		with self.assertRaises(AlreadyInRequirementsTreeError) as context:
+			RequirementsFile(Path("typing.txt"), [reference])
+
+		self.assertEqual(
+			"Reference to requirements file 'base.txt' is stated by 'unit.txt' already.",
+			str(context.exception)
+		)
 
 
 class IndexSessionRetries(Testcase):
@@ -1224,6 +1735,41 @@ class _ServerErrorSession:
 		return response
 
 
+class NoSession(Testcase):
+	"""Downloading details without a session raises, naming the project and, for a release, its version."""
+
+	def _Project(self) -> Project:
+		graph =   PythonPackageDependencyGraph("graph")
+		index =   PythonPackageIndex("index", "https://index.org/", "https://api.index.org/v4/", graph=graph)
+		project = Project("demo", "https://index.org/demo/", index=index)
+		project._session = None
+		return project
+
+	def test_Project(self) -> None:
+		with self.assertRaises(NoSessionAvailableError) as context:
+			self._Project().DownloadDetails()
+
+		self.assertEqual("demo", context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
+
+	def test_Release(self) -> None:
+		release = Release(PythonVersion.Parse("1.0"), datetime.now(), project=self._Project())
+		release._session = None
+
+		with self.assertRaises(NoSessionAvailableError) as context:
+			release.DownloadDetails()
+
+		self.assertEqual("demo", context.exception.ProjectName)
+		self.assertEqual(PythonVersion.Parse("1.0"), context.exception.Version)
+
+	def test_MessageOnly(self) -> None:
+		with self.assertRaises(NoSessionAvailableError) as context:
+			raise NoSessionAvailableError("No session.")
+
+		self.assertIsNone(context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
+
+
 class HTTPErrors(Testcase):
 	"""An HTTP error other than ``404 Not Found`` raises a ``PackageIndexError``, instead of being parsed as JSON."""
 
@@ -1238,6 +1784,8 @@ class HTTPErrors(Testcase):
 
 		self.assertEqual("Package index responded 500 Internal Server Error for package 'project'.", str(context.exception))
 		self.assertIsInstance(context.exception.__cause__, HTTPError)
+		self.assertEqual("project", context.exception.ProjectName)
+		self.assertIsNone(context.exception.Version)
 
 	def test_Release_ServerError(self) -> None:
 		graph = PythonPackageDependencyGraph("graph")
@@ -1254,4 +1802,6 @@ class HTTPErrors(Testcase):
 			str(context.exception)
 		)
 		self.assertIsInstance(context.exception.__cause__, HTTPError)
+		self.assertEqual("project", context.exception.ProjectName)
+		self.assertEqual(PythonVersion.Parse("v1.0.0"), context.exception.Version)
 

@@ -37,12 +37,13 @@ from pickle                import dumps, loads
 from pyTooling.CallGraph   import DuplicateFunctionError
 from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
 from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, EnvironmentVariableError
-from pyTooling.Exceptions  import ExceptionBase, MissingDependencyError, NotConfiguredError, NotInSameHierarchyError
+from pyTooling.Exceptions  import ExceptionBase, MissingDependencyError, NotAChildError, NotConfiguredError
+from pyTooling.Exceptions  import NotInSameHierarchyError
 from pyTooling.Exceptions  import PlatformNotSupportedError, ToolingException
 from pyTooling.Graph       import DuplicateEdgeError, DuplicateVertexError, NotInSameGraph
 from pyTooling.LinkedList  import NotInSameListError
 from pyTooling.Testing     import Testcase
-from pyTooling.Tree        import AlreadyInTreeError, NotInSameTreeError
+from pyTooling.Tree        import AlreadyInTreeError, NotAChildError as TreeNotAChildError, NotInSameTreeError
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -97,6 +98,10 @@ class CommonBases(Testcase):
 			with self.subTest(exception=exception.__name__):
 				self.assertTrue(issubclass(exception, NotInSameHierarchyError))
 				self.assertTrue(issubclass(exception, ToolingException))
+
+	def test_NotAChildError(self) -> None:
+		self.assertTrue(issubclass(TreeNotAChildError, NotAChildError))
+		self.assertTrue(issubclass(TreeNotAChildError, ToolingException))
 
 	def test_ToolingExceptionMessage(self) -> None:
 		"""A common base doesn't change how a 'ToolingException' stores its message."""
@@ -174,3 +179,17 @@ class MissingDependency(Testcase):
 		"""A caller guarding an optional import catches :exc:`ImportError`, so the new exception has to be one."""
 		with self.assertRaises(ImportError):
 			raise MissingDependencyError(dependency="lxml")
+
+	def test_IsAToolingException(self) -> None:
+		"""A caller handling pyTooling's own errors catches :exc:`ToolingException`; it isn't an :exc:`ExceptionBase`."""
+		with self.assertRaises(ToolingException) as context:
+			raise MissingDependencyError(dependency="lxml")
+
+		self.assertNotIsInstance(context.exception, ExceptionBase)
+
+	def test_ImportErrorName(self) -> None:
+		""":attr:`ImportError.name` is the missing package, as for Python's own import errors."""
+		ex = MissingDependencyError(dependency="ruamel.yaml", extra="yaml")
+
+		self.assertEqual("ruamel.yaml", ex.name)
+		self.assertEqual("Optional dependency 'ruamel.yaml' not installed.", ex.msg)

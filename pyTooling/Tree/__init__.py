@@ -49,6 +49,7 @@ from typing                import Any, Callable, Generator, Iterable, Mapping, H
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
+from pyTooling.Exceptions  import NotAChildError as CommonNotAChildError
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 
@@ -100,10 +101,84 @@ class AlreadyInTreeError(TreeError, AlreadyInHierarchyError):
 	   A tree a an acyclic graph without cross-edges. Thus backward edges and cross edges are permitted.
 	"""
 
+	_otherNode: Nullable[Node]  #: Other node, which is in the same tree already.
+
+	def __init__(self, message: str, /, *, otherNode: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the other node, which is in the same tree already.
+
+		:param message:   The exception's message.
+		:param otherNode: Optional, the other node, which is in the same tree already.
+		"""
+		super().__init__(message)
+		self._otherNode = otherNode
+
+	@readonly
+	def OtherNode(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the other node, which is in the same tree already (:attr:`_otherNode`).
+
+		:returns: The other node, or ``None`` if it wasn't recorded.
+		"""
+		return self._otherNode
+
 
 @export
 class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 	"""The exception is raised when the current node and the other node are not in the same tree."""
+
+	_otherNode: Nullable[Node]  #: Other node, which is in another tree.
+
+	def __init__(self, message: str, /, *, otherNode: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the other node, which is in another tree.
+
+		:param message:   The exception's message.
+		:param otherNode: Optional, the other node, which is in another tree.
+		"""
+		super().__init__(message)
+		self._otherNode = otherNode
+
+	@readonly
+	def OtherNode(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the other node, which is in another tree (:attr:`_otherNode`).
+
+		:returns: The other node, or ``None`` if it wasn't recorded.
+		"""
+		return self._otherNode
+
+
+@export
+class NotAChildError(TreeError, CommonNotAChildError):
+	"""
+	The exception is raised when a node is not a direct child of the current node.
+
+	.. hint::
+
+	   A grandchild is in the same tree, but it's a child of another node.
+	"""
+
+	_child: Nullable[Node]  #: Node that isn't a direct child of the current node.
+
+	def __init__(self, message: str, /, *, child: Nullable[Node] = None) -> None:
+		"""
+		Initializes the exception with the node that isn't a direct child of the current node.
+
+		:param message: The exception's message.
+		:param child:   Optional, the node that isn't a direct child of the current node.
+		"""
+		super().__init__(message)
+		self._child = child
+
+	@readonly
+	def Child(self) -> Nullable[Node]:
+		"""
+		Read-only property to access the node that isn't a direct child of the current node (:attr:`_child`).
+
+		:returns: The node, or ``None`` if it wasn't recorded.
+		"""
+		return self._child
 
 
 @export
@@ -330,7 +405,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 			raise ex
 		else:
 			if parent._root is self._root:
-				raise AlreadyInTreeError(f"Parent '{parent}' is already a child node in this tree.")
+				raise AlreadyInTreeError(f"Parent '{parent}' is already a child node in this tree.", otherNode=parent)
 
 			self._root = parent._root
 			self._parent = parent
@@ -549,7 +624,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 			raise ex
 
 		if child._root is self._root:
-			raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.")
+			raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.", otherNode=child)
 
 		child._root = self._root
 		child._parent = self
@@ -583,7 +658,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 
 			if child._root is self._root:
 				# TODO: create a more specific exception
-				raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.")
+				raise AlreadyInTreeError(f"Child '{child}' is already a node in this tree.", otherNode=child)
 
 			child._root = self._root
 			child._parent = self
@@ -593,6 +668,83 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 			self._SetNewRoot(child._nodesWithID, child._nodesWithoutID)
 			child._nodesWithID = child._nodesWithoutID = None
 			self._children.append(child)
+
+	def RemoveChild(self, child: Node) -> None:
+		"""
+		Remove a child node from the current node of the tree.
+
+		The child is detached together with its subtree: it becomes the root node of its own tree, like assigning
+		``None`` to its :attr:`Parent`. All nodes of that subtree get the child as new :attr:`_root` assigned and their
+		IDs are moved from the node's root's ID lists (:attr:`_nodesWithID`) into the child's.
+
+		:param child:           The child node to be removed from the tree.
+		:raises ValueError:     If parameter 'child' is ``None``.
+		:raises TypeError:      If parameter 'child' is not of type :class:`Node`.
+		:raises NotAChildError: If parameter 'child' is not a direct child of the current node.
+
+		.. seealso::
+
+		   :attr:`Parent`
+		      |rarr| Set the parent of a node.
+		   :meth:`RemoveChildren`
+		      |rarr| Remove multiple children at once.
+		   :meth:`AddChild`
+		      |rarr| Add a child node to the tree.
+		"""
+		if child is None:
+			raise ValueError("Parameter 'child' is None.")
+		elif not isinstance(child, Node):
+			ex = TypeError("Parameter 'child' is not of type 'Node'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+			raise ex
+		elif child._parent is not self:
+			raise NotAChildError(f"Node '{child}' is not a child of this node.", child=child)
+
+		child.Parent = None
+
+	def RemoveChildren(self, children: Iterable[Node]) -> None:
+		"""
+		Remove multiple children nodes from the current node of the tree.
+
+		Each child is detached together with its subtree, like :meth:`RemoveChild` does. The children are collected
+		before the first one is removed, so 'children' may iterate the current node's children, e.g.
+		:meth:`GetChildren`.
+
+		:param children:        The list of children nodes to be removed from the tree.
+		:raises ValueError:     If parameter 'children' is ``None``.
+		:raises TypeError:      If parameter 'children' is not iterable.
+		:raises ValueError:     If parameter 'children' contains ``None``.
+		:raises TypeError:      If parameter 'children' contains an item, which is not of type :class:`Node`.
+		:raises NotAChildError: If parameter 'children' contains an item, which is not a direct child of the current
+		                        node.
+
+		.. seealso::
+
+		   :attr:`Parent`
+		      |rarr| Set the parent of a node.
+		   :meth:`RemoveChild`
+		      |rarr| Remove a child node from the tree.
+		   :meth:`AddChildren`
+		      |rarr| Add multiple children at once.
+		"""
+		if children is None:
+			raise ValueError("Parameter 'children' is None.")
+		elif not isinstance(children, Iterable):
+			ex = TypeError("Parameter 'children' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(children)}'.")
+			raise ex
+
+		for child in tuple(children):
+			if child is None:
+				raise ValueError("Item in parameter 'children' is None.")
+			elif not isinstance(child, Node):
+				ex = TypeError(f"Item '{child}' in parameter 'children' is not of type 'Node'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+				raise ex
+			elif child._parent is not self:
+				raise NotAChildError(f"Item '{child}' in parameter 'children' is not a child of this node.", child=child)
+
+			child.Parent = None
 
 	def GetPath(self) -> Generator[Node, None, None]:
 		"""
@@ -636,7 +788,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 
 			# Check if both are in the same tree.
 			if self._root is not others._root:
-				raise NotInSameTreeError("Node 'others' is not in the same tree.")
+				raise NotInSameTreeError("Node 'others' is not in the same tree.", otherNode=others)
 
 			# Compute paths top-down and walk both paths until they deviate
 			for left, right in zip(self.Path, others.Path):
@@ -878,7 +1030,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 
 		# Check if both are in the same tree.
 		if self._root is not other._root:
-			raise NotInSameTreeError("Node 'other' is not in the same tree.")
+			raise NotInSameTreeError("Node 'other' is not in the same tree.", otherNode=other)
 
 		# Compute both paths to the root.
 		# 1. Walk from self to root, until a first common ancestor is found.

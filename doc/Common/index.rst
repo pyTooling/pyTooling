@@ -73,6 +73,50 @@ class.
    print(isnestedclass(N, A))
 
 
+.. _COMMON/Helper/getFullyQualifiedName:
+
+getFullyQualifiedName
+*********************
+
+:func:`~pyTooling.Common.getFullyQualifiedName` returns the name of an object's type including its module. A class or
+a function returns its own name. Types of the module :mod:`builtins` are returned without module.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from pyTooling.Common import getFullyQualifiedName
+
+   class Node:
+     pass
+
+   print(getFullyQualifiedName(Node()))  # __main__.Node
+   print(getFullyQualifiedName(5))       # int
+
+
+.. _COMMON/Helper/getTypeName:
+
+getTypeName
+***********
+
+:func:`~pyTooling.Common.getTypeName` returns the name of an object's type without its module, like
+:pycode:`obj.__class__.__name__`. A class or a function returns its own name.
+
+Both functions share the work in exception messages: the message names a class by its name, a note reporting a wrong
+type uses the fully qualified name.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from pyTooling.Common import getFullyQualifiedName, getTypeName
+
+   class Node:
+     def AddChild(self, child: "Node") -> None:
+       if not isinstance(child, Node):
+         ex = TypeError(f"Parameter 'child' is not of type '{getTypeName(Node)}'.")
+         ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+         raise ex
+
+
 .. _COMMON/Helper/firstElement:
 
 firstElement

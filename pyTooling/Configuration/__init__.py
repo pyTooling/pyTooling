@@ -47,8 +47,9 @@ Abstract configuration reader.
 from __future__            import annotations
 
 from pathlib               import Path
-from typing                import Union, ClassVar, Generator, Iterator, Optional as Nullable, Tuple
+from typing                import Any, Union, ClassVar, Generator, Iterator, Optional as Nullable, Tuple
 
+from pyTooling.Common      import getTypeName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mixin
 from pyTooling.Exceptions  import ConfigurationError
@@ -74,24 +75,143 @@ class KeyNotFoundError(ConfigurationError, KeyError):
 	writes ``except KeyError``. Catching :exc:`~pyTooling.Exceptions.ConfigurationError` still catches it.
 	"""
 
+	_key: Nullable[KeyT]  #: Key or index that wasn't found.
+
+	def __init__(self, message: str, /, *, key: Nullable[KeyT] = None) -> None:
+		"""
+		Initializes the exception with the key or index that wasn't found.
+
+		:param message: The exception's message.
+		:param key:     Optional, the key or index that wasn't found.
+		"""
+		super().__init__(message)
+		self._key = key
+
+	@readonly
+	def Key(self) -> Nullable[KeyT]:
+		"""
+		Read-only property to access the key or index that wasn't found (:attr:`_key`).
+
+		:returns: The missing key or index, or ``None`` if it wasn't recorded.
+		"""
+		return self._key
+
+	def __str__(self) -> str:
+		"""
+		Return the exception's message.
+
+		:returns: The exception's message.
+		"""
+		return self.Message
+
 
 @export
-class UnsupportedValueTypeError(ConfigurationError):
+class UnsupportedValueTypeError(ConfigurationError, TypeError):
 	"""
 	The configuration file parser returned a value of a type that isn't supported by :mod:`pyTooling.Configuration`.
 
 	Supported are scalars (:class:`str`, :class:`int`, :class:`float`) and the parser's dictionary and sequence types.
+
+	It is a :exc:`TypeError` as well, because the value's type is what's wrong. Catching
+	:exc:`~pyTooling.Exceptions.ConfigurationError` still catches it.
 	"""
+
+	_value: Any  #: Value of the unsupported type, as returned by the parser.
+
+	def __init__(self, message: str, /, *, value: Any = None) -> None:
+		"""
+		Initializes the exception with the value of the unsupported type.
+
+		:param message: The exception's message.
+		:param value:   Optional, the value of the unsupported type, as returned by the parser.
+		"""
+		super().__init__(message)
+		self._value = value
+
+	@readonly
+	def Value(self) -> Any:
+		"""
+		Read-only property to access the value of the unsupported type (:attr:`_value`).
+
+		:returns: The value as returned by the parser, or ``None`` if it wasn't recorded.
+		"""
+		return self._value
+
+	@readonly
+	def ValueType(self) -> Nullable[type]:
+		"""
+		Read-only property to return the unsupported type, the type of :attr:`_value`.
+
+		:returns: The type of the value, or ``None`` if the value wasn't recorded.
+		"""
+		if self._value is None:
+			return None
+
+		return type(self._value)
 
 
 @export
 class InterpolationError(ConfigurationError):
 	"""A variable reference (``${...}``) in a configuration value is malformed or can't be resolved."""
 
+	_value:    Nullable[str]  #: Configuration value containing the malformed variable reference.
+	_position: Nullable[int]  #: Position of the malformed ``$`` in the value.
+
+	def __init__(self, message: str, /, *, value: Nullable[str] = None, position: Nullable[int] = None) -> None:
+		"""
+		Initializes the exception with the value and the position of the malformed variable reference.
+
+		:param message:  The exception's message.
+		:param value:    Optional, the configuration value containing the malformed variable reference.
+		:param position: Optional, the position of the malformed ``$`` in the value.
+		"""
+		super().__init__(message)
+		self._value =    value
+		self._position = position
+
+	@readonly
+	def Value(self) -> Nullable[str]:
+		"""
+		Read-only property to access the configuration value containing the malformed variable reference (:attr:`_value`).
+
+		:returns: The value, or ``None`` if it wasn't recorded.
+		"""
+		return self._value
+
+	@readonly
+	def Position(self) -> Nullable[int]:
+		"""
+		Read-only property to access the position of the malformed ``$`` in the value (:attr:`_position`).
+
+		:returns: The position, or ``None`` if it wasn't recorded.
+		"""
+		return self._position
+
 
 @export
 class PathExpressionError(ConfigurationError):
 	"""A path expression (``a:b:c``) doesn't describe a valid node or value in the configuration."""
+
+	_pathExpression: Nullable[str]  #: Path expression that doesn't describe a valid node or value.
+
+	def __init__(self, message: str, /, *, pathExpression: Nullable[str] = None) -> None:
+		"""
+		Initializes the exception with the path expression that doesn't describe a valid node or value.
+
+		:param message:        The exception's message.
+		:param pathExpression: Optional, the path expression, with its elements separated by ``:``.
+		"""
+		super().__init__(message)
+		self._pathExpression = pathExpression
+
+	@readonly
+	def PathExpression(self) -> Nullable[str]:
+		"""
+		Read-only property to access the path expression (:attr:`_pathExpression`).
+
+		:returns: The path expression, or ``None`` if it wasn't recorded.
+		"""
+		return self._pathExpression
 
 
 @export
@@ -160,7 +280,7 @@ class Node(metaclass=ExtendedType, slots=True):
 		:returns:                    Key of the node.
 		:raises NotImplementedError: If a deriving class doesn't implement this property.
 		"""
-		raise NotImplementedError(f"Property 'Key' is abstract and not implemented by '{self.__class__.__name__}'.")
+		raise NotImplementedError(f"Property 'Key' is abstract and not implemented by '{getTypeName(self)}'.")
 
 	@Key.setter
 	def Key(self, value: KeyT) -> None:

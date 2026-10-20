@@ -14,6 +14,13 @@ Version 10.x (2026)
 
    .. rubric:: New Features
 
+   * :mod:`pyTooling.Timeout` is a new package: a :class:`~pyTooling.Timeout.Timeout` is the current timeout of the
+     calling thread while its ``with`` block runs, as a :class:`~pyTooling.Warning.WarningCollector` is the current
+     collector. Code below in the call hierarchy asks :meth:`~pyTooling.Timeout.Timeout.Remaining` for the seconds
+     left - to hand them to a blocking call - and a loop calls :meth:`~pyTooling.Timeout.Timeout.RaiseIfExpired` to
+     abort itself with a :exc:`~pyTooling.Timeout.TimeoutExpiredError`, which carries the timeout and by how much its
+     deadline was overrun; :meth:`~pyTooling.Timeout.Timeout.Current` returns the timeout itself. A nested timeout
+     can only shorten the time left. The timeout is cooperative: nothing interrupts a thread from outside.
    * :mod:`pyTooling.REST` is a new package: a small client for JSON REST APIs, built on the standard library, so
      nothing building on it drags an HTTP stack into every consumer.
 
@@ -53,7 +60,8 @@ Version 10.x (2026)
      :class:`~pyTooling.CI.Workflow`\ s, :class:`~pyTooling.CI.Matrix`\ es,
      :class:`~pyTooling.CI.Job`\ s and :class:`~pyTooling.CI.Step`\ s, with the times and an
      :class:`~pyTooling.CI.Outcome` on every element, and rules on those a definition can give them. Its
-     exceptions derive from :exc:`~pyTooling.CI.CIError`.
+     exceptions derive from :exc:`~pyTooling.CI.CIError`. An element's ``Duration`` is a
+     :class:`~datetime.timedelta`, ``DurationInSeconds`` the same as a :class:`float`.
 
      * Workflows, matrices, jobs and steps carry an **ordered list of rules** (:class:`~pyTooling.CI.RulesMixin`):
        a :class:`~pyTooling.CI.Rule` holds a condition as written, a :class:`~pyTooling.CI.RuleOutcome` deciding what
@@ -349,7 +357,9 @@ Version 10.x (2026)
        in rows independently of a drawing library, and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it
        arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
        PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
-       the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it.
+       the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it. The
+       layout's ``Duration`` - the end of the last bar - is a :class:`~datetime.timedelta`, ``DurationInSeconds`` the
+       same as a :class:`float`.
      * A Gantt chart written as SVG can be **collapsible**: a click on a called workflow or a job hides or shows the
        rows below it.
      * A timespan left by an exception records it - :attr:`~pyTooling.Tracing.Span.Exception` - and the exception
@@ -379,6 +389,8 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Common`
 
+     * :func:`~pyTooling.Common.getTypeName` returns the name of an object's type without its module, the counterpart
+       of :func:`~pyTooling.Common.getFullyQualifiedName` for exception messages.
      * :func:`~pyTooling.Common.parseISO8601Timestamp` parses an ISO 8601 timestamp. Whether a timestamp carrying no
        UTC offset stays naive is the caller's decision, given as ``defaultTimeZone``.
      * :class:`~pyTooling.Common.StringEnum` is a :class:`~enum.StrEnum` that converts a string to the member of
@@ -413,6 +425,15 @@ Version 10.x (2026)
        :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` / :meth:`~pyTooling.Graph.GraphViz.Graph.FromTree` with
        conversion methods a derived class overrides.
 
+   * :mod:`pyTooling.Tree`
+
+     * :meth:`Node.RemoveChild <pyTooling.Tree.Node.RemoveChild>` and
+       :meth:`~pyTooling.Tree.Node.RemoveChildren` remove children from a node, the counterparts of
+       :meth:`~pyTooling.Tree.Node.AddChild` and :meth:`~pyTooling.Tree.Node.AddChildren`. A removed child takes its
+       subtree along and becomes the root node of its own tree, like assigning ``None`` to its
+       :attr:`~pyTooling.Tree.Node.Parent`. A node, which isn't a direct child, raises the new
+       :exc:`~pyTooling.Tree.NotAChildError`, which carries it in :attr:`~pyTooling.Tree.NotAChildError.Child`.
+
    * :mod:`pyTooling.CLIAbstraction`
 
      * :meth:`Program._CopyParameters <pyTooling.CLIAbstraction.Program._CopyParameters>` copies every argument set on
@@ -429,9 +450,28 @@ Version 10.x (2026)
      * :class:`~pyTooling.Dependency.Python.RequirementsFile` reads a requirements file as a tree: a ``-r`` line is
        followed, every file knows its ``Parent``, its ``Root`` and its ``Hierarchy``, and ``AllRequirements`` yields the
        requirements in the order the files state them, the nearer statement winning. A cycle raises instead of being
-       read once and hidden.
+       read once and hidden. A file two files reference is read once; the second ``-r`` line is a
+       :class:`~pyTooling.Dependency.Python.RequirementsFileReference` to it. Each file read by
+       :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` measures its duration with a
+       :class:`~pyTooling.Stopwatch.Stopwatch`, the files it references included:
+       :attr:`~pyTooling.Dependency.Python.RequirementsFile.AnalysisDuration`.
      * :exc:`~pyTooling.Dependency.PackageIndexError` reports an HTTP error status of the package index other than ``404
        Not Found``, caused by the :exc:`~requests.HTTPError`.
+     * :class:`~pyTooling.Dependency.Resolver.Resolver` resolves requirements - given directly, from a requirements file
+       or from packages and their extras - into the newest matching releases of a package index, following their
+       requirements and the requirements of the extras they name. It takes a
+       :class:`~pyTooling.Dependency.Resolver.ResolutionStrategy` (lazy or eager), a limit (``None`` is unlimited), a
+       :class:`~pyTooling.Dependency.Resolver.PreReleasePolicy` (a requirement naming a pre-release selects it also with
+       pre-releases excluded) and an environment to evaluate markers against (``None`` evaluates none);
+       :class:`~pyTooling.Dependency.Resolver.CurrentEnvironmentResolver` uses the running interpreter's. The result
+       is a tree of :class:`~pyTooling.Dependency.Resolver.ResolvedRequirement` objects, each with the selected release
+       or the reason there is none, and the selected releases are connected in the dependency graph. The downloads of
+       one level run in parallel. New: :exc:`~pyTooling.Dependency.ExtraNotFoundError`,
+       :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`, and the critical
+       :class:`~pyTooling.Dependency.PackageIndexFailureWarning` for a server error or a failed connection of the
+       index. A resolution honours the current :class:`~pyTooling.Timeout.Timeout`: requirements left unresolved when
+       it expires get the status :attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired` and are
+       reported as the critical :class:`~pyTooling.Dependency.ResolutionTimeoutWarning`.
 
    * :mod:`pyTooling.Configuration`
 
@@ -448,6 +488,8 @@ Version 10.x (2026)
        package's own exception derives from its base exception and a common base, so one ``except`` clause catches e.g.
        all duplicates of all packages - as do the errors of :mod:`pyTooling.Graph`, :mod:`pyTooling.ControlFlow`,
        :mod:`pyTooling.CallGraph`, :mod:`pyTooling.Tree` and :mod:`pyTooling.LinkedList`.
+     * Common base :exc:`~pyTooling.Exceptions.NotAChildError`: an element isn't a direct child of the element it's
+       removed from. :exc:`pyTooling.Tree.NotAChildError` derives from it.
 
    * :mod:`pyTooling.Versioning`
 
@@ -471,6 +513,65 @@ Version 10.x (2026)
      * A :class:`~pyTooling.Versioning.VersionRange` can be open at either end: a bound of ``None`` is unbounded, so
        ``>=1.0`` is expressible.
 
+   * Exceptions carry the object they are about, so a caller can react without parsing the message. The new
+     parameters are keyword-only and default to ``None``, so an exception raised with a message only keeps working.
+
+     * :exc:`~pyTooling.Configuration.KeyNotFoundError` carries the missing key or index in
+       :attr:`~pyTooling.Configuration.KeyNotFoundError.Key`.
+     * :exc:`~pyTooling.Configuration.UnsupportedValueTypeError` carries the value the parser returned in
+       :attr:`~pyTooling.Configuration.UnsupportedValueTypeError.Value`, its type in
+       :attr:`~pyTooling.Configuration.UnsupportedValueTypeError.ValueType`. It is a :exc:`TypeError` too, as
+       :exc:`~pyTooling.Configuration.KeyNotFoundError` is a :exc:`KeyError`.
+     * :exc:`~pyTooling.Configuration.PathExpressionError` carries the path expression in
+       :attr:`~pyTooling.Configuration.PathExpressionError.PathExpression`.
+     * :exc:`~pyTooling.Dependency.ProjectNotFoundError` carries the project's name in
+       :attr:`~pyTooling.Dependency.ProjectNotFoundError.ProjectName`.
+     * :exc:`~pyTooling.Dependency.ReleaseNotFoundError` carries the project's name and the release's version in
+       :attr:`~pyTooling.Dependency.ReleaseNotFoundError.ProjectName` and
+       :attr:`~pyTooling.Dependency.ReleaseNotFoundError.Version`.
+     * :exc:`~pyTooling.Dependency.PackageIndexError` carries the project's name and, for a release, its version in
+       :attr:`~pyTooling.Dependency.PackageIndexError.ProjectName` and
+       :attr:`~pyTooling.Dependency.PackageIndexError.Version`.
+     * :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` carries the slot's name and the name of the class
+       under construction in :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.FieldName` and
+       :attr:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError.ClassName`.
+     * :mod:`pyTooling.MetaClasses`: the new common base :exc:`~pyTooling.MetaClasses.InvalidBaseClassError` of
+       :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`,
+       :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError` and
+       :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError` carries the base-class and the name of the class under
+       construction (``BaseClass``, ``ClassName``); :exc:`~pyTooling.MetaClasses.UnfulfilledExpectationError`
+       the class and the missing members (``IncompleteClass``, ``MissingMembers``);
+       :exc:`~pyTooling.MetaClasses.IncompatibleMetaClassError` the decorated class and its meta-class
+       (``DecoratedClass``, ``MetaClass``); :exc:`~pyTooling.MetaClasses.AbstractClassError` the class and the methods
+       to override (``AbstractClass``, ``AbstractMethods``).
+     * :mod:`pyTooling.Graph`: :exc:`~pyTooling.Graph.EdgeNotFoundError` and :exc:`~pyTooling.Graph.LinkNotFoundError`
+       carry both vertices (``Source``, ``Destination``), :exc:`~pyTooling.Graph.SameGraphError` the graph
+       (``Graph``), :exc:`~pyTooling.Graph.CycleError` the path closing the loop (``Path``).
+     * :mod:`pyTooling.CI`: :exc:`~pyTooling.CI.NeedDependencyError` carries both elements (``Element``, ``Need``),
+       :exc:`~pyTooling.CI.NeedDependencyCycleError` also the cycle (``Cycle``),
+       :exc:`~pyTooling.CI.AlreadyInPipelineError` the rule (``Element``).
+     * :exc:`~pyTooling.CallGraph.DuplicateFunctionError` carries the function's ID (``FunctionID``),
+       :exc:`~pyTooling.ControlFlow.DuplicateBlockError` the block's ID and kind (``BlockID``, ``Kind``),
+       :exc:`~pyTooling.ControlFlow.DuplicateEdgeError` the edge connecting the blocks already (``ExistingEdge``).
+     * :exc:`~pyTooling.LinkedList.NotInAListError` carries the node (``UnlinkedNode``);
+       :exc:`~pyTooling.Tree.AlreadyInTreeError` and :exc:`~pyTooling.Tree.NotInSameTreeError` the other node
+       (``OtherNode``).
+     * :exc:`~pyTooling.Configuration.InterpolationError` carries the value and the position of the malformed ``$``
+       (``Value``, ``Position``); :exc:`~pyTooling.Licensing.LicenseExpressionError` the expression and, for an unknown
+       license, its identifier (``Expression``, ``Identifier``); :exc:`~pyTooling.Dependency.NoSessionAvailableError`
+       the project's name and, for a release, its version (``ProjectName``, ``Version``);
+       :exc:`~pyTooling.Dependency.RequirementsFileNotFoundError` the missing file (``FilePath``);
+       :exc:`~pyTooling.Dependency.CircularRequirementsFileError` the file read again and the ``-r`` line referencing it
+       (``FilePath``, ``ReferencedIn``, ``LineNumber``); :exc:`~pyTooling.Platform.UnknownPlatformError` the value
+       the system reported (``UnknownValue``);
+       :exc:`~pyTooling.Attributes.AttributeScopeError` the attribute and the entity (``AppliedAttribute``,
+       ``Entity``).
+     * A lookup that finds nothing raises an exception that is a :exc:`LookupError` too, as
+       :exc:`~pyTooling.Configuration.KeyNotFoundError` is a :exc:`KeyError`:
+       :exc:`~pyTooling.Dependency.ProjectNotFoundError`, :exc:`~pyTooling.Dependency.ReleaseNotFoundError`,
+       :exc:`~pyTooling.Graph.EdgeNotFoundError` and :exc:`~pyTooling.Graph.LinkNotFoundError`.
+       :exc:`~pyTooling.Dependency.RequirementsFileNotFoundError` is a :exc:`FileNotFoundError` too.
+
    .. rubric:: Breaking Changes
 
    * ⚠️ **The four mixin-classes of** :mod:`pyTooling.GenericPath` **are renamed to the** ``***Mixin`` **spelling**
@@ -479,6 +580,18 @@ Version 10.x (2026)
      :class:`~pyTooling.GenericPath.RootMixin` and ``SystemMixIn`` |rarr|
      :class:`~pyTooling.GenericPath.SystemMixin`. They were the last four spelled ``MixIn``, and the old names are
      gone rather than kept as aliases - the same rule the renamed exceptions follow.
+   * ⚠️ :attr:`Stopwatch.Duration <pyTooling.Stopwatch.Stopwatch.Duration>`,
+     :attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` return a
+     :class:`~datetime.timedelta` instead of a :class:`float` of seconds. Arithmetic with a number or a float format
+     spec (``f"{sw.Duration:.3f}"``) raises a :exc:`TypeError`; use
+     :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds`, :attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds`
+     or :attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds` for the number.
+   * ⚠️ :attr:`Directory.ScanDuration <pyTooling.Filesystem.Directory.ScanDuration>`,
+     :attr:`~pyTooling.Filesystem.Directory.AggregateDuration` and
+     :attr:`LayerCake.SlicingDuration <pyTooling.Filesystem.Docker.LayerCake.SlicingDuration>` return a
+     :class:`~datetime.timedelta` instead of a :class:`float` of seconds; ``.total_seconds()`` gives the number.
+   * ⚠️ :attr:`Span.Duration <pyTooling.Tracing.Span.Duration>` returns a :class:`~datetime.timedelta` instead of a
+     :class:`float` of seconds; use :attr:`~pyTooling.Tracing.Span.DurationInSeconds` for the number.
 
    * ⚠️ :meth:`~pyTooling.GenericPath.PathMixin.Parse` **reads the flavour's** ``ELEMENT_TYPE``, so its signature is
      ``Parse(path, root=None)``. A flavour outside pyTooling passing ``pathCls`` and ``elementCls`` drops them and
@@ -600,6 +713,12 @@ Version 10.x (2026)
 
    * ⚠️ :exc:`~pyTooling.Exceptions.ExceptionBase` **has no** ``message`` **field anymore**. Read the message with
      ``str(ex)`` or the new read-only property :attr:`~pyTooling.Exceptions.ExceptionBase.Message`.
+   * ⚠️ :class:`~pyTooling.Dependency.Python.RequirementsFile` **is read by**
+     :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>`: ``RequirementsFile(path)``
+     |rarr| ``RequirementsFile.Parse(path)``. The initializer reads no file anymore; it takes the path, the
+     requirements and referenced files as ``entries``, and a keyword-only ``parent``, so a tree can be built by hand.
+     A requirements file given in ``entries`` joins the tree; one referenced by another file already raises
+     :exc:`~pyTooling.Dependency.AlreadyInRequirementsTreeError`.
 
    * ⚠️ **A program found in** ``PATH`` **is the full path** in :attr:`~pyTooling.CLIAbstraction.Program.Path` and as
      the first item of :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList`, e.g. ``/usr/bin/git`` instead of
@@ -631,6 +750,9 @@ Version 10.x (2026)
      ``(message, )`` and :func:`repr` shows it, as for any Python exception. ``args`` was empty. The ``message`` field
      and the :meth:`~object.__str__` override returning it are removed: the read-only property
      :attr:`~pyTooling.Exceptions.ExceptionBase.Message` returns ``args[0]``, and ``str(ex)`` is Python's own.
+   * :exc:`~pyTooling.Exceptions.MissingDependencyError` is a :exc:`~pyTooling.Exceptions.ToolingException` too, not
+     only an :exc:`ImportError`: ``except ToolingException`` catches a missing optional dependency now as well, and
+     :attr:`~python:ImportError.name` is the missing package. ``except ImportError`` catches it as before.
    * ⚠️ An attribute's scope is checked when the decorator runs (:ghissue:`384`); a function defined in a class body is
      recognized as a method by its qualified name, for any class. It was accepted silently and registered in a list the
      scope said it could never hold. :attr:`~pyTooling.Attributes.Attribute.Scope` is an instance property, and
@@ -697,6 +819,11 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Filesystem`
 
+     * ⚠️ :attr:`Directory.ScanDuration <pyTooling.Filesystem.Directory.ScanDuration>`,
+       :attr:`~pyTooling.Filesystem.Directory.AggregateDuration` and
+       :attr:`LayerCake.SlicingDuration <pyTooling.Filesystem.Docker.LayerCake.SlicingDuration>` store the stopwatch's
+       :class:`~datetime.timedelta`, which prints as hours, minutes and seconds. They returned seconds as a
+       :class:`float`.
      * :attr:`Element.Path <pyTooling.Filesystem.Element.Path>` is an abstract property, so
        :class:`~pyTooling.Filesystem.Element` and a derived class without its own ``Path`` raise an
        :exc:`~pyTooling.MetaClasses.AbstractClassError` when instantiated. The property raised a
@@ -731,6 +858,12 @@ Version 10.x (2026)
      * ⚠️ A release version the parser can't read is reported as a critical
        :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, carrying ``ProjectName`` and ``Version``, instead of a
        line written by :func:`print`. The release is still skipped.
+     * :meth:`PythonPackageIndex.DownloadProject <pyTooling.Dependency.Python.PythonPackageIndex.DownloadProject>`
+       downloads a project once and returns the same project for every later lookup, also for another spelling of its
+       name; a project the index doesn't know is remembered
+       (:attr:`~pyTooling.Dependency.Python.PythonPackageIndex.UnknownProjects`) and raises
+       :exc:`~pyTooling.Dependency.ProjectNotFoundError` again without a request. It created a new project and
+       downloaded it again on every call.
 
    * :mod:`pyTooling.GenericPath`
 
@@ -765,6 +898,16 @@ Version 10.x (2026)
      * FreeBSD is a supported platform: ``IsNativeFreeBSD`` no longer implies x86-64, AArch64 is recognized, and
        ``GetMemoryUsage`` reports the resident size through :func:`resource.getrusage`.
 
+   * :mod:`pyTooling.Stopwatch`
+
+     * ⚠️ :attr:`Stopwatch.Duration <pyTooling.Stopwatch.Stopwatch.Duration>`,
+       :attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` return a
+       :class:`~datetime.timedelta`, which prints and formats as hours, minutes and seconds - the type a data model
+       stores a measured duration as. The new :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds`,
+       :attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds` and
+       :attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds` return the :class:`float` of seconds the three
+       returned before. A stopped stopwatch computes its :class:`~datetime.timedelta` once.
+
    * :mod:`pyTooling.TerminalUI`
 
      * ⚠️ :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` is named after the exception
@@ -778,6 +921,10 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Tracing`
 
+     * ⚠️ :attr:`Span.Duration <pyTooling.Tracing.Span.Duration>` returns a :class:`~datetime.timedelta`, as
+       :attr:`Stopwatch.Duration <pyTooling.Stopwatch.Stopwatch.Duration>` does; the new
+       :attr:`~pyTooling.Tracing.Span.DurationInSeconds` returns the :class:`float` of seconds it returned before,
+       with the nanoseconds a performance counter measured.
      * :meth:`Span.Format() <pyTooling.Tracing.Span.Format>` and :meth:`Trace.Format() <pyTooling.Tracing.Trace.Format>`
        show ``--`` for a timespan that never started. They raised a :exc:`TypeError`, so one span that was never entered
        made the whole trace unprintable. :attr:`~pyTooling.Tracing.Span.Duration` still raises.
@@ -841,6 +988,10 @@ Version 10.x (2026)
        authoritative.
      * ``Release.__init__`` couldn't copy its ``requirements``: it iterated the mapping's keys and unpacked each into
        two, so ``{"test": [...]}`` raised a :exc:`ValueError`.
+     * :meth:`Release.DownloadDetails <pyTooling.Dependency.Python.Release.DownloadDetails>` registered an unloaded
+       project for each requirement and replaced a project the index had loaded already, and a project whose download
+       failed with ``404 Not Found`` stayed registered in the index. A lazily loaded project or release asked for a
+       higher loading state downloaded what it had loaded already again.
 
    * :mod:`pyTooling.Filesystem`
 

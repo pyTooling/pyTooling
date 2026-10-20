@@ -37,7 +37,7 @@ from typing                import ClassVar, Generic, TypeVar, Optional as Nullab
 from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError, UnannotatedFieldWarning, mixin
+from pyTooling.MetaClasses import DuplicateFieldInSlotsError, InvalidBaseClassError, UnannotatedFieldWarning, mixin
 from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
@@ -1089,6 +1089,8 @@ class NonEmptySlotsOnSecondaryBaseClass(Testcase):
 				_data_2: int
 
 		self.assertIn("Plain", str(context.exception))
+		self.assertIs(Plain, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_IndirectlyInheritedNonEmptySlots(self) -> None:
 		"""A mixin-class may not drag in a non-mixin base-class using non-empty slots."""
@@ -1214,6 +1216,8 @@ class BaseClassWithoutSlots(Testcase):
 				_data_2: int
 
 		self.assertEqual("Base-classes 'Plain' doesn't use '__slots__'.", str(context.exception))
+		self.assertIs(Plain, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
 
 
 class SecondaryBaseClassIsNotAMixin(Testcase):
@@ -1238,6 +1242,8 @@ class SecondaryBaseClassIsNotAMixin(Testcase):
 			"Declare it as 'class Secondary(..., mixin=True)' or apply the '@mixin' decorator.",
 			context.exception.__notes__[1]
 		)
+		self.assertIs(Secondary, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_SlottedClassWithoutFields(self) -> None:
 		"""Empty slots don't make it a mixin-class."""
@@ -1277,6 +1283,24 @@ class SecondaryBaseClassIsNotAMixin(Testcase):
 		self.assertTupleEqual(("_data_R1", ), Final.__slots__)
 
 
+class InvalidBaseClass(Testcase):
+	"""The errors about a base-class share a base carrying the base-class and the name of the class under construction."""
+
+	def test_CommonBase(self) -> None:
+		self.assertTrue(issubclass(BaseClassWithoutSlotsError, InvalidBaseClassError))
+		self.assertTrue(issubclass(BaseClassWithNonEmptySlotsError, InvalidBaseClassError))
+		self.assertTrue(issubclass(BaseClassIsNotAMixinError, InvalidBaseClassError))
+
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither a base-class nor a class name."""
+		with self.assertRaises(InvalidBaseClassError) as context:
+			raise BaseClassIsNotAMixinError("Not a mixin-class.")
+
+		self.assertEqual("Not a mixin-class.", str(context.exception))
+		self.assertIsNone(context.exception.BaseClass)
+		self.assertIsNone(context.exception.ClassName)
+
+
 class SlotShadowedByClassMember(Testcase):
 	"""
 	A class member assigned without a type annotation stays a class attribute.
@@ -1299,6 +1323,8 @@ class SlotShadowedByClassMember(Testcase):
 
 		self.assertIn("_data_0", str(context.exception))
 		self.assertIn("Slot '_data_0' is declared in base-class", context.exception.__notes__[0])
+		self.assertEqual("_data_0", context.exception.FieldName)
+		self.assertEqual("Derived", context.exception.ClassName)
 
 	def test_ShadowedMixinSlot(self) -> None:
 		class Mixin(metaclass=ExtendedType, mixin=True):
@@ -1358,6 +1384,8 @@ class DuplicateMixinSlot(Testcase):
 			str(context.exception),
 			r"^Slot '_data' of mixin-class '.*\.Mixin' already exists in base-class '.*\.Primary'\.$"
 		)
+		self.assertEqual("_data", context.exception.FieldName)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_TwoMixins(self) -> None:
 		class Primary(metaclass=ExtendedType, slots=True):
@@ -1378,6 +1406,8 @@ class DuplicateMixinSlot(Testcase):
 			r"^Slot '_data' is declared by mixin-classes '.*\.Mixin1' and '.*\.Mixin2'\.$"
 		)
 		self.assertEqual("Both are base-classes of class 'Final'.", context.exception.__notes__[0])
+		self.assertEqual("_data", context.exception.FieldName)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_OwnField(self) -> None:
 		class Primary(metaclass=ExtendedType, slots=True):
@@ -1394,6 +1424,8 @@ class DuplicateMixinSlot(Testcase):
 			str(context.exception),
 			r"^Slot '_data' declared in class 'Final' already exists in mixin-class '.*\.Mixin'\.$"
 		)
+		self.assertEqual("_data", context.exception.FieldName)
+		self.assertEqual("Final", context.exception.ClassName)
 
 	def test_MixinDerivedFromMixin(self) -> None:
 		class Mixin(metaclass=ExtendedType, mixin=True):
@@ -1466,6 +1498,15 @@ class DuplicateMixinSlot(Testcase):
 
 		self.assertTupleEqual(("_data2", ), Final.__slots__)
 		self.assertSetEqual({"_own", "_common", "_data1", "_data2"}, Final.__allSlots__)
+
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither a field name nor a class name."""
+		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+			raise DuplicateFieldInSlotsError("Duplicate slot.")
+
+		self.assertEqual("Duplicate slot.", str(context.exception))
+		self.assertIsNone(context.exception.FieldName)
+		self.assertIsNone(context.exception.ClassName)
 
 
 class ObjectBaseClass(Testcase):

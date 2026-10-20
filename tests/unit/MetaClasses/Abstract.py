@@ -71,6 +71,8 @@ class AbstractClasses(Testcase):
 			Base()
 
 		self.assertEqual("Class 'Base' is abstract and needs to be derived.", str(exceptionCapture.exception))
+		self.assertIs(Base, exceptionCapture.exception.AbstractClass)
+		self.assertEqual(tuple(), exceptionCapture.exception.AbstractMethods)
 
 	def test_AbstractClass_Derived(self) -> None:
 		@abstractclass
@@ -139,6 +141,16 @@ class AbstractClasses(Testcase):
 			Derived()
 
 
+class AbstractClassErrors(Testcase):
+	def test_MessageOnly(self) -> None:
+		"""An exception raised with a message only carries neither a class nor method names."""
+		with self.assertRaises(AbstractClassError) as exceptionCapture:
+			raise AbstractClassError("Abstract class.")
+
+		self.assertIsNone(exceptionCapture.exception.AbstractClass)
+		self.assertIsNone(exceptionCapture.exception.AbstractMethods)
+
+
 class AbstractMethod(Testcase):
 	def test_AbstractBase(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):
@@ -156,6 +168,8 @@ class AbstractMethod(Testcase):
 
 		self.assertIn("AbstractBase", str(exceptionCapture.exception))
 		self.assertIn("AbstractMethod", str(exceptionCapture.exception))
+		self.assertIs(AbstractBase, exceptionCapture.exception.AbstractClass)
+		self.assertEqual(("AbstractMethod", ), exceptionCapture.exception.AbstractMethods)
 
 	def test_AbstractClass(self) -> None:
 		class AbstractBase(metaclass=ExtendedType):

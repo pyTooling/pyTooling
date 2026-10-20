@@ -43,6 +43,7 @@ Common platform information gathered from various sources.
       |rarr| Filesystem statistics, whose path style depends on the platform.
 """
 from enum                    import Flag, auto, Enum
+from typing                  import Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -67,13 +68,18 @@ class UnknownPlatformError(PlatformError):
 	debugging unknown or new platforms.
 	"""
 
-	def __init__(self, *args) -> None:
+	_unknownValue: Nullable[str]  #: Value reported by the system, which pyTooling doesn't know.
+
+	def __init__(self, message: str, /, *, unknownValue: Nullable[str] = None) -> None:
 		"""
 		Initialize a new :class:`UnknownPlatformError` instance and add notes with further debugging information.
 
-		:param args: Forward positional parameters.
+		:param message:      The exception's message.
+		:param unknownValue: Optional, the value reported by the system, which pyTooling doesn't know (e.g. an
+		                     architecture or a platform name).
 		"""
-		super().__init__(*args)
+		super().__init__(message)
+		self._unknownValue = unknownValue
 
 		import sys
 		import os
@@ -86,6 +92,15 @@ class UnknownPlatformError(PlatformError):
 		self.add_note(f"platform.architecture:  {platform.architecture()}")
 		self.add_note(f"sys.platform:           {sys.platform}")
 		self.add_note(f"sysconfig.get_platform: {sysconfig.get_platform()}")
+
+	@readonly
+	def UnknownValue(self) -> Nullable[str]:
+		"""
+		Read-only property to access the value reported by the system, which pyTooling doesn't know (:attr:`_unknownValue`).
+
+		:returns: The unknown value, or ``None`` if it wasn't recorded.
+		"""
+		return self._unknownValue
 
 
 @export
@@ -239,7 +254,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				if machine == "AMD64":
 					self._platform |= Platforms.ARCH_x86_64
 				else:  # pragma: no cover
-					raise UnknownPlatformError(f"Unknown architecture '{machine}' for Windows.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for Windows.", unknownValue=machine)
 
 				if sysconfig_platform == "mingw_i686_msvcrt_gnu":
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.MinGW32
@@ -258,9 +273,15 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif sysconfig_platform == "mingw_x86_64_clang":  # pragma: no cover
 					self._platform |= Platforms.ENV_MSYS2 | Platforms.Clang64
 				else:  # pragma: no cover
-					raise UnknownPlatformError(f"Unknown MSYS2 architecture '{sysconfig_platform}'.")
+					raise UnknownPlatformError(
+						f"Unknown MSYS2 architecture '{sysconfig_platform}'.",
+						unknownValue=sysconfig_platform
+					)
 			else:  # pragma: no cover
-				raise UnknownPlatformError(f"Unknown platform '{sysconfig_platform}' running on Windows.")
+				raise UnknownPlatformError(
+					f"Unknown platform '{sysconfig_platform}' running on Windows.",
+					unknownValue=sysconfig_platform
+				)
 
 		elif os.name == "posix":
 			if sys_platform == "linux":
@@ -271,7 +292,10 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif sysconfig_platform == "linux-aarch64":         # native Linux Aarch64
 					self._platform |= Platforms.ARCH_AArch64
 				else:  # pragma: no cover
-					raise UnknownPlatformError(f"Unknown architecture '{sysconfig_platform}' for a native Linux.")
+					raise UnknownPlatformError(
+						f"Unknown architecture '{sysconfig_platform}' for a native Linux.",
+						unknownValue=sysconfig_platform
+					)
 
 			elif sys_platform == "darwin":
 				self._platform |= Platforms.OS_MacOS | Platforms.ENV_Native
@@ -281,7 +305,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif machine == "arm64":
 					self._platform |= Platforms.ARCH_AArch64
 				else:  # pragma: no cover
-					raise UnknownPlatformError(f"Unknown architecture '{machine}' for a native macOS.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for a native macOS.", unknownValue=machine)
 
 			elif sys_platform == "msys":
 				self._platform |= Platforms.OS_Windows | Platforms.ENV_MSYS2 | Platforms.MSYS
@@ -291,7 +315,10 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif machine == "x86_64":
 					self._platform |= Platforms.ARCH_x86_64
 				else:  # pragma: no cover
-					raise UnknownPlatformError(f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.")
+					raise UnknownPlatformError(
+						f"Unknown architecture '{machine}' for MSYS2-MSYS on Windows.",
+						unknownValue=machine
+					)
 
 			elif sys_platform == "cygwin":
 				self._platform |= Platforms.OS_Windows
@@ -301,7 +328,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif machine == "x86_64":
 					self._platform |= Platforms.ARCH_x86_64
 				else:  # pragma: no cover
-					raise UnknownPlatformError(f"Unknown architecture '{machine}' for Cygwin on Windows.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for Cygwin on Windows.", unknownValue=machine)
 
 			elif sys_platform.startswith("freebsd"):
 				self._platform = Platforms.OS_FreeBSD | Platforms.ENV_Native
@@ -310,11 +337,11 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 				elif machine in ("aarch64", "arm64"):
 					self._platform |= Platforms.ARCH_AArch64
 				else:  # pragma: no cover
-					raise UnknownPlatformError(f"Unknown architecture '{machine}' for FreeBSD.")
+					raise UnknownPlatformError(f"Unknown architecture '{machine}' for FreeBSD.", unknownValue=machine)
 			else:  # pragma: no cover
-				raise UnknownPlatformError(f"Unknown POSIX platform '{sys_platform}'.")
+				raise UnknownPlatformError(f"Unknown POSIX platform '{sys_platform}'.", unknownValue=sys_platform)
 		else:  # pragma: no cover
-			raise UnknownPlatformError(f"Unknown operating system '{os.name}'.")
+			raise UnknownPlatformError(f"Unknown operating system '{os.name}'.", unknownValue=os.name)
 
 	@readonly
 	def PythonImplementation(self) -> PythonImplementation:

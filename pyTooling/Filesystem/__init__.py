@@ -46,6 +46,7 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
 """
 from __future__            import annotations
 
+from datetime              import timedelta
 from enum                  import Enum
 from os                    import scandir, readlink
 from pathlib               import Path
@@ -348,8 +349,8 @@ class Directory(Element["Directory"]):
 	_symbolicLinks:     dict[str, SymbolicLink]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
 	_filesSize:         int                      #: Aggregated size of all direct files.
 	_collapsed:         bool                     #: True, if this directory was collapsed. It contains no subelements.
-	_scanDuration:      Nullable[float]          #: Duration for scanning the directory and all its subelements.
-	_aggregateDuration: Nullable[float]          #: Duration for aggregating all subelements.
+	_scanDuration:      Nullable[timedelta]      #: Duration for scanning the directory and all its subelements.
+	_aggregateDuration: Nullable[timedelta]      #: Duration for aggregating all subelements.
 
 	def __init__(
 		self,
@@ -691,11 +692,11 @@ class Directory(Element["Directory"]):
 		return self._path
 
 	@readonly
-	def ScanDuration(self) -> float:
+	def ScanDuration(self) -> timedelta:
 		"""
 		Read-only property to access the time needed to scan a directory structure including all subelements (recursively).
 
-		:returns:                The scan duration in seconds.
+		:returns:                The scan duration.
 		:raises FilesystemError: If the directory was not scanned.
 		"""
 		if self._scanDuration is None:
@@ -704,11 +705,11 @@ class Directory(Element["Directory"]):
 		return self._scanDuration
 
 	@readonly
-	def AggregateDuration(self) -> float:
+	def AggregateDuration(self) -> timedelta:
 		"""
 		Read-only property to access the time needed to aggregate the directory's and subelement's properties (recursively).
 
-		:returns:                The aggregation duration in seconds.
+		:returns:                The aggregation duration.
 		:raises FilesystemError: If the directory properties were not aggregated.
 		"""
 		if self._scanDuration is None:

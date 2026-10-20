@@ -55,7 +55,7 @@ from typing     import Optional as Nullable, ClassVar, Iterator, Generator, Any,
 from pyTooling.Decorators                import export, readonly
 from pyTooling.MetaClasses               import ExtendedType
 from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
-from pyTooling.Common                    import getFullyQualifiedName
+from pyTooling.Common                    import getFullyQualifiedName, getTypeName
 from pyTooling.Attributes                import Attribute
 from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine
 from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
@@ -356,7 +356,7 @@ class Program(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
 			raise ex
 		elif key not in self.__cliOptions__:
-			raise KeyError(f"Option '{key}' is not allowed on executable '{self.__class__.__name__}'")
+			raise KeyError(f"Option '{key}' is not allowed on executable '{getTypeName(self)}'")
 		elif key in self.__cliParameters__:
 			raise KeyError(f"Option '{key}' is already set to a value.")
 

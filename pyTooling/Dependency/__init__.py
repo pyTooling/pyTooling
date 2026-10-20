@@ -47,11 +47,12 @@ Implementation of package dependencies.
 from __future__            import annotations
 
 from datetime              import datetime
+from pathlib               import Path
 from typing                import Optional as Nullable, Iterable, Self, Iterator
 
 from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Exceptions      import ToolingException
+from pyTooling.Exceptions      import AlreadyInHierarchyError, ToolingException
 from pyTooling.Common          import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL import URL
 from pyTooling.Graph           import Graph, Vertex
@@ -73,10 +74,75 @@ class NoSessionAvailableError(DependencyError):
 	A session is created by the package index and handed to the objects it creates.
 	"""
 
+	_projectName: Nullable[str]              #: Name of the project that was to be requested.
+	_version:     Nullable[SemanticVersion]  #: Version of the release that was to be requested.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the exception with the project and, for a release, the version that was to be requested.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project that was to be requested.
+		:param version:     Optional, the version of the release that was to be requested; ``None`` for the project itself.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project that was to be requested (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release that was to be requested (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
+
 
 @export
-class RequirementsFileNotFoundError(DependencyError):
-	"""A requirements file doesn't exist, or a ``-r`` line references one that doesn't."""
+class RequirementsFileNotFoundError(DependencyError, FileNotFoundError):
+	"""
+	A requirements file doesn't exist, or a ``-r`` line references one that doesn't.
+
+	It is a :exc:`FileNotFoundError` as well (and so an :exc:`OSError`), because the file doesn't exist; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
+
+	_filePath: Nullable[Path]  #: Path of the requirements file that doesn't exist.
+
+	def __init__(self, message: str, /, *, filePath: Nullable[Path] = None) -> None:
+		"""
+		Initializes the exception with the path of the requirements file that doesn't exist.
+
+		:param message:  The exception's message.
+		:param filePath: Optional, the path of the requirements file that doesn't exist.
+		"""
+		super().__init__(message)
+		self._filePath = filePath
+
+	@readonly
+	def FilePath(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the requirements file that doesn't exist (:attr:`_filePath`).
+
+		:returns: The path, or ``None`` if it wasn't recorded.
+		"""
+		return self._filePath
 
 
 @export
@@ -85,23 +151,254 @@ class CircularRequirementsFileError(DependencyError):
 	A ``-r`` line references a requirements file that is already being read further up the include chain.
 
 	A cycle isn't read once and ignored: a file including itself is a statement nobody wrote on purpose, and reading
-	it silently would hide it. The exception names the chain, so the ``-r`` line to delete is in the message.
+	it silently would hide it. The exception names the chain, so the ``-r`` line to delete is in the message. A file
+	two files reference, without one being read inside the other, is no cycle.
 	"""
 
+	_filePath:     Nullable[Path]  #: Path of the requirements file that is already being read.
+	_referencedIn: Nullable[Path]  #: Path of the file whose ``-r`` line references it again.
+	_lineNumber:   Nullable[int]   #: Number of that ``-r`` line.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		filePath: Nullable[Path] = None,
+		referencedIn: Nullable[Path] = None,
+		lineNumber: Nullable[int] = None
+	) -> None:
+		"""
+		Initializes the exception with the file read again and the ``-r`` line referencing it.
+
+		:param message:      The exception's message.
+		:param filePath:     Optional, the path of the requirements file that is already being read.
+		:param referencedIn: Optional, the path of the file whose ``-r`` line references it again.
+		:param lineNumber:   Optional, the number of that ``-r`` line.
+		"""
+		super().__init__(message)
+		self._filePath =     filePath
+		self._referencedIn = referencedIn
+		self._lineNumber =   lineNumber
+
+	@readonly
+	def FilePath(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the requirements file that is already being read (:attr:`_filePath`).
+
+		:returns: The path, or ``None`` if it wasn't recorded.
+		"""
+		return self._filePath
+
+	@readonly
+	def ReferencedIn(self) -> Nullable[Path]:
+		"""
+		Read-only property to access the path of the file whose ``-r`` line references it again (:attr:`_referencedIn`).
+
+		:returns: The path, or ``None`` if it wasn't recorded.
+		"""
+		return self._referencedIn
+
+	@readonly
+	def LineNumber(self) -> Nullable[int]:
+		"""
+		Read-only property to access the number of that ``-r`` line (:attr:`_lineNumber`).
+
+		:returns: The line number, or ``None`` if it wasn't recorded.
+		"""
+		return self._lineNumber
+
 
 @export
-class ProjectNotFoundError(DependencyError):
-	"""The package index doesn't know a project of that name."""
+class AlreadyInRequirementsTreeError(DependencyError, AlreadyInHierarchyError):
+	"""A requirements file is given as an entry to another one, but a third file references it already."""
 
 
 @export
-class ReleaseNotFoundError(DependencyError):
-	"""The project exists in the package index, but not in the requested version."""
+class ProjectNotFoundError(DependencyError, LookupError):
+	"""
+	The package index doesn't know a project of that name.
+
+	It is a :exc:`LookupError` as well, because the project is looked up by name; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
+
+	_projectName: Nullable[str]  #: Name of the project the package index doesn't know.
+
+	def __init__(self, message: str, /, *, projectName: Nullable[str] = None) -> None:
+		"""
+		Initializes the exception with the name of the project that wasn't found.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project the package index doesn't know.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project that wasn't found (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+
+@export
+class ReleaseNotFoundError(DependencyError, LookupError):
+	"""
+	The project exists in the package index, but not in the requested version.
+
+	It is a :exc:`LookupError` as well, because the release is looked up by version; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
+
+	_projectName: Nullable[str]              #: Name of the project the release was requested of.
+	_version:     Nullable[SemanticVersion]  #: Version of the release the package index doesn't know.
+
+	def __init__(
+		self,
+		message:     str,
+		/,
+		*,
+		projectName: Nullable[str] = None,
+		version:     Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the exception with the project and the version of the release that wasn't found.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project the release was requested of.
+		:param version:     Optional, the version of the release the package index doesn't know.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project the release was requested of (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release that wasn't found (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
 
 
 @export
 class PackageIndexError(DependencyError):
 	"""The package index responded with an HTTP error status other than ``404 Not Found``."""
+
+	_projectName: Nullable[str]              #: Name of the project requested from the package index.
+	_version:     Nullable[SemanticVersion]  #: Version of the release requested, or ``None`` for the project itself.
+
+	def __init__(
+		self,
+		message:     str,
+		/,
+		*,
+		projectName: Nullable[str] = None,
+		version:     Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the exception with the project and, for a release, the version requested from the package index.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project requested from the package index.
+		:param version:     Optional, the version of the release requested; ``None`` for the project itself.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project requested from the package index (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release requested (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` for a request of the project itself or if it wasn't recorded.
+		"""
+		return self._version
+
+
+@export
+class ExtraNotFoundError(DependencyError, LookupError):
+	"""
+	A release doesn't declare the extra whose requirements were asked for.
+
+	It is a :exc:`LookupError` as well, because the extra is looked up by name; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
+
+	_projectName: Nullable[str]              #: Name of the project the release belongs to.
+	_version:     Nullable[SemanticVersion]  #: Version of the release.
+	_extra:       Nullable[str]              #: Name of the extra the release doesn't declare.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None,
+		extra: Nullable[str] = None
+	) -> None:
+		"""
+		Initializes the exception with the release and the extra it doesn't declare.
+
+		:param message:     The exception's message.
+		:param projectName: Optional, the name of the project the release belongs to.
+		:param version:     Optional, the version of the release.
+		:param extra:       Optional, the name of the extra the release doesn't declare.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+		self._extra =       extra
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project the release belongs to (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` if it wasn't recorded.
+		"""
+		return self._version
+
+	@readonly
+	def Extra(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the extra the release doesn't declare (:attr:`_extra`).
+
+		:returns: The extra's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._extra
 
 
 @export
@@ -144,6 +441,183 @@ class ReleaseDetailsWarning(Warning):
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
 	"""
+
+
+@export
+class UnresolvedRequirementWarning(Warning):
+	"""
+	A requirement couldn't be resolved: the package index doesn't know its project, or can't describe the release
+	selected for it.
+
+	The requirement stays in the resolution, with the reason as its status.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+
+	_projectName: Nullable[str]              #: Name of the required project.
+	_version:     Nullable[SemanticVersion]  #: Version of the selected release, or ``None`` for an unknown project.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None
+	) -> None:
+		"""
+		Initializes the warning with the required project and, if one was selected, the release.
+
+		:param message:     The warning's message.
+		:param projectName: Optional, the name of the required project.
+		:param version:     Optional, the version of the selected release; ``None`` for an unknown project.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the required project (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release selected for the requirement (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` for an unknown project or if it wasn't recorded.
+		"""
+		return self._version
+
+
+@export
+class PackageIndexFailureWarning(CriticalWarning):
+	"""
+	The package index failed to answer for a project or a release: it responded with a server error (``5xx``), or the
+	request failed on the network.
+
+	The requirement stays in the resolution, with the status
+	:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.IndexFailure`. The exception raised by the request is the
+	warning's cause.
+
+	.. important::
+
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+	"""
+
+	_projectName: Nullable[str]              #: Name of the project requested.
+	_version:     Nullable[SemanticVersion]  #: Version of the release requested, or ``None`` for the project itself.
+	_statusCode:  Nullable[int]              #: HTTP status code of the response, or ``None`` for a network failure.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		projectName: Nullable[str] = None,
+		version: Nullable[SemanticVersion] = None,
+		statusCode: Nullable[int] = None
+	) -> None:
+		"""
+		Initializes the warning with the project and, for a release, the version requested, and the response's status.
+
+		:param message:     The warning's message.
+		:param projectName: Optional, the name of the project requested.
+		:param version:     Optional, the version of the release requested; ``None`` for the project itself.
+		:param statusCode:  Optional, the HTTP status code of the response; ``None`` for a network failure.
+		"""
+		super().__init__(message)
+		self._projectName = projectName
+		self._version =     version
+		self._statusCode =  statusCode
+
+	@readonly
+	def ProjectName(self) -> Nullable[str]:
+		"""
+		Read-only property to access the name of the project requested (:attr:`_projectName`).
+
+		:returns: The project's name, or ``None`` if it wasn't recorded.
+		"""
+		return self._projectName
+
+	@readonly
+	def Version(self) -> Nullable[SemanticVersion]:
+		"""
+		Read-only property to access the version of the release requested (:attr:`_version`).
+
+		:returns: The release's version, or ``None`` for a request of the project itself or if it wasn't recorded.
+		"""
+		return self._version
+
+	@readonly
+	def StatusCode(self) -> Nullable[int]:
+		"""
+		Read-only property to access the HTTP status code of the response (:attr:`_statusCode`).
+
+		:returns: The status code, or ``None`` for a network failure or if it wasn't recorded.
+		"""
+		return self._statusCode
+
+
+@export
+class ResolutionTimeoutWarning(CriticalWarning):
+	"""
+	The current :class:`~pyTooling.Timeout.Timeout` expired while a resolver resolved requirements.
+
+	The requirements it didn't get to stay in the resolution, with the status
+	:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired`; the resolution returned is partial.
+
+	.. important::
+
+	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
+	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+	"""
+
+	_seconds:      Nullable[float]            #: The configured timeout in seconds.
+	_projectNames: Nullable[tuple[str, ...]]  #: Names of the projects whose requirements weren't resolved.
+
+	def __init__(
+		self,
+		message: str,
+		/, *,
+		seconds: Nullable[float] = None,
+		projectNames: Nullable[Iterable[str]] = None
+	) -> None:
+		"""
+		Initializes the warning with the configured timeout and the projects whose requirements weren't resolved.
+
+		:param message:      The warning's message.
+		:param seconds:      Optional, the configured timeout in seconds.
+		:param projectNames: Optional, the names of the projects whose requirements weren't resolved.
+		"""
+		super().__init__(message)
+		self._seconds =      seconds
+		self._projectNames = None if projectNames is None else tuple(projectNames)
+
+	@readonly
+	def Seconds(self) -> Nullable[float]:
+		"""
+		Read-only property to access the configured timeout in seconds (:attr:`_seconds`).
+
+		:returns: The timeout in seconds, or ``None`` if it wasn't recorded.
+		"""
+		return self._seconds
+
+	@readonly
+	def ProjectNames(self) -> Nullable[tuple[str, ...]]:
+		"""
+		Read-only property to access the names of the projects whose requirements weren't resolved (:attr:`_projectNames`).
+
+		:returns: The project names, or ``None`` if they weren't recorded.
+		"""
+		return self._projectNames
 
 
 @export

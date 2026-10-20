@@ -127,6 +127,101 @@ dependency graph is otherwise thousands of HTTP requests wide.
    Without it, importing :mod:`pyTooling.Dependency.Python` raises an exception naming the extra. The generic data
    model in :mod:`pyTooling.Dependency` has no such requirement.
 
+.. _DEPENDENCIES/Resolver:
+
+Resolving Requirements
+######################
+
+:class:`~pyTooling.Dependency.Resolver.Resolver` turns requirements into releases. For each requirement it selects
+the newest release matching the specifier, downloads that release's details and follows its requirements. A
+requirement naming extras (``pyTooling[yaml]``) brings in those extras' requirements as well, and their requirements
+in turn - an extra can pull in a whole subtree, with licenses of its own. It takes its requirements from
+
+* a list of :class:`~packaging.requirements.Requirement` objects
+  (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirements`),
+* a requirements file read by :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>`
+  (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirementsFile`), or
+* the newest releases of packages the pre-release policy admits, optionally one of their extras
+  (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolvePackages`).
+
+The result is a :class:`~pyTooling.Dependency.Resolver.Resolution`, a tree of
+:class:`~pyTooling.Dependency.Resolver.ResolvedRequirement` objects. Each one carries the selected release, or the
+reason there is none as its :class:`~pyTooling.Dependency.Resolver.ResolutionStatus`: the index doesn't know the
+project, no release matches, the index can't describe the selected release, the index failed to answer, the
+environment marker doesn't apply, the project closes a cycle, or the requirement is below the limit. The selected
+releases are connected in the index's
+dependency graph, too, so :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` shows them.
+
+The resolver is configured by four parameters:
+
+``strategy``
+   :attr:`~pyTooling.Dependency.Resolver.ResolutionStrategy.Lazy` (the default) resolves a release's requirements
+   when its :attr:`~pyTooling.Dependency.Resolver.ResolvedRequirement.Dependencies` are first asked for;
+   :attr:`~pyTooling.Dependency.Resolver.ResolutionStrategy.Eager` resolves everything up front, one level at a
+   time. Either way, the downloads of one level run in parallel.
+``limit``
+   The number of levels resolved below the given requirements; ``0`` resolves only the given requirements, ``None``
+   (the default) everything.
+``preReleases``
+   :attr:`~pyTooling.Dependency.Resolver.PreReleasePolicy.Exclude` (the default) selects a pre-release only if the
+   requirement names one (``pyTooling >= 10.0.0rc3``) or if no final release matches - what an installer would pick
+   (:pep:`440`); :attr:`~pyTooling.Dependency.Resolver.PreReleasePolicy.Include` selects pre-releases like final
+   releases.
+``environment``
+   The environment markers are evaluated against. ``None`` (the default) evaluates no marker, so every requirement is
+   resolved. :class:`~pyTooling.Dependency.Resolver.CurrentEnvironmentResolver` uses the running interpreter's
+   environment.
+
+A project or release the index fails to answer for - a server error (``5xx``) or a failed connection - gets the status
+:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.IndexFailure` and is reported as a critical
+:class:`~pyTooling.Dependency.PackageIndexFailureWarning`: the resolution continues, but a
+:class:`~pyTooling.Warning.WarningCollector` has to collect the warning, otherwise it raises.
+
+.. code-block:: Python
+
+   from packaging.requirements import Requirement
+
+   from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex
+   from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, ResolutionStatus
+   from pyTooling.Warning             import WarningCollector
+
+   graph = PythonPackageDependencyGraph("documentation")
+   index = PythonPackageIndex("PyPI", "https://pypi.org/", "https://pypi.org/pypi/", graph)
+
+   with WarningCollector() as warnings:
+     resolution = CurrentEnvironmentResolver(index, limit=2).ResolveRequirements([Requirement("pyTooling[yaml]")])
+
+   for requirement in resolution.Requirements:
+     if requirement.Status is ResolutionStatus.Resolved:
+       print(f"{requirement.Requirement} -> {requirement.Release.Version}")
+
+.. attention::
+
+   It is no installer's solver: every requirement is resolved on its own, and two requirements of one project with
+   conflicting specifiers select two releases. Nothing is backtracked.
+
+A resolution can be limited in time with a :class:`~pyTooling.Timeout.Timeout` around it (see :ref:`COMMON/Timeout`).
+Each level checks the timeout before it starts, and the downloads of a level get the time left as their timeout.
+Requirements not resolved when it expires get the status
+:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired` and are reported, once per level, as a critical
+:class:`~pyTooling.Dependency.ResolutionTimeoutWarning`. The resolution returned is partial, not lost: what was
+resolved before stays resolved. Checks needing no download - marker, cycle, limit - still apply. With the strategy
+:attr:`~pyTooling.Dependency.Resolver.ResolutionStrategy.Lazy`, a level resolved later uses the timeout current then.
+
+.. code-block:: Python
+
+   from pyTooling.Dependency.Resolver import ResolutionStrategy
+   from pyTooling.Timeout             import Timeout
+
+   with WarningCollector() as warnings, Timeout(20.0):
+     resolver =   CurrentEnvironmentResolver(index, strategy=ResolutionStrategy.Eager)
+     resolution = resolver.ResolveRequirements([Requirement("pyTooling[yaml]")])
+
+:meth:`Release.PostProcess <pyTooling.Dependency.Python.Release.PostProcess>` (behind
+:attr:`~pyTooling.Dependency.PackageVersion.DependsOn`) stays what it was: it attaches *every* release matching a
+requirement, not the one a resolver selects.
+
+
 .. _DEPENDENCIES/Exceptions:
 
 Exceptions and Warnings
@@ -137,12 +232,17 @@ Exceptions and Warnings
 :exc:`~pyTooling.Dependency.ProjectNotFoundError` and
 :exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for, and
 :exc:`~pyTooling.Dependency.PackageIndexError` when the index responds with another HTTP error status. The latter is
-caused by the :exc:`~requests.HTTPError`.
+caused by the :exc:`~requests.HTTPError`. :exc:`~pyTooling.Dependency.ExtraNotFoundError` is raised when the
+requirements of an extra are asked for, which a release doesn't declare.
 
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
-graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dependency.UnknownLicenseWarning`.
+graph. A license that can't be resolved is reported as an :class:`~pyTooling.Dependency.UnknownLicenseWarning`. A
+requirement a :class:`~pyTooling.Dependency.Resolver.Resolver` can't resolve, because the index doesn't know its
+project or can't describe the selected release, is reported as an
+:class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its
+status.
 
 These warnings are non-critical: they are reported to a :class:`~pyTooling.Warning.WarningCollector`, and without a
 collector up the call-hierarchy, they are dropped silently. A caller collects them to learn what was left out, see
@@ -151,6 +251,9 @@ collector up the call-hierarchy, they are dropped silently. A caller collects th
 A release whose version number the parser doesn't support, like pytz' ``2004d`` from before :pep:`440`, is skipped
 and reported as an :class:`~pyTooling.Dependency.UnsupportedVersionWarning`. It is a critical warning: without a
 collector up the call-hierarchy, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+
+A resolver whose :class:`~pyTooling.Timeout.Timeout` expired reports the requirements it left unresolved as a critical
+:class:`~pyTooling.Dependency.ResolutionTimeoutWarning`, with the configured seconds and the projects' names.
 
 
 .. _DEPENDENCIES/Competitors:
@@ -232,10 +335,13 @@ Source: :gh:`requirements-parser <madpah/requirements-parser>`, on PyPI as
 .. rubric:: Disadvantages
 
 * Options traversing the local file system are not handled, so a ``-r`` reference to another file isn't followed.
-  :class:`~pyTooling.Dependency.Python.RequirementsFile` reads the referenced files as a tree, keeps which file a
-  requirement was stated in, and raises a :exc:`~pyTooling.Dependency.CircularRequirementsFileError` for a cycle.
+  :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` reads the referenced files as
+  a tree, keeps which file a requirement was stated in, and raises a
+  :exc:`~pyTooling.Dependency.CircularRequirementsFileError` for a cycle. A file two files reference is read once; the
+  second ``-r`` line is a :class:`~pyTooling.Dependency.Python.RequirementsFileReference` to it.
 
 .. rubric:: Advantages
 
 * Parses editables, version control URIs, hashes and URLs, which
-  :class:`~pyTooling.Dependency.Python.RequirementsFile` skips as instructions to the installer.
+  :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>` skips as instructions to the
+  installer.
