@@ -49,7 +49,7 @@ from typing                      import Any, Callable, Iterable, Iterator, Mappi
 from pyTooling.Exceptions        import MissingDependencyError
 
 try:
-	from aiohttp                   import ClientResponseError, ClientSession
+	from aiohttp                   import ClientResponseError, ClientSession, ClientTimeout
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
 
@@ -64,9 +64,10 @@ except ImportError as ex:  # pragma: no cover
 from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import StringEnum, getFullyQualifiedName
+from pyTooling.Timeout           import Timeout
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Dependency        import BrokenRequirementWarning, ExtraNotFoundError, PackageIndexFailureWarning
-from pyTooling.Dependency        import ReleaseNotFoundError, UnresolvedRequirementWarning
+from pyTooling.Dependency        import ReleaseNotFoundError, ResolutionTimeoutWarning, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release, RequirementsFile
 
 _Requirement = Requirement
@@ -111,6 +112,7 @@ class ResolutionStatus(Enum):
 	Cycle =              6  #: The project is required further up the path already, so it isn't followed again.
 	LimitReached =       7  #: The requirement is below the resolver's limit, so it wasn't resolved.
 	IndexFailure =       8  #: The package index failed to answer for the project or the selected release.
+	TimeoutExpired =     9  #: The current timeout expired before the requirement was resolved.
 
 
 @export
@@ -400,6 +402,12 @@ class Resolver(metaclass=ExtendedType, slots=True):
 	:func:`packaging.markers.default_environment` returns it); a requirement whose marker doesn't apply gets the status
 	:attr:`~ResolutionStatus.MarkerNotApplying`. Without an environment, markers aren't evaluated and every requirement
 	is resolved. :class:`CurrentEnvironmentResolver` uses the running interpreter's environment.
+
+	Resolving honours the current :class:`~pyTooling.Timeout.Timeout` of the calling thread: each level checks it, and
+	the downloads of a level get the time left as their timeout. Requirements not resolved when it expires get the
+	status :attr:`~ResolutionStatus.TimeoutExpired`, reported once per level as a critical
+	:exc:`~pyTooling.Dependency.ResolutionTimeoutWarning`; the resolution returned is partial. With the strategy
+	:attr:`~ResolutionStrategy.Lazy`, a level resolved later uses the timeout current then.
 	"""
 
 	_index:       PythonPackageIndex        #: The package index the requirements are resolved against.
@@ -734,11 +742,20 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			else:
 				toLookUp.append(requirement)
 
-		self._LookUpProjects(toLookUp)
+		if Timeout.IsExpired():
+			self._ExpireRequirements(toLookUp)
+			return
+
+		timedOutProjects = self._LookUpProjects(toLookUp)
 
 		toDescribe: list[ResolvedRequirement] = []
+		timedOut:   list[ResolvedRequirement] = []
 		for requirement in toLookUp:
-			if requirement._project is None:
+			if requirement._project in timedOutProjects:
+				requirement._project = None
+				timedOut.append(requirement)
+				continue
+			elif requirement._project is None:
 				requirement._status = ResolutionStatus.UnknownProject
 				WarningCollector.Raise(UnresolvedRequirementWarning(
 					f"Package '{requirement._requirement.name}' is unknown to the package index.",
@@ -757,10 +774,14 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			requirement._release = release
 			toDescribe.append(requirement)
 
-		self._DescribeReleases(toDescribe)
+		timedOutReleases = self._DescribeReleases(toDescribe)
 
 		for requirement in toDescribe:
-			if requirement._release in self._failed:
+			if requirement._release in timedOutReleases:
+				requirement._release = None
+				timedOut.append(requirement)
+				continue
+			elif requirement._release in self._failed:
 				requirement._status = ResolutionStatus.IndexFailure
 				continue
 			elif requirement._release in self._undescribed:
@@ -777,15 +798,40 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			if (parent := requirement._parent) is not None:
 				parent._release.AddDependencyToPackageVersion(requirement._release)
 
-	def _LookUpProjects(self, requirements: list[ResolvedRequirement]) -> None:
+		if len(timedOut) > 0:
+			self._ExpireRequirements(timedOut)
+
+	def _ExpireRequirements(self, requirements: list[ResolvedRequirement]) -> None:
+		"""
+		Give requirements the status :attr:`~ResolutionStatus.TimeoutExpired` and report them as one critical
+		:exc:`~pyTooling.Dependency.ResolutionTimeoutWarning`.
+
+		:param requirements: The requirements the expired timeout left unresolved.
+		"""
+		if len(requirements) == 0:
+			return
+
+		for requirement in requirements:
+			requirement._status = ResolutionStatus.TimeoutExpired
+
+		seconds = Timeout.Current().Seconds
+		WarningCollector.Raise(ResolutionTimeoutWarning(
+			f"Timeout of {seconds} seconds expired; {len(requirements)} requirements weren't resolved.",
+			seconds=seconds,
+			projectNames=(requirement._requirement.name for requirement in requirements)
+		))
+
+	def _LookUpProjects(self, requirements: list[ResolvedRequirement]) -> set[Project]:
 		"""
 		Look up the required projects on the index, downloading those not loaded yet in parallel.
 
 		A project the index answers ``404 Not Found`` for is forgotten by the index and left ``None``. A project the index
 		fails to answer for is remembered as failed and reported as a critical
-		:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`.
+		:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`. A download the current timeout cut off is neither: the
+		project stays unloaded, so a later resolution asks for it again.
 
 		:param requirements: The requirements whose project is looked up.
+		:returns:            The projects whose download the current timeout cut off.
 		"""
 		toDownload: dict[str, Project] = {}
 		for requirement in requirements:
@@ -797,10 +843,13 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			if project not in self._failed and project.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 				toDownload[canonicalize_name(name)] = project
 
+		timedOut: set[Project] = set()
 		projects = list(toDownload.values())
 		documents = self._Download([project._GetPyPIEndpoint() for project in projects])
 		for project, document in zip(projects, documents):
-			if isinstance(document, BaseException):
+			if isinstance(document, TimeoutError) and Timeout.Current() is not None:
+				timedOut.add(project)
+			elif isinstance(document, BaseException):
 				self._failed.add(project)
 				WarningCollector.Raise(
 					PackageIndexFailureWarning(
@@ -818,15 +867,19 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		for requirement in requirements:
 			requirement._project = self._index._projectCache.get(canonicalize_name(requirement._requirement.name), None)
 
-	def _DescribeReleases(self, requirements: list[ResolvedRequirement]) -> None:
+		return timedOut
+
+	def _DescribeReleases(self, requirements: list[ResolvedRequirement]) -> set[Release]:
 		"""
 		Download the details of the selected releases not described yet, in parallel.
 
 		A release the index can't describe - it answers ``404 Not Found``, or the details can't be read - is remembered
 		as undescribed. A release the index fails to answer for is remembered as failed and reported as a critical
-		:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`.
+		:exc:`~pyTooling.Dependency.PackageIndexFailureWarning`. A download the current timeout cut off is neither: the
+		release stays undescribed, so a later resolution asks for it again.
 
 		:param requirements: The requirements whose selected release is described.
+		:returns:            The releases whose download the current timeout cut off.
 		"""
 		toDownload: dict[int, Release] = {}
 		for requirement in requirements:
@@ -836,10 +889,14 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			elif release.__lazy_state__ < LazyLoaderState.PartiallyLoaded:
 				toDownload[id(release)] = release
 
+		timedOut: set[Release] = set()
 		releases = list(toDownload.values())
 		documents = self._Download([release._GetPyPIEndpoint() for release in releases])
 		for release, document in zip(releases, documents):
-			if isinstance(document, BaseException):
+			if isinstance(document, TimeoutError) and Timeout.Current() is not None:
+				timedOut.add(release)
+				continue
+			elif isinstance(document, BaseException):
 				self._failed.add(release)
 				WarningCollector.Raise(
 					PackageIndexFailureWarning(
@@ -869,6 +926,8 @@ class Resolver(metaclass=ExtendedType, slots=True):
 					ex
 				)
 
+		return timedOut
+
 	def _SelectRelease(self, project: Project, specifier: SpecifierSet) -> Nullable[Release]:
 		"""
 		Select the newest release of a project matching a specifier, as far as the pre-release policy admits it.
@@ -887,11 +946,16 @@ class Resolver(metaclass=ExtendedType, slots=True):
 		"""
 		Download JSON documents from the package index's API in parallel, over one session.
 
+		While a :class:`~pyTooling.Timeout.Timeout` is current, the session's total timeout is the time it has left, so a
+		download it cuts off returns a :exc:`TimeoutError`.
+
 		:param endpoints: The endpoints, relative to the index's API URL.
 		:returns:         Per endpoint, the parsed document, ``None`` for ``404 Not Found``, or the exception raised.
 		"""
 		if len(endpoints) == 0:
 			return []
+		elif (remaining := Timeout.Remaining()) == 0.0:
+			return [TimeoutError("Timeout expired before the download.") for _ in endpoints]
 
 		async def downloadAll() -> list[Any]:
 			"""
@@ -914,7 +978,11 @@ class Resolver(metaclass=ExtendedType, slots=True):
 					response.raise_for_status()
 					return await response.json()
 
-			async with ClientSession(base_url=str(self._index._api), headers={"accept": "application/json"}) as session:
+			arguments: dict[str, Any] = {"base_url": str(self._index._api), "headers": {"accept": "application/json"}}
+			if remaining is not None:
+				arguments["timeout"] = ClientTimeout(total=remaining)
+
+			async with ClientSession(**arguments) as session:
 				return await asyncio_gather(*(download(session, endpoint) for endpoint in endpoints), return_exceptions=True)
 
 		return asyncio_run(downloadAll())

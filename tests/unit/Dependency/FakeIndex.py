@@ -160,9 +160,10 @@ class DocumentClientSession:
 	Documents: dict[str, dict]                = {}  #: JSON documents by endpoint, shared by all instances.
 	Sessions:  list["DocumentClientSession"] = []  #: Every session opened, in order.
 
-	def __init__(self, **_) -> None:
-		"""Initializes a session; the arguments of :class:`aiohttp.ClientSession` are ignored."""
-		self.Requests = []
+	def __init__(self, **arguments) -> None:
+		"""Initializes a session; the arguments of :class:`aiohttp.ClientSession` are recorded in :attr:`Arguments`."""
+		self.Arguments = arguments
+		self.Requests =  []
 		DocumentClientSession.Sessions.append(self)
 
 	async def __aenter__(self) -> "DocumentClientSession":

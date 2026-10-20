@@ -200,6 +200,23 @@ A project or release the index fails to answer for - a server error (``5xx``) or
    It is no installer's solver: every requirement is resolved on its own, and two requirements of one project with
    conflicting specifiers select two releases. Nothing is backtracked.
 
+A resolution can be limited in time with a :class:`~pyTooling.Timeout.Timeout` around it (see :ref:`COMMON/Timeout`).
+Each level checks the timeout before it starts, and the downloads of a level get the time left as their timeout.
+Requirements not resolved when it expires get the status
+:attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired` and are reported, once per level, as a critical
+:class:`~pyTooling.Dependency.ResolutionTimeoutWarning`. The resolution returned is partial, not lost: what was
+resolved before stays resolved. Checks needing no download - marker, cycle, limit - still apply. With the strategy
+:attr:`~pyTooling.Dependency.Resolver.ResolutionStrategy.Lazy`, a level resolved later uses the timeout current then.
+
+.. code-block:: Python
+
+   from pyTooling.Dependency.Resolver import ResolutionStrategy
+   from pyTooling.Timeout             import Timeout
+
+   with WarningCollector() as warnings, Timeout(20.0):
+     resolver =   CurrentEnvironmentResolver(index, strategy=ResolutionStrategy.Eager)
+     resolution = resolver.ResolveRequirements([Requirement("pyTooling[yaml]")])
+
 :meth:`Release.PostProcess <pyTooling.Dependency.Python.Release.PostProcess>` (behind
 :attr:`~pyTooling.Dependency.PackageVersion.DependsOn`) stays what it was: it attaches *every* release matching a
 requirement, not the one a resolver selects.
@@ -234,6 +251,9 @@ collector up the call-hierarchy, they are dropped silently. A caller collects th
 A release whose version number the parser doesn't support, like pytz' ``2004d`` from before :pep:`440`, is skipped
 and reported as an :class:`~pyTooling.Dependency.UnsupportedVersionWarning`. It is a critical warning: without a
 collector up the call-hierarchy, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+
+A resolver whose :class:`~pyTooling.Timeout.Timeout` expired reports the requirements it left unresolved as a critical
+:class:`~pyTooling.Dependency.ResolutionTimeoutWarning`, with the configured seconds and the projects' names.
 
 
 .. _DEPENDENCIES/Competitors:
