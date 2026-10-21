@@ -781,6 +781,10 @@ Version 10.x (2026)
 
    .. rubric:: Changes
 
+   * :mod:`pyTooling.TerminalUI` imports without colorama: the color palette
+     :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.FOREGROUND` holds empty strings then, so a terminal
+     application writes uncolored text. Importing the module raised :exc:`~pyTooling.Exceptions.MissingDependencyError`
+     without the ``terminal`` extra.
    * ⚠️ Class variables with constant meaning, set in the class body or once per class from a class keyword argument,
      are spelled in upper case. Besides the public ones listed under *Breaking Changes*: the patterns and names of
      :mod:`pyTooling.CLIAbstraction`'s argument classes (``_PATTERN``, ``_NAME``, ``_VALUE_PATTERN``,

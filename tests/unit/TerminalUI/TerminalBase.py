@@ -33,9 +33,13 @@
 Unit tests for :class:`pyTooling.TerminalUI.TerminalBaseApplication`: low-level writing, the exit codes, and
 the exception printers.
 """
+from importlib.util       import module_from_spec, spec_from_file_location
 from io                   import StringIO
+from sys                  import modules
+from unittest.mock        import patch
 
 from pyTooling.Exceptions import ExceptionBase
+from pyTooling            import TerminalUI
 from pyTooling.TerminalUI import TerminalBaseApplication
 from pyTooling.Testing    import Testcase
 
@@ -70,6 +74,27 @@ class Instantiate(Testcase):
 				self.__class__.FATAL_EXIT_CODE = 0
 
 		app = Application()
+
+
+class Colors(Testcase):
+	def test_Palette(self) -> None:
+		"""With colorama, the palette holds escape sequences."""
+		self.assertNotEqual("", TerminalBaseApplication.FOREGROUND["RED"])
+
+	def test_WithoutColorama(self) -> None:
+		"""Without colorama, the module imports and every entry of the palette is an empty string."""
+		name = "TerminalUIWithoutColorama"
+		spec = spec_from_file_location(name, TerminalUI.__file__)
+		module = module_from_spec(spec)
+		with patch.dict(modules, {"colorama": None, name: module}):
+			spec.loader.exec_module(module)
+
+		self.assertNotEqual(0, len(module.TerminalBaseApplication.FOREGROUND))
+		for key, value in module.TerminalBaseApplication.FOREGROUND.items():
+			with self.subTest(key=key):
+				self.assertEqual("", value)
+
+		self.assertNotIn(name, modules)
 
 
 class WriteMessages(Testcase):
