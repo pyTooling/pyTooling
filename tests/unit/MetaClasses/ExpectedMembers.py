@@ -34,6 +34,9 @@ An expectation is declared in one of two places: a class lists the members it ne
 into (``expects=``), or a single method lists what it needs from its class (:deco:`expects`). The first rejects
 instantiation, the second rejects that one call.
 """
+from typing                import Protocol
+
+from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
 from pyTooling.MetaClasses import abstractclass, abstractmethod, expects, mixin
 from pyTooling.Testing     import Testcase
@@ -144,8 +147,31 @@ class ExpectedMembers(Testcase):
 		self.assertEqual(tuple(), Plain.__missingMembers__)
 
 
+class WriterProtocol(Protocol):
+	"""A protocol naming a field, a property and a method."""
+
+	_counter: int
+
+	@property
+	def Width(self) -> int:
+		...
+
+	def Write(self, message: str) -> bool:
+		...
+
+
+class NoteWriterProtocol(WriterProtocol, Protocol):
+	"""A protocol extending another protocol by one method."""
+
+	def WriteNote(self, message: str) -> bool:
+		...
+
+
 class ExpectsParameter(Testcase):
-	"""The ``expects`` class keyword argument accepts any iterable of strings, except a string itself."""
+	"""
+	The ``expects`` class keyword argument accepts any iterable of strings, except a string itself, or a
+	:class:`typing.Protocol` class.
+	"""
 
 	def test_Expects_Tuple(self) -> None:
 		class Expecting(metaclass=ExtendedType, mixin=True, expects=("Write",)):
@@ -188,6 +214,76 @@ class ExpectsParameter(Testcase):
 
 		self.assertEqual("Parameter 'expects' contains an element that is not a string.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Expects_Protocol(self) -> None:
+		class Expecting(metaclass=ExtendedType, mixin=True, expects=WriterProtocol):
+			pass
+
+		expected = {
+			"Width":    "Expecting",
+			"Write":    "Expecting",
+			"_counter": "Expecting"
+		}
+		self.assertDictEqual(expected, Expecting.__expectedMembers__)
+
+	def test_Expects_Protocol_Derived(self) -> None:
+		class Expecting(metaclass=ExtendedType, mixin=True, expects=NoteWriterProtocol):
+			pass
+
+		self.assertSetEqual({"Width", "Write", "WriteNote", "_counter"}, set(Expecting.__expectedMembers__))
+
+	def test_Expects_Protocol_Fulfilled(self) -> None:
+		class Expecting(metaclass=ExtendedType, mixin=True, expects=WriterProtocol):
+			pass
+
+		class Combined(Host, Expecting):
+			@property
+			def Width(self) -> int:
+				return 80
+
+		self.assertTupleEqual((), Combined.__missingMembers__)
+		Combined()
+
+	def test_Expects_Protocol_Unfulfilled(self) -> None:
+		class Expecting(metaclass=ExtendedType, mixin=True, expects=WriterProtocol):
+			pass
+
+		class Combined(Host, Expecting):
+			pass
+
+		self.assertTupleEqual(("Width",), Combined.__missingMembers__)
+		with self.assertRaises(UnfulfilledExpectationError):
+			Combined()
+
+	def test_Expects_PlainProtocol(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			class Expecting(metaclass=ExtendedType, mixin=True, expects=Protocol):
+				pass
+
+		self.assertEqual("Parameter 'expects' is 'typing.Protocol' itself, which names no members.", str(context.exception))
+		self.assertListEqual(["Derive a protocol class naming the expected members."], context.exception.__notes__)
+
+	def test_Expects_Class(self) -> None:
+		class Writer:
+			def Write(self, message: str) -> bool:
+				return True
+
+		with self.assertRaises(TypeError) as context:
+			class Expecting(metaclass=ExtendedType, mixin=True, expects=Writer):
+				pass
+
+		self.assertEqual("Parameter 'expects' is a class, but not a 'typing.Protocol'.", str(context.exception))
+		self.assertListEqual([f"Got class '{getFullyQualifiedName(Writer)}'."], context.exception.__notes__)
+
+	def test_Expects_ProtocolImplementation(self) -> None:
+		class Writer(WriterProtocol):
+			pass
+
+		with self.assertRaises(TypeError) as context:
+			class Expecting(metaclass=ExtendedType, mixin=True, expects=Writer):
+				pass
+
+		self.assertEqual("Parameter 'expects' is a class, but not a 'typing.Protocol'.", str(context.exception))
 
 
 class AbstractClasses(Testcase):
