@@ -32,7 +32,7 @@
 """
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
-Colors need the optional package colorama (extra ``terminal``); without it, the output is uncolored.
+Colors need the optional package colorama (extra ``terminal``); without it, the output is uncolored text.
 
 .. seealso::
 
@@ -70,14 +70,12 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	terminal's width.
 	"""
 
-	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
-	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
-	#: Return code (242), if an optional dependency is missing. The value lives on the exception - see
-	#: :meth:`PrintMissingDependencyError`.
-	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyError.EXIT_CODE
-	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
-	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
-	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
+	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] = 240                               #: Return code, if unimplemented methods or code sections were called.
+	UNHANDLED_EXCEPTION_EXIT_CODE:       ClassVar[int] = 241                               #: Return code, if an unhandled exception reached the topmost exception handler.
+	MISSING_DEPENDENCY_EXIT_CODE:        ClassVar[int] = MissingDependencyError.EXIT_CODE  #: Return code (242), if an optional dependency is missing; the value lives on the exception - see :meth:`PrintMissingDependencyError`.
+	FATAL_EXIT_CODE:                     ClassVar[int] = 255                               #: Return code for fatal exits.
+	ISSUE_TRACKER_URL:                   ClassVar[str] = None                              #: URL to the issue tracker for reporting bugs.
+	INDENT:                              ClassVar[str] = "  "                              #: Indentation. Default: ``"  "`` (2 spaces)
 
 	try:
 		from colorama import Fore as Foreground

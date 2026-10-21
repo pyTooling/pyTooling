@@ -113,7 +113,7 @@ colorama isn't installed, every entry is an empty string, so the same code emits
 .. hint::
 
    colorama is an optional dependency, installed with the extra ``pyTooling[terminal]``. Without it, the package
-   imports as well and writes uncolored text.
+   imports as well, but writes uncolored text.
 
 
 .. _TERM/Size:
