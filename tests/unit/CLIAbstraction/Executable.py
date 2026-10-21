@@ -53,7 +53,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 class Git(Executable, GitArgumentsMixin):
 	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		cls._executableNames = {
+		cls._EXECUTABLE_NAMES = {
 			"Darwin":  "git",
 			"FreeBSD": "git",
 			"Linux":   "git",
@@ -64,10 +64,10 @@ class Git(Executable, GitArgumentsMixin):
 
 @mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
 class ExplicitBinaryDirectoryOnFreeBSD(Testcase, Helper):
-	_binaryDirectoryPath = Path("/usr/local/bin")
+	_BINARY_DIRECTORY_PATH = Path("/usr/local/bin")
 
 	def test_VersionFlag(self) -> None:
-		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+		tool = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH)
 		tool[tool.FlagVersion] = True
 
 		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
@@ -77,10 +77,10 @@ class ExplicitBinaryDirectoryOnFreeBSD(Testcase, Helper):
 
 @mark.skipif(sys_platform in ("freebsd", "win32"), reason="Don't run these tests on FreeBSD and Windows.")
 class ExplicitBinaryDirectoryOnLinux(Testcase, Helper):
-	_binaryDirectoryPath = Path("/usr/bin")
+	_BINARY_DIRECTORY_PATH = Path("/usr/bin")
 
 	def test_VersionFlag(self) -> None:
-		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+		tool = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH)
 		tool[tool.FlagVersion] = True
 
 		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))
@@ -90,10 +90,10 @@ class ExplicitBinaryDirectoryOnLinux(Testcase, Helper):
 
 @mark.skipif(sys_platform in ("darwin", "freebsd", "linux"), reason="Don't run these tests on FreeBSD, Linux or macOS.")
 class ExplicitBinaryDirectoryOnWindows(Testcase, Helper):
-	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
+	_BINARY_DIRECTORY_PATH = Path(r"C:\Program Files\Git\cmd")
 
 	def test_VersionFlag(self) -> None:
-		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+		tool = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH)
 		tool[tool.FlagVersion] = True
 
 		tool.StartProcess(environment=Environment(addVariables={"LANGUAGE": "C"}))

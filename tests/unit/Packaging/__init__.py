@@ -164,12 +164,12 @@ class VersionInformation(Testcase):
 class Description(Testcase):
 	"""The short description is the first paragraph of the package's module doc-string."""
 
-	_dataDirectory = Path("tests/data/Packaging")
+	_DATA_DIRECTORY = Path("tests/data/Packaging")
 
 	def _Description(self, fileName: str) -> str:
 		from pyTooling.Packaging import extractVersionInformation
 
-		return extractVersionInformation(self._dataDirectory / fileName).Description
+		return extractVersionInformation(self._DATA_DIRECTORY / fileName).Description
 
 	def test_SingleParagraph(self) -> None:
 		self.assertEqual("A package whose doc-string is a single line.", self._Description("SingleParagraph.py"))
@@ -233,12 +233,12 @@ class SourceFileErrors(Testcase):
 class MalformedKeywords(Testcase):
 	"""A '__keywords__' that isn't a list of strings names the file, and keeps the reason as the cause."""
 
-	_dataDirectory = Path("tests/data/Packaging")
+	_DATA_DIRECTORY = Path("tests/data/Packaging")
 
 	def _Extract(self, fileName: str) -> None:
 		from pyTooling.Packaging import extractVersionInformation
 
-		extractVersionInformation(self._dataDirectory / fileName)
+		extractVersionInformation(self._DATA_DIRECTORY / fileName)
 
 	def test_AStringInsteadOfAList(self) -> None:
 		from pyTooling.Packaging import PackagingError
@@ -372,7 +372,7 @@ class DescribePackage(CollectingTestcase):
 class DirectReferences(Testcase):
 	"""PyPI rejects direct references (``name @ URL``); extras leave them out, base requirements keep them."""
 
-	_directory = Path("tests/data/Packaging/DirectReferences")
+	_DIRECTORY = Path("tests/data/Packaging/DirectReferences")
 
 	def _describe(self) -> tuple[dict, WarningCollector]:
 		from pyTooling.Packaging import DescribePythonPackage
@@ -387,9 +387,9 @@ class DirectReferences(Testcase):
 					documentationURL="https://",
 					issueTrackerCodeURL="https://",
 					sourceFileWithVersion=Path("tests/pyPackage.Tool/__init__.py"),
-					requirementsFile=self._directory / "requirements.txt",
-					documentationRequirementsFile=self._directory / "requirements.Doc.txt",
-					unittestRequirementsFile=self._directory / "requirements.Test.txt",
+					requirementsFile=self._DIRECTORY / "requirements.txt",
+					documentationRequirementsFile=self._DIRECTORY / "requirements.Doc.txt",
+					unittestRequirementsFile=self._DIRECTORY / "requirements.Test.txt",
 					packagingRequirementsFile=None,
 					additionalRequirements={
 						"dist": ["wheel", "pyEDAA.Reports @ git+https://github.com/edaa-org/pyEDAA.Reports.git@dev"],
@@ -413,8 +413,8 @@ class DirectReferences(Testcase):
 					documentationURL="https://",
 					issueTrackerCodeURL="https://",
 					sourceFileWithVersion=Path("tests/pyPackage.Tool/__init__.py"),
-					requirementsFile=self._directory / "requirements.txt",
-					documentationRequirementsFile=self._directory / "requirements.Doc.txt",
+					requirementsFile=self._DIRECTORY / "requirements.txt",
+					documentationRequirementsFile=self._DIRECTORY / "requirements.Doc.txt",
 					unittestRequirementsFile=None,
 					packagingRequirementsFile=None
 				)
@@ -453,9 +453,9 @@ class DirectReferences(Testcase):
 		self.assertIn(
 			"'pyTooling.Sphinx[reports] @ git+https://github.com/pyTooling/pyTooling.Sphinx.git@dev'", messages[2]
 		)
-		self.assertIn(f"extra 'doc', from '{self._directory / 'requirements.Doc.txt'}'", messages[2])
+		self.assertIn(f"extra 'doc', from '{self._DIRECTORY / 'requirements.Doc.txt'}'", messages[2])
 		self.assertIn("'pyGHDL @ https://github.com/ghdl/ghdl/archive/master.zip'", messages[1])
-		self.assertIn(f"extra 'test', from '{self._directory / 'requirements.Test.txt'}'", messages[1])
+		self.assertIn(f"extra 'test', from '{self._DIRECTORY / 'requirements.Test.txt'}'", messages[1])
 		self.assertIn("extra 'dist', from parameter 'additionalRequirements'", messages[0])
 
 	def test_WarningFields(self) -> None:
@@ -468,8 +468,8 @@ class DirectReferences(Testcase):
 			[
 				("dist", "pyEDAA.Reports @ git+https://github.com/edaa-org/pyEDAA.Reports.git@dev", None),
 				("doc", "pyTooling.Sphinx[reports] @ git+https://github.com/pyTooling/pyTooling.Sphinx.git@dev",
-				 self._directory / "requirements.Doc.txt"),
-				("test", "pyGHDL @ https://github.com/ghdl/ghdl/archive/master.zip", self._directory / "requirements.Test.txt"),
+				 self._DIRECTORY / "requirements.Doc.txt"),
+				("test", "pyGHDL @ https://github.com/ghdl/ghdl/archive/master.zip", self._DIRECTORY / "requirements.Test.txt"),
 			],
 			fields
 		)

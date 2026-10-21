@@ -54,7 +54,7 @@ class EdgeLinking(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 	def test_LinkNewVertex_Linear(self) -> None:
 		def wrapper(count: int):
@@ -66,7 +66,7 @@ class EdgeLinking(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 
 	def test_LinkFromNewVertex_Flat(self) -> None:
@@ -79,7 +79,7 @@ class EdgeLinking(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 	def test_LinkFromNewVertex_Linear(self) -> None:
 		def wrapper(count: int):
@@ -91,7 +91,7 @@ class EdgeLinking(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 class RandomGraph(PerformanceTest):
 	def ConstructGraphFromEdgeListFile(self, file: Path, vertexCount: int) -> pt_Graph:
@@ -126,7 +126,7 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)
 
 	def test_DFS(self) -> None:
 		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
@@ -138,7 +138,7 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)
 
 	def test_ShortestPathByHops(self) -> None:
 		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
@@ -156,7 +156,7 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)
 
 	def test_ShortestPathByWeight(self) -> None:
 		def wrapper(graph: pt_Graph, componentStartVertex: int, componentSize: int):
@@ -174,4 +174,4 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)

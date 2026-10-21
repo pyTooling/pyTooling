@@ -56,7 +56,7 @@ class Insertion(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 	def test_InsertAfterLast(self) -> None:
 		def wrapper(count: int):
@@ -68,7 +68,7 @@ class Insertion(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 
 class Remove(PerformanceTest):
@@ -76,7 +76,7 @@ class Remove(PerformanceTest):
 		limit = 145
 		def wrapper(count: int):
 			def func():
-				dll = DoublyLinkedList(self.randomArray[0:count])
+				dll = DoublyLinkedList(self.RANDOM_ARRAY[0:count])
 
 				index = 0
 				collected = 0
@@ -109,4 +109,4 @@ class Remove(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts[:-1])
+		self.runSizedTests(wrapper, self.COUNTS[:-1])

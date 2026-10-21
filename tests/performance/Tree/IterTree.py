@@ -53,4 +53,4 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runTests(wrapper, self.COUNTS)

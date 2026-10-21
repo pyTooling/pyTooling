@@ -1188,7 +1188,7 @@ class UserManager(Testcase):
 
 
 class Application(TerminalApplication, Program):
-	HeadLine = "Application"
+	HEADLINE = "Application"
 
 	def __init__(self) -> None:
 		super().__init__()

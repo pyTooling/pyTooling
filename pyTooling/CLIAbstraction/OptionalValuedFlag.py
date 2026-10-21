@@ -55,7 +55,7 @@ class OptionalValuedFlag(NamedAndValuedArgument[str], pattern="{0"):
 
 	Example: ``width=100``
 	"""
-	_patternWithValue: ClassVar[str]  #: Format string used when the flag has a value; :attr:`_pattern` is used without one.
+	_PATTERN_WITH_VALUE: ClassVar[str]  #: Format string used when the flag has a value; :attr:`_PATTERN` is used without one.
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", patternWithValue: str = "{0}={1}", **kwargs: Any) -> None:
 		"""
@@ -70,7 +70,7 @@ class OptionalValuedFlag(NamedAndValuedArgument[str], pattern="{0"):
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-		cls._patternWithValue = patternWithValue
+		cls._PATTERN_WITH_VALUE = patternWithValue
 
 	def __init__(self, value: Nullable[str] = None) -> None:
 		"""
@@ -101,11 +101,11 @@ class OptionalValuedFlag(NamedAndValuedArgument[str], pattern="{0"):
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
-		if self._name is None:
-			raise ValueError("Internal value '_name' is None.")
+		if self._NAME is None:
+			raise ValueError("Internal value '_NAME' is None.")
 
-		pattern = self._pattern if self._value is None else self._patternWithValue
-		return pattern.format(self._name, self._value)
+		pattern = self._PATTERN if self._value is None else self._PATTERN_WITH_VALUE
+		return pattern.format(self._NAME, self._value)
 
 
 @export

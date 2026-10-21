@@ -51,7 +51,7 @@ class Insertion(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 	def test_InsertAfterLast(self) -> None:
 		def wrapper(count: int):
@@ -63,7 +63,7 @@ class Insertion(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 
 class Remove(PerformanceTest):
@@ -71,7 +71,7 @@ class Remove(PerformanceTest):
 		limit = 145
 		def wrapper(count: int):
 			def func():
-				lst =[i for i in self.randomArray[0:count]]
+				lst =[i for i in self.RANDOM_ARRAY[0:count]]
 
 				index = 0
 				collected = 0
@@ -104,13 +104,13 @@ class Remove(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts[:-1])
+		self.runSizedTests(wrapper, self.COUNTS[:-1])
 
 	def test_FillBuckets_MoveValue(self) -> None:
 		limit = 145
 		def wrapper(count: int):
 			def func():
-				lst = [i for i in self.randomArray[0:count]]
+				lst = [i for i in self.RANDOM_ARRAY[0:count]]
 
 				index = 0
 				collected = 0
@@ -138,13 +138,13 @@ class Remove(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts[:-1])
+		self.runSizedTests(wrapper, self.COUNTS[:-1])
 
 	def test_FillBuckets_NewList(self) -> None:
 		limit = 145
 		def wrapper(count: int):
 			def func():
-				lst =[i for i in self.randomArray[0:count]]
+				lst =[i for i in self.RANDOM_ARRAY[0:count]]
 
 				index = 0
 				collected = 0
@@ -172,4 +172,4 @@ class Remove(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts[:-1])
+		self.runSizedTests(wrapper, self.COUNTS[:-1])

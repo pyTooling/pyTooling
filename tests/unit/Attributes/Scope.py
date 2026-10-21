@@ -146,7 +146,7 @@ class Allowed(Testcase):
 
 
 class ScopeProperty(Testcase):
-	"""'Scope' is read from an attribute instance; '_scope' on the class."""
+	"""'Scope' is read from an attribute instance; '_SCOPE' on the class."""
 
 	def test_Instance(self) -> None:
 		self.assertEqual(AttributeScope.Method, MethodOnly().Scope)
@@ -157,34 +157,34 @@ class ScopeKeyword(Testcase):
 	"""The scope is a class keyword argument; a class without it inherits its base-class' scope."""
 
 	def test_Keyword(self) -> None:
-		self.assertIs(AttributeScope.Method, MethodOnly._scope)
+		self.assertIs(AttributeScope.Method, MethodOnly._SCOPE)
 
 	def test_Inherited(self) -> None:
 		class Derived(MethodOnly):
 			pass
 
-		self.assertIs(AttributeScope.Method, Derived._scope)
+		self.assertIs(AttributeScope.Method, Derived._SCOPE)
 		self.assertIs(AttributeScope.Method, Derived().Scope)
 
 	def test_Derived_OwnScope(self) -> None:
 		class Derived(MethodOnly, scope=AttributeScope.Method | AttributeScope.Function):
 			pass
 
-		self.assertEqual(AttributeScope.Method | AttributeScope.Function, Derived._scope)
-		self.assertIs(AttributeScope.Method, MethodOnly._scope, "The base-class keeps its scope.")
+		self.assertEqual(AttributeScope.Method | AttributeScope.Function, Derived._SCOPE)
+		self.assertIs(AttributeScope.Method, MethodOnly._SCOPE, "The base-class keeps its scope.")
 
 	def test_ClassVariable(self) -> None:
-		"""Overriding '_scope' in the class body still works."""
+		"""Overriding '_SCOPE' in the class body still works."""
 		class Overridden(Attribute):
-			_scope = AttributeScope.Function
+			_SCOPE = AttributeScope.Function
 
-		self.assertIs(AttributeScope.Function, Overridden._scope)
+		self.assertIs(AttributeScope.Function, Overridden._SCOPE)
 
 	def test_KeywordTakesPrecedence(self) -> None:
 		class Both(Attribute, scope=AttributeScope.Class):
-			_scope = AttributeScope.Function
+			_SCOPE = AttributeScope.Function
 
-		self.assertIs(AttributeScope.Class, Both._scope)
+		self.assertIs(AttributeScope.Class, Both._SCOPE)
 
 	def test_WrongType(self) -> None:
 		with self.assertRaises(TypeError) as context:

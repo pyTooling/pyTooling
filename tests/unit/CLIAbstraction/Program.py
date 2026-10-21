@@ -55,7 +55,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 class Git(Program, GitArgumentsMixin):
 	def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-		cls._executableNames = {
+		cls._EXECUTABLE_NAMES = {
 			"Darwin":  "git",
 			"FreeBSD": "git",
 			"Linux":   "git",
@@ -65,7 +65,7 @@ class Git(Program, GitArgumentsMixin):
 
 
 class Gitt(Program):
-	_executableNames = {
+	_EXECUTABLE_NAMES = {
 		"Darwin":  "gitt",
 		"FreeBSD": "gitt",
 		"Linux":   "gitt",
@@ -78,13 +78,13 @@ class Gitt(Program):
 
 
 class GitUnknownOS(Program):
-	_executableNames = {
+	_EXECUTABLE_NAMES = {
 		"UnknownOS": "git"
 	}
 
 
 class GitWithoutArguments(Program):
-	_executableNames = {
+	_EXECUTABLE_NAMES = {
 		"Darwin":  "git",
 		"FreeBSD": "git",
 		"Linux":   "git",
@@ -94,12 +94,12 @@ class GitWithoutArguments(Program):
 
 @mark.skipif(sys_platform in ("darwin", "linux", "win32"), reason="Don't run these tests on Linux, macOS and Windows.")
 class ExplicitPathsOnFreeBSD(Testcase, Helper):
-	_binaryDirectoryPath = Path("/usr/local/bin")
+	_BINARY_DIRECTORY_PATH = Path("/usr/local/bin")
 
 	def test_BinaryDirectory(self) -> None:
-		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+		tool = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH)
 
-		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._BINARY_DIRECTORY_PATH)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertListEqual([executable], literal_eval(repr(tool)))
@@ -107,16 +107,16 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
+			_ = Git(binaryDirectoryPath=str(self._BINARY_DIRECTORY_PATH))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionError):
-			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
+			_ = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH / "git")
 
 	def test_ExecutablePath(self) -> None:
-		tool = Git(executablePath=self._binaryDirectoryPath / "git")
+		tool = Git(executablePath=self._BINARY_DIRECTORY_PATH / "git")
 
-		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._BINARY_DIRECTORY_PATH)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertListEqual([executable], literal_eval(repr(tool)))
@@ -124,21 +124,21 @@ class ExplicitPathsOnFreeBSD(Testcase, Helper):
 
 	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
+			_ = Git(executablePath=str(self._BINARY_DIRECTORY_PATH / "git"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionError):
-			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
+			_ = Git(executablePath=self._BINARY_DIRECTORY_PATH / "gitt")
 
 
 @mark.skipif(sys_platform in ("freebsd", "win32"), reason="Don't run these tests on FreeBSD and Windows.")
 class ExplicitPathsOnLinux(Testcase, Helper):
-	_binaryDirectoryPath = Path("/usr/bin")
+	_BINARY_DIRECTORY_PATH = Path("/usr/bin")
 
 	def test_BinaryDirectory(self) -> None:
-		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+		tool = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH)
 
-		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._BINARY_DIRECTORY_PATH)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertListEqual([executable], literal_eval(repr(tool)))
@@ -146,16 +146,16 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
+			_ = Git(binaryDirectoryPath=str(self._BINARY_DIRECTORY_PATH))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionError):
-			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
+			_ = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH / "git")
 
 	def test_ExecutablePath(self) -> None:
-		tool = Git(executablePath=self._binaryDirectoryPath / "git")
+		tool = Git(executablePath=self._BINARY_DIRECTORY_PATH / "git")
 
-		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._BINARY_DIRECTORY_PATH)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertListEqual([executable], literal_eval(repr(tool)))
@@ -163,21 +163,21 @@ class ExplicitPathsOnLinux(Testcase, Helper):
 
 	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Git(executablePath=str(self._binaryDirectoryPath / "git"))
+			_ = Git(executablePath=str(self._BINARY_DIRECTORY_PATH / "git"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionError):
-			_ = Git(executablePath=self._binaryDirectoryPath / "gitt")
+			_ = Git(executablePath=self._BINARY_DIRECTORY_PATH / "gitt")
 
 
 @mark.skipif(sys_platform in ("darwin", "freebsd", "linux"), reason="Don't run these tests on FreeBSD, Linux or macOS.")
 class ExplicitPathsOnWindows(Testcase, Helper):
-	_binaryDirectoryPath = Path(r"C:\Program Files\Git\cmd")
+	_BINARY_DIRECTORY_PATH = Path(r"C:\Program Files\Git\cmd")
 
 	def test_BinaryDirectory(self) -> None:
-		tool = Git(binaryDirectoryPath=self._binaryDirectoryPath)
+		tool = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH)
 
-		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._BINARY_DIRECTORY_PATH)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertListEqual([executable], literal_eval(repr(tool)))
@@ -185,16 +185,16 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 
 	def test_BinaryDirectory_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Git(binaryDirectoryPath=str(self._binaryDirectoryPath))
+			_ = Git(binaryDirectoryPath=str(self._BINARY_DIRECTORY_PATH))
 
 	def test_BinaryDirectory_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionError):
-			_ = Git(binaryDirectoryPath=self._binaryDirectoryPath / "git")
+			_ = Git(binaryDirectoryPath=self._BINARY_DIRECTORY_PATH / "git")
 
 	def test_ExecutablePath(self) -> None:
-		tool = Git(executablePath=self._binaryDirectoryPath / "git.exe")
+		tool = Git(executablePath=self._BINARY_DIRECTORY_PATH / "git.exe")
 
-		executable = self.GetExecutablePath("git", self._binaryDirectoryPath)
+		executable = self.GetExecutablePath("git", self._BINARY_DIRECTORY_PATH)
 		self.assertEqual(Path(executable), tool.Path)
 		self.assertListEqual([executable], tool.ToArgumentList())
 		self.assertListEqual([executable], literal_eval(repr(tool)))
@@ -202,11 +202,11 @@ class ExplicitPathsOnWindows(Testcase, Helper):
 
 	def test_ExecutablePath_NotAPath(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Git(executablePath=str(self._binaryDirectoryPath / "git.exe"))
+			_ = Git(executablePath=str(self._BINARY_DIRECTORY_PATH / "git.exe"))
 
 	def test_ExecutablePath_DoesNotExist(self) -> None:
 		with self.assertRaises(CLIAbstractionError):
-			_ = Git(executablePath=self._binaryDirectoryPath / "gitt.exe")
+			_ = Git(executablePath=self._BINARY_DIRECTORY_PATH / "gitt.exe")
 
 
 class CommonOptions(Testcase, Helper):
@@ -317,7 +317,7 @@ class DryRun(Testcase):
 
 	def test_StartingAProcessIsRecorded(self) -> None:
 		class Gittex(Executable):
-			_executableNames = Gitt._executableNames
+			_EXECUTABLE_NAMES = Gitt._EXECUTABLE_NAMES
 
 		gittex = Gittex(executablePath=Path("does/not/exist/gitt"), dryRun=True)
 		gittex.StartProcess()

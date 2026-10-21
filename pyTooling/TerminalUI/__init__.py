@@ -32,7 +32,7 @@
 """
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
-:raises MissingDependencyError: If the 'terminal' extra isn't installed.
+Colors need the optional package colorama (extra ``terminal``); without it, the output is uncolored text.
 
 .. seealso::
 
@@ -43,28 +43,22 @@ A set of helpers to implement a text user interface (TUI) in a terminal.
    :mod:`pyTooling.Warning`
       |rarr| Collecting warnings that the application then writes.
 """
-from __future__              import annotations
+from __future__            import annotations
 
-from datetime                import datetime
-from enum                    import Enum, unique
-from io                      import TextIOWrapper
-from sys                     import stdin, stdout, stderr
-from textwrap                import dedent
-from types                   import ModuleType
-from typing                  import NoReturn, Any, Optional as Nullable, Callable, ClassVar
-from pyTooling.Exceptions    import MissingDependencyError
-from pyTooling.Versioning    import PythonVersion
+from datetime              import datetime
+from enum                  import Enum, unique
+from io                    import TextIOWrapper
+from sys                   import stdin, stdout, stderr
+from textwrap              import dedent
+from types                 import ModuleType
+from typing                import NoReturn, Any, Optional as Nullable, Callable, ClassVar, Protocol
 
-try:
-	from colorama              import Fore as Foreground
-except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
-
-from pyTooling.Decorators  import export, readonly
+from pyTooling.Decorators  import export, readonly, InheritDocString
 from pyTooling.MetaClasses import ExtendedType, mixin
-from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
+from pyTooling.Exceptions  import MissingDependencyError, PlatformNotSupportedError, ExceptionBase
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
+from pyTooling.Versioning  import PythonVersion
 
 
 @export
@@ -76,18 +70,16 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	terminal's width.
 	"""
 
-	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
-	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
-	#: Return code (242), if an optional dependency is missing. The value lives on the exception, which stays
-	#: importable when this module is not - see :meth:`PrintMissingDependencyError`.
-	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyError.EXIT_CODE
-	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
-	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
-	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
+	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] = 240                               #: Return code, if unimplemented methods or code sections were called.
+	UNHANDLED_EXCEPTION_EXIT_CODE:       ClassVar[int] = 241                               #: Return code, if an unhandled exception reached the topmost exception handler.
+	MISSING_DEPENDENCY_EXIT_CODE:        ClassVar[int] = MissingDependencyError.EXIT_CODE  #: Return code (242), if an optional dependency is missing; the value lives on the exception - see :meth:`PrintMissingDependencyError`.
+	FATAL_EXIT_CODE:                     ClassVar[int] = 255                               #: Return code for fatal exits.
+	ISSUE_TRACKER_URL:                   ClassVar[str] = None                              #: URL to the issue tracker for reporting bugs.
+	INDENT:                              ClassVar[str] = "  "                              #: Indentation. Default: ``"  "`` (2 spaces)
 
 	try:
 		from colorama import Fore as Foreground
-		Foreground: ClassVar[dict[str, str]] = {
+		FOREGROUND: ClassVar[dict[str, str]] = {
 			"RED":          Foreground.LIGHTRED_EX,
 			"DARK_RED":		  Foreground.RED,
 			"GREEN":        Foreground.LIGHTGREEN_EX,
@@ -109,7 +101,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			"WARNING":      Foreground.LIGHTYELLOW_EX
 		}                 #: Terminal colors
 	except ImportError:  # pragma: no cover
-		Foreground: ClassVar[dict[str, str]] = {
+		FOREGROUND: ClassVar[dict[str, str]] = {
 			"RED":         "",
 			"DARK_RED":    "",
 			"GREEN":       "",
@@ -447,7 +439,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.FOREGROUND))
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
 	def PrintMissingDependencyError(self, ex: MissingDependencyError) -> NoReturn:
@@ -461,17 +453,16 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		.. attention::
 
-		   :mod:`pyTooling.TerminalUI` raises this exception **itself** when *colorama* is missing, and that happens
-		   while the module is imported - long before an application object exists, so this method cannot report that
-		   case. An application that wants to survive it catches the exception around its own imports and prints the
-		   commands directly:
+		   A dependency missing while a module is imported raises before an application object exists, so this method
+		   cannot report that case. An application that wants to survive it catches the exception around its own imports
+		   and prints the commands directly:
 
 		   .. code-block:: python
 
 		      from pyTooling.Exceptions import MissingDependencyError
 
 		      try:
-		        from pyTooling.TerminalUI import TerminalApplication
+		        from myPackage.Plotting import Plot
 		      except MissingDependencyError as ex:
 		        print(f"{ex}\\n" + "\\n".join(f"  {command}" for command in ex.InstallCommands))
 		        raise SystemExit(MissingDependencyError.EXIT_CODE) from ex
@@ -497,7 +488,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		if (cause := ex.__cause__) is not None:
 			message += f"{{indent}}{{YELLOW}}Caused by:{{NOCOLOR}}            {{RED}}{cause!s}{{NOCOLOR}}\n"
 
-		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.Foreground))
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.FOREGROUND))
 		self.Exit(self.MISSING_DEPENDENCY_EXIT_CODE)
 
 	def PrintNotImplementedError(self, ex: NotImplementedError) -> NoReturn:
@@ -530,7 +521,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.Foreground))
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.FOREGROUND))
 		self.Exit(self.NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE)
 
 	def PrintExceptionBase(self, ex: Exception) -> NoReturn:
@@ -556,7 +547,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{exceptionType}{{NOCOLOR}}
 			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}
 			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
-			""").format(indent=self.INDENT, **self.Foreground))
+			""").format(indent=self.INDENT, **self.FOREGROUND))
 
 		if ex.__cause__ is not None:
 			causeType = getFullyQualifiedName(ex.__cause__)
@@ -564,17 +555,17 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			self.WriteLineToStdErr(dedent(f"""\
 				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{causeType}{{NOCOLOR}}
 				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {{RED}}{ex.__cause__!s}{{NOCOLOR}}\
-				""").format(indent2=self.INDENT * 2, **self.Foreground))
+				""").format(indent2=self.INDENT * 2, **self.FOREGROUND))
 
-		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.FOREGROUND))
 		print_tb(ex.__traceback__, file=self._stderr)
-		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.FOREGROUND))
 
 		if self.ISSUE_TRACKER_URL is not None:
 			self.WriteLineToStdErr(dedent(f"""\
 				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
 				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
-				""").format(indent=self.INDENT, **self.Foreground))
+				""").format(indent=self.INDENT, **self.FOREGROUND))
 
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
@@ -1041,7 +1032,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	_criticalWarningCount: int  #: Number of critical warnings written so far.
 	_warningCount:         int  #: Number of warnings written so far.
 
-	HeadLine:       ClassVar[str]  #: Headline of the application, printed by :meth:`_PrintHeadline`.
+	HEADLINE:       ClassVar[str]  #: Headline of the application, printed by :meth:`_PrintHeadline`.
 
 	def __init__(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
 		"""
@@ -1112,9 +1103,9 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		if width == 0:
 			width = self._width
 
-		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
-		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HeadLine, **TerminalApplication.Foreground))
-		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
+		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.FOREGROUND))
+		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HEADLINE, **TerminalApplication.FOREGROUND))
+		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.FOREGROUND))
 
 	def _PrintVersion(
 		self,
@@ -1143,15 +1134,17 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		          "MyModule"
 		        )
 		"""
-		copyrights = getattr(dunderModule, "__copyright__", "{RED}Copyright not set!".format(RED=Foreground.RED)).split("\n", 1)
+		red = self.FOREGROUND["DARK_RED"]
+
+		copyrights = getattr(dunderModule, "__copyright__", "{RED}Copyright not set!".format(RED=red)).split("\n", 1)
 		self.WriteNormal(f"Copyright:     {copyrights[0]}")
 		for copyright in copyrights[1:]:
 			self.WriteNormal(f"               {copyright}")
 
-		license = getattr(dunderModule, "__license__", "{RED}License not set!".format(RED=Foreground.RED))
+		license = getattr(dunderModule, "__license__", "{RED}License not set!".format(RED=red))
 		self.WriteNormal(f"License:       {license}")
 
-		authors = getattr(dunderModule, "__author__", "{RED}Unknown author!".format(RED=Foreground.RED)).split(", ")
+		authors = getattr(dunderModule, "__author__", "{RED}Unknown author!".format(RED=red)).split(", ")
 		self.WriteNormal(f"Authors:       {authors[0]}")
 		for author in authors[1:]:
 			self.WriteNormal(f"               {author}")
@@ -1160,7 +1153,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 			self.WriteNormal(f"Email:         {email}")
 
 		if (version := getattr(dunderModule, "__version__", None)) is None:
-			self.WriteNormal("Version:       {RED}Version not set!".format(RED=Foreground.RED))
+			self.WriteNormal("Version:       {RED}Version not set!".format(RED=red))
 		else:
 			currentVersion = PythonVersion.Parse(version)
 			if packageName is None:
@@ -1417,7 +1410,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._lines.append(line)
 		for method in self._LOG_LEVEL_ROUTING__[line.Severity]:
 			indentedMessage = self.INDENT * line.Indent + line.Message
-			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=indentedMessage, **self.Foreground), end="\n" if line.AppendLinebreak else "")
+			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=indentedMessage, **self.FOREGROUND), end="\n" if line.AppendLinebreak else "")
 
 		return True
 
@@ -1692,3 +1685,206 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:returns:               True, if message was actually written.
 		"""
 		return self.WriteLine(Line(message, Severity.DryRun, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+
+@export
+class TerminalApplicationProtocol(Protocol):
+	"""
+	The members a mixin-class can expect from a :class:`TerminalApplication` it is mixed into.
+
+	A mixin-class implementing command handlers writes messages, reads the verbosity and exits through its host class. It
+	names this protocol as its ``expects`` class keyword argument, so a class mixing it in without being a
+	:class:`TerminalApplication` can't be instantiated. Annotating ``self`` with the protocol lets a type-checker check
+	the calls inside the mixin-class:
+
+	.. code-block:: Python
+
+	   class PipelineHandlers(metaclass=ExtendedType, mixin=True, expects=TerminalApplicationProtocol):
+	     def HandlePipeline(self: TerminalApplicationProtocol, args: Namespace) -> None:
+	       self._PrintHeadline()
+	       self.WriteNormal("...")
+
+	.. seealso::
+
+	   :class:`~pyTooling.MetaClasses.ExtendedType`
+	      |rarr| The ``expects`` class keyword argument of mixin-classes.
+	"""
+
+	@InheritDocString(TerminalApplication)
+	def _PrintHeadline(self, width: int = 80) -> None:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Width(self) -> int:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Verbose(self) -> bool:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Debug(self) -> bool:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Quiet(self) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def Exit(self, returnCode: int = 0) -> NoReturn:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def ExitOnPreviousErrors(self) -> None:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def ExitOnPreviousCriticalWarnings(
+		self,
+		includeErrors: bool = True
+	) -> None:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def ExitOnPreviousWarnings(
+		self,
+		includeCriticalWarnings: bool = True,
+		includeErrors:           bool = True
+	) -> None:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteFatal(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True,
+		exitCode: int = 0,
+		immediateExit: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteError(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteErrorNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteCritical(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteCriticalNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteWarning(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteWarningNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteInfo(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteQuiet(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteNormal(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteVerbose(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteDebug(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteDryRun(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...

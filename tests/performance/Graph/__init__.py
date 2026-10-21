@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
 from time import perf_counter_ns
-from typing import Callable, Iterable
+from typing import Callable, ClassVar, Iterable
 
 from pyTooling.Graph   import Graph as pt_Graph
 from pyTooling.Testing import Testcase
@@ -64,8 +64,8 @@ class EdgeFile:
 
 
 class PerformanceTest(Testcase):
-	counts: Iterable[int] = (10, 100, 1000, 10000)
-	edgeFiles:  Iterable[EdgeFile] = (
+	COUNTS:     ClassVar[Iterable[int]] =      (10, 100, 1000, 10000)
+	EDGE_FILES: ClassVar[Iterable[EdgeFile]] = (
 		EdgeFile(   100,    150, BiggestNetwork(  92,    72), Path("graph_n100_m150_dir_w0_100.edgelist")),
 		EdgeFile(  1000,   1500, BiggestNetwork( 489,   626), Path("graph_n1000_m1500_dir_w0_100.edgelist")),
 		EdgeFile( 10000,  15000, BiggestNetwork(3056,  5741), Path("graph_n10000_m15000_dir_w0_100.edgelist")),
