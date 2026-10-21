@@ -421,7 +421,8 @@ a tuple of names can't.
 
 The protocol stays a plain :class:`typing.Protocol`: :class:`~pyTooling.MetaClasses.ExtendedType` only reads its
 members. A class can't be both, because the meta-class of :class:`typing.Protocol` conflicts with
-:class:`~pyTooling.MetaClasses.ExtendedType`. A class that isn't a protocol is rejected with a :exc:`TypeError`.
+:class:`~pyTooling.MetaClasses.ExtendedType`. A class that isn't a protocol is rejected with a :exc:`TypeError`,
+:class:`typing.Protocol` itself - it names no members - with a :exc:`ValueError`.
 
 :class:`~pyTooling.TerminalUI.TerminalApplicationProtocol` names what a mixin-class can expect from a
 :class:`~pyTooling.TerminalUI.TerminalApplication`.

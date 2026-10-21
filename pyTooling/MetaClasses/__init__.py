@@ -52,7 +52,7 @@ from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
 from types                import BuiltinFunctionType, CodeType, FunctionType, MemberDescriptorType, MethodType
-from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Self
+from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Protocol, Self
 from typing               import TypeVar, Generic, _GenericAlias, _get_protocol_attrs, ClassVar, Optional as Nullable
 
 from pyTooling.Common     import getFullyQualifiedName, getTypeName
@@ -2091,14 +2091,20 @@ class ExtendedType(type):
 		:param expects:     Names of members the class being constructed expects, or a :class:`typing.Protocol` class
 		                    whose members are these names.
 		:returns:           Dictionary mapping an expected member's name to the name of the class expecting it.
+		:raises ValueError: If parameter 'expects' is :class:`typing.Protocol` itself, which names no members. |br|
+		                    Derive a protocol class naming the expected members.
 		:raises TypeError:  If parameter 'expects' is a class, but not a :class:`typing.Protocol`.
 		:raises TypeError:  If parameter 'expects' is not an iterable of strings.
 		:raises TypeError:  If an element of parameter 'expects' is not a string.
 		"""
 		if isinstance(expects, type):
+			if expects is Protocol:
+				ex = ValueError("Parameter 'expects' is 'typing.Protocol' itself, which names no members.")
+				ex.add_note("Derive a protocol class naming the expected members.")
+				raise ex
 			# WORKAROUND: Python <3.13
-			# if not is_protocol(expects):
-			if not getattr(expects, "_is_protocol", False):
+			# elif not is_protocol(expects):
+			elif not getattr(expects, "_is_protocol", False):
 				ex = TypeError("Parameter 'expects' is a class, but not a 'typing.Protocol'.")
 				ex.add_note(f"Got class '{getFullyQualifiedName(expects)}'.")
 				raise ex

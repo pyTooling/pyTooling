@@ -255,6 +255,14 @@ class ExpectsParameter(Testcase):
 		with self.assertRaises(UnfulfilledExpectationError):
 			Combined()
 
+	def test_Expects_PlainProtocol(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			class Expecting(metaclass=ExtendedType, mixin=True, expects=Protocol):
+				pass
+
+		self.assertEqual("Parameter 'expects' is 'typing.Protocol' itself, which names no members.", str(context.exception))
+		self.assertListEqual(["Derive a protocol class naming the expected members."], context.exception.__notes__)
+
 	def test_Expects_Class(self) -> None:
 		class Writer:
 			def Write(self, message: str) -> bool:
