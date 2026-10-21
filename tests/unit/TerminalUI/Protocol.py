@@ -29,13 +29,14 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :data:`pyTooling.TerminalUI.TERMINAL_APPLICATION_PROTOCOL`: the members a mixin-class expects from a
+Unit tests for :class:`pyTooling.TerminalUI.TerminalApplicationProtocol`: the members a mixin-class expects from a
 terminal application.
 """
 from argparse              import Namespace
+from inspect               import signature
 
 from pyTooling.MetaClasses import ExtendedType, UnfulfilledExpectationError
-from pyTooling.TerminalUI  import TerminalApplication, TERMINAL_APPLICATION_PROTOCOL
+from pyTooling.TerminalUI  import TerminalApplication, TerminalApplicationProtocol
 from pyTooling.Testing     import Testcase
 
 
@@ -45,19 +46,47 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class Handlers(metaclass=ExtendedType, mixin=True, expects=TERMINAL_APPLICATION_PROTOCOL):
+class Handlers(metaclass=ExtendedType, mixin=True, expects=TerminalApplicationProtocol):
 	"""A mixin-class with command handlers, like the ``*Handlers`` classes of a command line program."""
 
-	def HandleExample(self, args: Namespace) -> None:
+	def HandleExample(self: TerminalApplicationProtocol, args: Namespace) -> None:
 		self.WriteNormal("Example.")
 
 
-class Protocol(Testcase):
+class ApplicationProtocol(Testcase):
 	def test_Members(self) -> None:
 		"""Every member of the protocol is a member of :class:`TerminalApplication`."""
-		for memberName in TERMINAL_APPLICATION_PROTOCOL:
+		for memberName in Handlers.__expectedMembers__:
 			with self.subTest(memberName=memberName):
 				self.assertHasAttr(TerminalApplication, memberName)
+
+	def test_Methods(self) -> None:
+		"""Every method of the protocol has the signature of the method in :class:`TerminalApplication`."""
+		for memberName in Handlers.__expectedMembers__:
+			member = getattr(TerminalApplicationProtocol, memberName)
+			if isinstance(member, property):
+				continue
+
+			with self.subTest(memberName=memberName):
+				self.assertEqual(signature(getattr(TerminalApplication, memberName)), signature(member))
+
+	def test_Properties(self) -> None:
+		"""Every property of the protocol is a property of :class:`TerminalApplication` with the same return type."""
+		for memberName in Handlers.__expectedMembers__:
+			member = getattr(TerminalApplicationProtocol, memberName)
+			if not isinstance(member, property):
+				continue
+
+			with self.subTest(memberName=memberName):
+				original = getattr(TerminalApplication, memberName)
+				self.assertIsInstance(original, property)
+				self.assertEqual(signature(original.fget), signature(member.fget))
+
+	def test_DocStrings(self) -> None:
+		"""Every member of the protocol carries the doc-string of the member in :class:`TerminalApplication`."""
+		for memberName in Handlers.__expectedMembers__:
+			with self.subTest(memberName=memberName):
+				self.assertIsNotNone(getattr(TerminalApplicationProtocol, memberName).__doc__)
 
 	def test_TerminalApplication(self) -> None:
 		class Application(TerminalApplication, Handlers):

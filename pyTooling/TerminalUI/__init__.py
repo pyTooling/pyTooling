@@ -51,7 +51,7 @@ from io                      import TextIOWrapper
 from sys                     import stdin, stdout, stderr
 from textwrap                import dedent
 from types                   import ModuleType
-from typing                  import NoReturn, Any, Optional as Nullable, Callable, ClassVar
+from typing                  import NoReturn, Any, Optional as Nullable, Callable, ClassVar, Protocol
 from pyTooling.Exceptions    import MissingDependencyError
 from pyTooling.Versioning    import PythonVersion
 
@@ -60,13 +60,11 @@ try:
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
 
-from pyTooling.Decorators  import export, readonly
+from pyTooling.Decorators  import export, readonly, InheritDocString
 from pyTooling.MetaClasses import ExtendedType, mixin
 from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
-
-__all__ = ["TERMINAL_APPLICATION_PROTOCOL"]
 
 
 @export
@@ -1696,46 +1694,204 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		return self.WriteLine(Line(message, Severity.DryRun, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
 
 
-TERMINAL_APPLICATION_PROTOCOL: tuple[str, ...] = (
-	"_PrintHeadline",
-	"Width",
-	"Verbose",
-	"Debug",
-	"Quiet",
-	"Exit",
-	"ExitOnPreviousErrors",
-	"ExitOnPreviousCriticalWarnings",
-	"ExitOnPreviousWarnings",
-	"WriteFatal",
-	"WriteError",
-	"WriteErrorNote",
-	"WriteCritical",
-	"WriteCriticalNote",
-	"WriteWarning",
-	"WriteWarningNote",
-	"WriteInfo",
-	"WriteQuiet",
-	"WriteNormal",
-	"WriteVerbose",
-	"WriteDebug",
-	"WriteDryRun"
-)
-"""
-A tuple of the members a mixin-class can expect from a :class:`TerminalApplication` it is mixed into.
+@export
+class TerminalApplicationProtocol(Protocol):
+	"""
+	The members a mixin-class can expect from a :class:`TerminalApplication` it is mixed into.
 
-A mixin-class implementing command handlers writes messages, reads the verbosity and exits through its host class. It
-names this tuple as its ``expects`` class keyword argument, so a class mixing it in without being a
-:class:`TerminalApplication` can't be instantiated:
+	A mixin-class implementing command handlers writes messages, reads the verbosity and exits through its host class. It
+	names this protocol as its ``expects`` class keyword argument, so a class mixing it in without being a
+	:class:`TerminalApplication` can't be instantiated. Annotating ``self`` with the protocol lets a type-checker check
+	the calls inside the mixin-class:
 
-.. code-block:: Python
+	.. code-block:: Python
 
-   class PipelineHandlers(metaclass=ExtendedType, mixin=True, expects=TERMINAL_APPLICATION_PROTOCOL):
-     def HandlePipeline(self, args: Namespace) -> None:
-       self._PrintHeadline()
-       self.WriteNormal("...")
+	   class PipelineHandlers(metaclass=ExtendedType, mixin=True, expects=TerminalApplicationProtocol):
+	     def HandlePipeline(self: TerminalApplicationProtocol, args: Namespace) -> None:
+	       self._PrintHeadline()
+	       self.WriteNormal("...")
 
-.. seealso::
+	.. seealso::
 
-   :class:`~pyTooling.MetaClasses.ExtendedType`
-      |rarr| The ``expects`` class keyword argument of mixin-classes.
-"""
+	   :class:`~pyTooling.MetaClasses.ExtendedType`
+	      |rarr| The ``expects`` class keyword argument of mixin-classes.
+	"""
+
+	@InheritDocString(TerminalApplication)
+	def _PrintHeadline(self, width: int = 80) -> None:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Width(self) -> int:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Verbose(self) -> bool:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Debug(self) -> bool:
+		...
+
+	@readonly
+	@InheritDocString(TerminalApplication)
+	def Quiet(self) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def Exit(self, returnCode: int = 0) -> NoReturn:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def ExitOnPreviousErrors(self) -> None:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def ExitOnPreviousCriticalWarnings(
+		self,
+		includeErrors: bool = True
+	) -> None:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def ExitOnPreviousWarnings(
+		self,
+		includeCriticalWarnings: bool = True,
+		includeErrors:           bool = True
+	) -> None:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteFatal(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True,
+		exitCode: int = 0,
+		immediateExit: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteError(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteErrorNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteCritical(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteCriticalNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteWarning(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteWarningNote(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteInfo(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteQuiet(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteNormal(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteVerbose(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteDebug(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...
+
+	@InheritDocString(TerminalApplication)
+	def WriteDryRun(
+		self,
+		message: str,
+		*,
+		indent: int = 0,
+		appendLinebreak: bool = True
+	) -> bool:
+		...

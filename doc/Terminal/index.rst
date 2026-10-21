@@ -559,15 +559,16 @@ The :ref:`Terminal Application tutorial <TUTORIAL/TerminalApplication>` builds s
 first message to the command handlers, the exception reporting and the unit tests.
 
 Larger programs move their command handlers into mixin-classes, one per group of commands. Such a mixin-class names
-:data:`~pyTooling.TerminalUI.TERMINAL_APPLICATION_PROTOCOL` as what it expects from its host class, so mixing it into
-anything but a :class:`~pyTooling.TerminalUI.TerminalApplication` fails on instantiation:
+the protocol :class:`~pyTooling.TerminalUI.TerminalApplicationProtocol` as what it expects from its host class, so
+mixing it into anything but a :class:`~pyTooling.TerminalUI.TerminalApplication` fails on instantiation. Annotating
+``self`` with the protocol lets a type-checker check the calls (see :ref:`META/ExpectedMembers/Protocol`):
 
 .. code-block:: Python
 
    @export
-   class PipelineHandlers(metaclass=ExtendedType, mixin=True, expects=TERMINAL_APPLICATION_PROTOCOL):
+   class PipelineHandlers(metaclass=ExtendedType, mixin=True, expects=TerminalApplicationProtocol):
      @CommandHandler("pipeline", help="Read a pipeline.")
-     def HandlePipeline(self, args: Namespace) -> None:
+     def HandlePipeline(self: TerminalApplicationProtocol, args: Namespace) -> None:
        self._PrintHeadline()
        self.WriteNormal("...")
 
