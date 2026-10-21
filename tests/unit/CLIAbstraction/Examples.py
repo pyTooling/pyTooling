@@ -45,8 +45,8 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class GitArgumentsMixin(metaclass=ExtendedType, mixin=True):
-	# _executableNames: ClassVar[Dict[str, str]] = {
-	_executableNames = {
+	# _EXECUTABLE_NAMES: ClassVar[Dict[str, str]] = {
+	_EXECUTABLE_NAMES = {
 		"Darwin":  "git",
 		"FreeBSD": "git",
 		"Linux":   "git",

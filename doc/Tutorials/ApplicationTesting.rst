@@ -41,12 +41,14 @@ What only a subprocess can tell you
 
       .. code-block:: python
 
+         from typing            import ClassVar
+
          from pyTooling.Testing import ApplicationTestcase
 
 
          class Version(ApplicationTestcase):
-           _consoleScript  = "myprogram"
-           _runnableModule = "myPackage"
+           _CONSOLE_SCRIPT:  ClassVar[str] = "myprogram"
+           _RUNNABLE_MODULE: ClassVar[str] = "myPackage"
 
            def test_Version(self) -> None:
              result = self.RunEntrypoint("--version")

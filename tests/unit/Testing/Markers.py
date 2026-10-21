@@ -275,8 +275,8 @@ python_functions = test_*
 class PyTestPlugin(ApplicationTestcase):
 	"""The plugin collects what is marked, titles it in the report, and leaves name-based tests alone."""
 
-	_consoleScript  = "pytest"
-	_runnableModule = "pytest"
+	_CONSOLE_SCRIPT  = "pytest"
+	_RUNNABLE_MODULE = "pytest"
 
 	def _RunPyTest(self, directory: Path, *arguments: str) -> tuple[object, Path]:
 		"""
@@ -444,8 +444,8 @@ class Suite(Testcase):
 class MarkedTestCaseClass(ApplicationTestcase):
 	"""A marked :class:`unittest.TestCase` class: its testcases keep their names and run as :mod:`unittest` runs them."""
 
-	_consoleScript  = "pytest"
-	_runnableModule = "pytest"
+	_CONSOLE_SCRIPT  = "pytest"
+	_RUNNABLE_MODULE = "pytest"
 
 	def _RunPyTest(self, directory: Path, *arguments: str) -> tuple[object, Path]:
 		"""
@@ -515,8 +515,8 @@ class MarkedTestCaseClass(ApplicationTestcase):
 class ReportFormat(ApplicationTestcase):
 	"""pyTooling's own report format: nested test suites, four names, and a schema the file points at."""
 
-	_consoleScript  = "pytest"
-	_runnableModule = "pytest"
+	_CONSOLE_SCRIPT  = "pytest"
+	_RUNNABLE_MODULE = "pytest"
 
 	def _RunPyTest(self, directory: Path) -> tuple[object, Path]:
 		"""
@@ -627,8 +627,8 @@ class ReportFormat(ApplicationTestcase):
 class Hierarchy(ApplicationTestcase):
 	"""The names of every test suite level, keyed by the dotted path matching a testcase's 'classname'."""
 
-	_consoleScript  = "pytest"
-	_runnableModule = "pytest"
+	_CONSOLE_SCRIPT  = "pytest"
+	_RUNNABLE_MODULE = "pytest"
 
 	PACKAGE_DOCSTRING = '''"""
 The version handling test suite.

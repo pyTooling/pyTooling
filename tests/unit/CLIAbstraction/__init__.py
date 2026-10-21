@@ -38,11 +38,11 @@ from typing   import Optional as Nullable
 
 
 class Helper:
-	_system = system()
+	_SYSTEM = system()
 
 	@classmethod
 	def GetExecutablePath(cls, programName: str, binaryDirectory: Nullable[Path] = None) -> str:
-		extensions = ".exe" if cls._system == "Windows" else ""
+		extensions = ".exe" if cls._SYSTEM == "Windows" else ""
 		programName = f"{programName}{extensions}"
 		if binaryDirectory is not None:
 			return str(binaryDirectory / programName)

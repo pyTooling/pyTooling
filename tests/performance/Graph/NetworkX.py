@@ -57,7 +57,7 @@ class Graph(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 	def test_AddEdge_Linear(self) -> None:
 		def wrapper(count: int):
@@ -73,7 +73,7 @@ class Graph(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 
 class RandomGraph(PerformanceTest):
@@ -98,7 +98,7 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)
 
 	def test_DFS(self) -> None:
 		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
@@ -109,7 +109,7 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)
 
 	def test_ShortestPathByHops(self) -> None:
 		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
@@ -124,7 +124,7 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)
 
 	def test_ShortestPathByWeight(self) -> None:
 		def wrapper(graph: nx_DiGraph, componentStartVertex: int, componentSize: int):
@@ -139,4 +139,4 @@ class RandomGraph(PerformanceTest):
 
 			return func
 
-		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.edgeFiles)
+		self.runFileBasedTests(self.ConstructGraphFromEdgeListFile, wrapper, self.EDGE_FILES)

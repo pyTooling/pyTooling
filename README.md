@@ -267,12 +267,12 @@ This is a minimal terminal application example which inherits from `TerminalAppl
 
 ```python
 from sys    import argv
-from typing import NoReturn
+from typing import ClassVar, NoReturn
 
 from pyTooling.TerminalUI import TerminalApplication
 
 class Application(TerminalApplication):
-  HeadLine = "My Application"
+  HEADLINE: ClassVar[str] = "My Application"
 
   def Run(self) -> None:
     self._PrintHeadline()

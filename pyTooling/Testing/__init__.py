@@ -290,8 +290,8 @@ class ApplicationTestcase(Testcase):
 	.. code-block:: python
 
 	   class Commands(ApplicationTestcase):
-	     _consoleScript =  "myprogram"
-	     _runnableModule = "myPackage.CLI"
+	     _CONSOLE_SCRIPT =  "myprogram"
+	     _RUNNABLE_MODULE = "myPackage.CLI"
 
 	     def test_Version(self) -> None:
 	       result = self.RunEntrypoint("--version")
@@ -300,9 +300,9 @@ class ApplicationTestcase(Testcase):
 	       self.assertIn("myprogram", result.stdout)
 	"""
 
-	_consoleScript:  ClassVar[Nullable[str]] = None   #: Name of the installed console script, resolved on ``PATH``.
-	_runnableModule: ClassVar[Nullable[str]] = None   #: Optional, dotted name of the module to run with ``python -m``.
-	_executable:     ClassVar[Nullable[str]] = None   #: The resolved console script, set by :meth:`setUpClass`.
+	_CONSOLE_SCRIPT:  ClassVar[Nullable[str]] = None   #: Name of the installed console script, resolved on ``PATH``.
+	_RUNNABLE_MODULE: ClassVar[Nullable[str]] = None   #: Optional, dotted name of the module to run with ``python -m``.
+	_executable:      ClassVar[Nullable[str]] = None   #: The resolved console script, set by :meth:`setUpClass`.
 
 	@classmethod
 	def setUpClass(cls) -> None:
@@ -315,12 +315,12 @@ class ApplicationTestcase(Testcase):
 		"""
 		super().setUpClass()
 
-		if cls._consoleScript is None:
-			raise ApplicationTestingError(f"Testcase '{cls.__name__}' has no console script. Set '_consoleScript'.")
+		if cls._CONSOLE_SCRIPT is None:
+			raise ApplicationTestingError(f"Testcase '{cls.__name__}' has no console script. Set '_CONSOLE_SCRIPT'.")
 
-		if (resolved := which(cls._consoleScript)) is None:
-			ex = ApplicationTestingError(f"Console script '{cls._consoleScript}' was not found in PATH.")
-			raise ex from FileNotFoundError(str(cls._consoleScript))
+		if (resolved := which(cls._CONSOLE_SCRIPT)) is None:
+			ex = ApplicationTestingError(f"Console script '{cls._CONSOLE_SCRIPT}' was not found in PATH.")
+			raise ex from FileNotFoundError(str(cls._CONSOLE_SCRIPT))
 
 		cls._executable = resolved
 
@@ -400,13 +400,13 @@ class ApplicationTestcase(Testcase):
 		:returns:                        The completed process, with ``stdout`` and ``stderr`` captured as text.
 		:raises ApplicationTestingError: If the test class named no runnable module.
 		"""
-		if self._runnableModule is None:
+		if self._RUNNABLE_MODULE is None:
 			ex = ApplicationTestingError(f"Testcase '{getTypeName(self)}' has no runnable module.")
-			ex.add_note("Set '_runnableModule' to run the program with 'python -m'.")
+			ex.add_note("Set '_RUNNABLE_MODULE' to run the program with 'python -m'.")
 			raise ex
 
 		return subprocess_run(
-			[PythonExecutable, "-m", self._runnableModule, *arguments],
+			[PythonExecutable, "-m", self._RUNNABLE_MODULE, *arguments],
 			capture_output=True,
 			text=True,
 			timeout=timeout,

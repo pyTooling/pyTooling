@@ -116,10 +116,10 @@ class ValuedFlagList(NamedAndValuedArgument[str], pattern="{0}={1}"):
 		:returns:           The rendered command line elements.
 		:raises ValueError: If the argument has no name.
 		"""
-		if self._name is None:
-			raise ValueError("Internal value '_name' is None.")
+		if self._NAME is None:
+			raise ValueError("Internal value '_NAME' is None.")
 
-		return [self._pattern.format(self._name, value) for value in self._value]
+		return [self._PATTERN.format(self._NAME, value) for value in self._value]
 
 
 @export

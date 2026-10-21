@@ -24,10 +24,12 @@ Terminal
 
       .. code-block:: Python
 
+         from typing               import ClassVar
+
          from pyTooling.TerminalUI import TerminalApplication
 
          class Application(TerminalApplication):
-           HeadLine = "My Application"
+           HEADLINE: ClassVar[str] = "My Application"
 
            def Run(self) -> None:
              self._PrintHeadline()
@@ -97,12 +99,12 @@ Colored Output
 
 If ``STDOUT`` is a terminal, colorama is initialized in the constructor, otherwise colors are switched off - so a
 redirected output doesn't contain escape sequences. The color palette is offered as a dictionary in the class variable
-:attr:`~pyTooling.TerminalUI.TerminalBaseApplication.Foreground`, which is used as the keyword arguments of a
+:attr:`~pyTooling.TerminalUI.TerminalBaseApplication.FOREGROUND`, which is used as the keyword arguments of a
 :meth:`str.format` call:
 
 .. code-block:: Python
 
-   self.WriteLineToStdErr("{RED}[ERROR] {message}{NOCOLOR}".format(message="It failed.", **self.Foreground))
+   self.WriteLineToStdErr("{RED}[ERROR] {message}{NOCOLOR}".format(message="It failed.", **self.FOREGROUND))
 
 Besides plain colors (``RED``, ``DARK_RED``, ``GREEN``, ``YELLOW``, ``MAGENTA``, ``BLUE``, ``CYAN``, ``GRAY``,
 ``WHITE``, ``NOCOLOR``, ...), the palette contains the semantic entries ``HEADLINE``, ``WARNING`` and ``ERROR``. If
@@ -473,7 +475,7 @@ Headline, Help and Version Information
 Three helper methods print the parts of a program's user interface that look the same in every application:
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHeadline` prints the class variable
-:attr:`~pyTooling.TerminalUI.TerminalApplication.HeadLine`, centered between two horizontal lines of the given width
+:attr:`~pyTooling.TerminalUI.TerminalApplication.HEADLINE`, centered between two horizontal lines of the given width
 (``0`` meaning the terminal's width):
 
 .. code-block::
@@ -543,7 +545,7 @@ while the messages, the verbosity and the exception reporting come from this pac
 
    @export
    class Application(TerminalApplication, ArgParseHelperMixin):
-     HeadLine:          ClassVar[str] = "My Application"
+     HEADLINE:          ClassVar[str] = "My Application"
      ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
 
      def __init__(self) -> None:

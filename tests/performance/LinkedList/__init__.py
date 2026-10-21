@@ -34,7 +34,7 @@ lists of growing size.
 """
 import timeit
 from statistics import median
-from typing import Callable, Iterable
+from typing import Callable, ClassVar, Iterable
 
 from pyTooling.Testing import Testcase
 
@@ -46,9 +46,9 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class PerformanceTest(Testcase):
-	counts: Iterable[int] = (10, 100, 1000, 10000)
+	COUNTS: ClassVar[Iterable[int]] = (10, 100, 1000, 10000)
 
-	randomArray = [
+	RANDOM_ARRAY: ClassVar[list[int]] = [
 		22, 43, 49, 37, 2, 30, 19, 3, 12, 45, 46, 17, 49, 49, 1, 26, 10, 1, 42, 14, 44, 9, 49, 26, 7, 21, 8, 1, 9, 24, 5,
 		26, 0, 49, 18, 11, 22, 27, 38, 6, 3, 31, 17, 10, 8, 30, 9, 50, 44, 30, 42, 21, 13, 37, 10, 11, 28, 43, 5, 31, 23,
 		24, 43, 44, 13, 37, 38, 0, 40, 48, 48, 29, 11, 45, 4, 18, 14, 37, 42, 31, 32, 23, 45, 21, 49, 21, 38, 32, 2, 12, 0,

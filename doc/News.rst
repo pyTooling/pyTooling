@@ -237,7 +237,7 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Testing`
 
-     * :class:`~pyTooling.Testing.ApplicationTestcase` no longer requires ``_runnableModule``: a program without a
+     * :class:`~pyTooling.Testing.ApplicationTestcase` no longer requires ``_RUNNABLE_MODULE``: a program without a
        ``__main__`` module is tested through its entry point, and only
        :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` asks for the module.
      * :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` and
@@ -287,7 +287,7 @@ Version 10.x (2026)
 
      * An attribute class states its scope as class keyword argument:
        :pycode:`class Hook(Attribute, scope=AttributeScope.Method)` (:ghissue:`383`). A derived class inherits it;
-       overriding ``_scope`` in the class body still works.
+       overriding ``_SCOPE`` in the class body still works.
 
    * :mod:`pyTooling.Attributes.ArgParse`
 
@@ -646,6 +646,13 @@ Version 10.x (2026)
      :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. There are no
      aliases of the old names, so an ``import`` or an ``except`` clause naming one has to be updated.
 
+   * ⚠️ **Class variables with constant meaning are spelled in upper case**, as ``INDENT`` and the exit codes already
+     are: ``TerminalApplication.HeadLine`` |rarr| ``HEADLINE``, ``TerminalBaseApplication.Foreground`` |rarr|
+     ``FOREGROUND``, ``Program._executableNames`` |rarr| ``_EXECUTABLE_NAMES``, and
+     ``ApplicationTestcase._consoleScript`` and ``_runnableModule`` |rarr| ``_CONSOLE_SCRIPT`` and
+     ``_RUNNABLE_MODULE``. There are no aliases: a subclass still setting an old name is no longer read, so rename it
+     in the class body.
+
    * ⚠️ ``TerminalApplication._PrintHelp`` moved to :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which
      owns the parsers it prints. An application calling it derives from both classes.
 
@@ -774,6 +781,11 @@ Version 10.x (2026)
 
    .. rubric:: Changes
 
+   * ⚠️ Class variables with constant meaning, set in the class body or once per class from a class keyword argument,
+     are spelled in upper case. Besides the public ones listed under *Breaking Changes*: the patterns and names of
+     :mod:`pyTooling.CLIAbstraction`'s argument classes (``_PATTERN``, ``_NAME``, ``_VALUE_PATTERN``,
+     ``_FALSE_PATTERN``, ``_PATTERN_WITH_VALUE``), ``Attribute._SCOPE``, ``GraphMLDocument._XML_NS`` and ``_XSI``, and
+     ``ProcessInformation._PROCESS_STATUS_FILE`` and ``_PAGE_SIZE``.
    * ⚠️ :exc:`~pyTooling.Exceptions.ExceptionBase` hands its message to :exc:`Exception`, so ``args`` is
      ``(message, )`` and :func:`repr` shows it, as for any Python exception. ``args`` was empty. The ``message`` field
      and the :meth:`~object.__str__` override returning it are removed: the read-only property

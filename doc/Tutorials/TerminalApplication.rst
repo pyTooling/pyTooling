@@ -102,10 +102,11 @@ Step 3 - A Headline and a Version Command
    .. grid-item::
       :columns: 6
 
-      :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHeadline` prints the class variable ``HeadLine`` centered
-      between two horizontal lines. :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` prints copyright,
-      license, authors and version - read from the dunder variables of the module handed to it, which is why an
-      application overrides it with the one-liner naming its own package.
+      :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHeadline` prints the class variable
+      :attr:`~pyTooling.TerminalUI.TerminalApplication.HEADLINE` centered between two horizontal lines.
+      :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` prints copyright, license, authors and version -
+      read from the dunder variables of the module handed to it, which is why an application overrides it with the
+      one-liner naming its own package.
 
       Passing the package name (second parameter) queries PyPI for the latest release, so the version line tells the
       user whether an update is available. The query has a one second timeout and never raises - an unreachable index

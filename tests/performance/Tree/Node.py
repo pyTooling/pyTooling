@@ -52,7 +52,7 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runTests(wrapper, self.COUNTS)
 
 	def test_SetParent(self) -> None:
 		def wrapper(count: int):
@@ -64,7 +64,7 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runTests(wrapper, self.COUNTS)
 
 	def test_AddLongAncestorChain(self) -> None:
 		def wrapper(count: int):
@@ -75,7 +75,7 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runTests(wrapper, self.COUNTS)
 
 	def test_AddLongChildBranch(self) -> None:
 		def wrapper(count: int):
@@ -88,7 +88,7 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runTests(wrapper, self.COUNTS)
 
 	def test_Path(self) -> None:
 		def wrapper(count: int):
@@ -102,7 +102,7 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runTests(wrapper, self.COUNTS)
 
 	def test_GetPath(self) -> None:
 		def wrapper(count: int):
@@ -116,7 +116,7 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts)
+		self.runTests(wrapper, self.COUNTS)
 
 	def test_AddFlatTree(self) -> None:
 		def run(count: int):
@@ -134,4 +134,4 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(run, self.counts[:-1])
+		self.runTests(run, self.COUNTS[:-1])

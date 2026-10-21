@@ -186,7 +186,7 @@ class Program(metaclass=ExtendedType, slots=True):
 	"""
 
 	_platform:         str                                                   #: Current platform the executable runs on (Linux, Windows, ...)
-	_executableNames:  ClassVar[dict[str, str]]                              #: Dictionary of platform specific executable names.
+	_EXECUTABLE_NAMES: ClassVar[dict[str, str]]                              #: Dictionary of platform specific executable names.
 	_executablePath:   Path                                                  #: The path to the executable (binary, script, ...).
 	_dryRun:           bool                                                  #: True, if program shall run in *dry-run mode*.
 	_dryRunMessages:   list[str]                                             #: Actions skipped in *dry-run mode*.
@@ -251,7 +251,7 @@ class Program(metaclass=ExtendedType, slots=True):
 						raise CLIAbstractionError(f"Binary directory '{binaryDirectoryPath}' not found.") from FileNotFoundError(binaryDirectoryPath)
 
 				try:
-					executablePath = binaryDirectoryPath / self.__class__._executableNames[self._platform]
+					executablePath = binaryDirectoryPath / self.__class__._EXECUTABLE_NAMES[self._platform]
 				except KeyError:
 					raise CLIAbstractionError(f"Program is not supported on platform '{self._platform}'.") from PlatformNotSupportedError(self._platform)
 
@@ -266,7 +266,7 @@ class Program(metaclass=ExtendedType, slots=True):
 				raise ex
 		else:
 			try:
-				executablePath = Path(self._executableNames[self._platform])
+				executablePath = Path(self._EXECUTABLE_NAMES[self._platform])
 			except KeyError:
 				raise CLIAbstractionError(f"Program is not supported on platform '{self._platform}'.") from PlatformNotSupportedError(self._platform)
 

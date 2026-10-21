@@ -112,28 +112,28 @@ class Instantiation(Testcase):
 class RecordedTimes(Testcase):
 	"""Timespans measured elsewhere - by a CI service, or read from a log - are constructed with their times."""
 
-	_begin = datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc)
+	_BEGIN = datetime(2026, 9, 15, 6, 35, 24, tzinfo=timezone.utc)
 
 	def test_Span(self) -> None:
-		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(seconds=1, microseconds=500_000))
+		s = Span("span", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(seconds=1, microseconds=500_000))
 
-		self.assertEqual(self._begin, s.StartTime)
-		self.assertEqual(self._begin + timedelta(seconds=1.5), s.StopTime)
+		self.assertEqual(self._BEGIN, s.StartTime)
+		self.assertEqual(self._BEGIN + timedelta(seconds=1.5), s.StopTime)
 		self.assertEqual(1.5, s.DurationInSeconds)
 
 	def test_Span_Timedelta(self) -> None:
-		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(seconds=1, microseconds=500_000))
+		s = Span("span", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(seconds=1, microseconds=500_000))
 
 		self.assertIs(timedelta, type(s.Duration))
 		self.assertEqual(timedelta(seconds=1.5), s.Duration)
 
 	def test_Span_Microsecond(self) -> None:
-		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(microseconds=1))
+		s = Span("span", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(microseconds=1))
 
 		self.assertEqual(1e-6, s.DurationInSeconds)
 
 	def test_Span_Days(self) -> None:
-		s = Span("span", beginTime=self._begin, endTime=self._begin + timedelta(days=2, seconds=3))
+		s = Span("span", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(days=2, seconds=3))
 
 		self.assertEqual(2 * 86_400 + 3, s.DurationInSeconds)
 
@@ -152,7 +152,7 @@ class RecordedTimes(Testcase):
 		self.assertEqual(3.0, s.DurationInSeconds)
 
 	def test_Trace(self) -> None:
-		begin = self._begin
+		begin = self._BEGIN
 
 		t =    Trace("pipeline", beginTime=begin, endTime=begin + timedelta(minutes=9))
 		job =  Span("job", parent=t, beginTime=begin + timedelta(seconds=11), endTime=begin + timedelta(minutes=2))
@@ -166,8 +166,8 @@ class RecordedTimes(Testcase):
 		self.assertEqual(8.0, step.DurationInSeconds)
 
 	def test_Trace_Format(self) -> None:
-		t = Trace("pipeline", beginTime=self._begin, endTime=self._begin + timedelta(seconds=2))
-		Span("job", parent=t, beginTime=self._begin, endTime=self._begin + timedelta(milliseconds=250))
+		t = Trace("pipeline", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(seconds=2))
+		Span("job", parent=t, beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(milliseconds=250))
 
 		lines = t.Format()
 
@@ -178,8 +178,8 @@ class RecordedTimes(Testcase):
 
 	def test_Trace_OTLPDuration(self) -> None:
 		"""The exported end is the start plus the exact recorded duration, not a duration rounded through seconds."""
-		t = Trace("pipeline", beginTime=self._begin, endTime=self._begin + timedelta(seconds=7, microseconds=1))
-		Span("job", parent=t, beginTime=self._begin, endTime=self._begin + timedelta(microseconds=123_457))
+		t = Trace("pipeline", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(seconds=7, microseconds=1))
+		Span("job", parent=t, beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(microseconds=123_457))
 
 		spans = {s["name"]: s for s in t.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]}
 
@@ -187,17 +187,17 @@ class RecordedTimes(Testcase):
 			with self.subTest(span=name):
 				span = spans[name]
 				self.assertEqual(expected, int(span["endTimeUnixNano"]) - int(span["startTimeUnixNano"]))
-				self.assertEqual(int(self._begin.timestamp()) * 1_000_000_000, int(span["startTimeUnixNano"]))
+				self.assertEqual(int(self._BEGIN.timestamp()) * 1_000_000_000, int(span["startTimeUnixNano"]))
 
 	def test_EndTimeWithoutBeginTime(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Span("span", endTime=self._begin)
+			_ = Span("span", endTime=self._BEGIN)
 
 		self.assertEqual("Parameter 'endTime' is given without parameter 'beginTime'.", str(context.exception))
 
 	def test_EndTimeBeforeBeginTime(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Span("span", beginTime=self._begin, endTime=self._begin - timedelta(microseconds=1))
+			_ = Span("span", beginTime=self._BEGIN, endTime=self._BEGIN - timedelta(microseconds=1))
 
 		self.assertEqual("Parameter 'endTime' is before parameter 'beginTime'.", str(context.exception))
 
@@ -209,13 +209,13 @@ class RecordedTimes(Testcase):
 
 	def test_EndTimeType(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Trace("trace", beginTime=self._begin, endTime=1789454124)
+			_ = Trace("trace", beginTime=self._BEGIN, endTime=1789454124)
 
 		self.assertEqual("Parameter 'endTime' is not of type 'datetime'.", str(context.exception))
 
 	def test_MixedTimeZones(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Span("span", beginTime=self._begin, endTime=datetime(2026, 9, 15, 8, 36, 0))
+			_ = Span("span", beginTime=self._BEGIN, endTime=datetime(2026, 9, 15, 8, 36, 0))
 
 		self.assertEqual(
 			"Parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.",
@@ -230,7 +230,7 @@ class RecordedTimes(Testcase):
 
 	def test_EnterRecordedSpan(self) -> None:
 		with Trace("trace"):
-			s = Span("span", beginTime=self._begin)
+			s = Span("span", beginTime=self._BEGIN)
 			with self.assertRaises(TracingError) as context:
 				with s:
 					pass
@@ -241,7 +241,7 @@ class RecordedTimes(Testcase):
 
 	def test_EnterRecordedTrace(self) -> None:
 		with self.assertRaises(TracingError) as context:
-			with Trace("trace", beginTime=self._begin, endTime=self._begin):
+			with Trace("trace", beginTime=self._BEGIN, endTime=self._BEGIN):
 				pass
 
 		self.assertEqual("Trace 'trace' is not empty and can't be entered.", str(context.exception))
@@ -276,8 +276,8 @@ class RecordedTimes(Testcase):
 
 	def test_State(self) -> None:
 		self.assertIs(SpanState.Empty, Span("span").State)
-		self.assertIs(SpanState.Running, Span("span", beginTime=self._begin).State)
-		self.assertIs(SpanState.Complete, Span("span", beginTime=self._begin, endTime=self._begin).State)
+		self.assertIs(SpanState.Running, Span("span", beginTime=self._BEGIN).State)
+		self.assertIs(SpanState.Complete, Span("span", beginTime=self._BEGIN, endTime=self._BEGIN).State)
 
 	def test_StateWhileTimed(self) -> None:
 		with Trace("trace") as trace:
@@ -291,16 +291,16 @@ class RecordedTimes(Testcase):
 		self.assertIs(SpanState.Complete, trace.State)
 
 	def test_Duration(self) -> None:
-		span = Span("span", beginTime=self._begin, duration=timedelta(seconds=90))
+		span = Span("span", beginTime=self._BEGIN, duration=timedelta(seconds=90))
 
-		self.assertEqual(self._begin + timedelta(seconds=90), span.StopTime)
+		self.assertEqual(self._BEGIN + timedelta(seconds=90), span.StopTime)
 		self.assertEqual(90.0, span.DurationInSeconds)
 		self.assertIs(SpanState.Complete, span.State)
 
 	def test_DurationOnTrace(self) -> None:
-		trace = Trace("trace", beginTime=self._begin, duration=timedelta(minutes=2))
+		trace = Trace("trace", beginTime=self._BEGIN, duration=timedelta(minutes=2))
 
-		self.assertEqual(self._begin + timedelta(minutes=2), trace.StopTime)
+		self.assertEqual(self._BEGIN + timedelta(minutes=2), trace.StopTime)
 		self.assertEqual(120.0, trace.DurationInSeconds)
 
 	def test_DurationWithoutBeginTime(self) -> None:
@@ -319,42 +319,42 @@ class RecordedTimes(Testcase):
 
 	def test_DurationAndEndTime(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Span("span", beginTime=self._begin, endTime=self._begin, duration=timedelta(seconds=5))
+			_ = Span("span", beginTime=self._BEGIN, endTime=self._BEGIN, duration=timedelta(seconds=5))
 
 		self.assertEqual("Parameters 'endTime' and 'duration' are both given.", str(context.exception))
 
 	def test_NegativeDuration(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Span("span", beginTime=self._begin, duration=timedelta(seconds=-1))
+			_ = Span("span", beginTime=self._BEGIN, duration=timedelta(seconds=-1))
 
 		self.assertEqual("Parameter 'duration' is negative.", str(context.exception))
 
 	def test_DurationAsSeconds(self) -> None:
-		span = Span("span", beginTime=self._begin, duration=98)
+		span = Span("span", beginTime=self._BEGIN, duration=98)
 
-		self.assertEqual(self._begin + timedelta(seconds=98), span.StopTime)
+		self.assertEqual(self._BEGIN + timedelta(seconds=98), span.StopTime)
 		self.assertEqual(98.0, span.DurationInSeconds)
 
 	def test_DurationAsFractionalSeconds(self) -> None:
-		span = Span("span", beginTime=self._begin, duration=98.5)
+		span = Span("span", beginTime=self._BEGIN, duration=98.5)
 
-		self.assertEqual(self._begin + timedelta(seconds=98.5), span.StopTime)
+		self.assertEqual(self._BEGIN + timedelta(seconds=98.5), span.StopTime)
 		self.assertEqual(98.5, span.DurationInSeconds)
 
 	def test_DurationAsSecondsOnTrace(self) -> None:
-		trace = Trace("trace", beginTime=self._begin, duration=120)
+		trace = Trace("trace", beginTime=self._BEGIN, duration=120)
 
 		self.assertEqual(120.0, trace.DurationInSeconds)
 
 	def test_DurationType(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Span("span", beginTime=self._begin, duration="98")
+			_ = Span("span", beginTime=self._BEGIN, duration="98")
 
 		self.assertEqual("Parameter 'duration' is not of type 'timedelta', 'int' or 'float'.", str(context.exception))
 
 	def test_DurationAsBool(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Span("span", beginTime=self._begin, duration=True)
+			_ = Span("span", beginTime=self._BEGIN, duration=True)
 
 		self.assertEqual("Parameter 'duration' is not of type 'timedelta', 'int' or 'float'.", str(context.exception))
 		self.assertIn("Got type 'bool'.", context.exception.__notes__)
@@ -363,13 +363,13 @@ class RecordedTimes(Testcase):
 		for value in (float("nan"), float("inf"), float("-inf")):
 			with self.subTest(duration=value):
 				with self.assertRaises(ValueError) as context:
-					_ = Span("span", beginTime=self._begin, duration=value)
+					_ = Span("span", beginTime=self._BEGIN, duration=value)
 
 				self.assertEqual("Parameter 'duration' is not a finite number of seconds.", str(context.exception))
 
 	def test_NegativeDurationAsSeconds(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Span("span", beginTime=self._begin, duration=-0.5)
+			_ = Span("span", beginTime=self._BEGIN, duration=-0.5)
 
 		self.assertEqual("Parameter 'duration' is negative.", str(context.exception))
 
@@ -388,8 +388,8 @@ class RecordedTimes(Testcase):
 		self.assertIs(span, span.Stop())
 
 	def test_StopTimeAssignment(self) -> None:
-		span = Span("span", beginTime=self._begin)
-		span.StopTime = self._begin + timedelta(seconds=3)
+		span = Span("span", beginTime=self._BEGIN)
+		span.StopTime = self._BEGIN + timedelta(seconds=3)
 
 		self.assertEqual(3.0, span.DurationInSeconds)
 
@@ -417,49 +417,49 @@ class RecordedTimes(Testcase):
 		self.assertEqual("Span 'span' is timed by a with-statement.", str(context.exception))
 
 	def test_StopTimeBeforeBeginTime(self) -> None:
-		span = Span("span", beginTime=self._begin)
+		span = Span("span", beginTime=self._BEGIN)
 
 		with self.assertRaises(ValueError) as context:
-			span.StopTime = self._begin - timedelta(microseconds=1)
+			span.StopTime = self._BEGIN - timedelta(microseconds=1)
 
 		self.assertEqual("Parameter 'value' is before the begin time.", str(context.exception))
 
 	def test_StopTimeAssignedTwice(self) -> None:
-		span = Span("span", beginTime=self._begin)
-		span.StopTime = self._begin + timedelta(seconds=1)
+		span = Span("span", beginTime=self._BEGIN)
+		span.StopTime = self._BEGIN + timedelta(seconds=1)
 
 		with self.assertRaises(TracingError) as context:
-			span.StopTime = self._begin + timedelta(seconds=2)
+			span.StopTime = self._BEGIN + timedelta(seconds=2)
 
 		self.assertEqual("Span 'span' already has an end time.", str(context.exception))
 
 	def test_ChildWithinParent(self) -> None:
-		parent = Span("parent", beginTime=self._begin, duration=timedelta(seconds=100))
-		child =  Span("child", beginTime=self._begin + timedelta(seconds=1), duration=timedelta(seconds=8), parent=parent)
+		parent = Span("parent", beginTime=self._BEGIN, duration=timedelta(seconds=100))
+		child =  Span("child", beginTime=self._BEGIN + timedelta(seconds=1), duration=timedelta(seconds=8), parent=parent)
 
 		self.assertIs(parent, child.Parent)
 		self.assertEqual(1, parent.SubSpanCount)
 
 	def test_ChildBeginsBeforeParent(self) -> None:
-		parent = Span("parent", beginTime=self._begin, duration=timedelta(seconds=100))
+		parent = Span("parent", beginTime=self._BEGIN, duration=timedelta(seconds=100))
 
 		with self.assertRaises(ValueError) as context:
-			_ = Span("child", beginTime=self._begin - timedelta(microseconds=1), parent=parent)
+			_ = Span("child", beginTime=self._BEGIN - timedelta(microseconds=1), parent=parent)
 
 		self.assertEqual("Timespan 'child' begins before its parent 'parent'.", str(context.exception))
 		self.assertEqual(0, parent.SubSpanCount)
 
 	def test_ChildEndsAfterParent(self) -> None:
-		parent = Span("parent", beginTime=self._begin, duration=timedelta(seconds=100))
+		parent = Span("parent", beginTime=self._BEGIN, duration=timedelta(seconds=100))
 
 		with self.assertRaises(ValueError) as context:
-			_ = Span("child", beginTime=self._begin, duration=timedelta(seconds=101), parent=parent)
+			_ = Span("child", beginTime=self._BEGIN, duration=timedelta(seconds=101), parent=parent)
 
 		self.assertEqual("Timespan 'child' ends after its parent 'parent'.", str(context.exception))
 
 	def test_ChildOfRunningParent(self) -> None:
-		parent = Span("parent", beginTime=self._begin)
-		child =  Span("child", beginTime=self._begin + timedelta(seconds=1), parent=parent)
+		parent = Span("parent", beginTime=self._BEGIN)
+		child =  Span("child", beginTime=self._BEGIN + timedelta(seconds=1), parent=parent)
 
 		self.assertIs(SpanState.Running, child.State)
 		self.assertEqual(1, parent.SubSpanCount)

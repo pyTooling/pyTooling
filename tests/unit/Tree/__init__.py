@@ -979,7 +979,7 @@ class Exceptions(Testcase):
 
 class Rendering(Testcase):
 	# parentID, nodeID, dict
-	_tree: Tuple[Tuple[int, int, Dict[str, float]], ...] = (
+	_TREE: Tuple[Tuple[int, int, Dict[str, float]], ...] = (
 		(0, 1, {"time": 11.0}), (0, 2, {"time": 3.2}), (0, 3, {"time": 7.9}),
 		(1, 4, {"time": 29.2}), (1, 5, {"time": 31.4}),
 		# 2
@@ -1000,7 +1000,7 @@ class Rendering(Testcase):
 		print()
 
 		root = Node(nodeID=0, value="<Root 0>", keyValuePairs={"time": 85.3})
-		for parentID, childID, kvp in self._tree:
+		for parentID, childID, kvp in self._TREE:
 			Node(nodeID=childID, value=f"<Node {childID}>", keyValuePairs=kvp, parent=root.GetNodeByID(parentID))
 
 		print("=" * 40)
@@ -1017,7 +1017,7 @@ class Rendering(Testcase):
 
 		print("=" * 40)
 
-		self.assertEqual(len(self._tree) + 2, len(rendering.split("\n")))
+		self.assertEqual(len(self._TREE) + 2, len(rendering.split("\n")))
 
 	def test_RenderUserdefined(self) -> None:
 		print()
@@ -1026,11 +1026,11 @@ class Rendering(Testcase):
 			return f"{node._id}: {node._value} - {','.join(f'{k}:{v}' for k, v in node._dict.items())}"
 
 		root = Node(nodeID=0, value="<Root 0>", keyValuePairs={"time": 85.3}, format=format)
-		for parentID, childID, kvp in self._tree:
+		for parentID, childID, kvp in self._TREE:
 			Node(nodeID=childID, value=f"<Node {childID}>", keyValuePairs=kvp, parent=root.GetNodeByID(parentID), format=format)
 
 		print("=" * 40)
 		rendering = root.Render()
 		print(rendering, end="")
 		print("=" * 40)
-		self.assertEqual(len(self._tree) + 2, len(rendering.split("\n")))
+		self.assertEqual(len(self._TREE) + 2, len(rendering.split("\n")))

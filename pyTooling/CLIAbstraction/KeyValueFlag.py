@@ -136,10 +136,10 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument[str], pattern="{0}{1}={2
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
-		if self._name is None:
-			raise ValueError("Internal value '_name' is None.")
+		if self._NAME is None:
+			raise ValueError("Internal value '_NAME' is None.")
 
-		return [self._pattern.format(self._name, key, value) for key, value in self._value.items()]
+		return [self._PATTERN.format(self._NAME, key, value) for key, value in self._value.items()]
 
 
 @export

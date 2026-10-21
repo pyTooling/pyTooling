@@ -113,7 +113,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 		_kernel32:      WinDLL
 		_processHandle: Any
 	elif CurrentPlatform.IsNativeLinux:
-		_processStatusFile: ClassVar[Path] = Path("/proc/self/statm")
+		_PROCESS_STATUS_FILE: ClassVar[Path] = Path("/proc/self/statm")
 	elif CurrentPlatform.IsNativeFreeBSD:
 		pass
 
@@ -144,7 +144,7 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 
 	if CurrentPlatform.IsNativeLinux:
 		from os import sysconf
-		_pageSize: ClassVar[int] = sysconf("SC_PAGESIZE")
+		_PAGE_SIZE: ClassVar[int] = sysconf("SC_PAGESIZE")
 
 		def GetMemoryUsage(self) -> MemoryInfo:
 			"""
@@ -175,13 +175,13 @@ class ProcessInformation(metaclass=ExtendedType, slots=True):
 			"""
 
 			try:
-				with self._processStatusFile.open("rb") as f:
+				with self._PROCESS_STATUS_FILE.open("rb") as f:
 					fields = f.read().split()
 			except FileNotFoundError as ex:
-				raise PlatformError(f"Can't open '{self._processStatusFile}' to extract the process' physical memory usage.") from ex
+				raise PlatformError(f"Can't open '{self._PROCESS_STATUS_FILE}' to extract the process' physical memory usage.") from ex
 
-			vms = int(fields[0]) * self._pageSize  #: VmSize
-			rss = int(fields[1]) * self._pageSize  #: VmRSS
+			vms = int(fields[0]) * self._PAGE_SIZE  #: VmSize
+			rss = int(fields[1]) * self._PAGE_SIZE  #: VmRSS
 
 			return MemoryInfo(rss, vms)
 

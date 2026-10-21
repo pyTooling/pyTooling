@@ -41,7 +41,8 @@ Example
 The following example implements a portion of the ``git`` program and its ``commit`` sub-command.
 
 1. A new class ``Git`` is derived from :class:`pyTooling.CLIAbstraction.Executable`.
-2. A class variable ``_executableNames`` is set, to specify different executable names based on the operating system.
+2. A class variable :attr:`~pyTooling.CLIAbstraction.Program._EXECUTABLE_NAMES` is set, to specify different
+   executable names based on the operating system.
 3. Nested classes are used to describe arguments and flags for the Git program.
 4. These nested classes are annotated with the ``@CLIArgument`` attribute, which is used to register the nested classes
    in an ordered lookup structure. This declaration order is also used to order arguments when converting to a list for
@@ -78,7 +79,7 @@ The following example implements a portion of the ``git`` program and its ``comm
          from pyTooling.CLIAbstraction.ValuedTupleFlag import ShortTupleFlag
 
          class Git(Executable):
-           _executableNames: ClassVar[Dict[str, str]] = {
+           _EXECUTABLE_NAMES: ClassVar[Dict[str, str]] = {
              "Darwin":  "git",
              "FreeBSD": "git",
              "Linux":   "git",
