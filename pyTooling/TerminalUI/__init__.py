@@ -85,27 +85,51 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
 
-	FOREGROUND: ClassVar[dict[str, str]] = {
-		"RED":          Foreground.LIGHTRED_EX,
-		"DARK_RED":		  Foreground.RED,
-		"GREEN":        Foreground.LIGHTGREEN_EX,
-		"DARK_GREEN":   Foreground.GREEN,
-		"YELLOW":       Foreground.LIGHTYELLOW_EX,
-		"DARK_YELLOW":  Foreground.YELLOW,
-		"MAGENTA":      Foreground.LIGHTMAGENTA_EX,
-		"BLUE":         Foreground.LIGHTBLUE_EX,
-		"DARK_BLUE":    Foreground.BLUE,
-		"CYAN":         Foreground.LIGHTCYAN_EX,
-		"DARK_CYAN":    Foreground.CYAN,
-		"GRAY":         Foreground.WHITE,
-		"DARK_GRAY":    Foreground.LIGHTBLACK_EX,
-		"WHITE":        Foreground.LIGHTWHITE_EX,
-		"NOCOLOR":      Foreground.RESET,
+	try:
+		from colorama import Fore as Foreground
+		FOREGROUND: ClassVar[dict[str, str]] = {
+			"RED":          Foreground.LIGHTRED_EX,
+			"DARK_RED":		  Foreground.RED,
+			"GREEN":        Foreground.LIGHTGREEN_EX,
+			"DARK_GREEN":   Foreground.GREEN,
+			"YELLOW":       Foreground.LIGHTYELLOW_EX,
+			"DARK_YELLOW":  Foreground.YELLOW,
+			"MAGENTA":      Foreground.LIGHTMAGENTA_EX,
+			"BLUE":         Foreground.LIGHTBLUE_EX,
+			"DARK_BLUE":    Foreground.BLUE,
+			"CYAN":         Foreground.LIGHTCYAN_EX,
+			"DARK_CYAN":    Foreground.CYAN,
+			"GRAY":         Foreground.WHITE,
+			"DARK_GRAY":    Foreground.LIGHTBLACK_EX,
+			"WHITE":        Foreground.LIGHTWHITE_EX,
+			"NOCOLOR":      Foreground.RESET,
 
-		"HEADLINE":     Foreground.LIGHTMAGENTA_EX,
-		"ERROR":        Foreground.LIGHTRED_EX,
-		"WARNING":      Foreground.LIGHTYELLOW_EX
-	}  #: Terminal colors
+			"HEADLINE":     Foreground.LIGHTMAGENTA_EX,
+			"ERROR":        Foreground.LIGHTRED_EX,
+			"WARNING":      Foreground.LIGHTYELLOW_EX
+		}                 #: Terminal colors
+	except ImportError:  # pragma: no cover
+		FOREGROUND: ClassVar[dict[str, str]] = {
+			"RED":         "",
+			"DARK_RED":    "",
+			"GREEN":       "",
+			"DARK_GREEN":  "",
+			"YELLOW":      "",
+			"DARK_YELLOW": "",
+			"MAGENTA":     "",
+			"BLUE":        "",
+			"DARK_BLUE":   "",
+			"CYAN":        "",
+			"DARK_CYAN":   "",
+			"GRAY":        "",
+			"DARK_GRAY":   "",
+			"WHITE":       "",
+			"NOCOLOR":     "",
+
+			"HEADLINE":    "",
+			"ERROR":       "",
+			"WARNING":     ""
+		}               #: Terminal colors
 
 	_stdin:  TextIOWrapper  #: STDIN
 	_stdout: TextIOWrapper  #: STDOUT

@@ -115,12 +115,14 @@ Step 2: the class and its first argument
 
       .. code-block:: Python
 
+         from typing                           import ClassVar
+
          from pyTooling.CLIAbstraction         import CLIArgument, Program
          from pyTooling.CLIAbstraction.Command import CommandArgument
          from pyTooling.CLIAbstraction.Flag    import ShortFlag, LongFlag
 
          class Git(Program):
-           _EXECUTABLE_NAMES = {
+           _EXECUTABLE_NAMES: ClassVar[dict[str, str]] = {
              "Darwin":  "git",
              "FreeBSD": "git",
              "Linux":   "git",
@@ -279,10 +281,12 @@ Step 5: sharing arguments between program variants
 
       .. code-block:: Python
 
+         from typing                import ClassVar
+
          from pyTooling.MetaClasses import ExtendedType
 
          class GitArgumentsMixin(metaclass=ExtendedType, mixin=True):
-           _EXECUTABLE_NAMES = {"Linux": "git", "Windows": "git.exe", "Darwin": "git"}
+           _EXECUTABLE_NAMES: ClassVar[dict[str, str]] = {"Linux": "git", "Windows": "git.exe", "Darwin": "git"}
 
            @CLIArgument()
            class FlagVersion(LongFlag, name="version"): ...

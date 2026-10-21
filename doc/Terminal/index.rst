@@ -24,10 +24,12 @@ Terminal
 
       .. code-block:: Python
 
+         from typing               import ClassVar
+
          from pyTooling.TerminalUI import TerminalApplication
 
          class Application(TerminalApplication):
-           HEADLINE = "My Application"
+           HEADLINE: ClassVar[str] = "My Application"
 
            def Run(self) -> None:
              self._PrintHeadline()

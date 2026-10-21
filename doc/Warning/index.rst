@@ -289,11 +289,13 @@ warnings:
 
 .. code-block:: Python
 
+   from typing               import ClassVar
+
    from pyTooling.TerminalUI import TerminalApplication
    from pyTooling.Warning    import CriticalWarning, WarningCollector
 
    class Application(TerminalApplication):
-     HEADLINE = "My Application"
+     HEADLINE: ClassVar[str] = "My Application"
 
      def Run(self) -> None:
        with WarningCollector() as warnings:

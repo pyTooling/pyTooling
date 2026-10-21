@@ -116,13 +116,13 @@ def ciSpanFilter(
 		:param span: The timespan.
 		:returns:    ``False``, if the timespan is hidden.
 		"""
-		kind = span.get(CI.Span.KIND)
+		kind = span.get(CI.Span.Kind)
 		if kind == SpanKind.Step:
 			if excludeSteps is StepExclusion.All:
 				return False
-			return excludeSteps is StepExclusion.Nothing or span.get(OTLP.CICD.Pipeline.Task.Run.RESULT) != Result.Skip
+			return excludeSteps is StepExclusion.Nothing or span.get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
 		elif kind == SpanKind.Job and excludeSkippedJobs:
-			return span.get(OTLP.CICD.Pipeline.Task.Run.RESULT) != Result.Skip
+			return span.get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Skip
 
 		return True
 
@@ -143,7 +143,7 @@ def msys2Environment(job: Span) -> Nullable[str]:
 	for step in job.IterateSubSpans():
 		if (match := MSYS2_SETUP_STEP.search(step.Name)) is None:
 			continue
-		elif step.get(OTLP.CICD.Pipeline.Task.Run.RESULT) != Result.Success:
+		elif step.get(OTLP.CICD.Pipeline.Task.Run.Result) != Result.Success:
 			continue
 		elif (environment := match.group(1).upper()) != "NATIVE":
 			return environment
@@ -167,7 +167,7 @@ def runnerCategory(span: Span) -> str:
 	job: Nullable[Span] = None
 	current: Nullable[Span] = span
 	while current is not None:
-		if job is None and current.get(CI.Span.KIND) == SpanKind.Job:
+		if job is None and current.get(CI.Span.Kind) == SpanKind.Job:
 			job = current
 
 		# the key pyTooling.GitHub's trace reader stores a job's runner labels under
@@ -291,9 +291,9 @@ class GanttRow(Row):
 		"""
 		Read-only property to return the CI span kind of the row's timespan.
 
-		:returns: The value of :data:`~pyTooling.Tracing.CI.CI.Span.KIND`, or ``None`` if the timespan has none.
+		:returns: The value of :data:`~pyTooling.Tracing.CI.CI.Span.Kind`, or ``None`` if the timespan has none.
 		"""
-		return self._span.get(CI.Span.KIND)
+		return self._span.get(CI.Span.Kind)
 
 	@readonly
 	def Depth(self) -> int:
@@ -558,7 +558,7 @@ class GanttLayout(Diagram):
 			self._categories[category] = None
 
 		row = GanttRow(span, depth, category, parent=self)
-		for barSpan, isQueued in ((queued, True), (span, span.get(CI.Span.KIND) == SpanKind.Queued)):
+		for barSpan, isQueued in ((queued, True), (span, span.get(CI.Span.Kind) == SpanKind.Queued)):
 			if barSpan is not None:
 				self._AddBar(barSpan, isQueued, row)
 
@@ -574,7 +574,7 @@ class GanttLayout(Diagram):
 			if self._spanFilter is not None and not self._spanFilter(span):
 				continue
 
-			kind = span.get(CI.Span.KIND)
+			kind = span.get(CI.Span.Kind)
 			if kind == SpanKind.Queued:
 				if pending is not None:
 					self._AddRow(pending, depth, None)
@@ -583,8 +583,8 @@ class GanttLayout(Diagram):
 
 			queued = None
 			if pending is not None:
-				taskName = span.get(OTLP.CICD.Pipeline.Task.NAME)
-				if kind == SpanKind.Job and taskName is not None and taskName == pending.get(OTLP.CICD.Pipeline.Task.NAME):
+				taskName = span.get(OTLP.CICD.Pipeline.Task.Name)
+				if kind == SpanKind.Job and taskName is not None and taskName == pending.get(OTLP.CICD.Pipeline.Task.Name):
 					queued = pending
 				else:
 					self._AddRow(pending, depth, None)
@@ -604,13 +604,13 @@ class GanttLayout(Diagram):
 		"""
 		queued: dict[str, Span] = {}
 		for span in parent.IterateSubSpans():
-			kind =   span.get(CI.Span.KIND)
-			result = span.get(OTLP.CICD.Pipeline.Task.Run.RESULT)
-			if kind == SpanKind.Queued and (taskName := span.get(OTLP.CICD.Pipeline.Task.NAME)) is not None:
+			kind =   span.get(CI.Span.Kind)
+			result = span.get(OTLP.CICD.Pipeline.Task.Run.Result)
+			if kind == SpanKind.Queued and (taskName := span.get(OTLP.CICD.Pipeline.Task.Name)) is not None:
 				queued[taskName] = span
 			elif kind == SpanKind.Job and result != Result.Skip and span.StartTime is not None:
 				if (category := self._categorize(span)) != "":
-					waiting = queued.get(span.get(OTLP.CICD.Pipeline.Task.NAME), None)
+					waiting = queued.get(span.get(OTLP.CICD.Pipeline.Task.Name), None)
 					waitTime = 0.0
 					if waiting is not None and waiting.StartTime is not None:
 						waitTime = self._Offset(span.StartTime) - self._Offset(waiting.StartTime)

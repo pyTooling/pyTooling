@@ -648,11 +648,10 @@ Version 10.x (2026)
 
    * ⚠️ **Class variables with constant meaning are spelled in upper case**, as ``INDENT`` and the exit codes already
      are: ``TerminalApplication.HeadLine`` |rarr| ``HEADLINE``, ``TerminalBaseApplication.Foreground`` |rarr|
-     ``FOREGROUND``, ``Program._executableNames`` |rarr| ``_EXECUTABLE_NAMES``, ``ApplicationTestcase._consoleScript``
-     and ``_runnableModule`` |rarr| ``_CONSOLE_SCRIPT`` and ``_RUNNABLE_MODULE``, and the attribute keys of
-     :class:`~pyTooling.Tracing.CI.OTLP` and :class:`~pyTooling.Tracing.CI.CI` (``Name``, ``Result``, ``Full``,
-     ``Revision``, ``Kind`` |rarr| ``NAME``, ``RESULT``, ``FULL``, ``REVISION``, ``KIND``). There are no aliases: a
-     subclass still setting an old name is no longer read, so rename it in the class body.
+     ``FOREGROUND``, ``Program._executableNames`` |rarr| ``_EXECUTABLE_NAMES``, and
+     ``ApplicationTestcase._consoleScript`` and ``_runnableModule`` |rarr| ``_CONSOLE_SCRIPT`` and
+     ``_RUNNABLE_MODULE``. There are no aliases: a subclass still setting an old name is no longer read, so rename it
+     in the class body.
 
    * ⚠️ ``TerminalApplication._PrintHelp`` moved to :class:`~pyTooling.Attributes.ArgParse.ArgParseHelperMixin`, which
      owns the parsers it prints. An application calling it derives from both classes.
@@ -785,9 +784,8 @@ Version 10.x (2026)
    * ⚠️ Class variables with constant meaning, set in the class body or once per class from a class keyword argument,
      are spelled in upper case. Besides the public ones listed under *Breaking Changes*: the patterns and names of
      :mod:`pyTooling.CLIAbstraction`'s argument classes (``_PATTERN``, ``_NAME``, ``_VALUE_PATTERN``,
-     ``_FALSE_PATTERN``, ``_PATTERN_WITH_VALUE``), ``Attribute._SCOPE``, ``GraphMLDocument.XML_NS`` and ``XSI``, and
-     ``ProcessInformation._PROCESS_STATUS_FILE`` and ``_PAGE_SIZE``. ``TerminalBaseApplication`` no longer imports
-     colorama a second time in its class body, which left the module object behind as a class attribute.
+     ``_FALSE_PATTERN``, ``_PATTERN_WITH_VALUE``), ``Attribute._SCOPE``, ``GraphMLDocument._XML_NS`` and ``_XSI``, and
+     ``ProcessInformation._PROCESS_STATUS_FILE`` and ``_PAGE_SIZE``.
    * ⚠️ :exc:`~pyTooling.Exceptions.ExceptionBase` hands its message to :exc:`Exception`, so ``args`` is
      ``(message, )`` and :func:`repr` shows it, as for any Python exception. ``args`` was empty. The ``message`` field
      and the :meth:`~object.__str__` override returning it are removed: the read-only property

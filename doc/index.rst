@@ -253,14 +253,12 @@ CLI Abstraction
       .. code-block:: Python
 
          class Git(Executable):
-           def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> self:
-             cls._EXECUTABLE_NAMES = {
-               "Darwin": "git",
-               "FreeBSD": "git",
-               "Linux": "git",
-               "Windows": "git.exe"
-             }
-             return super().__new__(cls)
+           _EXECUTABLE_NAMES: ClassVar[dict[str, str]] = {
+             "Darwin":  "git",
+             "FreeBSD": "git",
+             "Linux":   "git",
+             "Windows": "git.exe"
+           }
 
            @CLIArgument()
            class FlagHelp(ShortFlag, name="h"): ...
@@ -1028,12 +1026,12 @@ Terminal
       .. code-block:: Python
 
          from sys    import argv
-         from typing import NoReturn
+         from typing import ClassVar, NoReturn
 
          from pyTooling.TerminalUI import TerminalApplication
 
          class Application(TerminalApplication):
-           HEADLINE = "My Application"
+           HEADLINE: ClassVar[str] = "My Application"
 
            def Run(self) -> None:
              self._PrintHeadline()

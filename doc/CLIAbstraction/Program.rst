@@ -53,8 +53,9 @@ Setting Program Names based on OS
 *********************************
 
 The same program is spelled differently per operating system - ``git`` and ``git.exe`` - so the name isn't a single
-string but a **mapping from platform to name**, declared as the class variable ``_EXECUTABLE_NAMES``. The keys are the
-values :func:`platform.system` returns, and the constructor looks the current one up.
+string but a **mapping from platform to name**, declared as the class variable
+:attr:`~pyTooling.CLIAbstraction.Program._EXECUTABLE_NAMES`. The keys are the values :func:`platform.system` returns,
+and the constructor looks the current one up.
 
 .. code-block:: Python
 
@@ -81,7 +82,8 @@ Where the executable is looked for depends on what the constructor was given:
    * - ``executablePath``
      - Exactly that path. It is used as given, and has to exist.
    * - ``binaryDirectoryPath``
-     - That directory, joined with the platform's name from ``_EXECUTABLE_NAMES``.
+     - That directory, joined with the platform's name from
+       :attr:`~pyTooling.CLIAbstraction.Program._EXECUTABLE_NAMES`.
    * - neither
      - The platform's name, resolved through ``PATH`` with :func:`shutil.which`.
 
