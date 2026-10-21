@@ -34,7 +34,7 @@ growing size.
 """
 import timeit
 from statistics import median, mean
-from typing import Callable, Iterable
+from typing import Callable, ClassVar, Iterable
 
 from pyTooling.Testing import Testcase
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class PerformanceTest(Testcase):
-	counts: Iterable[int] = (10, 100, 1000, 10000)
+	COUNTS: ClassVar[Iterable[int]] = (10, 100, 1000, 10000)
 
 	@staticmethod
 	def minMaxSumMean(array):

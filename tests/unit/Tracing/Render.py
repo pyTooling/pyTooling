@@ -99,15 +99,15 @@ def _span(
 	:returns:      The timespan.
 	"""
 	span = Span(name, _at(begin), None if end is None else _at(end), parent=parent)
-	span[CI.Span.Kind] = kind
+	span[CI.Span.KIND] = kind
 	if task != "":
-		span[OTLP.CICD.Pipeline.Task.Name] = task
+		span[OTLP.CICD.Pipeline.Task.NAME] = task
 
 	if runner != "":
 		span["github.runner.labels"] = [runner]
 
 	if result != "":
-		span[OTLP.CICD.Pipeline.Task.Run.Result] = result
+		span[OTLP.CICD.Pipeline.Task.Run.RESULT] = result
 	return span
 
 
@@ -121,7 +121,7 @@ def _pipeline() -> dict[str, Span]:
 	:returns: Dictionary of a name to its timespan, including the trace as ``Pipeline``.
 	"""
 	trace = Trace("Pipeline", _at(0), _at(100))
-	trace[CI.Span.Kind] = "pipeline"
+	trace[CI.Span.KIND] = "pipeline"
 
 	s: dict[str, Span] = {"Pipeline": trace}
 	s["Build (queued)"] =   _span("Build (queued)", 1, 4, trace, "queued", "Build", "ubuntu-26.04")

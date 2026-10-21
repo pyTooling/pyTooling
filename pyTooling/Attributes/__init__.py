@@ -144,7 +144,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 	_functions:               ClassVar[list[Any]] = []                       #: List of functions, this Attribute was attached to.
 	_classes:                 ClassVar[list[Any]] = []                       #: List of classes, this Attribute was attached to.
 	_methods:                 ClassVar[list[Any]] = []                       #: List of methods, this Attribute was attached to.
-	_scope:                   ClassVar[AttributeScope] = AttributeScope.Any  #: Allowed language construct this attribute can be used with.
+	_SCOPE:                   ClassVar[AttributeScope] = AttributeScope.Any  #: Allowed language construct this attribute can be used with.
 
 	# Ensure each derived class has its own instances of class variables.
 	def __init_subclass__(cls, scope: Nullable[AttributeScope] = None, **kwargs: Any) -> None:
@@ -152,7 +152,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		Set a derived attribute class' scope, and give it its own registry of annotated entities.
 
 		The scope is given as class keyword argument: :pycode:`class Hook(Attribute, scope=AttributeScope.Method)`.
-		Without it, the class inherits its base-class' scope. Overriding :attr:`_scope` in the class body works as
+		Without it, the class inherits its base-class' scope. Overriding :attr:`_SCOPE` in the class body works as
 		well, but the keyword takes precedence.
 
 		The registries :attr:`_functions`, :attr:`_classes` and :attr:`_methods` are class variables, so a derived
@@ -172,7 +172,7 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(scope)}'.")
 				raise ex
 
-			cls._scope = scope
+			cls._SCOPE = scope
 
 		cls._functions = []
 		cls._classes = []
@@ -239,13 +239,13 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(entity)}'.")
 			raise ex
 
-		if kind not in attribute._scope:
+		if kind not in attribute._SCOPE:
 			ex = AttributeScopeError(
 				f"Attribute '{getTypeName(attribute)}' can't be applied to {kind.name.lower()} '{entity.__qualname__}'.",
 				appliedAttribute=attribute,
 				entity=entity
 			)
-			ex.add_note(f"Its scope is '{attribute._scope.name}'.")
+			ex.add_note(f"Its scope is '{attribute._SCOPE.name}'.")
 			raise ex
 
 		registry.append(entity)
@@ -258,13 +258,13 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 	@readonly
 	def Scope(self) -> AttributeScope:
 		"""
-		Read-only property to access the language entities this attribute can be applied to (:attr:`_scope`).
+		Read-only property to access the language entities this attribute can be applied to (:attr:`_SCOPE`).
 
-		It is an instance property: on the attribute class, :attr:`_scope` is read directly.
+		It is an instance property: on the attribute class, :attr:`_SCOPE` is read directly.
 
 		:returns: The language entities this attribute can be applied to.
 		"""
-		return self._scope
+		return self._SCOPE
 
 	@classmethod
 	def GetFunctions(cls, scope: Nullable[type | ModuleType] = None) -> Generator[TAttr, None, None]:

@@ -119,10 +119,10 @@ class ReadingValues(Testcase):
 
 
 class Errors(Testcase):
-	_configFile = Path("tests/data/Configuration/errors.yml")
+	_CONFIG_FILE = Path("tests/data/Configuration/errors.yml")
 
 	def test_UnknownKeyInDictionary(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["dictionary"]["key_3"]
@@ -132,7 +132,7 @@ class Errors(Testcase):
 		self.assertIn("Available keys: 'key_1', 'key_2'.", context.exception.__notes__)
 
 	def test_IndexOutOfRangeInSequence(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["sequence"][2]
@@ -142,7 +142,7 @@ class Errors(Testcase):
 		self.assertIn("Node 'sequence' is a sequence with indices 0..1.", context.exception.__notes__)
 
 	def test_UnknownKeyInEmptyDictionary(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["emptyDictionary"]["key_1"]
@@ -150,7 +150,7 @@ class Errors(Testcase):
 		self.assertIn("Node 'emptyDictionary' is an empty dictionary.", context.exception.__notes__)
 
 	def test_IndexInEmptySequence(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(KeyNotFoundError) as context:
 			_ = config["emptySequence"][0]
@@ -159,12 +159,12 @@ class Errors(Testcase):
 
 	def test_NullValue(self) -> None:
 		"""A null value is ``None``, not an unsupported type."""
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		self.assertIsNone(config["nullValue"])
 
 	def test_ReferenceToANullValue(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(PathExpressionError) as context:
 			_ = config["nullReference"]
@@ -173,7 +173,7 @@ class Errors(Testcase):
 		self.assertEqual("nullValue", context.exception.PathExpression)
 
 	def test_UnsupportedValueType(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(UnsupportedValueTypeError) as context:
 			_ = config["binaryValue"]
@@ -183,7 +183,7 @@ class Errors(Testcase):
 		self.assertIs(bytes, context.exception.ValueType)
 
 	def test_UnclosedVariableReference(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(InterpolationError) as context:
 			_ = config["unclosedVariable"]
@@ -193,7 +193,7 @@ class Errors(Testcase):
 		self.assertEqual(0, context.exception.Position)
 
 	def test_DanglingDollarSign(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(InterpolationError) as context:
 			_ = config["danglingDollar"]
@@ -203,7 +203,7 @@ class Errors(Testcase):
 		self.assertEqual(6, context.exception.Position)
 
 	def test_PathExpressionResolvingToDictionary(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(PathExpressionError) as context:
 			_ = config["dictionaryReference"]
@@ -212,7 +212,7 @@ class Errors(Testcase):
 		self.assertEqual("dictionary", context.exception.PathExpression)
 
 	def test_PathExpressionAboveRoot(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(PathExpressionError) as context:
 			_ = config["aboveRoot"]
@@ -222,7 +222,7 @@ class Errors(Testcase):
 		self.assertIn("Element '..' was applied to the root node, which has no parent node.", context.exception.__notes__)
 
 	def test_QueryPathAboveRoot(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with self.assertRaises(PathExpressionError) as context:
 			_ = config.QueryPath("..:dictionary")
@@ -232,7 +232,7 @@ class Errors(Testcase):
 
 	def test_AboveRootRaisesWhereThePathIsResolved(self) -> None:
 		"""The traceback ends in the method resolving the path, not in a helper it calls."""
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		with raises(PathExpressionError) as value:
 			_ = config["aboveRoot"]
@@ -246,16 +246,16 @@ class Errors(Testcase):
 class RootNode(Testcase):
 	"""The root node is its own root and has no parent, and every node below it points at that same root."""
 
-	_configFile = Path("tests/data/Configuration/config.yml")
+	_CONFIG_FILE = Path("tests/data/Configuration/config.yml")
 
 	def test_RootIsItsOwnRootAndHasNoParent(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		self.assertIs(config, config._root)
 		self.assertIsNone(config._parent)
 
 	def test_NestedNodesReferenceTheRealRoot(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
 		node = config["Install"]["VendorA"]["ToolA"]
 
@@ -263,9 +263,9 @@ class RootNode(Testcase):
 		self.assertIs(config["Install"]["VendorA"], node._parent)
 
 	def test_ConfigFileIsPreserved(self) -> None:
-		config = Configuration(self._configFile)
+		config = Configuration(self._CONFIG_FILE)
 
-		self.assertEqual(self._configFile, config.ConfigFile)
+		self.assertEqual(self._CONFIG_FILE, config.ConfigFile)
 
 
 class IteratingDictionaries(Testcase):

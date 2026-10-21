@@ -53,7 +53,7 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(wrapper, self.counts[:-1])
+		self.runTests(wrapper, self.COUNTS[:-1])
 
 	def test_AddFlatTree(self) -> None:
 		def run(count: int):
@@ -71,4 +71,4 @@ class Tree(PerformanceTest):
 
 			return func
 
-		self.runTests(run, self.counts[:-1])
+		self.runTests(run, self.COUNTS[:-1])

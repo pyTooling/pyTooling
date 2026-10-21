@@ -38,7 +38,7 @@ from myPackage            import MyPackageException, __issue_tracker_url__
 
 
 class Application(TerminalApplication):
-	HeadLine:          ClassVar[str] = "My Application"
+	HEADLINE:          ClassVar[str] = "My Application"
 	ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
 
 	def Run(self) -> None:
@@ -57,7 +57,7 @@ def main() -> NoReturn:
 	try:
 		program.Run()
 	except MyPackageException as ex:                      # the program's own exceptions, reported as messages
-		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**Application.Foreground))
+		program.WriteLineToStdErr(f"{{RED}}[ERROR] {ex}{{NOCOLOR}}".format(**Application.FOREGROUND))
 	except ExceptionBase as ex:
 		program.PrintExceptionBase(ex)                      # exit code 241, a known exception
 	except NotImplementedError as ex:

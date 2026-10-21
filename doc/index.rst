@@ -254,7 +254,7 @@ CLI Abstraction
 
          class Git(Executable):
            def __new__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> self:
-             cls._executableNames = {
+             cls._EXECUTABLE_NAMES = {
                "Darwin": "git",
                "FreeBSD": "git",
                "Linux": "git",
@@ -1033,7 +1033,7 @@ Terminal
          from pyTooling.TerminalUI import TerminalApplication
 
          class Application(TerminalApplication):
-           HeadLine = "My Application"
+           HEADLINE = "My Application"
 
            def Run(self) -> None:
              self._PrintHeadline()

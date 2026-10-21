@@ -61,8 +61,8 @@ class StripANSIColorCodes(Testcase):
 class RunningAModule(ApplicationTestcase):
 	"""The mixin runs a module and reports what it did. 'json.tool' is used because it ships with Python."""
 
-	_consoleScript =  PYTHON_CONSOLE_SCRIPT
-	_runnableModule = "json.tool"
+	_CONSOLE_SCRIPT =  PYTHON_CONSOLE_SCRIPT
+	_RUNNABLE_MODULE = "json.tool"
 
 	def test_ExitCodeAndOutputAreCaptured(self) -> None:
 		result = self.RunModule(stdInput='{"key": [1, 2]}')
@@ -93,8 +93,8 @@ class RunningAModule(ApplicationTestcase):
 class RunningAConsoleScript(ApplicationTestcase):
 	"""'python' itself is on PATH in every environment this runs in, so it stands in for an installed program."""
 
-	_consoleScript =  PYTHON_CONSOLE_SCRIPT
-	_runnableModule = "json.tool"
+	_CONSOLE_SCRIPT =  PYTHON_CONSOLE_SCRIPT
+	_RUNNABLE_MODULE = "json.tool"
 
 	def test_TheExecutableIsResolved(self) -> None:
 		self.assertIsNotNone(self._executable)
@@ -109,7 +109,7 @@ class RunningAConsoleScript(ApplicationTestcase):
 class TheEnvironment(ApplicationTestcase):
 	"""The variables given as 'environment' are merged into this process's environment, not replacing it."""
 
-	_consoleScript =  PYTHON_CONSOLE_SCRIPT
+	_CONSOLE_SCRIPT =  PYTHON_CONSOLE_SCRIPT
 
 	def test_AVariableIsAdded(self) -> None:
 		result = self.RunEntrypoint(
@@ -137,17 +137,17 @@ class ATestcaseThatIsNotSetUp(Testcase):
 
 	def test_AMissingConsoleScriptIsReported(self) -> None:
 		class Missing(ApplicationTestcase):
-			_runnableModule = "json.tool"
+			_RUNNABLE_MODULE = "json.tool"
 
 		with self.assertRaises(TestingError) as context:
 			Missing.setUpClass()
 
-		self.assertIn("_consoleScript", str(context.exception))
+		self.assertIn("_CONSOLE_SCRIPT", str(context.exception))
 
 	def test_ARunnableModuleIsOptional(self) -> None:
 		"""A program without a '__main__' module is tested through its entry point alone."""
 		class EntrypointOnly(ApplicationTestcase):
-			_consoleScript = PYTHON_CONSOLE_SCRIPT
+			_CONSOLE_SCRIPT = PYTHON_CONSOLE_SCRIPT
 
 			def test_Nothing(self) -> None:
 				pass
@@ -158,7 +158,7 @@ class ATestcaseThatIsNotSetUp(Testcase):
 
 	def test_RunningAMissingRunnableModuleIsReported(self) -> None:
 		class EntrypointOnly(ApplicationTestcase):
-			_consoleScript = PYTHON_CONSOLE_SCRIPT
+			_CONSOLE_SCRIPT = PYTHON_CONSOLE_SCRIPT
 
 			def test_Nothing(self) -> None:
 				pass
@@ -168,12 +168,12 @@ class ATestcaseThatIsNotSetUp(Testcase):
 			EntrypointOnly("test_Nothing").RunModule()
 
 		self.assertEqual("Testcase 'EntrypointOnly' has no runnable module.", str(context.exception))
-		self.assertIn("Set '_runnableModule' to run the program with 'python -m'.", context.exception.__notes__)
+		self.assertIn("Set '_RUNNABLE_MODULE' to run the program with 'python -m'.", context.exception.__notes__)
 
 	def test_AnUninstalledConsoleScriptIsReported(self) -> None:
 		class Missing(ApplicationTestcase):
-			_consoleScript =  "no-such-program-here"
-			_runnableModule = "json.tool"
+			_CONSOLE_SCRIPT =  "no-such-program-here"
+			_RUNNABLE_MODULE = "json.tool"
 
 		with self.assertRaises(TestingError) as context:
 			Missing.setUpClass()

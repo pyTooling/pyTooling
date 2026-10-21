@@ -85,51 +85,27 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
 	INDENT: ClassVar[str] =                                "  "  #: Indentation. Default: ``"  "`` (2 spaces)
 
-	try:
-		from colorama import Fore as Foreground
-		Foreground: ClassVar[dict[str, str]] = {
-			"RED":          Foreground.LIGHTRED_EX,
-			"DARK_RED":		  Foreground.RED,
-			"GREEN":        Foreground.LIGHTGREEN_EX,
-			"DARK_GREEN":   Foreground.GREEN,
-			"YELLOW":       Foreground.LIGHTYELLOW_EX,
-			"DARK_YELLOW":  Foreground.YELLOW,
-			"MAGENTA":      Foreground.LIGHTMAGENTA_EX,
-			"BLUE":         Foreground.LIGHTBLUE_EX,
-			"DARK_BLUE":    Foreground.BLUE,
-			"CYAN":         Foreground.LIGHTCYAN_EX,
-			"DARK_CYAN":    Foreground.CYAN,
-			"GRAY":         Foreground.WHITE,
-			"DARK_GRAY":    Foreground.LIGHTBLACK_EX,
-			"WHITE":        Foreground.LIGHTWHITE_EX,
-			"NOCOLOR":      Foreground.RESET,
+	FOREGROUND: ClassVar[dict[str, str]] = {
+		"RED":          Foreground.LIGHTRED_EX,
+		"DARK_RED":		  Foreground.RED,
+		"GREEN":        Foreground.LIGHTGREEN_EX,
+		"DARK_GREEN":   Foreground.GREEN,
+		"YELLOW":       Foreground.LIGHTYELLOW_EX,
+		"DARK_YELLOW":  Foreground.YELLOW,
+		"MAGENTA":      Foreground.LIGHTMAGENTA_EX,
+		"BLUE":         Foreground.LIGHTBLUE_EX,
+		"DARK_BLUE":    Foreground.BLUE,
+		"CYAN":         Foreground.LIGHTCYAN_EX,
+		"DARK_CYAN":    Foreground.CYAN,
+		"GRAY":         Foreground.WHITE,
+		"DARK_GRAY":    Foreground.LIGHTBLACK_EX,
+		"WHITE":        Foreground.LIGHTWHITE_EX,
+		"NOCOLOR":      Foreground.RESET,
 
-			"HEADLINE":     Foreground.LIGHTMAGENTA_EX,
-			"ERROR":        Foreground.LIGHTRED_EX,
-			"WARNING":      Foreground.LIGHTYELLOW_EX
-		}                 #: Terminal colors
-	except ImportError:  # pragma: no cover
-		Foreground: ClassVar[dict[str, str]] = {
-			"RED":         "",
-			"DARK_RED":    "",
-			"GREEN":       "",
-			"DARK_GREEN":  "",
-			"YELLOW":      "",
-			"DARK_YELLOW": "",
-			"MAGENTA":     "",
-			"BLUE":        "",
-			"DARK_BLUE":   "",
-			"CYAN":        "",
-			"DARK_CYAN":   "",
-			"GRAY":        "",
-			"DARK_GRAY":   "",
-			"WHITE":       "",
-			"NOCOLOR":     "",
-
-			"HEADLINE":    "",
-			"ERROR":       "",
-			"WARNING":     ""
-		}               #: Terminal colors
+		"HEADLINE":     Foreground.LIGHTMAGENTA_EX,
+		"ERROR":        Foreground.LIGHTRED_EX,
+		"WARNING":      Foreground.LIGHTYELLOW_EX
+	}  #: Terminal colors
 
 	_stdin:  TextIOWrapper  #: STDIN
 	_stdout: TextIOWrapper  #: STDOUT
@@ -447,7 +423,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.Foreground))
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.FOREGROUND))
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
 	def PrintMissingDependencyError(self, ex: MissingDependencyError) -> NoReturn:
@@ -497,7 +473,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		if (cause := ex.__cause__) is not None:
 			message += f"{{indent}}{{YELLOW}}Caused by:{{NOCOLOR}}            {{RED}}{cause!s}{{NOCOLOR}}\n"
 
-		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.Foreground))
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.FOREGROUND))
 		self.Exit(self.MISSING_DEPENDENCY_EXIT_CODE)
 
 	def PrintNotImplementedError(self, ex: NotImplementedError) -> NoReturn:
@@ -530,7 +506,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.Foreground))
+		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.FOREGROUND))
 		self.Exit(self.NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE)
 
 	def PrintExceptionBase(self, ex: Exception) -> NoReturn:
@@ -556,7 +532,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			{{indent}}{{YELLOW}}Exception type:{{NOCOLOR}}       {{DARK_RED}}{exceptionType}{{NOCOLOR}}
 			{{indent}}{{YELLOW}}Exception message:{{NOCOLOR}}    {{RED}}{ex!s}{{NOCOLOR}}
 			{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\
-			""").format(indent=self.INDENT, **self.Foreground))
+			""").format(indent=self.INDENT, **self.FOREGROUND))
 
 		if ex.__cause__ is not None:
 			causeType = getFullyQualifiedName(ex.__cause__)
@@ -564,17 +540,17 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			self.WriteLineToStdErr(dedent(f"""\
 				{{indent2}}{{DARK_YELLOW}}Caused by ex. type:{{NOCOLOR}} {{DARK_RED}}{causeType}{{NOCOLOR}}
 				{{indent2}}{{DARK_YELLOW}}Caused by message:{{NOCOLOR}}  {{RED}}{ex.__cause__!s}{{NOCOLOR}}\
-				""").format(indent2=self.INDENT * 2, **self.Foreground))
+				""").format(indent2=self.INDENT * 2, **self.FOREGROUND))
 
-		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.FOREGROUND))
 		print_tb(ex.__traceback__, file=self._stderr)
-		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.Foreground))
+		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.FOREGROUND))
 
 		if self.ISSUE_TRACKER_URL is not None:
 			self.WriteLineToStdErr(dedent(f"""\
 				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
 				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
-				""").format(indent=self.INDENT, **self.Foreground))
+				""").format(indent=self.INDENT, **self.FOREGROUND))
 
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
 
@@ -1041,7 +1017,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 	_criticalWarningCount: int  #: Number of critical warnings written so far.
 	_warningCount:         int  #: Number of warnings written so far.
 
-	HeadLine:       ClassVar[str]  #: Headline of the application, printed by :meth:`_PrintHeadline`.
+	HEADLINE:       ClassVar[str]  #: Headline of the application, printed by :meth:`_PrintHeadline`.
 
 	def __init__(self, mode: Mode = Mode.AllLinearToStdOut) -> None:
 		"""
@@ -1112,9 +1088,9 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		if width == 0:
 			width = self._width
 
-		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
-		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HeadLine, **TerminalApplication.Foreground))
-		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.Foreground))
+		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.FOREGROUND))
+		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HEADLINE, **TerminalApplication.FOREGROUND))
+		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.FOREGROUND))
 
 	def _PrintVersion(
 		self,
@@ -1417,7 +1393,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self._lines.append(line)
 		for method in self._LOG_LEVEL_ROUTING__[line.Severity]:
 			indentedMessage = self.INDENT * line.Indent + line.Message
-			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=indentedMessage, **self.Foreground), end="\n" if line.AppendLinebreak else "")
+			method(self._LOG_MESSAGE_FORMAT__[line.Severity].format(message=indentedMessage, **self.FOREGROUND), end="\n" if line.AppendLinebreak else "")
 
 		return True
 

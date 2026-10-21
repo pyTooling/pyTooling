@@ -272,7 +272,7 @@ from typing import NoReturn
 from pyTooling.TerminalUI import TerminalApplication
 
 class Application(TerminalApplication):
-  HeadLine = "My Application"
+  HEADLINE = "My Application"
 
   def Run(self) -> None:
     self._PrintHeadline()

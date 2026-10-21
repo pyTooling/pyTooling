@@ -26,7 +26,7 @@ The following example implements a portion of the ``git`` program and its ``--ve
    :caption: Git program defining --version argument.
 
    class Git(Executable):
-     _executableNames: ClassVar[Dict[str, str]] = {
+     _EXECUTABLE_NAMES: ClassVar[Dict[str, str]] = {
        "Darwin":  "git",
        "FreeBSD": "git",
        "Linux":   "git",

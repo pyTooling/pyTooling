@@ -1034,11 +1034,11 @@ class GraphMLDocument(Base):
 	A GraphML document: the root graph, the keys it declares, and the XML boilerplate to write it out.
 	"""
 
-	xmlNS: ClassVar[dict[Nullable[str], str]] = {
+	XML_NS: ClassVar[dict[Nullable[str], str]] = {
 		None:  "http://graphml.graphdrawing.org/xmlns",
 		"xsi": "http://www.w3.org/2001/XMLSchema-instance"
 	}  #: XML namespaces of a GraphML document.
-	xsi: ClassVar[dict[str, str]] = {
+	XSI: ClassVar[dict[str, str]] = {
 		"schemaLocation": "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
 	}  #: XML schema instance attributes of a GraphML document.
 
@@ -1241,9 +1241,9 @@ class GraphMLDocument(Base):
 		:returns:      The opening XML tag, indented and terminated by a newline.
 		"""
 		return f"""\
-{'  '*indent}<graphml xmlns="{self.xmlNS[None]}"
-{'  '*indent}         xmlns:xsi="{self.xmlNS["xsi"]}"
-{'  '*indent}         xsi:schemaLocation="{self.xsi["schemaLocation"]}">
+{'  '*indent}<graphml xmlns="{self.XML_NS[None]}"
+{'  '*indent}         xmlns:xsi="{self.XML_NS["xsi"]}"
+{'  '*indent}         xsi:schemaLocation="{self.XSI["schemaLocation"]}">
 """
 
 	def ClosingTag(self, indent: int = 0) -> str:

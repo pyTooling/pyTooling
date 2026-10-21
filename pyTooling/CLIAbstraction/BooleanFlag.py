@@ -64,7 +64,7 @@ class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 	* False: ``without-checks``
 	"""
 
-	_falsePattern: ClassVar[str]  #: Format string used when the flag's value is ``False``; :attr:`_pattern` is used for ``True``.
+	_FALSE_PATTERN: ClassVar[str]  #: Format string used when the flag's value is ``False``; :attr:`_PATTERN` is used for ``True``.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "with-{0}", falsePattern: str = "without-{0}", **kwargs: Any) -> None:
 		"""
@@ -85,7 +85,7 @@ class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 		del kwargs["pattern"]
 		ValuedArgument.__init_subclass__(*args, **kwargs)
 
-		cls._falsePattern = falsePattern
+		cls._FALSE_PATTERN = falsePattern
 
 	def __init__(self, value: bool) -> None:
 		"""Initializes a BooleanFlag instance.
@@ -101,11 +101,11 @@ class BooleanFlag(NamedArgument, ValuedArgument[bool]):
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
-		if self._name is None:
-			raise ValueError("Internal value '_name' is None.")
+		if self._NAME is None:
+			raise ValueError("Internal value '_NAME' is None.")
 
-		pattern = self._pattern if self._value is True else self._falsePattern
-		return pattern.format(self._name)
+		pattern = self._PATTERN if self._value is True else self._FALSE_PATTERN
+		return pattern.format(self._NAME)
 
 
 @export

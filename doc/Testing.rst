@@ -57,7 +57,7 @@ resolves the console script once per test class and offers two ways to start the
 * :meth:`~pyTooling.Testing.ApplicationTestcase.RunEntrypoint` runs the installed console script - the path a
   user takes, and therefore the one covering the entry-point wiring.
 * :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` runs ``python -m <module>``, if the test class names
-  one in ``_runnableModule``. When this passes while the entry point fails, the packaging is at fault rather than
+  one in ``_RUNNABLE_MODULE``. When this passes while the entry point fails, the packaging is at fault rather than
   the code. A program without a ``__main__`` module leaves it unset.
 
 Both capture ``stdout`` and ``stderr`` as text and take a ``timeout`` - 60 seconds by default -, so a hanging
@@ -69,8 +69,8 @@ program fails the test instead of the test suite.
 
 
    class Commands(ApplicationTestcase):
-     _consoleScript =  "myprogram"
-     _runnableModule = "myPackage.CLI"
+     _CONSOLE_SCRIPT =  "myprogram"
+     _RUNNABLE_MODULE = "myPackage.CLI"
 
      def test_Version(self) -> None:
        result = self.RunEntrypoint("--version")

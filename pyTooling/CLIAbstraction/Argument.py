@@ -78,7 +78,7 @@ class CommandLineArgument(metaclass=ExtendedType):
 	  |rarr| :class:`~pyTooling.CLIAbstraction.KeyValueFlag.NamedKeyValuePairsArgument`
 	"""
 
-	_pattern: ClassVar[str]  #: Format string to render the argument on the command line.
+	_PATTERN: ClassVar[str]  #: Format string to render the argument on the command line.
 
 	def __init_subclass__(cls, *args: Any, pattern: Nullable[str] = None, **kwargs: Any) -> None:
 		"""
@@ -90,7 +90,7 @@ class CommandLineArgument(metaclass=ExtendedType):
 		:param kwargs:  Any keyword argument.
 		"""
 		super().__init_subclass__(*args, **kwargs)
-		cls._pattern = pattern
+		cls._PATTERN = pattern
 
 	# TODO: Add property to read pattern
 
@@ -225,7 +225,7 @@ class DelimiterArgument(CommandLineArgument, pattern="--"):
 
 		:returns: Formatted argument.
 		"""
-		return self._pattern
+		return self._PATTERN
 
 
 @export
@@ -235,7 +235,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 	Base-class for all command line arguments with a name.
 	"""
 
-	_name: ClassVar[str]  #: Name of the argument, inserted into :attr:`_pattern`.
+	_NAME: ClassVar[str]  #: Name of the argument, inserted into :attr:`_PATTERN`.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
@@ -249,7 +249,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		"""
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-		cls._name = name
+		cls._NAME = name
 
 	@readonly
 	def Name(self) -> str:
@@ -258,7 +258,7 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 
 		:returns: Internal name.
 		"""
-		return self._name
+		return self._NAME
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
@@ -268,10 +268,10 @@ class NamedArgument(CommandLineArgument, pattern="{0}"):
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
-		if self._name is None:
-			raise ValueError("Internal value '_name' is None.")
+		if self._NAME is None:
+			raise ValueError("Internal value '_NAME' is None.")
 
-		return self._pattern.format(self._name)
+		return self._PATTERN.format(self._NAME)
 
 
 @export
@@ -280,7 +280,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 	Base-class for all command line arguments with a value.
 	"""
 
-	_value: ValueT  #: Value of the argument, inserted into :attr:`_pattern`.
+	_value: ValueT  #: Value of the argument, inserted into :attr:`_PATTERN`.
 
 	def __init_subclass__(cls, *args: Any, pattern: str = "{0}", **kwargs: Any) -> None:
 		"""
@@ -331,7 +331,7 @@ class ValuedArgument(CommandLineArgument, Generic[ValueT], pattern="{0}"):
 
 		:returns: Formatted argument.
 		"""
-		return self._pattern.format(self._value)
+		return self._PATTERN.format(self._value)
 
 
 class NamedAndValuedArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT], pattern="{0}={1}"):
@@ -372,10 +372,10 @@ class NamedAndValuedArgument(NamedArgument, ValuedArgument[ValueT], Generic[Valu
 		:returns:           Formatted argument.
 		:raises ValueError: If internal name is None.
 		"""
-		if self._name is None:
-			raise ValueError("Internal value '_name' is None.")
+		if self._NAME is None:
+			raise ValueError("Internal value '_NAME' is None.")
 
-		return self._pattern.format(self._name, self._value)
+		return self._PATTERN.format(self._NAME, self._value)
 
 
 @abstractclass
@@ -391,7 +391,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT]
 	* `width 100``
 	"""
 
-	_valuePattern: ClassVar[str]  #: Format string to render the argument's value as a second command line element.
+	_VALUE_PATTERN: ClassVar[str]  #: Format string to render the argument's value as a second command line element.
 
 	def __init_subclass__(cls, *args: Any, name: Nullable[str] = None, pattern: str = "{0}", valuePattern: str = "{0}", **kwargs: Any) -> None:
 		"""
@@ -408,7 +408,7 @@ class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT]
 		kwargs["name"] = name
 		kwargs["pattern"] = pattern
 		super().__init_subclass__(*args, **kwargs)
-		cls._valuePattern = valuePattern
+		cls._VALUE_PATTERN = valuePattern
 
 	def __init__(self, value: ValueT) -> None:
 		"""
@@ -422,10 +422,10 @@ class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT]
 
 	# @property
 	# def ValuePattern(self) -> str:
-	# 	if self._valuePattern is None:
-	# 		raise ValueError("Internal value '_valuePattern' is None.")
+	# 	if self._VALUE_PATTERN is None:
+	# 		raise ValueError("Internal value '_VALUE_PATTERN' is None.")
 	#
-	# 	return self._valuePattern
+	# 	return self._VALUE_PATTERN
 
 	def AsArgument(self) -> Union[str, Iterable[str]]:
 		"""
@@ -435,12 +435,12 @@ class NamedTupledArgument(NamedArgument, ValuedArgument[ValueT], Generic[ValueT]
 		:returns:           Formatted argument as tuple of strings.
 		:raises ValueError: If internal name is None.
 		"""
-		if self._name is None:
-			raise ValueError("Internal value '_name' is None.")
+		if self._NAME is None:
+			raise ValueError("Internal value '_NAME' is None.")
 
 		return (
-			self._pattern.format(self._name),
-			self._valuePattern.format(self._value)
+			self._PATTERN.format(self._NAME),
+			self._VALUE_PATTERN.format(self._value)
 		)
 
 

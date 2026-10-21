@@ -514,7 +514,7 @@ Applying ``Hook`` to anything but a method - a class, or a function at module le
 still a plain function while the decorator runs: its qualified name tells.
 
 The scope reads back from an attribute **instance** - :pycode:`Hook("open").Scope` - and from the class as
-:pycode:`Hook._scope`. A class derived from ``Hook`` inherits it, unless it states its own.
+:pycode:`Hook._SCOPE`. A class derived from ``Hook`` inherits it, unless it states its own.
 
 
 .. _TUTORIAL/Attributes/UseCases:

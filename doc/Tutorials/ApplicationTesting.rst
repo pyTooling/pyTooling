@@ -45,8 +45,8 @@ What only a subprocess can tell you
 
 
          class Version(ApplicationTestcase):
-           _consoleScript  = "myprogram"
-           _runnableModule = "myPackage"
+           _CONSOLE_SCRIPT  = "myprogram"
+           _RUNNABLE_MODULE = "myPackage"
 
            def test_Version(self) -> None:
              result = self.RunEntrypoint("--version")

@@ -102,7 +102,7 @@ Step 3 - A Headline and a Version Command
    .. grid-item::
       :columns: 6
 
-      :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHeadline` prints the class variable ``HeadLine`` centered
+      :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHeadline` prints the class variable ``HEADLINE`` centered
       between two horizontal lines. :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` prints copyright,
       license, authors and version - read from the dunder variables of the module handed to it, which is why an
       application overrides it with the one-liner naming its own package.

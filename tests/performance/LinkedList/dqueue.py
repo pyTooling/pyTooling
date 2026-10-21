@@ -53,7 +53,7 @@ class Insertion(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)
 
 	def test_InsertAfterLast(self) -> None:
 		def wrapper(count: int):
@@ -65,4 +65,4 @@ class Insertion(PerformanceTest):
 
 			return func
 
-		self.runSizedTests(wrapper, self.counts)
+		self.runSizedTests(wrapper, self.COUNTS)

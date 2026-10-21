@@ -89,7 +89,7 @@ Step 2: the class and its first argument
 
       Three things are worth naming:
 
-      .. rubric:: ``_executableNames`` maps :attr:`platform.system` to the file name
+      .. rubric:: ``_EXECUTABLE_NAMES`` maps :attr:`platform.system` to the file name
 
       The executable is looked up on ``PATH`` when the object is constructed, and a missing one raises
       :exc:`~pyTooling.CLIAbstraction.CLIAbstractionError` right there rather than at the first call. Pass
@@ -120,7 +120,7 @@ Step 2: the class and its first argument
          from pyTooling.CLIAbstraction.Flag    import ShortFlag, LongFlag
 
          class Git(Program):
-           _executableNames = {
+           _EXECUTABLE_NAMES = {
              "Darwin":  "git",
              "FreeBSD": "git",
              "Linux":   "git",
@@ -282,7 +282,7 @@ Step 5: sharing arguments between program variants
          from pyTooling.MetaClasses import ExtendedType
 
          class GitArgumentsMixin(metaclass=ExtendedType, mixin=True):
-           _executableNames = {"Linux": "git", "Windows": "git.exe", "Darwin": "git"}
+           _EXECUTABLE_NAMES = {"Linux": "git", "Windows": "git.exe", "Darwin": "git"}
 
            @CLIArgument()
            class FlagVersion(LongFlag, name="version"): ...

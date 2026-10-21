@@ -293,7 +293,7 @@ warnings:
    from pyTooling.Warning    import CriticalWarning, WarningCollector
 
    class Application(TerminalApplication):
-     HeadLine = "My Application"
+     HEADLINE = "My Application"
 
      def Run(self) -> None:
        with WarningCollector() as warnings:
