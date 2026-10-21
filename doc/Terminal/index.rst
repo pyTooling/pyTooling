@@ -558,6 +558,23 @@ while the messages, the verbosity and the exception reporting come from this pac
 The :ref:`Terminal Application tutorial <TUTORIAL/TerminalApplication>` builds such a program step by step - from the
 first message to the command handlers, the exception reporting and the unit tests.
 
+Larger programs move their command handlers into mixin-classes, one per group of commands. Such a mixin-class names
+:data:`~pyTooling.TerminalUI.TERMINAL_APPLICATION_PROTOCOL` as what it expects from its host class, so mixing it into
+anything but a :class:`~pyTooling.TerminalUI.TerminalApplication` fails on instantiation:
+
+.. code-block:: Python
+
+   @export
+   class PipelineHandlers(metaclass=ExtendedType, mixin=True, expects=TERMINAL_APPLICATION_PROTOCOL):
+     @CommandHandler("pipeline", help="Read a pipeline.")
+     def HandlePipeline(self, args: Namespace) -> None:
+       self._PrintHeadline()
+       self.WriteNormal("...")
+
+   @export
+   class Application(TerminalApplication, ArgParseHelperMixin, PipelineHandlers):
+     ...
+
 
 .. _TERM/Competitors:
 

@@ -66,6 +66,8 @@ from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
 
+__all__ = ["TERMINAL_APPLICATION_PROTOCOL"]
+
 
 @export
 class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True):
@@ -1692,3 +1694,48 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		:returns:               True, if message was actually written.
 		"""
 		return self.WriteLine(Line(message, Severity.DryRun, indent=self._baseIndent + indent, appendLinebreak=appendLinebreak))
+
+
+TERMINAL_APPLICATION_PROTOCOL: tuple[str, ...] = (
+	"_PrintHeadline",
+	"Width",
+	"Verbose",
+	"Debug",
+	"Quiet",
+	"Exit",
+	"ExitOnPreviousErrors",
+	"ExitOnPreviousCriticalWarnings",
+	"ExitOnPreviousWarnings",
+	"WriteFatal",
+	"WriteError",
+	"WriteErrorNote",
+	"WriteCritical",
+	"WriteCriticalNote",
+	"WriteWarning",
+	"WriteWarningNote",
+	"WriteInfo",
+	"WriteQuiet",
+	"WriteNormal",
+	"WriteVerbose",
+	"WriteDebug",
+	"WriteDryRun"
+)
+"""
+A tuple of the members a mixin-class can expect from a :class:`TerminalApplication` it is mixed into.
+
+A mixin-class implementing command handlers writes messages, reads the verbosity and exits through its host class. It
+names this tuple as its ``expects`` class keyword argument, so a class mixing it in without being a
+:class:`TerminalApplication` can't be instantiated:
+
+.. code-block:: Python
+
+   class PipelineHandlers(metaclass=ExtendedType, mixin=True, expects=TERMINAL_APPLICATION_PROTOCOL):
+     def HandlePipeline(self, args: Namespace) -> None:
+       self._PrintHeadline()
+       self.WriteNormal("...")
+
+.. seealso::
+
+   :class:`~pyTooling.MetaClasses.ExtendedType`
+      |rarr| The ``expects`` class keyword argument of mixin-classes.
+"""
