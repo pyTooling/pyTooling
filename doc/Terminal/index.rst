@@ -112,8 +112,8 @@ colorama isn't installed, every entry is an empty string, so the same code emits
 
 .. hint::
 
-   colorama is an optional dependency: install ``pyTooling[terminal]``, otherwise importing the package raises an
-   exception naming that extra.
+   colorama is an optional dependency, installed with the extra ``pyTooling[terminal]``. Without it, the package
+   imports as well and writes uncolored text.
 
 
 .. _TERM/Size:

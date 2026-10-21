@@ -32,7 +32,7 @@
 """
 A set of helpers to implement a text user interface (TUI) in a terminal.
 
-:raises MissingDependencyError: If the 'terminal' extra isn't installed.
+Colors need the optional package colorama (extra ``terminal``); without it, the output is uncolored.
 
 .. seealso::
 
@@ -43,28 +43,22 @@ A set of helpers to implement a text user interface (TUI) in a terminal.
    :mod:`pyTooling.Warning`
       |rarr| Collecting warnings that the application then writes.
 """
-from __future__              import annotations
+from __future__            import annotations
 
-from datetime                import datetime
-from enum                    import Enum, unique
-from io                      import TextIOWrapper
-from sys                     import stdin, stdout, stderr
-from textwrap                import dedent
-from types                   import ModuleType
-from typing                  import NoReturn, Any, Optional as Nullable, Callable, ClassVar, Protocol
-from pyTooling.Exceptions    import MissingDependencyError
-from pyTooling.Versioning    import PythonVersion
-
-try:
-	from colorama              import Fore as Foreground
-except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="colorama", extra="terminal") from ex
+from datetime              import datetime
+from enum                  import Enum, unique
+from io                    import TextIOWrapper
+from sys                   import stdin, stdout, stderr
+from textwrap              import dedent
+from types                 import ModuleType
+from typing                import NoReturn, Any, Optional as Nullable, Callable, ClassVar, Protocol
 
 from pyTooling.Decorators  import export, readonly, InheritDocString
 from pyTooling.MetaClasses import ExtendedType, mixin
-from pyTooling.Exceptions  import PlatformNotSupportedError, ExceptionBase
+from pyTooling.Exceptions  import MissingDependencyError, PlatformNotSupportedError, ExceptionBase
 from pyTooling.Common      import lastItem, getFullyQualifiedName
 from pyTooling.Platform    import Platform
+from pyTooling.Versioning  import PythonVersion
 
 
 @export
@@ -78,8 +72,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 	NOT_IMPLEMENTED_EXCEPTION_EXIT_CODE: ClassVar[int] =   240   #: Return code, if unimplemented methods or code sections were called.
 	UNHANDLED_EXCEPTION_EXIT_CODE: ClassVar[int] =         241   #: Return code, if an unhandled exception reached the topmost exception handler.
-	#: Return code (242), if an optional dependency is missing. The value lives on the exception, which stays
-	#: importable when this module is not - see :meth:`PrintMissingDependencyError`.
+	#: Return code (242), if an optional dependency is missing. The value lives on the exception - see
+	#: :meth:`PrintMissingDependencyError`.
 	MISSING_DEPENDENCY_EXIT_CODE: ClassVar[int] =          MissingDependencyError.EXIT_CODE
 	FATAL_EXIT_CODE: ClassVar[int] =                       255   #: Return code for fatal exits.
 	ISSUE_TRACKER_URL: ClassVar[str] =                     None  #: URL to the issue tracker for reporting bugs.
@@ -461,17 +455,16 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		.. attention::
 
-		   :mod:`pyTooling.TerminalUI` raises this exception **itself** when *colorama* is missing, and that happens
-		   while the module is imported - long before an application object exists, so this method cannot report that
-		   case. An application that wants to survive it catches the exception around its own imports and prints the
-		   commands directly:
+		   A dependency missing while a module is imported raises before an application object exists, so this method
+		   cannot report that case. An application that wants to survive it catches the exception around its own imports
+		   and prints the commands directly:
 
 		   .. code-block:: python
 
 		      from pyTooling.Exceptions import MissingDependencyError
 
 		      try:
-		        from pyTooling.TerminalUI import TerminalApplication
+		        from myPackage.Plotting import Plot
 		      except MissingDependencyError as ex:
 		        print(f"{ex}\\n" + "\\n".join(f"  {command}" for command in ex.InstallCommands))
 		        raise SystemExit(MissingDependencyError.EXIT_CODE) from ex
@@ -1143,15 +1136,17 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		          "MyModule"
 		        )
 		"""
-		copyrights = getattr(dunderModule, "__copyright__", "{RED}Copyright not set!".format(RED=Foreground.RED)).split("\n", 1)
+		red = self.FOREGROUND["DARK_RED"]
+
+		copyrights = getattr(dunderModule, "__copyright__", "{RED}Copyright not set!".format(RED=red)).split("\n", 1)
 		self.WriteNormal(f"Copyright:     {copyrights[0]}")
 		for copyright in copyrights[1:]:
 			self.WriteNormal(f"               {copyright}")
 
-		license = getattr(dunderModule, "__license__", "{RED}License not set!".format(RED=Foreground.RED))
+		license = getattr(dunderModule, "__license__", "{RED}License not set!".format(RED=red))
 		self.WriteNormal(f"License:       {license}")
 
-		authors = getattr(dunderModule, "__author__", "{RED}Unknown author!".format(RED=Foreground.RED)).split(", ")
+		authors = getattr(dunderModule, "__author__", "{RED}Unknown author!".format(RED=red)).split(", ")
 		self.WriteNormal(f"Authors:       {authors[0]}")
 		for author in authors[1:]:
 			self.WriteNormal(f"               {author}")
@@ -1160,7 +1155,7 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 			self.WriteNormal(f"Email:         {email}")
 
 		if (version := getattr(dunderModule, "__version__", None)) is None:
-			self.WriteNormal("Version:       {RED}Version not set!".format(RED=Foreground.RED))
+			self.WriteNormal("Version:       {RED}Version not set!".format(RED=red))
 		else:
 			currentVersion = PythonVersion.Parse(version)
 			if packageName is None:
