@@ -58,7 +58,7 @@ Each feature is switched on by a class keyword argument:
      - Create one instance, and return it on every further instantiation.
      - :ref:`META/Singleton`
    * - ``expects=(...)``
-     - Name the members the class needs from the class it is mixed into.
+     - Name the members the class needs from the class it is mixed into - as names or as a :class:`typing.Protocol`.
      - :ref:`META/ExpectedMembers`
 
 Abstract classes and methods need no keyword: a decorator marks them, and :class:`~pyTooling.MetaClasses.ExtendedType`
@@ -391,6 +391,40 @@ intermediate class having to say anything.
 ``expects`` is not limited to mixin-classes - any class can state what its subclasses have to provide. A
 mixin-class is the case it exists for, and a mixin-class is never itself incomplete, because it cannot provide what
 it expects from its host.
+
+
+.. _META/ExpectedMembers/Protocol:
+
+Naming the members with a protocol
+==================================
+
+Instead of names, ``expects`` accepts a :class:`typing.Protocol` class. Its members - methods, properties and annotated
+fields, including those of the protocols it derives from - are the expected members. A protocol also states the
+members' signatures, so annotating ``self`` with it lets a type-checker check the calls inside the mixin-class, which
+a tuple of names can't.
+
+.. rubric:: Example:
+.. code-block:: Python
+
+   from typing                import Protocol
+   from pyTooling.MetaClasses import ExtendedType
+
+   class Writer(Protocol):
+     _counter: int
+
+     def Write(self, message: str) -> bool:
+       ...
+
+   class ReportMixin(metaclass=ExtendedType, mixin=True, expects=Writer):
+     def Report(self: Writer) -> bool:
+       return self.Write(f"{self._counter}")
+
+The protocol stays a plain :class:`typing.Protocol`: :class:`~pyTooling.MetaClasses.ExtendedType` only reads its
+members. A class can't be both, because the meta-class of :class:`typing.Protocol` conflicts with
+:class:`~pyTooling.MetaClasses.ExtendedType`. A class that isn't a protocol is rejected with a :exc:`TypeError`.
+
+:class:`~pyTooling.TerminalUI.TerminalApplicationProtocol` names what a mixin-class can expect from a
+:class:`~pyTooling.TerminalUI.TerminalApplication`.
 
 
 .. _META/ExpectedMembers/Method:

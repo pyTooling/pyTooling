@@ -53,7 +53,7 @@ from sys                  import modules, version_info
 from threading            import Condition
 from types                import BuiltinFunctionType, CodeType, FunctionType, MemberDescriptorType, MethodType
 from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Self
-from typing               import TypeVar, Generic, _GenericAlias, ClassVar, Optional as Nullable
+from typing               import TypeVar, Generic, _GenericAlias, _get_protocol_attrs, ClassVar, Optional as Nullable
 
 from pyTooling.Common     import getFullyQualifiedName, getTypeName
 from pyTooling.Exceptions import ToolingException
@@ -981,7 +981,7 @@ class ExtendedType(type):
 		mixin: bool = False,
 		weakref: bool = False,
 		singleton: bool = False,
-		expects: Iterable[str] = (),
+		expects: Iterable[str] | type = (),
 		**kwargs: Any
 	) -> Self:
 		"""
@@ -1002,7 +1002,8 @@ class ExtendedType(type):
 		                        ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on to the class it
 		                        is mixed into.
 		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
-		:param expects:         Optional, names of members this class needs from whichever class it is mixed into. |br|
+		:param expects:         Optional, names of members this class needs from whichever class it is mixed into, or a
+		                        :class:`typing.Protocol` class naming them as its members. |br|
 		                        See :attr:`__expectedMembers__`.
 		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
 		                        :func:`type` does.
@@ -2075,7 +2076,7 @@ class ExtendedType(type):
 		className: str,
 		baseClasses: tuple[type, ...],
 		members: dict[str, Any],
-		expects: Iterable[str]
+		expects: Iterable[str] | type
 	) -> dict[str, str]:
 		"""
 		Collect the members expected by this class and by every class in its inheritance hierarchy.
@@ -2087,13 +2088,27 @@ class ExtendedType(type):
 		:param className:   The name of the class being constructed.
 		:param baseClasses: The tuple of base-classes the class is derived from.
 		:param members:     The dictionary of members for the constructed class.
-		:param expects:     Names of members the class being constructed expects.
+		:param expects:     Names of members the class being constructed expects, or a :class:`typing.Protocol` class
+		                    whose members are these names.
 		:returns:           Dictionary mapping an expected member's name to the name of the class expecting it.
+		:raises TypeError:  If parameter 'expects' is a class, but not a :class:`typing.Protocol`.
 		:raises TypeError:  If parameter 'expects' is not an iterable of strings.
 		:raises TypeError:  If an element of parameter 'expects' is not a string.
 		"""
+		if isinstance(expects, type):
+			# WORKAROUND: Python <3.13
+			# if not is_protocol(expects):
+			if not getattr(expects, "_is_protocol", False):
+				ex = TypeError("Parameter 'expects' is a class, but not a 'typing.Protocol'.")
+				ex.add_note(f"Got class '{getFullyQualifiedName(expects)}'.")
+				raise ex
+
+			# WORKAROUND: Python <3.13
+			# expects = tuple(sorted(get_protocol_members(expects)))
+			expects = tuple(sorted(_get_protocol_attrs(expects)))
+
 		# A tuple (the default) skips the slower isinstance check against the abstract base class 'Iterable'.
-		if type(expects) is not tuple and (isinstance(expects, str) or not isinstance(expects, Iterable)):
+		elif type(expects) is not tuple and (isinstance(expects, str) or not isinstance(expects, Iterable)):
 			ex = TypeError("Parameter 'expects' is not an iterable of strings.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(expects)}'.")
 			raise ex
