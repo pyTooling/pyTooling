@@ -436,6 +436,8 @@ Version 10.x (2026)
        subtree along and becomes the root node of its own tree, like assigning ``None`` to its
        :attr:`~pyTooling.Tree.Node.Parent`. A node, which isn't a direct child, raises the new
        :exc:`~pyTooling.Tree.NotAChildError`, which carries it in :attr:`~pyTooling.Tree.NotAChildError.Child`.
+     * :meth:`Node.Delete <pyTooling.Tree.Node.Delete>` deletes a node and its subtree and disconnects the nodes from
+       each other, so reference counting frees them instead of the cyclic garbage collector.
 
    * :mod:`pyTooling.CLIAbstraction`
 
