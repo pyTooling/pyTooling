@@ -33,13 +33,17 @@ Unit tests for :class:`~pyTooling.MetaClasses.ExtendedType` under postponed anno
 
 This module opts into :pep:`563` - ``from __future__ import annotations`` - which turns every annotation in it into
 a string. The meta-class has to reach the same conclusions as it does for evaluated annotations; the rest of the
-testsuite covers that other half.
+testsuite covers that other half. :class:`DeferredAnnotations` compiles its classes without the future import.
 """
-from __future__ import annotations
+from __future__            import annotations
 
-from typing import ClassVar, Optional as Nullable, List, Dict
+from textwrap              import dedent
+from typing                import Any, ClassVar, Optional as Nullable, List, Dict
+
+from pytest                import mark
 
 from pyTooling.MetaClasses import ExtendedType, mixin
+from pyTooling.Platform    import CurrentPlatform
 from pyTooling.Testing     import Testcase
 
 
@@ -161,3 +165,58 @@ class ResolveAnnotation(Testcase):
 
 		self.assertEqual("not an expression", ExtendedType._resolveAnnotation("not an expression", members))
 		self.assertEqual("not an expression", ExtendedType._resolveAnnotation("not an expression", members))
+
+
+@mark.skipif(CurrentPlatform.PythonVersion < "3.14", reason="Deferred annotations (PEP 649) exist since Python 3.14.")
+class DeferredAnnotations(Testcase):
+	"""
+	Classes in a module without ``from __future__ import annotations`` on Python 3.14 and newer (:pep:`649`).
+
+	The class bodies are compiled without this module's future import.
+	"""
+
+	def _Execute(self, source: str) -> dict[str, Any]:
+		"""
+		Execute a module's source code without inheriting this module's future import.
+
+		:param source: Source code of the module.
+		:returns:      The module's namespace.
+		"""
+		namespace = {"__name__": "DeferredAnnotations"}
+		exec(compile(dedent(source), "<DeferredAnnotations>", "exec", dont_inherit=True), namespace)
+		return namespace
+
+	def test_SelfReference(self) -> None:
+		namespace = self._Execute("""\
+			from pyTooling.MetaClasses import ExtendedType
+
+			class Node(metaclass=ExtendedType, slots=True):
+				_parent: Node
+				_value:  int
+			""")
+
+		self.assertEqual(("_parent", "_value"), namespace["Node"].__slots__)
+
+	def test_UndefinedName(self) -> None:
+		namespace = self._Execute("""\
+			from pyTooling.MetaClasses import ExtendedType
+
+			class Gated(metaclass=ExtendedType, slots=True):
+				_value: Undefined
+			""")
+
+		self.assertEqual(("_value", ), namespace["Gated"].__slots__)
+
+	def test_UndefinedName_ClassVariable(self) -> None:
+		"""A ``ClassVar`` of an undefined name is no slot and keeps its value."""
+		namespace = self._Execute("""\
+			from typing                import ClassVar
+			from pyTooling.MetaClasses import ExtendedType
+
+			class Gated(metaclass=ExtendedType, slots=True):
+				COUNT:  ClassVar[Undefined] = 0
+				_value: int
+			""")
+
+		self.assertEqual(("_value", ), namespace["Gated"].__slots__)
+		self.assertEqual(0, namespace["Gated"].COUNT)
