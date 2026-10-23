@@ -897,6 +897,13 @@ Version 10.x (2026)
        owning the parsers it prints, instead of :class:`~pyTooling.TerminalUI.TerminalApplication`; it writes through
        ``TerminalApplication``'s ``Write***`` methods.
 
+   * :mod:`pyTooling.Common`
+
+     * :func:`~pyTooling.Common.getResourceFile` and :func:`~pyTooling.Common.readResourceFile` import
+       :mod:`importlib.resources` when called, not when :mod:`pyTooling.Common` is imported. Every pyTooling package
+       imports :mod:`pyTooling.Common`: importing :mod:`pyTooling.Common` takes 8.3 ms less (Python 3.15), importing
+       :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 6.4 to 7.4 ms less.
+
    * :mod:`pyTooling.Configuration`
 
      * ⚠️ :class:`pyTooling.Configuration.Configuration` takes only ``configFile``. A configuration is the root node, so
@@ -909,6 +916,10 @@ Version 10.x (2026)
        :class:`~pyTooling.Decorators.DocStringMergeStrategy`, replacing the ``merge``, ``summaryOnly`` and ``order``
        parameters. A new strategy inherits just the base-class' summary. The default, ``BaseLast``, appends the
        base-class' doc-string below the entity's own.
+     * :deco:`~pyTooling.Decorators.InheritDocString` imports :func:`inspect.cleandoc` when it decorates, so importing
+       :mod:`pyTooling.Decorators` doesn't load :mod:`inspect`. Importing :mod:`pyTooling.Common` takes another 4.7 ms
+       less (Python 3.15), importing :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 2.8
+       to 3.3 ms less.
 
    * :mod:`pyTooling.Dependency`
 
@@ -944,6 +955,13 @@ Version 10.x (2026)
      * ⚠️ An edge or link takes its kind as a parameter before ``keyValuePairs``: ``edgeKind`` / ``linkKind`` in
        ``EdgeToVertex``, ``EdgeFromVertex``, ``LinkToVertex`` and ``LinkFromVertex``, ``kind`` in the constructors of
        :class:`~pyTooling.Graph.Edge` and :class:`~pyTooling.Graph.Link`.
+
+   * :mod:`pyTooling.Graph.GraphML`
+
+     * An attribute value is escaped with :meth:`str.translate` instead of :func:`xml.sax.saxutils.escape`, with the
+       same result. Importing :mod:`xml.sax.saxutils` loaded :mod:`urllib.request` and with it :mod:`ssl`,
+       :mod:`http.client` and :mod:`email`: importing :mod:`pyTooling.Graph.GraphML` takes 27 ms less (Python 3.15),
+       24 instead of 52 ms.
 
    * :mod:`pyTooling.MetaClasses`
 
