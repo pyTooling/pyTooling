@@ -916,6 +916,10 @@ Version 10.x (2026)
        :class:`~pyTooling.Decorators.DocStringMergeStrategy`, replacing the ``merge``, ``summaryOnly`` and ``order``
        parameters. A new strategy inherits just the base-class' summary. The default, ``BaseLast``, appends the
        base-class' doc-string below the entity's own.
+     * :deco:`~pyTooling.Decorators.InheritDocString` imports :func:`inspect.cleandoc` when it decorates, so importing
+       :mod:`pyTooling.Decorators` doesn't load :mod:`inspect`. Importing :mod:`pyTooling.Common` takes another 4.7 ms
+       less (Python 3.15), importing :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 2.8
+       to 3.3 ms less.
 
    * :mod:`pyTooling.Dependency`
 

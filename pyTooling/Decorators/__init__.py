@@ -45,7 +45,6 @@ from __future__ import annotations
 
 from enum       import Enum, unique
 from functools  import wraps
-from inspect    import cleandoc
 from sys        import modules
 from typing     import TYPE_CHECKING, Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
 from typing     import Optional as Nullable
@@ -370,6 +369,7 @@ def InheritDocString(
 		:param param: Method to which the doc-string from a method in ``baseClass`` (with same className) should be merged.
 		:returns:     Same method, but with overwritten doc-string field (``__doc__``).
 		"""
+		from inspect                 import cleandoc
 		# Imported here, because 'pyTooling.Documentation' imports 'export' from this module.
 		from pyTooling.Documentation import splitDocString
 
