@@ -37,7 +37,7 @@ from pickle                import dumps, loads
 from pyTooling.CallGraph   import DuplicateFunctionError
 from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
 from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, EnvironmentVariableError
-from pyTooling.Exceptions  import ExceptionBase, MissingDependencyError, NotAChildError, NotConfiguredError
+from pyTooling.Exceptions  import ExceptionBase, InUseError, MissingDependencyError, NotAChildError, NotConfiguredError
 from pyTooling.Exceptions  import NotInSameHierarchyError
 from pyTooling.Exceptions  import PlatformNotSupportedError, ToolingException
 from pyTooling.Graph       import DuplicateEdgeError, DuplicateVertexError, NotInSameGraph
@@ -102,6 +102,17 @@ class CommonBases(Testcase):
 	def test_NotAChildError(self) -> None:
 		self.assertTrue(issubclass(TreeNotAChildError, NotAChildError))
 		self.assertTrue(issubclass(TreeNotAChildError, ToolingException))
+
+	def test_InUseError(self) -> None:
+		"""A package's own error derives from its base-exception and 'InUseError'; both catch it."""
+		class ElementInUseError(ToolingException, InUseError):
+			pass
+
+		with self.assertRaises(InUseError) as context:
+			raise ElementInUseError("Element 'a' is still used by 'b'.")
+
+		self.assertIsInstance(context.exception, ToolingException)
+		self.assertEqual("Element 'a' is still used by 'b'.", str(context.exception))
 
 	def test_ToolingExceptionMessage(self) -> None:
 		"""A common base doesn't change how a 'ToolingException' stores its message."""
