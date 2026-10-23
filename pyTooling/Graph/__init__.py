@@ -2822,6 +2822,26 @@ class BaseGraph(
 					link._destination._inboundLinks.remove(link)
 					link._Delete()
 
+	def _DeleteElements(self) -> None:
+		"""
+		Delete the vertices, edges and links registered on this graph or subgraph, and their attached attributes.
+
+		Called by :meth:`Graph.Delete`, which deletes the subgraphs, views and components itself.
+		"""
+		self.RemoveEdges()
+		self.RemoveLinks()
+
+		for vertex in self._verticesWithoutID:
+			vertex._views = {}
+			vertex._dict.clear()
+
+		for vertex in self._verticesWithID.values():
+			vertex._views = {}
+			vertex._dict.clear()
+
+		self._verticesWithoutID = []
+		self._verticesWithID =    {}
+
 	def HasCycle(self) -> bool:
 		"""
 		Check if the graph contains at least one cycle.
@@ -3329,6 +3349,40 @@ class Graph(
 
 		:returns: The number of components in this graph."""
 		return len(self._components)
+
+	def Delete(self) -> None:
+		"""
+		Delete all subgraphs, views, components, vertices, edges and links of this graph.
+
+		Afterwards, the graph is empty: no vertex has an edge or a link, no subgraph, view or component lists a vertex,
+		and every element's attached attributes are removed, the graph's own too. The graph can be filled again.
+
+		.. seealso::
+
+		   :ref:`Deleting a graph <STRUCT/Graph/Delete>`
+		      |rarr| Reference cycles in a graph and Python's garbage collector.
+		   :meth:`Vertex.Delete <pyTooling.Graph.Vertex.Delete>`
+		      |rarr| Delete a single vertex with its edges and links.
+		"""
+		for subgraph in self._subgraphs:
+			subgraph._DeleteElements()
+			subgraph._dict.clear()
+
+		for view in self._views:
+			view._vertices = set()
+			view._dict.clear()
+
+		for component in self._components:
+			component._vertices = set()
+			component._dict.clear()
+
+		self._DeleteElements()
+
+		self._subgraphs =  set()
+		self._views =      set()
+		self._components = set()
+
+		super().Delete()
 
 	def ContainsVertexByID(self, vertexID: Nullable[VertexIDType]) -> bool:
 		"""
