@@ -32,10 +32,15 @@
 Unit tests for :mod:`pyTooling.Tree`: construction, merging and splitting of trees, the loop detection, the
 iteration methods, and the rendering of a tree.
 """
-from typing            import Any, Optional as Nullable, List, Tuple, Dict
+from gc                 import disable as gc_disable, enable as gc_enable, isenabled as gc_isenabled
+from typing             import Any, Optional as Nullable, List, Tuple, Dict
+from weakref            import ref
 
-from pyTooling.Tree    import Node, AlreadyInTreeError, NoSiblingsError, NotAChildError, NotInSameTreeError
-from pyTooling.Testing import Testcase
+from pytest             import mark
+
+from pyTooling.Platform import CurrentPlatform
+from pyTooling.Tree     import Node, AlreadyInTreeError, NoSiblingsError, NotAChildError, NotInSameTreeError
+from pyTooling.Testing  import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -578,6 +583,97 @@ class SplitTree(Testcase):
 
 		self.assertEqual("Not a child.", str(context.exception))
 		self.assertIsNone(context.exception.Child)
+
+
+class Value:
+	"""A weak-referenceable node value: a weak reference to it tells if the node holding it was freed."""
+
+
+def _treeHoldingValue(delete: bool) -> ref:
+	"""
+	Build a tree of nodes with and without ID and with key-value-pairs, and drop every reference to it.
+
+	:param delete: If ``True``, the tree is deleted before the last reference is dropped.
+	:returns:      A weak reference to the value of a leaf node.
+	"""
+	value = Value()
+	root = Node(nodeID=0, keyValuePairs={"key": "value"})
+	node = Node(parent=root)
+	Node(nodeID=1, value=value, parent=node)
+	Node(parent=root)
+
+	if delete:
+		root.Delete()
+
+	return ref(value)
+
+
+class DeleteTree(Testcase):
+	"""Deleting a node deletes its subtree and disconnects its nodes from each other."""
+
+	def test_Root(self) -> None:
+		root = Node(nodeID=0, keyValuePairs={"key": "value"})
+		node1 = Node(nodeID=1, parent=root)
+		node2 = Node(parent=node1)
+
+		root.Delete()
+
+		for node in (root, node1, node2):
+			self.assertIsNone(node.Root)
+			self.assertIsNone(node.Parent)
+			self.assertEqual(0, node.ChildCount)
+			self.assertEqual(0, len(node))
+
+	def test_Subtree(self) -> None:
+		"""A deleted subtree leaves its tree; the other nodes stay as they were."""
+		root = Node(nodeID=0)
+		node1 = Node(nodeID=1, parent=root)
+		node2 = Node(nodeID=2, parent=root)
+		node3 = Node(nodeID=3, parent=node1)
+		node4 = Node(parent=node1)
+
+		node1.Delete()
+
+		self.assertEqual(1, root.ChildCount)
+		self.assertIs(node2, root.Children[0])
+		self.assertEqual(2, root.Size)
+		self.assertIs(node2, root.GetNodeByID(2))
+		with self.assertRaises(KeyError):
+			root.GetNodeByID(3)
+
+		for node in (node1, node3, node4):
+			self.assertIsNone(node.Root)
+			self.assertIsNone(node.Parent)
+			self.assertEqual(0, node.ChildCount)
+
+	def test_ValueIsKept(self) -> None:
+		root = Node(value=42)
+
+		root.Delete()
+
+		self.assertEqual(42, root.Value)
+
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="PyPy doesn't count references.")
+	def test_ReferenceCounting(self) -> None:
+		"""Without the cyclic garbage collector, a deleted tree is freed as soon as the last reference is dropped."""
+		wasEnabled = gc_isenabled()
+		gc_disable()
+		try:
+			self.assertIsNone(_treeHoldingValue(delete=True)())
+		finally:
+			if wasEnabled:
+				gc_enable()
+
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="PyPy doesn't count references.")
+	def test_ReferenceCounting_WithoutDelete(self) -> None:
+		"""Without the cyclic garbage collector, a tree, which wasn't deleted, stays in memory: it has reference cycles."""
+		wasEnabled = gc_isenabled()
+		gc_disable()
+		try:
+			self.assertIsNotNone(_treeHoldingValue(delete=False)())
+		finally:
+			if wasEnabled:
+				gc_enable()
 
 
 class Loops(Testcase):
