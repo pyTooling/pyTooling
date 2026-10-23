@@ -32,18 +32,23 @@
 Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the statistics collected for it.
 """
 from datetime              import timedelta
-from os                    import DirEntry, scandir
+from gc                    import collect as gc_collect, disable as gc_disable, enable as gc_enable
+from gc                    import get_objects as gc_get_objects, isenabled as gc_isenabled
+from os                    import DirEntry, link, scandir, symlink
 from pathlib               import Path
 from sys                   import platform as sys_platform
 from tempfile              import TemporaryDirectory
 from typing                import Iterator
 from unittest.mock         import patch
 
+from pytest                import mark
+
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import count
 from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError
 from pyTooling.Filesystem  import NodeKind, PermissionWarning
 from pyTooling.MetaClasses import AbstractClassError
+from pyTooling.Platform    import CurrentPlatform
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Testing     import Testcase
 
@@ -401,6 +406,123 @@ class Scanning(Testcase):
 
 		self.assertIsInstance(root.ScanDuration, timedelta)
 		self.assertIsInstance(root.AggregateDuration, timedelta)
+
+
+def _createTree(directory: Path) -> None:
+	"""
+	Create a directory tree: files in two levels, a hard link and - except on Windows - a symbolic link.
+
+	:param directory: The (empty) directory to fill.
+	"""
+	(directory / "a" / "b").mkdir(parents=True)
+	(directory / "x.txt").write_text("x")
+	(directory / "a" / "y.txt").write_text("yy")
+	(directory / "a" / "b" / "z.txt").write_text("zzz")
+	link(directory / "x.txt", directory / "a" / "h.txt")
+	if sys_platform != "win32":
+		symlink("y.txt", directory / "a" / "l")
+
+
+def _filesystemObjectCount() -> int:
+	"""
+	Count the filesystem elements the garbage collector tracks.
+
+	:returns: The number of tracked :class:`~pyTooling.Filesystem.Base` instances.
+	"""
+	return sum(1 for obj in gc_get_objects() if isinstance(obj, Base))
+
+
+class Deletion(Testcase):
+	"""Deleting a root disconnects all elements of the scanned tree from each other."""
+
+	_directory: Path
+
+	def setUp(self) -> None:
+		super().setUp()
+
+		self._directory = Path(self.enterContext(TemporaryDirectory()))
+		_createTree(self._directory)
+
+	def test_Delete(self) -> None:
+		root = Root(self._directory)
+		directories = list(root.IterateDirectories())
+		elements = list(root.IterateFiles())
+		filenames = [element for element in elements if isinstance(element, Filename)]
+		files = [filename.File for filename in filenames]
+
+		root.Delete()
+
+		self.assertIsNone(root.Root)
+		self.assertEqual(0, root.Count)
+		self.assertEqual(0, root.TotalFileCount)
+		self.assertEqual(0, root.TotalUniqueFileCount)
+		for directory in directories:
+			self.assertIsNone(directory.Root)
+			self.assertIsNone(directory.Parent)
+			self.assertEqual(0, directory.Count)
+
+		for element in elements:
+			self.assertIsNone(element.Root)
+			self.assertIsNone(element.Parent)
+			self.assertEqual(0, len(element.LinkSources))
+
+		for filename in filenames:
+			self.assertIsNone(filename.File)
+
+		for file in files:
+			self.assertIsNone(file.Root)
+			self.assertEqual(0, len(file.Parents))
+
+	def test_Delete_Collapsed(self) -> None:
+		"""The elements a collapse removed from their directories are disconnected too."""
+		root = Root(self._directory)
+		subdirectory = next(next(root.Subdirectories).Subdirectories)
+		filename = next(subdirectory.RegularFiles)
+		file = filename.File
+
+		root.Collapse(lambda directory: True)
+		root.Delete()
+
+		self.assertIsNone(subdirectory.Parent)
+		self.assertIsNone(filename.Parent)
+		self.assertIsNone(filename.File)
+		self.assertEqual(0, len(file.Parents))
+
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="PyPy doesn't count references.")
+	def test_ReferenceCounting(self) -> None:
+		"""Without the cyclic garbage collector, a deleted tree is freed as soon as the last reference is dropped."""
+		gc_collect()
+		wasEnabled = gc_isenabled()
+		gc_disable()
+		try:
+			before = _filesystemObjectCount()
+			root = Root(self._directory)
+			self.assertGreater(_filesystemObjectCount(), before)
+
+			root.Delete()
+			del root
+
+			self.assertEqual(before, _filesystemObjectCount())
+		finally:
+			if wasEnabled:
+				gc_enable()
+
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="PyPy doesn't count references.")
+	def test_ReferenceCounting_WithoutDelete(self) -> None:
+		"""Without the cyclic garbage collector, a tree, which wasn't deleted, stays in memory: it has reference cycles."""
+		gc_collect()
+		wasEnabled = gc_isenabled()
+		gc_disable()
+		try:
+			before = _filesystemObjectCount()
+			root = Root(self._directory)
+			del root
+
+			self.assertGreater(_filesystemObjectCount(), before)
+		finally:
+			if wasEnabled:
+				gc_enable()
+			gc_collect()
 
 
 class PermissionDenied(Testcase):
