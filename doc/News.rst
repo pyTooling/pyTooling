@@ -897,6 +897,13 @@ Version 10.x (2026)
        owning the parsers it prints, instead of :class:`~pyTooling.TerminalUI.TerminalApplication`; it writes through
        ``TerminalApplication``'s ``Write***`` methods.
 
+   * :mod:`pyTooling.Common`
+
+     * :func:`~pyTooling.Common.getResourceFile` and :func:`~pyTooling.Common.readResourceFile` import
+       :mod:`importlib.resources` when called, not when :mod:`pyTooling.Common` is imported. Every pyTooling package
+       imports :mod:`pyTooling.Common`: importing :mod:`pyTooling.Common` takes 8.3 ms less (Python 3.15), importing
+       :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 6.4 to 7.4 ms less.
+
    * :mod:`pyTooling.Configuration`
 
      * ⚠️ :class:`pyTooling.Configuration.Configuration` takes only ``configFile``. A configuration is the root node, so
