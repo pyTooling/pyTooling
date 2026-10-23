@@ -43,8 +43,8 @@ Version 10.x (2026)
      * :meth:`~pyTooling.REST.RESTClient._Authorization` and :meth:`~pyTooling.REST.RESTClient._AddErrorNotes` are
        what a client of one API overrides: the bearer scheme of :rfc:`6750` is the default, and a status means what
        that API says it means.
-     * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
-       working.
+     * :data:`~pyTooling.REST.JSONObject` is the type of a JSON object, as :func:`json.loads` returns it. It is
+       imported from here: :mod:`pyTooling.CI` doesn't re-export it, so a pipeline model loads no HTTP stack.
 
    * :mod:`pyTooling.DataModel` is a new package for the foundations of data models.
      :class:`~pyTooling.DataModel.KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element, accessed like

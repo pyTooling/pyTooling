@@ -80,7 +80,6 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import AlreadyInHierarchyError, ToolingException
 from pyTooling.Graph       import Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import ExtendedType, ThisClass, abstractclass
-from pyTooling.REST        import JSONObject
 
 
 @export
