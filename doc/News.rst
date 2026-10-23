@@ -447,6 +447,12 @@ Version 10.x (2026)
        for the current platform: :func:`shlex.join` for a POSIX shell, on Windows ``subprocess.list2cmdline()`` as
        :class:`subprocess.Popen` passes them.
 
+   * :mod:`pyTooling.Filesystem`
+
+     * :meth:`Root.Delete <pyTooling.Filesystem.Root.Delete>` deletes a scanned directory tree: all directories,
+       filenames, symbolic links and file objects, also those a collapse removed, are disconnected from each other, so
+       reference counting frees them instead of the cyclic garbage collector.
+
    * :mod:`pyTooling.Dependency`
 
      * :meth:`~pyTooling.Dependency.PackageDependencyGraph.ToGraph` converts a package dependency graph into a
