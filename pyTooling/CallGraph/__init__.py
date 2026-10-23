@@ -66,7 +66,6 @@ from pyTooling.ControlFlow import Base, BaseWithCountAndValue, BasicBlock, Block
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
-from pyTooling.MetaClasses import ExtendedType
 
 
 # A class with a property named like a class - ``ControlFlowGraph`` - can't name that class in the annotation of a

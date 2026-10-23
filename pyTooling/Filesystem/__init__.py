@@ -50,8 +50,7 @@ from datetime              import timedelta
 from enum                  import Enum
 from os                    import scandir, readlink
 from pathlib               import Path
-from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
-from typing                import Iterator, cast
+from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, cast
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
