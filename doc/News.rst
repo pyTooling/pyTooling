@@ -490,6 +490,8 @@ Version 10.x (2026)
        :mod:`pyTooling.CallGraph`, :mod:`pyTooling.Tree` and :mod:`pyTooling.LinkedList`.
      * Common base :exc:`~pyTooling.Exceptions.NotAChildError`: an element isn't a direct child of the element it's
        removed from. :exc:`pyTooling.Tree.NotAChildError` derives from it.
+     * Common base :exc:`~pyTooling.Exceptions.InUseError`: an element is removed from a data structure, but other
+       elements still use it.
 
    * :mod:`pyTooling.Versioning`
 

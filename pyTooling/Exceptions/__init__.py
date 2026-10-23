@@ -353,3 +353,14 @@ class NotAChildError(Exception):
 	package's base-exception, e.g. ``class NotAChildError(TreeError, NotAChildError)`` in :mod:`pyTooling.Tree`. It has
 	no initializer of its own, so the package's base-exception decides how the message is stored.
 	"""
+
+
+@export
+class InUseError(Exception):
+	"""
+	The exception is raised when an element is removed from a data structure, but other elements still use it.
+
+	It's a common base: a package's own exception derives from it and from the package's base-exception, e.g.
+	``class LibraryInUseError(VHDLModelException, InUseError)`` in pyVHDLModel. It has no initializer of its own, so the
+	package's base-exception decides how the message is stored.
+	"""
