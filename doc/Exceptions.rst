@@ -68,10 +68,11 @@ Common Bases
 ############
 
 Some errors occur in every data structure: an element is added twice, an element is added to a hierarchy while it's
-already part of one, an element is used together with an element of another data structure, or an element isn't a
-direct child of the element it's removed from. A package raises its own exception for each - derived from its
-base-exception - and adds a common base as a second base-class. So a caller catches all duplicates of all packages by
-one clause, all errors of one package by its base-exception, or one error by its own class.
+already part of one, an element is used together with an element of another data structure, an element isn't a
+direct child of the element it's removed from, or an element is removed while other elements still use it. A package
+raises its own exception for each - derived from its base-exception - and adds a common base as a second base-class.
+So a caller catches all duplicates of all packages by one clause, all errors of one package by its base-exception, or
+one error by its own class.
 
 .. list-table::
    :header-rows: 1
@@ -95,6 +96,9 @@ one clause, all errors of one package by its base-exception, or one error by its
      - an element is not a direct child of the element it's removed from: a grandchild is in the same hierarchy, but
        not a child.
      - :exc:`~pyTooling.Tree.NotAChildError`
+   * - :exc:`InUseError`
+     - an element is removed from a data structure, but other elements still use it.
+     - none yet (pyVHDLModel: ``LibraryInUseError``)
 
 .. code-block:: Python
 

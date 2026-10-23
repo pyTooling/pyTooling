@@ -33,7 +33,11 @@ Unit tests for :mod:`pyTooling.Graph`: construction, subgraphs, the element attr
 weight, key-value-pairs), the iteration methods, and the conversion of a graph into a tree.
 """
 from enum     import Enum
+from gc       import disable as gc_disable, enable as gc_enable, isenabled as gc_isenabled
 from typing   import Any, Optional as Nullable, List, Tuple, Callable, get_type_hints
+from weakref  import ref
+
+from pytest   import mark
 
 from pyTooling.Decorators import readonly
 from pyTooling.Graph      import Graph, BaseGraph, Subgraph, View, Vertex, BaseEdge, Edge, Link
@@ -42,6 +46,7 @@ from pyTooling.Graph      import EdgeKind, EdgeKindType, LinkKind, LinkKindType,
 from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
 from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
 from pyTooling.Graph      import NotInDifferentSubgraphs, EdgeNotFoundError, LinkNotFoundError, SameGraphError
+from pyTooling.Platform   import CurrentPlatform
 from pyTooling.Testing    import Testcase
 
 
@@ -2133,6 +2138,144 @@ class Deletion(Testcase):
 
 		self.assertEqual(0, len(vertex))
 		self.assertNotIn("key", vertex)
+
+
+class Value:
+	"""A weak-referenceable vertex value: a weak reference to it tells if the vertex holding it was freed."""
+
+
+def _graphHoldingValue(delete: bool) -> ref:
+	"""
+	Build a graph of a vertex, two edges, a subgraph with a link, a view and attributes, and drop every reference to it.
+
+	:param delete: If ``True``, the graph is deleted before the last reference is dropped.
+	:returns:      A weak reference to the value of one of the graph's vertices.
+	"""
+	value = Value()
+	graph = Graph()
+	first = Vertex(vertexID="v1", value=value, graph=graph)
+	second = Vertex(vertexID="v2", graph=graph)
+	first.EdgeToVertex(second, edgeID="e1")
+	second.EdgeToVertex(first)
+	subgraph = Subgraph(graph=graph, name="sub")
+	inner = Vertex(vertexID="v3", subgraph=subgraph)
+	other = Subgraph(graph=graph, name="other")
+	inner.LinkToVertex(Vertex(vertexID="v4", subgraph=other), linkID="l1")
+	View(graph, name="view", vertices=(first, second))
+	first["key"] = "value"
+	graph["key"] = "value"
+
+	if delete:
+		graph.Delete()
+
+	return ref(value)
+
+
+class GraphDeletion(Testcase):
+	"""Deleting a graph deletes all of its elements and disconnects them from each other."""
+
+	def test_Empty(self) -> None:
+		graph = Graph()
+
+		graph.Delete()
+
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+
+	def test_Graph(self) -> None:
+		graph = Graph()
+		graph["key"] = "value"
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(graph=graph)
+		first["key"] = "value"
+		edge = first.EdgeToVertex(second, edgeID="e1")
+		edge["key"] = "value"
+		second.EdgeToVertex(first)
+
+		graph.Delete()
+
+		self.assertEqual(0, graph.VertexCount)
+		self.assertEqual(0, graph.EdgeCount)
+		self.assertEqual(0, graph.ComponentCount)
+		self.assertEqual(0, len(graph))
+		self.assertEqual(0, len(first.OutboundEdges))
+		self.assertEqual(0, len(first.InboundEdges))
+		self.assertEqual(0, len(second.OutboundEdges))
+		self.assertEqual(0, len(second.InboundEdges))
+		self.assertEqual(0, len(first))
+		self.assertEqual(0, len(edge))
+
+	def test_Subgraphs(self) -> None:
+		graph = Graph()
+		outer = Subgraph(graph=graph, name="outer")
+		inner = Subgraph(graph=graph, name="inner")
+		first = Vertex(vertexID="v1", subgraph=outer)
+		second = Vertex(vertexID="v2", subgraph=outer)
+		third = Vertex(vertexID="v3", subgraph=inner)
+		first.EdgeToVertex(second, edgeID="e1")
+		first.LinkToVertex(third, linkID="l1")
+		outer["key"] = "value"
+
+		graph.Delete()
+
+		self.assertEqual(0, graph.SubgraphCount)
+		self.assertEqual(0, outer.VertexCount)
+		self.assertEqual(0, outer.EdgeCount)
+		self.assertEqual(0, outer.LinkCount)
+		self.assertEqual(0, inner.VertexCount)
+		self.assertEqual(0, inner.LinkCount)
+		self.assertEqual(0, len(outer))
+		self.assertEqual(0, len(first.OutboundEdges))
+		self.assertEqual(0, len(first.OutboundLinks))
+		self.assertEqual(0, len(third.InboundLinks))
+
+	def test_ViewsAndComponents(self) -> None:
+		graph = Graph()
+		first = Vertex(vertexID="v1", graph=graph)
+		second = Vertex(vertexID="v2", graph=graph)
+		Vertex(vertexID="v3", graph=graph)
+		first.EdgeToVertex(second)
+		view = View(graph, name="view", vertices=(first, second))
+		component = first.Component
+
+		graph.Delete()
+
+		self.assertEqual(0, graph.ViewCount)
+		self.assertEqual(0, graph.ComponentCount)
+		self.assertEqual(0, view.VertexCount)
+		self.assertEqual(0, component.VertexCount)
+
+	def test_FilledAgain(self) -> None:
+		graph = Graph()
+		Vertex(vertexID="v1", graph=graph)
+
+		graph.Delete()
+		vertex = Vertex(vertexID="v1", graph=graph)
+
+		self.assertEqual(1, graph.VertexCount)
+		self.assertIs(vertex, graph.GetVertexByID("v1"))
+
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="PyPy doesn't count references.")
+	def test_ReferenceCounting(self) -> None:
+		"""Without the cyclic garbage collector, a deleted graph is freed as soon as the last reference is dropped."""
+		wasEnabled = gc_isenabled()
+		gc_disable()
+		try:
+			self.assertIsNone(_graphHoldingValue(delete=True)())
+		finally:
+			if wasEnabled:
+				gc_enable()
+
+	@mark.skipif(CurrentPlatform.IsPyPy, reason="PyPy doesn't count references.")
+	def test_ReferenceCounting_WithoutDelete(self) -> None:
+		"""Without the cyclic garbage collector, a graph, which wasn't deleted, stays in memory: it has reference cycles."""
+		wasEnabled = gc_isenabled()
+		gc_disable()
+		try:
+			self.assertIsNotNone(_graphHoldingValue(delete=False)())
+		finally:
+			if wasEnabled:
+				gc_enable()
 
 
 class Reversing(Testcase):

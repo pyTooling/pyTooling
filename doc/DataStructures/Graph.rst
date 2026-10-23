@@ -73,6 +73,7 @@ Features
 * A vertex knows its inbound and outbound edges.
 * An edge can have a weight.
 * A directed acyclic graph can be reduced to its transitive reduction.
+* A graph no longer needed can be deleted, so its memory is freed without waiting for the garbage collector.
 
 
 .. _STRUCT/Graph/MissingFeatures:
@@ -248,6 +249,37 @@ An edge's kind is given when it is created - :attr:`EdgeKind.Default <pyTooling.
 :class:`~pyTooling.Graph.LinkKind`. A kind may be a member of an enumeration of the user's own, e.g.
 ``a.EdgeToVertex(c, edgeKind=Dependency.Implied)`` or ``graph.AnnotateTransitiveEdges(directKind=Dependency.Needed,
 transitiveKind=Dependency.Implied)``.
+
+
+.. _STRUCT/Graph/Delete:
+
+Deleting a Graph
+================
+
+The elements of a graph reference each other: a vertex its graph and its edges, an edge its vertices, a component its
+vertices and each vertex its component. These are *reference cycles*, so when the last reference to a graph is
+dropped, Python's reference counting can't free it. The memory is freed only by the cyclic garbage collector
+(:mod:`gc`), which runs from time to time, or when a program calls :func:`gc.collect`. A full collection visits every
+object of the program, not only the graph.
+
+:meth:`~pyTooling.Graph.Graph.Delete` deletes all subgraphs, views, components, vertices, edges and links of a graph
+and disconnects them from each other. Afterwards, nothing but the program's own references keeps them alive, so
+reference counting frees them as soon as these are dropped. The graph itself is empty and can be filled again.
+
+.. code-block:: python
+
+   graph = Graph()
+   a, b, c = (Vertex(vertexID=name, graph=graph) for name in "ABC")
+   a.EdgeToVertex(b)
+   b.EdgeToVertex(c)
+
+   ...                    # use the graph
+
+   graph.Delete()
+   del graph, a, b, c     # freed now, not at the next garbage collection
+
+Deleting pays off where a program replaces a large graph while it keeps running, e.g. when it analyzes its input
+again. A vertex's value isn't deleted: if it references its vertex, the program clears that reference itself.
 
 
 .. _STRUCT/Graph/Export:

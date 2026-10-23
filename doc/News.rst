@@ -424,6 +424,9 @@ Version 10.x (2026)
        attributes with dictionary syntax, record and HTML-like labels escaped where they are written, and
        :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` / :meth:`~pyTooling.Graph.GraphViz.Graph.FromTree` with
        conversion methods a derived class overrides.
+     * :meth:`Graph.Delete <pyTooling.Graph.Graph.Delete>` deletes all subgraphs, views, components, vertices, edges
+       and links of a graph and disconnects them from each other, so reference counting frees them instead of the
+       cyclic garbage collector.
 
    * :mod:`pyTooling.Tree`
 
@@ -490,6 +493,8 @@ Version 10.x (2026)
        :mod:`pyTooling.CallGraph`, :mod:`pyTooling.Tree` and :mod:`pyTooling.LinkedList`.
      * Common base :exc:`~pyTooling.Exceptions.NotAChildError`: an element isn't a direct child of the element it's
        removed from. :exc:`pyTooling.Tree.NotAChildError` derives from it.
+     * Common base :exc:`~pyTooling.Exceptions.InUseError`: an element is removed from a data structure, but other
+       elements still use it.
 
    * :mod:`pyTooling.Versioning`
 
