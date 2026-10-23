@@ -683,6 +683,32 @@ class MiscOperations(Testcase):
 		self.assertIsNone(ll.FirstNode)
 		self.assertIsNone(ll.LastNode)
 
+	def test_Clear_NodesAreRemoved(self) -> None:
+		"""A node of a cleared list belongs to no list and has neither a previous nor a next node."""
+		nodes = [Node(0), Node(1), Node(2)]
+		ll = LinkedList(nodes)
+
+		ll.Clear()
+
+		for node in nodes:
+			self.assertIsNone(node.List)
+			self.assertIsNone(node.PreviousNode)
+			self.assertIsNone(node.NextNode)
+
+	def test_Clear_NodesCanBeInsertedAgain(self) -> None:
+		nodes = [Node(0), Node(1)]
+		ll = LinkedList(nodes)
+
+		ll.Clear()
+		other = LinkedList()
+		other.InsertAfterLast(nodes[0])
+		ll.InsertAfterLast(nodes[1])
+
+		self.assertIs(other, nodes[0].List)
+		self.assertIs(ll, nodes[1].List)
+		self.assertEqual(1, other.Count)
+		self.assertEqual(1, ll.Count)
+
 	def test_Reverse_Empty(self) -> None:
 		ll = LinkedList()
 

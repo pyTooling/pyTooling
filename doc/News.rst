@@ -1098,6 +1098,10 @@ Version 10.x (2026)
      * The annotation of ``Node._linkedList`` and :attr:`Node.List <pyTooling.LinkedList.Node.List>` named one type
        parameter of :class:`~pyTooling.LinkedList.LinkedList`, which has two, so :func:`typing.get_type_hints` raised a
        :exc:`TypeError` for :class:`~pyTooling.LinkedList.Node`.
+     * :meth:`LinkedList.Clear <pyTooling.LinkedList.LinkedList.Clear>` emptied the list, but its nodes still referred
+       to it and to each other: inserting one into a linked list raised
+       :exc:`~pyTooling.LinkedList.NotInSameListError`, and the nodes formed a reference cycle only the garbage
+       collector freed.
 
    * :mod:`pyTooling.MetaClasses`
 
