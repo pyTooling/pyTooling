@@ -424,6 +424,9 @@ Version 10.x (2026)
        attributes with dictionary syntax, record and HTML-like labels escaped where they are written, and
        :meth:`~pyTooling.Graph.GraphViz.Graph.FromGraph` / :meth:`~pyTooling.Graph.GraphViz.Graph.FromTree` with
        conversion methods a derived class overrides.
+     * :meth:`Graph.Delete <pyTooling.Graph.Graph.Delete>` deletes all subgraphs, views, components, vertices, edges
+       and links of a graph and disconnects them from each other, so reference counting frees them instead of the
+       cyclic garbage collector.
 
    * :mod:`pyTooling.Tree`
 
