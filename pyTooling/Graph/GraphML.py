@@ -41,7 +41,6 @@ from __future__            import annotations
 from enum                  import Enum, auto
 from pathlib               import Path
 from typing                import Any, ClassVar, Union, Optional as Nullable
-from xml.sax.saxutils      import escape as xml_escape
 
 from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod
@@ -51,6 +50,8 @@ from pyTooling.Graph       import GraphViz
 from pyTooling.Tree        import Node as pyToolingNode
 
 
+_ATTRIBUTE_ESCAPES = str.maketrans({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})  #: Translation table escaping an XML attribute value.
+
 
 def _escapeAttribute(value: Any) -> str:
 	"""
@@ -59,7 +60,7 @@ def _escapeAttribute(value: Any) -> str:
 	:param value: The value, converted by :func:`str`.
 	:returns:     The escaped text.
 	"""
-	return xml_escape(str(value), {'"': "&quot;"})
+	return str(value).translate(_ATTRIBUTE_ESCAPES)
 
 @export
 class AttributeContext(Enum):

@@ -956,6 +956,13 @@ Version 10.x (2026)
        ``EdgeToVertex``, ``EdgeFromVertex``, ``LinkToVertex`` and ``LinkFromVertex``, ``kind`` in the constructors of
        :class:`~pyTooling.Graph.Edge` and :class:`~pyTooling.Graph.Link`.
 
+   * :mod:`pyTooling.Graph.GraphML`
+
+     * An attribute value is escaped with :meth:`str.translate` instead of :func:`xml.sax.saxutils.escape`, with the
+       same result. Importing :mod:`xml.sax.saxutils` loaded :mod:`urllib.request` and with it :mod:`ssl`,
+       :mod:`http.client` and :mod:`email`: importing :mod:`pyTooling.Graph.GraphML` takes 27 ms less (Python 3.15),
+       24 instead of 52 ms.
+
    * :mod:`pyTooling.MetaClasses`
 
      * ⚠️ Annotating ``__weakref__`` or ``__dict__`` raises an :exc:`~pyTooling.MetaClasses.ExtendedTypeError`. Both
