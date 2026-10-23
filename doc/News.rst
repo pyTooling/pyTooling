@@ -1139,6 +1139,12 @@ Version 10.x (2026)
      * ⚠️ A ``ClassVar`` naming a mixin-class' slot produced a broken class: the name was in ``__slots__`` *and* a class
        attribute, so the field was read-only on every instance. It raises
        :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now.
+     * On Python 3.14 and newer, a class in a module without ``from __future__ import annotations`` raised a
+       :exc:`NotImplementedError`, if a field's annotation named something undefined at class creation - also the
+       class itself (``_parent: Node``). :class:`~pyTooling.MetaClasses.ExtendedType` asked the compiler-generated
+       ``__annotate__`` function for the annotations' source text, which only
+       :func:`annotationlib.call_annotate_function` provides. Such a field is a slot now, and a ``ClassVar`` of an
+       undefined name is a class variable.
 
    * :mod:`pyTooling.Packaging`
 
