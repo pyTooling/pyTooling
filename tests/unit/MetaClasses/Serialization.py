@@ -38,7 +38,7 @@ from pickle                import loads, dumps
 from typing                import Dict, Any
 
 from pyTooling.MetaClasses import ExtendedType, ExtendedTypeError
-from pyTooling.Graph       import Graph, Vertex
+from pyTooling.Graph       import Graph, Vertex, Edge
 from pyTooling.Tree        import Node
 from pyTooling.Testing     import Testcase
 
