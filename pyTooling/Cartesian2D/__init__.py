@@ -525,7 +525,7 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 
 		:returns: Euclidean distance between start and end point
 		"""
-		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.x - self.start.x) ** 2)
+		return sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
 
 	def AngleTo(self, other: LineSegment2D[Coordinate]) -> float:
 		"""

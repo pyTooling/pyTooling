@@ -178,6 +178,14 @@ class Instantiation(Testcase):
 		self.assertTupleEqual(((1, 2, 3), (2, 3, 4)), line.ToTuple())
 
 
+class LineSegment(Testcase):
+	def test_Length(self) -> None:
+		"""Every axis contributes its own difference: 2² + 3² + 6² = 7²."""
+		line = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 3, 6))
+
+		self.assertEqual(7.0, line.Length)
+
+
 class Copy(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin3D()
