@@ -42,8 +42,12 @@ Common platform information gathered from various sources.
    :mod:`pyTooling.Filesystem`
       |rarr| Filesystem statistics, whose path style depends on the platform.
 """
-from enum                    import Flag, auto, Enum
-from typing                  import Optional as Nullable
+import os
+import platform
+import sys
+import sysconfig
+from enum                  import Flag, auto, Enum
+from typing                import Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -80,11 +84,6 @@ class UnknownPlatformError(PlatformError):
 		"""
 		super().__init__(message)
 		self._unknownValue = unknownValue
-
-		import sys
-		import os
-		import platform
-		import sysconfig
 
 		self.add_note(f"os.name:                {os.name}")
 		self.add_note(f"platform.system:        {platform.system()}")
@@ -206,11 +205,6 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 		:raises UnknownPlatformError: If the operating system or the Python implementation isn't known to pyTooling.
 		"""
-		import sys
-		import os
-		import platform
-		import sysconfig
-
 		# Discover the Python implementation
 		pythonImplementation = platform.python_implementation()
 		if pythonImplementation == "CPython":
