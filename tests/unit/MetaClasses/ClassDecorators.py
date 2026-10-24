@@ -32,8 +32,8 @@
 Unit tests for the class decorators :deco:`~pyTooling.MetaClasses.slotted`,
 :deco:`~pyTooling.MetaClasses.mixin` and :deco:`~pyTooling.MetaClasses.singleton`.
 """
-from pyTooling.MetaClasses import ExtendedType, IncompatibleMetaClassError, mixin, singleton, slotted
-from pyTooling.MetaClasses import abstractclass, AbstractClassError
+from pyTooling.MetaClasses import ExtendedType, IncompatibleMetaClassError, mixin, singleton, slotted, abstractclass, \
+                                  AbstractClassError
 from pyTooling.Testing     import Testcase
 
 

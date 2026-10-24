@@ -64,10 +64,10 @@ from enum                import StrEnum
 from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
-from types               import ModuleType, TracebackType, FunctionType, MethodType, BuiltinFunctionType
-from types               import MethodWrapperType, MethodDescriptorType, WrapperDescriptorType
-from typing              import TypeVar, Callable, Generator, Hashable, Self
-from typing              import Any, Union, Mapping, Iterable, Optional as Nullable
+from types               import ModuleType, TracebackType, FunctionType, MethodType, BuiltinFunctionType, \
+                                MethodWrapperType, MethodDescriptorType, WrapperDescriptorType
+from typing              import TypeVar, Callable, Generator, Hashable, Self, Any, Union, Mapping, Iterable, \
+                                Optional as Nullable
 
 from pyTooling.Decorators  import export
 

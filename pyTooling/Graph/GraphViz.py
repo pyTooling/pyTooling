@@ -60,8 +60,8 @@ from typing                import Mapping, Optional as Nullable, Sequence, Union
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Vertex
-from pyTooling.Graph       import Edge as pyToolingEdge, Link as pyToolingLink
+from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Vertex, \
+                                  Edge as pyToolingEdge, Link as pyToolingLink
 from pyTooling.Tree        import Node as pyToolingNode
 
 

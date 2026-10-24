@@ -33,11 +33,10 @@ Unit tests for :mod:`pyTooling.CI`.
 """
 from datetime              import datetime, timedelta, timezone
 
-from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
-from pyTooling.CI          import JobGroup, Step, Rule, RuleOutcome
-from pyTooling.CI          import Outcome, CIError, PipelineError, NeedDependencyError, NeedDependencyCycleError
-from pyTooling.CI          import AlreadyInPipelineError
-from pyTooling.CI          import RulesMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
+from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job, \
+                                  JobGroup, Step, Rule, RuleOutcome, Outcome, CIError, PipelineError, \
+                                  NeedDependencyError, NeedDependencyCycleError, AlreadyInPipelineError, RulesMixin, \
+                                  DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
 from pyTooling.Exceptions  import AlreadyInHierarchyError
 from pyTooling.Graph       import BaseGraph, Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError

@@ -57,8 +57,8 @@ from pyTooling.MetaClasses               import ExtendedType
 from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
 from pyTooling.Common                    import getFullyQualifiedName, getTypeName
 from pyTooling.Attributes                import Attribute
-from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine
-from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
+from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine, NamedAndValuedArgument, \
+                                                ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
 from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
 from pyTooling.Platform                  import Platform
 

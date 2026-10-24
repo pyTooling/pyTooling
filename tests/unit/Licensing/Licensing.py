@@ -33,19 +33,15 @@ Unit tests for :mod:`pyTooling.Licensing`: the license data class and the SPDX l
 """
 from unittest            import skipUnless
 
-from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License
-from pyTooling.Licensing import CC0_1_0, GPL_2_0_only, GPL_2_0_or_later, OSI_LICENSE_URLS, PSF_2_0_License
-from pyTooling.Licensing import LicenseAbsence, ProprietaryLicense, UnknownLicense
-from pyTooling.Licensing import BSD_3_Clause_License, GPL_3_0_only, GPL_3_0_or_later
-from pyTooling.Licensing import LICENSE_TEXT_URLS, LICENSE_URLS
-from pyTooling.Licensing import AndOperator, BinaryOperator, LicenseException, LicenseExpression
-from pyTooling.Licensing import ISC_License, LicenseExpressionError, LicenseReference, LicensingError
-from pyTooling.Licensing import MIT_License
-from pyTooling.Licensing import CC_BY_4_0, CC_BY_NC_4_0, CC_BY_NC_ND_4_0, CC_BY_NC_SA_4_0, CC_BY_ND_4_0, CC_BY_SA_4_0
-from pyTooling.Licensing import LICENSES_BY_CLASSIFIER
-from pyTooling.Licensing import OrLaterOperator, OrOperator
-from pyTooling.Licensing import SPDXLicense
-from pyTooling.Licensing import BaseLicense, Operator, UnaryOperator, WithOperator
+from pyTooling.Licensing import Apache_2_0_License, LICENSES, PYTHON_LICENSE_NAMES, SPDX_INDEX, License, CC0_1_0, \
+                                GPL_2_0_only, GPL_2_0_or_later, OSI_LICENSE_URLS, PSF_2_0_License, LicenseAbsence, \
+                                ProprietaryLicense, UnknownLicense, BSD_3_Clause_License, GPL_3_0_only, \
+                                GPL_3_0_or_later, LICENSE_TEXT_URLS, LICENSE_URLS, AndOperator, BinaryOperator, \
+                                LicenseException, LicenseExpression, ISC_License, LicenseExpressionError, \
+                                LicenseReference, LicensingError, MIT_License, CC_BY_4_0, CC_BY_NC_4_0, \
+                                CC_BY_NC_ND_4_0, CC_BY_NC_SA_4_0, CC_BY_ND_4_0, CC_BY_SA_4_0, LICENSES_BY_CLASSIFIER, \
+                                OrLaterOperator, OrOperator, SPDXLicense, BaseLicense, Operator, UnaryOperator, \
+                                WithOperator
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing   import Testcase
 

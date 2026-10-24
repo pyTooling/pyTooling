@@ -43,22 +43,20 @@ from packaging.requirements       import Requirement
 from pytest                       import mark
 from requests                     import HTTPError, Response
 
-from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
-from pyTooling.Dependency.Python  import PythonPackageIndex, Release
-from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile, RequirementsFileReference
-from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
-from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
-from pyTooling.Dependency         import UndeclaredExtraMarkerWarning, UndeclaredExtraWarning
-from pyTooling.Dependency         import UnparsableRequirementWarning
-from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
-from pyTooling.Dependency         import PackageIndexError, ProjectNotFoundError, ReleaseNotFoundError
-from pyTooling.Dependency         import NoSessionAvailableError, ReleaseDetailsWarning, UnsupportedVersionWarning
-from pyTooling.Dependency         import AlreadyInRequirementsTreeError
+from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph, PythonPackageIndex, \
+                                         Release, LicenseOverrides, RequirementsFile, RequirementsFileReference, \
+                                         RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
+from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError, \
+                                         UndeclaredExtraMarkerWarning, UndeclaredExtraWarning, \
+                                         UnparsableRequirementWarning, DependencyError, RequirementsFileNotFoundError, \
+                                         UnknownLicenseWarning, PackageIndexError, ProjectNotFoundError, \
+                                         ReleaseNotFoundError, NoSessionAvailableError, ReleaseDetailsWarning, \
+                                         UnsupportedVersionWarning, AlreadyInRequirementsTreeError
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
-from pyTooling.Licensing          import LicenseAbsence, LicenseReference, ProprietaryLicense
-from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperator
+from pyTooling.Licensing          import LicenseAbsence, LicenseReference, ProprietaryLicense, SPDXLicense, \
+                                         UnknownLicense, WithOperator
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
 from pyTooling.Warning            import CriticalWarning, UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase

@@ -47,8 +47,8 @@ from __future__            import annotations
 from collections.abc       import Iterable as abc_Iterable
 from enum                  import Flag, Enum
 from re                    import compile as re_compile, escape as re_escape, Pattern
-from typing                import Optional as Nullable, Union, Any, ClassVar, Generic, TypeVar, Iterable
-from typing                import Iterator, Self
+from typing                import Optional as Nullable, Union, Any, ClassVar, Generic, TypeVar, Iterable, Iterator, \
+                                  Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod, mustoverride

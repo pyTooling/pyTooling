@@ -53,8 +53,7 @@ from __future__           import annotations
 
 from enum                 import IntFlag
 from types                import MethodType, FunctionType, ModuleType
-from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar
-from typing               import Optional as Nullable
+from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
 from pyTooling.Common     import getFullyQualifiedName, getTypeName

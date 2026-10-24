@@ -31,8 +31,8 @@
 """
 Unit tests for :mod:`pyTooling.CallGraph`: constructing functions, calls and graphs, and the checks of their parameters.
 """
-from pyTooling.CallGraph   import CallGraph, Function, Call, FunctionKind, CallKind
-from pyTooling.CallGraph   import CallGraphError, DuplicateFunctionError
+from pyTooling.CallGraph   import CallGraph, Function, Call, FunctionKind, CallKind, CallGraphError, \
+                                  DuplicateFunctionError
 from pyTooling.ControlFlow import ControlFlowGraph, BasicBlock, BlockKind
 from pyTooling.Testing     import Testcase
 

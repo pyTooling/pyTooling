@@ -37,11 +37,10 @@ Covered are parsing a constraint list, matching a version against it, and the em
 """
 from typing              import ClassVar
 
-from pyTooling.Versioning import SemanticVersion, PythonVersion, VersionComparison, VersionConstraint
-from pyTooling.Versioning import CaretVersionConstraint, CompatibleVersionConstraint, DebianVersionExpression
-from pyTooling.Versioning import RangeBoundHandling, RangeVersionConstraint, VersionRange
-from pyTooling.Versioning import NPMVersionExpression, PythonVersionExpression, TildeVersionConstraint
-from pyTooling.Versioning import VersionExpression
+from pyTooling.Versioning import SemanticVersion, PythonVersion, VersionComparison, VersionConstraint, \
+                                 CaretVersionConstraint, CompatibleVersionConstraint, DebianVersionExpression, \
+                                 RangeBoundHandling, RangeVersionConstraint, VersionRange, NPMVersionExpression, \
+                                 PythonVersionExpression, TildeVersionConstraint, VersionExpression
 from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover

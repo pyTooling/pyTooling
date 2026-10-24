@@ -37,8 +37,8 @@ instantiation, the second rejects that one call.
 from typing                import ClassVar, Protocol
 
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
-from pyTooling.MetaClasses import abstractclass, abstractmethod, expects, mixin
+from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError, abstractclass, \
+                                  abstractmethod, expects, mixin
 from pyTooling.Testing     import Testcase
 
 if __name__ == "__main__":  # pragma: no cover

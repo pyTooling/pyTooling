@@ -36,8 +36,8 @@ from tempfile                 import TemporaryDirectory
 from textwrap                 import dedent
 
 from pyTooling.Graph          import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Vertex
-from pyTooling.Graph.GraphViz import GraphKind, HTMLLabel, RecordLabel, DefaultAttributes, Node, Edge, Subgraph, Graph
-from pyTooling.Graph.GraphViz import quote
+from pyTooling.Graph.GraphViz import GraphKind, HTMLLabel, RecordLabel, DefaultAttributes, Node, Edge, Subgraph, \
+                                     Graph, quote
 from pyTooling.Tree           import Node as pyToolingNode
 from pyTooling.Testing        import Testcase
 

@@ -31,8 +31,8 @@
 """
 Unit tests for :mod:`pyTooling.ControlFlow`: constructing blocks, edges and graphs, and the checks of their parameters.
 """
-from pyTooling.ControlFlow import ControlFlowGraph, BasicBlock, Edge, BlockKind, EdgeKind
-from pyTooling.ControlFlow import ControlFlowError, DuplicateBlockError, DuplicateEdgeError
+from pyTooling.ControlFlow import ControlFlowGraph, BasicBlock, Edge, BlockKind, EdgeKind, ControlFlowError, \
+                                  DuplicateBlockError, DuplicateEdgeError
 from pyTooling.Testing     import Testcase
 
 

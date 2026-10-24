@@ -33,20 +33,19 @@
 Unit tests for :mod:`pyTooling.Attributes.ArgParse`: an application declaring its commands and options as
 decorated methods, and the command line it accepts as a result.
 """
-from argparse      import ArgumentError
-from io            import StringIO
-from pathlib       import Path
-from typing        import Callable, Any, Tuple, NoReturn
-from unittest.mock import patch
+from argparse                                 import ArgumentError
+from io                                       import StringIO
+from pathlib                                  import Path
+from typing                                   import Callable, Any, Tuple, NoReturn
+from unittest.mock                            import patch
 
-from pyTooling.Common                        import StringEnum
-from pyTooling.MetaClasses                   import UnfulfilledExpectationError
-from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
-from pyTooling.Attributes.ArgParse            import splitFormat
-from pyTooling.Attributes.ArgParse.Argument   import StringArgument, StringListArgument, PositionalArgument
-from pyTooling.Attributes.ArgParse.Argument   import PathArgument, PathListArgument, ListArgument
-from pyTooling.Attributes.ArgParse.Argument   import IntegerArgument, IntegerListArgument
-from pyTooling.Attributes.ArgParse.Argument   import FloatArgument, FloatListArgument
+from pyTooling.Common                         import StringEnum
+from pyTooling.MetaClasses                    import UnfulfilledExpectationError
+from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, \
+                                                     CommandLineArgument, splitFormat
+from pyTooling.Attributes.ArgParse.Argument   import StringArgument, StringListArgument, PositionalArgument, \
+                                                     PathArgument, PathListArgument, ListArgument, IntegerArgument, \
+                                                     IntegerListArgument, FloatArgument, FloatListArgument
 from pyTooling.Attributes.ArgParse.Flag       import FlagArgument, ShortFlag, LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import ValuedFlag, ShortValuedFlag, LongValuedFlag
 from pyTooling.TerminalUI                     import TerminalApplication

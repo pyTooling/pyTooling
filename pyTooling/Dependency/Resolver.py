@@ -66,8 +66,8 @@ from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import StringEnum, getFullyQualifiedName
 from pyTooling.Timeout           import Timeout
 from pyTooling.Warning           import WarningCollector
-from pyTooling.Dependency        import ExtraNotFoundError, PackageIndexFailureWarning, UndeclaredExtraWarning
-from pyTooling.Dependency        import ReleaseNotFoundError, ResolutionTimeoutWarning, UnresolvedRequirementWarning
+from pyTooling.Dependency        import ExtraNotFoundError, PackageIndexFailureWarning, UndeclaredExtraWarning, \
+                                        ReleaseNotFoundError, ResolutionTimeoutWarning, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release, RequirementsFile
 
 _Requirement = Requirement
