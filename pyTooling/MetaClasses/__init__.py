@@ -2227,7 +2227,8 @@ class ExtendedType(type):
 		for baseClass in reversed(newClass.__mro__[:-1]):
 			for memberName, member in vars(baseClass).items():
 				original = getattr(member, "__wrapped__", member)
-				if hasattr(original, "__expectedMembers__"):
+				# A class held by a class variable carries its class-level expectations, but is no marked method.
+				if not isinstance(original, type) and hasattr(original, "__expectedMembers__"):
 					marked[memberName] = original
 
 		wrapped: list[str] = []
