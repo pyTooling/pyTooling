@@ -31,6 +31,8 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - trapezium, rectangle and square.
 """
+from math                         import isclose, sqrt
+
 from pyTooling.Cartesian2D        import Point2D, LineSegment2D
 from pyTooling.Cartesian2D.Shapes import Shape, Trapezium, Rectangle, Square
 from pyTooling.Testing            import Testcase
@@ -114,6 +116,18 @@ class Instantiation(Testcase):
 			tuple(point.ToTuple() for point in rectangle.points)
 		)
 
+	def test_Rectangle_AxisAligned(self) -> None:
+		"""Two edges are parallel to the y-axis."""
+		point00 = Point2D(0, 0)
+		point01 = Point2D(4, 0)
+		point11 = Point2D(4, 2)
+		point10 = Point2D(0, 2)
+
+		rectangle = Rectangle(point00, point01, point11, point10)
+
+		self.assertEqual(4, len(rectangle.segments))
+		self.assertTupleEqual((4.0, 2.0, 4.0, 2.0), tuple(segment.Length for segment in rectangle.segments))
+
 	def test_Rectangle_OppositeEdges(self) -> None:
 		point00 = Point2D(0, 0)
 		point01 = Point2D(4, 0)
@@ -150,6 +164,30 @@ class Instantiation(Testcase):
 			((0, 0), (1, 1), (0, 2), (-1, 1)),
 			tuple(point.ToTuple() for point in square.points)
 		)
+
+	def test_Square_AxisAligned(self) -> None:
+		point00 = Point2D(1, 1)
+		point01 = Point2D(3, 1)
+		point11 = Point2D(3, 3)
+		point10 = Point2D(1, 3)
+
+		square = Square(point00, point01, point11, point10)
+
+		self.assertEqual(4, len(square.segments))
+		self.assertTupleEqual((2.0, 2.0, 2.0, 2.0), tuple(segment.Length for segment in square.segments))
+
+	def test_Square_Rotated(self) -> None:
+		"""A square rotated against the axes: all edges are sqrt(5) long, their x-differences are 2 and 1."""
+		point00 = Point2D(0, 0)
+		point01 = Point2D(2, 1)
+		point11 = Point2D(1, 3)
+		point10 = Point2D(-1, 2)
+
+		square = Square(point00, point01, point11, point10)
+
+		self.assertEqual(4, len(square.segments))
+		for segment in square.segments:
+			self.assertTrue(isclose(sqrt(5), segment.Length))
 
 	def test_Square_Rectangle(self) -> None:
 		point00 = Point2D(0, 0)

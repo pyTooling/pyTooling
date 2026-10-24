@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.Cartesian2D`: points, offsets and sizes, their copies, comparisons and
 arithmetic.
 """
-from math                  import sqrt
+from math                  import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D import Origin2D, Point2D, Offset2D, Size2D, LineSegment2D
 from pyTooling.Testing     import Testcase
@@ -150,6 +150,29 @@ class Instantiation(Testcase):
 		self.assertEqual(sqrt(2), line.Length)
 		self.assertEqual(offset, line.ToOffset())
 		self.assertTupleEqual(((1, 2), (2, 3)), line.ToTuple())
+
+
+class LineSegment(Testcase):
+	def test_Length_Horizontal(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(3, 0))
+
+		self.assertEqual(3.0, line.Length)
+
+	def test_Length_Vertical(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(0, 3))
+
+		self.assertEqual(3.0, line.Length)
+
+	def test_Length_Diagonal(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(3, 4))
+
+		self.assertEqual(5.0, line.Length)
+
+	def test_AngleTo_Perpendicular(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		line2 = LineSegment2D(Point2D(2, 0), Point2D(2, 2))
+
+		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
 
 
 class Copy(Testcase):
