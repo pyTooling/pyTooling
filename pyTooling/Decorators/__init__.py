@@ -46,8 +46,8 @@ from __future__ import annotations
 from enum       import Enum, unique
 from functools  import wraps
 from sys        import modules
-from typing     import TYPE_CHECKING, Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload
-from typing     import Optional as Nullable
+from typing     import TYPE_CHECKING, Any, Union, TypeVar, Callable, Generic, NoReturn, ParamSpec, overload, \
+                       Optional as Nullable
 
 __all__ = ["export", "Param", "RetType", "Func", "T"]
 

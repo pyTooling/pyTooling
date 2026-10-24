@@ -31,9 +31,8 @@
 """Unit tests for how a terminal application reports its issue tracker URL."""
 from io                   import StringIO
 
-from pyTooling.Exceptions import ExceptionBase
+from pyTooling.Exceptions import ExceptionBase, MissingDependencyError
 from pyTooling.TerminalUI import TerminalApplication
-from pyTooling.Exceptions import MissingDependencyError
 from pyTooling.Testing    import Testcase
 
 

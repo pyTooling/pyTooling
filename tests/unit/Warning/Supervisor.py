@@ -34,8 +34,8 @@ threads failed.
 """
 from threading            import Thread
 
-from pyTooling.Warning    import SupervisedThreadError, SupervisedWarningCollector, ThreadSupervisor, Warning
-from pyTooling.Warning    import WarningCollector
+from pyTooling.Warning    import SupervisedThreadError, SupervisedWarningCollector, ThreadSupervisor, Warning, \
+                                 WarningCollector
 from pyTooling.Testing    import Testcase
 
 

@@ -39,8 +39,8 @@ This test suite tests decorators:
 from typing import Tuple
 
 from pyTooling.Decorators  import notimplemented, readonly
-from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod, mustoverride, AbstractClassError
-from pyTooling.MetaClasses import mixin
+from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod, mustoverride, AbstractClassError, \
+                                  mixin
 from pyTooling.Testing     import Testcase
 
 if __name__ == "__main__":  # pragma: no cover

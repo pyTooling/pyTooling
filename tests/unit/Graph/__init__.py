@@ -40,12 +40,11 @@ from weakref  import ref
 from pytest   import mark
 
 from pyTooling.Decorators import readonly
-from pyTooling.Graph      import Graph, BaseGraph, Subgraph, View, Vertex, BaseEdge, Edge, Link
-from pyTooling.Graph      import BaseWithVertices, Component
-from pyTooling.Graph      import EdgeKind, EdgeKindType, LinkKind, LinkKindType, CycleError
-from pyTooling.Graph      import DuplicateVertexError, DuplicateEdgeError
-from pyTooling.Graph      import GraphError, DuplicateEdgeError, NotInSameGraph, DestinationNotReachable
-from pyTooling.Graph      import NotInDifferentSubgraphs, EdgeNotFoundError, LinkNotFoundError, SameGraphError
+from pyTooling.Graph      import Graph, BaseGraph, Subgraph, View, Vertex, BaseEdge, Edge, Link, BaseWithVertices, \
+                                 Component, EdgeKind, EdgeKindType, LinkKind, LinkKindType, CycleError, \
+                                 DuplicateVertexError, DuplicateEdgeError, GraphError, NotInSameGraph, \
+                                 DestinationNotReachable, NotInDifferentSubgraphs, EdgeNotFoundError, \
+                                 LinkNotFoundError, SameGraphError
 from pyTooling.Platform   import CurrentPlatform
 from pyTooling.Testing    import Testcase
 

@@ -44,9 +44,8 @@ from typing                import Any, ClassVar, Union, Optional as Nullable
 
 from pyTooling.Decorators  import export, notimplemented, readonly
 from pyTooling.MetaClasses import ExtendedType, abstractmethod
-from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph
-from pyTooling.Graph       import Edge as pyToolingEdge, Link as pyToolingLink
-from pyTooling.Graph       import GraphViz
+from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyToolingSubgraph, Edge as pyToolingEdge, \
+                                  Link as pyToolingLink, GraphViz
 from pyTooling.Tree        import Node as pyToolingNode
 
 

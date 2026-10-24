@@ -52,8 +52,8 @@ from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
 from types                import BuiltinFunctionType, CodeType, FunctionType, MemberDescriptorType, MethodType
-from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Protocol, Self
-from typing               import TypeVar, Generic, _GenericAlias, _get_protocol_attrs, ClassVar, Optional as Nullable
+from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Protocol, Self, TypeVar, \
+                                 Generic, _GenericAlias, _get_protocol_attrs, ClassVar, Optional as Nullable
 
 from pyTooling.Common     import getFullyQualifiedName, getTypeName
 from pyTooling.Exceptions import ToolingException

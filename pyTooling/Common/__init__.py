@@ -64,10 +64,11 @@ from enum                import StrEnum
 from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
-from types               import ModuleType, TracebackType, FunctionType, MethodType, BuiltinFunctionType
-from types               import MethodWrapperType, MethodDescriptorType, WrapperDescriptorType
-from typing              import TypeVar, Callable, Generator, Hashable, Self
-from typing              import Any, Union, Mapping, Iterable, Optional as Nullable
+from sys                 import getsizeof as sys_getsizeof
+from types               import ModuleType, TracebackType, FunctionType, MethodType, BuiltinFunctionType, \
+                                MethodWrapperType, MethodDescriptorType, WrapperDescriptorType
+from typing              import TypeVar, Callable, Generator, Hashable, Self, Any, Union, Mapping, Iterable, \
+                                Optional as Nullable
 
 from pyTooling.Decorators  import export
 
@@ -209,8 +210,6 @@ def getsizeof(obj: Any) -> int:
 	   * `How do I determine the size of an object in Python? <https://stackoverflow.com/a/30316760/3719459>`__ (CC BY-SA 4.0)
 	   * :gh:`Python __slots__, slots, and object layout <mCodingLLC/VideosSampleCode/tree/master/videos/080_python_slots>` (MIT License)
 	"""
-	from sys import getsizeof as sys_getsizeof
-
 	visitedIDs = set()  #: A set to track visited objects, so memory consumption isn't counted multiple times.
 
 	def recurse(obj: Any) -> int:

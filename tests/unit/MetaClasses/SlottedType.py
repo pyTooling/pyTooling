@@ -36,8 +36,9 @@ from typing                import ClassVar, Generic, TypeVar, Optional as Nullab
 
 from pytest                import mark
 
-from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError, InvalidBaseClassError, UnannotatedFieldWarning, mixin
+from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, \
+                                  BaseClassWithoutSlotsError, DuplicateFieldInSlotsError, InvalidBaseClassError, \
+                                  UnannotatedFieldWarning, mixin
 from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof

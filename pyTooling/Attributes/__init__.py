@@ -53,11 +53,10 @@ from __future__           import annotations
 
 from enum                 import IntFlag
 from types                import MethodType, FunctionType, ModuleType
-from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar
-from typing               import Optional as Nullable
+from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
-from pyTooling.Common     import getFullyQualifiedName, getTypeName
+from pyTooling.Common     import getFullyQualifiedName, getTypeName, isnestedclass
 from pyTooling.Exceptions import ToolingException
 
 
@@ -304,8 +303,6 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		                   ``None`` accepts every class.
 		:returns:          A sequence of classes where this attribute is attached to.
 		"""
-		from pyTooling.Common import isnestedclass
-
 		if scope is None:
 			if subclassOf is None:
 				for c in cls._classes:

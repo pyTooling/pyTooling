@@ -36,10 +36,10 @@ from pickle                import dumps, loads
 
 from pyTooling.CallGraph   import DuplicateFunctionError
 from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
-from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, EnvironmentVariableError
-from pyTooling.Exceptions  import ExceptionBase, InUseError, MissingDependencyError, NotAChildError, NotConfiguredError
-from pyTooling.Exceptions  import NotInSameHierarchyError
-from pyTooling.Exceptions  import PlatformNotSupportedError, ToolingException
+from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, EnvironmentVariableError, \
+                                  ExceptionBase, InUseError, MissingDependencyError, NotAChildError, \
+                                  NotConfiguredError, NotInSameHierarchyError, PlatformNotSupportedError, \
+                                  ToolingException
 from pyTooling.Graph       import DuplicateEdgeError, DuplicateVertexError, NotInSameGraph
 from pyTooling.LinkedList  import NotInSameListError
 from pyTooling.Testing     import Testcase

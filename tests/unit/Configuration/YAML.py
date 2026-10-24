@@ -37,8 +37,8 @@ from pathlib  import Path
 
 from pytest                       import raises
 
-from pyTooling.Configuration      import InterpolationError, KeyNotFoundError, PathExpressionError
-from pyTooling.Configuration      import UnsupportedValueTypeError
+from pyTooling.Configuration      import InterpolationError, KeyNotFoundError, PathExpressionError, \
+                                         UnsupportedValueTypeError
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration
 from pyTooling.Testing            import Testcase

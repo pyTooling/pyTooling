@@ -48,6 +48,7 @@ from __future__            import annotations
 from datetime              import datetime
 from enum                  import Enum, unique
 from io                    import TextIOWrapper
+from os                    import getenv
 from sys                   import stdin, stdout, stderr
 from textwrap              import dedent
 from types                 import ModuleType
@@ -322,8 +323,6 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 					pass
 
 		# Fall-fallback
-		from os import getenv
-
 		try:
 			columns = int(getenv("COLUMNS"))
 			lines =   int(getenv("LINES"))

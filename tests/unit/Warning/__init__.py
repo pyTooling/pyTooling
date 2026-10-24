@@ -34,9 +34,8 @@ and what happens when no collector is installed.
 """
 from typing   import List
 
-from pyTooling.Warning import WarningCollector, Warning, CriticalWarning
-from pyTooling.Warning import UnhandledExceptionError, UnhandledCriticalWarningError
-from pyTooling.Warning import EscalatedWarningError
+from pyTooling.Warning import WarningCollector, Warning, CriticalWarning, UnhandledExceptionError, \
+                              UnhandledCriticalWarningError, EscalatedWarningError
 from pyTooling.Testing import Testcase
 
 

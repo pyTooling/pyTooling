@@ -36,8 +36,8 @@ rejected at class-creation time instead of raising :exc:`NotImplementedError` at
 """
 from pathlib import Path
 
-from pyTooling.Configuration import KeyNotFoundError, Node, Dictionary, Sequence
-from pyTooling.Configuration import InterpolationError, PathExpressionError, UnsupportedValueTypeError
+from pyTooling.Configuration import KeyNotFoundError, Node, Dictionary, Sequence, InterpolationError, \
+                                    PathExpressionError, UnsupportedValueTypeError
 from pyTooling.Exceptions    import ConfigurationError
 from pyTooling.MetaClasses   import AbstractClassError
 from pyTooling.Testing       import Testcase

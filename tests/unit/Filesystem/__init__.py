@@ -32,8 +32,8 @@
 Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the statistics collected for it.
 """
 from datetime              import timedelta
-from gc                    import collect as gc_collect, disable as gc_disable, enable as gc_enable
-from gc                    import get_objects as gc_get_objects, isenabled as gc_isenabled
+from gc                    import collect as gc_collect, disable as gc_disable, enable as gc_enable, \
+                                  get_objects as gc_get_objects, isenabled as gc_isenabled
 from os                    import DirEntry, link, scandir, symlink
 from pathlib               import Path
 from sys                   import platform as sys_platform
@@ -45,8 +45,8 @@ from pytest                import mark
 
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import count
-from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError
-from pyTooling.Filesystem  import NodeKind, PermissionWarning
+from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError, \
+                                  NodeKind, PermissionWarning
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Platform    import CurrentPlatform
 from pyTooling.Warning     import WarningCollector

@@ -40,13 +40,12 @@ from aiohttp                       import ClientConnectionError
 from packaging.markers             import default_environment
 from packaging.requirements        import Requirement
 
-from pyTooling.Dependency          import BrokenRequirementWarning, DependencyError, ExtraNotFoundError
-from pyTooling.Dependency          import UndeclaredExtraWarning
-from pyTooling.Dependency          import PackageIndexFailureWarning, ReleaseNotFoundError, ResolutionTimeoutWarning
-from pyTooling.Dependency          import UnresolvedRequirementWarning
+from pyTooling.Dependency          import BrokenRequirementWarning, DependencyError, ExtraNotFoundError, \
+                                          UndeclaredExtraWarning, PackageIndexFailureWarning, ReleaseNotFoundError, \
+                                          ResolutionTimeoutWarning, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex, RequirementsFile
-from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, PreReleasePolicy, Resolution, ResolutionStatus
-from pyTooling.Dependency.Resolver import ResolutionStrategy, ResolvedRequirement, Resolver
+from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, PreReleasePolicy, Resolution, ResolutionStatus, \
+                                          ResolutionStrategy, ResolvedRequirement, Resolver
 from pyTooling.Timeout             import Timeout
 from pyTooling.Warning             import UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing             import Testcase

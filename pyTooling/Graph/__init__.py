@@ -67,8 +67,8 @@ import heapq
 from collections           import deque
 from enum                  import Enum
 from itertools             import chain
-from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable
-from typing                import Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
+from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable, \
+                                  Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType

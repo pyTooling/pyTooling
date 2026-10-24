@@ -47,20 +47,21 @@ are imported at module level and each is guarded, so a missing one names itself 
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-from __future__           import annotations
+from __future__                import annotations
 
-from asyncio              import run as asyncio_run, gather as asyncio_gather
-from collections          import deque
-from datetime             import datetime, timedelta
-from enum                 import IntEnum
-from functools            import wraps, update_wrapper
-from pathlib              import Path
-from re                   import compile as re_compile, Pattern
-from threading            import RLock
-from typing               import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
+from asyncio                   import run as asyncio_run, gather as asyncio_gather
+from collections               import deque
+from datetime                  import datetime, timedelta
+from enum                      import IntEnum
+from functools                 import wraps, update_wrapper
+from pathlib                   import Path
+from re                        import compile as re_compile, Pattern
+from threading                 import RLock
+from typing                    import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, \
+                                      Self
 
-from pyTooling.Configuration import Dictionary
-from pyTooling.Exceptions    import MissingDependencyError
+from pyTooling.Configuration   import Dictionary
+from pyTooling.Exceptions      import MissingDependencyError
 
 try:
 	from aiohttp                 import ClientSession
@@ -83,16 +84,14 @@ except ImportError as ex:  # pragma: no cover
 from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
 from pyTooling.Common          import getFullyQualifiedName, firstValue
-from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning
-from pyTooling.Dependency      import UnparsableRequirementWarning
-from pyTooling.Dependency      import UnsupportedVersionWarning
-from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
-from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
-from pyTooling.Dependency      import PackageIndexError
-from pyTooling.Dependency      import AlreadyInRequirementsTreeError
-from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
-from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
+from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph, \
+                                      ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning, \
+                                      UnparsableRequirementWarning, UnsupportedVersionWarning, ProjectNotFoundError, \
+                                      DependencyError, NoSessionAvailableError, ReleaseNotFoundError, \
+                                      CircularRequirementsFileError, RequirementsFileNotFoundError, PackageIndexError, \
+                                      AlreadyInRequirementsTreeError
+from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER, \
+                                      LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Stopwatch       import Stopwatch
 from pyTooling.Warning         import WarningCollector
 from pyTooling.GenericPath.URL import URL

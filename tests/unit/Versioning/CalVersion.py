@@ -32,8 +32,8 @@
 Unit tests for :class:`pyTooling.Versioning.CalendarVersion` and its year-based variants: parsing,
 comparing, validating and formatting.
 """
-from pyTooling.Versioning import Flags, Parts, CalendarVersion, WordSizeValidator, MaxValueValidator
-from pyTooling.Versioning import YearMonthVersion, YearWeekVersion, YearReleaseVersion, YearMonthDayVersion
+from pyTooling.Versioning import Flags, Parts, CalendarVersion, WordSizeValidator, MaxValueValidator, \
+                                 YearMonthVersion, YearWeekVersion, YearReleaseVersion, YearMonthDayVersion
 from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover

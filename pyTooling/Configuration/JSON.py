@@ -44,13 +44,10 @@ from typing                  import Any, Union, Iterator as typing_Iterator, Opt
 from pyTooling.Common        import getFullyQualifiedName
 from pyTooling.Decorators    import export, InheritDocString
 from pyTooling.MetaClasses   import ExtendedType
-from pyTooling.Configuration import ConfigurationError, KeyT, NodeT, ValueT
-from pyTooling.Configuration import InterpolationError, KeyNotFoundError, PathExpressionError
-from pyTooling.Configuration import UnsupportedValueTypeError
-from pyTooling.Configuration import Node as Abstract_Node
-from pyTooling.Configuration import Dictionary as Abstract_Dict
-from pyTooling.Configuration import Sequence as Abstract_Seq
-from pyTooling.Configuration import Configuration as Abstract_Configuration
+from pyTooling.Configuration import ConfigurationError, KeyT, NodeT, ValueT, InterpolationError, KeyNotFoundError, \
+                                    PathExpressionError, UnsupportedValueTypeError, Node as Abstract_Node, \
+                                    Dictionary as Abstract_Dict, Sequence as Abstract_Seq, \
+                                    Configuration as Abstract_Configuration
 
 
 @export

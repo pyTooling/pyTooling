@@ -35,8 +35,8 @@ Unit tests for :mod:`pyTooling.Graph.GraphML`: constructing a GraphML document, 
 from xml.dom.minidom         import parseString
 
 from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
-from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
-from pyTooling.Graph.GraphML import Base, BaseWithID, BaseWithData
+from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, \
+                                    GraphMLDocument, Base, BaseWithID, BaseWithData
 from pyTooling.Tree          import Node as pyToolingNode
 from pyTooling.Testing       import Testcase
 
