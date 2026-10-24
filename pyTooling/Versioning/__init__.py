@@ -47,6 +47,7 @@ from __future__            import annotations
 from collections.abc       import Iterable as abc_Iterable
 from enum                  import Flag, Enum
 from re                    import compile as re_compile, escape as re_escape, Pattern
+from sys                   import version_info
 from typing                import Optional as Nullable, Union, Any, ClassVar, Generic, TypeVar, Iterable, Iterator, \
                                   Self
 
@@ -1702,8 +1703,6 @@ class PythonVersion(SemanticVersion):
 		:returns:                 A PythonVersion instance of the current Python interpreter's version.
 		:raises ToolingException: If the interpreter reports a release level this class doesn't know.
 		"""
-		from sys import version_info
-
 		if version_info.releaselevel == "final":
 			rl = ReleaseLevel.Final
 			number = None
