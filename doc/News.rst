@@ -43,8 +43,8 @@ Version 10.x (2026)
      * :meth:`~pyTooling.REST.RESTClient._Authorization` and :meth:`~pyTooling.REST.RESTClient._AddErrorNotes` are
        what a client of one API overrides: the bearer scheme of :rfc:`6750` is the default, and a status means what
        that API says it means.
-     * ``JSONObject`` is declared here now; :mod:`pyTooling.CI` re-exports it, so an import naming it there keeps
-       working.
+     * :data:`~pyTooling.REST.JSONObject` is the type of a JSON object, as :func:`json.loads` returns it. It is
+       imported from here: :mod:`pyTooling.CI` doesn't re-export it, so a pipeline model loads no HTTP stack.
 
    * :mod:`pyTooling.DataModel` is a new package for the foundations of data models.
      :class:`~pyTooling.DataModel.KeyValuePairsMixin` attaches arbitrary key-value-pairs to an element, accessed like
@@ -436,6 +436,8 @@ Version 10.x (2026)
        subtree along and becomes the root node of its own tree, like assigning ``None`` to its
        :attr:`~pyTooling.Tree.Node.Parent`. A node, which isn't a direct child, raises the new
        :exc:`~pyTooling.Tree.NotAChildError`, which carries it in :attr:`~pyTooling.Tree.NotAChildError.Child`.
+     * :meth:`Node.Delete <pyTooling.Tree.Node.Delete>` deletes a node and its subtree and disconnects the nodes from
+       each other, so reference counting frees them instead of the cyclic garbage collector.
 
    * :mod:`pyTooling.CLIAbstraction`
 
@@ -444,6 +446,12 @@ Version 10.x (2026)
      * ``formatCommandLine`` in :mod:`pyTooling.CLIAbstraction.Argument` joins arguments to one command line, escaped
        for the current platform: :func:`shlex.join` for a POSIX shell, on Windows ``subprocess.list2cmdline()`` as
        :class:`subprocess.Popen` passes them.
+
+   * :mod:`pyTooling.Filesystem`
+
+     * :meth:`Root.Delete <pyTooling.Filesystem.Root.Delete>` deletes a scanned directory tree: all directories,
+       filenames, symbolic links and file objects, also those a collapse removed, are disconnected from each other, so
+       reference counting frees them instead of the cyclic garbage collector.
 
    * :mod:`pyTooling.Dependency`
 
@@ -889,6 +897,13 @@ Version 10.x (2026)
        owning the parsers it prints, instead of :class:`~pyTooling.TerminalUI.TerminalApplication`; it writes through
        ``TerminalApplication``'s ``Write***`` methods.
 
+   * :mod:`pyTooling.Common`
+
+     * :func:`~pyTooling.Common.getResourceFile` and :func:`~pyTooling.Common.readResourceFile` import
+       :mod:`importlib.resources` when called, not when :mod:`pyTooling.Common` is imported. Every pyTooling package
+       imports :mod:`pyTooling.Common`: importing :mod:`pyTooling.Common` takes 8.3 ms less (Python 3.15), importing
+       :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 6.4 to 7.4 ms less.
+
    * :mod:`pyTooling.Configuration`
 
      * ⚠️ :class:`pyTooling.Configuration.Configuration` takes only ``configFile``. A configuration is the root node, so
@@ -901,6 +916,10 @@ Version 10.x (2026)
        :class:`~pyTooling.Decorators.DocStringMergeStrategy`, replacing the ``merge``, ``summaryOnly`` and ``order``
        parameters. A new strategy inherits just the base-class' summary. The default, ``BaseLast``, appends the
        base-class' doc-string below the entity's own.
+     * :deco:`~pyTooling.Decorators.InheritDocString` imports :func:`inspect.cleandoc` when it decorates, so importing
+       :mod:`pyTooling.Decorators` doesn't load :mod:`inspect`. Importing :mod:`pyTooling.Common` takes another 4.7 ms
+       less (Python 3.15), importing :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 2.8
+       to 3.3 ms less.
 
    * :mod:`pyTooling.Dependency`
 
@@ -936,6 +955,13 @@ Version 10.x (2026)
      * ⚠️ An edge or link takes its kind as a parameter before ``keyValuePairs``: ``edgeKind`` / ``linkKind`` in
        ``EdgeToVertex``, ``EdgeFromVertex``, ``LinkToVertex`` and ``LinkFromVertex``, ``kind`` in the constructors of
        :class:`~pyTooling.Graph.Edge` and :class:`~pyTooling.Graph.Link`.
+
+   * :mod:`pyTooling.Graph.GraphML`
+
+     * An attribute value is escaped with :meth:`str.translate` instead of :func:`xml.sax.saxutils.escape`, with the
+       same result. Importing :mod:`xml.sax.saxutils` loaded :mod:`urllib.request` and with it :mod:`ssl`,
+       :mod:`http.client` and :mod:`email`: importing :mod:`pyTooling.Graph.GraphML` takes 27 ms less (Python 3.15),
+       24 instead of 52 ms.
 
    * :mod:`pyTooling.MetaClasses`
 
@@ -1098,6 +1124,10 @@ Version 10.x (2026)
      * The annotation of ``Node._linkedList`` and :attr:`Node.List <pyTooling.LinkedList.Node.List>` named one type
        parameter of :class:`~pyTooling.LinkedList.LinkedList`, which has two, so :func:`typing.get_type_hints` raised a
        :exc:`TypeError` for :class:`~pyTooling.LinkedList.Node`.
+     * :meth:`LinkedList.Clear <pyTooling.LinkedList.LinkedList.Clear>` emptied the list, but its nodes still referred
+       to it and to each other: inserting one into a linked list raised
+       :exc:`~pyTooling.LinkedList.NotInSameListError`, and the nodes formed a reference cycle only the garbage
+       collector freed.
 
    * :mod:`pyTooling.MetaClasses`
 
@@ -1127,6 +1157,12 @@ Version 10.x (2026)
      * ⚠️ A ``ClassVar`` naming a mixin-class' slot produced a broken class: the name was in ``__slots__`` *and* a class
        attribute, so the field was read-only on every instance. It raises
        :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now.
+     * On Python 3.14 and newer, a class in a module without ``from __future__ import annotations`` raised a
+       :exc:`NotImplementedError`, if a field's annotation named something undefined at class creation - also the
+       class itself (``_parent: Node``). :class:`~pyTooling.MetaClasses.ExtendedType` asked the compiler-generated
+       ``__annotate__`` function for the annotations' source text, which only
+       :func:`annotationlib.call_annotate_function` provides. Such a field is a slot now, and a ``ClassVar`` of an
+       undefined name is a class variable.
 
    * :mod:`pyTooling.Packaging`
 

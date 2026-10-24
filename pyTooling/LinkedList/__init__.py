@@ -572,10 +572,21 @@ class LinkedList(Generic[_NodeKey, _NodeValue], metaclass=ExtendedType, slots=Tr
 	def Clear(self) -> None:
 		"""
 		Clear the linked list.
+
+		Every node is removed: afterwards, it belongs to no linked list and has neither a previous nor a next node, so it
+		can be inserted into a linked list again.
 		"""
+		node = self._firstNode
+		while node is not None:
+			nextNode =           node._nextNode
+			node._linkedList =   None
+			node._previousNode = None
+			node._nextNode =     None
+			node =               nextNode
+
 		self._firstNode = None
-		self._lastNode = None
-		self._count = 0
+		self._lastNode =  None
+		self._count =     0
 
 	def InsertBeforeFirst(self, node: Node[_NodeKey, _NodeValue]) -> None:
 		"""

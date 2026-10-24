@@ -1273,12 +1273,12 @@ class ExtendedType(type):
 			#   The necessary 'annotationlib' is not available for older Python versions.
 			annotations = members["__annotations__"]
 		elif version_info >= (3, 14) and (annotate := members.get("__annotate_func__", None)) is not None:
-			from annotationlib import Format
+			from annotationlib import Format, call_annotate_function
 			try:
 				annotations = annotate(Format.VALUE)
 			except NameError:
 				# A forward reference the class body cannot resolve yet - PEP 649 offers the source text instead.
-				annotations = annotate(Format.STRING)
+				annotations = call_annotate_function(annotate, Format.STRING)
 		else:
 			return {}
 
@@ -2227,7 +2227,8 @@ class ExtendedType(type):
 		for baseClass in reversed(newClass.__mro__[:-1]):
 			for memberName, member in vars(baseClass).items():
 				original = getattr(member, "__wrapped__", member)
-				if hasattr(original, "__expectedMembers__"):
+				# A class held by a class variable carries its class-level expectations, but is no marked method.
+				if not isinstance(original, type) and hasattr(original, "__expectedMembers__"):
 					marked[memberName] = original
 
 		wrapped: list[str] = []

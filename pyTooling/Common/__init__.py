@@ -46,7 +46,7 @@ __author__ =            "Patrick Lehmann"
 __email__ =             "Paebbels@gmail.com"
 __copyright__ =         "2017-2026, Patrick Lehmann"
 __license__ =           "Apache License, Version 2.0"
-__version__ =           "10.0.0rc7"
+__version__ =           "10.0.0rc8"
 __keywords__ =          [
 	"abstract", "argparse", "attributes", "bfs", "cli", "console", "data structure", "decorators", "dfs",
 	"double linked list", "exceptions", "file system statistics", "generators", "generic library", "generic path",
@@ -61,7 +61,6 @@ __issue_tracker_url__ = "https://GitHub.com/pyTooling/pyTooling/issues"
 from collections         import deque
 from datetime            import datetime, tzinfo
 from enum                import StrEnum
-from importlib.resources import files
 from numbers             import Number
 from os                  import chdir
 from pathlib             import Path
@@ -142,6 +141,8 @@ def getResourceFile(module: Union[str, ModuleType], filename: str) -> Path:
 	:returns:                 Path to the resource's file.
 	:raises ToolingException: If resource file doesn't exist.
 	"""
+	from importlib.resources import files
+
 	# TODO: files() has wrong TypeHint Traversible vs. Path
 	resourcePath: Path = files(module) / filename
 	if not resourcePath.exists():
@@ -162,6 +163,8 @@ def readResourceFile(module: Union[str, ModuleType], filename: str) -> str:
 	:param filename: The filename.
 	:returns:        File content.
 	"""
+	from importlib.resources import files
+
 	# TODO: check if resource exists.
 	return files(module).joinpath(filename).read_text()
 

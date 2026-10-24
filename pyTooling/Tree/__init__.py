@@ -227,7 +227,7 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 	_id: Nullable[IDType]                       #: Unique identifier of a node. ``None`` if not used.
 	_nodesWithID: Nullable[dict[IDType, Node]]  #: Dictionary of all IDs in the tree. ``None`` if it's not the root node.
 	_nodesWithoutID: Nullable[list[Node]]       #: List of all nodes without an ID in the tree. ``None`` if it's not the root node.
-	_root: Node                                 #: Reference to the root of a tree. ``self`` if it's the root node.
+	_root: Nullable[Node]                       #: Reference to the root of a tree. ``self`` if it's the root node, ``None`` once deleted.
 	_parent: Nullable[Node]                     #: Reference to the parent node. ``None`` if it's the root node.
 	_children: list[Node]                       #: List of all children
 #	_links: list['Node']
@@ -745,6 +745,33 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 				raise NotAChildError(f"Item '{child}' in parameter 'children' is not a child of this node.", child=child)
 
 			child.Parent = None
+
+	def Delete(self) -> None:
+		"""
+		Delete this node and its subtree.
+
+		A node with a parent is removed from it first, like :meth:`RemoveChild` does. Then every node of the subtree is
+		disconnected: it has no root, no parent and no children, and its key-value-pairs are removed. A deleted node
+		belongs to no tree and can't be used any more. Its value is kept.
+
+		.. seealso::
+
+		   :ref:`Deleting a tree <STRUCT/Tree/Delete>`
+		      |rarr| Reference cycles in a tree and Python's garbage collector.
+		   :meth:`RemoveChild`
+		      |rarr| Remove a child node, which keeps its subtree as a tree of its own.
+		"""
+		if self._parent is not None:
+			self.Parent = None
+
+		for node in (*self._nodesWithoutID, *self._nodesWithID.values()):
+			node._root =     None
+			node._parent =   None
+			node._children = []
+			node._dict.clear()
+
+		self._nodesWithID =    None
+		self._nodesWithoutID = None
 
 	def GetPath(self) -> Generator[Node, None, None]:
 		"""

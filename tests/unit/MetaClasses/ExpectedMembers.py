@@ -34,7 +34,7 @@ An expectation is declared in one of two places: a class lists the members it ne
 into (``expects=``), or a single method lists what it needs from its class (:deco:`expects`). The first rejects
 instantiation, the second rejects that one call.
 """
-from typing                import Protocol
+from typing                import ClassVar, Protocol
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
@@ -522,6 +522,27 @@ class ExpectingMethods(Testcase):
 
 	def test_TheMarkerIsOnTheMethod(self) -> None:
 		self.assertEqual(("MainParser", "SubParsers"), Terminal.PrintHelp.__wrapped__.__expectedMembers__)
+
+	def test_ClassVariable(self) -> None:
+		"""A class variable holding a class with fulfilled class-level expectations keeps the class."""
+		class Complete(Host, Mixin):
+			pass
+
+		class Holder(metaclass=ExtendedType, slots=True):
+			_CLASS: ClassVar[type] = Complete
+
+		self.assertIs(Complete, Holder._CLASS)
+		self.assertIs(Complete, Holder.__dict__["_CLASS"])
+
+	def test_ClassVariable_Unfulfilled(self) -> None:
+		"""A class variable holding a class with unfulfilled class-level expectations keeps the class."""
+		class Incomplete(HalfHost, Mixin):
+			pass
+
+		class Holder(metaclass=ExtendedType, slots=True):
+			_CLASS: ClassVar[type] = Incomplete
+
+		self.assertIs(Incomplete, Holder._CLASS)
 
 	def test_WithTheMixinTheOriginalMethodIsRestored(self) -> None:
 		class Application(Terminal, ParserMixin):

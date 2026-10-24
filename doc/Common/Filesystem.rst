@@ -16,6 +16,7 @@ Features
   links, hard links).
 * Identify filenames pointing to the same file (a.k.a hard links).
 * Compute directory sizes by aggregating file sizes.
+* Delete a scanned tree no longer needed, so its memory is freed without waiting for the garbage collector.
 
 
 .. _FILESYS/MissingFeatures:
@@ -186,6 +187,36 @@ So ``Size - Size2`` is what hard-linking saves, and the counts alongside them te
    :attr:`~pyTooling.Filesystem.Directory.AggregateDuration` report what the two phases cost, measured with
    :class:`~pyTooling.Stopwatch.Stopwatch`. On a large tree the scan dominates, because it is the part that touches
    the filesystem.
+
+
+.. _FILESYS/Delete:
+
+Deleting a Scope
+================
+
+The elements of a scanned tree reference each other: a directory its subdirectories, filenames and symbolic links,
+each of them its parent and the root, a filename its file object and the file object all its filenames, and the root
+every file object. These are *reference cycles*, so when the last reference to a :class:`~pyTooling.Filesystem.Root`
+is dropped, Python's reference counting can't free the tree. The memory is freed only by the cyclic garbage collector
+(:mod:`gc`), which runs from time to time, or when a program calls :func:`gc.collect`. A full collection visits every
+object of the program, not only the tree - and a scan creates one object per directory entry.
+
+:meth:`~pyTooling.Filesystem.Root.Delete` disconnects all elements: no element has a root, a parent, subelements or
+link sources any more, no filename refers to a file object and no file object to a filename. This includes the
+elements :meth:`~pyTooling.Filesystem.Directory.Collapse` removed from their directories, which the root still reaches
+through the file objects. Afterwards, nothing but the program's own references keeps the elements alive, so reference
+counting frees them as soon as these are dropped.
+
+.. code-block:: Python
+
+   root = Root(Path("/home/user/project"))
+   root.AggregateSizes()
+   print(root.Size)
+
+   root.Delete()
+   del root               # freed now, not at the next garbage collection
+
+Deleting pays off where a program scans directory trees again while it keeps running.
 
 
 

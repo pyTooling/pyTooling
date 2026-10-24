@@ -114,6 +114,7 @@ Features
 * A node can store key-value-pairs via dictionary syntax.
 * A node has a reference to its parent node.
 * A node can add and remove children; a removed child takes its subtree along.
+* A tree no longer needed can be deleted, so its memory is freed without waiting for the garbage collector.
 * A node has a reference to the root node in a tree (representative node).
 * Rendering to simple ASCII art for debugging purposes.
 
@@ -840,6 +841,38 @@ The following operations are executed on all nodes in subtree **B**:
 
 Afterwards, :attr:`~pyTooling.Tree.Node.Size` and :meth:`~pyTooling.Tree.Node.GetNodeByID` of **A** no longer see the
 nodes of **B**, and :attr:`~pyTooling.Tree.Node.ChildCount` of **P** no longer counts **B**.
+
+
+.. _STRUCT/Tree/Delete:
+
+Deleting a Tree
+===============
+
+The nodes of a tree reference each other: a node its parent and its children, every node the root, and the root all
+nodes of the tree and itself. These are *reference cycles*, so when the last reference to a tree is dropped, Python's
+reference counting can't free it. The memory is freed only by the cyclic garbage collector (:mod:`gc`), which runs
+from time to time, or when a program calls :func:`gc.collect`. A full collection visits every object of the program,
+not only the tree.
+
+:meth:`~pyTooling.Tree.Node.Delete` deletes a node and its subtree: a node with a parent is removed from it first,
+like :meth:`~pyTooling.Tree.Node.RemoveChild` does, then every node of the subtree loses its root, its parent, its
+children and its key-value-pairs. Afterwards, nothing but the program's own references keeps the nodes alive, so
+reference counting frees them as soon as these are dropped. A deleted node belongs to no tree and can't be used any
+more; its value is kept.
+
+.. code-block:: python
+
+   root = Node(nodeID=0)
+   node = Node(nodeID=1, parent=root)
+   Node(nodeID=2, parent=node)
+
+   ...                    # use the tree
+
+   root.Delete()
+   del root, node         # freed now, not at the next garbage collection
+
+Deleting pays off where a program replaces a large tree while it keeps running. A value referencing its node is the
+program's own cycle: the program clears that reference itself.
 
 
 .. _STRUCT/Tree/Rendering:

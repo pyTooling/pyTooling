@@ -1478,6 +1478,71 @@ class Root(Directory):
 		symLink._isOutOfRange = True
 		self._unconnectedSymbolicLinks.append(symLink)
 
+	def Delete(self) -> None:
+		"""
+		Delete this filesystem statistics scope: all directories, filenames, symbolic links and file objects.
+
+		Every element is disconnected: it has no root, no parent, no subelements and no link sources, a filename refers
+		to no file object and a file object to no filename. This includes the elements a :meth:`Collapse` removed from
+		their directories, which the root still reaches through the file objects. Afterwards, the root is empty and its
+		elements can't be used any more.
+
+		.. seealso::
+
+		   :ref:`Deleting a scope <FILESYS/Delete>`
+		      |rarr| Reference cycles in a scanned directory tree and Python's garbage collector.
+		"""
+		directories: dict[int, Directory] = {}
+		pending: list[Directory] = [self]
+		for file in self._ids.values():
+			for filename in file._parents:
+				if filename._parent is not None:
+					pending.append(filename._parent)
+
+		while len(pending) > 0:
+			directory = pending.pop()
+			while directory is not None and id(directory) not in directories:
+				directories[id(directory)] = directory
+				pending.extend(directory._subdirectories.values())
+				directory = directory._parent
+
+		for file in self._ids.values():
+			for filename in file._parents:
+				filename._root =        None
+				filename._parent =      None
+				filename._file =        None
+				filename._linkSources = []
+
+			file._root =    None
+			file._parents = []
+
+		for directory in directories.values():
+			for filename in directory._files.values():
+				if (file := filename._file) is not None:
+					file._root =    None
+					file._parents = []
+
+				filename._root =        None
+				filename._parent =      None
+				filename._file =        None
+				filename._linkSources = []
+
+			for link in directory._symbolicLinks.values():
+				link._root =        None
+				link._parent =      None
+				link._linkSources = []
+
+			directory._root =           None
+			directory._parent =         None
+			directory._linkSources =    []
+			directory._subdirectories = {}
+			directory._files =          {}
+			directory._symbolicLinks =  {}
+
+		self._ids =                      {}
+		self._brokenSymbolicLinks =      []
+		self._unconnectedSymbolicLinks = []
+
 	def Copy(self) -> Root:
 		"""
 		Copy the directory structure including all subelements and link it to the given parent.
