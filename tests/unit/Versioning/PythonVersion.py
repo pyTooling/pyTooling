@@ -34,8 +34,6 @@ Unit tests for :pep:`440`'s alternative spellings in :class:`pyTooling.Versionin
 A version keeps the spelling it was parsed from and compares equal to its normalized form;
 :meth:`~pyTooling.Versioning.PythonVersion.Normalize` returns the normalized form.
 """
-from unittest             import main as unittest_main
-
 from pyTooling.Versioning import PythonVersion, SemanticVersion, ReleaseLevel, VersionValidatorError
 from pyTooling.Testing    import Testcase
 

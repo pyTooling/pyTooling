@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
 need network access.
 """
-from datetime                     import date, datetime, timedelta, timezone
+from datetime                     import datetime, timedelta, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
@@ -57,7 +57,7 @@ from pyTooling.Dependency         import AlreadyInRequirementsTreeError
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
-from pyTooling.Licensing          import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
+from pyTooling.Licensing          import LicenseAbsence, LicenseReference, ProprietaryLicense
 from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperator
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
 from pyTooling.Warning            import CriticalWarning, UnhandledCriticalWarningError, WarningCollector

@@ -60,7 +60,7 @@ analysis. :meth:`ControlFlowGraph.ToGraph` converts a control flow graph into a 
 from __future__            import annotations
 
 from enum                  import Enum
-from typing                import Any, Generator, Hashable, Iterator, Mapping, Optional as Nullable
+from typing                import Any, Generator, Hashable, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.DataModel   import KeyValuePairsMixin, Predicate

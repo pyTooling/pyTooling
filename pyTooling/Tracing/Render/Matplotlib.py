@@ -54,7 +54,7 @@ from pathlib                     import Path
 from typing                      import ClassVar, Iterable, Optional as Nullable, Union
 
 from pyTooling.Decorators        import export, readonly
-from pyTooling.Common            import getFullyQualifiedName, readResourceFile
+from pyTooling.Common            import readResourceFile
 from pyTooling.Exceptions        import MissingDependencyError
 from pyTooling.Resources         import Tracing as TracingResources
 from pyTooling.Tracing.CI        import SpanKind

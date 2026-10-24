@@ -60,7 +60,7 @@ renderer draws what any of them describe.
 from __future__            import annotations
 
 from datetime              import datetime, timedelta
-from typing                import Iterator, Optional as Nullable
+from typing                import Iterator
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType

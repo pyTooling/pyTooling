@@ -51,7 +51,7 @@ from __future__           import annotations
 
 from asyncio              import run as asyncio_run, gather as asyncio_gather
 from collections          import deque
-from datetime             import date, datetime, timedelta
+from datetime             import datetime, timedelta
 from enum                 import IntEnum
 from functools            import wraps, update_wrapper
 from pathlib              import Path

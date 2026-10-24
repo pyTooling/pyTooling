@@ -34,7 +34,7 @@ weight, key-value-pairs), the iteration methods, and the conversion of a graph i
 """
 from enum     import Enum
 from gc       import disable as gc_disable, enable as gc_enable, isenabled as gc_isenabled
-from typing   import Any, Optional as Nullable, List, Tuple, Callable, get_type_hints
+from typing   import Any, Optional as Nullable, List, Tuple, get_type_hints
 from weakref  import ref
 
 from pytest   import mark
