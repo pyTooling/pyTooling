@@ -31,8 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian3D.Volumes` - cuboid and cube.
 """
-from pyTooling.Cartesian3D         import Point3D
-from pyTooling.Cartesian3D.Volumes import Volume, Cuboid, Cube
+from pyTooling.Cartesian3D.Volumes import Cube
 from pyTooling.Testing             import Testcase
 
 

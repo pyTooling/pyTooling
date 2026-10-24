@@ -49,7 +49,6 @@ from pyTooling.Attributes.ArgParse.Argument   import IntegerArgument, IntegerLis
 from pyTooling.Attributes.ArgParse.Argument   import FloatArgument, FloatListArgument
 from pyTooling.Attributes.ArgParse.Flag       import FlagArgument, ShortFlag, LongFlag
 from pyTooling.Attributes.ArgParse.ValuedFlag import ValuedFlag, ShortValuedFlag, LongValuedFlag
-from pyTooling.Attributes.ArgParse.KeyValueFlag import NamedKeyValuePairsArgument, ShortKeyValueFlag, LongKeyValueFlag
 from pyTooling.TerminalUI                     import TerminalApplication
 from pyTooling.Testing                        import Testcase
 

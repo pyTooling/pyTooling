@@ -42,7 +42,7 @@ from warnings                    import catch_warnings, simplefilter
 from xml.etree                   import ElementTree
 
 from pyTooling.Tracing           import Span, Trace, TracingError
-from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
+from pyTooling.Tracing.CI        import CI, OTLP
 from pyTooling.MetaClasses       import AbstractClassError
 from pyTooling.Tracing.Render    import GanttLayout, Renderer, StepExclusion, ciSpanFilter, msys2Environment, \
                                        runnerCategory
