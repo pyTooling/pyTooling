@@ -45,7 +45,6 @@ from datetime                    import datetime, timedelta
 from enum                        import Enum
 from pathlib                     import Path
 from re                          import IGNORECASE, compile as re_compile
-from statistics                  import fmean
 from typing                      import Callable, ClassVar, Generic, Iterator, Optional as Nullable, TypeVar, Union
 
 from pyTooling.Decorators        import export, readonly
@@ -397,6 +396,8 @@ class CategoryStatistics(metaclass=ExtendedType, slots=True):
 
 		:returns: Seconds.
 		"""
+		from statistics import fmean
+
 		return fmean(self._waitTimes)
 
 	@readonly
@@ -424,6 +425,8 @@ class CategoryStatistics(metaclass=ExtendedType, slots=True):
 
 		:returns: Seconds.
 		"""
+		from statistics import fmean
+
 		return fmean(self._runTimes)
 
 	@readonly

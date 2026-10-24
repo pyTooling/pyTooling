@@ -49,8 +49,8 @@ from datetime              import datetime, timedelta
 from enum                  import Enum
 from json                  import dumps as json_dumps
 from math                  import isfinite
+from os                    import urandom
 from pathlib               import Path
-from secrets               import randbits
 from time                  import perf_counter_ns
 from threading             import local
 from types                 import TracebackType
@@ -348,8 +348,8 @@ def _newIdentifier(bits: int) -> str:
 	:raises TracingError: If no non-zero identifier was drawn within :data:`_MAXIMUM_IDENTIFIER_ATTEMPTS` attempts.
 	"""
 	for _ in range(_MAXIMUM_IDENTIFIER_ATTEMPTS):
-		if (identifier := randbits(bits)) != 0:
-			return f"{identifier:0{bits // 4}x}"
+		if any(identifier := urandom(bits // 8)):
+			return identifier.hex()
 	else:
 		ex = TracingError(f"Couldn't draw a non-zero {bits}-bit random identifier.")
 		ex.add_note(f"Tried {_MAXIMUM_IDENTIFIER_ATTEMPTS} times.")

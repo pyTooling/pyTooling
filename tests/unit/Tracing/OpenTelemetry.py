@@ -397,14 +397,28 @@ class Encoding(Testcase):
 class Identifiers(Testcase):
 	"""An all-zero identifier is invalid in OTLP, so it is drawn again - but not forever."""
 
+	def test_TraceIdentifier(self) -> None:
+		"""A trace identifier is 16 bytes, written as 32 lower-case hex digits."""
+		identifier = _newIdentifier(128)
+
+		self.assertEqual(32, len(identifier))
+		self.assertEqual(identifier, f"{int(identifier, 16):032x}")
+
+	def test_SpanIdentifier(self) -> None:
+		"""A span identifier is 8 bytes, written as 16 lower-case hex digits."""
+		identifier = _newIdentifier(64)
+
+		self.assertEqual(16, len(identifier))
+		self.assertEqual(identifier, f"{int(identifier, 16):016x}")
+
 	def test_AZeroIsDrawnAgain(self) -> None:
-		with mock.patch("pyTooling.Tracing.randbits", side_effect=(0, 0, 0x0123456789ABCDEF)):
+		with mock.patch("pyTooling.Tracing.urandom", side_effect=(bytes(8), bytes(8), bytes.fromhex("0123456789abcdef"))):
 			identifier = _newIdentifier(64)
 
 		self.assertEqual("0123456789abcdef", identifier)
 
 	def test_OnlyZerosRaisesATracingError(self) -> None:
-		with mock.patch("pyTooling.Tracing.randbits", return_value=0):
+		with mock.patch("pyTooling.Tracing.urandom", return_value=bytes(8)):
 			with self.assertRaises(TracingError) as exceptionCapture:
 				_newIdentifier(64)
 
