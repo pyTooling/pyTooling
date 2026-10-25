@@ -1902,6 +1902,13 @@ class DuplicateIdentifiers(Testcase):
 
 		self.assertEqual("v1", context.exception.VertexID)
 
+	def test_DuplicateVertexError_MessageOnly(self) -> None:
+		"""The vertex ID is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise DuplicateVertexError("Vertex ID 'v1' already exists in this graph.")
+
+		self.assertIn("'vertexID'", str(context.exception))
+
 	def test_ADuplicateEdgeIDIsCarried(self) -> None:
 		graph = Graph()
 		first = Vertex(vertexID="v1", graph=graph)

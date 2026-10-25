@@ -707,6 +707,14 @@ class ProjectReleases(Testcase):
 		)
 		self.assertIsInstance(context.exception.__cause__, UnsupportedVersionWarning)
 
+	def test_UnsupportedVersionWarning_MessageOnly(self) -> None:
+		"""The project's name and the version are required: creating the warning with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			_ = UnsupportedVersionWarning("Skipping release '2004d' of package 'pytz'.")
+
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'version'", str(context.exception))
+
 
 class ProjectURLs(Testcase):
 	"""How a release's project URLs are resolved from the free-text ``project_urls`` mapping."""
@@ -2016,4 +2024,11 @@ class HTTPErrors(Testcase):
 		self.assertIsInstance(context.exception.__cause__, HTTPError)
 		self.assertEqual("project", context.exception.ProjectName)
 		self.assertEqual(PythonVersion.Parse("v1.0.0"), context.exception.Version)
+
+	def test_PackageIndexError_MessageOnly(self) -> None:
+		"""The project's name is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise PackageIndexError("Package index responded 500 Internal Server Error for package 'project'.")
+
+		self.assertIn("'projectName'", str(context.exception))
 
