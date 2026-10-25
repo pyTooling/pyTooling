@@ -44,14 +44,14 @@ A set of helper functions to describe a Python package for setuptools.
    :mod:`pyTooling.Testing`
       |rarr| Testing the console scripts a package installs.
 """
-from ast             import parse as ast_parse, get_docstring as ast_get_docstring, iter_child_nodes, Assign, \
-                            Constant, Name, List as ast_List
-from collections.abc import Sized
-from os              import scandir as os_scandir
-from pathlib         import Path
-from re              import compile as re_compile, split as re_split, sub as re_sub
-from sys             import version_info
-from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
+from ast                     import parse as ast_parse, get_docstring as ast_get_docstring, iter_child_nodes, Assign, \
+                                    Constant, Name, List as ast_List
+from os                      import scandir as os_scandir
+from pathlib                 import Path
+from re                      import compile as re_compile, split as re_split, sub as re_sub
+from sys                     import version_info
+from typing                  import Any, Iterable, Optional as Nullable, Sequence, Sized, Union
+
 from pyTooling.Decorators    import export, readonly
 from pyTooling.Documentation import splitDocString
 from pyTooling.Exceptions    import ToolingException, MissingDependencyError
