@@ -46,7 +46,7 @@ dictionary with ``SCHEMA_VERSION_LATEST`` naming the newest.
 
 .. rubric:: JSON Schema Files
 
-* :file:`PackageOverrides-v0.1.json` - the schema of the package-override file the :ref:`dependency-table <DEP>`
+* :file:`PackageOverrides-v0.1.schema.json` - the schema of the package-override file the :ref:`dependency-table <DEP>`
   directive reads, which :class:`~pyTooling.Dependency.Python.LicenseOverrides` parses and whose ``version`` field
   states the structure it was written for. Named by
   :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES` and

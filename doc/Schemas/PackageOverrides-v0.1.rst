@@ -20,7 +20,7 @@ file states the structure it was written for in ``version``, and when a human la
 
       .. admonition:: Download
 
-         :download:`PackageOverrides-v0.1.json <../../pyTooling/Resources/PackageOverrides-v0.1.json>`
+         :download:`PackageOverrides-v0.1.schema.json <../../pyTooling/Resources/PackageOverrides-v0.1.schema.json>`
 
    .. grid-item::
       :columns: 6
@@ -29,7 +29,7 @@ file states the structure it was written for in ``version``, and when a human la
 
          .. code-block:: bash
 
-            check-jsonschema --schemafile PackageOverrides-v0.1.json PackageOverrides.yaml
+            check-jsonschema --schemafile PackageOverrides-v0.1.schema.json PackageOverrides.yaml
 
 .. seealso::
 
@@ -46,21 +46,21 @@ relative path needs nothing published:
 
 .. code-block:: YAML
 
-   # yaml-language-server: $schema=../pyTooling/Resources/PackageOverrides-v0.1.json
+   # yaml-language-server: $schema=../pyTooling/Resources/PackageOverrides-v0.1.schema.json
 
 Outside a checkout, the schema is served at its ``$id``:
 
 .. code-block:: YAML
 
-   # yaml-language-server: $schema=https://pyTooling.GitHub.io/pyTooling/Schemas/PackageOverrides-v0.1.json
+   # yaml-language-server: $schema=https://pyTooling.GitHub.io/pyTooling/Schemas/PackageOverrides-v0.1.schema.json
 
 .. _SCHEMAS/PackageOverrides-v0.1/Source:
 
 Source
 ******
 
-.. literalinclude:: ../../pyTooling/Resources/PackageOverrides-v0.1.json
-   :caption: PackageOverrides-v0.1.json
+.. literalinclude:: ../../pyTooling/Resources/PackageOverrides-v0.1.schema.json
+   :caption: PackageOverrides-v0.1.schema.json
    :language: json
    :linenos:
    :tab-width: 2

@@ -484,7 +484,7 @@ Version 10.x (2026)
        it expires get the status :attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired` and are
        reported as the critical :class:`~pyTooling.Dependency.ResolutionTimeoutWarning`.
      * The package-override file :class:`~pyTooling.Dependency.Python.LicenseOverrides` reads has a JSON schema,
-       :file:`PackageOverrides-v0.1.json`, shipped as a package resource and named by
+       :file:`PackageOverrides-v0.1.schema.json`, shipped as a package resource and named by
        :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES`. The documentation serves it - and
        :file:`TestReport-v0.1.xsd` - under ``https://pyTooling.GitHub.io/pyTooling/Schemas/``, the schema's ``$id``,
        so an editor validates the file as it is typed.
