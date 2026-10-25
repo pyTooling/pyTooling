@@ -200,7 +200,7 @@ jobs:
 #      - UnitTestingParams
 #      - Documentation
 #    with:
-#      document: sphinx_reports
+#      document: pyTooling
 #      latex_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_latex }}
 #      pdf_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_pdf }}
 
