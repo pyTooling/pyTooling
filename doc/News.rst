@@ -768,6 +768,11 @@ Version 10.x (2026)
      A requirements file given in ``entries`` joins the tree; one referenced by another file already raises
      :exc:`~pyTooling.Dependency.AlreadyInRequirementsTreeError`.
 
+   * ⚠️ **The extra** ``pypi`` **is renamed to** ``dependencies``: ``pip install pyTooling[pypi]`` |rarr|
+     ``pip install pyTooling[dependencies]``, also in requirements files. There is no alias; pip installs a package
+     without an extra it doesn't declare, warning only, so :mod:`pyTooling.Dependency.Python` then raises
+     :exc:`~pyTooling.Exceptions.MissingDependencyError` on import.
+
    * ⚠️ **A program found in** ``PATH`` **is the full path** in :attr:`~pyTooling.CLIAbstraction.Program.Path` and as
      the first item of :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList`, e.g. ``/usr/bin/git`` instead of
      ``git``.
@@ -923,6 +928,9 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Dependency`
 
+     * ⚠️ The extra installing what :mod:`pyTooling.Dependency.Python` and :mod:`pyTooling.Dependency.Resolver` import
+       (aiohttp, packaging, requests) is named ``dependencies``, after the feature it serves, like ``diagram``,
+       ``terminal`` and ``yaml``. It was named ``pypi``, after the index it reads.
      * ⚠️ A release version the parser can't read is reported as a critical
        :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, carrying ``ProjectName`` and ``Version``, instead of a
        line written by :func:`print`. The release is still skipped.

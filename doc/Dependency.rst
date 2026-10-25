@@ -76,10 +76,10 @@ When installed as ``pyTooling[diagram]``:
    :caption: Dependencies added by the ``diagram`` extra.
 
 
-When installed as ``pyTooling[pypi]``:
+When installed as ``pyTooling[dependencies]``:
 
-.. dependency-table:: pypi
-   :caption: Dependencies added by the ``pypi`` extra.
+.. dependency-table:: dependencies
+   :caption: Dependencies added by the ``dependencies`` extra.
 
 
 When installed as ``pyTooling[testing]``:

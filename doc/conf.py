@@ -287,7 +287,7 @@ pyTooling_Dependency_Requirements = {
 	"terminal":      {"package":  "pyTooling[terminal]"},
 	"yaml":          {"package":  "pyTooling[yaml]"},
 	"diagram":       {"package":  "pyTooling[diagram]"},
-	"pypi":          {"package":  "pyTooling[pypi]"},
+	"dependencies":  {"package":  "pyTooling[dependencies]"},
 	"testing":       {"package":  "pyTooling[testing]"},
 	"unittest":      {"file":     "../tests/unit/requirements.txt"},
 	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
