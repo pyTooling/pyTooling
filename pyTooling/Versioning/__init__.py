@@ -254,18 +254,18 @@ class ReleaseLevel(Enum):
 		:returns:                 The string equivalent of the release level.
 		:raises ToolingException: If the release level is unknown, so it has no string equivalent.
 		"""
-		if self is ReleaseLevel.Alpha:
+		if self is ReleaseLevel.Final:
+			return "final"
+		elif self is ReleaseLevel.ReleaseCandidate:
+			return "rc"
+		elif self is ReleaseLevel.Development:
+			return "dev"
+		elif self is ReleaseLevel.Alpha:
 			return "alpha"
 		elif self is ReleaseLevel.Beta:
 			return "beta"
 		elif self is ReleaseLevel.Gamma:
 			return "gamma"
-		elif self is ReleaseLevel.Development:
-			return "dev"
-		elif self is ReleaseLevel.ReleaseCandidate:
-			return "rc"
-		elif self is ReleaseLevel.Final:
-			return "final"
 
 		raise ToolingException(f"Unknown ReleaseLevel '{self.name}'.")
 
