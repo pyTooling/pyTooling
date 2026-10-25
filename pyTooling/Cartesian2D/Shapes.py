@@ -125,14 +125,15 @@ class Rectangle(Trapezium[Coordinate]):
 				ex.add_note(f"Got lengths {edge.Length} and {oppositeEdge.Length}.")
 				raise ex
 
-		for edge in self.segments:
+		for edge in self.segments[:2]:
 			if edge.Length == 0.0:
 				ex = ValueError("Line segment (edge) has length 0.")
 				ex.add_note(f"Got corners {edge.start} and {edge.end}.")
 				raise ex
 
-		for index, edge in enumerate(self.segments):
-			nextEdge = self.segments[(index + 1) % 4]
+		for index in range(2):
+			edge =     self.segments[index]
+			nextEdge = self.segments[index + 1]
 			angle =    pi - edge.AngleTo(nextEdge)
 			if not isclose(angle, pi / 2):
 				ex = ValueError("Inner angle of a rectangle is not 90°.")

@@ -167,6 +167,19 @@ class Instantiation(Testcase):
 		self.assertEqual("Inner angle of a rectangle is not 90°.", str(context.exception))
 		self.assertListEqual(["Got 116.57° at corner (4, 0)."], context.exception.__notes__)
 
+	def test_Rectangle_Crossed(self) -> None:
+		"""Opposite edges are equally long and two opposite angles are 90 degrees, but the edges cross each other."""
+		point00 = Point2D(0, 0)
+		point01 = Point2D(4, 0)
+		point11 = Point2D(4, 3)
+		point10 = Point2D(2.88, -0.84)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Rectangle(point00, point01, point11, point10)
+
+		self.assertEqual("Inner angle of a rectangle is not 90°.", str(context.exception))
+		self.assertListEqual(["Got 16.26° at corner (4, 3)."], context.exception.__notes__)
+
 	def test_Rectangle_SameCorners(self) -> None:
 		"""Two pairs of consecutive corners are the same point: opposite edges are equally long, both 0."""
 		point00 = Point2D(0, 0)
