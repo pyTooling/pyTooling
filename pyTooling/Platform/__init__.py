@@ -719,4 +719,5 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		return f"{platform}{environment} ({architecture}){runtime}"
 
 
-CurrentPlatform = Platform()     #: Gathered information for the current platform.
+CurrentPlatform = Platform()
+"""Gathered information for the current platform."""

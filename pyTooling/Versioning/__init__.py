@@ -3301,8 +3301,8 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		return self._items[index]
 
 
-#: The :class:`Version` class under a name no constraint shadows with a property of its own.
 _VersionType = Version
+"""The :class:`Version` class under a name no constraint shadows with a property of its own."""
 
 
 @export
@@ -3483,12 +3483,12 @@ class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
 		return f"{self._comparison}{self._version}"
 
 
-#: The comparisons a plain :class:`VersionConstraint` cannot express, because each derives an upper bound.
 _SHORTHAND_COMPARISONS = (
 	VersionComparison.CompatibleRelease,
 	VersionComparison.Caret,
 	VersionComparison.Tilde,
 )
+"""The comparisons a plain :class:`VersionConstraint` cannot express, because each derives an upper bound."""
 
 
 @export

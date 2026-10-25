@@ -98,34 +98,37 @@ from pyTooling.GenericPath.URL import URL, URLError
 from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
 
 
-#: Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it.
 _LICENSE_NOTE_LENGTH = 64
+"""Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it."""
 
-#: PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
-#: :class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
 _PROPRIETARY_CLASSIFIER =    "License :: Other/Proprietary License"
+"""
+PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
+:class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
+"""
 
-#: Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first.
 _REPOSITORY_URL_ALIASES =    ("source code", "source", "code", "repository", "github", "gitlab")
+"""Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first."""
+
 _DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
 _ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
 _PROJECT_URL_ALIASES =       ("homepage", "home page", "home")
 _CHANGELOG_URL_ALIASES =     ("changelog", "changes", "release notes", "whatsnew", "what's new")
 
-#: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
+"""Pattern of an ``extra == "<name>"`` comparison in a requirement's marker."""
 
-#: How often a request to a package index is retried before it is reported as an error.
 RETRY_ATTEMPTS = 4
+"""How often a request to a package index is retried before it is reported as an error."""
 
-#: Seconds the delay between two retries grows by, doubling per attempt: 0.5 s, 1 s, 2 s, 4 s.
 RETRY_BACKOFF = 0.5
+"""Seconds the delay between two retries grows by, doubling per attempt: 0.5 s, 1 s, 2 s, 4 s."""
 
-#: Status codes worth retrying: a rate-limit and the transient server-side failures.
 RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
+"""Status codes worth retrying: a rate-limit and the transient server-side failures."""
 
-#: What a requirements file states: a requirement, a referenced file, or a reference to a file read before.
 RequirementsFileEntryT = Union[Requirement, "RequirementsFile", "RequirementsFileReference"]
+"""What a requirements file states: a requirement, a referenced file, or a reference to a file read before."""
 
 
 @export

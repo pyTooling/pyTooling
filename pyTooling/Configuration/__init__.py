@@ -58,9 +58,14 @@ from pyTooling.Exceptions  import ConfigurationError
 __all__ = ["KeyT", "NodeT", "ValueT"]
 
 
-KeyT =   Union[str, int]                          #: Type variable for keys.
-NodeT =  Union["Dictionary", "Sequence"]          #: Type variable for nodes.
-ValueT = Nullable[Union[NodeT, str, int, float]]  #: Type variable for values; ``None`` for a null value.
+KeyT = Union[str, int]
+"""Type variable for keys."""
+
+NodeT = Union["Dictionary", "Sequence"]
+"""Type variable for nodes."""
+
+ValueT = Nullable[Union[NodeT, str, int, float]]
+"""Type variable for values; ``None`` for a null value."""
 
 
 @export
