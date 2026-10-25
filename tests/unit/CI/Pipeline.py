@@ -550,6 +550,13 @@ class Rules(Testcase):
 
 		self.assertEqual("Rule belongs to 'Build' already.", str(context.exception))
 
+	def test_AlreadyInPipelineError_MessageOnly(self) -> None:
+		"""The element is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise AlreadyInPipelineError("Rule belongs to 'Build' already.")
+
+		self.assertIn("'element'", str(context.exception))
+
 
 class Times(Testcase):
 	def test_UnreportedGroup(self) -> None:
@@ -744,6 +751,14 @@ class Dependencies(Testcase):
 		self.assertIsNone(context.exception.Element)
 		self.assertIsNone(context.exception.Need)
 		self.assertIsNone(context.exception.Cycle)
+
+	def test_NeedDependencyError_MessageOnly(self) -> None:
+		"""Both elements are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise NeedDependencyError("'Build' needs 'Prepare' already.")
+
+		self.assertIn("'element'", str(context.exception))
+		self.assertIn("'need'", str(context.exception))
 
 	def test_AddNeed_Cycle(self) -> None:
 		"""Adding a need doesn't search for cycles; validating the completed pipeline does."""

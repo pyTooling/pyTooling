@@ -68,24 +68,24 @@ class VersionValidatorError(ToolingException):
 	:attr:`Version`, so a caller can report what was wrong with it.
 	"""
 
-	_version: Nullable[Version]  #: The version rejected by a validator.
+	_version: Version  #: The version rejected by a validator.
 
-	def __init__(self, message: str, /, *, version: Nullable[Version] = None) -> None:
+	def __init__(self, message: str, /, *, version: Version) -> None:
 		"""
 		Initializes the exception with the rejected version.
 
 		:param message: The exception's message.
-		:param version: Optional, the version the validator rejected.
+		:param version: The version the validator rejected.
 		"""
 		super().__init__(message)
 		self._version = version
 
 	@readonly
-	def Version(self) -> Nullable[Version]:
+	def Version(self) -> Version:
 		"""
 		Read-only property to access the version the validator rejected (:attr:`_version`).
 
-		:returns: The rejected version, or ``None`` if it wasn't recorded.
+		:returns: The rejected version.
 		"""
 		return self._version
 

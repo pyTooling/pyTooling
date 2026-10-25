@@ -181,24 +181,24 @@ class NotInDifferentSubgraphs(GraphError):
 class DuplicateVertexError(GraphError, DuplicateElementError):
 	"""The exception is raised when the vertex already exists in the graph."""
 
-	_vertexID: Nullable[VertexIDType]  #: ID of the vertex that already exists in the graph.
+	_vertexID: VertexIDType  #: ID of the vertex that already exists in the graph.
 
-	def __init__(self, message: str, /, *, vertexID: Nullable[VertexIDType] = None) -> None:
+	def __init__(self, message: str, /, *, vertexID: VertexIDType) -> None:
 		"""
 		Initializes the exception with the identifier that is already taken.
 
 		:param message:  The exception's message.
-		:param vertexID: Optional, the vertex identifier that already exists.
+		:param vertexID: The vertex identifier that already exists.
 		"""
 		super().__init__(message)
 		self._vertexID = vertexID
 
 	@readonly
-	def VertexID(self) -> Nullable[VertexIDType]:
+	def VertexID(self) -> VertexIDType:
 		"""
 		Read-only property to access the identifier that already exists (:attr:`_vertexID`).
 
-		:returns: The duplicate vertex identifier, or ``None`` if it wasn't recorded.
+		:returns: The duplicate vertex identifier.
 		"""
 		return self._vertexID
 

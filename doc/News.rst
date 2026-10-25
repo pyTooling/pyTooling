@@ -527,7 +527,8 @@ Version 10.x (2026)
        ``>=1.0`` is expressible.
 
    * Exceptions carry the object they are about, so a caller can react without parsing the message. The new
-     parameters are keyword-only and default to ``None``, so an exception raised with a message only keeps working.
+     parameters are keyword-only. Most default to ``None``, so an exception raised with a message only keeps working;
+     where every raise knows the value, it is required.
 
      * :exc:`~pyTooling.Configuration.KeyNotFoundError` carries the missing key or index in
        :attr:`~pyTooling.Configuration.KeyNotFoundError.Key`.
@@ -580,6 +581,14 @@ Version 10.x (2026)
      * :mod:`pyTooling.CI`: :exc:`~pyTooling.CI.NeedDependencyError` carries both elements (``Element``, ``Need``),
        :exc:`~pyTooling.CI.NeedDependencyCycleError` also the cycle (``Cycle``),
        :exc:`~pyTooling.CI.AlreadyInPipelineError` the rule (``Element``).
+     * The values of :exc:`~pyTooling.CI.AlreadyInPipelineError`, :exc:`~pyTooling.CI.NeedDependencyError`,
+       :exc:`~pyTooling.Dependency.ExtraNotFoundError`, :exc:`~pyTooling.Dependency.PackageIndexError`,
+       :exc:`~pyTooling.Dependency.PackageIndexFailureWarning`,
+       :exc:`~pyTooling.Dependency.UnresolvedRequirementWarning` and
+       :exc:`~pyTooling.Dependency.UnsupportedVersionWarning` are required, as every raise knows them. Only a release's
+       version stays optional: a request of the project itself has none. ``NeedDependencyError`` takes ``None`` for
+       the elements of a cycle of several needs, ``PackageIndexFailureWarning`` for the status code of a network
+       failure.
      * :exc:`~pyTooling.CallGraph.DuplicateFunctionError` carries the function's ID (``FunctionID``),
        :exc:`~pyTooling.ControlFlow.DuplicateBlockError` the block's ID and kind (``BlockID``, ``Kind``),
        :exc:`~pyTooling.ControlFlow.DuplicateEdgeError` the edge connecting the blocks already (``ExistingEdge``).
@@ -658,6 +667,11 @@ Version 10.x (2026)
    * ⚠️ **32 exception classes are renamed to the** ``***Error`` **suffix**, as :pep:`8` asks for. Only
      :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. There are no
      aliases of the old names, so an ``import`` or an ``except`` clause naming one has to be updated.
+
+   * ⚠️ **The descriptive values of** :exc:`~pyTooling.Graph.DuplicateVertexError`,
+     :exc:`~pyTooling.Warning.SupervisedThreadError` **and** :exc:`~pyTooling.Versioning.VersionValidatorError` **are
+     required**: ``vertexID``, ``threadName`` and ``version`` have no default anymore. Code raising one of them passes
+     the value by keyword; raising one with a message only is a :exc:`TypeError`.
 
    * ⚠️ **Class variables with constant meaning are spelled in upper case**, as ``INDENT`` and the exit codes already
      are: ``TerminalApplication.HeadLine`` |rarr| ``HEADLINE``, ``TerminalBaseApplication.Foreground`` |rarr|
@@ -1026,6 +1040,9 @@ Version 10.x (2026)
      * ⚠️ Membership tests are named ``Contains***``; ``Has***`` checks a property or feature of an object.
      * ⚠️ 32 exception classes carry the ``***Error`` suffix; ``***Exception`` is reserved for a package's own base
        exception, :exc:`~pyTooling.Exceptions.ToolingException`.
+     * ⚠️ :exc:`~pyTooling.Graph.DuplicateVertexError`, :exc:`~pyTooling.Warning.SupervisedThreadError` and
+       :exc:`~pyTooling.Versioning.VersionValidatorError` require their descriptive value, as every raise in pyTooling
+       passes it; it defaulted to ``None``.
 
    .. rubric:: Bug Fixes
 

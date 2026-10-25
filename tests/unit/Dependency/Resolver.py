@@ -341,6 +341,21 @@ class Unresolved(ResolverTestcase):
 		self.assertEqual("1.0", str(failures[0].Version))
 		self.assertEqual(500, failures[0].StatusCode)
 
+	def test_UnresolvedRequirementWarning_MessageOnly(self) -> None:
+		"""The project's name is required: creating the warning with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			_ = UnresolvedRequirementWarning("Package 'ghost' is unknown to the package index.")
+
+		self.assertIn("'projectName'", str(context.exception))
+
+	def test_PackageIndexFailureWarning_MessageOnly(self) -> None:
+		"""The project's name and the status code are required: a warning with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			_ = PackageIndexFailureWarning("Package index failed to answer for package 'flaky'.")
+
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'statusCode'", str(context.exception))
+
 	def test_IndexFailure_Uncollected(self) -> None:
 		"""Without a collector, the critical warning raises."""
 		with self.assertRaises(UnhandledCriticalWarningError):
@@ -609,6 +624,15 @@ class Inputs(ResolverTestcase):
 		"""Code looking up an extra catches it as a :exc:`LookupError`, code using the package as a ``DependencyError``."""
 		self.assertTrue(issubclass(ExtraNotFoundError, LookupError))
 		self.assertTrue(issubclass(ExtraNotFoundError, DependencyError))
+
+	def test_ExtraNotFoundError_MessageOnly(self) -> None:
+		"""The release and the extra are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise ExtraNotFoundError("Package 'app' has no extra 'docs'.")
+
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'version'", str(context.exception))
+		self.assertIn("'extra'", str(context.exception))
 
 	def test_RequirementExtra(self) -> None:
 		"""An extra a requirement names adds that extra's requirements to the dependencies."""

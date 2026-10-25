@@ -64,6 +64,13 @@ class Validators(Testcase):
 		self.assertEqual("rejected", str(exception))
 		self.assertEqual(3, exception.Version.Patch)
 
+	def test_VersionValidatorError_MessageOnly(self) -> None:
+		"""The version is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise VersionValidatorError("rejected")
+
+		self.assertIn("'version'", str(context.exception))
+
 	def test_TheRejectedVersionIsCarried(self) -> None:
 		"""The caller gets the version object, not only the string it came from."""
 		with self.assertRaises(VersionValidatorError) as context:

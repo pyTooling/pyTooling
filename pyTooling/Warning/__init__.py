@@ -500,21 +500,21 @@ class SupervisedThreadError(ExceptionBase):
 	A :class:`SupervisedWarningCollector` hands the exception leaving its thread to the :class:`ThreadSupervisor`; it
 	becomes this exception's cause, and :attr:`~SupervisedThreadError.ThreadName` names the thread.
 	"""
-	_threadName: Nullable[str]  #: Name of the thread the exception was raised in.
+	_threadName: str  #: Name of the thread the exception was raised in.
 
 	def __init__(
 		self,
 		message: str,
 		/,
 		*,
-		threadName: Nullable[str] = None,
+		threadName: str,
 		cause: Nullable[BaseException] = None
 	) -> None:
 		"""
 		Initializes the exception with the name of the thread that failed.
 
 		:param message:    The exception's message.
-		:param threadName: Optional, name of the thread that raised the collected exception.
+		:param threadName: Name of the thread that raised the collected exception.
 		:param cause:      Optional, the exception collected from that thread.
 		"""
 		super().__init__(message)
@@ -522,11 +522,11 @@ class SupervisedThreadError(ExceptionBase):
 		self.__cause__ = cause
 
 	@readonly
-	def ThreadName(self) -> Nullable[str]:
+	def ThreadName(self) -> str:
 		"""
 		Read-only property to access the name of the thread that raised the exception (:attr:`_threadName`).
 
-		:returns: Name of the thread, or ``None`` if it wasn't recorded.
+		:returns: Name of the thread.
 		"""
 		return self._threadName
 

@@ -103,15 +103,15 @@ class NeedDependencyError(PipelineError):
 		self,
 		message: str,
 		/, *,
-		element: Nullable[DependencyMixin] = None,
-		need: Nullable[DependencyMixin] = None
+		element: Nullable[DependencyMixin],
+		need: Nullable[DependencyMixin]
 	) -> None:
 		"""
 		Initializes the exception with the element and the element it would need.
 
 		:param message: The exception's message.
-		:param element: Optional, the element that would need the other one.
-		:param need:    Optional, the element that would be needed.
+		:param element: The element that would need the other one; ``None`` for a cycle of several needs.
+		:param need:    The element that would be needed; ``None`` for a cycle of several needs.
 		"""
 		super().__init__(message)
 		self._element = element
@@ -177,12 +177,12 @@ class AlreadyInPipelineError(PipelineError, AlreadyInHierarchyError):
 
 	_element: Any  #: Element belonging to another element of a pipeline already.
 
-	def __init__(self, message: str, /, *, element: Any = None) -> None:
+	def __init__(self, message: str, /, *, element: Any) -> None:
 		"""
 		Initializes the exception with the element belonging to another one already.
 
 		:param message: The exception's message.
-		:param element: Optional, the element belonging to another element of a pipeline already.
+		:param element: The element belonging to another element of a pipeline already.
 		"""
 		super().__init__(message)
 		self._element = element
@@ -192,7 +192,7 @@ class AlreadyInPipelineError(PipelineError, AlreadyInHierarchyError):
 		"""
 		Read-only property to access the element belonging to another element of a pipeline already (:attr:`_element`).
 
-		:returns: The element, or ``None`` if it wasn't recorded.
+		:returns: The element.
 		"""
 		return self._element
 
