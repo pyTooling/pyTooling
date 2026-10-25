@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.CI`.
 """
 from datetime              import datetime, timedelta, timezone
+from typing                import get_type_hints
 
 from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job, \
                                   JobGroup, Step, Rule, RuleOutcome, Outcome, CIError, PipelineError, \
@@ -426,6 +427,10 @@ class Rules(Testcase):
 		self.assertIsNone(rule.Parent)
 		self.assertEqual(0, len(rule))
 		self.assertFalse(hasattr(rule, "__dict__"))
+
+	def test_Rule_WhenAnnotation(self) -> None:
+		"""The property's return annotation resolves, as autodoc and type checkers resolve it."""
+		self.assertIs(RuleOutcome, get_type_hints(Rule.When.fget)["return"])
 
 	def test_Rule_Values(self) -> None:
 		rule = Rule("$CI_COMMIT_BRANCH == 'main'", RuleOutcome.Manual, keyValuePairs={"allow_failure": True})

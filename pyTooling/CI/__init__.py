@@ -599,7 +599,7 @@ class Rule(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		return self._condition
 
 	@readonly
-	def When(self) -> When:
+	def When(self) -> RuleOutcome:
 		"""
 		Read-only property to access what the rule decides, if it matches (:attr:`_when`).
 
