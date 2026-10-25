@@ -42,4 +42,6 @@ xmlschema ~= 4.3
 # For pyTooling.Dependency.Python testing - validates the package-override file against its schema.
 # On MSYS2 this comes from pacman, not pip: 'jsonschema' needs 'rpds-py', a Rust extension with no PyPI wheel for
 # 'mingw_x86_64_ucrt_gnu'. MSYS2 ships it prebuilt, and the pipeline's pip to pacboy mapping installs that package.
-jsonschema ~= 4.26
+# * PyPy on Windows: 'rpds-py' has no PyPy wheel for Windows, and building it from source fails to link. The schema
+#   testcases are skipped there.
+jsonschema ~= 4.26 ; implementation_name != "pypy" or sys_platform != "win32"
