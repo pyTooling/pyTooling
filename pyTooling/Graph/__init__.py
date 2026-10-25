@@ -72,7 +72,8 @@ from typing                import Any, TypeVar, Generic, Deque, Union, Optional 
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import DuplicateElementError, NotInSameHierarchyError, ToolingException
+from pyTooling.Exceptions  import CycleError as CommonCycleError, DuplicateElementError, NotInSameHierarchyError, \
+                                  ToolingException
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 from pyTooling.Tree        import Node
@@ -356,7 +357,7 @@ class SameGraphError(GraphError):
 
 
 @export
-class CycleError(GraphError):
+class CycleError(GraphError, CommonCycleError):
 	"""The exception is raised when a not permitted cycle is found."""
 
 	_path: Nullable[tuple[Vertex, ...]]  #: Path of vertices ending in the vertex reached a second time.
