@@ -38,8 +38,8 @@ A string that isn't such a URL raises :exc:`~pyTooling.GenericPath.URL.URLError`
 A port is a number after the host's ``:``. ``http://host:/x`` (no port) and ``ssh://git@github.com:org/repo.git`` (a
 path instead of a port) raise :exc:`~pyTooling.GenericPath.URL.URLError`, and its note gives the URL as it was
 probably meant: ``http://host/x``, ``ssh://git@github.com/org/repo.git``. Git's and scp's SCP-like address
-``git@github.com:org/repo.git`` names no scheme; the note gives its URL ``ssh://git@github.com/org/repo.git``, whose
-path starts at the root instead of the user's home directory. In ``file://C:/Windows``, the drive letter stands where
+``git@github.com:org/repo.git`` names no scheme; the notes offer :ref:`SCPAddress <STRUCT/Path/URL/SCP>` and give
+its URL ``ssh://git@github.com/~/org/repo.git``. In ``file://C:/Windows``, the drive letter stands where
 the host is; the note gives ``file:///C:/Windows``.
 
 
@@ -156,6 +156,40 @@ together, at the position of the key's first occurrence: ``?tag=a&page=2&tag=b``
      query=(KeySequencePair("tag", ("python", "vhdl")), KeyValuePair("page", "2"))
    )
    # https://example.org/search?tag=python&tag=vhdl&page=2
+
+
+.. _STRUCT/Path/URL/SCP:
+
+SCP-like Addresses
+******************
+
+scp, rsync and Git also write a remote file or repository as ``[user@]host:[path]``, e.g.
+``git@github.com:org/repo.git`` (`scp(1) <https://man.openbsd.org/scp.1>`__, Git's *scp-like syntax*). That is no URL:
+it names no scheme, no port, no query and no fragment, and a **relative** path starts in the user's home directory,
+where a URL's path starts at the root.
+
+:meth:`SCPAddress.Parse <pyTooling.GenericPath.URL.SCPAddress.Parse>` reads it into an
+:class:`~pyTooling.GenericPath.URL.SCPAddress` - :attr:`~pyTooling.GenericPath.URL.SCPAddress.User`,
+:attr:`~pyTooling.GenericPath.URL.SCPAddress.Host` and :attr:`~pyTooling.GenericPath.URL.SCPAddress.Path` -, and
+:meth:`~pyTooling.GenericPath.URL.SCPAddress.ToURL` converts it to the ``ssh://`` URL naming the same location.
+
+.. code-block:: python
+
+   address = SCPAddress.Parse("git@github.com:org/repo.git")
+   address.User               # 'git'
+   str(address.Host)          # 'github.com'
+   str(address.Path)          # 'org/repo.git' - relative: in the home directory
+   str(address.ToURL())       # 'ssh://git@github.com/~/org/repo.git'
+
+   str(SCPAddress.Parse("deploy@server:/srv/www").ToURL())   # 'ssh://deploy@server/srv/www'
+
+A URL can't express a path in the home directory; :meth:`~pyTooling.GenericPath.URL.SCPAddress.ToURL` writes it the way
+Git does, as ``/~/``, and a path starting with ``~user`` keeps it. Not every SSH server expands ``~``; Git does.
+
+As in Git, the first ``:`` separates the host, so the part before it holds no ``/``: ``./a:b`` is no SCP-like address.
+A single letter before the ``:`` is a Windows drive letter (``C:/Windows``) and raises
+:exc:`~pyTooling.GenericPath.URL.URLError`, as does an address with a scheme - a URL is read by
+:meth:`URL.Parse <pyTooling.GenericPath.URL.URL.Parse>`.
 
 
 .. _STRUCT/Path/URL/Protocols:

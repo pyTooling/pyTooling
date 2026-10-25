@@ -39,7 +39,7 @@ from unittest.mock             import patch
 from pyTooling.Exceptions      import MissingDependencyError, ToolingException
 from pyTooling.MetaClasses     import AbstractClassError
 from pyTooling.GenericPath.URL import Host, Path, URL, URLError, Protocols, QueryParameter, KeyValuePair, \
-                                      KeySequencePair
+                                      KeySequencePair, SCPAddress
 from pyTooling.Testing         import Testcase
 
 
@@ -743,6 +743,144 @@ class RepeatedQueryKeys(Testcase):
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 
+class SCPAddresses(Testcase):
+	"""``[user@]host:[path]`` as scp, rsync and Git write it; a relative path starts in the user's home directory."""
+
+	def test_Parse(self) -> None:
+		address = SCPAddress.Parse("git@github.com:org/repo.git")
+
+		self.assertEqual("git", address.User)
+		self.assertIsInstance(address.Host, Host)
+		self.assertEqual("github.com", address.Host.Hostname)
+		self.assertIsNone(address.Host.Port)
+		self.assertIsInstance(address.Path, Path)
+		self.assertEqual("org/repo.git", str(address.Path))
+		self.assertEqual("git@github.com:org/repo.git", str(address))
+
+	def test_Parse_WithoutUser(self) -> None:
+		address = SCPAddress.Parse("github.com:org/repo.git")
+
+		self.assertIsNone(address.User)
+		self.assertEqual("github.com:org/repo.git", str(address))
+
+	def test_Parse_RoundTrip(self) -> None:
+		for text in (
+			"user@host:/srv/www",
+			"host:",
+			"host:~bob/repo",
+			"user@[2001:db8::1]:repo",
+			"192.168.1.1:backup/",
+			"host:22:path",
+			"host:with space/file"
+		):
+			with self.subTest(address=text):
+				self.assertEqual(text, str(SCPAddress.Parse(text)))
+
+	def test_Parse_Errors(self) -> None:
+		for text in ("host", "./a:b", "a@b@c:d", "user@:path", ":path", "host:a\nb"):
+			with self.subTest(address=text):
+				with self.assertRaises(URLError) as context:
+					_ = SCPAddress.Parse(text)
+
+				self.assertEqual(f"Syntax error when parsing SCP-like address {text!r}.", str(context.exception))
+
+	def test_Parse_DriveLetter(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = SCPAddress.Parse("C:/Windows")
+
+		self.assertEqual(
+			"Drive letter 'C' instead of a host when parsing SCP-like address 'C:/Windows'.",
+			str(context.exception)
+		)
+
+	def test_Parse_URL(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = SCPAddress.Parse("ssh://git@github.com/org/repo.git")
+
+		self.assertEqual(
+			"URL instead of an SCP-like address when parsing 'ssh://git@github.com/org/repo.git'.",
+			str(context.exception)
+		)
+		self.assertListEqual(
+			["An address with a scheme followed by '://' is a URL. Read it with 'URL.Parse'."],
+			context.exception.__notes__
+		)
+
+	def test_Parse_Parameter(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = SCPAddress.Parse(None)
+
+		self.assertEqual("Parameter 'address' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = SCPAddress.Parse(1)
+
+		self.assertEqual("Parameter 'address' is not of type 'str'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_ToURL(self) -> None:
+		for text, url in (
+			("git@github.com:org/repo.git",  "ssh://git@github.com/~/org/repo.git"),
+			("deploy@server:/srv/www",       "ssh://deploy@server/srv/www"),
+			("host:~bob/repo",               "ssh://host/~bob/repo"),
+			("host:",                        "ssh://host/~"),
+			("user@[2001:db8::1]:repo",      "ssh://user@[2001:db8::1]/~/repo"),
+			("host:with space/file",         "ssh://host/~/with%20space/file")
+		):
+			with self.subTest(address=text):
+				converted = SCPAddress.Parse(text).ToURL()
+
+				self.assertIs(Protocols.SSH, converted.Scheme)
+				self.assertEqual(url, str(converted))
+
+	def test_Construction(self) -> None:
+		host =    Host("github.com")
+		address = SCPAddress(host, Path.Parse("org/repo.git", host), "git")
+
+		self.assertEqual("git@github.com:org/repo.git", str(address))
+
+	def test_Construction_Errors(self) -> None:
+		host = Host("github.com")
+		path = Path.Parse("repo.git", host)
+
+		with self.assertRaises(ValueError) as context:
+			_ = SCPAddress(None, path)
+
+		self.assertEqual("Parameter 'host' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = SCPAddress("github.com", path)
+
+		self.assertEqual("Parameter 'host' is not of type 'Host'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+		with self.assertRaises(ValueError) as context:
+			_ = SCPAddress(Host("github.com", 22), path)
+
+		self.assertEqual("Parameter 'host' names a port.", str(context.exception))
+		self.assertListEqual(
+			["Got port '22'. An SCP-like address has no port; an 'ssh://' URL has."],
+			context.exception.__notes__
+		)
+
+		with self.assertRaises(ValueError) as context:
+			_ = SCPAddress(host, None)
+
+		self.assertEqual("Parameter 'path' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = SCPAddress(host, "repo.git")
+
+		self.assertEqual("Parameter 'path' is not of type 'Path'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+		with self.assertRaises(TypeError) as context:
+			_ = SCPAddress(host, path, 1)
+
+		self.assertEqual("Parameter 'user' is not of type 'str'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+
 class AddedSchemes(Testcase):
 	"""Schemes written as ``scheme://``, added because an unlisted one can't be parsed."""
 
@@ -1000,16 +1138,19 @@ class MissingScheme(Testcase):
 		self.assertMissingScheme("git@github.com:org/repo.git")
 
 	def test_AnSCPLikeAddress_Notes(self) -> None:
-		"""The notes give the ``ssh://`` URL of an SCP-like address, also for an absolute path."""
-		for text in ("git@github.com:org/repo.git", "git@github.com:/org/repo.git"):
+		"""The notes offer :meth:`SCPAddress.Parse` and give the ``ssh://`` URL of the address."""
+		for text, url in (
+			("git@github.com:org/repo.git",  "ssh://git@github.com/~/org/repo.git"),
+			("git@github.com:/org/repo.git", "ssh://git@github.com/org/repo.git")
+		):
 			with self.subTest(url=text):
 				with self.assertRaises(URLError) as context:
 					_ = URL.Parse(text)
 
 				self.assertListEqual(
 					[
-						"An SCP-like address 'user@host:path' (Git, scp) is no URL. As URL: 'ssh://git@github.com/org/repo.git'.",
-						"In the URL, the path starts at the root, not in the user's home directory."
+						"An SCP-like address 'user@host:path' (Git, scp) is no URL. Read it with 'SCPAddress.Parse'.",
+						f"As URL: '{url}'."
 					],
 					context.exception.__notes__
 				)

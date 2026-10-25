@@ -53,7 +53,7 @@ from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.GenericPath import RootMixin, ElementMixin, PathMixin
 
 
-__all__ = ["URL_PATTERN", "URL_REGEXP"]
+__all__ = ["URL_PATTERN", "URL_REGEXP", "SCP_ADDRESS_PATTERN", "SCP_ADDRESS_REGEXP"]
 
 URL_PATTERN = (
 	r"""(?P<scheme>[a-zA-Z][-a-zA-Z0-9+.]*)://"""
@@ -69,6 +69,16 @@ URL_PATTERN = (
 
 URL_REGEXP = re_compile("^" + URL_PATTERN + r"\Z")
 """Precompiled regular expression for URL validation."""
+
+SCP_ADDRESS_PATTERN = (
+	r"""(?:(?P<user>[^@/:\[\]]+)@)?"""
+	r"""(?P<host>\[[0-9A-Fa-f:.]+\]|(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)"""
+	r""":(?P<path>[^\x00-\x1f\x7f]*)"""
+)
+"""Regular expression pattern for validating and splitting an SCP-like address ``[user@]host:[path]``."""
+
+SCP_ADDRESS_REGEXP = re_compile("^" + SCP_ADDRESS_PATTERN + r"\Z")
+"""Precompiled regular expression for SCP-like address validation."""
 
 _SCHEME_PREFIX = re_compile(r"[a-zA-Z][-a-zA-Z0-9+.]*://")
 """Precompiled regular expression for the leading scheme."""
@@ -86,8 +96,6 @@ _PORT = re_compile(
 )
 """Precompiled regular expression for the text after the host's ``:``, where a URL has its port."""
 
-_SCP_LIKE = re_compile(r"""(?P<user>[^/?#:@]+)@(?P<host>[^/?#:@\[\]]+):(?P<path>[^?#]*)""")
-"""Precompiled regular expression for an SCP-like address ``user@host:path``, as Git and scp write it."""
 
 FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"
 """Characters :rfc:`3986` forbids in a URL unless they are percent-encoded."""
@@ -739,8 +747,8 @@ class URL:
 		:raises URLError:               When ``iri`` is set and IDNA 2008 rejects the host. |br|
 		                                The note gives the reason of the ``idna`` package.
 		:raises URLError:               When the URL doesn't start with a scheme followed by ``://``. |br|
-		                                For an SCP-like address (``user@host:path``), the notes give its ``ssh://`` URL:
-		                                In the URL, the path starts at the root, not in the user's home directory.
+		                                For an SCP-like address (``user@host:path``), the notes offer
+		                                :meth:`SCPAddress.Parse` and give its ``ssh://`` URL.
 		:raises URLError:               When a ``file`` URL names a drive letter as its host. |br|
 		                                The note gives the URL with the drive letter in the path.
 		:raises URLError:               When the URL has a ``:`` after the host, but no port. |br|
@@ -851,12 +859,13 @@ class URL:
 
 		if _SCHEME_PREFIX.match(url) is None:
 			ex = URLError(f"Missing scheme when parsing URL {url!r}.")
-			if (scpLike := _SCP_LIKE.fullmatch(url)) is not None:
-				user = scpLike.group("user")
-				host = scpLike.group("host")
-				path = scpLike.group("path").lstrip("/")
-				ex.add_note(f"An SCP-like address 'user@host:path' (Git, scp) is no URL. As URL: 'ssh://{user}@{host}/{path}'.")
-				ex.add_note("In the URL, the path starts at the root, not in the user's home directory.")
+			if (
+				(scpLike := SCP_ADDRESS_REGEXP.match(url)) is not None
+				and scpLike.group("user") is not None
+				and len(scpLike.group("host")) > 1
+			):
+				ex.add_note("An SCP-like address 'user@host:path' (Git, scp) is no URL. Read it with 'SCPAddress.Parse'.")
+				ex.add_note(f"As URL: '{SCPAddress.Parse(url).ToURL()}'.")
 			else:
 				ex.add_note("A URL starts with a scheme followed by '://', e.g. 'https://'.")
 			raise ex
@@ -1065,3 +1074,183 @@ class URL:
 			query=None if self._query is None else self._query.values(),
 			fragment=self._fragment
 		)
+
+
+_Host = Host
+"""Alias of :class:`Host` for annotations in a class with a property named ``Host``, which the class body binds."""
+
+_Path = Path
+"""Alias of :class:`Path` for annotations in a class with a property named ``Path``, which the class body binds."""
+
+
+@export
+class SCPAddress(metaclass=ExtendedType, slots=True):
+	"""
+	Represents an SCP-like address of a remote file or repository: a host, an optional user and a path.
+
+	.. code-block::
+
+	   [user@]host:[path]
+
+	scp, rsync and Git write a remote location this way (`scp(1) <https://man.openbsd.org/scp.1>`__, Git's *scp-like
+	syntax*). It is no URL - it has no scheme, no port, no query and no fragment -, and its path is read differently:
+	a **relative** path starts in the user's home directory, an absolute one at the root. :meth:`ToURL` converts it to
+	the ``ssh://`` URL naming the same location.
+
+	.. seealso::
+
+	   :class:`URL`
+	      |rarr| A URL, which names a scheme and may name a port.
+	"""
+
+	_user: Nullable[str]  #: User name, ``None`` if the address names none.
+	_host: _Host          #: Host name; an SCP-like address has no port.
+	_path: _Path          #: Path on the host; a relative path starts in the user's home directory.
+
+	def __init__(self, host: Host, path: Path, user: Nullable[str] = None) -> None:
+		"""
+		Initializes an SCP-like address.
+
+		:param host:        Host the file or repository is located on.
+		:param path:        Path on the host. A relative path starts in the user's home directory.
+		:param user:        Optional, user name to log in with. Default: the SSH client's default user.
+		:raises ValueError: If parameter 'host' is ``None``.
+		:raises TypeError:  If parameter 'host' is not of type :class:`Host`.
+		:raises ValueError: If parameter 'host' names a port. |br|
+		                    An SCP-like address has no port; an ``ssh://`` URL has.
+		:raises ValueError: If parameter 'path' is ``None``.
+		:raises TypeError:  If parameter 'path' is not of type :class:`Path`.
+		:raises TypeError:  If parameter 'user' is not of type :class:`str`.
+		"""
+		if host is None:
+			raise ValueError("Parameter 'host' is None.")
+		elif not isinstance(host, Host):
+			ex = TypeError("Parameter 'host' is not of type 'Host'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
+			raise ex
+		elif host._port is not None:
+			ex = ValueError("Parameter 'host' names a port.")
+			ex.add_note(f"Got port '{host._port}'. An SCP-like address has no port; an 'ssh://' URL has.")
+			raise ex
+
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		if user is not None and not isinstance(user, str):
+			ex = TypeError("Parameter 'user' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
+			raise ex
+
+		self._host = host
+		self._path = path
+		self._user = user
+
+	@readonly
+	def User(self) -> Nullable[str]:
+		"""
+		Read-only property to access the optional user name (:attr:`_user`).
+
+		:returns: The user name, ``None`` if the address names none.
+		"""
+		return self._user
+
+	@readonly
+	def Host(self) -> Host:
+		"""
+		Read-only property to access the host (:attr:`_host`).
+
+		:returns: The host the file or repository is located on.
+		"""
+		return self._host
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access the path on the host (:attr:`_path`).
+
+		:returns: The path; a relative path starts in the user's home directory.
+		"""
+		return self._path
+
+	@classmethod
+	def Parse(cls, address: str) -> SCPAddress:
+		"""
+		Parse an SCP-like address string and return the address object.
+
+		The address is ``[user@]host:[path]``, as :data:`SCP_ADDRESS_PATTERN` reads it: a host name or a bracketed IPv6
+		address, followed by ``:``; the path after it may be empty (the home directory). As in Git, the first ``:``
+		separates the host, so the part before it holds no ``/``.
+
+		:param address:     The SCP-like address.
+		:returns:           The address object.
+		:raises ValueError: If parameter 'address' is ``None``.
+		:raises TypeError:  If parameter 'address' is not of type :class:`str`.
+		:raises URLError:   When the address names a scheme followed by ``://``. |br|
+		                    The note offers :meth:`URL.Parse`.
+		:raises URLError:   When a single letter stands where the host is - a Windows drive letter.
+		:raises URLError:   When syntax does not match.
+		"""
+		if address is None:
+			raise ValueError("Parameter 'address' is None.")
+		elif not isinstance(address, str):
+			ex = TypeError("Parameter 'address' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(address)}'.")
+			raise ex
+
+		if _SCHEME_PREFIX.match(address) is not None:
+			ex = URLError(f"URL instead of an SCP-like address when parsing {address!r}.")
+			ex.add_note("An address with a scheme followed by '://' is a URL. Read it with 'URL.Parse'.")
+			raise ex
+		elif (matches := SCP_ADDRESS_REGEXP.match(address)) is None:
+			raise URLError(f"Syntax error when parsing SCP-like address {address!r}.")
+
+		host = matches.group("host")
+		if len(host) == 1 and host.isalpha():
+			raise URLError(f"Drive letter '{host}' instead of a host when parsing SCP-like address {address!r}.")
+
+		hostObj = Host(host)
+		return cls(hostObj, Path.Parse(matches.group("path"), hostObj), matches.group("user"))
+
+	def ToURL(self) -> URL:
+		"""
+		Convert the address to the ``ssh://`` URL naming the same location.
+
+		An absolute path becomes the URL's path. A relative path starts in the user's home directory, which a URL can't
+		express; Git spells it ``/~/`` - ``git@github.com:org/repo.git`` becomes
+		``ssh://git@github.com/~/org/repo.git`` -, and a path starting with ``~user`` keeps it:
+		``host:~user/repo`` becomes ``ssh://host/~user/repo``. Not every SSH server understands ``~``; Git does.
+		Characters a URL can't hold are percent-encoded.
+
+		:returns: The ``ssh://`` URL.
+		"""
+		path = str(self._path)
+		if self._path._isAbsolute:
+			urlPath = path
+		elif path == "":
+			urlPath = "/~"
+		elif path.startswith("~"):
+			urlPath = f"/{path}"
+		else:
+			urlPath = f"/~/{path}"
+
+		return URL(
+			Protocols.SSH,
+			Path.Parse(urlQuote(urlPath, safe="/!$&'()*+,;=:@~"), self._host),
+			self._host,
+			None if self._user is None else urlQuote(self._user, safe="!$&'()*+,;=")
+		)
+
+	def __str__(self) -> str:
+		"""
+		Formats the address as it is written: ``[user@]host:[path]``.
+
+		:returns: The SCP-like address.
+		"""
+		if self._user is None:
+			return f"{self._host}:{self._path}"
+
+		return f"{self._user}@{self._host}:{self._path}"
