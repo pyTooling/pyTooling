@@ -2145,6 +2145,60 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		return self
 
+	def AddOTLPJSONString(self, jsonString: str) -> Self:
+		"""
+		Add the traces and fragments of an **OTLP/JSON** document encoded as a string to this collection.
+
+		:param jsonString:    The encoded OTLP/JSON document.
+		:returns:             The collection itself, so calls can be chained.
+		:raises ValueError:   If parameter 'jsonString' is None.
+		:raises TypeError:    If parameter 'jsonString' is not of type :class:`str`.
+		:raises TracingError: If the string isn't valid JSON.
+		:raises TracingError: If the document doesn't fit into this collection, see :meth:`AddOTLPJSON`.
+		"""
+		if jsonString is None:
+			raise ValueError("Parameter 'jsonString' is None.")
+		elif not isinstance(jsonString, str):
+			ex = TypeError("Parameter 'jsonString' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(jsonString)}'.")
+			raise ex
+
+		try:
+			document = json_loads(jsonString)
+		except JSONDecodeError as cause:
+			ex = TracingError("OTLP/JSON document isn't valid JSON.")
+			ex.add_note(str(cause))
+			raise ex from cause
+
+		return self.AddOTLPJSON(document)
+
+	def AddOTLPJSONFile(self, jsonFile: Path) -> Self:
+		"""
+		Add the traces and fragments of an **OTLP/JSON** document read from a file to this collection.
+
+		:param jsonFile:      Path of the file to read.
+		:returns:             The collection itself, so calls can be chained.
+		:raises ValueError:   If parameter 'jsonFile' is None.
+		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
+		:raises TracingError: If the file couldn't be read.
+		:raises TracingError: If the file isn't valid JSON.
+		:raises TracingError: If the document doesn't fit into this collection, see :meth:`AddOTLPJSON`.
+		"""
+		if jsonFile is None:
+			raise ValueError("Parameter 'jsonFile' is None.")
+		elif not isinstance(jsonFile, Path):
+			ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
+			raise ex
+
+		try:
+			with jsonFile.open("r", encoding="utf-8") as file:
+				content = file.read()
+		except OSError as cause:
+			raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be read.") from cause
+
+		return self.AddOTLPJSONString(content)
+
 	@staticmethod
 	def _BuildTrace(
 		traceID: str,
@@ -2226,60 +2280,6 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		return trace, built, fragments
-
-	def AddOTLPJSONString(self, jsonString: str) -> Self:
-		"""
-		Add the traces and fragments of an **OTLP/JSON** document encoded as a string to this collection.
-
-		:param jsonString:    The encoded OTLP/JSON document.
-		:returns:             The collection itself, so calls can be chained.
-		:raises ValueError:   If parameter 'jsonString' is None.
-		:raises TypeError:    If parameter 'jsonString' is not of type :class:`str`.
-		:raises TracingError: If the string isn't valid JSON.
-		:raises TracingError: If the document doesn't fit into this collection, see :meth:`AddOTLPJSON`.
-		"""
-		if jsonString is None:
-			raise ValueError("Parameter 'jsonString' is None.")
-		elif not isinstance(jsonString, str):
-			ex = TypeError("Parameter 'jsonString' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(jsonString)}'.")
-			raise ex
-
-		try:
-			document = json_loads(jsonString)
-		except JSONDecodeError as cause:
-			ex = TracingError("OTLP/JSON document isn't valid JSON.")
-			ex.add_note(str(cause))
-			raise ex from cause
-
-		return self.AddOTLPJSON(document)
-
-	def AddOTLPJSONFile(self, jsonFile: Path) -> Self:
-		"""
-		Add the traces and fragments of an **OTLP/JSON** document read from a file to this collection.
-
-		:param jsonFile:      Path of the file to read.
-		:returns:             The collection itself, so calls can be chained.
-		:raises ValueError:   If parameter 'jsonFile' is None.
-		:raises TypeError:    If parameter 'jsonFile' is not of type :class:`~pathlib.Path`.
-		:raises TracingError: If the file couldn't be read.
-		:raises TracingError: If the file isn't valid JSON.
-		:raises TracingError: If the document doesn't fit into this collection, see :meth:`AddOTLPJSON`.
-		"""
-		if jsonFile is None:
-			raise ValueError("Parameter 'jsonFile' is None.")
-		elif not isinstance(jsonFile, Path):
-			ex = TypeError("Parameter 'jsonFile' is not of type 'Path'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(jsonFile)}'.")
-			raise ex
-
-		try:
-			with jsonFile.open("r", encoding="utf-8") as file:
-				content = file.read()
-		except OSError as cause:
-			raise TracingError(f"OTLP/JSON file '{jsonFile}' couldn't be read.") from cause
-
-		return self.AddOTLPJSONString(content)
 
 	def _LinkFragments(self) -> None:
 		"""
