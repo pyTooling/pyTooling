@@ -39,15 +39,17 @@ argument parsing or the exit codes.
 
   See :ref:`high-level help <TESTING>` for explanations and usage examples.
 """
-from inspect    import cleandoc
-from pathlib    import Path
-from re         import compile as re_compile
-from shutil     import which
-from os         import environ
-from subprocess import CompletedProcess, run as subprocess_run
-from unittest   import TestCase
-from sys        import executable as PythonExecutable, version_info
-from typing     import Any, Callable, ClassVar, Mapping, Union, Optional as Nullable
+from inspect                 import cleandoc
+from pathlib                 import Path
+from re                      import compile as re_compile
+from shutil                  import which
+from os                      import environ
+from subprocess              import CompletedProcess, run as subprocess_run
+from unittest                import TestCase
+from unittest.util           import safe_repr
+from sys                     import executable as PythonExecutable, version_info
+from types                   import ModuleType
+from typing                  import Any, Callable, ClassVar, Mapping, Union, Optional as Nullable
 
 from pyTooling.Common        import getFullyQualifiedName, getTypeName
 from pyTooling.Decorators    import export
@@ -258,10 +260,17 @@ class Testcase(TestCase):
 
 			:param obj:  The object to check.
 			:param name: Name of the attribute the object is expected to have.
-			:param msg:  Optional, message replacing the generated one.
+			:param msg:  Optional, message added to (or, without ``longMessage``, replacing) the generated one.
 			"""
 			if not hasattr(obj, name):
-				self.fail(msg or f"{type(obj).__name__!r} object has no attribute {name!r}")
+				if isinstance(obj, ModuleType):
+					standardMessage = f"module {obj.__name__!r} has no attribute {name!r}"
+				elif isinstance(obj, type):
+					standardMessage = f"type object {obj.__name__!r} has no attribute {name!r}"
+				else:
+					standardMessage = f"{type(obj).__name__!r} object has no attribute {name!r}"
+
+				self.fail(self._formatMessage(msg, standardMessage))
 
 		def assertNotHasAttr(self, obj: Any, name: str, msg: Nullable[str] = None) -> None:
 			"""
@@ -271,10 +280,178 @@ class Testcase(TestCase):
 
 			:param obj:  The object to check.
 			:param name: Name of the attribute the object is expected not to have.
-			:param msg:  Optional, message replacing the generated one.
+			:param msg:  Optional, message added to (or, without ``longMessage``, replacing) the generated one.
 			"""
 			if hasattr(obj, name):
-				self.fail(msg or f"{type(obj).__name__!r} object has unexpected attribute {name!r}")
+				if isinstance(obj, ModuleType):
+					standardMessage = f"module {obj.__name__!r} has unexpected attribute {name!r}"
+				elif isinstance(obj, type):
+					standardMessage = f"type object {obj.__name__!r} has unexpected attribute {name!r}"
+				else:
+					standardMessage = f"{type(obj).__name__!r} object has unexpected attribute {name!r}"
+
+				self.fail(self._formatMessage(msg, standardMessage))
+
+		def assertIsSubclass(self, cls: Any, superclass: Union[type, tuple[type, ...]], msg: Nullable[str] = None) -> None:
+			"""
+			Assert a class is a subclass of a class, or of one of a tuple of classes.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param cls:        The class to check.
+			:param superclass: The class, or a tuple of classes, ``cls`` is expected to derive from.
+			:param msg:        Optional, message added to (or, without ``longMessage``, replacing) the generated one.
+			"""
+			try:
+				if issubclass(cls, superclass):
+					return
+			except TypeError:
+				if not isinstance(cls, type):
+					self.fail(self._formatMessage(msg, f"{cls!r} is not a class"))
+				raise
+
+			if isinstance(superclass, tuple):
+				standardMessage = f"{cls!r} is not a subclass of any of {superclass!r}"
+			else:
+				standardMessage = f"{cls!r} is not a subclass of {superclass!r}"
+
+			self.fail(self._formatMessage(msg, standardMessage))
+
+		def assertNotIsSubclass(
+			self,
+			cls:        Any,
+			superclass: Union[type, tuple[type, ...]],
+			msg:        Nullable[str] = None
+		) -> None:
+			"""
+			Assert a class is no subclass of a class, nor of any of a tuple of classes.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param cls:        The class to check.
+			:param superclass: The class, or a tuple of classes, ``cls`` is expected not to derive from.
+			:param msg:        Optional, message added to (or, without ``longMessage``, replacing) the generated one.
+			"""
+			try:
+				if not issubclass(cls, superclass):
+					return
+			except TypeError:
+				if not isinstance(cls, type):
+					self.fail(self._formatMessage(msg, f"{cls!r} is not a class"))
+				raise
+
+			if isinstance(superclass, tuple):
+				superclass = next(base for base in superclass if issubclass(cls, base))
+
+			self.fail(self._formatMessage(msg, f"{cls!r} is a subclass of {superclass!r}"))
+
+		def assertStartsWith(self, s: Any, prefix: Any, msg: Nullable[str] = None) -> None:
+			"""
+			Assert a string (or bytes) starts with a prefix, or with one of a tuple of prefixes.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param s:      The string or bytes to check.
+			:param prefix: The prefix, or a tuple of prefixes, ``s`` is expected to start with.
+			:param msg:    Optional, message added to (or, without ``longMessage``, replacing) the generated one.
+			"""
+			try:
+				if s.startswith(prefix):
+					return
+			except (AttributeError, TypeError):
+				for tail in prefix if isinstance(prefix, tuple) else (prefix, ):
+					if isinstance(tail, str) and not isinstance(s, str):
+						self.fail(self._formatMessage(msg, f"Expected str, not {type(s).__name__}"))
+					elif isinstance(tail, (bytes, bytearray)) and not isinstance(s, (bytes, bytearray)):
+						self.fail(self._formatMessage(msg, f"Expected bytes, not {type(s).__name__}"))
+				raise
+
+			if isinstance(prefix, tuple):
+				standardMessage = f"{safe_repr(s, short=True)} doesn't start with any of {safe_repr(prefix)}"
+			else:
+				standardMessage = f"{safe_repr(s, short=True)} doesn't start with {safe_repr(prefix)}"
+
+			self.fail(self._formatMessage(msg, standardMessage))
+
+		def assertNotStartsWith(self, s: Any, prefix: Any, msg: Nullable[str] = None) -> None:
+			"""
+			Assert a string (or bytes) starts with neither a prefix nor any of a tuple of prefixes.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param s:      The string or bytes to check.
+			:param prefix: The prefix, or a tuple of prefixes, ``s`` is expected not to start with.
+			:param msg:    Optional, message added to (or, without ``longMessage``, replacing) the generated one.
+			"""
+			try:
+				if not s.startswith(prefix):
+					return
+			except (AttributeError, TypeError):
+				for tail in prefix if isinstance(prefix, tuple) else (prefix, ):
+					if isinstance(tail, str) and not isinstance(s, str):
+						self.fail(self._formatMessage(msg, f"Expected str, not {type(s).__name__}"))
+					elif isinstance(tail, (bytes, bytearray)) and not isinstance(s, (bytes, bytearray)):
+						self.fail(self._formatMessage(msg, f"Expected bytes, not {type(s).__name__}"))
+				raise
+
+			if isinstance(prefix, tuple):
+				prefix = next(tail for tail in prefix if s.startswith(tail))
+
+			self.fail(self._formatMessage(msg, f"{safe_repr(s, short=True)} starts with {safe_repr(prefix)}"))
+
+		def assertEndsWith(self, s: Any, suffix: Any, msg: Nullable[str] = None) -> None:
+			"""
+			Assert a string (or bytes) ends with a suffix, or with one of a tuple of suffixes.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param s:      The string or bytes to check.
+			:param suffix: The suffix, or a tuple of suffixes, ``s`` is expected to end with.
+			:param msg:    Optional, message added to (or, without ``longMessage``, replacing) the generated one.
+			"""
+			try:
+				if s.endswith(suffix):
+					return
+			except (AttributeError, TypeError):
+				for tail in suffix if isinstance(suffix, tuple) else (suffix, ):
+					if isinstance(tail, str) and not isinstance(s, str):
+						self.fail(self._formatMessage(msg, f"Expected str, not {type(s).__name__}"))
+					elif isinstance(tail, (bytes, bytearray)) and not isinstance(s, (bytes, bytearray)):
+						self.fail(self._formatMessage(msg, f"Expected bytes, not {type(s).__name__}"))
+				raise
+
+			if isinstance(suffix, tuple):
+				standardMessage = f"{safe_repr(s, short=True)} doesn't end with any of {safe_repr(suffix)}"
+			else:
+				standardMessage = f"{safe_repr(s, short=True)} doesn't end with {safe_repr(suffix)}"
+
+			self.fail(self._formatMessage(msg, standardMessage))
+
+		def assertNotEndsWith(self, s: Any, suffix: Any, msg: Nullable[str] = None) -> None:
+			"""
+			Assert a string (or bytes) ends with neither a suffix nor any of a tuple of suffixes.
+
+			Available in :class:`unittest.TestCase` from Python 3.14 on.
+
+			:param s:      The string or bytes to check.
+			:param suffix: The suffix, or a tuple of suffixes, ``s`` is expected not to end with.
+			:param msg:    Optional, message added to (or, without ``longMessage``, replacing) the generated one.
+			"""
+			try:
+				if not s.endswith(suffix):
+					return
+			except (AttributeError, TypeError):
+				for tail in suffix if isinstance(suffix, tuple) else (suffix, ):
+					if isinstance(tail, str) and not isinstance(s, str):
+						self.fail(self._formatMessage(msg, f"Expected str, not {type(s).__name__}"))
+					elif isinstance(tail, (bytes, bytearray)) and not isinstance(s, (bytes, bytearray)):
+						self.fail(self._formatMessage(msg, f"Expected bytes, not {type(s).__name__}"))
+				raise
+
+			if isinstance(suffix, tuple):
+				suffix = next(tail for tail in suffix if s.endswith(tail))
+
+			self.fail(self._formatMessage(msg, f"{safe_repr(s, short=True)} ends with {safe_repr(suffix)}"))
 
 
 @export

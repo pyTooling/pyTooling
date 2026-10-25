@@ -198,3 +198,118 @@ class Assertions(Testcase):
 	def test_AnExistingAttributeFailsTheNegation(self) -> None:
 		with self.assertRaises(AssertionError):
 			self.assertNotHasAttr(object(), "__class__")
+
+
+class BackportedAssertions(Testcase):
+	"""The assertions Python 3.14 added, with the same messages from unittest (3.14+) or from :class:`Testcase`."""
+
+	def test_HasAttr_Module(self) -> None:
+		import json
+
+		with self.assertRaises(AssertionError) as context:
+			self.assertHasAttr(json, "noSuchAttribute")
+
+		self.assertEqual("module 'json' has no attribute 'noSuchAttribute'", str(context.exception))
+
+	def test_HasAttr_Type(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertHasAttr(int, "noSuchAttribute")
+
+		self.assertEqual("type object 'int' has no attribute 'noSuchAttribute'", str(context.exception))
+
+	def test_IsSubclass(self) -> None:
+		self.assertIsSubclass(bool, int)
+		self.assertIsSubclass(bool, (str, int))
+
+	def test_IsSubclass_Fails(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertIsSubclass(int, str)
+
+		self.assertEqual("<class 'int'> is not a subclass of <class 'str'>", str(context.exception))
+
+	def test_IsSubclass_FailsTuple(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertIsSubclass(int, (str, bytes))
+
+		self.assertEqual(
+			"<class 'int'> is not a subclass of any of (<class 'str'>, <class 'bytes'>)",
+			str(context.exception)
+		)
+
+	def test_IsSubclass_NoClass(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertIsSubclass(1, int)
+
+		self.assertEqual("1 is not a class", str(context.exception))
+
+	def test_NotIsSubclass(self) -> None:
+		self.assertNotIsSubclass(int, (str, bytes))
+
+	def test_NotIsSubclass_Fails(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertNotIsSubclass(bool, (str, int))
+
+		self.assertEqual("<class 'bool'> is a subclass of <class 'int'>", str(context.exception))
+
+	def test_StartsWith(self) -> None:
+		self.assertStartsWith("pyTooling", "py")
+		self.assertStartsWith(b"pyTooling", (b"x", b"py"))
+
+	def test_StartsWith_Fails(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertStartsWith("pyTooling", "Tool")
+
+		self.assertEqual("'pyTooling' doesn't start with 'Tool'", str(context.exception))
+
+	def test_StartsWith_FailsTuple(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertStartsWith("pyTooling", ("a", "b"))
+
+		self.assertEqual("'pyTooling' doesn't start with any of ('a', 'b')", str(context.exception))
+
+	def test_StartsWith_WrongType(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertStartsWith(b"pyTooling", "py")
+
+		self.assertEqual("Expected str, not bytes", str(context.exception))
+
+	def test_NotStartsWith(self) -> None:
+		self.assertNotStartsWith("pyTooling", ("a", "b"))
+
+	def test_NotStartsWith_Fails(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertNotStartsWith("pyTooling", ("a", "py"))
+
+		self.assertEqual("'pyTooling' starts with 'py'", str(context.exception))
+
+	def test_EndsWith(self) -> None:
+		self.assertEndsWith("pyTooling", "ing")
+
+	def test_EndsWith_Fails(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertEndsWith("pyTooling", "py")
+
+		self.assertEqual("'pyTooling' doesn't end with 'py'", str(context.exception))
+
+	def test_EndsWith_WrongType(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertEndsWith("pyTooling", b"ing")
+
+		self.assertEqual("Expected bytes, not str", str(context.exception))
+
+	def test_NotEndsWith(self) -> None:
+		self.assertNotEndsWith("pyTooling", "py")
+
+	def test_NotEndsWith_Fails(self) -> None:
+		with self.assertRaises(AssertionError) as context:
+			self.assertNotEndsWith("pyTooling", ("x", "ing"))
+
+		self.assertEqual("'pyTooling' ends with 'ing'", str(context.exception))
+
+	def test_Message(self) -> None:
+		"""A message is added to the generated one, as ``longMessage`` is on by default."""
+		with self.assertRaises(AssertionError) as context:
+			self.assertEndsWith("pyTooling", "py", "the package name")
+
+		self.assertEqual("'pyTooling' doesn't end with 'py' : the package name", str(context.exception))
+
