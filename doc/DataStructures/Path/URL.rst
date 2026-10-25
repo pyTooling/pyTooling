@@ -8,13 +8,13 @@ Implements a *Unified Resource Locator* (URL).
 .. code-block:: Python
 
    url = URL.Parse("http://paebbels:xxx@semaphore.plc2.de:5000/api/v1/semaphore?name=Riviera&foo=bar#page2")
-   print(url.Scheme())      # HTTP
-   print(url.User())        # paebbels
-   print(url.Password())    # xxx
-   print(url.Host())        # semaphore.plc2.de:5000
-   print(url.Path())        # /api/v1/semaphore
-   print(url.Query())       # name=Riviera&foo=bar
-   print(url.Fragment())    # page2
+   print(url.Scheme)                # Protocols.HTTP
+   print(url.User)                  # paebbels
+   print(url.Password)              # xxx
+   print(url.Host)                  # semaphore.plc2.de:5000
+   print(url.Path)                  # /api/v1/semaphore
+   print(url.Query["name"].Value)   # Riviera
+   print(url.Fragment)              # page2
 
 
 .. _STRUCT/Path/URL/Parse:
@@ -110,6 +110,52 @@ The conversion needs the `idna <https://pypi.org/project/idna/>`__ package, inst
 (``pip install pyTooling[idna]``). Without it, converting a Unicode host or decoding an A-label raises
 :exc:`~pyTooling.Exceptions.MissingDependencyError`; an IRI whose host is ASCII, and an ASCII host without A-labels,
 need no package.
+
+
+.. _STRUCT/Path/URL/Query:
+
+Query
+*****
+
+:rfc:`3986` puts no structure into a query. The common form are ``key=value`` pairs separated by ``&``, and a key may
+repeat: a form with a multi-select or a group of checkboxes sends ``tag=a&tag=b``.
+:attr:`URL.Query <pyTooling.GenericPath.URL.URL.Query>` holds the parameters by key, each a
+:class:`~pyTooling.GenericPath.URL.QueryParameter`:
+
+* A key written once is a :class:`~pyTooling.GenericPath.URL.KeyValuePair`.
+* A key written several times is a :class:`~pyTooling.GenericPath.URL.KeySequencePair` holding every value in order.
+
+Both answer :attr:`~pyTooling.GenericPath.URL.QueryParameter.Value` and
+:attr:`~pyTooling.GenericPath.URL.QueryParameter.Values`, so a reader needn't know which one it got.
+:attr:`~pyTooling.GenericPath.URL.QueryParameter.Value` of a repeated key is its **last** value - what a dictionary
+of the pairs would keep -, and :attr:`~pyTooling.GenericPath.URL.QueryParameter.Values` holds all of them; for a key
+written once, it holds the one value.
+
+.. code-block:: python
+
+   url = URL.Parse("https://example.org/search?tag=python&tag=vhdl&page=2&verbose")
+
+   url.Query["page"].Value      # '2'
+   url.Query["tag"].Value       # 'vhdl'
+   url.Query["tag"].Values      # ('python', 'vhdl')
+   url.Query["verbose"].Value   # None - a parameter without '='
+
+A parameter written without ``=`` has the value ``None``, one with an empty value (``?verbose=``) the value ``""``. A
+URL with an empty query (``https://example.org/?``) has an empty dictionary, a URL without a query ``None``.
+
+:meth:`str() <pyTooling.GenericPath.URL.URL.__str__>` writes every value back. The values of a key are written
+together, at the position of the key's first occurrence: ``?tag=a&page=2&tag=b`` is written
+``?tag=a&tag=b&page=2``. A URL built by hand takes its parameters as an iterable; a key may occur once:
+
+.. code-block:: python
+
+   url = URL(
+     Protocols.HTTPS,
+     Path.Parse("/search"),
+     Host("example.org"),
+     query=(KeySequencePair("tag", ("python", "vhdl")), KeyValuePair("page", "2"))
+   )
+   # https://example.org/search?tag=python&tag=vhdl&page=2
 
 
 .. _STRUCT/Path/URL/Protocols:
