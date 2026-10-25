@@ -3040,8 +3040,10 @@ class BaseGraph(
 		:param transitiveKind: Optional, the kind a transitive edge gets. Default: :attr:`EdgeKind.Transitive`.
 		:param keyName:        Optional, the key the path of a transitive edge is stored as. Default: ``None``, no path is
 		                       computed.
-		:raises ValueError:    If parameter 'directKind' or 'transitiveKind' is None.
-		:raises TypeError:     If parameter 'directKind' or 'transitiveKind' is not an enumeration member.
+		:raises ValueError:    If parameter 'directKind' is None.
+		:raises TypeError:     If parameter 'directKind' is not an enumeration member.
+		:raises ValueError:    If parameter 'transitiveKind' is None.
+		:raises TypeError:     If parameter 'transitiveKind' is not an enumeration member.
 		:raises TypeError:     If parameter 'keyName' is not a string.
 		:raises CycleError:    If the graph contains a cycle, which has no unique transitive reduction.
 
