@@ -1242,6 +1242,11 @@ Version 10.x (2026)
        :meth:`Filename.ToTree <pyTooling.Filesystem.Filename.ToTree>` and
        :meth:`SymbolicLink.ToTree <pyTooling.Filesystem.SymbolicLink.ToTree>` take the optional ``format`` as well, so
        a user defined format renders the whole tree.
+     * :meth:`Directory.ResolveSymbolicLinks <pyTooling.Filesystem.Directory.ResolveSymbolicLinks>` raised an
+       :exc:`AttributeError` for a relative link target passing through another symbolic link or a regular file, e.g.
+       ``a -> dirlink/f.txt`` with ``dirlink -> dir``. A link in the middle of the target's path is followed, as the
+       operating system does; a regular file there, and a cycle of links, make the link broken, and a link with an
+       absolute target there makes it unconnected.
 
    * :mod:`pyTooling.Graph`
 
