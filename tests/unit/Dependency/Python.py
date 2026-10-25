@@ -2014,6 +2014,7 @@ class PackageOverridesSchema(Testcase):
 
 		self.assertEqual([], self._Violations(document))
 
+
 class EmptyLicenseOverrideFiles(Testcase):
 	"""A file may legitimately state no packages, including by having every entry commented out."""
 

@@ -927,6 +927,8 @@ Version 10.x (2026)
        :mod:`importlib.resources` when called, not when :mod:`pyTooling.Common` is imported. Every pyTooling package
        imports :mod:`pyTooling.Common`: importing :mod:`pyTooling.Common` takes 8.3 ms less (Python 3.15), importing
        :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 6.4 to 7.4 ms less.
+     * :func:`~pyTooling.Common.getResourceFile` and :func:`~pyTooling.Common.readResourceFile` take the file name as
+       a :class:`~pathlib.Path` too, as the ``SCHEMA_FILES`` mappings state it.
 
    * :mod:`pyTooling.Configuration`
 
@@ -1266,9 +1268,9 @@ Version 10.x (2026)
      sentence describing ``*args``/``**kwargs``, which none of them takes.
    * The four documentation-coverage findings that were real are fixed: :meth:`pyTooling.Tree.Node.__delitem__`,
      both comparison operators of :class:`~pyTooling.Licensing.License`, and ``abstract_new()``.
-   * :ref:`SCHEMAS` is a new section, last in *References and Reports*: a page per schema showing its full source
-     with a copy button, and offering the file itself for download. The page includes the schema from the package,
-     so there is no second copy to drift.
+   * :ref:`SCHEMAS` is a new section in *References and Reports*, after the class reference: a page per schema
+     showing its full source with a copy button, and offering the file itself for download. The page includes the
+     schema from the package, so there is no second copy to drift.
    * A schema is also **drawn**, by the directive ``xmlschema-graph`` of
      :doc:`pyTooling.Sphinx <pyToolSphinx:index>` - complex types as records, containment as labelled edges carrying
      the cardinality, and a node for an enumeration.

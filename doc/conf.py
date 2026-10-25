@@ -110,8 +110,8 @@ html_static_path = ["_static"]
 html_extra_path = ["_extra"]
 
 # Every schema the package ships, found by extension rather than by importing the module that names them: reading
-# 'LicenseOverrides.SCHEMA_FILES' would make building the documentation need the 'pypi' extra at configuration time.
-# They are served under 'Schemas/', the schema URL prefix, next to the pages describing them.
+# 'LicenseOverrides.SCHEMA_FILES' would make building the documentation need the 'dependencies' extra at
+# configuration time. They are served under 'Schemas/', the schema URL prefix, next to the pages describing them.
 _resourceDirectory = ROOT.parent / directoryName / "Resources"
 _schemaDirectory = ROOT / "_extra" / "Schemas"
 _schemaDirectory.mkdir(parents=True, exist_ok=True)
