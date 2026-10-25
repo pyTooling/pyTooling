@@ -89,8 +89,11 @@ class Bar(metaclass=ExtendedType, slots=True):
 		:param begin:       Begin of the bar.
 		:param end:         End of the bar, which may equal the begin but must not precede it.
 		:param parent:      The row the bar sits in.
-		:raises ValueError: If parameter 'begin', 'end' or 'parent' is None.
-		:raises TypeError:  If parameter 'begin' or 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'begin' is None.
+		:raises TypeError:  If parameter 'begin' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'end' is None.
+		:raises TypeError:  If parameter 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Row`.
 		:raises ValueError: If the end precedes the begin.
 		"""
@@ -246,7 +249,8 @@ class Row(metaclass=ExtendedType, slots=True):
 
 		:param name:        Name of the row.
 		:param parent:      The diagram the row belongs to.
-		:raises ValueError: If parameter 'name' or 'parent' is None.
+		:raises ValueError: If parameter 'name' is None.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Diagram`.
 		"""
@@ -423,7 +427,8 @@ class Diagram(metaclass=ExtendedType, slots=True):
 
 		:param title:       Title of the diagram.
 		:param origin:      The time offsets are counted from.
-		:raises ValueError: If parameter 'title' or 'origin' is None.
+		:raises ValueError: If parameter 'title' is None.
+		:raises ValueError: If parameter 'origin' is None.
 		:raises TypeError:  If parameter 'title' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'origin' is not of type :class:`~datetime.datetime`.
 		"""

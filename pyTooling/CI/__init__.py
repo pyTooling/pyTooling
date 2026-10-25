@@ -718,12 +718,14 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 
 		:param needs:                Optional, siblings this element needs. Default: ``None``.
 		:param dependents:           Optional, siblings needing this element. Default: ``None``.
-		:raises TypeError:           If parameter 'needs' or 'dependents' is not iterable.
-		:raises ValueError:          If an element of parameter 'needs' or 'dependents' is ``None``.
-		:raises TypeError:           If an element of parameter 'needs' or 'dependents' is not of type
-		                             :class:`DependencyMixin`.
-		:raises NeedDependencyError: If an element of parameter 'needs' or 'dependents' isn't contained in the same
-		                             group.
+		:raises TypeError:           If parameter 'needs' is not iterable.
+		:raises ValueError:          If an element of parameter 'needs' is ``None``.
+		:raises TypeError:           If an element of parameter 'needs' is not of type :class:`DependencyMixin`.
+		:raises NeedDependencyError: If an element of parameter 'needs' isn't contained in the same group.
+		:raises TypeError:           If parameter 'dependents' is not iterable.
+		:raises ValueError:          If an element of parameter 'dependents' is ``None``.
+		:raises TypeError:           If an element of parameter 'dependents' is not of type :class:`DependencyMixin`.
+		:raises NeedDependencyError: If an element of parameter 'dependents' isn't contained in the same group.
 		"""
 		for name, elements in (("needs", needs), ("dependents", dependents)):
 			if elements is not None and not isinstance(elements, Iterable):

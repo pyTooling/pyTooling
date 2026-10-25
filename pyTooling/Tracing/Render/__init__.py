@@ -200,8 +200,11 @@ class GanttBar(Bar):
 		:param queued:      The bar is the time a job waited for a runner.
 		:param running:     The bar's timespan is still running.
 		:param parent:      The row the bar sits in.
-		:raises ValueError: If parameter 'begin', 'end' or 'parent' is None.
-		:raises TypeError:  If parameter 'begin' or 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'begin' is None.
+		:raises TypeError:  If parameter 'begin' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'end' is None.
+		:raises TypeError:  If parameter 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Diagram.Gantt.Row`.
 		:raises ValueError: If the end precedes the begin.
 		"""
