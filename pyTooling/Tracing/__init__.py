@@ -2105,7 +2105,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		except (ToolingException, JSONDecodeError) as cause:
 			raise TracingError(f"JSON schema '{schemaFile}' couldn't be read from the package resources.") from cause
 
-		errors = sorted(Draft202012Validator(schema).iter_errors(document), key=lambda error: list(error.absolute_path))
+		errors = list(Draft202012Validator(schema).iter_errors(document))
 		if len(errors) > 0:
 			ex = TracingError(f"OTLP/JSON document isn't valid according to JSON schema '{schemaFile}'.")
 			for error in errors:

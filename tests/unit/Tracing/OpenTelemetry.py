@@ -1129,8 +1129,8 @@ class ReadIdentifiers(Testcase):
 
 		self.assertEqual(
 			[
-				f"{FIRST_SPAN}/spanId: '0000000000000000' does not match {SPAN_ID_PATTERN}",
-				f"{FIRST_SPAN}/traceId: '00000000000000000000000000000000' does not match {TRACE_ID_PATTERN}"
+				f"{FIRST_SPAN}/traceId: '00000000000000000000000000000000' does not match {TRACE_ID_PATTERN}",
+				f"{FIRST_SPAN}/spanId: '0000000000000000' does not match {SPAN_ID_PATTERN}"
 			],
 			exceptionCapture.exception.__notes__
 		)
@@ -1337,14 +1337,14 @@ class ReadMalformedDocuments(Testcase):
 		self.assertEqual(["document/resourceSpans: {} is not of type 'array'"], exceptionCapture.exception.__notes__)
 
 	def test_AllViolations(self) -> None:
-		"""Every violation of the schema is a note of its own, ordered by its position."""
+		"""Every violation of the schema is a note of its own, in the order the validator finds them."""
 		with self.assertRaises(TracingError) as exceptionCapture:
 			Trace.FromOTLPJSON(_document(_span("root", "abc", kind="internal")))
 
 		self.assertEqual(
 			[
-				f"{FIRST_SPAN}/kind: 'internal' is not of type 'integer'",
-				f"{FIRST_SPAN}/spanId: 'abc' does not match {SPAN_ID_PATTERN}"
+				f"{FIRST_SPAN}/spanId: 'abc' does not match {SPAN_ID_PATTERN}",
+				f"{FIRST_SPAN}/kind: 'internal' is not of type 'integer'"
 			],
 			exceptionCapture.exception.__notes__
 		)
