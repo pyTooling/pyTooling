@@ -37,6 +37,7 @@ from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
 from typing                       import Any, Optional as Nullable, Self
+from unittest                     import skipUnless
 from unittest.mock                import patch
 
 from packaging.requirements       import Requirement
@@ -62,6 +63,12 @@ from pyTooling.Warning            import CriticalWarning, UnhandledCriticalWarni
 from pyTooling.Testing            import Testcase
 
 from tests.unit.Dependency.FakeIndex import DocumentSession, ProjectDocument
+
+try:
+	from jsonschema                 import Draft202012Validator, FormatChecker
+	HAS_JSONSCHEMA = True
+except ImportError:  # pragma: no cover
+	HAS_JSONSCHEMA = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -1955,6 +1962,7 @@ class RequirementsFileInstantiation(Testcase):
 		)
 
 
+@skipUnless(HAS_JSONSCHEMA, "Needs 'jsonschema', which has no PyPy wheel for Windows.")
 class PackageOverridesSchema(Testcase):
 	"""The package-override file's structure is stated as a JSON schema, so an editor and CI check the same thing."""
 
@@ -1962,8 +1970,6 @@ class PackageOverridesSchema(Testcase):
 	def _Validator():
 		"""The shipped schema, as a validator that reports every violation rather than only the first."""
 		from json                        import loads
-
-		from jsonschema                  import Draft202012Validator, FormatChecker
 
 		from pyTooling                   import Resources
 		from pyTooling.Common            import readResourceFile
@@ -1991,8 +1997,6 @@ class PackageOverridesSchema(Testcase):
 
 	def test_TheSchemaIsItselfValid(self) -> None:
 		"""Compiling it is the check: an unusable schema can't be compiled."""
-		from jsonschema import Draft202012Validator
-
 		Draft202012Validator.check_schema(self._Validator().schema)
 
 	def test_EverySchemaVersionHasAFile(self) -> None:
