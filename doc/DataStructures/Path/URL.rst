@@ -35,6 +35,13 @@ A string that isn't such a URL raises :exc:`~pyTooling.GenericPath.URL.URLError`
 ``http:///path`` no host. A relative reference like ``things/4711`` is no URL either; it is appended to one with
 :meth:`URL.__truediv__ <pyTooling.GenericPath.URL.URL.__truediv__>`.
 
+A port is a number after the host's ``:``. ``http://host:/x`` (no port) and ``ssh://git@github.com:org/repo.git`` (a
+path instead of a port) raise :exc:`~pyTooling.GenericPath.URL.URLError`, and its note gives the URL as it was
+probably meant: ``http://host/x``, ``ssh://git@github.com/org/repo.git``. Git's and scp's SCP-like address
+``git@github.com:org/repo.git`` names no scheme; the note gives its URL ``ssh://git@github.com/org/repo.git``, whose
+path starts at the root instead of the user's home directory. In ``file://C:/Windows``, the drive letter stands where
+the host is; the note gives ``file:///C:/Windows``.
+
 
 .. _STRUCT/Path/URL/IRI:
 

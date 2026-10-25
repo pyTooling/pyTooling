@@ -513,9 +513,9 @@ class ParseErrors(Testcase):
 
 	def test_SyntaxErrorRaisesURLError(self) -> None:
 		with self.assertRaises(URLError) as context:
-			_ = URL.Parse("http://host:abc/")
+			_ = URL.Parse("http://ho!st/")
 
-		self.assertEqual("Syntax error when parsing URL 'http://host:abc/'.", str(context.exception))
+		self.assertEqual("Syntax error when parsing URL 'http://ho!st/'.", str(context.exception))
 
 class QueriesAndFragments(Testcase):
 	""":rfc:`3986` allows an empty query, an empty fragment and a query parameter without ``=``; each round-trips."""
@@ -695,7 +695,7 @@ class ForbiddenCharacters(Testcase):
 
 	def test_NoNoteWhenNothingIsForbidden(self) -> None:
 		with self.assertRaises(URLError) as context:
-			_ = URL.Parse("http://host:abc/")
+			_ = URL.Parse("http://ho!st/")
 
 		self.assertEqual([], getattr(context.exception, "__notes__", []))
 
@@ -833,6 +833,21 @@ class MissingScheme(Testcase):
 		"""Git's ``user@host:path`` is no URL; ``ssh://user@host/path`` is."""
 		self.assertMissingScheme("git@github.com:org/repo.git")
 
+	def test_AnSCPLikeAddress_Notes(self) -> None:
+		"""The notes give the ``ssh://`` URL of an SCP-like address, also for an absolute path."""
+		for text in ("git@github.com:org/repo.git", "git@github.com:/org/repo.git"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertListEqual(
+					[
+						"An SCP-like address 'user@host:path' (Git, scp) is no URL. As URL: 'ssh://git@github.com/org/repo.git'.",
+						"In the URL, the path starts at the root, not in the user's home directory."
+					],
+					context.exception.__notes__
+				)
+
 	def test_TheNote(self) -> None:
 		with self.assertRaises(URLError) as context:
 			_ = URL.Parse("nonsense")
@@ -888,7 +903,8 @@ class MissingHost(Testcase):
 		with self.assertRaises(URLError) as context:
 			_ = URL.Parse("file://C:/Windows")
 
-		self.assertEqual("Syntax error when parsing URL 'file://C:/Windows'.", str(context.exception))
+		self.assertEqual("Drive letter 'C' as host when parsing URL 'file://C:/Windows'.", str(context.exception))
+		self.assertListEqual(["A drive letter belongs to the path: 'file:///C:/Windows'."], context.exception.__notes__)
 
 	def test_AFileURLWithHost(self) -> None:
 		for text, hostname in (("file://server/share/file.txt", "server"), ("file://localhost/etc/hosts", "localhost")):
@@ -933,18 +949,32 @@ class Ports(Testcase):
 
 	def test_EmptyPort(self) -> None:
 		"""A ``:`` without a number was read as the start of the path."""
-		for text in ("http://host:/p", "ssh://u@h:/p"):
+		for text, url in (
+			("http://host:/p",  "http://host/p"),
+			("ssh://u@h:/p",    "ssh://u@h/p"),
+			("http://host:",    "http://host"),
+			("http://[::1]:/p", "http://[::1]/p")
+		):
 			with self.subTest(url=text):
 				with self.assertRaises(URLError) as context:
 					_ = URL.Parse(text)
 
-				self.assertEqual(f"Syntax error when parsing URL {text!r}.", str(context.exception))
+				self.assertEqual(f"Missing port after ':' when parsing URL {text!r}.", str(context.exception))
+				self.assertListEqual([f"Without ':', the URL is '{url}'."], context.exception.__notes__)
 
 	def test_NotANumber(self) -> None:
-		with self.assertRaises(URLError) as context:
-			_ = URL.Parse("http://host:abc/")
+		"""A path after the host's ``:`` - an SCP-like address with a scheme - was read as the port."""
+		for text, port, url in (
+			("http://host:abc/",                  "abc", "http://host/abc/"),
+			("ssh://git@github.com:org/repo.git", "org", "ssh://git@github.com/org/repo.git"),
+			("http://user:pw@host:x/",            "x",   "http://user:pw@host/x/")
+		):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
 
-		self.assertEqual("Syntax error when parsing URL 'http://host:abc/'.", str(context.exception))
+				self.assertEqual(f"Port '{port}' is not a number when parsing URL {text!r}.", str(context.exception))
+				self.assertListEqual([f"With a path after '/' instead, the URL is '{url}'."], context.exception.__notes__)
 
 
 class UserInformation(Testcase):
@@ -1055,7 +1085,7 @@ class IRIs(Testcase):
 	def test_Strict_ASCII(self) -> None:
 		"""An ASCII syntax error carries no note about IRIs."""
 		with self.assertRaises(URLError) as context:
-			_ = URL.Parse("http://host:abc/")
+			_ = URL.Parse("http://ho!st/")
 
 		self.assertEqual([], getattr(context.exception, "__notes__", []))
 
