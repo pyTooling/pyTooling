@@ -79,6 +79,15 @@ _IRI_HOST = re_compile(
 )
 """Precompiled regular expression splitting an IRI into scheme and user information, host, and the rest."""
 
+_PORT = re_compile(
+	r"""(?P<prefix>(?P<scheme>[a-zA-Z][-a-zA-Z0-9+.]*)://(?:[^/?#@]*@)?(?P<host>\[[^\]/?#]*\]|[^/?#:@\[\]]*))"""
+	r""":(?P<port>[^/?#]*)"""
+)
+"""Precompiled regular expression for the text after the host's ``:``, where a URL has its port."""
+
+_SCP_LIKE = re_compile(r"""(?P<user>[^/?#:@]+)@(?P<host>[^/?#:@\[\]]+):(?P<path>[^?#]*)""")
+"""Precompiled regular expression for an SCP-like address ``user@host:path``, as Git and scp write it."""
+
 FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"
 """Characters :rfc:`3986` forbids in a URL unless they are percent-encoded."""
 
@@ -512,7 +521,15 @@ class URL:
 		                                isn't installed.
 		:raises URLError:               When ``iri`` is set and IDNA 2008 rejects the host. |br|
 		                                The note gives the reason of the ``idna`` package.
-		:raises URLError:               When the URL doesn't start with a scheme followed by ``://``.
+		:raises URLError:               When the URL doesn't start with a scheme followed by ``://``. |br|
+		                                For an SCP-like address (``user@host:path``), the notes give its ``ssh://`` URL:
+		                                In the URL, the path starts at the root, not in the user's home directory.
+		:raises URLError:               When a ``file`` URL names a drive letter as its host. |br|
+		                                The note gives the URL with the drive letter in the path.
+		:raises URLError:               When the URL has a ``:`` after the host, but no port. |br|
+		                                The note gives the URL without the ``:``.
+		:raises URLError:               When the port isn't a number. |br|
+		                                The note gives the URL with a path after ``/`` instead.
 		:raises URLError:               When syntax does not match. |br|
 		                                If the URL holds a Unicode character, the note offers ``iri=True``.
 		:raises URLError:               When the URL names a scheme that is not in :class:`Protocols`. |br|
@@ -617,7 +634,29 @@ class URL:
 
 		if _SCHEME_PREFIX.match(url) is None:
 			ex = URLError(f"Missing scheme when parsing URL {url!r}.")
-			ex.add_note("A URL starts with a scheme followed by '://', e.g. 'https://'.")
+			if (scpLike := _SCP_LIKE.fullmatch(url)) is not None:
+				user = scpLike.group("user")
+				host = scpLike.group("host")
+				path = scpLike.group("path").lstrip("/")
+				ex.add_note(f"An SCP-like address 'user@host:path' (Git, scp) is no URL. As URL: 'ssh://{user}@{host}/{path}'.")
+				ex.add_note("In the URL, the path starts at the root, not in the user's home directory.")
+			else:
+				ex.add_note("A URL starts with a scheme followed by '://', e.g. 'https://'.")
+			raise ex
+
+		if (portMatch := _PORT.match(url)) is not None and not portMatch.group("port").isdigit():
+			port =   portMatch.group("port")
+			prefix = portMatch.group("prefix")
+			host =   portMatch.group("host")
+			if port == "" and len(host) == 1 and host.isalpha() and portMatch.group("scheme").lower() == "file":
+				ex = URLError(f"Drive letter '{host}' as host when parsing URL {url!r}.")
+				ex.add_note(f"A drive letter belongs to the path: 'file:///{host}:{url[portMatch.end():]}'.")
+			elif port == "":
+				ex = URLError(f"Missing port after ':' when parsing URL {url!r}.")
+				ex.add_note(f"Without ':', the URL is '{prefix}{url[portMatch.end():]}'.")
+			else:
+				ex = URLError(f"Port '{port}' is not a number when parsing URL {url!r}.")
+				ex.add_note(f"With a path after '/' instead, the URL is '{prefix}/{url[portMatch.start('port'):]}'.")
 			raise ex
 
 		ex = URLError(f"Syntax error when parsing URL {url!r}.")
