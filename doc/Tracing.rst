@@ -356,8 +356,8 @@ the document:
 .. code-block:: text
 
    TracingError: OTLP/JSON document isn't valid according to JSON schema 'OTLP-Traces-v1.0.schema.json'.
-     document/resourceSpans/0/scopeSpans/0/spans/0/kind: 'internal' is not of type 'integer'
      document/resourceSpans/0/scopeSpans/0/spans/0/spanId: 'abc' does not match '^(?!0{16}$)[0-9a-fA-F]{16}$'
+     document/resourceSpans/0/scopeSpans/0/spans/0/kind: 'internal' is not of type 'integer'
 
 The schema states what OTLP's JSON encoding requires, and allows fields of unknown names, which a receiver ignores.
 What a schema can't state is checked while the document is read, and raises a
