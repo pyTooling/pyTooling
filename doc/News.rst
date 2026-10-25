@@ -1286,6 +1286,14 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.MetaClasses`
 
+     * ``singleton=True`` was ignored on a class derived from a class created by
+       :class:`~pyTooling.MetaClasses.ExtendedType`, which isn't a singleton: the inherited ``__isSingleton__`` took
+       precedence over the class keyword argument.
+     * :deco:`~pyTooling.MetaClasses.singleton`, :deco:`~pyTooling.MetaClasses.mixin` and
+       :deco:`~pyTooling.MetaClasses.slotted` on a class created by :class:`~pyTooling.MetaClasses.ExtendedType` dropped
+       the class' own options: ``@singleton`` on a class with ``slots=True`` returned a class marked neither slotted
+       nor singleton, and on a mixin-class a class that wasn't a mixin. The recreated class keeps ``slots``,
+       ``mixin``, ``weakref`` and ``singleton`` and adds the decorator's option.
      * A class or static method marked with :deco:`~pyTooling.MetaClasses.abstractmethod` or
        :deco:`~pyTooling.MetaClasses.mustoverride` didn't make its class abstract: the class could be instantiated.
        :class:`~pyTooling.MetaClasses.ExtendedType` looked for the marker on the :class:`classmethod` or

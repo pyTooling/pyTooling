@@ -117,6 +117,59 @@ class Singleton(Testcase):
 		self.assertIs(App(), App())
 
 
+class DecoratedExtendedTypeClass(Testcase):
+	"""A class created by :class:`ExtendedType` keeps its own options, when a decorator recreates it."""
+
+	def test_SingletonOnSlottedClass(self) -> None:
+		@singleton
+		class Data(metaclass=ExtendedType, slots=True):
+			_data: int
+
+			def __init__(self) -> None:
+				self._data = 5
+
+		self.assertTrue(Data.__slotted__)
+		self.assertEqual(("_data", ), Data.__slots__)
+		self.assertTrue(Data.__isSingleton__)
+		self.assertIs(Data(), Data())
+		self.assertFalse(hasattr(Data(), "__dict__"))
+
+	def test_SingletonOnWeakReferencedClass(self) -> None:
+		@singleton
+		class Data(metaclass=ExtendedType, slots=True, weakref=True):
+			_data: int
+
+		self.assertEqual(("_data", "__weakref__"), Data.__slots__)
+		self.assertTrue(Data.__isSingleton__)
+
+	def test_SingletonOnMixinClass(self) -> None:
+		@singleton
+		class Feature(metaclass=ExtendedType, mixin=True):
+			_feature: int
+
+		self.assertTrue(Feature.__isMixin__)
+		self.assertEqual(("_feature", ), Feature.__mixinSlots__)
+		self.assertTrue(Feature.__isSingleton__)
+
+	def test_SlottedOnSingletonClass(self) -> None:
+		@slotted
+		class Data(metaclass=ExtendedType, singleton=True):
+			_data: int
+
+		self.assertTrue(Data.__slotted__)
+		self.assertTrue(Data.__isSingleton__)
+		self.assertIs(Data(), Data())
+
+	def test_MixinOnSlottedClass(self) -> None:
+		@mixin
+		class Feature(metaclass=ExtendedType, slots=True):
+			_feature: int
+
+		self.assertTrue(Feature.__isMixin__)
+		self.assertEqual(("_feature", ), Feature.__mixinSlots__)
+		self.assertFalse(Feature.__isSingleton__)
+
+
 class IncompatibleMetaClass(Testcase):
 	"""
 	A decorated class must use :class:`type` or a meta-class derived from
