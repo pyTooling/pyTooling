@@ -202,7 +202,10 @@ class LineSegment(Testcase):
 			_ = line1.AngleTo(line2)
 
 		self.assertEqual("Line segment has length 0.", str(context.exception))
-		self.assertListEqual(["Got line segment ((1, 1) → (1, 1))."], context.exception.__notes__)
+		self.assertListEqual([
+			"Got line segment ((1, 1) → (1, 1)).",
+			"Can't determine an angle between two lines if one of the lines has no direction, due to a zero-length."
+		], context.exception.__notes__)
 
 	def test_AngleTo_ZeroLengthOther(self) -> None:
 		line1 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
@@ -212,7 +215,10 @@ class LineSegment(Testcase):
 			_ = line1.AngleTo(line2)
 
 		self.assertEqual("Parameter 'other' has length 0.", str(context.exception))
-		self.assertListEqual(["Got line segment ((1, 1) → (1, 1))."], context.exception.__notes__)
+		self.assertListEqual([
+			"Got line segment ((1, 1) → (1, 1)).",
+			"Can't determine an angle between two lines if one of the lines has no direction, due to a zero-length."
+		], context.exception.__notes__)
 
 
 class Copy(Testcase):
