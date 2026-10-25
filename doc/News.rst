@@ -233,6 +233,12 @@ Version 10.x (2026)
        (``file:///etc/hosts``). After the host and port, the path starts with a slash. A character the RFC forbids is
        rejected anywhere in the URL, a port must be in range 0..65535, and a user or password may carry the RFC's
        user-information characters - ``first.last@`` and ``p%40ss`` were read as a host and a path.
+       A rejected URL says what is wrong and, in a note, gives the URL as it was probably meant: a ``:`` after the host
+       without a port, a path in place of the port, a drive letter as host (``file://C:/Windows``).
+     * :class:`~pyTooling.GenericPath.URL.SCPAddress` reads the **SCP-like address** ``[user@]host:[path]`` scp, rsync
+       and Git write - ``git@github.com:org/repo.git`` -, which is no URL: no scheme, no port, and a relative path
+       starts in the user's home directory. :meth:`~pyTooling.GenericPath.URL.SCPAddress.ToURL` converts it to the
+       ``ssh://`` URL, writing the home directory as Git does: ``ssh://git@github.com/~/org/repo.git``.
      * :meth:`~pyTooling.GenericPath.URL.URL.Parse` **reads an IRI** (:rfc:`3987`) with ``iri=True``: a Unicode host is
        converted to its A-labels by IDNA 2008 (:rfc:`5891`) after the mapping of UTS #46, as browsers do, and every
        other non-ASCII character is percent-encoded as UTF-8, so the result is an :rfc:`3986` URL -
