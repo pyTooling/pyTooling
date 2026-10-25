@@ -119,6 +119,9 @@ class Stopwatch(SlottedObject):
 	as a paused stopwatch.
 
 	The stopwatch can also be used in a :ref:`with-statement <with>`, because it implements the :ref:`context manager protocol <context-managers>`.
+
+	A stopwatch measures one time span: it is started once and stopped once. There is no restart or reset operation; a
+	new stopwatch measures again.
 	"""
 
 	_name:         Nullable[str]  #: Optional name of the stopwatch.
@@ -190,16 +193,19 @@ class Stopwatch(SlottedObject):
 		"""
 		Start the stopwatch.
 
-		A stopwatch can only be started once. There is no restart or reset operation provided.
+		A stopwatch can only be started once. There is no restart or reset operation provided; a new stopwatch measures
+		again.
 
 		:raises StopwatchError: If stopwatch was already started.
-		:raises StopwatchError: If stopwatch was already started and stopped.
+		:raises StopwatchError: If stopwatch was already started and stopped. |br|
+		                        Create a new stopwatch to measure again.
 		"""
-		if self._startTime is not None:
+		if self._totalTime is not None:
+			ex = StopwatchError("Stopwatch was already used (started and stopped).")
+			ex.add_note("A stopwatch can't be restarted. Create a new one to measure again.")
+			raise ex
+		elif self._startTime is not None:
 			raise StopwatchError("Stopwatch was already started.")
-
-		if self._stopTime is not None:
-			raise StopwatchError("Stopwatch was already used (started and stopped).")
 
 		self._beginTime = datetime.now()
 		self._resumeTime = self._startTime = perf_counter_ns()
@@ -585,7 +591,9 @@ class Stopwatch(SlottedObject):
 
 		:returns:               The stopwatch itself.
 		:raises StopwatchError: If the stopwatch is running.
-		:raises StopwatchError: If the stopwatch was already stopped.
+		:raises StopwatchError: If the stopwatch was already stopped. |br|
+		                        Create a new stopwatch to measure again, or create it with ``preferPause=True`` to
+		                        measure several ``with``-blocks.
 		"""
 		if self._startTime is None:           # start stopwatch
 			self._beginTime = datetime.now()
@@ -599,7 +607,9 @@ class Stopwatch(SlottedObject):
 		elif self._resumeTime is not None:    # is running?
 			raise StopwatchError("Stopwatch is currently running and can not be started/resumed again.")
 		elif self._stopTime is not None:      # is stopped?
-			raise StopwatchError("Stopwatch was already stopped.")
+			ex = StopwatchError("Stopwatch was already stopped.")
+			ex.add_note("A stopwatch can't be restarted. Create a new one, or one with 'preferPause=True'.")
+			raise ex
 		else:
 			raise StopwatchError("Internal error.")
 
