@@ -661,6 +661,29 @@ cached instance of that class will be returned.
         def WriteLine(self, message):
           print(message)
 
+Inheritance
+===========
+
+A class derived from a singleton is a singleton too, and it has a single instance of its own: the instance of the
+derived class isn't the base class' instance. The behaviour can't be switched off in a derived class - a
+``singleton=False`` keyword has no effect, because it can't be told apart from the default. A class derived from a
+class that isn't a singleton becomes one with ``singleton=True``.
+
+.. code-block:: python
+
+   class Base(metaclass=ExtendedType, singleton=True):
+     pass
+
+   class Derived(Base):                        # a singleton, too
+     pass
+
+   class NoOptOut(Base, singleton=False):      # still a singleton
+     pass
+
+   assert Derived() is Derived()
+   assert Derived() is not Base()
+   assert NoOptOut() is NoOptOut()
+
 .. _META/Overloading:
 
 Overloading

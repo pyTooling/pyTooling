@@ -159,3 +159,16 @@ class Singleton(Testcase):
 
 		appSame = DerivedApp3WithOuterParameters()
 		self.assertIs(app, appSame)
+
+	def test_DerivedClassSingletonParameter(self) -> None:
+		"""A class derived from a class, which isn't a singleton, becomes one by its own parameter."""
+		class Base(metaclass=ExtendedType):
+			pass
+
+		class Final(Base, singleton=True):
+			pass
+
+		self.assertTrue(Final.__isSingleton__)
+		self.assertIs(Final(), Final())
+		self.assertFalse(Base.__isSingleton__)
+		self.assertIsNot(Base(), Base())

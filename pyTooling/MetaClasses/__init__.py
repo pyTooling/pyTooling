@@ -482,6 +482,9 @@ def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 	"""
 	Recreate a class with :class:`ExtendedType` (or the class' own compatible meta-class) applying the given options.
 
+	A class created by :class:`ExtendedType` keeps its own options - slots, mixin, weak references, singleton - and the
+	decorator's option is added to them.
+
 	:param cls:                         Class to recreate.
 	:param decoratorName:               Name of the calling decorator. It's used in the error message.
 	:param options:                     Meta-class options like ``slots``, ``mixin``, ``singleton`` or ``expects``.
@@ -492,11 +495,20 @@ def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 	                                    :class:`~pyTooling.MetaClasses.ExtendedType`.
 	"""
 	if cls.__class__ is type:
-		metacls = ExtendedType
+		metacls =   ExtendedType
+		arguments = {}
 	elif issubclass(cls.__class__, ExtendedType):
 		metacls = cls.__class__
 		for method in cls.__methods__:
 			delattr(method, "__classobj__")
+
+		ownSlots = cls.__dict__["__mixinSlots__"] if cls.__isMixin__ else cls.__dict__.get("__slots__", ())
+		arguments = {
+			"slots":     cls.__slotted__,
+			"mixin":     cls.__isMixin__,
+			"weakref":   "__weakref__" in ownSlots,
+			"singleton": cls.__isSingleton__
+		}
 	else:
 		metaClass = cls.__class__
 		ex = IncompatibleMetaClassError(
@@ -517,7 +529,9 @@ def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 		if key not in slots:
 			members[key] = value
 
-	return metacls(cls.__name__, bases, members, **options)
+	arguments.update(options)
+
+	return metacls(cls.__name__, bases, members, **arguments)
 
 
 @export
@@ -999,12 +1013,12 @@ class ExtendedType(type):
 		:param slots:                       Optional, if ``True``, store object attributes in :term:`__slots__ <slots>`
 		                                    instead of ``__dict__``. A class derived from a slotted class is slotted too.
 		:param mixin:                       Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``,
-		                                    create slots if ``slots`` is true. If ``None``, preserve behavior of primary
-		                                    base-class.
+		                                    create slots if ``slots`` is true.
 		:param weakref:                     Optional, if ``True``, let instances of a slotted class be referenced weakly by
 		                                    adding ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on
 		                                    to the class it is mixed into.
-		:param singleton:                   Optional, if ``True``, make the class a :term:`Singleton`.
+		:param singleton:                   Optional, if ``True``, make the class a :term:`Singleton`. A class derived from
+		                                    a singleton is a singleton too; ``False`` doesn't switch it off.
 		:param expects:                     Optional, names of members this class needs from whichever class it is mixed
 		                                    into, or a :class:`typing.Protocol` class naming them as its members. |br|
 		                                    See :attr:`__expectedMembers__`.
@@ -2017,11 +2031,12 @@ class ExtendedType(type):
 		This implementation is threadsafe.
 
 		:param newClass:  The newly constructed class for further modifications.
-		:param singleton: If ``True``, the class allows only a single instance to exist.
+		:param singleton: If ``True``, the class allows only a single instance to exist. A class derived from a singleton
+		                  is a singleton, too, with an instance of its own; ``False`` doesn't switch it off.
 		:returns:         ``True``, if the class is a singleton.
 		"""
-		if hasattr(newClass, "__isSingleton__"):
-			singleton = newClass.__isSingleton__
+		if not singleton:
+			singleton = getattr(newClass, "__isSingleton__", False)
 
 		if singleton:
 			oldnew = newClass.__new__
