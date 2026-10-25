@@ -34,6 +34,8 @@ This package provides a representation for a Uniform Resource Locator (URL).
 .. code-block::
 
    scheme://[user[:password]@]domain.tld[:port][/path/to/file][?query][#fragment]
+
+The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`.
 """
 from __future__            import annotations
 
@@ -276,6 +278,8 @@ class URL:
 	.. code-block::
 
 	   scheme://[user[:password]@]domain.tld[:port][/path/to/file][?query][#fragment]
+
+	The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`.
 	"""
 
 	_scheme:    Nullable[Protocols]       #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
