@@ -149,10 +149,15 @@ class MatplotlibRenderer(Renderer[Figure]):
 		:param dpi:            Optional, resolution of a PNG file in dots per inch. Default: ``150``.
 		:raises TypeError:     If parameter 'layout' is not of type :class:`~pyTooling.Tracing.Render.GanttLayout`.
 		:raises TypeError:     If parameter 'title' is not of type :class:`str`.
-		:raises ValueError:    If parameter 'width', 'rowHeight' or 'fontSize' is None.
-		:raises TypeError:     If parameter 'width', 'rowHeight' or 'fontSize' is not of type :class:`float` or
-		                       :class:`int`.
-		:raises ValueError:    If parameter 'width', 'rowHeight' or 'fontSize' isn't positive.
+		:raises ValueError:    If parameter 'width' is None.
+		:raises TypeError:     If parameter 'width' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'width' isn't positive.
+		:raises ValueError:    If parameter 'rowHeight' is None.
+		:raises TypeError:     If parameter 'rowHeight' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'rowHeight' isn't positive.
+		:raises ValueError:    If parameter 'fontSize' is None.
+		:raises TypeError:     If parameter 'fontSize' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'fontSize' isn't positive.
 		:raises ValueError:    If parameter 'fontFamilies' is None.
 		:raises TypeError:     If parameter 'fontFamilies' is not an iterable of :class:`str`.
 		:raises ValueError:    If parameter 'legendLocation' is None.

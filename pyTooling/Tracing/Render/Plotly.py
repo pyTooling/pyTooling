@@ -134,9 +134,12 @@ class PlotlyRenderer(Renderer[Figure]):
 		:raises TypeError:      If parameter 'title' is not of type :class:`str`.
 		:raises TypeError:      If parameter 'width' is not of type :class:`int`.
 		:raises ValueError:     If parameter 'width' isn't positive.
-		:raises ValueError:     If parameter 'rowHeight' or 'fontSize' is None.
-		:raises TypeError:      If parameter 'rowHeight' or 'fontSize' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:     If parameter 'rowHeight' or 'fontSize' isn't positive.
+		:raises ValueError:     If parameter 'rowHeight' is None.
+		:raises TypeError:      If parameter 'rowHeight' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:     If parameter 'rowHeight' isn't positive.
+		:raises ValueError:     If parameter 'fontSize' is None.
+		:raises TypeError:      If parameter 'fontSize' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:     If parameter 'fontSize' isn't positive.
 		:raises ValueError:     If parameter 'includePlotlyJS' is None.
 		:raises TypeError:      If parameter 'includePlotlyJS' is not of type :class:`PlotlyJavaScript`.
 		"""
