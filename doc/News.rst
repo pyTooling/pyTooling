@@ -1054,6 +1054,16 @@ Version 10.x (2026)
 
    .. rubric:: Bug Fixes
 
+   * :mod:`pyTooling.Cartesian2D.Shapes`
+
+     * A :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` accepted a parallelogram, and a
+       :class:`~pyTooling.Cartesian2D.Shapes.Square` a rhombus: the constructor raised only if all four angles between
+       consecutive edges were 0. It requires four inner angles of 90 |degree| now.
+     * A rectangle or square with floating-point corners - rotated by 3 |degree|, for example - was rejected: the edge
+       lengths were compared exactly and differed in the last digit. Lengths and angles are compared with
+       :func:`math.isclose` now.
+     * Two consecutive corners at the same point raised :exc:`ZeroDivisionError` instead of :exc:`ValueError`.
+
    * :mod:`pyTooling.CLIAbstraction`
 
      * A program in dry-run mode raised an :exc:`AttributeError` instead of skipping a missing executable or a

@@ -31,7 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - trapezium, rectangle and square.
 """
-from math                         import isclose, sqrt
+from math                         import cos, isclose, radians, sin, sqrt
 
 from pyTooling.Cartesian2D        import Point2D, LineSegment2D
 from pyTooling.Cartesian2D.Shapes import Shape, Trapezium, Rectangle, Square
@@ -137,7 +137,61 @@ class Instantiation(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = Rectangle(point00, point01, point11, point10)
 
-		self.assertEqual("Line segments (edges) of opposite edges different lengths.", str(context.exception))
+		self.assertEqual("Opposite line segments (edges) have different lengths.", str(context.exception))
+		self.assertListEqual(["Got lengths 4.0 and 5.0."], context.exception.__notes__)
+
+	def test_Rectangle_Float(self) -> None:
+		"""A rectangle rotated by 3 degrees: the lengths of opposite edges differ in the last digit."""
+		angle = radians(3)
+		point00 = Point2D(0.0, 0.0)
+		point01 = Point2D(4 * cos(angle), 4 * sin(angle))
+		point11 = Point2D(4 * cos(angle) - 2 * sin(angle), 4 * sin(angle) + 2 * cos(angle))
+		point10 = Point2D(-2 * sin(angle), 2 * cos(angle))
+
+		rectangle = Rectangle(point00, point01, point11, point10)
+
+		self.assertEqual(4, len(rectangle.segments))
+		for segment, length in zip(rectangle.segments, (4.0, 2.0, 4.0, 2.0)):
+			self.assertTrue(isclose(length, segment.Length))
+
+	def test_Rectangle_Parallelogram(self) -> None:
+		"""Opposite edges are parallel and equally long, but no angle is 90 degrees."""
+		point00 = Point2D(0, 0)
+		point01 = Point2D(4, 0)
+		point11 = Point2D(5, 2)
+		point10 = Point2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Rectangle(point00, point01, point11, point10)
+
+		self.assertEqual("Inner angle of a rectangle is not 90°.", str(context.exception))
+		self.assertListEqual(["Got 116.57° at corner (4, 0)."], context.exception.__notes__)
+
+	def test_Rectangle_Crossed(self) -> None:
+		"""Opposite edges are equally long and two opposite angles are 90 degrees, but the edges cross each other."""
+		point00 = Point2D(0, 0)
+		point01 = Point2D(4, 0)
+		point11 = Point2D(4, 3)
+		point10 = Point2D(2.88, -0.84)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Rectangle(point00, point01, point11, point10)
+
+		self.assertEqual("Inner angle of a rectangle is not 90°.", str(context.exception))
+		self.assertListEqual(["Got 16.26° at corner (4, 3)."], context.exception.__notes__)
+
+	def test_Rectangle_SameCorners(self) -> None:
+		"""Two pairs of consecutive corners are the same point: opposite edges are equally long, both 0."""
+		point00 = Point2D(0, 0)
+		point01 = Point2D(0, 0)
+		point11 = Point2D(4, 2)
+		point10 = Point2D(4, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Rectangle(point00, point01, point11, point10)
+
+		self.assertEqual("Line segment (edge) has length 0.", str(context.exception))
+		self.assertListEqual(["Got corners (0, 0) and (0, 0)."], context.exception.__notes__)
 
 	def test_Rectangle_str(self) -> None:
 		point00 = Point2D(0, 0)
@@ -199,6 +253,20 @@ class Instantiation(Testcase):
 			_ = Square(point00, point01, point11, point10)
 
 		self.assertEqual("Line segments (edges) between corners have different lengths.", str(context.exception))
+		self.assertListEqual([f"Got lengths {sqrt(20)} and {sqrt(5)}."], context.exception.__notes__)
+
+	def test_Square_Rhombus(self) -> None:
+		"""All edges are sqrt(5) long, but no angle is 90 degrees."""
+		point00 = Point2D(0, 0)
+		point01 = Point2D(2, 1)
+		point11 = Point2D(3, 3)
+		point10 = Point2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Square(point00, point01, point11, point10)
+
+		self.assertEqual("Inner angle of a rectangle is not 90°.", str(context.exception))
+		self.assertListEqual(["Got 143.13° at corner (2, 1)."], context.exception.__notes__)
 
 	def test_Square_str(self) -> None:
 		point01 = Point2D(1, 1)
