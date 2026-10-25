@@ -1740,19 +1740,20 @@ class PythonVersion(SemanticVersion):
 			ex.add_note("It follows PEP 440, and may carry one of the prefixes 'v', 'i', 'r' or 'rev', e.g. 'v1.2.3'.")
 			raise ex
 
-		def toInt(value: Nullable[str]) -> Nullable[int]:
+		def toInt(value: Nullable[str], default: Nullable[int] = None) -> Nullable[int]:
 			"""
 			Nested function converting an optional part of a version string to an integer.
 
-			:param value: The matched part, or ``None`` if the pattern didn't match it.
-			:returns:     The part as an integer, or ``None`` if it wasn't present.
+			:param value:   The matched part, or ``None`` if the pattern didn't match it.
+			:param default: Optional, the integer to return if the part wasn't present. Default: ``None``.
+			:returns:       The part as an integer, or ``default`` if it wasn't present.
 			"""
-			return None if value is None else int(value)
+			return default if value is None else int(value)
 
 		if (spelling := match["level"]) is not None:
 			spelling = spelling.lower()
 			releaseLevel = next(level for level, spellings in cls._RELEASE_LEVEL_SPELLINGS.items() if spelling in spellings)
-			number =       toInt(match["number"]) or 0
+			number =       toInt(match["number"], 0)
 		else:
 			releaseLevel = ReleaseLevel.Final
 			number =       None
@@ -1760,7 +1761,7 @@ class PythonVersion(SemanticVersion):
 		if match["implicitPost"] is not None:
 			post = int(match["implicitPost"])
 		elif match["postSpelling"] is not None:
-			post = toInt(match["post"]) or 0
+			post = toInt(match["post"], 0)
 		else:
 			post = None
 
