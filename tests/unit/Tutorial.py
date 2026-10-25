@@ -29,6 +29,7 @@
 # ==================================================================================================================== #
 #
 """Unit tests keeping the tutorial's example programs correct."""
+from io                   import StringIO
 from pathlib              import Path
 from sys                  import path as sys_path
 from importlib            import import_module
@@ -84,7 +85,7 @@ class Step1(Testcase):
 
 
 class Step5(Testcase):
-	"""The fifth example imports its package's ``__issue_tracker_url__``, so the exception printers report it."""
+	"""The fifth example sets its package as ``DUNDER_MODULE``, so the exception printers report its issue tracker."""
 
 	def test_IssueTrackerURL(self) -> None:
 		module = import_module("Step5")
@@ -93,8 +94,17 @@ class Step5(Testcase):
 			pass
 
 		program = TestApplication()
+		program._stderr = StringIO()
+		try:
+			raise ValueError("Something failed.")
+		except ValueError as ex:
+			with self.assertRaises(SystemExit):
+				program.PrintException(ex)
 
-		self.assertEqual("https://github.com/myUser/myPackage/issues", program._GetIssueTrackerURL())
+		self.assertIn(
+			"Please report this bug at GitHub: https://github.com/myUser/myPackage/issues",
+			program._stderr.getvalue()
+		)
 
 
 class Step6(Testcase):

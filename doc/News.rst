@@ -705,9 +705,16 @@ Version 10.x (2026)
      Rename the call; there is no alias.
 
    * ⚠️ ``TerminalBaseApplication.ISSUE_TRACKER_URL`` **is removed**: the exception printers read the issue tracker URL
-     from the application's ``__issue_tracker_url__``, as the version information does. Delete the class variable;
-     the package's ``__init__.py`` usually defines the dunder variable already, and a script outside the package
-     imports it (see :ref:`TERM/IssueTracker`).
+     from ``__issue_tracker_url__`` of the module set as class constant
+     :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE`. Replace the class variable with
+     :pycode:`DUNDER_MODULE = myPackage`, the package declaring the dunder variables (see :ref:`TERM/IssueTracker`).
+
+   * ⚠️ :meth:`TerminalApplication._PrintVersion() <pyTooling.TerminalUI.TerminalApplication._PrintVersion>`
+     **no longer takes a module**: it reads the dunder variables of
+     :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE`. Set the constant and drop the module
+     argument: :pycode:`self._PrintVersion(DunderModule, "myPackage")` becomes
+     :pycode:`self._PrintVersion("myPackage")`. An override existing only to hand over the module can go. A module
+     still passed raises a :exc:`TypeError`.
 
    * ⚠️ :func:`~pyTooling.Packaging.DescribePythonPackage` **raises when it can find no description**, instead of
      publishing a package without one. Either pass ``description``, or give the file named by ``sourceFileWithVersion``
@@ -1041,10 +1048,14 @@ Version 10.x (2026)
 
      * ⚠️ :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` is named after the exception
        it prints, :exc:`~pyTooling.Exceptions.MissingDependencyError`; it was ``PrintMissingDependencyException()``.
-     * ⚠️ The exception printers read the issue tracker URL from the dunder variable ``__issue_tracker_url__``, searched
-       in the module declaring the application's class, in its parent packages, and then in the modules of its
-       base-classes (:meth:`~pyTooling.TerminalUI.TerminalBaseApplication._GetIssueTrackerURL`). The class variable
-       ``ISSUE_TRACKER_URL`` is removed, so the version information and a bug report can't name different URLs.
+     * ⚠️ An application names the module declaring its dunder variables once, as class constant
+       :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE` (``None`` by default). The exception
+       printers read ``__issue_tracker_url__`` from it - the constant or the variable being ``None``, no invitation to
+       report a bug is printed - and the class variable ``ISSUE_TRACKER_URL`` is removed, so the version information
+       and a bug report can't name different URLs.
+     * ⚠️ :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` reads the same constant instead of a module
+       parameter; its output is unchanged. Without a module, copyright, license, author and version are reported as
+       not set, as for a module lacking them.
 
    * :mod:`pyTooling.Testing`
 

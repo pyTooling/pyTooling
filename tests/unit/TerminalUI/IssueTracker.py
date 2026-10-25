@@ -28,9 +28,8 @@
 # SPDX-License-Identifier: Apache-2.0                                                                                  #
 # ==================================================================================================================== #
 #
-"""Unit tests for how a terminal application reports its issue tracker URL."""
+"""Unit tests for how a terminal application reports its version information and issue tracker URL."""
 from io                   import StringIO
-from sys                  import modules
 from types                import ModuleType
 
 from pyTooling.Exceptions import ExceptionBase, MissingDependencyError
@@ -44,26 +43,30 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-EXAMPLE_URL =     "https://GitHub.com/vendor/project/issues"          #: Issue tracker URL of the example package.
-EXAMPLE_MODULES = ("vendor", "vendor.project", "vendor.project.CLI")  #: The example's namespace, package and module.
+EXAMPLE_URL = "https://GitHub.com/vendor/project/issues"  #: Issue tracker URL of the example package.
 
 
-def setUpModule() -> None:
-	"""Register an example package ``vendor.project``, whose ``__init__.py`` declares the issue tracker URL."""
-	for moduleName in EXAMPLE_MODULES:
-		modules[moduleName] = ModuleType(moduleName)
+def examplePackage() -> ModuleType:
+	"""
+	Create an example package ``vendor.project``, whose ``__init__.py`` declares the dunder variables.
 
-	modules["vendor.project"].__issue_tracker_url__ = EXAMPLE_URL
+	:returns: The example package.
+	"""
+	package = ModuleType("vendor.project")
+	package.__copyright__ =         "2020-2026 Patrick Lehmann\n2010-2019 Original Author"
+	package.__license__ =           "Apache License, Version 2.0"
+	package.__author__ =            "Patrick Lehmann, Original Author"
+	package.__email__ =             "Paebbels@gmail.com"
+	package.__version__ =           "1.2.3"
+	package.__project_url__ =       "https://GitHub.com/vendor/project"
+	package.__documentation_url__ = "https://vendor.GitHub.io/project"
+	package.__issue_tracker_url__ = EXAMPLE_URL
 
-
-def tearDownModule() -> None:
-	"""Remove the example package."""
-	for moduleName in EXAMPLE_MODULES:
-		del modules[moduleName]
+	return package
 
 
 class IssueTrackerURL(Testcase):
-	"""The exception printers invite the user to report a bug at the application's ``__issue_tracker_url__``."""
+	"""The exception printers invite the user to report a bug at the ``__issue_tracker_url__`` of ``DUNDER_MODULE``."""
 
 	def _printException(self, application: TerminalApplication, method: str, ex: Exception) -> str:
 		"""
@@ -96,7 +99,7 @@ class IssueTrackerURL(Testcase):
 	def test_PrintException(self) -> None:
 		"""An unhandled exception ends with the invitation to report it."""
 		class Application(TerminalApplication):
-			__module__ = "vendor.project.CLI"
+			DUNDER_MODULE = examplePackage()
 
 		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
 
@@ -106,7 +109,7 @@ class IssueTrackerURL(Testcase):
 	def test_PrintExceptionBase(self) -> None:
 		"""A known exception ends with the invitation, too."""
 		class Application(TerminalApplication):
-			__module__ = "vendor.project.CLI"
+			DUNDER_MODULE = examplePackage()
 
 		output = self._printException(Application(), "PrintExceptionBase", self._raised(ExceptionBase("Known.")))
 
@@ -115,7 +118,7 @@ class IssueTrackerURL(Testcase):
 	def test_PrintNotImplementedError(self) -> None:
 		"""An unimplemented method ends with the invitation, too."""
 		class Application(TerminalApplication):
-			__module__ = "vendor.project.CLI"
+			DUNDER_MODULE = examplePackage()
 
 		output = self._printException(
 			Application(), "PrintNotImplementedError", self._raised(NotImplementedError("Not yet."))
@@ -123,46 +126,99 @@ class IssueTrackerURL(Testcase):
 
 		self.assertIn(f"Please report this bug at GitHub: {EXAMPLE_URL}", output)
 
-	def test_GetIssueTrackerURL_Package(self) -> None:
-		"""The URL is found in a parent package of the module declaring the application."""
+	def test_PrintException_NoDunderModule(self) -> None:
+		"""``DUNDER_MODULE`` is ``None`` by default, so the invitation is omitted."""
 		class Application(TerminalApplication):
-			__module__ = "vendor.project.CLI"
-
-		self.assertEqual(EXAMPLE_URL, Application()._GetIssueTrackerURL())
-
-	def test_GetIssueTrackerURL_Module(self) -> None:
-		"""The module declaring the application holds the URL itself, e.g. a script importing it from its package."""
-		module = ModuleType("myScript")
-		module.__issue_tracker_url__ = "https://GitHub.com/example/script/issues"
-		modules["myScript"] = module
-		self.addCleanup(modules.pop, "myScript")
-
-		class Application(TerminalApplication):
-			__module__ = "myScript"
-
-		self.assertEqual("https://GitHub.com/example/script/issues", Application()._GetIssueTrackerURL())
-
-	def test_GetIssueTrackerURL_DerivedClass(self) -> None:
-		"""A class derived in a module without the URL - here a testcase - reports the URL of its base-class' package."""
-		class Application(TerminalApplication):
-			__module__ = "vendor.project.CLI"
-
-		class TestApplication(Application):
 			pass
 
-		self.assertEqual(EXAMPLE_URL, TestApplication()._GetIssueTrackerURL())
+		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
+
+		self.assertIsNone(Application.DUNDER_MODULE)
+		self.assertIn("Something failed.", output)
+		self.assertNotIn("Please report this bug", output)
 
 	def test_PrintException_NoIssueTrackerURL(self) -> None:
-		"""No module of the application defines ``__issue_tracker_url__``, so the invitation is omitted."""
+		"""The module doesn't define ``__issue_tracker_url__``, so the invitation is omitted."""
+		class Application(TerminalApplication):
+			DUNDER_MODULE = ModuleType("vendor.project")
+
+		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
+
+		self.assertIn("Something failed.", output)
+		self.assertNotIn("Please report this bug", output)
+
+	def test_PrintException_IssueTrackerURLIsNone(self) -> None:
+		"""The module sets ``__issue_tracker_url__`` to ``None``, so the invitation is omitted."""
+		package = examplePackage()
+		package.__issue_tracker_url__ = None
+
+		class Application(TerminalApplication):
+			DUNDER_MODULE = package
+
+		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
+
+		self.assertIn("Something failed.", output)
+		self.assertNotIn("Please report this bug", output)
+
+
+class VersionInformation(Testcase):
+	"""``_PrintVersion`` prints the dunder variables of ``DUNDER_MODULE``."""
+
+	def test_PrintVersion(self) -> None:
+		class Application(TerminalApplication):
+			DUNDER_MODULE = examplePackage()
+
+		application = Application()
+		application._PrintVersion()
+
+		self.assertEqual(
+			[
+				"Copyright:     2020-2026 Patrick Lehmann",
+				"               2010-2019 Original Author",
+				"License:       Apache License, Version 2.0",
+				"Authors:       Patrick Lehmann",
+				"               Original Author",
+				"Email:         Paebbels@gmail.com",
+				"Version:       v1.2.3",
+				"Project:       https://GitHub.com/vendor/project",
+				"Documentation: https://vendor.GitHub.io/project",
+				f"Issue tracker: {EXAMPLE_URL}"
+			],
+			[line.Message for line in application.Lines]
+		)
+
+	def test_PrintVersion_NoDunderModule(self) -> None:
+		"""Without a module, the four expected variables are reported as missing."""
 		class Application(TerminalApplication):
 			pass
 
 		application = Application()
-		output = self._printException(application, "PrintException", self._raised(ValueError("Something failed.")))
+		application._PrintVersion()
+		red = Application.FOREGROUND["DARK_RED"]
 
-		self.assertIsNone(application._GetIssueTrackerURL())
-		self.assertIn("Something failed.", output)
-		self.assertNotIn("Please report this bug", output)
+		self.assertEqual(
+			[
+				f"Copyright:     {red}Copyright not set!",
+				f"License:       {red}License not set!",
+				f"Authors:       {red}Unknown author!",
+				f"Version:       {red}Version not set!"
+			],
+			[line.Message for line in application.Lines]
+		)
+
+	def test_PrintVersion_Module(self) -> None:
+		"""A module handed over as before is rejected."""
+		class Application(TerminalApplication):
+			DUNDER_MODULE = examplePackage()
+
+		with self.assertRaises(TypeError) as context:
+			Application()._PrintVersion(examplePackage())
+
+		self.assertEqual("Parameter 'packageName' is not of type 'str'.", str(context.exception))
+		self.assertEqual(
+			["Got type 'module'.", "A module with dunder variables is set as class constant 'DUNDER_MODULE'."],
+			context.exception.__notes__
+		)
 
 
 class MissingDependency(Testcase):
@@ -177,7 +233,7 @@ class MissingDependency(Testcase):
 		:returns:  Everything the application wrote to ``STDERR``.
 		"""
 		class Application(TerminalApplication):
-			__module__ = "vendor.project.CLI"
+			DUNDER_MODULE = examplePackage()
 
 		application = Application()
 		application._stderr = StringIO()

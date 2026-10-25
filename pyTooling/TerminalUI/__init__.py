@@ -49,7 +49,7 @@ from datetime              import datetime
 from enum                  import Enum, unique
 from io                    import TextIOWrapper
 from os                    import getenv
-from sys                   import modules, stdin, stdout, stderr
+from sys                   import stdin, stdout, stderr
 from textwrap              import dedent
 from types                 import ModuleType
 from typing                import NoReturn, Any, Optional as Nullable, Callable, ClassVar, Protocol
@@ -76,6 +76,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	MISSING_DEPENDENCY_EXIT_CODE:        ClassVar[int] = MissingDependencyError.EXIT_CODE  #: Return code (242), if an optional dependency is missing; the value lives on the exception - see :meth:`PrintMissingDependencyError`.
 	FATAL_EXIT_CODE:                     ClassVar[int] = 255                               #: Return code for fatal exits.
 	INDENT:                              ClassVar[str] = "  "                              #: Indentation. Default: ``"  "`` (2 spaces)
+	DUNDER_MODULE:                       ClassVar[Nullable[ModuleType]] = None             #: Module declaring the application's dunder variables, e.g. ``__version__``, read by :meth:`TerminalApplication._PrintVersion` and the exception printers. Default: ``None``, i.e. none declared.
 
 	try:
 		from colorama import Fore as Foreground
@@ -392,8 +393,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If the application defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at that
-		URL (see :meth:`_GetIssueTrackerURL`).
+		If :attr:`DUNDER_MODULE` defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at
+		that URL.
 
 		:param ex: The exception to print.
 		"""
@@ -434,7 +435,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"{line.replace('{', '{{').replace('}', '}}')}"
 		message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		if (issueTrackerURL := self._GetIssueTrackerURL()) is not None:
+		if (issueTrackerURL := getattr(self.DUNDER_MODULE, "__issue_tracker_url__", None)) is not None:
 			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
@@ -494,8 +495,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Prints a not-implemented exception of type :exc:`NotImplementedError`.
 
-		If the application defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at that
-		URL (see :meth:`_GetIssueTrackerURL`).
+		If :attr:`DUNDER_MODULE` defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at
+		that URL.
 
 		:param ex: The exception to print.
 		"""
@@ -517,7 +518,7 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		message += f"{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\n"
 
-		if (issueTrackerURL := self._GetIssueTrackerURL()) is not None:
+		if (issueTrackerURL := getattr(self.DUNDER_MODULE, "__issue_tracker_url__", None)) is not None:
 			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
@@ -530,8 +531,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If the application defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at that
-		URL (see :meth:`_GetIssueTrackerURL`).
+		If :attr:`DUNDER_MODULE` defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at
+		that URL.
 
 		:param ex: The exception to print.
 		"""
@@ -562,34 +563,13 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		print_tb(ex.__traceback__, file=self._stderr)
 		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.FOREGROUND))
 
-		if (issueTrackerURL := self._GetIssueTrackerURL()) is not None:
+		if (issueTrackerURL := getattr(self.DUNDER_MODULE, "__issue_tracker_url__", None)) is not None:
 			self.WriteLineToStdErr(dedent(f"""\
 				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}
 				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
 				""").format(indent=self.INDENT, **self.FOREGROUND))
 
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
-
-	def _GetIssueTrackerURL(self) -> Nullable[str]:
-		"""
-		Find the application's issue tracker URL in the dunder variable ``__issue_tracker_url__``.
-
-		The variable is searched in the module declaring the application's class, then in each parent package of that
-		module - ``<package>/__init__.py`` usually holds it, beside ``__version__``. If none defines it, the search
-		continues with the base-classes, so a class derived in another module, e.g. in a testcase, reports the URL of the
-		application it derives from.
-
-		:returns: The issue tracker URL, or ``None``, if no module defines ``__issue_tracker_url__``.
-		"""
-		for cls in type(self).__mro__:
-			moduleName = cls.__module__
-			while moduleName != "":
-				if (issueTrackerURL := getattr(modules.get(moduleName), "__issue_tracker_url__", None)) is not None:
-					return issueTrackerURL
-
-				moduleName = moduleName.rpartition(".")[0]
-
-		return None
 
 
 @export
@@ -1129,34 +1109,42 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HEADLINE, **TerminalApplication.FOREGROUND))
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.FOREGROUND))
 
-	def _PrintVersion(
-		self,
-		dunderModule:        ModuleType,
-		packageName:         Nullable[str] = None,
-		versionCheckTimeout: int = 1
-	) -> None:
+	def _PrintVersion(self, packageName: Nullable[str] = None, versionCheckTimeout: int = 1) -> None:
 		"""
 		Helper method to print the version information.
 
-		:param dunderModule:        The Python module containing the dunder variables for author(s), email, copyright,
-		                            version, ...
+		The author(s), email, copyright, version and URLs are read from the dunder variables of the module the class
+		constant :attr:`DUNDER_MODULE` refers to. If it is ``None``, every dunder variable counts as missing.
+
 		:param packageName:         Optional, name of the package on PyPI. If given, the latest released version is
 		                            queried and reported as an available update. Default: ``None``.
 		:param versionCheckTimeout: Optional, timeout in seconds for the PyPI request. Default: ``1``.
+		:raises TypeError:          If parameter 'packageName' is not of type :class:`str`. |br|
+		                            A module with dunder variables is set as class constant :attr:`DUNDER_MODULE`.
 
 		.. admonition:: Example usage
 
 		   .. code-block:: Python
 
-		      def _PrintVersion(self):
-		        import myPackage.MyModule as DunderModule
+		      import myPackage
 
-		        super()._PrintVersion(
-		          DunderModule,
-		          "MyModule"
-		        )
+		      class Application(TerminalApplication):
+		        HEADLINE =      "My Application"
+		        DUNDER_MODULE = myPackage
+
+		        def HandleVersion(self, _: Namespace) -> None:
+		          self._PrintHeadline()
+		          self._PrintVersion("myPackage")
 		"""
-		red = self.FOREGROUND["DARK_RED"]
+		if packageName is not None and not isinstance(packageName, str):
+			ex = TypeError("Parameter 'packageName' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(packageName)}'.")
+			if isinstance(packageName, ModuleType):
+				ex.add_note("A module with dunder variables is set as class constant 'DUNDER_MODULE'.")
+			raise ex
+
+		dunderModule = self.DUNDER_MODULE
+		red =          self.FOREGROUND["DARK_RED"]
 
 		copyrights = getattr(dunderModule, "__copyright__", "{RED}Copyright not set!".format(RED=red)).split("\n", 1)
 		self.WriteNormal(f"Copyright:     {copyrights[0]}")
