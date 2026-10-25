@@ -205,6 +205,23 @@ class LineSegment(Testcase):
 
 		self.assertEqual(pi, line1.AngleTo(line2))
 
+	def test_AngleTo_None(self) -> None:
+		line = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 0, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line.AngleTo(None)
+
+		self.assertEqual("Parameter 'other' is None.", str(context.exception))
+
+	def test_AngleTo_Type(self) -> None:
+		line = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 0, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = line.AngleTo(Point3D(2, 0, 0))
+
+		self.assertEqual("Parameter 'other' is not of type 'LineSegment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Point3D'."], context.exception.__notes__)
+
 	def test_AngleTo_ZeroLength(self) -> None:
 		line1 = LineSegment3D(Point3D(1, 1, 1), Point3D(1, 1, 1))
 		line2 = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 0, 0))

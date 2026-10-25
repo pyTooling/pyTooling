@@ -194,6 +194,23 @@ class LineSegment(Testcase):
 
 		self.assertAlmostEqual(0.0, line1.AngleTo(line2), places=15)
 
+	def test_AngleTo_None(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line.AngleTo(None)
+
+		self.assertEqual("Parameter 'other' is None.", str(context.exception))
+
+	def test_AngleTo_Type(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = line.AngleTo(Point2D(2, 0))
+
+		self.assertEqual("Parameter 'other' is not of type 'LineSegment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
 	def test_AngleTo_ZeroLength(self) -> None:
 		line1 = LineSegment2D(Point2D(1, 1), Point2D(1, 1))
 		line2 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))

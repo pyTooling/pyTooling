@@ -536,19 +536,27 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 
 		:param other:       The second line segment.
 		:returns:           The angle in radians.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`LineSegment2D`.
+		:raises ValueError: If parameter 'other' has length 0.
 		:raises ValueError: If this line segment has length 0.
-		:raises ValueError: If line segment ``other`` has length 0.
 		"""
-		if self.start.x == self.end.x and self.start.y == self.end.y:
-			ex = ValueError("Line segment has length 0.")
-			ex.add_note(f"Got line segment {self}.")
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, LineSegment2D):
+			ex = TypeError("Parameter 'other' is not of type 'LineSegment2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+		elif other.start.x == other.end.x and other.start.y == other.end.y:
+			ex = ValueError("Parameter 'other' has length 0.")
+			ex.add_note(f"Got line segment {other}.")
 			ex.add_note("Can't determine an angle between two lines if one of the lines has no direction, due to a "
 			            "zero-length.")
 			raise ex
 
-		if other.start.x == other.end.x and other.start.y == other.end.y:
-			ex = ValueError("Parameter 'other' has length 0.")
-			ex.add_note(f"Got line segment {other}.")
+		if self.start.x == self.end.x and self.start.y == self.end.y:
+			ex = ValueError("Line segment has length 0.")
+			ex.add_note(f"Got line segment {self}.")
 			ex.add_note("Can't determine an angle between two lines if one of the lines has no direction, due to a "
 			            "zero-length.")
 			raise ex
