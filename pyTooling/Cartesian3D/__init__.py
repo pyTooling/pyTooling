@@ -64,20 +64,22 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param x:          X-coordinate.
 		:param y:          Y-coordinate.
 		:param z:          Z-coordinate.
-		:raises TypeError: If x/y/z-coordinate is not of type integer or float.
+		:raises TypeError: If parameter 'x' is not of type :class:`float` or :class:`int`.
+		:raises TypeError: If parameter 'y' is not of type :class:`float` or :class:`int`.
+		:raises TypeError: If parameter 'z' is not of type :class:`float` or :class:`int`.
 		"""
 		if not isinstance(x, (int, float)):
-			ex = TypeError("Parameter 'x' is not of type integer or float.")
+			ex = TypeError("Parameter 'x' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
 
 		if not isinstance(y, (int, float)):
-			ex = TypeError("Parameter 'y' is not of type integer or float.")
+			ex = TypeError("Parameter 'y' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
 		if not isinstance(z, (int, float)):
-			ex = TypeError("Parameter 'z' is not of type integer or float.")
+			ex = TypeError("Parameter 'z' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(z)}'.")
 			raise ex
 
@@ -114,7 +116,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          A new 3D-point shifted by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			return self.__class__(
@@ -129,7 +131,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.z + other[2]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -139,7 +141,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			self.x += other.xOffset
@@ -150,7 +152,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.y += other[1]
 			self.z += other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -162,7 +164,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-point as :class:`Point3D`.
 		:returns:          A new 3D-offset representing the distance between these two points.
-		:raises TypeError: If parameter 'other' is not a :class:`Point3D`.
+		:raises TypeError: If parameter 'other' is not of type :class:`Point3D`.
 		"""
 		if isinstance(other, Point3D):
 			return Offset3D(
@@ -171,7 +173,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.z - other.z
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type Point3D.")
+			ex = TypeError("Parameter 'other' is not of type 'Point3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -181,7 +183,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			self.x -= other.xOffset
@@ -192,7 +194,7 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.y -= other[1]
 			self.z -= other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -257,20 +259,22 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param xOffset:    x-direction offset.
 		:param yOffset:    y-direction offset.
 		:param zOffset:    z-direction offset.
-		:raises TypeError: If x/y/z-offset is not of type integer or float.
+		:raises TypeError: If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
+		:raises TypeError: If parameter 'yOffset' is not of type :class:`float` or :class:`int`.
+		:raises TypeError: If parameter 'zOffset' is not of type :class:`float` or :class:`int`.
 		"""
 		if not isinstance(xOffset, (int, float)):
-			ex = TypeError("Parameter 'xOffset' is not of type integer or float.")
+			ex = TypeError("Parameter 'xOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(xOffset)}'.")
 			raise ex
 
 		if not isinstance(yOffset, (int, float)):
-			ex = TypeError("Parameter 'yOffset' is not of type integer or float.")
+			ex = TypeError("Parameter 'yOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(yOffset)}'.")
 			raise ex
 
 		if not isinstance(zOffset, (int, float)):
-			ex = TypeError("Parameter 'zOffset' is not of type integer or float.")
+			ex = TypeError("Parameter 'zOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(zOffset)}'.")
 			raise ex
 
@@ -307,14 +311,14 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 3D-offsets are equal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			return self.xOffset == other.xOffset and self.yOffset == other.yOffset and self.zOffset == other.zOffset
 		elif isinstance(other, tuple):
 			return self.xOffset == other[0] and self.yOffset == other[1] and self.zOffset == other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -324,7 +328,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 3D-offsets are unequal.
-		:raises TypeError: If parameter ``other`` is not of type :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		return not self.__eq__(other)
 
@@ -346,7 +350,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          A new 3D-offset extended by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			return self.__class__(
@@ -361,7 +365,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.zOffset + other[2]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -371,7 +375,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			self.xOffset += other.xOffset
@@ -382,7 +386,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.yOffset += other[1]
 			self.zOffset += other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -394,7 +398,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          A new 3D-offset reduced by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			return self.__class__(
@@ -409,7 +413,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self.zOffset - other[2]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -419,7 +423,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not a :class:`Offset3D` or tuple.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
 		"""
 		if isinstance(other, Offset3D):
 			self.xOffset -= other.xOffset
@@ -430,7 +434,7 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.yOffset -= other[1]
 			self.zOffset -= other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type Offset3D or tuple.")
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -468,20 +472,22 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param width:      width in x-direction.
 		:param height:     height in y-direction.
 		:param depth:      depth in z-direction.
-		:raises TypeError: If width/height/depth is not of type integer or float.
+		:raises TypeError: If parameter 'width' is not of type :class:`float` or :class:`int`.
+		:raises TypeError: If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:raises TypeError: If parameter 'depth' is not of type :class:`float` or :class:`int`.
 		"""
 		if not isinstance(width, (int, float)):
-			ex = TypeError("Parameter 'width' is not of type integer or float.")
+			ex = TypeError("Parameter 'width' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
 			raise ex
 
 		if not isinstance(height, (int, float)):
-			ex = TypeError("Parameter 'height' is not of type integer or float.")
+			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
 			raise ex
 
 		if not isinstance(depth, (int, float)):
-			ex = TypeError("Parameter 'depth' is not of type integer or float.")
+			ex = TypeError("Parameter 'depth' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(depth)}'.")
 			raise ex
 
@@ -536,15 +542,16 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param start:      Start point of the segment.
 		:param end:        End point of the segment.
 		:param copyPoints: Optional, if ``True``, the given points are copied instead of referenced.
-		:raises TypeError: If start/end is not of type :class:`Point3D`.
+		:raises TypeError: If parameter 'start' is not of type :class:`Point3D`.
+		:raises TypeError: If parameter 'end' is not of type :class:`Point3D`.
 		"""
 		if not isinstance(start, Point3D):
-			ex = TypeError("Parameter 'start' is not of type Point3D.")
+			ex = TypeError("Parameter 'start' is not of type 'Point3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
 
 		if not isinstance(end, Point3D):
-			ex = TypeError("Parameter 'end' is not of type Point3D.")
+			ex = TypeError("Parameter 'end' is not of type 'Point3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
 

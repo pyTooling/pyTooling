@@ -65,7 +65,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium("1, 1", point01, point11, point10)
 
-		self.assertEqual("Parameter 'p00' is not of type Point2D.", str(context.exception))
+		self.assertEqual("Parameter 'p00' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Trapezium_str2(self) -> None:
@@ -76,7 +76,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium(point00, "3, 1", point11, point10)
 
-		self.assertEqual("Parameter 'p01' is not of type Point2D.", str(context.exception))
+		self.assertEqual("Parameter 'p01' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Trapezium_str3(self) -> None:
@@ -87,7 +87,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium(point00, point01, "3, 3", point10)
 
-		self.assertEqual("Parameter 'p11' is not of type Point2D.", str(context.exception))
+		self.assertEqual("Parameter 'p11' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Trapezium_str4(self) -> None:
@@ -98,7 +98,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium(point00, point01, point11, "1, 3")
 
-		self.assertEqual("Parameter 'p10' is not of type Point2D.", str(context.exception))
+		self.assertEqual("Parameter 'p10' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Rectangle(self) -> None:
@@ -201,7 +201,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Rectangle(point00, point01, point11, "-1, 2")
 
-		self.assertEqual("Parameter 'p10' is not of type Point2D.", str(context.exception))
+		self.assertEqual("Parameter 'p10' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Square(self) -> None:
@@ -276,7 +276,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Square("0, 0", point01, point11, point10)
 
-		self.assertEqual("Parameter 'p00' is not of type Point2D.", str(context.exception))
+		self.assertEqual("Parameter 'p00' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 

@@ -85,21 +85,21 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Point3D("1", 2, 3)
 
-		self.assertEqual("Parameter 'x' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'x' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Point_str2(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Point3D(1, "2", 3)
 
-		self.assertEqual("Parameter 'y' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'y' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Point_str3(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Point3D(1, 2, "3")
 
-		self.assertEqual("Parameter 'z' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'z' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Offset_int(self) -> None:
@@ -130,21 +130,21 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Offset3D("1", 2, 3)
 
-		self.assertEqual("Parameter 'xOffset' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'xOffset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Offset_str2(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Offset3D(1, "2", 3)
 
-		self.assertEqual("Parameter 'yOffset' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'yOffset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Offset_str3(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Offset3D(1, 2, "3")
 
-		self.assertEqual("Parameter 'zOffset' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'zOffset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Size_int(self) -> None:
@@ -175,21 +175,21 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Size3D("1", 2, 3)
 
-		self.assertEqual("Parameter 'width' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'width' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Size_str2(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Size3D(1, "2", 3)
 
-		self.assertEqual("Parameter 'height' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Size_str3(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Size3D(1, 2, "3")
 
-		self.assertEqual("Parameter 'depth' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'depth' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_LineSegment(self) -> None:
