@@ -406,7 +406,9 @@ Version 10.x (2026)
        :exc:`~pyTooling.Tracing.SpanCycleError`. Each derives from :exc:`~pyTooling.Tracing.TracingError` and from a
        generic error of :mod:`pyTooling.Exceptions`: the new :exc:`~pyTooling.Exceptions.ElementNotFoundError` (a
        :exc:`LookupError`), :exc:`~pyTooling.Exceptions.DuplicateElementError`, or the new
-       :exc:`~pyTooling.Exceptions.CycleError`.
+       :exc:`~pyTooling.Exceptions.CycleError`. :exc:`Graph.CycleError <pyTooling.Graph.CycleError>`,
+       :exc:`~pyTooling.CI.NeedDependencyCycleError` and :exc:`~pyTooling.Dependency.CircularRequirementsFileError`
+       derive from :exc:`~pyTooling.Exceptions.CycleError` too.
 
    * :mod:`pyTooling.Packaging`
 

@@ -77,7 +77,7 @@ from typing                import Any, ClassVar, Hashable, Iterable, Iterator, M
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
 from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import AlreadyInHierarchyError, ToolingException
+from pyTooling.Exceptions  import AlreadyInHierarchyError, CycleError, ToolingException
 from pyTooling.Graph       import Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import ExtendedType, ThisClass, abstractclass
 
@@ -137,7 +137,7 @@ class NeedDependencyError(PipelineError):
 
 
 @export
-class NeedDependencyCycleError(NeedDependencyError):
+class NeedDependencyCycleError(NeedDependencyError, CycleError):
 	"""The exception raised for a need which would close a cycle of dependencies."""
 
 	_cycle: Nullable[tuple[DependencyMixin, ...]]  #: Elements forming the cycle, in the order they need each other.

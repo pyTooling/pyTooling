@@ -52,7 +52,7 @@ from typing                          import TYPE_CHECKING, Optional as Nullable,
 
 from pyTooling.Decorators            import export, readonly
 from pyTooling.MetaClasses           import ExtendedType
-from pyTooling.Exceptions            import AlreadyInHierarchyError, ToolingException
+from pyTooling.Exceptions            import AlreadyInHierarchyError, CycleError, ToolingException
 from pyTooling.Common                import getFullyQualifiedName, firstKey, firstValue
 from pyTooling.GenericPath.URL       import URL
 from pyTooling.Graph                 import Graph, Vertex
@@ -150,7 +150,7 @@ class RequirementsFileNotFoundError(DependencyError, FileNotFoundError):
 
 
 @export
-class CircularRequirementsFileError(DependencyError):
+class CircularRequirementsFileError(DependencyError, CycleError):
 	"""
 	A ``-r`` line references a requirements file that is already being read further up the include chain.
 
