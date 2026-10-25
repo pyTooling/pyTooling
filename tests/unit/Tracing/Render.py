@@ -466,6 +466,59 @@ class Matplotlib(Testcase):
 
 		self.assertEqual("Parameter 'width' isn't positive.", str(context.exception))
 
+	def test_ParameterChecks(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, width="16")
+
+		self.assertEqual("Parameter 'width' is not of type 'float' or 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = MatplotlibRenderer(layout, rowHeight=None)
+
+		self.assertEqual("Parameter 'rowHeight' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, fontSize="7")
+
+		self.assertEqual("Parameter 'fontSize' is not of type 'float' or 'int'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, fontFamilies="Arial")
+
+		self.assertEqual("Parameter 'fontFamilies' is not an iterable of 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, fontFamilies=(1, 2))
+
+		self.assertEqual("Parameter 'fontFamilies' is not an iterable of 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, legendLocation=1)
+
+		self.assertEqual("Parameter 'legendLocation' is not of type 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, collapsible=1)
+
+		self.assertEqual("Parameter 'collapsible' is not of type 'bool'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, collapsedKinds="job")
+
+		self.assertEqual("Parameter 'collapsedKinds' is not an iterable of 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, dpi=150.0)
+
+		self.assertEqual("Parameter 'dpi' is not of type 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = MatplotlibRenderer(layout, dpi=0)
+
+		self.assertEqual("Parameter 'dpi' isn't positive.", str(context.exception))
+
 	def test_Title(self) -> None:
 		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
 

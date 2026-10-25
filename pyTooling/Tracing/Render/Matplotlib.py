@@ -54,7 +54,7 @@ from pathlib                     import Path
 from typing                      import ClassVar, Iterable, Optional as Nullable, Union
 
 from pyTooling.Decorators        import export, readonly
-from pyTooling.Common            import readResourceFile
+from pyTooling.Common            import getFullyQualifiedName, readResourceFile
 from pyTooling.Exceptions        import MissingDependencyError
 from pyTooling.Resources         import Tracing as TracingResources
 from pyTooling.Tracing.CI        import SpanKind
@@ -149,24 +149,123 @@ class MatplotlibRenderer(Renderer[Figure]):
 		:param dpi:            Optional, resolution of a PNG file in dots per inch. Default: ``150``.
 		:raises TypeError:     If parameter 'layout' is not of type :class:`~pyTooling.Tracing.Render.GanttLayout`.
 		:raises TypeError:     If parameter 'title' is not of type :class:`str`.
-		:raises ValueError:    If parameter 'width', 'rowHeight', 'fontSize' or 'dpi' isn't positive.
+		:raises ValueError:    If parameter 'width' is None.
+		:raises TypeError:     If parameter 'width' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'width' isn't positive.
+		:raises ValueError:    If parameter 'rowHeight' is None.
+		:raises TypeError:     If parameter 'rowHeight' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'rowHeight' isn't positive.
+		:raises ValueError:    If parameter 'fontSize' is None.
+		:raises TypeError:     If parameter 'fontSize' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'fontSize' isn't positive.
+		:raises ValueError:    If parameter 'fontFamilies' is None.
+		:raises TypeError:     If parameter 'fontFamilies' is not an iterable of :class:`str`.
+		:raises ValueError:    If parameter 'legendLocation' is None.
+		:raises TypeError:     If parameter 'legendLocation' is not of type :class:`str`.
+		:raises ValueError:    If parameter 'collapsible' is None.
+		:raises TypeError:     If parameter 'collapsible' is not of type :class:`bool`.
+		:raises ValueError:    If parameter 'collapsedKinds' is None.
+		:raises TypeError:     If parameter 'collapsedKinds' is not an iterable of :class:`str`.
+		:raises ValueError:    If parameter 'dpi' is None.
+		:raises TypeError:     If parameter 'dpi' is not of type :class:`int`.
+		:raises ValueError:    If parameter 'dpi' isn't positive.
 		"""
 		super().__init__(layout, title=title)
 
-		for parameter, value in (("width", width), ("rowHeight", rowHeight), ("fontSize", fontSize), ("dpi", dpi)):
-			if not value > 0:
-				ex = ValueError(f"Parameter '{parameter}' isn't positive.")
-				ex.add_note(f"Got value '{value}'.")
+		if width is None:
+			raise ValueError("Parameter 'width' is None.")
+		elif not isinstance(width, (float, int)):
+			ex = TypeError("Parameter 'width' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
+			raise ex
+		elif width <= 0:
+			ex = ValueError("Parameter 'width' isn't positive.")
+			ex.add_note(f"Got value '{width}'.")
+			raise ex
+
+		if rowHeight is None:
+			raise ValueError("Parameter 'rowHeight' is None.")
+		elif not isinstance(rowHeight, (float, int)):
+			ex = TypeError("Parameter 'rowHeight' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(rowHeight)}'.")
+			raise ex
+		elif rowHeight <= 0:
+			ex = ValueError("Parameter 'rowHeight' isn't positive.")
+			ex.add_note(f"Got value '{rowHeight}'.")
+			raise ex
+
+		if fontSize is None:
+			raise ValueError("Parameter 'fontSize' is None.")
+		elif not isinstance(fontSize, (float, int)):
+			ex = TypeError("Parameter 'fontSize' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fontSize)}'.")
+			raise ex
+		elif fontSize <= 0:
+			ex = ValueError("Parameter 'fontSize' isn't positive.")
+			ex.add_note(f"Got value '{fontSize}'.")
+			raise ex
+
+		if fontFamilies is None:
+			raise ValueError("Parameter 'fontFamilies' is None.")
+		elif isinstance(fontFamilies, str) or not isinstance(fontFamilies, Iterable):
+			ex = TypeError("Parameter 'fontFamilies' is not an iterable of 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fontFamilies)}'.")
+			raise ex
+
+		families = tuple(fontFamilies)
+		for family in families:
+			if not isinstance(family, str):
+				ex = TypeError("Parameter 'fontFamilies' is not an iterable of 'str'.")
+				ex.add_note(f"Got an element of type '{getFullyQualifiedName(family)}'.")
 				raise ex
+
+		if legendLocation is None:
+			raise ValueError("Parameter 'legendLocation' is None.")
+		elif not isinstance(legendLocation, str):
+			ex = TypeError("Parameter 'legendLocation' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(legendLocation)}'.")
+			raise ex
+
+		if collapsible is None:
+			raise ValueError("Parameter 'collapsible' is None.")
+		elif not isinstance(collapsible, bool):
+			ex = TypeError("Parameter 'collapsible' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(collapsible)}'.")
+			raise ex
+
+		if collapsedKinds is None:
+			raise ValueError("Parameter 'collapsedKinds' is None.")
+		elif isinstance(collapsedKinds, str) or not isinstance(collapsedKinds, Iterable):
+			ex = TypeError("Parameter 'collapsedKinds' is not an iterable of 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(collapsedKinds)}'.")
+			raise ex
+
+		kinds = frozenset(collapsedKinds)
+		for kind in kinds:
+			if not isinstance(kind, str):
+				ex = TypeError("Parameter 'collapsedKinds' is not an iterable of 'str'.")
+				ex.add_note(f"Got an element of type '{getFullyQualifiedName(kind)}'.")
+				raise ex
+
+		if dpi is None:
+			raise ValueError("Parameter 'dpi' is None.")
+		elif not isinstance(dpi, int):
+			ex = TypeError("Parameter 'dpi' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(dpi)}'.")
+			raise ex
+		elif dpi <= 0:
+			ex = ValueError("Parameter 'dpi' isn't positive.")
+			ex.add_note(f"Got value '{dpi}'.")
+			raise ex
 
 		self._width =          width
 		self._rowHeight =      rowHeight
 		self._fontSize =       fontSize
 		self._legendLocation = legendLocation
 		self._collapsible =    collapsible
-		self._collapsedKinds = frozenset(collapsedKinds)
+		self._collapsedKinds = kinds
 		self._dpi =            dpi
-		self._families, self._fonts = self._LoadFonts(fontFamilies)
+		self._families, self._fonts = self._LoadFonts(families)
 
 	@readonly
 	def Width(self) -> float:
