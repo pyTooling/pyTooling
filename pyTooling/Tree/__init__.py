@@ -1150,8 +1150,8 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 		:param lineend:        Optional, a string printed at the end of every line. Default: ``"\\n"``.
 		:param nodeMarker:     Optional, a string printed before every non-last tree node. Default: ``"├─"``.
 		:param lastNodeMarker: Optional, a string printed before every last tree node. Default: ``"└─"``.
-		:param bypassMarker:   Optional, a string printed when there are further nodes in the parent level. Default: ``"│
-		                       "``.
+		:param bypassMarker:   Optional, a string printed when there are further nodes in the parent level.
+		                       Default: ``"│ "``.
 		:returns:              A rendered tree as multiline string.
 		"""
 		emptyMarker = " " * len(bypassMarker)
