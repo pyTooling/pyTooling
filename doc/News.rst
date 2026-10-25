@@ -223,6 +223,9 @@ Version 10.x (2026)
        (``file:///etc/hosts``). After the host and port, the path starts with a slash. A character the RFC forbids is
        rejected anywhere in the URL, a port must be in range 0..65535, and a user or password may carry the RFC's
        user-information characters - ``first.last@`` and ``p%40ss`` were read as a host and a path.
+     * :mod:`pyTooling.Dependency` reports a project URL a package index publishes that isn't a URL as a non-critical
+       :exc:`~pyTooling.Dependency.UnparsableURLWarning`, and the release has no such URL. ``UNKNOWN``, which distutils
+       wrote for a field not given, counts as not published.
 
    * :mod:`pyTooling.MetaClasses`
 

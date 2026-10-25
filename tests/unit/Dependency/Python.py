@@ -51,7 +51,7 @@ from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequi
                                          UnparsableRequirementWarning, DependencyError, RequirementsFileNotFoundError, \
                                          UnknownLicenseWarning, PackageIndexError, ProjectNotFoundError, \
                                          ReleaseNotFoundError, NoSessionAvailableError, ReleaseDetailsWarning, \
-                                         UnsupportedVersionWarning, AlreadyInRequirementsTreeError
+                                         UnsupportedVersionWarning, AlreadyInRequirementsTreeError, UnparsableURLWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -839,6 +839,56 @@ class ProjectURLs(Testcase):
 		self.assertIsNone(project.LatestVersion)
 		self.assertIsNone(project.RepositoryURL)
 		self.assertIsNone(project.DocumentationURL)
+
+	def test_UnknownIsNotPublished(self) -> None:
+		"""distutils wrote ``UNKNOWN`` for a field not given, e.g. ``ordereddict`` 1.1 on PyPI."""
+		release = self._release()
+		with WarningCollector(handler=lambda warning: False) as collector:
+			release.UpdateDetailsFromPyPIJSON({"info": {
+				"provides_extra": None,
+				"requires_dist":  None,
+				"home_page":      "UNKNOWN",
+				"project_urls":   {"Download": "UNKNOWN", "Homepage": "UNKNOWN", "Documentation": ""}
+			}})
+
+		self.assertIsNone(release.ProjectURL)
+		self.assertIsNone(release.RepositoryURL)
+		self.assertIsNone(release.DocumentationURL)
+		self.assertEqual([], [warning for warning in collector.Warnings if isinstance(warning, UnparsableURLWarning)])
+
+	def test_SomethingThatIsNotAURL(self) -> None:
+		"""A value that isn't a URL is reported, and the release has no such URL."""
+		release = self._release()
+		with WarningCollector(handler=lambda warning: False) as collector:
+			release.UpdateDetailsFromPyPIJSON({"info": {
+				"provides_extra": None,
+				"requires_dist":  None,
+				"project_urls":   {"Documentation": "project.readthedocs.io"}
+			}})
+
+		self.assertIsNone(release.DocumentationURL)
+
+		warnings = [warning for warning in collector.Warnings if isinstance(warning, UnparsableURLWarning)]
+		self.assertEqual(1, len(warnings))
+		self.assertEqual("URL 'documentation' of 'project' v1.0.0 isn't a URL.", str(warnings[0]))
+		self.assertEqual("project", warnings[0].ProjectName)
+		self.assertEqual(release.Version, warnings[0].Version)
+		self.assertIn("Got value 'project.readthedocs.io'.", warnings[0].__notes__)
+
+	def test_TheNextAliasAnswers(self) -> None:
+		"""A homepage that isn't a URL leaves the homepage to ``home_page``."""
+		release = self._release()
+		self._resolve(release, project_urls={"Homepage": "UNKNOWN"}, home_page="https://project.org")
+
+		self.assertEqual("https://project.org", str(release.ProjectURL))
+
+	def test_UnparsableURLWarningIsNotCritical(self) -> None:
+		"""Without a collector, the release is resolved and the warning is dropped."""
+		release = self._release()
+		release.UpdateDetailsFromPyPIJSON({"info": {"provides_extra": None, "requires_dist": None, "home_page": "x"}})
+
+		self.assertIsNone(release.ProjectURL)
+		self.assertNotIsInstance(UnparsableURLWarning("message"), CriticalWarning)
 
 
 class Licenses(Testcase):
