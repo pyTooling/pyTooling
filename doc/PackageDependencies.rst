@@ -118,11 +118,11 @@ dependency graph is otherwise thousands of HTTP requests wide.
 
    Querying PyPI needs :gh:`aiohttp <aio-libs/aiohttp>`, :gh:`requests <psf/requests>`
    and :gh:`packaging <pypa/packaging>`, which are optional dependencies. Install them with the
-   ``pypi`` extra:
+   ``dependencies`` extra:
 
    .. code-block:: shell
 
-      pip install pyTooling[pypi]
+      pip install pyTooling[dependencies]
 
    Without it, importing :mod:`pyTooling.Dependency.Python` raises an exception naming the extra. The generic data
    model in :mod:`pyTooling.Dependency` has no such requirement.

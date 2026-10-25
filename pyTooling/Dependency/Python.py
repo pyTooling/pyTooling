@@ -31,7 +31,7 @@
 """
 Implementation of package dependencies.
 
-Importing this module needs the ``pypi`` extra, because it reads a package index over HTTP and parses PEP 440
+Importing this module needs the ``dependencies`` extra, because it reads a package index over HTTP and parses PEP 440
 requirements:
 
 * :mod:`aiohttp`,
@@ -41,7 +41,7 @@ requirements:
 are imported at module level and each is guarded, so a missing one names itself rather than failing as a bare
 :exc:`ImportError`.
 
-:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+:raises MissingDependencyError: If the 'dependencies' extra isn't installed.
 
 .. hint::
 
@@ -66,20 +66,20 @@ from pyTooling.Exceptions      import MissingDependencyError
 try:
 	from aiohttp                 import ClientSession
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
+	raise MissingDependencyError(dependency="aiohttp", extra="dependencies") from ex
 
 try:
 	from packaging.requirements  import InvalidRequirement, Requirement
 	from packaging.utils         import canonicalize_name
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
+	raise MissingDependencyError(dependency="packaging", extra="dependencies") from ex
 
 try:
 	from requests                import Session, HTTPError
 	from requests.adapters       import HTTPAdapter
 	from urllib3.util.retry      import Retry
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="requests", extra="pypi") from ex
+	raise MissingDependencyError(dependency="requests", extra="dependencies") from ex
 
 from pyTooling.Decorators      import export, readonly
 from pyTooling.MetaClasses     import ExtendedType, abstractmethod
