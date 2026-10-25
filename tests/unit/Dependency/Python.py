@@ -37,7 +37,6 @@ from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
 from typing                       import Any, Optional as Nullable, Self
-from unittest                     import skipUnless
 from unittest.mock                import patch
 
 from packaging.requirements       import Requirement
@@ -64,6 +63,7 @@ from pyTooling.Testing            import Testcase
 
 from tests.unit.Dependency.FakeIndex import DocumentSession, ProjectDocument
 
+# 'jsonschema' needs 'rpds-py', a Rust extension without a PyPy wheel for Windows; its source build fails to link there.
 try:
 	from jsonschema                 import Draft202012Validator, FormatChecker
 	HAS_JSONSCHEMA = True
@@ -1962,7 +1962,7 @@ class RequirementsFileInstantiation(Testcase):
 		)
 
 
-@skipUnless(HAS_JSONSCHEMA, "Needs 'jsonschema', which has no PyPy wheel for Windows.")
+@mark.skipif(not HAS_JSONSCHEMA, reason="Needs 'jsonschema', which can't be installed on PyPy for Windows.")
 class PackageOverridesSchema(Testcase):
 	"""The package-override file's structure is stated as a JSON schema, so an editor and CI check the same thing."""
 
