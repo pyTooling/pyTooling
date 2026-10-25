@@ -41,10 +41,11 @@ from unittest             import mock
 from pytest               import mark
 
 from pyTooling.Tracing    import OTLP_SCOPE_NAME, Event, Fragment, Span, Trace, TraceCollection, TraceElement, \
-                                 TracingError
+                                 TracingError, DuplicateSpanError, DuplicateTraceError, SpanCycleError, \
+                                 SpanNotFoundError, TraceNotFoundError
 from pyTooling            import Resources
 from pyTooling.Common     import __version__, getResourceFile, readResourceFile
-from pyTooling.Exceptions import MissingDependencyError
+from pyTooling.Exceptions import CycleError, DuplicateElementError, ElementNotFoundError, MissingDependencyError
 from pyTooling.Warning    import DirectoryCreatedWarning, WarningCollector
 from pyTooling.Testing    import Testcase
 
@@ -1135,7 +1136,7 @@ class ReadIdentifiers(Testcase):
 		)
 	def test_Duplicate(self) -> None:
 		"""The same span identifier twice is rejected."""
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(DuplicateSpanError) as exceptionCapture:
 			Trace.FromOTLPJSON(_document(
 				_span("root", "1111111111111111"),
 				_span("child", "2222222222222222", "1111111111111111"),
@@ -1154,14 +1155,14 @@ class ReadBrokenTrees(Testcase):
 
 	def test_TwoRoots(self) -> None:
 		"""Two roots are rejected."""
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(DuplicateTraceError) as exceptionCapture:
 			Trace.FromOTLPJSON(_document(_span("one", "1111111111111111"), _span("two", "2222222222222222")))
 
 		self.assertEqual(f"Trace '{TRACE_ID}' has 2 spans without a 'parentSpanId'.", str(exceptionCapture.exception))
 
 	def test_Cycle(self) -> None:
 		"""A cycle has no root at all."""
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(SpanCycleError) as exceptionCapture:
 			Trace.FromOTLPJSON(_document(
 				_span("one", "1111111111111111", "2222222222222222"),
 				_span("two", "2222222222222222", "1111111111111111"),
@@ -1201,7 +1202,7 @@ class ReadBrokenTrees(Testcase):
 
 	def test_Cycle_Detached(self) -> None:
 		"""Two spans naming each other are not reachable from the root, although the root itself is fine."""
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(SpanCycleError) as exceptionCapture:
 			Trace.FromOTLPJSON(_document(
 				_span("root", "1111111111111111"),
 				_span("one", "2222222222222222", "3333333333333333"),
@@ -1287,7 +1288,7 @@ class SelectATrace(Testcase):
 
 	def test_Unknown(self) -> None:
 		"""An unknown trace ID is reported."""
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(TraceNotFoundError) as exceptionCapture:
 			Trace.FromOTLPJSON(_document(_span("root", "1111111111111111")), "f" * 32)
 
 		self.assertEqual(f"OTLP/JSON document contains no trace '{'f' * 32}'.", str(exceptionCapture.exception))
@@ -1486,6 +1487,32 @@ def _splitExample() -> tuple[Trace, dict, dict]:
 	return trace, _document(spans["build"], spans["link"]), _document(spans["compile"], spans["parse"])
 
 
+class Errors(Testcase):
+	"""Each specific error is a :exc:`~pyTooling.Tracing.TracingError` and one of pyTooling's generic errors."""
+
+	def test_TraceNotFoundError(self) -> None:
+		self.assertTrue(issubclass(TraceNotFoundError, TracingError))
+		self.assertTrue(issubclass(TraceNotFoundError, ElementNotFoundError))
+		self.assertTrue(issubclass(TraceNotFoundError, LookupError))
+
+	def test_SpanNotFoundError(self) -> None:
+		self.assertTrue(issubclass(SpanNotFoundError, TracingError))
+		self.assertTrue(issubclass(SpanNotFoundError, ElementNotFoundError))
+		self.assertTrue(issubclass(SpanNotFoundError, LookupError))
+
+	def test_DuplicateTraceError(self) -> None:
+		self.assertTrue(issubclass(DuplicateTraceError, TracingError))
+		self.assertTrue(issubclass(DuplicateTraceError, DuplicateElementError))
+
+	def test_DuplicateSpanError(self) -> None:
+		self.assertTrue(issubclass(DuplicateSpanError, TracingError))
+		self.assertTrue(issubclass(DuplicateSpanError, DuplicateElementError))
+
+	def test_SpanCycleError(self) -> None:
+		self.assertTrue(issubclass(SpanCycleError, TracingError))
+		self.assertTrue(issubclass(SpanCycleError, CycleError))
+
+
 class Fragments(Testcase):
 	"""A fragment keeps the identifiers of its trace and of the parent it is waiting for."""
 
@@ -1646,7 +1673,7 @@ class Collections(Testcase):
 
 	def test_Cycle(self) -> None:
 		"""A fragment's parent is merely absent; a cycle's spans point at each other and can be placed nowhere."""
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(SpanCycleError) as exceptionCapture:
 			TraceCollection.FromOTLPJSON(_document(
 				_span("one", "1111111111111111", "2222222222222222"),
 				_span("two", "2222222222222222", "1111111111111111"),
@@ -1659,7 +1686,7 @@ class Collections(Testcase):
 
 	def test_TwoRoots(self) -> None:
 		"""Two root spans are still rejected."""
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(DuplicateTraceError) as exceptionCapture:
 			TraceCollection.FromOTLPJSON(_document(_span("one", "1111111111111111"), _span("two", "2222222222222222")))
 
 		self.assertEqual(f"Trace '{TRACE_ID}' has 2 spans without a 'parentSpanId'.", str(exceptionCapture.exception))
@@ -1731,7 +1758,7 @@ class MergingDocuments(Testcase):
 		_, _, second = _splitExample()
 		collection = TraceCollection.FromOTLPJSON(second)
 
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(DuplicateSpanError) as exceptionCapture:
 			collection.AddOTLPJSON(second)
 
 		self.assertIn("Collection already contains a timespan", str(exceptionCapture.exception))
@@ -1740,7 +1767,7 @@ class MergingDocuments(Testcase):
 		"""A second root span for one trace is rejected."""
 		collection = TraceCollection.FromOTLPJSON(_document(_span("root", "1111111111111111")))
 
-		with self.assertRaises(TracingError) as exceptionCapture:
+		with self.assertRaises(DuplicateTraceError) as exceptionCapture:
 			collection.AddOTLPJSON(_document(_span("other root", "2222222222222222")))
 
 		self.assertEqual(f"Collection already contains trace '{TRACE_ID}'.", str(exceptionCapture.exception))
@@ -1790,8 +1817,59 @@ class CollectionLookup(Testcase):
 		"""An identifier of another length is no identifier."""
 		collection = self._Collection()
 
-		with self.assertRaises(KeyError):
+		with self.assertRaises(ValueError) as exceptionCapture:
 			_ = collection["abc"]
+
+		self.assertEqual(
+			"Parameter 'identifier' is neither a 32 digit trace nor a 16 digit span identifier.",
+			str(exceptionCapture.exception)
+		)
+		self.assertEqual(["Got 'abc' with 3 digits."], exceptionCapture.exception.__notes__)
+
+	def test_GetItem_MissingTrace(self) -> None:
+		"""A trace nothing has delivered is reported with the way to add it."""
+		collection = self._Collection()
+
+		with self.assertRaises(TraceNotFoundError) as exceptionCapture:
+			_ = collection[OTHER_TRACE_ID]
+
+		self.assertEqual(f"Collection contains no trace '{OTHER_TRACE_ID}'.", str(exceptionCapture.exception))
+		self.assertEqual(["Add the document carrying it with 'AddOTLPJSON'."], exceptionCapture.exception.__notes__)
+		self.assertIsInstance(exceptionCapture.exception, ElementNotFoundError)
+		self.assertIsInstance(exceptionCapture.exception.__cause__, KeyError)
+
+	def test_GetItem_TraceOfFragments(self) -> None:
+		"""A trace whose root span hasn't arrived isn't a trace yet, but its fragments are there."""
+		collection = TraceCollection.FromOTLPJSON(_document(_span("fragment", "3333333333333333", "4444444444444444")))
+
+		with self.assertRaises(TraceNotFoundError) as exceptionCapture:
+			_ = collection[TRACE_ID]
+
+		self.assertEqual(
+			["Its root span hasn't arrived; its timespans are in 'Fragments', see 'IterateFragmentsOf'."],
+			exceptionCapture.exception.__notes__
+		)
+
+	def test_GetItem_MissingSpan(self) -> None:
+		"""The awaited parent is exactly what isn't here."""
+		collection = self._Collection()
+
+		with self.assertRaises(SpanNotFoundError) as exceptionCapture:
+			_ = collection["4444444444444444"]
+
+		self.assertEqual("Collection contains no timespan '4444444444444444'.", str(exceptionCapture.exception))
+		self.assertEqual(["Add the document carrying it with 'AddOTLPJSON'."], exceptionCapture.exception.__notes__)
+		self.assertIsInstance(exceptionCapture.exception.__cause__, KeyError)
+
+	def test_TraceIDOfSpan_Missing(self) -> None:
+		"""A span nothing has delivered belongs to no known trace."""
+		collection = self._Collection()
+
+		with self.assertRaises(SpanNotFoundError) as exceptionCapture:
+			collection.TraceIDOfSpan("4444444444444444")
+
+		self.assertEqual("Collection contains no timespan '4444444444444444'.", str(exceptionCapture.exception))
+		self.assertEqual(["Add the document carrying it with 'AddOTLPJSON'."], exceptionCapture.exception.__notes__)
 
 	def test_Contains(self) -> None:
 		"""Contains asks the same indexes."""

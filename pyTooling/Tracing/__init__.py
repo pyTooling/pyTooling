@@ -60,7 +60,8 @@ from typing                import Optional as Nullable, Any, ClassVar, Iterator,
 from pyTooling             import Resources
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import MissingDependencyError, ToolingException
+from pyTooling.Exceptions  import CycleError, DuplicateElementError, ElementNotFoundError, MissingDependencyError, \
+                                  ToolingException
 from pyTooling.Common      import __version__, getFullyQualifiedName, getTypeName, readResourceFile
 from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Versioning  import SemanticVersion
@@ -101,6 +102,31 @@ _MAXIMUM_IDENTIFIER_ATTEMPTS = 4
 @export
 class TracingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
+
+
+@export
+class TraceNotFoundError(TracingError, ElementNotFoundError):
+	"""The exception is raised when a trace identifier names no trace of a collection or a document."""
+
+
+@export
+class SpanNotFoundError(TracingError, ElementNotFoundError):
+	"""The exception is raised when a span identifier names no timespan of a collection."""
+
+
+@export
+class DuplicateTraceError(TracingError, DuplicateElementError):
+	"""The exception is raised when a trace has more than one root span: a timespan without a ``parentSpanId``."""
+
+
+@export
+class DuplicateSpanError(TracingError, DuplicateElementError):
+	"""The exception is raised when two timespans carry the same span identifier."""
+
+
+@export
+class SpanCycleError(TracingError, CycleError):
+	"""The exception is raised when timespans reference each other by their ``parentSpanId`` in a cycle."""
 
 
 @export
@@ -1536,21 +1562,22 @@ class Trace(Span):
 		:meth:`ToOTLPJSON`, a span's ``kind`` and ``status`` aren't read, and a :class:`tuple` attribute returns as a
 		:class:`list`.
 
-		:param document:      The OTLP/JSON document, as :func:`json.load` returns it.
-		:param traceID:       Optional, identifier of the trace to read. Default: the only trace in the document.
-		:returns:             The trace, with every timespan and event below it.
-		:raises TypeError:    If parameter 'traceID' is not of type :class:`str`.
-		:raises TracingError: If the document holds no spans.
-		:raises TracingError: If the document holds several traces and parameter 'traceID' names none. |br|
-		                      Name the trace in parameter 'traceID', or read all with :meth:`TraceCollection.FromOTLPJSON`.
-		:raises TracingError: If the document holds no trace of identifier 'traceID'.
-		:raises TracingError: If the trace's root span is absent: the span without a 'parentSpanId' is the trace itself,
-		                      and this document doesn't carry it. |br|
-		                      Use :class:`TraceCollection` for a trace that isn't complete yet.
-		:raises TracingError: If a span of the trace is a fragment. |br|
-		                      Use :class:`TraceCollection` to keep a fragment until its parent arrives.
-		:raises TracingError: If the document doesn't fit into a :class:`TraceCollection`, see
-		                      :meth:`TraceCollection.AddOTLPJSON`.
+		:param document:            The OTLP/JSON document, as :func:`json.load` returns it.
+		:param traceID:             Optional, identifier of the trace to read. Default: the only trace in the document.
+		:returns:                   The trace, with every timespan and event below it.
+		:raises TypeError:          If parameter 'traceID' is not of type :class:`str`.
+		:raises TracingError:       If the document holds no spans.
+		:raises TracingError:       If the document holds several traces and parameter 'traceID' names none. |br|
+		                            Name the trace in parameter 'traceID', or read all with
+		                            :meth:`TraceCollection.FromOTLPJSON`.
+		:raises TraceNotFoundError: If the document holds no trace of identifier 'traceID'.
+		:raises TracingError:       If the trace's root span is absent: the span without a 'parentSpanId' is the trace
+		                            itself, and this document doesn't carry it. |br|
+		                            Use :class:`TraceCollection` for a trace that isn't complete yet.
+		:raises TracingError:       If a span of the trace is a fragment. |br|
+		                            Use :class:`TraceCollection` to keep a fragment until its parent arrives.
+		:raises TracingError:       If the document doesn't fit into a :class:`TraceCollection`, see
+		                            :meth:`TraceCollection.AddOTLPJSON`.
 		"""
 		if traceID is not None and not isinstance(traceID, str):
 			ex = TypeError("Parameter 'traceID' is not of type 'str'.")
@@ -1573,7 +1600,7 @@ class Trace(Span):
 		else:
 			traceID = traceID.lower()
 			if traceID not in traceIDs:
-				ex = TracingError(f"OTLP/JSON document contains no trace '{traceID}'.")
+				ex = TraceNotFoundError(f"OTLP/JSON document contains no trace '{traceID}'.")
 				ex.add_note(f"Found: {', '.join(traceIDs)}." if len(traceIDs) > 0 else "The document contains no spans.")
 				raise ex
 
@@ -1904,11 +1931,12 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		A timespan of a fragment answers too: its trace's root span hasn't arrived, but the :class:`Fragment` keeps the
 		``traceId`` the document stated.
 
-		:param spanID:      Identifier of the timespan.
-		:returns:           Identifier of the trace the timespan belongs to.
-		:raises ValueError: If parameter 'spanID' is None.
-		:raises TypeError:  If parameter 'spanID' is not of type :class:`str`.
-		:raises KeyError:   If the collection contains no timespan with that identifier.
+		:param spanID:             Identifier of the timespan.
+		:returns:                  Identifier of the trace the timespan belongs to.
+		:raises ValueError:        If parameter 'spanID' is None.
+		:raises TypeError:         If parameter 'spanID' is not of type :class:`str`.
+		:raises SpanNotFoundError: If the collection contains no timespan with that identifier. |br|
+		                           Add the document carrying it with :meth:`AddOTLPJSON`.
 		"""
 		if spanID is None:
 			raise ValueError("Parameter 'spanID' is None.")
@@ -1917,7 +1945,14 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(spanID)}'.")
 			raise ex
 
-		return self._spans[spanID.lower()]._trace._traceID
+		try:
+			span = self._spans[spanID.lower()]
+		except KeyError as cause:
+			ex = SpanNotFoundError(f"Collection contains no timespan '{spanID}'.")
+			ex.add_note("Add the document carrying it with 'AddOTLPJSON'.")
+			raise ex from cause
+
+		return span._trace._traceID
 
 	def IterateFragmentsOf(self, traceID: str) -> Iterator[Fragment]:
 		"""
@@ -1946,11 +1981,16 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		A trace identifier is 32 hex digits and a span identifier is 16, so which of the two indexes is searched
 		follows from the length - the two can't be confused.
 
-		:param identifier:  A trace identifier of 32, or a span identifier of 16 hex digits.
-		:returns:           The trace or the timespan registered under that identifier.
-		:raises ValueError: If parameter 'identifier' is None.
-		:raises TypeError:  If parameter 'identifier' is not of type :class:`str`.
-		:raises KeyError:   If the identifier has neither length, or nothing is registered under it.
+		:param identifier:          A trace identifier of 32, or a span identifier of 16 hex digits.
+		:returns:                   The trace or the timespan registered under that identifier.
+		:raises ValueError:         If parameter 'identifier' is None.
+		:raises TypeError:          If parameter 'identifier' is not of type :class:`str`.
+		:raises ValueError:         If parameter 'identifier' has neither 32 nor 16 digits.
+		:raises TraceNotFoundError: If the collection contains no complete trace with that identifier. |br|
+		                            If its root span hasn't arrived, its timespans are in :attr:`Fragments`, see
+		                            :meth:`IterateFragmentsOf`. Else add the document carrying it with :meth:`AddOTLPJSON`.
+		:raises SpanNotFoundError:  If the collection contains no timespan with that identifier. |br|
+		                            Add the document carrying it with :meth:`AddOTLPJSON`.
 		"""
 		if identifier is None:
 			raise ValueError("Parameter 'identifier' is None.")
@@ -1961,11 +2001,26 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		key = identifier.lower()
 		if len(key) == 32:
-			return self._traces[key]
+			try:
+				return self._traces[key]
+			except KeyError as cause:
+				ex = TraceNotFoundError(f"Collection contains no trace '{identifier}'.")
+				if any(fragment._traceID == key for fragment in self._fragments.values()):
+					ex.add_note("Its root span hasn't arrived; its timespans are in 'Fragments', see 'IterateFragmentsOf'.")
+				else:
+					ex.add_note("Add the document carrying it with 'AddOTLPJSON'.")
+				raise ex from cause
 		elif len(key) == 16:
-			return self._spans[key]
+			try:
+				return self._spans[key]
+			except KeyError as cause:
+				ex = SpanNotFoundError(f"Collection contains no timespan '{identifier}'.")
+				ex.add_note("Add the document carrying it with 'AddOTLPJSON'.")
+				raise ex from cause
 
-		raise KeyError(f"'{identifier}' is neither a 32 digit trace nor a 16 digit span identifier.")
+		ex = ValueError("Parameter 'identifier' is neither a 32 digit trace nor a 16 digit span identifier.")
+		ex.add_note(f"Got '{identifier}' with {len(identifier)} digits.")
+		raise ex
 
 	def __contains__(self, identifier: str) -> bool:
 		"""
@@ -2024,11 +2079,11 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		:raises TracingError:           If the schema can't be read from the package resources.
 		:raises TracingError:           If the document isn't valid according to the schema. |br|
 		                                A note per violation names its position in the document.
-		:raises TracingError:           If two timespans of a trace carry the same ``spanId``.
-		:raises TracingError:           If more than one timespan of a trace has no ``parentSpanId``.
-		:raises TracingError:           If timespans of a trace reference each other in a cycle.
-		:raises TracingError:           If the collection already holds a timespan of the same identifier.
-		:raises TracingError:           If the collection already holds a trace and the document carries a second root
+		:raises DuplicateSpanError:     If two timespans of a trace carry the same ``spanId``.
+		:raises DuplicateTraceError:    If more than one timespan of a trace has no ``parentSpanId``.
+		:raises SpanCycleError:         If timespans of a trace reference each other in a cycle.
+		:raises DuplicateSpanError:     If the collection already holds a timespan of the same identifier.
+		:raises DuplicateTraceError:    If the collection already holds a trace and the document carries a second root
 		                                span for it.
 		:raises TracingError:           If a timespan or an event can't be read, see :meth:`Span._ParseOTLPJSON`.
 		"""
@@ -2068,13 +2123,13 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		for traceID, trace, built, _ in results:
 			if trace is not None and traceID in self._traces:
-				ex = TracingError(f"Collection already contains trace '{traceID}'.")
+				ex = DuplicateTraceError(f"Collection already contains trace '{traceID}'.")
 				ex.add_note("A trace has one root span, and this document carries a second one.")
 				raise ex
 
 			for spanID in built:
 				if spanID in self._spans:
-					ex = TracingError(f"Collection already contains a timespan '{spanID}'.")
+					ex = DuplicateSpanError(f"Collection already contains a timespan '{spanID}'.")
 					ex.add_note(f"It belongs to trace '{self._spans[spanID]._trace._traceID}'.")
 					raise ex
 
@@ -2102,15 +2157,15 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		``parentSpanId`` is the trace itself; a span naming a span of the document becomes its sub-span; a span naming a
 		span nothing delivered is the root of a **fragment**, whose own sub-spans may well be present.
 
-		:param traceID:       Identifier of the trace.
-		:param spans:         The ``(path, mapping)`` pairs of the trace's timespans, in document order.
-		:returns:             Tuple of the trace (or ``None``, if its root span is absent), every timespan built by span
-		                      identifier, and the fragments.
-		:raises TracingError: If two timespans carry the same ``spanId``.
-		:raises TracingError: If more than one timespan has no ``parentSpanId``.
-		:raises TracingError: If timespans reference each other in a cycle: every other span is reachable from the
-		                      trace's root span or from a fragment's root span.
-		:raises TracingError: If a timespan or an event can't be read, see :meth:`Span._ParseOTLPJSON`.
+		:param traceID:              Identifier of the trace.
+		:param spans:                The ``(path, mapping)`` pairs of the trace's timespans, in document order.
+		:returns:                    Tuple of the trace (or ``None``, if its root span is absent), every timespan built by
+		                             span identifier, and the fragments.
+		:raises DuplicateSpanError:  If two timespans carry the same ``spanId``.
+		:raises DuplicateTraceError: If more than one timespan has no ``parentSpanId``.
+		:raises SpanCycleError:      If timespans reference each other in a cycle: every other span is reachable from the
+		                             trace's root span or from a fragment's root span.
+		:raises TracingError:        If a timespan or an event can't be read, see :meth:`Span._ParseOTLPJSON`.
 		"""
 		entries:  dict[str, tuple[str, dict[str, Any]]] = {}
 		parents:  dict[str, str] =                        {}
@@ -2119,7 +2174,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		for path, otlpSpan in spans:
 			spanID = otlpSpan["spanId"].lower()
 			if spanID in entries:
-				ex = TracingError(f"Trace '{traceID}' has more than one span with identifier '{spanID}'.")
+				ex = DuplicateSpanError(f"Trace '{traceID}' has more than one span with identifier '{spanID}'.")
 				ex.add_note(f"Found at '{entries[spanID][0]}' and at '{path}'.")
 				raise ex
 
@@ -2131,7 +2186,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 				children.setdefault(parentSpanID.lower(), []).append(spanID)
 
 		if len(roots) > 1:
-			ex = TracingError(f"Trace '{traceID}' has {len(roots)} spans without a 'parentSpanId'.")
+			ex = DuplicateTraceError(f"Trace '{traceID}' has {len(roots)} spans without a 'parentSpanId'.")
 			ex.add_note("The span without a 'parentSpanId' is the trace itself, so there is at most one of them.")
 			ex.add_note(f"Found: {', '.join(entries[spanID][0] for spanID in roots)}.")
 			raise ex
@@ -2165,7 +2220,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		if len(built) != len(entries):
 			unreachable = [path for spanID, (path, _) in entries.items() if spanID not in built]
-			ex = TracingError(f"{len(unreachable)} span(s) of trace '{traceID}' reference each other in a cycle.")
+			ex = SpanCycleError(f"{len(unreachable)} span(s) of trace '{traceID}' reference each other in a cycle.")
 			ex.add_note("Every other span is reachable from the trace's root span or from a fragment's root span.")
 			ex.add_note(f"Found: {', '.join(unreachable)}.")
 			raise ex

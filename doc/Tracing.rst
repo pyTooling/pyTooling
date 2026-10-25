@@ -363,8 +363,10 @@ The schema states what OTLP's JSON encoding requires, and allows fields of unkno
 What a schema can't state is checked while the document is read, and raises a
 :exc:`~pyTooling.Tracing.TracingError` naming the field:
 
-* two spans of a trace with the same ``spanId``, or two attributes with the same key,
-* more than one span of a trace without a ``parentSpanId``, or spans referencing each other in a cycle,
+* two spans of a trace with the same ``spanId`` (:exc:`~pyTooling.Tracing.DuplicateSpanError`), or two attributes
+  with the same key,
+* more than one span of a trace without a ``parentSpanId`` (:exc:`~pyTooling.Tracing.DuplicateTraceError`), or spans
+  referencing each other in a cycle (:exc:`~pyTooling.Tracing.SpanCycleError`),
 * a span with one timestamp instead of both or neither, or ending before it starts,
 * a timestamp a :class:`~datetime.datetime` can't hold,
 * a span or an event without a name, an event without ``timeUnixNano``, an attribute without a value - this data
@@ -442,7 +444,9 @@ useful on its own:
      - the **complete** traces; a fragment is not a trace and is neither iterated nor counted as one
 
 A trace identifier is 32 hex digits and a span identifier is 16, so which of the two indexes ``[...]`` searches
-follows from the length. The two can't be confused.
+follows from the length. The two can't be confused. An identifier nothing has delivered raises a
+:exc:`~pyTooling.Tracing.TraceNotFoundError` or a :exc:`~pyTooling.Tracing.SpanNotFoundError`, both a
+:exc:`LookupError`; an identifier of another length raises a :exc:`ValueError`.
 
 .. _TRACING/OTLP/Collection/Writing:
 

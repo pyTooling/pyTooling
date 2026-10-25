@@ -400,6 +400,13 @@ Version 10.x (2026)
        arrived yet - indexed by identifier, links them as further documents are added in any order, and writes itself
        back as OTLP/JSON. A fragment's root is a :class:`~pyTooling.Tracing.Fragment`, which keeps the identifiers of
        its trace and of the parent it is waiting for.
+     * A missing, duplicate or cyclic trace or timespan raises a specific error:
+       :exc:`~pyTooling.Tracing.TraceNotFoundError`, :exc:`~pyTooling.Tracing.SpanNotFoundError`,
+       :exc:`~pyTooling.Tracing.DuplicateTraceError`, :exc:`~pyTooling.Tracing.DuplicateSpanError` and
+       :exc:`~pyTooling.Tracing.SpanCycleError`. Each derives from :exc:`~pyTooling.Tracing.TracingError` and from a
+       generic error of :mod:`pyTooling.Exceptions`: the new :exc:`~pyTooling.Exceptions.ElementNotFoundError` (a
+       :exc:`LookupError`), :exc:`~pyTooling.Exceptions.DuplicateElementError`, or the new
+       :exc:`~pyTooling.Exceptions.CycleError`.
 
    * :mod:`pyTooling.Packaging`
 
