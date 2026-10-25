@@ -79,14 +79,14 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Point2D("1", 2)
 
-		self.assertEqual("Parameter 'x' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'x' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Point_str2(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Point2D(1, "2")
 
-		self.assertEqual("Parameter 'y' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'y' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Offset_int(self) -> None:
@@ -113,14 +113,14 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Offset2D("1", 2)
 
-		self.assertEqual("Parameter 'xOffset' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'xOffset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Offset_str2(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Offset2D(1, "2")
 
-		self.assertEqual("Parameter 'yOffset' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'yOffset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Size_int(self) -> None:
@@ -147,14 +147,14 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Size2D("1", 2)
 
-		self.assertEqual("Parameter 'width' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'width' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Size_str2(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Size2D(1, "2")
 
-		self.assertEqual("Parameter 'height' is not of type integer or float.", str(context.exception))
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_LineSegment(self) -> None:

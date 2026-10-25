@@ -59,25 +59,28 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:param p01:        Second corner.
 		:param p11:        Third corner.
 		:param p10:        Fourth corner.
-		:raises TypeError: If a given point is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError: If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError: If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError: If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError: If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
 		if not isinstance(p00, Point2D):
-			ex = TypeError("Parameter 'p00' is not of type Point2D.")
+			ex = TypeError("Parameter 'p00' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p00)}'.")
 			raise ex
 
 		if not isinstance(p01, Point2D):
-			ex = TypeError("Parameter 'p01' is not of type Point2D.")
+			ex = TypeError("Parameter 'p01' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p01)}'.")
 			raise ex
 
 		if not isinstance(p11, Point2D):
-			ex = TypeError("Parameter 'p11' is not of type Point2D.")
+			ex = TypeError("Parameter 'p11' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p11)}'.")
 			raise ex
 
 		if not isinstance(p10, Point2D):
-			ex = TypeError("Parameter 'p10' is not of type Point2D.")
+			ex = TypeError("Parameter 'p10' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")
 			raise ex
 
@@ -110,7 +113,10 @@ class Rectangle(Trapezium[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:raises TypeError:  If a given point is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -155,7 +161,10 @@ class Square(Rectangle[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:raises TypeError:  If a given point is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
