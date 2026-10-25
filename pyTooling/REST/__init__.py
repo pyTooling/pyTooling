@@ -55,7 +55,7 @@ from urllib.request            import Request, urlopen
 from pyTooling.Common          import getFullyQualifiedName, StringEnum
 from pyTooling.Decorators      import export, readonly
 from pyTooling.Exceptions      import ToolingException
-from pyTooling.GenericPath.URL import URL
+from pyTooling.GenericPath.URL import URL, URLError as URLParseError
 from pyTooling.MetaClasses     import ExtendedType
 
 
@@ -170,6 +170,8 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'apiURL' is ``None``.
 		:raises TypeError:  If parameter 'apiURL' is neither of type :class:`str` nor of type
 		                    :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises ValueError: If parameter 'apiURL' is a string :meth:`URL.Parse <pyTooling.GenericPath.URL.URL.Parse>`
+		                    rejects.
 		:raises ValueError: If parameter 'apiURL' names no scheme or no host.
 		:raises ValueError: If parameter 'apiURL' ends in an empty path element, e.g. ``'https://example.org/api//'``.
 		:raises TypeError:  If parameter 'token' is not of type :class:`str`.
@@ -187,7 +189,12 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		if apiURL is None:
 			raise ValueError("Parameter 'apiURL' is None.")
 		elif isinstance(apiURL, str):
-			parsedURL = URL.Parse(apiURL).WithoutTrailingSlash()
+			try:
+				parsedURL = URL.Parse(apiURL).WithoutTrailingSlash()
+			except URLParseError as cause:
+				ex = ValueError("Parameter 'apiURL' is not a URL.")
+				ex.add_note(f"Got value '{apiURL}'.")
+				raise ex from cause
 		elif isinstance(apiURL, URL):
 			parsedURL = apiURL.WithoutTrailingSlash()
 		else:

@@ -36,7 +36,7 @@ from typing                    import Any, Optional as Nullable
 from unittest                  import mock
 from urllib.error              import HTTPError, URLError
 
-from pyTooling.GenericPath.URL import URL
+from pyTooling.GenericPath.URL import URL, URLError as URLParseError
 from pyTooling.REST            import MediaType, RESTClient, RESTError
 from pyTooling.Testing         import Testcase
 
@@ -577,8 +577,19 @@ class BaseURL(Testcase):
 	def test_SomethingThatIsNotAURL(self) -> None:
 		for apiURL in ("", "api.example.org", "/things"):
 			with self.subTest(apiURL=apiURL):
-				with self.assertRaises(ValueError):
+				with self.assertRaises(ValueError) as context:
 					_ = RESTClient(apiURL)
+
+				self.assertEqual("Parameter 'apiURL' is not a URL.", str(context.exception))
+				self.assertIn(f"Got value '{apiURL}'.", context.exception.__notes__)
+				self.assertIsInstance(context.exception.__cause__, URLParseError)
+
+	def test_AURLWithoutHost(self) -> None:
+		"""A ``file`` URL may leave its host empty, but an API is reached at a host."""
+		with self.assertRaises(ValueError) as context:
+			_ = RESTClient("file:///api")
+
+		self.assertEqual("Parameter 'apiURL' names no scheme or no host.", str(context.exception))
 
 	def test_AnEmptyPathElement(self) -> None:
 		"""'/api//' is a valid URL naming an empty element - as a base URL it is a typo every request would carry."""

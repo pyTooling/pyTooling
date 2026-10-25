@@ -215,6 +215,17 @@ Version 10.x (2026)
        it, where ``?flag`` used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no
        longer an error - ``?key=a=b`` parses as ``{"key": "a=b"}``, where it used to raise *"too many values to
        unpack"*.
+     * ⚠️ :meth:`~pyTooling.GenericPath.URL.URL.Parse` **rejects a string that isn't a URL** with a
+       :exc:`~pyTooling.GenericPath.URL.URLError`. Every part of :data:`~pyTooling.GenericPath.URL.URL_PATTERN` was
+       optional, so ``""``, ``"nonsense"`` and ``"https://a b/c"`` parsed - the last one as host ``a`` and path
+       ``" b/c"``. A URL starts with a scheme followed by ``://`` and a host, as :rfc:`3986` writes an absolute URI with
+       an authority; only a ``file`` or ``unix`` URL may leave the host empty, and then names an absolute path
+       (``file:///etc/hosts``). After the host and port, the path starts with a slash. A character the RFC forbids is
+       rejected anywhere in the URL, a port must be in range 0..65535, and a user or password may carry the RFC's
+       user-information characters - ``first.last@`` and ``p%40ss`` were read as a host and a path.
+     * :mod:`pyTooling.Dependency` reports a project URL a package index publishes that isn't a URL as a non-critical
+       :exc:`~pyTooling.Dependency.UnparsableURLWarning`, and the release has no such URL. ``UNKNOWN``, which distutils
+       wrote for a field not given, counts as not published.
 
    * :mod:`pyTooling.MetaClasses`
 
@@ -642,6 +653,12 @@ Version 10.x (2026)
    * ⚠️ :class:`~pyTooling.GenericPath.URL.Host` **rejects a host name that is** ``None`` **or empty** with a
      :exc:`ValueError`. An empty name was accepted, and ``None`` raised a :exc:`TypeError`.
      :meth:`~pyTooling.GenericPath.URL.URL.Parse` is unchanged.
+
+   * ⚠️ :meth:`~pyTooling.GenericPath.URL.URL.Parse` **requires a scheme and a host**, and raises a
+     :exc:`~pyTooling.GenericPath.URL.URLError` for a string that isn't a URL. A host without scheme - ``github.com``,
+     ``localhost:8080`` - was parsed as a URL without scheme; write the scheme (``https://github.com``). A relative
+     reference is appended to a URL with ``/``. :data:`~pyTooling.GenericPath.URL.URL_PATTERN` requires the scheme
+     too.
 
    * ⚠️ **A membership test is named** ``Contains***``: ``Has***`` asks for a property of the object itself, like
      :meth:`~pyTooling.Graph.BaseGraph.HasCycle`. ``Graph.HasVertexByID`` |rarr|

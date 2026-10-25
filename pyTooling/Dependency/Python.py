@@ -89,12 +89,12 @@ from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, P
                                       UnparsableRequirementWarning, UnsupportedVersionWarning, ProjectNotFoundError, \
                                       DependencyError, NoSessionAvailableError, ReleaseNotFoundError, \
                                       CircularRequirementsFileError, RequirementsFileNotFoundError, PackageIndexError, \
-                                      AlreadyInRequirementsTreeError
+                                      AlreadyInRequirementsTreeError, UnparsableURLWarning
 from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER, \
                                       LicenseAbsence, ProprietaryLicense, UnknownLicense
 from pyTooling.Stopwatch       import Stopwatch
 from pyTooling.Warning         import WarningCollector
-from pyTooling.GenericPath.URL import URL
+from pyTooling.GenericPath.URL import URL, URLError
 from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
 
 
@@ -1576,6 +1576,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:attr:`~pyTooling.Dependency.Package.RepositoryURL` and its siblings mirror the latest release, so the
 		package still answers for the current state.
 
+		A published value that is empty or ``UNKNOWN`` - what distutils wrote for a field not given - counts as not
+		published. A value that isn't a URL counts as not published either, and is reported to a
+		:class:`~pyTooling.Warning.WarningCollector` as :exc:`~pyTooling.Dependency.UnparsableURLWarning`.
+
 		:param infoNode: The ``info`` node of the JSON document describing this release.
 		"""
 		projectURLs = {
@@ -1584,16 +1588,42 @@ class Release(PackageVersion, LazyLoadableMixin):
 			if value is not None
 		}
 
+		def parse(field: str, text: str) -> Nullable[URL]:
+			"""
+			Nested function parsing a URL the package index published.
+
+			:param field: Name of the field the URL was published in, for the warning.
+			:param text:  The published URL.
+			:returns:     The URL, or ``None`` if the text is empty, ``UNKNOWN`` or no URL.
+			"""
+			if text == "" or text == "UNKNOWN":
+				return None
+
+			try:
+				return URL.Parse(text)
+			except URLError as cause:
+				WarningCollector.Raise(
+					UnparsableURLWarning(
+						f"URL '{field}' of '{self._package._name}' {self._version} isn't a URL.",
+						projectName=self._package._name,
+						version=self._version
+					),
+					cause,
+					notes=f"Got value '{text}'."
+				)
+
+			return None
+
 		def urlFor(aliases: tuple[str, ...]) -> Nullable[URL]:
 			"""
 			Return the first of the given aliases the package index published a URL for.
 
 			:param aliases: The keys to look for, most specific first.
-			:returns:       The URL of the first alias that is present, or ``None`` if none of them is.
+			:returns:       The URL of the first alias that is present and parses, or ``None`` if none of them is.
 			"""
 			for alias in aliases:
-				if (url := projectURLs.get(alias, None)) is not None:
-					return URL.Parse(url)
+				if (text := projectURLs.get(alias, None)) is not None and (url := parse(alias, text)) is not None:
+					return url
 
 			return None
 
@@ -1603,7 +1633,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		self._projectURL      = urlFor(_PROJECT_URL_ALIASES)
 
 		if self._projectURL is None and (homePage := infoNode.get("home_page", None)) is not None:
-			self._projectURL = URL.Parse(homePage)
+			self._projectURL = parse("home_page", homePage)
 
 		index: PythonPackageIndex = self._package._storage
 		if (repository := index._licenseOverrides.RepositoryOf(self._package._name)) is not None:

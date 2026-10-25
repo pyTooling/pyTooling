@@ -243,7 +243,8 @@ about: :class:`~pyTooling.Dependency.UnparsableRequirementWarning` (a line of a 
 :class:`~pyTooling.Dependency.UndeclaredExtraWarning` (a requirement naming an extra the selected release doesn't
 declare). Requirements of a release whose marker names an extra the release doesn't declare are reported as an
 :class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`. A license that can't be resolved is reported as an
-:class:`~pyTooling.Dependency.UnknownLicenseWarning`. A requirement a :class:`~pyTooling.Dependency.Resolver.Resolver`
+:class:`~pyTooling.Dependency.UnknownLicenseWarning`, a project URL that isn't a URL as an
+:class:`~pyTooling.Dependency.UnparsableURLWarning`. A requirement a :class:`~pyTooling.Dependency.Resolver.Resolver`
 can't resolve, because the index doesn't know its project or can't describe the selected release, is reported as an
 :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its status.
 
@@ -251,7 +252,7 @@ can't resolve, because the index doesn't know its project or can't describe the 
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning` are critical: something was left out, so a caller who doesn't
 see the warning gets a wrong result. Without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy,
 :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised. :class:`~pyTooling.Dependency.UnknownLicenseWarning`,
-:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` and
+:class:`~pyTooling.Dependency.UnparsableURLWarning`, :class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` and
 :class:`~pyTooling.Dependency.UnresolvedRequirementWarning` are non-critical: without a collector, they are dropped
 silently. A caller collects the warnings to learn what was left out, see :ref:`WARNING`:
 

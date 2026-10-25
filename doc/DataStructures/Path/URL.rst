@@ -17,6 +17,25 @@ Implements a *Unified Resource Locator* (URL).
    print(url.Fragment())    # page2
 
 
+.. _STRUCT/Path/URL/Parse:
+
+Parsing
+*******
+
+:meth:`URL.Parse <pyTooling.GenericPath.URL.URL.Parse>` reads a URL as :rfc:`3986` writes an absolute URI with an
+authority: a scheme followed by ``://``, a host with an optional user, password and port, then a path starting with a
+slash, a query and a fragment. Only a ``file`` or ``unix`` URL may leave the host empty, and then names an absolute
+path, e.g. ``file:///etc/hosts``.
+
+.. code-block::
+
+   scheme://[user[:password]@]host[:port][/path/to/file][?query][#fragment]
+
+A string that isn't such a URL raises :exc:`~pyTooling.GenericPath.URL.URLError`: ``github.com`` names no scheme,
+``http:///path`` no host. A relative reference like ``things/4711`` is no URL either; it is appended to one with
+:meth:`URL.__truediv__ <pyTooling.GenericPath.URL.URL.__truediv__>`.
+
+
 .. _STRUCT/Path/URL/Protocols:
 
 Protocols
