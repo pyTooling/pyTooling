@@ -458,12 +458,56 @@ class Parsing(Testcase):
 		self.assertEqual(ReleaseLevel.ReleaseCandidate, version.ReleaseLevel)
 		self.assertEqual(2, version.ReleaseNumber)
 
+	def test_ReleaseNumberAfterDot(self) -> None:
+		"""SemVer writes a pre-release's number as an identifier of its own: ``rc.1``."""
+		for versionString in ("v2.0.0-rc.1", "v2.0.0-rc-1", "v2.0.0.rc.1", "v2.0.0rc1"):
+			with self.subTest(versionString=versionString):
+				version = SemanticVersion.Parse(versionString)
+
+				self.assertEqual(ReleaseLevel.ReleaseCandidate, version.ReleaseLevel)
+				self.assertEqual(1, version.ReleaseNumber)
+				self.assertEqual("", version.Postfix)
+				self.assertNotIn(Parts.Postfix, version.Parts)
+
+	def test_PostfixWithDots(self) -> None:
+		"""SemVer's build metadata is made of dot-separated identifiers: ``+build.5``."""
+		version = SemanticVersion.Parse("v1.2.3+build.5")
+
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+		self.assertEqual("build.5", version.Postfix)
+		self.assertEqual("v1.2.3+build.5", str(version))
+
+	def test_PostfixWithHyphens(self) -> None:
+		version = SemanticVersion.Parse("1.2.3+exp.sha-5114f85")
+
+		self.assertEqual("exp.sha-5114f85", version.Postfix)
+
+	def test_CalendarSpelling(self) -> None:
+		"""A letter after the numbers is an alpha release here; parse OSVVM's '2025.06a' with YearMonthVersion."""
+		version = SemanticVersion.Parse("2025.06a")
+
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(0, version.ReleaseNumber)
+
 
 class HashVersions(Testcase):
 	def test_SemanticVersion(self) -> None:
 		version = SemanticVersion.Parse("v1.2.3")
 
 		self.assertIsNotNone(version.__hash__())
+
+	def test_EqualVersionsHashAlike(self) -> None:
+		"""Prefix and flags aren't compared, so they mustn't change the hash either."""
+		constructed = SemanticVersion(1, 2, 3)
+		parsed = SemanticVersion.Parse("v1.2.3")
+
+		self.assertEqual(constructed, parsed)
+		self.assertEqual(hash(constructed), hash(parsed))
+		self.assertIn(parsed, {constructed})
+
+	def test_PostfixChangesTheHash(self) -> None:
+		self.assertEqual(2, len({SemanticVersion.Parse("1.2.3"), SemanticVersion.Parse("1.2.3+build.5")}))
 
 
 class CompareVersions(Testcase):
@@ -598,6 +642,23 @@ class CompareVersions(Testcase):
 				self.assertNotEqual(v1, v2)
 				self.assertLess(v1, v2)
 				self.assertGreater(v2, v1)
+
+	def test_Postfix(self) -> None:
+		"""Unequal versions are ordered: a postfix sorts after no postfix, two postfixes as strings."""
+		for smaller, greater in (
+			("1.2.3",         "1.2.3+build.5"),
+			("1.2.3+build.5", "1.2.3+build.6"),
+			("1.2.3+build.5", "1.2.4")
+		):
+			with self.subTest(smaller=smaller, greater=greater):
+				v1 = SemanticVersion.Parse(smaller)
+				v2 = SemanticVersion.Parse(greater)
+
+				self.assertNotEqual(v1, v2)
+				self.assertLess(v1, v2)
+				self.assertGreater(v2, v1)
+				self.assertFalse(v2 <= v1)
+				self.assertFalse(v1 >= v2)
 
 
 class CompareNone(Testcase):
@@ -948,6 +1009,11 @@ class FormattingUsingFormat(Testcase):
 
 		self.assertEqual("alpha", f"{version:%R}")
 
+	def test_ReleaseLevel_Gamma(self) -> None:
+		version = SemanticVersion(1, 2, 3, level=ReleaseLevel.Gamma, number=4)
+
+		self.assertEqual("gamma4", f"{version:%R%n}")
+
 	def test_ReleaseLevel_Long_Number(self) -> None:
 		version = SemanticVersion(1, 2, 3, level=ReleaseLevel.Alpha, number=4)
 
@@ -991,6 +1057,8 @@ class RoundTrip(Testcase):
 			"v1.2.3.beta1",
 			"v1.2.3.rc1",
 			"v1.2.3.rc1+deb25",
+			"v1.2.3+build.5",
+			"v1.2.3.rc1+exp.sha-5114f85",
 			"1.2.rc3.post2",
 			"1.2.rc3.post2.dev4",
 			"v1.2.3.alpha4.post5.dev6+deb11u3"

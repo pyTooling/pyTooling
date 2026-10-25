@@ -260,10 +260,12 @@ class ReleaseLevel(Enum):
 			return "rc"
 		elif self is ReleaseLevel.Development:
 			return "dev"
-		elif self is ReleaseLevel.Beta:
-			return "beta"
 		elif self is ReleaseLevel.Alpha:
 			return "alpha"
+		elif self is ReleaseLevel.Beta:
+			return "beta"
+		elif self is ReleaseLevel.Gamma:
+			return "gamma"
 
 		raise ToolingException(f"Unknown ReleaseLevel '{self.name}'.")
 
@@ -629,6 +631,40 @@ class Version(metaclass=ExtendedType, slots=True):
 		:returns:             The parsed version number.
 		"""
 
+	@classmethod
+	def _ParseReleaseLevel(cls, release: Nullable[str], level: Nullable[str], versionString: str) -> ReleaseLevel:
+		"""
+		Private helper method to map the release level written in a version string to a :class:`ReleaseLevel`.
+
+		A version string writes a release level either as ``dev`` or ``final``, or abbreviated or spelled out, e.g.
+		``a`` or ``alpha`` for an alpha release.
+
+		:param release:       The release level ``dev`` or ``final``, or ``None`` if the version string has none.
+		:param level:         The release level's spelling, or ``None`` if the version string has none.
+		:param versionString: The version string, the release level was taken from.
+		:returns:             The release level, or :attr:`ReleaseLevel.Final`, if the version string writes none.
+		:raises ValueError:   If the release level is unknown.
+		"""
+		if release is not None:
+			if release == "dev":
+				return ReleaseLevel.Development
+			elif release == "final":
+				return ReleaseLevel.Final
+		elif level is not None:
+			level = level.lower()
+			if level == "a" or level == "alpha":
+				return ReleaseLevel.Alpha
+			elif level == "b" or level == "beta":
+				return ReleaseLevel.Beta
+			elif level == "c" or level == "gamma":
+				return ReleaseLevel.Gamma
+			elif level == "rc" or level == "pre" or level == "preview":
+				return ReleaseLevel.ReleaseCandidate
+		else:
+			return ReleaseLevel.Final
+
+		raise ValueError(f"Unknown release level '{release or level}' in version number '{versionString}'.")
+
 	@readonly
 	def Parts(self) -> Parts:
 		"""
@@ -844,6 +880,11 @@ class Version(metaclass=ExtendedType, slots=True):
 		if left._build < right._build:
 			return True
 		elif left._build > right._build:
+			return False
+
+		if left._postfix < right._postfix:
+			return True
+		elif left._postfix > right._postfix:
 			return False
 
 		return None
@@ -1166,26 +1207,25 @@ class Version(metaclass=ExtendedType, slots=True):
 		"""
 		Compute a hash for this version number and cache it.
 
-		All parts of the version are part of the hash, so two versions differing in a postfix or a build number don't
-		collide.
+		The hash is computed from the parts :meth:`_equal` compares, so versions comparing equal have equal hashes, e.g.
+		``v1.2.3`` and ``1.2.3``. Two versions differing in a postfix or a build number don't collide.
 
 		:returns: Hash of this version number.
 		"""
 		if self.__hash is None:
 			self.__hash = hash((
-				self._prefix,
 				self._epoch,
 				self._major,
 				self._minor,
 				self._micro,
 				self._releaseLevel,
 				self._releaseNumber,
+				Parts.Post in self._parts,
 				self._post,
+				Parts.Dev in self._parts,
 				self._dev,
 				self._build,
-				self._postfix,
-				self._hash,
-				self._flags
+				self._postfix
 			))
 		return self.__hash
 
@@ -1206,11 +1246,11 @@ class SemanticVersion(Version):
 		r"|"
 			r"(?:[\.\-]?(?P<release>dev|final))"
 		r"|"
-			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc|pl)(?P<number>\d*))"
+			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc|pl)(?:[\.\-]?(?P<number>\d+))?)"
 		r")?"
 		r"(?:(?P<delim2>[\.\-]post)(?P<post>\d+))?"
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
-		r"(?:(?P<delim4>[\.\-\+])(?P<postfix>\w+))?"
+		r"(?:(?P<delim4>[\.\-\+])(?P<postfix>\w+(?:[\.\-]\w+)*))?"
 		r"$"
 	)  #: Regular expression to parse a semantic version from a string.
 
@@ -1375,36 +1415,11 @@ class SemanticVersion(Version):
 
 		prefix = match["prefix"]
 
-		release = match["release"]
-		if release is not None:
-			if release == "dev":
-				releaseLevel = ReleaseLevel.Development
-			elif release == "final":
-				releaseLevel = ReleaseLevel.Final
-			else:  # pragma: no cover
-				raise ValueError(f"Unknown release level '{release}' in version number '{versionString}'.")
-		else:
-			level = match["level"]
-			if level is not None:
-				level = level.lower()
-				if level == "a" or level == "alpha":
-					releaseLevel = ReleaseLevel.Alpha
-				elif level == "b" or level == "beta":
-					releaseLevel = ReleaseLevel.Beta
-				elif level == "c" or level == "gamma":
-					releaseLevel = ReleaseLevel.Gamma
-				elif level == "rc" or level == "pre" or level == "preview":
-					releaseLevel = ReleaseLevel.ReleaseCandidate
-				else:  # pragma: no cover
-					raise ValueError(f"Unknown release level '{level}' in version number '{versionString}'.")
-			else:
-				releaseLevel = ReleaseLevel.Final
-
 		version = cls(
 			major=toInt(match["major"]),
 			minor=toInt(match["minor"]),
 			micro=toInt(match["micro"]),
-			level=releaseLevel,
+			level=cls._ParseReleaseLevel(match["release"], match["level"], versionString),
 			number=toInt(match["number"]),
 			post=toInt(match["post"]),
 			dev=toInt(match["dev"]),
@@ -1869,18 +1884,36 @@ class CalendarVersion(Version):
 		r"(?P<major>\d+)"
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
+		r"(?:(?!$)"
+			r"(?:\.(?P<build>\d+))?"
+			r"(?:"
+				r"(?:[\.\-]?(?P<release>dev|final)(?![A-Za-z]))"
+			r"|"
+				r"(?:[\.\-]?(?P<level>alpha|beta|gamma|preview|pre|rc|[abc](?=[\.\-]?\d))(?![A-Za-z])"
+				r"(?:[\.\-]?(?P<number>\d+))?)"
+			r")?"
+			r"(?:[\.\-]post(?P<post>\d+))?"
+			r"(?:[\.\-]dev(?P<dev>\d+))?"
+			r"(?:(?:\+|[\.\-]?(?=[A-Za-z]))(?P<postfix>\w+(?:[\.\-]\w+)*))?"
+		r")?"
 		r"$"
 	)  #: Regular expression to parse a calendar version from a string.
 
 	def __init__(
 		self,
-		major: int,
-		minor: Nullable[int] = None,
-		micro: Nullable[int] = None,
-		build: Nullable[int] = None,
-		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None,
-		postfix: Nullable[str] = None
+		major:   int,
+		minor:   Nullable[int] = None,
+		micro:   Nullable[int] = None,
+		build:   Nullable[int] = None,
+		flags:   Flags = Flags.Clean,
+		prefix:  Nullable[str] = None,
+		postfix: Nullable[str] = None,
+		*,
+		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:  Nullable[int] = None,
+		post:    Nullable[int] = None,
+		dev:     Nullable[int] = None,
+		hash:    Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a calendar version number representation.
@@ -1892,6 +1925,11 @@ class CalendarVersion(Version):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
+		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param hash:        Optional, hash of the version control system's commit this version was built from.
 		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type integer.
@@ -1902,8 +1940,20 @@ class CalendarVersion(Version):
 		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises ValueError: If parameter 'level' is None.
+		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:  If parameter 'number' is not of type integer.
+		:raises ValueError: If parameter 'number' is a negative number.
+		:raises TypeError:  If parameter 'post' is not of type integer.
+		:raises ValueError: If parameter 'post' is a negative number.
+		:raises TypeError:  If parameter 'dev' is not of type integer.
+		:raises ValueError: If parameter 'dev' is a negative number.
+		:raises TypeError:  If parameter 'hash' is not of type string.
 		"""
-		super().__init__(major, minor, micro, build=build, postfix=postfix, prefix=prefix, flags=flags)
+		super().__init__(
+			major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags
+		)
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Predicate[CalendarVersion]] = None) -> CalendarVersion:
@@ -1917,9 +1967,16 @@ class CalendarVersion(Version):
 		* ``r|R`` - release, revision
 		* ``rev|REV`` - revision
 
-		A version number carries up to :attr:`_PARTCOUNT` numeric parts. :class:`YearMonthVersion`,
-		:class:`YearWeekVersion` and :class:`YearReleaseVersion` describe two parts, so a third part is rejected for
-		them.
+		A version number carries up to :attr:`_PARTCOUNT` numeric parts and a build number as the next numeric part.
+		:class:`YearMonthVersion`, :class:`YearWeekVersion` and :class:`YearReleaseVersion` describe two parts, so their
+		third numeric part is the build number: ``2024.10.3`` is build 3 of ``2024.10``.
+
+		The numbers may be followed by a release level, a post-release, a development release and a postfix, e.g.
+		``2024.10rc1.post2.dev3+deadbeef``. A ``.`` or ``-`` may separate a release level from the numbers and from its
+		own number: ``2024.01a1``, ``2024.01.a1`` and ``2024.01-a1`` are the same alpha release. A release level spelled
+		out (``alpha``, ``beta``, ``gamma``, ``rc``, ``pre``, ``preview``) may omit its number, which is 0 then. A letter
+		without a number is a postfix, as OSVVM's ``2025.06a`` is a release after ``2025.06``. A postfix follows a ``+``;
+		one starting with a letter may also follow a ``.``, a ``-`` or directly the version.
 
 		:param versionString:          The version string to parse.
 		:param validator:              Optional, a validation function.
@@ -1929,9 +1986,10 @@ class CalendarVersion(Version):
 		:raises ValueError:            If parameter ``versionString`` isn't a calendar version number. |br|
 		                               It may carry one of the prefixes ``v``, ``i``, ``r`` or ``rev``, e.g.
 		                               ``v2024.04``.
-		:raises ValueError:            If parameter ``versionString`` has more parts than the class describes. |br|
+		:raises ValueError:            If parameter ``versionString`` has more numeric parts than the class describes
+		                               plus a build number. |br|
 		                               Use :class:`CalendarVersion` or :class:`YearMonthDayVersion` to parse a
-		                               three-part calendar version number.
+		                               three-part calendar version number with a build number.
 		:raises VersionValidatorError: If the parsed version is rejected by ``validator``.
 		"""
 		if versionString is None:
@@ -1950,13 +2008,21 @@ class CalendarVersion(Version):
 			raise ex
 
 		prefix = match["prefix"]
-		minor = match["minor"]
-		micro = match["micro"]
+		minor =  match["minor"]
+		micro =  match["micro"]
+		build =  match["build"]
 
-		if micro is not None and cls._PARTCOUNT < 3:
-			ex = ValueError(f"Version number '{versionString}' has 3 parts, but '{cls.__name__}' describes {cls._PARTCOUNT}.")
-			ex.add_note("Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
-			raise ex
+		if cls._PARTCOUNT < 3 and micro is not None:
+			if build is not None:
+				ex = ValueError(
+					f"Version number '{versionString}' has 4 numeric parts, but '{cls.__name__}' describes "
+					f"{cls._PARTCOUNT} and a build number."
+				)
+				ex.add_note("Use 'CalendarVersion' or 'YearMonthDayVersion' to parse a 3-part calendar version number.")
+				raise ex
+
+			build = micro
+			micro = None
 
 		numbers = [int(match["major"])]
 		if minor is not None:
@@ -1964,7 +2030,27 @@ class CalendarVersion(Version):
 			if micro is not None:
 				numbers.append(int(micro))
 
-		version = cls(*numbers, flags=Flags.Clean, prefix=prefix if prefix != "" else None)
+		if build is not None:
+			build = int(build)
+
+		if match.lastgroup in ("major", "minor", "micro", "build"):
+			version = cls(*numbers, build=build, flags=Flags.Clean, prefix=prefix)
+		else:
+			number = match["number"]
+			post =   match["post"]
+			dev =    match["dev"]
+
+			version = cls(
+				*numbers,
+				build=build,
+				flags=Flags.Clean,
+				prefix=prefix,
+				postfix=match["postfix"],
+				level=cls._ParseReleaseLevel(match["release"], match["level"], versionString),
+				number=int(number) if number is not None else None,
+				post=int(post) if post is not None else None,
+				dev=int(dev) if dev is not None else None
+			)
 
 		if validator is not None and not validator(version):
 			raise VersionValidatorError(f"Failed to validate version string '{versionString}'.", version=version)
@@ -1984,15 +2070,20 @@ class CalendarVersion(Version):
 		"""
 		Private helper method to compute the equality of two :class:`CalendarVersion` instances.
 
+		Every part counts, from the year to the postfix: ``2025.06a`` isn't ``2025.06``.
+
 		:param left:  Left parameter.
 		:param right: Right parameter.
 		:returns:     ``True``, if ``left`` is equal to ``right``, otherwise it's ``False``.
 		"""
-		return (left._major == right._major) and (left._minor == right._minor) and (left._micro == right._micro)
+		return super()._equal(left, right)
 
 	def _compare(self, left: CalendarVersion, right: CalendarVersion) -> Nullable[bool]:
 		"""
 		Private helper method to compute the comparison of two :class:`CalendarVersion` instances.
+
+		The postfix is compared last: a version without one is older than a version with one, and two postfixes compare
+		as strings, so ``2025.06 < 2025.06a < 2025.06b``.
 
 		:param left:  Left parameter.
 		:param right: Right parameter.
@@ -2000,22 +2091,7 @@ class CalendarVersion(Version):
 		              False if ``left`` is greater than ``right``. |br|
 		              Otherwise it's None (both parameters are equal).
 		"""
-		if left._major < right._major:
-			return True
-		elif left._major > right._major:
-			return False
-
-		if left._minor < right._minor:
-			return True
-		elif left._minor > right._minor:
-			return False
-
-		if left._micro < right._micro:
-			return True
-		elif left._micro > right._micro:
-			return False
-
-		return None
+		return super()._compare(left, right)
 
 	def __eq__(self, other: Any) -> bool:
 		"""
@@ -2142,24 +2218,21 @@ class CalendarVersion(Version):
 
 		.. topic:: Format Specifiers
 
+		   * ``%p`` - prefix
 		   * ``%M`` - major number (year)
 		   * ``%m`` - minor number (month/week)
 		   * ``%u`` - micro number (day)
+		   * ``%b`` - build number
+		   * ``%r`` - release level's first letter
+		   * ``%R`` - release level
+		   * ``%n`` - release number
+		   * ``%d`` - development number
+		   * ``%P`` - postfix
 
 		:param formatSpec: The format specification.
 		:returns:          Formatted version number.
 		"""
-		if formatSpec == "":
-			return self.__str__()
-
-		result = formatSpec
-		# result = result.replace("%P", str(self._prefix))
-		result = result.replace("%M", str(self._major))
-		result = result.replace("%m", str(self._minor))
-		result = result.replace("%u", str(self._micro))
-		# result = result.replace("%p", str(self._pre))
-
-		return result.replace("%%", "%")
+		return self._format(formatSpec).replace("%%", "%")
 
 	def __repr__(self) -> str:
 		"""
@@ -2172,21 +2245,47 @@ class CalendarVersion(Version):
 
 		:returns: Raw version number representation without a prefix.
 		"""
-		result = f"{self._major}.{self._minor}"
-		result += f".{self._micro}" if Parts.Micro in self._parts else ""
-
-		return result
+		return f"{self._major}{self._FormatParts(True)}"
 
 	def __str__(self) -> str:
 		"""
 		Return a string representation of this version number with only the present parts.
 
+		The string parses back into an equal version: ``2025.06a`` is written ``2025.6+a``, and the third numeric part
+		of a :class:`YearMonthVersion` is its build number.
+
 		:returns: Version number representation including a prefix.
 		"""
 		result = self._prefix if Parts.Prefix in self._parts else ""
 		result += f"{self._major}"
-		result += f".{self._minor}" if Parts.Minor in self._parts else ""
-		result += f".{self._micro}" if Parts.Micro in self._parts else ""
+		result += self._FormatParts(False)
+
+		return result
+
+	def _FormatParts(self, withMinor: bool) -> str:
+		"""
+		Private helper method to format the parts following the major number.
+
+		A numeric part is written, if it or a later numeric part is present, so it keeps its position. A release level,
+		a post-release, a development release and a postfix are written, if present.
+
+		:param withMinor: If ``True``, the minor number is written even if no numeric part follows the major number.
+		:returns:         The parts following the major number.
+		"""
+		build = Parts.Build in self._parts
+		micro = self._PARTCOUNT > 2 and (build or Parts.Micro in self._parts)
+		minor = withMinor or micro or build or Parts.Minor in self._parts
+
+		result = f".{self._minor}" if minor else ""
+		result += f".{self._micro}" if micro else ""
+		result += f".{self._build}" if build else ""
+		if self._releaseLevel is ReleaseLevel.Development:
+			result += "-dev"
+		elif self._releaseLevel is not ReleaseLevel.Final:
+			result += f".{self._releaseLevel}{self._releaseNumber}"
+		result += f".post{self._post}" if Parts.Post in self._parts else ""
+		result += f".dev{self._dev}" if Parts.Dev in self._parts else ""
+		result += f"+{self._postfix}" if Parts.Postfix in self._parts else ""
 
 		return result
 
@@ -2199,12 +2298,18 @@ class YearMonthVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year: int,
-		month: Nullable[int] = None,
-		build: Nullable[int] = None,
-		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None,
-		postfix: Nullable[str] = None
+		year:    int,
+		month:   Nullable[int] = None,
+		build:   Nullable[int] = None,
+		flags:   Flags = Flags.Clean,
+		prefix:  Nullable[str] = None,
+		postfix: Nullable[str] = None,
+		*,
+		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:  Nullable[int] = None,
+		post:    Nullable[int] = None,
+		dev:     Nullable[int] = None,
+		hash:    Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-month version number representation.
@@ -2215,6 +2320,11 @@ class YearMonthVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
+		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param hash:        Optional, hash of the version control system's commit this version was built from.
 		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type integer.
@@ -2225,8 +2335,20 @@ class YearMonthVersion(CalendarVersion):
 		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises ValueError: If parameter 'level' is None.
+		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:  If parameter 'number' is not of type integer.
+		:raises ValueError: If parameter 'number' is a negative number.
+		:raises TypeError:  If parameter 'post' is not of type integer.
+		:raises ValueError: If parameter 'post' is a negative number.
+		:raises TypeError:  If parameter 'dev' is not of type integer.
+		:raises ValueError: If parameter 'dev' is a negative number.
+		:raises TypeError:  If parameter 'hash' is not of type string.
 		"""
-		super().__init__(year, month, None, build, flags, prefix, postfix)
+		super().__init__(
+			year, month, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+		)
 
 	@readonly
 	def Month(self) -> int:
@@ -2257,12 +2379,18 @@ class YearWeekVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year: int,
-		week: Nullable[int] = None,
-		build: Nullable[int] = None,
-		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None,
-		postfix: Nullable[str] = None
+		year:    int,
+		week:    Nullable[int] = None,
+		build:   Nullable[int] = None,
+		flags:   Flags = Flags.Clean,
+		prefix:  Nullable[str] = None,
+		postfix: Nullable[str] = None,
+		*,
+		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:  Nullable[int] = None,
+		post:    Nullable[int] = None,
+		dev:     Nullable[int] = None,
+		hash:    Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-week version number representation.
@@ -2273,6 +2401,11 @@ class YearWeekVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
+		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param hash:        Optional, hash of the version control system's commit this version was built from.
 		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type integer.
@@ -2283,8 +2416,20 @@ class YearWeekVersion(CalendarVersion):
 		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises ValueError: If parameter 'level' is None.
+		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:  If parameter 'number' is not of type integer.
+		:raises ValueError: If parameter 'number' is a negative number.
+		:raises TypeError:  If parameter 'post' is not of type integer.
+		:raises ValueError: If parameter 'post' is a negative number.
+		:raises TypeError:  If parameter 'dev' is not of type integer.
+		:raises ValueError: If parameter 'dev' is a negative number.
+		:raises TypeError:  If parameter 'hash' is not of type string.
 		"""
-		super().__init__(year, week, None, build, flags, prefix, postfix)
+		super().__init__(
+			year, week, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+		)
 
 	@readonly
 	def Week(self) -> int:
@@ -2315,12 +2460,18 @@ class YearReleaseVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year: int,
+		year:    int,
 		release: Nullable[int] = None,
-		build: Nullable[int] = None,
-		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None,
-		postfix: Nullable[str] = None
+		build:   Nullable[int] = None,
+		flags:   Flags = Flags.Clean,
+		prefix:  Nullable[str] = None,
+		postfix: Nullable[str] = None,
+		*,
+		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:  Nullable[int] = None,
+		post:    Nullable[int] = None,
+		dev:     Nullable[int] = None,
+		hash:    Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-release version number representation.
@@ -2331,6 +2482,11 @@ class YearReleaseVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
+		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param hash:        Optional, hash of the version control system's commit this version was built from.
 		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type integer.
@@ -2341,8 +2497,20 @@ class YearReleaseVersion(CalendarVersion):
 		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises ValueError: If parameter 'level' is None.
+		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:  If parameter 'number' is not of type integer.
+		:raises ValueError: If parameter 'number' is a negative number.
+		:raises TypeError:  If parameter 'post' is not of type integer.
+		:raises ValueError: If parameter 'post' is a negative number.
+		:raises TypeError:  If parameter 'dev' is not of type integer.
+		:raises ValueError: If parameter 'dev' is a negative number.
+		:raises TypeError:  If parameter 'hash' is not of type string.
 		"""
-		super().__init__(year, release, None, build, flags, prefix, postfix)
+		super().__init__(
+			year, release, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+		)
 
 	@readonly
 	def Release(self) -> int:
@@ -2371,13 +2539,19 @@ class YearMonthDayVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year: int,
-		month: Nullable[int] = None,
-		day: Nullable[int] = None,
-		build: Nullable[int] = None,
-		flags: Flags = Flags.Clean,
-		prefix: Nullable[str] = None,
-		postfix: Nullable[str] = None
+		year:    int,
+		month:   Nullable[int] = None,
+		day:     Nullable[int] = None,
+		build:   Nullable[int] = None,
+		flags:   Flags = Flags.Clean,
+		prefix:  Nullable[str] = None,
+		postfix: Nullable[str] = None,
+		*,
+		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:  Nullable[int] = None,
+		post:    Nullable[int] = None,
+		dev:     Nullable[int] = None,
+		hash:    Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-month-day version number representation.
@@ -2389,6 +2563,11 @@ class YearMonthDayVersion(CalendarVersion):
 		:param flags:       Optional, the version number's flags.
 		:param prefix:      Optional, the version number's prefix.
 		:param postfix:     Optional, the version number's postfix.
+		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:        Optional, post number part of the version number.
+		:param dev:         Optional, development number part of the version number.
+		:param hash:        Optional, hash of the version control system's commit this version was built from.
 		:raises TypeError:  If parameter 'major' is not of type integer.
 		:raises ValueError: If parameter 'major' is a negative number.
 		:raises TypeError:  If parameter 'minor' is not of type integer.
@@ -2399,8 +2578,20 @@ class YearMonthDayVersion(CalendarVersion):
 		:raises ValueError: If parameter 'build' is a negative number.
 		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises ValueError: If parameter 'level' is None.
+		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:  If parameter 'number' is not of type integer.
+		:raises ValueError: If parameter 'number' is a negative number.
+		:raises TypeError:  If parameter 'post' is not of type integer.
+		:raises ValueError: If parameter 'post' is a negative number.
+		:raises TypeError:  If parameter 'dev' is not of type integer.
+		:raises ValueError: If parameter 'dev' is a negative number.
+		:raises TypeError:  If parameter 'hash' is not of type string.
 		"""
-		super().__init__(year, month, day, build, flags, prefix, postfix)
+		super().__init__(
+			year, month, day, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+		)
 
 	@readonly
 	def Month(self) -> int:

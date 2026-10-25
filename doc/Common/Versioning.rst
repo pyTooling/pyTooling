@@ -103,6 +103,8 @@ prefix, a postfix or a build number.
         v1.2.3.\ :green:`beta4` |br|
         v1.2.3.\ :green:`rc4`
 
+        A ``.`` or ``-`` may separate the release number, as SemVer writes it: ``v2.0.0-rc.1`` is ``v2.0.0.rc1``.
+
       Post number
         tbd
 
@@ -114,7 +116,11 @@ prefix, a postfix or a build number.
         v1.2.3.\ :green:`dev4`
 
       Postfix string
-        v1.2.3+\ :green:`deb11u5`
+        v1.2.3+\ :green:`deb11u5` |br|
+        v1.2.3+\ :green:`build.5`
+
+        Identifiers separated by ``.`` or ``-``, like SemVer's build metadata. A postfix makes a version newer:
+        ``v1.2.3 < v1.2.3+build.5 < v1.2.3+build.6``.
 
       Comparison operators
         Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.
@@ -397,19 +403,60 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
         Represents the micro or patch version number in semantic version.
 
       Build number
-        Represents the build number.
+        Represents the build number: the numeric part following the parts a class describes, e.g. ``3`` in
+        ``2024.10.15.3`` or, for a :class:`~pyTooling.Versioning.YearMonthVersion`, in ``2024.10.3``.
+
+      Release level
+        A pre-release like ``2024.01a1``, ``2024.01-rc1`` or ``2024.01-dev``, as for a semantic version.
+
+      Post-release and development release
+        ``2024.01.post2`` and ``2024.01.dev3``.
 
       Prefix string
         Represents the prefix like: ``v`` (version), ``r`` (revision), ``i`` (internal version/release), ``ver``
         (version), ``rev`` (revision).
 
+      Postfix string
+        Anything following the version, e.g. ``deadbeef`` in ``2024.10.15+deadbeef`` or ``a`` in OSVVM's
+        ``2025.06a``.
+
       Comparison operators
         Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.
 
-      .. rubric:: Missing Features
+      .. rubric:: Spellings
 
-      * release-level: additional labels like ``dev``, ``rc``, ``pl``, ``alpha``
-      * pre-version and post-version
+      A ``.`` or ``-`` may separate a release level from the numbers and from its own number. A release level spelled
+      out may omit its number, which is 0 then; a letter without a number is a postfix. A version is written in one
+      spelling, which parses back into an equal version:
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 40 30 30
+
+         * - Parsed
+           - Written
+           - Meaning
+         * - ``2024.01a1``, ``2024.01.a1``, ``2024.01-a.1``
+           - ``2024.1.alpha1``
+           - alpha 1
+         * - ``2024.01-rc``
+           - ``2024.1.rc0``
+           - release candidate 0
+         * - ``2024.01-dev``
+           - ``2024.1-dev``
+           - development release
+         * - ``2024.01.post2.dev3``
+           - ``2024.1.post2.dev3``
+           - development release of a post-release
+         * - ``2025.06a``, ``2025.06-a``
+           - ``2025.6+a``
+           - postfix ``a``
+         * - ``2024.10.15+deadbeef``
+           - ``2024.10.15+deadbeef``
+           - postfix ``deadbeef``
+
+      Pre-releases are older than their release; a postfix and a build number make a version newer:
+      ``2025.06rc1 < 2025.06 < 2025.06a < 2025.06b < 2025.06.1``. Two postfixes compare as strings.
 
    .. grid-item::
       :columns: 6
@@ -541,7 +588,7 @@ Variants
 
             .. rubric:: Examples
 
-            * OSVVM: 2024.07
+            * OSVVM: 2024.07, 2025.06a
             * Ubuntu: 2024.10
 
          .. grid-item::
