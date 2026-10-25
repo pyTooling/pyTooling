@@ -536,6 +536,12 @@ Version 10.x (2026)
        present.
      * A :class:`~pyTooling.Versioning.VersionRange` can be open at either end: a bound of ``None`` is unbounded, so
        ``>=1.0`` is expressible.
+     * :class:`~pyTooling.Versioning.CalendarVersion` and its year-based classes carry a release level, a post-release,
+       a development release, a build number and a postfix, as a semantic version does: ``2024.01a1``,
+       ``2024.01-rc1``, ``2024.01-dev``, ``2024.01.post2.dev3``, ``2024.10.15.3``, ``2024.10.15+deadbeef`` and OSVVM's
+       ``2025.06a``. A ``.`` or ``-`` may separate the release level; a letter without a number is a postfix. Their
+       initializers take ``level``, ``number``, ``post``, ``dev`` and ``hash`` as keyword parameters; :func:`str`,
+       :func:`repr` and :func:`format` write the new parts.
 
    * Exceptions carry the object they are about, so a caller can react without parsing the message. The new
      parameters are keyword-only. Most default to ``None``, so an exception raised with a message only keeps working;
@@ -828,6 +834,21 @@ Version 10.x (2026)
    * ⚠️ :meth:`VersionRange.__and__ <pyTooling.Versioning.VersionRange.__and__>` **no longer includes bounds the
      operands exclude** - see *Bug Fixes*.
 
+   * ⚠️ **The third numeric part of a** :class:`~pyTooling.Versioning.YearMonthVersion`,
+     :class:`~pyTooling.Versioning.YearWeekVersion` **or** :class:`~pyTooling.Versioning.YearReleaseVersion` **is its
+     build number**: ``YearMonthVersion.Parse("2024.10.15")`` raised a :exc:`ValueError`; it is build 15 of
+     ``2024.10``. Parse a date with :class:`~pyTooling.Versioning.YearMonthDayVersion`.
+
+   * ⚠️ **A calendar version compares and hashes every part**, see *Bug Fixes*: ``2025.06a == 2025.06`` is
+     ``False``. Code comparing only the numbers compares :attr:`~pyTooling.Versioning.CalendarVersion.Year` and
+     :attr:`~pyTooling.Versioning.YearMonthVersion.Month`.
+
+   * ⚠️ **A postfix makes a version newer**, see *Bug Fixes*: ``1.2.3 < 1.2.3+build.5``. Code expecting both to sort
+     alike drops the postfix before comparing.
+
+   * ⚠️ ``SemanticVersion.Parse("v2.0.0-rc.1")`` **is release candidate 1**, not release candidate 0 with the postfix
+     ``1`` - see *Bug Fixes*.
+
    .. rubric:: Changes
 
    * :mod:`pyTooling.TerminalUI` imports without colorama: the color palette
@@ -1060,6 +1081,13 @@ Version 10.x (2026)
      * ⚠️ A :class:`~pyTooling.Tree.Node` takes its key-value-pairs from
        :class:`~pyTooling.DataModel.KeyValuePairsMixin`, so its key and value type parameters are gone.
 
+   * :mod:`pyTooling.Versioning`
+
+     * ⚠️ A two-part calendar version - :class:`~pyTooling.Versioning.YearMonthVersion`,
+       :class:`~pyTooling.Versioning.YearWeekVersion`, :class:`~pyTooling.Versioning.YearReleaseVersion` - reads a
+       third numeric part as its build number, as a fourth one is the build number of a three-part version:
+       ``2024.10.15`` is build 15 of ``2024.10``. It was rejected; a fourth numeric part still is.
+
    * General
 
      * ⚠️ Membership tests are named ``Contains***``; ``Has***`` checks a property or feature of an object.
@@ -1254,6 +1282,21 @@ Version 10.x (2026)
      * ⚠️ :meth:`VersionRange.__and__ <pyTooling.Versioning.VersionRange.__and__>` discarded both operands' bound
        handling, so intersecting two ranges that exclude their bounds returned a range including them. Each bound keeps
        the handling of the range it came from; where both contribute the same value, the stricter one wins.
+     * ⚠️ A calendar version ignored everything but its numbers: ``YearMonthVersion(2025, 6, postfix="a")`` was equal
+       to ``YearMonthVersion(2025, 6)`` and written ``2025.6``; a build number didn't count either.
+       :meth:`CalendarVersion.Parse <pyTooling.Versioning.CalendarVersion.Parse>` rejected every release level,
+       post-release, development release and postfix (``2024.01a``, ``2024.01-dev``, ``2024.10.15+deadbeef``) with a
+       :exc:`ValueError`.
+     * ⚠️ A postfix didn't order a version: ``1.2.3`` and ``1.2.3+build.5`` were unequal, but neither was less than the
+       other, and both ``<=`` and ``>=`` were true, so sorting them depended on their input order. A version without a
+       postfix is less than one with a postfix now, and two postfixes compare as strings.
+     * ⚠️ :meth:`SemanticVersion.Parse <pyTooling.Versioning.SemanticVersion.Parse>` read SemVer's ``v2.0.0-rc.1`` as
+       release candidate 0 with the postfix ``1`` (written ``v2.0.0.rc0+1``) and rejected a postfix with a ``.`` or
+       ``-``, like ``v1.2.3+build.5``.
+     * :class:`~pyTooling.Versioning.Version` hashed the prefix and the flags, which it doesn't compare:
+       ``SemanticVersion(1, 2, 3) == SemanticVersion.Parse("v1.2.3")``, but a set holding one didn't find the other.
+     * ``str(ReleaseLevel.Gamma)`` raised a :exc:`~pyTooling.Exceptions.ToolingException`, so a version's ``%R``
+       format failed for a gamma release.
 
    * :mod:`pyTooling.Warning`
 
