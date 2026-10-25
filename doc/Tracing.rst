@@ -391,7 +391,10 @@ A document is not a trace. It carries whatever spans a producer had to hand, and
 
 A :class:`~pyTooling.Tracing.TraceCollection` holds both cases. It keeps the traces whose root span has arrived, and
 the **fragments** - timespans whose ``parentSpanId`` names a span nothing has delivered yet. A fragment is a real
-timespan with its own sub-spans; only its place in the tree is unknown.
+timespan with its own sub-spans; only its place in the tree is unknown. Its root is a
+:class:`~pyTooling.Tracing.Fragment`, which keeps the identifiers of its trace and of the parent it is waiting for
+(:attr:`~pyTooling.Tracing.Fragment.TraceID`, :attr:`~pyTooling.Tracing.Fragment.ParentSpanID`), and the timespans
+below it name the fragment as their :attr:`~pyTooling.Tracing.Span.Trace` until the parent arrives.
 
 .. code-block:: python
 
@@ -434,8 +437,7 @@ useful on its own:
    * - :attr:`~pyTooling.Tracing.TraceCollection.Traces` / :attr:`~pyTooling.Tracing.TraceCollection.Fragments`
      - the complete traces, and the root timespan of each fragment
    * - :meth:`~pyTooling.Tracing.TraceCollection.TraceIDOfSpan`
-     - which trace a timespan belongs to - answerable for a fragment, which has no
-       :attr:`~pyTooling.Tracing.Span.Trace` to ask
+     - which trace a timespan belongs to - for a timespan of a fragment too, whose trace's root span hasn't arrived
    * - ``for trace in collection`` / ``len(collection)``
      - the **complete** traces; a fragment is not a trace and is neither iterated nor counted as one
 

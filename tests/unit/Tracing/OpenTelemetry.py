@@ -40,7 +40,8 @@ from unittest             import mock
 
 from pytest               import mark
 
-from pyTooling.Tracing    import OTLP_SCOPE_NAME, Event, Span, Trace, TraceCollection, TraceElement, TracingError
+from pyTooling.Tracing    import OTLP_SCOPE_NAME, Event, Fragment, Span, Trace, TraceCollection, TraceElement, \
+                                 TracingError
 from pyTooling            import Resources
 from pyTooling.Common     import __version__, getResourceFile, readResourceFile
 from pyTooling.Exceptions import MissingDependencyError
@@ -1485,6 +1486,96 @@ def _splitExample() -> tuple[Trace, dict, dict]:
 	return trace, _document(spans["build"], spans["link"]), _document(spans["compile"], spans["parse"])
 
 
+class Fragments(Testcase):
+	"""A fragment keeps the identifiers of its trace and of the parent it is waiting for."""
+
+	def test_Construction(self) -> None:
+		"""Both identifiers are stored lower-case, and the fragment is the trace of its sub-spans."""
+		fragment = Fragment("fragment", traceID=TRACE_ID.upper(), parentSpanID="ABCDEF0123456789")
+		span =     Span("below", parent=fragment)
+
+		self.assertEqual(TRACE_ID, fragment.TraceID)
+		self.assertEqual("abcdef0123456789", fragment.ParentSpanID)
+		self.assertIsNone(fragment.Parent)
+		self.assertIs(fragment, fragment.Trace)
+		self.assertIs(fragment, span.Trace)
+
+	def test_Export(self) -> None:
+		"""The fragment writes the parent it is waiting for; its sub-spans write the fragment as parent."""
+		fragment = Fragment("fragment", traceID=TRACE_ID, parentSpanID="abcdef0123456789")
+		span =     Span("below", parent=fragment)
+		spans =    fragment._ToOTLPJSON()
+
+		self.assertEqual([TRACE_ID, TRACE_ID], [entry["traceId"] for entry in spans])
+		self.assertEqual("abcdef0123456789", spans[0]["parentSpanId"])
+		self.assertEqual(fragment.SpanID, spans[1]["parentSpanId"])
+		self.assertEqual(span.SpanID, spans[1]["spanId"])
+
+	def test_TraceID_None(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID=None, parentSpanID="abcdef0123456789")
+
+		self.assertEqual("Parameter 'traceID' is None.", str(exceptionCapture.exception))
+
+	def test_TraceID_Type(self) -> None:
+		with self.assertRaises(TypeError) as exceptionCapture:
+			Fragment("fragment", traceID=0x0123, parentSpanID="abcdef0123456789")
+
+		self.assertEqual("Parameter 'traceID' is not of type 'str'.", str(exceptionCapture.exception))
+		self.assertEqual(["Got type 'int'."], exceptionCapture.exception.__notes__)
+
+	def test_TraceID_Length(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID="0123456789abcdef", parentSpanID="abcdef0123456789")
+
+		self.assertEqual("Parameter 'traceID' is not 32 hexadecimal digits.", str(exceptionCapture.exception))
+		self.assertEqual(["Got '0123456789abcdef'."], exceptionCapture.exception.__notes__)
+
+	def test_TraceID_Digits(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID="g" * 32, parentSpanID="abcdef0123456789")
+
+		self.assertEqual("Parameter 'traceID' is not 32 hexadecimal digits.", str(exceptionCapture.exception))
+
+	def test_TraceID_Zero(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID="0" * 32, parentSpanID="abcdef0123456789")
+
+		self.assertEqual("Parameter 'traceID' is all zeros.", str(exceptionCapture.exception))
+
+	def test_ParentSpanID_None(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID=TRACE_ID, parentSpanID=None)
+
+		self.assertEqual("Parameter 'parentSpanID' is None.", str(exceptionCapture.exception))
+
+	def test_ParentSpanID_Type(self) -> None:
+		with self.assertRaises(TypeError) as exceptionCapture:
+			Fragment("fragment", traceID=TRACE_ID, parentSpanID=0x0123)
+
+		self.assertEqual("Parameter 'parentSpanID' is not of type 'str'.", str(exceptionCapture.exception))
+		self.assertEqual(["Got type 'int'."], exceptionCapture.exception.__notes__)
+
+	def test_ParentSpanID_Length(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID=TRACE_ID, parentSpanID=TRACE_ID)
+
+		self.assertEqual("Parameter 'parentSpanID' is not 16 hexadecimal digits.", str(exceptionCapture.exception))
+		self.assertEqual([f"Got '{TRACE_ID}'."], exceptionCapture.exception.__notes__)
+
+	def test_ParentSpanID_Digits(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID=TRACE_ID, parentSpanID="g" * 16)
+
+		self.assertEqual("Parameter 'parentSpanID' is not 16 hexadecimal digits.", str(exceptionCapture.exception))
+
+	def test_ParentSpanID_Zero(self) -> None:
+		with self.assertRaises(ValueError) as exceptionCapture:
+			Fragment("fragment", traceID=TRACE_ID, parentSpanID="0" * 16)
+
+		self.assertEqual("Parameter 'parentSpanID' is all zeros.", str(exceptionCapture.exception))
+
+
 @skipWithoutJSONSchema
 class Collections(Testcase):
 	"""A collection holds what a document carries: several traces, and timespans that aren't part of one yet."""
@@ -1524,9 +1615,13 @@ class Collections(Testcase):
 		self.assertEqual(1, collection.TraceCount)
 		self.assertEqual(1, collection.FragmentCount)
 		self.assertTrue(collection.HasFragments)
-		self.assertEqual("fragment", collection.Fragments[0].Name)
-		self.assertIsNone(collection.Fragments[0].Parent)
-		self.assertIsNone(collection.Fragments[0].Trace)
+		fragment = collection.Fragments[0]
+		self.assertIsInstance(fragment, Fragment)
+		self.assertEqual("fragment", fragment.Name)
+		self.assertIsNone(fragment.Parent)
+		self.assertIs(fragment, fragment.Trace)
+		self.assertEqual(TRACE_ID, fragment.TraceID)
+		self.assertEqual("3333333333333333", fragment.ParentSpanID)
 
 	def test_Fragment_SubSpans(self) -> None:
 		"""Only the fragment's *place* is unknown; the part of the tree that came with it is built."""
@@ -1537,7 +1632,9 @@ class Collections(Testcase):
 
 		self.assertEqual(0, collection.TraceCount)
 		self.assertEqual(1, collection.FragmentCount)
-		self.assertEqual(["below"], [span.Name for span in collection.Fragments[0].IterateSubSpans()])
+		fragment = collection.Fragments[0]
+		self.assertEqual(["below"], [span.Name for span in fragment.IterateSubSpans()])
+		self.assertIs(fragment, next(fragment.IterateSubSpans()).Trace)
 
 	def test_MissingRoot(self) -> None:
 		"""A trace without its root span is only fragments."""
@@ -1707,10 +1804,10 @@ class CollectionLookup(Testcase):
 		self.assertNotIn("4444444444444444", collection, "The awaited parent is exactly what isn't here.")
 
 	def test_TraceIDOfSpan(self) -> None:
-		"""It has no 'Trace' to ask, but its 'traceId' was in the document all the same."""
+		"""Its 'Trace' is the fragment, which keeps the 'traceId' of the document."""
 		collection = self._Collection()
 
-		self.assertIsNone(collection["3333333333333333"].Trace)
+		self.assertIsInstance(collection["3333333333333333"].Trace, Fragment)
 		self.assertEqual(TRACE_ID, collection.TraceIDOfSpan("3333333333333333"))
 
 	def test_IterateFragmentsOf(self) -> None:

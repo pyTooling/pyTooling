@@ -398,7 +398,8 @@ Version 10.x (2026)
      * A :class:`~pyTooling.Tracing.TraceCollection` reads documents that aren't one complete trace: several traces at
        once, or only part of one. It keeps the complete traces and the **fragments** - timespans whose parent hasn't
        arrived yet - indexed by identifier, links them as further documents are added in any order, and writes itself
-       back as OTLP/JSON.
+       back as OTLP/JSON. A fragment's root is a :class:`~pyTooling.Tracing.Fragment`, which keeps the identifiers of
+       its trace and of the parent it is waiting for.
 
    * :mod:`pyTooling.Packaging`
 

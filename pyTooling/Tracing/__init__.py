@@ -557,18 +557,18 @@ class Span(TraceElement):
 
 	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
-	_trace:     Nullable[Trace]          #: Reference to the trace this timespan belongs to.
-	_spanID:    str                      #: Identifier of this timespan, as 16 hex digits.
+	_trace:     Nullable[Union[Trace, Fragment]]  #: Reference to the trace (or fragment) this timespan belongs to.
+	_spanID:    str                               #: Identifier of this timespan, as 16 hex digits.
 
-	_beginTime: Nullable[datetime]       #: Timestamp when the timespan begins.
-	_endTime:   Nullable[datetime]       #: Timestamp when the timespan ends.
-	_startTime: Nullable[int]            #: Performance counter in ns when the timespan was started.
-	_stopTime:  Nullable[int]            #: Performance counter in ns when the timespan was stopped.
-	_totalTime: Nullable[int]            #: Duration of this timespan in ns.
+	_beginTime: Nullable[datetime]                #: Timestamp when the timespan begins.
+	_endTime:   Nullable[datetime]                #: Timestamp when the timespan ends.
+	_startTime: Nullable[int]                     #: Performance counter in ns when the timespan was started.
+	_stopTime:  Nullable[int]                     #: Performance counter in ns when the timespan was stopped.
+	_totalTime: Nullable[int]                     #: Duration of this timespan in ns.
 
-	_spans:     list[Span]               #: Sub-timespans
-	_events:    list[Event]              #: Events happened within this timespan
-	_exception: Nullable[BaseException]  #: The exception that left the ``with``-statement timing this timespan.
+	_spans:     list[Span]                        #: Sub-timespans
+	_events:    list[Event]                       #: Events happened within this timespan
+	_exception: Nullable[BaseException]           #: The exception that left the ``with``-statement timing this timespan.
 
 	def __init__(
 		self,
@@ -750,11 +750,14 @@ class Span(TraceElement):
 		return self._exception
 
 	@readonly
-	def Trace(self) -> Nullable[Trace]:
+	def Trace(self) -> Nullable[Union[Trace, Fragment]]:
 		"""
 		Read-only property to access the trace this timespan belongs to.
 
-		:returns: The enclosing trace, or ``None`` while the timespan is not part of one.
+		A timespan below a :class:`Fragment` belongs to the fragment, until a :class:`TraceCollection` attaches the
+		fragment to its parent.
+
+		:returns: The enclosing trace or fragment, or ``None`` while the timespan is not part of one.
 		"""
 		return self._trace
 
@@ -1070,34 +1073,29 @@ class Span(TraceElement):
 		currentSpan = _threadLocalData.currentSpan
 		_threadLocalData.currentSpan = currentSpan._parent
 
-	def _ToOTLPJSON(self, traceID: Nullable[str] = None, parentSpanID: Nullable[str] = None) -> list[OTLPSpan]:
+	def _ToOTLPJSON(self) -> list[OTLPSpan]:
 		"""
 		Convert this timespan and its sub-spans to their **OTLP/JSON** representation.
 
-		OTLP has no nesting: the tree is flattened into one list - this timespan first, then the lists its sub-spans
-		return - and the hierarchy is carried by ``parentSpanId``, read off the parent relation.
+		OTLP has no nesting: the hierarchy is carried by ``parentSpanId``, so the tree is flattened into one list -
+		this timespan first, then the lists its sub-spans return - and reassembled by whoever reads the document.
 
-		A fragment of a :class:`TraceCollection` has neither a trace nor a parent object; the collection passes both
-		identifiers.
+		Both identifiers come from the data model: ``spanId`` is this timespan's own, ``traceId`` belongs to the
+		trace (or :class:`Fragment`) it is part of, and ``parentSpanId`` is read off the parent relation. A timespan
+		joins a trace through a ``with``-statement, or through the ``parent`` parameter of its constructor.
 
-		:param traceID:       Optional, the trace identifier to report. Default: the one of this timespan's trace.
-		:param parentSpanID:  Optional, the span identifier to report as ``parentSpanId`` when this timespan has no
-		                      parent object. Default: none, which writes no ``parentSpanId`` at all.
 		:returns:             This timespan and every timespan below it, flattened.
-		:raises TracingError: If this timespan is not part of a trace and no ``traceID`` was given. |br|
+		:raises TracingError: If this timespan is not part of a trace. |br|
 		                      A span is added to a trace by a 'with'-statement, or by the 'parent' parameter.
 		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
 		"""
-		if traceID is None:
-			if self._trace is None:
-				ex = TracingError(f"Timespan '{self._name}' is not part of a trace.")
-				ex.add_note("A span is added to a trace by a 'with'-statement, or by the 'parent' parameter.")
-				raise ex
-
-			traceID = self._trace._traceID
+		if self._trace is None:
+			ex = TracingError(f"Timespan '{self._name}' is not part of a trace.")
+			ex.add_note("A span is added to a trace by a 'with'-statement, or by the 'parent' parameter.")
+			raise ex
 
 		converted: OTLPSpan = {
-			"traceId": traceID,
+			"traceId": self._trace._traceID,
 			"spanId":  self._spanID,
 			"name":    self._name,
 			"kind":    1,                # SPAN_KIND_INTERNAL
@@ -1105,8 +1103,6 @@ class Span(TraceElement):
 
 		if self._parent is not None:
 			converted["parentSpanId"] = self._parent._spanID
-		elif parentSpanID is not None:
-			converted["parentSpanId"] = parentSpanID
 
 		if self.StartTime is not None:
 			startTimeUnixNano = self._ToUnixNanoseconds(self.StartTime)
@@ -1130,7 +1126,7 @@ class Span(TraceElement):
 				"message": f"{getFullyQualifiedName(self._exception)}: {self._exception}"
 			}
 
-		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON(traceID))]
+		return [converted, *(span for subSpan in self._spans for span in subSpan._ToOTLPJSON())]
 
 	@classmethod
 	def _ParseOTLPJSON(cls, otlpSpan: dict[str, Any], path: str, *, parent: Nullable[Span] = None) -> Self:
@@ -1171,11 +1167,7 @@ class Span(TraceElement):
 			ex.add_note("A timespan has both timestamps or neither, and this one has 'endTimeUnixNano'.")
 			raise ex
 
-		if parent is None:
-			timespan = cls(name)
-		else:
-			timespan = cls(name, parent=parent)
-
+		timespan = cls._NewFromOTLPJSON(name, otlpSpan, parent)
 		timespan._spanID = otlpSpan["spanId"].lower()
 
 		if hasStartTime:
@@ -1210,6 +1202,23 @@ class Span(TraceElement):
 			Event._ParseOTLPJSON(otlpEvent, timespan, f"{path}.events[{position}]")
 
 		return timespan
+
+	@classmethod
+	def _NewFromOTLPJSON(cls, name: str, otlpSpan: dict[str, Any], parent: Nullable[Span]) -> Self:
+		"""
+		Construct the timespan :meth:`_ParseOTLPJSON` fills from an **OTLP/JSON** mapping.
+
+		A class taking more than a name and a parent from the mapping overrides it, see :class:`Fragment`.
+
+		:param name:     Name of the timespan.
+		:param otlpSpan: The timespan as an OTLP mapping, validated by the schema.
+		:param parent:   The enclosing timespan, or ``None`` for a trace or the root of a fragment.
+		:returns:        The new timespan, appended to its parent's sub-spans.
+		"""
+		if parent is None:
+			return cls(name)
+		else:
+			return cls(name, parent=parent)
 
 	def _FormatDuration(self) -> str:
 		"""
@@ -1549,7 +1558,7 @@ class Trace(Span):
 			raise ex
 
 		collection = TraceCollection.FromOTLPJSON(document)
-		traceIDs =   list(dict.fromkeys(collection._traceIDs.values()))
+		traceIDs =   list(dict.fromkeys(span._trace._traceID for span in collection._spans.values()))
 
 		if traceID is None:
 			if len(traceIDs) == 0:
@@ -1662,6 +1671,145 @@ class Trace(Span):
 
 
 @export
+class Fragment(Span):
+	"""
+	The root of a part of a software execution trace, whose enclosing timespan hasn't arrived yet.
+
+	OTLP exports every timespan with the identifier of its trace and of its parent, and a distributed execution is
+	exported by each process separately: the timespan enclosing a span often travels in another document. While it
+	hasn't arrived, neither the trace nor the parent exists as an object, so the fragment keeps both identifiers. The
+	timespans below it reference the fragment as their trace (:attr:`~Span.Trace`), and its export writes the
+	``parentSpanId`` it is waiting for.
+
+	A :class:`TraceCollection` attaches a fragment to its parent as soon as that arrives; the fragment and the timespans
+	below it join the parent's trace then.
+	"""
+	_traceID:      str  #: Identifier of the trace this fragment belongs to, as 32 hex digits.
+	_parentSpanID: str  #: Identifier of the timespan this fragment is waiting for, as 16 hex digits.
+
+	def __init__(
+		self,
+		name:         str,
+		beginTime:    Nullable[datetime] = None,
+		endTime:      Nullable[datetime] = None,
+		duration:     Nullable[DurationValue] = None,
+		*,
+		traceID:      str,
+		parentSpanID: str
+	) -> None:
+		"""
+		Initializes the root of a fragment of a software execution trace.
+
+		:param name:         Name of the timespan.
+		:param beginTime:    Optional, recorded time when the timespan began.
+		:param endTime:      Optional, recorded time when the timespan ended. Requires ``beginTime``.
+		:param duration:     Optional, recorded duration of the timespan, as an alternative to ``endTime``. Requires
+		                     ``beginTime``. A :class:`~datetime.timedelta`, or a number of seconds as :class:`int`
+		                     (whole) or :class:`float` (fractional).
+		:param traceID:      Identifier of the trace the fragment belongs to, as 32 hex digits.
+		:param parentSpanID: Identifier of the timespan the fragment is waiting for, as 16 hex digits.
+		:raises TypeError:   If parameter 'name' is not of type :class:`str`.
+		:raises ValueError:  If parameter 'name' is empty.
+		:raises TypeError:   If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
+		                     :class:`float`.
+		:raises ValueError:  If parameter 'duration' is not a finite number of seconds.
+		:raises ValueError:  If parameter 'duration' is given without parameter 'beginTime'.
+		:raises ValueError:  If parameters 'endTime' and 'duration' are both given.
+		:raises ValueError:  If parameter 'duration' is negative.
+		:raises ValueError:  If parameter 'endTime' is given without parameter 'beginTime'.
+		:raises TypeError:   If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:   If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError:  If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
+		:raises ValueError:  If parameter 'endTime' is before parameter 'beginTime'.
+		:raises ValueError:  If parameter 'traceID' is None.
+		:raises TypeError:   If parameter 'traceID' is not of type :class:`str`.
+		:raises ValueError:  If parameter 'traceID' is not 32 hexadecimal digits.
+		:raises ValueError:  If parameter 'traceID' is all zeros.
+		:raises ValueError:  If parameter 'parentSpanID' is None.
+		:raises TypeError:   If parameter 'parentSpanID' is not of type :class:`str`.
+		:raises ValueError:  If parameter 'parentSpanID' is not 16 hexadecimal digits.
+		:raises ValueError:  If parameter 'parentSpanID' is all zeros.
+		"""
+		super().__init__(name, beginTime, endTime, duration)
+
+		if traceID is None:
+			raise ValueError("Parameter 'traceID' is None.")
+		elif not isinstance(traceID, str):
+			ex = TypeError("Parameter 'traceID' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(traceID)}'.")
+			raise ex
+		elif len(traceID) != 32 or traceID.strip("0123456789abcdefABCDEF") != "":
+			ex = ValueError("Parameter 'traceID' is not 32 hexadecimal digits.")
+			ex.add_note(f"Got '{traceID}'.")
+			raise ex
+		elif traceID == "0" * 32:
+			raise ValueError("Parameter 'traceID' is all zeros.")
+
+		if parentSpanID is None:
+			raise ValueError("Parameter 'parentSpanID' is None.")
+		elif not isinstance(parentSpanID, str):
+			ex = TypeError("Parameter 'parentSpanID' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parentSpanID)}'.")
+			raise ex
+		elif len(parentSpanID) != 16 or parentSpanID.strip("0123456789abcdefABCDEF") != "":
+			ex = ValueError("Parameter 'parentSpanID' is not 16 hexadecimal digits.")
+			ex.add_note(f"Got '{parentSpanID}'.")
+			raise ex
+		elif parentSpanID == "0" * 16:
+			raise ValueError("Parameter 'parentSpanID' is all zeros.")
+
+		self._traceID =      traceID.lower()
+		self._parentSpanID = parentSpanID.lower()
+		self._trace =        self
+
+	@readonly
+	def TraceID(self) -> str:
+		"""
+		Read-only property to access the identifier of the trace this fragment belongs to (:attr:`_traceID`).
+
+		:returns: Identifier of the trace, as 32 hex digits.
+		"""
+		return self._traceID
+
+	@readonly
+	def ParentSpanID(self) -> str:
+		"""
+		Read-only property to access the identifier of the timespan this fragment is waiting for (:attr:`_parentSpanID`).
+
+		:returns: Identifier of the parent timespan, as 16 hex digits.
+		"""
+		return self._parentSpanID
+
+	@classmethod
+	def _NewFromOTLPJSON(cls, name: str, otlpSpan: dict[str, Any], parent: Nullable[Span]) -> Self:
+		"""
+		Construct the fragment :meth:`~Span._ParseOTLPJSON` fills, with the identifiers of its trace and its parent.
+
+		:param name:     Name of the timespan.
+		:param otlpSpan: The timespan as an OTLP mapping, validated by the schema.
+		:param parent:   Ignored, a fragment has no parent object.
+		:returns:        The new fragment.
+		"""
+		return cls(name, traceID=otlpSpan["traceId"], parentSpanID=otlpSpan["parentSpanId"])
+
+	def _ToOTLPJSON(self) -> list[OTLPSpan]:
+		"""
+		Convert this fragment and its sub-spans to their **OTLP/JSON** representation.
+
+		While its parent hasn't arrived, the fragment writes the ``parentSpanId`` it is waiting for, so reading the
+		document back produces the same fragment rather than a second root span.
+
+		:returns:             This fragment and every timespan below it, flattened.
+		:raises TracingError: If an attribute is of a type OTLP's ``AnyValue`` can't carry.
+		"""
+		spans = super()._ToOTLPJSON()
+		if self._parent is None:
+			spans[0]["parentSpanId"] = self._parentSpanID
+
+		return spans
+
+
+@export
 class TraceCollection(metaclass=ExtendedType, slots=True):
 	"""
 	A set of software execution traces, together with the timespans that haven't found their trace yet.
@@ -1680,10 +1828,9 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		SemanticVersion(1, 0): Path("OTLP-Traces-v1.0.schema.json"),
 	}  #: JSON schema file per schema version, in :mod:`pyTooling.Resources`.
 
-	_traces:    dict[str, Trace]  #: Traces whose root span has arrived, by trace identifier.
-	_spans:     dict[str, Span]   #: Every timespan of the collection, by span identifier.
-	_traceIDs:  dict[str, str]    #: The trace a timespan belongs to, by span identifier.
-	_fragments: dict[str, str]    #: The span identifier a fragment is waiting for, by the fragment's own.
+	_traces:    dict[str, Trace]     #: Traces whose root span has arrived, by trace identifier.
+	_spans:     dict[str, Span]      #: Every timespan of the collection, by span identifier.
+	_fragments: dict[str, Fragment]  #: Fragments waiting for their parent, by span identifier.
 
 	def __init__(self) -> None:
 		"""Initializes an empty collection of software execution traces."""
@@ -1691,7 +1838,6 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		self._traces =    {}
 		self._spans =     {}
-		self._traceIDs =  {}
 		self._fragments = {}
 
 	@readonly
@@ -1704,7 +1850,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		return tuple(self._traces.values())
 
 	@readonly
-	def Fragments(self) -> tuple[Span, ...]:
+	def Fragments(self) -> tuple[Fragment, ...]:
 		"""
 		Read-only property to return the timespans that are waiting for a parent.
 
@@ -1713,7 +1859,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		:returns: The root timespan of every fragment, in the order they were added.
 		"""
-		return tuple(self._spans[spanID] for spanID in self._fragments)
+		return tuple(self._fragments.values())
 
 	@readonly
 	def TraceCount(self) -> int:
@@ -1755,8 +1901,8 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		"""
 		Return the identifier of the trace a timespan belongs to.
 
-		A fragment has no :attr:`~pyTooling.Tracing.Span.Trace` to ask - its trace's root span hasn't arrived - but
-		its ``traceId`` was in the document all the same, so the collection can answer for it.
+		A timespan of a fragment answers too: its trace's root span hasn't arrived, but the :class:`Fragment` keeps the
+		``traceId`` the document stated.
 
 		:param spanID:      Identifier of the timespan.
 		:returns:           Identifier of the trace the timespan belongs to.
@@ -1771,9 +1917,9 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(spanID)}'.")
 			raise ex
 
-		return self._traceIDs[spanID.lower()]
+		return self._spans[spanID.lower()]._trace._traceID
 
-	def IterateFragmentsOf(self, traceID: str) -> Iterator[Span]:
+	def IterateFragmentsOf(self, traceID: str) -> Iterator[Fragment]:
 		"""
 		Returns an iterator to iterate the fragments belonging to one trace.
 
@@ -1791,7 +1937,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		wanted = traceID.lower()
 
-		return (self._spans[spanID] for spanID in self._fragments if self._traceIDs[spanID] == wanted)
+		return (fragment for fragment in self._fragments.values() if fragment._traceID == wanted)
 
 	def __getitem__(self, identifier: str) -> Union[Trace, Span]:
 		"""
@@ -1929,19 +2075,16 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 			for spanID in built:
 				if spanID in self._spans:
 					ex = TracingError(f"Collection already contains a timespan '{spanID}'.")
-					ex.add_note(f"It belongs to trace '{self._traceIDs[spanID]}'.")
+					ex.add_note(f"It belongs to trace '{self._spans[spanID]._trace._traceID}'.")
 					raise ex
 
 		for traceID, trace, built, fragments in results:
 			if trace is not None:
 				self._traces[traceID] = trace
 
-			for spanID, span in built.items():
-				self._spans[spanID] =    span
-				self._traceIDs[spanID] = traceID
-
-			for fragment, parentSpanID in fragments:
-				self._fragments[fragment._spanID] = parentSpanID
+			self._spans.update(built)
+			for fragment in fragments:
+				self._fragments[fragment._spanID] = fragment
 
 		self._LinkFragments()
 
@@ -1951,7 +2094,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 	def _BuildTrace(
 		traceID: str,
 		spans: list[tuple[str, dict[str, Any]]]
-	) -> tuple[Nullable[Trace], dict[str, Span], list[tuple[Span, str]]]:
+	) -> tuple[Nullable[Trace], dict[str, Span], list[Fragment]]:
 		"""
 		Build the timespans of one trace from their **OTLP/JSON** mappings.
 
@@ -1962,7 +2105,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		:param traceID:       Identifier of the trace.
 		:param spans:         The ``(path, mapping)`` pairs of the trace's timespans, in document order.
 		:returns:             Tuple of the trace (or ``None``, if its root span is absent), every timespan built by span
-		                      identifier, and the ``(fragment, parentSpanID)`` pairs of the fragments' roots.
+		                      identifier, and the fragments.
 		:raises TracingError: If two timespans carry the same ``spanId``.
 		:raises TracingError: If more than one timespan has no ``parentSpanId``.
 		:raises TracingError: If timespans reference each other in a cycle: every other span is reachable from the
@@ -1996,7 +2139,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		trace:     Nullable[Trace] =       None
 		built:     dict[str, Span] =       {}
 		pending:   list[Span] =            []
-		fragments: list[tuple[Span, str]] = []
+		fragments: list[Fragment] =         []
 		if len(roots) == 1:
 			path, otlpSpan = entries[roots[0]]
 			trace =          Trace._ParseOTLPJSON(otlpSpan, path)
@@ -2007,9 +2150,9 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		for spanID, parentSpanID in parents.items():
 			if parentSpanID not in entries:
 				path, otlpSpan = entries[spanID]
-				fragment =       Span._ParseOTLPJSON(otlpSpan, path)
+				fragment =       Fragment._ParseOTLPJSON(otlpSpan, path)
 				built[spanID] =  fragment
-				fragments.append((fragment, parentSpanID))
+				fragments.append(fragment)
 				pending.append(fragment)
 
 		while len(pending) > 0:
@@ -2090,11 +2233,10 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		The sub-spans of a timespan that received a fragment are sorted by start time, so a trace reassembled from
 		several documents doesn't depend on the order they were added in. A timespan without a start time sorts last.
 		"""
-		for spanID, parentSpanID in [pair for pair in self._fragments.items() if pair[1] in self._spans]:
-			fragment = self._spans[spanID]
-			parent =   self._spans[parentSpanID]
+		for fragment in [fragment for fragment in self._fragments.values() if fragment._parentSpanID in self._spans]:
+			parent = self._spans[fragment._parentSpanID]
 			parent._AddSpan(fragment)
-			del self._fragments[spanID]
+			del self._fragments[fragment._spanID]
 
 			# A fragment is attached when its parent arrives, which is not the order the timespans ran in. Sorting
 			# the siblings by start time makes a reassembled trace read like a local one, and makes the result
@@ -2159,8 +2301,8 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		          every fragment of that trace.
 		"""
 		roots: dict[str, list[Span]] = {traceID: [trace] for traceID, trace in self._traces.items()}
-		for spanID in self._fragments:
-			roots.setdefault(self._traceIDs[spanID], []).append(self._spans[spanID])
+		for fragment in self._fragments.values():
+			roots.setdefault(fragment._traceID, []).append(fragment)
 
 		return roots
 
@@ -2187,7 +2329,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 			spans =       [
 				span
 				for root in roots
-				for span in root._ToOTLPJSON(traceID, self._AwaitedParentOf(root))
+				for span in root._ToOTLPJSON()
 			]
 
 			resourceSpans.append({
@@ -2196,15 +2338,6 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 			})
 
 		return {"resourceSpans": resourceSpans}
-
-	def _AwaitedParentOf(self, span: Span) -> Nullable[str]:
-		"""
-		Return the span identifier a fragment is waiting for.
-
-		:param span: The timespan to look up.
-		:returns:    The identifier of the timespan's absent parent, or ``None`` if it isn't a fragment.
-		"""
-		return self._fragments.get(span._spanID, None)
 
 	def ToOTLPJSONString(
 		self,
@@ -2290,9 +2423,9 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 
 		if len(self._fragments) > 0:
 			result.append(f"Fragments: {self.FragmentCount}")
-			for spanID, parentSpanID in self._fragments.items():
-				result.append(f"  ⌛ waiting for span {parentSpanID}")
-				result.extend(self._spans[spanID].Format(2, columnSize))
+			for fragment in self._fragments.values():
+				result.append(f"  ⌛ waiting for span {fragment._parentSpanID}")
+				result.extend(fragment.Format(2, columnSize))
 
 		return result
 
