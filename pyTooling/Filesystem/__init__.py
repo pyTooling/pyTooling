@@ -454,6 +454,11 @@ class Directory(Element["Directory"]):
 
 		A link whose target lies inside the scanned tree is connected to that element; a target that doesn't exist
 		registers the link as broken, and a target outside the scanned tree registers it as unconnected.
+
+		A relative target is followed as the operating system does: a symbolic link in the middle of the target's path is
+		replaced by its own target, a regular file in the middle of it makes the link broken, and so does a cycle of
+		links. A symbolic link at the end of the path is the target itself. A link passing through a link with an
+		absolute target is registered as unconnected.
 		"""
 		for dir in self._subdirectories.values():
 			dir.ResolveSymbolicLinks()
@@ -463,33 +468,42 @@ class Directory(Element["Directory"]):
 				# todo: resolve path and check if target is in range, otherwise add to out-of-range list
 				pass
 			else:
-				target = self
-				for elem in link._target.parts:
+				directory: Directory = self
+				target:    Element =   self
+				parts =    list(link._target.parts)
+				followed = {link}
+				while len(parts) > 0:
+					elem = parts.pop(0)
 					if elem == ".":
 						continue
 					elif elem == "..":
-						if (target := target._parent) is None:
+						if (directory := directory._parent) is None:
 							self._root.RegisterUnconnectedSymbolicLink(link)
 							break
 
-						continue
+						target = directory
+					elif elem in directory._subdirectories:
+						target = directory = directory._subdirectories[elem]
+					elif elem in directory._files:
+						if len(parts) > 0:
+							self._root.RegisterBrokenSymbolicLink(link)
+							break
 
-					try:
-						target = target._subdirectories[elem]
-						continue
-					except KeyError:
-						pass
-
-					try:
-						target = target._files[elem]
-						continue
-					except KeyError:
-						pass
-
-					try:
-						target = target._symbolicLinks[elem]
-						continue
-					except KeyError:
+						target = directory._files[elem]
+					elif elem in directory._symbolicLinks:
+						intermediate = directory._symbolicLinks[elem]
+						if len(parts) == 0:
+							target = intermediate
+						elif intermediate in followed:
+							self._root.RegisterBrokenSymbolicLink(link)
+							break
+						elif intermediate._target.is_absolute():
+							self._root.RegisterUnconnectedSymbolicLink(link)
+							break
+						else:
+							followed.add(intermediate)
+							parts[0:0] = intermediate._target.parts
+					else:
 						self._root.RegisterBrokenSymbolicLink(link)
 						break
 				else:
