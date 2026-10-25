@@ -223,6 +223,12 @@ Version 10.x (2026)
        (``file:///etc/hosts``). After the host and port, the path starts with a slash. A character the RFC forbids is
        rejected anywhere in the URL, a port must be in range 0..65535, and a user or password may carry the RFC's
        user-information characters - ``first.last@`` and ``p%40ss`` were read as a host and a path.
+     * :meth:`~pyTooling.GenericPath.URL.URL.Parse` **reads an IRI** (:rfc:`3987`) with ``iri=True``: a Unicode host is
+       converted to its A-labels by IDNA 2008 (:rfc:`5891`) after the mapping of UTS #46, as browsers do, and every
+       other non-ASCII character is percent-encoded as UTF-8, so the result is an :rfc:`3986` URL -
+       ``https://www.müller.de/`` is read as ``https://www.xn--mller-kva.de/``.
+       :attr:`~pyTooling.GenericPath.URL.Host.UnicodeHostname` decodes the A-labels for display. IDNA 2008 needs the
+       ``idna`` package, installed by the new extra ``pyTooling[idna]``.
      * :mod:`pyTooling.Dependency` reports a project URL a package index publishes that isn't a URL as a non-critical
        :exc:`~pyTooling.Dependency.UnparsableURLWarning`, and the release has no such URL. ``UNKNOWN``, which distutils
        wrote for a field not given, counts as not published.

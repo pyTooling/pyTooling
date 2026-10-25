@@ -76,6 +76,12 @@ When installed as ``pyTooling[diagram]``:
    :caption: Dependencies added by the ``diagram`` extra.
 
 
+When installed as ``pyTooling[idna]``:
+
+.. dependency-table:: idna
+   :caption: Dependencies added by the ``idna`` extra.
+
+
 When installed as ``pyTooling[dependencies]``:
 
 .. dependency-table:: dependencies

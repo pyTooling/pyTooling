@@ -29,9 +29,9 @@ Installing a Wheel Package from PyPI using PIP
 ==============================================
 
 Users can install the |PackageName| package as a minimal installation or the package with extensions
-(``dependencies``, ``diagram``, ``packaging``, ``terminal``, ``yaml``) installing further dependencies. In case the
-provided extensions are not needed, it keeps the list of dependencies low - especially the minimal installation is still
-dependency free.
+(``dependencies``, ``diagram``, ``idna``, ``packaging``, ``terminal``, ``yaml``) installing further dependencies. In
+case the provided extensions are not needed, it keeps the list of dependencies low - especially the minimal installation
+is still dependency free.
 
 See :ref:`DEP/package` for more details.
 
@@ -86,6 +86,17 @@ See :ref:`DEP/package` for more details.
                # Alternatively
                python3 -m pip install pyTooling[yaml]
 
+         .. tab-item:: With Internationalized Domain Name Support
+            :sync: IDNA
+
+            .. code-block:: bash
+
+               # With IDNA 2008 support for IRIs in pyTooling.GenericPath.URL
+               pip3 install pyTooling[idna]
+
+               # Alternatively
+               python3 -m pip install pyTooling[idna]
+
    .. tab-item:: Windows
       :sync: Windows
 
@@ -134,6 +145,17 @@ See :ref:`DEP/package` for more details.
 
                # Alternatively
                py -m pip install pyTooling[yaml]
+
+         .. tab-item:: With Internationalized Domain Name Support
+            :sync: IDNA
+
+            .. code-block:: powershell
+
+               # With IDNA 2008 support for IRIs in pyTooling.GenericPath.URL
+               pip install pyTooling[idna]
+
+               # Alternatively
+               py -m pip install pyTooling[idna]
 
 Developers can install the |PackageName| package itself or the package with further dependencies for documentation
 generation (``doc``), running unit tests (``test``) or just all (``all``) dependencies.

@@ -35,17 +35,19 @@ This package provides a representation for a Uniform Resource Locator (URL).
 
    scheme://[user[:password]@]domain.tld[:port][/path/to/file][?query][#fragment]
 
-The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`.
+The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`. An IRI
+(:rfc:`3987`), which may hold Unicode characters, is read with ``URL.Parse(..., iri=True)``.
 """
 from __future__            import annotations
 
 from enum                  import Flag
 from re                    import compile as re_compile
+from string                import punctuation
 from urllib.parse          import quote as urlQuote
 from typing                import ClassVar, Optional as Nullable, Mapping, Union
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import MissingDependencyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.GenericPath import RootMixin, ElementMixin, PathMixin
 
@@ -65,6 +67,11 @@ URL_PATTERN = (
 URL_REGEXP = re_compile("^" + URL_PATTERN + r"\Z")  #: Precompiled regular expression for URL validation.
 
 _SCHEME_PREFIX = re_compile(r"[a-zA-Z][-a-zA-Z0-9+.]*://")  #: Precompiled regular expression for the leading scheme.
+_IRI_HOST =      re_compile(
+	r"""(?P<prefix>[a-zA-Z][-a-zA-Z0-9+.]*://(?:[^/?#@]*@)?)"""
+	r"""(?P<host>[^/?#:@\[\]]*)"""
+	r"""(?P<rest>.*)"""
+)  #: Precompiled regular expression splitting an IRI into scheme and user information, host, and the rest.
 
 FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"  #: Characters :rfc:`3986` forbids in a URL unless they are percent-encoded.
 
@@ -72,7 +79,7 @@ FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"  #: Characters :rfc:`3986` forbids in a UR
 @export
 class URLError(ToolingException):
 	"""
-	Raised when a URL can't be parsed.
+	Raised when a URL can't be parsed, or a hostname's A-label can't be decoded.
 
 	.. note::
 
@@ -222,6 +229,43 @@ class Host(RootMixin):
 		:returns: Hostname as DNS name or IP address.
 		"""
 		return self._hostname
+
+	@readonly
+	def UnicodeHostname(self) -> str:
+		"""
+		Read-only property to return the hostname with its A-labels decoded to Unicode.
+
+		A URL carries an internationalized domain name (IDN) as A-labels, the ASCII form of IDNA 2008 (:rfc:`5890`), and
+		this property returns the Unicode form a user reads: ``www.xn--mller-kva.de`` |rarr| ``www.müller.de``. A label
+		that is no A-label - an ASCII label, an IP address - is returned unchanged. Only decoding an A-label needs the
+		``idna`` package.
+
+		:returns:                       Hostname with its A-labels decoded to Unicode.
+		:raises MissingDependencyError: If the hostname holds an A-label and the ``idna`` extra isn't installed.
+		:raises URLError:               If a label starts with ``xn--`` and is no A-label of IDNA 2008. |br|
+		                                The note gives the reason of the ``idna`` package.
+		"""
+		if "xn--" not in self._hostname.lower():
+			return self._hostname
+
+		try:
+			from idna import IDNAError, decode as idnaDecode
+		except ImportError as ex:
+			raise MissingDependencyError(dependency="idna", extra="idna") from ex
+
+		labels = []
+		for label in self._hostname.split("."):
+			if label[:4].lower() == "xn--":
+				try:
+					labels.append(idnaDecode(label))
+				except IDNAError as cause:
+					ex = URLError(f"Label {label!r} of hostname {self._hostname!r} is no A-label of IDNA 2008.")
+					ex.add_note(f"IDNA: {cause}")
+					raise ex from cause
+			else:
+				labels.append(label)
+
+		return ".".join(labels)
 
 	@readonly
 	def Port(self) -> Nullable[int]:
@@ -428,7 +472,7 @@ class URL:
 
 	# http://semaphore.plc2.de:5000/api/v1/semaphore?name=Riviera&foo=bar#page2
 	@classmethod
-	def Parse(cls, url: str) -> URL:
+	def Parse(cls, url: str, *, iri: bool = False) -> URL:
 		"""
 		Parse a URL string and returns the URL object.
 
@@ -436,26 +480,50 @@ class URL:
 		authority: ``https://example.org/path``. After the host and port, a path starts with a slash. Only a ``file`` or
 		``unix`` URL may leave the host empty, and then names an absolute path: ``file:///etc/hosts``.
 
-		:param url:               URL as string to be parsed.
-		:returns:                 A URL object.
-		:raises ValueError:       If parameter 'url' is ``None``.
-		:raises TypeError:        If parameter 'url' is not of type :class:`str`.
-		:raises URLError:         When the URL holds a character :rfc:`3986` forbids. |br|
-		                          The note names the character and how to percent-encode it.
-		:raises URLError:         When the URL doesn't start with a scheme followed by ``://``.
-		:raises URLError:         When syntax does not match.
-		:raises URLError:         When the URL names a scheme that is not in :class:`Protocols`. |br|
-		                          The note lists the known schemes.
-		:raises URLError:         When the URL names no host, and isn't a ``file`` or ``unix`` URL without user and port.
-		:raises URLError:         When a ``file`` or ``unix`` URL names neither a host nor a path.
-		:raises URLError:         When the port is out of range 0..65535.
-		:raises URLError:         When a parameter of the query is not a ``key=value`` pair.
+		With ``iri``, the string is read as an IRI (Internationalized Resource Identifier, :rfc:`3987`), which may hold
+		Unicode characters. A Unicode host is converted to its A-labels by IDNA 2008 (:rfc:`5891`) after the mapping of
+		`UTS #46 <https://www.unicode.org/reports/tr46/>`__, and every other non-ASCII character is percent-encoded as
+		UTF-8 (:rfc:`RFC 3987, section 3.1 <3987#section-3.1>`). The URL object is an :rfc:`3986` URL either way:
+		``https://www.müller.de/`` is read as ``https://www.xn--mller-kva.de/``. An error found in the converted URL
+		names that URL, and a note names the IRI it was converted from.
+
+		:param url:                     URL as string to be parsed.
+		:param iri:                     Optional, read ``url`` as an IRI (Internationalized Resource Identifier,
+		                                :rfc:`3987`) instead of a URL. Default: ``False``.
+		:returns:                       A URL object.
+		:raises ValueError:             If parameter 'url' is ``None``.
+		:raises TypeError:              If parameter 'url' is not of type :class:`str`.
+		:raises ValueError:             If parameter 'iri' is ``None``.
+		:raises TypeError:              If parameter 'iri' is not of type :class:`bool`.
+		:raises URLError:               When the URL holds a character :rfc:`3986` forbids. |br|
+		                                The note names the character and how to percent-encode it.
+		:raises MissingDependencyError: When ``iri`` is set, the host holds a Unicode character, and the ``idna`` extra
+		                                isn't installed.
+		:raises URLError:               When ``iri`` is set and IDNA 2008 rejects the host. |br|
+		                                The note gives the reason of the ``idna`` package.
+		:raises URLError:               When the URL doesn't start with a scheme followed by ``://``.
+		:raises URLError:               When syntax does not match. |br|
+		                                If the URL holds a Unicode character, the note offers ``iri=True``.
+		:raises URLError:               When the URL names a scheme that is not in :class:`Protocols`. |br|
+		                                The note lists the known schemes.
+		:raises URLError:               When the URL names no host, and isn't a ``file`` or ``unix`` URL without user and
+		                                port.
+		:raises URLError:               When a ``file`` or ``unix`` URL names neither a host nor a path.
+		:raises URLError:               When the port is out of range 0..65535.
+		:raises URLError:               When a parameter of the query is not a ``key=value`` pair.
 		"""
 		if url is None:
 			raise ValueError("Parameter 'url' is None.")
 		elif not isinstance(url, str):
 			ex = TypeError("Parameter 'url' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
+			raise ex
+
+		if iri is None:
+			raise ValueError("Parameter 'iri' is None.")
+		elif not isinstance(iri, bool):
+			ex = TypeError("Parameter 'iri' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(iri)}'.")
 			raise ex
 
 		for character in url:
@@ -466,6 +534,29 @@ class URL:
 					f"'{urlQuote(character, safe='')}'."
 				)
 				raise ex
+
+		if iri and not url.isascii() and (parts := _IRI_HOST.match(url)) is not None:
+			host = parts["host"]
+			if not host.isascii():
+				try:
+					from idna import IDNAError, encode as idnaEncode
+				except ImportError as ex:
+					raise MissingDependencyError(dependency="idna", extra="idna") from ex
+
+				try:
+					host = idnaEncode(host, uts46=True).decode("ascii")
+				except IDNAError as cause:
+					ex = URLError(f"Host {host!r} is no domain name of IDNA 2008 when parsing IRI {url!r}.")
+					ex.add_note(f"IDNA: {cause}")
+					raise ex from cause
+
+			prefix = urlQuote(parts["prefix"], safe=punctuation)
+			rest =   urlQuote(parts["rest"], safe=punctuation)
+			try:
+				return cls.Parse(prefix + host + rest)
+			except URLError as ex:
+				ex.add_note(f"Converted from IRI {url!r}.")
+				raise
 
 		if (matches := URL_REGEXP.match(url)) is not None:
 			scheme =    matches.group("scheme")
@@ -519,7 +610,10 @@ class URL:
 			ex.add_note("A URL starts with a scheme followed by '://', e.g. 'https://'.")
 			raise ex
 
-		raise URLError(f"Syntax error when parsing URL {url!r}.")
+		ex = URLError(f"Syntax error when parsing URL {url!r}.")
+		if not url.isascii():
+			ex.add_note("A URL holds ASCII characters only. Read an IRI, which holds Unicode characters, with 'iri=True'.")
+		raise ex
 
 	@classmethod
 	def _ParseQuery(cls, query: str, url: str) -> dict[str, str]:

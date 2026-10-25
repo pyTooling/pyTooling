@@ -32,7 +32,10 @@
 Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.GenericPath.URL`: parsing a URL into its
 parts and rendering it back.
 """
-from pyTooling.Exceptions      import ToolingException
+from sys                       import modules
+from unittest.mock             import patch
+
+from pyTooling.Exceptions      import MissingDependencyError, ToolingException
 from pyTooling.GenericPath.URL import Host, URL, URLError, Protocols
 from pyTooling.Testing         import Testcase
 
@@ -991,3 +994,235 @@ class AcceptedURLs(Testcase):
 
 		self.assertEqual("/", str(url.Path))
 		self.assertEqual("/#aio-libs:matrix.org", url.Fragment)
+
+
+class IRIs(Testcase):
+	"""
+	An IRI (:rfc:`3987`) is read with ``iri=True`` and becomes an :rfc:`3986` URL.
+
+	The host is converted to its A-labels by IDNA 2008 after the mapping of UTS #46, every other non-ASCII character is
+	percent-encoded as UTF-8.
+	"""
+
+	def test_Strict(self) -> None:
+		"""Without ``iri``, a Unicode host is rejected, and the note offers ``iri=True``."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("https://www.müller.de/")
+
+		self.assertEqual("Syntax error when parsing URL 'https://www.müller.de/'.", str(context.exception))
+		self.assertEqual(
+			["A URL holds ASCII characters only. Read an IRI, which holds Unicode characters, with 'iri=True'."],
+			context.exception.__notes__
+		)
+
+	def test_Strict_ASCII(self) -> None:
+		"""An ASCII syntax error carries no note about IRIs."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("http://host:abc/")
+
+		self.assertEqual([], getattr(context.exception, "__notes__", []))
+
+	def test_Host(self) -> None:
+		url = URL.Parse("https://www.müller.de/", iri=True)
+
+		self.assertEqual(Protocols.HTTPS, url.Scheme)
+		self.assertEqual("www.xn--mller-kva.de", url.Host.Hostname)
+		self.assertEqual("/", str(url.Path))
+		self.assertEqual("https://www.xn--mller-kva.de/", str(url))
+
+	def test_Host_Port(self) -> None:
+		url = URL.Parse("https://www.müller.de:8443/api", iri=True)
+
+		self.assertEqual("www.xn--mller-kva.de", url.Host.Hostname)
+		self.assertEqual(8443, url.Host.Port)
+		self.assertEqual("/api", str(url.Path))
+
+	def test_IDNA2008(self) -> None:
+		"""IDNA 2008 keeps ``ß``; IDNA 2003 and Python's built-in ``idna`` codec map it to ``ss``."""
+		url = URL.Parse("https://straße.de/", iri=True)
+
+		self.assertEqual("xn--strae-oqa.de", url.Host.Hostname)
+		self.assertEqual("straße.de", url.Host.UnicodeHostname)
+
+	def test_UTS46(self) -> None:
+		"""UTS #46 maps upper case, full-width letters and the ideographic full stop before IDNA 2008, as browsers do."""
+		for text in ("https://MÜLLER.de/", "https://Müller.DE/", "https://ｍüｌｌｅｒ。de/"):
+			with self.subTest(iri=text):
+				self.assertEqual("xn--mller-kva.de", URL.Parse(text, iri=True).Host.Hostname)
+
+	def test_TrailingDot(self) -> None:
+		self.assertEqual("www.xn--mller-kva.de.", URL.Parse("https://www.müller.de./", iri=True).Host.Hostname)
+
+	def test_PercentEncoding(self) -> None:
+		"""Path, query and fragment are percent-encoded as UTF-8."""
+		url = URL.Parse("https://www.müller.de/straße?ä=ö#ü", iri=True)
+
+		self.assertEqual("/stra%C3%9Fe", str(url.Path))
+		self.assertDictEqual({"%C3%A4": "%C3%B6"}, url.Query)
+		self.assertEqual("%C3%BC", url.Fragment)
+		self.assertEqual("https://www.xn--mller-kva.de/stra%C3%9Fe?%C3%A4=%C3%B6#%C3%BC", str(url))
+
+	def test_PercentEncoding_UserInformation(self) -> None:
+		url = URL.Parse("https://jürgen:pä@example.org/", iri=True)
+
+		self.assertEqual("j%C3%BCrgen", url.User)
+		self.assertEqual("p%C3%A4", url.Password)
+		self.assertEqual("example.org", url.Host.Hostname)
+
+	def test_PercentEncoding_Kept(self) -> None:
+		"""A character already percent-encoded stays as it is."""
+		self.assertEqual("/a%20b/%C3%A4", str(URL.Parse("https://example.org/a%20b/ä", iri=True).Path))
+
+	def test_PercentEncoding_IPv6(self) -> None:
+		url = URL.Parse("https://[2001:db8::1]:8080/ä", iri=True)
+
+		self.assertEqual("[2001:db8::1]", url.Host.Hostname)
+		self.assertEqual("/%C3%A4", str(url.Path))
+
+	def test_RoundTrip(self) -> None:
+		"""The URL an IRI is read as parses without ``iri`` into the same string."""
+		for text in (
+			"https://www.müller.de/",
+			"https://straße.de/",
+			"https://user:pä@www.müller.de:8443/straße?ä=ö&b=2#ü",
+			"https://example.org/wiki/Straße",
+		):
+			with self.subTest(iri=text):
+				converted = str(URL.Parse(text, iri=True))
+
+				self.assertTrue(converted.isascii())
+				self.assertEqual(converted, str(URL.Parse(converted)))
+
+	def test_ASCII(self) -> None:
+		"""An ASCII URL is read as without ``iri``."""
+		for text in (
+			"https://user:password@example.org:8443/p?q=1#frag",
+			"https://www.xn--mller-kva.de/",
+			"file:///etc/hosts",
+			"https://[2001:db8::1]:8080/path",
+		):
+			with self.subTest(url=text):
+				self.assertEqual(str(URL.Parse(text)), str(URL.Parse(text, iri=True)))
+
+	def test_IDNARejected(self) -> None:
+		"""IDNA 2008 disallows symbols, which IDNA 2003 accepted."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("https://☃.net/", iri=True)
+
+		self.assertEqual(
+			"Host '☃.net' is no domain name of IDNA 2008 when parsing IRI 'https://☃.net/'.",
+			str(context.exception)
+		)
+		self.assertEqual(["IDNA: Codepoint U+2603 at position 1 of '☃' not allowed"], context.exception.__notes__)
+		self.assertIsInstance(context.exception.__cause__, UnicodeError)
+
+	def test_IDNARejected_EmptyLabel(self) -> None:
+		with self.assertRaises(URLError):
+			_ = URL.Parse("https://www..müller.de/", iri=True)
+
+	def test_ConvertedNote(self) -> None:
+		"""An error found in the converted URL names it, and the note names the IRI given."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("https://www.müller.de:99999/", iri=True)
+
+		self.assertEqual(
+			"Port 99999 is out of range 0..65535 when parsing URL 'https://www.xn--mller-kva.de:99999/'.",
+			str(context.exception)
+		)
+		self.assertEqual(["Converted from IRI 'https://www.müller.de:99999/'."], context.exception.__notes__)
+
+	def test_MissingScheme(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("www.müller.de", iri=True)
+
+		self.assertEqual("Missing scheme when parsing URL 'www.müller.de'.", str(context.exception))
+
+	def test_ForbiddenCharacter(self) -> None:
+		"""A character an IRI forbids too is rejected before the conversion, with the IRI in the message."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("https://www.müller.de/a b", iri=True)
+
+		self.assertEqual("Forbidden character when parsing URL 'https://www.müller.de/a b'.", str(context.exception))
+		self.assertEqual(
+			["Character ' ' is not allowed in a URL. Write it percent-encoded as '%20'."],
+			context.exception.__notes__
+		)
+
+	def test_ForbiddenCharacter_Unicode(self) -> None:
+		"""A Unicode space is a space: :rfc:`3987` allows no space either."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("https://www.müller.de/a\u3000b", iri=True)
+
+		self.assertEqual(
+			["Character '\\u3000' is not allowed in a URL. Write it percent-encoded as '%E3%80%80'."],
+			context.exception.__notes__
+		)
+
+	def test_Parameter(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = URL.Parse("https://example.org/", iri=None)
+
+		self.assertEqual("Parameter 'iri' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = URL.Parse("https://example.org/", iri="yes")
+
+		self.assertEqual("Parameter 'iri' is not of type 'bool'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_WithoutIDNA(self) -> None:
+		"""Without the ``idna`` package, converting a Unicode host raises and names the extra."""
+		with patch.dict(modules, {"idna": None}):
+			with self.assertRaises(MissingDependencyError) as context:
+				_ = URL.Parse("https://www.müller.de/", iri=True)
+
+		self.assertEqual("idna", context.exception.Dependency)
+		self.assertEqual("idna", context.exception.Extra)
+		self.assertEqual(
+			["Either install pyTooling with extra 'pyTooling[idna]' or install 'idna' directly."],
+			context.exception.__notes__
+		)
+
+	def test_WithoutIDNA_ASCIIHost(self) -> None:
+		"""Percent-encoding needs no package: an IRI whose host is ASCII is read without ``idna``."""
+		with patch.dict(modules, {"idna": None}):
+			url = URL.Parse("https://example.org/straße", iri=True)
+
+		self.assertEqual("/stra%C3%9Fe", str(url.Path))
+
+
+class UnicodeHostnames(Testcase):
+	""":attr:`Host.UnicodeHostname` decodes the A-labels of a hostname."""
+
+	def test_ALabel(self) -> None:
+		self.assertEqual("www.müller.de", Host("www.xn--mller-kva.de").UnicodeHostname)
+
+	def test_ALabel_UpperCase(self) -> None:
+		self.assertEqual("www.müller.de", Host("www.XN--MLLER-KVA.de").UnicodeHostname)
+
+	def test_ALabel_ASCIILabels(self) -> None:
+		"""Only A-labels are decoded: an ASCII label IDNA 2008 would reject, like ``my_host``, is kept."""
+		self.assertEqual("my_host.müller.de", Host("my_host.xn--mller-kva.de").UnicodeHostname)
+
+	def test_NoALabel(self) -> None:
+		for hostname in ("example.org", "192.0.2.1", "[2001:db8::1]", "my_host"):
+			with self.subTest(hostname=hostname):
+				self.assertEqual(hostname, Host(hostname).UnicodeHostname)
+
+	def test_NoALabel_WithoutIDNA(self) -> None:
+		with patch.dict(modules, {"idna": None}):
+			self.assertEqual("example.org", Host("example.org").UnicodeHostname)
+
+	def test_InvalidALabel(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = Host("xn--zz.de").UnicodeHostname
+
+		self.assertEqual("Label 'xn--zz' of hostname 'xn--zz.de' is no A-label of IDNA 2008.", str(context.exception))
+		self.assertEqual(["IDNA: Invalid A-label"], context.exception.__notes__)
+
+	def test_WithoutIDNA(self) -> None:
+		with patch.dict(modules, {"idna": None}):
+			with self.assertRaises(MissingDependencyError) as context:
+				_ = Host("www.xn--mller-kva.de").UnicodeHostname
+
+		self.assertEqual("idna", context.exception.Extra)

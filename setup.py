@@ -51,6 +51,7 @@ packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 additionalRequirements = {
 	"dependencies": ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
 	"diagram":      ["matplotlib >= 3.10"],
+	"idna":         ["idna >= 3.20"],
 	"packaging":    ["setuptools >= 83.0"],
 	"terminal":     ["colorama ~= 0.4.6"],
 	"testing":      ["pytest ~= 9.1"],
