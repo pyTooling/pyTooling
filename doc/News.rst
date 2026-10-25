@@ -579,8 +579,9 @@ Version 10.x (2026)
      * :class:`~pyTooling.Versioning.CalendarVersion` and its year-based classes carry a release level, a post-release,
        a development release, a build number and a postfix, as a semantic version does: ``2024.01a1``,
        ``2024.01-rc1``, ``2024.01-dev``, ``2024.01.post2.dev3``, ``2024.10.15.3``, ``2024.10.15+deadbeef`` and OSVVM's
-       ``2025.06a``. A ``.`` or ``-`` may separate the release level; a letter without a number is a postfix. Their
-       initializers take ``level``, ``number``, ``post``, ``dev`` and ``hash`` as keyword parameters; :func:`str`,
+       ``2025.06a``. A ``.`` or ``-`` may separate the release level; a letter without a number is a postfix, and the
+       separator in front of a postfix is kept, so ``2025.06a`` is written ``2025.6a``. Their initializers take
+       ``level``, ``number``, ``post``, ``dev``, ``hash`` and ``postfixSeparator`` as keyword parameters; :func:`str`,
        :func:`repr` and :func:`format` write the new parts.
 
    * Exceptions carry the object they are about, so a caller can react without parsing the message. The new
