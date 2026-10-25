@@ -174,6 +174,52 @@ class LineSegment(Testcase):
 
 		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
 
+	def test_AngleTo_Parallel(self) -> None:
+		"""Same direction, different lengths: the cosine of the angle rounds to 0.9999999999999999."""
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(7, 7))
+
+		self.assertEqual(0.0, line1.AngleTo(line2))
+
+	def test_AngleTo_Opposite(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(-7, -7))
+
+		self.assertEqual(pi, line1.AngleTo(line2))
+
+	def test_AngleTo_ParallelFloat(self) -> None:
+		"""Same direction: the cosine of the angle rounds to 1.0000000000000002, outside acos' domain."""
+		line1 = LineSegment2D(Point2D(0.0, 0.0), Point2D(0.30000000000000004, 0.2))
+		line2 = LineSegment2D(Point2D(0.0, 0.0), Point2D(0.9000000000000001, 0.6000000000000001))
+
+		self.assertAlmostEqual(0.0, line1.AngleTo(line2), places=15)
+
+	def test_AngleTo_ZeroLength(self) -> None:
+		line1 = LineSegment2D(Point2D(1, 1), Point2D(1, 1))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line1.AngleTo(line2)
+
+		self.assertEqual("Line segment has length 0.", str(context.exception))
+		self.assertListEqual([
+			"Got line segment ((1, 1) → (1, 1)).",
+			"Can't determine an angle between two lines if one of the lines has no direction, due to a zero-length."
+		], context.exception.__notes__)
+
+	def test_AngleTo_ZeroLengthOther(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		line2 = LineSegment2D(Point2D(1, 1), Point2D(1, 1))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line1.AngleTo(line2)
+
+		self.assertEqual("Parameter 'other' has length 0.", str(context.exception))
+		self.assertListEqual([
+			"Got line segment ((1, 1) → (1, 1)).",
+			"Can't determine an angle between two lines if one of the lines has no direction, due to a zero-length."
+		], context.exception.__notes__)
+
 
 class Copy(Testcase):
 	def test_Origin(self) -> None:
