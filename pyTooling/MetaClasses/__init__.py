@@ -1017,7 +1017,8 @@ class ExtendedType(type):
 		:param weakref:                     Optional, if ``True``, let instances of a slotted class be referenced weakly by
 		                                    adding ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on
 		                                    to the class it is mixed into.
-		:param singleton:                   Optional, if ``True``, make the class a :term:`Singleton`.
+		:param singleton:                   Optional, if ``True``, make the class a :term:`Singleton`. A class derived from
+		                                    a singleton is a singleton too; ``False`` doesn't switch it off.
 		:param expects:                     Optional, names of members this class needs from whichever class it is mixed
 		                                    into, or a :class:`typing.Protocol` class naming them as its members. |br|
 		                                    See :attr:`__expectedMembers__`.
@@ -2031,7 +2032,7 @@ class ExtendedType(type):
 
 		:param newClass:  The newly constructed class for further modifications.
 		:param singleton: If ``True``, the class allows only a single instance to exist. A class derived from a singleton
-		                  is a singleton, too.
+		                  is a singleton, too, with an instance of its own; ``False`` doesn't switch it off.
 		:returns:         ``True``, if the class is a singleton.
 		"""
 		if not singleton:
