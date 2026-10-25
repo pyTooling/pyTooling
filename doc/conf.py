@@ -287,6 +287,7 @@ pyTooling_Dependency_Requirements = {
 	"terminal":      {"package":  "pyTooling[terminal]"},
 	"yaml":          {"package":  "pyTooling[yaml]"},
 	"diagram":       {"package":  "pyTooling[diagram]"},
+	"idna":          {"package":  "pyTooling[idna]"},
 	"dependencies":  {"package":  "pyTooling[dependencies]"},
 	"testing":       {"package":  "pyTooling[testing]"},
 	"unittest":      {"file":     "../tests/unit/requirements.txt"},

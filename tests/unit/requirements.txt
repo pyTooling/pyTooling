@@ -12,6 +12,9 @@ pytest-xdist ~= 3.8
 aiohttp >= 3.12    # aiohttp limited on MSYS2 to 3.12.x
 requests >= 2.32
 
+# For pyTooling.GenericPath.URL testing - reading an IRI with an internationalized domain name (IDNA 2008)
+idna >= 3.20
+
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml ~= 0.19.1
 
