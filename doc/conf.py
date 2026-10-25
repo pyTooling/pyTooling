@@ -304,6 +304,7 @@ pyTooling_Dependency_Requirements = {
 	"idna":          {"package":  "pyTooling[idna]"},
 	"dependencies":  {"package":  "pyTooling[dependencies]"},
 	"testing":       {"package":  "pyTooling[testing]"},
+	"tracing":       {"package":  "pyTooling[tracing]"},
 	"unittest":      {"file":     "../tests/unit/requirements.txt"},
 	"benchmark":     {"file":     "../tests/benchmark/requirements.txt"},
 	"performance":   {"file":     "../tests/performance/requirements.txt"},
