@@ -88,10 +88,10 @@ class GenericPath(Testcase):
 
 class URLs(Testcase):
 	def test_Host(self) -> None:
-		resource = "github"
+		resource = "http://github"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github", url.Host.Hostname)
 		self.assertIsNone(url.Host.Port)
 		self.assertIsNone(url.User)
@@ -103,10 +103,10 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_IP(self) -> None:
-		resource = "192.168.1.1"
+		resource = "http://192.168.1.1"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("192.168.1.1", url.Host.Hostname)
 		self.assertIsNone(url.Host.Port)
 		self.assertIsNone(url.User)
@@ -118,11 +118,11 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_DNS(self) -> None:
-		resource = "github.com"
+		resource = "http://github.com."
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
-		self.assertEqual("github.com", url.Host.Hostname)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
+		self.assertEqual("github.com.", url.Host.Hostname)
 		self.assertIsNone(url.Host.Port)
 		self.assertIsNone(url.User)
 		self.assertIsNone(url.Password)
@@ -133,10 +133,10 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_DNS_Port(self) -> None:
-		resource = "github.com:80"
+		resource = "http://github.com:80"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
 		self.assertEqual(80, url.Host.Port)
 		self.assertIsNone(url.User)
@@ -148,10 +148,10 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_DNS_Port_Path(self) -> None:
-		resource = "github.com:80/entrypoint"
+		resource = "http://github.com:80/entrypoint"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
 		self.assertEqual(80, url.Host.Port)
 		self.assertIsNone(url.User)
@@ -163,10 +163,10 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_DNS_Port_Path_File(self) -> None:
-		resource = "github.com:80/path/file.png"
+		resource = "http://github.com:80/path/file.png"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
 		self.assertEqual(80, url.Host.Port)
 		self.assertIsNone(url.User)
@@ -178,10 +178,10 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_DNS_Port_Path_File_Query(self) -> None:
-		resource = "github.com:80/path/file.png?width=1024"
+		resource = "http://github.com:80/path/file.png?width=1024"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
 		self.assertEqual(80, url.Host.Port)
 		self.assertIsNone(url.User)
@@ -193,10 +193,10 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_DNS_Port_Path_File_QueryQuery(self) -> None:
-		resource = "github.com:80/path/file.png?width=1024&height=912"
+		resource = "http://github.com:80/path/file.png?width=1024&height=912"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
 		self.assertEqual(80, url.Host.Port)
 		self.assertIsNone(url.User)
@@ -208,10 +208,10 @@ class URLs(Testcase):
 		self.assertEqual(resource, str(url))
 
 	def test_DNS_Port_Path_File_Fragment(self) -> None:
-		resource = "github.com:80/entrypoint#chapter-3"
+		resource = "http://github.com:80/entrypoint#chapter-3"
 		url = URL.Parse(resource)
 
-		self.assertIsNone(url.Scheme)
+		self.assertEqual(Protocols.HTTP, url.Scheme)
 		self.assertEqual("github.com", url.Host.Hostname)
 		self.assertEqual(80, url.Host.Port)
 		self.assertIsNone(url.User)
@@ -522,16 +522,19 @@ class ParseErrors(Testcase):
 			_ = URL.Parse("ftpx://example.org")
 
 	def test_SyntaxErrorRaisesURLError(self) -> None:
-		"""
-		``'?#'`` is one of the few strings ``URL_PATTERN`` rejects.
-
-		Every group of the pattern is optional, so almost nothing fails it - ``'https://a b/c'`` and even a string
-		holding a newline are accepted. See the pull-request's *Known Issues*.
-		"""
 		with self.assertRaises(URLError) as context:
-			_ = URL.Parse("?#")
+			_ = URL.Parse("http://host:abc/")
 
-		self.assertEqual("Syntax error when parsing URL '?#'.", str(context.exception))
+		self.assertEqual("Syntax error when parsing URL 'http://host:abc/'.", str(context.exception))
+
+	def test_AnEmptyQueryOrFragment(self) -> None:
+		"""Unchanged: :rfc:`3986` allows an empty query and an empty fragment, ``URL_PATTERN`` doesn't."""
+		for text in ("https://example.org/p?", "https://example.org/p#"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertEqual(f"Syntax error when parsing URL {text!r}.", str(context.exception))
 
 
 class AddedSchemes(Testcase):
@@ -601,24 +604,29 @@ class AddedSchemes(Testcase):
 	def test_IsEncryptedIsNoEnumerationMember(self) -> None:
 		self.assertNotIn("IsEncrypted", Protocols.__members__)
 
-	def test_AnOpaqueSchemeIsMisparsedAsCredentials(self) -> None:
+	def test_AnOpaqueSchemeIsRejected(self) -> None:
 		"""
 		``URL_PATTERN`` only recognises a scheme written before ``://``.
 
-		A URI like ``sip:alice@atlanta.com`` or ``mailto:a@b.org`` carries no ``//``, so the scheme is not recognised
-		and the ``scheme:user`` part is taken for ``user:password`` instead - it parses wrongly rather than raising.
-		Listing such a scheme in :class:`Protocols` would change nothing; the pattern would have to.
+		A URI like ``sip:alice@atlanta.com`` or ``mailto:a@b.org`` carries no ``//``, so it has no scheme a URL can
+		start with. Listing such a scheme in :class:`Protocols` would change nothing; the pattern would have to.
 		"""
-		url = URL.Parse("sip:alice@atlanta.com")
+		for text in ("sip:alice@atlanta.com", "mailto:a@b.org", "urn:isbn:0451450523"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
 
-		self.assertIsNone(url.Scheme)
-		self.assertEqual("sip", url.User)
-		self.assertEqual("alice", url.Password)
-		self.assertEqual("atlanta.com", url.Host.Hostname)
+				self.assertEqual(f"Missing scheme when parsing URL '{text}'.", str(context.exception))
 
 
 class ForbiddenCharacters(Testcase):
 	"""A rejected URL holding a character :rfc:`3986` forbids says how to write it."""
+
+	def test_Message(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("https://example.org/a b")
+
+		self.assertEqual("Forbidden character when parsing URL 'https://example.org/a b'.", str(context.exception))
 
 	def test_SpaceIsExplained(self) -> None:
 		with self.assertRaises(URLError) as context:
@@ -647,13 +655,35 @@ class ForbiddenCharacters(Testcase):
 
 	def test_NoNoteWhenNothingIsForbidden(self) -> None:
 		with self.assertRaises(URLError) as context:
-			_ = URL.Parse("?#")
+			_ = URL.Parse("http://host:abc/")
 
 		self.assertEqual([], getattr(context.exception, "__notes__", []))
 
-	def test_AnAcceptedURLIsUnaffected(self) -> None:
-		"""A space is accepted today, so the note never fires for one - see the pull-request's Known Issues."""
-		self.assertEqual("https://a b/c", str(URL.Parse("https://a b/c")))
+	def test_AnywhereInTheURL(self) -> None:
+		"""A space after the host was read as the start of the path, which then didn't start with a slash."""
+		for text in ("https://a b/c", "https://example.org/a b", "https://example.org/p?q=a b", "https://h/p#a b"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertIn(
+					"Character ' ' is not allowed in a URL. Write it percent-encoded as '%20'.",
+					context.exception.__notes__
+				)
+
+	def test_OnlySpaces(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("   ")
+
+		self.assertEqual("Forbidden character when parsing URL '   '.", str(context.exception))
+
+	def test_ATrailingNewline(self) -> None:
+		"""A ``$`` matches before a trailing newline, so the newline was dropped from the URL instead of rejected."""
+		with self.assertRaises(URLError):
+			_ = URL.Parse("https://example.org/\n")
+
+	def test_PercentEncodedIsAccepted(self) -> None:
+		self.assertEqual("/a%20b", str(URL.Parse("https://example.org/a%20b").Path))
 
 
 class HostParameters(Testcase):
@@ -715,3 +745,245 @@ class IPv6Hosts(Testcase):
 
 		self.assertTrue(url.Host.Hostname.startswith("["))
 		self.assertEqual("https://[2001:db8::1]:8080/path", str(url))
+
+
+class MissingScheme(Testcase):
+	"""A URL starts with a scheme followed by ``://``; without one, it's a relative reference or no URL at all."""
+
+	def assertMissingScheme(self, text: str) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse(text)
+
+		self.assertEqual(f"Missing scheme when parsing URL {text!r}.", str(context.exception))
+
+	def test_AHost(self) -> None:
+		"""A bare host was read as the host of a URL without scheme - :rfc:`3986` reads ``host:port`` as a scheme."""
+		for text in (
+			"github",
+			"nonsense",
+			"UNKNOWN",
+			"192.168.1.1",
+			"github.com",
+			"github.com:80",
+			"localhost:8080",
+			"github.com:80/entrypoint",
+			"github.com:80/path/file.png?width=1024",
+			"github.com:80/entrypoint#chapter-3",
+			"example.org/redirect?to=https://elsewhere.org"
+		):
+			with self.subTest(url=text):
+				self.assertMissingScheme(text)
+
+	def test_AReference(self) -> None:
+		"""A relative reference is appended to a URL with ``/``, not parsed as one."""
+		for text in ("", "?#", "//example.org/path", "/path/to/file", "things/4711", "C:/Windows"):
+			with self.subTest(url=text):
+				self.assertMissingScheme(text)
+
+	def test_AMalformedSeparator(self) -> None:
+		for text in ("://x", "http:/x", "http//host"):
+			with self.subTest(url=text):
+				self.assertMissingScheme(text)
+
+	def test_AnSCPLikeAddress(self) -> None:
+		"""Git's ``user@host:path`` is no URL; ``ssh://user@host/path`` is."""
+		self.assertMissingScheme("git@github.com:org/repo.git")
+
+	def test_TheNote(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("nonsense")
+
+		self.assertEqual(["A URL starts with a scheme followed by '://', e.g. 'https://'."], context.exception.__notes__)
+
+
+class MissingHost(Testcase):
+	"""Only a ``file`` or a ``unix`` URL may leave its host empty, and then names an absolute path."""
+
+	def test_Rejected(self) -> None:
+		for text in ("http://", "http:///path", "http://:80", "http://user@/p", "https://?q=1", "ssh://#f"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertEqual(f"Missing host when parsing URL {text!r}.", str(context.exception))
+
+	def test_AUserOrAPortNeedsAHost(self) -> None:
+		for text in ("file://user@/etc/hosts", "file://:80/etc/hosts", "unix://:80/var/run/docker.sock"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertEqual(f"Missing host when parsing URL {text!r}.", str(context.exception))
+
+	def test_TheNote(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("http:///path")
+
+		self.assertEqual(
+			["Only a 'file' or 'unix' URL may leave the host empty, e.g. 'file:///etc/hosts'."],
+			context.exception.__notes__
+		)
+
+	def test_AFileURL(self) -> None:
+		url = URL.Parse("file:///etc/hosts")
+
+		self.assertEqual(Protocols.FILE, url.Scheme)
+		self.assertIsNone(url.Host)
+		self.assertEqual("/etc/hosts", str(url.Path))
+		self.assertEqual("file:///etc/hosts", str(url))
+
+	def test_AWindowsDriveLetter(self) -> None:
+		""":rfc:`8089` writes a drive letter as the first element of an absolute path."""
+		url = URL.Parse("file:///C:/Windows/System32")
+
+		self.assertIsNone(url.Host)
+		self.assertEqual("/C:/Windows/System32", str(url.Path))
+
+	def test_ADriveLetterAsHost(self) -> None:
+		"""``file://C:/...`` reads ``C`` as the host and ``:/...`` as its port."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("file://C:/Windows")
+
+		self.assertEqual("Syntax error when parsing URL 'file://C:/Windows'.", str(context.exception))
+
+	def test_AFileURLWithHost(self) -> None:
+		for text, hostname in (("file://server/share/file.txt", "server"), ("file://localhost/etc/hosts", "localhost")):
+			with self.subTest(url=text):
+				self.assertEqual(hostname, URL.Parse(text).Host.Hostname)
+
+	def test_AUnixSocket(self) -> None:
+		url = URL.Parse("unix:///var/run/docker.sock")
+
+		self.assertIsNone(url.Host)
+		self.assertEqual("/var/run/docker.sock", str(url.Path))
+
+	def test_MissingPath(self) -> None:
+		for text in ("file://", "unix://"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertEqual(f"Missing path when parsing URL {text!r}.", str(context.exception))
+				self.assertEqual(
+					["A 'file' or 'unix' URL without a host names an absolute path, e.g. 'file:///etc/hosts'."],
+					context.exception.__notes__
+				)
+
+
+class Ports(Testcase):
+	"""A port follows the host after a ``:``, and is a number in range 0..65535."""
+
+	def test_Boundaries(self) -> None:
+		for text, port in (("https://host:0/", 0), ("https://host:65535/", 65535)):
+			with self.subTest(url=text):
+				self.assertEqual(port, URL.Parse(text).Host.Port)
+
+	def test_OutOfRange(self) -> None:
+		"""It was the :class:`Host` constructor's :exc:`ValueError`, naming a parameter the caller never passed."""
+		for text, port in (("https://host:65536/", 65536), ("https://host:99999/", 99999)):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertEqual(f"Port {port} is out of range 0..65535 when parsing URL {text!r}.", str(context.exception))
+
+	def test_EmptyPort(self) -> None:
+		"""A ``:`` without a number was read as the start of the path."""
+		for text in ("http://host:/p", "ssh://u@h:/p"):
+			with self.subTest(url=text):
+				with self.assertRaises(URLError) as context:
+					_ = URL.Parse(text)
+
+				self.assertEqual(f"Syntax error when parsing URL {text!r}.", str(context.exception))
+
+	def test_NotANumber(self) -> None:
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("http://host:abc/")
+
+		self.assertEqual("Syntax error when parsing URL 'http://host:abc/'.", str(context.exception))
+
+
+class UserInformation(Testcase):
+	"""A user and a password are written with the characters :rfc:`3986` allows in the user information."""
+
+	def test_ADotInTheUser(self) -> None:
+		"""It was read as the host, and ``@example.org/`` as the path."""
+		url = URL.Parse("https://first.last@example.org/")
+
+		self.assertEqual("first.last", url.User)
+		self.assertIsNone(url.Password)
+		self.assertEqual("example.org", url.Host.Hostname)
+		self.assertEqual("/", str(url.Path))
+
+	def test_APercentEncodedPassword(self) -> None:
+		"""It was read as host ``user`` and path ``:p%40ss@example.org/``."""
+		url = URL.Parse("https://user:p%40ss@example.org/")
+
+		self.assertEqual("user", url.User)
+		self.assertEqual("p%40ss", url.Password)
+		self.assertEqual("example.org", url.Host.Hostname)
+		self.assertEqual("https://user:p%40ss@example.org/", str(url))
+
+	def test_AnAtInThePath(self) -> None:
+		url = URL.Parse("https://hachyderm.io/@coveragepy")
+
+		self.assertIsNone(url.User)
+		self.assertEqual("hachyderm.io", url.Host.Hostname)
+		self.assertEqual("/@coveragepy", str(url.Path))
+
+
+class SchemeSpelling(Testcase):
+	""":rfc:`3986` writes a scheme as a letter followed by letters, digits, ``+``, ``-`` and ``.``."""
+
+	def test_UpperCase(self) -> None:
+		self.assertEqual(Protocols.HTTPS, URL.Parse("HTTPS://Example.org/").Scheme)
+
+	def test_APlusInTheScheme(self) -> None:
+		"""It was read as host ``git`` and path ``+ssh://...``."""
+		with self.assertRaises(URLError) as context:
+			_ = URL.Parse("git+ssh://git@github.com/o/r.git")
+
+		self.assertEqual(
+			"Unknown scheme 'git+ssh' when parsing URL 'git+ssh://git@github.com/o/r.git'.",
+			str(context.exception)
+		)
+
+
+class AcceptedURLs(Testcase):
+	"""What a URL looks like in the wild, read and written back unchanged."""
+
+	def test_RoundTrip(self) -> None:
+		for text in (
+			"https://example.org",
+			"https://example.org/",
+			"https://example.org./",
+			"https://example.org/path/to/file.txt",
+			"https://example.org:8443/api/v3",
+			"https://user@example.org/",
+			"https://user:password@example.org:8443/p?q=1#frag",
+			"https://example.org/p?a=1&b=2",
+			"https://example.org/p#section",
+			"http://192.168.1.1:80/",
+			"ftp://ftp.example.org/pub/file.tar.gz",
+			"ftp://anonymous:guest@ftp.example.org/pub",
+			"ssh://git@github.com/owner/repo.git",
+			"tcp://0.0.0.0:2375",
+			"https://matrix.to/#/#aio-libs:matrix.org",
+			"https://github.com/aio-libs/yarl/actions?query=branch:master",
+			"https://example.org/redirect?to=https://elsewhere.org"
+		):
+			with self.subTest(url=text):
+				self.assertEqual(text, str(URL.Parse(text)))
+
+	def test_AColonInTheQuery(self) -> None:
+		self.assertDictEqual(
+			{"query": "branch:master"},
+			URL.Parse("https://github.com/aio-libs/yarl/actions?query=branch:master").Query
+		)
+
+	def test_AHashInTheFragment(self) -> None:
+		"""Only the first ``#`` starts the fragment."""
+		url = URL.Parse("https://matrix.to/#/#aio-libs:matrix.org")
+
+		self.assertEqual("/", str(url.Path))
+		self.assertEqual("/#aio-libs:matrix.org", url.Fragment)

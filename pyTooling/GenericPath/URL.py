@@ -33,7 +33,7 @@ This package provides a representation for a Uniform Resource Locator (URL).
 
 .. code-block::
 
-   [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
+   scheme://[user[:password]@]domain.tld[:port][/path/to/file][?query][#fragment]
 """
 from __future__            import annotations
 
@@ -51,14 +51,18 @@ from pyTooling.GenericPath import RootMixin, ElementMixin, PathMixin
 __all__ = ["URL_PATTERN", "URL_REGEXP"]
 
 URL_PATTERN = (
-	r"""(?:(?P<scheme>\w+)://)?"""
-	r"""(?:(?P<user>[-a-zA-Z0-9_]+)(?::(?P<password>[-a-zA-Z0-9_]+))?@)?"""
-	r"""(?:(?P<host>\[[0-9A-Fa-f:.]+\]|(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)(?:\:(?P<port>\d+))?)?"""
-	r"""(?P<path>[^?#]*?)"""
+	r"""(?P<scheme>[a-zA-Z][-a-zA-Z0-9+.]*)://"""
+	r"""(?:(?P<user>(?:[-a-zA-Z0-9._~!$&'()*+,;=]|%[0-9A-Fa-f]{2})+)"""
+	r"""(?::(?P<password>(?:[-a-zA-Z0-9._~!$&'()*+,;=]|%[0-9A-Fa-f]{2})+))?@)?"""
+	r"""(?P<host>\[[0-9A-Fa-f:.]+\]|(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)?"""
+	r"""(?:\:(?P<port>\d+))?"""
+	r"""(?P<path>(?:/[^?#]*)?)"""
 	r"""(?:\?(?P<query>[^#]+?))?"""
 	r"""(?:#(?P<fragment>.+?))?"""
-)                                                 #: Regular expression pattern for validating and splitting a URL.
-URL_REGEXP = re_compile("^" + URL_PATTERN + "$")  #: Precompiled regular expression for URL validation.
+)                                                   #: Regular expression pattern for validating and splitting a URL.
+URL_REGEXP = re_compile("^" + URL_PATTERN + r"\Z")  #: Precompiled regular expression for URL validation.
+
+_SCHEME_PREFIX = re_compile(r"[a-zA-Z][-a-zA-Z0-9+.]*://")  #: Precompiled regular expression for the leading scheme.
 
 FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"  #: Characters :rfc:`3986` forbids in a URL unless they are percent-encoded.
 
@@ -115,8 +119,8 @@ class Protocols(Flag):
 	   as they are needed.
 
 	   An **opaque** scheme - ``mailto:a@b.org``, ``urn:isbn:…``, and ``sip:alice@atlanta.com``, whose URI carries no
-	   ``//`` - is a different matter: :data:`URL_PATTERN` only recognises a scheme before ``://``, so such a URL
-	   parses with its scheme silently dropped rather than raising. Listing it here would change nothing.
+	   ``//`` - is a different matter: :data:`URL_PATTERN` only recognises a scheme before ``://``, so
+	   :meth:`URL.Parse` rejects such a URI for its missing scheme. Listing it here would change nothing.
 	"""
 
 	TLS      = 1      #: Transport Layer Security
@@ -271,7 +275,7 @@ class URL:
 
 	.. code-block::
 
-	   [schema://][user[:password]@]domain.tld[:port]/path/to/file[?query][#fragment]
+	   scheme://[user[:password]@]domain.tld[:port][/path/to/file][?query][#fragment]
 	"""
 
 	_scheme:    Nullable[Protocols]       #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
@@ -424,15 +428,23 @@ class URL:
 		"""
 		Parse a URL string and returns the URL object.
 
+		A URL starts with a scheme followed by ``://`` and a host, as :rfc:`3986` writes an absolute URI with an
+		authority: ``https://example.org/path``. After the host and port, a path starts with a slash. Only a ``file`` or
+		``unix`` URL may leave the host empty, and then names an absolute path: ``file:///etc/hosts``.
+
 		:param url:               URL as string to be parsed.
 		:returns:                 A URL object.
 		:raises ValueError:       If parameter 'url' is ``None``.
 		:raises TypeError:        If parameter 'url' is not of type :class:`str`.
-		:raises URLError:         When syntax does not match. |br|
-		                          A note names the first character :rfc:`3986` forbids, if the URL holds one, and how
-		                          to percent-encode it.
+		:raises URLError:         When the URL holds a character :rfc:`3986` forbids. |br|
+		                          The note names the character and how to percent-encode it.
+		:raises URLError:         When the URL doesn't start with a scheme followed by ``://``.
+		:raises URLError:         When syntax does not match.
 		:raises URLError:         When the URL names a scheme that is not in :class:`Protocols`. |br|
 		                          The note lists the known schemes.
+		:raises URLError:         When the URL names no host, and isn't a ``file`` or ``unix`` URL without user and port.
+		:raises URLError:         When a ``file`` or ``unix`` URL names neither a host nor a path.
+		:raises URLError:         When the port is out of range 0..65535.
 		:raises URLError:         When a parameter of the query is not a ``key=value`` pair.
 		"""
 		if url is None:
@@ -441,6 +453,15 @@ class URL:
 			ex = TypeError("Parameter 'url' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(url)}'.")
 			raise ex
+
+		for character in url:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				ex = URLError(f"Forbidden character when parsing URL {url!r}.")
+				ex.add_note(
+					f"Character {character!r} is not allowed in a URL. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				raise ex
 
 		if (matches := URL_REGEXP.match(url)) is not None:
 			scheme =    matches.group("scheme")
@@ -455,13 +476,25 @@ class URL:
 			query =     matches.group("query")
 			fragment =  matches.group("fragment")
 
-			if scheme is not None:
-				try:
-					scheme = Protocols[scheme.upper()]
-				except KeyError as ex:
-					error = URLError(f"Unknown scheme '{scheme}' when parsing URL '{url}'.")
-					error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
-					raise error from ex
+			try:
+				scheme = Protocols[scheme.upper()]
+			except KeyError as ex:
+				error = URLError(f"Unknown scheme '{scheme}' when parsing URL '{url}'.")
+				error.add_note(f"Known schemes: {', '.join(name.lower() for name in Protocols.__members__)}.")
+				raise error from ex
+
+			if host is None:
+				if user is not None or port is not None or scheme not in (Protocols.FILE, Protocols.UNIX):
+					ex = URLError(f"Missing host when parsing URL {url!r}.")
+					ex.add_note("Only a 'file' or 'unix' URL may leave the host empty, e.g. 'file:///etc/hosts'.")
+					raise ex
+				elif path == "":
+					ex = URLError(f"Missing path when parsing URL {url!r}.")
+					ex.add_note("A 'file' or 'unix' URL without a host names an absolute path, e.g. 'file:///etc/hosts'.")
+					raise ex
+
+			if port is not None and port > 65535:
+				raise URLError(f"Port {port} is out of range 0..65535 when parsing URL {url!r}.")
 
 			hostObj =    None if host is None else Host(host, port)
 			pathObj =    Path.Parse(path, hostObj)
@@ -477,16 +510,12 @@ class URL:
 				fragment
 			)
 
-		error = URLError(f"Syntax error when parsing URL {url!r}.")
-		for character in url:
-			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
-				error.add_note(
-					f"Character {character!r} is not allowed in a URL. Write it percent-encoded as "
-					f"'{urlQuote(character, safe='')}'."
-				)
-				break
+		if _SCHEME_PREFIX.match(url) is None:
+			ex = URLError(f"Missing scheme when parsing URL {url!r}.")
+			ex.add_note("A URL starts with a scheme followed by '://', e.g. 'https://'.")
+			raise ex
 
-		raise error
+		raise URLError(f"Syntax error when parsing URL {url!r}.")
 
 	@classmethod
 	def _ParseQuery(cls, query: str, url: str) -> dict[str, str]:
