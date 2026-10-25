@@ -105,7 +105,8 @@ def getFullyQualifiedName(obj: Any) -> str:
 
 _NAMED_TYPES = (
 	type, FunctionType, MethodType, BuiltinFunctionType, MethodDescriptorType, WrapperDescriptorType, MethodWrapperType
-)  #: Types of objects carrying their own name: classes, functions and methods, incl. built-in ones.
+)
+"""Types of objects carrying their own name: classes, functions and methods, incl. built-in ones."""
 
 
 @export

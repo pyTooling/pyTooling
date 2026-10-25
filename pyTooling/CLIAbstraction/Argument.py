@@ -51,7 +51,8 @@ else:
 __all__ = ["ValueT"]
 
 
-ValueT = TypeVar("ValueT")   #: The type of value in a valued argument.
+ValueT = TypeVar("ValueT")
+"""The type of value in a valued argument."""
 
 
 @export

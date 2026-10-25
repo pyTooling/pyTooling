@@ -49,7 +49,8 @@ from pyTooling.Graph       import Graph as pyToolingGraph, Subgraph as pyTooling
 from pyTooling.Tree        import Node as pyToolingNode
 
 
-_ATTRIBUTE_ESCAPES = str.maketrans({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})  #: Translation table escaping an XML attribute value.
+_ATTRIBUTE_ESCAPES = str.maketrans({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})
+"""Translation table escaping an XML attribute value."""
 
 
 def _escapeAttribute(value: Any) -> str:

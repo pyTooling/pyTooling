@@ -916,8 +916,8 @@ class Directory(Element["Directory"]):
 		return self._name
 
 
-#: Alias of :class:`Directory` for annotations in :class:`PermissionWarning`, whose property has the same name.
 _Directory = Directory
+"""Alias of :class:`Directory` for annotations in :class:`PermissionWarning`, whose property has the same name."""
 
 
 @export

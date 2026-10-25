@@ -53,13 +53,21 @@ __all__ = ["export", "Param", "RetType", "Func", "T"]
 
 
 # See https://stackoverflow.com/questions/47060133/python-3-type-hinting-for-decorator
-Param = ParamSpec("Param")                               #: A parameter specification for function or method
-RetType = TypeVar("RetType")                             #: Type variable for a return type
-Func = Callable[Param, RetType]                          #: Type specification for a function
+Param = ParamSpec("Param")
+"""A parameter specification for function or method."""
+
+RetType = TypeVar("RetType")
+"""Type variable for a return type."""
+
+Func = Callable[Param, RetType]
+"""Type specification for a function."""
 
 
-T = TypeVar("T", bound=Union[type, Callable[..., Any]])  #: A type variable for classes or functions.
-C = TypeVar("C", bound=Callable[..., Any])               #: A type variable for functions or methods.
+T = TypeVar("T", bound=Union[type, Callable[..., Any]])
+"""A type variable for classes or functions."""
+
+C = TypeVar("C", bound=Callable[..., Any])
+"""A type variable for functions or methods."""
 
 
 def export(entity: T) -> T:

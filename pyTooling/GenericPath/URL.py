@@ -63,17 +63,24 @@ URL_PATTERN = (
 	r"""(?P<path>(?:/[^?#]*)?)"""
 	r"""(?:\?(?P<query>[^#]+?))?"""
 	r"""(?:#(?P<fragment>.+?))?"""
-)                                                   #: Regular expression pattern for validating and splitting a URL.
-URL_REGEXP = re_compile("^" + URL_PATTERN + r"\Z")  #: Precompiled regular expression for URL validation.
+)
+"""Regular expression pattern for validating and splitting a URL."""
 
-_SCHEME_PREFIX = re_compile(r"[a-zA-Z][-a-zA-Z0-9+.]*://")  #: Precompiled regular expression for the leading scheme.
-_IRI_HOST =      re_compile(
+URL_REGEXP = re_compile("^" + URL_PATTERN + r"\Z")
+"""Precompiled regular expression for URL validation."""
+
+_SCHEME_PREFIX = re_compile(r"[a-zA-Z][-a-zA-Z0-9+.]*://")
+"""Precompiled regular expression for the leading scheme."""
+
+_IRI_HOST = re_compile(
 	r"""(?P<prefix>[a-zA-Z][-a-zA-Z0-9+.]*://(?:[^/?#@]*@)?)"""
 	r"""(?P<host>[^/?#:@\[\]]*)"""
 	r"""(?P<rest>.*)"""
-)  #: Precompiled regular expression splitting an IRI into scheme and user information, host, and the rest.
+)
+"""Precompiled regular expression splitting an IRI into scheme and user information, host, and the rest."""
 
-FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"  #: Characters :rfc:`3986` forbids in a URL unless they are percent-encoded.
+FORBIDDEN_CHARACTERS = " <>\"{}|\\^`"
+"""Characters :rfc:`3986` forbids in a URL unless they are percent-encoded."""
 
 
 @export

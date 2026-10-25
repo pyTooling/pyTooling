@@ -471,8 +471,11 @@ class MustOverrideClassError(AbstractClassError):
 # """
 
 
-M = TypeVar("M", bound=Callable[..., Any])   #: A type variable for methods.
-C = TypeVar("C", bound=type)       #: A type variable for classes.
+M = TypeVar("M", bound=Callable[..., Any])
+"""A type variable for methods."""
+
+C = TypeVar("C", bound=type)
+"""A type variable for classes."""
 
 
 def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:

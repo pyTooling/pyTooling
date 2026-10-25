@@ -56,7 +56,8 @@ from pyTooling.Exceptions    import ToolingException
 from pyTooling.MetaClasses   import C, M
 
 
-_ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")   #: Pattern matching an ANSI escape sequence selecting a color.
+_ANSI_COLOR_CODES = re_compile(r"\x1B\[[0-9;]*m")
+"""Pattern matching an ANSI escape sequence selecting a color."""
 
 
 @export
