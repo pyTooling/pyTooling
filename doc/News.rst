@@ -211,10 +211,11 @@ Version 10.x (2026)
        string or bytes-like object"* about neither the parameter nor the value.
      * An unknown scheme raises a :exc:`~pyTooling.Exceptions.ToolingException` listing the known ones, where
        ``ftpx://host`` used to raise ``KeyError: 'FTPX'``.
-     * A query parameter that is no ``key=value`` pair raises a :exc:`~pyTooling.Exceptions.ToolingException` naming
-       it, where ``?flag`` used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no
+     * A query parameter without ``=`` parses with the value ``None`` - ``?flag`` as ``{"flag": None}``, written back as
+       ``?flag`` - where it used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no
        longer an error - ``?key=a=b`` parses as ``{"key": "a=b"}``, where it used to raise *"too many values to
-       unpack"*.
+       unpack"*. An empty query (``https://example.org/?``) and an empty fragment (``#``) parse and round-trip, as
+       :rfc:`3986` allows them.
      * ⚠️ :meth:`~pyTooling.GenericPath.URL.URL.Parse` **rejects a string that isn't a URL** with a
        :exc:`~pyTooling.GenericPath.URL.URLError`. Every part of :data:`~pyTooling.GenericPath.URL.URL_PATTERN` was
        optional, so ``""``, ``"nonsense"`` and ``"https://a b/c"`` parsed - the last one as host ``a`` and path

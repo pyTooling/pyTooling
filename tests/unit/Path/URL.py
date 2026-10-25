@@ -36,7 +36,7 @@ from sys                       import modules
 from unittest.mock             import patch
 
 from pyTooling.Exceptions      import MissingDependencyError, ToolingException
-from pyTooling.GenericPath.URL import Host, URL, URLError, Protocols
+from pyTooling.GenericPath.URL import Host, Path, URL, URLError, Protocols
 from pyTooling.Testing         import Testcase
 
 
@@ -371,10 +371,6 @@ class Concatenation(Testcase):
 
 		self.assertEqual("https://example.org/things", str(composed), "That path is absolute, so it replaces.")
 
-	def test_ABrokenQuery(self) -> None:
-		with self.assertRaises(URLError):
-			_ = URL.Parse("https://example.org/api") / "things?novalue"
-
 	def test_SomethingElse(self) -> None:
 		for left in (URL.Parse("https://example.org/api"), URL.Parse("https://example.org/api").Path):
 			with self.subTest(left=left.__class__.__name__):
@@ -501,15 +497,6 @@ class ParseErrors(Testcase):
 			with self.subTest(scheme=scheme):
 				self.assertEqual(protocol, URL.Parse(f"{scheme}://example.org/file.txt").Scheme)
 
-	def test_QueryParameterWithoutValue(self) -> None:
-		with self.assertRaises(URLError) as context:
-			_ = URL.Parse("https://example.org/p?flag")
-
-		self.assertEqual(
-			"Query parameter 'flag' is no 'key=value' pair in URL 'https://example.org/p?flag'.",
-			str(context.exception)
-		)
-
 	def test_QueryParameterWithAnEmptyValue(self) -> None:
 		self.assertDictEqual({"key": ""}, URL.Parse("https://example.org/p?key=").Query)
 
@@ -530,14 +517,64 @@ class ParseErrors(Testcase):
 
 		self.assertEqual("Syntax error when parsing URL 'http://host:abc/'.", str(context.exception))
 
-	def test_AnEmptyQueryOrFragment(self) -> None:
-		"""Unchanged: :rfc:`3986` allows an empty query and an empty fragment, ``URL_PATTERN`` doesn't."""
-		for text in ("https://example.org/p?", "https://example.org/p#"):
-			with self.subTest(url=text):
-				with self.assertRaises(URLError) as context:
-					_ = URL.Parse(text)
+class QueriesAndFragments(Testcase):
+	""":rfc:`3986` allows an empty query, an empty fragment and a query parameter without ``=``; each round-trips."""
 
-				self.assertEqual(f"Syntax error when parsing URL {text!r}.", str(context.exception))
+	def test_NoQuery(self) -> None:
+		url = URL.Parse("https://example.org/p")
+
+		self.assertIsNone(url.Query)
+		self.assertEqual("https://example.org/p", str(url))
+
+	def test_EmptyQuery(self) -> None:
+		url = URL.Parse("https://example.org/p?")
+
+		self.assertDictEqual({}, url.Query)
+		self.assertEqual("https://example.org/p?", str(url))
+
+	def test_EmptyFragment(self) -> None:
+		url = URL.Parse("https://example.org/p#")
+
+		self.assertEqual("", url.Fragment)
+		self.assertEqual("https://example.org/p#", str(url))
+
+	def test_EmptyQueryAndFragment(self) -> None:
+		url = URL.Parse("https://example.org/p?#")
+
+		self.assertDictEqual({}, url.Query)
+		self.assertEqual("", url.Fragment)
+		self.assertEqual("https://example.org/p?#", str(url))
+
+	def test_ParameterWithoutValue(self) -> None:
+		"""A parameter without ``=`` has no value, unlike one with an empty value."""
+		url = URL.Parse("https://example.org/p?flag")
+
+		self.assertDictEqual({"flag": None}, url.Query)
+		self.assertEqual("https://example.org/p?flag", str(url))
+
+	def test_ParameterMixed(self) -> None:
+		url = URL.Parse("https://example.org/p?flag&empty=&key=value")
+
+		self.assertDictEqual({"flag": None, "empty": "", "key": "value"}, url.Query)
+		self.assertEqual("https://example.org/p?flag&empty=&key=value", str(url))
+
+	def test_Concatenation_ParameterWithoutValue(self) -> None:
+		url = URL.Parse("https://example.org/api") / "things?flag"
+
+		self.assertDictEqual({"flag": None}, url.Query)
+		self.assertEqual("https://example.org/api/things?flag", str(url))
+
+	def test_Concatenation_EmptyQueryAndFragment(self) -> None:
+		url = URL.Parse("https://example.org/api") / "things?#"
+
+		self.assertDictEqual({}, url.Query)
+		self.assertEqual("", url.Fragment)
+		self.assertEqual("https://example.org/api/things?#", str(url))
+
+	def test_Construction_ParameterWithoutValue(self) -> None:
+		url = URL(Protocols.HTTPS, Path.Parse("/p"), Host("example.org"), query={"flag": None, "key": "value"})
+
+		self.assertEqual("https://example.org/p?flag&key=value", str(url))
 
 
 class AddedSchemes(Testcase):

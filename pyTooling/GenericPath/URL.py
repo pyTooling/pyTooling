@@ -61,8 +61,8 @@ URL_PATTERN = (
 	r"""(?P<host>\[[0-9A-Fa-f:.]+\]|(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)?"""
 	r"""(?:\:(?P<port>\d+))?"""
 	r"""(?P<path>(?:/[^?#]*)?)"""
-	r"""(?:\?(?P<query>[^#]+?))?"""
-	r"""(?:#(?P<fragment>.+?))?"""
+	r"""(?:\?(?P<query>[^#]*?))?"""
+	r"""(?:#(?P<fragment>.*?))?"""
 )
 """Regular expression pattern for validating and splitting a URL."""
 
@@ -333,13 +333,13 @@ class URL:
 	The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`.
 	"""
 
-	_scheme:    Nullable[Protocols]       #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
-	_user:      Nullable[str]             #: User name of the URL's authority part.
-	_password:  Nullable[str]             #: Password of the URL's authority part.
-	_host:      Nullable[Host]            #: Host name and port of the URL's authority part.
-	_path:      Path                      #: Path part of the URL.
-	_query:     Nullable[dict[str, str]]  #: Query parameters of the URL, by parameter name.
-	_fragment:  Nullable[str]             #: Fragment (anchor) of the URL.
+	_scheme:    Nullable[Protocols]                 #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
+	_user:      Nullable[str]                       #: User name of the URL's authority part.
+	_password:  Nullable[str]                       #: Password of the URL's authority part.
+	_host:      Nullable[Host]                      #: Host name and port of the URL's authority part.
+	_path:      Path                                #: Path part of the URL.
+	_query:     Nullable[dict[str, Nullable[str]]]  #: Query parameters of the URL, by parameter name.
+	_fragment:  Nullable[str]                       #: Fragment (anchor) of the URL.
 
 	def __init__(
 		self,
@@ -348,7 +348,7 @@ class URL:
 		host:     Nullable[Host] = None,
 		user:     Nullable[str] = None,
 		password: Nullable[str] = None,
-		query:    Nullable[Mapping[str, str]] = None,
+		query:    Nullable[Mapping[str, Nullable[str]]] = None,
 		fragment: Nullable[str] = None
 	) -> None:
 		"""
@@ -359,7 +359,7 @@ class URL:
 		:param host:       Optional, hostname where the resource is located.
 		:param user:       Optional, username for basic authentication.
 		:param password:   Optional, password for basic authentication.
-		:param query:      Optional, query string.
+		:param query:      Optional, the query's parameters by name. A value of ``None`` is a parameter without ``=``.
 		:param fragment:   Optional, fragment.
 		:raises TypeError: If parameter 'host' is not of type :class:`Host`.
 		"""
@@ -460,9 +460,13 @@ class URL:
 		return self._path
 
 	@readonly
-	def Query(self) -> Nullable[dict[str, str]]:
+	def Query(self) -> Nullable[dict[str, Nullable[str]]]:
 		"""
 		Read-only property to access the dictionary of key-value pairs representing the query part in the URL.
+
+		A parameter written without ``=`` (``?verbose``) has the value ``None``, one with an empty value (``?verbose=``)
+		the value ``""``. A URL with an empty query (``https://example.org/?``) has an empty dictionary, a URL without
+		a query ``None``.
 
 		:returns: A dictionary representing the query as key-value pairs.
 		"""
@@ -517,7 +521,6 @@ class URL:
 		                                port.
 		:raises URLError:               When a ``file`` or ``unix`` URL names neither a host nor a path.
 		:raises URLError:               When the port is out of range 0..65535.
-		:raises URLError:               When a parameter of the query is not a ``key=value`` pair.
 		"""
 		if url is None:
 			raise ValueError("Parameter 'url' is None.")
@@ -600,7 +603,7 @@ class URL:
 
 			hostObj =    None if host is None else Host(host, port)
 			pathObj =    Path.Parse(path, hostObj)
-			parameters = None if query is None else cls._ParseQuery(query, url)
+			parameters = None if query is None else cls._ParseQuery(query)
 
 			return cls(
 				scheme,
@@ -623,24 +626,23 @@ class URL:
 		raise ex
 
 	@classmethod
-	def _ParseQuery(cls, query: str, url: str) -> dict[str, str]:
+	def _ParseQuery(cls, query: str) -> dict[str, Nullable[str]]:
 		"""
 		Parse a URL's query into its parameters.
 
-		:param query:     The query, without the leading ``?``. It is not empty - a URL carrying no query has none.
-		:param url:       The URL the query came from, for the exception's message.
-		:returns:         The parameters by name.
-		:raises URLError: When a parameter of the query is not a ``key=value`` pair.
+		:rfc:`3986` puts no structure into a query; the common ``key=value`` pairs separated by ``&`` are read into a
+		dictionary. A parameter without ``=`` has the value ``None``; an empty query (``?``) has no parameters.
+
+		:param query: The query, without the leading ``?``.
+		:returns:     The parameters by name.
 		"""
-		parameters = {}
+		parameters: dict[str, Nullable[str]] = {}
+		if query == "":
+			return parameters
+
 		for pair in query.split("&"):
 			key, separator, value = pair.partition("=")
-			if separator == "":
-				error = URLError(f"Query parameter '{pair}' is no 'key=value' pair in URL '{url}'.")
-				error.add_note("Every parameter of a query needs a '=', even when its value is empty.")
-				raise error
-
-			parameters[key] = value
+			parameters[key] = value if separator == "=" else None
 
 		return parameters
 
@@ -699,15 +701,14 @@ class URL:
 		:raises URLError:  When the right side names a scheme or an authority instead of a resource.
 		:raises URLError:  When the right side holds a character :rfc:`3986` forbids. |br|
 		                   The note names the character and how to percent-encode it.
-		:raises URLError:  When a parameter of the right side's query is not a ``key=value`` pair.
 		"""
 		if isinstance(other, str):
 			self._CheckRelativeReference(other)
 
-			resource, _, fragment = other.partition("#")
-			resource, _, query =    resource.partition("?")
-			parameters = None if query == "" else self._ParseQuery(query, other)
-			fragment =   fragment if fragment != "" else None
+			resource, fragmentSeparator, fragment = other.partition("#")
+			resource, querySeparator, query =       resource.partition("?")
+			parameters = None if querySeparator == "" else self._ParseQuery(query)
+			fragment =   None if fragmentSeparator == "" else fragment
 		elif isinstance(other, Path):
 			resource =   other
 			parameters = None
@@ -750,8 +751,9 @@ class URL:
 		if self._scheme is not None and (scheme := self._scheme.name) is not None:
 			result = scheme.lower() + "://" + result
 
-		if self._query is not None and len(self._query) > 0:
-			result = result + "?" + "&".join([f"{key}={value}" for key, value in self._query.items()])
+		if self._query is not None:
+			parameters = [key if value is None else f"{key}={value}" for key, value in self._query.items()]
+			result = result + "?" + "&".join(parameters)
 
 		if self._fragment is not None:
 			result = result + "#" + self._fragment
