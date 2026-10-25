@@ -741,8 +741,6 @@ class Plotly(Testcase):
 	def test_RowHeight(self) -> None:
 		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
 
-		self.assertEqual(20.5, PlotlyRenderer(layout, rowHeight=20.5).RowHeight)
-
 		with self.assertRaises(ValueError) as context:
 			_ = PlotlyRenderer(layout, rowHeight=None)
 
@@ -751,7 +749,7 @@ class Plotly(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = PlotlyRenderer(layout, rowHeight="20")
 
-		self.assertEqual("Parameter 'rowHeight' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertEqual("Parameter 'rowHeight' is not of type 'int'.", str(context.exception))
 
 		with self.assertRaises(ValueError) as context:
 			_ = PlotlyRenderer(layout, rowHeight=0)
