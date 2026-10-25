@@ -211,10 +211,19 @@ Version 10.x (2026)
        string or bytes-like object"* about neither the parameter nor the value.
      * An unknown scheme raises a :exc:`~pyTooling.Exceptions.ToolingException` listing the known ones, where
        ``ftpx://host`` used to raise ``KeyError: 'FTPX'``.
-     * A query parameter without ``=`` parses with the value ``None`` - ``?flag`` as ``{"flag": None}``, written back as
-       ``?flag`` - where it used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no
-       longer an error - ``?key=a=b`` parses as ``{"key": "a=b"}``, where it used to raise *"too many values to
-       unpack"*. An empty query (``https://example.org/?``) and an empty fragment (``#``) parse and round-trip, as
+     * ⚠️ :attr:`~pyTooling.GenericPath.URL.URL.Query` holds a
+       :class:`~pyTooling.GenericPath.URL.QueryParameter` per key instead of a string: a
+       :class:`~pyTooling.GenericPath.URL.KeyValuePair` for a key written once, a
+       :class:`~pyTooling.GenericPath.URL.KeySequencePair` for a key written several times - ``?tag=a&tag=b`` kept only
+       ``b`` and wrote back ``?tag=b``. :attr:`~pyTooling.GenericPath.URL.QueryParameter.Value` answers the (last)
+       value, :attr:`~pyTooling.GenericPath.URL.QueryParameter.Values` all of them. **Read ``url.Query[key].Value``
+       where ``url.Query[key]`` was read, and pass the constructor's ``query`` as an iterable of parameters instead of
+       a dictionary.**
+     * A query parameter without ``=`` parses with the value ``None`` - ``?flag`` as a
+       :class:`~pyTooling.GenericPath.URL.KeyValuePair` with the value ``None``, written back as ``?flag`` - where it
+       used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no longer an error -
+       ``?key=a=b`` parses with the value ``"a=b"``, where it used to raise *"too many values to unpack"*. An empty
+       query (``https://example.org/?``) and an empty fragment (``#``) parse and round-trip, as
        :rfc:`3986` allows them.
      * ⚠️ :meth:`~pyTooling.GenericPath.URL.URL.Parse` **rejects a string that isn't a URL** with a
        :exc:`~pyTooling.GenericPath.URL.URLError`. Every part of :data:`~pyTooling.GenericPath.URL.URL_PATTERN` was

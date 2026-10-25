@@ -33,10 +33,13 @@ Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.GenericPath.URL`
 parts and rendering it back.
 """
 from sys                       import modules
+from typing                    import Optional as Nullable
 from unittest.mock             import patch
 
 from pyTooling.Exceptions      import MissingDependencyError, ToolingException
-from pyTooling.GenericPath.URL import Host, Path, URL, URLError, Protocols
+from pyTooling.MetaClasses     import AbstractClassError
+from pyTooling.GenericPath.URL import Host, Path, URL, URLError, Protocols, QueryParameter, KeyValuePair, \
+                                      KeySequencePair
 from pyTooling.Testing         import Testcase
 
 
@@ -44,6 +47,11 @@ if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
 	print("Use: 'python -m unittest <testcase module>'")
 	exit(1)
+
+
+def queryValues(query: Nullable[dict[str, QueryParameter]]) -> Nullable[dict[str, Nullable[str]]]:
+	"""Return a URL's query parameters as their values by key, so a test compares them with a dictionary literal."""
+	return None if query is None else {key: parameter.Value for key, parameter in query.items()}
 
 
 class Schemes(Testcase):
@@ -190,7 +198,7 @@ class URLs(Testcase):
 		self.assertIsNone(url.User)
 		self.assertIsNone(url.Password)
 		self.assertEqual("/path/file.png", str(url.Path))
-		self.assertDictEqual({"width": "1024"}, url.Query)
+		self.assertDictEqual({"width": "1024"}, queryValues(url.Query))
 		self.assertIsNone(url.Fragment)
 
 		self.assertEqual(resource, str(url))
@@ -205,7 +213,7 @@ class URLs(Testcase):
 		self.assertIsNone(url.User)
 		self.assertIsNone(url.Password)
 		self.assertEqual("/path/file.png", str(url.Path))
-		self.assertDictEqual({"width": "1024", "height": "912"}, url.Query)
+		self.assertDictEqual({"width": "1024", "height": "912"}, queryValues(url.Query))
 		self.assertIsNone(url.Fragment)
 
 		self.assertEqual(resource, str(url))
@@ -310,7 +318,7 @@ class URLs(Testcase):
 		self.assertEqual("gitlab-ci-token", url.User)
 		self.assertEqual("glcbt-64_2yjksyWRz6mPq57YFsvx", url.Password)
 		self.assertEqual("/path/to/resource.ext", str(url.Path))
-		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
+		self.assertDictEqual({"query1": "34", "query2": "343"}, queryValues(url.Query))
 		self.assertEqual("ref-45", url.Fragment)
 
 		self.assertEqual(resource, str(url))
@@ -323,7 +331,7 @@ class URLs(Testcase):
 		self.assertIsNone(cleanURL.User)
 		self.assertIsNone(cleanURL.Password)
 		self.assertEqual("/path/to/resource.ext", str(url.Path))
-		self.assertDictEqual({"query1": "34", "query2": "343"}, url.Query)
+		self.assertDictEqual({"query1": "34", "query2": "343"}, queryValues(url.Query))
 		self.assertEqual("ref-45", url.Fragment)
 
 
@@ -358,7 +366,7 @@ class Concatenation(Testcase):
 		composed = URL.Parse("https://example.org/api?token=abc") / "things?fields=name"
 
 		self.assertEqual("https://example.org/api/things?fields=name", str(composed))
-		self.assertDictEqual({"fields": "name"}, composed.Query)
+		self.assertDictEqual({"fields": "name"}, queryValues(composed.Query))
 
 	def test_TheHostAndCredentialsAreKept(self) -> None:
 		composed = URL.Parse("https://user:pass@example.org:8443/api") / "things"
@@ -449,7 +457,7 @@ class TrailingSlash(Testcase):
 		self.assertEqual("user", shortenedURL.User)
 		self.assertEqual("pass", shortenedURL.Password)
 		self.assertEqual("example.org", shortenedURL.Host.Hostname)
-		self.assertDictEqual({"query": "1"}, shortenedURL.Query)
+		self.assertDictEqual({"query": "1"}, queryValues(shortenedURL.Query))
 		self.assertEqual("ref", shortenedURL.Fragment)
 
 class ParseErrors(Testcase):
@@ -498,11 +506,11 @@ class ParseErrors(Testcase):
 				self.assertEqual(protocol, URL.Parse(f"{scheme}://example.org/file.txt").Scheme)
 
 	def test_QueryParameterWithAnEmptyValue(self) -> None:
-		self.assertDictEqual({"key": ""}, URL.Parse("https://example.org/p?key=").Query)
+		self.assertDictEqual({"key": ""}, queryValues(URL.Parse("https://example.org/p?key=").Query))
 
 	def test_QueryValueContainingAnEqualsSign(self) -> None:
 		"""A '=' is legal inside a value; only the first one separates."""
-		self.assertDictEqual({"key": "a=b"}, URL.Parse("https://example.org/p?key=a=b").Query)
+		self.assertDictEqual({"key": "a=b"}, queryValues(URL.Parse("https://example.org/p?key=a=b").Query))
 
 	def test_URLErrorIsAToolingException(self) -> None:
 		"""So a consumer catching the package's base exception still catches it."""
@@ -549,19 +557,19 @@ class QueriesAndFragments(Testcase):
 		"""A parameter without ``=`` has no value, unlike one with an empty value."""
 		url = URL.Parse("https://example.org/p?flag")
 
-		self.assertDictEqual({"flag": None}, url.Query)
+		self.assertDictEqual({"flag": None}, queryValues(url.Query))
 		self.assertEqual("https://example.org/p?flag", str(url))
 
 	def test_ParameterMixed(self) -> None:
 		url = URL.Parse("https://example.org/p?flag&empty=&key=value")
 
-		self.assertDictEqual({"flag": None, "empty": "", "key": "value"}, url.Query)
+		self.assertDictEqual({"flag": None, "empty": "", "key": "value"}, queryValues(url.Query))
 		self.assertEqual("https://example.org/p?flag&empty=&key=value", str(url))
 
 	def test_Concatenation_ParameterWithoutValue(self) -> None:
 		url = URL.Parse("https://example.org/api") / "things?flag"
 
-		self.assertDictEqual({"flag": None}, url.Query)
+		self.assertDictEqual({"flag": None}, queryValues(url.Query))
 		self.assertEqual("https://example.org/api/things?flag", str(url))
 
 	def test_Concatenation_EmptyQueryAndFragment(self) -> None:
@@ -572,9 +580,167 @@ class QueriesAndFragments(Testcase):
 		self.assertEqual("https://example.org/api/things?#", str(url))
 
 	def test_Construction_ParameterWithoutValue(self) -> None:
-		url = URL(Protocols.HTTPS, Path.Parse("/p"), Host("example.org"), query={"flag": None, "key": "value"})
+		url = URL(
+			Protocols.HTTPS,
+			Path.Parse("/p"),
+			Host("example.org"),
+			query=(KeyValuePair("flag", None), KeyValuePair("key", "value"))
+		)
 
 		self.assertEqual("https://example.org/p?flag&key=value", str(url))
+
+
+class QueryParameters(Testcase):
+	"""A key written once is a :class:`KeyValuePair`, a key written several times a :class:`KeySequencePair`."""
+
+	def test_Abstract(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = QueryParameter("key")
+
+	def test_KeyValuePair(self) -> None:
+		parameter = KeyValuePair("key", "value")
+
+		self.assertIsInstance(parameter, QueryParameter)
+		self.assertEqual("key", parameter.Key)
+		self.assertEqual("value", parameter.Value)
+		self.assertTupleEqual(("value", ), parameter.Values)
+		self.assertEqual("key=value", str(parameter))
+
+	def test_KeyValuePair_WithoutValue(self) -> None:
+		parameter = KeyValuePair("flag", None)
+
+		self.assertIsNone(parameter.Value)
+		self.assertTupleEqual((None, ), parameter.Values)
+		self.assertEqual("flag", str(parameter))
+
+	def test_KeySequencePair(self) -> None:
+		"""The value is the last one, as a dictionary of the pairs would keep it."""
+		parameter = KeySequencePair("tag", ["a", None, "c"])
+
+		self.assertIsInstance(parameter, QueryParameter)
+		self.assertEqual("tag", parameter.Key)
+		self.assertEqual("c", parameter.Value)
+		self.assertTupleEqual(("a", None, "c"), parameter.Values)
+		self.assertEqual("tag=a&tag&tag=c", str(parameter))
+
+	def test_KeySequencePair_FromIterator(self) -> None:
+		self.assertTupleEqual(("a", "b"), KeySequencePair("tag", iter(("a", "b"))).Values)
+
+	def test_Key(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = KeyValuePair(None, "value")
+
+		self.assertEqual("Parameter 'key' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = KeySequencePair(1, ["value"])
+
+		self.assertEqual("Parameter 'key' is not of type 'str'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Value(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = KeyValuePair("key", 1)
+
+		self.assertEqual("Parameter 'value' is not of type 'str'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Values(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = KeySequencePair("key", None)
+
+		self.assertEqual("Parameter 'values' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = KeySequencePair("key", 1)
+
+		self.assertEqual("Parameter 'values' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+		with self.assertRaises(TypeError) as context:
+			_ = KeySequencePair("key", ["a", 1])
+
+		self.assertEqual("Element of parameter 'values' is not of type 'str'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+		with self.assertRaises(ValueError) as context:
+			_ = KeySequencePair("key", [])
+
+		self.assertEqual("Parameter 'values' is empty.", str(context.exception))
+
+
+class RepeatedQueryKeys(Testcase):
+	"""A repeated key keeps every value; it was a dictionary entry keeping only the last one (``a=1&a=2`` -> ``a=2``)."""
+
+	def test_Parse_Once(self) -> None:
+		url = URL.Parse("https://example.org/p?tag=a")
+
+		self.assertIsInstance(url.Query["tag"], KeyValuePair)
+
+	def test_Parse_Repeated(self) -> None:
+		url = URL.Parse("https://example.org/p?tag=a&tag=b")
+		tag = url.Query["tag"]
+
+		self.assertIsInstance(tag, KeySequencePair)
+		self.assertTupleEqual(("a", "b"), tag.Values)
+		self.assertEqual("b", tag.Value)
+		self.assertEqual("https://example.org/p?tag=a&tag=b", str(url))
+
+	def test_Parse_WithoutValue(self) -> None:
+		url = URL.Parse("https://example.org/p?flag&flag=1&flag=")
+
+		self.assertTupleEqual((None, "1", ""), url.Query["flag"].Values)
+		self.assertEqual("https://example.org/p?flag&flag=1&flag=", str(url))
+
+	def test_Parse_Interleaved(self) -> None:
+		"""A key's values are written together, at the position of the key's first occurrence."""
+		url = URL.Parse("https://example.org/p?tag=a&page=2&tag=b")
+
+		self.assertListEqual(["tag", "page"], list(url.Query))
+		self.assertTupleEqual(("a", "b"), url.Query["tag"].Values)
+		self.assertEqual("https://example.org/p?tag=a&tag=b&page=2", str(url))
+
+	def test_Concatenation(self) -> None:
+		url = URL.Parse("https://example.org/api") / "things?tag=a&tag=b"
+
+		self.assertTupleEqual(("a", "b"), url.Query["tag"].Values)
+
+	def test_Construction(self) -> None:
+		url = URL(
+			Protocols.HTTPS,
+			Path.Parse("/p"),
+			Host("example.org"),
+			query=(KeySequencePair("tag", ("a", "b")), KeyValuePair("page", "2"))
+		)
+
+		self.assertEqual("https://example.org/p?tag=a&tag=b&page=2", str(url))
+		self.assertEqual(str(url), str(url.WithoutCredentials()))
+
+	def test_Construction_DuplicateKey(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = URL(
+				Protocols.HTTPS,
+				Path.Parse("/p"),
+				Host("example.org"),
+				query=(KeyValuePair("tag", "a"), KeyValuePair("tag", "b"))
+			)
+
+		self.assertEqual("Parameter 'query' has key 'tag' twice.", str(context.exception))
+		self.assertListEqual(["A key with several values is a 'KeySequencePair'."], context.exception.__notes__)
+
+	def test_Construction_NoParameter(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = URL(Protocols.HTTPS, Path.Parse("/p"), Host("example.org"), query={"tag": "a"})
+
+		self.assertEqual("Element of parameter 'query' is not of type 'QueryParameter'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Construction_NotIterable(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = URL(Protocols.HTTPS, Path.Parse("/p"), Host("example.org"), query=1)
+
+		self.assertEqual("Parameter 'query' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 
 class AddedSchemes(Testcase):
@@ -766,7 +932,7 @@ class IPv6Hosts(Testcase):
 		self.assertEqual("[fe80::1]", url.Host.Hostname)
 		self.assertEqual(443, url.Host.Port)
 		self.assertEqual("user", url.User)
-		self.assertDictEqual({"q": "1"}, url.Query)
+		self.assertDictEqual({"q": "1"}, queryValues(url.Query))
 		self.assertEqual("f", url.Fragment)
 
 	def test_IPv4IsUnaffected(self) -> None:
@@ -1052,7 +1218,7 @@ class AcceptedURLs(Testcase):
 	def test_AColonInTheQuery(self) -> None:
 		self.assertDictEqual(
 			{"query": "branch:master"},
-			URL.Parse("https://github.com/aio-libs/yarl/actions?query=branch:master").Query
+			queryValues(URL.Parse("https://github.com/aio-libs/yarl/actions?query=branch:master").Query)
 		)
 
 	def test_AHashInTheFragment(self) -> None:
@@ -1125,7 +1291,7 @@ class IRIs(Testcase):
 		url = URL.Parse("https://www.müller.de/straße?ä=ö#ü", iri=True)
 
 		self.assertEqual("/stra%C3%9Fe", str(url.Path))
-		self.assertDictEqual({"%C3%A4": "%C3%B6"}, url.Query)
+		self.assertDictEqual({"%C3%A4": "%C3%B6"}, queryValues(url.Query))
 		self.assertEqual("%C3%BC", url.Fragment)
 		self.assertEqual("https://www.xn--mller-kva.de/stra%C3%9Fe?%C3%A4=%C3%B6#%C3%BC", str(url))
 

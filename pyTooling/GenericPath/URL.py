@@ -44,11 +44,12 @@ from enum                  import Flag
 from re                    import compile as re_compile
 from string                import punctuation
 from urllib.parse          import quote as urlQuote
-from typing                import ClassVar, Optional as Nullable, Mapping, Union
+from typing                import ClassVar, Iterable, Optional as Nullable, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import MissingDependencyError, ToolingException
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.GenericPath import RootMixin, ElementMixin, PathMixin
 
 
@@ -331,6 +332,200 @@ class Path(PathMixin):
 
 
 @export
+class QueryParameter(metaclass=ExtendedType, slots=True):
+	"""
+	Base-class of a parameter in a URL's query: a key with one value or with a sequence of values.
+
+	:rfc:`3986` puts no structure into a query. The common form are ``key=value`` pairs separated by ``&``, in which a
+	key may repeat - a form with a multi-select or a group of checkboxes sends ``tag=a&tag=b``. A key written once is a
+	:class:`KeyValuePair`, a key written several times a :class:`KeySequencePair`. Both answer :attr:`Value` and
+	:attr:`Values`, so a reader needn't know which one it got.
+	"""
+
+	_key: str  #: The parameter's name.
+
+	def __init__(self, key: str) -> None:
+		"""
+		Initializes a query parameter by its key.
+
+		:param key:         The parameter's name.
+		:raises ValueError: If parameter 'key' is ``None``.
+		:raises TypeError:  If parameter 'key' is not of type :class:`str`.
+		"""
+		if key is None:
+			raise ValueError("Parameter 'key' is None.")
+		elif not isinstance(key, str):
+			ex = TypeError("Parameter 'key' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(key)}'.")
+			raise ex
+
+		self._key = key
+
+	@readonly
+	def Key(self) -> str:
+		"""
+		Read-only property to access the parameter's name (:attr:`_key`).
+
+		:returns: The parameter's name.
+		"""
+		return self._key
+
+	@readonly
+	@abstractmethod
+	def Value(self) -> Nullable[str]:  # type: ignore[empty-body]
+		"""
+		Read-only property to return the parameter's value.
+
+		A parameter written without ``=`` (``?verbose``) has the value ``None``, one with an empty value (``?verbose=``)
+		the value ``""``. A key written several times answers its last value, as a dictionary of the pairs would.
+
+		:returns: The parameter's (last) value.
+		"""
+
+	@readonly
+	@abstractmethod
+	def Values(self) -> tuple[Nullable[str], ...]:  # type: ignore[empty-body]
+		"""
+		Read-only property to return all values of the parameter, in the order they were written.
+
+		:returns: The parameter's values; one value for a key written once.
+		"""
+
+	@abstractmethod
+	def __str__(self) -> str:  # type: ignore[empty-body]
+		"""
+		Return the parameter as it is written in a query.
+
+		:returns: ``key=value`` per value, joined by ``&``; ``key`` alone for the value ``None``.
+		"""
+
+
+@export
+class KeyValuePair(QueryParameter):
+	"""A parameter of a URL's query whose key is written once: ``?key=value``."""
+
+	_value: Nullable[str]  #: The parameter's value; ``None`` for a parameter without ``=``.
+
+	def __init__(self, key: str, value: Nullable[str]) -> None:
+		"""
+		Initializes a query parameter with one value.
+
+		:param key:         The parameter's name.
+		:param value:       The parameter's value. ``None`` is a parameter without ``=``.
+		:raises ValueError: If parameter 'key' is ``None``.
+		:raises TypeError:  If parameter 'key' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'value' is not of type :class:`str`.
+		"""
+		super().__init__(key)
+
+		if value is not None and not isinstance(value, str):
+			ex = TypeError("Parameter 'value' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		self._value = value
+
+	@readonly
+	def Value(self) -> Nullable[str]:
+		"""
+		Read-only property to access the parameter's value (:attr:`_value`).
+
+		A parameter written without ``=`` (``?verbose``) has the value ``None``, one with an empty value (``?verbose=``)
+		the value ``""``.
+
+		:returns: The parameter's value.
+		"""
+		return self._value
+
+	@readonly
+	def Values(self) -> tuple[Nullable[str], ...]:
+		"""
+		Read-only property to return the parameter's value as a sequence of values.
+
+		:returns: A tuple holding the one value.
+		"""
+		return (self._value, )
+
+	def __str__(self) -> str:
+		"""
+		Return the parameter as it is written in a query.
+
+		:returns: ``key=value``, or ``key`` alone for the value ``None``.
+		"""
+		return self._key if self._value is None else f"{self._key}={self._value}"
+
+
+@export
+class KeySequencePair(QueryParameter):
+	"""A parameter of a URL's query whose key is written several times: ``?key=value1&key=value2``."""
+
+	_values: tuple[Nullable[str], ...]  #: The parameter's values, in the order they were written.
+
+	def __init__(self, key: str, values: Iterable[Nullable[str]]) -> None:
+		"""
+		Initializes a query parameter with a sequence of values.
+
+		:param key:         The parameter's name.
+		:param values:      The parameter's values, in the order they are written. ``None`` is a value without ``=``.
+		:raises ValueError: If parameter 'key' is ``None``.
+		:raises TypeError:  If parameter 'key' is not of type :class:`str`.
+		:raises ValueError: If parameter 'values' is ``None``.
+		:raises TypeError:  If parameter 'values' is not iterable.
+		:raises TypeError:  If an element of parameter 'values' is not of type :class:`str`.
+		:raises ValueError: If parameter 'values' is empty.
+		"""
+		super().__init__(key)
+
+		if values is None:
+			raise ValueError("Parameter 'values' is None.")
+		elif not isinstance(values, Iterable):
+			ex = TypeError("Parameter 'values' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(values)}'.")
+			raise ex
+
+		valueTuple = tuple(values)
+		for value in valueTuple:
+			if value is not None and not isinstance(value, str):
+				ex = TypeError("Element of parameter 'values' is not of type 'str'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
+
+		if len(valueTuple) == 0:
+			raise ValueError("Parameter 'values' is empty.")
+
+		self._values = valueTuple
+
+	@readonly
+	def Value(self) -> Nullable[str]:
+		"""
+		Read-only property to return the parameter's last value.
+
+		That is what a dictionary of the pairs would keep, so code reading one value per key gets the same result as
+		before the key was written twice. All values are in :attr:`Values`.
+
+		:returns: The parameter's last value.
+		"""
+		return self._values[-1]
+
+	@readonly
+	def Values(self) -> tuple[Nullable[str], ...]:
+		"""
+		Read-only property to access the parameter's values (:attr:`_values`).
+
+		:returns: The parameter's values, in the order they were written.
+		"""
+		return self._values
+
+	def __str__(self) -> str:
+		"""
+		Return the parameter as it is written in a query.
+
+		:returns: ``key=value`` per value, joined by ``&``; ``key`` alone for the value ``None``.
+		"""
+		return "&".join(self._key if value is None else f"{self._key}={value}" for value in self._values)
+
+
+@export
 class URL:
 	"""
 	Represents a URL (Uniform Resource Locator) including scheme, host, credentials, path, query and fragment.
@@ -342,13 +537,13 @@ class URL:
 	The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`.
 	"""
 
-	_scheme:    Nullable[Protocols]                 #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
-	_user:      Nullable[str]                       #: User name of the URL's authority part.
-	_password:  Nullable[str]                       #: Password of the URL's authority part.
-	_host:      Nullable[Host]                      #: Host name and port of the URL's authority part.
-	_path:      Path                                #: Path part of the URL.
-	_query:     Nullable[dict[str, Nullable[str]]]  #: Query parameters of the URL, by parameter name.
-	_fragment:  Nullable[str]                       #: Fragment (anchor) of the URL.
+	_scheme:    Nullable[Protocols]                  #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
+	_user:      Nullable[str]                        #: User name of the URL's authority part.
+	_password:  Nullable[str]                        #: Password of the URL's authority part.
+	_host:      Nullable[Host]                       #: Host name and port of the URL's authority part.
+	_path:      Path                                 #: Path part of the URL.
+	_query:     Nullable[dict[str, QueryParameter]]  #: Query parameters of the URL, by parameter name.
+	_fragment:  Nullable[str]                        #: Fragment (anchor) of the URL.
 
 	def __init__(
 		self,
@@ -357,20 +552,29 @@ class URL:
 		host:     Nullable[Host] = None,
 		user:     Nullable[str] = None,
 		password: Nullable[str] = None,
-		query:    Nullable[Mapping[str, Nullable[str]]] = None,
+		query:    Nullable[Iterable[QueryParameter]] = None,
 		fragment: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a Uniform Resource Locator (URL).
 
-		:param scheme:     Transport scheme to be used for a specified resource.
-		:param path:       Path to the resource.
-		:param host:       Optional, hostname where the resource is located.
-		:param user:       Optional, username for basic authentication.
-		:param password:   Optional, password for basic authentication.
-		:param query:      Optional, the query's parameters by name. A value of ``None`` is a parameter without ``=``.
-		:param fragment:   Optional, fragment.
-		:raises TypeError: If parameter 'host' is not of type :class:`Host`.
+		:param scheme:      Transport scheme to be used for a specified resource.
+		:param path:        Path to the resource.
+		:param host:        Optional, hostname where the resource is located.
+		:param user:        Optional, username for basic authentication.
+		:param password:    Optional, password for basic authentication.
+		:param query:       Optional, the query's parameters. An empty iterable is an empty query (``?``).
+		:param fragment:    Optional, fragment.
+		:raises TypeError:  If parameter 'scheme' is not of type :class:`Protocols`.
+		:raises TypeError:  If parameter 'user' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'password' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'host' is not of type :class:`Host`.
+		:raises TypeError:  If parameter 'path' is not of type :class:`Path`.
+		:raises TypeError:  If parameter 'query' is not iterable.
+		:raises TypeError:  If an element of parameter 'query' is not of type :class:`QueryParameter`.
+		:raises ValueError: If parameter 'query' holds a key twice. |br|
+		                    A key with several values is a :class:`KeySequencePair`.
+		:raises TypeError:  If parameter 'fragment' is not of type :class:`str`.
 		"""
 		if scheme is not None and not isinstance(scheme, Protocols):
 			ex = TypeError("Parameter 'scheme' is not of type 'Protocols'.")
@@ -407,12 +611,23 @@ class URL:
 		self._path = path
 
 		if query is not None:
-			if not isinstance(query, Mapping):
-				ex = TypeError("Parameter 'query' is not a mapping ('dict', ...).")
+			if not isinstance(query, Iterable):
+				ex = TypeError("Parameter 'query' is not iterable.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(query)}'.")
 				raise ex
 
-			self._query = dict(query)
+			self._query = parameters = {}
+			for parameter in query:
+				if not isinstance(parameter, QueryParameter):
+					ex = TypeError("Element of parameter 'query' is not of type 'QueryParameter'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(parameter)}'.")
+					raise ex
+				elif parameter._key in parameters:
+					ex = ValueError(f"Parameter 'query' has key '{parameter._key}' twice.")
+					ex.add_note("A key with several values is a 'KeySequencePair'.")
+					raise ex
+
+				parameters[parameter._key] = parameter
 		else:
 			self._query = None
 
@@ -469,15 +684,17 @@ class URL:
 		return self._path
 
 	@readonly
-	def Query(self) -> Nullable[dict[str, Nullable[str]]]:
+	def Query(self) -> Nullable[dict[str, QueryParameter]]:
 		"""
-		Read-only property to access the dictionary of key-value pairs representing the query part in the URL.
+		Read-only property to access the query's parameters by key (:attr:`_query`).
 
-		A parameter written without ``=`` (``?verbose``) has the value ``None``, one with an empty value (``?verbose=``)
+		A key written once is a :class:`KeyValuePair`, a key written several times (``?tag=a&tag=b``) a
+		:class:`KeySequencePair`; both answer :attr:`~QueryParameter.Value` and :attr:`~QueryParameter.Values`. A
+		parameter written without ``=`` (``?verbose``) has the value ``None``, one with an empty value (``?verbose=``)
 		the value ``""``. A URL with an empty query (``https://example.org/?``) has an empty dictionary, a URL without
 		a query ``None``.
 
-		:returns: A dictionary representing the query as key-value pairs.
+		:returns: The query's parameters by key.
 		"""
 		return self._query
 
@@ -665,25 +882,33 @@ class URL:
 		raise ex
 
 	@classmethod
-	def _ParseQuery(cls, query: str) -> dict[str, Nullable[str]]:
+	def _ParseQuery(cls, query: str) -> list[QueryParameter]:
 		"""
 		Parse a URL's query into its parameters.
 
-		:rfc:`3986` puts no structure into a query; the common ``key=value`` pairs separated by ``&`` are read into a
-		dictionary. A parameter without ``=`` has the value ``None``; an empty query (``?``) has no parameters.
+		:rfc:`3986` puts no structure into a query; the common ``key=value`` pairs separated by ``&`` are read. A key
+		written once becomes a :class:`KeyValuePair`, a key written several times a :class:`KeySequencePair` holding
+		its values in order, at the position of its first occurrence. A parameter without ``=`` has the value ``None``;
+		an empty query (``?``) has no parameters.
 
 		:param query: The query, without the leading ``?``.
-		:returns:     The parameters by name.
+		:returns:     The parameters, in the order their keys first occur.
 		"""
-		parameters: dict[str, Nullable[str]] = {}
 		if query == "":
-			return parameters
+			return []
 
+		values: dict[str, list[Nullable[str]]] = {}
 		for pair in query.split("&"):
 			key, separator, value = pair.partition("=")
-			parameters[key] = value if separator == "=" else None
+			if key in values:
+				values[key].append(value if separator == "=" else None)
+			else:
+				values[key] = [value if separator == "=" else None]
 
-		return parameters
+		return [
+			KeyValuePair(key, valueList[0]) if len(valueList) == 1 else KeySequencePair(key, valueList)
+			for key, valueList in values.items()
+		]
 
 	@classmethod
 	def _CheckRelativeReference(cls, reference: str) -> None:
@@ -791,8 +1016,7 @@ class URL:
 			result = scheme.lower() + "://" + result
 
 		if self._query is not None:
-			parameters = [key if value is None else f"{key}={value}" for key, value in self._query.items()]
-			result = result + "?" + "&".join(parameters)
+			result = result + "?" + "&".join(str(parameter) for parameter in self._query.values())
 
 		if self._fragment is not None:
 			result = result + "#" + self._fragment
@@ -809,7 +1033,7 @@ class URL:
 			scheme=self._scheme,
 			path=self._path,
 			host=self._host,
-			query=self._query,
+			query=None if self._query is None else self._query.values(),
 			fragment=self._fragment
 		)
 
@@ -838,6 +1062,6 @@ class URL:
 			host=self._host,
 			user=self._user,
 			password=self._password,
-			query=self._query,
+			query=None if self._query is None else self._query.values(),
 			fragment=self._fragment
 		)
