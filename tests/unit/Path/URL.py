@@ -756,6 +756,10 @@ class MissingScheme(Testcase):
 
 		self.assertEqual(f"Missing scheme when parsing URL {text!r}.", str(context.exception))
 
+	def test_EmptyString(self) -> None:
+		"""An empty string was a URL without scheme, host and path; it names no scheme."""
+		self.assertMissingScheme("")
+
 	def test_AHost(self) -> None:
 		"""A bare host was read as the host of a URL without scheme - :rfc:`3986` reads ``host:port`` as a scheme."""
 		for text in (
