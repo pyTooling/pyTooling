@@ -181,10 +181,11 @@ Step 5 - Reporting Unhandled Exceptions
    .. grid-item::
       :columns: 6
 
-      Set :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL`, and each of these reports ends by
-      inviting the user to file a bug, with the URL - except the missing-dependency report, which names the package and
-      the command installing it instead: nothing is wrong with the program. The application connects the class variable
-      to its own dunder variable, because only the application knows which of its modules carries it.
+      Give the application a ``__issue_tracker_url__``, and each of these reports ends by inviting the user to file a
+      bug, with the URL - except the missing-dependency report, which names the package and the command installing it
+      instead: nothing is wrong with the program. The URL is searched in the module declaring the application, then in
+      its parent packages (see :ref:`TERM/IssueTracker`). This script is no module of ``myPackage``, so it imports the
+      package's variable; an application inside the package finds it in ``myPackage/__init__.py`` without an import.
 
    .. grid-item::
       :columns: 6
@@ -193,7 +194,8 @@ Step 5 - Reporting Unhandled Exceptions
          :language: Python
          :tab-width: 2
          :caption: Step5.py
-         :pyobject: Application
+         :start-at: from myPackage
+         :end-at: HEADLINE
 
 
 .. _TUTORIAL/TerminalApplication/Step6:

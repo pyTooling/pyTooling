@@ -38,8 +38,7 @@ from myPackage            import MyPackageException, __issue_tracker_url__
 
 
 class Application(TerminalApplication):
-	HEADLINE:          ClassVar[str] = "My Application"
-	ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
+	HEADLINE: ClassVar[str] = "My Application"
 
 	def Run(self) -> None:
 		self._PrintHeadline()

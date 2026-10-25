@@ -49,7 +49,7 @@ from datetime              import datetime
 from enum                  import Enum, unique
 from io                    import TextIOWrapper
 from os                    import getenv
-from sys                   import stdin, stdout, stderr
+from sys                   import modules, stdin, stdout, stderr
 from textwrap              import dedent
 from types                 import ModuleType
 from typing                import NoReturn, Any, Optional as Nullable, Callable, ClassVar, Protocol
@@ -75,7 +75,6 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	UNHANDLED_EXCEPTION_EXIT_CODE:       ClassVar[int] = 241                               #: Return code, if an unhandled exception reached the topmost exception handler.
 	MISSING_DEPENDENCY_EXIT_CODE:        ClassVar[int] = MissingDependencyError.EXIT_CODE  #: Return code (242), if an optional dependency is missing; the value lives on the exception - see :meth:`PrintMissingDependencyError`.
 	FATAL_EXIT_CODE:                     ClassVar[int] = 255                               #: Return code for fatal exits.
-	ISSUE_TRACKER_URL:                   ClassVar[str] = None                              #: URL to the issue tracker for reporting bugs.
 	INDENT:                              ClassVar[str] = "  "                              #: Indentation. Default: ``"  "`` (2 spaces)
 
 	try:
@@ -393,7 +392,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If the application defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at that
+		URL (see :meth:`_GetIssueTrackerURL`).
 
 		:param ex: The exception to print.
 		"""
@@ -434,8 +434,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"{line.replace('{', '{{').replace('}', '}}')}"
 		message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		if self.ISSUE_TRACKER_URL is not None:
-			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+		if (issueTrackerURL := self._GetIssueTrackerURL()) is not None:
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.FOREGROUND))
@@ -494,7 +494,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Prints a not-implemented exception of type :exc:`NotImplementedError`.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If the application defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at that
+		URL (see :meth:`_GetIssueTrackerURL`).
 
 		:param ex: The exception to print.
 		"""
@@ -516,8 +517,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		message += f"{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\n"
 
-		if self.ISSUE_TRACKER_URL is not None:
-			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+		if (issueTrackerURL := self._GetIssueTrackerURL()) is not None:
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.FOREGROUND))
@@ -529,7 +530,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If the application defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at that
+		URL (see :meth:`_GetIssueTrackerURL`).
 
 		:param ex: The exception to print.
 		"""
@@ -560,13 +562,34 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		print_tb(ex.__traceback__, file=self._stderr)
 		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.FOREGROUND))
 
-		if self.ISSUE_TRACKER_URL is not None:
+		if (issueTrackerURL := self._GetIssueTrackerURL()) is not None:
 			self.WriteLineToStdErr(dedent(f"""\
-				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
+				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}
 				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
 				""").format(indent=self.INDENT, **self.FOREGROUND))
 
 		self.Exit(self.UNHANDLED_EXCEPTION_EXIT_CODE)
+
+	def _GetIssueTrackerURL(self) -> Nullable[str]:
+		"""
+		Find the application's issue tracker URL in the dunder variable ``__issue_tracker_url__``.
+
+		The variable is searched in the module declaring the application's class, then in each parent package of that
+		module - ``<package>/__init__.py`` usually holds it, beside ``__version__``. If none defines it, the search
+		continues with the base-classes, so a class derived in another module, e.g. in a testcase, reports the URL of the
+		application it derives from.
+
+		:returns: The issue tracker URL, or ``None``, if no module defines ``__issue_tracker_url__``.
+		"""
+		for cls in type(self).__mro__:
+			moduleName = cls.__module__
+			while moduleName != "":
+				if (issueTrackerURL := getattr(modules.get(moduleName), "__issue_tracker_url__", None)) is not None:
+					return issueTrackerURL
+
+				moduleName = moduleName.rpartition(".")[0]
+
+		return None
 
 
 @export

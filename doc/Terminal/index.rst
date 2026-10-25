@@ -195,26 +195,41 @@ exits:
 
 .. _TERM/IssueTracker:
 
-Reporting Bugs: ISSUE_TRACKER_URL
-=================================
+Reporting Bugs: __issue_tracker_url__
+=====================================
 
-If the class variable :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL` is set, every exception
-printed by the methods above ends with an invitation to report the bug, followed by that URL. It is ``None`` by default,
-in which case the invitation is omitted. It is independent of the ``Issue tracker:`` line of
-:ref:`the version information <TERM/ProgramInformation>`, which is read from the application's dunder module.
+If the application defines the dunder variable ``__issue_tracker_url__``, every exception printed by the methods above
+ends with an invitation to report the bug, followed by that URL. Without it, the invitation is omitted. It is the same
+variable the ``Issue tracker:`` line of :ref:`the version information <TERM/ProgramInformation>` prints.
 
-An application connects the class variable to its own dunder variable. pyTooling can't find that variable on its own:
-which module carries ``__issue_tracker_url__`` is up to the application - ``<package>/__init__.py`` for a simple
-package, ``<namespace>/<package>/__init__.py`` for a namespace package.
+:meth:`~pyTooling.TerminalUI.TerminalBaseApplication._GetIssueTrackerURL` searches the variable in the module declaring
+the application's class, then in each parent package of that module. An application in ``myPackage/CLI/__init__.py``
+finds it in ``myPackage/__init__.py``, beside ``__version__`` and the package's other dunder variables, and an
+application in a namespace package ``myNamespace/myPackage/CLI.py`` finds it in ``myNamespace/myPackage/__init__.py``.
+If none of them defines it, the search continues with the modules of the base-classes, so a class derived from the
+application, e.g. in a testcase, reports the same URL.
+
+.. code-block:: Python
+
+   # myPackage/__init__.py
+   __issue_tracker_url__ = "https://GitHub.com/myUser/myPackage/issues"
+
+   # myPackage/CLI/__init__.py
+   from pyTooling.TerminalUI import TerminalApplication
+
+   class Application(TerminalApplication):
+     HEADLINE = "My Application"
+
+A program outside the package, like a single script, imports the variable, which defines it in the script's module:
 
 .. code-block:: Python
 
    from pyTooling.TerminalUI import TerminalApplication
 
-   from myPackage import __issue_tracker_url__
+   from myPackage            import __issue_tracker_url__
 
    class Application(TerminalApplication):
-     ISSUE_TRACKER_URL = __issue_tracker_url__
+     HEADLINE = "My Application"
 
 
 .. _TERM/LineTerminal:
@@ -545,8 +560,7 @@ while the messages, the verbosity and the exception reporting come from this pac
 
    @export
    class Application(TerminalApplication, ArgParseHelperMixin):
-     HEADLINE:          ClassVar[str] = "My Application"
-     ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
+     HEADLINE: ClassVar[str] = "My Application"
 
      def __init__(self) -> None:
        super().__init__()

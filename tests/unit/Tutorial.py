@@ -83,6 +83,20 @@ class Step1(Testcase):
 		self.assertNotIn(Severity.Verbose, [line.Severity for line in program.Lines])
 
 
+class Step5(Testcase):
+	"""The fifth example imports its package's ``__issue_tracker_url__``, so the exception printers report it."""
+
+	def test_IssueTrackerURL(self) -> None:
+		module = import_module("Step5")
+
+		class TestApplication(module.Application):    # own class: the base class is a singleton
+			pass
+
+		program = TestApplication()
+
+		self.assertEqual("https://github.com/myUser/myPackage/issues", program._GetIssueTrackerURL())
+
+
 class Step6(Testcase):
 	"""The 'help' command takes a command name, so 'args.Command' must exist."""
 

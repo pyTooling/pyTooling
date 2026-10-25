@@ -193,11 +193,6 @@ class ExceptionHandling(Testcase):
 		print()
 
 		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-
-				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
-
 			def Run(self):
 				raise NotImplementedError("Abstract method")
 
@@ -213,11 +208,6 @@ class ExceptionHandling(Testcase):
 		print()
 
 		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-
-				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
-
 			def Run(self):
 				raise Exception("Common exception")
 
@@ -233,11 +223,6 @@ class ExceptionHandling(Testcase):
 		print()
 
 		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-
-				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
-
 			def Run(self):
 				ex = Exception("Common exception")
 				ex.add_note("First note")
@@ -255,11 +240,6 @@ class ExceptionHandling(Testcase):
 		print()
 
 		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-
-				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
-
 			def Run(self):
 				ex = Exception("Common exception")
 				ex.add_note("First note")
@@ -278,11 +258,6 @@ class ExceptionHandling(Testcase):
 		print()
 
 		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-
-				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
-
 			def Run(self):
 				ex = Exception("Common exception")
 				ex.add_note("First note")
@@ -303,11 +278,6 @@ class ExceptionHandling(Testcase):
 		print()
 
 		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-
-				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
-
 			def Run(self):
 				raise ExceptionBase("Base exception")
 
@@ -323,11 +293,6 @@ class ExceptionHandling(Testcase):
 		print()
 
 		class Application(TerminalBaseApplication):
-			def __init__(self) -> None:
-				super().__init__()
-
-				self.__class__.ISSUE_TRACKER_URL = "https://GitHub.com/pyTooling/pyTooling/issues"
-
 			def Run(self):
 				raise ExceptionBase("Base exception") from FileNotFoundError("File doesn't exist.")
 

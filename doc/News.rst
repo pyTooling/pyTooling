@@ -704,6 +704,11 @@ Version 10.x (2026)
      :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError`, after the exception it prints.
      Rename the call; there is no alias.
 
+   * ⚠️ ``TerminalBaseApplication.ISSUE_TRACKER_URL`` **is removed**: the exception printers read the issue tracker URL
+     from the application's ``__issue_tracker_url__``, as the version information does. Delete the class variable;
+     the package's ``__init__.py`` usually defines the dunder variable already, and a script outside the package
+     imports it (see :ref:`TERM/IssueTracker`).
+
    * ⚠️ :func:`~pyTooling.Packaging.DescribePythonPackage` **raises when it can find no description**, instead of
      publishing a package without one. Either pass ``description``, or give the file named by ``sourceFileWithVersion``
      a module doc-string. The ``description`` parameter of both ``Describe***`` functions moved behind the required
@@ -1036,6 +1041,10 @@ Version 10.x (2026)
 
      * ⚠️ :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` is named after the exception
        it prints, :exc:`~pyTooling.Exceptions.MissingDependencyError`; it was ``PrintMissingDependencyException()``.
+     * ⚠️ The exception printers read the issue tracker URL from the dunder variable ``__issue_tracker_url__``, searched
+       in the module declaring the application's class, in its parent packages, and then in the modules of its
+       base-classes (:meth:`~pyTooling.TerminalUI.TerminalBaseApplication._GetIssueTrackerURL`). The class variable
+       ``ISSUE_TRACKER_URL`` is removed, so the version information and a bug report can't name different URLs.
 
    * :mod:`pyTooling.Testing`
 

@@ -30,6 +30,8 @@
 #
 """Unit tests for how a terminal application reports its issue tracker URL."""
 from io                   import StringIO
+from sys                  import modules
+from types                import ModuleType
 
 from pyTooling.Exceptions import ExceptionBase, MissingDependencyError
 from pyTooling.TerminalUI import TerminalApplication
@@ -42,11 +44,26 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
-class IssueTrackerURL(Testcase):
-	"""``ISSUE_TRACKER_URL`` is where an application connects its own dunder variable, so the exception printers can
-	invite the user to report a bug."""
+EXAMPLE_URL =     "https://GitHub.com/vendor/project/issues"          #: Issue tracker URL of the example package.
+EXAMPLE_MODULES = ("vendor", "vendor.project", "vendor.project.CLI")  #: The example's namespace, package and module.
 
-	_URL = "https://GitHub.com/example/project/issues"
+
+def setUpModule() -> None:
+	"""Register an example package ``vendor.project``, whose ``__init__.py`` declares the issue tracker URL."""
+	for moduleName in EXAMPLE_MODULES:
+		modules[moduleName] = ModuleType(moduleName)
+
+	modules["vendor.project"].__issue_tracker_url__ = EXAMPLE_URL
+
+
+def tearDownModule() -> None:
+	"""Remove the example package."""
+	for moduleName in EXAMPLE_MODULES:
+		del modules[moduleName]
+
+
+class IssueTrackerURL(Testcase):
+	"""The exception printers invite the user to report a bug at the application's ``__issue_tracker_url__``."""
 
 	def _printException(self, application: TerminalApplication, method: str, ex: Exception) -> str:
 		"""
@@ -79,40 +96,71 @@ class IssueTrackerURL(Testcase):
 	def test_PrintException(self) -> None:
 		"""An unhandled exception ends with the invitation to report it."""
 		class Application(TerminalApplication):
-			ISSUE_TRACKER_URL = self._URL
+			__module__ = "vendor.project.CLI"
 
 		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
 
 		self.assertIn("Something failed.", output)
-		self.assertIn(self._URL, output)
+		self.assertIn(f"Please report this bug at GitHub: {EXAMPLE_URL}", output)
 
 	def test_PrintExceptionBase(self) -> None:
 		"""A known exception ends with the invitation, too."""
 		class Application(TerminalApplication):
-			ISSUE_TRACKER_URL = self._URL
+			__module__ = "vendor.project.CLI"
 
 		output = self._printException(Application(), "PrintExceptionBase", self._raised(ExceptionBase("Known.")))
 
-		self.assertIn(self._URL, output)
+		self.assertIn(f"Please report this bug at GitHub: {EXAMPLE_URL}", output)
 
 	def test_PrintNotImplementedError(self) -> None:
 		"""An unimplemented method ends with the invitation, too."""
 		class Application(TerminalApplication):
-			ISSUE_TRACKER_URL = self._URL
+			__module__ = "vendor.project.CLI"
 
 		output = self._printException(
 			Application(), "PrintNotImplementedError", self._raised(NotImplementedError("Not yet."))
 		)
 
-		self.assertIn(self._URL, output)
+		self.assertIn(f"Please report this bug at GitHub: {EXAMPLE_URL}", output)
+
+	def test_GetIssueTrackerURL_Package(self) -> None:
+		"""The URL is found in a parent package of the module declaring the application."""
+		class Application(TerminalApplication):
+			__module__ = "vendor.project.CLI"
+
+		self.assertEqual(EXAMPLE_URL, Application()._GetIssueTrackerURL())
+
+	def test_GetIssueTrackerURL_Module(self) -> None:
+		"""The module declaring the application holds the URL itself, e.g. a script importing it from its package."""
+		module = ModuleType("myScript")
+		module.__issue_tracker_url__ = "https://GitHub.com/example/script/issues"
+		modules["myScript"] = module
+		self.addCleanup(modules.pop, "myScript")
+
+		class Application(TerminalApplication):
+			__module__ = "myScript"
+
+		self.assertEqual("https://GitHub.com/example/script/issues", Application()._GetIssueTrackerURL())
+
+	def test_GetIssueTrackerURL_DerivedClass(self) -> None:
+		"""A class derived in a module without the URL - here a testcase - reports the URL of its base-class' package."""
+		class Application(TerminalApplication):
+			__module__ = "vendor.project.CLI"
+
+		class TestApplication(Application):
+			pass
+
+		self.assertEqual(EXAMPLE_URL, TestApplication()._GetIssueTrackerURL())
 
 	def test_PrintException_NoIssueTrackerURL(self) -> None:
-		"""The class variable is ``None`` by default, and then the invitation is omitted rather than printed empty."""
+		"""No module of the application defines ``__issue_tracker_url__``, so the invitation is omitted."""
 		class Application(TerminalApplication):
 			pass
 
-		output = self._printException(Application(), "PrintException", self._raised(ValueError("Something failed.")))
+		application = Application()
+		output = self._printException(application, "PrintException", self._raised(ValueError("Something failed.")))
 
+		self.assertIsNone(application._GetIssueTrackerURL())
 		self.assertIn("Something failed.", output)
 		self.assertNotIn("Please report this bug", output)
 
@@ -129,7 +177,7 @@ class MissingDependency(Testcase):
 		:returns:  Everything the application wrote to ``STDERR``.
 		"""
 		class Application(TerminalApplication):
-			ISSUE_TRACKER_URL = "https://GitHub.com/example/project/issues"
+			__module__ = "vendor.project.CLI"
 
 		application = Application()
 		application._stderr = StringIO()

@@ -41,8 +41,7 @@ from myPackage                              import __issue_tracker_url__
 
 @export
 class Application(TerminalApplication, ArgParseHelperMixin):
-	HEADLINE:          ClassVar[str] = "My Application"
-	ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
+	HEADLINE: ClassVar[str] = "My Application"
 
 	def __init__(self) -> None:
 		super().__init__()

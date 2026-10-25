@@ -321,9 +321,9 @@ the program itself was surprised, and those clauses hand over to a printer.
    with 'myTool config --migrate'"* reaches the user, and the :exc:`OSError` behind a ``ResourceError`` is shown
    under it. Nothing at the call site has to walk ``__cause__`` or ``__notes__`` by hand.
 
-   Set :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL` and each report ends by inviting the
-   user to file a bug, with the URL - except the missing-dependency report, which names the package to install
-   instead, because nothing is wrong with the program.
+   Give the package a ``__issue_tracker_url__`` and each report ends by inviting the user to file a bug, with the
+   URL - except the missing-dependency report, which names the package to install instead, because nothing is wrong
+   with the program.
 
 .. seealso::
 
