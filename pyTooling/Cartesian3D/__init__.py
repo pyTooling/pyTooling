@@ -580,11 +580,15 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		if self.start.x == self.end.x and self.start.y == self.end.y and self.start.z == self.end.z:
 			ex = ValueError("Line segment has length 0.")
 			ex.add_note(f"Got line segment {self}.")
+			ex.add_note("Can't determine an angle between two lines if one of the lines has no direction, due to a "
+			            "zero-length.")
 			raise ex
 
 		if other.start.x == other.end.x and other.start.y == other.end.y and other.start.z == other.end.z:
 			ex = ValueError("Parameter 'other' has length 0.")
 			ex.add_note(f"Got line segment {other}.")
+			ex.add_note("Can't determine an angle between two lines if one of the lines has no direction, due to a "
+			            "zero-length.")
 			raise ex
 
 		vectorA =         self.ToOffset()
