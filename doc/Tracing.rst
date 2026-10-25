@@ -358,7 +358,8 @@ legend come from the same base-class, so both charts look alike.
 
 The page can be zoomed and panned. Hovering a bar or line shows the timespan's name, its absolute begin and end, and its
 duration, and a click on a legend entry hides or shows a category's bars. The page embeds plotly's JavaScript library -
-about 4 MiB - so it works offline, e.g. downloaded from a pipeline's artifacts; ``includePlotlyJS="cdn"`` loads the
+about 4 MiB - so it works offline, e.g. downloaded from a pipeline's artifacts;
+``includePlotlyJS=PlotlyJavaScript.CDN`` (:class:`~pyTooling.Tracing.Render.Plotly.PlotlyJavaScript`) loads the
 library from plotly's CDN instead.
 
 The time axis is a date axis showing the time since the trace began as ``hh:mm:ss``, so its ticks adapt when zooming.

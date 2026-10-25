@@ -55,7 +55,7 @@ except ImportError:  # pragma: no cover
 	HAS_MATPLOTLIB = False
 
 try:
-	from pyTooling.Tracing.Render.Plotly import PlotlyRenderer, TIME_AXIS_ORIGIN
+	from pyTooling.Tracing.Render.Plotly import PlotlyJavaScript, PlotlyRenderer, TIME_AXIS_ORIGIN
 	HAS_PLOTLY = True
 except ImportError:  # pragma: no cover
 	HAS_PLOTLY = False
@@ -640,7 +640,7 @@ class Plotly(Testcase):
 			embedded = Path(directory) / "report" / "Pipeline.html"
 			cdn = Path(directory) / "Pipeline-CDN.html"
 			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50))).Write(embedded)
-			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), includePlotlyJS="cdn").Write(cdn)
+			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), includePlotlyJS=PlotlyJavaScript.CDN).Write(cdn)
 			embeddedContent = embedded.read_text(encoding="utf-8")
 			cdnContent = cdn.read_text(encoding="utf-8")
 
@@ -672,8 +672,68 @@ class Plotly(Testcase):
 		with self.assertRaises(TypeError):
 			_ = PlotlyRenderer(_pipeline()["Pipeline"])
 
-	def test_RowHeight(self) -> None:
+	def test_Width(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, width=800.0)
+
+		self.assertEqual("Parameter 'width' is not of type 'int'.", str(context.exception))
+
 		with self.assertRaises(ValueError) as context:
-			_ = PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), rowHeight=0)
+			_ = PlotlyRenderer(layout, width=0)
+
+		self.assertEqual("Parameter 'width' isn't positive.", str(context.exception))
+
+	def test_RowHeight(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, rowHeight=None)
+
+		self.assertEqual("Parameter 'rowHeight' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, rowHeight="20")
+
+		self.assertEqual("Parameter 'rowHeight' is not of type 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, rowHeight=0)
 
 		self.assertEqual("Parameter 'rowHeight' isn't positive.", str(context.exception))
+
+	def test_FontSize(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		self.assertEqual(12, PlotlyRenderer(layout, fontSize=12).FontSize)
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, fontSize=None)
+
+		self.assertEqual("Parameter 'fontSize' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, fontSize="11")
+
+		self.assertEqual("Parameter 'fontSize' is not of type 'float' or 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, fontSize=-1.0)
+
+		self.assertEqual("Parameter 'fontSize' isn't positive.", str(context.exception))
+
+	def test_IncludePlotlyJS(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		self.assertIs(PlotlyJavaScript.Embedded, PlotlyRenderer(layout).IncludePlotlyJS)
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, includePlotlyJS=None)
+
+		self.assertEqual("Parameter 'includePlotlyJS' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, includePlotlyJS=True)
+
+		self.assertEqual("Parameter 'includePlotlyJS' is not of type 'PlotlyJavaScript'.", str(context.exception))

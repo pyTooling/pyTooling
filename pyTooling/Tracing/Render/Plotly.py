@@ -11,7 +11,7 @@
 #                                                                                                                      #
 # License:                                                                                                             #
 # ==================================================================================================================== #
-# Copyright 2026-2026 Patrick Lehmann - Bötzingen, Germany                                                             #
+# Copyright 2026-2026 Patrick Lehmann - Boetzingen, Germany                                                            #
 #                                                                                                                      #
 # Licensed under the Apache License, Version 2.0 (the "License");                                                      #
 # you may not use this file except in compliance with the License.                                                     #
@@ -43,19 +43,18 @@ Render a software execution trace as an interactive Gantt chart with :term:`plot
 
    See :ref:`high-level help <TRACING/Render/Plotly>` for explanations and usage examples.
 """
-from datetime                    import datetime, timedelta
-from html                        import escape
-from pathlib                     import Path
-from typing                      import Any, ClassVar, Optional as Nullable, Union
+from datetime                 import datetime, timedelta
+from pathlib                  import Path
+from typing                   import Any, ClassVar, Optional as Nullable
 
-from pyTooling.Decorators        import export, readonly
-from pyTooling.Exceptions        import MissingDependencyError
-from pyTooling.Tracing.CI        import SpanKind
-from pyTooling.Tracing.Render    import GanttBar, GanttLayout, GanttRow, Renderer
-from pyTooling.Tracing.Render    import LINE_LEGEND_LABEL, QUEUED_LEGEND_LABEL
+from pyTooling.Common         import getFullyQualifiedName, StringEnum
+from pyTooling.Decorators     import export, readonly
+from pyTooling.Exceptions     import MissingDependencyError
+from pyTooling.Tracing.CI     import SpanKind
+from pyTooling.Tracing.Render import GanttBar, GanttLayout, GanttRow, LINE_LEGEND_LABEL, QUEUED_LEGEND_LABEL, Renderer
 
 try:
-	from plotly.graph_objects    import Bar, Figure, Scatter
+	from plotly.graph_objects   import Bar, Figure, Scatter
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="plotly", extra="diagram") from ex
 
@@ -78,34 +77,14 @@ _HOVER_TEMPLATE = (
 """Hover text of a bar or line, filled from the fields composed by :meth:`PlotlyRenderer._Hover`."""
 
 
-def _text(text: str) -> str:
-	"""
-	Escape a text for plotly, which interprets HTML tags like ``<b>`` and entities in titles, labels and hover texts.
+@export
+class PlotlyJavaScript(StringEnum):
+	"""How an HTML page written by :class:`PlotlyRenderer` loads plotly's JavaScript library."""
 
-	:param text: The text.
-	:returns:    The text with ``&``, ``<`` and ``>`` escaped.
-	"""
-	return escape(text, quote=False)
+	Embedded = "embedded"  #: The library is embedded into the page (about 4 MiB), so the page works offline.
+	CDN =      "cdn"       #: The page loads the library from plotly's CDN.
 
-
-def _preformatted(text: str) -> str:
-	"""
-	Convert a text of aligned columns and lines into plotly's markup.
-
-	:param text: The text, with lines separated by ``\\n``.
-	:returns:    The escaped text with non-breaking spaces, and lines separated by ``<br>``.
-	"""
-	return "<br>".join(_text(line).replace(" ", " ") for line in text.split("\n"))
-
-
-def _time(seconds: float) -> datetime:
-	"""
-	Return the position of a time on the time axis.
-
-	:param seconds: Seconds after the trace began.
-	:returns:       The position as a date after :data:`TIME_AXIS_ORIGIN`.
-	"""
-	return TIME_AXIS_ORIGIN + timedelta(seconds=seconds)
+	DEFAULT = Embedded     #: The way used if none is given.
 
 
 @export
@@ -129,7 +108,7 @@ class PlotlyRenderer(Renderer[Figure]):
 	_width:           Nullable[int]     #: Width of the chart in pixels, or ``None`` for the width of the page.
 	_rowHeight:       int               #: Height of a row in pixels.
 	_fontSize:        float             #: Font size of labels in pixels.
-	_includePlotlyJS: Union[bool, str]  #: How an HTML page loads plotly's JavaScript library.
+	_includePlotlyJS: PlotlyJavaScript  #: How an HTML page loads plotly's JavaScript library.
 
 	def __init__(
 		self,
@@ -139,7 +118,7 @@ class PlotlyRenderer(Renderer[Figure]):
 		width:           Nullable[int] = None,
 		rowHeight:       int = 20,
 		fontSize:        float = 11.0,
-		includePlotlyJS: Union[bool, str] = True
+		includePlotlyJS: PlotlyJavaScript = PlotlyJavaScript.DEFAULT
 	) -> None:
 		"""
 		Initializes a plotly renderer for a layout.
@@ -149,22 +128,60 @@ class PlotlyRenderer(Renderer[Figure]):
 		:param width:           Optional, width of the chart in pixels. Default: the width of the page.
 		:param rowHeight:       Optional, height of a row in pixels. Default: ``20``.
 		:param fontSize:        Optional, font size of labels in pixels. Default: ``11.0``.
-		:param includePlotlyJS: Optional, how an HTML page loads plotly's JavaScript library: ``True`` embeds it (about
-		                        4 MiB), so the page works offline, and ``'cdn'`` loads it from plotly's CDN.
-		                        Default: ``True``.
+		:param includePlotlyJS: Optional, how an HTML page loads plotly's JavaScript library.
+		                        Default: :attr:`PlotlyJavaScript.DEFAULT`.
 		:raises TypeError:      If parameter 'layout' is not of type :class:`~pyTooling.Tracing.Render.GanttLayout`.
 		:raises TypeError:      If parameter 'title' is not of type :class:`str`.
-		:raises ValueError:     If parameter 'width', 'rowHeight' or 'fontSize' isn't positive.
+		:raises TypeError:      If parameter 'width' is not of type :class:`int`.
+		:raises ValueError:     If parameter 'width' isn't positive.
+		:raises ValueError:     If parameter 'rowHeight' is None.
+		:raises TypeError:      If parameter 'rowHeight' is not of type :class:`int`.
+		:raises ValueError:     If parameter 'rowHeight' isn't positive.
+		:raises ValueError:     If parameter 'fontSize' is None.
+		:raises TypeError:      If parameter 'fontSize' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:     If parameter 'fontSize' isn't positive.
+		:raises ValueError:     If parameter 'includePlotlyJS' is None.
+		:raises TypeError:      If parameter 'includePlotlyJS' is not of type :class:`PlotlyJavaScript`.
 		"""
 		super().__init__(layout, title=title)
 
-		for parameter, value in (("width", width), ("rowHeight", rowHeight), ("fontSize", fontSize)):
-			if parameter == "width" and value is None:
-				continue
-			elif not value > 0:
-				ex = ValueError(f"Parameter '{parameter}' isn't positive.")
-				ex.add_note(f"Got value '{value}'.")
-				raise ex
+		if width is not None and not isinstance(width, int):
+			ex = TypeError("Parameter 'width' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
+			raise ex
+		elif width is not None and width <= 0:
+			ex = ValueError("Parameter 'width' isn't positive.")
+			ex.add_note(f"Got value '{width}'.")
+			raise ex
+
+		if rowHeight is None:
+			raise ValueError("Parameter 'rowHeight' is None.")
+		elif not isinstance(rowHeight, int):
+			ex = TypeError("Parameter 'rowHeight' is not of type 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(rowHeight)}'.")
+			raise ex
+		elif rowHeight <= 0:
+			ex = ValueError("Parameter 'rowHeight' isn't positive.")
+			ex.add_note(f"Got value '{rowHeight}'.")
+			raise ex
+
+		if fontSize is None:
+			raise ValueError("Parameter 'fontSize' is None.")
+		elif not isinstance(fontSize, (float, int)):
+			ex = TypeError("Parameter 'fontSize' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fontSize)}'.")
+			raise ex
+		elif fontSize <= 0:
+			ex = ValueError("Parameter 'fontSize' isn't positive.")
+			ex.add_note(f"Got value '{fontSize}'.")
+			raise ex
+
+		if includePlotlyJS is None:
+			raise ValueError("Parameter 'includePlotlyJS' is None.")
+		elif not isinstance(includePlotlyJS, PlotlyJavaScript):
+			ex = TypeError("Parameter 'includePlotlyJS' is not of type 'PlotlyJavaScript'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(includePlotlyJS)}'.")
+			raise ex
 
 		self._width =           width
 		self._rowHeight =       rowHeight
@@ -199,11 +216,11 @@ class PlotlyRenderer(Renderer[Figure]):
 		return self._fontSize
 
 	@readonly
-	def IncludePlotlyJS(self) -> Union[bool, str]:
+	def IncludePlotlyJS(self) -> PlotlyJavaScript:
 		"""
 		Read-only property to access how an HTML page loads plotly's JavaScript library (:attr:`_includePlotlyJS`).
 
-		:returns: ``True`` to embed the library, or ``'cdn'`` to load it from plotly's CDN.
+		:returns: How the library is loaded.
 		"""
 		return self._includePlotlyJS
 
@@ -223,11 +240,11 @@ class PlotlyRenderer(Renderer[Figure]):
 			detail = row.Category
 
 		return [
-			_text(row.Name),
+			self._EscapeText(row.Name),
 			self.FormatTime(bar.Begin),
 			self.FormatTime(bar.End),
 			self.FormatSeconds(bar.DurationInSeconds),
-			_text(detail)
+			self._EscapeText(detail)
 		]
 
 	def Render(self) -> Figure:
@@ -236,19 +253,23 @@ class PlotlyRenderer(Renderer[Figure]):
 
 		:returns: The chart as a plotly figure.
 		"""
-		layout = self._layout
-		rows = list(layout.IterateRows())
-		duration = max(layout.DurationInSeconds, 1.0)
+		layout =       self._layout
+		rows =         list(layout.IterateRows())
+		duration =     max(layout.DurationInSeconds, 1.0)
 		minimumWidth = duration / 1000
 
-		bars: dict[tuple[bool, str], dict[str, list[Any]]] = {}
-		lines: dict[bool, dict[str, list[Any]]] = {}
+		bars:  dict[tuple[bool, str], dict[str, list[Any]]] = {}
+		lines: dict[bool, dict[str, list[Any]]] =            {}
 		for position, row in enumerate(rows):
 			if row.Kind in (SpanKind.Pipeline, SpanKind.Workflow):
 				for bar in row.Bars:
 					line = lines.setdefault(bar.IsRunning, {"x": [], "y": [], "customdata": []})
 					hover = self._Hover(row, bar)
-					line["x"].extend((_time(bar.BeginSinceOriginInSeconds), _time(bar.EndSinceOriginInSeconds), None))
+					line["x"].extend((
+						self._TimeAxisPosition(bar.BeginSinceOriginInSeconds),
+						self._TimeAxisPosition(bar.EndSinceOriginInSeconds),
+						None
+					))
 					line["y"].extend((position, position, None))
 					line["customdata"].extend((hover, hover, [""] * len(hover)))
 				continue
@@ -258,7 +279,7 @@ class PlotlyRenderer(Renderer[Figure]):
 					(bar.IsQueued, "" if bar.IsQueued else row.Category),
 					{"base": [], "x": [], "y": [], "customdata": [], "pattern": []}
 				)
-				group["base"].append(_time(bar.BeginSinceOriginInSeconds))
+				group["base"].append(self._TimeAxisPosition(bar.BeginSinceOriginInSeconds))
 				group["x"].append(max(bar.DurationInSeconds, minimumWidth) * 1000)
 				group["y"].append(position)
 				group["customdata"].append(self._Hover(row, bar))
@@ -269,11 +290,14 @@ class PlotlyRenderer(Renderer[Figure]):
 			if (group := bars.get((queued, category))) is None:
 				continue
 			elif queued:
-				name, color = _preformatted(QUEUED_LEGEND_LABEL), self.QUEUED
+				name =  self._Preformatted(QUEUED_LEGEND_LABEL)
+				color = self.QUEUED
 			elif category == "":
-				name, color = "", self.NEUTRAL
+				name =  ""
+				color = self.NEUTRAL
 			else:
-				name, color = _preformatted(self.LegendLabel(category)), self.Color(category)
+				name =  self._Preformatted(self.LegendLabel(category))
+				color = self.Color(category)
 
 			figure.add_trace(Bar(
 				orientation="h",
@@ -300,14 +324,14 @@ class PlotlyRenderer(Renderer[Figure]):
 				mode="lines+markers",
 				line={"color": self.LINE, "width": 1, "dash": "dash" if running else "solid"},
 				marker={"color": self.LINE, "symbol": "line-ns-open", "size": 10},
-				name=_preformatted(LINE_LEGEND_LABEL),
+				name=self._Preformatted(LINE_LEGEND_LABEL),
 				legendgroup="lines",
 				showlegend=not running or False not in lines
 			))
 
 		monospace = {"family": MONOSPACE_FONT_FAMILIES, "size": self._fontSize}
 		figure.update_layout(
-			title={"text": _text(self._title)},
+			title={"text": self._EscapeText(self._title)},
 			template="plotly_white",
 			barmode="overlay",
 			width=self._width,
@@ -315,7 +339,7 @@ class PlotlyRenderer(Renderer[Figure]):
 			font={"size": self._fontSize},
 			hoverlabel={"align": "left"},
 			legend={
-				"title": {"text": _preformatted(self.LegendTitle()), "font": monospace},
+				"title": {"text": self._Preformatted(self.LegendTitle()), "font": monospace},
 				"font": monospace,
 				"x": 1.0,
 				"y": 1.0,
@@ -329,20 +353,50 @@ class PlotlyRenderer(Renderer[Figure]):
 		figure.update_xaxes(
 			type="date",
 			tickformat="%H:%M:%S",
-			range=[_time(0), _time(duration)],
+			range=[self._TimeAxisPosition(0), self._TimeAxisPosition(duration)],
 			title={"text": "time since the trace began"},
 			showgrid=True
 		)
 		figure.update_yaxes(
 			tickmode="array",
 			tickvals=list(range(len(rows))),
-			ticktext=[" " * 2 * row.Depth + _text(row.Name) for row in rows],
+			ticktext=["\u00a0" * 2 * row.Depth + self._EscapeText(row.Name) for row in rows],
 			range=[len(rows) - 0.5, -0.5],
 			showgrid=False,
 			automargin=True
 		)
 
 		return figure
+
+	@staticmethod
+	def _EscapeText(text: str) -> str:
+		"""
+		Escape a text for plotly, which interprets HTML tags like ``<b>`` and entities in titles, labels and hover texts.
+
+		:param text: The text.
+		:returns:    The text with ``&``, ``<`` and ``>`` escaped.
+		"""
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+	@classmethod
+	def _Preformatted(cls, text: str) -> str:
+		"""
+		Convert a text of aligned columns and lines into plotly's markup.
+
+		:param text: The text, with lines separated by ``\\n``.
+		:returns:    The escaped text with non-breaking spaces, and lines separated by ``<br>``.
+		"""
+		return "<br>".join(cls._EscapeText(line).replace(" ", "\u00a0") for line in text.split("\n"))
+
+	@staticmethod
+	def _TimeAxisPosition(seconds: float) -> datetime:
+		"""
+		Return the position of a time on the time axis.
+
+		:param seconds: Seconds after the trace began.
+		:returns:       The position as a date after :data:`TIME_AXIS_ORIGIN`.
+		"""
+		return TIME_AXIS_ORIGIN + timedelta(seconds=seconds)
 
 	def _Write(self, figure: Figure, file: Path, fileFormat: str) -> None:
 		"""
@@ -354,8 +408,13 @@ class PlotlyRenderer(Renderer[Figure]):
 		:raises OSError:   If the file couldn't be written.
 		"""
 		if fileFormat == "html":
-			content = figure.to_html(include_plotlyjs=self._includePlotlyJS, full_html=True, config={"displaylogo": False})
+			content = figure.to_html(
+				include_plotlyjs=True if self._includePlotlyJS is PlotlyJavaScript.Embedded else "cdn",
+				full_html=True,
+				config={"displaylogo": False}
+			)
 		else:
 			content = figure.to_json()
 
-		file.write_text(content, encoding="utf-8")
+		with file.open("w", encoding="utf-8") as stream:
+			stream.write(content)
