@@ -1091,6 +1091,15 @@ Version 10.x (2026)
 
    .. rubric:: Bug Fixes
 
+   * :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`
+
+     * :meth:`LineSegment2D.AngleTo <pyTooling.Cartesian2D.LineSegment2D.AngleTo>` and
+       :meth:`LineSegment3D.AngleTo <pyTooling.Cartesian3D.LineSegment3D.AngleTo>` raised :exc:`ZeroDivisionError` for
+       a line segment of length 0. They raise :exc:`ValueError` now.
+     * ``AngleTo`` of two parallel line segments raised :exc:`ValueError` (``math domain error``), when the cosine of
+       the angle rounded to a value above 1 or below -1 - ``(0, 0, 0) → (1, 1, 1)`` and ``(0, 0, 0) → (2, 2, 2)``, for
+       example - or returned up to ``2.1e-08`` instead of 0. The angle is computed with :func:`math.atan2` now.
+
    * :mod:`pyTooling.Cartesian2D.Shapes`
 
      * A :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` accepted a parallelogram, and a

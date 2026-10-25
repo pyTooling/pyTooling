@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.Cartesian3D`: points, offsets and sizes, their copies, comparisons and
 arithmetic.
 """
-from math                  import sqrt
+from math                  import pi, sqrt
 
 from pyTooling.Cartesian3D import Origin3D, Point3D, Offset3D, Size3D, LineSegment3D
 from pyTooling.Testing     import Testcase
@@ -184,6 +184,46 @@ class LineSegment(Testcase):
 		line = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 3, 6))
 
 		self.assertEqual(7.0, line.Length)
+
+	def test_AngleTo_Perpendicular(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 0, 0))
+		line2 = LineSegment3D(Point3D(2, 0, 0), Point3D(2, 0, 2))
+
+		self.assertEqual(pi / 2, line1.AngleTo(line2))
+
+	def test_AngleTo_Parallel(self) -> None:
+		"""Same direction, different lengths: the cosine of the angle rounds to 1.0000000000000002, outside acos' domain."""
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
+		line2 = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 2, 2))
+
+		self.assertEqual(0.0, line1.AngleTo(line2))
+
+	def test_AngleTo_Opposite(self) -> None:
+		"""Opposite directions: the cosine of the angle rounds to -1.0000000000000002, outside acos' domain."""
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
+		line2 = LineSegment3D(Point3D(0, 0, 0), Point3D(-2, -2, -2))
+
+		self.assertEqual(pi, line1.AngleTo(line2))
+
+	def test_AngleTo_ZeroLength(self) -> None:
+		line1 = LineSegment3D(Point3D(1, 1, 1), Point3D(1, 1, 1))
+		line2 = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 0, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line1.AngleTo(line2)
+
+		self.assertEqual("Line segment has length 0.", str(context.exception))
+		self.assertListEqual(["Got line segment ((1, 1, 1) → (1, 1, 1))."], context.exception.__notes__)
+
+	def test_AngleTo_ZeroLengthOther(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 0, 0))
+		line2 = LineSegment3D(Point3D(1, 1, 1), Point3D(1, 1, 1))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line1.AngleTo(line2)
+
+		self.assertEqual("Parameter 'other' has length 0.", str(context.exception))
+		self.assertListEqual(["Got line segment ((1, 1, 1) → (1, 1, 1))."], context.exception.__notes__)
 
 
 class Copy(Testcase):

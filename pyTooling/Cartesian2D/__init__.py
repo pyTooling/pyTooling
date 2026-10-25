@@ -40,7 +40,7 @@ An implementation of 2D cartesian data structures for Python.
 """
 from __future__            import annotations
 
-from math                  import sqrt, acos
+from math                  import atan2, sqrt
 from typing                import TypeVar, Union, Generic, Any, Self
 
 from pyTooling.Decorators  import readonly, export
@@ -531,14 +531,30 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Compute the angle between this line segment and another one.
 
-		:param other: The second line segment.
-		:returns:     The angle in radians.
-		"""
-		vectorA = self.ToOffset()
-		vectorB = other.ToOffset()
-		scalarProductAB = vectorA.xOffset * vectorB.xOffset + vectorA.yOffset * vectorB.yOffset
+		The angle is the one between both segments' directions, from ``0`` (same direction) to :data:`math.pi` (opposite
+		directions).
 
-		return acos(scalarProductAB / (abs(self.Length) * abs(other.Length)))
+		:param other:       The second line segment.
+		:returns:           The angle in radians.
+		:raises ValueError: If this line segment has length 0.
+		:raises ValueError: If line segment ``other`` has length 0.
+		"""
+		if self.start.x == self.end.x and self.start.y == self.end.y:
+			ex = ValueError("Line segment has length 0.")
+			ex.add_note(f"Got line segment {self}.")
+			raise ex
+
+		if other.start.x == other.end.x and other.start.y == other.end.y:
+			ex = ValueError("Parameter 'other' has length 0.")
+			ex.add_note(f"Got line segment {other}.")
+			raise ex
+
+		vectorA =         self.ToOffset()
+		vectorB =         other.ToOffset()
+		scalarProductAB = vectorA.xOffset * vectorB.xOffset + vectorA.yOffset * vectorB.yOffset
+		crossProductAB =  vectorA.xOffset * vectorB.yOffset - vectorA.yOffset * vectorB.xOffset
+
+		return atan2(abs(crossProductAB), scalarProductAB)
 
 	def ToOffset(self) -> Offset2D[Coordinate]:
 		"""

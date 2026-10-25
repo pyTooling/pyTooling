@@ -216,7 +216,8 @@ measurements:
 
 * :attr:`~pyTooling.Cartesian2D.LineSegment2D.Length` - the Euclidean distance between its ends, a :class:`float`
   even for integer coordinates;
-* :meth:`~pyTooling.Cartesian2D.LineSegment2D.AngleTo` - the angle to another line segment;
+* :meth:`~pyTooling.Cartesian2D.LineSegment2D.AngleTo` - the angle to another line segment's direction, from 0 to
+  :data:`math.pi`; a line segment of length 0 has no direction and raises :exc:`ValueError`;
 * :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset` - the segment as the displacement from start to end.
 
 .. seealso::
