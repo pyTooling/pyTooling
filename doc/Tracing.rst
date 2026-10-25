@@ -144,7 +144,7 @@ Three methods, for the three things a caller does with the document:
    * - :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`
      - nothing - it writes the document to the given :class:`~pathlib.Path`
 
-A missing directory of that path is created. Before, a :exc:`~pyTooling.Tracing.DirectoryCreatedWarning` naming it is
+A missing directory of that path is created. Before, a :exc:`~pyTooling.Warning.DirectoryCreatedWarning` naming it is
 raised to the current :class:`~pyTooling.Warning.WarningCollector`, so a program can report it:
 
 .. code-block:: python

@@ -346,8 +346,9 @@ Version 10.x (2026)
        :meth:`~pyTooling.Tracing.Trace.ToOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
        accepted it since v1.35.
-     * Writing a file creates its missing directory after raising a :exc:`~pyTooling.Tracing.DirectoryCreatedWarning`
-       to the current :class:`~pyTooling.Warning.WarningCollector`.
+     * Writing a file creates its missing directory after raising a :exc:`~pyTooling.Warning.DirectoryCreatedWarning`
+       to the current :class:`~pyTooling.Warning.WarningCollector`. The warning is new in :mod:`pyTooling.Warning`, so
+       every writer creating a directory can raise it.
      * The document is typed rather than a mapping of :class:`~typing.Any`: twelve :class:`~typing.TypedDict`
        classes name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
        :class:`~pyTooling.Tracing.OTLPAnyValue`.

@@ -40,12 +40,11 @@ from unittest             import mock
 
 from pytest               import mark
 
-from pyTooling.Tracing    import OTLP_SCOPE_NAME, Event, Span, Trace, TraceCollection, TraceElement, TracingError, \
-                                 DirectoryCreatedWarning
+from pyTooling.Tracing    import OTLP_SCOPE_NAME, Event, Span, Trace, TraceCollection, TraceElement, TracingError
 from pyTooling            import Resources
 from pyTooling.Common     import __version__, getResourceFile, readResourceFile
 from pyTooling.Exceptions import MissingDependencyError
-from pyTooling.Warning    import WarningCollector
+from pyTooling.Warning    import DirectoryCreatedWarning, WarningCollector
 from pyTooling.Testing    import Testcase
 
 # 'jsonschema' needs 'rpds-py', a Rust extension without a PyPy wheel for Windows; its source build fails to link there.

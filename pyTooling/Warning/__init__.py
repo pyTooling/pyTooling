@@ -44,6 +44,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from __future__           import annotations
 
+from pathlib              import Path
 from threading            import current_thread, local, Lock
 from types                import TracebackType
 from typing               import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
@@ -121,6 +122,38 @@ class Warning(BaseException):
 
 
 AnyWarning = Union[CriticalWarning, Warning]
+
+
+@export
+class DirectoryCreatedWarning(Warning):
+	"""
+	Warning emitted when a file is written, whose directory doesn't exist yet and is created.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+	_directory: Path  #: The directory that is created.
+
+	def __init__(self, message: str, /, *, directory: Path) -> None:
+		"""
+		Initializes the warning with the directory that is created.
+
+		:param message:   The warning's message.
+		:param directory: The directory that doesn't exist and is created.
+		"""
+		super().__init__(message)
+		self._directory = directory
+
+	@readonly
+	def Directory(self) -> Path:
+		"""
+		Read-only property to access the directory that is created (:attr:`_directory`).
+
+		:returns: The directory's path.
+		"""
+		return self._directory
 
 
 @export

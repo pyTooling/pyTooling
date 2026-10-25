@@ -64,7 +64,7 @@ from pyTooling.Exceptions  import MissingDependencyError, ToolingException
 from pyTooling.Common      import __version__, getFullyQualifiedName, getTypeName, readResourceFile
 from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Versioning  import SemanticVersion
-from pyTooling.Warning     import WarningCollector, Warning
+from pyTooling.Warning     import WarningCollector, DirectoryCreatedWarning
 
 
 __all__ = ["_threadLocalData", "OTLP_SCOPE_NAME"]
@@ -101,38 +101,6 @@ _MAXIMUM_IDENTIFIER_ATTEMPTS = 4
 @export
 class TracingError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Tracing`."""
-
-
-@export
-class DirectoryCreatedWarning(Warning):
-	"""
-	Warning emitted when a trace is written to a file, whose directory doesn't exist yet and is created.
-
-	.. attention::
-
-	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
-	   dropped silently.
-	"""
-	_directory: Path  #: The directory that is created.
-
-	def __init__(self, message: str, /, *, directory: Path) -> None:
-		"""
-		Initializes the warning with the directory that is created.
-
-		:param message:   The warning's message.
-		:param directory: The directory that doesn't exist and is created.
-		"""
-		super().__init__(message)
-		self._directory = directory
-
-	@readonly
-	def Directory(self) -> Path:
-		"""
-		Read-only property to access the directory that is created (:attr:`_directory`).
-
-		:returns: The directory's path.
-		"""
-		return self._directory
 
 
 @export
@@ -1499,7 +1467,8 @@ class Trace(Span):
 
 		Missing parent directories are created, because the directory a pipeline collects its artifacts from - usually
 		``report/`` - rarely exists yet when the trace is written. Before creating them, a
-		:class:`DirectoryCreatedWarning` is raised to the current :class:`~pyTooling.Warning.WarningCollector`.
+		:class:`~pyTooling.Warning.DirectoryCreatedWarning` is raised to the current
+		:class:`~pyTooling.Warning.WarningCollector`.
 
 		:param jsonFile:      Path of the file to write.
 		:param serviceName:   Optional, the value of the ``service.name`` resource attribute. Default: the trace's name.
@@ -2266,8 +2235,9 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 		"""
 		Write this collection to a file as an **OTLP/JSON** document.
 
-		Missing parent directories are created. Before creating them, a :class:`DirectoryCreatedWarning` is raised to the
-		current :class:`~pyTooling.Warning.WarningCollector`.
+		Missing parent directories are created. Before creating them, a
+		:class:`~pyTooling.Warning.DirectoryCreatedWarning` is raised to the current
+		:class:`~pyTooling.Warning.WarningCollector`.
 
 		:param jsonFile:      Path of the file to write.
 		:param indent:        Optional, indentation for a human-readable file. Default: ``None``, the compact form
