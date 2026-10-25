@@ -822,7 +822,8 @@ class ParsingPostfix(Testcase):
 		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
 		self.assertEqual("a", version.Postfix)
 		self.assertIn(Parts.Postfix, version.Parts)
-		self.assertEqual("2025.6+a", str(version))
+		self.assertEqual("2025.6a", str(version))
+		self.assertEqual("", version.PostfixSeparator)
 
 	def test_Delimiters(self) -> None:
 		for versionString in ("2025.06a", "2025.06.a", "2025.06-a", "2025.06+a"):
@@ -899,7 +900,7 @@ class RoundTrip(Testcase):
 			(CalendarVersion,     "v2024.01c3",         "v2024.1.gamma3"),
 			(CalendarVersion,     "2024.01-dev",        "2024.1-dev"),
 			(CalendarVersion,     "2024.01.post2.dev3", "2024.1.post2.dev3"),
-			(YearMonthVersion,    "v2025.06a",          "v2025.6+a"),
+			(YearMonthVersion,    "v2025.06a",          "v2025.6a"),
 			(YearMonthVersion,    "2024.10.3",          "2024.10.3")
 		):
 			with self.subTest(versionClass=cls.__name__, versionString=versionString):
@@ -923,7 +924,7 @@ class RoundTrip(Testcase):
 		for cls, versionString, expected in (
 			(CalendarVersion,  "v2024",                 "2024.0"),
 			(CalendarVersion,  "v2024.01rc1.post2+abc", "2024.1.rc1.post2+abc"),
-			(YearMonthVersion, "v2025.06a",             "2025.6+a"),
+			(YearMonthVersion, "v2025.06a",             "2025.6a"),
 			(YearMonthVersion, "2024.10.3",             "2024.10.3")
 		):
 			with self.subTest(versionClass=cls.__name__, versionString=versionString):
@@ -1027,6 +1028,82 @@ class RangesAndSets(Testcase):
 		versions = [YearMonthVersion.Parse(v) for v in ("2025.06b", "2025.06", "2025.07", "2025.06a", "2025.06rc1")]
 		versionSet = VersionSet(versions)
 
-		self.assertEqual(["2025.6.rc1", "2025.6", "2025.6+a", "2025.6+b", "2025.7"], [str(v) for v in versionSet])
+		self.assertEqual(["2025.6.rc1", "2025.6", "2025.6a", "2025.6b", "2025.7"], [str(v) for v in versionSet])
 		self.assertIn(YearMonthVersion.Parse("2025.06a"), versionSet)
 		self.assertNotIn(YearMonthVersion.Parse("2025.06c"), versionSet)
+
+
+class PostfixSeparator(Testcase):
+	"""A parsed version keeps the separator in front of its postfix; comparison and hash ignore it."""
+
+	def test_Parse_None(self) -> None:
+		version = YearMonthVersion.Parse("2025.06a")
+
+		self.assertEqual("", version.PostfixSeparator)
+		self.assertEqual("2025.6a", str(version))
+
+	def test_Parse_Plus(self) -> None:
+		version = YearMonthVersion.Parse("2025.06+build.5")
+
+		self.assertEqual("+", version.PostfixSeparator)
+		self.assertEqual("2025.6+build.5", str(version))
+
+	def test_Parse_Dash(self) -> None:
+		version = YearMonthVersion.Parse("2025.06-foo")
+
+		self.assertEqual("-", version.PostfixSeparator)
+		self.assertEqual("2025.6-foo", str(version))
+
+	def test_Parse_Dot(self) -> None:
+		version = CalendarVersion.Parse("2025.06.foo")
+
+		self.assertEqual(".", version.PostfixSeparator)
+		self.assertEqual("2025.6.foo", str(version))
+
+	def test_Default(self) -> None:
+		version = YearMonthVersion(2025, 6, postfix="a")
+
+		self.assertEqual("+", version.PostfixSeparator)
+		self.assertEqual("2025.6+a", str(version))
+
+	def test_Construction(self) -> None:
+		self.assertEqual("2025.6a", str(YearMonthVersion(2025, 6, postfix="a", postfixSeparator="")))
+
+	def test_Equality(self) -> None:
+		self.assertEqual(YearMonthVersion.Parse("2025.06a"), YearMonthVersion.Parse("2025.06+a"))
+		self.assertEqual(hash(YearMonthVersion.Parse("2025.06a")), hash(YearMonthVersion.Parse("2025.06+a")))
+
+	def test_Type(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = YearMonthVersion(2025, 6, postfix="a", postfixSeparator=1)
+
+		self.assertEqual("Parameter 'postfixSeparator' is not of type 'str'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Value(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = YearMonthVersion(2025, 6, postfix="a", postfixSeparator="/")
+
+		self.assertEqual("Parameter 'postfixSeparator' is none of '+', '.', '-' and ''.", str(context.exception))
+		self.assertListEqual(["Got value '/'."], context.exception.__notes__)
+
+	def test_NotReadBack_Digit(self) -> None:
+		"""A postfix starting with a digit would continue the month."""
+		with self.assertRaises(ValueError) as context:
+			_ = YearMonthVersion(2025, 6, postfix="5", postfixSeparator="")
+
+		self.assertEqual(
+			"Parameter 'postfixSeparator' is '', but the postfix wouldn't be read back.",
+			str(context.exception)
+		)
+
+	def test_NotReadBack_ReleaseLevel(self) -> None:
+		"""Without a ``+``, the postfix ``a1`` reads as alpha release 1."""
+		with self.assertRaises(ValueError):
+			_ = YearMonthVersion(2025, 6, postfix="a1", postfixSeparator="")
+
+	def test_NotReadBack_Development(self) -> None:
+		"""After a ``-``, the postfix ``dev`` reads as a development release."""
+		with self.assertRaises(ValueError):
+			_ = YearMonthVersion(2025, 6, postfix="dev", postfixSeparator="-")
+

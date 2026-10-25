@@ -1982,6 +1982,8 @@ class CalendarVersion(Version):
 
 	_PARTCOUNT: ClassVar[int] = 3   #: Number of numeric parts a version number of this class can carry.
 
+	_postfixSeparator: str  #: The separator written in front of the postfix: ``+``, ``.``, ``-`` or none.
+
 	_PATTERN: ClassVar[Pattern] = re_compile(
 		r"^"
 		r"(?P<prefix>rev|REV|[vViIrR])?"
@@ -1998,66 +2000,106 @@ class CalendarVersion(Version):
 			r")?"
 			r"(?:[\.\-]post(?P<post>\d+))?"
 			r"(?:[\.\-]dev(?P<dev>\d+))?"
-			r"(?:(?:\+|[\.\-]?(?=[A-Za-z]))(?P<postfix>\w+(?:[\.\-]\w+)*))?"
+			r"(?:(?P<postfixSeparator>\+|[\.\-]?(?=[A-Za-z]))(?P<postfix>\w+(?:[\.\-]\w+)*))?"
 		r")?"
 		r"$"
 	)  #: Regular expression to parse a calendar version from a string.
 
 	def __init__(
 		self,
-		major:   int,
-		minor:   Nullable[int] = None,
-		micro:   Nullable[int] = None,
-		build:   Nullable[int] = None,
-		flags:   Flags = Flags.Clean,
-		prefix:  Nullable[str] = None,
-		postfix: Nullable[str] = None,
+		major:            int,
+		minor:            Nullable[int] = None,
+		micro:            Nullable[int] = None,
+		build:            Nullable[int] = None,
+		flags:            Flags = Flags.Clean,
+		prefix:           Nullable[str] = None,
+		postfix:          Nullable[str] = None,
 		*,
-		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
-		number:  Nullable[int] = None,
-		post:    Nullable[int] = None,
-		dev:     Nullable[int] = None,
-		hash:    Nullable[str] = None
+		level:            Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:           Nullable[int] = None,
+		post:             Nullable[int] = None,
+		dev:              Nullable[int] = None,
+		hash:             Nullable[str] = None,
+		postfixSeparator: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a calendar version number representation.
 
-		:param major:       Major number part of the version number.
-		:param minor:       Optional, minor number part of the version number.
-		:param micro:       Optional, micro (patch) number part of the version number.
-		:param build:       Optional, build number part of the version number.
-		:param flags:       Optional, the version number's flags.
-		:param prefix:      Optional, the version number's prefix.
-		:param postfix:     Optional, the version number's postfix.
-		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
-		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
-		:param post:        Optional, post number part of the version number.
-		:param dev:         Optional, development number part of the version number.
-		:param hash:        Optional, hash of the version control system's commit this version was built from.
-		:raises TypeError:  If parameter 'major' is not of type integer.
-		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type integer.
-		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type integer.
-		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type integer.
-		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type string.
-		:raises TypeError:  If parameter 'postfix' is not of type string.
-		:raises ValueError: If parameter 'level' is None.
-		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
-		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
-		:raises TypeError:  If parameter 'number' is not of type integer.
-		:raises ValueError: If parameter 'number' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type integer.
-		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type integer.
-		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'hash' is not of type string.
+		:param major:            Major number part of the version number.
+		:param minor:            Optional, minor number part of the version number.
+		:param micro:            Optional, micro (patch) number part of the version number.
+		:param build:            Optional, build number part of the version number.
+		:param flags:            Optional, the version number's flags.
+		:param prefix:           Optional, the version number's prefix.
+		:param postfix:          Optional, the version number's postfix.
+		:param level:            Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:           Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:             Optional, post number part of the version number.
+		:param dev:              Optional, development number part of the version number.
+		:param hash:             Optional, hash of the version control system's commit this version was built from.
+		:param postfixSeparator: Optional, the separator written in front of the postfix: ``+``, ``.``, ``-`` or ``""``.
+		                         Default: ``+``.
+		:raises TypeError:       If parameter 'major' is not of type integer.
+		:raises ValueError:      If parameter 'major' is a negative number.
+		:raises TypeError:       If parameter 'minor' is not of type integer.
+		:raises ValueError:      If parameter 'minor' is a negative number.
+		:raises TypeError:       If parameter 'micro' is not of type integer.
+		:raises ValueError:      If parameter 'micro' is a negative number.
+		:raises TypeError:       If parameter 'build' is not of type integer.
+		:raises ValueError:      If parameter 'build' is a negative number.
+		:raises TypeError:       If parameter 'prefix' is not of type string.
+		:raises TypeError:       If parameter 'postfix' is not of type string.
+		:raises ValueError:      If parameter 'level' is None.
+		:raises TypeError:       If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError:      If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:       If parameter 'number' is not of type integer.
+		:raises ValueError:      If parameter 'number' is a negative number.
+		:raises TypeError:       If parameter 'post' is not of type integer.
+		:raises ValueError:      If parameter 'post' is a negative number.
+		:raises TypeError:       If parameter 'dev' is not of type integer.
+		:raises ValueError:      If parameter 'dev' is a negative number.
+		:raises TypeError:       If parameter 'hash' is not of type string.
+		:raises TypeError:       If parameter 'postfixSeparator' is not of type string.
+		:raises ValueError:      If parameter 'postfixSeparator' is none of ``+``, ``.``, ``-`` and ``""``.
+		:raises ValueError:      If parameter 'postfixSeparator' isn't ``+``, and the postfix written after it would read as
+		                         another part of the version. |br|
+		                         Only ``+`` separates every postfix, e.g. one starting with a digit or one like ``a1``.
 		"""
 		super().__init__(
 			major, minor, micro, level, number, post, dev, build=build, postfix=postfix, prefix=prefix, hash=hash, flags=flags
 		)
+
+		if postfixSeparator is None:
+			postfixSeparator = "+"
+		elif not isinstance(postfixSeparator, str):
+			ex = TypeError("Parameter 'postfixSeparator' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(postfixSeparator)}'.")
+			raise ex
+		elif postfixSeparator not in ("+", ".", "-", ""):
+			ex = ValueError("Parameter 'postfixSeparator' is none of '+', '.', '-' and ''.")
+			ex.add_note(f"Got value '{postfixSeparator}'.")
+			raise ex
+		elif postfixSeparator != "+" and self._postfix != "" and (
+			(match := self._PATTERN.match(f"0{postfixSeparator}{self._postfix}")) is None
+			or match["postfix"] != self._postfix
+		):
+			ex = ValueError(f"Parameter 'postfixSeparator' is '{postfixSeparator}', but the postfix wouldn't be read back.")
+			ex.add_note(f"Got postfix '{self._postfix}', which reads as another part of a version after the separator.")
+			ex.add_note("Only '+' separates every postfix, e.g. one starting with a digit or one like 'a1' or 'dev'.")
+			raise ex
+
+		self._postfixSeparator = postfixSeparator
+
+	@readonly
+	def PostfixSeparator(self) -> str:
+		"""
+		Read-only property to access the separator written in front of the postfix (:attr:`_postfixSeparator`).
+
+		A parsed version keeps the separator it was written with, e.g. none in ``2025.06a``.
+
+		:returns: ``+``, ``.``, ``-`` or ``""``.
+		"""
+		return self._postfixSeparator
 
 	@classmethod
 	def Parse(cls, versionString: Nullable[str], validator: Nullable[Predicate[CalendarVersion]] = None) -> CalendarVersion:
@@ -2080,7 +2122,8 @@ class CalendarVersion(Version):
 		own number: ``2024.01a1``, ``2024.01.a1`` and ``2024.01-a1`` are the same alpha release. A release level spelled
 		out (``alpha``, ``beta``, ``gamma``, ``rc``, ``pre``, ``preview``) may omit its number, which is 0 then. A letter
 		without a number is a postfix, as OSVVM's ``2025.06a`` is a release after ``2025.06``. A postfix follows a ``+``;
-		one starting with a letter may also follow a ``.``, a ``-`` or directly the version.
+		one starting with a letter may also follow a ``.``, a ``-`` or directly the version. The version keeps that
+		separator (:attr:`PostfixSeparator`), so ``2025.06a`` is written ``2025.6a``.
 
 		:param versionString:          The version string to parse.
 		:param validator:              Optional, a validation function.
@@ -2150,6 +2193,7 @@ class CalendarVersion(Version):
 				flags=Flags.Clean,
 				prefix=prefix,
 				postfix=match["postfix"],
+				postfixSeparator=match["postfixSeparator"],
 				level=cls._ParseReleaseLevel(match["release"], match["level"], versionString),
 				number=int(number) if number is not None else None,
 				post=int(post) if post is not None else None,
@@ -2389,7 +2433,7 @@ class CalendarVersion(Version):
 			result += f".{self._releaseLevel}{self._releaseNumber}"
 		result += f".post{self._post}" if Parts.Post in self._parts else ""
 		result += f".dev{self._dev}" if Parts.Dev in self._parts else ""
-		result += f"+{self._postfix}" if Parts.Postfix in self._parts else ""
+		result += f"{self._postfixSeparator}{self._postfix}" if Parts.Postfix in self._parts else ""
 
 		return result
 
@@ -2402,56 +2446,65 @@ class YearMonthVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year:    int,
-		month:   Nullable[int] = None,
-		build:   Nullable[int] = None,
-		flags:   Flags = Flags.Clean,
-		prefix:  Nullable[str] = None,
-		postfix: Nullable[str] = None,
+		year:             int,
+		month:            Nullable[int] = None,
+		build:            Nullable[int] = None,
+		flags:            Flags = Flags.Clean,
+		prefix:           Nullable[str] = None,
+		postfix:          Nullable[str] = None,
 		*,
-		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
-		number:  Nullable[int] = None,
-		post:    Nullable[int] = None,
-		dev:     Nullable[int] = None,
-		hash:    Nullable[str] = None
+		level:            Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:           Nullable[int] = None,
+		post:             Nullable[int] = None,
+		dev:              Nullable[int] = None,
+		hash:             Nullable[str] = None,
+		postfixSeparator: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-month version number representation.
 
-		:param year:        Year part of the version number.
-		:param month:       Optional, month part of the version number.
-		:param build:       Optional, build number part of the version number.
-		:param flags:       Optional, the version number's flags.
-		:param prefix:      Optional, the version number's prefix.
-		:param postfix:     Optional, the version number's postfix.
-		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
-		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
-		:param post:        Optional, post number part of the version number.
-		:param dev:         Optional, development number part of the version number.
-		:param hash:        Optional, hash of the version control system's commit this version was built from.
-		:raises TypeError:  If parameter 'major' is not of type integer.
-		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type integer.
-		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type integer.
-		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type integer.
-		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type string.
-		:raises TypeError:  If parameter 'postfix' is not of type string.
-		:raises ValueError: If parameter 'level' is None.
-		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
-		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
-		:raises TypeError:  If parameter 'number' is not of type integer.
-		:raises ValueError: If parameter 'number' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type integer.
-		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type integer.
-		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'hash' is not of type string.
+		:param year:             Year part of the version number.
+		:param month:            Optional, month part of the version number.
+		:param build:            Optional, build number part of the version number.
+		:param flags:            Optional, the version number's flags.
+		:param prefix:           Optional, the version number's prefix.
+		:param postfix:          Optional, the version number's postfix.
+		:param level:            Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:           Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:             Optional, post number part of the version number.
+		:param dev:              Optional, development number part of the version number.
+		:param hash:             Optional, hash of the version control system's commit this version was built from.
+		:param postfixSeparator: Optional, the separator written in front of the postfix: ``+``, ``.``, ``-`` or ``""``.
+		                         Default: ``+``.
+		:raises TypeError:       If parameter 'major' is not of type integer.
+		:raises ValueError:      If parameter 'major' is a negative number.
+		:raises TypeError:       If parameter 'minor' is not of type integer.
+		:raises ValueError:      If parameter 'minor' is a negative number.
+		:raises TypeError:       If parameter 'micro' is not of type integer.
+		:raises ValueError:      If parameter 'micro' is a negative number.
+		:raises TypeError:       If parameter 'build' is not of type integer.
+		:raises ValueError:      If parameter 'build' is a negative number.
+		:raises TypeError:       If parameter 'prefix' is not of type string.
+		:raises TypeError:       If parameter 'postfix' is not of type string.
+		:raises ValueError:      If parameter 'level' is None.
+		:raises TypeError:       If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError:      If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:       If parameter 'number' is not of type integer.
+		:raises ValueError:      If parameter 'number' is a negative number.
+		:raises TypeError:       If parameter 'post' is not of type integer.
+		:raises ValueError:      If parameter 'post' is a negative number.
+		:raises TypeError:       If parameter 'dev' is not of type integer.
+		:raises ValueError:      If parameter 'dev' is a negative number.
+		:raises TypeError:       If parameter 'hash' is not of type string.
+		:raises TypeError:       If parameter 'postfixSeparator' is not of type string.
+		:raises ValueError:      If parameter 'postfixSeparator' is none of ``+``, ``.``, ``-`` and ``""``.
+		:raises ValueError:      If parameter 'postfixSeparator' isn't ``+``, and the postfix written after it would read as
+		                         another part of the version. |br|
+		                         Only ``+`` separates every postfix, e.g. one starting with a digit or one like ``a1``.
 		"""
 		super().__init__(
-			year, month, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+			year, month, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash,
+			postfixSeparator=postfixSeparator
 		)
 
 	@readonly
@@ -2483,56 +2536,65 @@ class YearWeekVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year:    int,
-		week:    Nullable[int] = None,
-		build:   Nullable[int] = None,
-		flags:   Flags = Flags.Clean,
-		prefix:  Nullable[str] = None,
-		postfix: Nullable[str] = None,
+		year:             int,
+		week:             Nullable[int] = None,
+		build:            Nullable[int] = None,
+		flags:            Flags = Flags.Clean,
+		prefix:           Nullable[str] = None,
+		postfix:          Nullable[str] = None,
 		*,
-		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
-		number:  Nullable[int] = None,
-		post:    Nullable[int] = None,
-		dev:     Nullable[int] = None,
-		hash:    Nullable[str] = None
+		level:            Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:           Nullable[int] = None,
+		post:             Nullable[int] = None,
+		dev:              Nullable[int] = None,
+		hash:             Nullable[str] = None,
+		postfixSeparator: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-week version number representation.
 
-		:param year:        Year part of the version number.
-		:param week:        Optional, week part of the version number.
-		:param build:       Optional, build number part of the version number.
-		:param flags:       Optional, the version number's flags.
-		:param prefix:      Optional, the version number's prefix.
-		:param postfix:     Optional, the version number's postfix.
-		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
-		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
-		:param post:        Optional, post number part of the version number.
-		:param dev:         Optional, development number part of the version number.
-		:param hash:        Optional, hash of the version control system's commit this version was built from.
-		:raises TypeError:  If parameter 'major' is not of type integer.
-		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type integer.
-		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type integer.
-		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type integer.
-		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type string.
-		:raises TypeError:  If parameter 'postfix' is not of type string.
-		:raises ValueError: If parameter 'level' is None.
-		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
-		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
-		:raises TypeError:  If parameter 'number' is not of type integer.
-		:raises ValueError: If parameter 'number' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type integer.
-		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type integer.
-		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'hash' is not of type string.
+		:param year:             Year part of the version number.
+		:param week:             Optional, week part of the version number.
+		:param build:            Optional, build number part of the version number.
+		:param flags:            Optional, the version number's flags.
+		:param prefix:           Optional, the version number's prefix.
+		:param postfix:          Optional, the version number's postfix.
+		:param level:            Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:           Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:             Optional, post number part of the version number.
+		:param dev:              Optional, development number part of the version number.
+		:param hash:             Optional, hash of the version control system's commit this version was built from.
+		:param postfixSeparator: Optional, the separator written in front of the postfix: ``+``, ``.``, ``-`` or ``""``.
+		                         Default: ``+``.
+		:raises TypeError:       If parameter 'major' is not of type integer.
+		:raises ValueError:      If parameter 'major' is a negative number.
+		:raises TypeError:       If parameter 'minor' is not of type integer.
+		:raises ValueError:      If parameter 'minor' is a negative number.
+		:raises TypeError:       If parameter 'micro' is not of type integer.
+		:raises ValueError:      If parameter 'micro' is a negative number.
+		:raises TypeError:       If parameter 'build' is not of type integer.
+		:raises ValueError:      If parameter 'build' is a negative number.
+		:raises TypeError:       If parameter 'prefix' is not of type string.
+		:raises TypeError:       If parameter 'postfix' is not of type string.
+		:raises ValueError:      If parameter 'level' is None.
+		:raises TypeError:       If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError:      If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:       If parameter 'number' is not of type integer.
+		:raises ValueError:      If parameter 'number' is a negative number.
+		:raises TypeError:       If parameter 'post' is not of type integer.
+		:raises ValueError:      If parameter 'post' is a negative number.
+		:raises TypeError:       If parameter 'dev' is not of type integer.
+		:raises ValueError:      If parameter 'dev' is a negative number.
+		:raises TypeError:       If parameter 'hash' is not of type string.
+		:raises TypeError:       If parameter 'postfixSeparator' is not of type string.
+		:raises ValueError:      If parameter 'postfixSeparator' is none of ``+``, ``.``, ``-`` and ``""``.
+		:raises ValueError:      If parameter 'postfixSeparator' isn't ``+``, and the postfix written after it would read as
+		                         another part of the version. |br|
+		                         Only ``+`` separates every postfix, e.g. one starting with a digit or one like ``a1``.
 		"""
 		super().__init__(
-			year, week, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+			year, week, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash,
+			postfixSeparator=postfixSeparator
 		)
 
 	@readonly
@@ -2564,56 +2626,65 @@ class YearReleaseVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year:    int,
-		release: Nullable[int] = None,
-		build:   Nullable[int] = None,
-		flags:   Flags = Flags.Clean,
-		prefix:  Nullable[str] = None,
-		postfix: Nullable[str] = None,
+		year:             int,
+		release:          Nullable[int] = None,
+		build:            Nullable[int] = None,
+		flags:            Flags = Flags.Clean,
+		prefix:           Nullable[str] = None,
+		postfix:          Nullable[str] = None,
 		*,
-		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
-		number:  Nullable[int] = None,
-		post:    Nullable[int] = None,
-		dev:     Nullable[int] = None,
-		hash:    Nullable[str] = None
+		level:            Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:           Nullable[int] = None,
+		post:             Nullable[int] = None,
+		dev:              Nullable[int] = None,
+		hash:             Nullable[str] = None,
+		postfixSeparator: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-release version number representation.
 
-		:param year:        Year part of the version number.
-		:param release:     Optional, release number of the version number.
-		:param build:       Optional, build number part of the version number.
-		:param flags:       Optional, the version number's flags.
-		:param prefix:      Optional, the version number's prefix.
-		:param postfix:     Optional, the version number's postfix.
-		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
-		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
-		:param post:        Optional, post number part of the version number.
-		:param dev:         Optional, development number part of the version number.
-		:param hash:        Optional, hash of the version control system's commit this version was built from.
-		:raises TypeError:  If parameter 'major' is not of type integer.
-		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type integer.
-		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type integer.
-		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type integer.
-		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type string.
-		:raises TypeError:  If parameter 'postfix' is not of type string.
-		:raises ValueError: If parameter 'level' is None.
-		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
-		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
-		:raises TypeError:  If parameter 'number' is not of type integer.
-		:raises ValueError: If parameter 'number' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type integer.
-		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type integer.
-		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'hash' is not of type string.
+		:param year:             Year part of the version number.
+		:param release:          Optional, release number of the version number.
+		:param build:            Optional, build number part of the version number.
+		:param flags:            Optional, the version number's flags.
+		:param prefix:           Optional, the version number's prefix.
+		:param postfix:          Optional, the version number's postfix.
+		:param level:            Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:           Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:             Optional, post number part of the version number.
+		:param dev:              Optional, development number part of the version number.
+		:param hash:             Optional, hash of the version control system's commit this version was built from.
+		:param postfixSeparator: Optional, the separator written in front of the postfix: ``+``, ``.``, ``-`` or ``""``.
+		                         Default: ``+``.
+		:raises TypeError:       If parameter 'major' is not of type integer.
+		:raises ValueError:      If parameter 'major' is a negative number.
+		:raises TypeError:       If parameter 'minor' is not of type integer.
+		:raises ValueError:      If parameter 'minor' is a negative number.
+		:raises TypeError:       If parameter 'micro' is not of type integer.
+		:raises ValueError:      If parameter 'micro' is a negative number.
+		:raises TypeError:       If parameter 'build' is not of type integer.
+		:raises ValueError:      If parameter 'build' is a negative number.
+		:raises TypeError:       If parameter 'prefix' is not of type string.
+		:raises TypeError:       If parameter 'postfix' is not of type string.
+		:raises ValueError:      If parameter 'level' is None.
+		:raises TypeError:       If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError:      If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:       If parameter 'number' is not of type integer.
+		:raises ValueError:      If parameter 'number' is a negative number.
+		:raises TypeError:       If parameter 'post' is not of type integer.
+		:raises ValueError:      If parameter 'post' is a negative number.
+		:raises TypeError:       If parameter 'dev' is not of type integer.
+		:raises ValueError:      If parameter 'dev' is a negative number.
+		:raises TypeError:       If parameter 'hash' is not of type string.
+		:raises TypeError:       If parameter 'postfixSeparator' is not of type string.
+		:raises ValueError:      If parameter 'postfixSeparator' is none of ``+``, ``.``, ``-`` and ``""``.
+		:raises ValueError:      If parameter 'postfixSeparator' isn't ``+``, and the postfix written after it would read as
+		                         another part of the version. |br|
+		                         Only ``+`` separates every postfix, e.g. one starting with a digit or one like ``a1``.
 		"""
 		super().__init__(
-			year, release, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+			year, release, None, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash,
+			postfixSeparator=postfixSeparator
 		)
 
 	@readonly
@@ -2643,58 +2714,67 @@ class YearMonthDayVersion(CalendarVersion):
 
 	def __init__(
 		self,
-		year:    int,
-		month:   Nullable[int] = None,
-		day:     Nullable[int] = None,
-		build:   Nullable[int] = None,
-		flags:   Flags = Flags.Clean,
-		prefix:  Nullable[str] = None,
-		postfix: Nullable[str] = None,
+		year:             int,
+		month:            Nullable[int] = None,
+		day:              Nullable[int] = None,
+		build:            Nullable[int] = None,
+		flags:            Flags = Flags.Clean,
+		prefix:           Nullable[str] = None,
+		postfix:          Nullable[str] = None,
 		*,
-		level:   Nullable[ReleaseLevel] = ReleaseLevel.Final,
-		number:  Nullable[int] = None,
-		post:    Nullable[int] = None,
-		dev:     Nullable[int] = None,
-		hash:    Nullable[str] = None
+		level:            Nullable[ReleaseLevel] = ReleaseLevel.Final,
+		number:           Nullable[int] = None,
+		post:             Nullable[int] = None,
+		dev:              Nullable[int] = None,
+		hash:             Nullable[str] = None,
+		postfixSeparator: Nullable[str] = None
 	) -> None:
 		"""
 		Initializes a year-month-day version number representation.
 
-		:param year:        Year part of the version number.
-		:param month:       Optional, month part of the version number.
-		:param day:         Optional, day part of the version number.
-		:param build:       Optional, build number part of the version number.
-		:param flags:       Optional, the version number's flags.
-		:param prefix:      Optional, the version number's prefix.
-		:param postfix:     Optional, the version number's postfix.
-		:param level:       Optional, release level of the version number (alpha, beta, release candidate, final, ...).
-		:param number:      Optional, number within the release level, e.g. ``2`` in ``rc2``.
-		:param post:        Optional, post number part of the version number.
-		:param dev:         Optional, development number part of the version number.
-		:param hash:        Optional, hash of the version control system's commit this version was built from.
-		:raises TypeError:  If parameter 'major' is not of type integer.
-		:raises ValueError: If parameter 'major' is a negative number.
-		:raises TypeError:  If parameter 'minor' is not of type integer.
-		:raises ValueError: If parameter 'minor' is a negative number.
-		:raises TypeError:  If parameter 'micro' is not of type integer.
-		:raises ValueError: If parameter 'micro' is a negative number.
-		:raises TypeError:  If parameter 'build' is not of type integer.
-		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type string.
-		:raises TypeError:  If parameter 'postfix' is not of type string.
-		:raises ValueError: If parameter 'level' is None.
-		:raises TypeError:  If parameter 'level' is not of type :class:`ReleaseLevel`.
-		:raises ValueError: If parameter 'number' is given for the release level 'Final'.
-		:raises TypeError:  If parameter 'number' is not of type integer.
-		:raises ValueError: If parameter 'number' is a negative number.
-		:raises TypeError:  If parameter 'post' is not of type integer.
-		:raises ValueError: If parameter 'post' is a negative number.
-		:raises TypeError:  If parameter 'dev' is not of type integer.
-		:raises ValueError: If parameter 'dev' is a negative number.
-		:raises TypeError:  If parameter 'hash' is not of type string.
+		:param year:             Year part of the version number.
+		:param month:            Optional, month part of the version number.
+		:param day:              Optional, day part of the version number.
+		:param build:            Optional, build number part of the version number.
+		:param flags:            Optional, the version number's flags.
+		:param prefix:           Optional, the version number's prefix.
+		:param postfix:          Optional, the version number's postfix.
+		:param level:            Optional, release level of the version number (alpha, beta, release candidate, final, ...).
+		:param number:           Optional, number within the release level, e.g. ``2`` in ``rc2``.
+		:param post:             Optional, post number part of the version number.
+		:param dev:              Optional, development number part of the version number.
+		:param hash:             Optional, hash of the version control system's commit this version was built from.
+		:param postfixSeparator: Optional, the separator written in front of the postfix: ``+``, ``.``, ``-`` or ``""``.
+		                         Default: ``+``.
+		:raises TypeError:       If parameter 'major' is not of type integer.
+		:raises ValueError:      If parameter 'major' is a negative number.
+		:raises TypeError:       If parameter 'minor' is not of type integer.
+		:raises ValueError:      If parameter 'minor' is a negative number.
+		:raises TypeError:       If parameter 'micro' is not of type integer.
+		:raises ValueError:      If parameter 'micro' is a negative number.
+		:raises TypeError:       If parameter 'build' is not of type integer.
+		:raises ValueError:      If parameter 'build' is a negative number.
+		:raises TypeError:       If parameter 'prefix' is not of type string.
+		:raises TypeError:       If parameter 'postfix' is not of type string.
+		:raises ValueError:      If parameter 'level' is None.
+		:raises TypeError:       If parameter 'level' is not of type :class:`ReleaseLevel`.
+		:raises ValueError:      If parameter 'number' is given for the release level 'Final'.
+		:raises TypeError:       If parameter 'number' is not of type integer.
+		:raises ValueError:      If parameter 'number' is a negative number.
+		:raises TypeError:       If parameter 'post' is not of type integer.
+		:raises ValueError:      If parameter 'post' is a negative number.
+		:raises TypeError:       If parameter 'dev' is not of type integer.
+		:raises ValueError:      If parameter 'dev' is a negative number.
+		:raises TypeError:       If parameter 'hash' is not of type string.
+		:raises TypeError:       If parameter 'postfixSeparator' is not of type string.
+		:raises ValueError:      If parameter 'postfixSeparator' is none of ``+``, ``.``, ``-`` and ``""``.
+		:raises ValueError:      If parameter 'postfixSeparator' isn't ``+``, and the postfix written after it would read as
+		                         another part of the version. |br|
+		                         Only ``+`` separates every postfix, e.g. one starting with a digit or one like ``a1``.
 		"""
 		super().__init__(
-			year, month, day, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash
+			year, month, day, build, flags, prefix, postfix, level=level, number=number, post=post, dev=dev, hash=hash,
+			postfixSeparator=postfixSeparator
 		)
 
 	@readonly

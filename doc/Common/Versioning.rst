@@ -471,8 +471,11 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
          * - ``2024.01.post2.dev3``
            - ``2024.1.post2.dev3``
            - development release of a post-release
-         * - ``2025.06a``, ``2025.06-a``
-           - ``2025.6+a``
+         * - ``2025.06a``
+           - ``2025.6a``
+           - postfix ``a``
+         * - ``2025.06-a``
+           - ``2025.6-a``
            - postfix ``a``
          * - ``2024.10.15+deadbeef``
            - ``2024.10.15+deadbeef``
@@ -480,6 +483,10 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
 
       Pre-releases are older than their release; a postfix and a build number make a version newer:
       ``2025.06rc1 < 2025.06 < 2025.06a < 2025.06b < 2025.06.1``. Two postfixes compare as strings.
+
+      A version keeps the separator written in front of its postfix - ``+``, ``.``, ``-`` or none
+      (:attr:`~pyTooling.Versioning.CalendarVersion.PostfixSeparator`) - and writes it back; equality and hash ignore
+      it. A constructed version writes ``+``, unless its ``postfixSeparator`` says otherwise.
 
    .. grid-item::
       :columns: 6
