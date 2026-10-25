@@ -730,6 +730,11 @@ Version 10.x (2026)
      :class:`~pyTooling.MetaClasses.ExtendedType` raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`.
      Declare it with ``mixin=True`` or apply :deco:`~pyTooling.MetaClasses.mixin`.
 
+   * ⚠️ ``slots=True`` **on a primary base-class without slots raises**
+     :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`: ``class B(A, slots=True)`` with ``A`` declared without
+     ``slots=True``. Declare the base-class with ``slots=True``, or remove ``slots=True`` from the derived class - its
+     instances keep a ``__dict__`` as before.
+
    * ⚠️ **A mixin-class' slot that exists already raises** :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`: a
      field of the class itself, a slot of the primary inheritance line, or a slot of a second mixin-class. Rename the
      field, or drop one of the slots.
@@ -1206,6 +1211,10 @@ Version 10.x (2026)
        metaclass=ExtendedType, slots=True)``) raised an :exc:`IndexError`: an inheritance path ending in
        :class:`object` was collected for every base-class, except for :class:`object` itself. An explicit
        :class:`object` base-class behaves like none.
+     * ⚠️ ``slots=True`` was ignored silently on a class whose primary base-class was built by
+       :class:`~pyTooling.MetaClasses.ExtendedType` without slots: the class was created without ``__slots__``, its
+       instances had a ``__dict__``, and ``__slotted__`` was ``False``. It raises
+       :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError` now, as for any other base-class without slots.
      * ⚠️ A ``ClassVar`` naming a mixin-class' slot produced a broken class: the name was in ``__slots__`` *and* a class
        attribute, so the field was read-only on every instance. It raises
        :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now.

@@ -990,32 +990,49 @@ class ExtendedType(type):
 		A field assigned in the class body without a type annotation is reported as an :exc:`UnannotatedFieldWarning` to
 		a :class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
 
-		:param className:       The name of the class to construct.
-		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:param members:         The dictionary of members for the constructed class.
-		:param slots:           Optional, if ``True``, store object attributes in :term:`__slots__ <slots>` instead of
-		                        ``__dict__``.
-		:param mixin:           Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
-		                        ``slots``
-		                        is true. If ``None``, preserve behavior of primary base-class.
-		:param weakref:         Optional, if ``True``, let instances of a slotted class be referenced weakly by adding
-		                        ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on to the class it
-		                        is mixed into.
-		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
-		:param expects:         Optional, names of members this class needs from whichever class it is mixed into, or a
-		                        :class:`typing.Protocol` class naming them as its members. |br|
-		                        See :attr:`__expectedMembers__`.
-		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
-		                        :func:`type` does.
-		:returns:               The new class.
-		:raises AttributeError: If base-class has no '__slots__' attribute.
-		:raises AttributeError: If slot already exists in base-class.
+		:param className:                   The name of the class to construct.
+		:param baseClasses:                 The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:                     The dictionary of members for the constructed class.
+		:param slots:                       Optional, if ``True``, store object attributes in :term:`__slots__ <slots>`
+		                                    instead of ``__dict__``. A class derived from a slotted class is slotted too.
+		:param mixin:                       Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``,
+		                                    create slots if ``slots`` is true. If ``None``, preserve behavior of primary
+		                                    base-class.
+		:param weakref:                     Optional, if ``True``, let instances of a slotted class be referenced weakly by
+		                                    adding ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on
+		                                    to the class it is mixed into.
+		:param singleton:                   Optional, if ``True``, make the class a :term:`Singleton`.
+		:param expects:                     Optional, names of members this class needs from whichever class it is mixed
+		                                    into, or a :class:`typing.Protocol` class naming them as its members. |br|
+		                                    See :attr:`__expectedMembers__`.
+		:param kwargs:                      Any further class keyword argument, forwarded to
+		                                    :meth:`~object.__init_subclass__` as :func:`type` does.
+		:returns:                           The new class.
+		:raises AttributeError:             If base-class has no '__slots__' attribute.
+		:raises AttributeError:             If slot already exists in base-class.
+		:raises BaseClassWithoutSlotsError: If the class requests slots, but its primary base-class has no slots. |br|
+		                                    Declare the base-class with ``slots=True``, or remove ``slots=True`` from the
+		                                    class.
 		"""
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
 			if isinstance(primaryBaseClass, metacls):
-				slots = primaryBaseClass.__slotted__
+				if primaryBaseClass.__slotted__:
+					slots = True
+				elif slots:
+					baseName = getFullyQualifiedName(primaryBaseClass)
+					ex = BaseClassWithoutSlotsError(
+						f"Class '{className}' requests slots, but its base-class '{baseName}' has no slots.",
+						baseClass=primaryBaseClass,
+						className=className
+					)
+					ex.add_note("Instances of a class derived from a base-class without slots have a '__dict__' anyway.")
+					ex.add_note(
+						f"Declare it as 'class {primaryBaseClass.__name__}(..., slots=True)', "
+						f"or remove 'slots=True' from class '{className}'."
+					)
+					raise ex
 
 		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
 		classFields, objectFields = metacls._computeSlots(className, baseClasses, members, slots, mixin, weakref)

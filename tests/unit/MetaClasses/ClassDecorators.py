@@ -33,7 +33,7 @@ Unit tests for the class decorators :deco:`~pyTooling.MetaClasses.slotted`,
 :deco:`~pyTooling.MetaClasses.mixin` and :deco:`~pyTooling.MetaClasses.singleton`.
 """
 from pyTooling.MetaClasses import ExtendedType, IncompatibleMetaClassError, mixin, singleton, slotted, abstractclass, \
-                                  AbstractClassError
+                                  AbstractClassError, BaseClassWithoutSlotsError
 from pyTooling.Testing     import Testcase
 
 
@@ -61,6 +61,19 @@ class Slotted(Testcase):
 
 		with self.assertRaises(AttributeError):
 			inst._data_1 = 6
+
+	def test_NonSlottedBaseClass(self) -> None:
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		class Data(Base):
+			_data_0: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			_ = slotted(Data)
+
+		self.assertIs(Base, context.exception.BaseClass)
+		self.assertEqual("Data", context.exception.ClassName)
 
 
 class Mixin(Testcase):

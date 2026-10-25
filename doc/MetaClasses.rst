@@ -132,7 +132,9 @@ assigns the initial values of the whole hierarchy to the new instance and then c
 .. rubric:: Rules
 
 * **Every base-class uses slots.** A base-class without ``__slots__`` would give each instance a ``__dict__`` anyway:
-  :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`.
+  :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`. That includes a class built by
+  :class:`~pyTooling.MetaClasses.ExtendedType` without ``slots=True``: ``class Derived(Base, slots=True)`` raises, if
+  ``Base`` has no slots.
 * **Derived classes are slotted too.** A class derived from a slotted class lists only its own new fields in
   ``__slots__``; ``__allSlots__`` holds the fields of the whole hierarchy.
 * **A field is declared once in a hierarchy.** Annotating a base-class' field again raises an
