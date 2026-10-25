@@ -238,7 +238,7 @@ class PlotlyRenderer(Renderer[Figure]):
 		"""
 		layout = self._layout
 		rows = list(layout.IterateRows())
-		duration = max(layout.Duration, 1.0)
+		duration = max(layout.DurationInSeconds, 1.0)
 		minimumWidth = duration / 1000
 
 		bars: dict[tuple[bool, str], dict[str, list[Any]]] = {}
