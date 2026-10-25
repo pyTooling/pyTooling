@@ -1851,7 +1851,7 @@ class TraceCollection(metaclass=ExtendedType, slots=True):
 	added, in whichever order the documents arrive.
 	"""
 	SCHEMA_VERSION_LATEST: ClassVar[SemanticVersion] = SemanticVersion(1, 0)  #: Newest version of the OTLP/JSON schema.
-	SCHEMA_FILES: ClassVar[dict[SemanticVersion, Path]] = {
+	SCHEMA_FILES:          ClassVar[dict[SemanticVersion, Path]] = {
 		SemanticVersion(1, 0): Path("OTLP-Traces-v1.0.schema.json"),
 	}  #: JSON schema file per schema version, in :mod:`pyTooling.Resources`.
 
