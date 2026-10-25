@@ -105,6 +105,19 @@ if environ.get("GITHUB_ACTIONS") == "true":
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# Files served verbatim at the root of the published documentation, so a schema has a stable URL that doesn't move
+# when the documentation's page structure does.
+html_extra_path = ["_extra"]
+
+# Every schema the package ships, found by extension rather than by importing the module that names them: reading
+# 'LicenseOverrides.SCHEMA_FILES' would make building the documentation need the 'dependencies' extra at
+# configuration time. They are served under 'Schemas/', the schema URL prefix, next to the pages describing them.
+_resourceDirectory = ROOT / f"../{directoryName}/Resources"
+_schemaDirectory =   ROOT / "_extra/Schemas"
+_schemaDirectory.mkdir(parents=True, exist_ok=True)
+for _schemaFile in (*_resourceDirectory.glob("*.json"), *_resourceDirectory.glob("*.xsd")):
+	_schemaFile.copy(_schemaDirectory / _schemaFile.name)
+
 html_logo = str(Path(html_static_path[0]) / "logo.png")
 html_favicon = str(Path(html_static_path[0]) / "icon.png")
 
@@ -183,6 +196,7 @@ extensions = [
 	"sphinx_copybutton",
 	"sphinx_autodoc_typehints",
 	"autoapi.sphinx",
+	"sphinx_toctree_level_up",
 # pyTooling extensions
 	"pyTooling.Sphinx",
 ]
