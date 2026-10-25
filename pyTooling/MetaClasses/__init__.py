@@ -1102,7 +1102,9 @@ class ExtendedType(type):
 							f"Unassigned field '{ex.name}' in object '{self}' of type '{getTypeName(self)}'."
 						) from ex
 
-				newClass.__getstate__ = __getstate__
+				__getstate__.__module__ =   newClass.__module__
+				__getstate__.__qualname__ = f"{newClass.__qualname__}.__getstate__"
+				newClass.__getstate__ =     __getstate__
 
 			if "__setstate__" not in members:
 				def __setstate__(self, state: dict[str, Any]) -> None:
@@ -1122,7 +1124,9 @@ class ExtendedType(type):
 					for slotName, value in state.items():
 						setattr(self, slotName, value)
 
-				newClass.__setstate__ = __setstate__
+				__setstate__.__module__ =   newClass.__module__
+				__setstate__.__qualname__ = f"{newClass.__qualname__}.__setstate__"
+				newClass.__setstate__ =     __setstate__
 
 		# Check for inherited class attributes
 		attributes: list[Attribute] = []

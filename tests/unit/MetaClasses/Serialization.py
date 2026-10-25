@@ -144,6 +144,29 @@ def format(value: Node) -> str:
 	return ""
 
 
+class GeneratedMethods(Testcase):
+	"""The generated pair is named like a method written in the class body - documentation tools look it up by name."""
+
+	class Nested(metaclass=ExtendedType, slots=True):
+		_data: int
+
+	def test_QualifiedName(self) -> None:
+		self.assertEqual("SimpleClass.__getstate__", SimpleClass.__getstate__.__qualname__)
+		self.assertEqual("SimpleClass.__setstate__", SimpleClass.__setstate__.__qualname__)
+
+	def test_QualifiedName_Derived(self) -> None:
+		self.assertEqual("DerivedClass.__getstate__", DerivedClass.__getstate__.__qualname__)
+		self.assertEqual("DerivedClass.__setstate__", DerivedClass.__setstate__.__qualname__)
+
+	def test_QualifiedName_Nested(self) -> None:
+		self.assertEqual("GeneratedMethods.Nested.__getstate__", self.Nested.__getstate__.__qualname__)
+		self.assertEqual("GeneratedMethods.Nested.__setstate__", self.Nested.__setstate__.__qualname__)
+
+	def test_Module(self) -> None:
+		self.assertEqual(__name__, SimpleClass.__getstate__.__module__)
+		self.assertEqual(__name__, SimpleClass.__setstate__.__module__)
+
+
 class PickledTree(Testcase):
 	def test_SimpleTree(self) -> None:
 		root = Node(value="Root")
