@@ -255,6 +255,11 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Testing`
 
+     * :class:`~pyTooling.Testing.Testcase` provides the six further assertions Python 3.14 added on 3.11 to 3.13:
+       :meth:`~pyTooling.Testing.Testcase.assertIsSubclass`, :meth:`~pyTooling.Testing.Testcase.assertNotIsSubclass`,
+       :meth:`~pyTooling.Testing.Testcase.assertStartsWith`, :meth:`~pyTooling.Testing.Testcase.assertNotStartsWith`,
+       :meth:`~pyTooling.Testing.Testcase.assertEndsWith` and :meth:`~pyTooling.Testing.Testcase.assertNotEndsWith`,
+       with Python 3.14's messages; ``assertHasAttr`` writes them too.
      * :class:`~pyTooling.Testing.ApplicationTestcase` no longer requires ``_RUNNABLE_MODULE``: a program without a
        ``__main__`` module is tested through its entry point, and only
        :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` asks for the module.
