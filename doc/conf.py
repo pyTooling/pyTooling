@@ -115,7 +115,7 @@ html_extra_path = ["_extra"]
 _resourceDirectory = ROOT.parent / directoryName / "Resources"
 _schemaDirectory = ROOT / "_extra" / "Schemas"
 _schemaDirectory.mkdir(parents=True, exist_ok=True)
-for _schemaFile in sorted((*_resourceDirectory.glob("*.json"), *_resourceDirectory.glob("*.xsd"))):
+for _schemaFile in (*_resourceDirectory.glob("*.json"), *_resourceDirectory.glob("*.xsd")):
 	_schemaFile.copy(_schemaDirectory / _schemaFile.name)
 
 html_logo = str(Path(html_static_path[0]) / "logo.png")
