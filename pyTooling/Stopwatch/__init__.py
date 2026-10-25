@@ -297,14 +297,17 @@ class Stopwatch(SlottedObject):
 		:raises StopwatchError: If stopwatch was not started.
 		:raises StopwatchError: If stopwatch was already stopped.
 		"""
-		self._stopTime = perf_counter_ns()
-		self._endTime =  datetime.now()
+		stopTime = perf_counter_ns()
+		endTime =  datetime.now()
 
 		if self._startTime is None:
 			raise StopwatchError("Stopwatch was never started.")
 
 		if self._totalTime is not None:
 			raise StopwatchError("Stopwatch was already stopped.")
+
+		self._stopTime = stopTime
+		self._endTime =  endTime
 
 		if len(self._splits) == 0:    # was never paused
 			diff = (self._stopTime - self._startTime) / 1e9
