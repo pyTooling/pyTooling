@@ -106,7 +106,7 @@ class PlotlyRenderer(Renderer[Figure]):
 	FORMATS: ClassVar[tuple[str, ...]] = ("html", "json")  #: The file formats this renderer writes.
 
 	_width:           Nullable[int]     #: Width of the chart in pixels, or ``None`` for the width of the page.
-	_rowHeight:       int               #: Height of a row in pixels.
+	_rowHeight:       float             #: Height of a row in pixels.
 	_fontSize:        float             #: Font size of labels in pixels.
 	_includePlotlyJS: PlotlyJavaScript  #: How an HTML page loads plotly's JavaScript library.
 
@@ -116,7 +116,7 @@ class PlotlyRenderer(Renderer[Figure]):
 		*,
 		title:           Nullable[str] = None,
 		width:           Nullable[int] = None,
-		rowHeight:       int = 20,
+		rowHeight:       float = 20.0,
 		fontSize:        float = 11.0,
 		includePlotlyJS: PlotlyJavaScript = PlotlyJavaScript.DEFAULT
 	) -> None:
@@ -126,7 +126,7 @@ class PlotlyRenderer(Renderer[Figure]):
 		:param layout:          The layout to draw.
 		:param title:           Optional, the chart's title. Default: the trace's name and wall time.
 		:param width:           Optional, width of the chart in pixels. Default: the width of the page.
-		:param rowHeight:       Optional, height of a row in pixels. Default: ``20``.
+		:param rowHeight:       Optional, height of a row in pixels. Default: ``20.0``.
 		:param fontSize:        Optional, font size of labels in pixels. Default: ``11.0``.
 		:param includePlotlyJS: Optional, how an HTML page loads plotly's JavaScript library.
 		                        Default: :attr:`PlotlyJavaScript.DEFAULT`.
@@ -134,47 +134,38 @@ class PlotlyRenderer(Renderer[Figure]):
 		:raises TypeError:      If parameter 'title' is not of type :class:`str`.
 		:raises TypeError:      If parameter 'width' is not of type :class:`int`.
 		:raises ValueError:     If parameter 'width' isn't positive.
-		:raises ValueError:     If parameter 'rowHeight' is None.
-		:raises TypeError:      If parameter 'rowHeight' is not of type :class:`int`.
-		:raises ValueError:     If parameter 'rowHeight' isn't positive.
-		:raises ValueError:     If parameter 'fontSize' is None.
-		:raises TypeError:      If parameter 'fontSize' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:     If parameter 'fontSize' isn't positive.
+		:raises ValueError:     If parameter 'rowHeight' or 'fontSize' is None.
+		:raises TypeError:      If parameter 'rowHeight' or 'fontSize' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:     If parameter 'rowHeight' or 'fontSize' isn't positive.
 		:raises ValueError:     If parameter 'includePlotlyJS' is None.
 		:raises TypeError:      If parameter 'includePlotlyJS' is not of type :class:`PlotlyJavaScript`.
 		"""
 		super().__init__(layout, title=title)
 
-		if width is not None and not isinstance(width, int):
-			ex = TypeError("Parameter 'width' is not of type 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
-			raise ex
-		elif width is not None and width <= 0:
-			ex = ValueError("Parameter 'width' isn't positive.")
-			ex.add_note(f"Got value '{width}'.")
-			raise ex
+		if width is not None:
+			if not isinstance(width, int):
+				ex = TypeError("Parameter 'width' is not of type 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
+				raise ex
+			elif width <= 0:
+				ex = ValueError("Parameter 'width' isn't positive.")
+				ex.add_note(f"Got value '{width}'.")
+				raise ex
 
-		if rowHeight is None:
-			raise ValueError("Parameter 'rowHeight' is None.")
-		elif not isinstance(rowHeight, int):
-			ex = TypeError("Parameter 'rowHeight' is not of type 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(rowHeight)}'.")
-			raise ex
-		elif rowHeight <= 0:
-			ex = ValueError("Parameter 'rowHeight' isn't positive.")
-			ex.add_note(f"Got value '{rowHeight}'.")
-			raise ex
-
-		if fontSize is None:
-			raise ValueError("Parameter 'fontSize' is None.")
-		elif not isinstance(fontSize, (float, int)):
-			ex = TypeError("Parameter 'fontSize' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(fontSize)}'.")
-			raise ex
-		elif fontSize <= 0:
-			ex = ValueError("Parameter 'fontSize' isn't positive.")
-			ex.add_note(f"Got value '{fontSize}'.")
-			raise ex
+		for name, size in (
+			("rowHeight", rowHeight),
+			("fontSize",  fontSize)
+		):
+			if size is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(size, (float, int)):
+				ex = TypeError(f"Parameter '{name}' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(size)}'.")
+				raise ex
+			elif size <= 0:
+				ex = ValueError(f"Parameter '{name}' isn't positive.")
+				ex.add_note(f"Got value '{size}'.")
+				raise ex
 
 		if includePlotlyJS is None:
 			raise ValueError("Parameter 'includePlotlyJS' is None.")
@@ -198,7 +189,7 @@ class PlotlyRenderer(Renderer[Figure]):
 		return self._width
 
 	@readonly
-	def RowHeight(self) -> int:
+	def RowHeight(self) -> float:
 		"""
 		Read-only property to access the height of a row (:attr:`_rowHeight`).
 

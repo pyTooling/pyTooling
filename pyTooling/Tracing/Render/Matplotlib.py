@@ -149,15 +149,10 @@ class MatplotlibRenderer(Renderer[Figure]):
 		:param dpi:            Optional, resolution of a PNG file in dots per inch. Default: ``150``.
 		:raises TypeError:     If parameter 'layout' is not of type :class:`~pyTooling.Tracing.Render.GanttLayout`.
 		:raises TypeError:     If parameter 'title' is not of type :class:`str`.
-		:raises ValueError:    If parameter 'width' is None.
-		:raises TypeError:     If parameter 'width' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:    If parameter 'width' isn't positive.
-		:raises ValueError:    If parameter 'rowHeight' is None.
-		:raises TypeError:     If parameter 'rowHeight' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:    If parameter 'rowHeight' isn't positive.
-		:raises ValueError:    If parameter 'fontSize' is None.
-		:raises TypeError:     If parameter 'fontSize' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:    If parameter 'fontSize' isn't positive.
+		:raises ValueError:    If parameter 'width', 'rowHeight' or 'fontSize' is None.
+		:raises TypeError:     If parameter 'width', 'rowHeight' or 'fontSize' is not of type :class:`float` or
+		                       :class:`int`.
+		:raises ValueError:    If parameter 'width', 'rowHeight' or 'fontSize' isn't positive.
 		:raises ValueError:    If parameter 'fontFamilies' is None.
 		:raises TypeError:     If parameter 'fontFamilies' is not an iterable of :class:`str`.
 		:raises ValueError:    If parameter 'legendLocation' is None.
@@ -172,38 +167,21 @@ class MatplotlibRenderer(Renderer[Figure]):
 		"""
 		super().__init__(layout, title=title)
 
-		if width is None:
-			raise ValueError("Parameter 'width' is None.")
-		elif not isinstance(width, (float, int)):
-			ex = TypeError("Parameter 'width' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
-			raise ex
-		elif width <= 0:
-			ex = ValueError("Parameter 'width' isn't positive.")
-			ex.add_note(f"Got value '{width}'.")
-			raise ex
-
-		if rowHeight is None:
-			raise ValueError("Parameter 'rowHeight' is None.")
-		elif not isinstance(rowHeight, (float, int)):
-			ex = TypeError("Parameter 'rowHeight' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(rowHeight)}'.")
-			raise ex
-		elif rowHeight <= 0:
-			ex = ValueError("Parameter 'rowHeight' isn't positive.")
-			ex.add_note(f"Got value '{rowHeight}'.")
-			raise ex
-
-		if fontSize is None:
-			raise ValueError("Parameter 'fontSize' is None.")
-		elif not isinstance(fontSize, (float, int)):
-			ex = TypeError("Parameter 'fontSize' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(fontSize)}'.")
-			raise ex
-		elif fontSize <= 0:
-			ex = ValueError("Parameter 'fontSize' isn't positive.")
-			ex.add_note(f"Got value '{fontSize}'.")
-			raise ex
+		for name, size in (
+			("width",     width),
+			("rowHeight", rowHeight),
+			("fontSize",  fontSize)
+		):
+			if size is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(size, (float, int)):
+				ex = TypeError(f"Parameter '{name}' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(size)}'.")
+				raise ex
+			elif size <= 0:
+				ex = ValueError(f"Parameter '{name}' isn't positive.")
+				ex.add_note(f"Got value '{size}'.")
+				raise ex
 
 		if fontFamilies is None:
 			raise ValueError("Parameter 'fontFamilies' is None.")
