@@ -94,6 +94,12 @@ When installed as ``pyTooling[testing]``:
    :caption: Dependencies added by the ``testing`` extra.
 
 
+When installed as ``pyTooling[tracing]``, for reading a trace from OTLP/JSON:
+
+.. dependency-table:: tracing
+   :caption: Dependencies added by the ``tracing`` extra.
+
+
 .. _DEP/testing:
 
 Unit Testing (Optional)

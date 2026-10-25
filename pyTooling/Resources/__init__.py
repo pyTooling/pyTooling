@@ -51,6 +51,10 @@ dictionary with ``SCHEMA_VERSION_LATEST`` naming the newest.
   states the structure it was written for. Named by
   :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES` and
   :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_VERSION_LATEST`.
+* :file:`OTLP-Traces-v1.0.schema.json` - the schema of an OTLP/JSON document of traces, which
+  :class:`~pyTooling.Tracing.TraceCollection` validates a document against before reading it. Named by
+  :attr:`~pyTooling.Tracing.TraceCollection.SCHEMA_FILES` and
+  :attr:`~pyTooling.Tracing.TraceCollection.SCHEMA_VERSION_LATEST`.
 
 .. seealso::
 

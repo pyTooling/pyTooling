@@ -342,10 +342,12 @@ Version 10.x (2026)
        :meth:`~pyTooling.Tracing.TraceElement.IterateAttributes` yields the :pycode:`(key, value)` pairs that the
        iteration yielded before.
 
-     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
-       :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
+     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.ToOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
        accepted it since v1.35.
+     * Writing a file creates its missing directory after raising a :exc:`~pyTooling.Tracing.DirectoryCreatedWarning`
+       to the current :class:`~pyTooling.Warning.WarningCollector`.
      * The document is typed rather than a mapping of :class:`~typing.Any`: twelve :class:`~typing.TypedDict`
        classes name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
        :class:`~pyTooling.Tracing.OTLPAnyValue`.
@@ -382,6 +384,20 @@ Version 10.x (2026)
      * A timespan left by an exception records it - :attr:`~pyTooling.Tracing.Span.Exception` - and the exception
        propagates as before. The OTLP/JSON export reports such a span with ``STATUS_CODE_ERROR``
        (:class:`~pyTooling.Tracing.OTLPStatus`); a failed span looked like a successful one.
+     * A trace **reads itself back** from an OTLP/JSON document - :meth:`~pyTooling.Tracing.Trace.FromOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.FromOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.ReadOTLPJSONFile`.
+       OTLP carries no nesting, so the tree is reassembled from the flat list of spans and their ``parentSpanId``
+       references, and a document holding several traces is read one trace at a time.
+     * The document is validated against the new JSON schema ``OTLP-Traces-v1.0.schema.json``
+       (:attr:`TraceCollection.SCHEMA_FILES <pyTooling.Tracing.TraceCollection.SCHEMA_FILES>`) before it is read, which
+       needs the new extra ``pyTooling[tracing]``: every violation is a note of the
+       :exc:`~pyTooling.Tracing.TracingError`, naming its position in the document. A duplicate span or attribute key,
+       a set of spans that isn't a tree, and timestamps that don't fit raise a :exc:`~pyTooling.Tracing.TracingError`
+       naming the field.
+     * A :class:`~pyTooling.Tracing.TraceCollection` reads documents that aren't one complete trace: several traces at
+       once, or only part of one. It keeps the complete traces and the **fragments** - timespans whose parent hasn't
+       arrived yet - indexed by identifier, links them as further documents are added in any order, and writes itself
+       back as OTLP/JSON.
 
    * :mod:`pyTooling.Packaging`
 

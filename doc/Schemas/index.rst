@@ -29,6 +29,10 @@ Schema URL prefix: ``https://pyTooling.GitHub.io/pyTooling/Schemas/***``
      - v0.1
      - JSON
      - :class:`pyTooling.Dependency.Python.LicenseOverrides`
+   * - :ref:`OTLP-Traces <SCHEMAS/OTLP-Traces-v1.0>`
+     - v1.0
+     - JSON
+     - :class:`pyTooling.Tracing.TraceCollection`
 
 .. _SCHEMAS/Versioning:
 
@@ -99,3 +103,14 @@ PackageOverrides
    :maxdepth: 1
 
    PackageOverrides-v0.1
+
+
+.. _SCHEMAS/OTLP-Traces:
+
+OTLP-Traces
+***********
+
+.. toctree::
+   :maxdepth: 1
+
+   OTLP-Traces-v1.0

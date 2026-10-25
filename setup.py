@@ -55,6 +55,8 @@ additionalRequirements = {
 	"packaging":    ["setuptools >= 83.0"],
 	"terminal":     ["colorama ~= 0.4.6"],
 	"testing":      ["pytest ~= 9.1"],
+	# 'jsonschema' needs 'rpds-py', which has no wheel for PyPy on Windows
+	"tracing":      ["jsonschema ~= 4.26 ; implementation_name != 'pypy' or sys_platform != 'win32'"],
 	"yaml":         ["ruamel.yaml ~= 0.19"],
 }
 

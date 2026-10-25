@@ -749,8 +749,8 @@ Glossary
      **OTLP** is its protocol. Its JSON encoding is one document every usual destination reads: a collector accepts
      it natively, and Jaeger imports it.
 
-     A :term:`trace` exports itself that way - :meth:`Trace.ToJSON <pyTooling.Tracing.Trace.ToJSON>` and
-     :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`, see :ref:`TRACING/OTLP`. pyTooling exports every
+     A :term:`trace` exports itself that way - :meth:`Trace.ToOTLPJSON <pyTooling.Tracing.Trace.ToOTLPJSON>` and
+     :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`, see :ref:`TRACING/OTLP`. pyTooling exports every
      :term:`span` as kind ``INTERNAL``, so the trace follows the conventions' *attributes*, not their span kinds.
 
      Wikipedia: :wiki:`OpenTelemetry <OpenTelemetry>`
