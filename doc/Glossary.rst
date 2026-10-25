@@ -611,6 +611,11 @@ Glossary
      Specification: `SPDX license expressions
      <https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/>`__
 
+   matplotlib
+     A Python library drawing static charts, e.g. as SVG, PNG or PDF files.
+
+     Website: https://matplotlib.org/
+
    Matrix
      A *matrix* is a :term:`job` written once and run several times, once per combination of the values it is
      given - three Python versions on two operating systems are six jobs.
@@ -826,6 +831,12 @@ Glossary
 
      :class:`pyTooling.CI.Pipeline` models one - with :term:`called workflows <workflow>`,
      :term:`matrices <matrix>`, jobs and steps below it, each knowing its parent. See :ref:`CI/Pipeline`.
+
+   plotly
+     A Python library drawing interactive charts, which are shown by plotly's JavaScript library, e.g. in an HTML
+     page.
+
+     Website: https://plotly.com/python/
 
    Post-Order
      :wiki:`Post-order <Tree_traversal#Post-order,_LRN>` is a depth-first traversal of a :term:`tree` visiting a
