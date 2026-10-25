@@ -33,18 +33,16 @@ from typing               import NoReturn
 
 from pyTooling.TerminalUI import TerminalApplication
 
+import myPackage
+
 
 class Application(TerminalApplication):
-	HEADLINE = "My Application"
+	HEADLINE =      "My Application"
+	DUNDER_MODULE = myPackage
 
 	def Run(self) -> None:
 		self._PrintHeadline()
-		self._PrintVersion()
-
-	def _PrintVersion(self) -> None:
-		import myPackage as DunderModule
-
-		super()._PrintVersion(DunderModule, "myPackage")
+		self._PrintVersion("myPackage")
 
 
 def main() -> NoReturn:

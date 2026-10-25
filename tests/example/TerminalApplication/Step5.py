@@ -29,17 +29,19 @@
 # ==================================================================================================================== #
 #
 from sys                  import argv
+from types                import ModuleType
 from typing               import ClassVar, NoReturn
 
 from pyTooling.Exceptions import ExceptionBase, MissingDependencyError
 from pyTooling.TerminalUI import TerminalApplication
 
-from myPackage            import MyPackageException, __issue_tracker_url__
+import myPackage
+from myPackage            import MyPackageException
 
 
 class Application(TerminalApplication):
-	HEADLINE:          ClassVar[str] = "My Application"
-	ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
+	HEADLINE:      ClassVar[str] =        "My Application"
+	DUNDER_MODULE: ClassVar[ModuleType] = myPackage
 
 	def Run(self) -> None:
 		self._PrintHeadline()
