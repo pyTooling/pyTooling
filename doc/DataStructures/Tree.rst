@@ -880,29 +880,76 @@ program's own cycle: the program clears that reference itself.
 Tree Rendering
 ==============
 
-The tree data structure can be rendered as ASCII art. The :meth:`~pyTooling.Tree.Node.Render` method renders the tree
-into a multi line string.
+The tree data structure can be rendered as text art. The :meth:`~pyTooling.Tree.Node.Render` method renders the tree
+into a multi line string: the node it is called on first, then every node below it, one line per node, with markers
+drawing the branches. A node is written by its format function (parameter ``format`` of :class:`~pyTooling.Tree.Node`),
+or else by :pycode:`str(node)`, which is the node's ID.
 
-.. todo:: TREE:Render:: explain parameters
+.. code-block:: python
 
-.. admonition:: Example
+   root =  Node(nodeID=0)
+   node1 = Node(nodeID=1, parent=root)
+   Node(nodeID=2, parent=root)
+   node3 = Node(nodeID=3, parent=root)
+   Node(nodeID=4, parent=node1)
+   Node(nodeID=5, parent=node1)
+   Node(nodeID=6, parent=node3)
+   Node(nodeID=7, parent=node3)
 
-   .. code-block::
+   print(root.Render())
 
-      <Root 0>
-      o-- <Node 1>
-      |   o-- <Node 4>
-      |   |   o-- <Node 8>
-      |   |       o-- <Node 9>
-      |   o-- <Node 5>
-      |       o-- <Node 10>
-      |           o-- <Node 11>
-      |           o-- <Node 12>
-      |           o-- <Node 13>
-      o-- <Node 2>
-      o-- <Node 3>
-          o-- <Node 6>
-          o-- <Node 7>
+.. code-block:: text
+
+   0
+   ├─1
+   │ ├─4
+   │ └─5
+   ├─2
+   └─3
+     ├─6
+     └─7
+
+The parameters choose the markers and what surrounds each line:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 20 55
+
+   * - Parameter
+     - Default
+     - Printed
+   * - ``prefix``
+     - ``""``
+     - in front of every line, e.g. for indentation
+   * - ``lineend``
+     - ``"\n"``
+     - at the end of every line
+   * - ``nodeMarker``
+     - ``"├─"``
+     - in front of a node that has a following sibling
+   * - ``lastNodeMarker``
+     - ``"└─"``
+     - in front of a node that is the last child of its parent
+   * - ``bypassMarker``
+     - ``"│ "``
+     - for a level whose node has a following sibling; below a last child, as many spaces
+
+E.g. plain ASCII markers, indented by two spaces:
+
+.. code-block:: python
+
+   print(root.Render(prefix="  ", nodeMarker="o-- ", lastNodeMarker="o-- ", bypassMarker="|   "))
+
+.. code-block:: text
+
+     0
+     o-- 1
+     |   o-- 4
+     |   o-- 5
+     o-- 2
+     o-- 3
+         o-- 6
+         o-- 7
 
 
 .. _STRUCT/Tree/Competitors:
