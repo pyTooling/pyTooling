@@ -214,9 +214,8 @@ jobs:
       - PublishCoverageResults
       - StaticTypeCheck
     with:
-      doc:      ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
-      coverage: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
-      typing:   ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
+      doc:    ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
+      typing: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
 
   TriggerTaggedRelease:
     uses: pyTooling/Actions/.github/workflows/TagReleaseCommit.yml@r9
