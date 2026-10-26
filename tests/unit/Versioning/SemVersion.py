@@ -1096,6 +1096,29 @@ class FormatEscape(Testcase):
 		self.assertEqual("%M 1.2", f"{version:%%M %M.%m}")
 		self.assertEqual("100%", f"{version:%M00%%}")
 
+	def test_UnknownSpecifier(self) -> None:
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = f"{version:%M.%X}"
+		self.assertEqual("Unknown format specifier '%X' in '%M.%X'.", str(context.exception))
+
+	def test_UnknownSpecifier_AfterPercentSign(self) -> None:
+		"""An unknown specifier behind a literal percent sign was accepted; only the first ``%`` was checked."""
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = f"{version:%%M %X}"
+		self.assertEqual("Unknown format specifier '%X' in '%%M %X'.", str(context.exception))
+
+	def test_TrailingPercentSign(self) -> None:
+		"""A single ``%`` at the end raised an :exc:`IndexError`."""
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = f"{version:%M%}"
+		self.assertEqual("Unknown format specifier '%' in '%M%'.", str(context.exception))
+
 
 class RoundTrip(Testcase):
 	def test_Parse2Str(self) -> None:

@@ -1628,8 +1628,9 @@ class SemanticVersion(Version):
 		"""
 		result = self._format(formatSpec)
 
-		if (pos := result.find("%")) != -1 and result[pos + 1] != "%":  # pragma: no cover
-			raise ValueError(f"Unknown format specifier '%{result[pos + 1]}' in '{formatSpec}'.")
+		for part in result.split("%%"):
+			if (pos := part.find("%")) != -1:
+				raise ValueError(f"Unknown format specifier '{part[pos:pos + 2]}' in '{formatSpec}'.")
 
 		return result.replace("%%", "%")
 
