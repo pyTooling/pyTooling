@@ -140,7 +140,10 @@ in turn - an extra can pull in a whole subtree, with licenses of its own. It tak
 * a list of :class:`~packaging.requirements.Requirement` objects
   (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirements`),
 * a requirements file read by :meth:`RequirementsFile.Parse <pyTooling.Dependency.Python.RequirementsFile.Parse>`
-  (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirementsFile`), or
+  (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolveRequirementsFile`),
+* the build requirements of a ``pyproject.toml`` file read by
+  :meth:`PyProjectFile.Parse <pyTooling.Dependency.Python.PyProjectFile.Parse>`
+  (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolvePyProjectFile`), or
 * the newest releases of packages the pre-release policy admits, optionally one of their extras
   (:meth:`~pyTooling.Dependency.Resolver.Resolver.ResolvePackages`).
 
@@ -233,13 +236,17 @@ Exceptions and Warnings
 :exc:`~pyTooling.Dependency.ReleaseNotFoundError` when the index does not know what was asked for, and
 :exc:`~pyTooling.Dependency.PackageIndexError` when the index responds with another HTTP error status. The latter is
 caused by the :exc:`~requests.HTTPError`. :exc:`~pyTooling.Dependency.ExtraNotFoundError` is raised when the
-requirements of an extra are asked for, which a release doesn't declare.
+requirements of an extra are asked for, which a release doesn't declare. Reading a ``pyproject.toml`` file raises a
+:exc:`~pyTooling.Dependency.PyProjectFileNotFoundError` if the file doesn't exist, and a
+:exc:`~pyTooling.Dependency.PyProjectFileError` if it isn't valid TOML or its ``[build-system]`` table isn't structured
+as :pep:`518` specifies.
 
 A malformed requirement or unreadable release metadata does not abort the traversal - it is reported as a
 :class:`~pyTooling.Dependency.BrokenRequirementWarning` or
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning`, because one bad package should not hide the rest of the
 graph. :class:`~pyTooling.Dependency.BrokenRequirementWarning` is the base of two warnings, each carrying what it is
-about: :class:`~pyTooling.Dependency.UnparsableRequirementWarning` (a line of a requirements file) and
+about: :class:`~pyTooling.Dependency.UnparsableRequirementWarning` (a line of a requirements file, or a build
+requirement of a ``pyproject.toml`` file) and
 :class:`~pyTooling.Dependency.UndeclaredExtraWarning` (a requirement naming an extra the selected release doesn't
 declare). Requirements of a release whose marker names an extra the release doesn't declare are reported as an
 :class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`. A license that can't be resolved is reported as an
