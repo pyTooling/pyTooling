@@ -61,7 +61,7 @@ Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex
    * - keys ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
        ``changelogURL``
      - the URL of the license text, the source repository, the documentation, the issue tracker, the project's
-       homepage and the changelog, each a :class:`~pyTooling.GenericPath.URL.URL`.
+       homepage and the changelog, each a :class:`~pyTooling.URI.URL`.
 
 The key-value pairs keep the version's typed objects; a graph writer converts them to text. All but ``license`` are set
 only if the version knows the value - for a Python package, after its details were loaded; converting a graph doesn't
@@ -118,11 +118,11 @@ dependency graph is otherwise thousands of HTTP requests wide.
 
    Querying PyPI needs :gh:`aiohttp <aio-libs/aiohttp>`, :gh:`requests <psf/requests>`
    and :gh:`packaging <pypa/packaging>`, which are optional dependencies. Install them with the
-   ``pypi`` extra:
+   ``dependencies`` extra:
 
    .. code-block:: shell
 
-      pip install pyTooling[pypi]
+      pip install pyTooling[dependencies]
 
    Without it, importing :mod:`pyTooling.Dependency.Python` raises an exception naming the extra. The generic data
    model in :mod:`pyTooling.Dependency` has no such requirement.
@@ -243,7 +243,8 @@ about: :class:`~pyTooling.Dependency.UnparsableRequirementWarning` (a line of a 
 :class:`~pyTooling.Dependency.UndeclaredExtraWarning` (a requirement naming an extra the selected release doesn't
 declare). Requirements of a release whose marker names an extra the release doesn't declare are reported as an
 :class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning`. A license that can't be resolved is reported as an
-:class:`~pyTooling.Dependency.UnknownLicenseWarning`. A requirement a :class:`~pyTooling.Dependency.Resolver.Resolver`
+:class:`~pyTooling.Dependency.UnknownLicenseWarning`, a project URL that isn't a URL as an
+:class:`~pyTooling.Dependency.UnparsableURLWarning`. A requirement a :class:`~pyTooling.Dependency.Resolver.Resolver`
 can't resolve, because the index doesn't know its project or can't describe the selected release, is reported as an
 :class:`~pyTooling.Dependency.UnresolvedRequirementWarning`; it stays in the resolution, with the reason as its status.
 
@@ -251,7 +252,7 @@ can't resolve, because the index doesn't know its project or can't describe the 
 :class:`~pyTooling.Dependency.ReleaseDetailsWarning` are critical: something was left out, so a caller who doesn't
 see the warning gets a wrong result. Without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy,
 :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised. :class:`~pyTooling.Dependency.UnknownLicenseWarning`,
-:class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` and
+:class:`~pyTooling.Dependency.UnparsableURLWarning`, :class:`~pyTooling.Dependency.UndeclaredExtraMarkerWarning` and
 :class:`~pyTooling.Dependency.UnresolvedRequirementWarning` are non-critical: without a collector, they are dropped
 silently. A caller collects the warnings to learn what was left out, see :ref:`WARNING`:
 

@@ -29,6 +29,7 @@
 # ==================================================================================================================== #
 #
 from argparse                               import Namespace, RawDescriptionHelpFormatter
+from types                                  import ModuleType
 from typing                                 import ClassVar, NoReturn
 
 from pyTooling.Attributes.ArgParse          import ArgParseHelperMixin, CommandHandler, DefaultHandler
@@ -36,13 +37,13 @@ from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.Decorators                   import export
 from pyTooling.TerminalUI                   import TerminalApplication
 
-from myPackage                              import __issue_tracker_url__
+import myPackage
 
 
 @export
 class Application(TerminalApplication, ArgParseHelperMixin):
-	HEADLINE:          ClassVar[str] = "My Application"
-	ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
+	HEADLINE:      ClassVar[str] =        "My Application"
+	DUNDER_MODULE: ClassVar[ModuleType] = myPackage
 
 	def __init__(self) -> None:
 		super().__init__()
@@ -65,12 +66,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
 	@CommandHandler("version", help="Display version information.")
 	def HandleVersion(self, _: Namespace) -> None:
 		self._PrintHeadline()
-		self._PrintVersion()
-
-	def _PrintVersion(self) -> None:
-		import myPackage as DunderModule
-
-		super()._PrintVersion(DunderModule, "myPackage")
+		self._PrintVersion("myPackage")
 
 
 def main() -> NoReturn:

@@ -32,12 +32,12 @@
 Unit tests for :mod:`pyTooling.CI`.
 """
 from datetime              import datetime, timedelta, timezone
+from typing                import get_args, get_type_hints
 
-from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job
-from pyTooling.CI          import JobGroup, Step, Rule, RuleOutcome
-from pyTooling.CI          import Outcome, CIError, PipelineError, NeedDependencyError, NeedDependencyCycleError
-from pyTooling.CI          import AlreadyInPipelineError
-from pyTooling.CI          import RulesMixin, DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
+from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job, \
+                                  JobGroup, Step, Rule, RuleOutcome, Outcome, CIError, PipelineError, \
+                                  NeedDependencyError, NeedDependencyCycleError, AlreadyInPipelineError, RulesMixin, \
+                                  DependencyMixin, MatrixInstanceMixin, QualifiedNameMixin
 from pyTooling.Exceptions  import AlreadyInHierarchyError
 from pyTooling.Graph       import BaseGraph, Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
@@ -428,6 +428,10 @@ class Rules(Testcase):
 		self.assertEqual(0, len(rule))
 		self.assertFalse(hasattr(rule, "__dict__"))
 
+	def test_Rule_WhenAnnotation(self) -> None:
+		"""The property's return annotation resolves, as autodoc and type checkers resolve it."""
+		self.assertIs(RuleOutcome, get_type_hints(Rule.When.fget)["return"])
+
 	def test_Rule_Values(self) -> None:
 		rule = Rule("$CI_COMMIT_BRANCH == 'main'", RuleOutcome.Manual, keyValuePairs={"allow_failure": True})
 
@@ -550,6 +554,13 @@ class Rules(Testcase):
 			_ = Job("Test", rules=[rule])
 
 		self.assertEqual("Rule belongs to 'Build' already.", str(context.exception))
+
+	def test_AlreadyInPipelineError_MessageOnly(self) -> None:
+		"""The element is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise AlreadyInPipelineError("Rule belongs to 'Build' already.")
+
+		self.assertIn("'element'", str(context.exception))
 
 
 class Times(Testcase):
@@ -737,14 +748,29 @@ class Dependencies(Testcase):
 		self.assertIs(job, context.exception.Need)
 		self.assertTupleEqual((job, job), context.exception.Cycle)
 
-	def test_NeedDependencyErrors_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no element."""
-		with self.assertRaises(NeedDependencyCycleError) as context:
+	def test_NeedDependencyCycleError_MessageOnly(self) -> None:
+		"""The cycle is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise NeedDependencyCycleError("Cycle.")
+
+		self.assertIn("'cycle'", str(context.exception))
+
+	def test_NeedDependencyCycleError_CycleOnly(self) -> None:
+		"""A cycle of several needs carries neither an element nor a need."""
+		with self.assertRaises(NeedDependencyCycleError) as context:
+			raise NeedDependencyCycleError("Cycle.", cycle=())
 
 		self.assertIsNone(context.exception.Element)
 		self.assertIsNone(context.exception.Need)
-		self.assertIsNone(context.exception.Cycle)
+		self.assertTupleEqual((), context.exception.Cycle)
+
+	def test_NeedDependencyError_MessageOnly(self) -> None:
+		"""Both elements are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise NeedDependencyError("'Build' needs 'Prepare' already.")
+
+		self.assertIn("'element'", str(context.exception))
+		self.assertIn("'need'", str(context.exception))
 
 	def test_AddNeed_Cycle(self) -> None:
 		"""Adding a need doesn't search for cycles; validating the completed pipeline does."""
@@ -1067,3 +1093,12 @@ class ToGraph(Testcase):
 		order = [self._Name(vertex) for vertex in graph.IterateTopologically()]
 		self.assertEqual("Prepare", order[0])
 		self.assertEqual("Release", order[-1])
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.CI
+
+		self.assertIs(Pipeline, get_args(get_type_hints(Base, vars(pyTooling.CI))["_pipeline"])[0])
+		self.assertIs(Outcome, get_args(get_type_hints(Base, vars(pyTooling.CI))["_outcome"])[0])

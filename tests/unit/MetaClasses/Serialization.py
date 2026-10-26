@@ -144,6 +144,29 @@ def format(value: Node) -> str:
 	return ""
 
 
+class GeneratedMethods(Testcase):
+	"""The generated pair is named like a method written in the class body - documentation tools look it up by name."""
+
+	class Nested(metaclass=ExtendedType, slots=True):
+		_data: int
+
+	def test_QualifiedName(self) -> None:
+		self.assertEqual("SimpleClass.__getstate__", SimpleClass.__getstate__.__qualname__)
+		self.assertEqual("SimpleClass.__setstate__", SimpleClass.__setstate__.__qualname__)
+
+	def test_QualifiedName_Derived(self) -> None:
+		self.assertEqual("DerivedClass.__getstate__", DerivedClass.__getstate__.__qualname__)
+		self.assertEqual("DerivedClass.__setstate__", DerivedClass.__setstate__.__qualname__)
+
+	def test_QualifiedName_Nested(self) -> None:
+		self.assertEqual("GeneratedMethods.Nested.__getstate__", self.Nested.__getstate__.__qualname__)
+		self.assertEqual("GeneratedMethods.Nested.__setstate__", self.Nested.__setstate__.__qualname__)
+
+	def test_Module(self) -> None:
+		self.assertEqual(__name__, SimpleClass.__getstate__.__module__)
+		self.assertEqual(__name__, SimpleClass.__setstate__.__module__)
+
+
 class PickledTree(Testcase):
 	def test_SimpleTree(self) -> None:
 		root = Node(value="Root")
@@ -182,12 +205,12 @@ class PickledGraph(Testcase):
 		recreated: Graph = loads(serialized)
 
 		self.assertEqual("Graph", recreated.Name)
-		self.assertEqual(3, graph.VertexCount)
-		self.assertEqual(3, graph.EdgeCount)
+		self.assertEqual(3, recreated.VertexCount)
+		self.assertEqual(3, recreated.EdgeCount)
 
-		r1 = graph.GetVertexByID(1)
-		r2 = graph.GetVertexByID(2)
-		r3 = graph.GetVertexByID(3)
+		r1 = recreated.GetVertexByID(1)
+		r2 = recreated.GetVertexByID(2)
+		r3 = recreated.GetVertexByID(3)
 
 		self.assertIs((e12 := r1.OutboundEdges[0]).Destination, r2)
 		self.assertIs((e23 := r2.OutboundEdges[0]).Destination, r3)
@@ -199,3 +222,49 @@ class PickledGraph(Testcase):
 		self.assertDictEqual(kvp12, e12._dict)
 		self.assertDictEqual(kvp23, e23._dict)
 		self.assertDictEqual(kvp31, e31._dict)
+
+	def test_SimpleGraph_Vertices(self) -> None:
+		graph = Graph("Graph")
+		Vertex(vertexID=1, value="v1", weight=120, graph=graph)
+		Vertex(vertexID=2, value="v2", weight=230, graph=graph)
+
+		serialized = dumps(graph)
+		recreated: Graph = loads(serialized)
+
+		for vertex in recreated.IterateVertices():
+			self.assertIsInstance(vertex, Vertex)
+			self.assertIs(recreated, vertex.Graph)
+
+		self.assertListEqual([1, 2], [vertex.ID for vertex in recreated.IterateVertices()])
+		self.assertListEqual(["v1", "v2"], [vertex.Value for vertex in recreated.IterateVertices()])
+		self.assertListEqual([120, 230], [vertex.Weight for vertex in recreated.IterateVertices()])
+
+	def test_SimpleGraph_Edges(self) -> None:
+		graph = Graph("Graph")
+		v1 = Vertex(vertexID=1, graph=graph)
+		v2 = Vertex(vertexID=2, graph=graph)
+
+		v1.EdgeToVertex(v2, edgeID=12, edgeValue="12", edgeWeight=125)
+		v2.EdgeToVertex(v1, edgeID=21, edgeValue="21", edgeWeight=215)
+
+		serialized = dumps(graph)
+		recreated: Graph = loads(serialized)
+
+		for edge in recreated.IterateEdges():
+			self.assertIsInstance(edge, Edge)
+
+		self.assertListEqual([12, 21], [edge.ID for edge in recreated.IterateEdges()])
+		self.assertListEqual(["12", "21"], [edge.Value for edge in recreated.IterateEdges()])
+		self.assertListEqual([125, 215], [edge.Weight for edge in recreated.IterateEdges()])
+
+		r1 = recreated.GetVertexByID(1)
+		r2 = recreated.GetVertexByID(2)
+		e12 = r1.OutboundEdges[0]
+		e21 = r2.OutboundEdges[0]
+
+		self.assertIs(r1, e12.Source)
+		self.assertIs(r2, e12.Destination)
+		self.assertIs(r2, e21.Source)
+		self.assertIs(r1, e21.Destination)
+		self.assertIs(e12, r2.InboundEdges[0])
+		self.assertIs(e21, r1.InboundEdges[0])

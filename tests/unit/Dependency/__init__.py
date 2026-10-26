@@ -32,14 +32,15 @@
 Unit tests for :mod:`pyTooling.Dependency`: building a dependency graph and solving it to the latest
 matching versions.
 """
-from datetime import datetime
+from datetime             import datetime
+from typing               import get_args, get_type_hints
 
-from pyTooling.Exceptions      import ToolingException
-from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing       import LicenseExpression, UnknownLicense
-from pyTooling.Versioning      import SemanticVersion
-from pyTooling.Dependency      import PackageDependencyGraph, PackageStorage, Package, PackageVersion
-from pyTooling.Testing         import Testcase
+from pyTooling.Exceptions import ToolingException
+from pyTooling.URI        import URL
+from pyTooling.Licensing  import LicenseExpression, UnknownLicense
+from pyTooling.Versioning import SemanticVersion
+from pyTooling.Dependency import PackageDependencyGraph, PackageStorage, Package, PackageVersion
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -501,3 +502,13 @@ class ToGraph(Testcase):
 		}, graph.GetVertexByID(known)._dict)
 		self.assertListEqual(["license"], list(graph.GetVertexByID(unknown)._dict))
 		self.assertIsInstance(graph.GetVertexByID(unknown)["license"], UnknownLicense)
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Dependency
+
+		self.assertIs(Package, get_type_hints(PackageVersion, vars(pyTooling.Dependency))["_package"])
+		self.assertIs(LicenseExpression, get_type_hints(PackageVersion, vars(pyTooling.Dependency))["_licenseExpression"])
+		self.assertIs(Package, get_args(get_type_hints(PackageVersion, vars(pyTooling.Dependency))["_dependsOn"])[0])

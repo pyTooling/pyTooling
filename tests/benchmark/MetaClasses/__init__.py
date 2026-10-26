@@ -31,7 +31,7 @@
 """
 Benchmarks for :class:`pyTooling.MetaClasses.ExtendedType`, measuring what its features cost at runtime.
 """
-from typing import Tuple, Any, Dict
+from typing import Any
 
 from pytest import mark
 

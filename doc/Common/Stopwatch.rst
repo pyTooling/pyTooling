@@ -113,7 +113,7 @@ Out of Scope
 ============
 
 * **Restarting or resetting.** A stopwatch measures one time span in its lifetime. Create a new stopwatch instead of
-  reusing a stopped one.
+  reusing a stopped one (:ref:`example <COMMON/Stopwatch/StartStop/Again>`).
 * **Nesting.** A stopwatch measures one thing. Use one stopwatch per measured thing.
 * **Thread-safety.** Two threads operating one stopwatch will interleave their splits.
 
@@ -174,6 +174,27 @@ until the respective operation happened.
 .. code-block:: python
 
    print(f"{sw.StartTime} -> {sw.StopTime}")
+
+
+.. _COMMON/Stopwatch/StartStop/Again:
+
+Measuring Again
+---------------
+
+A stopped stopwatch can't be restarted or reset. Its results stay readable, and a new stopwatch takes the next
+measurement:
+
+.. code-block:: python
+
+   durations = []
+   for file in files:
+     sw = Stopwatch(file.name, started=True)
+     parse(file)
+     durations.append(sw.Stop())
+
+To add several regions up into **one** measurement instead, pause and resume the same stopwatch
+(:ref:`COMMON/Stopwatch/PauseResume`), or create it with ``preferPause=True`` and measure each region in a
+``with``-block (:ref:`COMMON/Stopwatch/ContextManager`).
 
 
 .. _COMMON/Stopwatch/PauseResume:

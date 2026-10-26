@@ -88,6 +88,45 @@ class Operations(Testcase):
 		with self.assertRaises(ToolingException):
 			sw.Stop()
 
+	def test_Start_Stopped(self) -> None:
+		sw = Stopwatch(started=True)
+		sw.Stop()
+
+		with self.assertRaises(StopwatchError) as context:
+			sw.Start()
+
+		self.assertEqual("Stopwatch was already used (started and stopped).", str(context.exception))
+		self.assertListEqual(
+			["A stopwatch can't be restarted. Create a new one to measure again."],
+			context.exception.__notes__
+		)
+
+	def test_Stop_Stopped(self) -> None:
+		"""A second stop raises and keeps the stop time of the first."""
+		sw = Stopwatch(started=True)
+		sw.Stop()
+		stopTime = sw.StopTime
+
+		with self.assertRaises(StopwatchError) as context:
+			sw.Stop()
+
+		self.assertEqual("Stopwatch was already stopped.", str(context.exception))
+		self.assertIs(stopTime, sw.StopTime)
+
+	def test_Stop_NeverStarted(self) -> None:
+		"""A stop before the start raises and leaves the stopwatch unused."""
+		sw = Stopwatch()
+
+		with self.assertRaises(StopwatchError) as context:
+			sw.Stop()
+
+		self.assertEqual("Stopwatch was never started.", str(context.exception))
+		self.assertIsNone(sw.StopTime)
+
+		sw.Start()
+		sw.Stop()
+		self.assertTrue(sw.IsStopped)
+
 	def test_StartStop(self) -> None:
 		print()
 
@@ -372,6 +411,10 @@ class ContextManagerErrors(Testcase):
 			sw.__enter__()
 
 		self.assertEqual("Stopwatch was already stopped.", str(context.exception))
+		self.assertListEqual(
+			["A stopwatch can't be restarted. Create a new one, or one with 'preferPause=True'."],
+			context.exception.__notes__
+		)
 
 	def test_Exit_NeverStarted(self) -> None:
 		with self.assertRaises(StopwatchError) as context:

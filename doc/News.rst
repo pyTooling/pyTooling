@@ -10,7 +10,7 @@ release.
 Version 10.x (2026)
 *******************
 
-.. topic:: :gh:`v10.0.0 - unreleased <pyTooling/pyTooling/releases/v10.0.0>`
+.. topic:: :gh:`v10.0.0 - 26.10.2026 <pyTooling/pyTooling/releases/v10.0.0>`
 
    .. rubric:: New Features
 
@@ -25,7 +25,7 @@ Version 10.x (2026)
      nothing building on it drags an HTTP stack into every consumer.
 
      * A resource is addressed by its path below :attr:`~pyTooling.REST.RESTClient.APIURL`, which is a
-       :class:`~pyTooling.GenericPath.URL.URL`, so the API is stated once instead of in every call.
+       :class:`~pyTooling.URI.URL`, so the API is stated once instead of in every call.
      * :meth:`~pyTooling.REST.RESTClient.GetJSONObject` reads a resource and says where its next page is;
        :meth:`~pyTooling.REST.RESTClient.PostJSONObject`, :meth:`~pyTooling.REST.RESTClient.PutJSONObject`,
        :meth:`~pyTooling.REST.RESTClient.PatchJSONObject` and :meth:`~pyTooling.REST.RESTClient.DeleteResource`
@@ -154,11 +154,11 @@ Version 10.x (2026)
        type-checks.
 
    * :meth:`~pyTooling.GenericPath.PathMixin.WithoutTrailingDelimiter` returns a path that doesn't end in
-     ``ELEMENT_DELIMITER``, and :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` a URL whose path doesn't -
+     ``ELEMENT_DELIMITER``, and :meth:`~pyTooling.URI.URL.WithoutTrailingSlash` a URL whose path doesn't -
      a URL's element delimiter is the slash. A trailing delimiter is an empty last element, so ``/api/v3/`` and
      ``/api/v3`` are different paths although they usually name the same thing - and a path something is appended to
      wants the latter. A path with none answers with itself.
-   * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.GenericPath.URL.URL.__truediv__` and
+   * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.URI.URL.__truediv__` and
      :meth:`~pyTooling.GenericPath.PathMixin.__truediv__`, each taking a string or a path on the right, the way
      :class:`pathlib.PurePath` does. The right side is a **relative reference**: its path goes
      below the left side's, and a string brings its own query and fragment, which the left side's are not carried
@@ -172,30 +172,44 @@ Version 10.x (2026)
    * ⚠️ A path flavour names the type of its elements - ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and
      ``ROOT_DELIMITER``. :meth:`~pyTooling.GenericPath.PathMixin.Parse` reads that instead of being handed the path and
      element classes as parameters, so its signature is ``Parse(path, root=None)`` and a flavour needs no ``Parse`` of
-     its own - :class:`~pyTooling.GenericPath.URL.Path` lost the one it had. **A flavour outside pyTooling passing
+     its own - :class:`~pyTooling.URI.Path` lost the one it had. **A flavour outside pyTooling passing
      ``pathCls`` and ``elementCls`` has to drop them and declare ``ELEMENT_TYPE``.**
    * :meth:`~pyTooling.GenericPath.PathMixin.Parse` strips ``ROOT_DELIMITER`` from an absolute path, not as many
      characters as ``ELEMENT_DELIMITER`` is long. The two are the same in a URL, so nothing parses differently today,
      but a path flavour marking its root differently - a drive letter, a host separated by a colon - would have lost
      the wrong number of characters.
 
-   * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
-     :exc:`~pyTooling.GenericPath.URL.URLError` for it.
+   * ⚠️ :mod:`pyTooling.URI` is a new package: the URL module ``pyTooling.GenericPath.URL`` moved there, with all its
+     classes (:class:`~pyTooling.URI.URL`, :class:`~pyTooling.URI.Host`, :class:`~pyTooling.URI.Protocols`,
+     :exc:`~pyTooling.URI.URLError`, ...). **Import them from** ``pyTooling.URI``; there is no alias.
+     :mod:`pyTooling.GenericPath` stays the base of hierarchical paths, which a URL's path is.
+   * :class:`~pyTooling.URI.URI` is the generic URI of :rfc:`3986` - scheme, scheme-specific part, query, fragment -
+     for every scheme (``mailto:``, ``tel:``, ``urn:``). :class:`~pyTooling.URI.URL` derives from it.
+     :meth:`URI.Parse <pyTooling.URI.URI.Parse>` returns a :class:`~pyTooling.URI.URL` for a URI with an authority
+     and a scheme of :class:`~pyTooling.URI.Protocols`, else a :class:`~pyTooling.URI.URI`.
+     ``URL.Parse(text, defaultScheme=Protocols.HTTPS)`` prepends a scheme to a URL without one, as a browser does.
+     ⚠️ A :class:`~pyTooling.URI.URL` requires a scheme: ``None`` raises :exc:`ValueError`.
+   * :class:`~pyTooling.URI.URN` is a URN of :rfc:`8141`: namespace identifier, namespace-specific string, and the r-,
+     q- and f-components (:attr:`~pyTooling.URI.URN.Resolution`, :attr:`~pyTooling.URI.URI.Query`,
+     :attr:`~pyTooling.URI.URI.Fragment`). :meth:`URN.Parse <pyTooling.URI.URN.Parse>` reads one, and
+     :meth:`URI.Parse <pyTooling.URI.URI.Parse>` returns a :class:`~pyTooling.URI.URN` for the scheme ``urn``.
+   * :mod:`pyTooling.URI` reports what it rejects, and raises
+     :exc:`~pyTooling.URI.URLError` for it.
 
-     * :exc:`~pyTooling.GenericPath.URL.URLError` replaces the bare
+     * :exc:`~pyTooling.URI.URLError` replaces the bare
        :exc:`~pyTooling.Exceptions.ToolingException` the module raised, so a consumer can catch a URL problem
        without catching everything pyTooling raises. It still derives from it.
-     * ⚠️ :class:`~pyTooling.GenericPath.URL.Host` rejects a host name that is ``None`` or empty with a
+     * ⚠️ :class:`~pyTooling.URI.Host` rejects a host name that is ``None`` or empty with a
        :exc:`ValueError`, as its doc-string always said; ``None`` was a :exc:`TypeError`.
      * A rejected URL holding a character :rfc:`3986` forbids - a space, a control character, ``<``, ``|``,
        ... - gets a note naming it and its percent-encoding, e.g. *"Character ' ' is not allowed in a URL.
        Write it percent-encoded as '%20'."*
-     * :class:`~pyTooling.GenericPath.URL.Protocols` gains ``ws``, ``wss``, ``ssh``, ``sftp``, ``git``,
+     * :class:`~pyTooling.URI.Protocols` gains ``ws``, ``wss``, ``ssh``, ``sftp``, ``git``,
        ``ldap`` and ``ldaps``. A scheme missing from the enumeration makes a URL unparseable, so the list
        grows as schemes are needed. ``sftp`` is carried by :attr:`~Protocols.SSH` rather than being
        :attr:`~Protocols.FTP` plus :attr:`~Protocols.TLS` - that combination is :attr:`~Protocols.FTPS`.
-     * :attr:`~pyTooling.GenericPath.URL.Protocols.IsEncrypted` answers whether a scheme is secured, by TLS or
-       by SSH. Testing :attr:`~pyTooling.GenericPath.URL.Protocols.TLS` alone answers *"is this TLS"* and
+     * :attr:`~pyTooling.URI.Protocols.IsEncrypted` answers whether a scheme is secured, by TLS or
+       by SSH. Testing :attr:`~pyTooling.URI.Protocols.TLS` alone answers *"is this TLS"* and
        misses ``ssh`` and ``sftp``, which are encrypted and carry no TLS flag.
      * ``tcp``, ``udp`` and ``unix`` name an endpoint whose higher protocol is unspecified -
        ``tcp://0.0.0.0:2375`` as the Docker daemon writes it, ``unix:///var/run/docker.sock`` for a local
@@ -206,15 +220,48 @@ Version 10.x (2026)
        ``None`` and a path of ``[2001:db8::1]:8080/path``, while reassembling into the original string - so a
        round-trip looked correct while the model was wrong.
 
-     * :meth:`~pyTooling.GenericPath.URL.URL.Parse` checks its parameter: ``None`` raises a :exc:`ValueError` and a
+     * :meth:`~pyTooling.URI.URL.Parse` checks its parameter: ``None`` raises a :exc:`ValueError` and a
        value of another type a :exc:`TypeError` naming it, instead of the :mod:`re` module reporting *"expected
        string or bytes-like object"* about neither the parameter nor the value.
      * An unknown scheme raises a :exc:`~pyTooling.Exceptions.ToolingException` listing the known ones, where
        ``ftpx://host`` used to raise ``KeyError: 'FTPX'``.
-     * A query parameter that is no ``key=value`` pair raises a :exc:`~pyTooling.Exceptions.ToolingException` naming
-       it, where ``?flag`` used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no
-       longer an error - ``?key=a=b`` parses as ``{"key": "a=b"}``, where it used to raise *"too many values to
-       unpack"*.
+     * ⚠️ :attr:`~pyTooling.URI.URL.Query` holds a
+       :class:`~pyTooling.URI.QueryParameter` per key instead of a string: a
+       :class:`~pyTooling.URI.KeyValuePair` for a key written once, a
+       :class:`~pyTooling.URI.KeySequencePair` for a key written several times - ``?tag=a&tag=b`` kept only
+       ``b`` and wrote back ``?tag=b``. :attr:`~pyTooling.URI.QueryParameter.Value` answers the (last)
+       value, :attr:`~pyTooling.URI.QueryParameter.Values` all of them. **Read ``url.Query[key].Value``
+       where ``url.Query[key]`` was read, and pass the constructor's ``query`` as an iterable of parameters instead of
+       a dictionary.**
+     * A query parameter without ``=`` parses with the value ``None`` - ``?flag`` as a
+       :class:`~pyTooling.URI.KeyValuePair` with the value ``None``, written back as ``?flag`` - where it
+       used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no longer an error -
+       ``?key=a=b`` parses with the value ``"a=b"``, where it used to raise *"too many values to unpack"*. An empty
+       query (``https://example.org/?``) and an empty fragment (``#``) parse and round-trip, as
+       :rfc:`3986` allows them.
+     * ⚠️ :meth:`~pyTooling.URI.URL.Parse` **rejects a string that isn't a URL** with a
+       :exc:`~pyTooling.URI.URLError`. Every part of :data:`~pyTooling.URI.URL_PATTERN` was
+       optional, so ``""``, ``"nonsense"`` and ``"https://a b/c"`` parsed - the last one as host ``a`` and path
+       ``" b/c"``. A URL starts with a scheme followed by ``://`` and a host, as :rfc:`3986` writes an absolute URI with
+       an authority; only a ``file`` or ``unix`` URL may leave the host empty, and then names an absolute path
+       (``file:///etc/hosts``). After the host and port, the path starts with a slash. A character the RFC forbids is
+       rejected anywhere in the URL, a port must be in range 0..65535, and a user or password may carry the RFC's
+       user-information characters - ``first.last@`` and ``p%40ss`` were read as a host and a path.
+       A rejected URL says what is wrong and, in a note, gives the URL as it was probably meant: a ``:`` after the host
+       without a port, a path in place of the port, a drive letter as host (``file://C:/Windows``).
+     * :class:`~pyTooling.URI.SCPAddress` reads the **SCP-like address** ``[user@]host:[path]`` scp, rsync
+       and Git write - ``git@github.com:org/repo.git`` -, which is no URL: no scheme, no port, and a relative path
+       starts in the user's home directory. :meth:`~pyTooling.URI.SCPAddress.ToURL` converts it to the
+       ``ssh://`` URL, writing the home directory as Git does: ``ssh://git@github.com/~/org/repo.git``.
+     * :meth:`~pyTooling.URI.URL.Parse` **reads an IRI** (:rfc:`3987`) with ``iri=True``: a Unicode host is
+       converted to its A-labels by IDNA 2008 (:rfc:`5891`) after the mapping of UTS #46, as browsers do, and every
+       other non-ASCII character is percent-encoded as UTF-8, so the result is an :rfc:`3986` URL -
+       ``https://www.müller.de/`` is read as ``https://www.xn--mller-kva.de/``.
+       :attr:`~pyTooling.URI.Host.UnicodeHostname` decodes the A-labels for display. IDNA 2008 needs the
+       ``idna`` package, installed by the new extra ``pyTooling[idna]``.
+     * :mod:`pyTooling.Dependency` reports a project URL a package index publishes that isn't a URL as a non-critical
+       :exc:`~pyTooling.Dependency.UnparsableURLWarning`, and the release has no such URL. ``UNKNOWN``, which distutils
+       wrote for a field not given, counts as not published.
 
    * :mod:`pyTooling.MetaClasses`
 
@@ -237,6 +284,11 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Testing`
 
+     * :class:`~pyTooling.Testing.Testcase` provides the six further assertions Python 3.14 added on 3.11 to 3.13:
+       :meth:`~pyTooling.Testing.Testcase.assertIsSubclass`, :meth:`~pyTooling.Testing.Testcase.assertNotIsSubclass`,
+       :meth:`~pyTooling.Testing.Testcase.assertStartsWith`, :meth:`~pyTooling.Testing.Testcase.assertNotStartsWith`,
+       :meth:`~pyTooling.Testing.Testcase.assertEndsWith` and :meth:`~pyTooling.Testing.Testcase.assertNotEndsWith`,
+       with Python 3.14's messages; ``assertHasAttr`` writes them too.
      * :class:`~pyTooling.Testing.ApplicationTestcase` no longer requires ``_RUNNABLE_MODULE``: a program without a
        ``__main__`` module is tested through its entry point, and only
        :meth:`~pyTooling.Testing.ApplicationTestcase.RunModule` asks for the module.
@@ -325,10 +377,13 @@ Version 10.x (2026)
        :meth:`~pyTooling.Tracing.TraceElement.IterateAttributes` yields the :pycode:`(key, value)` pairs that the
        iteration yielded before.
 
-     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToJSON`,
-       :meth:`~pyTooling.Tracing.Trace.ToJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`. One
+     * A software execution trace exports itself as **OTLP/JSON** - :meth:`~pyTooling.Tracing.Trace.ToOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.ToOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`. One
        format reaches both usual destinations: an OpenTelemetry collector accepts OTLP natively, and Jaeger has
        accepted it since v1.35.
+     * Writing a file creates its missing directory after raising a :exc:`~pyTooling.Warning.DirectoryCreatedWarning`
+       to the current :class:`~pyTooling.Warning.WarningCollector`. The warning is new in :mod:`pyTooling.Warning`, so
+       every writer creating a directory can raise it.
      * The document is typed rather than a mapping of :class:`~typing.Any`: twelve :class:`~typing.TypedDict`
        classes name the OTLP messages they encode, from :class:`~pyTooling.Tracing.OTLPDocument` down to
        :class:`~pyTooling.Tracing.OTLPAnyValue`.
@@ -356,7 +411,8 @@ Version 10.x (2026)
      * A trace **renders as a Gantt chart**: :class:`~pyTooling.Tracing.Render.GanttLayout` arranges the timespans
        in rows independently of a drawing library, and a :class:`~pyTooling.Tracing.Render.Renderer` draws what it
        arranged. :class:`~pyTooling.Tracing.Render.Matplotlib.MatplotlibRenderer` writes the chart as SVG, PNG or
-       PDF; matplotlib is installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
+       PDF, and :class:`~pyTooling.Tracing.Render.Plotly.PlotlyRenderer` as an interactive HTML page; matplotlib and
+       plotly are installed by the new extra ``pyTooling[diagram]``. Everything no drawing library decides -
        the categories' colors and the legend's texts - is on the base-class, so a second backend repeats none of it. The
        layout's ``Duration`` - the end of the last bar - is a :class:`~datetime.timedelta`, ``DurationInSeconds`` the
        same as a :class:`float`.
@@ -365,6 +421,30 @@ Version 10.x (2026)
      * A timespan left by an exception records it - :attr:`~pyTooling.Tracing.Span.Exception` - and the exception
        propagates as before. The OTLP/JSON export reports such a span with ``STATUS_CODE_ERROR``
        (:class:`~pyTooling.Tracing.OTLPStatus`); a failed span looked like a successful one.
+     * A trace **reads itself back** from an OTLP/JSON document - :meth:`~pyTooling.Tracing.Trace.FromOTLPJSON`,
+       :meth:`~pyTooling.Tracing.Trace.FromOTLPJSONString` and :meth:`~pyTooling.Tracing.Trace.ReadOTLPJSONFile`.
+       OTLP carries no nesting, so the tree is reassembled from the flat list of spans and their ``parentSpanId``
+       references, and a document holding several traces is read one trace at a time.
+     * The document is validated against the new JSON schema ``OTLP-Traces-v1.0.schema.json``
+       (:attr:`TraceCollection.SCHEMA_FILES <pyTooling.Tracing.TraceCollection.SCHEMA_FILES>`) before it is read, which
+       needs the new extra ``pyTooling[tracing]``: every violation is a note of the
+       :exc:`~pyTooling.Tracing.TracingError`, naming its position in the document. A duplicate span or attribute key,
+       a set of spans that isn't a tree, and timestamps that don't fit raise a :exc:`~pyTooling.Tracing.TracingError`
+       naming the field.
+     * A :class:`~pyTooling.Tracing.TraceCollection` reads documents that aren't one complete trace: several traces at
+       once, or only part of one. It keeps the complete traces and the **fragments** - timespans whose parent hasn't
+       arrived yet - indexed by identifier, links them as further documents are added in any order, and writes itself
+       back as OTLP/JSON. A fragment's root is a :class:`~pyTooling.Tracing.Fragment`, which keeps the identifiers of
+       its trace and of the parent it is waiting for.
+     * A missing, duplicate or cyclic trace or timespan raises a specific error:
+       :exc:`~pyTooling.Tracing.TraceNotFoundError`, :exc:`~pyTooling.Tracing.SpanNotFoundError`,
+       :exc:`~pyTooling.Tracing.DuplicateTraceError`, :exc:`~pyTooling.Tracing.DuplicateSpanError` and
+       :exc:`~pyTooling.Tracing.SpanCycleError`. Each derives from :exc:`~pyTooling.Tracing.TracingError` and from a
+       generic error of :mod:`pyTooling.Exceptions`: the new :exc:`~pyTooling.Exceptions.ElementNotFoundError` (a
+       :exc:`LookupError`), :exc:`~pyTooling.Exceptions.DuplicateElementError`, or the new
+       :exc:`~pyTooling.Exceptions.CycleError`. :exc:`Graph.CycleError <pyTooling.Graph.CycleError>`,
+       :exc:`~pyTooling.CI.NeedDependencyCycleError` and :exc:`~pyTooling.Dependency.CircularRequirementsFileError`
+       derive from :exc:`~pyTooling.Exceptions.CycleError` too.
 
    * :mod:`pyTooling.Packaging`
 
@@ -381,9 +461,7 @@ Version 10.x (2026)
      * ⚠️ :func:`~pyTooling.Packaging.DescribePythonPackage` leaves requirements with a direct reference (``name @
        URL``) out of every extra and reports each as a critical :exc:`~pyTooling.Packaging.DirectReferenceWarning` to a
        :class:`~pyTooling.Warning.WarningCollector`: the Python Package Index rejects a package whose metadata contains
-       one. pyTooling itself names pyTooling.Sphinx, which isn't on PyPI yet, by its repository in
-       :file:`doc/requirements.txt`; its ``doc`` and ``all`` extras carried it, so v10.0.0-rc1 couldn't be uploaded.
-       Base requirements are kept. A :file:`setup.py` with such an extra must collect the warnings, otherwise
+       one. Base requirements are kept. A :file:`setup.py` with such an extra must collect the warnings, otherwise
        :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` stops the build; pyTooling's own collects and prints
        them.
 
@@ -483,6 +561,11 @@ Version 10.x (2026)
        index. A resolution honours the current :class:`~pyTooling.Timeout.Timeout`: requirements left unresolved when
        it expires get the status :attr:`~pyTooling.Dependency.Resolver.ResolutionStatus.TimeoutExpired` and are
        reported as the critical :class:`~pyTooling.Dependency.ResolutionTimeoutWarning`.
+     * The package-override file :class:`~pyTooling.Dependency.Python.LicenseOverrides` reads has a JSON schema,
+       :file:`PackageOverrides-v0.1.schema.json`, shipped as a package resource and named by
+       :attr:`~pyTooling.Dependency.Python.LicenseOverrides.SCHEMA_FILES`. The documentation serves it - and
+       :file:`TestReport-v0.1.xsd` - under ``https://pyTooling.GitHub.io/pyTooling/Schemas/``, the schema's ``$id``,
+       so an editor validates the file as it is typed.
 
    * :mod:`pyTooling.Configuration`
 
@@ -525,9 +608,17 @@ Version 10.x (2026)
        present.
      * A :class:`~pyTooling.Versioning.VersionRange` can be open at either end: a bound of ``None`` is unbounded, so
        ``>=1.0`` is expressible.
+     * :class:`~pyTooling.Versioning.CalendarVersion` and its year-based classes carry a release level, a post-release,
+       a development release, a build number and a postfix, as a semantic version does: ``2024.01a1``,
+       ``2024.01-rc1``, ``2024.01-dev``, ``2024.01.post2.dev3``, ``2024.10.15.3``, ``2024.10.15+deadbeef`` and OSVVM's
+       ``2025.06a``. A ``.`` or ``-`` may separate the release level; a letter without a number is a postfix, and the
+       separator in front of a postfix is kept, so ``2025.06a`` is written ``2025.6a``. Their initializers take
+       ``level``, ``number``, ``post``, ``dev``, ``hash`` and ``postfixSeparator`` as keyword parameters; :func:`str`,
+       :func:`repr` and :func:`format` write the new parts.
 
    * Exceptions carry the object they are about, so a caller can react without parsing the message. The new
-     parameters are keyword-only and default to ``None``, so an exception raised with a message only keeps working.
+     parameters are keyword-only. Every raise knows them, so they are required; only a value that can really be
+     missing defaults to ``None``.
 
      * :exc:`~pyTooling.Configuration.KeyNotFoundError` carries the missing key or index in
        :attr:`~pyTooling.Configuration.KeyNotFoundError.Key`.
@@ -580,6 +671,18 @@ Version 10.x (2026)
      * :mod:`pyTooling.CI`: :exc:`~pyTooling.CI.NeedDependencyError` carries both elements (``Element``, ``Need``),
        :exc:`~pyTooling.CI.NeedDependencyCycleError` also the cycle (``Cycle``),
        :exc:`~pyTooling.CI.AlreadyInPipelineError` the rule (``Element``).
+     * The values stay optional only where they can really be missing: a release's version of
+       :exc:`~pyTooling.Dependency.NoSessionAvailableError`, :exc:`~pyTooling.Dependency.PackageIndexError` and
+       :exc:`~pyTooling.Dependency.PackageIndexFailureWarning` (a request of the project itself has none), of
+       :exc:`~pyTooling.Dependency.ReleaseNotFoundError` (a project without any release) and of
+       :exc:`~pyTooling.Dependency.UnresolvedRequirementWarning` (an unknown project); the kind of
+       :exc:`~pyTooling.ControlFlow.DuplicateBlockError` (a duplicate ID); the identifier of
+       :exc:`~pyTooling.Licensing.LicenseExpressionError` (a malformed expression); the path of
+       :exc:`~pyTooling.Graph.CycleError`; the element and need of :exc:`~pyTooling.CI.NeedDependencyCycleError` (a
+       cycle of several needs). ``NeedDependencyError`` takes ``None`` for the elements of such a cycle,
+       ``PackageIndexFailureWarning`` for the status code of a network failure, and
+       :exc:`~pyTooling.Packaging.DirectReferenceWarning` for the file of a requirement from parameter
+       ``additionalRequirements``.
      * :exc:`~pyTooling.CallGraph.DuplicateFunctionError` carries the function's ID (``FunctionID``),
        :exc:`~pyTooling.ControlFlow.DuplicateBlockError` the block's ID and kind (``BlockID``, ``Kind``),
        :exc:`~pyTooling.ControlFlow.DuplicateEdgeError` the edge connecting the blocks already (``ExistingEdge``).
@@ -630,9 +733,15 @@ Version 10.x (2026)
      ``Parse(path, root=None)``. A flavour outside pyTooling passing ``pathCls`` and ``elementCls`` drops them and
      declares ``ELEMENT_TYPE``.
 
-   * ⚠️ :class:`~pyTooling.GenericPath.URL.Host` **rejects a host name that is** ``None`` **or empty** with a
+   * ⚠️ :class:`~pyTooling.URI.Host` **rejects a host name that is** ``None`` **or empty** with a
      :exc:`ValueError`. An empty name was accepted, and ``None`` raised a :exc:`TypeError`.
-     :meth:`~pyTooling.GenericPath.URL.URL.Parse` is unchanged.
+     :meth:`~pyTooling.URI.URL.Parse` is unchanged.
+
+   * ⚠️ :meth:`~pyTooling.URI.URL.Parse` **requires a scheme and a host**, and raises a
+     :exc:`~pyTooling.URI.URLError` for a string that isn't a URL. A host without scheme - ``github.com``,
+     ``localhost:8080`` - was parsed as a URL without scheme; write the scheme (``https://github.com``). A relative
+     reference is appended to a URL with ``/``. :data:`~pyTooling.URI.URL_PATTERN` requires the scheme
+     too.
 
    * ⚠️ **A membership test is named** ``Contains***``: ``Has***`` asks for a property of the object itself, like
      :meth:`~pyTooling.Graph.BaseGraph.HasCycle`. ``Graph.HasVertexByID`` |rarr|
@@ -659,6 +768,33 @@ Version 10.x (2026)
      :exc:`~pyTooling.Exceptions.ToolingException`, the package's own base exception, keeps ``Exception``. There are no
      aliases of the old names, so an ``import`` or an ``except`` clause naming one has to be updated.
 
+   * ⚠️ **The descriptive values of** :exc:`~pyTooling.Graph.DuplicateVertexError`,
+     :exc:`~pyTooling.Graph.DuplicateEdgeError`, :exc:`~pyTooling.Warning.SupervisedThreadError` **and**
+     :exc:`~pyTooling.Versioning.VersionValidatorError` **are required**: ``vertexID``, ``edgeID``, ``threadName`` and
+     ``version`` have no default anymore. Code raising one of them passes the value by keyword; raising one with a
+     message only is a :exc:`TypeError`.
+
+   * ⚠️ **Exceptions and warnings, which v9 defined without an initializer of their own, require their descriptive
+     values** (some had an ``***Exception`` name): a message only is a :exc:`TypeError`.
+     :mod:`pyTooling.Configuration`: :exc:`~pyTooling.Configuration.KeyNotFoundError` (``key``),
+     :exc:`~pyTooling.Configuration.UnsupportedValueTypeError` (``value``),
+     :exc:`~pyTooling.Configuration.InterpolationError` (``value``, ``position``),
+     :exc:`~pyTooling.Configuration.PathExpressionError` (``pathExpression``). :mod:`pyTooling.Dependency`:
+     :exc:`~pyTooling.Dependency.NoSessionAvailableError`, :exc:`~pyTooling.Dependency.ProjectNotFoundError` and
+     :exc:`~pyTooling.Dependency.ReleaseNotFoundError` (``projectName``),
+     :exc:`~pyTooling.Dependency.ReleaseDetailsWarning` (``projectName``, ``version``). :mod:`pyTooling.MetaClasses`:
+     :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`,
+     :exc:`~pyTooling.MetaClasses.BaseClassWithNonEmptySlotsError` and
+     :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError` (``baseClass``, ``className``),
+     :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` (``fieldName``, ``className``),
+     :exc:`~pyTooling.MetaClasses.UnannotatedFieldWarning` (``className``, ``fieldNames``),
+     :exc:`~pyTooling.MetaClasses.IncompatibleMetaClassError` (``decoratedClass``, ``metaClass``),
+     :exc:`~pyTooling.MetaClasses.AbstractClassError` and :exc:`~pyTooling.MetaClasses.MustOverrideClassError`
+     (``abstractClass``, ``abstractMethods``). :mod:`pyTooling.Platform`:
+     :exc:`~pyTooling.Platform.UnknownPlatformError` and :exc:`~pyTooling.Platform.UnknownOperatingSystemError`
+     (``unknownValue``). :mod:`pyTooling.Tree`:
+     :exc:`~pyTooling.Tree.AlreadyInTreeError` and :exc:`~pyTooling.Tree.NotInSameTreeError` (``otherNode``).
+
    * ⚠️ **Class variables with constant meaning are spelled in upper case**, as ``INDENT`` and the exit codes already
      are: ``TerminalApplication.HeadLine`` |rarr| ``HEADLINE``, ``TerminalBaseApplication.Foreground`` |rarr|
      ``FOREGROUND``, ``Program._executableNames`` |rarr| ``_EXECUTABLE_NAMES``, and
@@ -672,6 +808,18 @@ Version 10.x (2026)
    * ⚠️ ``TerminalBaseApplication.PrintMissingDependencyException()`` **is renamed to**
      :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError`, after the exception it prints.
      Rename the call; there is no alias.
+
+   * ⚠️ ``TerminalBaseApplication.ISSUE_TRACKER_URL`` **is removed**: the exception printers read the issue tracker URL
+     from ``__issue_tracker_url__`` of the module set as class constant
+     :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE`. Replace the class variable with
+     :pycode:`DUNDER_MODULE = myPackage`, the package declaring the dunder variables (see :ref:`TERM/IssueTracker`).
+
+   * ⚠️ :meth:`TerminalApplication._PrintVersion() <pyTooling.TerminalUI.TerminalApplication._PrintVersion>`
+     **no longer takes a module**: it reads the dunder variables of
+     :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE`. Set the constant and drop the module
+     argument: :pycode:`self._PrintVersion(DunderModule, "myPackage")` becomes
+     :pycode:`self._PrintVersion("myPackage")`. An override existing only to hand over the module can go. A module
+     still passed raises a :exc:`TypeError`.
 
    * ⚠️ :func:`~pyTooling.Packaging.DescribePythonPackage` **raises when it can find no description**, instead of
      publishing a package without one. Either pass ``description``, or give the file named by ``sourceFileWithVersion``
@@ -698,6 +846,11 @@ Version 10.x (2026)
    * ⚠️ **A slotted secondary base-class has to be a mixin-class**, also without fields:
      :class:`~pyTooling.MetaClasses.ExtendedType` raises :exc:`~pyTooling.MetaClasses.BaseClassIsNotAMixinError`.
      Declare it with ``mixin=True`` or apply :deco:`~pyTooling.MetaClasses.mixin`.
+
+   * ⚠️ ``slots=True`` **on a primary base-class without slots raises**
+     :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError`: ``class B(A, slots=True)`` with ``A`` declared without
+     ``slots=True``. Declare the base-class with ``slots=True``, or remove ``slots=True`` from the derived class - its
+     instances keep a ``__dict__`` as before.
 
    * ⚠️ **A mixin-class' slot that exists already raises** :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError`: a
      field of the class itself, a slot of the primary inheritance line, or a slot of a second mixin-class. Rename the
@@ -768,6 +921,11 @@ Version 10.x (2026)
      A requirements file given in ``entries`` joins the tree; one referenced by another file already raises
      :exc:`~pyTooling.Dependency.AlreadyInRequirementsTreeError`.
 
+   * ⚠️ **The extra** ``pypi`` **is renamed to** ``dependencies``: ``pip install pyTooling[pypi]`` |rarr|
+     ``pip install pyTooling[dependencies]``, also in requirements files. There is no alias; pip installs a package
+     without an extra it doesn't declare, warning only, so :mod:`pyTooling.Dependency.Python` then raises
+     :exc:`~pyTooling.Exceptions.MissingDependencyError` on import.
+
    * ⚠️ **A program found in** ``PATH`` **is the full path** in :attr:`~pyTooling.CLIAbstraction.Program.Path` and as
      the first item of :meth:`~pyTooling.CLIAbstraction.Program.ToArgumentList`, e.g. ``/usr/bin/git`` instead of
      ``git``.
@@ -791,6 +949,27 @@ Version 10.x (2026)
 
    * ⚠️ :meth:`VersionRange.__and__ <pyTooling.Versioning.VersionRange.__and__>` **no longer includes bounds the
      operands exclude** - see *Bug Fixes*.
+
+   * ⚠️ **The third numeric part of a** :class:`~pyTooling.Versioning.YearMonthVersion`,
+     :class:`~pyTooling.Versioning.YearWeekVersion` **or** :class:`~pyTooling.Versioning.YearReleaseVersion` **is its
+     build number**: ``YearMonthVersion.Parse("2024.10.15")`` raised a :exc:`ValueError`; it is build 15 of
+     ``2024.10``. Parse a date with :class:`~pyTooling.Versioning.YearMonthDayVersion`.
+
+   * ⚠️ **A calendar version compares and hashes every part**, see *Bug Fixes*: ``2025.06a == 2025.06`` is
+     ``False``. Code comparing only the numbers compares :attr:`~pyTooling.Versioning.CalendarVersion.Year` and
+     :attr:`~pyTooling.Versioning.YearMonthVersion.Month`.
+
+   * ⚠️ **A postfix makes a version newer**, see *Bug Fixes*: ``1.2.3 < 1.2.3+build.5``. Code expecting both to sort
+     alike drops the postfix before comparing.
+
+   * ⚠️ **An** :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.OptionalValuedFlag` **passes a string or**
+     ``None`` **instead of a boolean** - see *Bug Fixes*. The option given without a value passes ``defaultValue``, an
+     empty string by default, which is false: test ``args.color is not None`` to ask whether the option was given.
+   * ⚠️ ``SemanticVersion.Parse("v2.0.0-rc.1")`` **is release candidate 1**, not release candidate 0 with the postfix
+     ``1`` - see *Bug Fixes*.
+   * ⚠️ ``SemanticVersion.Parse("1.2.3foo")`` **raises** :exc:`ValueError` instead of returning ``1.2`` with the postfix
+     ``3foo``; so do ``1.2.3_x`` and a fifth number (``1.2.3.4.5``) - see *Bug Fixes*. Separate a postfix by ``.``,
+     ``-`` or ``+``: ``1.2.3.foo``, ``1.2.3-1``, ``1.2.3+5``.
 
    .. rubric:: Changes
 
@@ -903,6 +1082,8 @@ Version 10.x (2026)
        :mod:`importlib.resources` when called, not when :mod:`pyTooling.Common` is imported. Every pyTooling package
        imports :mod:`pyTooling.Common`: importing :mod:`pyTooling.Common` takes 8.3 ms less (Python 3.15), importing
        :mod:`pyTooling.Graph`, :mod:`pyTooling.Tree` or :mod:`pyTooling.Versioning` 6.4 to 7.4 ms less.
+     * :func:`~pyTooling.Common.getResourceFile` and :func:`~pyTooling.Common.readResourceFile` take the file name as
+       a :class:`~pathlib.Path` too, as the ``SCHEMA_FILES`` mappings state it.
 
    * :mod:`pyTooling.Configuration`
 
@@ -923,6 +1104,9 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Dependency`
 
+     * ⚠️ The extra installing what :mod:`pyTooling.Dependency.Python` and :mod:`pyTooling.Dependency.Resolver` import
+       (aiohttp, packaging, requests) is named ``dependencies``, after the feature it serves, like ``diagram``,
+       ``terminal`` and ``yaml``. It was named ``pypi``, after the index it reads.
      * ⚠️ A release version the parser can't read is reported as a critical
        :exc:`~pyTooling.Dependency.UnsupportedVersionWarning`, carrying ``ProjectName`` and ``Version``, instead of a
        line written by :func:`print`. The release is still skipped.
@@ -982,6 +1166,13 @@ Version 10.x (2026)
 
      * FreeBSD is a supported platform: ``IsNativeFreeBSD`` no longer implies x86-64, AArch64 is recognized, and
        ``GetMemoryUsage`` reports the resident size through :func:`resource.getrusage`.
+     * :exc:`~pyTooling.Platform.UnknownPlatformError` is the base-class of three specific errors:
+       :exc:`~pyTooling.Platform.UnknownOperatingSystemError` (:data:`os.name`),
+       :exc:`~pyTooling.Platform.UnknownEnvironmentError` (the platform on Windows, :data:`sys.platform` on POSIX) and
+       :exc:`~pyTooling.Platform.UnknownArchitectureError` (the processor architecture).
+       :class:`~pyTooling.Platform.Platform` raises them instead of the base-class. ⚠️
+       :exc:`~pyTooling.Platform.UnknownOperatingSystemError`, so far a :exc:`~pyTooling.Platform.PlatformError`
+       without data, takes ``unknownValue`` and adds the debugging notes.
 
    * :mod:`pyTooling.Stopwatch`
 
@@ -997,6 +1188,14 @@ Version 10.x (2026)
 
      * ⚠️ :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError` is named after the exception
        it prints, :exc:`~pyTooling.Exceptions.MissingDependencyError`; it was ``PrintMissingDependencyException()``.
+     * ⚠️ An application names the module declaring its dunder variables once, as class constant
+       :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE` (``None`` by default). The exception
+       printers read ``__issue_tracker_url__`` from it - the constant or the variable being ``None``, no invitation to
+       report a bug is printed - and the class variable ``ISSUE_TRACKER_URL`` is removed, so the version information
+       and a bug report can't name different URLs.
+     * ⚠️ :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` reads the same constant instead of a module
+       parameter; its output is unchanged. Without a module, copyright, license, author and version are reported as
+       not set, as for a module lacking them.
 
    * :mod:`pyTooling.Testing`
 
@@ -1021,13 +1220,65 @@ Version 10.x (2026)
      * ⚠️ A :class:`~pyTooling.Tree.Node` takes its key-value-pairs from
        :class:`~pyTooling.DataModel.KeyValuePairsMixin`, so its key and value type parameters are gone.
 
+   * :mod:`pyTooling.Versioning`
+
+     * ⚠️ A two-part calendar version - :class:`~pyTooling.Versioning.YearMonthVersion`,
+       :class:`~pyTooling.Versioning.YearWeekVersion`, :class:`~pyTooling.Versioning.YearReleaseVersion` - reads a
+       third numeric part as its build number, as a fourth one is the build number of a three-part version:
+       ``2024.10.15`` is build 15 of ``2024.10``. It was rejected; a fourth numeric part still is.
+
    * General
 
      * ⚠️ Membership tests are named ``Contains***``; ``Has***`` checks a property or feature of an object.
      * ⚠️ 32 exception classes carry the ``***Error`` suffix; ``***Exception`` is reserved for a package's own base
        exception, :exc:`~pyTooling.Exceptions.ToolingException`.
+     * ⚠️ :exc:`~pyTooling.Graph.DuplicateVertexError`, :exc:`~pyTooling.Graph.DuplicateEdgeError`,
+       :exc:`~pyTooling.Warning.SupervisedThreadError` and :exc:`~pyTooling.Versioning.VersionValidatorError` require
+       their descriptive value, as every raise in pyTooling passes it; it defaulted to ``None``.
+     * ⚠️ 19 exceptions and warnings, which v9 defined without an initializer of their own, require their
+       descriptive values; a message only is a :exc:`TypeError`.
 
    .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Attributes.ArgParse.KeyValueFlag`
+
+     * :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.NamedKeyValuePairsArgument`,
+       :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.ShortKeyValueFlag` and
+       :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.LongKeyValueFlag` parsed no key-value pair: they passed the
+       parameterization of a boolean flag to :mod:`argparse`, so ``-Dkey=value`` left ``-key=value`` unprocessed and the
+       handler received ``True``. The new action
+       :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.KeyValuePairsAction` adds every ``key=value`` to a
+       dictionary, which the handler receives (``None`` without the option); a key without ``=`` has the value ``None``.
+       A new parameter ``metaName`` names the value in the help page (default ``KEY=VALUE``).
+
+   * :mod:`pyTooling.Attributes.ArgParse.OptionalValuedFlag`
+
+     * ⚠️ :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.OptionalValuedFlag`,
+       :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.ShortOptionalValuedFlag` and
+       :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.LongOptionalValuedFlag` parsed no value: they passed
+       the parameterization of a boolean flag to :mod:`argparse`, so ``--color`` passed ``True`` and ``--color=red``
+       was an error. The handler receives the value (``--color=red`` or ``--color red``), the new parameter
+       ``defaultValue`` for the option without a value (default ``""``), or ``None`` without the option. A new
+       parameter ``metaName`` names the value in the help page (default ``VALUE``).
+
+   * :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`
+
+     * :meth:`LineSegment2D.AngleTo <pyTooling.Cartesian2D.LineSegment2D.AngleTo>` and
+       :meth:`LineSegment3D.AngleTo <pyTooling.Cartesian3D.LineSegment3D.AngleTo>` raised :exc:`ZeroDivisionError` for
+       a line segment of length 0. They raise :exc:`ValueError` now.
+     * ``AngleTo`` of two parallel line segments raised :exc:`ValueError` (``math domain error``), when the cosine of
+       the angle rounded to a value above 1 or below -1 - ``(0, 0, 0) → (1, 1, 1)`` and ``(0, 0, 0) → (2, 2, 2)``, for
+       example - or returned up to ``2.1e-08`` instead of 0. The angle is computed with :func:`math.atan2` now.
+
+   * :mod:`pyTooling.Cartesian2D.Shapes`
+
+     * A :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` accepted a parallelogram, and a
+       :class:`~pyTooling.Cartesian2D.Shapes.Square` a rhombus: the constructor raised only if all four angles between
+       consecutive edges were 0. It requires four inner angles of 90 |degree| now.
+     * A rectangle or square with floating-point corners - rotated by 3 |degree|, for example - was rejected: the edge
+       lengths were compared exactly and differed in the last digit. Lengths and angles are compared with
+       :func:`math.isclose` now.
+     * Two consecutive corners at the same point raised :exc:`ZeroDivisionError` instead of :exc:`ValueError`.
 
    * :mod:`pyTooling.CLIAbstraction`
 
@@ -1087,6 +1338,11 @@ Version 10.x (2026)
        :meth:`Filename.ToTree <pyTooling.Filesystem.Filename.ToTree>` and
        :meth:`SymbolicLink.ToTree <pyTooling.Filesystem.SymbolicLink.ToTree>` take the optional ``format`` as well, so
        a user defined format renders the whole tree.
+     * :meth:`Directory.ResolveSymbolicLinks <pyTooling.Filesystem.Directory.ResolveSymbolicLinks>` raised an
+       :exc:`AttributeError` for a relative link target passing through another symbolic link or a regular file, e.g.
+       ``a -> dirlink/f.txt`` with ``dirlink -> dir``. A link in the middle of the target's path is followed, as the
+       operating system does; a regular file there, and a cycle of links, make the link broken, and a link with an
+       absolute target there makes it unconnected.
 
    * :mod:`pyTooling.Graph`
 
@@ -1096,6 +1352,19 @@ Version 10.x (2026)
        field ``_graph`` named the class' own property :attr:`~pyTooling.Graph.Subgraph.Graph`. The same shadowing
        resolved ``Subgraph._graph`` and ``Vertex._component`` to a property instead of a class. They are annotated
        with module-level aliases of :class:`~pyTooling.Graph.Graph` and :class:`~pyTooling.Graph.Component` now.
+
+   * :mod:`pyTooling.CI`, :mod:`pyTooling.CLIAbstraction`, :mod:`pyTooling.Dependency`, :mod:`pyTooling.Diagram`,
+     :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Graph`, :mod:`pyTooling.Platform`, :mod:`pyTooling.TerminalUI`,
+     :mod:`pyTooling.Tracing`, :mod:`pyTooling.Versioning` and their sub-modules
+
+     * The same shadowing resolved 39 fields of 27 classes to a property instead of a class, when evaluated in the
+       class' namespace by :func:`inspect.get_annotations` with ``eval_str=True`` or by :func:`typing.get_type_hints`
+       given the module's namespace: e.g. ``_path: Path`` of :class:`~pyTooling.Dependency.Python.RequirementsFile`
+       named its property :attr:`~pyTooling.Dependency.Python.RequirementsFile.Path`. In :mod:`pyTooling.Platform`,
+       whose annotations Python 3.14 evaluates lazily (:pep:`649`), :func:`typing.get_type_hints` returned the
+       properties :attr:`~pyTooling.Platform.Platform.PythonImplementation` and
+       :attr:`~pyTooling.Platform.Platform.PythonVersion` for the fields of :class:`~pyTooling.Platform.Platform` even
+       without a namespace. They are annotated with module-level aliases now, e.g. ``_Path = Path``.
 
    * :mod:`pyTooling.Graph.GraphML`
 
@@ -1131,6 +1400,14 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.MetaClasses`
 
+     * ``singleton=True`` was ignored on a class derived from a class created by
+       :class:`~pyTooling.MetaClasses.ExtendedType`, which isn't a singleton: the inherited ``__isSingleton__`` took
+       precedence over the class keyword argument.
+     * :deco:`~pyTooling.MetaClasses.singleton`, :deco:`~pyTooling.MetaClasses.mixin` and
+       :deco:`~pyTooling.MetaClasses.slotted` on a class created by :class:`~pyTooling.MetaClasses.ExtendedType` dropped
+       the class' own options: ``@singleton`` on a class with ``slots=True`` returned a class marked neither slotted
+       nor singleton, and on a mixin-class a class that wasn't a mixin. The recreated class keeps ``slots``,
+       ``mixin``, ``weakref`` and ``singleton`` and adds the decorator's option.
      * A class or static method marked with :deco:`~pyTooling.MetaClasses.abstractmethod` or
        :deco:`~pyTooling.MetaClasses.mustoverride` didn't make its class abstract: the class could be instantiated.
        :class:`~pyTooling.MetaClasses.ExtendedType` looked for the marker on the :class:`classmethod` or
@@ -1154,6 +1431,10 @@ Version 10.x (2026)
        metaclass=ExtendedType, slots=True)``) raised an :exc:`IndexError`: an inheritance path ending in
        :class:`object` was collected for every base-class, except for :class:`object` itself. An explicit
        :class:`object` base-class behaves like none.
+     * ⚠️ ``slots=True`` was ignored silently on a class whose primary base-class was built by
+       :class:`~pyTooling.MetaClasses.ExtendedType` without slots: the class was created without ``__slots__``, its
+       instances had a ``__dict__``, and ``__slotted__`` was ``False``. It raises
+       :exc:`~pyTooling.MetaClasses.BaseClassWithoutSlotsError` now, as for any other base-class without slots.
      * ⚠️ A ``ClassVar`` naming a mixin-class' slot produced a broken class: the name was in ``__slots__`` *and* a class
        attribute, so the field was read-only on every instance. It raises
        :exc:`~pyTooling.MetaClasses.DuplicateFieldInSlotsError` now.
@@ -1202,6 +1483,44 @@ Version 10.x (2026)
      * ⚠️ :meth:`VersionRange.__and__ <pyTooling.Versioning.VersionRange.__and__>` discarded both operands' bound
        handling, so intersecting two ranges that exclude their bounds returned a range including them. Each bound keeps
        the handling of the range it came from; where both contribute the same value, the stricter one wins.
+     * ⚠️ A calendar version ignored everything but its numbers: ``YearMonthVersion(2025, 6, postfix="a")`` was equal
+       to ``YearMonthVersion(2025, 6)`` and written ``2025.6``; a build number didn't count either.
+       :meth:`CalendarVersion.Parse <pyTooling.Versioning.CalendarVersion.Parse>` rejected every release level,
+       post-release, development release and postfix (``2024.01a``, ``2024.01-dev``, ``2024.10.15+deadbeef``) with a
+       :exc:`ValueError`.
+     * ⚠️ A postfix didn't order a version: ``1.2.3`` and ``1.2.3+build.5`` were unequal, but neither was less than the
+       other, and both ``<=`` and ``>=`` were true, so sorting them depended on their input order. A version without a
+       postfix is less than one with a postfix now, and two postfixes compare as strings.
+     * ⚠️ :meth:`SemanticVersion.Parse <pyTooling.Versioning.SemanticVersion.Parse>` read SemVer's ``v2.0.0-rc.1`` as
+       release candidate 0 with the postfix ``1`` (written ``v2.0.0.rc0+1``) and rejected a postfix with a ``.`` or
+       ``-``, like ``v1.2.3+build.5``.
+     * :class:`~pyTooling.Versioning.Version` hashed the prefix and the flags, which it doesn't compare:
+       ``SemanticVersion(1, 2, 3) == SemanticVersion.Parse("v1.2.3")``, but a set holding one didn't find the other.
+     * ``str(ReleaseLevel.Gamma)`` raised a :exc:`~pyTooling.Exceptions.ToolingException`, so a version's ``%R``
+       format failed for a gamma release.
+     * Comparing a :class:`~pyTooling.Versioning.YearMonthVersion`, :class:`~pyTooling.Versioning.YearWeekVersion`,
+       :class:`~pyTooling.Versioning.YearReleaseVersion` or :class:`~pyTooling.Versioning.YearMonthDayVersion` with an
+       :class:`int` raised :exc:`TypeError`: the integer was passed as ``major``, which they don't take. It is the year
+       now.
+     * :class:`~pyTooling.Versioning.SemanticVersion` read a release level after a build number as a postfix:
+       ``1.2.3.4-rc1`` had build 4 and postfix ``rc1``. It reads build 4 and release candidate 1 now.
+     * ⚠️ :class:`~pyTooling.Versioning.SemanticVersion` lost a number followed by letters: ``1.2.3foo`` was ``1.2``
+       with the postfix ``3foo``, ``1.2.3.4.5`` build 4 with the postfix ``5``. A postfix after a ``.`` doesn't start
+       with a digit now, so these raise a syntax error.
+     * A :class:`~pyTooling.Versioning.SemanticVersion` constructed with the release level ``Development`` and a number
+       dropped the number: it was written ``-dev``. Such a number raises :exc:`ValueError` now, as with ``Final``; a
+       development release's number is ``dev``.
+     * ``repr()`` of a :class:`~pyTooling.Versioning.SemanticVersion` ended after the micro number, dropping the build
+       number, release level, post-release, development release and postfix; it writes every part now. ``repr()`` of a
+       :class:`~pyTooling.Versioning.PythonVersion` is its :pep:`440` normalized form.
+     * ``%%`` in a format specification was meant as a literal percent sign, but ``%%M`` became ``%`` followed by the
+       major number, and :func:`format` raised for the unknown specifier ``%1``.
+     * :func:`format` of a version checked the specification unevenly: a calendar version passed an unknown specifier
+       through (``%M.%X`` gave ``2024.%X``), a :class:`~pyTooling.Versioning.SemanticVersion` raised
+       :exc:`IndexError` for a trailing ``%`` and took a ``%`` in a part's value - e.g. the postfix - for an unknown
+       specifier. Every version class checks the specification itself now and raises :exc:`ValueError` for an
+       unknown specifier or a trailing ``%``.
+     * :class:`~pyTooling.Versioning.VersionSet` given an iterator was empty: the type check consumed it.
 
    * :mod:`pyTooling.Warning`
 
@@ -1213,6 +1532,18 @@ Version 10.x (2026)
        :meth:`~pyTooling.Warning.WarningCollector.Raise` swallowed it for a warning, and turned it into
        :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` or :exc:`~pyTooling.Warning.UnhandledExceptionError` for
        a critical warning or an exception. It propagates now.
+
+   * :mod:`pyTooling.Versioning`
+
+     * :meth:`PythonVersion.Parse <pyTooling.Versioning.PythonVersion.Parse>` missed most spellings :pep:`440`
+       normalizes, and read some of them wrongly: ``1.0rev1`` became major 1 with the local version ``0rev1`` - the
+       minor number was lost -, ``1.0-1`` a local version instead of ``1.0.post1``, ``1.0.0-rc.1`` was ``rc0`` with
+       the local version ``1``, and ``1.0.0.RC1`` wasn't a release candidate.
+       :class:`~pyTooling.Versioning.PythonVersion` has a pattern of its own now: case-insensitive, ``.``, ``-`` or
+       ``_`` around every part, ``rev`` and ``r`` for ``post``, implicit numbers, and a local version with ``.``,
+       ``-`` or ``_`` inside. ⚠️ ``10.0.0-PRE1`` is a release candidate now, not the local version ``PRE1``; a local
+       version can't follow a ``.`` any more (``1.0.0.foo``), and ``final`` and ``pl`` aren't release levels of a
+       Python version.
 
    * :file:`doc/conf.py` imported :mod:`pyTooling.Packaging` before inserting the repository into ``sys.path``, so
      nine modules were documented from the *installed* package and the rest from the checkout.
@@ -1226,9 +1557,9 @@ Version 10.x (2026)
      sentence describing ``*args``/``**kwargs``, which none of them takes.
    * The four documentation-coverage findings that were real are fixed: :meth:`pyTooling.Tree.Node.__delitem__`,
      both comparison operators of :class:`~pyTooling.Licensing.License`, and ``abstract_new()``.
-   * :ref:`SCHEMAS` is a new section, last in *References and Reports*: a page per schema showing its full source
-     with a copy button, and offering the file itself for download. The page includes the schema from the package,
-     so there is no second copy to drift.
+   * :ref:`SCHEMAS` is a new section in *References and Reports*, after the class reference: a page per schema
+     showing its full source with a copy button, and offering the file itself for download. The page includes the
+     schema from the package, so there is no second copy to drift.
    * A schema is also **drawn**, by the directive ``xmlschema-graph`` of
      :doc:`pyTooling.Sphinx <pyToolSphinx:index>` - complex types as records, containment as labelled edges carrying
      the cardinality, and a node for an enumeration.
@@ -1279,14 +1610,6 @@ Version 10.x (2026)
    * A package PyPI would reject is neither tagged nor uploaded, a pre-release's release page is published as a
      pre-release, and only the wheel is published on PyPI.
 
-.. topic:: :gh:`v10.0.0-rc2 - 13.10.2026 <pyTooling/pyTooling/releases/v10.0.0-rc2>`
-
-   Release candidate published on PyPI. Its changes are listed in v10.0.0.
-
-.. topic:: :gh:`v10.0.0-rc1 - 12.10.2026 <pyTooling/pyTooling/releases/v10.0.0-rc1>`
-
-   Release candidate published on GitHub only; PyPI rejected its upload. Its changes are listed in v10.0.0.
-
 
 Version 9.x (2026)
 ******************
@@ -1320,7 +1643,7 @@ Version 9.x (2026)
      stubs, and the four methods every backend implements are ``@abstractmethod``.
    * :class:`~pyTooling.Versioning.CalendarVersion` renders only the parts it was given.
      ``YearMonthVersion(2024, 10)`` was ``'2024.10.0'``.
-   * :class:`pyTooling.GenericPath.URL.Protocols` is a :class:`~enum.Flag` whose secured schemes are named
+   * :class:`pyTooling.URI.Protocols` is a :class:`~enum.Flag` whose secured schemes are named
      composites, so ``Protocols.TLS in url.Scheme`` answers whether a scheme is encrypted. The numeric values
      change.
    * ``SupervisedThreadException`` takes its message positionally and the attached objects by keyword.
@@ -1894,7 +2217,7 @@ Version 6.x (2024)
 
    * :mod:`pyTooling.GenericPath`
 
-     * :class:`pyTooling.GenericPath.URL.URL` supports basic authentication credentials (username and password),
+     * :class:`pyTooling.URI.URL` supports basic authentication credentials (username and password),
        with a ``WithoutCredentials()`` method.
 
    .. rubric:: Changes

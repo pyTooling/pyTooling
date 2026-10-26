@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.Cartesian2D`: points, offsets and sizes, their copies, comparisons and
 arithmetic.
 """
-from math                  import sqrt
+from math                  import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D import Origin2D, Point2D, Offset2D, Size2D, LineSegment2D
 from pyTooling.Testing     import Testcase
@@ -76,12 +76,18 @@ class Instantiation(Testcase):
 		self.assertEqual("Point2D(1.0, 2.0)", repr(point))
 
 	def test_Point_str1(self) -> None:
-		with self.assertRaises(TypeError):
-			_ =Point2D("1", 2)
+		with self.assertRaises(TypeError) as context:
+			_ = Point2D("1", 2)
+
+		self.assertEqual("Parameter 'x' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Point_str2(self) -> None:
-		with self.assertRaises(TypeError):
-			_ =Point2D(1, "2")
+		with self.assertRaises(TypeError) as context:
+			_ = Point2D(1, "2")
+
+		self.assertEqual("Parameter 'y' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Offset_int(self) -> None:
 		offset = Offset2D(1, 2)
@@ -104,12 +110,18 @@ class Instantiation(Testcase):
 		self.assertEqual("Offset2D(1.0, 2.0)", repr(offset))
 
 	def test_Offset_str1(self) -> None:
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			_ = Offset2D("1", 2)
 
+		self.assertEqual("Parameter 'xOffset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
 	def test_Offset_str2(self) -> None:
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			_ = Offset2D(1, "2")
+
+		self.assertEqual("Parameter 'yOffset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Size_int(self) -> None:
 		size = Size2D(1, 2)
@@ -132,12 +144,18 @@ class Instantiation(Testcase):
 		self.assertEqual("Size2D(1.0, 2.0)", repr(size))
 
 	def test_Size_str1(self) -> None:
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			_ = Size2D("1", 2)
 
+		self.assertEqual("Parameter 'width' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
 	def test_Size_str2(self) -> None:
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			_ = Size2D(1, "2")
+
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_LineSegment(self) -> None:
 		point1 = Point2D(1, 2)
@@ -150,6 +168,92 @@ class Instantiation(Testcase):
 		self.assertEqual(sqrt(2), line.Length)
 		self.assertEqual(offset, line.ToOffset())
 		self.assertTupleEqual(((1, 2), (2, 3)), line.ToTuple())
+
+
+class LineSegment(Testcase):
+	def test_Length_Horizontal(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(3, 0))
+
+		self.assertEqual(3.0, line.Length)
+
+	def test_Length_Vertical(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(0, 3))
+
+		self.assertEqual(3.0, line.Length)
+
+	def test_Length_Diagonal(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(3, 4))
+
+		self.assertEqual(5.0, line.Length)
+
+	def test_AngleTo_Perpendicular(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		line2 = LineSegment2D(Point2D(2, 0), Point2D(2, 2))
+
+		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
+
+	def test_AngleTo_Parallel(self) -> None:
+		"""Same direction, different lengths: the cosine of the angle rounds to 0.9999999999999999."""
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(7, 7))
+
+		self.assertEqual(0.0, line1.AngleTo(line2))
+
+	def test_AngleTo_Opposite(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(-7, -7))
+
+		self.assertEqual(pi, line1.AngleTo(line2))
+
+	def test_AngleTo_ParallelFloat(self) -> None:
+		"""Same direction: the cosine of the angle rounds to 1.0000000000000002, outside acos' domain."""
+		line1 = LineSegment2D(Point2D(0.0, 0.0), Point2D(0.30000000000000004, 0.2))
+		line2 = LineSegment2D(Point2D(0.0, 0.0), Point2D(0.9000000000000001, 0.6000000000000001))
+
+		self.assertAlmostEqual(0.0, line1.AngleTo(line2), places=15)
+
+	def test_AngleTo_None(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line.AngleTo(None)
+
+		self.assertEqual("Parameter 'other' is None.", str(context.exception))
+
+	def test_AngleTo_Type(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = line.AngleTo(Point2D(2, 0))
+
+		self.assertEqual("Parameter 'other' is not of type 'LineSegment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_AngleTo_ZeroLength(self) -> None:
+		line1 = LineSegment2D(Point2D(1, 1), Point2D(1, 1))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line1.AngleTo(line2)
+
+		self.assertEqual("Line segment has length 0.", str(context.exception))
+		self.assertListEqual([
+			"Got line segment ((1, 1) → (1, 1)).",
+			"Can't determine an angle between two lines if one of the lines has no direction, due to a zero-length."
+		], context.exception.__notes__)
+
+	def test_AngleTo_ZeroLengthOther(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		line2 = LineSegment2D(Point2D(1, 1), Point2D(1, 1))
+
+		with self.assertRaises(ValueError) as context:
+			_ = line1.AngleTo(line2)
+
+		self.assertEqual("Parameter 'other' has length 0.", str(context.exception))
+		self.assertListEqual([
+			"Got line segment ((1, 1) → (1, 1)).",
+			"Can't determine an angle between two lines if one of the lines has no direction, due to a zero-length."
+		], context.exception.__notes__)
 
 
 class Copy(Testcase):

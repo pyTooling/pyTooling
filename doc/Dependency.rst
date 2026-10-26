@@ -76,16 +76,28 @@ When installed as ``pyTooling[diagram]``:
    :caption: Dependencies added by the ``diagram`` extra.
 
 
-When installed as ``pyTooling[pypi]``:
+When installed as ``pyTooling[idna]``:
 
-.. dependency-table:: pypi
-   :caption: Dependencies added by the ``pypi`` extra.
+.. dependency-table:: idna
+   :caption: Dependencies added by the ``idna`` extra.
+
+
+When installed as ``pyTooling[dependencies]``:
+
+.. dependency-table:: dependencies
+   :caption: Dependencies added by the ``dependencies`` extra.
 
 
 When installed as ``pyTooling[testing]``:
 
 .. dependency-table:: testing
    :caption: Dependencies added by the ``testing`` extra.
+
+
+When installed as ``pyTooling[tracing]``, for reading a trace from OTLP/JSON:
+
+.. dependency-table:: tracing
+   :caption: Dependencies added by the ``tracing`` extra.
 
 
 .. _DEP/testing:

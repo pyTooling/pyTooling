@@ -322,6 +322,30 @@ class DuplicateElementError(Exception):
 
 
 @export
+class ElementNotFoundError(LookupError):
+	"""
+	The exception is raised when a data structure contains no element of the requested kind and key.
+
+	It's a common base: a package's own exception derives from it and from the package's base-exception, e.g.
+	``class SpanNotFoundError(TracingError, ElementNotFoundError)`` in :mod:`pyTooling.Tracing`. It's a
+	:exc:`LookupError`, so code catching that catches it too. It has no initializer of its own, so the package's
+	base-exception decides how the message is stored.
+	"""
+
+
+@export
+class CycleError(Exception):
+	"""
+	The exception is raised when the elements of a data structure reference each other in a cycle, where the structure
+	doesn't permit one.
+
+	It's a common base: a package's own exception derives from it and from the package's base-exception, e.g.
+	``class SpanCycleError(TracingError, CycleError)`` in :mod:`pyTooling.Tracing`. It has no initializer of its own,
+	so the package's base-exception decides how the message is stored.
+	"""
+
+
+@export
 class AlreadyInHierarchyError(Exception):
 	"""
 	The exception is raised when an element is added to a hierarchy, but it's already part of one.

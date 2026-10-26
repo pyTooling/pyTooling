@@ -49,12 +49,15 @@ packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
 additionalRequirements = {
-	"diagram":   ["matplotlib >= 3.10"],
-	"pypi":      ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
-	"packaging": ["setuptools >= 83.0"],
-	"terminal":  ["colorama ~= 0.4.6"],
-	"testing":   ["pytest ~= 9.1"],
-	"yaml":      ["ruamel.yaml ~= 0.19"],
+	"dependencies": ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
+	"diagram":      ["matplotlib >= 3.10", "plotly >= 6.0"],
+	"idna":         ["idna >= 3.20"],
+	"packaging":    ["setuptools >= 83.0"],
+	"terminal":     ["colorama ~= 0.4.6"],
+	"testing":      ["pytest ~= 9.1"],
+	# 'jsonschema' needs 'rpds-py', which has no wheel for PyPy on Windows
+	"tracing":      ["jsonschema ~= 4.26 ; implementation_name != 'pypy' or sys_platform != 'win32'"],
+	"yaml":         ["ruamel.yaml ~= 0.19"],
 }
 
 with WarningCollector() as warnings:
@@ -70,7 +73,7 @@ with WarningCollector() as warnings:
 			pythonVersions=("3.11", "3.12", "3.13", "3.14", "3.15"),
 			dataFiles={
 				packageName[:-1] + "Common": ["../py.typed"],
-				packageName[:-1] + "Resources": ["*.xsd"],
+				packageName[:-1] + "Resources": ["*.xsd", "*.json"],
 				packageName[:-1] + "Resources.Tracing": ["*.css", "*.js"]
 			},
 			pytestPlugins={

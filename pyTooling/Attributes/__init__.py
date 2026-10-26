@@ -53,11 +53,10 @@ from __future__           import annotations
 
 from enum                 import IntFlag
 from types                import MethodType, FunctionType, ModuleType
-from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar
-from typing               import Optional as Nullable
+from typing               import Callable, TypeVar, Any, Iterable, Union, Generator, ClassVar, Optional as Nullable
 
 from pyTooling.Decorators import export, readonly
-from pyTooling.Common     import getFullyQualifiedName, getTypeName
+from pyTooling.Common     import getFullyQualifiedName, getTypeName, isnestedclass
 from pyTooling.Exceptions import ToolingException
 
 
@@ -97,42 +96,42 @@ class AttributeScopeError(ToolingException):
 	An attribute is applied to a language entity its :class:`AttributeScope` doesn't allow.
 	"""
 
-	_appliedAttribute: Nullable[Attribute]                  #: Attribute applied outside its scope.
-	_entity:           Nullable[Callable[..., Any] | type]  #: Function, method or class the attribute was applied to.
+	_appliedAttribute: Attribute                  #: Attribute applied outside its scope.
+	_entity:           Callable[..., Any] | type  #: Function, method or class the attribute was applied to.
 
 	def __init__(
 		self,
 		message: str,
 		/, *,
-		appliedAttribute: Nullable[Attribute] = None,
-		entity: Nullable[Callable[..., Any] | type] = None
+		appliedAttribute: Attribute,
+		entity: Callable[..., Any] | type
 	) -> None:
 		"""
 		Initializes the exception with the attribute and the language entity it was applied to.
 
 		:param message:          The exception's message.
-		:param appliedAttribute: Optional, the attribute applied outside its scope.
-		:param entity:           Optional, the language entity (function, method or class) the attribute was applied to.
+		:param appliedAttribute: The attribute applied outside its scope.
+		:param entity:           The language entity (function, method or class) the attribute was applied to.
 		"""
 		super().__init__(message)
 		self._appliedAttribute = appliedAttribute
 		self._entity =           entity
 
 	@readonly
-	def AppliedAttribute(self) -> Nullable[Attribute]:
+	def AppliedAttribute(self) -> Attribute:
 		"""
 		Read-only property to access the attribute applied outside its scope (:attr:`_appliedAttribute`).
 
-		:returns: The attribute, or ``None`` if it wasn't recorded.
+		:returns: The attribute.
 		"""
 		return self._appliedAttribute
 
 	@readonly
-	def Entity(self) -> Nullable[Callable[..., Any] | type]:
+	def Entity(self) -> Callable[..., Any] | type:
 		"""
 		Read-only property to access the language entity the attribute was applied to (:attr:`_entity`).
 
-		:returns: The entity, or ``None`` if it wasn't recorded.
+		:returns: The entity.
 		"""
 		return self._entity
 
@@ -304,8 +303,6 @@ class Attribute:  # (metaclass=ExtendedType, slots=True):
 		                   ``None`` accepts every class.
 		:returns:          A sequence of classes where this attribute is attached to.
 		"""
-		from pyTooling.Common import isnestedclass
-
 		if scope is None:
 			if subclassOf is None:
 				for c in cls._classes:

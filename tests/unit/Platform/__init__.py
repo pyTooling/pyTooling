@@ -34,11 +34,14 @@ Unit tests for :mod:`pyTooling.Platform`: the flags describing the current platf
 Most testcases are gated on the environment variable ``ENVIRONMENT_NAME``, so they run on the matching CI
 platform only.
 """
-from os       import getenv as os_getenv, environ as os_environ
-from pytest   import mark
+from os                   import getenv as os_getenv, environ as os_environ
+from typing               import get_type_hints
+from pytest               import mark
 
-from pyTooling.Platform import Platforms, Platform, CurrentPlatform, UnknownPlatformError
-from pyTooling.Testing  import Testcase
+from pyTooling.Platform   import Platforms, Platform, PythonImplementation, CurrentPlatform, UnknownPlatformError, \
+                                 UnknownOperatingSystemError, UnknownEnvironmentError, UnknownArchitectureError
+from pyTooling.Versioning import PythonVersion
+from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -519,7 +522,61 @@ class Errors(Testcase):
 		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
 
 	def test_UnknownPlatformError_MessageOnly(self) -> None:
-		with self.assertRaises(UnknownPlatformError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise UnknownPlatformError("Unknown platform.")
 
-		self.assertIsNone(context.exception.UnknownValue)
+		self.assertIn("'unknownValue'", str(context.exception))
+
+	def test_UnknownOperatingSystemError(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownOperatingSystemError("Unknown operating system 'java'.", unknownValue="java")
+
+		self.assertIs(UnknownOperatingSystemError, type(context.exception))
+		self.assertEqual("Unknown operating system 'java'.", str(context.exception))
+		self.assertEqual("java", context.exception.UnknownValue)
+		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
+
+	def test_UnknownEnvironmentError(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownEnvironmentError("Unknown POSIX platform 'aix'.", unknownValue="aix")
+
+		self.assertIs(UnknownEnvironmentError, type(context.exception))
+		self.assertEqual("Unknown POSIX platform 'aix'.", str(context.exception))
+		self.assertEqual("aix", context.exception.UnknownValue)
+		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
+
+	def test_UnknownArchitectureError(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownArchitectureError("Unknown architecture 'z80' for FreeBSD.", unknownValue="z80")
+
+		self.assertIs(UnknownArchitectureError, type(context.exception))
+		self.assertEqual("Unknown architecture 'z80' for FreeBSD.", str(context.exception))
+		self.assertEqual("z80", context.exception.UnknownValue)
+		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
+
+	def test_SubErrors_MessageOnly(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			raise UnknownOperatingSystemError("Unknown operating system.")
+		self.assertIn("'unknownValue'", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			raise UnknownEnvironmentError("Unknown environment.")
+		self.assertIn("'unknownValue'", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			raise UnknownArchitectureError("Unknown architecture.")
+		self.assertIn("'unknownValue'", str(context.exception))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Platform
+
+		self.assertIs(PythonImplementation, get_type_hints(Platform, vars(pyTooling.Platform))["_pythonImplementation"])
+		self.assertIs(PythonVersion, get_type_hints(Platform, vars(pyTooling.Platform))["_pythonVersion"])
+
+	def test_PropertyReturnsTheClass(self) -> None:
+		"""A property's return annotation names the class, not the property it annotates."""
+		self.assertIs(PythonImplementation, get_type_hints(Platform.PythonImplementation.fget)["return"])
+		self.assertIs(PythonVersion, get_type_hints(Platform.PythonVersion.fget)["return"])

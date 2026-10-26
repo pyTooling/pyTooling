@@ -204,7 +204,8 @@ same token** - ``--quota=5GiB``. :pycode:`metaName` is what the help page shows 
 Two variants exist for values that aren't a single string:
 
 * :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.OptionalValuedFlag` - the value **may** be omitted, so
-  the option carries a default when it is given bare.
+  the option carries a default when it is given bare: ``--color=red`` passes ``"red"``, ``--color`` passes
+  ``defaultValue``, and without the option the handler receives ``None``.
 * :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.NamedKeyValuePairsArgument` - the value is itself a
   ``key=value`` pair, so an option may be repeated to build a mapping, as ``-D name=value`` does for a compiler.
   :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.ShortKeyValueFlag` and

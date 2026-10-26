@@ -68,32 +68,32 @@ class TimeoutExpiredError(ToolingException, TimeoutError):
 	:exc:`~pyTooling.Exceptions.ToolingException` still catches it.
 	"""
 
-	_seconds: Nullable[float]  #: The configured timeout in seconds.
-	_overrun: Nullable[float]  #: Seconds by which the deadline was overrun when the error was raised.
+	_seconds: float  #: The configured timeout in seconds.
+	_overrun: float  #: Seconds by which the deadline was overrun when the error was raised.
 
-	def __init__(self, message: str, /, *, seconds: Nullable[float] = None, overrun: Nullable[float] = None) -> None:
+	def __init__(self, message: str, /, *, seconds: float, overrun: float) -> None:
 		"""
 		Initializes the exception with the timeout, which expired, and by how much it was overrun.
 
 		:param message: The exception's message.
-		:param seconds: Optional, the configured timeout in seconds.
-		:param overrun: Optional, the seconds by which the deadline was overrun when the error was raised.
+		:param seconds: The configured timeout in seconds.
+		:param overrun: The seconds by which the deadline was overrun when the error was raised.
 		"""
 		super().__init__(message)
 		self._seconds = seconds
 		self._overrun = overrun
 
 	@readonly
-	def Seconds(self) -> Nullable[float]:
+	def Seconds(self) -> float:
 		"""
 		Read-only property to access the configured timeout in seconds (:attr:`_seconds`).
 
-		:returns: The timeout in seconds, or ``None`` if it wasn't recorded.
+		:returns: The timeout in seconds.
 		"""
 		return self._seconds
 
 	@readonly
-	def Overrun(self) -> Nullable[float]:
+	def Overrun(self) -> float:
 		"""
 		Read-only property to access the seconds by which the deadline was overrun when the error was raised
 		(:attr:`_overrun`).
@@ -101,7 +101,7 @@ class TimeoutExpiredError(ToolingException, TimeoutError):
 		A loop checking its timeout once per iteration notices the expiry only at its next check, so the overrun tells how
 		long the last iteration ran past the deadline.
 
-		:returns: The overrun in seconds, or ``None`` if it wasn't recorded.
+		:returns: The overrun in seconds.
 		"""
 		return self._overrun
 

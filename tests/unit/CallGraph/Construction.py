@@ -31,8 +31,8 @@
 """
 Unit tests for :mod:`pyTooling.CallGraph`: constructing functions, calls and graphs, and the checks of their parameters.
 """
-from pyTooling.CallGraph   import CallGraph, Function, Call, FunctionKind, CallKind
-from pyTooling.CallGraph   import CallGraphError, DuplicateFunctionError
+from pyTooling.CallGraph   import CallGraph, Function, Call, FunctionKind, CallKind, CallGraphError, \
+                                  DuplicateFunctionError
 from pyTooling.ControlFlow import ControlFlowGraph, BasicBlock, BlockKind
 from pyTooling.Testing     import Testcase
 
@@ -302,11 +302,11 @@ class Checks(Testcase):
 		self.assertIs(FunctionKind.Defined, graph.GetFunction("main").Kind)
 
 	def test_DuplicateFunctionError_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no function ID."""
-		with self.assertRaises(DuplicateFunctionError) as context:
+		"""The function ID is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise DuplicateFunctionError("Duplicate function.")
 
-		self.assertIsNone(context.exception.FunctionID)
+		self.assertIn("'functionID'", str(context.exception))
 
 	def test_Function_Kind(self) -> None:
 		graph = CallGraph("prog")

@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Tracing.Render` and :mod:`pyTooling.Tracing.Render.Matplotlib`.
 """
 from datetime                    import datetime, timedelta, timezone
+from inspect                     import get_annotations
 from json                        import loads as json_loads
 from pathlib                     import Path
 from re                          import search
@@ -42,10 +43,10 @@ from warnings                    import catch_warnings, simplefilter
 from xml.etree                   import ElementTree
 
 from pyTooling.Tracing           import Span, Trace, TracingError
-from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
+from pyTooling.Tracing.CI        import CI, OTLP
 from pyTooling.MetaClasses       import AbstractClassError
-from pyTooling.Tracing.Render    import GanttLayout, Renderer, StepExclusion, ciSpanFilter, msys2Environment, \
-                                       runnerCategory
+from pyTooling.Tracing.Render    import GanttLayout, GanttRow, Renderer, StepExclusion, ciSpanFilter, \
+                                       msys2Environment, runnerCategory
 from pyTooling.Testing           import Testcase
 
 try:
@@ -53,6 +54,12 @@ try:
 	HAS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
 	HAS_MATPLOTLIB = False
+
+try:
+	from pyTooling.Tracing.Render.Plotly import PlotlyJavaScript, PlotlyRenderer, TIME_AXIS_ORIGIN
+	HAS_PLOTLY = True
+except ImportError:  # pragma: no cover
+	HAS_PLOTLY = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -460,6 +467,59 @@ class Matplotlib(Testcase):
 
 		self.assertEqual("Parameter 'width' isn't positive.", str(context.exception))
 
+	def test_ParameterChecks(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, width="16")
+
+		self.assertEqual("Parameter 'width' is not of type 'float' or 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = MatplotlibRenderer(layout, rowHeight=None)
+
+		self.assertEqual("Parameter 'rowHeight' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, fontSize="7")
+
+		self.assertEqual("Parameter 'fontSize' is not of type 'float' or 'int'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, fontFamilies="Arial")
+
+		self.assertEqual("Parameter 'fontFamilies' is not an iterable of 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, fontFamilies=(1, 2))
+
+		self.assertEqual("Parameter 'fontFamilies' is not an iterable of 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, legendLocation=1)
+
+		self.assertEqual("Parameter 'legendLocation' is not of type 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, collapsible=1)
+
+		self.assertEqual("Parameter 'collapsible' is not of type 'bool'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, collapsedKinds="job")
+
+		self.assertEqual("Parameter 'collapsedKinds' is not an iterable of 'str'.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = MatplotlibRenderer(layout, dpi=150.0)
+
+		self.assertEqual("Parameter 'dpi' is not of type 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = MatplotlibRenderer(layout, dpi=0)
+
+		self.assertEqual("Parameter 'dpi' isn't positive.", str(context.exception))
+
 	def test_Title(self) -> None:
 		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
 
@@ -528,3 +588,213 @@ class Matplotlib(Testcase):
 	def test_TheRendererIsAbstract(self) -> None:
 		with self.assertRaises(AbstractClassError):
 			_ = Renderer(GanttLayout(_pipeline()["Pipeline"]))
+
+
+class _Renderer(Renderer[None]):
+	"""A renderer drawing nothing, to test what the base-class composes independently of a drawing library."""
+	FORMATS = ("txt", )  #: The file formats this renderer writes.
+
+	def Render(self) -> None:
+		"""
+		Draw nothing.
+
+		:returns: ``None``.
+		"""
+
+	def _Write(self, figure: None, file: Path, fileFormat: str) -> None:
+		"""
+		Write nothing.
+
+		:param figure:     Unused.
+		:param file:       Unused.
+		:param fileFormat: Unused.
+		"""
+
+
+class Legend(Testcase):
+	def test_Seconds(self) -> None:
+		self.assertEqual("0:00", Renderer.FormatSeconds(0.4))
+		self.assertEqual("1:00", Renderer.FormatSeconds(59.6))
+		self.assertEqual("1:02:05", Renderer.FormatSeconds(3725))
+
+	def test_Time(self) -> None:
+		self.assertEqual("2026-09-15 06:35:00 UTC", Renderer.FormatTime(_BEGIN))
+
+	def test_TitleAndLabel(self) -> None:
+		renderer = _Renderer(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50)))
+		title = renderer.LegendTitle()
+		label = renderer.LegendLabel("ubuntu-26.04")
+
+		self.assertIn("started     2026-09-15 06:35:00 UTC\n", title)
+		self.assertIn("2 jobs", title)
+		self.assertTrue(label.startswith("ubuntu-26.04 "))
+		self.assertIn("0:03 / 0:03 / 0:03", label)
+		self.assertEqual(title.split("\n")[-1].index("jobs") + 4, label.index(" 1   ") + 2, "Columns align.")
+
+
+def _plain(text: str) -> str:
+	"""
+	Undo the non-breaking spaces and line breaks of plotly's markup.
+
+	:param text: The text in plotly's markup.
+	:returns:    The text with spaces and ``\\n``.
+	"""
+	return text.replace("\u00a0", " ").replace("<br>", "\n")
+
+
+@skipUnless(HAS_PLOTLY, "Needs plotly, installed by the extra 'pyTooling[diagram]'.")
+class Plotly(Testcase):
+	def test_Figure(self) -> None:
+		figure = PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))).Render()
+		names = [_plain(trace.name) for trace in figure.data]
+
+		self.assertEqual("Pipeline (1:40)", figure.layout.title.text)
+		self.assertEqual(5, len(figure.layout.yaxis.ticktext))
+		self.assertEqual("date", figure.layout.xaxis.type)
+		self.assertIn("started     2026-09-15 06:35:00 UTC\n", _plain(figure.layout.legend.title.text))
+		self.assertTrue(names[0].startswith("ubuntu-26.04"))
+		self.assertIn("0:03 / 0:03 / 0:03", names[0])
+		self.assertIn("waiting for a runner", names)
+		self.assertIn("pipeline, called workflow", names)
+
+	def test_Bars(self) -> None:
+		figure = PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))).Render()
+		bars = {_plain(trace.name).split("  ")[0]: trace for trace in figure.data if trace.type == "bar"}
+		build = bars["ubuntu-26.04"]
+		queued = bars["waiting for a runner"]
+		windows = bars["windows-2025 + UCRT64"]
+
+		self.assertEqual(TIME_AXIS_ORIGIN + timedelta(seconds=4), build.base[0])
+		self.assertEqual(26_000, build.x[0], "A bar's length is its duration in milliseconds.")
+		self.assertEqual(
+			["Build", "2026-09-15 06:35:04 UTC", "2026-09-15 06:35:30 UTC", "0:26", "ubuntu-26.04"],
+			list(build.customdata[0])
+		)
+		self.assertEqual((1, 3_000), (queued.y[0], queued.x[0]), "The waiting bar is on the job's row.")
+		self.assertEqual("/", windows.marker.pattern.shape[0], "A running bar is hatched.")
+		self.assertEqual("windows-2025 + UCRT64, running", windows.customdata[0][4])
+
+	def test_Lines(self) -> None:
+		figure = PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))).Render()
+		lines = [trace for trace in figure.data if trace.type == "scatter"]
+
+		self.assertEqual(["solid", "dash"], [line.line.dash for line in lines], "The running called workflow is dashed.")
+		self.assertEqual([True, False], [line.showlegend for line in lines])
+
+	def test_Escaping(self) -> None:
+		trace = Trace("<b>Pipeline</b>", _at(0), _at(10))
+		Span("Tests & <i>Checks</i>", _at(1), _at(5), parent=trace)
+		figure = PlotlyRenderer(GanttLayout(trace)).Render()
+
+		self.assertEqual("&lt;b&gt;Pipeline&lt;/b&gt; (0:10)", figure.layout.title.text)
+		self.assertEqual("\u00a0\u00a0Tests &amp; &lt;i&gt;Checks&lt;/i&gt;", figure.layout.yaxis.ticktext[1])
+
+	def test_HTML(self) -> None:
+		with TemporaryDirectory() as directory:
+			embedded = Path(directory) / "report" / "Pipeline.html"
+			cdn = Path(directory) / "Pipeline-CDN.html"
+			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50))).Write(embedded)
+			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], now=_at(50)), includePlotlyJS=PlotlyJavaScript.CDN).Write(cdn)
+			embeddedContent = embedded.read_text(encoding="utf-8")
+			cdnContent = cdn.read_text(encoding="utf-8")
+
+		self.assertIn("<html>", embeddedContent)
+		self.assertGreater(len(embeddedContent), 1_000_000, "plotly's library is embedded.")
+		self.assertIn("Plotly.newPlot", cdnContent)
+		self.assertIn("cdn.plot.ly", cdnContent)
+
+	def test_JSON(self) -> None:
+		with TemporaryDirectory() as directory:
+			file = Path(directory) / "Pipeline.json"
+			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"], spanFilter=ciSpanFilter(), now=_at(50))).Write(file)
+			content = json_loads(file.read_text(encoding="utf-8"))
+
+		self.assertEqual("Pipeline (1:40)", content["layout"]["title"]["text"])
+		self.assertEqual(5, len(content["layout"]["yaxis"]["ticktext"]))
+
+	def test_UnsupportedFormat(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"])).Write(Path("Pipeline.svg"))
+
+		self.assertEqual("File 'Pipeline.svg' has an unsupported format.", str(context.exception))
+
+	def test_FileType(self) -> None:
+		with self.assertRaises(TypeError):
+			PlotlyRenderer(GanttLayout(_pipeline()["Pipeline"])).Write("Pipeline.html")
+
+	def test_LayoutType(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = PlotlyRenderer(_pipeline()["Pipeline"])
+
+	def test_Width(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, width=800.0)
+
+		self.assertEqual("Parameter 'width' is not of type 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, width=0)
+
+		self.assertEqual("Parameter 'width' isn't positive.", str(context.exception))
+
+	def test_RowHeight(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, rowHeight=None)
+
+		self.assertEqual("Parameter 'rowHeight' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, rowHeight="20")
+
+		self.assertEqual("Parameter 'rowHeight' is not of type 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, rowHeight=0)
+
+		self.assertEqual("Parameter 'rowHeight' isn't positive.", str(context.exception))
+
+	def test_FontSize(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		self.assertEqual(12, PlotlyRenderer(layout, fontSize=12).FontSize)
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, fontSize=None)
+
+		self.assertEqual("Parameter 'fontSize' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, fontSize="11")
+
+		self.assertEqual("Parameter 'fontSize' is not of type 'float' or 'int'.", str(context.exception))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, fontSize=-1.0)
+
+		self.assertEqual("Parameter 'fontSize' isn't positive.", str(context.exception))
+
+	def test_IncludePlotlyJS(self) -> None:
+		layout = GanttLayout(_pipeline()["Pipeline"], now=_at(50))
+
+		self.assertIs(PlotlyJavaScript.Embedded, PlotlyRenderer(layout).IncludePlotlyJS)
+
+		with self.assertRaises(ValueError) as context:
+			_ = PlotlyRenderer(layout, includePlotlyJS=None)
+
+		self.assertEqual("Parameter 'includePlotlyJS' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PlotlyRenderer(layout, includePlotlyJS=True)
+
+		self.assertEqual("Parameter 'includePlotlyJS' is not of type 'PlotlyJavaScript'.", str(context.exception))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		self.assertIs(Span, get_annotations(GanttRow, eval_str=True)["_span"])
+		self.assertIs(Trace, get_annotations(GanttLayout, eval_str=True)["_trace"])

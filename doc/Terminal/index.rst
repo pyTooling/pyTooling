@@ -195,26 +195,33 @@ exits:
 
 .. _TERM/IssueTracker:
 
-Reporting Bugs: ISSUE_TRACKER_URL
-=================================
+Reporting Bugs: __issue_tracker_url__
+=====================================
 
-If the class variable :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL` is set, every exception
-printed by the methods above ends with an invitation to report the bug, followed by that URL. It is ``None`` by default,
-in which case the invitation is omitted. It is independent of the ``Issue tracker:`` line of
-:ref:`the version information <TERM/ProgramInformation>`, which is read from the application's dunder module.
+If the module set as class constant :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE` defines the
+dunder variable ``__issue_tracker_url__``, every exception printed by the methods above ends with an invitation to
+report the bug, followed by that URL. If the constant or the variable is ``None``, the invitation is omitted. The
+:ref:`version information <TERM/ProgramInformation>` reads the same module, so its ``Issue tracker:`` line and the
+invitation name the same URL.
 
-An application connects the class variable to its own dunder variable. pyTooling can't find that variable on its own:
-which module carries ``__issue_tracker_url__`` is up to the application - ``<package>/__init__.py`` for a simple
-package, ``<namespace>/<package>/__init__.py`` for a namespace package.
+An application sets the constant to its own package, whose ``__init__.py`` declares ``__version__`` and the other
+dunder variables. A package in a namespace package is imported from its namespace, e.g.
+:pycode:`from myNamespace import myPackage`.
 
 .. code-block:: Python
 
+   # myPackage/__init__.py
+   __version__ =           "1.0.0"
+   __issue_tracker_url__ = "https://GitHub.com/myUser/myPackage/issues"
+
+   # myPackage/CLI/__init__.py
    from pyTooling.TerminalUI import TerminalApplication
 
-   from myPackage import __issue_tracker_url__
+   import myPackage
 
    class Application(TerminalApplication):
-     ISSUE_TRACKER_URL = __issue_tracker_url__
+     HEADLINE =      "My Application"
+     DUNDER_MODULE = myPackage
 
 
 .. _TERM/LineTerminal:
@@ -489,7 +496,8 @@ or of one subcommand. It belongs to the mixin-class, which owns the parsers, and
 :class:`~pyTooling.TerminalUI.TerminalApplication` - so it is usable in an application combining both classes.
 
 :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` prints the program's meta data, read from the dunder
-variables of the module handed to it:
+variables of the module set as class constant :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE` (see
+:ref:`TERM/IssueTracker`):
 
 +---------------------------+----------------------------------------------------+
 | **Dunder variable**       | **Printed as**                                     |
@@ -512,17 +520,20 @@ variables of the module handed to it:
 +---------------------------+----------------------------------------------------+
 
 A missing copyright, license, author or version is printed in red rather than omitted, because those four are expected
-of every program.
+of every program. Without a module (``DUNDER_MODULE`` is ``None``), all four are missing.
 
-If a package name is passed as the second parameter, PyPI is queried for the latest release and the version line reports
+If a package name is passed (``packageName``), PyPI is queried for the latest release and the version line reports
 whether an update is available:
 
 .. code-block:: Python
 
-   def _PrintVersion(self) -> None:
-     import myPackage as DunderModule
+   class Application(TerminalApplication):
+     HEADLINE =      "My Application"
+     DUNDER_MODULE = myPackage
 
-     super()._PrintVersion(DunderModule, "myPackage")
+     def HandleVersion(self, _: Namespace) -> None:
+       self._PrintHeadline()
+       self._PrintVersion("myPackage")
 
 .. code-block::
 
@@ -545,8 +556,8 @@ while the messages, the verbosity and the exception reporting come from this pac
 
    @export
    class Application(TerminalApplication, ArgParseHelperMixin):
-     HEADLINE:          ClassVar[str] = "My Application"
-     ISSUE_TRACKER_URL: ClassVar[str] = __issue_tracker_url__
+     HEADLINE:      ClassVar[str] =        "My Application"
+     DUNDER_MODULE: ClassVar[ModuleType] = myPackage
 
      def __init__(self) -> None:
        super().__init__()

@@ -35,12 +35,27 @@ added later without changing every class again.
 Assertions
 ==========
 
-:meth:`~pyTooling.Testing.Testcase.assertHasAttr` and :meth:`~pyTooling.Testing.Testcase.assertNotHasAttr` check
-whether an object has an attribute. They were added to :class:`unittest.TestCase` in **Python 3.14**, so a test
-suite running on 3.11 to 3.13 cannot use them - :class:`~pyTooling.Testing.Testcase` provides them there.
+**Python 3.14** added eight assertions to :class:`unittest.TestCase`, so a test suite running on 3.11 to 3.13 cannot
+use them - :class:`~pyTooling.Testing.Testcase` provides them there:
 
-On Python 3.14 and newer the class defines nothing of its own, so the standard library's implementations and
-messages are used and the two behave identically on every supported interpreter.
+.. list-table::
+   :header-rows: 1
+   :widths: 50 50
+
+   * - Assertion
+     - Checks
+   * - :meth:`~pyTooling.Testing.Testcase.assertHasAttr`, :meth:`~pyTooling.Testing.Testcase.assertNotHasAttr`
+     - whether an object has an attribute
+   * - :meth:`~pyTooling.Testing.Testcase.assertIsSubclass`, :meth:`~pyTooling.Testing.Testcase.assertNotIsSubclass`
+     - whether a class derives from a class, or from one of a tuple of classes
+   * - :meth:`~pyTooling.Testing.Testcase.assertStartsWith`, :meth:`~pyTooling.Testing.Testcase.assertNotStartsWith`
+     - whether a string or bytes starts with a prefix, or one of a tuple of prefixes
+   * - :meth:`~pyTooling.Testing.Testcase.assertEndsWith`, :meth:`~pyTooling.Testing.Testcase.assertNotEndsWith`
+     - whether a string or bytes ends with a suffix, or one of a tuple of suffixes
+
+They fail with the messages Python 3.14 writes, and add a given ``msg`` to them as :attr:`unittest.TestCase.longMessage`
+says. On Python 3.14 and newer the class defines nothing of its own, so the standard library's implementations are
+used and the assertions behave identically on every supported interpreter.
 
 .. _TESTING/Application:
 

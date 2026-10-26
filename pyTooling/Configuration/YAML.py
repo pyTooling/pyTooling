@@ -37,13 +37,13 @@ Configuration reader for YAML files.
 
    See :ref:`high-level help <CONFIG/FileFormat/YAML>` for explanations and usage examples.
 """
-from __future__           import annotations
+from __future__                import annotations
 
-from pathlib              import Path
-from datetime             import date, datetime
-from typing               import Any, Union, Iterator as typing_Iterator, Optional as Nullable, Self
+from pathlib                   import Path
+from datetime                  import date, datetime
+from typing                    import Any, Union, Iterator as typing_Iterator, Optional as Nullable, Self
 
-from pyTooling.Exceptions import MissingDependencyError
+from pyTooling.Exceptions      import MissingDependencyError
 
 try:
 	from ruamel.yaml             import YAML, CommentedMap, CommentedSeq
@@ -53,13 +53,10 @@ except ImportError as ex:  # pragma: no cover
 from pyTooling.Common          import getFullyQualifiedName
 from pyTooling.Decorators      import export, InheritDocString
 from pyTooling.MetaClasses     import ExtendedType
-from pyTooling.Configuration   import ConfigurationError, KeyT, NodeT, ValueT
-from pyTooling.Configuration   import InterpolationError, KeyNotFoundError, PathExpressionError
-from pyTooling.Configuration   import UnsupportedValueTypeError
-from pyTooling.Configuration   import Node as Abstract_Node
-from pyTooling.Configuration   import Dictionary as Abstract_Dict
-from pyTooling.Configuration   import Sequence as Abstract_Seq
-from pyTooling.Configuration   import Configuration as Abstract_Configuration
+from pyTooling.Configuration   import ConfigurationError, KeyT, NodeT, ValueT, InterpolationError, KeyNotFoundError, \
+                                      PathExpressionError, UnsupportedValueTypeError, Node as Abstract_Node, \
+                                      Dictionary as Abstract_Dict, Sequence as Abstract_Seq, \
+                                      Configuration as Abstract_Configuration
 
 
 @export

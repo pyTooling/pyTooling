@@ -611,6 +611,11 @@ Glossary
      Specification: `SPDX license expressions
      <https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/>`__
 
+   matplotlib
+     A Python library drawing static charts, e.g. as SVG, PNG or PDF files.
+
+     Website: https://matplotlib.org/
+
    Matrix
      A *matrix* is a :term:`job` written once and run several times, once per combination of the values it is
      given - three Python versions on two operating systems are six jobs.
@@ -749,8 +754,8 @@ Glossary
      **OTLP** is its protocol. Its JSON encoding is one document every usual destination reads: a collector accepts
      it natively, and Jaeger imports it.
 
-     A :term:`trace` exports itself that way - :meth:`Trace.ToJSON <pyTooling.Tracing.Trace.ToJSON>` and
-     :meth:`~pyTooling.Tracing.Trace.WriteJSONFile`, see :ref:`TRACING/OTLP`. pyTooling exports every
+     A :term:`trace` exports itself that way - :meth:`Trace.ToOTLPJSON <pyTooling.Tracing.Trace.ToOTLPJSON>` and
+     :meth:`~pyTooling.Tracing.Trace.WriteOTLPJSONFile`, see :ref:`TRACING/OTLP`. pyTooling exports every
      :term:`span` as kind ``INTERNAL``, so the trace follows the conventions' *attributes*, not their span kinds.
 
      Wikipedia: :wiki:`OpenTelemetry <OpenTelemetry>`
@@ -811,7 +816,7 @@ Glossary
      holds the elements, and a **flavour** says what the hierarchy looks like - its ``ELEMENT_DELIMITER``,
      its ``ROOT_DELIMITER`` and the ``ELEMENT_TYPE`` its elements have.
 
-     :class:`pyTooling.GenericPath.URL.Path` is the flavour of a :term:`URL`. Composing with ``/`` and removing a
+     :class:`pyTooling.URI.Path` is the flavour of a :term:`URL`. Composing with ``/`` and removing a
      trailing delimiter are the flavour-independent part, so a new flavour states its three declarations and
      inherits the rest.
 
@@ -826,6 +831,12 @@ Glossary
 
      :class:`pyTooling.CI.Pipeline` models one - with :term:`called workflows <workflow>`,
      :term:`matrices <matrix>`, jobs and steps below it, each knowing its parent. See :ref:`CI/Pipeline`.
+
+   plotly
+     A Python library drawing interactive charts, which are shown by plotly's JavaScript library, e.g. in an HTML
+     page.
+
+     Website: https://plotly.com/python/
 
    Post-Order
      :wiki:`Post-order <Tree_traversal#Post-order,_LRN>` is a depth-first traversal of a :term:`tree` visiting a
@@ -1172,8 +1183,8 @@ Glossary
      A *Uniform Resource Locator* is a :term:`URI` that says where a resource is: a scheme, an authority - host,
      port and optionally user and password -, a path, a query and a fragment, as :rfc:`3986` writes them.
 
-     :class:`~pyTooling.GenericPath.URL.URL` parses one, composes it with a resource below it using the ``/``
-     operator, and reports what it rejects as a :exc:`~pyTooling.GenericPath.URL.URLError`. Its path is a path
+     :class:`~pyTooling.URI.URL` parses one, composes it with a resource below it using the ``/``
+     operator, and reports what it rejects as a :exc:`~pyTooling.URI.URLError`. Its path is a path
      flavour of :mod:`pyTooling.GenericPath`, so it is a sequence of elements rather than a string.
 
      Wikipedia: :wiki:`Uniform Resource Locator <URL>`

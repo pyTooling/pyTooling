@@ -48,6 +48,7 @@ from __future__            import annotations
 from datetime              import datetime
 from enum                  import Enum, unique
 from io                    import TextIOWrapper
+from os                    import getenv
 from sys                   import stdin, stdout, stderr
 from textwrap              import dedent
 from types                 import ModuleType
@@ -74,8 +75,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 	UNHANDLED_EXCEPTION_EXIT_CODE:       ClassVar[int] = 241                               #: Return code, if an unhandled exception reached the topmost exception handler.
 	MISSING_DEPENDENCY_EXIT_CODE:        ClassVar[int] = MissingDependencyError.EXIT_CODE  #: Return code (242), if an optional dependency is missing; the value lives on the exception - see :meth:`PrintMissingDependencyError`.
 	FATAL_EXIT_CODE:                     ClassVar[int] = 255                               #: Return code for fatal exits.
-	ISSUE_TRACKER_URL:                   ClassVar[str] = None                              #: URL to the issue tracker for reporting bugs.
 	INDENT:                              ClassVar[str] = "  "                              #: Indentation. Default: ``"  "`` (2 spaces)
+	DUNDER_MODULE:                       ClassVar[Nullable[ModuleType]] = None             #: Module declaring the application's dunder variables, e.g. ``__version__``, read by :meth:`TerminalApplication._PrintVersion` and the exception printers. Default: ``None``, i.e. none declared.
 
 	try:
 		from colorama import Fore as Foreground
@@ -322,8 +323,6 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 					pass
 
 		# Fall-fallback
-		from os import getenv
-
 		try:
 			columns = int(getenv("COLUMNS"))
 			lines =   int(getenv("LINES"))
@@ -394,7 +393,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If :attr:`DUNDER_MODULE` defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at
+		that URL.
 
 		:param ex: The exception to print.
 		"""
@@ -435,8 +435,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 			message += f"{line.replace('{', '{{').replace('}', '}}')}"
 		message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
-		if self.ISSUE_TRACKER_URL is not None:
-			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+		if (issueTrackerURL := getattr(self.DUNDER_MODULE, "__issue_tracker_url__", None)) is not None:
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT*2, **self.FOREGROUND))
@@ -495,7 +495,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		"""
 		Prints a not-implemented exception of type :exc:`NotImplementedError`.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If :attr:`DUNDER_MODULE` defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at
+		that URL.
 
 		:param ex: The exception to print.
 		"""
@@ -517,8 +518,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		message += f"{{indent}}{{YELLOW}}Caused in:{{NOCOLOR}}            {funcName}(...) in file '{filename}' at line {sourceLine}\n"
 
-		if self.ISSUE_TRACKER_URL is not None:
-			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}\n"
+		if (issueTrackerURL := getattr(self.DUNDER_MODULE, "__issue_tracker_url__", None)) is not None:
+			message += f"\n{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}\n"
 			message += f"{{indent}}{{RED}}{'-' * 120}{{NOCOLOR}}"
 
 		self.WriteLineToStdErr(message.format(indent=self.INDENT, indent2=self.INDENT * 2, **self.FOREGROUND))
@@ -530,7 +531,8 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 
 		If the exception as a nested action, the cause is printed as well.
 
-		If ``ISSUE_TRACKER_URL`` is configured, a URL to the issue tracker is added.
+		If :attr:`DUNDER_MODULE` defines ``__issue_tracker_url__``, the output ends with an invitation to report the bug at
+		that URL.
 
 		:param ex: The exception to print.
 		"""
@@ -561,9 +563,9 @@ class TerminalBaseApplication(metaclass=ExtendedType, slots=True, singleton=True
 		print_tb(ex.__traceback__, file=self._stderr)
 		self.WriteLineToStdErr(f"""{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}""".format(indent=self.INDENT, **self.FOREGROUND))
 
-		if self.ISSUE_TRACKER_URL is not None:
+		if (issueTrackerURL := getattr(self.DUNDER_MODULE, "__issue_tracker_url__", None)) is not None:
 			self.WriteLineToStdErr(dedent(f"""\
-				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {self.ISSUE_TRACKER_URL}{{NOCOLOR}}
+				{{indent}}{{DARK_CYAN}}Please report this bug at GitHub: {issueTrackerURL}{{NOCOLOR}}
 				{{indent}}{{RED}}{'-' * 80}{{NOCOLOR}}\
 				""").format(indent=self.INDENT, **self.FOREGROUND))
 
@@ -701,6 +703,12 @@ class Severity(Enum):
 			raise ex
 
 
+_Severity = Severity
+"""
+Alias of :class:`Severity` for annotations in a class with a property named ``Severity``, which the class body binds.
+"""
+
+
 @export
 @unique
 class Mode(Enum):
@@ -717,7 +725,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	Represents a single message line with a severity and indentation level.
 	"""
 
-	_LOG_MESSAGE_FORMAT__: ClassVar[dict[Severity, str]] = {
+	_LOG_MESSAGE_FORMAT__: ClassVar[dict[_Severity, str]] = {
 		Severity.Exception:     "EXCEPTION: {message}",
 		Severity.ExceptionNote: "           > {message}",
 		Severity.Fatal:         "FATAL: {message}",
@@ -735,11 +743,11 @@ class Line(metaclass=ExtendedType, slots=True):
 		Severity.Debug:         "DEBUG: {message}",
 	}                           #: Message line formatting rules.
 
-	_timestamp:       datetime  #: Timestamp when the line was created.
-	_message:         str       #: Text message (line content).
-	_severity:        Severity  #: Message severity
-	_indent:          int       #: Indentation
-	_appendLinebreak: bool      #: True, if a trailing linebreak should be added when printing this line object.
+	_timestamp:       datetime   #: Timestamp when the line was created.
+	_message:         str        #: Text message (line content).
+	_severity:        _Severity  #: Message severity
+	_indent:          int        #: Indentation
+	_appendLinebreak: bool       #: True, if a trailing linebreak should be added when printing this line object.
 
 	def __init__(
 		self,
@@ -1107,34 +1115,42 @@ class TerminalApplication(TerminalBaseApplication):  #, ILineTerminal):
 		self.WriteNormal(f"{{HEADLINE}}{{headline: ^{width}s}}".format(headline=self.HEADLINE, **TerminalApplication.FOREGROUND))
 		self.WriteNormal(f"{{HEADLINE}}{'=' * width}".format(**TerminalApplication.FOREGROUND))
 
-	def _PrintVersion(
-		self,
-		dunderModule:        ModuleType,
-		packageName:         Nullable[str] = None,
-		versionCheckTimeout: int = 1
-	) -> None:
+	def _PrintVersion(self, packageName: Nullable[str] = None, versionCheckTimeout: int = 1) -> None:
 		"""
 		Helper method to print the version information.
 
-		:param dunderModule:        The Python module containing the dunder variables for author(s), email, copyright,
-		                            version, ...
+		The author(s), email, copyright, version and URLs are read from the dunder variables of the module the class
+		constant :attr:`DUNDER_MODULE` refers to. If it is ``None``, every dunder variable counts as missing.
+
 		:param packageName:         Optional, name of the package on PyPI. If given, the latest released version is
 		                            queried and reported as an available update. Default: ``None``.
 		:param versionCheckTimeout: Optional, timeout in seconds for the PyPI request. Default: ``1``.
+		:raises TypeError:          If parameter 'packageName' is not of type :class:`str`. |br|
+		                            A module with dunder variables is set as class constant :attr:`DUNDER_MODULE`.
 
 		.. admonition:: Example usage
 
 		   .. code-block:: Python
 
-		      def _PrintVersion(self):
-		        import myPackage.MyModule as DunderModule
+		      import myPackage
 
-		        super()._PrintVersion(
-		          DunderModule,
-		          "MyModule"
-		        )
+		      class Application(TerminalApplication):
+		        HEADLINE =      "My Application"
+		        DUNDER_MODULE = myPackage
+
+		        def HandleVersion(self, _: Namespace) -> None:
+		          self._PrintHeadline()
+		          self._PrintVersion("myPackage")
 		"""
-		red = self.FOREGROUND["DARK_RED"]
+		if packageName is not None and not isinstance(packageName, str):
+			ex = TypeError("Parameter 'packageName' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(packageName)}'.")
+			if isinstance(packageName, ModuleType):
+				ex.add_note("A module with dunder variables is set as class constant 'DUNDER_MODULE'.")
+			raise ex
+
+		dunderModule = self.DUNDER_MODULE
+		red =          self.FOREGROUND["DARK_RED"]
 
 		copyrights = getattr(dunderModule, "__copyright__", "{RED}Copyright not set!".format(RED=red)).split("\n", 1)
 		self.WriteNormal(f"Copyright:     {copyrights[0]}")

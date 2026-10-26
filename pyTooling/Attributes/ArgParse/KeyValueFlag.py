@@ -34,10 +34,46 @@ Attributes describing options carrying key-value-pairs, like ``-Dkey=value``.
 
 The pairs are collected into a dictionary and passed to the handler method as one parameter.
 """
-from typing   import Optional as Nullable
+from argparse                               import Action, ArgumentError, ArgumentParser, Namespace
+from typing                                 import Any, Optional as Nullable, Sequence, Union
 
 from pyTooling.Decorators                   import export
 from pyTooling.Attributes.ArgParse.Argument import NamedAndValuedArgument
+
+
+@export
+class KeyValuePairsAction(Action):
+	"""
+	An :mod:`argparse` action collecting ``key=value`` pairs into a dictionary.
+
+	Every occurrence of the option adds one pair; a later value of the same key replaces the earlier one. A key without
+	``=`` (``-Dflag``) has the value ``None``. The dictionary is created on the first occurrence, so the option's
+	default is never modified.
+	"""
+
+	def __call__(
+		self,
+		parser:        ArgumentParser,
+		namespace:     Namespace,
+		values:        Union[str, Sequence[Any], None],
+		option_string: Nullable[str] = None
+	) -> None:
+		"""
+		Add the pair given with one occurrence of the option.
+
+		:param parser:         The parser running the action.
+		:param namespace:      The namespace collecting the parsed arguments.
+		:param values:         The option's value, ``key=value`` or ``key``.
+		:param option_string:  The option string the value was given with, e.g. ``-D``.
+		:raises ArgumentError: When the key is empty (``-D=value``).
+		"""
+		key, separator, value = str(values).partition("=")
+		if key == "":
+			raise ArgumentError(self, f"expected KEY=VALUE, got '{values}'")
+
+		pairs = dict(getattr(namespace, self.dest) or {})
+		pairs[key] = value if separator == "=" else None
+		setattr(namespace, self.dest, pairs)
 
 
 @export
@@ -45,14 +81,21 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 	"""
 	Defines a key-value argument like ``-Dkey=value``.
 
-	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
-	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument
-	is present in the commandline arguments, otherwise ``False``.
+	Some of the named parameters passed to :meth:`~argparse.ArgumentParser.add_argument` are predefined (or overwritten),
+	so every occurrence of the option adds a ``key=value`` pair to a dictionary, which is passed to the registered
+	handler method. The dictionary is ``None``, if the option isn't given.
 	"""
 
-	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		short:    Nullable[str] = None,
+		long:     Nullable[str] = None,
+		dest:     Nullable[str] = None,
+		metaName: str = "KEY=VALUE",
+		help:     Nullable[str] = None
+	) -> None:
 		"""
-		Initializes a flag argument.
+		Initializes a key-value argument.
 
 		.. admonition:: ArgParse parameterization
 
@@ -60,24 +103,20 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 		   as positional parameters, and with these named parameters:
 
 		   * ``dest=dest``
-		   * ``action="store_const"``
-		   * ``const=True``
-		   * ``default=False``
+		   * ``action=KeyValuePairsAction``
+		   * ``metavar=metaName``
+		   * ``default=None``
 		   * ``help=help``
 
-		   ``action="store_const"`` with ``const=True`` and ``default=False`` is what makes the handler method receive a
-		   boolean.
+		   :class:`KeyValuePairsAction` adds each ``key=value`` to a dictionary: ``-DA=1 -D B=2`` (or
+		   ``--define A=1 --define=B=2``) passes ``{"A": "1", "B": "2"}`` to the handler method.
 
-		.. attention::
-
-		   This is exactly :class:`~pyTooling.Attributes.ArgParse.Flag.FlagArgument`'s parameterization, so no
-		   key-value pair is parsed and the handler method receives a boolean. See the class doc-string.
-
-		:param short: Optional, short option name including the dash, e.g. ``"-v"``. Default: ``None``.
-		:param long:  Optional, long option name including the dashes, e.g. ``"--verbose"``. Default: ``None``.
-		:param dest:  Optional, name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
-		              handler method reads it by.
-		:param help:  Optional, help text shown for this argument in the help page. Default: ``None``.
+		:param short:    Optional, short option name including the dash, e.g. ``"-D"``. Default: ``None``.
+		:param long:     Optional, long option name including the dashes, e.g. ``"--define"``. Default: ``None``.
+		:param dest:     Optional, name the parsed dictionary is stored under in the :class:`~argparse.Namespace`, and
+		                 the name the handler method reads it by.
+		:param metaName: Optional, name shown for the value in the help page (``metavar``). Default: ``"KEY=VALUE"``.
+		:param help:     Optional, help text shown for this argument in the help page. Default: ``None``.
 		"""
 		args = []
 		if short is not None:
@@ -88,9 +127,9 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 
 		kwargs = {
 			"dest":    dest,
-			"action":  "store_const",
-			"const":   True,
-			"default": False,
+			"action":  KeyValuePairsAction,
+			"metavar": metaName,
+			"default": None,
 			"help":    help,
 		}
 		super().__init__(*args, **kwargs)
@@ -100,27 +139,41 @@ class NamedKeyValuePairsArgument(NamedAndValuedArgument):
 class ShortKeyValueFlag(NamedKeyValuePairsArgument):
 	"""Defines a key-value argument in short form like ``-Dkey=value``."""
 
-	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		short:    Nullable[str] = None,
+		dest:     Nullable[str] = None,
+		metaName: str = "KEY=VALUE",
+		help:     Nullable[str] = None
+	) -> None:
 		"""
 		Initialize a key-value argument in its short form.
 
-		:param short: Optional, short form of the option, including its dash, e.g. :pycode:`short="-v"`.
-		:param dest:  Optional, name of the parameter the parsed value is passed to the handler method as.
-		:param help:  Optional, help text of the option, displayed in the help page.
+		:param short:    Optional, short form of the option, including its dash, e.g. :pycode:`short="-D"`.
+		:param dest:     Optional, name of the parameter the parsed dictionary is passed to the handler method as.
+		:param metaName: Optional, name of the value in the help page. Default: ``"KEY=VALUE"``.
+		:param help:     Optional, help text of the option, displayed in the help page.
 		"""
-		super().__init__(short=short, dest=dest, help=help)
+		super().__init__(short=short, dest=dest, metaName=metaName, help=help)
 
 
 @export
 class LongKeyValueFlag(NamedKeyValuePairsArgument):
 	"""Defines a key-value argument in long form like ``--define key=value``."""
 
-	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		long:     Nullable[str] = None,
+		dest:     Nullable[str] = None,
+		metaName: str = "KEY=VALUE",
+		help:     Nullable[str] = None
+	) -> None:
 		"""
 		Initialize a key-value argument in its long form.
 
-		:param long: Optional, long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
-		:param dest: Optional, name of the parameter the parsed value is passed to the handler method as.
-		:param help: Optional, help text of the option, displayed in the help page.
+		:param long:     Optional, long form of the option, including its dashes, e.g. :pycode:`long="--define"`.
+		:param dest:     Optional, name of the parameter the parsed dictionary is passed to the handler method as.
+		:param metaName: Optional, name of the value in the help page. Default: ``"KEY=VALUE"``.
+		:param help:     Optional, help text of the option, displayed in the help page.
 		"""
-		super().__init__(long=long, dest=dest, help=help)
+		super().__init__(long=long, dest=dest, metaName=metaName, help=help)

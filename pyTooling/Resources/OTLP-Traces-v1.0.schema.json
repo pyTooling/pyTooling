@@ -1,0 +1,437 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://pyTooling.GitHub.io/pyTooling/Schemas/OTLP-Traces-v1.0.schema.json",
+	"title": "OTLP/JSON traces",
+	"description": "An OTLP/JSON document of traces: 'opentelemetry.proto.trace.v1.TracesData' in the JSON Protobuf Encoding of the OpenTelemetry Protocol (lowerCamelCase field names, hex-encoded trace and span identifiers, integer enumeration values, 64-bit integers as decimal strings or numbers). Fields with unknown names are allowed, because an OTLP/JSON receiver must ignore them.",
+	"type": "object",
+	"properties": {
+		"resourceSpans": {
+			"description": "The spans, grouped by the resource that produced them.",
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/ResourceSpans"
+			}
+		}
+	},
+	"$defs": {
+		"ResourceSpans": {
+			"description": "'ResourceSpans': the spans produced by one resource.",
+			"type": "object",
+			"properties": {
+				"resource": {
+					"$ref": "#/$defs/Resource"
+				},
+				"scopeSpans": {
+					"description": "The spans, grouped by instrumentation scope.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/ScopeSpans"
+					}
+				},
+				"schemaUrl": {
+					"type": "string"
+				}
+			}
+		},
+		"Resource": {
+			"description": "'opentelemetry.proto.resource.v1.Resource': the entity that produced the spans.",
+			"type": "object",
+			"properties": {
+				"attributes": {
+					"description": "Attributes, with unique keys.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/KeyValue"
+					}
+				},
+				"droppedAttributesCount": {
+					"$ref": "#/$defs/UInt32"
+				}
+			}
+		},
+		"ScopeSpans": {
+			"description": "'ScopeSpans': the spans produced by one instrumentation scope.",
+			"type": "object",
+			"properties": {
+				"scope": {
+					"$ref": "#/$defs/InstrumentationScope"
+				},
+				"spans": {
+					"description": "The spans, flattened; the hierarchy is carried by 'parentSpanId'.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/Span"
+					}
+				},
+				"schemaUrl": {
+					"type": "string"
+				}
+			}
+		},
+		"InstrumentationScope": {
+			"description": "'opentelemetry.proto.common.v1.InstrumentationScope': the library that produced the spans.",
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"version": {
+					"type": "string"
+				},
+				"attributes": {
+					"description": "Attributes, with unique keys.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/KeyValue"
+					}
+				},
+				"droppedAttributesCount": {
+					"$ref": "#/$defs/UInt32"
+				}
+			}
+		},
+		"Span": {
+			"description": "'Span': one timespan of a trace.",
+			"type": "object",
+			"required": [
+				"traceId",
+				"spanId"
+			],
+			"properties": {
+				"traceId": {
+					"$ref": "#/$defs/TraceID"
+				},
+				"spanId": {
+					"$ref": "#/$defs/SpanID"
+				},
+				"traceState": {
+					"type": "string"
+				},
+				"parentSpanId": {
+					"$ref": "#/$defs/ParentSpanID"
+				},
+				"flags": {
+					"$ref": "#/$defs/UInt32"
+				},
+				"name": {
+					"type": "string"
+				},
+				"kind": {
+					"$ref": "#/$defs/Enumeration"
+				},
+				"startTimeUnixNano": {
+					"$ref": "#/$defs/UInt64"
+				},
+				"endTimeUnixNano": {
+					"$ref": "#/$defs/UInt64"
+				},
+				"attributes": {
+					"description": "Attributes, with unique keys.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/KeyValue"
+					}
+				},
+				"droppedAttributesCount": {
+					"$ref": "#/$defs/UInt32"
+				},
+				"events": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/Event"
+					}
+				},
+				"droppedEventsCount": {
+					"$ref": "#/$defs/UInt32"
+				},
+				"links": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/Link"
+					}
+				},
+				"droppedLinksCount": {
+					"$ref": "#/$defs/UInt32"
+				},
+				"status": {
+					"$ref": "#/$defs/Status"
+				}
+			}
+		},
+		"Event": {
+			"description": "'Span.Event': a named point in time within a span.",
+			"type": "object",
+			"properties": {
+				"timeUnixNano": {
+					"$ref": "#/$defs/UInt64"
+				},
+				"name": {
+					"type": "string"
+				},
+				"attributes": {
+					"description": "Attributes, with unique keys.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/KeyValue"
+					}
+				},
+				"droppedAttributesCount": {
+					"$ref": "#/$defs/UInt32"
+				}
+			}
+		},
+		"Link": {
+			"description": "'Span.Link': a reference to a span of the same or another trace.",
+			"type": "object",
+			"required": [
+				"traceId",
+				"spanId"
+			],
+			"properties": {
+				"traceId": {
+					"$ref": "#/$defs/TraceID"
+				},
+				"spanId": {
+					"$ref": "#/$defs/SpanID"
+				},
+				"traceState": {
+					"type": "string"
+				},
+				"attributes": {
+					"description": "Attributes, with unique keys.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/KeyValue"
+					}
+				},
+				"droppedAttributesCount": {
+					"$ref": "#/$defs/UInt32"
+				},
+				"flags": {
+					"$ref": "#/$defs/UInt32"
+				}
+			}
+		},
+		"Status": {
+			"description": "'Status': whether a span completed successfully.",
+			"type": "object",
+			"properties": {
+				"message": {
+					"type": "string"
+				},
+				"code": {
+					"$ref": "#/$defs/Enumeration"
+				}
+			}
+		},
+		"KeyValue": {
+			"description": "'opentelemetry.proto.common.v1.KeyValue': one attribute. An attribute key is a non-empty string.",
+			"type": "object",
+			"required": [
+				"key"
+			],
+			"properties": {
+				"key": {
+					"type": "string",
+					"minLength": 1
+				},
+				"value": {
+					"$ref": "#/$defs/AnyValue"
+				}
+			}
+		},
+		"AnyValue": {
+			"description": "'opentelemetry.proto.common.v1.AnyValue': a value, named by its one key, or none ('empty').",
+			"type": "object",
+			"properties": {
+				"stringValue": {
+					"type": "string"
+				},
+				"boolValue": {
+					"type": "boolean"
+				},
+				"intValue": {
+					"$ref": "#/$defs/Int64"
+				},
+				"doubleValue": {
+					"$ref": "#/$defs/Double"
+				},
+				"arrayValue": {
+					"$ref": "#/$defs/ArrayValue"
+				},
+				"kvlistValue": {
+					"$ref": "#/$defs/KeyValueList"
+				},
+				"bytesValue": {
+					"$ref": "#/$defs/Bytes"
+				}
+			},
+			"oneOf": [
+				{
+					"required": [
+						"stringValue"
+					]
+				},
+				{
+					"required": [
+						"boolValue"
+					]
+				},
+				{
+					"required": [
+						"intValue"
+					]
+				},
+				{
+					"required": [
+						"doubleValue"
+					]
+				},
+				{
+					"required": [
+						"arrayValue"
+					]
+				},
+				{
+					"required": [
+						"kvlistValue"
+					]
+				},
+				{
+					"required": [
+						"bytesValue"
+					]
+				},
+				{
+					"not": {
+						"anyOf": [
+							{
+								"required": [
+									"stringValue"
+								]
+							},
+							{
+								"required": [
+									"boolValue"
+								]
+							},
+							{
+								"required": [
+									"intValue"
+								]
+							},
+							{
+								"required": [
+									"doubleValue"
+								]
+							},
+							{
+								"required": [
+									"arrayValue"
+								]
+							},
+							{
+								"required": [
+									"kvlistValue"
+								]
+							},
+							{
+								"required": [
+									"bytesValue"
+								]
+							}
+						]
+					}
+				}
+			]
+		},
+		"ArrayValue": {
+			"description": "'opentelemetry.proto.common.v1.ArrayValue': a list of values.",
+			"type": "object",
+			"properties": {
+				"values": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/AnyValue"
+					}
+				}
+			}
+		},
+		"KeyValueList": {
+			"description": "'opentelemetry.proto.common.v1.KeyValueList': a mapping of values, with unique keys.",
+			"type": "object",
+			"properties": {
+				"values": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/KeyValue"
+					}
+				}
+			}
+		},
+		"TraceID": {
+			"description": "A trace identifier: 16 bytes as 32 hexadecimal digits (case-insensitive), not all zero.",
+			"type": "string",
+			"pattern": "^(?!0{32}$)[0-9a-fA-F]{32}$"
+		},
+		"SpanID": {
+			"description": "A span identifier: 8 bytes as 16 hexadecimal digits (case-insensitive), not all zero.",
+			"type": "string",
+			"pattern": "^(?!0{16}$)[0-9a-fA-F]{16}$"
+		},
+		"ParentSpanID": {
+			"description": "The parent's span identifier, or empty for a root span.",
+			"type": "string",
+			"pattern": "^$|^(?!0{16}$)[0-9a-fA-F]{16}$"
+		},
+		"UInt64": {
+			"description": "An unsigned 64-bit integer ('uint64', 'fixed64'): a decimal string, or a number.",
+			"type": [
+				"string",
+				"integer"
+			],
+			"pattern": "^[0-9]+$",
+			"minimum": 0
+		},
+		"Int64": {
+			"description": "A signed 64-bit integer ('int64'): a decimal string, or a number.",
+			"type": [
+				"string",
+				"integer"
+			],
+			"pattern": "^-?[0-9]+$"
+		},
+		"UInt32": {
+			"description": "An unsigned 32-bit integer ('uint32', 'fixed32'): a number, or a decimal string.",
+			"type": [
+				"string",
+				"integer"
+			],
+			"pattern": "^[0-9]+$",
+			"minimum": 0,
+			"maximum": 4294967295
+		},
+		"Double": {
+			"description": "A double: a number, a decimal string, or one of 'NaN', 'Infinity' and '-Infinity'.",
+			"anyOf": [
+				{
+					"type": "number"
+				},
+				{
+					"type": "string",
+					"pattern": "^(NaN|-?Infinity|-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?)$"
+				}
+			]
+		},
+		"Bytes": {
+			"description": "A byte string, base64-encoded with the standard or the URL-safe alphabet, padded or not.",
+			"type": "string",
+			"pattern": "^[A-Za-z0-9+/_-]*={0,2}$"
+		},
+		"Enumeration": {
+			"description": "An enumeration value ('SpanKind', 'StatusCode'), encoded as its integer.",
+			"type": "integer",
+			"minimum": 0
+		}
+	}
+}

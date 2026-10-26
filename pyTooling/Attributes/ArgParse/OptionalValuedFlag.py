@@ -43,16 +43,24 @@ from pyTooling.Attributes.ArgParse.Argument import NamedAndValuedArgument
 @export
 class OptionalValuedFlag(NamedAndValuedArgument):
 	"""
-	Defines a switch argument like ``--repeat[=1]``.
+	Defines a switch argument with an optional value like ``--repeat[=1]``.
 
-	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten) to create
-	a boolean parameter passed to the registered handler method. The boolean parameter is ``True`` if the switch argument
-	is present in the commandline arguments, otherwise ``False``.
+	Some of the named parameters passed to :meth:`~ArgumentParser.add_argument` are predefined (or overwritten), so the
+	registered handler method receives the option's value: the given value (``--repeat=3``), ``defaultValue`` if the
+	option is given without a value (``--repeat``), or ``None`` if the option isn't given.
 	"""
 
-	def __init__(self, short: Nullable[str] = None, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		short:        Nullable[str] = None,
+		long:         Nullable[str] = None,
+		dest:         Nullable[str] = None,
+		metaName:     str = "VALUE",
+		defaultValue: str = "",
+		help:         Nullable[str] = None
+	) -> None:
 		"""
-		Initializes a flag argument.
+		Initializes a switch argument with an optional value.
 
 		.. admonition:: ArgParse parameterization
 
@@ -60,24 +68,24 @@ class OptionalValuedFlag(NamedAndValuedArgument):
 		   as positional parameters, and with these named parameters:
 
 		   * ``dest=dest``
-		   * ``action="store_const"``
-		   * ``const=True``
-		   * ``default=False``
+		   * ``nargs="?"``
+		   * ``metavar=metaName``
+		   * ``const=defaultValue``
+		   * ``default=None``
 		   * ``help=help``
 
-		   ``action="store_const"`` with ``const=True`` and ``default=False`` is what makes the handler method receive a
-		   boolean.
+		   ``nargs="?"`` makes the value optional: ``--repeat=3`` (or ``--repeat 3``) passes ``"3"`` to the handler
+		   method, ``--repeat`` passes ``defaultValue`` (``const``), and without the option the handler method receives
+		   ``None`` (``default``).
 
-		.. attention::
-
-		   This is exactly :class:`~pyTooling.Attributes.ArgParse.Flag.FlagArgument`'s parameterization, so no value
-		   is parsed and the handler method receives a boolean. See the class doc-string.
-
-		:param short: Optional, short option name including the dash, e.g. ``"-v"``. Default: ``None``.
-		:param long:  Optional, long option name including the dashes, e.g. ``"--verbose"``. Default: ``None``.
-		:param dest:  Optional, name the parsed value is stored under in the :class:`~argparse.Namespace`, and the name the
-		              handler method reads it by.
-		:param help:  Optional, help text shown for this argument in the help page. Default: ``None``.
+		:param short:        Optional, short option name including the dash, e.g. ``"-r"``. Default: ``None``.
+		:param long:         Optional, long option name including the dashes, e.g. ``"--repeat"``. Default: ``None``.
+		:param dest:         Optional, name the parsed value is stored under in the :class:`~argparse.Namespace`, and the
+		                     name the handler method reads it by.
+		:param metaName:     Optional, name shown for the value in the help page (``metavar``). Default: ``"VALUE"``.
+		:param defaultValue: Optional, value the handler method receives, if the option is given without a value.
+		                     Default: ``""``.
+		:param help:         Optional, help text shown for this argument in the help page. Default: ``None``.
 		"""
 		args = []
 		if short is not None:
@@ -88,9 +96,10 @@ class OptionalValuedFlag(NamedAndValuedArgument):
 
 		kwargs = {
 			"dest":    dest,
-			"action":  "store_const",
-			"const":   True,
-			"default": False,
+			"nargs":   "?",
+			"metavar": metaName,
+			"const":   defaultValue,
+			"default": None,
 			"help":    help,
 		}
 		super().__init__(*args, **kwargs)
@@ -100,27 +109,45 @@ class OptionalValuedFlag(NamedAndValuedArgument):
 class ShortOptionalValuedFlag(OptionalValuedFlag):
 	"""Defines a switch argument with an optional value in short form like ``-r[=1]``."""
 
-	def __init__(self, short: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		short:        Nullable[str] = None,
+		dest:         Nullable[str] = None,
+		metaName:     str = "VALUE",
+		defaultValue: str = "",
+		help:         Nullable[str] = None
+	) -> None:
 		"""
 		Initialize a switch argument with an optional value in its short form.
 
-		:param short: Optional, short form of the option, including its dash, e.g. :pycode:`short="-v"`.
-		:param dest:  Optional, name of the parameter the parsed value is passed to the handler method as.
-		:param help:  Optional, help text of the option, displayed in the help page.
+		:param short:        Optional, short form of the option, including its dash, e.g. :pycode:`short="-r"`.
+		:param dest:         Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param metaName:     Optional, name of the value in the help page. Default: ``"VALUE"``.
+		:param defaultValue: Optional, value passed, if the option is given without a value. Default: ``""``.
+		:param help:         Optional, help text of the option, displayed in the help page.
 		"""
-		super().__init__(short=short, dest=dest, help=help)
+		super().__init__(short=short, dest=dest, metaName=metaName, defaultValue=defaultValue, help=help)
 
 
 @export
 class LongOptionalValuedFlag(OptionalValuedFlag):
 	"""Defines a switch argument with an optional value in long form like ``--repeat[=1]``."""
 
-	def __init__(self, long: Nullable[str] = None, dest: Nullable[str] = None, help: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		long:         Nullable[str] = None,
+		dest:         Nullable[str] = None,
+		metaName:     str = "VALUE",
+		defaultValue: str = "",
+		help:         Nullable[str] = None
+	) -> None:
 		"""
 		Initialize a switch argument with an optional value in its long form.
 
-		:param long: Optional, long form of the option, including its dashes, e.g. :pycode:`long="--verbose"`.
-		:param dest: Optional, name of the parameter the parsed value is passed to the handler method as.
-		:param help: Optional, help text of the option, displayed in the help page.
+		:param long:         Optional, long form of the option, including its dashes, e.g. :pycode:`long="--repeat"`.
+		:param dest:         Optional, name of the parameter the parsed value is passed to the handler method as.
+		:param metaName:     Optional, name of the value in the help page. Default: ``"VALUE"``.
+		:param defaultValue: Optional, value passed, if the option is given without a value. Default: ``""``.
+		:param help:         Optional, help text of the option, displayed in the help page.
 		"""
-		super().__init__(long=long, dest=dest, help=help)
+		super().__init__(long=long, dest=dest, metaName=metaName, defaultValue=defaultValue, help=help)

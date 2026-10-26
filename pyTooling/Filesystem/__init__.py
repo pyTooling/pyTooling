@@ -50,8 +50,7 @@ from datetime              import timedelta
 from enum                  import Enum
 from os                    import scandir, readlink
 from pathlib               import Path
-from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, Union
-from typing                import Iterator, cast
+from typing                import Optional as Nullable, Generic, Generator, TypeVar, Any, Callable, cast
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.Exceptions  import ToolingException
@@ -68,6 +67,11 @@ __all__ = ["_ParentType"]
 
 _ParentType = TypeVar("_ParentType", bound="Element")
 """The type variable for a parent reference."""
+
+_Path = Path
+"""
+Alias of :class:`~pathlib.Path` for annotations in a class with a property named ``Path``, which the class body binds.
+"""
 
 
 @export
@@ -87,26 +91,26 @@ class PermissionWarning(Warning):
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
 	"""
-	_directory: Nullable[_Directory]  #: The directory that couldn't be read.
+	_directory: _Directory  #: The directory that couldn't be read.
 
-	def __init__(self, message: str, /, *, directory: Nullable[_Directory] = None) -> None:
+	def __init__(self, message: str, /, *, directory: _Directory) -> None:
 		"""
 		Initializes the warning with the directory that couldn't be read.
 
 		:param message:   The warning's message.
-		:param directory: Optional, the directory whose scan raised a :exc:`PermissionError`.
+		:param directory: The directory whose scan raised a :exc:`PermissionError`.
 		"""
 		super().__init__(message)
 		self._directory = directory
 
 	@readonly
-	def Directory(self) -> Nullable[_Directory]:
+	def Directory(self) -> _Directory:
 		"""
 		Read-only property to access the directory that couldn't be read (:attr:`_directory`).
 
 		Its path is :attr:`Directory.Path <pyTooling.Filesystem.Directory.Path>`.
 
-		:returns: The directory, or ``None`` if it wasn't recorded.
+		:returns: The directory.
 		"""
 		return self._directory
 
@@ -130,8 +134,8 @@ class Base(metaclass=ExtendedType, slots=True):
 
 	It implements a size and a reference to the root element of the filesystem.
 	"""
-	_root:   Nullable[Root]  #: Reference to the root of the filesystem statistics scope.
-	_size:   Nullable[int]   #: Actual or aggregated size of the filesystem element.
+	_root:   Nullable[_Root]  #: Reference to the root of the filesystem statistics scope.
+	_size:   Nullable[int]    #: Actual or aggregated size of the filesystem element.
 
 	def __init__(
 		self,
@@ -345,7 +349,7 @@ class Directory(Element["Directory"]):
 	aggregation is provided via :data:`AggregateDuration`.
 	"""
 
-	_path:              Nullable[Path]           #: Cached :class:`~pathlib.Path` object of this directory.
+	_path:              Nullable[_Path]          #: Cached :class:`~pathlib.Path` object of this directory.
 	_subdirectories:    dict[str, Directory]     #: Dictionary containing name-:class:`Directory` pairs.
 	_files:             dict[str, Filename]      #: Dictionary containing name-:class:`Filename` pairs.
 	_symbolicLinks:     dict[str, SymbolicLink]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
@@ -455,6 +459,11 @@ class Directory(Element["Directory"]):
 
 		A link whose target lies inside the scanned tree is connected to that element; a target that doesn't exist
 		registers the link as broken, and a target outside the scanned tree registers it as unconnected.
+
+		A relative target is followed as the operating system does: a symbolic link in the middle of the target's path is
+		replaced by its own target, a regular file in the middle of it makes the link broken, and so does a cycle of
+		links. A symbolic link at the end of the path is the target itself. A link passing through a link with an
+		absolute target is registered as unconnected.
 		"""
 		for dir in self._subdirectories.values():
 			dir.ResolveSymbolicLinks()
@@ -464,33 +473,42 @@ class Directory(Element["Directory"]):
 				# todo: resolve path and check if target is in range, otherwise add to out-of-range list
 				pass
 			else:
-				target = self
-				for elem in link._target.parts:
+				directory: Directory = self
+				target:    Element =   self
+				parts =    list(link._target.parts)
+				followed = {link}
+				while len(parts) > 0:
+					elem = parts.pop(0)
 					if elem == ".":
 						continue
 					elif elem == "..":
-						if (target := target._parent) is None:
+						if (directory := directory._parent) is None:
 							self._root.RegisterUnconnectedSymbolicLink(link)
 							break
 
-						continue
+						target = directory
+					elif elem in directory._subdirectories:
+						target = directory = directory._subdirectories[elem]
+					elif elem in directory._files:
+						if len(parts) > 0:
+							self._root.RegisterBrokenSymbolicLink(link)
+							break
 
-					try:
-						target = target._subdirectories[elem]
-						continue
-					except KeyError:
-						pass
-
-					try:
-						target = target._files[elem]
-						continue
-					except KeyError:
-						pass
-
-					try:
-						target = target._symbolicLinks[elem]
-						continue
-					except KeyError:
+						target = directory._files[elem]
+					elif elem in directory._symbolicLinks:
+						intermediate = directory._symbolicLinks[elem]
+						if len(parts) == 0:
+							target = intermediate
+						elif intermediate in followed:
+							self._root.RegisterBrokenSymbolicLink(link)
+							break
+						elif intermediate._target.is_absolute():
+							self._root.RegisterUnconnectedSymbolicLink(link)
+							break
+						else:
+							followed.add(intermediate)
+							parts[0:0] = intermediate._target.parts
+					else:
 						self._root.RegisterBrokenSymbolicLink(link)
 						break
 				else:
@@ -917,8 +935,8 @@ class Directory(Element["Directory"]):
 		return self._name
 
 
-#: Alias of :class:`Directory` for annotations in :class:`PermissionWarning`, whose property has the same name.
 _Directory = Directory
+"""Alias of :class:`Directory` for annotations in :class:`PermissionWarning`, whose property has the same name."""
 
 
 @export
@@ -931,7 +949,7 @@ class Filename(Element[Directory]):
 	   Filename and file storage are represented by two classes, which allows multiple names (hard links) per file storage
 	   object.
 	"""
-	_file: Nullable[File]  #: The file this filename refers to; ``None`` until the filename is linked.
+	_file: Nullable[_File]  #: The file this filename refers to; ``None`` until the filename is linked.
 
 	def __init__(
 		self,
@@ -1135,7 +1153,7 @@ class SymbolicLink(Element[Directory]):
 	After the scan, the link is resolved: it is either connected to an element of the scanned tree, broken (the target
 	doesn't exist), or out of range (the target lies outside the scanned tree).
 	"""
-	_target:       Path            #: Path the symbolic link points to.
+	_target:       _Path           #: Path the symbolic link points to.
 	_isConnected:  bool            #: ``True``, if the link target was resolved to an element of the scanned tree.
 	_isBroken:     Nullable[bool]  #: ``True``, if the link target doesn't exist; ``None`` until resolved.
 	_isOutOfRange: Nullable[bool]  #: ``True``, if the link target lies outside the scanned tree; ``None`` until resolved.
@@ -1591,6 +1609,10 @@ class Root(Directory):
 		return self._name
 
 
+_Root = Root
+"""Alias of :class:`Root` for annotations in a class with a property named ``Root``, which the class body binds."""
+
+
 @export
 class File(Base):
 	"""
@@ -1716,3 +1738,7 @@ class File(Base):
 		)
 
 		return fileNode
+
+
+_File = File
+"""Alias of :class:`File` for annotations in a class with a property named ``File``, which the class body binds."""

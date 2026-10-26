@@ -33,25 +33,28 @@
 Unit tests for :mod:`pyTooling.Attributes.ArgParse`: an application declaring its commands and options as
 decorated methods, and the command line it accepts as a result.
 """
-from argparse      import ArgumentError
-from io            import StringIO
-from pathlib       import Path
-from typing        import Callable, Any, Tuple, NoReturn
-from unittest.mock import patch
+from argparse                                         import ArgumentError
+from io                                               import StringIO
+from pathlib                                          import Path
+from typing                                           import Callable, Any, Tuple, NoReturn
+from unittest.mock                                    import patch
 
-from pyTooling.Common                        import StringEnum
-from pyTooling.MetaClasses                   import UnfulfilledExpectationError
-from pyTooling.Attributes.ArgParse            import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
-from pyTooling.Attributes.ArgParse            import splitFormat
-from pyTooling.Attributes.ArgParse.Argument   import StringArgument, StringListArgument, PositionalArgument
-from pyTooling.Attributes.ArgParse.Argument   import PathArgument, PathListArgument, ListArgument
-from pyTooling.Attributes.ArgParse.Argument   import IntegerArgument, IntegerListArgument
-from pyTooling.Attributes.ArgParse.Argument   import FloatArgument, FloatListArgument
-from pyTooling.Attributes.ArgParse.Flag       import FlagArgument, ShortFlag, LongFlag
-from pyTooling.Attributes.ArgParse.ValuedFlag import ValuedFlag, ShortValuedFlag, LongValuedFlag
-from pyTooling.Attributes.ArgParse.KeyValueFlag import NamedKeyValuePairsArgument, ShortKeyValueFlag, LongKeyValueFlag
-from pyTooling.TerminalUI                     import TerminalApplication
-from pyTooling.Testing                        import Testcase
+from pyTooling.Common                                 import StringEnum
+from pyTooling.MetaClasses                            import UnfulfilledExpectationError
+from pyTooling.Attributes.ArgParse                    import ArgParseHelperMixin, DefaultHandler, CommandHandler, \
+                                                             CommandLineArgument, splitFormat
+from pyTooling.Attributes.ArgParse.Argument           import StringArgument, StringListArgument, PositionalArgument, \
+                                                             PathArgument, PathListArgument, ListArgument, \
+                                                             IntegerArgument, IntegerListArgument, FloatArgument, \
+                                                             FloatListArgument
+from pyTooling.Attributes.ArgParse.Flag               import FlagArgument, ShortFlag, LongFlag
+from pyTooling.Attributes.ArgParse.ValuedFlag         import ValuedFlag, ShortValuedFlag, LongValuedFlag
+from pyTooling.Attributes.ArgParse.KeyValueFlag       import NamedKeyValuePairsArgument, ShortKeyValueFlag, \
+                                                             LongKeyValueFlag
+from pyTooling.Attributes.ArgParse.OptionalValuedFlag import OptionalValuedFlag, ShortOptionalValuedFlag, \
+                                                             LongOptionalValuedFlag
+from pyTooling.TerminalUI                             import TerminalApplication
+from pyTooling.Testing                                import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -1137,6 +1140,195 @@ class ValuedFlags(Testcase):
 		self.assertIs(prog.handler.__func__, Program.CmdHandler)
 		self.assertEqual(1 + 1, len(prog.args.__dict__), f"args: {prog.args.__dict__}")  #: 1+ for 'func' as callback
 		self.assertIsNone(prog.args.count)
+
+
+class KeyValueFlags(Testcase):
+	"""Every occurrence of a key-value option adds a ``key=value`` pair to a dictionary; it parsed nothing."""
+
+	def test_NamedKeyValuePairsArgument(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@NamedKeyValuePairsArgument(short="-D", long="--define", dest="defines", help="Define a macro.")
+			def HandleDefault(self, args) -> None:
+				self.handler = self.HandleDefault
+				self.args = args
+
+		prog = Program()
+
+		arguments = ["-DA=1", "-D", "B=2", "--define", "C=3", "--define=D=4=5", "-DE"]
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+		prog._RouteToHandler(parsed)
+
+		self.assertListEqual([], nonProcessedArgs)
+		self.assertIs(prog.handler.__func__, Program.HandleDefault)
+		self.assertDictEqual({"A": "1", "B": "2", "C": "3", "D": "4=5", "E": None}, prog.args.defines)
+
+	def test_SameKey(self) -> None:
+		"""A later value of the same key replaces the earlier one."""
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@ShortKeyValueFlag("-D", dest="defines")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		parsed, _ = prog.MainParser.parse_known_args(["-DA=1", "-DA=2"])
+		prog._RouteToHandler(parsed)
+
+		self.assertDictEqual({"A": "2"}, prog.args.defines)
+
+	def test_NotGiven(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongKeyValueFlag("--define", dest="defines")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		parsed, _ = prog.MainParser.parse_known_args([])
+		prog._RouteToHandler(parsed)
+
+		self.assertIsNone(prog.args.defines)
+
+	def test_ShortKeyValueFlag(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@ShortKeyValueFlag("-D", dest="defines")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(["-DA=1", "--define", "B=2"])
+		prog._RouteToHandler(parsed)
+
+		self.assertDictEqual({"A": "1"}, prog.args.defines)
+		self.assertListEqual(["--define", "B=2"], nonProcessedArgs)
+
+	def test_LongKeyValueFlag(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongKeyValueFlag("--define", dest="defines")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		parsed, _ = prog.MainParser.parse_known_args(["--define", "A=1", "--define=B=2"])
+		prog._RouteToHandler(parsed)
+
+		self.assertDictEqual({"A": "1", "B": "2"}, prog.args.defines)
+
+	def test_EmptyKey(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongKeyValueFlag("--define", dest="defines")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		with self.assertRaises(ArgumentError) as context:
+			_ = prog.MainParser.parse_known_args(["--define", "=1"])
+
+		self.assertEqual("argument --define: expected KEY=VALUE, got '=1'", str(context.exception))
+
+	def test_MetaName(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@ShortKeyValueFlag("-D", dest="defines", metaName="NAME=VALUE", help="Define a macro.")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		self.assertIn("-D NAME=VALUE", Program().MainParser.format_help())
+
+
+class OptionalValuedFlags(Testcase):
+	"""An option whose value may be omitted; it parsed no value: ``--color=red`` was an error."""
+
+	def _Program(self) -> Any:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@OptionalValuedFlag(short="-c", long="--color", dest="color", defaultValue="auto", help="Colorize.")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		return Program()
+
+	def test_Value(self) -> None:
+		for arguments in (["--color=red"], ["--color", "red"], ["-c", "red"]):
+			with self.subTest(arguments=arguments):
+				prog = self._Program()
+				parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+				prog._RouteToHandler(parsed)
+
+				self.assertListEqual([], nonProcessedArgs)
+				self.assertEqual("red", prog.args.color)
+
+	def test_WithoutValue(self) -> None:
+		for arguments in (["--color"], ["-c"]):
+			with self.subTest(arguments=arguments):
+				prog = self._Program()
+				parsed, nonProcessedArgs = prog.MainParser.parse_known_args(arguments)
+				prog._RouteToHandler(parsed)
+
+				self.assertListEqual([], nonProcessedArgs)
+				self.assertEqual("auto", prog.args.color)
+
+	def test_NotGiven(self) -> None:
+		prog = self._Program()
+		parsed, _ = prog.MainParser.parse_known_args([])
+		prog._RouteToHandler(parsed)
+
+		self.assertIsNone(prog.args.color)
+
+	def test_DefaultValue(self) -> None:
+		"""Without ``defaultValue``, a bare option passes an empty string, so it differs from the option not given."""
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongOptionalValuedFlag("--color", dest="color")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		parsed, _ = prog.MainParser.parse_known_args(["--color"])
+		prog._RouteToHandler(parsed)
+
+		self.assertEqual("", prog.args.color)
+
+	def test_ShortOptionalValuedFlag(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@ShortOptionalValuedFlag("-r", dest="repeat", defaultValue="1")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(["-r", "3"])
+		prog._RouteToHandler(parsed)
+
+		self.assertListEqual([], nonProcessedArgs)
+		self.assertEqual("3", prog.args.repeat)
+
+	def test_LongOptionalValuedFlag(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongOptionalValuedFlag("--repeat", dest="repeat", defaultValue="1")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		prog = Program()
+		parsed, nonProcessedArgs = prog.MainParser.parse_known_args(["--repeat"])
+		prog._RouteToHandler(parsed)
+
+		self.assertListEqual([], nonProcessedArgs)
+		self.assertEqual("1", prog.args.repeat)
+
+	def test_HelpPage(self) -> None:
+		class Program(ProgramBase):
+			@DefaultHandler()
+			@LongOptionalValuedFlag("--repeat", dest="repeat", metaName="COUNT")
+			def HandleDefault(self, args) -> None:
+				self.args = args
+
+		self.assertIn("--repeat [COUNT]", Program().MainParser.format_help())
 
 
 class Program(ProgramBase, mixin=True):

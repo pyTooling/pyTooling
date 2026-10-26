@@ -43,13 +43,13 @@ A powerful tree data structure for Python.
 from __future__            import annotations
 
 from collections           import deque
-from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable
-from typing                import Any, Callable, Generator, Iterable, Mapping, Hashable
+from typing                import TypeVar, Generic, Deque, Union, Optional as Nullable, Any, Callable, Generator, \
+                                  Iterable, Mapping, Hashable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException
-from pyTooling.Exceptions  import NotAChildError as CommonNotAChildError
+from pyTooling.Exceptions  import AlreadyInHierarchyError, NotInSameHierarchyError, ToolingException, \
+                                  NotAChildError as CommonNotAChildError
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 
@@ -101,24 +101,24 @@ class AlreadyInTreeError(TreeError, AlreadyInHierarchyError):
 	   A tree a an acyclic graph without cross-edges. Thus backward edges and cross edges are permitted.
 	"""
 
-	_otherNode: Nullable[Node]  #: Other node, which is in the same tree already.
+	_otherNode: Node  #: Other node, which is in the same tree already.
 
-	def __init__(self, message: str, /, *, otherNode: Nullable[Node] = None) -> None:
+	def __init__(self, message: str, /, *, otherNode: Node) -> None:
 		"""
 		Initializes the exception with the other node, which is in the same tree already.
 
 		:param message:   The exception's message.
-		:param otherNode: Optional, the other node, which is in the same tree already.
+		:param otherNode: The other node, which is in the same tree already.
 		"""
 		super().__init__(message)
 		self._otherNode = otherNode
 
 	@readonly
-	def OtherNode(self) -> Nullable[Node]:
+	def OtherNode(self) -> Node:
 		"""
 		Read-only property to access the other node, which is in the same tree already (:attr:`_otherNode`).
 
-		:returns: The other node, or ``None`` if it wasn't recorded.
+		:returns: The other node.
 		"""
 		return self._otherNode
 
@@ -127,24 +127,24 @@ class AlreadyInTreeError(TreeError, AlreadyInHierarchyError):
 class NotInSameTreeError(TreeError, NotInSameHierarchyError):
 	"""The exception is raised when the current node and the other node are not in the same tree."""
 
-	_otherNode: Nullable[Node]  #: Other node, which is in another tree.
+	_otherNode: Node  #: Other node, which is in another tree.
 
-	def __init__(self, message: str, /, *, otherNode: Nullable[Node] = None) -> None:
+	def __init__(self, message: str, /, *, otherNode: Node) -> None:
 		"""
 		Initializes the exception with the other node, which is in another tree.
 
 		:param message:   The exception's message.
-		:param otherNode: Optional, the other node, which is in another tree.
+		:param otherNode: The other node, which is in another tree.
 		"""
 		super().__init__(message)
 		self._otherNode = otherNode
 
 	@readonly
-	def OtherNode(self) -> Nullable[Node]:
+	def OtherNode(self) -> Node:
 		"""
 		Read-only property to access the other node, which is in another tree (:attr:`_otherNode`).
 
-		:returns: The other node, or ``None`` if it wasn't recorded.
+		:returns: The other node.
 		"""
 		return self._otherNode
 
@@ -159,24 +159,24 @@ class NotAChildError(TreeError, CommonNotAChildError):
 	   A grandchild is in the same tree, but it's a child of another node.
 	"""
 
-	_child: Nullable[Node]  #: Node that isn't a direct child of the current node.
+	_child: Node  #: Node that isn't a direct child of the current node.
 
-	def __init__(self, message: str, /, *, child: Nullable[Node] = None) -> None:
+	def __init__(self, message: str, /, *, child: Node) -> None:
 		"""
 		Initializes the exception with the node that isn't a direct child of the current node.
 
 		:param message: The exception's message.
-		:param child:   Optional, the node that isn't a direct child of the current node.
+		:param child:   The node that isn't a direct child of the current node.
 		"""
 		super().__init__(message)
 		self._child = child
 
 	@readonly
-	def Child(self) -> Nullable[Node]:
+	def Child(self) -> Node:
 		"""
 		Read-only property to access the node that isn't a direct child of the current node (:attr:`_child`).
 
-		:returns: The node, or ``None`` if it wasn't recorded.
+		:returns: The node.
 		"""
 		return self._child
 
@@ -1150,8 +1150,8 @@ class Node(KeyValuePairsMixin, Generic[IDType, ValueType], metaclass=ExtendedTyp
 		:param lineend:        Optional, a string printed at the end of every line. Default: ``"\\n"``.
 		:param nodeMarker:     Optional, a string printed before every non-last tree node. Default: ``"├─"``.
 		:param lastNodeMarker: Optional, a string printed before every last tree node. Default: ``"└─"``.
-		:param bypassMarker:   Optional, a string printed when there are further nodes in the parent level. Default: ``"│
-		                       "``.
+		:param bypassMarker:   Optional, a string printed when there are further nodes in the parent level.
+		                       Default: ``"│ "``.
 		:returns:              A rendered tree as multiline string.
 		"""
 		emptyMarker = " " * len(bypassMarker)

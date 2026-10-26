@@ -35,14 +35,18 @@ Unit tests for :mod:`pyTooling.Exceptions`.
 from pickle                import dumps, loads
 
 from pyTooling.CallGraph   import DuplicateFunctionError
+from pyTooling.CI          import NeedDependencyCycleError
 from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
-from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, EnvironmentVariableError
-from pyTooling.Exceptions  import ExceptionBase, InUseError, MissingDependencyError, NotAChildError, NotConfiguredError
-from pyTooling.Exceptions  import NotInSameHierarchyError
-from pyTooling.Exceptions  import PlatformNotSupportedError, ToolingException
-from pyTooling.Graph       import DuplicateEdgeError, DuplicateVertexError, NotInSameGraph
+from pyTooling.Dependency  import CircularRequirementsFileError
+from pyTooling.Exceptions  import AlreadyInHierarchyError, CycleError, DuplicateElementError, \
+                                  EnvironmentVariableError, ExceptionBase, InUseError, MissingDependencyError, \
+                                  NotAChildError, NotConfiguredError, NotInSameHierarchyError, \
+                                  PlatformNotSupportedError, ToolingException
+from pyTooling.Graph       import CycleError as GraphCycleError, DuplicateEdgeError, DuplicateVertexError, \
+                                  NotInSameGraph
 from pyTooling.LinkedList  import NotInSameListError
 from pyTooling.Testing     import Testcase
+from pyTooling.Tracing     import SpanCycleError
 from pyTooling.Tree        import AlreadyInTreeError, NotAChildError as TreeNotAChildError, NotInSameTreeError
 
 
@@ -87,6 +91,12 @@ class CommonBases(Testcase):
 		                  DuplicateFunctionError):
 			with self.subTest(exception=exception.__name__):
 				self.assertTrue(issubclass(exception, DuplicateElementError))
+				self.assertTrue(issubclass(exception, ToolingException))
+
+	def test_CycleError(self) -> None:
+		for exception in (GraphCycleError, NeedDependencyCycleError, CircularRequirementsFileError, SpanCycleError):
+			with self.subTest(exception=exception.__name__):
+				self.assertTrue(issubclass(exception, CycleError))
 				self.assertTrue(issubclass(exception, ToolingException))
 
 	def test_AlreadyInHierarchyError(self) -> None:

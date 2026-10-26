@@ -106,15 +106,15 @@ class LicenseExpressionError(LicensingError):
 	The exception is raised when an SPDX license expression is malformed or names a license SPDX doesn't define.
 	"""
 
-	_expression: Nullable[str]  #: License expression that can't be parsed.
+	_expression: str            #: License expression that can't be parsed.
 	_identifier: Nullable[str]  #: License identifier SPDX doesn't define.
 
-	def __init__(self, message: str, /, *, expression: Nullable[str] = None, identifier: Nullable[str] = None) -> None:
+	def __init__(self, message: str, /, *, expression: str, identifier: Nullable[str] = None) -> None:
 		"""
 		Initializes the exception with the license expression and, for an unknown license, its identifier.
 
 		:param message:    The exception's message.
-		:param expression: Optional, the license expression that can't be parsed.
+		:param expression: The license expression that can't be parsed.
 		:param identifier: Optional, the license identifier SPDX doesn't define, if that's the reason.
 		"""
 		super().__init__(message)
@@ -122,11 +122,11 @@ class LicenseExpressionError(LicensingError):
 		self._identifier = identifier
 
 	@readonly
-	def Expression(self) -> Nullable[str]:
+	def Expression(self) -> str:
 		"""
 		Read-only property to access the license expression that can't be parsed (:attr:`_expression`).
 
-		:returns: The expression, or ``None`` if it wasn't recorded.
+		:returns: The expression.
 		"""
 		return self._expression
 
@@ -179,7 +179,6 @@ class PythonLicenseName:
 		return self.ShortName
 
 
-#: Mapping of SPDX identifiers to Python license names
 PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 	"Apache-2.0":        PythonLicenseName("Apache 2.0",        "Apache Software License"),
 	"0BSD":              PythonLicenseName("0BSD",              "Zero-Clause BSD (0BSD)"),
@@ -208,13 +207,9 @@ PYTHON_LICENSE_NAMES: dict[str, PythonLicenseName] = {
 	"AGPL-3.0-only":     PythonLicenseName("AGPL-3.0-only",     "GNU Affero General Public License v3"),
 	"AGPL-3.0-or-later": PythonLicenseName("AGPL-3.0-or-later", "GNU Affero General Public License v3 or later (AGPLv3+)"),
 }
+"""Mapping of SPDX identifiers to Python license names."""
 
 
-#: Mapping of SPDX identifiers to the page where the licensor publishes the license.
-#:
-#: Sourced from the SPDX License List's own ``seeAlso`` field, or from the licensor's domain where SPDX names none.
-#: A license whose only published home is its OSI page has **no entry** - that URL is
-#: :attr:`License.OSIURL` and isn't repeated here, e.g. ``MIT`` or ``BSD-3-Clause``.
 LICENSE_URLS: dict[str, str] = {
 	"Apache-2.0":        "https://www.apache.org/licenses/LICENSE-2.0",
 	"ISC":               "https://www.isc.org/licenses/",
@@ -243,16 +238,15 @@ LICENSE_URLS: dict[str, str] = {
 	"AGPL-3.0-only":     "https://www.gnu.org/licenses/agpl-3.0-standalone.html",
 	"AGPL-3.0-or-later": "https://www.gnu.org/licenses/agpl-3.0-standalone.html",
 }
+"""
+Mapping of SPDX identifiers to the page where the licensor publishes the license.
+
+Sourced from the SPDX License List's own ``seeAlso`` field, or from the licensor's domain where SPDX names none.
+A license whose only published home is its OSI page has **no entry** - that URL is
+:attr:`License.OSIURL` and isn't repeated here, e.g. ``MIT`` or ``BSD-3-Clause``.
+"""
 
 
-#: Mapping of SPDX identifiers to the license text, by the file extension it is published as.
-#:
-#: Keys are the extension without its dot - ``txt``, ``md``, ``rst``, ``tex``. What a license offers is entirely up
-#: to its licensor: the GNU licenses publish three formats - the GPL-3.0 a fourth, ``rst`` -, most publish one, and
-#: several publish none at all beyond an HTML page, which is :data:`LICENSE_URLS`.
-#:
-#: Every URL here answered an HTTP request with the license, so the table is what is **known** rather than a claim
-#: of completeness - a license absent from it may still publish a text nobody has looked up yet.
 LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
 	"Apache-2.0":        {"txt": "https://www.apache.org/licenses/LICENSE-2.0.txt"},
 	"MPL-2.0":           {"txt": "https://www.mozilla.org/media/MPL/2.0/index.txt"},
@@ -319,15 +313,17 @@ LICENSE_TEXT_URLS: dict[str, dict[str, str]] = {
 		"tex": "https://www.gnu.org/licenses/agpl-3.0.tex",
 	},
 }
+"""
+Mapping of SPDX identifiers to the license text, by the file extension it is published as.
 
-#: Mapping of SPDX identifiers to the license's page at the
-#: `Open Source Initiative <https://opensource.org/licenses>`__.
-#:
-#: OSI's slugs don't follow the SPDX identifier and can't be derived from it: ``PSF-2.0`` is published as
-#: ``Python-2.0``, and OSI has **one** page per license where SPDX has two identifiers - ``GPL-2.0-only`` and
-#: ``GPL-2.0-or-later`` both point at it, because *only* versus *or later* is SPDX's distinction, not OSI's.
-#:
-#: A license OSI hasn't approved has no entry, which is why ``CC0-1.0`` and the Creative Commons licenses are absent.
+Keys are the extension without its dot - ``txt``, ``md``, ``rst``, ``tex``. What a license offers is entirely up
+to its licensor: the GNU licenses publish three formats - the GPL-3.0 a fourth, ``rst`` -, most publish one, and
+several publish none at all beyond an HTML page, which is :data:`LICENSE_URLS`.
+
+Every URL here answered an HTTP request with the license, so the table is what is **known** rather than a claim
+of completeness - a license absent from it may still publish a text nobody has looked up yet.
+"""
+
 OSI_LICENSE_URLS: dict[str, str] = {
 	"0BSD":              "https://opensource.org/license/0bsd",
 	"Apache-2.0":        "https://opensource.org/license/apache-2.0",
@@ -355,6 +351,16 @@ OSI_LICENSE_URLS: dict[str, str] = {
 	"AGPL-3.0-only":     "https://opensource.org/license/agpl-3-0",
 	"AGPL-3.0-or-later": "https://opensource.org/license/agpl-3-0",
 }
+"""
+Mapping of SPDX identifiers to the license's page at the
+`Open Source Initiative <https://opensource.org/licenses>`__.
+
+OSI's slugs don't follow the SPDX identifier and can't be derived from it: ``PSF-2.0`` is published as
+``Python-2.0``, and OSI has **one** page per license where SPDX has two identifiers - ``GPL-2.0-only`` and
+``GPL-2.0-or-later`` both point at it, because *only* versus *or later* is SPDX's distinction, not OSI's.
+
+A license OSI hasn't approved has no entry, which is why ``CC0-1.0`` and the Creative Commons licenses are absent.
+"""
 
 
 @export
@@ -647,7 +653,6 @@ CC_BY_NC_ND_4_0 = License(
 )
 
 
-#: All predefined licenses, in the order they are defined above.
 LICENSES: tuple[License, ...] = (
 	Zero_Clause_BSD, Apache_2_0_License, BSD_2_Clause_License, BSD_3_Clause_License, MIT_License, MIT_0_License,
 	MIT_CMU_License, ISC_License, MPL_2_0_License,
@@ -657,9 +662,10 @@ LICENSES: tuple[License, ...] = (
 	AGPL_3_0_only, AGPL_3_0_or_later,
 	CC_BY_4_0, CC_BY_SA_4_0, CC_BY_NC_4_0, CC_BY_ND_4_0, CC_BY_NC_SA_4_0, CC_BY_NC_ND_4_0,
 )
+"""All predefined licenses, in the order they are defined above."""
 
-#: Mapping of predefined licenses, indexed by their SPDX identifier.
 SPDX_INDEX: dict[str, License] = {spdxLicense.SPDXIdentifier: spdxLicense for spdxLicense in LICENSES}
+"""Mapping of predefined licenses, indexed by their SPDX identifier."""
 
 
 @export
@@ -687,15 +693,17 @@ def buildClassifierIndex() -> dict[str, tuple[License, ...]]:
 	return {classifier: tuple(licenses) for classifier, licenses in index.items()}
 
 
-#: Mapping of a Python license classifier to the licenses it can mean.
-#:
-#: The mapping is one-to-one except for ``License :: OSI Approved :: BSD License``, which means either
-#: :data:`BSD_2_Clause_License` or :data:`BSD_3_Clause_License` with nothing in the classifier to tell them apart.
 LICENSES_BY_CLASSIFIER: dict[str, tuple[License, ...]] = buildClassifierIndex()
+"""
+Mapping of a Python license classifier to the licenses it can mean.
+
+The mapping is one-to-one except for ``License :: OSI Approved :: BSD License``, which means either
+:data:`BSD_2_Clause_License` or :data:`BSD_3_Clause_License` with nothing in the classifier to tell them apart.
+"""
 
 
-#: The :class:`License` class under a name no expression node shadows with a property of its own.
 _LicenseType = License
+"""The :class:`License` class under a name no expression node shadows with a property of its own."""
 
 
 @export

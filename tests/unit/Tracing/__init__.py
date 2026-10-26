@@ -32,7 +32,9 @@
 Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attached to them.
 """
 from datetime          import datetime, timedelta, timezone
+from inspect           import get_annotations
 from time              import sleep
+from typing            import get_args
 
 from pyTooling.Tracing import TracingError, Trace, TraceElement, Span, Event, SpanState
 from pyTooling.Testing import Testcase
@@ -181,7 +183,7 @@ class RecordedTimes(Testcase):
 		t = Trace("pipeline", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(seconds=7, microseconds=1))
 		Span("job", parent=t, beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(microseconds=123_457))
 
-		spans = {s["name"]: s for s in t.ToJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]}
+		spans = {s["name"]: s for s in t.ToOTLPJSON()["resourceSpans"][0]["scopeSpans"][0]["spans"]}
 
 		for name, expected in (("pipeline", 7_000_001_000), ("job", 123_457_000)):
 			with self.subTest(span=name):
@@ -729,3 +731,9 @@ class Attributes(Testcase):
 				element["id2"] = 2
 
 				self.assertListEqual([("id1", "value1"), ("id2", 2)], list(element.IterateAttributes()))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		self.assertIs(Trace, get_args(get_annotations(Span, eval_str=True)["_trace"])[0])

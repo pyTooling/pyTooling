@@ -44,14 +44,14 @@ A set of helper functions to describe a Python package for setuptools.
    :mod:`pyTooling.Testing`
       |rarr| Testing the console scripts a package installs.
 """
-from ast             import parse as ast_parse, get_docstring as ast_get_docstring, iter_child_nodes, Assign, \
-                            Constant, Name, List as ast_List
-from collections.abc import Sized
-from os              import scandir as os_scandir
-from pathlib         import Path
-from re              import compile as re_compile, split as re_split, sub as re_sub
-from sys             import version_info
-from typing          import Iterable, Sequence, Any, Optional as Nullable, Union
+from ast                     import parse as ast_parse, get_docstring as ast_get_docstring, iter_child_nodes, Assign, \
+                                    Constant, Name, List as ast_List
+from os                      import scandir as os_scandir
+from pathlib                 import Path
+from re                      import compile as re_compile, split as re_split, sub as re_sub
+from sys                     import version_info
+from typing                  import Any, Iterable, Optional as Nullable, Sequence, Sized, Union
+
 from pyTooling.Decorators    import export, readonly
 from pyTooling.Documentation import splitDocString
 from pyTooling.Exceptions    import ToolingException, MissingDependencyError
@@ -87,25 +87,25 @@ class DirectReferenceWarning(CriticalWarning):
 	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
-	_requirement: Nullable[str]   #: The requirement left out, as stated.
-	_extra:       Nullable[str]   #: The extra the requirement was left out of.
+	_requirement: str             #: The requirement left out, as stated.
+	_extra:       str             #: The extra the requirement was left out of.
 	_filePath:    Nullable[Path]  #: The requirements file stating it; ``None`` for parameter 'additionalRequirements'.
 
 	def __init__(
 		self,
 		message: str,
 		/, *,
-		requirement: Nullable[str] = None,
-		extra: Nullable[str] = None,
-		filePath: Nullable[Path] = None
+		requirement: str,
+		extra: str,
+		filePath: Nullable[Path]
 	) -> None:
 		"""
 		Initializes the warning with the requirement left out, its extra and where it was stated.
 
 		:param message:     The warning's message.
-		:param requirement: Optional, the requirement left out, as stated.
-		:param extra:       Optional, the extra the requirement was left out of.
-		:param filePath:    Optional, the requirements file stating it; ``None`` for parameter 'additionalRequirements'.
+		:param requirement: The requirement left out, as stated.
+		:param extra:       The extra the requirement was left out of.
+		:param filePath:    The requirements file stating it; ``None`` for parameter 'additionalRequirements'.
 		"""
 		super().__init__(message)
 		self._requirement = requirement
@@ -113,20 +113,20 @@ class DirectReferenceWarning(CriticalWarning):
 		self._filePath =    filePath
 
 	@readonly
-	def Requirement(self) -> Nullable[str]:
+	def Requirement(self) -> str:
 		"""
 		Read-only property to access the requirement left out, as stated (:attr:`_requirement`).
 
-		:returns: The requirement, or ``None`` if it wasn't recorded.
+		:returns: The requirement.
 		"""
 		return self._requirement
 
 	@readonly
-	def Extra(self) -> Nullable[str]:
+	def Extra(self) -> str:
 		"""
 		Read-only property to access the extra the requirement was left out of (:attr:`_extra`).
 
-		:returns: The extra's name, or ``None`` if it wasn't recorded.
+		:returns: The extra's name.
 		"""
 		return self._extra
 
@@ -135,8 +135,7 @@ class DirectReferenceWarning(CriticalWarning):
 		"""
 		Read-only property to access the requirements file stating the requirement (:attr:`_filePath`).
 
-		:returns: The file's path, or ``None`` for a requirement from parameter 'additionalRequirements' or if it wasn't
-		          recorded.
+		:returns: The file's path, or ``None`` for a requirement from parameter 'additionalRequirements'.
 		"""
 		return self._filePath
 

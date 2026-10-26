@@ -32,38 +32,44 @@
 Unit tests for :mod:`pyTooling.Dependency.Python`. The ``PyPI`` testcases talk to the real index, so they
 need network access.
 """
-from datetime                     import date, datetime, timedelta, timezone
+from datetime                     import datetime, timedelta, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
-from typing                       import Any, Optional as Nullable, Self
+from typing                       import Any, Optional as Nullable, Self, get_args, get_type_hints
 from unittest.mock                import patch
 
 from packaging.requirements       import Requirement
 from pytest                       import mark
 from requests                     import HTTPError, Response
 
-from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph
-from pyTooling.Dependency.Python  import PythonPackageIndex, Release
-from pyTooling.Dependency.Python  import LicenseOverrides, RequirementsFile, RequirementsFileReference
-from pyTooling.Dependency.Python  import RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
-from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError
-from pyTooling.Dependency         import UndeclaredExtraMarkerWarning, UndeclaredExtraWarning
-from pyTooling.Dependency         import UnparsableRequirementWarning
-from pyTooling.Dependency         import DependencyError, RequirementsFileNotFoundError, UnknownLicenseWarning
-from pyTooling.Dependency         import PackageIndexError, ProjectNotFoundError, ReleaseNotFoundError
-from pyTooling.Dependency         import NoSessionAvailableError, ReleaseDetailsWarning, UnsupportedVersionWarning
-from pyTooling.Dependency         import AlreadyInRequirementsTreeError
+from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph, PythonPackageIndex, \
+                                         Release, LicenseOverrides, RequirementsFile, RequirementsFileReference, \
+                                         Distribution, RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
+from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError, \
+                                         UndeclaredExtraMarkerWarning, UndeclaredExtraWarning, \
+                                         UnparsableRequirementWarning, DependencyError, RequirementsFileNotFoundError, \
+                                         UnknownLicenseWarning, PackageIndexError, ProjectNotFoundError, \
+                                         ReleaseNotFoundError, NoSessionAvailableError, ReleaseDetailsWarning, \
+                                         UnsupportedVersionWarning, AlreadyInRequirementsTreeError, UnparsableURLWarning
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
-from pyTooling.Licensing          import LicenseAbsence, LicenseReference, BaseLicense, ProprietaryLicense
-from pyTooling.Licensing          import SPDXLicense, UnknownLicense, WithOperator
+from pyTooling.URI                import URL
+from pyTooling.Licensing          import LicenseAbsence, LicenseReference, ProprietaryLicense, SPDXLicense, \
+                                         UnknownLicense, WithOperator
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
 from pyTooling.Warning            import CriticalWarning, UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase
 
 from tests.unit.Dependency.FakeIndex import DocumentSession, ProjectDocument
+
+# 'jsonschema' needs 'rpds-py', a Rust extension without a PyPy wheel for Windows; its source build fails to link there.
+try:
+	from jsonschema                 import Draft202012Validator, FormatChecker
+	HAS_JSONSCHEMA = True
+except ImportError:  # pragma: no cover
+	HAS_JSONSCHEMA = False
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -145,11 +151,10 @@ class NotFound(Testcase):
 		self.assertEqual("project", context.exception.ProjectName)
 
 	def test_ProjectNotFoundError_MessageOnly(self) -> None:
-		with self.assertRaises(ProjectNotFoundError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise ProjectNotFoundError("Project not found.")
 
-		self.assertEqual("Project not found.", str(context.exception))
-		self.assertIsNone(context.exception.ProjectName)
+		self.assertIn("'projectName'", str(context.exception))
 
 	def test_ProjectNotFoundError_Bases(self) -> None:
 		self.assertTrue(issubclass(ProjectNotFoundError, LookupError))
@@ -169,12 +174,10 @@ class NotFound(Testcase):
 		self.assertIs(release.Version, context.exception.Version)
 
 	def test_ReleaseNotFoundError_MessageOnly(self) -> None:
-		with self.assertRaises(ReleaseNotFoundError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise ReleaseNotFoundError("Release not found.")
 
-		self.assertEqual("Release not found.", str(context.exception))
-		self.assertIsNone(context.exception.ProjectName)
-		self.assertIsNone(context.exception.Version)
+		self.assertIn("'projectName'", str(context.exception))
 
 	def test_ReleaseNotFoundError_Bases(self) -> None:
 		self.assertTrue(issubclass(ReleaseNotFoundError, LookupError))
@@ -197,10 +200,11 @@ class ReleaseWarnings(Testcase):
 		self.assertIs(version, warning.Version)
 
 	def test_UnknownLicenseWarning_MessageOnly(self) -> None:
-		warning = UnknownLicenseWarning("License couldn't be resolved.")
+		with self.assertRaises(TypeError) as context:
+			_ = UnknownLicenseWarning("License couldn't be resolved.")
 
-		self.assertIsNone(warning.ProjectName)
-		self.assertIsNone(warning.Version)
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'version'", str(context.exception))
 
 	def test_ReleaseDetailsWarning(self) -> None:
 		version = PythonVersion.Parse("1.2.3")
@@ -215,10 +219,11 @@ class ReleaseWarnings(Testcase):
 		self.assertIs(version, warning.Version)
 
 	def test_ReleaseDetailsWarning_MessageOnly(self) -> None:
-		warning = ReleaseDetailsWarning("Dropping a release.")
+		with self.assertRaises(TypeError) as context:
+			_ = ReleaseDetailsWarning("Dropping a release.")
 
-		self.assertIsNone(warning.ProjectName)
-		self.assertIsNone(warning.Version)
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'version'", str(context.exception))
 
 
 class BrokenRequirementWarnings(Testcase):
@@ -235,24 +240,27 @@ class BrokenRequirementWarnings(Testcase):
 		self.assertFalse(issubclass(UndeclaredExtraMarkerWarning, CriticalWarning))
 
 	def test_UnparsableRequirementWarning_MessageOnly(self) -> None:
-		warning = UnparsableRequirementWarning("Requirement can't be parsed.")
+		with self.assertRaises(TypeError) as context:
+			_ = UnparsableRequirementWarning("Requirement can't be parsed.")
 
-		self.assertIsNone(warning.Line)
-		self.assertIsNone(warning.FilePath)
-		self.assertIsNone(warning.LineNumber)
+		self.assertIn("'line'", str(context.exception))
+		self.assertIn("'filePath'", str(context.exception))
+		self.assertIn("'lineNumber'", str(context.exception))
 
 	def test_UndeclaredExtraMarkerWarning_MessageOnly(self) -> None:
-		warning = UndeclaredExtraMarkerWarning("Requirements name an undeclared extra.")
+		with self.assertRaises(TypeError) as context:
+			_ = UndeclaredExtraMarkerWarning("Requirements name an undeclared extra.")
 
-		self.assertIsNone(warning.Release)
-		self.assertTupleEqual((), warning.Requirements)
+		self.assertIn("'release'", str(context.exception))
+		self.assertIn("'requirements'", str(context.exception))
 
 	def test_UndeclaredExtraWarning_MessageOnly(self) -> None:
-		warning = UndeclaredExtraWarning("Requirement names an undeclared extra.")
+		with self.assertRaises(TypeError) as context:
+			_ = UndeclaredExtraWarning("Requirement names an undeclared extra.")
 
-		self.assertIsNone(warning.Requirement)
-		self.assertIsNone(warning.Extra)
-		self.assertIsNone(warning.Release)
+		self.assertIn("'requirement'", str(context.exception))
+		self.assertIn("'extra'", str(context.exception))
+		self.assertIn("'release'", str(context.exception))
 
 
 class ProjectCache(Testcase):
@@ -709,6 +717,14 @@ class ProjectReleases(Testcase):
 		)
 		self.assertIsInstance(context.exception.__cause__, UnsupportedVersionWarning)
 
+	def test_UnsupportedVersionWarning_MessageOnly(self) -> None:
+		"""The project's name and the version are required: creating the warning with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			_ = UnsupportedVersionWarning("Skipping release '2004d' of package 'pytz'.")
+
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'version'", str(context.exception))
+
 
 class ProjectURLs(Testcase):
 	"""How a release's project URLs are resolved from the free-text ``project_urls`` mapping."""
@@ -833,6 +849,56 @@ class ProjectURLs(Testcase):
 		self.assertIsNone(project.LatestVersion)
 		self.assertIsNone(project.RepositoryURL)
 		self.assertIsNone(project.DocumentationURL)
+
+	def test_UnknownIsNotPublished(self) -> None:
+		"""distutils wrote ``UNKNOWN`` for a field not given, e.g. ``ordereddict`` 1.1 on PyPI."""
+		release = self._release()
+		with WarningCollector(handler=lambda warning: False) as collector:
+			release.UpdateDetailsFromPyPIJSON({"info": {
+				"provides_extra": None,
+				"requires_dist":  None,
+				"home_page":      "UNKNOWN",
+				"project_urls":   {"Download": "UNKNOWN", "Homepage": "UNKNOWN", "Documentation": ""}
+			}})
+
+		self.assertIsNone(release.ProjectURL)
+		self.assertIsNone(release.RepositoryURL)
+		self.assertIsNone(release.DocumentationURL)
+		self.assertEqual([], [warning for warning in collector.Warnings if isinstance(warning, UnparsableURLWarning)])
+
+	def test_SomethingThatIsNotAURL(self) -> None:
+		"""A value that isn't a URL is reported, and the release has no such URL."""
+		release = self._release()
+		with WarningCollector(handler=lambda warning: False) as collector:
+			release.UpdateDetailsFromPyPIJSON({"info": {
+				"provides_extra": None,
+				"requires_dist":  None,
+				"project_urls":   {"Documentation": "project.readthedocs.io"}
+			}})
+
+		self.assertIsNone(release.DocumentationURL)
+
+		warnings = [warning for warning in collector.Warnings if isinstance(warning, UnparsableURLWarning)]
+		self.assertEqual(1, len(warnings))
+		self.assertEqual("URL 'documentation' of 'project' v1.0.0 isn't a URL.", str(warnings[0]))
+		self.assertEqual("project", warnings[0].ProjectName)
+		self.assertEqual(release.Version, warnings[0].Version)
+		self.assertIn("Got value 'project.readthedocs.io'.", warnings[0].__notes__)
+
+	def test_TheNextAliasAnswers(self) -> None:
+		"""A homepage that isn't a URL leaves the homepage to ``home_page``."""
+		release = self._release()
+		self._resolve(release, project_urls={"Homepage": "UNKNOWN"}, home_page="https://project.org")
+
+		self.assertEqual("https://project.org", str(release.ProjectURL))
+
+	def test_UnparsableURLWarningIsNotCritical(self) -> None:
+		"""Without a collector, the release is resolved and the warning is dropped."""
+		release = self._release()
+		release.UpdateDetailsFromPyPIJSON({"info": {"provides_extra": None, "requires_dist": None, "home_page": "x"}})
+
+		self.assertIsNone(release.ProjectURL)
+		self.assertFalse(issubclass(UnparsableURLWarning, CriticalWarning))
 
 
 class Licenses(Testcase):
@@ -1228,7 +1294,7 @@ class ReadingLicenseOverrides(Testcase):
 
 	def test_TheSchemaVersionIsChecked(self) -> None:
 		"""It says which structure the file is written for, so a later one can be told apart rather than misread."""
-		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION)
+		self.assertEqual(SemanticVersion(0, 1), LicenseOverrides.SCHEMA_VERSION_LATEST)
 
 		overrides = LicenseOverrides.FromFile(self._DIRECTORY / "licenses.yml")
 		self.assertEqual("BSD-3-Clause", overrides.LicenseOf("colorama"))
@@ -1669,18 +1735,18 @@ class RequirementsFiles(Testcase):
 		self.assertEqual((path.parent / 'nothing.txt').resolve(), context.exception.FilePath)
 
 	def test_RequirementsFileErrors_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no path."""
-		with self.assertRaises(RequirementsFileNotFoundError) as notFoundCapture:
+		"""The paths and the line number are required: raising an exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as notFoundCapture:
 			raise RequirementsFileNotFoundError("Missing file.")
 
-		self.assertIsNone(notFoundCapture.exception.FilePath)
+		self.assertIn("'filePath'", str(notFoundCapture.exception))
 
-		with self.assertRaises(CircularRequirementsFileError) as circularCapture:
+		with self.assertRaises(TypeError) as circularCapture:
 			raise CircularRequirementsFileError("Cycle.")
 
-		self.assertIsNone(circularCapture.exception.FilePath)
-		self.assertIsNone(circularCapture.exception.ReferencedIn)
-		self.assertIsNone(circularCapture.exception.LineNumber)
+		self.assertIn("'filePath'", str(circularCapture.exception))
+		self.assertIn("'referencedIn'", str(circularCapture.exception))
+		self.assertIn("'lineNumber'", str(circularCapture.exception))
 
 	def test_Parse_PathIsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -1899,6 +1965,162 @@ class RequirementsFileInstantiation(Testcase):
 		)
 
 
+@mark.skipif(not HAS_JSONSCHEMA, reason="Needs 'jsonschema', which can't be installed on PyPy for Windows.")
+class PackageOverridesSchema(Testcase):
+	"""The package-override file's structure is stated as a JSON schema, so an editor and CI check the same thing."""
+
+	@staticmethod
+	def _Validator():
+		"""The shipped schema, as a validator that reports every violation rather than only the first."""
+		from json                        import loads
+
+		from pyTooling                   import Resources
+		from pyTooling.Common            import readResourceFile
+		from pyTooling.Dependency.Python import LicenseOverrides
+
+		schemaFile = LicenseOverrides.SCHEMA_FILES[LicenseOverrides.SCHEMA_VERSION_LATEST]
+
+		return Draft202012Validator(loads(readResourceFile(Resources, schemaFile)), format_checker=FormatChecker())
+
+	def _Violations(self, document) -> list:
+		"""Return every violation the schema reports for 'document', each as 'path: message'."""
+		return [f"{'/'.join(str(part) for part in error.path)}: {error.message}"
+		        for error in self._Validator().iter_errors(document)]
+
+	@staticmethod
+	def _Document(**overrides):
+		document = {
+			"version":    "0.1",
+			"analysedAt": "2026-09-06T21:30:00+00:00",
+			"packages":   {"colorama": {"license": "BSD-3-Clause"}},
+		}
+		document.update(overrides)
+
+		return document
+
+	def test_TheSchemaIsItselfValid(self) -> None:
+		"""Compiling it is the check: an unusable schema can't be compiled."""
+		Draft202012Validator.check_schema(self._Validator().schema)
+
+	def test_EverySchemaVersionHasAFile(self) -> None:
+		"""A structure version the parser accepts must have a schema to check a file of that version against."""
+		from pyTooling                   import Resources
+		from pyTooling.Common            import getResourceFile
+		from pyTooling.Dependency.Python import LicenseOverrides
+
+		self.assertIn(LicenseOverrides.SCHEMA_VERSION_LATEST, LicenseOverrides.SCHEMA_FILES)
+		for schemaFile in LicenseOverrides.SCHEMA_FILES.values():
+			self.assertTrue(getResourceFile(Resources, schemaFile).exists())
+
+	def test_AMinimalDocumentIsAccepted(self) -> None:
+		self.assertEqual([], self._Violations(self._Document()))
+
+	def test_AnAnalysedAtIsRequired(self) -> None:
+		"""'FromFile' rejects a file without one, so the schema has to as well."""
+		self.assertNotEqual([], self._Violations({"version": "0.1", "packages": {}}))
+
+	def test_NoPackagesIsAccepted(self) -> None:
+		"""A file may state no packages: absent, empty, or every entry commented out (a null node)."""
+		base = {"version": "0.1", "analysedAt": "2026-09-06T21:30:00+00:00"}
+
+		self.assertEqual([], self._Violations(base))
+		self.assertEqual([], self._Violations({**base, "packages": {}}))
+		self.assertEqual([], self._Violations({**base, "packages": None}))
+
+	def test_AVersionExpressionKeyIsAccepted(self) -> None:
+		"""'chardet <7.0.0' is a package name followed by a version expression, which is a legal key."""
+		document = self._Document(packages={"chardet <7.0.0": {"license": "LGPL-2.1-or-later"}})
+
+		self.assertEqual([], self._Violations(document))
+
+	def test_AnAnalysedAtDateIsRejected(self) -> None:
+		"""'analysedAt' is a date-time; a bare date loads as a 'date' and the reader expects a 'datetime'."""
+		self.assertNotEqual([], self._Violations(self._Document(analysedAt="2026-09-06")))
+		self.assertEqual([], self._Violations(self._Document(analysedAt="2026-09-06T21:30:00+00:00")))
+
+	def test_AnUnquotedVersionIsRejected(self) -> None:
+		"""Unquoted, YAML reads '0.1' as a float, and a float loses a trailing zero."""
+		self.assertNotEqual([], self._Violations(self._Document(version=0.1)))
+
+	def test_AMisspelledFieldIsRejected(self) -> None:
+		"""'licenseUrl' instead of 'licenseURL' would otherwise be read as no statement at all."""
+		document = self._Document(packages={"colorama": {"licenseUrl": "https://example.org/LICENSE"}})
+
+		self.assertNotEqual([], self._Violations(document))
+
+	def test_AnEmptyEntryIsRejected(self) -> None:
+		self.assertNotEqual([], self._Violations(self._Document(packages={"colorama": {}})))
+
+	def test_ARelativeLicenseURLIsRejected(self) -> None:
+		"""A licenseURL is linked from a rendered table, so it has to be absolute."""
+		document = self._Document(packages={"colorama": {"licenseURL": "LICENSE.txt"}})
+
+		self.assertNotEqual([], self._Violations(document))
+
+	def test_TheProjectsOwnOverrideFileValidates(self) -> None:
+		"""The file this repository ships is the one the schema exists for."""
+		from ruamel.yaml import YAML
+
+		path = Path(__file__).parent.parent.parent.parent / "doc" / "Dependency.PackageOverrides.yaml"
+		self.assertTrue(path.exists(), f"'{path}' not found.")
+
+		document = YAML(typ="safe").load(path)
+		if "analysedAt" in document:
+			# YAML parses a date-time into a 'datetime'; JSON Schema's 'date-time' is a string
+			document["analysedAt"] = document["analysedAt"].isoformat()
+
+		self.assertEqual([], self._Violations(document))
+
+
+class EmptyLicenseOverrideFiles(Testcase):
+	"""A file may legitimately state no packages, including by having every entry commented out."""
+
+	@staticmethod
+	def _Write(directory: str, text: str) -> Path:
+		path = Path(directory) / "overrides.yaml"
+		path.write_text(dedent(text).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_EveryEntryCommentedOut(self) -> None:
+		"""'packages:' with nothing under it is a null node, which a configuration has no type for."""
+		with TemporaryDirectory() as directory:
+			path = self._Write(directory, """
+				version: "0.1"
+				analysedAt: 2026-09-06T21:30:00+00:00
+				packages:
+				  # colorama:
+				  #   license: BSD-3-Clause
+			""")
+			overrides = LicenseOverrides.FromFile(path)
+
+		self.assertEqual(0, len(overrides))
+
+	def test_AnEmptyMapping(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = self._Write(directory, """
+				version: "0.1"
+				analysedAt: 2026-09-06T21:30:00+00:00
+				packages: {}
+			""")
+			overrides = LicenseOverrides.FromFile(path)
+
+		self.assertEqual(0, len(overrides))
+
+	def test_APackagesScalarIsStillRejected(self) -> None:
+		"""Tolerating a null node must not tolerate a 'packages' that is a scalar."""
+		with TemporaryDirectory() as directory:
+			path = self._Write(directory, """
+				version: "0.1"
+				analysedAt: 2026-09-06T21:30:00+00:00
+				packages: 42
+			""")
+			with self.assertRaises(DependencyError) as exceptionCapture:
+				LicenseOverrides.FromFile(path)
+
+		self.assertIn("isn't a mapping", str(exceptionCapture.exception))
+
+
 class IndexSessionRetries(Testcase):
 	"""A package index is a third party over the network, so a transient failure is retried rather than reported."""
 
@@ -1977,11 +2199,10 @@ class NoSession(Testcase):
 		self.assertEqual(PythonVersion.Parse("1.0"), context.exception.Version)
 
 	def test_MessageOnly(self) -> None:
-		with self.assertRaises(NoSessionAvailableError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise NoSessionAvailableError("No session.")
 
-		self.assertIsNone(context.exception.ProjectName)
-		self.assertIsNone(context.exception.Version)
+		self.assertIn("'projectName'", str(context.exception))
 
 
 class HTTPErrors(Testcase):
@@ -2019,3 +2240,29 @@ class HTTPErrors(Testcase):
 		self.assertEqual("project", context.exception.ProjectName)
 		self.assertEqual(PythonVersion.Parse("v1.0.0"), context.exception.Version)
 
+	def test_PackageIndexError_MessageOnly(self) -> None:
+		"""The project's name is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise PackageIndexError("Package index responded 500 Internal Server Error for package 'project'.")
+
+		self.assertIn("'projectName'", str(context.exception))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Dependency.Python
+
+		namespace = vars(pyTooling.Dependency.Python)
+		hints =     get_type_hints(RequirementsFile, namespace)
+		self.assertIs(Path, hints["_path"])
+		self.assertIs(Path, get_args(get_args(hints["_analyzedRequirementFiles"])[0])[0])
+		self.assertIs(Path, get_type_hints(RequirementsFileReference, namespace)["_path"])
+		self.assertIs(Path, get_args(get_args(get_type_hints(LicenseOverrides, namespace)["SCHEMA_FILES"])[0])[1])
+		self.assertIs(Path, get_args(get_type_hints(LicenseOverrides, namespace)["_path"])[0])
+		self.assertIs(URL, get_type_hints(Distribution, namespace)["_url"])
+		self.assertIs(URL, get_args(get_type_hints(Project, namespace)["_url"])[0])
+		self.assertIs(URL, get_args(get_type_hints(Project, namespace)["_api"])[0])
+		self.assertIs(URL, get_type_hints(PythonPackageIndex, namespace)["_url"])
+		self.assertIs(URL, get_type_hints(PythonPackageIndex, namespace)["_api"])
+		self.assertIs(LicenseOverrides, get_type_hints(PythonPackageIndex, namespace)["_licenseOverrides"])

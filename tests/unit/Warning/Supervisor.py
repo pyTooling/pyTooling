@@ -34,8 +34,8 @@ threads failed.
 """
 from threading            import Thread
 
-from pyTooling.Warning    import SupervisedThreadError, SupervisedWarningCollector, ThreadSupervisor, Warning
-from pyTooling.Warning    import WarningCollector
+from pyTooling.Warning    import SupervisedThreadError, SupervisedWarningCollector, ThreadSupervisor, Warning, \
+                                 WarningCollector
 from pyTooling.Testing    import Testcase
 
 
@@ -87,6 +87,13 @@ class ReRaising(Testcase):
 			self._supervisorWith("Alpha", "Beta").ReRaise(unwrapped=True)
 
 		self.assertTrue(all(isinstance(exception, ValueError) for exception in context.exception.exceptions))
+
+	def test_SupervisedThreadError_MessageOnly(self) -> None:
+		"""The thread's name is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			raise SupervisedThreadError("Thread 'Worker' failed.")
+
+		self.assertIn("'threadName'", str(context.exception))
 
 
 class Collecting(Testcase):

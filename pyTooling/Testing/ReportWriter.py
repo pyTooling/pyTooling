@@ -81,19 +81,23 @@ from xml.etree.ElementTree    import Element, ElementTree, SubElement, indent
 from pytest                   import Config, Parser, Session, StashKey
 from pyTooling.Decorators     import export
 from pyTooling.MetaClasses    import ExtendedType
+from pyTooling.Versioning     import SemanticVersion
 from pyTooling.Testing.PyTest import hierarchyKey
 
 
 __all__ = ["SCHEMA_VERSION_LATEST", "SCHEMA_FILES", "REPORT_WRITER_KEY"]
 
 
-SCHEMA_VERSION_LATEST = "v0.1"   #: Latest version of the report format, and the one this writer produces.
+SCHEMA_VERSION_LATEST: SemanticVersion = SemanticVersion(0, 1)
+"""Latest version of the report format, and the one this writer produces."""
 
-SCHEMA_FILES: dict[str, str] = {
-	"v0.1": "TestReport-v0.1.xsd",
-}   #: Schema file per format version, so a later version is added beside the one in use, not instead of it.
+SCHEMA_FILES: dict[SemanticVersion, Path] = {
+	SemanticVersion(0, 1): Path("TestReport-v0.1.xsd"),
+}
+"""Schema file per format version, so a later version is added beside the one in use, not instead of it."""
 
-REPORT_WRITER_KEY: StashKey["TestReportWriter"] = StashKey()   #: Where the writer is stashed on the configuration.
+REPORT_WRITER_KEY: StashKey["TestReportWriter"] = StashKey()
+"""Where the writer is stashed on the configuration."""
 
 
 class _Result(TypedDict, total=False):
@@ -192,7 +196,7 @@ class TestReportWriter(metaclass=ExtendedType, slots=True):
 		statuses = [entry.get("status", "errored") for entry in self._results.values()]
 		root = Element("TestReport", {
 			"xmlns:xsi":                     "http://www.w3.org/2001/XMLSchema-instance",
-			"xsi:noNamespaceSchemaLocation": SCHEMA_FILES[SCHEMA_VERSION_LATEST],
+			"xsi:noNamespaceSchemaLocation": SCHEMA_FILES[SCHEMA_VERSION_LATEST].name,
 			"timestamp":                     datetime.now(timezone.utc).isoformat(),
 			"duration":                      f"{sum(entry['duration'] for entry in self._results.values()):.6f}",
 			"tests":                         str(len(statuses)),

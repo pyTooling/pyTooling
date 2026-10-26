@@ -32,11 +32,12 @@
 Unit tests for :mod:`pyTooling.Graph.GraphML`: constructing a GraphML document, and converting a
 :mod:`pyTooling.Graph` graph or a :mod:`pyTooling.Tree` tree into one.
 """
+from typing                  import get_args, get_type_hints
 from xml.dom.minidom         import parseString
 
 from pyTooling.Graph         import Graph as pyTooling_Graph, Subgraph as pyTooling_Subgraph, Vertex
-from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, GraphMLDocument
-from pyTooling.Graph.GraphML import Base, BaseWithID, BaseWithData
+from pyTooling.Graph.GraphML import AttributeContext, AttributeTypes, Key, Data, Node, Edge, Graph, Subgraph, \
+                                    GraphMLDocument, Base, BaseWithID, BaseWithData
 from pyTooling.Tree          import Node as pyToolingNode
 from pyTooling.Testing       import Testcase
 
@@ -569,3 +570,13 @@ class pyToolingTree(Testcase):
 			{("vertex3", "vertex1"), ("vertex2", "vertex1"), ("vertex4", "vertex3")},
 			{(edge.getAttribute("source"), edge.getAttribute("target")) for edge in dom.getElementsByTagName("edge")}
 		)
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Graph.GraphML
+
+		self.assertIs(Data, get_args(get_type_hints(BaseWithData, vars(pyTooling.Graph.GraphML))["_data"])[0])
+		self.assertIs(Key, get_type_hints(Data, vars(pyTooling.Graph.GraphML))["_key"])
+		self.assertIs(Graph, get_type_hints(GraphMLDocument, vars(pyTooling.Graph.GraphML))["_graph"])

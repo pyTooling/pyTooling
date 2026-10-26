@@ -35,10 +35,10 @@ requirements, as far as its limit allows. The result is a :class:`Resolution`: a
 objects, each carrying the selected release or the reason there is none. The selected releases are connected in the
 index's dependency graph, too.
 
-Importing this module needs the ``pypi`` extra (:mod:`aiohttp`, :mod:`packaging`), like
+Importing this module needs the ``dependencies`` extra (:mod:`aiohttp`, :mod:`packaging`), like
 :mod:`pyTooling.Dependency.Python`.
 
-:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+:raises MissingDependencyError: If the 'dependencies' extra isn't installed.
 """
 from __future__                  import annotations
 
@@ -51,7 +51,7 @@ from pyTooling.Exceptions        import MissingDependencyError
 try:
 	from aiohttp                   import ClientResponseError, ClientSession, ClientTimeout
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
+	raise MissingDependencyError(dependency="aiohttp", extra="dependencies") from ex
 
 try:
 	from packaging.markers         import default_environment
@@ -59,15 +59,15 @@ try:
 	from packaging.specifiers      import SpecifierSet
 	from packaging.utils           import canonicalize_name
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
+	raise MissingDependencyError(dependency="packaging", extra="dependencies") from ex
 
 from pyTooling.Decorators        import export, readonly
 from pyTooling.MetaClasses       import ExtendedType
 from pyTooling.Common            import StringEnum, getFullyQualifiedName
 from pyTooling.Timeout           import Timeout
 from pyTooling.Warning           import WarningCollector
-from pyTooling.Dependency        import ExtraNotFoundError, PackageIndexFailureWarning, UndeclaredExtraWarning
-from pyTooling.Dependency        import ReleaseNotFoundError, ResolutionTimeoutWarning, UnresolvedRequirementWarning
+from pyTooling.Dependency        import ExtraNotFoundError, PackageIndexFailureWarning, UndeclaredExtraWarning, \
+                                        ReleaseNotFoundError, ResolutionTimeoutWarning, UnresolvedRequirementWarning
 from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release, RequirementsFile
 
 _Requirement = Requirement

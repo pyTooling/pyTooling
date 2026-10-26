@@ -12,6 +12,9 @@ pytest-xdist ~= 3.8
 aiohttp >= 3.12    # aiohttp limited on MSYS2 to 3.12.x
 requests >= 2.32
 
+# For pyTooling.URI testing - reading an IRI with an internationalized domain name (IDNA 2008)
+idna >= 3.20
+
 # For pyTooling.Configuration.YAML testing
 ruamel.yaml ~= 0.19.1
 
@@ -33,5 +36,15 @@ colorama ~= 0.4.6
 # Remove the 'implementation_version' limit once Pillow, numpy and matplotlib ship 'pp80' wheels.
 matplotlib >= 3.10 ; implementation_name != "pypy" or (sys_platform != "win32" and implementation_version < "8")
 
+# For pyTooling.Tracing.Render.Plotly testing
+plotly >= 6.0
+
 # For pyTooling.Testing.ReportWriter testing - validates the report against its schema
 xmlschema ~= 4.3
+
+# For pyTooling.Dependency.Python testing - validates the package-override file against its schema.
+# On MSYS2 this comes from pacman, not pip: 'jsonschema' needs 'rpds-py', a Rust extension with no PyPI wheel for
+# 'mingw_x86_64_ucrt_gnu'. MSYS2 ships it prebuilt, and the pipeline's pip to pacboy mapping installs that package.
+# * PyPy on Windows: 'rpds-py' has no PyPy wheel for Windows, and building it from source fails to link. The schema
+#   testcases are skipped there.
+jsonschema ~= 4.26 ; implementation_name != "pypy" or sys_platform != "win32"

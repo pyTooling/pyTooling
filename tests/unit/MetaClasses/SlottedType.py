@@ -33,11 +33,13 @@ Unit tests for the slots handling of :class:`pyTooling.MetaClasses.ExtendedType`
 raised for unannotated or shadowed fields, and inheritance including mixin-classes.
 """
 from typing                import ClassVar, Generic, TypeVar, Optional as Nullable
+from weakref               import ref
 
 from pytest                import mark
 
-from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, BaseClassWithoutSlotsError
-from pyTooling.MetaClasses import DuplicateFieldInSlotsError, InvalidBaseClassError, UnannotatedFieldWarning, mixin
+from pyTooling.MetaClasses import ExtendedType, BaseClassIsNotAMixinError, BaseClassWithNonEmptySlotsError, \
+                                  BaseClassWithoutSlotsError, DuplicateFieldInSlotsError, InvalidBaseClassError, \
+                                  UnannotatedFieldWarning, mixin
 from pyTooling.Decorators  import readonly
 from pyTooling.Warning     import WarningCollector
 from pyTooling.Common      import getsizeof
@@ -1168,6 +1170,111 @@ class BaseClassWithoutSlots(Testcase):
 
 		self.assertEqual("Base-classes 'Base' doesn't use '__slots__'.", str(context.exception))
 
+	def test_NonSlottedBaseClass_Slots(self) -> None:
+		"""A class requesting slots on a base-class without slots isn't created without slots silently."""
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Base, slots=True):
+				_data_2: int
+
+		self.assertEqual(
+			f"Class 'Final' requests slots, but its base-class '{Base.__module__}.{Base.__qualname__}' has no slots.",
+			str(context.exception)
+		)
+		self.assertListEqual([
+				"Instances of a class derived from a base-class without slots have a '__dict__' anyway.",
+				"Declare it as 'class Base(..., slots=True)', or remove 'slots=True' from class 'Final'."
+			],
+			context.exception.__notes__
+		)
+		self.assertIs(Base, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
+
+	def test_NonSlottedBaseClass_Slots_Indirect(self) -> None:
+		"""The primary base-class without slots is named, also if it inherited 'no slots' from its own base-class."""
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		class Parent(Base):
+			_data_P1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Parent, slots=True):
+				_data_2: int
+
+		self.assertIs(Parent, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
+
+	def test_NonSlottedBaseClass_Slots_Mixin(self) -> None:
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data_M1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Base, Mixin, slots=True):
+				_data_2: int
+
+		self.assertIs(Base, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
+
+	def test_NonSlottedBaseClass_Slots_Singleton(self) -> None:
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		with self.assertRaises(BaseClassWithoutSlotsError) as context:
+			class Final(Base, slots=True, singleton=True):
+				_data_2: int
+
+		self.assertIs(Base, context.exception.BaseClass)
+		self.assertEqual("Final", context.exception.ClassName)
+
+	def test_NonSlottedBaseClass_Derived(self) -> None:
+		"""A class derived from a base-class without slots has no slots either, unless it requests them."""
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		class Mixin(metaclass=ExtendedType, mixin=True):
+			_data_M1: int
+
+		class Final(Base, Mixin):
+			_data_2: int
+
+		self.assertFalse(Final.__slotted__)
+		self.assertNotIn("__slots__", Final.__dict__)
+
+		inst = Final()
+		inst._data_3 = 3
+
+		self.assertEqual(3, inst.__dict__["_data_3"])
+
+	def test_NonSlottedBaseClass_WeakReference(self) -> None:
+		"""A class without slots is weak-referenceable anyway; ``weakref=True`` doesn't request slots."""
+		class Base(metaclass=ExtendedType):
+			_data_B1: int
+
+		class Final(Base, weakref=True):
+			_data_2: int
+
+		inst = Final()
+
+		self.assertFalse(Final.__slotted__)
+		self.assertIs(inst, ref(inst)())
+
+	def test_SlottedBaseClass_Slots(self) -> None:
+		"""Requesting slots again on a slotted base-class is accepted."""
+		class Base(metaclass=ExtendedType, slots=True):
+			_data_B1: int
+
+		class Final(Base, slots=True):
+			_data_2: int
+
+		self.assertTrue(Final.__slotted__)
+		self.assertTupleEqual(("_data_2", ), Final.__slots__)
+
 	def test_IndirectPlainBaseClass(self) -> None:
 		"""A plain base-class using ``__slots__`` may itself derive from one without."""
 		class Root:
@@ -1292,13 +1399,12 @@ class InvalidBaseClass(Testcase):
 		self.assertTrue(issubclass(BaseClassIsNotAMixinError, InvalidBaseClassError))
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither a base-class nor a class name."""
-		with self.assertRaises(InvalidBaseClassError) as context:
+		"""The base-class and the class name are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise BaseClassIsNotAMixinError("Not a mixin-class.")
 
-		self.assertEqual("Not a mixin-class.", str(context.exception))
-		self.assertIsNone(context.exception.BaseClass)
-		self.assertIsNone(context.exception.ClassName)
+		self.assertIn("'baseClass'", str(context.exception))
+		self.assertIn("'className'", str(context.exception))
 
 
 class SlotShadowedByClassMember(Testcase):
@@ -1500,13 +1606,12 @@ class DuplicateMixinSlot(Testcase):
 		self.assertSetEqual({"_own", "_common", "_data1", "_data2"}, Final.__allSlots__)
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither a field name nor a class name."""
-		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+		"""The field name and the class name are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise DuplicateFieldInSlotsError("Duplicate slot.")
 
-		self.assertEqual("Duplicate slot.", str(context.exception))
-		self.assertIsNone(context.exception.FieldName)
-		self.assertIsNone(context.exception.ClassName)
+		self.assertIn("'fieldName'", str(context.exception))
+		self.assertIn("'className'", str(context.exception))
 
 
 class ObjectBaseClass(Testcase):
@@ -1641,10 +1746,11 @@ class UnannotatedFields(Testcase):
 		self.assertTupleEqual(("LIMIT", "NAME"), warnings[0].FieldNames)
 
 	def test_UnannotatedFieldWarning_MessageOnly(self) -> None:
-		warning = UnannotatedFieldWarning("Class declares fields without a type annotation.")
+		with self.assertRaises(TypeError) as context:
+			_ = UnannotatedFieldWarning("Class declares fields without a type annotation.")
 
-		self.assertIsNone(warning.ClassName)
-		self.assertTupleEqual((), warning.FieldNames)
+		self.assertIn("'className'", str(context.exception))
+		self.assertIn("'fieldNames'", str(context.exception))
 
 
 class Hierarchy(Testcase):

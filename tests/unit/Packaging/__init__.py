@@ -105,7 +105,7 @@ class HelperFunctions(Testcase):
 		from pyTooling.Packaging import loadRequirementsFile
 
 		requirements = loadRequirementsFile(Path("doc/requirements.txt"))
-		self.assertEqual(15, len(requirements))
+		self.assertEqual(16, len(requirements))
 		self.assertEqual([], [requirement for requirement in requirements if "#" in requirement])
 
 	def test_loadRequirementsGit(self) -> None:
@@ -477,11 +477,12 @@ class DirectReferences(Testcase):
 	def test_DirectReferenceWarning_MessageOnly(self) -> None:
 		from pyTooling.Packaging import DirectReferenceWarning
 
-		warning = DirectReferenceWarning("Requirement is a direct reference.")
+		with self.assertRaises(TypeError) as context:
+			_ = DirectReferenceWarning("Requirement is a direct reference.")
 
-		self.assertIsNone(warning.Requirement)
-		self.assertIsNone(warning.Extra)
-		self.assertIsNone(warning.FilePath)
+		self.assertIn("'requirement'", str(context.exception))
+		self.assertIn("'extra'", str(context.exception))
+		self.assertIn("'filePath'", str(context.exception))
 
 
 class EntryPoints(CollectingTestcase):

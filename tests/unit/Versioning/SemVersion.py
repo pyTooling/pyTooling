@@ -32,7 +32,10 @@
 Unit tests for :class:`pyTooling.Versioning.SemanticVersion`: parsing, comparing, validating, formatting and
 the round-trip from a version string back to itself.
 """
-from pyTooling.Versioning import Flags, Parts, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator
+from typing               import get_type_hints
+
+from pyTooling.Versioning import Flags, Parts, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator, \
+                                 Version, VersionValidatorError
 from pyTooling.Testing    import Testcase
 
 
@@ -458,12 +461,56 @@ class Parsing(Testcase):
 		self.assertEqual(ReleaseLevel.ReleaseCandidate, version.ReleaseLevel)
 		self.assertEqual(2, version.ReleaseNumber)
 
+	def test_ReleaseNumberAfterDot(self) -> None:
+		"""SemVer writes a pre-release's number as an identifier of its own: ``rc.1``."""
+		for versionString in ("v2.0.0-rc.1", "v2.0.0-rc-1", "v2.0.0.rc.1", "v2.0.0rc1"):
+			with self.subTest(versionString=versionString):
+				version = SemanticVersion.Parse(versionString)
+
+				self.assertEqual(ReleaseLevel.ReleaseCandidate, version.ReleaseLevel)
+				self.assertEqual(1, version.ReleaseNumber)
+				self.assertEqual("", version.Postfix)
+				self.assertNotIn(Parts.Postfix, version.Parts)
+
+	def test_PostfixWithDots(self) -> None:
+		"""SemVer's build metadata is made of dot-separated identifiers: ``+build.5``."""
+		version = SemanticVersion.Parse("v1.2.3+build.5")
+
+		self.assertEqual(3, version.Micro)
+		self.assertEqual(ReleaseLevel.Final, version.ReleaseLevel)
+		self.assertEqual("build.5", version.Postfix)
+		self.assertEqual("v1.2.3+build.5", str(version))
+
+	def test_PostfixWithHyphens(self) -> None:
+		version = SemanticVersion.Parse("1.2.3+exp.sha-5114f85")
+
+		self.assertEqual("exp.sha-5114f85", version.Postfix)
+
+	def test_CalendarSpelling(self) -> None:
+		"""A letter after the numbers is an alpha release here; parse OSVVM's '2025.06a' with YearMonthVersion."""
+		version = SemanticVersion.Parse("2025.06a")
+
+		self.assertEqual(ReleaseLevel.Alpha, version.ReleaseLevel)
+		self.assertEqual(0, version.ReleaseNumber)
+
 
 class HashVersions(Testcase):
 	def test_SemanticVersion(self) -> None:
 		version = SemanticVersion.Parse("v1.2.3")
 
 		self.assertIsNotNone(version.__hash__())
+
+	def test_EqualVersionsHashAlike(self) -> None:
+		"""Prefix and flags aren't compared, so they mustn't change the hash either."""
+		constructed = SemanticVersion(1, 2, 3)
+		parsed = SemanticVersion.Parse("v1.2.3")
+
+		self.assertEqual(constructed, parsed)
+		self.assertEqual(hash(constructed), hash(parsed))
+		self.assertIn(parsed, {constructed})
+
+	def test_PostfixChangesTheHash(self) -> None:
+		self.assertEqual(2, len({SemanticVersion.Parse("1.2.3"), SemanticVersion.Parse("1.2.3+build.5")}))
 
 
 class CompareVersions(Testcase):
@@ -598,6 +645,23 @@ class CompareVersions(Testcase):
 				self.assertNotEqual(v1, v2)
 				self.assertLess(v1, v2)
 				self.assertGreater(v2, v1)
+
+	def test_Postfix(self) -> None:
+		"""Unequal versions are ordered: a postfix sorts after no postfix, two postfixes as strings."""
+		for smaller, greater in (
+			("1.2.3",         "1.2.3+build.5"),
+			("1.2.3+build.5", "1.2.3+build.6"),
+			("1.2.3+build.5", "1.2.4")
+		):
+			with self.subTest(smaller=smaller, greater=greater):
+				v1 = SemanticVersion.Parse(smaller)
+				v2 = SemanticVersion.Parse(greater)
+
+				self.assertNotEqual(v1, v2)
+				self.assertLess(v1, v2)
+				self.assertGreater(v2, v1)
+				self.assertFalse(v2 <= v1)
+				self.assertFalse(v1 >= v2)
 
 
 class CompareNone(Testcase):
@@ -863,6 +927,18 @@ class FormattingUsingRepr(Testcase):
 
 		self.assertEqual("1.2.3", repr(version))
 
+	def test_AllParts(self) -> None:
+		"""The normalized form writes every part; it ended after the micro number."""
+		for text, normalized in (
+			("v1.2-pre1+deb3",           "1.2.0.rc1+deb3"),
+			("1.2.3-rc1.post2.dev3+abc", "1.2.3.rc1.post2.dev3+abc"),
+			("1.2.3.4-dev",              "1.2.3.4-dev"),
+			("1.2.3a1",                  "1.2.3.alpha1"),
+			("2:1.0",                    "2:1.0.0")
+		):
+			with self.subTest(version=text):
+				self.assertEqual(normalized, repr(SemanticVersion.Parse(text)))
+
 
 class FormattingUsingStr(Testcase):
 	def test_Major(self) -> None:
@@ -948,6 +1024,11 @@ class FormattingUsingFormat(Testcase):
 
 		self.assertEqual("alpha", f"{version:%R}")
 
+	def test_ReleaseLevel_Gamma(self) -> None:
+		version = SemanticVersion(1, 2, 3, level=ReleaseLevel.Gamma, number=4)
+
+		self.assertEqual("gamma4", f"{version:%R%n}")
+
 	def test_ReleaseLevel_Long_Number(self) -> None:
 		version = SemanticVersion(1, 2, 3, level=ReleaseLevel.Alpha, number=4)
 
@@ -967,6 +1048,115 @@ class FormattingUsingFormat(Testcase):
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.ReleaseCandidate, 3, prefix="v", postfix="deb25")
 
 		self.assertEqual("v1.2.3-rc3+deb25", f"{version:%p%M.%m.%u-%R%n+%P}")
+
+
+class BuildAndReleaseLevel(Testcase):
+	"""A release level may follow a build number; it was read as a postfix."""
+
+	def test_Parse(self) -> None:
+		for text in ("1.2.3.4-rc1", "1.2.3.4.rc1", "1.2.3.4rc1"):
+			with self.subTest(version=text):
+				version = SemanticVersion.Parse(text)
+
+				self.assertEqual(4, version.Build)
+				self.assertIs(ReleaseLevel.ReleaseCandidate, version.ReleaseLevel)
+				self.assertEqual(1, version.ReleaseNumber)
+				self.assertEqual("", version.Postfix)
+				self.assertEqual("1.2.3.4.rc1", str(version))
+
+	def test_Development(self) -> None:
+		version = SemanticVersion.Parse("1.2.3.4-dev")
+
+		self.assertEqual(4, version.Build)
+		self.assertIs(ReleaseLevel.Development, version.ReleaseLevel)
+
+	def test_Postfix(self) -> None:
+		"""A postfix that isn't a release level stays a postfix."""
+		version = SemanticVersion.Parse("1.2.3.4-foo")
+
+		self.assertEqual(4, version.Build)
+		self.assertEqual("foo", version.Postfix)
+
+
+class DevelopmentLevel(Testcase):
+	def test_NumberRejected(self) -> None:
+		"""A number of the release level 'dev' was dropped silently: ``str()`` wrote ``-dev``."""
+		with self.assertRaises(ValueError) as context:
+			_ = SemanticVersion(1, 2, 3, level=ReleaseLevel.Development, number=2)
+
+		self.assertEqual("Parameter 'number' must be None, if parameter 'level' is 'Development'.", str(context.exception))
+		self.assertListEqual(["The number of a development release is parameter 'dev'."], context.exception.__notes__)
+
+	def test_DevelopmentNumber(self) -> None:
+		self.assertEqual("1.2.3.dev2", str(SemanticVersion(1, 2, 3, dev=2)))
+
+
+class PostfixAfterDot(Testcase):
+	def test_LettersAfterNumber(self) -> None:
+		"""``1.2.3foo`` was read as ``1.2`` with the postfix ``3foo``: the micro number was lost."""
+		for versionString in ("1.2.3foo", "1.2.3xyz1", "1.2.3_x"):
+			with self.subTest(versionString=versionString):
+				with self.assertRaises(ValueError) as context:
+					SemanticVersion.Parse(versionString)
+				self.assertEqual(f"Syntax error in parameter 'versionString': '{versionString}'", str(context.exception))
+
+	def test_FifthNumber(self) -> None:
+		"""``1.2.3.4.5`` was read as build 4 with the postfix ``5``."""
+		with self.assertRaises(ValueError) as context:
+			SemanticVersion.Parse("1.2.3.4.5")
+		self.assertEqual("Syntax error in parameter 'versionString': '1.2.3.4.5'", str(context.exception))
+
+	def test_WordAfterDot(self) -> None:
+		version = SemanticVersion.Parse("1.2.3.foo")
+
+		self.assertEqual(3, version.Micro)
+		self.assertEqual("foo", version.Postfix)
+
+	def test_NumberAfterDashOrPlus(self) -> None:
+		for versionString in ("1.2.3-1", "1.2.3+1"):
+			with self.subTest(versionString=versionString):
+				version = SemanticVersion.Parse(versionString)
+
+				self.assertEqual(3, version.Micro)
+				self.assertEqual("1", version.Postfix)
+
+
+class FormatEscape(Testcase):
+	def test_PercentSign(self) -> None:
+		"""``%%`` is a literal percent sign; ``%%M`` was read as ``%`` followed by the major number."""
+		version = SemanticVersion(1, 2, 3)
+
+		self.assertEqual("%M 1.2", f"{version:%%M %M.%m}")
+		self.assertEqual("100%", f"{version:%M00%%}")
+
+	def test_UnknownSpecifier(self) -> None:
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = f"{version:%M.%X}"
+		self.assertEqual("Unknown format specifier '%X' in '%M.%X'.", str(context.exception))
+
+	def test_UnknownSpecifier_AfterPercentSign(self) -> None:
+		"""An unknown specifier behind a literal percent sign was accepted; only the first ``%`` was checked."""
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = f"{version:%%M %X}"
+		self.assertEqual("Unknown format specifier '%X' in '%%M %X'.", str(context.exception))
+
+	def test_TrailingPercentSign(self) -> None:
+		"""A single ``%`` at the end raised an :exc:`IndexError`."""
+		version = SemanticVersion(1, 2, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = f"{version:%M%}"
+		self.assertEqual("Unknown format specifier '%' in '%M%'.", str(context.exception))
+
+	def test_PercentSignInValue(self) -> None:
+		"""A ``%`` in a part's value was taken for an unknown specifier, as the formatted text was checked."""
+		version = SemanticVersion(1, 2, 3, postfix="a%b")
+
+		self.assertEqual("1.2.3 a%b", f"{version:%M.%m.%u %P}")
 
 
 class RoundTrip(Testcase):
@@ -991,6 +1181,8 @@ class RoundTrip(Testcase):
 			"v1.2.3.beta1",
 			"v1.2.3.rc1",
 			"v1.2.3.rc1+deb25",
+			"v1.2.3+build.5",
+			"v1.2.3.rc1+exp.sha-5114f85",
 			"1.2.rc3.post2",
 			"1.2.rc3.post2.dev4",
 			"v1.2.3.alpha4.post5.dev6+deb11u3"
@@ -1009,3 +1201,14 @@ class RoundTrip(Testcase):
 		ver = "v01.02.03.rc04.post05.dev06+deb07"
 		version = SemanticVersion.Parse(ver)
 		self.assertEqual(ver.replace("0", "", 6), str(version), ver)
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Versioning
+
+		self.assertIs(Version, get_type_hints(VersionValidatorError, vars(pyTooling.Versioning))["_version"])
+		self.assertIs(Parts, get_type_hints(Version, vars(pyTooling.Versioning))["_parts"])
+		self.assertIs(ReleaseLevel, get_type_hints(Version, vars(pyTooling.Versioning))["_releaseLevel"])
+		self.assertIs(Flags, get_type_hints(Version, vars(pyTooling.Versioning))["_flags"])

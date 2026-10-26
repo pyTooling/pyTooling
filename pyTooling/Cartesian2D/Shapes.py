@@ -30,7 +30,9 @@
 #
 """An implementation of 2D cartesian shapes for Python."""
 
+from math                  import degrees, isclose, pi
 from typing                import Generic
+
 from pyTooling.Decorators  import export
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
@@ -56,26 +58,29 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:param p00:        First corner.
 		:param p01:        Second corner.
 		:param p11:        Third corner.
-		:param p10:        Forth corner
-		:raises TypeError: If a given point is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:param p10:        Fourth corner.
+		:raises TypeError: If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError: If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError: If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError: If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
 		if not isinstance(p00, Point2D):
-			ex = TypeError("Parameter 'p00' is not of type Point2D.")
+			ex = TypeError("Parameter 'p00' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p00)}'.")
 			raise ex
 
 		if not isinstance(p01, Point2D):
-			ex = TypeError("Parameter 'p01' is not of type Point2D.")
+			ex = TypeError("Parameter 'p01' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p01)}'.")
 			raise ex
 
 		if not isinstance(p11, Point2D):
-			ex = TypeError("Parameter 'p11' is not of type Point2D.")
+			ex = TypeError("Parameter 'p11' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p11)}'.")
 			raise ex
 
 		if not isinstance(p10, Point2D):
-			ex = TypeError("Parameter 'p10' is not of type Point2D.")
+			ex = TypeError("Parameter 'p10' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")
 			raise ex
 
@@ -97,7 +102,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 @export
 class Rectangle(Trapezium[Coordinate]):
 	"""
-	A rectangle is a trapezium, where opposite edges a parallel to each other and all inner angels are 90 |degree| .
+	A rectangle is a trapezium, where opposite edges are parallel to each other and all inner angles are 90 |degree| .
 	"""
 
 	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
@@ -107,23 +112,45 @@ class Rectangle(Trapezium[Coordinate]):
 		:param p00:         First corner.
 		:param p01:         Second corner.
 		:param p11:         Third corner.
-		:param p10:         Forth corner
-		:raises ValueError: If the given points don't describe a rectangle.
+		:param p10:         Fourth corner.
+		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If opposite edges have different lengths.
+		:raises ValueError: If two consecutive corners are the same point.
+		:raises ValueError: If an inner angle isn't 90 |degree|.
 		"""
 		super().__init__(p00, p01, p11, p10)
 
-		if self.segments[0].Length != self.segments[2].Length or self.segments[1].Length != self.segments[3].Length:
-			raise ValueError("Line segments (edges) of opposite edges different lengths.")
+		for index in range(2):
+			edge =         self.segments[index]
+			oppositeEdge = self.segments[index + 2]
+			if not isclose(edge.Length, oppositeEdge.Length):
+				ex = ValueError("Opposite line segments (edges) have different lengths.")
+				ex.add_note(f"Got lengths {edge.Length} and {oppositeEdge.Length}.")
+				raise ex
 
-		if (self.segments[0].AngleTo(self.segments[1]) == 0.0 and self.segments[1].AngleTo(self.segments[2]) == 0.0
-			and self.segments[2].AngleTo(self.segments[3]) == 0.0 and self.segments[3].AngleTo(self.segments[0]) == 0.0):
-			raise ValueError("Line segments (edges) have no 90° angles.")
+		for edge in self.segments[:2]:
+			if edge.Length == 0.0:
+				ex = ValueError("Line segment (edge) has length 0.")
+				ex.add_note(f"Got corners {edge.start} and {edge.end}.")
+				raise ex
+
+		for index in range(2):
+			edge =     self.segments[index]
+			nextEdge = self.segments[index + 1]
+			angle =    pi - edge.AngleTo(nextEdge)
+			if not isclose(angle, pi / 2):
+				ex = ValueError("Inner angle of a rectangle is not 90°.")
+				ex.add_note(f"Got {degrees(angle):.2f}° at corner {edge.end}.")
+				raise ex
 
 
 @export
 class Square(Rectangle[Coordinate]):
 	"""
-	A square is a rectangle, where all edges have the same length and all inner angels are 90 |degree| .
+	A square is a rectangle, where all edges have the same length and all inner angles are 90 |degree| .
 	"""
 
 	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
@@ -133,10 +160,21 @@ class Square(Rectangle[Coordinate]):
 		:param p00:         First corner.
 		:param p01:         Second corner.
 		:param p11:         Third corner.
-		:param p10:         Forth corner
-		:raises ValueError: If the given points don't describe a square.
+		:param p10:         Fourth corner.
+		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If opposite edges have different lengths.
+		:raises ValueError: If two consecutive corners are the same point.
+		:raises ValueError: If an inner angle isn't 90 |degree|.
+		:raises ValueError: If adjacent edges have different lengths.
 		"""
 		super().__init__(p00, p01, p11, p10)
 
-		if self.segments[0].Length != self.segments[1].Length:
-			raise ValueError("Line segments (edges) between corners have different lengths.")
+		edge =     self.segments[0]
+		nextEdge = self.segments[1]
+		if not isclose(edge.Length, nextEdge.Length):
+			ex = ValueError("Line segments (edges) between corners have different lengths.")
+			ex.add_note(f"Got lengths {edge.Length} and {nextEdge.Length}.")
+			raise ex

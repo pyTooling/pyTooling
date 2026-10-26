@@ -77,7 +77,7 @@ from typing                import Any, ClassVar, Hashable, Iterable, Iterator, M
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
 from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Decorators  import export, readonly
-from pyTooling.Exceptions  import AlreadyInHierarchyError, ToolingException
+from pyTooling.Exceptions  import AlreadyInHierarchyError, CycleError, ToolingException
 from pyTooling.Graph       import Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import ExtendedType, ThisClass, abstractclass
 
@@ -103,15 +103,15 @@ class NeedDependencyError(PipelineError):
 		self,
 		message: str,
 		/, *,
-		element: Nullable[DependencyMixin] = None,
-		need: Nullable[DependencyMixin] = None
+		element: Nullable[DependencyMixin],
+		need: Nullable[DependencyMixin]
 	) -> None:
 		"""
 		Initializes the exception with the element and the element it would need.
 
 		:param message: The exception's message.
-		:param element: Optional, the element that would need the other one.
-		:param need:    Optional, the element that would be needed.
+		:param element: The element that would need the other one; ``None`` for a cycle of several needs.
+		:param need:    The element that would be needed; ``None`` for a cycle of several needs.
 		"""
 		super().__init__(message)
 		self._element = element
@@ -137,10 +137,10 @@ class NeedDependencyError(PipelineError):
 
 
 @export
-class NeedDependencyCycleError(NeedDependencyError):
+class NeedDependencyCycleError(NeedDependencyError, CycleError):
 	"""The exception raised for a need which would close a cycle of dependencies."""
 
-	_cycle: Nullable[tuple[DependencyMixin, ...]]  #: Elements forming the cycle, in the order they need each other.
+	_cycle: tuple[DependencyMixin, ...]  #: Elements forming the cycle, in the order they need each other.
 
 	def __init__(
 		self,
@@ -148,7 +148,7 @@ class NeedDependencyCycleError(NeedDependencyError):
 		/, *,
 		element: Nullable[DependencyMixin] = None,
 		need: Nullable[DependencyMixin] = None,
-		cycle: Nullable[Iterable[DependencyMixin]] = None
+		cycle: Iterable[DependencyMixin]
 	) -> None:
 		"""
 		Initializes the exception with the elements forming the cycle.
@@ -156,17 +156,17 @@ class NeedDependencyCycleError(NeedDependencyError):
 		:param message: The exception's message.
 		:param element: Optional, the element that would need the other one.
 		:param need:    Optional, the element that would be needed.
-		:param cycle:   Optional, the elements forming the cycle, in the order they need each other.
+		:param cycle:   The elements forming the cycle, in the order they need each other.
 		"""
 		super().__init__(message, element=element, need=need)
-		self._cycle = None if cycle is None else tuple(cycle)
+		self._cycle = tuple(cycle)
 
 	@readonly
-	def Cycle(self) -> Nullable[tuple[DependencyMixin, ...]]:
+	def Cycle(self) -> tuple[DependencyMixin, ...]:
 		"""
 		Read-only property to access the elements forming the cycle (:attr:`_cycle`).
 
-		:returns: Tuple of elements in the order they need each other, or ``None`` if they weren't recorded.
+		:returns: Tuple of elements in the order they need each other.
 		"""
 		return self._cycle
 
@@ -177,12 +177,12 @@ class AlreadyInPipelineError(PipelineError, AlreadyInHierarchyError):
 
 	_element: Any  #: Element belonging to another element of a pipeline already.
 
-	def __init__(self, message: str, /, *, element: Any = None) -> None:
+	def __init__(self, message: str, /, *, element: Any) -> None:
 		"""
 		Initializes the exception with the element belonging to another one already.
 
 		:param message: The exception's message.
-		:param element: Optional, the element belonging to another element of a pipeline already.
+		:param element: The element belonging to another element of a pipeline already.
 		"""
 		super().__init__(message)
 		self._element = element
@@ -192,7 +192,7 @@ class AlreadyInPipelineError(PipelineError, AlreadyInHierarchyError):
 		"""
 		Read-only property to access the element belonging to another element of a pipeline already (:attr:`_element`).
 
-		:returns: The element, or ``None`` if it wasn't recorded.
+		:returns: The element.
 		"""
 		return self._element
 
@@ -240,6 +240,12 @@ class Outcome(StringEnum):
 		return None
 
 
+_Outcome = Outcome
+"""
+Alias of :class:`Outcome` for annotations in a class with a property named ``Outcome``, which the class body binds.
+"""
+
+
 @export
 class RuleOutcome(StringEnum):
 	"""
@@ -275,11 +281,11 @@ class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 
 	_name:        str                  #: Name of the element.
 	_parent:      Nullable[Base]       #: Reference to the containing element.
-	_pipeline:    Nullable[Pipeline]   #: Reference to the pipeline this element belongs to.
+	_pipeline:    Nullable[_Pipeline]  #: Reference to the pipeline this element belongs to.
 	_createdAt:   Nullable[datetime]   #: Time the element was created.
 	_startedAt:   Nullable[datetime]   #: Time the element started running.
 	_completedAt: Nullable[datetime]   #: Time the element completed.
-	_outcome:     Nullable[Outcome]    #: How the element ended.
+	_outcome:     Nullable[_Outcome]   #: How the element ended.
 
 	def __init__(
 		self,
@@ -599,7 +605,7 @@ class Rule(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		return self._condition
 
 	@readonly
-	def When(self) -> When:
+	def When(self) -> RuleOutcome:
 		"""
 		Read-only property to access what the rule decides, if it matches (:attr:`_when`).
 
@@ -718,12 +724,14 @@ class DependencyMixin(metaclass=ExtendedType, mixin=True, expects=("_parent",)):
 
 		:param needs:                Optional, siblings this element needs. Default: ``None``.
 		:param dependents:           Optional, siblings needing this element. Default: ``None``.
-		:raises TypeError:           If parameter 'needs' or 'dependents' is not iterable.
-		:raises ValueError:          If an element of parameter 'needs' or 'dependents' is ``None``.
-		:raises TypeError:           If an element of parameter 'needs' or 'dependents' is not of type
-		                             :class:`DependencyMixin`.
-		:raises NeedDependencyError: If an element of parameter 'needs' or 'dependents' isn't contained in the same
-		                             group.
+		:raises TypeError:           If parameter 'needs' is not iterable.
+		:raises ValueError:          If an element of parameter 'needs' is ``None``.
+		:raises TypeError:           If an element of parameter 'needs' is not of type :class:`DependencyMixin`.
+		:raises NeedDependencyError: If an element of parameter 'needs' isn't contained in the same group.
+		:raises TypeError:           If parameter 'dependents' is not iterable.
+		:raises ValueError:          If an element of parameter 'dependents' is ``None``.
+		:raises TypeError:           If an element of parameter 'dependents' is not of type :class:`DependencyMixin`.
+		:raises NeedDependencyError: If an element of parameter 'dependents' isn't contained in the same group.
 		"""
 		for name, elements in (("needs", needs), ("dependents", dependents)):
 			if elements is not None and not isinstance(elements, Iterable):
@@ -1531,6 +1539,11 @@ class Pipeline(Workflow):
 
 		self._pipeline = self
 
+
+_Pipeline = Pipeline
+"""
+Alias of :class:`Pipeline` for annotations in a class with a property named ``Pipeline``, which the class body binds.
+"""
 
 
 @export

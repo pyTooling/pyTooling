@@ -72,12 +72,12 @@ class Enforcement(Testcase):
 		self.assertEqual("function", context.exception.Entity.__name__)
 
 	def test_AttributeScopeError_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither an attribute nor an entity."""
-		with self.assertRaises(AttributeScopeError) as context:
+		"""The attribute and the entity are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise AttributeScopeError("Out of scope.")
 
-		self.assertIsNone(context.exception.AppliedAttribute)
-		self.assertIsNone(context.exception.Entity)
+		self.assertIn("'appliedAttribute'", str(context.exception))
+		self.assertIn("'entity'", str(context.exception))
 
 	def test_FunctionScopedOnAClass(self) -> None:
 		with self.assertRaises(AttributeScopeError):

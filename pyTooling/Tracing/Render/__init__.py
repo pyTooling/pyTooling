@@ -45,7 +45,6 @@ from datetime                    import datetime, timedelta
 from enum                        import Enum
 from pathlib                     import Path
 from re                          import IGNORECASE, compile as re_compile
-from statistics                  import fmean
 from typing                      import Callable, ClassVar, Generic, Iterator, Optional as Nullable, TypeVar, Union
 
 from pyTooling.Decorators        import export, readonly
@@ -57,13 +56,28 @@ from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 
 
-__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP", "LINE_LEGEND_LABEL"]
+__all__ = ["SpanFilter", "SpanCategory", "MSYS2_SETUP_STEP", "LINE_LEGEND_LABEL", "QUEUED_LEGEND_LABEL"]
 
 _FigureType = TypeVar("_FigureType")
 """Type of the drawing a renderer's backend produces, e.g. matplotlib's :class:`~matplotlib.figure.Figure`."""
 
+_Span = Span
+"""
+Alias of :class:`~pyTooling.Tracing.Span` for annotations in a class with a property named ``Span``, which the class
+body binds.
+"""
+
+_Trace = Trace
+"""
+Alias of :class:`~pyTooling.Tracing.Trace` for annotations in a class with a property named ``Trace``, which the class
+body binds.
+"""
+
 LINE_LEGEND_LABEL = "pipeline, called workflow"
 """The legend's label of the line drawn for the pipeline and every called workflow."""
+
+QUEUED_LEGEND_LABEL = "waiting for a runner"
+"""The legend's label of the bars showing the time a job waited for a runner."""
 
 SpanFilter = Predicate[Span]
 """A function deciding whether a timespan - and with it, its sub-spans - is shown."""
@@ -201,8 +215,11 @@ class GanttBar(Bar):
 		:param queued:      The bar is the time a job waited for a runner.
 		:param running:     The bar's timespan is still running.
 		:param parent:      The row the bar sits in.
-		:raises ValueError: If parameter 'begin', 'end' or 'parent' is None.
-		:raises TypeError:  If parameter 'begin' or 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'begin' is None.
+		:raises TypeError:  If parameter 'begin' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'end' is None.
+		:raises TypeError:  If parameter 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Diagram.Gantt.Row`.
 		:raises ValueError: If the end precedes the begin.
 		"""
@@ -238,9 +255,9 @@ class GanttRow(Row):
 	It adds to :class:`~pyTooling.Diagram.Gantt.Row` the timespan the row shows, where that timespan sits in the
 	trace's tree, and the category its bars are colored by.
 	"""
-	_span:     Span  #: The timespan shown by the row.
-	_depth:    int   #: Nesting depth of the timespan, where the trace is at depth 0.
-	_category: str   #: Category of the timespan, or the empty string.
+	_span:     _Span  #: The timespan shown by the row.
+	_depth:    int    #: Nesting depth of the timespan, where the trace is at depth 0.
+	_category: str    #: Category of the timespan, or the empty string.
 
 	def __init__(self, span: Span, depth: int, category: str, *, parent: GanttLayout) -> None:
 		"""
@@ -397,6 +414,8 @@ class CategoryStatistics(metaclass=ExtendedType, slots=True):
 
 		:returns: Seconds.
 		"""
+		from statistics import fmean
+
 		return fmean(self._waitTimes)
 
 	@readonly
@@ -424,6 +443,8 @@ class CategoryStatistics(metaclass=ExtendedType, slots=True):
 
 		:returns: Seconds.
 		"""
+		from statistics import fmean
+
 		return fmean(self._runTimes)
 
 	@readonly
@@ -461,7 +482,7 @@ class GanttLayout(Diagram):
 	The statistics count every job of the trace, which wasn't skipped and has a category - independently of the filter
 	deciding which rows are shown.
 	"""
-	_trace:      Trace                          #: The trace laid out.
+	_trace:      _Trace                         #: The trace laid out.
 	_now:        datetime                       #: The time a running timespan's bar ends at.
 	_spanFilter: Nullable[SpanFilter]           #: The function deciding which timespans are shown, or ``None`` for all.
 	_categorize: SpanCategory                   #: The function returning a timespan's category.

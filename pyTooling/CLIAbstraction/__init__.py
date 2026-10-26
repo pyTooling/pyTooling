@@ -57,10 +57,16 @@ from pyTooling.MetaClasses               import ExtendedType
 from pyTooling.Exceptions                import ToolingException, PlatformNotSupportedError
 from pyTooling.Common                    import getFullyQualifiedName, getTypeName
 from pyTooling.Attributes                import Attribute
-from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine
-from pyTooling.CLIAbstraction.Argument   import NamedAndValuedArgument, ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
+from pyTooling.CLIAbstraction.Argument   import CommandLineArgument, formatCommandLine, NamedAndValuedArgument, \
+                                                ValuedArgument, PathArgument, PathListArgument, NamedTupledArgument
 from pyTooling.CLIAbstraction.ValuedFlag import ValuedFlag
 from pyTooling.Platform                  import Platform
+
+
+_Path = Path
+"""
+Alias of :class:`~pathlib.Path` for annotations in a class with a property named ``Path``, which the class body binds.
+"""
 
 
 @export
@@ -187,7 +193,7 @@ class Program(metaclass=ExtendedType, slots=True):
 
 	_platform:         str                                                   #: Current platform the executable runs on (Linux, Windows, ...)
 	_EXECUTABLE_NAMES: ClassVar[dict[str, str]]                              #: Dictionary of platform specific executable names.
-	_executablePath:   Path                                                  #: The path to the executable (binary, script, ...).
+	_executablePath:   _Path                                                 #: The path to the executable (binary, script, ...).
 	_dryRun:           bool                                                  #: True, if program shall run in *dry-run mode*.
 	_dryRunMessages:   list[str]                                             #: Actions skipped in *dry-run mode*.
 	__cliOptions__:    ClassVar[dict[type[CommandLineArgument], int]]        #: List of all possible CLI options.

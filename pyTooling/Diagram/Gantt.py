@@ -60,7 +60,7 @@ renderer draws what any of them describe.
 from __future__            import annotations
 
 from datetime              import datetime, timedelta
-from typing                import Iterator, Optional as Nullable
+from typing                import Iterator
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
@@ -78,7 +78,7 @@ class Bar(metaclass=ExtendedType, slots=True):
 	(:attr:`BeginSinceParent`) - because a chart is drawn on the second and a report usually wants one of the others.
 	"""
 	_parent:  Row       #: The row this bar sits in.
-	_diagram: Diagram   #: The diagram this bar belongs to.
+	_diagram: _Diagram  #: The diagram this bar belongs to.
 	_begin:   datetime  #: Begin of the bar.
 	_end:     datetime  #: End of the bar.
 
@@ -89,8 +89,11 @@ class Bar(metaclass=ExtendedType, slots=True):
 		:param begin:       Begin of the bar.
 		:param end:         End of the bar, which may equal the begin but must not precede it.
 		:param parent:      The row the bar sits in.
-		:raises ValueError: If parameter 'begin', 'end' or 'parent' is None.
-		:raises TypeError:  If parameter 'begin' or 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'begin' is None.
+		:raises TypeError:  If parameter 'begin' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'end' is None.
+		:raises TypeError:  If parameter 'end' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Row`.
 		:raises ValueError: If the end precedes the begin.
 		"""
@@ -236,7 +239,7 @@ class Row(metaclass=ExtendedType, slots=True):
 
 	A row spans its bars: it begins with its earliest bar and ends with its latest, whether or not they touch.
 	"""
-	_parent: Diagram     #: The diagram this row belongs to.
+	_parent: _Diagram    #: The diagram this row belongs to.
 	_name:   str         #: Name of the row, which labels it in a chart.
 	_bars:   list[Bar]   #: The bars of this row, in the order they were added.
 
@@ -246,7 +249,8 @@ class Row(metaclass=ExtendedType, slots=True):
 
 		:param name:        Name of the row.
 		:param parent:      The diagram the row belongs to.
-		:raises ValueError: If parameter 'name' or 'parent' is None.
+		:raises ValueError: If parameter 'name' is None.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Diagram`.
 		"""
@@ -423,7 +427,8 @@ class Diagram(metaclass=ExtendedType, slots=True):
 
 		:param title:       Title of the diagram.
 		:param origin:      The time offsets are counted from.
-		:raises ValueError: If parameter 'title' or 'origin' is None.
+		:raises ValueError: If parameter 'title' is None.
+		:raises ValueError: If parameter 'origin' is None.
 		:raises TypeError:  If parameter 'title' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'origin' is not of type :class:`~datetime.datetime`.
 		"""
@@ -504,3 +509,9 @@ class Diagram(metaclass=ExtendedType, slots=True):
 		:returns: Iterator to iterate all rows, in the order they were added.
 		"""
 		return iter(self._rows)
+
+
+_Diagram = Diagram
+"""
+Alias of :class:`Diagram` for annotations in a class with a property named ``Diagram``, which the class body binds.
+"""

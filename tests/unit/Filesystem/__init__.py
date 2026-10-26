@@ -32,21 +32,21 @@
 Unit tests for :mod:`pyTooling.Filesystem`: scanning a directory tree and the statistics collected for it.
 """
 from datetime              import timedelta
-from gc                    import collect as gc_collect, disable as gc_disable, enable as gc_enable
-from gc                    import get_objects as gc_get_objects, isenabled as gc_isenabled
+from gc                    import collect as gc_collect, disable as gc_disable, enable as gc_enable, \
+                                  get_objects as gc_get_objects, isenabled as gc_isenabled
 from os                    import DirEntry, link, scandir, symlink
 from pathlib               import Path
 from sys                   import platform as sys_platform
 from tempfile              import TemporaryDirectory
-from typing                import Iterator
+from typing                import Iterator, get_args, get_type_hints
 from unittest.mock         import patch
 
 from pytest                import mark
 
 from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import count
-from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError
-from pyTooling.Filesystem  import NodeKind, PermissionWarning
+from pyTooling.Filesystem  import Base, Root, Directory, Element, Filename, File, SymbolicLink, FilesystemError, \
+                                  NodeKind, PermissionWarning
 from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Platform    import CurrentPlatform
 from pyTooling.Warning     import WarningCollector
@@ -578,6 +578,113 @@ class PermissionDenied(Testcase):
 		self.assertEqual(1, root.TotalFileCount)
 
 	def test_MessageOnly(self) -> None:
-		warning = PermissionWarning("Directory can't be read.")
+		with self.assertRaises(TypeError) as context:
+			_ = PermissionWarning("Directory can't be read.")
 
-		self.assertIsNone(warning.Directory)
+		self.assertIn("'directory'", str(context.exception))
+
+
+@mark.skipif(sys_platform == "win32", reason="Creating a symbolic link needs a privilege on Windows.")
+class SymbolicLinkResolution(Testcase):
+	"""A relative link target is followed through other links, as the operating system resolves it."""
+
+	_root: Path
+
+	def setUp(self) -> None:
+		super().setUp()
+
+		self._root = Path(self.enterContext(TemporaryDirectory())) / "root"
+		(self._root / "dir" / "inner").mkdir(parents=True)
+		(self._root / "dir" / "f.txt").write_text("f")
+		(self._root / "file.txt").write_text("file")
+
+	def _Link(self, root: Root, name: str) -> SymbolicLink:
+		return next(link for link in root.SymbolicLinks if link.Name == name)
+
+	def _Directory(self, root: Root, name: str) -> Directory:
+		return next(directory for directory in root.Subdirectories if directory.Name == name)
+
+	def test_Chain(self) -> None:
+		"""A link to a link is connected to that link, which is connected to its own target."""
+		symlink("dir", self._root / "b")
+		symlink("b", self._root / "a")
+		root = Root(self._root)
+
+		self.assertTrue(self._Link(root, "a").IsConnected)
+		self.assertIn(self._Link(root, "a"), self._Link(root, "b").LinkSources)
+		self.assertIn(self._Link(root, "b"), self._Directory(root, "dir").LinkSources)
+
+	def test_ThroughLink(self) -> None:
+		"""A link in the middle of the target's path is replaced by its own target."""
+		symlink("dir", self._root / "dirlink")
+		symlink("dirlink/f.txt", self._root / "a")
+		root = Root(self._root)
+		file = next(file for file in self._Directory(root, "dir").RegularFiles if file.Name == "f.txt")
+
+		self.assertTrue(self._Link(root, "a").IsConnected)
+		self.assertIn(self._Link(root, "a"), file.LinkSources)
+		self.assertEqual([], root.BrokenSymbolicLinks)
+
+	def test_ThroughLink_Parent(self) -> None:
+		"""A '..' after a followed link leaves the link's target, not the link's own directory."""
+		symlink("dir/inner", self._root / "innerlink")
+		symlink("innerlink/../f.txt", self._root / "a")
+		root = Root(self._root)
+		file = next(file for file in self._Directory(root, "dir").RegularFiles if file.Name == "f.txt")
+
+		self.assertIn(self._Link(root, "a"), file.LinkSources)
+
+	def test_ThroughFile(self) -> None:
+		"""A regular file in the middle of the target's path makes the link broken."""
+		symlink("file.txt/x", self._root / "a")
+		root = Root(self._root)
+
+		self.assertTrue(self._Link(root, "a").IsBroken)
+		self.assertFalse(self._Link(root, "a").IsConnected)
+		self.assertEqual([self._Link(root, "a")], root.BrokenSymbolicLinks)
+
+	def test_Cycle(self) -> None:
+		"""A path through a cycle of links is broken; the link closing the cycle is connected to the other link."""
+		symlink("b/x", self._root / "a")
+		symlink("a", self._root / "b")
+		root = Root(self._root)
+
+		self.assertTrue(self._Link(root, "a").IsBroken)
+		self.assertEqual([self._Link(root, "a")], root.BrokenSymbolicLinks)
+		self.assertIn(self._Link(root, "b"), self._Link(root, "a").LinkSources)
+
+	def test_Dangling(self) -> None:
+		"""A target nothing in the tree is named like is broken."""
+		symlink("missing", self._root / "a")
+		root = Root(self._root)
+
+		self.assertTrue(self._Link(root, "a").IsBroken)
+		self.assertEqual([self._Link(root, "a")], root.BrokenSymbolicLinks)
+
+	def test_OutsideRoot(self) -> None:
+		"""A target above the root is outside the scanned tree."""
+		symlink("../outside", self._root / "a")
+		root = Root(self._root)
+
+		self.assertTrue(self._Link(root, "a").IsOutOfRange)
+		self.assertEqual([self._Link(root, "a")], root.UnconnectedSymbolicLinks)
+
+	def test_ThroughAbsoluteLink(self) -> None:
+		"""A path through a link with an absolute target can't be followed inside the tree."""
+		symlink(self._root / "dir", self._root / "absolute")
+		symlink("absolute/f.txt", self._root / "a")
+		root = Root(self._root)
+
+		self.assertTrue(self._Link(root, "a").IsOutOfRange)
+		self.assertEqual([self._Link(root, "a")], root.UnconnectedSymbolicLinks)
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Filesystem
+
+		self.assertIs(Root, get_args(get_type_hints(Base, vars(pyTooling.Filesystem))["_root"])[0])
+		self.assertIs(Path, get_args(get_type_hints(Directory, vars(pyTooling.Filesystem))["_path"])[0])
+		self.assertIs(File, get_args(get_type_hints(Filename, vars(pyTooling.Filesystem))["_file"])[0])
+		self.assertIs(Path, get_type_hints(SymbolicLink, vars(pyTooling.Filesystem))["_target"])

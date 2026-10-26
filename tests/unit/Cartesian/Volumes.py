@@ -31,7 +31,6 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian3D.Volumes` - cuboid and cube.
 """
-from pyTooling.Cartesian3D         import Point3D
 from pyTooling.Cartesian3D.Volumes import Volume, Cuboid, Cube
 from pyTooling.Testing             import Testcase
 
@@ -43,5 +42,20 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Instantiation(Testcase):
+	def test_Volume(self) -> None:
+		volume = Volume()
+
+		self.assertIs(Volume, type(volume))
+
+	def test_Cuboid(self) -> None:
+		cuboid = Cuboid()
+
+		self.assertIs(Cuboid, type(cuboid))
+		self.assertIsInstance(cuboid, Volume)
+
 	def test_Cube(self) -> None:
-		origin = Cube()
+		cube = Cube()
+
+		self.assertIs(Cube, type(cube))
+		self.assertIsInstance(cube, Cuboid)
+		self.assertIsInstance(cube, Volume)

@@ -67,12 +67,13 @@ import heapq
 from collections           import deque
 from enum                  import Enum
 from itertools             import chain
-from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable
-from typing                import Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
+from typing                import Any, TypeVar, Generic, Deque, Union, Optional as Nullable, \
+                                  Iterator as typing_Iterator, Generator, Iterable, Mapping, Hashable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import DuplicateElementError, NotInSameHierarchyError, ToolingException
+from pyTooling.Exceptions  import CycleError as CommonCycleError, DuplicateElementError, NotInSameHierarchyError, \
+                                  ToolingException
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.DataModel   import KeyValuePairsMixin, Predicate
 from pyTooling.Tree        import Node
@@ -181,24 +182,24 @@ class NotInDifferentSubgraphs(GraphError):
 class DuplicateVertexError(GraphError, DuplicateElementError):
 	"""The exception is raised when the vertex already exists in the graph."""
 
-	_vertexID: Nullable[VertexIDType]  #: ID of the vertex that already exists in the graph.
+	_vertexID: VertexIDType  #: ID of the vertex that already exists in the graph.
 
-	def __init__(self, message: str, /, *, vertexID: Nullable[VertexIDType] = None) -> None:
+	def __init__(self, message: str, /, *, vertexID: VertexIDType) -> None:
 		"""
 		Initializes the exception with the identifier that is already taken.
 
 		:param message:  The exception's message.
-		:param vertexID: Optional, the vertex identifier that already exists.
+		:param vertexID: The vertex identifier that already exists.
 		"""
 		super().__init__(message)
 		self._vertexID = vertexID
 
 	@readonly
-	def VertexID(self) -> Nullable[VertexIDType]:
+	def VertexID(self) -> VertexIDType:
 		"""
 		Read-only property to access the identifier that already exists (:attr:`_vertexID`).
 
-		:returns: The duplicate vertex identifier, or ``None`` if it wasn't recorded.
+		:returns: The duplicate vertex identifier.
 		"""
 		return self._vertexID
 
@@ -207,24 +208,24 @@ class DuplicateVertexError(GraphError, DuplicateElementError):
 class DuplicateEdgeError(GraphError, DuplicateElementError):
 	"""The exception is raised when the edge already exists in the graph."""
 
-	_edgeID: Nullable[EdgeIDType]  #: ID of the edge that already exists in the graph.
+	_edgeID: EdgeIDType  #: ID of the edge that already exists in the graph.
 
-	def __init__(self, message: str, /, *, edgeID: Nullable[EdgeIDType] = None) -> None:
+	def __init__(self, message: str, /, *, edgeID: EdgeIDType) -> None:
 		"""
 		Initializes the exception with the identifier that is already taken.
 
 		:param message: The exception's message.
-		:param edgeID:  Optional, the edge identifier that already exists.
+		:param edgeID:  The edge identifier that already exists.
 		"""
 		super().__init__(message)
 		self._edgeID = edgeID
 
 	@readonly
-	def EdgeID(self) -> Nullable[EdgeIDType]:
+	def EdgeID(self) -> EdgeIDType:
 		"""
 		Read-only property to access the identifier that already exists (:attr:`_edgeID`).
 
-		:returns: The duplicate edge identifier, or ``None`` if it wasn't recorded.
+		:returns: The duplicate edge identifier.
 		"""
 		return self._edgeID
 
@@ -252,36 +253,36 @@ class EdgeNotFoundError(GraphError, LookupError):
 	:exc:`~pyTooling.Graph.GraphError` still catches it.
 	"""
 
-	_source:      Nullable[Vertex]  #: Vertex the edge was searched from.
-	_destination: Nullable[Vertex]  #: Vertex the edge was searched to.
+	_source:      Vertex  #: Vertex the edge was searched from.
+	_destination: Vertex  #: Vertex the edge was searched to.
 
-	def __init__(self, message: str, /, *, source: Nullable[Vertex] = None, destination: Nullable[Vertex] = None) -> None:
+	def __init__(self, message: str, /, *, source: Vertex, destination: Vertex) -> None:
 		"""
 		Initializes the exception with the two vertices no edge was found between.
 
 		:param message:     The exception's message.
-		:param source:      Optional, the vertex the edge was searched from.
-		:param destination: Optional, the vertex the edge was searched to.
+		:param source:      The vertex the edge was searched from.
+		:param destination: The vertex the edge was searched to.
 		"""
 		super().__init__(message)
 		self._source =      source
 		self._destination = destination
 
 	@readonly
-	def Source(self) -> Nullable[Vertex]:
+	def Source(self) -> Vertex:
 		"""
 		Read-only property to access the vertex the edge was searched from (:attr:`_source`).
 
-		:returns: The source vertex, or ``None`` if it wasn't recorded.
+		:returns: The source vertex.
 		"""
 		return self._source
 
 	@readonly
-	def Destination(self) -> Nullable[Vertex]:
+	def Destination(self) -> Vertex:
 		"""
 		Read-only property to access the vertex the edge was searched to (:attr:`_destination`).
 
-		:returns: The destination vertex, or ``None`` if it wasn't recorded.
+		:returns: The destination vertex.
 		"""
 		return self._destination
 
@@ -295,36 +296,36 @@ class LinkNotFoundError(GraphError, LookupError):
 	:exc:`~pyTooling.Graph.GraphError` still catches it.
 	"""
 
-	_source:      Nullable[Vertex]  #: Vertex the link was searched from.
-	_destination: Nullable[Vertex]  #: Vertex the link was searched to.
+	_source:      Vertex  #: Vertex the link was searched from.
+	_destination: Vertex  #: Vertex the link was searched to.
 
-	def __init__(self, message: str, /, *, source: Nullable[Vertex] = None, destination: Nullable[Vertex] = None) -> None:
+	def __init__(self, message: str, /, *, source: Vertex, destination: Vertex) -> None:
 		"""
 		Initializes the exception with the two vertices no link was found between.
 
 		:param message:     The exception's message.
-		:param source:      Optional, the vertex the link was searched from.
-		:param destination: Optional, the vertex the link was searched to.
+		:param source:      The vertex the link was searched from.
+		:param destination: The vertex the link was searched to.
 		"""
 		super().__init__(message)
 		self._source =      source
 		self._destination = destination
 
 	@readonly
-	def Source(self) -> Nullable[Vertex]:
+	def Source(self) -> Vertex:
 		"""
 		Read-only property to access the vertex the link was searched from (:attr:`_source`).
 
-		:returns: The source vertex, or ``None`` if it wasn't recorded.
+		:returns: The source vertex.
 		"""
 		return self._source
 
 	@readonly
-	def Destination(self) -> Nullable[Vertex]:
+	def Destination(self) -> Vertex:
 		"""
 		Read-only property to access the vertex the link was searched to (:attr:`_destination`).
 
-		:returns: The destination vertex, or ``None`` if it wasn't recorded.
+		:returns: The destination vertex.
 		"""
 		return self._destination
 
@@ -333,30 +334,30 @@ class LinkNotFoundError(GraphError, LookupError):
 class SameGraphError(GraphError):
 	"""The exception is raised when a vertex is copied into the graph it already belongs to."""
 
-	_graph: Nullable[Graph]  #: Graph the vertex belongs to already.
+	_graph: _Graph  #: Graph the vertex belongs to already.
 
-	def __init__(self, message: str, /, *, graph: Nullable[Graph] = None) -> None:
+	def __init__(self, message: str, /, *, graph: Graph) -> None:
 		"""
 		Initializes the exception with the graph the vertex belongs to already.
 
 		:param message: The exception's message.
-		:param graph:   Optional, the graph the vertex belongs to already.
+		:param graph:   The graph the vertex belongs to already.
 		"""
 		super().__init__(message)
 		self._graph = graph
 
 	@readonly
-	def Graph(self) -> Nullable[Graph]:
+	def Graph(self) -> Graph:
 		"""
 		Read-only property to access the graph the vertex belongs to already (:attr:`_graph`).
 
-		:returns: The graph, or ``None`` if it wasn't recorded.
+		:returns: The graph.
 		"""
 		return self._graph
 
 
 @export
-class CycleError(GraphError):
+class CycleError(GraphError, CommonCycleError):
 	"""The exception is raised when a not permitted cycle is found."""
 
 	_path: Nullable[tuple[Vertex, ...]]  #: Path of vertices ending in the vertex reached a second time.
@@ -3039,8 +3040,10 @@ class BaseGraph(
 		:param transitiveKind: Optional, the kind a transitive edge gets. Default: :attr:`EdgeKind.Transitive`.
 		:param keyName:        Optional, the key the path of a transitive edge is stored as. Default: ``None``, no path is
 		                       computed.
-		:raises ValueError:    If parameter 'directKind' or 'transitiveKind' is None.
-		:raises TypeError:     If parameter 'directKind' or 'transitiveKind' is not an enumeration member.
+		:raises ValueError:    If parameter 'directKind' is None.
+		:raises TypeError:     If parameter 'directKind' is not an enumeration member.
+		:raises ValueError:    If parameter 'transitiveKind' is None.
+		:raises TypeError:     If parameter 'transitiveKind' is not an enumeration member.
 		:raises TypeError:     If parameter 'keyName' is not a string.
 		:raises CycleError:    If the graph contains a cycle, which has no unique transitive reduction.
 

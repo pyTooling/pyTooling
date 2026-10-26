@@ -52,8 +52,8 @@ from re                   import compile as re_compile
 from sys                  import modules, version_info
 from threading            import Condition
 from types                import BuiltinFunctionType, CodeType, FunctionType, MemberDescriptorType, MethodType
-from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Protocol, Self
-from typing               import TypeVar, Generic, _GenericAlias, _get_protocol_attrs, ClassVar, Optional as Nullable
+from typing               import Any, Callable, Generator, Iterator, Iterable, NoReturn, Protocol, Self, TypeVar, \
+                                 Generic, _GenericAlias, _get_protocol_attrs, ClassVar, Optional as Nullable
 
 from pyTooling.Common     import getFullyQualifiedName, getTypeName
 from pyTooling.Exceptions import ToolingException
@@ -107,37 +107,37 @@ class InvalidBaseClassError(ExtendedTypeError):
 	error is raised, so it is identified by its name.
 	"""
 
-	_baseClass: Nullable[type]  #: Base-class that can't be combined with the class under construction.
-	_className: Nullable[str]   #: Name of the class under construction.
+	_baseClass: type  #: Base-class that can't be combined with the class under construction.
+	_className: str   #: Name of the class under construction.
 
-	def __init__(self, message: str, /, *, baseClass: Nullable[type] = None, className: Nullable[str] = None) -> None:
+	def __init__(self, message: str, /, *, baseClass: type, className: str) -> None:
 		"""
 		Initializes the exception with the base-class and the name of the class under construction.
 
 		:param message:   The exception's message.
-		:param baseClass: Optional, the base-class that can't be combined with the class under construction.
-		:param className: Optional, the name of the class under construction.
+		:param baseClass: The base-class that can't be combined with the class under construction.
+		:param className: The name of the class under construction.
 		"""
 		super().__init__(message)
 		self._baseClass = baseClass
 		self._className = className
 
 	@readonly
-	def BaseClass(self) -> Nullable[type]:
+	def BaseClass(self) -> type:
 		"""
 		Read-only property to access the base-class that can't be combined with the class under construction
 		(:attr:`_baseClass`).
 
-		:returns: The base-class, or ``None`` if it wasn't recorded.
+		:returns: The base-class.
 		"""
 		return self._baseClass
 
 	@readonly
-	def ClassName(self) -> Nullable[str]:
+	def ClassName(self) -> str:
 		"""
 		Read-only property to access the name of the class under construction (:attr:`_className`).
 
-		:returns: The class' name, or ``None`` if it wasn't recorded.
+		:returns: The class' name.
 		"""
 		return self._className
 
@@ -185,36 +185,36 @@ class DuplicateFieldInSlotsError(ExtendedTypeError):
 	This exception is raised when a slot name is used multiple times within the inheritance hierarchy.
 	"""
 
-	_fieldName: Nullable[str]  #: Name of the slot that is used multiple times.
-	_className: Nullable[str]  #: Name of the class under construction, whose hierarchy uses the slot name multiple times.
+	_fieldName: str  #: Name of the slot that is used multiple times.
+	_className: str  #: Name of the class under construction, whose hierarchy uses the slot name multiple times.
 
-	def __init__(self, message: str, /, *, fieldName: Nullable[str] = None, className: Nullable[str] = None) -> None:
+	def __init__(self, message: str, /, *, fieldName: str, className: str) -> None:
 		"""
 		Initializes the exception with the slot name used multiple times and the class under construction.
 
 		:param message:   The exception's message.
-		:param fieldName: Optional, the name of the slot that is used multiple times.
-		:param className: Optional, the name of the class under construction.
+		:param fieldName: The name of the slot that is used multiple times.
+		:param className: The name of the class under construction.
 		"""
 		super().__init__(message)
 		self._fieldName = fieldName
 		self._className = className
 
 	@readonly
-	def FieldName(self) -> Nullable[str]:
+	def FieldName(self) -> str:
 		"""
 		Read-only property to access the name of the slot that is used multiple times (:attr:`_fieldName`).
 
-		:returns: The slot's name, or ``None`` if it wasn't recorded.
+		:returns: The slot's name.
 		"""
 		return self._fieldName
 
 	@readonly
-	def ClassName(self) -> Nullable[str]:
+	def ClassName(self) -> str:
 		"""
 		Read-only property to access the name of the class under construction (:attr:`_className`).
 
-		:returns: The class' name, or ``None`` if it wasn't recorded.
+		:returns: The class' name.
 		"""
 		return self._className
 
@@ -233,35 +233,35 @@ class UnannotatedFieldWarning(Warning):
 	   dropped silently.
 	"""
 
-	_className:  Nullable[str]         #: Name of the class under construction.
-	_fieldNames: tuple[str, ...]       #: Names of the fields without a type annotation.
+	_className:  str              #: Name of the class under construction.
+	_fieldNames: tuple[str, ...]  #: Names of the fields without a type annotation.
 
 	def __init__(
 		self,
 		message: str,
 		/, *,
-		className: Nullable[str] = None,
-		fieldNames: Nullable[Iterable[str]] = None
+		className: str,
+		fieldNames: Iterable[str]
 	) -> None:
 		"""
 		Initializes the warning with the class and its fields without a type annotation.
 
 		:param message:    The warning's message.
-		:param className:  Optional, the name of the class under construction.
-		:param fieldNames: Optional, the names of the fields without a type annotation.
+		:param className:  The name of the class under construction.
+		:param fieldNames: The names of the fields without a type annotation.
 		"""
 		super().__init__(message)
 		self._className =  className
-		self._fieldNames = () if fieldNames is None else tuple(fieldNames)
+		self._fieldNames = tuple(fieldNames)
 
 	@readonly
-	def ClassName(self) -> Nullable[str]:
+	def ClassName(self) -> str:
 		"""
 		Read-only property to access the name of the class under construction (:attr:`_className`).
 
 		The class isn't created yet when the warning is reported, so it carries the name.
 
-		:returns: The class' name, or ``None`` if it wasn't recorded.
+		:returns: The class' name.
 		"""
 		return self._className
 
@@ -270,7 +270,7 @@ class UnannotatedFieldWarning(Warning):
 		"""
 		Read-only property to access the names of the fields without a type annotation (:attr:`_fieldNames`).
 
-		:returns: Tuple of field names; empty if they weren't recorded.
+		:returns: Tuple of field names.
 		"""
 		return self._fieldNames
 
@@ -302,42 +302,42 @@ class UnfulfilledExpectationError(ExtendedTypeError):
 	      |rarr| The meta-class implementing the check.
 	"""
 
-	_incompleteClass: Nullable[type]             #: Class that doesn't provide every expected member.
-	_missingMembers:  Nullable[tuple[str, ...]]  #: Names of the expected members the class doesn't provide.
+	_incompleteClass: type             #: Class that doesn't provide every expected member.
+	_missingMembers:  tuple[str, ...]  #: Names of the expected members the class doesn't provide.
 
 	def __init__(
 		self,
 		message: str,
 		/, *,
-		incompleteClass: Nullable[type] = None,
-		missingMembers: Nullable[Iterable[str]] = None
+		incompleteClass: type,
+		missingMembers: Iterable[str]
 	) -> None:
 		"""
 		Initializes the exception with the class and the names of the members it doesn't provide.
 
 		:param message:         The exception's message.
-		:param incompleteClass: Optional, the class that doesn't provide every expected member.
-		:param missingMembers:  Optional, the names of the expected members the class doesn't provide.
+		:param incompleteClass: The class that doesn't provide every expected member.
+		:param missingMembers:  The names of the expected members the class doesn't provide.
 		"""
 		super().__init__(message)
 		self._incompleteClass = incompleteClass
-		self._missingMembers =  None if missingMembers is None else tuple(missingMembers)
+		self._missingMembers =  tuple(missingMembers)
 
 	@readonly
-	def IncompleteClass(self) -> Nullable[type]:
+	def IncompleteClass(self) -> type:
 		"""
 		Read-only property to access the class that doesn't provide every expected member (:attr:`_incompleteClass`).
 
-		:returns: The class, or ``None`` if it wasn't recorded.
+		:returns: The class.
 		"""
 		return self._incompleteClass
 
 	@readonly
-	def MissingMembers(self) -> Nullable[tuple[str, ...]]:
+	def MissingMembers(self) -> tuple[str, ...]:
 		"""
 		Read-only property to access the names of the expected members the class doesn't provide (:attr:`_missingMembers`).
 
-		:returns: Tuple of member names, or ``None`` if they weren't recorded.
+		:returns: Tuple of member names.
 		"""
 		return self._missingMembers
 
@@ -349,42 +349,42 @@ class IncompatibleMetaClassError(ExtendedTypeError):
 	meta-class that is neither :class:`type` nor derived from :class:`~pyTooling.MetaClasses.ExtendedType`.
 	"""
 
-	_decoratedClass: Nullable[type]  #: Class decorated with :deco:`slotted`, :deco:`mixin` or :deco:`singleton`.
-	_metaClass:      Nullable[type]  #: Incompatible meta-class of the decorated class.
+	_decoratedClass: type  #: Class decorated with :deco:`slotted`, :deco:`mixin` or :deco:`singleton`.
+	_metaClass:      type  #: Incompatible meta-class of the decorated class.
 
 	def __init__(
 		self,
 		message: str,
 		/, *,
-		decoratedClass: Nullable[type] = None,
-		metaClass: Nullable[type] = None
+		decoratedClass: type,
+		metaClass: type
 	) -> None:
 		"""
 		Initializes the exception with the decorated class and its incompatible meta-class.
 
 		:param message:        The exception's message.
-		:param decoratedClass: Optional, the decorated class.
-		:param metaClass:      Optional, the incompatible meta-class of the decorated class.
+		:param decoratedClass: The decorated class.
+		:param metaClass:      The incompatible meta-class of the decorated class.
 		"""
 		super().__init__(message)
 		self._decoratedClass = decoratedClass
 		self._metaClass =      metaClass
 
 	@readonly
-	def DecoratedClass(self) -> Nullable[type]:
+	def DecoratedClass(self) -> type:
 		"""
 		Read-only property to access the decorated class (:attr:`_decoratedClass`).
 
-		:returns: The decorated class, or ``None`` if it wasn't recorded.
+		:returns: The decorated class.
 		"""
 		return self._decoratedClass
 
 	@readonly
-	def MetaClass(self) -> Nullable[type]:
+	def MetaClass(self) -> type:
 		"""
 		Read-only property to access the incompatible meta-class of the decorated class (:attr:`_metaClass`).
 
-		:returns: The meta-class, or ``None`` if it wasn't recorded.
+		:returns: The meta-class.
 		"""
 		return self._metaClass
 
@@ -404,44 +404,43 @@ class AbstractClassError(ExtendedTypeError):
 	      |rarr| Exception raised, if a method is marked as *must-override*.
 	"""
 
-	_abstractClass:   Nullable[type]             #: Abstract class an instance was requested of.
-	_abstractMethods: Nullable[tuple[str, ...]]  #: Names of the methods that need to be overridden.
+	_abstractClass:   type             #: Abstract class an instance was requested of.
+	_abstractMethods: tuple[str, ...]  #: Names of the methods that need to be overridden.
 
 	def __init__(
 		self,
 		message: str,
 		/, *,
-		abstractClass: Nullable[type] = None,
-		abstractMethods: Nullable[Iterable[str]] = None
+		abstractClass: type,
+		abstractMethods: Iterable[str]
 	) -> None:
 		"""
 		Initializes the exception with the abstract class and the names of the methods to override.
 
 		:param message:         The exception's message.
-		:param abstractClass:   Optional, the abstract class an instance was requested of.
-		:param abstractMethods: Optional, the names of the methods that need to be overridden. Empty for a class declared
+		:param abstractClass:   The abstract class an instance was requested of.
+		:param abstractMethods: The names of the methods that need to be overridden. Empty for a class declared
 		                        abstract without abstract methods.
 		"""
 		super().__init__(message)
 		self._abstractClass =   abstractClass
-		self._abstractMethods = None if abstractMethods is None else tuple(abstractMethods)
+		self._abstractMethods = tuple(abstractMethods)
 
 	@readonly
-	def AbstractClass(self) -> Nullable[type]:
+	def AbstractClass(self) -> type:
 		"""
 		Read-only property to access the abstract class an instance was requested of (:attr:`_abstractClass`).
 
-		:returns: The abstract class, or ``None`` if it wasn't recorded.
+		:returns: The abstract class.
 		"""
 		return self._abstractClass
 
 	@readonly
-	def AbstractMethods(self) -> Nullable[tuple[str, ...]]:
+	def AbstractMethods(self) -> tuple[str, ...]:
 		"""
 		Read-only property to access the names of the methods that need to be overridden (:attr:`_abstractMethods`).
 
-		:returns: Tuple of method names (empty for a class declared abstract without abstract methods), or ``None`` if they
-		          weren't recorded.
+		:returns: Tuple of method names; empty for a class declared abstract without abstract methods.
 		"""
 		return self._abstractMethods
 
@@ -471,13 +470,19 @@ class MustOverrideClassError(AbstractClassError):
 # """
 
 
-M = TypeVar("M", bound=Callable[..., Any])   #: A type variable for methods.
-C = TypeVar("C", bound=type)       #: A type variable for classes.
+M = TypeVar("M", bound=Callable[..., Any])
+"""A type variable for methods."""
+
+C = TypeVar("C", bound=type)
+"""A type variable for classes."""
 
 
 def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 	"""
 	Recreate a class with :class:`ExtendedType` (or the class' own compatible meta-class) applying the given options.
+
+	A class created by :class:`ExtendedType` keeps its own options - slots, mixin, weak references, singleton - and the
+	decorator's option is added to them.
 
 	:param cls:                         Class to recreate.
 	:param decoratorName:               Name of the calling decorator. It's used in the error message.
@@ -489,11 +494,20 @@ def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 	                                    :class:`~pyTooling.MetaClasses.ExtendedType`.
 	"""
 	if cls.__class__ is type:
-		metacls = ExtendedType
+		metacls =   ExtendedType
+		arguments = {}
 	elif issubclass(cls.__class__, ExtendedType):
 		metacls = cls.__class__
 		for method in cls.__methods__:
 			delattr(method, "__classobj__")
+
+		ownSlots = cls.__dict__["__mixinSlots__"] if cls.__isMixin__ else cls.__dict__.get("__slots__", ())
+		arguments = {
+			"slots":     cls.__slotted__,
+			"mixin":     cls.__isMixin__,
+			"weakref":   "__weakref__" in ownSlots,
+			"singleton": cls.__isSingleton__
+		}
 	else:
 		metaClass = cls.__class__
 		ex = IncompatibleMetaClassError(
@@ -514,7 +528,9 @@ def _recreateClass(cls: type, decoratorName: str, **options: Any) -> type:
 		if key not in slots:
 			members[key] = value
 
-	return metacls(cls.__name__, bases, members, **options)
+	arguments.update(options)
+
+	return metacls(cls.__name__, bases, members, **arguments)
 
 
 @export
@@ -990,32 +1006,49 @@ class ExtendedType(type):
 		A field assigned in the class body without a type annotation is reported as an :exc:`UnannotatedFieldWarning` to
 		a :class:`~pyTooling.Warning.WarningCollector`; without a collector, it's dropped.
 
-		:param className:       The name of the class to construct.
-		:param baseClasses:     The tuple of :term:`base-classes <base-class>` the class is derived from.
-		:param members:         The dictionary of members for the constructed class.
-		:param slots:           Optional, if ``True``, store object attributes in :term:`__slots__ <slots>` instead of
-		                        ``__dict__``.
-		:param mixin:           Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``, create slots if
-		                        ``slots``
-		                        is true. If ``None``, preserve behavior of primary base-class.
-		:param weakref:         Optional, if ``True``, let instances of a slotted class be referenced weakly by adding
-		                        ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on to the class it
-		                        is mixed into.
-		:param singleton:       Optional, if ``True``, make the class a :term:`Singleton`.
-		:param expects:         Optional, names of members this class needs from whichever class it is mixed into, or a
-		                        :class:`typing.Protocol` class naming them as its members. |br|
-		                        See :attr:`__expectedMembers__`.
-		:param kwargs:          Any further class keyword argument, forwarded to :meth:`~object.__init_subclass__` as
-		                        :func:`type` does.
-		:returns:               The new class.
-		:raises AttributeError: If base-class has no '__slots__' attribute.
-		:raises AttributeError: If slot already exists in base-class.
+		:param className:                   The name of the class to construct.
+		:param baseClasses:                 The tuple of :term:`base-classes <base-class>` the class is derived from.
+		:param members:                     The dictionary of members for the constructed class.
+		:param slots:                       Optional, if ``True``, store object attributes in :term:`__slots__ <slots>`
+		                                    instead of ``__dict__``. A class derived from a slotted class is slotted too.
+		:param mixin:                       Optional, if ``True``, make the class a :term:`Mixin-Class`. If ``False``,
+		                                    create slots if ``slots`` is true.
+		:param weakref:                     Optional, if ``True``, let instances of a slotted class be referenced weakly by
+		                                    adding ``__weakref__`` to :term:`__slots__ <slots>`. A mixin-class passes it on
+		                                    to the class it is mixed into.
+		:param singleton:                   Optional, if ``True``, make the class a :term:`Singleton`. A class derived from
+		                                    a singleton is a singleton too; ``False`` doesn't switch it off.
+		:param expects:                     Optional, names of members this class needs from whichever class it is mixed
+		                                    into, or a :class:`typing.Protocol` class naming them as its members. |br|
+		                                    See :attr:`__expectedMembers__`.
+		:param kwargs:                      Any further class keyword argument, forwarded to
+		                                    :meth:`~object.__init_subclass__` as :func:`type` does.
+		:returns:                           The new class.
+		:raises AttributeError:             If base-class has no '__slots__' attribute.
+		:raises AttributeError:             If slot already exists in base-class.
+		:raises BaseClassWithoutSlotsError: If the class requests slots, but its primary base-class has no slots. |br|
+		                                    Declare the base-class with ``slots=True``, or remove ``slots=True`` from the
+		                                    class.
 		"""
 		# Inherit 'slots' feature from primary base-class
 		if len(baseClasses) > 0:
 			primaryBaseClass = baseClasses[0]
 			if isinstance(primaryBaseClass, metacls):
-				slots = primaryBaseClass.__slotted__
+				if primaryBaseClass.__slotted__:
+					slots = True
+				elif slots:
+					baseName = getFullyQualifiedName(primaryBaseClass)
+					ex = BaseClassWithoutSlotsError(
+						f"Class '{className}' requests slots, but its base-class '{baseName}' has no slots.",
+						baseClass=primaryBaseClass,
+						className=className
+					)
+					ex.add_note("Instances of a class derived from a base-class without slots have a '__dict__' anyway.")
+					ex.add_note(
+						f"Declare it as 'class {primaryBaseClass.__name__}(..., slots=True)', "
+						f"or remove 'slots=True' from class '{className}'."
+					)
+					raise ex
 
 		# Compute slots and mixin-slots from annotated fields as well as class- and object-fields with initial values.
 		classFields, objectFields = metacls._computeSlots(className, baseClasses, members, slots, mixin, weakref)
@@ -1068,7 +1101,9 @@ class ExtendedType(type):
 							f"Unassigned field '{ex.name}' in object '{self}' of type '{getTypeName(self)}'."
 						) from ex
 
-				newClass.__getstate__ = __getstate__
+				__getstate__.__module__ =   newClass.__module__
+				__getstate__.__qualname__ = f"{newClass.__qualname__}.__getstate__"
+				newClass.__getstate__ =     __getstate__
 
 			if "__setstate__" not in members:
 				def __setstate__(self, state: dict[str, Any]) -> None:
@@ -1088,7 +1123,9 @@ class ExtendedType(type):
 					for slotName, value in state.items():
 						setattr(self, slotName, value)
 
-				newClass.__setstate__ = __setstate__
+				__setstate__.__module__ =   newClass.__module__
+				__setstate__.__qualname__ = f"{newClass.__qualname__}.__setstate__"
+				newClass.__setstate__ =     __setstate__
 
 		# Check for inherited class attributes
 		attributes: list[Attribute] = []
@@ -1997,11 +2034,12 @@ class ExtendedType(type):
 		This implementation is threadsafe.
 
 		:param newClass:  The newly constructed class for further modifications.
-		:param singleton: If ``True``, the class allows only a single instance to exist.
+		:param singleton: If ``True``, the class allows only a single instance to exist. A class derived from a singleton
+		                  is a singleton, too, with an instance of its own; ``False`` doesn't switch it off.
 		:returns:         ``True``, if the class is a singleton.
 		"""
-		if hasattr(newClass, "__isSingleton__"):
-			singleton = newClass.__isSingleton__
+		if not singleton:
+			singleton = getattr(newClass, "__isSingleton__", False)
 
 		if singleton:
 			oldnew = newClass.__new__

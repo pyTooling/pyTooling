@@ -48,6 +48,13 @@ from pyTooling.Filesystem  import Root, Element, Directory, Filename, SymbolicLi
 from pyTooling.Stopwatch   import Stopwatch
 
 
+_Root = Root
+"""
+Alias of :class:`~pyTooling.Filesystem.Root` for annotations in a class with a property named ``Root``, which the class
+body binds.
+"""
+
+
 @export
 class Layer(metaclass=ExtendedType):
 	"""
@@ -204,7 +211,7 @@ class LayerCake(metaclass=ExtendedType):
 	first, each layer filled up to a target size that shrinks by a gradient from layer to layer - and collects the
 	directories no layer covers.
 	"""
-	_root:             Nullable[Root]       #: Reference to the filesystem root.
+	_root:             Nullable[_Root]      #: Reference to the filesystem root.
 	_layers:           list[Layer]          #: List of Docker image layers.
 	_emptyDirectories: list[Directory]      #: List of empty directories (not covered by layers).
 	_slicingDuration:  Nullable[timedelta]  #: Time to sort files by size and assign them to layers.

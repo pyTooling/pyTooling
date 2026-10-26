@@ -66,7 +66,6 @@ from pyTooling.ControlFlow import Base, BaseWithCountAndValue, BasicBlock, Block
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import DuplicateElementError, ToolingException
 from pyTooling.Graph       import Graph, Vertex
-from pyTooling.MetaClasses import ExtendedType
 
 
 # A class with a property named like a class - ``ControlFlowGraph`` - can't name that class in the annotation of a
@@ -119,24 +118,24 @@ class CallGraphError(ToolingException):
 class DuplicateFunctionError(CallGraphError, DuplicateElementError):
 	"""The exception raised for a function with an ID, which the graph has already."""
 
-	_functionID: Nullable[Hashable]  #: ID of the function the graph has already.
+	_functionID: Hashable  #: ID of the function the graph has already.
 
-	def __init__(self, message: str, /, *, functionID: Nullable[Hashable] = None) -> None:
+	def __init__(self, message: str, /, *, functionID: Hashable) -> None:
 		"""
 		Initializes the exception with the ID of the function the graph has already.
 
 		:param message:    The exception's message.
-		:param functionID: Optional, the ID of the function the graph has already.
+		:param functionID: The ID of the function the graph has already.
 		"""
 		super().__init__(message)
 		self._functionID = functionID
 
 	@readonly
-	def FunctionID(self) -> Nullable[Hashable]:
+	def FunctionID(self) -> Hashable:
 		"""
 		Read-only property to access the ID of the function the graph has already (:attr:`_functionID`).
 
-		:returns: The function's ID, or ``None`` if it wasn't recorded.
+		:returns: The function's ID.
 		"""
 		return self._functionID
 

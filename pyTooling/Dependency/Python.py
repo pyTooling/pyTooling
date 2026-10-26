@@ -31,7 +31,7 @@
 """
 Implementation of package dependencies.
 
-Importing this module needs the ``pypi`` extra, because it reads a package index over HTTP and parses PEP 440
+Importing this module needs the ``dependencies`` extra, because it reads a package index over HTTP and parses PEP 440
 requirements:
 
 * :mod:`aiohttp`,
@@ -41,92 +41,105 @@ requirements:
 are imported at module level and each is guarded, so a missing one names itself rather than failing as a bare
 :exc:`ImportError`.
 
-:raises MissingDependencyError: If the 'pypi' extra isn't installed.
+:raises MissingDependencyError: If the 'dependencies' extra isn't installed.
 
 .. hint::
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-from __future__           import annotations
+from __future__               import annotations
 
-from asyncio              import run as asyncio_run, gather as asyncio_gather
-from collections          import deque
-from datetime             import date, datetime, timedelta
-from enum                 import IntEnum
-from functools            import wraps, update_wrapper
-from pathlib              import Path
-from re                   import compile as re_compile, Pattern
-from threading            import RLock
-from typing               import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, Self
+from asyncio                  import run as asyncio_run, gather as asyncio_gather
+from collections              import deque
+from datetime                 import datetime, timedelta
+from enum                     import IntEnum
+from functools                import wraps, update_wrapper
+from pathlib                  import Path
+from re                       import compile as re_compile, Pattern
+from threading                import RLock
+from typing                   import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, \
+                                     Self
 
-from pyTooling.Configuration import Dictionary
-from pyTooling.Exceptions    import MissingDependencyError
-
-try:
-	from aiohttp                 import ClientSession
-except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="aiohttp", extra="pypi") from ex
+from pyTooling.Configuration  import Dictionary, UnsupportedValueTypeError
+from pyTooling.Exceptions     import MissingDependencyError
 
 try:
-	from packaging.requirements  import InvalidRequirement, Requirement
-	from packaging.utils         import canonicalize_name
+	from aiohttp                import ClientSession
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="packaging", extra="pypi") from ex
+	raise MissingDependencyError(dependency="aiohttp", extra="dependencies") from ex
 
 try:
-	from requests                import Session, HTTPError
-	from requests.adapters       import HTTPAdapter
-	from urllib3.util.retry      import Retry
+	from packaging.requirements import InvalidRequirement, Requirement
+	from packaging.utils        import canonicalize_name
 except ImportError as ex:  # pragma: no cover
-	raise MissingDependencyError(dependency="requests", extra="pypi") from ex
+	raise MissingDependencyError(dependency="packaging", extra="dependencies") from ex
 
-from pyTooling.Decorators      import export, readonly
-from pyTooling.MetaClasses     import ExtendedType, abstractmethod
-from pyTooling.Common          import getFullyQualifiedName, firstValue
-from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph
-from pyTooling.Dependency      import ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning
-from pyTooling.Dependency      import UnparsableRequirementWarning
-from pyTooling.Dependency      import UnsupportedVersionWarning
-from pyTooling.Dependency      import ProjectNotFoundError, DependencyError, NoSessionAvailableError
-from pyTooling.Dependency      import ReleaseNotFoundError, CircularRequirementsFileError, RequirementsFileNotFoundError
-from pyTooling.Dependency      import PackageIndexError
-from pyTooling.Dependency      import AlreadyInRequirementsTreeError
-from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER
-from pyTooling.Licensing       import LicenseAbsence, ProprietaryLicense, UnknownLicense
-from pyTooling.Stopwatch       import Stopwatch
-from pyTooling.Warning         import WarningCollector
-from pyTooling.GenericPath.URL import URL
-from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
+try:
+	from requests               import Session, HTTPError
+	from requests.adapters      import HTTPAdapter
+	from urllib3.util.retry     import Retry
+except ImportError as ex:  # pragma: no cover
+	raise MissingDependencyError(dependency="requests", extra="dependencies") from ex
+
+from pyTooling.Decorators     import export, readonly
+from pyTooling.MetaClasses    import ExtendedType, abstractmethod
+from pyTooling.Common         import getFullyQualifiedName, firstValue
+from pyTooling.Dependency     import Package, PackageStorage, PackageVersion, PackageDependencyGraph, \
+                                     ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning, \
+                                     UnparsableRequirementWarning, UnsupportedVersionWarning, ProjectNotFoundError, \
+                                     DependencyError, NoSessionAvailableError, ReleaseNotFoundError, \
+                                     CircularRequirementsFileError, RequirementsFileNotFoundError, PackageIndexError, \
+                                     AlreadyInRequirementsTreeError, UnparsableURLWarning
+from pyTooling.Licensing      import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER, \
+                                     LicenseAbsence, ProprietaryLicense, UnknownLicense
+from pyTooling.Stopwatch      import Stopwatch
+from pyTooling.Warning        import WarningCollector
+from pyTooling.URI            import URL, URLError
+from pyTooling.Versioning     import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
 
 
-#: Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it.
+_Path = Path
+"""
+Alias of :class:`~pathlib.Path` for annotations in a class with a property named ``Path``, which the class body binds.
+"""
+
+_URL = URL
+"""
+Alias of :class:`~pyTooling.URI.URL` for annotations in a class with a property named ``URL``, which the class body
+binds.
+"""
+
 _LICENSE_NOTE_LENGTH = 64
+"""Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it."""
 
-#: PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
-#: :class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
 _PROPRIETARY_CLASSIFIER =    "License :: Other/Proprietary License"
+"""
+PyPI's classifier for a license that isn't open source. SPDX can't name one, so it becomes a
+:class:`~pyTooling.Licensing.ProprietaryLicense` rather than an expression to parse.
+"""
 
-#: Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first.
 _REPOSITORY_URL_ALIASES =    ("source code", "source", "code", "repository", "github", "gitlab")
+"""Aliases matched against the free-text keys of ``project_urls``, lower-cased, most specific first."""
+
 _DOCUMENTATION_URL_ALIASES = ("documentation", "docs", "read the docs")
 _ISSUE_TRACKER_URL_ALIASES = ("bug tracker", "issue tracker", "issues", "bug reports", "tracker")
 _PROJECT_URL_ALIASES =       ("homepage", "home page", "home")
 _CHANGELOG_URL_ALIASES =     ("changelog", "changes", "release notes", "whatsnew", "what's new")
 
-#: Pattern of an ``extra == "<name>"`` comparison in a requirement's marker.
 _EXTRA_MARKER = re_compile(r'''extra\s*==\s*["']([^"']+)["']''')
+"""Pattern of an ``extra == "<name>"`` comparison in a requirement's marker."""
 
-#: How often a request to a package index is retried before it is reported as an error.
 RETRY_ATTEMPTS = 4
+"""How often a request to a package index is retried before it is reported as an error."""
 
-#: Seconds the delay between two retries grows by, doubling per attempt: 0.5 s, 1 s, 2 s, 4 s.
 RETRY_BACKOFF = 0.5
+"""Seconds the delay between two retries grows by, doubling per attempt: 0.5 s, 1 s, 2 s, 4 s."""
 
-#: Status codes worth retrying: a rate-limit and the transient server-side failures.
 RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
+"""Status codes worth retrying: a rate-limit and the transient server-side failures."""
 
-#: What a requirements file states: a requirement, a referenced file, or a reference to a file read before.
 RequirementsFileEntryT = Union[Requirement, "RequirementsFile", "RequirementsFileReference"]
+"""What a requirements file states: a requirement, a referenced file, or a reference to a file read before."""
 
 
 @export
@@ -157,9 +170,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
 	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
-	_path:                     Path                                        #: Path of this requirements file.
+	_path:                     _Path                                       #: Path of this requirements file.
 	_entries:                  list[RequirementsFileEntryT]                #: What this file states, in file order.
-	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of the tree, by resolved path.
+	_analyzedRequirementFiles: Nullable[dict[_Path, RequirementsFile]]     #: Every file of the tree, by resolved path.
 	_analysisDuration:         Nullable[timedelta]                         #: Time :meth:`Parse` took to read the file.
 
 	def __init__(
@@ -594,7 +607,7 @@ class RequirementsFileReference(metaclass=ExtendedType, slots=True):
 	"""
 
 	_parent: Nullable[RequirementsFile]  #: File stating the ``-r`` line; ``None`` until a file states it.
-	_path:   Path                        #: Path of the referenced file.
+	_path:   _Path                       #: Path of the referenced file.
 	_target: RequirementsFile            #: The referenced file, read where it was referenced first.
 
 	def __init__(self, path: Path, target: RequirementsFile, *, parent: Nullable[RequirementsFile] = None) -> None:
@@ -704,7 +717,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	       license: GPL-2.0-only
 
 	``version`` states the structure this file is written for and is checked against
-	:attr:`SCHEMA_VERSION`; ``analysedAt`` is the day a human last checked the statements - see :attr:`AnalysedAt`.
+	:attr:`SCHEMA_VERSION_LATEST`; ``analysedAt`` is the day a human last checked the statements - see :attr:`AnalysedAt`.
 
 	**A key is a package name, optionally followed by a version expression** - the shape a requirement line has.
 	The expression is read by :class:`~pyTooling.Versioning.PythonVersionExpression`, so it is the same language a
@@ -723,14 +736,20 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 	#: Structure this parser reads. A file states the one it was written for as its ``version`` field, and a file
 	#: stating a different one is rejected rather than read on the chance that it still fits.
-	SCHEMA_VERSION: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
+	SCHEMA_VERSION_LATEST: ClassVar[SemanticVersion] = SemanticVersion(0, 1)
+
+	#: JSON schema file per structure version, in :mod:`pyTooling.Resources`. A later version is added beside the one
+	#: in use, not instead of it, so a file written for an older structure keeps a schema to be checked against.
+	SCHEMA_FILES: ClassVar[dict[SemanticVersion, _Path]] = {
+		SemanticVersion(0, 1): Path("PackageOverrides-v0.1.schema.json"),
+	}
 
 	#: Splits a key into the package name and whatever follows it. A name stops at the first character an operator
 	#: can start with, so ``igraph>=0.10`` splits the same way ``igraph >=0.10`` does.
 	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
 
 	_analysedAt:   Nullable[datetime]                         #: When the statements were last checked by a human.
-	_path:         Nullable[Path]                             #: Path of the file the statements were read from.
+	_path:         Nullable[_Path]                            #: Path of the file the statements were read from.
 	#: License expression per package, by the version expression its key states, in the file's order.
 	_licenses:     dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 	#: URL of the license's text per package, by the version expression its key states, in the file's order.
@@ -788,7 +807,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		there is nothing to convert and no second constructor for the node tree.
 
 		``version`` is **required** and is the first thing checked: it states which structure the file was written
-		for, and is compared against :attr:`SCHEMA_VERSION`. **Quote it** - unquoted, YAML reads ``0.1`` as a float,
+		for, and is compared against :attr:`SCHEMA_VERSION_LATEST`. **Quote it** - unquoted, YAML reads ``0.1`` as a float,
 		and a float loses a trailing zero, so ``1.10`` would arrive as ``1.1``.
 
 		``analysedAt`` is **required** too, and is the day a human last checked these statements. It is an ISO-8601
@@ -803,10 +822,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		                                An empty file is one, and states no overrides - but it states no
 		                                ``version`` either, so it is rejected by the next check.
 		:raises DependencyError:        If ``version`` is missing, isn't a version, or isn't
-		                                :attr:`SCHEMA_VERSION`.
+		                                :attr:`SCHEMA_VERSION_LATEST`.
 		:raises DependencyError:        If ``analysedAt`` is missing or isn't an ISO-8601 date.
 		:raises DependencyError:        If ``packages`` isn't a mapping. |br|
-		                                A file stating no packages is fine and gives no overrides.
+		                                A file stating no packages is fine and gives no overrides - whether the key
+		                                is absent, an empty mapping, or present with every entry commented out.
 		:raises DependencyError:        If a version expression in the file can't be parsed.
 		"""
 		# Imported here rather than at module level, so a missing 'ruamel.yaml' is reported when the overrides are
@@ -823,7 +843,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		if (schemaVersion := configuration.get("version", None)) is None:
 			ex = DependencyError(f"License override file '{path}' states no 'version'.")
 			ex.add_note("It says which structure the file is written for, so a later one can be told apart.")
-			ex.add_note(f'Add it as the first field: version: "{cls.SCHEMA_VERSION}"')
+			ex.add_note(f'Add it as the first field: version: "{cls.SCHEMA_VERSION_LATEST}"')
 			raise ex
 
 		try:
@@ -833,9 +853,9 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got '{schemaVersion}'.")
 			raise ex from cause
 
-		if fileVersion != cls.SCHEMA_VERSION:
+		if fileVersion != cls.SCHEMA_VERSION_LATEST:
 			ex = DependencyError(f"License override file '{path}' is written for structure '{fileVersion}'.")
-			ex.add_note(f"This reads '{cls.SCHEMA_VERSION}'.")
+			ex.add_note(f"This reads '{cls.SCHEMA_VERSION_LATEST}'.")
 			raise ex
 
 		if (analysedMoment := configuration.get("analysedAt", None)) is None:
@@ -854,7 +874,11 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 			ex.add_note("Write it as an ISO-8601 timestamp: analysedAt: 2026-09-04T21:45:00+00:00")
 			raise ex from cause
 
-		packages = configuration.get("packages", None)
+		try:
+			packages = configuration.get("packages", None)
+		except UnsupportedValueTypeError:
+			packages = None
+
 		if packages is None:
 			return cls(analysedAt, path)
 		elif not isinstance(packages, Dictionary):
@@ -1009,6 +1033,13 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		return f"LicenseOverrides({len(self)} packages)"
 
 
+_LicenseOverrides = LicenseOverrides
+"""
+Alias of :class:`LicenseOverrides` for annotations in a class with a property named ``LicenseOverrides``, which the
+class body binds.
+"""
+
+
 @export
 class LazyLoaderState(IntEnum):
 	"""
@@ -1146,7 +1177,7 @@ class Distribution(metaclass=ExtendedType, slots=True):
 	A single downloadable file of a release - a wheel or a source archive.
 	"""
 	_filename:   str       #: Filename of the distribution's file.
-	_url:        URL       #: URL to download the distribution's file from.
+	_url:        _URL      #: URL to download the distribution's file from.
 	_uploadTime: datetime  #: Time when the distribution was uploaded to the package index.
 
 	def __init__(self, filename: str, url: Union[str, URL], uploadTime: datetime) -> None:
@@ -1577,6 +1608,10 @@ class Release(PackageVersion, LazyLoadableMixin):
 		:attr:`~pyTooling.Dependency.Package.RepositoryURL` and its siblings mirror the latest release, so the
 		package still answers for the current state.
 
+		A published value that is empty or ``UNKNOWN`` - what distutils wrote for a field not given - counts as not
+		published. A value that isn't a URL counts as not published either, and is reported to a
+		:class:`~pyTooling.Warning.WarningCollector` as :exc:`~pyTooling.Dependency.UnparsableURLWarning`.
+
 		:param infoNode: The ``info`` node of the JSON document describing this release.
 		"""
 		projectURLs = {
@@ -1585,16 +1620,42 @@ class Release(PackageVersion, LazyLoadableMixin):
 			if value is not None
 		}
 
+		def parse(field: str, text: str) -> Nullable[URL]:
+			"""
+			Nested function parsing a URL the package index published.
+
+			:param field: Name of the field the URL was published in, for the warning.
+			:param text:  The published URL.
+			:returns:     The URL, or ``None`` if the text is empty, ``UNKNOWN`` or no URL.
+			"""
+			if text == "" or text == "UNKNOWN":
+				return None
+
+			try:
+				return URL.Parse(text)
+			except URLError as cause:
+				WarningCollector.Raise(
+					UnparsableURLWarning(
+						f"URL '{field}' of '{self._package._name}' {self._version} isn't a URL.",
+						projectName=self._package._name,
+						version=self._version
+					),
+					cause,
+					notes=f"Got value '{text}'."
+				)
+
+			return None
+
 		def urlFor(aliases: tuple[str, ...]) -> Nullable[URL]:
 			"""
 			Return the first of the given aliases the package index published a URL for.
 
 			:param aliases: The keys to look for, most specific first.
-			:returns:       The URL of the first alias that is present, or ``None`` if none of them is.
+			:returns:       The URL of the first alias that is present and parses, or ``None`` if none of them is.
 			"""
 			for alias in aliases:
-				if (url := projectURLs.get(alias, None)) is not None:
-					return URL.Parse(url)
+				if (text := projectURLs.get(alias, None)) is not None and (url := parse(alias, text)) is not None:
+					return url
 
 			return None
 
@@ -1604,7 +1665,7 @@ class Release(PackageVersion, LazyLoadableMixin):
 		self._projectURL      = urlFor(_PROJECT_URL_ALIASES)
 
 		if self._projectURL is None and (homePage := infoNode.get("home_page", None)) is not None:
-			self._projectURL = URL.Parse(homePage)
+			self._projectURL = parse("home_page", homePage)
 
 		index: PythonPackageIndex = self._package._storage
 		if (repository := index._licenseOverrides.RepositoryOf(self._package._name)) is not None:
@@ -1657,9 +1718,9 @@ class Project(Package, LazyLoadableMixin):
 
 	The list of releases and the project's details are fetched from the index on first use.
 	"""
-	_url:         Nullable[URL]      #: URL of the project's page on the package index.
+	_url:         Nullable[_URL]     #: URL of the project's page on the package index.
 
-	_api:         Nullable[URL]      #: URL of the package index's API, used to load the project's details.
+	_api:         Nullable[_URL]     #: URL of the package index's API, used to load the project's details.
 	_session:     Nullable[Session]  #: HTTP session reused for the API requests.
 
 	def __init__(
@@ -1974,10 +2035,10 @@ class PythonPackageIndex(PackageStorage):
 	It is the entry point of the dependency graph: projects are looked up here, and every request to the index reuses
 	the same HTTP session.
 	"""
-	_url:              URL                 #: URL of the package index's website.
-	_api:              URL                 #: URL of the package index's API.
+	_url:              _URL                #: URL of the package index's website.
+	_api:              _URL                #: URL of the package index's API.
 	_session:          Session             #: HTTP session reused for every request to this index.
-	_licenseOverrides: LicenseOverrides    #: Licenses stated by hand, for what this index can't answer for.
+	_licenseOverrides: _LicenseOverrides   #: Licenses stated by hand, for what this index can't answer for.
 	_projectCache:     dict[str, Project]  #: Projects looked up on this index, by canonical name.
 	_unknownProjects:  set[str]            #: Canonical names of the projects this index doesn't know.
 
@@ -1997,8 +2058,8 @@ class PythonPackageIndex(PackageStorage):
 		:param api:              URL of the index's JSON API, as a string or a parsed URL.
 		:param graph:            Dependency graph this index belongs to.
 		:param licenseOverrides: Optional, licenses stated by hand; an empty set of overrides if not given.
-		:raises TypeError:       If parameter 'url' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
-		:raises TypeError:       If parameter 'api' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises TypeError:       If parameter 'url' is neither a string nor a :class:`~pyTooling.URI.URL`.
+		:raises TypeError:       If parameter 'api' is neither a string nor a :class:`~pyTooling.URI.URL`.
 		"""
 		super().__init__(name, graph)
 

@@ -103,6 +103,8 @@ prefix, a postfix or a build number.
         v1.2.3.\ :green:`beta4` |br|
         v1.2.3.\ :green:`rc4`
 
+        A ``.`` or ``-`` may separate the release number, as SemVer writes it: ``v2.0.0-rc.1`` is ``v2.0.0.rc1``.
+
       Post number
         tbd
 
@@ -114,7 +116,13 @@ prefix, a postfix or a build number.
         v1.2.3.\ :green:`dev4`
 
       Postfix string
-        v1.2.3+\ :green:`deb11u5`
+        v1.2.3+\ :green:`deb11u5` |br|
+        v1.2.3+\ :green:`build.5`
+
+        Identifiers separated by ``.`` or ``-``, like SemVer's build metadata. A postfix makes a version newer:
+        ``v1.2.3 < v1.2.3+build.5 < v1.2.3+build.6``.
+        It follows the version after ``+``, ``-`` or ``.``; after a ``.`` it doesn't start with a digit
+        (``1.2.3.foo``), so ``1.2.3foo`` and a fifth number (``1.2.3.4.5``) are syntax errors.
 
       Comparison operators
         Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.
@@ -146,104 +154,8 @@ prefix, a postfix or a build number.
 
       .. rubric:: Condensed Class Definition
 
-      .. code-block:: Python
+      .. condensed-class:: pyTooling.Versioning.SemanticVersion
 
-         @export
-         class SemanticVersion(Version):
-
-           @classmethod
-           def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[SemanticVersion], bool]] = None) -> Version:
-             pass
-
-           @readonly
-           def Parts(self) -> Parts:
-             pass
-
-           @readonly
-           def Prefix(self) -> str:
-             pass
-
-           @readonly
-           def Major(self) -> int:
-             pass
-
-           @readonly
-           def Minor(self) -> int:
-             pass
-
-           @readonly
-           def Micro(self) -> int:
-             pass
-
-           @readonly
-           def Patch(self) -> int:
-             pass
-
-           @readonly
-           def ReleaseLevel(self) -> ReleaseLevel:
-             pass
-
-           @readonly
-           def ReleaseNumber(self) -> int:
-             pass
-
-           @readonly
-           def ReleaseLevelSpelling(self) -> str:
-             pass
-
-           @readonly
-           def Post(self) -> int:
-             pass
-
-           @readonly
-           def Dev(self) -> int:
-             pass
-
-           @readonly
-           def Build(self) -> int:
-             pass
-
-           @readonly
-           def Postfix(self) -> str:
-             pass
-
-           @readonly
-           def Hash(self) -> str:
-             pass
-
-           @readonly
-           def Flags(self) -> Flags:
-             pass
-
-           def __eq__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
-             pass
-
-           def __ne__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
-             pass
-
-           def __lt__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
-             pass
-
-           def __le__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
-             pass
-
-           def __gt__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
-             pass
-
-           def __ge__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
-             pass
-
-           def __imod__(self, other: Union[SemanticVersion, str, int, None]) -> bool:
-             pass
-
-           def __format__(self, formatSpec: str) -> str:
-             pass
-
-           def __repr__(self) -> str:
-             pass
-
-           def __str__(self) -> str:
-             pass
 
 .. _VERSIONING/SemVerVariants:
 
@@ -307,6 +219,29 @@ Variants
                  - ``v10.0.0rc1``
                  - ``10.0.0rc1``
                  - rc
+               * - ``10.0.0-RC.1``
+                 - ``10.0.0rc1``
+                 - ``10.0.0rc1``
+                 - rc
+               * - ``10.0.0rev1``, ``10.0.0-r1``, ``10.0.0-1``
+                 - ``10.0.0.post1``
+                 - ``10.0.0.post1``
+                 - final
+               * - ``10.0.0.post``
+                 - ``10.0.0.post0``
+                 - ``10.0.0.post0``
+                 - final
+               * - ``10.0.0rc1_dev-2``
+                 - ``10.0.0rc1.dev2``
+                 - ``10.0.0rc1.dev2``
+                 - rc
+               * - ``10.0.0+Ubuntu-1``
+                 - ``10.0.0+Ubuntu-1``
+                 - ``10.0.0+ubuntu.1``
+                 - final
+
+            Every spelling is case-insensitive, and ``.``, ``-`` or ``_`` may separate the parts. A local version keeps
+            its spelling, and is compared in its normalized form.
 
             :class:`~pyTooling.Versioning.SemanticVersion` reads ``pre`` and ``preview`` as a release candidate, too,
             but keeps its own meaning of ``c`` (*gamma*) and ``-dev`` (a release level): there, ``10.0.0c1`` isn't
@@ -397,98 +332,74 @@ The :class:`~pyTooling.Versioning.CalendarVersion` class represents of a version
         Represents the micro or patch version number in semantic version.
 
       Build number
-        Represents the build number.
+        Represents the build number: the numeric part following the parts a class describes, e.g. ``3`` in
+        ``2024.10.15.3`` or, for a :class:`~pyTooling.Versioning.YearMonthVersion`, in ``2024.10.3``.
+
+      Release level
+        A pre-release like ``2024.01a1``, ``2024.01-rc1`` or ``2024.01-dev``, as for a semantic version.
+
+      Post-release and development release
+        ``2024.01.post2`` and ``2024.01.dev3``.
 
       Prefix string
         Represents the prefix like: ``v`` (version), ``r`` (revision), ``i`` (internal version/release), ``ver``
         (version), ``rev`` (revision).
 
+      Postfix string
+        Anything following the version, e.g. ``deadbeef`` in ``2024.10.15+deadbeef`` or ``a`` in OSVVM's
+        ``2025.06a``.
+
       Comparison operators
         Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.
 
-      .. rubric:: Missing Features
+      .. rubric:: Spellings
 
-      * release-level: additional labels like ``dev``, ``rc``, ``pl``, ``alpha``
-      * pre-version and post-version
+      A ``.`` or ``-`` may separate a release level from the numbers and from its own number. A release level spelled
+      out may omit its number, which is 0 then; a letter without a number is a postfix. A version is written in one
+      spelling, which parses back into an equal version:
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 40 30 30
+
+         * - Parsed
+           - Written
+           - Meaning
+         * - ``2024.01a1``, ``2024.01.a1``, ``2024.01-a.1``
+           - ``2024.1.alpha1``
+           - alpha 1
+         * - ``2024.01-rc``
+           - ``2024.1.rc0``
+           - release candidate 0
+         * - ``2024.01-dev``
+           - ``2024.1-dev``
+           - development release
+         * - ``2024.01.post2.dev3``
+           - ``2024.1.post2.dev3``
+           - development release of a post-release
+         * - ``2025.06a``
+           - ``2025.6a``
+           - postfix ``a``
+         * - ``2025.06-a``
+           - ``2025.6-a``
+           - postfix ``a``
+         * - ``2024.10.15+deadbeef``
+           - ``2024.10.15+deadbeef``
+           - postfix ``deadbeef``
+
+      Pre-releases are older than their release; a postfix and a build number make a version newer:
+      ``2025.06rc1 < 2025.06 < 2025.06a < 2025.06b < 2025.06.1``. Two postfixes compare as strings.
+
+      A version keeps the separator written in front of its postfix - ``+``, ``.``, ``-`` or none
+      (:attr:`~pyTooling.Versioning.CalendarVersion.PostfixSeparator`) - and writes it back; equality and hash ignore
+      it. A constructed version writes ``+``, unless its ``postfixSeparator`` says otherwise.
 
    .. grid-item::
       :columns: 6
 
       .. rubric:: Condensed Class Definition
 
-      .. code-block:: Python
-
-         @export
-         class CalendarVersion(Version):
-           @classmethod
-           def Parse(cls, versionString: Nullable[str], validator: Nullable[Callable[[CalendarVersion], bool]] = None) -> CalendarVersion:
-             pass
-
-           @readonly
-           def Parts(self) -> Parts:
-             pass
-
-           @readonly
-           def Major(self) -> int:
-             pass
-
-           @readonly
-           def Minor(self) -> int:
-             pass
-
-           @readonly
-           def Micro(self) -> int:
-             pass
-
-           @readonly
-           def Patch(self) -> int:
-             pass
-
-           @readonly
-           def Build(self) -> int:
-             pass
-
-           @readonly
-           def Flags(self) -> Flags:
-             pass
-
-           @readonly
-           def Prefix(self) -> str:
-             pass
-
-           @readonly
-           def Postfix(self) -> str:
-             pass
-
-           def __eq__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
-             pass
-
-           def __ne__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
-             pass
-
-           def __lt__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
-             pass
-
-           def __le__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
-             pass
-
-           def __gt__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
-             pass
-
-           def __ge__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
-             pass
-
-           def __imod__(self, other: Union[CalendarVersion, str, int, None]) -> bool:
-             pass
-
-           def __format__(self, formatSpec: str) -> str:
-             pass
-
-           def __repr__(self) -> str:
-             pass
-
-           def __str__(self) -> str:
-             pass
+      .. condensed-class:: pyTooling.Versioning.CalendarVersion
 
 
 .. _VERSIONING/CalVerVariants:
@@ -541,7 +452,7 @@ Variants
 
             .. rubric:: Examples
 
-            * OSVVM: 2024.07
+            * OSVVM: 2024.07, 2025.06a
             * Ubuntu: 2024.10
 
          .. grid-item::
@@ -1156,8 +1067,8 @@ Source: :gh:`packaging <pypa/packaging>`, on PyPI as `packaging <https://pypi.or
 
 * The reference implementation of :pep:`440`, which pip uses. Where :class:`~pyTooling.Versioning.PythonVersion` and
   packaging disagree, packaging is right.
-* Parses everything :pep:`440` allows, e.g. local versions as ``1.0+local.7``, which
-  :class:`~pyTooling.Versioning.PythonVersion` doesn't parse, and the operator ``===``.
+* Parses release segments of any length, which :class:`~pyTooling.Versioning.PythonVersion` limits to four numbers,
+  and the operator ``===``.
 * A ``SpecifierSet`` handles pre-releases as pip does, and filters an iterable of versions.
 
 .. _VERSIONING/semver:

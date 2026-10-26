@@ -36,8 +36,8 @@ rejected at class-creation time instead of raising :exc:`NotImplementedError` at
 """
 from pathlib import Path
 
-from pyTooling.Configuration import KeyNotFoundError, Node, Dictionary, Sequence
-from pyTooling.Configuration import InterpolationError, PathExpressionError, UnsupportedValueTypeError
+from pyTooling.Configuration import KeyNotFoundError, Node, Dictionary, Sequence, InterpolationError, \
+                                    PathExpressionError, UnsupportedValueTypeError
 from pyTooling.Exceptions    import ConfigurationError
 from pyTooling.MetaClasses   import AbstractClassError
 from pyTooling.Testing       import Testcase
@@ -118,27 +118,24 @@ class MappingAndSequenceProtocols(Testcase):
 
 	def test_KeyNotFoundError_Message(self) -> None:
 		"""The message reads as given, although :exc:`KeyError` would quote it."""
-		ex = KeyNotFoundError("Key 'key_3' not found in node 'dictionary'.")
+		ex = KeyNotFoundError("Key 'key_3' not found in node 'dictionary'.", key="key_3")
 
 		self.assertEqual("Key 'key_3' not found in node 'dictionary'.", str(ex))
 
 class Exceptions(Testcase):
-	"""An exception raised with a message only carries no object."""
+	"""The descriptive values are required: an exception raised with a message only is a 'TypeError'."""
 
-	def test_KeyNotFoundError(self) -> None:
-		with self.assertRaises(KeyNotFoundError) as context:
+	def test_KeyNotFoundError_MessageOnly(self) -> None:
+		with self.assertRaises(TypeError) as context:
 			raise KeyNotFoundError("Key not found.")
 
-		self.assertEqual("Key not found.", str(context.exception))
-		self.assertIsNone(context.exception.Key)
+		self.assertIn("'key'", str(context.exception))
 
-	def test_UnsupportedValueTypeError(self) -> None:
-		with self.assertRaises(UnsupportedValueTypeError) as context:
+	def test_UnsupportedValueTypeError_MessageOnly(self) -> None:
+		with self.assertRaises(TypeError) as context:
 			raise UnsupportedValueTypeError("Unsupported type.")
 
-		self.assertEqual("Unsupported type.", str(context.exception))
-		self.assertIsNone(context.exception.Value)
-		self.assertIsNone(context.exception.ValueType)
+		self.assertIn("'value'", str(context.exception))
 
 	def test_UnsupportedValueTypeError_TypeError(self) -> None:
 		with self.assertRaises(TypeError) as context:
@@ -147,17 +144,15 @@ class Exceptions(Testcase):
 		self.assertIsInstance(context.exception, UnsupportedValueTypeError)
 		self.assertIs(bytes, context.exception.ValueType)
 
-	def test_PathExpressionError(self) -> None:
-		with self.assertRaises(PathExpressionError) as context:
+	def test_PathExpressionError_MessageOnly(self) -> None:
+		with self.assertRaises(TypeError) as context:
 			raise PathExpressionError("Invalid path expression.")
 
-		self.assertEqual("Invalid path expression.", str(context.exception))
-		self.assertIsNone(context.exception.PathExpression)
+		self.assertIn("'pathExpression'", str(context.exception))
 
-	def test_InterpolationError(self) -> None:
-		with self.assertRaises(InterpolationError) as context:
+	def test_InterpolationError_MessageOnly(self) -> None:
+		with self.assertRaises(TypeError) as context:
 			raise InterpolationError("Malformed variable reference.")
 
-		self.assertEqual("Malformed variable reference.", str(context.exception))
-		self.assertIsNone(context.exception.Value)
-		self.assertIsNone(context.exception.Position)
+		self.assertIn("'value'", str(context.exception))
+		self.assertIn("'position'", str(context.exception))

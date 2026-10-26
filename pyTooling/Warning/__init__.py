@@ -44,6 +44,7 @@ A solution to send warnings like exceptions to a handler in the upper part of th
 """
 from __future__           import annotations
 
+from pathlib              import Path
 from threading            import current_thread, local, Lock
 from types                import TracebackType
 from typing               import Callable, Optional as Nullable, Iterator, Self, Iterable, Union
@@ -121,6 +122,38 @@ class Warning(BaseException):
 
 
 AnyWarning = Union[CriticalWarning, Warning]
+
+
+@export
+class DirectoryCreatedWarning(Warning):
+	"""
+	Warning emitted when a file is written, whose directory doesn't exist yet and is created.
+
+	.. attention::
+
+	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
+	   dropped silently.
+	"""
+	_directory: Path  #: The directory that is created.
+
+	def __init__(self, message: str, /, *, directory: Path) -> None:
+		"""
+		Initializes the warning with the directory that is created.
+
+		:param message:   The warning's message.
+		:param directory: The directory that doesn't exist and is created.
+		"""
+		super().__init__(message)
+		self._directory = directory
+
+	@readonly
+	def Directory(self) -> Path:
+		"""
+		Read-only property to access the directory that is created (:attr:`_directory`).
+
+		:returns: The directory's path.
+		"""
+		return self._directory
 
 
 @export
@@ -500,21 +533,21 @@ class SupervisedThreadError(ExceptionBase):
 	A :class:`SupervisedWarningCollector` hands the exception leaving its thread to the :class:`ThreadSupervisor`; it
 	becomes this exception's cause, and :attr:`~SupervisedThreadError.ThreadName` names the thread.
 	"""
-	_threadName: Nullable[str]  #: Name of the thread the exception was raised in.
+	_threadName: str  #: Name of the thread the exception was raised in.
 
 	def __init__(
 		self,
 		message: str,
 		/,
 		*,
-		threadName: Nullable[str] = None,
+		threadName: str,
 		cause: Nullable[BaseException] = None
 	) -> None:
 		"""
 		Initializes the exception with the name of the thread that failed.
 
 		:param message:    The exception's message.
-		:param threadName: Optional, name of the thread that raised the collected exception.
+		:param threadName: Name of the thread that raised the collected exception.
 		:param cause:      Optional, the exception collected from that thread.
 		"""
 		super().__init__(message)
@@ -522,11 +555,11 @@ class SupervisedThreadError(ExceptionBase):
 		self.__cause__ = cause
 
 	@readonly
-	def ThreadName(self) -> Nullable[str]:
+	def ThreadName(self) -> str:
 		"""
 		Read-only property to access the name of the thread that raised the exception (:attr:`_threadName`).
 
-		:returns: Name of the thread, or ``None`` if it wasn't recorded.
+		:returns: Name of the thread.
 		"""
 		return self._threadName
 

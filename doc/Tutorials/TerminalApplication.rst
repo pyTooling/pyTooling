@@ -105,12 +105,12 @@ Step 3 - A Headline and a Version Command
       :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintHeadline` prints the class variable
       :attr:`~pyTooling.TerminalUI.TerminalApplication.HEADLINE` centered between two horizontal lines.
       :meth:`~pyTooling.TerminalUI.TerminalApplication._PrintVersion` prints copyright, license, authors and version -
-      read from the dunder variables of the module handed to it, which is why an application overrides it with the
-      one-liner naming its own package.
+      read from the dunder variables of the module set as class constant
+      :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE`, here the application's own package.
 
-      Passing the package name (second parameter) queries PyPI for the latest release, so the version line tells the
-      user whether an update is available. The query has a one second timeout and never raises - an unreachable index
-      prints ``(PyPI timeout)``.
+      Passing the package name queries PyPI for the latest release, so the version line tells the user whether an
+      update is available. The query has a one second timeout and never raises - an unreachable index prints
+      ``(PyPI timeout)``.
 
    .. grid-item::
       :columns: 6
@@ -119,7 +119,8 @@ Step 3 - A Headline and a Version Command
          :language: Python
          :tab-width: 2
          :caption: Step3.py
-         :pyobject: Application
+         :start-at: import myPackage
+         :end-at: self._PrintVersion
 
 
 .. _TUTORIAL/TerminalApplication/Step4:
@@ -181,10 +182,11 @@ Step 5 - Reporting Unhandled Exceptions
    .. grid-item::
       :columns: 6
 
-      Set :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.ISSUE_TRACKER_URL`, and each of these reports ends by
-      inviting the user to file a bug, with the URL - except the missing-dependency report, which names the package and
-      the command installing it instead: nothing is wrong with the program. The application connects the class variable
-      to its own dunder variable, because only the application knows which of its modules carries it.
+      If the module set as :attr:`~pyTooling.TerminalUI.TerminalBaseApplication.DUNDER_MODULE` declares
+      ``__issue_tracker_url__``, each of these reports ends by inviting the user to file a bug, with the URL - except
+      the missing-dependency report, which names the package and the command installing it instead: nothing is wrong
+      with the program. It is the module the version information of step 3 reads, so both name the same URL (see
+      :ref:`TERM/IssueTracker`).
 
    .. grid-item::
       :columns: 6
@@ -193,7 +195,8 @@ Step 5 - Reporting Unhandled Exceptions
          :language: Python
          :tab-width: 2
          :caption: Step5.py
-         :pyobject: Application
+         :start-at: import myPackage
+         :end-at: DUNDER_MODULE
 
 
 .. _TUTORIAL/TerminalApplication/Step6:

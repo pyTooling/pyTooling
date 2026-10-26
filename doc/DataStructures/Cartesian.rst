@@ -216,7 +216,8 @@ measurements:
 
 * :attr:`~pyTooling.Cartesian2D.LineSegment2D.Length` - the Euclidean distance between its ends, a :class:`float`
   even for integer coordinates;
-* :meth:`~pyTooling.Cartesian2D.LineSegment2D.AngleTo` - the angle to another line segment;
+* :meth:`~pyTooling.Cartesian2D.LineSegment2D.AngleTo` - the angle to another line segment's direction, from 0 to
+  :data:`math.pi`; a line segment of length 0 has no direction and raises :exc:`ValueError`;
 * :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset` - the segment as the displacement from start to end.
 
 .. seealso::
@@ -277,8 +278,10 @@ Rectangle
 =========
 
 A :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` is a trapezium whose opposite edges are parallel and equal in
-length, with 90 |degree| inner angles. The constructor compares the opposite edges' lengths and the angles between
-consecutive edges, and raises :exc:`ValueError` when the four corners describe something else.
+length, with 90 |degree| inner angles. The constructor compares the opposite edges' lengths and the four inner angles,
+and raises :exc:`ValueError` when the four corners describe something else - a parallelogram, for example, or two
+consecutive corners at the same point. Lengths and angles are compared with :func:`math.isclose`, so a rectangle
+rotated by an arbitrary angle, with floating-point corners, is accepted.
 
 .. seealso::
 
@@ -294,7 +297,7 @@ Square
 ======
 
 A :class:`~pyTooling.Cartesian2D.Shapes.Square` is a rectangle whose edges are all the same length - one more
-comparison, one more :exc:`ValueError`.
+comparison, one more :exc:`ValueError`. A rhombus has four equally long edges, but fails the rectangle's angle check.
 
 .. seealso::
 
