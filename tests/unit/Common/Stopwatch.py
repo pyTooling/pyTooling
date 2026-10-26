@@ -935,13 +935,15 @@ class DurationClassFormatting(Testcase):
 		self.assertEqual("93784123456000", f"{self.DURATION:%n}")
 
 	def test_Negative(self) -> None:
-		"""The fields are those of the absolute value, the result gets a leading ``-``."""
+		"""The fields are those of the absolute value, with a ``-`` in front of the first placeholder."""
 		duration = Duration(minutes=-1, seconds=-30, microseconds=-250_000)
 
 		self.assertEqual("-01:30.250", f"{duration:%M:%S.%L}")
 		self.assertEqual("-90", f"{duration:%s}")
 		self.assertEqual("-90250000", f"{duration:%u}")
 		self.assertEqual("-00.000001", f"{Duration(microseconds=-1):%S.%U}")
+		self.assertEqual("took -5 s", f"{Duration(seconds=-5):took %s s}")
+		self.assertEqual("100% -5", f"{Duration(seconds=-5):100%% %s}")
 
 	def test_Zero(self) -> None:
 		self.assertEqual("00:00:00.000", f"{Duration():%H:%M:%S.%L}")

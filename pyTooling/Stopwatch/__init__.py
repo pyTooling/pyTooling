@@ -138,7 +138,8 @@ class Duration(timedelta):
 		   A :class:`~datetime.timedelta` resolves microseconds, so ``%N`` and ``%n`` are the microseconds multiplied by
 		   1000.
 
-		   A negative duration renders the fields of its absolute value, and the result gets a leading ``-``.
+		   A negative duration renders the fields of its absolute value, with a ``-`` in front of the first placeholder:
+		   ``took %s s`` renders ``took -5 s``.
 
 		   ``%%`` renders a literal percent sign. An empty format specification returns :meth:`__str__`.
 
@@ -158,7 +159,7 @@ class Duration(timedelta):
 		Return a duration given in nanoseconds according to the format specification.
 
 		The specifiers are documented at :meth:`__format__`. A negative duration renders the fields of its absolute value,
-		and the result gets a leading ``-``.
+		with a ``-`` in front of the first placeholder.
 
 		:param nanoseconds: The duration in nanoseconds.
 		:param formatSpec:  The format specification, using ``%``-placeholders for the duration's parts.
@@ -196,11 +197,12 @@ class Duration(timedelta):
 				if specifier not in fields:
 					raise ValueError(f"Unknown format specifier '%{specifier}' in '{formatSpec}'.")
 
-				text += fields[specifier] + placeholder[1:]
+				text += sign + fields[specifier] + placeholder[1:]
+				sign = ""
 
 			parts.append(text)
 
-		return sign + "%".join(parts)
+		return "%".join(parts)
 
 
 @export

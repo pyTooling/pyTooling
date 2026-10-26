@@ -722,8 +722,8 @@ differences:
 
 * A :class:`~datetime.timedelta` resolves **microseconds**, so ``%N`` and ``%n`` are the microseconds multiplied by
   1000.
-* A :class:`~datetime.timedelta` can be negative. The fields are those of the absolute value, and the result gets a
-  leading ``-``.
+* A :class:`~datetime.timedelta` can be negative. The fields are those of the absolute value, with a ``-`` in front
+  of the first placeholder: ``took %s s`` renders ``took -5 s``.
 
 .. attention::
 
