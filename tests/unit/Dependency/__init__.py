@@ -32,14 +32,14 @@
 Unit tests for :mod:`pyTooling.Dependency`: building a dependency graph and solving it to the latest
 matching versions.
 """
-from datetime import datetime
+from datetime             import datetime
 
-from pyTooling.Exceptions      import ToolingException
-from pyTooling.GenericPath.URL import URL
-from pyTooling.Licensing       import LicenseExpression, UnknownLicense
-from pyTooling.Versioning      import SemanticVersion
-from pyTooling.Dependency      import PackageDependencyGraph, PackageStorage, Package, PackageVersion
-from pyTooling.Testing         import Testcase
+from pyTooling.Exceptions import ToolingException
+from pyTooling.URI        import URL
+from pyTooling.Licensing  import LicenseExpression, UnknownLicense
+from pyTooling.Versioning import SemanticVersion
+from pyTooling.Dependency import PackageDependencyGraph, PackageStorage, Package, PackageVersion
+from pyTooling.Testing    import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover

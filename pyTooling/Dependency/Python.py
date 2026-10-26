@@ -47,55 +47,55 @@ are imported at module level and each is guarded, so a missing one names itself 
 
    See :ref:`high-level help <DEPENDENCIES>` for explanations and usage examples.
 """
-from __future__                import annotations
+from __future__               import annotations
 
-from asyncio                   import run as asyncio_run, gather as asyncio_gather
-from collections               import deque
-from datetime                  import datetime, timedelta
-from enum                      import IntEnum
-from functools                 import wraps, update_wrapper
-from pathlib                   import Path
-from re                        import compile as re_compile, Pattern
-from threading                 import RLock
-from typing                    import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, \
-                                      Self
+from asyncio                  import run as asyncio_run, gather as asyncio_gather
+from collections              import deque
+from datetime                 import datetime, timedelta
+from enum                     import IntEnum
+from functools                import wraps, update_wrapper
+from pathlib                  import Path
+from re                       import compile as re_compile, Pattern
+from threading                import RLock
+from typing                   import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, \
+                                     Self
 
-from pyTooling.Configuration   import Dictionary, UnsupportedValueTypeError
-from pyTooling.Exceptions      import MissingDependencyError
+from pyTooling.Configuration  import Dictionary, UnsupportedValueTypeError
+from pyTooling.Exceptions     import MissingDependencyError
 
 try:
-	from aiohttp                 import ClientSession
+	from aiohttp                import ClientSession
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="aiohttp", extra="dependencies") from ex
 
 try:
-	from packaging.requirements  import InvalidRequirement, Requirement
-	from packaging.utils         import canonicalize_name
+	from packaging.requirements import InvalidRequirement, Requirement
+	from packaging.utils        import canonicalize_name
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="packaging", extra="dependencies") from ex
 
 try:
-	from requests                import Session, HTTPError
-	from requests.adapters       import HTTPAdapter
-	from urllib3.util.retry      import Retry
+	from requests               import Session, HTTPError
+	from requests.adapters      import HTTPAdapter
+	from urllib3.util.retry     import Retry
 except ImportError as ex:  # pragma: no cover
 	raise MissingDependencyError(dependency="requests", extra="dependencies") from ex
 
-from pyTooling.Decorators      import export, readonly
-from pyTooling.MetaClasses     import ExtendedType, abstractmethod
-from pyTooling.Common          import getFullyQualifiedName, firstValue
-from pyTooling.Dependency      import Package, PackageStorage, PackageVersion, PackageDependencyGraph, \
-                                      ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning, \
-                                      UnparsableRequirementWarning, UnsupportedVersionWarning, ProjectNotFoundError, \
-                                      DependencyError, NoSessionAvailableError, ReleaseNotFoundError, \
-                                      CircularRequirementsFileError, RequirementsFileNotFoundError, PackageIndexError, \
-                                      AlreadyInRequirementsTreeError, UnparsableURLWarning
-from pyTooling.Licensing       import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER, \
-                                      LicenseAbsence, ProprietaryLicense, UnknownLicense
-from pyTooling.Stopwatch       import Stopwatch
-from pyTooling.Warning         import WarningCollector
-from pyTooling.GenericPath.URL import URL, URLError
-from pyTooling.Versioning      import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
+from pyTooling.Decorators     import export, readonly
+from pyTooling.MetaClasses    import ExtendedType, abstractmethod
+from pyTooling.Common         import getFullyQualifiedName, firstValue
+from pyTooling.Dependency     import Package, PackageStorage, PackageVersion, PackageDependencyGraph, \
+                                     ReleaseDetailsWarning, UndeclaredExtraMarkerWarning, UnknownLicenseWarning, \
+                                     UnparsableRequirementWarning, UnsupportedVersionWarning, ProjectNotFoundError, \
+                                     DependencyError, NoSessionAvailableError, ReleaseNotFoundError, \
+                                     CircularRequirementsFileError, RequirementsFileNotFoundError, PackageIndexError, \
+                                     AlreadyInRequirementsTreeError, UnparsableURLWarning
+from pyTooling.Licensing      import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER, \
+                                     LicenseAbsence, ProprietaryLicense, UnknownLicense
+from pyTooling.Stopwatch      import Stopwatch
+from pyTooling.Warning        import WarningCollector
+from pyTooling.URI            import URL, URLError
+from pyTooling.Versioning     import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
 
 
 _LICENSE_NOTE_LENGTH = 64
@@ -2040,8 +2040,8 @@ class PythonPackageIndex(PackageStorage):
 		:param api:              URL of the index's JSON API, as a string or a parsed URL.
 		:param graph:            Dependency graph this index belongs to.
 		:param licenseOverrides: Optional, licenses stated by hand; an empty set of overrides if not given.
-		:raises TypeError:       If parameter 'url' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
-		:raises TypeError:       If parameter 'api' is neither a string nor a :class:`~pyTooling.GenericPath.URL.URL`.
+		:raises TypeError:       If parameter 'url' is neither a string nor a :class:`~pyTooling.URI.URL`.
+		:raises TypeError:       If parameter 'api' is neither a string nor a :class:`~pyTooling.URI.URL`.
 		"""
 		super().__init__(name, graph)
 

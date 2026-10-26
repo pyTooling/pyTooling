@@ -44,19 +44,19 @@ knowledge about a particular service, so it lives here rather than in each reade
    `pyTooling.GitHub <https://pyTooling.github.io/pyTooling.GitHub/>`__
       |rarr| A data model read from a REST API through this client.
 """
-from http                      import HTTPMethod
-from json                      import dumps as json_dumps, loads as json_loads
-from re                        import compile as re_compile
-from time                      import sleep
-from typing                    import Any, Optional as Nullable, Union
-from urllib.error              import HTTPError, URLError
-from urllib.request            import Request, urlopen
+from http                  import HTTPMethod
+from json                  import dumps as json_dumps, loads as json_loads
+from re                    import compile as re_compile
+from time                  import sleep
+from typing                import Any, Optional as Nullable, Union
+from urllib.error          import HTTPError, URLError
+from urllib.request        import Request, urlopen
 
-from pyTooling.Common          import getFullyQualifiedName, StringEnum
-from pyTooling.Decorators      import export, readonly
-from pyTooling.Exceptions      import ToolingException
-from pyTooling.GenericPath.URL import URL, URLError as URLParseError
-from pyTooling.MetaClasses     import ExtendedType
+from pyTooling.Common      import getFullyQualifiedName, StringEnum
+from pyTooling.Decorators  import export, readonly
+from pyTooling.Exceptions  import ToolingException
+from pyTooling.URI         import URL, URLError as URLParseError
+from pyTooling.MetaClasses import ExtendedType
 
 
 __all__ = ["JSONObject"]
@@ -159,7 +159,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a client for one REST API.
 
-		:param apiURL:      Base URL of the REST API, as a string to parse or as a :class:`~pyTooling.GenericPath.URL.URL`.
+		:param apiURL:      Base URL of the REST API, as a string to parse or as a :class:`~pyTooling.URI.URL`.
 		:param token:       Optional, token authorizing the requests. Default: anonymous requests.
 		:param headers:     Optional, headers sent with every request. Default: no headers beside the authorization.
 		:param timeout:     Optional, timeout of a single request in seconds. Default: ``30.0``.
@@ -169,8 +169,8 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 		                    with every further attempt. Default: ``2.0``.
 		:raises ValueError: If parameter 'apiURL' is ``None``.
 		:raises TypeError:  If parameter 'apiURL' is neither of type :class:`str` nor of type
-		                    :class:`~pyTooling.GenericPath.URL.URL`.
-		:raises ValueError: If parameter 'apiURL' is a string :meth:`URL.Parse <pyTooling.GenericPath.URL.URL.Parse>`
+		                    :class:`~pyTooling.URI.URL`.
+		:raises ValueError: If parameter 'apiURL' is a string :meth:`URL.Parse <pyTooling.URI.URL.Parse>`
 		                    rejects.
 		:raises ValueError: If parameter 'apiURL' names no scheme or no host.
 		:raises ValueError: If parameter 'apiURL' ends in an empty path element, e.g. ``'https://example.org/api//'``.
@@ -481,7 +481,7 @@ class RESTClient(metaclass=ExtendedType, slots=True):
 			mediaType = MediaType.JSON
 
 		# A resource path is always **below** the API, so a leading delimiter is removed - :meth:`URL.__truediv__
-		# <pyTooling.GenericPath.URL.URL.__truediv__>` would otherwise read it as naming its own root.
+		# <pyTooling.URI.URL.__truediv__>` would otherwise read it as naming its own root.
 		url =     self._apiURL / resourcePath.lstrip("/")
 		request = Request(str(url), data=data, method=method, headers=self._RequestHeaders(mediaType, headers))
 		retries = self._retries if idempotent else 0

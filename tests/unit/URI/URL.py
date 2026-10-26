@@ -1,9 +1,9 @@
 # ==================================================================================================================== #
-#             _____           _ _               ____                      _      ____       _   _                      #
-#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___| ___ _ __   ___ _ __(_) ___|  _ \ __ _| |_| |__                   #
-# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |  _ / _ \ '_ \ / _ \ '__| |/ __| |_) / _` | __| '_ \                  #
-# | |_) | |_| || | (_) | (_) | | | | | | (_| || |_| |  __/ | | |  __/ |  | | (__|  __/ (_| | |_| | | |                 #
-# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____|\___|_| |_|\___|_|  |_|\___|_|   \__,_|\__|_| |_|                 #
+#             _____           _ _              _   _ ____  ___                                                         #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _ | | | |  _ \|_ _|                                                        #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || | | | |_) || |                                                         #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |_| |  _ < | |                                                         #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)___/|_| \_\___|                                                        #
 # |_|    |___/                          |___/                                                                          #
 # ==================================================================================================================== #
 # Authors:                                                                                                             #
@@ -29,18 +29,18 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.GenericPath.URL`: parsing a URL into its
+Unit tests for :mod:`pyTooling.GenericPath` and :mod:`pyTooling.URI`: parsing a URL into its
 parts and rendering it back.
 """
-from sys                       import modules
-from typing                    import Optional as Nullable
-from unittest.mock             import patch
+from sys                   import modules
+from typing                import Optional as Nullable
+from unittest.mock         import patch
 
-from pyTooling.Exceptions      import MissingDependencyError, ToolingException
-from pyTooling.MetaClasses     import AbstractClassError
-from pyTooling.GenericPath.URL import Host, Path, URL, URLError, Protocols, QueryParameter, KeyValuePair, \
-                                      KeySequencePair, SCPAddress
-from pyTooling.Testing         import Testcase
+from pyTooling.Exceptions  import MissingDependencyError, ToolingException
+from pyTooling.MetaClasses import AbstractClassError
+from pyTooling.URI         import Host, Path, URL, URLError, Protocols, QueryParameter, KeyValuePair, \
+                                  KeySequencePair, SCPAddress
+from pyTooling.Testing     import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -420,7 +420,7 @@ class Concatenation(Testcase):
 
 
 class TrailingSlash(Testcase):
-	"""What :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` removes, and what it leaves alone."""
+	"""What :meth:`~pyTooling.URI.URL.WithoutTrailingSlash` removes, and what it leaves alone."""
 
 	def test_APathEndingInASlash(self) -> None:
 		for url, expected in (
@@ -461,7 +461,7 @@ class TrailingSlash(Testcase):
 		self.assertEqual("ref", shortenedURL.Fragment)
 
 class ParseErrors(Testcase):
-	"""What :meth:`~pyTooling.GenericPath.URL.URL.Parse` rejects, and how it says so."""
+	"""What :meth:`~pyTooling.URI.URL.Parse` rejects, and how it says so."""
 
 	def test_None(self) -> None:
 		with self.assertRaises(ValueError) as context:

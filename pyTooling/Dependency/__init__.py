@@ -54,7 +54,7 @@ from pyTooling.Decorators            import export, readonly
 from pyTooling.MetaClasses           import ExtendedType
 from pyTooling.Exceptions            import AlreadyInHierarchyError, CycleError, ToolingException
 from pyTooling.Common                import getFullyQualifiedName, firstKey, firstValue
-from pyTooling.GenericPath.URL       import URL
+from pyTooling.URI                   import URL
 from pyTooling.Graph                 import Graph, Vertex
 from pyTooling.Licensing             import LicenseExpression, BaseLicense, UnknownLicense
 from pyTooling.Versioning            import SemanticVersion
@@ -1900,7 +1900,7 @@ class PackageDependencyGraph(metaclass=ExtendedType, slots=True):
 		  :class:`~pyTooling.Licensing.UnknownLicense` if it's unknown;
 		* ``releasedAt`` - the release time as :class:`~datetime.datetime`;
 		* ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
-		  ``changelogURL`` - each a :class:`~pyTooling.GenericPath.URL.URL`.
+		  ``changelogURL`` - each a :class:`~pyTooling.URI.URL`.
 
 		All but ``license`` are set only if the version knows them; for a Python package, after its details were loaded. The
 		format is described in :ref:`DEPENDENCIES/Graph`.
