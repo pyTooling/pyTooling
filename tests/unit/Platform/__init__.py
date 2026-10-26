@@ -38,7 +38,8 @@ from os                   import getenv as os_getenv, environ as os_environ
 from typing               import get_type_hints
 from pytest               import mark
 
-from pyTooling.Platform   import Platforms, Platform, PythonImplementation, CurrentPlatform, UnknownPlatformError
+from pyTooling.Platform   import Platforms, Platform, PythonImplementation, CurrentPlatform, UnknownPlatformError, \
+                                 UnknownOperatingSystemError, UnknownEnvironmentError, UnknownArchitectureError
 from pyTooling.Versioning import PythonVersion
 from pyTooling.Testing    import Testcase
 
@@ -524,6 +525,46 @@ class Errors(Testcase):
 		with self.assertRaises(TypeError) as context:
 			raise UnknownPlatformError("Unknown platform.")
 
+		self.assertIn("'unknownValue'", str(context.exception))
+
+	def test_UnknownOperatingSystemError(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownOperatingSystemError("Unknown operating system 'java'.", unknownValue="java")
+
+		self.assertIs(UnknownOperatingSystemError, type(context.exception))
+		self.assertEqual("Unknown operating system 'java'.", str(context.exception))
+		self.assertEqual("java", context.exception.UnknownValue)
+		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
+
+	def test_UnknownEnvironmentError(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownEnvironmentError("Unknown POSIX platform 'aix'.", unknownValue="aix")
+
+		self.assertIs(UnknownEnvironmentError, type(context.exception))
+		self.assertEqual("Unknown POSIX platform 'aix'.", str(context.exception))
+		self.assertEqual("aix", context.exception.UnknownValue)
+		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
+
+	def test_UnknownArchitectureError(self) -> None:
+		with self.assertRaises(UnknownPlatformError) as context:
+			raise UnknownArchitectureError("Unknown architecture 'z80' for FreeBSD.", unknownValue="z80")
+
+		self.assertIs(UnknownArchitectureError, type(context.exception))
+		self.assertEqual("Unknown architecture 'z80' for FreeBSD.", str(context.exception))
+		self.assertEqual("z80", context.exception.UnknownValue)
+		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
+
+	def test_SubErrors_MessageOnly(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			raise UnknownOperatingSystemError("Unknown operating system.")
+		self.assertIn("'unknownValue'", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			raise UnknownEnvironmentError("Unknown environment.")
+		self.assertIn("'unknownValue'", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			raise UnknownArchitectureError("Unknown architecture.")
 		self.assertIn("'unknownValue'", str(context.exception))
 
 
