@@ -870,15 +870,15 @@ class URL(URI):
 		:param fragment:    Optional, fragment.
 		:raises ValueError: If parameter 'scheme' is ``None``.
 		:raises TypeError:  If parameter 'scheme' is not of type :class:`Protocols`.
+		:raises TypeError:  If parameter 'path' is not of type :class:`Path`.
+		:raises TypeError:  If parameter 'host' is not of type :class:`Host`.
+		:raises TypeError:  If parameter 'user' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'password' is not of type :class:`str`.
 		:raises TypeError:  If parameter 'query' is not iterable.
 		:raises TypeError:  If an element of parameter 'query' is not of type :class:`QueryParameter`.
 		:raises ValueError: If parameter 'query' holds a key twice. |br|
 		                    A key with several values is a :class:`KeySequencePair`.
 		:raises TypeError:  If parameter 'fragment' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'user' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'password' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'host' is not of type :class:`Host`.
-		:raises TypeError:  If parameter 'path' is not of type :class:`Path`.
 		"""
 		super().__init__(scheme, None, query, fragment)
 
@@ -1364,11 +1364,6 @@ class URN(URI):
 		:param resolution:              Optional, the r-component, without ``?+``.
 		:param query:                   Optional, the q-component's parameters.
 		:param fragment:                Optional, the f-component.
-		:raises TypeError:              If parameter 'query' is not iterable.
-		:raises TypeError:              If an element of parameter 'query' is not of type :class:`QueryParameter`.
-		:raises ValueError:             If parameter 'query' holds a key twice. |br|
-		                                A key with several values is a :class:`KeySequencePair`.
-		:raises TypeError:              If parameter 'fragment' is not of type :class:`str`.
 		:raises ValueError:             If parameter 'namespaceID' is ``None``.
 		:raises TypeError:              If parameter 'namespaceID' is not of type :class:`str`.
 		:raises ValueError:             If parameter 'namespaceID' is no namespace identifier of :rfc:`8141`. |br|
@@ -1378,6 +1373,11 @@ class URN(URI):
 		:raises TypeError:              If parameter 'namespaceSpecificString' is not of type :class:`str`.
 		:raises ValueError:             If parameter 'namespaceSpecificString' is empty.
 		:raises TypeError:              If parameter 'resolution' is not of type :class:`str`.
+		:raises TypeError:              If parameter 'query' is not iterable.
+		:raises TypeError:              If an element of parameter 'query' is not of type :class:`QueryParameter`.
+		:raises ValueError:             If parameter 'query' holds a key twice. |br|
+		                                A key with several values is a :class:`KeySequencePair`.
+		:raises TypeError:              If parameter 'fragment' is not of type :class:`str`.
 		"""
 		super().__init__("urn", None, query, fragment)
 

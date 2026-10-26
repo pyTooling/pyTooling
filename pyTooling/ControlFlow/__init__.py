@@ -298,14 +298,14 @@ class BasicBlock(BaseWithCountAndValue):
 		:param count:                Optional, how often the block was executed. Default: ``None``.
 		:param value:                Optional, any value attached to the block, e.g. its source lines. Default: ``None``.
 		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:raises TypeError:           If parameter 'count' is not of type :class:`int`.
-		:raises ValueError:          If parameter 'count' is negative.
 		:raises ValueError:          If parameter 'controlFlowGraph' is None.
 		:raises TypeError:           If parameter 'controlFlowGraph' is not of type :class:`ControlFlowGraph`.
 		:raises ValueError:          If parameter 'blockID' is None.
 		:raises TypeError:           If parameter 'blockID' is not hashable.
 		:raises ValueError:          If parameter 'kind' is None.
 		:raises TypeError:           If parameter 'kind' is not of type :class:`BlockKind`.
+		:raises TypeError:           If parameter 'count' is not of type :class:`int`.
+		:raises ValueError:          If parameter 'count' is negative.
 		:raises DuplicateBlockError: If the graph has a block with that ID already.
 		:raises DuplicateBlockError: If the block is an entry, exit or unwind block, and the graph has one already.
 		"""
@@ -512,8 +512,6 @@ class Edge(BaseWithCountAndValue):
 		:param count:               Optional, how often control took the edge. Default: ``None``.
 		:param value:               Optional, any value attached to the edge, e.g. a ``case`` label. Default: ``None``.
 		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:raises TypeError:          If parameter 'count' is not of type :class:`int`.
-		:raises ValueError:         If parameter 'count' is negative.
 		:raises ValueError:         If parameter 'source' is None.
 		:raises TypeError:          If parameter 'source' is not of type :class:`BasicBlock`.
 		:raises ValueError:         If parameter 'source' is an exit or unwind block.
@@ -523,6 +521,8 @@ class Edge(BaseWithCountAndValue):
 		:raises ValueError:         If parameter 'destination' belongs to another graph than parameter 'source'.
 		:raises ValueError:         If parameter 'kind' is None.
 		:raises TypeError:          If parameter 'kind' is not of type :class:`EdgeKind`.
+		:raises TypeError:          If parameter 'count' is not of type :class:`int`.
+		:raises ValueError:         If parameter 'count' is negative.
 		:raises DuplicateEdgeError: If an edge of the same kind connects the two blocks already.
 		"""
 		super().__init__(count, value, keyValuePairs)
