@@ -183,6 +183,12 @@ Version 10.x (2026)
      classes (:class:`~pyTooling.URI.URL`, :class:`~pyTooling.URI.Host`, :class:`~pyTooling.URI.Protocols`,
      :exc:`~pyTooling.URI.URLError`, ...). **Import them from** ``pyTooling.URI``; there is no alias.
      :mod:`pyTooling.GenericPath` stays the base of hierarchical paths, which a URL's path is.
+   * :class:`~pyTooling.URI.URI` is the generic URI of :rfc:`3986` - scheme, scheme-specific part, query, fragment -
+     for every scheme (``mailto:``, ``tel:``, ``urn:``). :class:`~pyTooling.URI.URL` derives from it.
+     :meth:`URI.Parse <pyTooling.URI.URI.Parse>` returns a :class:`~pyTooling.URI.URL` for a URI with an authority
+     and a scheme of :class:`~pyTooling.URI.Protocols`, else a :class:`~pyTooling.URI.URI`.
+     ``URL.Parse(text, defaultScheme=Protocols.HTTPS)`` prepends a scheme to a URL without one, as a browser does.
+     ⚠️ A :class:`~pyTooling.URI.URL` requires a scheme: ``None`` raises :exc:`ValueError`.
    * :mod:`pyTooling.URI` reports what it rejects, and raises
      :exc:`~pyTooling.URI.URLError` for it.
 
