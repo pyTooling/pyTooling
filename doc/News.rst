@@ -793,7 +793,8 @@ Version 10.x (2026)
      :exc:`~pyTooling.MetaClasses.IncompatibleMetaClassError` (``decoratedClass``, ``metaClass``),
      :exc:`~pyTooling.MetaClasses.AbstractClassError` and :exc:`~pyTooling.MetaClasses.MustOverrideClassError`
      (``abstractClass``, ``abstractMethods``). :mod:`pyTooling.Platform`:
-     :exc:`~pyTooling.Platform.UnknownPlatformError` (``unknownValue``). :mod:`pyTooling.Tree`:
+     :exc:`~pyTooling.Platform.UnknownPlatformError` and :exc:`~pyTooling.Platform.UnknownOperatingSystemError`
+     (``unknownValue``). :mod:`pyTooling.Tree`:
      :exc:`~pyTooling.Tree.AlreadyInTreeError` and :exc:`~pyTooling.Tree.NotInSameTreeError` (``otherNode``).
 
    * ⚠️ **Class variables with constant meaning are spelled in upper case**, as ``INDENT`` and the exit codes already
@@ -1161,6 +1162,13 @@ Version 10.x (2026)
 
      * FreeBSD is a supported platform: ``IsNativeFreeBSD`` no longer implies x86-64, AArch64 is recognized, and
        ``GetMemoryUsage`` reports the resident size through :func:`resource.getrusage`.
+     * :exc:`~pyTooling.Platform.UnknownPlatformError` is the base-class of three specific errors:
+       :exc:`~pyTooling.Platform.UnknownOperatingSystemError` (:data:`os.name`),
+       :exc:`~pyTooling.Platform.UnknownEnvironmentError` (the platform on Windows, :data:`sys.platform` on POSIX) and
+       :exc:`~pyTooling.Platform.UnknownArchitectureError` (the processor architecture).
+       :class:`~pyTooling.Platform.Platform` raises them instead of the base-class. ⚠️
+       :exc:`~pyTooling.Platform.UnknownOperatingSystemError`, so far a :exc:`~pyTooling.Platform.PlatformError`
+       without data, takes ``unknownValue`` and adds the debugging notes.
 
    * :mod:`pyTooling.Stopwatch`
 
