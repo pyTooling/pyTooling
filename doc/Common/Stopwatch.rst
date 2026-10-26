@@ -100,6 +100,8 @@ Features
         measurement via :func:`time.perf_counter_ns`.
       * The rendered resolution is configurable, and a format specification renders the duration as hours, minutes and
         seconds, or wholly in seconds, milliseconds, microseconds or nanoseconds.
+      * Durations are returned as :class:`~pyTooling.Stopwatch.Duration`, a :class:`~datetime.timedelta` accepting the
+        same format specification.
 
    .. grid-item::
       :columns: 6
@@ -293,9 +295,9 @@ records four spans:
    sw.SplitCount     # 4
    sw.ActiveCount    # 3
    sw.InactiveCount  # 1
-   sw.Activity       # timedelta(microseconds=300000)
-   sw.Inactivity     # timedelta(microseconds=200000)
-   sw.Duration       # timedelta(microseconds=500000)
+   sw.Activity       # Duration(microseconds=300000)
+   sw.Inactivity     # Duration(microseconds=200000)
+   sw.Duration       # Duration(microseconds=500000)
 
 :attr:`~pyTooling.Stopwatch.Stopwatch.HasSplitTimes` reports whether at least one split time was recorded, and
 :attr:`~pyTooling.Stopwatch.Stopwatch.SplitCount` how many.
@@ -511,14 +513,15 @@ otherwise. Testing the state first is how a stopwatch is driven from code that d
 The Three Durations
 ===================
 
-:attr:`~pyTooling.Stopwatch.Stopwatch.Duration` is the measurement as a :class:`~datetime.timedelta`.
+:attr:`~pyTooling.Stopwatch.Stopwatch.Duration` is the measurement as a :class:`~pyTooling.Stopwatch.Duration`, which
+is a :class:`~datetime.timedelta` (:ref:`COMMON/Stopwatch/Duration`).
 :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInSeconds` is the same measurement in **seconds**, as a :class:`float`,
 and :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInNanoseconds` in **whole nanoseconds**, as an :class:`int` - which
 is how :func:`time.perf_counter_ns` took it in the first place.
 
 .. code-block:: python
 
-   sw.Duration               # timedelta(microseconds=250294)
+   sw.Duration               # Duration(microseconds=250294)
    print(sw.Duration)        # 0:00:00.250294
    sw.DurationInSeconds      # 0.250294020
    sw.DurationInNanoseconds  # 250294020
@@ -679,6 +682,58 @@ For a stopwatch that measured 26 hours, 3 minutes and 4.123456789 seconds:
    Formatting works from :attr:`~pyTooling.Stopwatch.Stopwatch.DurationInNanoseconds`, because dividing a duration
    into fields wants a whole number of them. Not for precision - see
    :ref:`the two durations <COMMON/Stopwatch/Durations>`.
+
+
+.. _COMMON/Stopwatch/Duration:
+
+Duration
+========
+
+:class:`~pyTooling.Stopwatch.Duration` is a :class:`~datetime.timedelta` with a
+:meth:`~pyTooling.Stopwatch.Duration.__format__` method, so the :ref:`format specification <COMMON/Stopwatch/Format>`
+of a stopwatch works on a stored duration too. :attr:`~pyTooling.Stopwatch.Stopwatch.Duration`,
+:attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` return one.
+
+It takes the constructor parameters of :class:`~datetime.timedelta`. An existing :class:`~datetime.timedelta` is
+converted by :meth:`~pyTooling.Stopwatch.Duration.FromTimedelta`.
+
+.. rubric:: Usage
+
+.. code-block:: python
+
+   from datetime import timedelta
+   from pyTooling.Stopwatch import Duration
+
+   duration = Duration(hours=26, minutes=3, seconds=4, microseconds=123456)
+   print(f"{duration:%H:%M:%S.%U}")
+
+   duration = Duration.FromTimedelta(timedelta(minutes=-1, seconds=-30))
+   print(f"{duration:%M:%S}")
+
+.. rubric:: Result
+
+.. code-block::
+
+   26:03:04.123456
+   -01:30
+
+The specifiers are those of :meth:`Stopwatch.__format__ <pyTooling.Stopwatch.Stopwatch.__format__>`, with two
+differences:
+
+* A :class:`~datetime.timedelta` resolves **microseconds**, so ``%N`` and ``%n`` are the microseconds multiplied by
+  1000.
+* A :class:`~datetime.timedelta` can be negative. The fields are those of the absolute value, and the result gets a
+  leading ``-``.
+
+.. attention::
+
+   Arithmetic on a :class:`~pyTooling.Stopwatch.Duration` returns a plain :class:`~datetime.timedelta`, because
+   :class:`~datetime.timedelta` implements its operators for its own type. Convert the result back to format it:
+
+   .. code-block:: python
+
+      total = Duration.FromTimedelta(sw1.Duration + sw2.Duration)
+      print(f"{total:%H:%M:%S}")
 
 
 .. _COMMON/Stopwatch/Competitors:
