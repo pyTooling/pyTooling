@@ -30,7 +30,8 @@
 #
 """
 Unit tests for :class:`pyTooling.Stopwatch.Stopwatch`: starting, pausing, resuming, splitting and stopping,
-the formatting of the results, and its use as a context manager.
+the formatting of the results, and its use as a context manager. Unit tests for :class:`pyTooling.Stopwatch.Duration`:
+conversion and formatting.
 """
 from datetime             import timedelta
 from time                 import sleep
@@ -38,7 +39,7 @@ from time                 import sleep
 from pyTooling.Exceptions import ToolingException
 
 from pyTooling.Platform   import CurrentPlatform
-from pyTooling.Stopwatch  import Stopwatch, StopwatchError
+from pyTooling.Stopwatch  import Duration, Stopwatch, StopwatchError
 from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
@@ -810,3 +811,121 @@ class DurationFormatting(Testcase):
 
 		self.assertEqual("00:00:00.000", f"{sw:%H:%M:%S.%L}")
 		self.assertEqual("0", f"{sw:%n}")
+
+
+class DurationClass(Testcase):
+	""":class:`~pyTooling.Stopwatch.Duration` as a :class:`~datetime.timedelta`, and its conversion from one."""
+
+	def test_Constructor(self) -> None:
+		duration = Duration(weeks=1, days=2, hours=3, minutes=4, seconds=5, milliseconds=6, microseconds=7)
+		expected = timedelta(weeks=1, days=2, hours=3, minutes=4, seconds=5, milliseconds=6, microseconds=7)
+
+		self.assertIsInstance(duration, timedelta)
+		self.assertEqual(expected, duration)
+
+	def test_Slots(self) -> None:
+		duration = Duration(seconds=1)
+
+		with self.assertRaises(AttributeError):
+			duration.unknown = 1
+
+	def test_FromTimedelta(self) -> None:
+		value = timedelta(days=1, seconds=2, microseconds=3)
+		duration = Duration.FromTimedelta(value)
+
+		self.assertIs(Duration, type(duration))
+		self.assertEqual(value, duration)
+
+	def test_FromTimedelta_Negative(self) -> None:
+		value = timedelta(seconds=-1.5)
+		duration = Duration.FromTimedelta(value)
+
+		self.assertEqual(value, duration)
+
+	def test_FromTimedelta_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Duration.FromTimedelta(None)
+
+		self.assertEqual("Parameter 'value' is None.", str(context.exception))
+
+	def test_FromTimedelta_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Duration.FromTimedelta(1.5)
+
+		self.assertEqual("Parameter 'value' is not of type 'timedelta'.", str(context.exception))
+		self.assertEqual(["Got type 'float'."], context.exception.__notes__)
+
+	def test_Arithmetic(self) -> None:
+		"""Arithmetic returns a plain timedelta, which :meth:`FromTimedelta` converts back."""
+		first = Duration(seconds=5)
+		second = Duration(seconds=3)
+
+		self.assertIs(timedelta, type(first + second))
+		self.assertIs(timedelta, type(first - second))
+		self.assertIs(timedelta, type(-first))
+		self.assertIs(timedelta, type(first * 2))
+		self.assertIs(Duration, type(Duration.FromTimedelta(first + second)))
+		self.assertEqual(Duration(seconds=8), Duration.FromTimedelta(first + second))
+
+
+class DurationClassFormatting(Testcase):
+	"""The ``%``-placeholders of :meth:`Duration.__format__`."""
+
+	# 26 hours, 3 minutes, 4.123456 seconds
+	DURATION = Duration(hours=26, minutes=3, seconds=4, microseconds=123_456)
+
+	def test_Fields(self) -> None:
+		self.assertEqual("26:03:04", f"{self.DURATION:%H:%M:%S}")
+		self.assertEqual("03:04", f"{self.DURATION:%M:%S}")
+
+	def test_HoursAreNotCapped(self) -> None:
+		self.assertEqual("26", f"{self.DURATION:%H}")
+
+	def test_FieldsArePadded(self) -> None:
+		duration = Duration(hours=1, seconds=1, milliseconds=2, microseconds=3)
+
+		self.assertEqual("01:00:01.002", f"{duration:%H:%M:%S.%L}")
+		self.assertEqual("01:00:01.002003", f"{duration:%H:%M:%S.%U}")
+
+	def test_Fractions(self) -> None:
+		"""A timedelta resolves microseconds, so ``%N`` ends in ``000``."""
+		self.assertEqual("123", f"{self.DURATION:%L}")
+		self.assertEqual("123456", f"{self.DURATION:%U}")
+		self.assertEqual("123456000", f"{self.DURATION:%N}")
+
+	def test_Totals(self) -> None:
+		self.assertEqual("93784", f"{self.DURATION:%s}")
+		self.assertEqual("93784123", f"{self.DURATION:%m}")
+		self.assertEqual("93784123456", f"{self.DURATION:%u}")
+		self.assertEqual("93784123456000", f"{self.DURATION:%n}")
+
+	def test_Negative(self) -> None:
+		"""The fields are those of the absolute value, the result gets a leading ``-``."""
+		duration = Duration(minutes=-1, seconds=-30, microseconds=-250_000)
+
+		self.assertEqual("-01:30.250", f"{duration:%M:%S.%L}")
+		self.assertEqual("-90", f"{duration:%s}")
+		self.assertEqual("-90250000", f"{duration:%u}")
+		self.assertEqual("-00.000001", f"{Duration(microseconds=-1):%S.%U}")
+
+	def test_Zero(self) -> None:
+		self.assertEqual("00:00:00.000", f"{Duration():%H:%M:%S.%L}")
+		self.assertEqual("0", f"{Duration():%n}")
+
+	def test_EmptySpecification(self) -> None:
+		self.assertEqual("1 day, 2:03:04.123456", f"{self.DURATION}")
+
+	def test_EscapedPercent(self) -> None:
+		self.assertEqual("100% of 93784 s", f"{self.DURATION:100%% of %s s}")
+
+	def test_UnknownSpecifier(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			format(self.DURATION, "%s %Q")
+
+		self.assertEqual("Unknown format specifier '%Q' in '%s %Q'.", str(context.exception))
+
+	def test_TrailingPercent(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			format(self.DURATION, "%s%")
+
+		self.assertEqual("Unknown format specifier '%' in '%s%'.", str(context.exception))

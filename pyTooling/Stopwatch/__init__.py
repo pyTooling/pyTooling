@@ -61,6 +61,144 @@ class StopwatchError(ToolingException):
 
 
 @export
+class Duration(timedelta):
+	"""
+	A :class:`~datetime.timedelta`, which can be formatted by a format specification.
+
+	The constructor is the one of :class:`~datetime.timedelta`, so it takes the same parameters: ``days``, ``seconds``,
+	``microseconds``, ``milliseconds``, ``minutes``, ``hours`` and ``weeks``. An existing :class:`~datetime.timedelta`
+	is converted by :meth:`FromTimedelta`.
+
+	Arithmetic on a duration returns a plain :class:`~datetime.timedelta`, because :class:`~datetime.timedelta`
+	implements its operators in C for its own type. ``Duration.FromTimedelta(a + b)`` converts the result back.
+
+	.. note::
+
+	   :class:`~datetime.timedelta` is a C type, so this is a plain class with ``__slots__ = ()``, not an
+	   :class:`~pyTooling.MetaClasses.ExtendedType` class.
+	"""
+
+	__slots__ = ()
+
+	@classmethod
+	def FromTimedelta(cls, value: timedelta) -> Self:
+		"""
+		Convert a :class:`~datetime.timedelta` into a duration.
+
+		:param value:       The time delta to convert.
+		:returns:           A duration of the same length.
+		:raises ValueError: If parameter 'value' is None.
+		:raises TypeError:  If parameter 'value' is not of type :class:`~datetime.timedelta`.
+		"""
+		if value is None:
+			raise ValueError("Parameter 'value' is None.")
+		elif not isinstance(value, timedelta):
+			ex = TypeError("Parameter 'value' is not of type 'timedelta'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		return cls(days=value.days, seconds=value.seconds, microseconds=value.microseconds)
+
+	def __format__(self, formatSpec: str) -> str:
+		"""
+		Return the duration according to the format specification.
+
+		.. topic:: Format Specifiers
+
+		   An **uppercase** specifier is a field of the duration as it would be displayed. A **lowercase** specifier is
+		   the whole duration expressed in one unit, which is what a report or a comparison wants.
+
+		   +-----------+--------------------------------------------------------+
+		   | Specifier | Meaning                                                |
+		   +===========+========================================================+
+		   | ``%H``    | hours, not capped - a 26 hour duration shows ``26``    |
+		   +-----------+--------------------------------------------------------+
+		   | ``%M``    | minutes, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%S``    | seconds, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%L``    | fractional seconds, 3 digits (milliseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%U``    | fractional seconds, 6 digits (microseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%N``    | fractional seconds, 9 digits (nanoseconds)             |
+		   +-----------+--------------------------------------------------------+
+		   | ``%s``    | the whole duration in seconds                          |
+		   +-----------+--------------------------------------------------------+
+		   | ``%m``    | the whole duration in milliseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%u``    | the whole duration in microseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%n``    | the whole duration in nanoseconds                      |
+		   +-----------+--------------------------------------------------------+
+
+		   The fractional specifiers are truncations of the same fraction, so ``%S.%U`` renders ``04.123456`` without
+		   having to be combined with anything. ``%H`` is not capped, so ``%H:%M:%S`` never silently drops a day.
+
+		   A :class:`~datetime.timedelta` resolves microseconds, so ``%N`` and ``%n`` are the microseconds multiplied by
+		   1000.
+
+		   A negative duration renders the fields of its absolute value, and the result gets a leading ``-``.
+
+		   ``%%`` renders a literal percent sign. An empty format specification returns :meth:`__str__`.
+
+		:param formatSpec:  The format specification, using ``%``-placeholders for the duration's parts.
+		:returns:           The formatted duration.
+		:raises ValueError: If the format specification contains an unknown placeholder.
+		"""
+		if formatSpec == "":
+			return self.__str__()
+
+		microseconds = (self.days * 86_400 + self.seconds) * 1_000_000 + self.microseconds
+		return self._FormatNanoseconds(microseconds * 1_000, formatSpec)
+
+	@staticmethod
+	def _FormatNanoseconds(nanoseconds: int, formatSpec: str) -> str:
+		"""
+		Return a duration given in nanoseconds according to the format specification.
+
+		The specifiers are documented at :meth:`__format__`. A negative duration renders the fields of its absolute value,
+		and the result gets a leading ``-``.
+
+		:param nanoseconds: The duration in nanoseconds.
+		:param formatSpec:  The format specification, using ``%``-placeholders for the duration's parts.
+		:returns:           The formatted duration.
+		:raises ValueError: If the format specification contains an unknown placeholder.
+		"""
+		if nanoseconds < 0:
+			sign =        "-"
+			nanoseconds = -nanoseconds
+		else:
+			sign = ""
+
+		seconds, fraction = divmod(nanoseconds, 1_000_000_000)
+		minutes, secondField = divmod(seconds, 60)
+		hours, minuteField = divmod(minutes, 60)
+
+		result = formatSpec
+		for placeholder, value in (
+			("%H", f"{hours:02}"),
+			("%M", f"{minuteField:02}"),
+			("%S", f"{secondField:02}"),
+			("%L", f"{fraction // 1_000_000:03}"),
+			("%U", f"{fraction // 1_000:06}"),
+			("%N", f"{fraction:09}"),
+			("%s", f"{nanoseconds // 1_000_000_000}"),
+			("%m", f"{nanoseconds // 1_000_000}"),
+			("%u", f"{nanoseconds // 1_000}"),
+			("%n", f"{nanoseconds}"),
+		):
+			result = result.replace(placeholder, value)
+
+		if (position := result.find("%")) != -1:
+			following = result[position + 1] if position + 1 < len(result) else ""
+			if following != "%":
+				raise ValueError(f"Unknown format specifier '%{following}' in '{formatSpec}'.")
+
+		return sign + result.replace("%%", "%")
+
+
+@export
 class ExcludeContextManager:
 	"""
 	A stopwatch context manager for excluding certain time spans from measurement.
@@ -737,32 +875,7 @@ class Stopwatch(SlottedObject):
 		if formatSpec == "":
 			return self.__str__()
 
-		nanoseconds = self.DurationInNanoseconds
-		seconds, fraction = divmod(nanoseconds, 1_000_000_000)
-		minutes, secondField = divmod(seconds, 60)
-		hours, minuteField = divmod(minutes, 60)
-
-		result = formatSpec
-		for placeholder, value in (
-			("%H", f"{hours:02}"),
-			("%M", f"{minuteField:02}"),
-			("%S", f"{secondField:02}"),
-			("%L", f"{fraction // 1_000_000:03}"),
-			("%U", f"{fraction // 1_000:06}"),
-			("%N", f"{fraction:09}"),
-			("%s", f"{nanoseconds // 1_000_000_000}"),
-			("%m", f"{nanoseconds // 1_000_000}"),
-			("%u", f"{nanoseconds // 1_000}"),
-			("%n", f"{nanoseconds}"),
-		):
-			result = result.replace(placeholder, value)
-
-		if (position := result.find("%")) != -1:
-			following = result[position + 1] if position + 1 < len(result) else ""
-			if following != "%":
-				raise ValueError(f"Unknown format specifier '%{following}' in '{formatSpec}'.")
-
-		return result.replace("%%", "%")
+		return Duration._FormatNanoseconds(self.DurationInNanoseconds, formatSpec)
 
 	def __str__(self) -> str:
 		"""
