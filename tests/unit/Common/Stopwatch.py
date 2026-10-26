@@ -791,6 +791,30 @@ class DurationFormatting(Testcase):
 
 		self.assertEqual("100% of 1 s", f"{sw:100%% of %s s}")
 
+	def test_EscapedPercent_BeforeLetter(self) -> None:
+		"""The ``%M`` in ``%%M`` is a literal percent sign followed by ``M``, not a specifier."""
+		sw = self._stopwatch(1_000_000_000)
+
+		self.assertEqual("100%M", format(sw, "100%%M"))
+		self.assertEqual("%01", format(sw, "%%%S"))
+		self.assertEqual("%%", format(sw, "%%%%"))
+
+	def test_UnknownSpecifier_AfterEscapedPercent(self) -> None:
+		sw = self._stopwatch(1_000_000_000)
+
+		with self.assertRaises(ValueError) as context:
+			format(sw, "%% %Q")
+
+		self.assertEqual("Unknown format specifier '%Q' in '%% %Q'.", str(context.exception))
+
+	def test_TrailingPercent_AfterEscapedPercent(self) -> None:
+		sw = self._stopwatch(1_000_000_000)
+
+		with self.assertRaises(ValueError) as context:
+			format(sw, "%%%")
+
+		self.assertEqual("Unknown format specifier '%' in '%%%'.", str(context.exception))
+
 	def test_UnknownSpecifier(self) -> None:
 		sw = self._stopwatch(1_000_000_000)
 
@@ -917,6 +941,24 @@ class DurationClassFormatting(Testcase):
 
 	def test_EscapedPercent(self) -> None:
 		self.assertEqual("100% of 93784 s", f"{self.DURATION:100%% of %s s}")
+
+	def test_EscapedPercent_BeforeLetter(self) -> None:
+		"""The ``%M`` in ``%%M`` is a literal percent sign followed by ``M``, not a specifier."""
+		self.assertEqual("100%M", format(self.DURATION, "100%%M"))
+		self.assertEqual("%04", format(self.DURATION, "%%%S"))
+		self.assertEqual("%%", format(self.DURATION, "%%%%"))
+
+	def test_UnknownSpecifier_AfterEscapedPercent(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			format(self.DURATION, "%% %Q")
+
+		self.assertEqual("Unknown format specifier '%Q' in '%% %Q'.", str(context.exception))
+
+	def test_TrailingPercent_AfterEscapedPercent(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			format(self.DURATION, "%%%")
+
+		self.assertEqual("Unknown format specifier '%' in '%%%'.", str(context.exception))
 
 	def test_UnknownSpecifier(self) -> None:
 		with self.assertRaises(ValueError) as context:

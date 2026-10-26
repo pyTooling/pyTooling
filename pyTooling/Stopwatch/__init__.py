@@ -175,27 +175,32 @@ class Duration(timedelta):
 		minutes, secondField = divmod(seconds, 60)
 		hours, minuteField = divmod(minutes, 60)
 
-		result = formatSpec
-		for placeholder, value in (
-			("%H", f"{hours:02}"),
-			("%M", f"{minuteField:02}"),
-			("%S", f"{secondField:02}"),
-			("%L", f"{fraction // 1_000_000:03}"),
-			("%U", f"{fraction // 1_000:06}"),
-			("%N", f"{fraction:09}"),
-			("%s", f"{nanoseconds // 1_000_000_000}"),
-			("%m", f"{nanoseconds // 1_000_000}"),
-			("%u", f"{nanoseconds // 1_000}"),
-			("%n", f"{nanoseconds}"),
-		):
-			result = result.replace(placeholder, value)
+		fields = {
+			"H": f"{hours:02}",
+			"M": f"{minuteField:02}",
+			"S": f"{secondField:02}",
+			"L": f"{fraction // 1_000_000:03}",
+			"U": f"{fraction // 1_000:06}",
+			"N": f"{fraction:09}",
+			"s": f"{nanoseconds // 1_000_000_000}",
+			"m": f"{nanoseconds // 1_000_000}",
+			"u": f"{nanoseconds // 1_000}",
+			"n": f"{nanoseconds}",
+		}
 
-		if (position := result.find("%")) != -1:
-			following = result[position + 1] if position + 1 < len(result) else ""
-			if following != "%":
-				raise ValueError(f"Unknown format specifier '%{following}' in '{formatSpec}'.")
+		parts = []
+		for part in formatSpec.split("%%"):
+			text, *placeholders = part.split("%")
+			for placeholder in placeholders:
+				specifier = placeholder[:1]
+				if specifier not in fields:
+					raise ValueError(f"Unknown format specifier '%{specifier}' in '{formatSpec}'.")
 
-		return sign + result.replace("%%", "%")
+				text += fields[specifier] + placeholder[1:]
+
+			parts.append(text)
+
+		return sign + "%".join(parts)
 
 
 @export
