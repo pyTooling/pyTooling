@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-This package provides a representation for a Uniform Resource Locator (URL).
+This package provides representations of Uniform Resource Identifiers (URI): the generic URI, the Uniform Resource
+Locator (URL) and the Uniform Resource Name (URN, :rfc:`8141`).
 
 .. code-block::
 
@@ -53,7 +54,10 @@ from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.GenericPath import RootMixin, ElementMixin, PathMixin
 
 
-__all__ = ["URI_PATTERN", "URI_REGEXP", "URL_PATTERN", "URL_REGEXP", "SCP_ADDRESS_PATTERN", "SCP_ADDRESS_REGEXP"]
+__all__ = [
+	"URI_PATTERN", "URI_REGEXP", "URN_PATTERN", "URN_REGEXP", "URL_PATTERN", "URL_REGEXP", "SCP_ADDRESS_PATTERN",
+	"SCP_ADDRESS_REGEXP"
+]
 
 URL_PATTERN = (
 	r"""(?P<scheme>[a-zA-Z][-a-zA-Z0-9+.]*)://"""
@@ -80,6 +84,25 @@ URI_PATTERN = (
 
 URI_REGEXP = re_compile("^" + URI_PATTERN + r"\Z")
 """Precompiled regular expression for URI validation."""
+
+_PCHAR = r"""(?:[-a-zA-Z0-9._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})"""
+"""Regular expression pattern of one path character of :rfc:`3986` (``pchar``)."""
+
+URN_PATTERN = (
+	r"""(?P<scheme>[uU][rR][nN]):"""
+	r"""(?P<namespaceID>[a-zA-Z0-9][-a-zA-Z0-9]{0,30}[a-zA-Z0-9]):"""
+	r"""(?P<namespaceSpecificString>""" + _PCHAR + r"""(?:""" + _PCHAR + r"""|/)*)"""
+	r"""(?:\?\+(?P<resolution>""" + _PCHAR + r"""(?:(?!\?=)(?:""" + _PCHAR + r"""|[/?]))*))?"""
+	r"""(?:\?=(?P<query>""" + _PCHAR + r"""(?:""" + _PCHAR + r"""|[/?])*))?"""
+	r"""(?:#(?P<fragment>(?:""" + _PCHAR + r"""|[/?])*))?"""
+)
+"""Regular expression pattern for validating and splitting a URN (:rfc:`8141`)."""
+
+URN_REGEXP = re_compile("^" + URN_PATTERN + r"\Z")
+"""Precompiled regular expression for URN validation."""
+
+_NAMESPACE_ID = re_compile(r"[a-zA-Z0-9][-a-zA-Z0-9]{0,30}[a-zA-Z0-9]")
+"""Precompiled regular expression for a URN's namespace identifier (:rfc:`8141`, section 2)."""
 
 SCP_ADDRESS_PATTERN = (
 	r"""(?:(?P<user>[^@/:\[\]]+)@)?"""
@@ -694,16 +717,19 @@ class URI(metaclass=ExtendedType, slots=True):
 		part, an optional query and an optional fragment. Every scheme is accepted. If the scheme-specific part starts
 		with ``//`` (an authority) and the scheme is one of :class:`Protocols`, the URI is a URL and is read by
 		:meth:`URL.Parse`, with that method's checks; ``URI.Parse("https://example.org/")`` returns a :class:`URL`,
-		``URI.Parse("mailto:user@example.org")`` a :class:`URI`.
+		``URI.Parse("mailto:user@example.org")`` a :class:`URI`. A URI of the scheme ``urn`` is read by
+		:meth:`URN.Parse` and returned as a :class:`URN`.
 
 		:param uri:         The URI.
-		:returns:           The URI object, a :class:`URL` for a URL.
+		:returns:           The URI object, a :class:`URL` for a URL, a :class:`URN` for a URN.
 		:raises ValueError: If parameter 'uri' is ``None``.
 		:raises TypeError:  If parameter 'uri' is not of type :class:`str`.
 		:raises URLError:   When the URI holds a character :rfc:`3986` forbids, which is not allowed in a URI. |br|
 		                    The note names the character and how to write it percent-encoded.
 		:raises URLError:   When the URI holds a non-ASCII character.
 		:raises URLError:   When the URI doesn't start with a scheme followed by ``:``.
+		:raises URLError:   When a URL or a URN doesn't follow its syntax, as :meth:`URL.Parse` and :meth:`URN.Parse`
+		                    report it.
 		"""
 		if uri is None:
 			raise ValueError("Parameter 'uri' is None.")
@@ -732,6 +758,8 @@ class URI(metaclass=ExtendedType, slots=True):
 		schemeSpecificPart = matches.group("schemeSpecificPart")
 		if schemeSpecificPart.startswith("//") and scheme.upper() in Protocols.__members__:
 			return URL.Parse(uri)
+		elif scheme.lower() == "urn":
+			return URN.Parse(uri)
 
 		query = matches.group("query")
 		return URI(
@@ -1298,6 +1326,209 @@ class URL(URI):
 			query=None if self._query is None else self._query.values(),
 			fragment=self._fragment
 		)
+
+
+@export
+class URN(URI):
+	"""
+	Represents a URN (Uniform Resource Name, :rfc:`8141`): a namespace and a name in it, which names a resource without
+	locating it.
+
+	.. code-block::
+
+	   urn:<namespace-id>:<namespace-specific-string>[?+r-component][?=q-component][#f-component]
+
+	The namespace identifier (``isbn``, ``ietf``, ``uuid``, ...) decides the structure of the namespace-specific string;
+	a ``:`` in it separates parts only by that namespace's rules, so a URN is no hierarchical path. The r-component
+	(``?+``) carries parameters for a resolver, the q-component (``?=``) parameters for the named resource - read as
+	``key=value`` pairs into :attr:`Query` -, and the f-component (``#``) is a fragment.
+	"""
+
+	_namespaceID:             str            #: Namespace identifier, e.g. ``isbn``.
+	_namespaceSpecificString: str            #: Name within the namespace, e.g. ``0451450523``.
+	_resolution:              Nullable[str]  #: The r-component, without ``?+``; ``None`` if the URN has none.
+
+	def __init__(
+		self,
+		namespaceID:             str,
+		namespaceSpecificString: str,
+		resolution:              Nullable[str] = None,
+		query:                   Nullable[Iterable[QueryParameter]] = None,
+		fragment:                Nullable[str] = None
+	) -> None:
+		"""
+		Initializes a Uniform Resource Name (URN).
+
+		:param namespaceID:             Namespace identifier, e.g. ``isbn``.
+		:param namespaceSpecificString: Name within the namespace, e.g. ``0451450523``.
+		:param resolution:              Optional, the r-component, without ``?+``.
+		:param query:                   Optional, the q-component's parameters.
+		:param fragment:                Optional, the f-component.
+		:raises TypeError:              If parameter 'query' is not iterable.
+		:raises TypeError:              If an element of parameter 'query' is not of type :class:`QueryParameter`.
+		:raises ValueError:             If parameter 'query' holds a key twice. |br|
+		                                A key with several values is a :class:`KeySequencePair`.
+		:raises TypeError:              If parameter 'fragment' is not of type :class:`str`.
+		:raises ValueError:             If parameter 'namespaceID' is ``None``.
+		:raises TypeError:              If parameter 'namespaceID' is not of type :class:`str`.
+		:raises ValueError:             If parameter 'namespaceID' is no namespace identifier of :rfc:`8141`. |br|
+		                                A namespace identifier has 2 to 32 letters, digits or ``-``, and neither starts nor
+		                                ends with ``-``.
+		:raises ValueError:             If parameter 'namespaceSpecificString' is ``None``.
+		:raises TypeError:              If parameter 'namespaceSpecificString' is not of type :class:`str`.
+		:raises ValueError:             If parameter 'namespaceSpecificString' is empty.
+		:raises TypeError:              If parameter 'resolution' is not of type :class:`str`.
+		"""
+		super().__init__("urn", None, query, fragment)
+
+		if namespaceID is None:
+			raise ValueError("Parameter 'namespaceID' is None.")
+		elif not isinstance(namespaceID, str):
+			ex = TypeError("Parameter 'namespaceID' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(namespaceID)}'.")
+			raise ex
+		elif _NAMESPACE_ID.fullmatch(namespaceID) is None:
+			ex = ValueError("Parameter 'namespaceID' is no namespace identifier.")
+			ex.add_note(
+				f"Got value '{namespaceID}'. A namespace identifier has 2 to 32 letters, digits or '-', and neither starts "
+				f"nor ends with '-'."
+			)
+			raise ex
+
+		if namespaceSpecificString is None:
+			raise ValueError("Parameter 'namespaceSpecificString' is None.")
+		elif not isinstance(namespaceSpecificString, str):
+			ex = TypeError("Parameter 'namespaceSpecificString' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(namespaceSpecificString)}'.")
+			raise ex
+		elif namespaceSpecificString == "":
+			raise ValueError("Parameter 'namespaceSpecificString' is empty.")
+
+		if resolution is not None and not isinstance(resolution, str):
+			ex = TypeError("Parameter 'resolution' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(resolution)}'.")
+			raise ex
+
+		self._namespaceID =             namespaceID
+		self._namespaceSpecificString = namespaceSpecificString
+		self._resolution =              resolution
+
+	@readonly
+	def NamespaceID(self) -> str:
+		"""
+		Read-only property to access the namespace identifier (:attr:`_namespaceID`).
+
+		:rfc:`8141` compares it case-insensitively; it is kept as written.
+
+		:returns: The namespace identifier, e.g. ``isbn``.
+		"""
+		return self._namespaceID
+
+	@readonly
+	def NamespaceSpecificString(self) -> str:
+		"""
+		Read-only property to access the namespace-specific string (:attr:`_namespaceSpecificString`).
+
+		:returns: The name within the namespace, e.g. ``0451450523`` in ``urn:isbn:0451450523``.
+		"""
+		return self._namespaceSpecificString
+
+	@readonly
+	def Resolution(self) -> Nullable[str]:
+		"""
+		Read-only property to access the r-component (:attr:`_resolution`).
+
+		:returns: The r-component without ``?+``, ``None`` if the URN has none.
+		"""
+		return self._resolution
+
+	@readonly
+	def SchemeSpecificPart(self) -> str:
+		"""
+		Read-only property to return the scheme-specific part, computed from the URN's parts.
+
+		:returns: The namespace identifier and the namespace-specific string, separated by ``:``.
+		"""
+		return f"{self._namespaceID}:{self._namespaceSpecificString}"
+
+	@classmethod
+	def Parse(cls, urn: str) -> URN:
+		"""
+		Parse a URN string and return the URN object.
+
+		The URN is read by :rfc:`8141` (:data:`URN_PATTERN`): ``urn:`` (in any case), the namespace identifier, ``:``,
+		the namespace-specific string, then an optional r-component (``?+``), q-component (``?=``) and f-component
+		(``#``), in that order. The q-component is read as ``key=value`` pairs, as a URL's query.
+
+		:param urn:         The URN.
+		:returns:           The URN object.
+		:raises ValueError: If parameter 'urn' is ``None``.
+		:raises TypeError:  If parameter 'urn' is not of type :class:`str`.
+		:raises URLError:   When the URN holds a character :rfc:`3986` forbids, which is not allowed in a URN. |br|
+		                    The note names the character and how to write it percent-encoded.
+		:raises URLError:   When the string doesn't start with ``urn:``.
+		:raises URLError:   When the namespace identifier is invalid. |br|
+		                    A namespace identifier has 2 to 32 letters, digits or ``-``, and neither starts nor ends with
+		                    ``-``.
+		:raises URLError:   When the namespace-specific string is missing or empty.
+		:raises URLError:   When syntax does not match.
+		"""
+		if urn is None:
+			raise ValueError("Parameter 'urn' is None.")
+		elif not isinstance(urn, str):
+			ex = TypeError("Parameter 'urn' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(urn)}'.")
+			raise ex
+
+		for character in urn:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				ex = URLError(f"Forbidden character when parsing URN {urn!r}.")
+				ex.add_note(
+					f"Character {character!r} is not allowed in a URN. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				raise ex
+
+		if urn[:4].lower() != "urn:":
+			raise URLError(f"Missing 'urn:' when parsing URN {urn!r}.")
+		elif (matches := URN_REGEXP.match(urn)) is None:
+			namespaceID, _, namespaceSpecificString = urn[4:].partition(":")
+			if _NAMESPACE_ID.fullmatch(namespaceID) is None:
+				ex = URLError(f"Invalid namespace identifier {namespaceID!r} when parsing URN {urn!r}.")
+				ex.add_note("A namespace identifier has 2 to 32 letters, digits or '-', and neither starts nor ends with '-'.")
+				raise ex
+			elif namespaceSpecificString == "":
+				raise URLError(f"Missing namespace-specific string when parsing URN {urn!r}.")
+
+			raise URLError(f"Syntax error when parsing URN {urn!r}.")
+
+		query = matches.group("query")
+		return cls(
+			matches.group("namespaceID"),
+			matches.group("namespaceSpecificString"),
+			matches.group("resolution"),
+			None if query is None else cls._ParseQuery(query),
+			matches.group("fragment")
+		)
+
+	def __str__(self) -> str:
+		"""
+		Formats the URN as it is written: ``urn:<namespace-id>:<namespace-specific-string>[?+r][?=q][#f]``.
+
+		:returns: The URN.
+		"""
+		result = f"urn:{self._namespaceID}:{self._namespaceSpecificString}"
+
+		if self._resolution is not None:
+			result = f"{result}?+{self._resolution}"
+
+		if self._query is not None:
+			result = result + "?=" + "&".join(str(parameter) for parameter in self._query.values())
+
+		if self._fragment is not None:
+			result = f"{result}#{self._fragment}"
+
+		return result
 
 
 @export

@@ -189,6 +189,10 @@ Version 10.x (2026)
      and a scheme of :class:`~pyTooling.URI.Protocols`, else a :class:`~pyTooling.URI.URI`.
      ``URL.Parse(text, defaultScheme=Protocols.HTTPS)`` prepends a scheme to a URL without one, as a browser does.
      ⚠️ A :class:`~pyTooling.URI.URL` requires a scheme: ``None`` raises :exc:`ValueError`.
+   * :class:`~pyTooling.URI.URN` is a URN of :rfc:`8141`: namespace identifier, namespace-specific string, and the r-,
+     q- and f-components (:attr:`~pyTooling.URI.URN.Resolution`, :attr:`~pyTooling.URI.URI.Query`,
+     :attr:`~pyTooling.URI.URI.Fragment`). :meth:`URN.Parse <pyTooling.URI.URN.Parse>` reads one, and
+     :meth:`URI.Parse <pyTooling.URI.URI.Parse>` returns a :class:`~pyTooling.URI.URN` for the scheme ``urn``.
    * :mod:`pyTooling.URI` reports what it rejects, and raises
      :exc:`~pyTooling.URI.URLError` for it.
 

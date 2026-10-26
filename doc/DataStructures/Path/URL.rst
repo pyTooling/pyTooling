@@ -4,7 +4,8 @@ Uniform Resource Identifier (URI) and Locator (URL)
 ###################################################
 
 :mod:`pyTooling.URI` implements a *Uniform Resource Identifier* (URI, :rfc:`3986`) and, derived from it, a *Uniform
-Resource Locator* (URL): a URI with an authority (``//host``) and a hierarchical path.
+Resource Locator* (URL) - a URI with an authority (``//host``) and a hierarchical path - and a *Uniform Resource Name*
+(URN, :rfc:`8141`).
 
 .. code-block:: Python
 
@@ -47,6 +48,36 @@ A URI whose scheme-specific part starts with ``//`` (an authority) and whose sch
 
 :attr:`URI.Scheme <pyTooling.URI.URI.Scheme>` is the scheme's name; a URL answers the
 :class:`~pyTooling.URI.Protocols` member instead, which also tells whether the scheme is secured.
+
+
+.. _STRUCT/Path/URL/URN:
+
+URNs
+****
+
+A :class:`~pyTooling.URI.URN` (*Uniform Resource Name*, :rfc:`8141`) names a resource without locating it:
+
+.. code-block::
+
+   urn:<namespace-id>:<namespace-specific-string>[?+r-component][?=q-component][#f-component]
+
+The namespace identifier (``isbn``, ``ietf``, ``uuid``, ...) has 2 to 32 letters, digits or ``-`` and decides the
+structure of the namespace-specific string; a ``:`` in it separates parts only by that namespace's rules, so a URN is no
+hierarchical path. The r-component carries parameters for a resolver, the q-component parameters for the named
+resource - read as ``key=value`` pairs into :attr:`~pyTooling.URI.URI.Query`, as a URL's query -, and the f-component is
+a fragment. :meth:`URN.Parse <pyTooling.URI.URN.Parse>` reads a URN, and so does
+:meth:`URI.Parse <pyTooling.URI.URI.Parse>` for the scheme ``urn``.
+
+.. code-block:: python
+
+   urn = URI.Parse("urn:ietf:rfc:3986")
+   urn.NamespaceID              # 'ietf'
+   urn.NamespaceSpecificString  # 'rfc:3986'
+
+   urn = URN.Parse("urn:example:weather?+lang=de?=time=now#temperature")
+   urn.Resolution               # 'lang=de'
+   urn.Query["time"].Value      # 'now'
+   urn.Fragment                 # 'temperature'
 
 
 .. _STRUCT/Path/URL/Parse:
