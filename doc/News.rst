@@ -964,6 +964,9 @@ Version 10.x (2026)
    * ⚠️ **A postfix makes a version newer**, see *Bug Fixes*: ``1.2.3 < 1.2.3+build.5``. Code expecting both to sort
      alike drops the postfix before comparing.
 
+   * ⚠️ **An** :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.OptionalValuedFlag` **passes a string or**
+     ``None`` **instead of a boolean** - see *Bug Fixes*. The option given without a value passes ``defaultValue``, an
+     empty string by default, which is false: test ``args.color is not None`` to ask whether the option was given.
    * ⚠️ ``SemanticVersion.Parse("v2.0.0-rc.1")`` **is release candidate 1**, not release candidate 0 with the postfix
      ``1`` - see *Bug Fixes*.
 
@@ -1246,6 +1249,16 @@ Version 10.x (2026)
        :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.KeyValuePairsAction` adds every ``key=value`` to a
        dictionary, which the handler receives (``None`` without the option); a key without ``=`` has the value ``None``.
        A new parameter ``metaName`` names the value in the help page (default ``KEY=VALUE``).
+
+   * :mod:`pyTooling.Attributes.ArgParse.OptionalValuedFlag`
+
+     * ⚠️ :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.OptionalValuedFlag`,
+       :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.ShortOptionalValuedFlag` and
+       :class:`~pyTooling.Attributes.ArgParse.OptionalValuedFlag.LongOptionalValuedFlag` parsed no value: they passed
+       the parameterization of a boolean flag to :mod:`argparse`, so ``--color`` passed ``True`` and ``--color=red``
+       was an error. The handler receives the value (``--color=red`` or ``--color red``), the new parameter
+       ``defaultValue`` for the option without a value (default ``""``), or ``None`` without the option. A new
+       parameter ``metaName`` names the value in the help page (default ``VALUE``).
 
    * :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`
 
