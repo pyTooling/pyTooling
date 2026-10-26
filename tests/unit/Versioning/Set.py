@@ -66,6 +66,17 @@ class Instantiation(Testcase):
 		self.assertEqual(v2, vs[1])
 		self.assertEqual(v3, vs[2])
 
+	def test_Iterator(self) -> None:
+		"""An iterator was consumed by the type check, so the set was empty."""
+		v1 = SemanticVersion(1, 0, 0)
+		v2 = SemanticVersion(2, 0, 0)
+
+		vs = VersionSet(iter((v2, v1)))
+
+		self.assertEqual(2, len(vs))
+		self.assertEqual(v1, vs[0])
+		self.assertEqual(v2, vs[1])
+
 	def test_SemVer_CalVer(self) -> None:
 		v1 = SemanticVersion(1, 0, 0)
 		v2 = CalendarVersion(2, 0, 0)

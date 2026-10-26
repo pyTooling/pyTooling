@@ -1421,6 +1421,21 @@ Version 10.x (2026)
        ``SemanticVersion(1, 2, 3) == SemanticVersion.Parse("v1.2.3")``, but a set holding one didn't find the other.
      * ``str(ReleaseLevel.Gamma)`` raised a :exc:`~pyTooling.Exceptions.ToolingException`, so a version's ``%R``
        format failed for a gamma release.
+     * Comparing a :class:`~pyTooling.Versioning.YearMonthVersion`, :class:`~pyTooling.Versioning.YearWeekVersion`,
+       :class:`~pyTooling.Versioning.YearReleaseVersion` or :class:`~pyTooling.Versioning.YearMonthDayVersion` with an
+       :class:`int` raised :exc:`TypeError`: the integer was passed as ``major``, which they don't take. It is the year
+       now.
+     * :class:`~pyTooling.Versioning.SemanticVersion` read a release level after a build number as a postfix:
+       ``1.2.3.4-rc1`` had build 4 and postfix ``rc1``. It reads build 4 and release candidate 1 now.
+     * A :class:`~pyTooling.Versioning.SemanticVersion` constructed with the release level ``Development`` and a number
+       dropped the number: it was written ``-dev``. Such a number raises :exc:`ValueError` now, as with ``Final``; a
+       development release's number is ``dev``.
+     * ``repr()`` of a :class:`~pyTooling.Versioning.SemanticVersion` ended after the micro number, dropping the build
+       number, release level, post-release, development release and postfix; it writes every part now. ``repr()`` of a
+       :class:`~pyTooling.Versioning.PythonVersion` is its :pep:`440` normalized form.
+     * ``%%`` in a format specification was meant as a literal percent sign, but ``%%M`` became ``%`` followed by the
+       major number, and :func:`format` raised for the unknown specifier ``%1``.
+     * :class:`~pyTooling.Versioning.VersionSet` given an iterator was empty: the type check consumed it.
 
    * :mod:`pyTooling.Warning`
 

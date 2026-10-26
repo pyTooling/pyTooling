@@ -924,6 +924,18 @@ class FormattingUsingRepr(Testcase):
 
 		self.assertEqual("1.2.3", repr(version))
 
+	def test_AllParts(self) -> None:
+		"""The normalized form writes every part; it ended after the micro number."""
+		for text, normalized in (
+			("v1.2-pre1+deb3",           "1.2.0.rc1+deb3"),
+			("1.2.3-rc1.post2.dev3+abc", "1.2.3.rc1.post2.dev3+abc"),
+			("1.2.3.4-dev",              "1.2.3.4-dev"),
+			("1.2.3a1",                  "1.2.3.alpha1"),
+			("2:1.0",                    "2:1.0.0")
+		):
+			with self.subTest(version=text):
+				self.assertEqual(normalized, repr(SemanticVersion.Parse(text)))
+
 
 class FormattingUsingStr(Testcase):
 	def test_Major(self) -> None:
@@ -1033,6 +1045,56 @@ class FormattingUsingFormat(Testcase):
 		version = SemanticVersion(1, 2, 3, ReleaseLevel.ReleaseCandidate, 3, prefix="v", postfix="deb25")
 
 		self.assertEqual("v1.2.3-rc3+deb25", f"{version:%p%M.%m.%u-%R%n+%P}")
+
+
+class BuildAndReleaseLevel(Testcase):
+	"""A release level may follow a build number; it was read as a postfix."""
+
+	def test_Parse(self) -> None:
+		for text in ("1.2.3.4-rc1", "1.2.3.4.rc1", "1.2.3.4rc1"):
+			with self.subTest(version=text):
+				version = SemanticVersion.Parse(text)
+
+				self.assertEqual(4, version.Build)
+				self.assertIs(ReleaseLevel.ReleaseCandidate, version.ReleaseLevel)
+				self.assertEqual(1, version.ReleaseNumber)
+				self.assertEqual("", version.Postfix)
+				self.assertEqual("1.2.3.4.rc1", str(version))
+
+	def test_Development(self) -> None:
+		version = SemanticVersion.Parse("1.2.3.4-dev")
+
+		self.assertEqual(4, version.Build)
+		self.assertIs(ReleaseLevel.Development, version.ReleaseLevel)
+
+	def test_Postfix(self) -> None:
+		"""A postfix that isn't a release level stays a postfix."""
+		version = SemanticVersion.Parse("1.2.3.4-foo")
+
+		self.assertEqual(4, version.Build)
+		self.assertEqual("foo", version.Postfix)
+
+
+class DevelopmentLevel(Testcase):
+	def test_NumberRejected(self) -> None:
+		"""A number of the release level 'dev' was dropped silently: ``str()`` wrote ``-dev``."""
+		with self.assertRaises(ValueError) as context:
+			_ = SemanticVersion(1, 2, 3, level=ReleaseLevel.Development, number=2)
+
+		self.assertEqual("Parameter 'number' must be None, if parameter 'level' is 'Development'.", str(context.exception))
+		self.assertListEqual(["The number of a development release is parameter 'dev'."], context.exception.__notes__)
+
+	def test_DevelopmentNumber(self) -> None:
+		self.assertEqual("1.2.3.dev2", str(SemanticVersion(1, 2, 3, dev=2)))
+
+
+class FormatEscape(Testcase):
+	def test_PercentSign(self) -> None:
+		"""``%%`` is a literal percent sign; ``%%M`` was read as ``%`` followed by the major number."""
+		version = SemanticVersion(1, 2, 3)
+
+		self.assertEqual("%M 1.2", f"{version:%%M %M.%m}")
+		self.assertEqual("100%", f"{version:%M00%%}")
 
 
 class RoundTrip(Testcase):

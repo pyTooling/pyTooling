@@ -444,6 +444,11 @@ class CompareInteger(Testcase):
 		self.assertGreater(2025, YearMonthDayVersion(2024, 3, 14))
 
 
+class CalendarFormatEscape(Testcase):
+	def test_PercentSign(self) -> None:
+		self.assertEqual("%M 2024.3", f"{YearMonthVersion(2024, 3):%%M %M.%m}")
+
+
 class CompareOtherType(Testcase):
 	def test_Equal(self) -> None:
 		version = CalendarVersion(1, 2)

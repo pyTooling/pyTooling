@@ -452,6 +452,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'minor' is a negative number.
 		:raises TypeError:  If parameter 'micro' is not of type integer.
 		:raises ValueError: If parameter 'micro' is a negative number.
+		:raises ValueError: If parameter 'number' is given, while parameter 'level' is ``Final`` or ``Development``. |br|
+		                    The number of a development release is parameter ``dev``.
 		:raises TypeError:  If parameter 'epoch' is not of type integer.
 		:raises ValueError: If parameter 'epoch' is a negative number.
 		:raises TypeError:  If parameter 'build' is not of type integer.
@@ -516,9 +518,12 @@ class Version(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'level' is not of type 'ReleaseLevel'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(level)}'.")
 			raise ex
-		elif level is ReleaseLevel.Final:
+		elif level is ReleaseLevel.Final or level is ReleaseLevel.Development:
 			if number is not None:
-				raise ValueError("Parameter 'number' must be None, if parameter 'level' is 'Final'.")
+				ex = ValueError(f"Parameter 'number' must be None, if parameter 'level' is '{level.name}'.")
+				if level is ReleaseLevel.Development:
+					ex.add_note("The number of a development release is parameter 'dev'.")
+				raise ex
 
 			self._parts |= Parts.Level
 			self._releaseLevel = level
@@ -930,25 +935,30 @@ class Version(metaclass=ExtendedType, slots=True):
 		   * ``%u`` - micro number
 		   * ``%b`` - build number
 
+		``%%`` is a literal percent sign, which the caller replaces by ``%``.
+
 		:param formatSpec: The format specification.
-		:returns:          Formatted version number.
+		:returns:          Formatted version number, ``%%`` kept as written.
 		"""
 		if formatSpec == "":
 			return self.__str__()
 
-		result = formatSpec
-		result = result.replace("%p", str(self._prefix))
-		result = result.replace("%M", str(self._major))
-		result = result.replace("%m", str(self._minor))
-		result = result.replace("%u", str(self._micro))
-		result = result.replace("%b", str(self._build))
-		result = result.replace("%r", str(self._releaseLevel)[0])
-		result = result.replace("%R", str(self._releaseLevel))
-		result = result.replace("%n", str(self._releaseNumber))
-		result = result.replace("%d", str(self._dev))
-		result = result.replace("%P", str(self._postfix))
+		# A literal percent sign is written '%%'; it is kept as written, so '%%M' doesn't become '%' and the major number.
+		parts = []
+		for part in formatSpec.split("%%"):
+			part = part.replace("%p", str(self._prefix))
+			part = part.replace("%M", str(self._major))
+			part = part.replace("%m", str(self._minor))
+			part = part.replace("%u", str(self._micro))
+			part = part.replace("%b", str(self._build))
+			part = part.replace("%r", str(self._releaseLevel)[0])
+			part = part.replace("%R", str(self._releaseLevel))
+			part = part.replace("%n", str(self._releaseNumber))
+			part = part.replace("%d", str(self._dev))
+			part = part.replace("%P", str(self._postfix))
+			parts.append(part)
 
-		return result
+		return "%%".join(parts)
 
 	@mustoverride
 	def __eq__(self, other: Any) -> bool:
@@ -1241,9 +1251,8 @@ class SemanticVersion(Version):
 		r"(?P<major>\d+)"
 		r"(?:\.(?P<minor>\d+))?"
 		r"(?:\.(?P<micro>\d+))?"
+		r"(?:\.(?P<build>\d+))?"
 		r"(?:"
-			r"(?:\.(?P<build>\d+))"
-		r"|"
 			r"(?:[\.\-]?(?P<release>dev|final))"
 		r"|"
 			r"(?:(?P<delim1>[\.\-]?)(?P<level>alpha|beta|gamma|preview|pre|a|b|c|rc|pl)(?:[\.\-]?(?P<number>\d+))?)"
@@ -1633,11 +1642,24 @@ class SemanticVersion(Version):
 		   A prefix doesn't contribute to the version number's value, therefore it's not part of the normalized form. Use
 		   :meth:`__str__` to render a version number including its prefix.
 
+		The major, minor and micro number are always written, a release level in its canonical spelling (``alpha``,
+		``beta``, ``gamma``, ``rc``, ``-dev``); a build number, a post-release, a development release and a postfix are
+		written, if present: ``v1.2-pre1+deb3`` is ``1.2.0.rc1+deb3``.
+
 		:returns: Raw version number representation without a prefix.
 		"""
-		epoch = f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
+		result = f"{self._epoch}{self._EPOCH_SEPARATOR}" if Parts.Epoch in self._parts else ""
+		result += f"{self._major}.{self._minor}.{self._micro}"
+		result += f".{self._build}" if Parts.Build in self._parts else ""
+		if self._releaseLevel is ReleaseLevel.Development:
+			result += "-dev"
+		elif self._releaseLevel is not ReleaseLevel.Final:
+			result += f".{self._releaseLevel}{self._releaseNumber}"
+		result += f".post{self._post}" if Parts.Post in self._parts else ""
+		result += f".dev{self._dev}" if Parts.Dev in self._parts else ""
+		result += f"+{self._postfix}" if Parts.Postfix in self._parts else ""
 
-		return f"{epoch}{self._major}.{self._minor}.{self._micro}"
+		return result
 
 	def __str__(self) -> str:
 		"""
@@ -1946,6 +1968,16 @@ class PythonVersion(SemanticVersion):
 		:returns: Hash of this version number.
 		"""
 		return hash((self._key(self), self._NormalizeLocal(self._postfix)))
+
+	def __repr__(self) -> str:
+		"""
+		Return this version number in :pep:`440`'s normalized form, as :meth:`Normalize` computes it.
+
+		``v1.0-pre1+Ubuntu-1`` is ``1.0rc1+ubuntu.1``.
+
+		:returns: Normalized version number representation without a prefix.
+		"""
+		return str(self.Normalize())
 
 	def __str__(self) -> str:
 		"""
@@ -3265,22 +3297,21 @@ class VersionSet(Generic[V], metaclass=ExtendedType, slots=True):
 		if isinstance(versions, Version):
 			self._items = [versions]
 		elif isinstance(versions, abc_Iterable):
-			iterator = iter(versions)
-			try:
-				firstVersion = next(iterator)
-			except StopIteration:
-				self._items = []
+			versionList = list(versions)
+			if len(versionList) == 0:
+				self._items = versionList
 				return
 
-			if not isinstance(firstVersion, Version):
+			if not isinstance(versionList[0], Version):
 				raise TypeError("First element in parameter 'versions' is not of type Version.")
 
-			baseType = firstVersion.__class__
-			for version in iterator:
+			baseType = versionList[0].__class__
+			for version in versionList[1:]:
 				if not isinstance(version, baseType):
 					raise TypeError(f"Element from parameter 'versions' is not of type {baseType.__name__}")
 
-			self._items = list(sorted(versions))
+			versionList.sort()
+			self._items = versionList
 		else:
 			raise TypeError("Parameter 'versions' is not an Iterable.")
 
