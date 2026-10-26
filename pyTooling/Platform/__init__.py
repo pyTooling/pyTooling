@@ -352,7 +352,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			raise UnknownPlatformError(f"Unknown operating system '{os.name}'.", unknownValue=os.name)
 
 	@readonly
-	def PythonImplementation(self) -> PythonImplementation:
+	def PythonImplementation(self) -> _PythonImplementation:
 		"""
 		Read-only property to access the :class:`PythonImplementation` of the current interpreter.
 
@@ -377,7 +377,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		return self._pythonImplementation is PythonImplementation.PyPy
 
 	@readonly
-	def PythonVersion(self) -> PythonVersion:
+	def PythonVersion(self) -> _PythonVersion:
 		"""
 		Read-only property to access the :class:`pyTooling.Versioning.PythonVersion` of the current interpreter.
 

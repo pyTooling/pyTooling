@@ -534,3 +534,8 @@ class TypeHints(Testcase):
 
 		self.assertIs(PythonImplementation, get_type_hints(Platform, vars(pyTooling.Platform))["_pythonImplementation"])
 		self.assertIs(PythonVersion, get_type_hints(Platform, vars(pyTooling.Platform))["_pythonVersion"])
+
+	def test_PropertyReturnsTheClass(self) -> None:
+		"""A property's return annotation names the class, not the property it annotates."""
+		self.assertIs(PythonImplementation, get_type_hints(Platform.PythonImplementation.fget)["return"])
+		self.assertIs(PythonVersion, get_type_hints(Platform.PythonVersion.fget)["return"])
