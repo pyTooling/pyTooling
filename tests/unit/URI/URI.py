@@ -114,7 +114,7 @@ class Parsing(Testcase):
 		for text, scheme, schemeSpecificPart in (
 			("mailto:user@example.org", "mailto", "user@example.org"),
 			("tel:+49-761-123456",      "tel",    "+49-761-123456"),
-			("urn:isbn:0451450523",     "urn",    "isbn:0451450523"),
+			("geo:47.9990,7.8421",      "geo",    "47.9990,7.8421"),
 			("sip:alice@example.org",   "sip",    "alice@example.org"),
 			("news:comp.lang.python",   "news",   "comp.lang.python")
 		):
