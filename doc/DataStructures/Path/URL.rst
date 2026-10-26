@@ -1,9 +1,10 @@
 .. _STRUCT/Path/URL:
 
-Unified Resource Locator (URL)
-##############################
+Uniform Resource Identifier (URI) and Locator (URL)
+###################################################
 
-Implements a *Unified Resource Locator* (URL).
+:mod:`pyTooling.URI` implements a *Uniform Resource Identifier* (URI, :rfc:`3986`) and, derived from it, a *Uniform
+Resource Locator* (URL): a URI with an authority (``//host``) and a hierarchical path.
 
 .. code-block:: Python
 
@@ -15,6 +16,37 @@ Implements a *Unified Resource Locator* (URL).
    print(url.Path)                  # /api/v1/semaphore
    print(url.Query["name"].Value)   # Riviera
    print(url.Fragment)              # page2
+
+
+.. _STRUCT/Path/URL/URI:
+
+URIs
+****
+
+A :class:`~pyTooling.URI.URI` is a scheme, ``:``, a scheme-specific part, an optional query and an optional fragment -
+the generic syntax every URI follows, whatever its scheme: ``mailto:user@example.org``, ``tel:+49-761-123456``,
+``urn:isbn:0451450523``. :meth:`URI.Parse <pyTooling.URI.URI.Parse>` reads every scheme; the scheme is stored in lower
+case, as schemes are case-insensitive.
+
+A URI whose scheme-specific part starts with ``//`` (an authority) and whose scheme is one of
+:class:`~pyTooling.URI.Protocols` is a URL: :meth:`URI.Parse <pyTooling.URI.URI.Parse>` reads it by
+:meth:`URL.Parse <pyTooling.URI.URL.Parse>` and returns a :class:`~pyTooling.URI.URL`, which derives from
+:class:`~pyTooling.URI.URI` and splits the scheme-specific part into user, password, host and path.
+
+.. code-block:: python
+
+   uri = URI.Parse("mailto:user@example.org?subject=Hi")
+   uri.Scheme                  # 'mailto'
+   uri.SchemeSpecificPart      # 'user@example.org'
+   uri.Query["subject"].Value  # 'Hi'
+
+   url = URI.Parse("https://example.org/api")
+   isinstance(url, URL)        # True
+   url.Scheme                  # Protocols.HTTPS
+   url.SchemeSpecificPart      # '//example.org/api'
+
+:attr:`URI.Scheme <pyTooling.URI.URI.Scheme>` is the scheme's name; a URL answers the
+:class:`~pyTooling.URI.Protocols` member instead, which also tells whether the scheme is secured.
 
 
 .. _STRUCT/Path/URL/Parse:
@@ -34,6 +66,11 @@ path, e.g. ``file:///etc/hosts``.
 A string that isn't such a URL raises :exc:`~pyTooling.URI.URLError`: ``github.com`` names no scheme,
 ``http:///path`` no host. A relative reference like ``things/4711`` is no URL either; it is appended to one with
 :meth:`URL.__truediv__ <pyTooling.URI.URL.__truediv__>`.
+
+What is typed into a browser's address bar often has no scheme. ``URL.Parse(text, defaultScheme=Protocols.HTTPS)``
+prepends one to a URL without ``scheme://``, as a browser does: ``www.example.org/path`` is read as
+``https://www.example.org/path``, ``//example.org/path`` as ``https://example.org/path``. An error found in the
+completed URL gets a note naming the prepended scheme. Without ``defaultScheme``, parsing stays strict.
 
 A port is a number after the host's ``:``. ``http://host:/x`` (no port) and ``ssh://git@github.com:org/repo.git`` (a
 path instead of a port) raise :exc:`~pyTooling.URI.URLError`, and its note gives the URL as it was

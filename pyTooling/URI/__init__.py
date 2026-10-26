@@ -53,7 +53,7 @@ from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.GenericPath import RootMixin, ElementMixin, PathMixin
 
 
-__all__ = ["URL_PATTERN", "URL_REGEXP", "SCP_ADDRESS_PATTERN", "SCP_ADDRESS_REGEXP"]
+__all__ = ["URI_PATTERN", "URI_REGEXP", "URL_PATTERN", "URL_REGEXP", "SCP_ADDRESS_PATTERN", "SCP_ADDRESS_REGEXP"]
 
 URL_PATTERN = (
 	r"""(?P<scheme>[a-zA-Z][-a-zA-Z0-9+.]*)://"""
@@ -70,6 +70,17 @@ URL_PATTERN = (
 URL_REGEXP = re_compile("^" + URL_PATTERN + r"\Z")
 """Precompiled regular expression for URL validation."""
 
+URI_PATTERN = (
+	r"""(?P<scheme>[a-zA-Z][-a-zA-Z0-9+.]*):"""
+	r"""(?P<schemeSpecificPart>[^?#]*)"""
+	r"""(?:\?(?P<query>[^#]*))?"""
+	r"""(?:#(?P<fragment>.*))?"""
+)
+"""Regular expression pattern for validating and splitting a URI: scheme, scheme-specific part, query and fragment."""
+
+URI_REGEXP = re_compile("^" + URI_PATTERN + r"\Z")
+"""Precompiled regular expression for URI validation."""
+
 SCP_ADDRESS_PATTERN = (
 	r"""(?:(?P<user>[^@/:\[\]]+)@)?"""
 	r"""(?P<host>\[[0-9A-Fa-f:.]+\]|(?:[-a-zA-Z0-9_]+)(?:\.[-a-zA-Z0-9_]+)*\.?)"""
@@ -82,6 +93,9 @@ SCP_ADDRESS_REGEXP = re_compile("^" + SCP_ADDRESS_PATTERN + r"\Z")
 
 _SCHEME_PREFIX = re_compile(r"[a-zA-Z][-a-zA-Z0-9+.]*://")
 """Precompiled regular expression for the leading scheme."""
+
+_SCHEME = re_compile(r"[a-zA-Z][-a-zA-Z0-9+.]*")
+"""Precompiled regular expression for a scheme name (:rfc:`3986`, section 3.1)."""
 
 _IRI_HOST = re_compile(
 	r"""(?P<prefix>[a-zA-Z][-a-zA-Z0-9+.]*://(?:[^/?#@]*@)?)"""
@@ -534,89 +548,71 @@ class KeySequencePair(QueryParameter):
 
 
 @export
-class URL:
+class URI(metaclass=ExtendedType, slots=True):
 	"""
-	Represents a URL (Uniform Resource Locator) including scheme, host, credentials, path, query and fragment.
+	Represents a URI (Uniform Resource Identifier): a scheme, a scheme-specific part, a query and a fragment.
 
 	.. code-block::
 
-	   scheme://[user[:password]@]domain.tld[:port][/path/to/file][?query][#fragment]
+	   scheme:scheme-specific-part[?query][#fragment]
 
-	The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`.
+	This is the generic syntax of :rfc:`3986`, which accepts every scheme, also those naming no host: ``mailto:``,
+	``tel:``, ``urn:``. A URI with an authority (``//host``) and a scheme of :class:`Protocols` is a :class:`URL`, which
+	derives from this class and splits the scheme-specific part into user, password, host and path.
+	:meth:`Parse` returns a :class:`URL` for such a URI.
 	"""
 
-	_scheme:    Nullable[Protocols]                  #: Protocol (scheme) of the URL, ``None`` if the URL carries none.
-	_user:      Nullable[str]                        #: User name of the URL's authority part.
-	_password:  Nullable[str]                        #: Password of the URL's authority part.
-	_host:      Nullable[Host]                       #: Host name and port of the URL's authority part.
-	_path:      Path                                 #: Path part of the URL.
-	_query:     Nullable[dict[str, QueryParameter]]  #: Query parameters of the URL, by parameter name.
-	_fragment:  Nullable[str]                        #: Fragment (anchor) of the URL.
+	_scheme:             Union[str, Protocols]                #: Scheme in lower case; a URL's Protocols member.
+	_schemeSpecificPart: Nullable[str]                        #: Scheme-specific part; ``None`` in a URL.
+	_query:              Nullable[dict[str, QueryParameter]]  #: Query parameters by name; ``None`` without query.
+	_fragment:           Nullable[str]                        #: Fragment; ``None`` if the URI has none.
 
 	def __init__(
 		self,
-		scheme:   Nullable[Protocols],
-		path:     Path,
-		host:     Nullable[Host] = None,
-		user:     Nullable[str] = None,
-		password: Nullable[str] = None,
-		query:    Nullable[Iterable[QueryParameter]] = None,
-		fragment: Nullable[str] = None
+		scheme:             Union[str, Protocols],
+		schemeSpecificPart: Nullable[str],
+		query:              Nullable[Iterable[QueryParameter]] = None,
+		fragment:           Nullable[str] = None
 	) -> None:
 		"""
-		Initializes a Uniform Resource Locator (URL).
+		Initializes a Uniform Resource Identifier (URI).
 
-		:param scheme:      Transport scheme to be used for a specified resource.
-		:param path:        Path to the resource.
-		:param host:        Optional, hostname where the resource is located.
-		:param user:        Optional, username for basic authentication.
-		:param password:    Optional, password for basic authentication.
-		:param query:       Optional, the query's parameters. An empty iterable is an empty query (``?``).
-		:param fragment:    Optional, fragment.
-		:raises TypeError:  If parameter 'scheme' is not of type :class:`Protocols`.
-		:raises TypeError:  If parameter 'user' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'password' is not of type :class:`str`.
-		:raises TypeError:  If parameter 'host' is not of type :class:`Host`.
-		:raises TypeError:  If parameter 'path' is not of type :class:`Path`.
-		:raises TypeError:  If parameter 'query' is not iterable.
-		:raises TypeError:  If an element of parameter 'query' is not of type :class:`QueryParameter`.
-		:raises ValueError: If parameter 'query' holds a key twice. |br|
-		                    A key with several values is a :class:`KeySequencePair`.
-		:raises TypeError:  If parameter 'fragment' is not of type :class:`str`.
+		:param scheme:             The scheme's name, e.g. ``mailto``; a :class:`URL` passes its :class:`Protocols` member.
+		:param schemeSpecificPart: The part between the scheme's ``:`` and the query, e.g. ``user@example.org``.
+		                           ``None`` is passed by a :class:`URL`, which computes it from its parts.
+		:param query:              Optional, the query's parameters. An empty iterable is an empty query (``?``).
+		:param fragment:           Optional, fragment.
+		:raises ValueError:        If parameter 'scheme' is ``None``.
+		:raises TypeError:         If parameter 'scheme' is not of type :class:`str`.
+		:raises ValueError:        If parameter 'scheme' is no scheme name of :rfc:`3986`.
+		:raises TypeError:         If parameter 'schemeSpecificPart' is not of type :class:`str`.
+		:raises TypeError:         If parameter 'query' is not iterable.
+		:raises TypeError:         If an element of parameter 'query' is not of type :class:`QueryParameter`.
+		:raises ValueError:        If parameter 'query' holds a key twice. |br|
+		                           A key with several values is a :class:`KeySequencePair`.
+		:raises TypeError:         If parameter 'fragment' is not of type :class:`str`.
 		"""
-		if scheme is not None and not isinstance(scheme, Protocols):
-			ex = TypeError("Parameter 'scheme' is not of type 'Protocols'.")
+		if scheme is None:
+			raise ValueError("Parameter 'scheme' is None.")
+		elif isinstance(scheme, Protocols):
+			self._scheme = scheme
+		elif not isinstance(scheme, str):
+			ex = TypeError("Parameter 'scheme' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(scheme)}'.")
 			raise ex
+		elif _SCHEME.fullmatch(scheme) is None:
+			ex = ValueError("Parameter 'scheme' is no scheme name.")
+			ex.add_note(f"Got value '{scheme}'. A scheme starts with a letter, followed by letters, digits, '+', '-' or '.'.")
+			raise ex
+		else:
+			self._scheme = scheme.lower()
 
-		self._scheme = scheme
-
-		if user is not None and not isinstance(user, str):
-			ex = TypeError("Parameter 'user' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
+		if schemeSpecificPart is not None and not isinstance(schemeSpecificPart, str):
+			ex = TypeError("Parameter 'schemeSpecificPart' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(schemeSpecificPart)}'.")
 			raise ex
 
-		self._user = user
-
-		if password is not None and not isinstance(password, str):
-			ex = TypeError("Parameter 'password' is not of type 'str'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
-			raise ex
-
-		self._password = password
-
-		if host is not None and not isinstance(host, Host):
-			ex = TypeError("Parameter 'host' is not of type 'Host'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
-			raise ex
-		self._host = host
-
-		if path is not None and not isinstance(path, Path):
-			ex = TypeError("Parameter 'path' is not of type 'Path'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
-			raise ex
-
-		self._path = path
+		self._schemeSpecificPart = schemeSpecificPart
 
 		if query is not None:
 			if not isinstance(query, Iterable):
@@ -647,13 +643,280 @@ class URL:
 		self._fragment = fragment
 
 	@readonly
-	def Scheme(self) -> Nullable[Protocols]:
+	def Scheme(self) -> str:
 		"""
-		Read-only property to access the URL scheme.
+		Read-only property to access the scheme (:attr:`_scheme`).
 
-		:returns: URL scheme of the URL, ``None`` if it carries none.
+		:returns: The scheme's name in lower case, e.g. ``mailto``.
 		"""
-		return self._scheme
+		return self._scheme  # type: ignore[return-value]
+
+	@readonly
+	def SchemeSpecificPart(self) -> str:
+		"""
+		Read-only property to access the scheme-specific part (:attr:`_schemeSpecificPart`).
+
+		:returns: The part between the scheme's ``:`` and the query, e.g. ``user@example.org`` in
+		          ``mailto:user@example.org``.
+		"""
+		return self._schemeSpecificPart  # type: ignore[return-value]
+
+	@readonly
+	def Query(self) -> Nullable[dict[str, QueryParameter]]:
+		"""
+		Read-only property to access the query's parameters by key (:attr:`_query`).
+
+		A key written once is a :class:`KeyValuePair`, a key written several times (``?tag=a&tag=b``) a
+		:class:`KeySequencePair`; both answer :attr:`~QueryParameter.Value` and :attr:`~QueryParameter.Values`. A
+		parameter written without ``=`` (``?verbose``) has the value ``None``, one with an empty value (``?verbose=``)
+		the value ``""``. A URL with an empty query (``https://example.org/?``) has an empty dictionary, a URL without
+		a query ``None``.
+
+		:returns: The query's parameters by key.
+		"""
+		return self._query
+
+	@readonly
+	def Fragment(self) -> Nullable[str]:
+		"""
+		Read-only property to access the fragment (:attr:`_fragment`).
+
+		:returns: The fragment, ``None`` if the URI has none.
+		"""
+		return self._fragment
+
+	@classmethod
+	def Parse(cls, uri: str) -> URI:
+		"""
+		Parse a URI string and return the URI object - a :class:`URL`, if the URI is one.
+
+		A URI is read by the generic syntax of :rfc:`3986` (:data:`URI_PATTERN`): a scheme, ``:``, the scheme-specific
+		part, an optional query and an optional fragment. Every scheme is accepted. If the scheme-specific part starts
+		with ``//`` (an authority) and the scheme is one of :class:`Protocols`, the URI is a URL and is read by
+		:meth:`URL.Parse`, with that method's checks; ``URI.Parse("https://example.org/")`` returns a :class:`URL`,
+		``URI.Parse("mailto:user@example.org")`` a :class:`URI`.
+
+		:param uri:         The URI.
+		:returns:           The URI object, a :class:`URL` for a URL.
+		:raises ValueError: If parameter 'uri' is ``None``.
+		:raises TypeError:  If parameter 'uri' is not of type :class:`str`.
+		:raises URLError:   When the URI holds a character :rfc:`3986` forbids, which is not allowed in a URI. |br|
+		                    The note names the character and how to write it percent-encoded.
+		:raises URLError:   When the URI holds a non-ASCII character.
+		:raises URLError:   When the URI doesn't start with a scheme followed by ``:``.
+		"""
+		if uri is None:
+			raise ValueError("Parameter 'uri' is None.")
+		elif not isinstance(uri, str):
+			ex = TypeError("Parameter 'uri' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(uri)}'.")
+			raise ex
+
+		for character in uri:
+			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
+				ex = URLError(f"Forbidden character when parsing URI {uri!r}.")
+				ex.add_note(
+					f"Character {character!r} is not allowed in a URI. Write it percent-encoded as "
+					f"'{urlQuote(character, safe='')}'."
+				)
+				raise ex
+
+		if not uri.isascii():
+			raise URLError(f"Non-ASCII character when parsing URI {uri!r}.")
+		elif (matches := URI_REGEXP.match(uri)) is None:
+			ex = URLError(f"Missing scheme when parsing URI {uri!r}.")
+			ex.add_note("A URI starts with a scheme followed by ':', e.g. 'mailto:'.")
+			raise ex
+
+		scheme =             matches.group("scheme")
+		schemeSpecificPart = matches.group("schemeSpecificPart")
+		if schemeSpecificPart.startswith("//") and scheme.upper() in Protocols.__members__:
+			return URL.Parse(uri)
+
+		query = matches.group("query")
+		return URI(
+			scheme,
+			schemeSpecificPart,
+			None if query is None else cls._ParseQuery(query),
+			matches.group("fragment")
+		)
+
+	@classmethod
+	def _ParseQuery(cls, query: str) -> list[QueryParameter]:
+		"""
+		Parse a URI's query into its parameters.
+
+		:rfc:`3986` puts no structure into a query; the common ``key=value`` pairs separated by ``&`` are read. A key
+		written once becomes a :class:`KeyValuePair`, a key written several times a :class:`KeySequencePair` holding
+		its values in order, at the position of its first occurrence. A parameter without ``=`` has the value ``None``;
+		an empty query (``?``) has no parameters.
+
+		:param query: The query, without the leading ``?``.
+		:returns:     The parameters, in the order their keys first occur.
+		"""
+		if query == "":
+			return []
+
+		values: dict[str, list[Nullable[str]]] = {}
+		for pair in query.split("&"):
+			key, separator, value = pair.partition("=")
+			if key in values:
+				values[key].append(value if separator == "=" else None)
+			else:
+				values[key] = [value if separator == "=" else None]
+
+		return [
+			KeyValuePair(key, valueList[0]) if len(valueList) == 1 else KeySequencePair(key, valueList)
+			for key, valueList in values.items()
+		]
+
+	def _FormatQueryAndFragment(self) -> str:
+		"""
+		Format the query and the fragment as they follow the rest of a URI.
+
+		:returns: ``?query`` and ``#fragment``, each only if the URI has it.
+		"""
+		result = ""
+		if self._query is not None:
+			result = "?" + "&".join(str(parameter) for parameter in self._query.values())
+
+		if self._fragment is not None:
+			result = result + "#" + self._fragment
+
+		return result
+
+	def __str__(self) -> str:
+		"""
+		Formats the URI as it is written: ``scheme:scheme-specific-part[?query][#fragment]``.
+
+		:returns: The URI.
+		"""
+		return f"{self._scheme}:{self._schemeSpecificPart}{self._FormatQueryAndFragment()}"
+
+
+_Host = Host
+"""Alias of :class:`Host` for annotations in a class with a property named ``Host``, which the class body binds."""
+
+_Path = Path
+"""Alias of :class:`Path` for annotations in a class with a property named ``Path``, which the class body binds."""
+
+
+@export
+class URL(URI):
+	"""
+	Represents a URL (Uniform Resource Locator) including scheme, host, credentials, path, query and fragment.
+
+	.. code-block::
+
+	   scheme://[user[:password]@]domain.tld[:port][/path/to/file][?query][#fragment]
+
+	The syntax is the one of :rfc:`3986` (an absolute URI with an authority); ``file`` URLs follow :rfc:`8089`. A URL is
+	a :class:`URI` whose scheme is one of :class:`Protocols` and whose scheme-specific part is split into user,
+	password, host and path.
+	"""
+
+	_user:      Nullable[str]    #: User name of the URL's authority part.
+	_password:  Nullable[str]    #: Password of the URL's authority part.
+	_host:      Nullable[_Host]  #: Host name and port of the URL's authority part.
+	_path:      _Path            #: Path part of the URL.
+
+	def __init__(
+		self,
+		scheme:   Protocols,
+		path:     Path,
+		host:     Nullable[Host] = None,
+		user:     Nullable[str] = None,
+		password: Nullable[str] = None,
+		query:    Nullable[Iterable[QueryParameter]] = None,
+		fragment: Nullable[str] = None
+	) -> None:
+		"""
+		Initializes a Uniform Resource Locator (URL).
+
+		:param scheme:      Transport scheme to be used for a specified resource.
+		:param path:        Path to the resource.
+		:param host:        Optional, hostname where the resource is located.
+		:param user:        Optional, username for basic authentication.
+		:param password:    Optional, password for basic authentication.
+		:param query:       Optional, the query's parameters. An empty iterable is an empty query (``?``).
+		:param fragment:    Optional, fragment.
+		:raises ValueError: If parameter 'scheme' is ``None``.
+		:raises TypeError:  If parameter 'scheme' is not of type :class:`Protocols`.
+		:raises TypeError:  If parameter 'query' is not iterable.
+		:raises TypeError:  If an element of parameter 'query' is not of type :class:`QueryParameter`.
+		:raises ValueError: If parameter 'query' holds a key twice. |br|
+		                    A key with several values is a :class:`KeySequencePair`.
+		:raises TypeError:  If parameter 'fragment' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'user' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'password' is not of type :class:`str`.
+		:raises TypeError:  If parameter 'host' is not of type :class:`Host`.
+		:raises TypeError:  If parameter 'path' is not of type :class:`Path`.
+		"""
+		super().__init__(scheme, None, query, fragment)
+
+		if not isinstance(scheme, Protocols):
+			ex = TypeError("Parameter 'scheme' is not of type 'Protocols'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(scheme)}'.")
+			raise ex
+
+		if user is not None and not isinstance(user, str):
+			ex = TypeError("Parameter 'user' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(user)}'.")
+			raise ex
+
+		self._user = user
+
+		if password is not None and not isinstance(password, str):
+			ex = TypeError("Parameter 'password' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(password)}'.")
+			raise ex
+
+		self._password = password
+
+		if host is not None and not isinstance(host, Host):
+			ex = TypeError("Parameter 'host' is not of type 'Host'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(host)}'.")
+			raise ex
+		self._host = host
+
+		if path is not None and not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		self._path = path
+
+	@readonly
+	def Scheme(self) -> Protocols:  # type: ignore[override]
+		"""
+		Read-only property to access the URL scheme (:attr:`_scheme`).
+
+		A :class:`URI` answers its scheme's name; a URL answers the member of :class:`Protocols`, which also tells
+		whether the scheme is secured (:attr:`~Protocols.IsEncrypted`).
+
+		:returns: URL scheme of the URL.
+		"""
+		return self._scheme  # type: ignore[return-value]
+
+	@readonly
+	def SchemeSpecificPart(self) -> str:
+		"""
+		Read-only property to return the scheme-specific part, computed from the URL's parts.
+
+		:returns: ``//``, the user information, the host and the path, e.g. ``//user@example.org:8080/api``.
+		"""
+		result = str(self._path)
+
+		if self._host is not None:
+			result = str(self._host) + result
+
+		if self._user is not None:
+			if self._password is not None:
+				result = f"{self._user}:{self._password}@{result}"
+			else:
+				result = f"{self._user}@{result}"
+
+		return "//" + result
 
 	@readonly
 	def User(self) -> Nullable[str]:
@@ -691,33 +954,15 @@ class URL:
 		"""
 		return self._path
 
-	@readonly
-	def Query(self) -> Nullable[dict[str, QueryParameter]]:
-		"""
-		Read-only property to access the query's parameters by key (:attr:`_query`).
-
-		A key written once is a :class:`KeyValuePair`, a key written several times (``?tag=a&tag=b``) a
-		:class:`KeySequencePair`; both answer :attr:`~QueryParameter.Value` and :attr:`~QueryParameter.Values`. A
-		parameter written without ``=`` (``?verbose``) has the value ``None``, one with an empty value (``?verbose=``)
-		the value ``""``. A URL with an empty query (``https://example.org/?``) has an empty dictionary, a URL without
-		a query ``None``.
-
-		:returns: The query's parameters by key.
-		"""
-		return self._query
-
-	@readonly
-	def Fragment(self) -> Nullable[str]:
-		"""
-		Read-only property to access the fragment part of the URL.
-
-		:returns: The fragment part of the URL.
-		"""
-		return self._fragment
-
 	# http://semaphore.plc2.de:5000/api/v1/semaphore?name=Riviera&foo=bar#page2
 	@classmethod
-	def Parse(cls, url: str, *, iri: bool = False) -> URL:
+	def Parse(  # type: ignore[override]
+		cls,
+		url:           str,
+		*,
+		iri:           bool = False,
+		defaultScheme: Nullable[Protocols] = None
+	) -> URL:
 		"""
 		Parse a URL string and returns the URL object.
 
@@ -732,14 +977,23 @@ class URL:
 		``https://www.müller.de/`` is read as ``https://www.xn--mller-kva.de/``. An error found in the converted URL
 		names that URL, and a note names the IRI it was converted from.
 
+		With ``defaultScheme``, a URL without ``scheme://`` gets that scheme prepended, as a browser does with what is typed
+		into its address bar: ``www.example.org/path`` is read as ``https://www.example.org/path`` with
+		``defaultScheme=Protocols.HTTPS``, ``//example.org/path`` (a network-path reference) as
+		``https://example.org/path``. An error found in the completed URL names that URL, and a note names the scheme
+		that was prepended. Strict parsing stays the default.
+
 		:param url:                     URL as string to be parsed.
 		:param iri:                     Optional, read ``url`` as an IRI (Internationalized Resource Identifier,
 		                                :rfc:`3987`) instead of a URL. Default: ``False``.
+		:param defaultScheme:           Optional, scheme prepended to a URL without ``scheme://``. Default: ``None``, such a
+		                                URL raises.
 		:returns:                       A URL object.
 		:raises ValueError:             If parameter 'url' is ``None``.
 		:raises TypeError:              If parameter 'url' is not of type :class:`str`.
 		:raises ValueError:             If parameter 'iri' is ``None``.
 		:raises TypeError:              If parameter 'iri' is not of type :class:`bool`.
+		:raises TypeError:              If parameter 'defaultScheme' is not of type :class:`Protocols`.
 		:raises URLError:               When the URL holds a character :rfc:`3986` forbids. |br|
 		                                The note names the character and how to percent-encode it.
 		:raises MissingDependencyError: When ``iri`` is set, the host holds a Unicode character, and the ``idna`` extra
@@ -777,6 +1031,20 @@ class URL:
 			ex = TypeError("Parameter 'iri' is not of type 'bool'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(iri)}'.")
 			raise ex
+
+		if defaultScheme is not None:
+			if not isinstance(defaultScheme, Protocols):
+				ex = TypeError("Parameter 'defaultScheme' is not of type 'Protocols'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(defaultScheme)}'.")
+				raise ex
+			elif _SCHEME_PREFIX.match(url) is None:
+				scheme =    defaultScheme.name.lower()  # type: ignore[union-attr]
+				completed = f"{scheme}:{url}" if url.startswith("//") else f"{scheme}://{url}"
+				try:
+					return cls.Parse(completed, iri=iri)
+				except URLError as ex:
+					ex.add_note(f"Scheme '{scheme}' was prepended to {url!r}.")
+					raise
 
 		for character in url:
 			if character in FORBIDDEN_CHARACTERS or character.isspace() or not character.isprintable():
@@ -891,35 +1159,6 @@ class URL:
 		raise ex
 
 	@classmethod
-	def _ParseQuery(cls, query: str) -> list[QueryParameter]:
-		"""
-		Parse a URL's query into its parameters.
-
-		:rfc:`3986` puts no structure into a query; the common ``key=value`` pairs separated by ``&`` are read. A key
-		written once becomes a :class:`KeyValuePair`, a key written several times a :class:`KeySequencePair` holding
-		its values in order, at the position of its first occurrence. A parameter without ``=`` has the value ``None``;
-		an empty query (``?``) has no parameters.
-
-		:param query: The query, without the leading ``?``.
-		:returns:     The parameters, in the order their keys first occur.
-		"""
-		if query == "":
-			return []
-
-		values: dict[str, list[Nullable[str]]] = {}
-		for pair in query.split("&"):
-			key, separator, value = pair.partition("=")
-			if key in values:
-				values[key].append(value if separator == "=" else None)
-			else:
-				values[key] = [value if separator == "=" else None]
-
-		return [
-			KeyValuePair(key, valueList[0]) if len(valueList) == 1 else KeySequencePair(key, valueList)
-			for key, valueList in values.items()
-		]
-
-	@classmethod
 	def _CheckRelativeReference(cls, reference: str) -> None:
 		"""
 		Check a string names a resource below a URL.
@@ -1008,29 +1247,14 @@ class URL:
 
 		:returns: Formatted URL object.
 		"""
-		result = str(self._path)
-
-		if self._host is not None:
-			result = str(self._host) + result
-
-		if self._user is not None:
-			if self._password is not None:
-				result = f"{self._user}:{self._password}@{result}"
-			else:
-				result = f"{self._user}@{result}"
+		result = self.SchemeSpecificPart
 
 		# 'Protocols' is a 'Flag', so a single member and a combination both have a name; only 'Protocols(0)' has
 		# none - and a scheme without any flag is no scheme, so it renders nothing either way.
-		if self._scheme is not None and (scheme := self._scheme.name) is not None:
-			result = scheme.lower() + "://" + result
+		if (scheme := self._scheme.name) is not None:  # type: ignore[union-attr]
+			result = scheme.lower() + ":" + result
 
-		if self._query is not None:
-			result = result + "?" + "&".join(str(parameter) for parameter in self._query.values())
-
-		if self._fragment is not None:
-			result = result + "#" + self._fragment
-
-		return result
+		return result + self._FormatQueryAndFragment()
 
 	def WithoutCredentials(self) -> URL:
 		"""
@@ -1074,13 +1298,6 @@ class URL:
 			query=None if self._query is None else self._query.values(),
 			fragment=self._fragment
 		)
-
-
-_Host = Host
-"""Alias of :class:`Host` for annotations in a class with a property named ``Host``, which the class body binds."""
-
-_Path = Path
-"""Alias of :class:`Path` for annotations in a class with a property named ``Path``, which the class body binds."""
 
 
 @export
