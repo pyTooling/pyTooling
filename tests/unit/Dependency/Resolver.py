@@ -43,7 +43,8 @@ from packaging.requirements        import Requirement
 from pyTooling.Dependency          import BrokenRequirementWarning, DependencyError, ExtraNotFoundError, \
                                           UndeclaredExtraWarning, PackageIndexFailureWarning, ReleaseNotFoundError, \
                                           ResolutionTimeoutWarning, UnresolvedRequirementWarning
-from pyTooling.Dependency.Python   import PythonPackageDependencyGraph, PythonPackageIndex, RequirementsFile
+from pyTooling.Dependency.Python   import PyProjectFile, PythonPackageDependencyGraph, PythonPackageIndex, \
+                                          RequirementsFile
 from pyTooling.Dependency.Resolver import CurrentEnvironmentResolver, PreReleasePolicy, Resolution, ResolutionStatus, \
                                           ResolutionStrategy, ResolvedRequirement, Resolver
 from pyTooling.Timeout             import Timeout
@@ -692,6 +693,26 @@ class Inputs(ResolverTestcase):
 		self.assertEqual(2, resolution.RequirementCount)
 		self.assertTrue(all(requirement.Status is ResolutionStatus.Resolved for requirement in resolution.Requirements))
 
+	def test_PyProjectFile(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "pyproject.toml"
+			path.write_text('[build-system]\nrequires = ["lib >= 1.0", "util"]\n')
+
+			resolution = Resolver(self._Index()).ResolvePyProjectFile(PyProjectFile.Parse(path))
+
+		self.assertIsInstance(resolution, Resolution)
+		self.assertEqual(["lib", "util"], [requirement.Requirement.name for requirement in resolution.Requirements])
+		self.assertEqual(
+			["2.0", "1.0"],
+			[str(requirement.Release.Version) for requirement in resolution.Requirements]
+		)
+		self.assertTrue(all(requirement.Status is ResolutionStatus.Resolved for requirement in resolution.Requirements))
+
+	def test_PyProjectFile_NoBuildRequirements(self) -> None:
+		resolution = Resolver(self._Index()).ResolvePyProjectFile(PyProjectFile(Path("pyproject.toml")))
+
+		self.assertEqual(0, resolution.RequirementCount)
+
 
 class ParameterChecks(ResolverTestcase):
 	def test_Index(self) -> None:
@@ -757,6 +778,18 @@ class ParameterChecks(ResolverTestcase):
 
 		with self.assertRaises(TypeError):
 			Resolver(self._Index()).ResolveRequirementsFile(Path("requirements.txt"))
+
+	def test_PyProjectFile(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Resolver(self._Index()).ResolvePyProjectFile(None)
+
+		self.assertEqual("Parameter 'pyProjectFile' is None.", str(context.exception))
+
+		with self.assertRaises(TypeError) as context:
+			Resolver(self._Index()).ResolvePyProjectFile("pyproject.toml")
+
+		self.assertEqual("Parameter 'pyProjectFile' is not of type 'PyProjectFile'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Packages(self) -> None:
 		resolver = Resolver(self._Index())
