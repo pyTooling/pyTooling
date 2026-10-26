@@ -2035,16 +2035,18 @@ class PyProjectFiles(Testcase):
 		self.assertEqual([], pyProjectFile.BuildRequirements)
 
 	def test_NoRequires(self) -> None:
-		"""A ``[build-system]`` table without a ``requires`` key states no build requirements."""
+		"""A ``[build-system]`` table must have the key ``requires`` (PEP 518)."""
 		with TemporaryDirectory() as directory:
 			path = self._write(Path(directory), """
 				[build-system]
 				build-backend = "setuptools.build_meta"
 			""")
 
-			pyProjectFile = PyProjectFile.Parse(path)
+			with self.assertRaises(PyProjectFileError) as context:
+				PyProjectFile.Parse(path)
 
-		self.assertEqual([], pyProjectFile.BuildRequirements)
+		self.assertEqual(f"Key 'build-system' in '{path}' has no key 'requires'.", str(context.exception))
+		self.assertIs(path, context.exception.FilePath)
 
 	def test_BuildSystemNotATable(self) -> None:
 		with TemporaryDirectory() as directory:

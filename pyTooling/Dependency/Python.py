@@ -769,8 +769,8 @@ class PyProjectFile(metaclass=ExtendedType, slots=True):
 		without a collector, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 
 		A file without a ``[build-system]`` table has no build requirements: the list is empty, the setuptools defaults
-		:pep:`518` lets a build frontend assume aren't filled in. A table without the ``requires`` key, which :pep:`518`
-		makes mandatory, has no build requirements either.
+		:pep:`518` lets a build frontend assume aren't filled in. A ``[build-system]`` table must have the key
+		``requires`` (:pep:`518`), as pip rejects such a file too.
 
 		Reading is measured with a :class:`~pyTooling.Stopwatch.Stopwatch` (:attr:`AnalysisDuration`).
 
@@ -781,6 +781,7 @@ class PyProjectFile(metaclass=ExtendedType, slots=True):
 		:raises PyProjectFileNotFoundError:    If the ``pyproject.toml`` file doesn't exist.
 		:raises PyProjectFileError:            If the file isn't valid TOML.
 		:raises PyProjectFileError:            If key ``build-system`` is not a table.
+		:raises PyProjectFileError:            If key ``build-system`` has no key ``requires``.
 		:raises PyProjectFileError:            If key ``build-system.requires`` is not a list.
 		:raises PyProjectFileError:            If an element of key ``build-system.requires`` is not a string.
 		:raises UnhandledCriticalWarningError: If an element of key ``build-system.requires`` can't be parsed as a
@@ -813,33 +814,34 @@ class PyProjectFile(metaclass=ExtendedType, slots=True):
 					ex = PyProjectFileError(f"Key 'build-system' in '{path}' is not a table.", filePath=path)
 					ex.add_note(f"Got type '{getFullyQualifiedName(buildSystem)}'.")
 					raise ex
-				elif (requires := buildSystem.get("requires", None)) is not None:
-					if not isinstance(requires, list):
-						ex = PyProjectFileError(f"Key 'build-system.requires' in '{path}' is not a list.", filePath=path)
-						ex.add_note(f"Got type '{getFullyQualifiedName(requires)}'.")
+				elif (requires := buildSystem.get("requires", None)) is None:
+					raise PyProjectFileError(f"Key 'build-system' in '{path}' has no key 'requires'.", filePath=path)
+				elif not isinstance(requires, list):
+					ex = PyProjectFileError(f"Key 'build-system.requires' in '{path}' is not a list.", filePath=path)
+					ex.add_note(f"Got type '{getFullyQualifiedName(requires)}'.")
+					raise ex
+
+				for requirement in requires:
+					if not isinstance(requirement, str):
+						ex = PyProjectFileError(
+							f"An element of key 'build-system.requires' in '{path}' is not of type 'str'.",
+							filePath=path
+						)
+						ex.add_note(f"Got type '{getFullyQualifiedName(requirement)}'.")
 						raise ex
 
-					for requirement in requires:
-						if not isinstance(requirement, str):
-							ex = PyProjectFileError(
-								f"An element of key 'build-system.requires' in '{path}' is not of type 'str'.",
-								filePath=path
-							)
-							ex.add_note(f"Got type '{getFullyQualifiedName(requirement)}'.")
-							raise ex
-
-						try:
-							buildRequirements.append(Requirement(requirement))
-						except InvalidRequirement as ex:
-							WarningCollector.Raise(
-								UnparsableRequirementWarning(
-									f"Build requirement '{requirement}' in '{path}' can't be parsed.",
-									line=requirement,
-									filePath=path,
-									lineNumber=None
-								),
-								ex
-							)
+					try:
+						buildRequirements.append(Requirement(requirement))
+					except InvalidRequirement as ex:
+						WarningCollector.Raise(
+							UnparsableRequirementWarning(
+								f"Build requirement '{requirement}' in '{path}' can't be parsed.",
+								line=requirement,
+								filePath=path,
+								lineNumber=None
+							),
+							ex
+						)
 
 		return cls(path, buildRequirements, analysisDuration=sw.Duration)
 
