@@ -816,7 +816,7 @@ Glossary
      holds the elements, and a **flavour** says what the hierarchy looks like - its ``ELEMENT_DELIMITER``,
      its ``ROOT_DELIMITER`` and the ``ELEMENT_TYPE`` its elements have.
 
-     :class:`pyTooling.GenericPath.URL.Path` is the flavour of a :term:`URL`. Composing with ``/`` and removing a
+     :class:`pyTooling.URI.Path` is the flavour of a :term:`URL`. Composing with ``/`` and removing a
      trailing delimiter are the flavour-independent part, so a new flavour states its three declarations and
      inherits the rest.
 
@@ -1183,8 +1183,8 @@ Glossary
      A *Uniform Resource Locator* is a :term:`URI` that says where a resource is: a scheme, an authority - host,
      port and optionally user and password -, a path, a query and a fragment, as :rfc:`3986` writes them.
 
-     :class:`~pyTooling.GenericPath.URL.URL` parses one, composes it with a resource below it using the ``/``
-     operator, and reports what it rejects as a :exc:`~pyTooling.GenericPath.URL.URLError`. Its path is a path
+     :class:`~pyTooling.URI.URL` parses one, composes it with a resource below it using the ``/``
+     operator, and reports what it rejects as a :exc:`~pyTooling.URI.URLError`. Its path is a path
      flavour of :mod:`pyTooling.GenericPath`, so it is a sequence of elements rather than a string.
 
      Wikipedia: :wiki:`Uniform Resource Locator <URL>`

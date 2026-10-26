@@ -33,7 +33,7 @@ A generic path to derive domain specific path libraries.
 
 .. seealso::
 
-   :mod:`pyTooling.GenericPath.URL`
+   :mod:`pyTooling.URI`
       |rarr| A URL as a domain-specific path.
    :mod:`pyTooling.Configuration`
       |rarr| Path expressions addressing a node in a configuration.

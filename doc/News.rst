@@ -25,7 +25,7 @@ Version 10.x (2026)
      nothing building on it drags an HTTP stack into every consumer.
 
      * A resource is addressed by its path below :attr:`~pyTooling.REST.RESTClient.APIURL`, which is a
-       :class:`~pyTooling.GenericPath.URL.URL`, so the API is stated once instead of in every call.
+       :class:`~pyTooling.URI.URL`, so the API is stated once instead of in every call.
      * :meth:`~pyTooling.REST.RESTClient.GetJSONObject` reads a resource and says where its next page is;
        :meth:`~pyTooling.REST.RESTClient.PostJSONObject`, :meth:`~pyTooling.REST.RESTClient.PutJSONObject`,
        :meth:`~pyTooling.REST.RESTClient.PatchJSONObject` and :meth:`~pyTooling.REST.RESTClient.DeleteResource`
@@ -154,11 +154,11 @@ Version 10.x (2026)
        type-checks.
 
    * :meth:`~pyTooling.GenericPath.PathMixin.WithoutTrailingDelimiter` returns a path that doesn't end in
-     ``ELEMENT_DELIMITER``, and :meth:`~pyTooling.GenericPath.URL.URL.WithoutTrailingSlash` a URL whose path doesn't -
+     ``ELEMENT_DELIMITER``, and :meth:`~pyTooling.URI.URL.WithoutTrailingSlash` a URL whose path doesn't -
      a URL's element delimiter is the slash. A trailing delimiter is an empty last element, so ``/api/v3/`` and
      ``/api/v3`` are different paths although they usually name the same thing - and a path something is appended to
      wants the latter. A path with none answers with itself.
-   * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.GenericPath.URL.URL.__truediv__` and
+   * ``URL / resource`` and ``path / resource`` compose - :meth:`~pyTooling.URI.URL.__truediv__` and
      :meth:`~pyTooling.GenericPath.PathMixin.__truediv__`, each taking a string or a path on the right, the way
      :class:`pathlib.PurePath` does. The right side is a **relative reference**: its path goes
      below the left side's, and a string brings its own query and fragment, which the left side's are not carried
@@ -172,30 +172,34 @@ Version 10.x (2026)
    * ⚠️ A path flavour names the type of its elements - ``ELEMENT_TYPE``, beside ``ELEMENT_DELIMITER`` and
      ``ROOT_DELIMITER``. :meth:`~pyTooling.GenericPath.PathMixin.Parse` reads that instead of being handed the path and
      element classes as parameters, so its signature is ``Parse(path, root=None)`` and a flavour needs no ``Parse`` of
-     its own - :class:`~pyTooling.GenericPath.URL.Path` lost the one it had. **A flavour outside pyTooling passing
+     its own - :class:`~pyTooling.URI.Path` lost the one it had. **A flavour outside pyTooling passing
      ``pathCls`` and ``elementCls`` has to drop them and declare ``ELEMENT_TYPE``.**
    * :meth:`~pyTooling.GenericPath.PathMixin.Parse` strips ``ROOT_DELIMITER`` from an absolute path, not as many
      characters as ``ELEMENT_DELIMITER`` is long. The two are the same in a URL, so nothing parses differently today,
      but a path flavour marking its root differently - a drive letter, a host separated by a colon - would have lost
      the wrong number of characters.
 
-   * :mod:`pyTooling.GenericPath.URL` reports what it rejects, and raises
-     :exc:`~pyTooling.GenericPath.URL.URLError` for it.
+   * ⚠️ :mod:`pyTooling.URI` is a new package: the URL module ``pyTooling.GenericPath.URL`` moved there, with all its
+     classes (:class:`~pyTooling.URI.URL`, :class:`~pyTooling.URI.Host`, :class:`~pyTooling.URI.Protocols`,
+     :exc:`~pyTooling.URI.URLError`, ...). **Import them from** ``pyTooling.URI``; there is no alias.
+     :mod:`pyTooling.GenericPath` stays the base of hierarchical paths, which a URL's path is.
+   * :mod:`pyTooling.URI` reports what it rejects, and raises
+     :exc:`~pyTooling.URI.URLError` for it.
 
-     * :exc:`~pyTooling.GenericPath.URL.URLError` replaces the bare
+     * :exc:`~pyTooling.URI.URLError` replaces the bare
        :exc:`~pyTooling.Exceptions.ToolingException` the module raised, so a consumer can catch a URL problem
        without catching everything pyTooling raises. It still derives from it.
-     * ⚠️ :class:`~pyTooling.GenericPath.URL.Host` rejects a host name that is ``None`` or empty with a
+     * ⚠️ :class:`~pyTooling.URI.Host` rejects a host name that is ``None`` or empty with a
        :exc:`ValueError`, as its doc-string always said; ``None`` was a :exc:`TypeError`.
      * A rejected URL holding a character :rfc:`3986` forbids - a space, a control character, ``<``, ``|``,
        ... - gets a note naming it and its percent-encoding, e.g. *"Character ' ' is not allowed in a URL.
        Write it percent-encoded as '%20'."*
-     * :class:`~pyTooling.GenericPath.URL.Protocols` gains ``ws``, ``wss``, ``ssh``, ``sftp``, ``git``,
+     * :class:`~pyTooling.URI.Protocols` gains ``ws``, ``wss``, ``ssh``, ``sftp``, ``git``,
        ``ldap`` and ``ldaps``. A scheme missing from the enumeration makes a URL unparseable, so the list
        grows as schemes are needed. ``sftp`` is carried by :attr:`~Protocols.SSH` rather than being
        :attr:`~Protocols.FTP` plus :attr:`~Protocols.TLS` - that combination is :attr:`~Protocols.FTPS`.
-     * :attr:`~pyTooling.GenericPath.URL.Protocols.IsEncrypted` answers whether a scheme is secured, by TLS or
-       by SSH. Testing :attr:`~pyTooling.GenericPath.URL.Protocols.TLS` alone answers *"is this TLS"* and
+     * :attr:`~pyTooling.URI.Protocols.IsEncrypted` answers whether a scheme is secured, by TLS or
+       by SSH. Testing :attr:`~pyTooling.URI.Protocols.TLS` alone answers *"is this TLS"* and
        misses ``ssh`` and ``sftp``, which are encrypted and carry no TLS flag.
      * ``tcp``, ``udp`` and ``unix`` name an endpoint whose higher protocol is unspecified -
        ``tcp://0.0.0.0:2375`` as the Docker daemon writes it, ``unix:///var/run/docker.sock`` for a local
@@ -206,27 +210,27 @@ Version 10.x (2026)
        ``None`` and a path of ``[2001:db8::1]:8080/path``, while reassembling into the original string - so a
        round-trip looked correct while the model was wrong.
 
-     * :meth:`~pyTooling.GenericPath.URL.URL.Parse` checks its parameter: ``None`` raises a :exc:`ValueError` and a
+     * :meth:`~pyTooling.URI.URL.Parse` checks its parameter: ``None`` raises a :exc:`ValueError` and a
        value of another type a :exc:`TypeError` naming it, instead of the :mod:`re` module reporting *"expected
        string or bytes-like object"* about neither the parameter nor the value.
      * An unknown scheme raises a :exc:`~pyTooling.Exceptions.ToolingException` listing the known ones, where
        ``ftpx://host`` used to raise ``KeyError: 'FTPX'``.
-     * ⚠️ :attr:`~pyTooling.GenericPath.URL.URL.Query` holds a
-       :class:`~pyTooling.GenericPath.URL.QueryParameter` per key instead of a string: a
-       :class:`~pyTooling.GenericPath.URL.KeyValuePair` for a key written once, a
-       :class:`~pyTooling.GenericPath.URL.KeySequencePair` for a key written several times - ``?tag=a&tag=b`` kept only
-       ``b`` and wrote back ``?tag=b``. :attr:`~pyTooling.GenericPath.URL.QueryParameter.Value` answers the (last)
-       value, :attr:`~pyTooling.GenericPath.URL.QueryParameter.Values` all of them. **Read ``url.Query[key].Value``
+     * ⚠️ :attr:`~pyTooling.URI.URL.Query` holds a
+       :class:`~pyTooling.URI.QueryParameter` per key instead of a string: a
+       :class:`~pyTooling.URI.KeyValuePair` for a key written once, a
+       :class:`~pyTooling.URI.KeySequencePair` for a key written several times - ``?tag=a&tag=b`` kept only
+       ``b`` and wrote back ``?tag=b``. :attr:`~pyTooling.URI.QueryParameter.Value` answers the (last)
+       value, :attr:`~pyTooling.URI.QueryParameter.Values` all of them. **Read ``url.Query[key].Value``
        where ``url.Query[key]`` was read, and pass the constructor's ``query`` as an iterable of parameters instead of
        a dictionary.**
      * A query parameter without ``=`` parses with the value ``None`` - ``?flag`` as a
-       :class:`~pyTooling.GenericPath.URL.KeyValuePair` with the value ``None``, written back as ``?flag`` - where it
+       :class:`~pyTooling.URI.KeyValuePair` with the value ``None``, written back as ``?flag`` - where it
        used to raise *"not enough values to unpack"*. A ``=`` inside a **value** is legal and no longer an error -
        ``?key=a=b`` parses with the value ``"a=b"``, where it used to raise *"too many values to unpack"*. An empty
        query (``https://example.org/?``) and an empty fragment (``#``) parse and round-trip, as
        :rfc:`3986` allows them.
-     * ⚠️ :meth:`~pyTooling.GenericPath.URL.URL.Parse` **rejects a string that isn't a URL** with a
-       :exc:`~pyTooling.GenericPath.URL.URLError`. Every part of :data:`~pyTooling.GenericPath.URL.URL_PATTERN` was
+     * ⚠️ :meth:`~pyTooling.URI.URL.Parse` **rejects a string that isn't a URL** with a
+       :exc:`~pyTooling.URI.URLError`. Every part of :data:`~pyTooling.URI.URL_PATTERN` was
        optional, so ``""``, ``"nonsense"`` and ``"https://a b/c"`` parsed - the last one as host ``a`` and path
        ``" b/c"``. A URL starts with a scheme followed by ``://`` and a host, as :rfc:`3986` writes an absolute URI with
        an authority; only a ``file`` or ``unix`` URL may leave the host empty, and then names an absolute path
@@ -235,15 +239,15 @@ Version 10.x (2026)
        user-information characters - ``first.last@`` and ``p%40ss`` were read as a host and a path.
        A rejected URL says what is wrong and, in a note, gives the URL as it was probably meant: a ``:`` after the host
        without a port, a path in place of the port, a drive letter as host (``file://C:/Windows``).
-     * :class:`~pyTooling.GenericPath.URL.SCPAddress` reads the **SCP-like address** ``[user@]host:[path]`` scp, rsync
+     * :class:`~pyTooling.URI.SCPAddress` reads the **SCP-like address** ``[user@]host:[path]`` scp, rsync
        and Git write - ``git@github.com:org/repo.git`` -, which is no URL: no scheme, no port, and a relative path
-       starts in the user's home directory. :meth:`~pyTooling.GenericPath.URL.SCPAddress.ToURL` converts it to the
+       starts in the user's home directory. :meth:`~pyTooling.URI.SCPAddress.ToURL` converts it to the
        ``ssh://`` URL, writing the home directory as Git does: ``ssh://git@github.com/~/org/repo.git``.
-     * :meth:`~pyTooling.GenericPath.URL.URL.Parse` **reads an IRI** (:rfc:`3987`) with ``iri=True``: a Unicode host is
+     * :meth:`~pyTooling.URI.URL.Parse` **reads an IRI** (:rfc:`3987`) with ``iri=True``: a Unicode host is
        converted to its A-labels by IDNA 2008 (:rfc:`5891`) after the mapping of UTS #46, as browsers do, and every
        other non-ASCII character is percent-encoded as UTF-8, so the result is an :rfc:`3986` URL -
        ``https://www.müller.de/`` is read as ``https://www.xn--mller-kva.de/``.
-       :attr:`~pyTooling.GenericPath.URL.Host.UnicodeHostname` decodes the A-labels for display. IDNA 2008 needs the
+       :attr:`~pyTooling.URI.Host.UnicodeHostname` decodes the A-labels for display. IDNA 2008 needs the
        ``idna`` package, installed by the new extra ``pyTooling[idna]``.
      * :mod:`pyTooling.Dependency` reports a project URL a package index publishes that isn't a URL as a non-critical
        :exc:`~pyTooling.Dependency.UnparsableURLWarning`, and the release has no such URL. ``UNKNOWN``, which distutils
@@ -717,14 +721,14 @@ Version 10.x (2026)
      ``Parse(path, root=None)``. A flavour outside pyTooling passing ``pathCls`` and ``elementCls`` drops them and
      declares ``ELEMENT_TYPE``.
 
-   * ⚠️ :class:`~pyTooling.GenericPath.URL.Host` **rejects a host name that is** ``None`` **or empty** with a
+   * ⚠️ :class:`~pyTooling.URI.Host` **rejects a host name that is** ``None`` **or empty** with a
      :exc:`ValueError`. An empty name was accepted, and ``None`` raised a :exc:`TypeError`.
-     :meth:`~pyTooling.GenericPath.URL.URL.Parse` is unchanged.
+     :meth:`~pyTooling.URI.URL.Parse` is unchanged.
 
-   * ⚠️ :meth:`~pyTooling.GenericPath.URL.URL.Parse` **requires a scheme and a host**, and raises a
-     :exc:`~pyTooling.GenericPath.URL.URLError` for a string that isn't a URL. A host without scheme - ``github.com``,
+   * ⚠️ :meth:`~pyTooling.URI.URL.Parse` **requires a scheme and a host**, and raises a
+     :exc:`~pyTooling.URI.URLError` for a string that isn't a URL. A host without scheme - ``github.com``,
      ``localhost:8080`` - was parsed as a URL without scheme; write the scheme (``https://github.com``). A relative
-     reference is appended to a URL with ``/``. :data:`~pyTooling.GenericPath.URL.URL_PATTERN` requires the scheme
+     reference is appended to a URL with ``/``. :data:`~pyTooling.URI.URL_PATTERN` requires the scheme
      too.
 
    * ⚠️ **A membership test is named** ``Contains***``: ``Has***`` asks for a property of the object itself, like
@@ -1541,7 +1545,7 @@ Version 9.x (2026)
      stubs, and the four methods every backend implements are ``@abstractmethod``.
    * :class:`~pyTooling.Versioning.CalendarVersion` renders only the parts it was given.
      ``YearMonthVersion(2024, 10)`` was ``'2024.10.0'``.
-   * :class:`pyTooling.GenericPath.URL.Protocols` is a :class:`~enum.Flag` whose secured schemes are named
+   * :class:`pyTooling.URI.Protocols` is a :class:`~enum.Flag` whose secured schemes are named
      composites, so ``Protocols.TLS in url.Scheme`` answers whether a scheme is encrypted. The numeric values
      change.
    * ``SupervisedThreadException`` takes its message positionally and the attached objects by keyword.
@@ -2115,7 +2119,7 @@ Version 6.x (2024)
 
    * :mod:`pyTooling.GenericPath`
 
-     * :class:`pyTooling.GenericPath.URL.URL` supports basic authentication credentials (username and password),
+     * :class:`pyTooling.URI.URL` supports basic authentication credentials (username and password),
        with a ``WithoutCredentials()`` method.
 
    .. rubric:: Changes

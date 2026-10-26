@@ -61,7 +61,7 @@ Every package version of every storage becomes a :class:`~pyTooling.Graph.Vertex
    * - keys ``licenseURL``, ``repositoryURL``, ``documentationURL``, ``issueTrackerURL``, ``projectURL`` and
        ``changelogURL``
      - the URL of the license text, the source repository, the documentation, the issue tracker, the project's
-       homepage and the changelog, each a :class:`~pyTooling.GenericPath.URL.URL`.
+       homepage and the changelog, each a :class:`~pyTooling.URI.URL`.
 
 The key-value pairs keep the version's typed objects; a graph writer converts them to text. All but ``license`` are set
 only if the version knows the value - for a Python package, after its details were loaded; converting a graph doesn't

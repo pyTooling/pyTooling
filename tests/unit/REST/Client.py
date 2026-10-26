@@ -31,14 +31,14 @@
 """
 Unit tests for :class:`pyTooling.REST.RESTClient`.
 """
-from json                      import dumps as json_dumps
-from typing                    import Any, Optional as Nullable
-from unittest                  import mock
-from urllib.error              import HTTPError, URLError
+from json              import dumps as json_dumps
+from typing            import Any, Optional as Nullable
+from unittest          import mock
+from urllib.error      import HTTPError, URLError
 
-from pyTooling.GenericPath.URL import URL, URLError as URLParseError
-from pyTooling.REST            import MediaType, RESTClient, RESTError
-from pyTooling.Testing         import Testcase
+from pyTooling.URI     import URL, URLError as URLParseError
+from pyTooling.REST    import MediaType, RESTClient, RESTError
+from pyTooling.Testing import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover

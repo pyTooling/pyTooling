@@ -91,7 +91,7 @@ See :ref:`DEP/package` for more details.
 
             .. code-block:: bash
 
-               # With IDNA 2008 support for IRIs in pyTooling.GenericPath.URL
+               # With IDNA 2008 support for IRIs in pyTooling.URI
                pip3 install pyTooling[idna]
 
                # Alternatively
@@ -151,7 +151,7 @@ See :ref:`DEP/package` for more details.
 
             .. code-block:: powershell
 
-               # With IDNA 2008 support for IRIs in pyTooling.GenericPath.URL
+               # With IDNA 2008 support for IRIs in pyTooling.URI
                pip install pyTooling[idna]
 
                # Alternatively
