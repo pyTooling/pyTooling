@@ -10,7 +10,7 @@ release.
 Version 10.x (2026)
 *******************
 
-.. topic:: :gh:`v10.0.0 - unreleased <pyTooling/pyTooling/releases/v10.0.0>`
+.. topic:: :gh:`v10.0.0 - 26.10.2026 <pyTooling/pyTooling/releases/v10.0.0>`
 
    .. rubric:: New Features
 
@@ -461,9 +461,7 @@ Version 10.x (2026)
      * ⚠️ :func:`~pyTooling.Packaging.DescribePythonPackage` leaves requirements with a direct reference (``name @
        URL``) out of every extra and reports each as a critical :exc:`~pyTooling.Packaging.DirectReferenceWarning` to a
        :class:`~pyTooling.Warning.WarningCollector`: the Python Package Index rejects a package whose metadata contains
-       one. pyTooling itself names pyTooling.Sphinx, which isn't on PyPI yet, by its repository in
-       :file:`doc/requirements.txt`; its ``doc`` and ``all`` extras carried it, so v10.0.0-rc1 couldn't be uploaded.
-       Base requirements are kept. A :file:`setup.py` with such an extra must collect the warnings, otherwise
+       one. Base requirements are kept. A :file:`setup.py` with such an extra must collect the warnings, otherwise
        :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` stops the build; pyTooling's own collects and prints
        them.
 
@@ -1611,14 +1609,6 @@ Version 10.x (2026)
    * CPython 3.11 to 3.15 and PyPy 3.11 and 3.12 are tested.
    * A package PyPI would reject is neither tagged nor uploaded, a pre-release's release page is published as a
      pre-release, and only the wheel is published on PyPI.
-
-.. topic:: :gh:`v10.0.0-rc2 - 13.10.2026 <pyTooling/pyTooling/releases/v10.0.0-rc2>`
-
-   Release candidate published on PyPI. Its changes are listed in v10.0.0.
-
-.. topic:: :gh:`v10.0.0-rc1 - 12.10.2026 <pyTooling/pyTooling/releases/v10.0.0-rc1>`
-
-   Release candidate published on GitHub only; PyPI rejected its upload. Its changes are listed in v10.0.0.
 
 
 Version 9.x (2026)
