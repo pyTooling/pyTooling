@@ -200,12 +200,12 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		:raises ValueError:                     If parameter 'path' is ``None``.
 		:raises TypeError:                      If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:                      If parameter 'entries' is not iterable.
-		:raises TypeError:                      If parameter 'parent' is not of type :class:`RequirementsFile`.
-		:raises TypeError:                      If parameter 'analysisDuration' is not of type :class:`~datetime.timedelta`.
 		:raises ValueError:                     If an element of parameter 'entries' is ``None``.
 		:raises TypeError:                      If an element of parameter 'entries' is not of type
 		                                        :class:`~packaging.requirements.Requirement`, :class:`RequirementsFile`
 		                                        or :class:`RequirementsFileReference`.
+		:raises TypeError:                      If parameter 'parent' is not of type :class:`RequirementsFile`.
+		:raises TypeError:                      If parameter 'analysisDuration' is not of type :class:`~datetime.timedelta`.
 		:raises AlreadyInRequirementsTreeError: If an element of parameter 'entries' is referenced by another file
 		                                        already.
 		:raises AlreadyInRequirementsTreeError: If an element of parameter 'entries' is a reference another file states

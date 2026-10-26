@@ -549,11 +549,11 @@ class Rule(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:        Optional, reference to the element the rule belongs to, which adds it as its last rule.
 		                      Default: ``None``.
-		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'condition' is not of type :class:`str`.
 		:raises ValueError:   If parameter 'condition' is empty.
 		:raises ValueError:   If parameter 'when' is ``None``.
 		:raises TypeError:    If parameter 'when' is not of type :class:`RuleOutcome`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'parent' is not of type :class:`RulesMixin`.
 		"""
 		super().__init__(keyValuePairs)

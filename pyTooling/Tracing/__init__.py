@@ -624,18 +624,18 @@ class Span(TraceElement):
 		:param parent:      Optional, reference to a parent span or trace.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
+		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
+		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
 		                    :class:`float`.
 		:raises ValueError: If parameter 'duration' is not a finite number of seconds.
 		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
-		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
 		:raises ValueError: If parameter 'duration' is negative.
-		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
-		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Span`.
+		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
 		:raises ValueError: If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
-		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		:raises ValueError: If the timespan begins before or ends after its parent.
 		"""
 		super().__init__(name, parent)
@@ -1328,17 +1328,17 @@ class Trace(Span):
 		                    (whole) or :class:`float` (fractional).
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
 		:raises ValueError: If parameter 'name' is empty.
+		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
+		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		:raises TypeError:  If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
 		                    :class:`float`.
 		:raises ValueError: If parameter 'duration' is not a finite number of seconds.
 		:raises ValueError: If parameter 'duration' is given without parameter 'beginTime'.
-		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
 		:raises ValueError: If parameter 'duration' is negative.
-		:raises ValueError: If parameter 'endTime' is given without parameter 'beginTime'.
-		:raises TypeError:  If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:  If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError: If parameters 'endTime' and 'duration' are both given.
 		:raises ValueError: If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
-		:raises ValueError: If parameter 'endTime' is before parameter 'beginTime'.
 		"""
 		super().__init__(name, beginTime, endTime, duration)
 
@@ -1741,17 +1741,15 @@ class Fragment(Span):
 		:param parentSpanID: Identifier of the timespan the fragment is waiting for, as 16 hex digits.
 		:raises TypeError:   If parameter 'name' is not of type :class:`str`.
 		:raises ValueError:  If parameter 'name' is empty.
+		:raises TypeError:   If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError:  If parameter 'endTime' is given without parameter 'beginTime'.
+		:raises TypeError:   If parameter 'endTime' is not of type :class:`~datetime.datetime`.
+		:raises ValueError:  If parameter 'endTime' is before parameter 'beginTime'.
 		:raises TypeError:   If parameter 'duration' is not of type :class:`~datetime.timedelta`, :class:`int` or
 		                     :class:`float`.
 		:raises ValueError:  If parameter 'duration' is not a finite number of seconds.
 		:raises ValueError:  If parameter 'duration' is given without parameter 'beginTime'.
-		:raises ValueError:  If parameters 'endTime' and 'duration' are both given.
 		:raises ValueError:  If parameter 'duration' is negative.
-		:raises ValueError:  If parameter 'endTime' is given without parameter 'beginTime'.
-		:raises TypeError:   If parameter 'beginTime' is not of type :class:`~datetime.datetime`.
-		:raises TypeError:   If parameter 'endTime' is not of type :class:`~datetime.datetime`.
-		:raises ValueError:  If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
-		:raises ValueError:  If parameter 'endTime' is before parameter 'beginTime'.
 		:raises ValueError:  If parameter 'traceID' is None.
 		:raises TypeError:   If parameter 'traceID' is not of type :class:`str`.
 		:raises ValueError:  If parameter 'traceID' is not 32 hexadecimal digits.
@@ -1760,6 +1758,8 @@ class Fragment(Span):
 		:raises TypeError:   If parameter 'parentSpanID' is not of type :class:`str`.
 		:raises ValueError:  If parameter 'parentSpanID' is not 16 hexadecimal digits.
 		:raises ValueError:  If parameter 'parentSpanID' is all zeros.
+		:raises ValueError:  If parameters 'endTime' and 'duration' are both given.
+		:raises ValueError:  If parameters 'beginTime' and 'endTime' mix a time zone aware and a naive timestamp.
 		"""
 		super().__init__(name, beginTime, endTime, duration)
 

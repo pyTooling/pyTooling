@@ -250,8 +250,8 @@ class Row(metaclass=ExtendedType, slots=True):
 		:param name:        Name of the row.
 		:param parent:      The diagram the row belongs to.
 		:raises ValueError: If parameter 'name' is None.
-		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Diagram`.
 		"""
 		if name is None:
@@ -428,8 +428,8 @@ class Diagram(metaclass=ExtendedType, slots=True):
 		:param title:       Title of the diagram.
 		:param origin:      The time offsets are counted from.
 		:raises ValueError: If parameter 'title' is None.
-		:raises ValueError: If parameter 'origin' is None.
 		:raises TypeError:  If parameter 'title' is not of type :class:`str`.
+		:raises ValueError: If parameter 'origin' is None.
 		:raises TypeError:  If parameter 'origin' is not of type :class:`~datetime.datetime`.
 		"""
 		if title is None:
