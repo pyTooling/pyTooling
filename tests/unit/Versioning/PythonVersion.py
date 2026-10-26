@@ -286,3 +286,17 @@ class FourthComponent(Testcase):
 		self.assertEqual(4, version.Build)
 		self.assertEqual("1.2.3.4", str(version))
 		self.assertLess(version, PythonVersion.Parse("1.2.3.5"))
+
+
+class Representation(Testcase):
+	"""``repr()`` is the :pep:`440` normalized form; it wrote ``major.minor.micro`` only."""
+
+	def test_Normalized(self) -> None:
+		for text, normalized in (
+			("v1!1.0-pre1.post2.dev3+Ubuntu-1", "1!1.0rc1.post2.dev3+ubuntu.1"),
+			("1.0",                             "1.0"),
+			("1.0.0-dev",                       "1.0.0.dev0"),
+			("2.1c3",                           "2.1rc3")
+		):
+			with self.subTest(version=text):
+				self.assertEqual(normalized, repr(PythonVersion.Parse(text)))
