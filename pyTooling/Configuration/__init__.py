@@ -80,24 +80,24 @@ class KeyNotFoundError(ConfigurationError, KeyError):
 	writes ``except KeyError``. Catching :exc:`~pyTooling.Exceptions.ConfigurationError` still catches it.
 	"""
 
-	_key: Nullable[KeyT]  #: Key or index that wasn't found.
+	_key: KeyT  #: Key or index that wasn't found.
 
-	def __init__(self, message: str, /, *, key: Nullable[KeyT] = None) -> None:
+	def __init__(self, message: str, /, *, key: KeyT) -> None:
 		"""
 		Initializes the exception with the key or index that wasn't found.
 
 		:param message: The exception's message.
-		:param key:     Optional, the key or index that wasn't found.
+		:param key:     The key or index that wasn't found.
 		"""
 		super().__init__(message)
 		self._key = key
 
 	@readonly
-	def Key(self) -> Nullable[KeyT]:
+	def Key(self) -> KeyT:
 		"""
 		Read-only property to access the key or index that wasn't found (:attr:`_key`).
 
-		:returns: The missing key or index, or ``None`` if it wasn't recorded.
+		:returns: The missing key or index.
 		"""
 		return self._key
 
@@ -123,12 +123,12 @@ class UnsupportedValueTypeError(ConfigurationError, TypeError):
 
 	_value: Any  #: Value of the unsupported type, as returned by the parser.
 
-	def __init__(self, message: str, /, *, value: Any = None) -> None:
+	def __init__(self, message: str, /, *, value: Any) -> None:
 		"""
 		Initializes the exception with the value of the unsupported type.
 
 		:param message: The exception's message.
-		:param value:   Optional, the value of the unsupported type, as returned by the parser.
+		:param value:   The value of the unsupported type, as returned by the parser.
 		"""
 		super().__init__(message)
 		self._value = value
@@ -138,20 +138,17 @@ class UnsupportedValueTypeError(ConfigurationError, TypeError):
 		"""
 		Read-only property to access the value of the unsupported type (:attr:`_value`).
 
-		:returns: The value as returned by the parser, or ``None`` if it wasn't recorded.
+		:returns: The value as returned by the parser.
 		"""
 		return self._value
 
 	@readonly
-	def ValueType(self) -> Nullable[type]:
+	def ValueType(self) -> type:
 		"""
 		Read-only property to return the unsupported type, the type of :attr:`_value`.
 
-		:returns: The type of the value, or ``None`` if the value wasn't recorded.
+		:returns: The type of the value.
 		"""
-		if self._value is None:
-			return None
-
 		return type(self._value)
 
 
@@ -159,36 +156,36 @@ class UnsupportedValueTypeError(ConfigurationError, TypeError):
 class InterpolationError(ConfigurationError):
 	"""A variable reference (``${...}``) in a configuration value is malformed or can't be resolved."""
 
-	_value:    Nullable[str]  #: Configuration value containing the malformed variable reference.
-	_position: Nullable[int]  #: Position of the malformed ``$`` in the value.
+	_value:    str  #: Configuration value containing the malformed variable reference.
+	_position: int  #: Position of the malformed ``$`` in the value.
 
-	def __init__(self, message: str, /, *, value: Nullable[str] = None, position: Nullable[int] = None) -> None:
+	def __init__(self, message: str, /, *, value: str, position: int) -> None:
 		"""
 		Initializes the exception with the value and the position of the malformed variable reference.
 
 		:param message:  The exception's message.
-		:param value:    Optional, the configuration value containing the malformed variable reference.
-		:param position: Optional, the position of the malformed ``$`` in the value.
+		:param value:    The configuration value containing the malformed variable reference.
+		:param position: The position of the malformed ``$`` in the value.
 		"""
 		super().__init__(message)
 		self._value =    value
 		self._position = position
 
 	@readonly
-	def Value(self) -> Nullable[str]:
+	def Value(self) -> str:
 		"""
 		Read-only property to access the configuration value containing the malformed variable reference (:attr:`_value`).
 
-		:returns: The value, or ``None`` if it wasn't recorded.
+		:returns: The value.
 		"""
 		return self._value
 
 	@readonly
-	def Position(self) -> Nullable[int]:
+	def Position(self) -> int:
 		"""
 		Read-only property to access the position of the malformed ``$`` in the value (:attr:`_position`).
 
-		:returns: The position, or ``None`` if it wasn't recorded.
+		:returns: The position.
 		"""
 		return self._position
 
@@ -197,24 +194,24 @@ class InterpolationError(ConfigurationError):
 class PathExpressionError(ConfigurationError):
 	"""A path expression (``a:b:c``) doesn't describe a valid node or value in the configuration."""
 
-	_pathExpression: Nullable[str]  #: Path expression that doesn't describe a valid node or value.
+	_pathExpression: str  #: Path expression that doesn't describe a valid node or value.
 
-	def __init__(self, message: str, /, *, pathExpression: Nullable[str] = None) -> None:
+	def __init__(self, message: str, /, *, pathExpression: str) -> None:
 		"""
 		Initializes the exception with the path expression that doesn't describe a valid node or value.
 
 		:param message:        The exception's message.
-		:param pathExpression: Optional, the path expression, with its elements separated by ``:``.
+		:param pathExpression: The path expression, with its elements separated by ``:``.
 		"""
 		super().__init__(message)
 		self._pathExpression = pathExpression
 
 	@readonly
-	def PathExpression(self) -> Nullable[str]:
+	def PathExpression(self) -> str:
 		"""
 		Read-only property to access the path expression (:attr:`_pathExpression`).
 
-		:returns: The path expression, or ``None`` if it wasn't recorded.
+		:returns: The path expression.
 		"""
 		return self._pathExpression
 

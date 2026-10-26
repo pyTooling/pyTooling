@@ -91,26 +91,26 @@ class PermissionWarning(Warning):
 	   It's a non-critical warning: without a :class:`~pyTooling.Warning.WarningCollector` up the call-hierarchy, it's
 	   dropped silently.
 	"""
-	_directory: Nullable[_Directory]  #: The directory that couldn't be read.
+	_directory: _Directory  #: The directory that couldn't be read.
 
-	def __init__(self, message: str, /, *, directory: Nullable[_Directory] = None) -> None:
+	def __init__(self, message: str, /, *, directory: _Directory) -> None:
 		"""
 		Initializes the warning with the directory that couldn't be read.
 
 		:param message:   The warning's message.
-		:param directory: Optional, the directory whose scan raised a :exc:`PermissionError`.
+		:param directory: The directory whose scan raised a :exc:`PermissionError`.
 		"""
 		super().__init__(message)
 		self._directory = directory
 
 	@readonly
-	def Directory(self) -> Nullable[_Directory]:
+	def Directory(self) -> _Directory:
 		"""
 		Read-only property to access the directory that couldn't be read (:attr:`_directory`).
 
 		Its path is :attr:`Directory.Path <pyTooling.Filesystem.Directory.Path>`.
 
-		:returns: The directory, or ``None`` if it wasn't recorded.
+		:returns: The directory.
 		"""
 		return self._directory
 

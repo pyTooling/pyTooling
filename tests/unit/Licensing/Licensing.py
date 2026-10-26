@@ -520,12 +520,11 @@ class MalformedExpressions(Testcase):
 		self.assertIsNone(context.exception.Identifier)
 
 	def test_LicenseExpressionError_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither an expression nor an identifier."""
-		with self.assertRaises(LicenseExpressionError) as context:
+		"""The expression is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise LicenseExpressionError("Malformed expression.")
 
-		self.assertIsNone(context.exception.Expression)
-		self.assertIsNone(context.exception.Identifier)
+		self.assertIn("'expression'", str(context.exception))
 
 	def test_AMalformedExpressionIsALicensingError(self) -> None:
 		"""The dedicated exception stays catchable through the module's base exception."""

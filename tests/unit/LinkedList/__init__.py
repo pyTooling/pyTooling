@@ -314,11 +314,11 @@ class Insert(Testcase):
 		self.assertIs(node, context.exception.UnlinkedNode)
 
 	def test_NotInAListError_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no node."""
-		with self.assertRaises(NotInAListError) as context:
+		"""The node is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise NotInAListError("Not in a list.")
 
-		self.assertIsNone(context.exception.UnlinkedNode)
+		self.assertIn("'unlinkedNode'", str(context.exception))
 
 	def test_InsertNodeBefore_WrongType(self) -> None:
 		with self.assertRaises(TypeError) as context:

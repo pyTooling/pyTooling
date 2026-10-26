@@ -578,9 +578,10 @@ class PermissionDenied(Testcase):
 		self.assertEqual(1, root.TotalFileCount)
 
 	def test_MessageOnly(self) -> None:
-		warning = PermissionWarning("Directory can't be read.")
+		with self.assertRaises(TypeError) as context:
+			_ = PermissionWarning("Directory can't be read.")
 
-		self.assertIsNone(warning.Directory)
+		self.assertIn("'directory'", str(context.exception))
 
 
 @mark.skipif(sys_platform == "win32", reason="Creating a symbolic link needs a privilege on Windows.")

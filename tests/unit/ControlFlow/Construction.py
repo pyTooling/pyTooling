@@ -326,17 +326,16 @@ class Checks(Testcase):
 		self.assertEqual(3, graph.BlockCount)
 
 	def test_DuplicateErrors_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no object."""
-		with self.assertRaises(DuplicateBlockError) as blockCapture:
+		"""The block's ID and the existing edge are required: raising an exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as blockCapture:
 			raise DuplicateBlockError("Duplicate block.")
 
-		self.assertIsNone(blockCapture.exception.BlockID)
-		self.assertIsNone(blockCapture.exception.Kind)
+		self.assertIn("'blockID'", str(blockCapture.exception))
 
-		with self.assertRaises(DuplicateEdgeError) as edgeCapture:
+		with self.assertRaises(TypeError) as edgeCapture:
 			raise DuplicateEdgeError("Duplicate edge.")
 
-		self.assertIsNone(edgeCapture.exception.ExistingEdge)
+		self.assertIn("'existingEdge'", str(edgeCapture.exception))
 
 	def test_Count(self) -> None:
 		graph = ControlFlowGraph("main")

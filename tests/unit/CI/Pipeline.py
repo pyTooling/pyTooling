@@ -748,14 +748,21 @@ class Dependencies(Testcase):
 		self.assertIs(job, context.exception.Need)
 		self.assertTupleEqual((job, job), context.exception.Cycle)
 
-	def test_NeedDependencyErrors_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no element."""
-		with self.assertRaises(NeedDependencyCycleError) as context:
+	def test_NeedDependencyCycleError_MessageOnly(self) -> None:
+		"""The cycle is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise NeedDependencyCycleError("Cycle.")
+
+		self.assertIn("'cycle'", str(context.exception))
+
+	def test_NeedDependencyCycleError_CycleOnly(self) -> None:
+		"""A cycle of several needs carries neither an element nor a need."""
+		with self.assertRaises(NeedDependencyCycleError) as context:
+			raise NeedDependencyCycleError("Cycle.", cycle=())
 
 		self.assertIsNone(context.exception.Element)
 		self.assertIsNone(context.exception.Need)
-		self.assertIsNone(context.exception.Cycle)
+		self.assertTupleEqual((), context.exception.Cycle)
 
 	def test_NeedDependencyError_MessageOnly(self) -> None:
 		"""Both elements are required: raising the exception with a message only is a 'TypeError'."""

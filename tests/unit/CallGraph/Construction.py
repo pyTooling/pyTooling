@@ -302,11 +302,11 @@ class Checks(Testcase):
 		self.assertIs(FunctionKind.Defined, graph.GetFunction("main").Kind)
 
 	def test_DuplicateFunctionError_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no function ID."""
-		with self.assertRaises(DuplicateFunctionError) as context:
+		"""The function ID is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise DuplicateFunctionError("Duplicate function.")
 
-		self.assertIsNone(context.exception.FunctionID)
+		self.assertIn("'functionID'", str(context.exception))
 
 	def test_Function_Kind(self) -> None:
 		graph = CallGraph("prog")

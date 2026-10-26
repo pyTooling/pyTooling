@@ -121,15 +121,15 @@ class ControlFlowError(ToolingException):
 class DuplicateBlockError(ControlFlowError, DuplicateElementError):
 	"""The exception raised for a block a graph has already: one with the same ID, or a second entry, exit or unwind."""
 
-	_blockID: Nullable[Hashable]   #: ID of the rejected block.
+	_blockID: Hashable             #: ID of the rejected block.
 	_kind:    Nullable[BlockKind]  #: Kind of the rejected block, if a graph has one block of that kind at most.
 
-	def __init__(self, message: str, /, *, blockID: Nullable[Hashable] = None, kind: Nullable[BlockKind] = None) -> None:
+	def __init__(self, message: str, /, *, blockID: Hashable, kind: Nullable[BlockKind] = None) -> None:
 		"""
 		Initializes the exception with the ID and kind of the rejected block.
 
 		:param message: The exception's message.
-		:param blockID: Optional, the ID of the rejected block.
+		:param blockID: The ID of the rejected block.
 		:param kind:    Optional, the kind of the rejected block, if a graph has one block of that kind at most.
 		"""
 		super().__init__(message)
@@ -137,11 +137,11 @@ class DuplicateBlockError(ControlFlowError, DuplicateElementError):
 		self._kind =    kind
 
 	@readonly
-	def BlockID(self) -> Nullable[Hashable]:
+	def BlockID(self) -> Hashable:
 		"""
 		Read-only property to access the ID of the rejected block (:attr:`_blockID`).
 
-		:returns: The block's ID, or ``None`` if it wasn't recorded.
+		:returns: The block's ID.
 		"""
 		return self._blockID
 
@@ -160,25 +160,25 @@ class DuplicateBlockError(ControlFlowError, DuplicateElementError):
 class DuplicateEdgeError(ControlFlowError, DuplicateElementError):
 	"""The exception raised for an edge, which connects the same two blocks as an edge of the same kind."""
 
-	_existingEdge: Nullable[Edge]  #: Edge connecting the same two blocks with the same kind already.
+	_existingEdge: Edge  #: Edge connecting the same two blocks with the same kind already.
 
-	def __init__(self, message: str, /, *, existingEdge: Nullable[Edge] = None) -> None:
+	def __init__(self, message: str, /, *, existingEdge: Edge) -> None:
 		"""
 		Initializes the exception with the edge connecting the same two blocks already.
 
 		:param message:      The exception's message.
-		:param existingEdge: Optional, the edge connecting the same two blocks with the same kind already.
+		:param existingEdge: The edge connecting the same two blocks with the same kind already.
 		"""
 		super().__init__(message)
 		self._existingEdge = existingEdge
 
 	@readonly
-	def ExistingEdge(self) -> Nullable[Edge]:
+	def ExistingEdge(self) -> Edge:
 		"""
 		Read-only property to access the edge connecting the same two blocks with the same kind already
 		(:attr:`_existingEdge`).
 
-		:returns: The existing edge, or ``None`` if it wasn't recorded.
+		:returns: The existing edge.
 		"""
 		return self._existingEdge
 

@@ -34,7 +34,7 @@ weight, key-value-pairs), the iteration methods, and the conversion of a graph i
 """
 from enum     import Enum
 from gc       import disable as gc_disable, enable as gc_enable, isenabled as gc_isenabled
-from typing   import Any, Optional as Nullable, List, Tuple, get_args, get_type_hints
+from typing   import Any, Optional as Nullable, List, Tuple, get_type_hints
 from weakref  import ref
 
 from pytest   import mark
@@ -1979,24 +1979,26 @@ class Deletion(Testcase):
 		self.assertTrue(issubclass(LinkNotFoundError, GraphError))
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no object."""
-		with self.assertRaises(EdgeNotFoundError) as edgeCapture:
+		"""The vertices and the graph are required: raising an exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as edgeCapture:
 			raise EdgeNotFoundError("No edge.")
 
-		self.assertIsNone(edgeCapture.exception.Source)
-		self.assertIsNone(edgeCapture.exception.Destination)
+		self.assertIn("'source'", str(edgeCapture.exception))
+		self.assertIn("'destination'", str(edgeCapture.exception))
 
-		with self.assertRaises(LinkNotFoundError) as linkCapture:
+		with self.assertRaises(TypeError) as linkCapture:
 			raise LinkNotFoundError("No link.")
 
-		self.assertIsNone(linkCapture.exception.Source)
-		self.assertIsNone(linkCapture.exception.Destination)
+		self.assertIn("'source'", str(linkCapture.exception))
+		self.assertIn("'destination'", str(linkCapture.exception))
 
-		with self.assertRaises(SameGraphError) as graphCapture:
+		with self.assertRaises(TypeError) as graphCapture:
 			raise SameGraphError("Same graph.")
 
-		self.assertIsNone(graphCapture.exception.Graph)
+		self.assertIn("'graph'", str(graphCapture.exception))
 
+	def test_CycleError_MessageOnly(self) -> None:
+		"""A cycle error raised with a message only carries no path."""
 		with self.assertRaises(CycleError) as cycleCapture:
 			raise CycleError("Cycle.")
 
@@ -2336,7 +2338,7 @@ class TypeHints(Testcase):
 		self.assertIs(Graph, get_type_hints(Subgraph, vars(pyTooling.Graph))["_graph"])
 		self.assertIs(Graph, get_type_hints(BaseWithVertices, vars(pyTooling.Graph))["_graph"].__origin__)
 		self.assertIs(Component, get_type_hints(Vertex, vars(pyTooling.Graph))["_component"])
-		self.assertIs(Graph, get_args(get_type_hints(SameGraphError, vars(pyTooling.Graph))["_graph"])[0])
+		self.assertIs(Graph, get_type_hints(SameGraphError, vars(pyTooling.Graph))["_graph"])
 
 	def test_Kind(self) -> None:
 		"""An edge's and a link's kind is the last type parameter of its class."""

@@ -1399,13 +1399,12 @@ class InvalidBaseClass(Testcase):
 		self.assertTrue(issubclass(BaseClassIsNotAMixinError, InvalidBaseClassError))
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither a base-class nor a class name."""
-		with self.assertRaises(InvalidBaseClassError) as context:
+		"""The base-class and the class name are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise BaseClassIsNotAMixinError("Not a mixin-class.")
 
-		self.assertEqual("Not a mixin-class.", str(context.exception))
-		self.assertIsNone(context.exception.BaseClass)
-		self.assertIsNone(context.exception.ClassName)
+		self.assertIn("'baseClass'", str(context.exception))
+		self.assertIn("'className'", str(context.exception))
 
 
 class SlotShadowedByClassMember(Testcase):
@@ -1607,13 +1606,12 @@ class DuplicateMixinSlot(Testcase):
 		self.assertSetEqual({"_own", "_common", "_data1", "_data2"}, Final.__allSlots__)
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither a field name nor a class name."""
-		with self.assertRaises(DuplicateFieldInSlotsError) as context:
+		"""The field name and the class name are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise DuplicateFieldInSlotsError("Duplicate slot.")
 
-		self.assertEqual("Duplicate slot.", str(context.exception))
-		self.assertIsNone(context.exception.FieldName)
-		self.assertIsNone(context.exception.ClassName)
+		self.assertIn("'fieldName'", str(context.exception))
+		self.assertIn("'className'", str(context.exception))
 
 
 class ObjectBaseClass(Testcase):
@@ -1748,10 +1746,11 @@ class UnannotatedFields(Testcase):
 		self.assertTupleEqual(("LIMIT", "NAME"), warnings[0].FieldNames)
 
 	def test_UnannotatedFieldWarning_MessageOnly(self) -> None:
-		warning = UnannotatedFieldWarning("Class declares fields without a type annotation.")
+		with self.assertRaises(TypeError) as context:
+			_ = UnannotatedFieldWarning("Class declares fields without a type annotation.")
 
-		self.assertIsNone(warning.ClassName)
-		self.assertTupleEqual((), warning.FieldNames)
+		self.assertIn("'className'", str(context.exception))
+		self.assertIn("'fieldNames'", str(context.exception))
 
 
 class Hierarchy(Testcase):

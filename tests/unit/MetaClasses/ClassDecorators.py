@@ -210,12 +210,12 @@ class IncompatibleMetaClass(Testcase):
 		self.assertIn("'@singleton'", str(context.exception))
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither a class nor a meta-class."""
-		with self.assertRaises(IncompatibleMetaClassError) as context:
+		"""The class and the meta-class are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise IncompatibleMetaClassError("Incompatible meta-class.")
 
-		self.assertIsNone(context.exception.DecoratedClass)
-		self.assertIsNone(context.exception.MetaClass)
+		self.assertIn("'decoratedClass'", str(context.exception))
+		self.assertIn("'metaClass'", str(context.exception))
 
 
 class ClassKeywordArguments(Testcase):

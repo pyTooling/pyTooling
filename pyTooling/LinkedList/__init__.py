@@ -73,24 +73,24 @@ class InternalError(LinkedListError):
 class NotInAListError(LinkedListError):
 	"""The exception is raised when a node is not assigned to any linked list."""
 
-	_unlinkedNode: Nullable[Node]  #: Node that isn't part of a linked list.
+	_unlinkedNode: Node  #: Node that isn't part of a linked list.
 
-	def __init__(self, message: str, /, *, unlinkedNode: Nullable[Node] = None) -> None:
+	def __init__(self, message: str, /, *, unlinkedNode: Node) -> None:
 		"""
 		Initializes the exception with the node that isn't part of a linked list.
 
 		:param message:      The exception's message.
-		:param unlinkedNode: Optional, the node that isn't part of a linked list.
+		:param unlinkedNode: The node that isn't part of a linked list.
 		"""
 		super().__init__(message)
 		self._unlinkedNode = unlinkedNode
 
 	@readonly
-	def UnlinkedNode(self) -> Nullable[Node]:
+	def UnlinkedNode(self) -> Node:
 		"""
 		Read-only property to access the node that isn't part of a linked list (:attr:`_unlinkedNode`).
 
-		:returns: The node, or ``None`` if it wasn't recorded.
+		:returns: The node.
 		"""
 		return self._unlinkedNode
 
