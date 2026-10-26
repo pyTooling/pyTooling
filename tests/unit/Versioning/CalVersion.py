@@ -448,6 +448,22 @@ class CalendarFormatEscape(Testcase):
 	def test_PercentSign(self) -> None:
 		self.assertEqual("%M 2024.3", f"{YearMonthVersion(2024, 3):%%M %M.%m}")
 
+	def test_UnknownSpecifier(self) -> None:
+		"""An unknown specifier was passed through: ``%M.%X`` gave ``2024.%X``."""
+		with self.assertRaises(ValueError) as context:
+			_ = f"{YearMonthVersion(2024, 3):%M.%X}"
+		self.assertEqual("Unknown format specifier '%X' in '%M.%X'.", str(context.exception))
+
+	def test_UnknownSpecifier_AfterPercentSign(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = f"{YearMonthVersion(2024, 3):%%M %X}"
+		self.assertEqual("Unknown format specifier '%X' in '%%M %X'.", str(context.exception))
+
+	def test_TrailingPercentSign(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = f"{YearMonthVersion(2024, 3):%M%}"
+		self.assertEqual("Unknown format specifier '%' in '%M%'.", str(context.exception))
+
 
 class CompareOtherType(Testcase):
 	def test_Equal(self) -> None:

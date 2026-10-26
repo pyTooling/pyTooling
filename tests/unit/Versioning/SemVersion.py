@@ -1122,6 +1122,12 @@ class FormatEscape(Testcase):
 			_ = f"{version:%M%}"
 		self.assertEqual("Unknown format specifier '%' in '%M%'.", str(context.exception))
 
+	def test_PercentSignInValue(self) -> None:
+		"""A ``%`` in a part's value was taken for an unknown specifier, as the formatted text was checked."""
+		version = SemanticVersion(1, 2, 3, postfix="a%b")
+
+		self.assertEqual("1.2.3 a%b", f"{version:%M.%m.%u %P}")
+
 
 class RoundTrip(Testcase):
 	def test_Parse2Str(self) -> None:
