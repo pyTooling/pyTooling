@@ -104,12 +104,12 @@ class ExpectedMembers(Testcase):
 		self.assertEqual(("Write", ), exceptionCapture.exception.MissingMembers)
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither a class nor member names."""
-		with self.assertRaises(UnfulfilledExpectationError) as exceptionCapture:
+		"""The class and the member names are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as exceptionCapture:
 			raise UnfulfilledExpectationError("Unfulfilled expectation.")
 
-		self.assertIsNone(exceptionCapture.exception.IncompleteClass)
-		self.assertIsNone(exceptionCapture.exception.MissingMembers)
+		self.assertIn("'incompleteClass'", str(exceptionCapture.exception))
+		self.assertIn("'missingMembers'", str(exceptionCapture.exception))
 
 	def test_MissingField(self) -> None:
 		class NoCounter(metaclass=ExtendedType, slots=True):

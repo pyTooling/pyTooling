@@ -477,11 +477,12 @@ class DirectReferences(Testcase):
 	def test_DirectReferenceWarning_MessageOnly(self) -> None:
 		from pyTooling.Packaging import DirectReferenceWarning
 
-		warning = DirectReferenceWarning("Requirement is a direct reference.")
+		with self.assertRaises(TypeError) as context:
+			_ = DirectReferenceWarning("Requirement is a direct reference.")
 
-		self.assertIsNone(warning.Requirement)
-		self.assertIsNone(warning.Extra)
-		self.assertIsNone(warning.FilePath)
+		self.assertIn("'requirement'", str(context.exception))
+		self.assertIn("'extra'", str(context.exception))
+		self.assertIn("'filePath'", str(context.exception))
 
 
 class EntryPoints(CollectingTestcase):

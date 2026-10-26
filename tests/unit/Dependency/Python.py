@@ -151,11 +151,10 @@ class NotFound(Testcase):
 		self.assertEqual("project", context.exception.ProjectName)
 
 	def test_ProjectNotFoundError_MessageOnly(self) -> None:
-		with self.assertRaises(ProjectNotFoundError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise ProjectNotFoundError("Project not found.")
 
-		self.assertEqual("Project not found.", str(context.exception))
-		self.assertIsNone(context.exception.ProjectName)
+		self.assertIn("'projectName'", str(context.exception))
 
 	def test_ProjectNotFoundError_Bases(self) -> None:
 		self.assertTrue(issubclass(ProjectNotFoundError, LookupError))
@@ -175,12 +174,10 @@ class NotFound(Testcase):
 		self.assertIs(release.Version, context.exception.Version)
 
 	def test_ReleaseNotFoundError_MessageOnly(self) -> None:
-		with self.assertRaises(ReleaseNotFoundError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise ReleaseNotFoundError("Release not found.")
 
-		self.assertEqual("Release not found.", str(context.exception))
-		self.assertIsNone(context.exception.ProjectName)
-		self.assertIsNone(context.exception.Version)
+		self.assertIn("'projectName'", str(context.exception))
 
 	def test_ReleaseNotFoundError_Bases(self) -> None:
 		self.assertTrue(issubclass(ReleaseNotFoundError, LookupError))
@@ -203,10 +200,11 @@ class ReleaseWarnings(Testcase):
 		self.assertIs(version, warning.Version)
 
 	def test_UnknownLicenseWarning_MessageOnly(self) -> None:
-		warning = UnknownLicenseWarning("License couldn't be resolved.")
+		with self.assertRaises(TypeError) as context:
+			_ = UnknownLicenseWarning("License couldn't be resolved.")
 
-		self.assertIsNone(warning.ProjectName)
-		self.assertIsNone(warning.Version)
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'version'", str(context.exception))
 
 	def test_ReleaseDetailsWarning(self) -> None:
 		version = PythonVersion.Parse("1.2.3")
@@ -221,10 +219,11 @@ class ReleaseWarnings(Testcase):
 		self.assertIs(version, warning.Version)
 
 	def test_ReleaseDetailsWarning_MessageOnly(self) -> None:
-		warning = ReleaseDetailsWarning("Dropping a release.")
+		with self.assertRaises(TypeError) as context:
+			_ = ReleaseDetailsWarning("Dropping a release.")
 
-		self.assertIsNone(warning.ProjectName)
-		self.assertIsNone(warning.Version)
+		self.assertIn("'projectName'", str(context.exception))
+		self.assertIn("'version'", str(context.exception))
 
 
 class BrokenRequirementWarnings(Testcase):
@@ -241,24 +240,27 @@ class BrokenRequirementWarnings(Testcase):
 		self.assertFalse(issubclass(UndeclaredExtraMarkerWarning, CriticalWarning))
 
 	def test_UnparsableRequirementWarning_MessageOnly(self) -> None:
-		warning = UnparsableRequirementWarning("Requirement can't be parsed.")
+		with self.assertRaises(TypeError) as context:
+			_ = UnparsableRequirementWarning("Requirement can't be parsed.")
 
-		self.assertIsNone(warning.Line)
-		self.assertIsNone(warning.FilePath)
-		self.assertIsNone(warning.LineNumber)
+		self.assertIn("'line'", str(context.exception))
+		self.assertIn("'filePath'", str(context.exception))
+		self.assertIn("'lineNumber'", str(context.exception))
 
 	def test_UndeclaredExtraMarkerWarning_MessageOnly(self) -> None:
-		warning = UndeclaredExtraMarkerWarning("Requirements name an undeclared extra.")
+		with self.assertRaises(TypeError) as context:
+			_ = UndeclaredExtraMarkerWarning("Requirements name an undeclared extra.")
 
-		self.assertIsNone(warning.Release)
-		self.assertTupleEqual((), warning.Requirements)
+		self.assertIn("'release'", str(context.exception))
+		self.assertIn("'requirements'", str(context.exception))
 
 	def test_UndeclaredExtraWarning_MessageOnly(self) -> None:
-		warning = UndeclaredExtraWarning("Requirement names an undeclared extra.")
+		with self.assertRaises(TypeError) as context:
+			_ = UndeclaredExtraWarning("Requirement names an undeclared extra.")
 
-		self.assertIsNone(warning.Requirement)
-		self.assertIsNone(warning.Extra)
-		self.assertIsNone(warning.Release)
+		self.assertIn("'requirement'", str(context.exception))
+		self.assertIn("'extra'", str(context.exception))
+		self.assertIn("'release'", str(context.exception))
 
 
 class ProjectCache(Testcase):
@@ -896,7 +898,7 @@ class ProjectURLs(Testcase):
 		release.UpdateDetailsFromPyPIJSON({"info": {"provides_extra": None, "requires_dist": None, "home_page": "x"}})
 
 		self.assertIsNone(release.ProjectURL)
-		self.assertNotIsInstance(UnparsableURLWarning("message"), CriticalWarning)
+		self.assertFalse(issubclass(UnparsableURLWarning, CriticalWarning))
 
 
 class Licenses(Testcase):
@@ -1733,18 +1735,18 @@ class RequirementsFiles(Testcase):
 		self.assertEqual((path.parent / 'nothing.txt').resolve(), context.exception.FilePath)
 
 	def test_RequirementsFileErrors_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no path."""
-		with self.assertRaises(RequirementsFileNotFoundError) as notFoundCapture:
+		"""The paths and the line number are required: raising an exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as notFoundCapture:
 			raise RequirementsFileNotFoundError("Missing file.")
 
-		self.assertIsNone(notFoundCapture.exception.FilePath)
+		self.assertIn("'filePath'", str(notFoundCapture.exception))
 
-		with self.assertRaises(CircularRequirementsFileError) as circularCapture:
+		with self.assertRaises(TypeError) as circularCapture:
 			raise CircularRequirementsFileError("Cycle.")
 
-		self.assertIsNone(circularCapture.exception.FilePath)
-		self.assertIsNone(circularCapture.exception.ReferencedIn)
-		self.assertIsNone(circularCapture.exception.LineNumber)
+		self.assertIn("'filePath'", str(circularCapture.exception))
+		self.assertIn("'referencedIn'", str(circularCapture.exception))
+		self.assertIn("'lineNumber'", str(circularCapture.exception))
 
 	def test_Parse_PathIsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -2197,11 +2199,10 @@ class NoSession(Testcase):
 		self.assertEqual(PythonVersion.Parse("1.0"), context.exception.Version)
 
 	def test_MessageOnly(self) -> None:
-		with self.assertRaises(NoSessionAvailableError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise NoSessionAvailableError("No session.")
 
-		self.assertIsNone(context.exception.ProjectName)
-		self.assertIsNone(context.exception.Version)
+		self.assertIn("'projectName'", str(context.exception))
 
 
 class HTTPErrors(Testcase):

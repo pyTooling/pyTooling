@@ -521,10 +521,10 @@ class Errors(Testcase):
 		self.assertTrue(context.exception.__notes__[0].startswith("os.name:"))
 
 	def test_UnknownPlatformError_MessageOnly(self) -> None:
-		with self.assertRaises(UnknownPlatformError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise UnknownPlatformError("Unknown platform.")
 
-		self.assertIsNone(context.exception.UnknownValue)
+		self.assertIn("'unknownValue'", str(context.exception))
 
 
 class TypeHints(Testcase):

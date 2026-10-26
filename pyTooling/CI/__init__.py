@@ -140,7 +140,7 @@ class NeedDependencyError(PipelineError):
 class NeedDependencyCycleError(NeedDependencyError, CycleError):
 	"""The exception raised for a need which would close a cycle of dependencies."""
 
-	_cycle: Nullable[tuple[DependencyMixin, ...]]  #: Elements forming the cycle, in the order they need each other.
+	_cycle: tuple[DependencyMixin, ...]  #: Elements forming the cycle, in the order they need each other.
 
 	def __init__(
 		self,
@@ -148,7 +148,7 @@ class NeedDependencyCycleError(NeedDependencyError, CycleError):
 		/, *,
 		element: Nullable[DependencyMixin] = None,
 		need: Nullable[DependencyMixin] = None,
-		cycle: Nullable[Iterable[DependencyMixin]] = None
+		cycle: Iterable[DependencyMixin]
 	) -> None:
 		"""
 		Initializes the exception with the elements forming the cycle.
@@ -156,17 +156,17 @@ class NeedDependencyCycleError(NeedDependencyError, CycleError):
 		:param message: The exception's message.
 		:param element: Optional, the element that would need the other one.
 		:param need:    Optional, the element that would be needed.
-		:param cycle:   Optional, the elements forming the cycle, in the order they need each other.
+		:param cycle:   The elements forming the cycle, in the order they need each other.
 		"""
 		super().__init__(message, element=element, need=need)
-		self._cycle = None if cycle is None else tuple(cycle)
+		self._cycle = tuple(cycle)
 
 	@readonly
-	def Cycle(self) -> Nullable[tuple[DependencyMixin, ...]]:
+	def Cycle(self) -> tuple[DependencyMixin, ...]:
 		"""
 		Read-only property to access the elements forming the cycle (:attr:`_cycle`).
 
-		:returns: Tuple of elements in the order they need each other, or ``None`` if they weren't recorded.
+		:returns: Tuple of elements in the order they need each other.
 		"""
 		return self._cycle
 

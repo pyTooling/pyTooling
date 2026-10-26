@@ -106,15 +106,15 @@ class LicenseExpressionError(LicensingError):
 	The exception is raised when an SPDX license expression is malformed or names a license SPDX doesn't define.
 	"""
 
-	_expression: Nullable[str]  #: License expression that can't be parsed.
+	_expression: str            #: License expression that can't be parsed.
 	_identifier: Nullable[str]  #: License identifier SPDX doesn't define.
 
-	def __init__(self, message: str, /, *, expression: Nullable[str] = None, identifier: Nullable[str] = None) -> None:
+	def __init__(self, message: str, /, *, expression: str, identifier: Nullable[str] = None) -> None:
 		"""
 		Initializes the exception with the license expression and, for an unknown license, its identifier.
 
 		:param message:    The exception's message.
-		:param expression: Optional, the license expression that can't be parsed.
+		:param expression: The license expression that can't be parsed.
 		:param identifier: Optional, the license identifier SPDX doesn't define, if that's the reason.
 		"""
 		super().__init__(message)
@@ -122,11 +122,11 @@ class LicenseExpressionError(LicensingError):
 		self._identifier = identifier
 
 	@readonly
-	def Expression(self) -> Nullable[str]:
+	def Expression(self) -> str:
 		"""
 		Read-only property to access the license expression that can't be parsed (:attr:`_expression`).
 
-		:returns: The expression, or ``None`` if it wasn't recorded.
+		:returns: The expression.
 		"""
 		return self._expression
 

@@ -351,16 +351,16 @@ class MergeTree(Testcase):
 		self.assertIs(other, context.exception.OtherNode)
 
 	def test_TreeErrors_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no node."""
-		with self.assertRaises(AlreadyInTreeError) as alreadyCapture:
+		"""The other node is required: raising an exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as alreadyCapture:
 			raise AlreadyInTreeError("Already in tree.")
 
-		self.assertIsNone(alreadyCapture.exception.OtherNode)
+		self.assertIn("'otherNode'", str(alreadyCapture.exception))
 
-		with self.assertRaises(NotInSameTreeError) as notInSameCapture:
+		with self.assertRaises(TypeError) as notInSameCapture:
 			raise NotInSameTreeError("Not in the same tree.")
 
-		self.assertIsNone(notInSameCapture.exception.OtherNode)
+		self.assertIn("'otherNode'", str(notInSameCapture.exception))
 
 	def test_AddChildren_TypeError(self) -> None:
 		root = Node(1)
@@ -577,12 +577,11 @@ class SplitTree(Testcase):
 		self.assertIs(other, context.exception.Child)
 
 	def test_NotAChildError_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no node."""
-		with self.assertRaises(NotAChildError) as context:
+		"""The node is required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
 			raise NotAChildError("Not a child.")
 
-		self.assertEqual("Not a child.", str(context.exception))
-		self.assertIsNone(context.exception.Child)
+		self.assertIn("'child'", str(context.exception))
 
 
 class Value:

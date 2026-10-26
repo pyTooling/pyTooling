@@ -33,7 +33,7 @@ Unit tests for :mod:`pyTooling.Timeout`: the current timeout of a thread, nestin
 a loop raises when its timeout expired.
 """
 from threading            import Thread
-from time                 import sleep
+from time                 import perf_counter_ns, sleep
 from typing               import Optional as Nullable
 
 from pyTooling.Exceptions import ToolingException
@@ -225,17 +225,18 @@ class ExpiredError(Testcase):
 
 	def test_Seconds(self) -> None:
 		with self.assertRaises(TimeoutError) as context:
-			raise TimeoutExpiredError("Scanning took longer than 20 seconds.", seconds=20.0)
+			raise TimeoutExpiredError("Scanning took longer than 20 seconds.", seconds=20.0, overrun=0.5)
 
 		self.assertEqual("Scanning took longer than 20 seconds.", str(context.exception))
 		self.assertEqual(20.0, context.exception.Seconds)
+		self.assertEqual(0.5, context.exception.Overrun)
 
 	def test_MessageOnly(self) -> None:
-		with self.assertRaises(TimeoutExpiredError) as context:
+		with self.assertRaises(TypeError) as context:
 			raise TimeoutExpiredError("Expired.")
 
-		self.assertIsNone(context.exception.Seconds)
-		self.assertIsNone(context.exception.Overrun)
+		self.assertIn("'seconds'", str(context.exception))
+		self.assertIn("'overrun'", str(context.exception))
 
 	def test_RaiseIfExpired(self) -> None:
 		"""A loop calls RaiseIfExpired once per iteration; the error carries the timeout and the overrun."""
@@ -277,10 +278,11 @@ class ExpiredError(Testcase):
 		iterations = 0
 
 		with self.assertRaises(TimeoutExpiredError):
-			with Timeout(0.05):
+			with Timeout(0.05) as timeout:
 				while True:
 					if Timeout.IsExpired():
-						raise TimeoutExpiredError("Loop took too long.", seconds=0.05)
+						overrun = (perf_counter_ns() - timeout.Deadline) / 1e9
+						raise TimeoutExpiredError("Loop took too long.", seconds=timeout.Seconds, overrun=overrun)
 
 					iterations += 1
 					sleep(0.01)

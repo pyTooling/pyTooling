@@ -143,12 +143,12 @@ class AbstractClasses(Testcase):
 
 class AbstractClassErrors(Testcase):
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries neither a class nor method names."""
-		with self.assertRaises(AbstractClassError) as exceptionCapture:
+		"""The class and the method names are required: raising the exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as exceptionCapture:
 			raise AbstractClassError("Abstract class.")
 
-		self.assertIsNone(exceptionCapture.exception.AbstractClass)
-		self.assertIsNone(exceptionCapture.exception.AbstractMethods)
+		self.assertIn("'abstractClass'", str(exceptionCapture.exception))
+		self.assertIn("'abstractMethods'", str(exceptionCapture.exception))
 
 
 class AbstractMethod(Testcase):

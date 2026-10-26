@@ -47,7 +47,6 @@ import platform
 import sys
 import sysconfig
 from enum                  import Flag, auto, Enum
-from typing                import Optional as Nullable
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import ToolingException
@@ -79,14 +78,14 @@ class UnknownPlatformError(PlatformError):
 	debugging unknown or new platforms.
 	"""
 
-	_unknownValue: Nullable[str]  #: Value reported by the system, which pyTooling doesn't know.
+	_unknownValue: str  #: Value reported by the system, which pyTooling doesn't know.
 
-	def __init__(self, message: str, /, *, unknownValue: Nullable[str] = None) -> None:
+	def __init__(self, message: str, /, *, unknownValue: str) -> None:
 		"""
 		Initialize a new :class:`UnknownPlatformError` instance and add notes with further debugging information.
 
 		:param message:      The exception's message.
-		:param unknownValue: Optional, the value reported by the system, which pyTooling doesn't know (e.g. an
+		:param unknownValue: The value reported by the system, which pyTooling doesn't know (e.g. an
 		                     architecture or a platform name).
 		"""
 		super().__init__(message)
@@ -100,11 +99,11 @@ class UnknownPlatformError(PlatformError):
 		self.add_note(f"sysconfig.get_platform: {sysconfig.get_platform()}")
 
 	@readonly
-	def UnknownValue(self) -> Nullable[str]:
+	def UnknownValue(self) -> str:
 		"""
 		Read-only property to access the value reported by the system, which pyTooling doesn't know (:attr:`_unknownValue`).
 
-		:returns: The unknown value, or ``None`` if it wasn't recorded.
+		:returns: The unknown value.
 		"""
 		return self._unknownValue
 

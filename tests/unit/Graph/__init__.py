@@ -1979,24 +1979,26 @@ class Deletion(Testcase):
 		self.assertTrue(issubclass(LinkNotFoundError, GraphError))
 
 	def test_MessageOnly(self) -> None:
-		"""An exception raised with a message only carries no object."""
-		with self.assertRaises(EdgeNotFoundError) as edgeCapture:
+		"""The vertices and the graph are required: raising an exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as edgeCapture:
 			raise EdgeNotFoundError("No edge.")
 
-		self.assertIsNone(edgeCapture.exception.Source)
-		self.assertIsNone(edgeCapture.exception.Destination)
+		self.assertIn("'source'", str(edgeCapture.exception))
+		self.assertIn("'destination'", str(edgeCapture.exception))
 
-		with self.assertRaises(LinkNotFoundError) as linkCapture:
+		with self.assertRaises(TypeError) as linkCapture:
 			raise LinkNotFoundError("No link.")
 
-		self.assertIsNone(linkCapture.exception.Source)
-		self.assertIsNone(linkCapture.exception.Destination)
+		self.assertIn("'source'", str(linkCapture.exception))
+		self.assertIn("'destination'", str(linkCapture.exception))
 
-		with self.assertRaises(SameGraphError) as graphCapture:
+		with self.assertRaises(TypeError) as graphCapture:
 			raise SameGraphError("Same graph.")
 
-		self.assertIsNone(graphCapture.exception.Graph)
+		self.assertIn("'graph'", str(graphCapture.exception))
 
+	def test_CycleError_MessageOnly(self) -> None:
+		"""A cycle error raised with a message only carries no path."""
 		with self.assertRaises(CycleError) as cycleCapture:
 			raise CycleError("Cycle.")
 

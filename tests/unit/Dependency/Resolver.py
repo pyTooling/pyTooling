@@ -477,12 +477,12 @@ class Timeouts(ResolverTestcase):
 		self.assertEqual(1, len(warnings.Warnings))
 
 	def test_Warning_MessageOnly(self) -> None:
-		"""A warning raised with a message only carries no timeout and no projects."""
-		warning = ResolutionTimeoutWarning("Timeout expired.")
+		"""The timeout and the projects are required: creating the warning with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as context:
+			_ = ResolutionTimeoutWarning("Timeout expired.")
 
-		self.assertEqual("Timeout expired.", str(warning))
-		self.assertIsNone(warning.Seconds)
-		self.assertIsNone(warning.ProjectNames)
+		self.assertIn("'seconds'", str(context.exception))
+		self.assertIn("'projectNames'", str(context.exception))
 
 	def test_Uncollected(self) -> None:
 		"""Without a collector, the critical warning raises."""
