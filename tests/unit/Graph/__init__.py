@@ -34,7 +34,7 @@ weight, key-value-pairs), the iteration methods, and the conversion of a graph i
 """
 from enum     import Enum
 from gc       import disable as gc_disable, enable as gc_enable, isenabled as gc_isenabled
-from typing   import Any, Optional as Nullable, List, Tuple, get_args, get_type_hints
+from typing   import Any, Optional as Nullable, List, Tuple, get_type_hints
 from weakref  import ref
 
 from pytest   import mark
@@ -2338,7 +2338,7 @@ class TypeHints(Testcase):
 		self.assertIs(Graph, get_type_hints(Subgraph, vars(pyTooling.Graph))["_graph"])
 		self.assertIs(Graph, get_type_hints(BaseWithVertices, vars(pyTooling.Graph))["_graph"].__origin__)
 		self.assertIs(Component, get_type_hints(Vertex, vars(pyTooling.Graph))["_component"])
-		self.assertIs(Graph, get_args(get_type_hints(SameGraphError, vars(pyTooling.Graph))["_graph"])[0])
+		self.assertIs(Graph, get_type_hints(SameGraphError, vars(pyTooling.Graph))["_graph"])
 
 	def test_Kind(self) -> None:
 		"""An edge's and a link's kind is the last type parameter of its class."""
