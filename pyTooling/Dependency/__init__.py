@@ -225,6 +225,67 @@ class AlreadyInRequirementsTreeError(DependencyError, AlreadyInHierarchyError):
 
 
 @export
+class PyProjectFileNotFoundError(DependencyError, FileNotFoundError):
+	"""
+	A ``pyproject.toml`` file doesn't exist.
+
+	It is a :exc:`FileNotFoundError` as well (and so an :exc:`OSError`), because the file doesn't exist; catching
+	:exc:`~pyTooling.Dependency.DependencyError` still catches it.
+	"""
+
+	_filePath: Path  #: Path of the ``pyproject.toml`` file that doesn't exist.
+
+	def __init__(self, message: str, /, *, filePath: Path) -> None:
+		"""
+		Initializes the exception with the path of the ``pyproject.toml`` file that doesn't exist.
+
+		:param message:  The exception's message.
+		:param filePath: The path of the ``pyproject.toml`` file that doesn't exist.
+		"""
+		super().__init__(message)
+		self._filePath = filePath
+
+	@readonly
+	def FilePath(self) -> Path:
+		"""
+		Read-only property to access the path of the ``pyproject.toml`` file that doesn't exist (:attr:`_filePath`).
+
+		:returns: The path.
+		"""
+		return self._filePath
+
+
+@export
+class PyProjectFileError(DependencyError):
+	"""
+	A ``pyproject.toml`` file isn't valid TOML, or its ``[build-system]`` table isn't structured as :pep:`518` specifies.
+
+	Invalid TOML is caused by the :exc:`tomllib.TOMLDecodeError`.
+	"""
+
+	_filePath: Path  #: Path of the ``pyproject.toml`` file that can't be read.
+
+	def __init__(self, message: str, /, *, filePath: Path) -> None:
+		"""
+		Initializes the exception with the path of the ``pyproject.toml`` file that can't be read.
+
+		:param message:  The exception's message.
+		:param filePath: The path of the ``pyproject.toml`` file that can't be read.
+		"""
+		super().__init__(message)
+		self._filePath = filePath
+
+	@readonly
+	def FilePath(self) -> Path:
+		"""
+		Read-only property to access the path of the ``pyproject.toml`` file that can't be read (:attr:`_filePath`).
+
+		:returns: The path.
+		"""
+		return self._filePath
+
+
+@export
 class ProjectNotFoundError(DependencyError, LookupError):
 	"""
 	The package index doesn't know a project of that name.
@@ -417,9 +478,9 @@ class BrokenRequirementWarning(CriticalWarning):
 	"""
 	Base-class of the warnings about a stated requirement that can't be used as stated.
 
-	A line of a requirements file can't be parsed, or a requirement names an extra the selected release doesn't
-	declare. The requirement is left out, so a dependency the caller relies on is missing. Catch this class to handle
-	both; each derived class carries what it is about.
+	A line of a requirements file or a build requirement of a ``pyproject.toml`` file can't be parsed, or a requirement
+	names an extra the selected release doesn't declare. The requirement is left out, so a dependency the caller relies
+	on is missing. Catch this class to handle both; each derived class carries what it is about.
 
 	.. important::
 
@@ -433,15 +494,18 @@ class UnparsableRequirementWarning(BrokenRequirementWarning):
 	"""
 	A line of a requirements file can't be parsed as a requirement, so it's left out of the file.
 
+	The same holds for an element of a ``pyproject.toml`` file's ``[build-system]`` ``requires`` key, which has no line
+	number.
+
 	.. important::
 
 	   As a critical warning, it must be collected by a :class:`~pyTooling.Warning.WarningCollector` up the
 	   call-hierarchy, otherwise :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
 	"""
 
-	_line:       str   #: The line's text.
-	_filePath:   Path  #: Path of the requirements file.
-	_lineNumber: int   #: Number of the line in the requirements file.
+	_line:       str            #: The line's text.
+	_filePath:   Path           #: Path of the requirements file.
+	_lineNumber: Nullable[int]  #: Number of the line in the requirements file; ``None`` for a ``pyproject.toml`` file.
 
 	def __init__(
 		self,
@@ -449,15 +513,15 @@ class UnparsableRequirementWarning(BrokenRequirementWarning):
 		/, *,
 		line: str,
 		filePath: Path,
-		lineNumber: int
+		lineNumber: Nullable[int]
 	) -> None:
 		"""
 		Initializes the warning with the line that can't be parsed and where it is.
 
 		:param message:    The warning's message.
-		:param line:       The line's text.
-		:param filePath:   The path of the requirements file.
-		:param lineNumber: The number of the line in the requirements file.
+		:param line:       The line's text, or the element of a ``pyproject.toml`` file's ``requires`` key.
+		:param filePath:   The path of the requirements file or the ``pyproject.toml`` file.
+		:param lineNumber: The number of the line in the requirements file, or ``None`` for a ``pyproject.toml`` file.
 		"""
 		super().__init__(message)
 		self._line =       line
@@ -483,11 +547,11 @@ class UnparsableRequirementWarning(BrokenRequirementWarning):
 		return self._filePath
 
 	@readonly
-	def LineNumber(self) -> int:
+	def LineNumber(self) -> Nullable[int]:
 		"""
 		Read-only property to access the number of the line in the requirements file (:attr:`_lineNumber`).
 
-		:returns: The line number.
+		:returns: The line number, or ``None`` for a ``pyproject.toml`` file.
 		"""
 		return self._lineNumber
 
