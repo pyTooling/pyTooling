@@ -949,11 +949,17 @@ class Version(metaclass=ExtendedType, slots=True):
 		   * ``%m`` - minor number
 		   * ``%u`` - micro number
 		   * ``%b`` - build number
+		   * ``%r`` - release level's first letter
+		   * ``%R`` - release level
+		   * ``%n`` - release number
+		   * ``%d`` - development number
+		   * ``%P`` - postfix
 
 		``%%`` is a literal percent sign, which the caller replaces by ``%``.
 
-		:param formatSpec: The format specification.
-		:returns:          Formatted version number, ``%%`` kept as written.
+		:param formatSpec:  The format specification.
+		:returns:           Formatted version number, ``%%`` kept as written.
+		:raises ValueError: If the format specification contains an unknown specifier, or a single ``%`` at its end.
 		"""
 		if formatSpec == "":
 			return self.__str__()
@@ -961,6 +967,14 @@ class Version(metaclass=ExtendedType, slots=True):
 		# A literal percent sign is written '%%'; it is kept as written, so '%%M' doesn't become '%' and the major number.
 		parts = []
 		for part in formatSpec.split("%%"):
+			pos = part.find("%")
+			while pos != -1:
+				specifier = part[pos + 1:pos + 2]
+				if specifier == "" or specifier not in "pMmubrRndP":
+					raise ValueError(f"Unknown format specifier '%{specifier}' in '{formatSpec}'.")
+
+				pos = part.find("%", pos + 2)
+
 			part = part.replace("%p", str(self._prefix))
 			part = part.replace("%M", str(self._major))
 			part = part.replace("%m", str(self._minor))
@@ -1639,15 +1653,9 @@ class SemanticVersion(Version):
 
 		:param formatSpec:  The format specification, using ``%``-placeholders for the version's parts.
 		:returns:           Formatted version number.
-		:raises ValueError: If the format specification contains an unknown placeholder.
+		:raises ValueError: If the format specification contains an unknown specifier, or a single ``%`` at its end.
 		"""
-		result = self._format(formatSpec)
-
-		for part in result.split("%%"):
-			if (pos := part.find("%")) != -1:
-				raise ValueError(f"Unknown format specifier '{part[pos:pos + 2]}' in '{formatSpec}'.")
-
-		return result.replace("%%", "%")
+		return self._format(formatSpec).replace("%%", "%")
 
 	def __repr__(self) -> str:
 		"""
@@ -2425,8 +2433,11 @@ class CalendarVersion(Version):
 		   * ``%d`` - development number
 		   * ``%P`` - postfix
 
-		:param formatSpec: The format specification.
-		:returns:          Formatted version number.
+		``%%`` is a literal percent sign.
+
+		:param formatSpec:  The format specification.
+		:returns:           Formatted version number.
+		:raises ValueError: If the format specification contains an unknown specifier, or a single ``%`` at its end.
 		"""
 		return self._format(formatSpec).replace("%%", "%")
 
