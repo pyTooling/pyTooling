@@ -1435,6 +1435,8 @@ Version 10.x (2026)
        :class:`~pyTooling.Versioning.PythonVersion` is its :pep:`440` normalized form.
      * ``%%`` in a format specification was meant as a literal percent sign, but ``%%M`` became ``%`` followed by the
        major number, and :func:`format` raised for the unknown specifier ``%1``.
+     * :func:`format` of a :class:`~pyTooling.Versioning.SemanticVersion` checked only the first ``%`` for an unknown
+       specifier: ``%%M %X`` passed, and a trailing ``%`` raised :exc:`IndexError`. Both raise :exc:`ValueError` now.
      * :class:`~pyTooling.Versioning.VersionSet` given an iterator was empty: the type check consumed it.
 
    * :mod:`pyTooling.Warning`
