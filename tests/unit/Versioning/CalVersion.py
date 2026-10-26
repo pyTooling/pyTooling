@@ -432,6 +432,17 @@ class CompareInteger(Testcase):
 
 		self.assertGreaterEqual(2, version)
 
+	def test_DerivedClasses(self) -> None:
+		"""An integer is the year of a derived calendar version; it was passed as ``major``, which they don't take."""
+		for version in (YearMonthVersion(2024, 3), YearWeekVersion(2024, 3), YearReleaseVersion(2024, 3)):
+			with self.subTest(version=repr(version)):
+				self.assertNotEqual(2024, version)
+				self.assertLess(2024, version)
+				self.assertGreater(2025, version)
+				self.assertEqual(version.__class__(2024), 2024)
+
+		self.assertGreater(2025, YearMonthDayVersion(2024, 3, 14))
+
 
 class CompareOtherType(Testcase):
 	def test_Equal(self) -> None:

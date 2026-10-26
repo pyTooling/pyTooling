@@ -956,8 +956,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		Compare two version numbers for equality.
 
 		The second operand should be an instance of :class:`Version`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -974,7 +974,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
-			other = self.__class__(major=other)
+			other = self.__class__(other)
 		else:
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -989,8 +989,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		Compare two version numbers for inequality.
 
 		The second operand should be an instance of :class:`Version`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1007,7 +1007,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
-			other = self.__class__(major=other)
+			other = self.__class__(other)
 		else:
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -1023,8 +1023,8 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		The second operand should be an instance of :class:`Version`, but :class:`VersionRange`, :class:`VersionSet`,
 		``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1046,7 +1046,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
-			other = self.__class__(major=other)
+			other = self.__class__(other)
 		else:
 			ex = TypeError("Second operand is not supported by < operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -1062,8 +1062,8 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		The second operand should be an instance of :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, but
 		``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1087,7 +1087,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
-			other = self.__class__(major=other)
+			other = self.__class__(other)
 		else:
 			ex = TypeError("Second operand is not supported by <= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -1104,8 +1104,8 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		The second operand should be an instance of :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, but
 		``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1127,7 +1127,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
-			other = self.__class__(major=other)
+			other = self.__class__(other)
 		else:
 			ex = TypeError("Second operand is not supported by > operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -1143,8 +1143,8 @@ class Version(metaclass=ExtendedType, slots=True):
 
 		The second operand should be an instance of :class:`Version`, :class:`VersionRange`, :class:`VersionSet`, but
 		``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1168,7 +1168,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
-			other = self.__class__(major=other)
+			other = self.__class__(other)
 		else:
 			ex = TypeError("Second operand is not supported by >= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -1194,7 +1194,7 @@ class Version(metaclass=ExtendedType, slots=True):
 		elif isinstance(other, str):
 			other = self.__class__.Parse(other)
 		elif isinstance(other, int):
-			other = self.__class__(major=other)
+			other = self.__class__(other)
 		else:
 			ex = TypeError("Second operand is not supported by >> operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -1484,8 +1484,8 @@ class SemanticVersion(Version):
 		Compare two version numbers for equality.
 
 		The second operand should be an instance of :class:`SemanticVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1502,8 +1502,8 @@ class SemanticVersion(Version):
 		Compare two version numbers for inequality.
 
 		The second operand should be an instance of :class:`SemanticVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1520,8 +1520,8 @@ class SemanticVersion(Version):
 		Compare two version numbers if the version is less than the second operand.
 
 		The second operand should be an instance of :class:`SemanticVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1538,8 +1538,8 @@ class SemanticVersion(Version):
 		Compare two version numbers if the version is less than or equal the second operand.
 
 		The second operand should be an instance of :class:`SemanticVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1556,8 +1556,8 @@ class SemanticVersion(Version):
 		Compare two version numbers if the version is greater than the second operand.
 
 		The second operand should be an instance of :class:`SemanticVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -1574,8 +1574,8 @@ class SemanticVersion(Version):
 		Compare two version numbers if the version is greater than or equal the second operand.
 
 		The second operand should be an instance of :class:`SemanticVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -2246,8 +2246,8 @@ class CalendarVersion(Version):
 		Compare two version numbers for equality.
 
 		The second operand should be an instance of :class:`CalendarVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a calendar version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a calendar version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -2264,8 +2264,8 @@ class CalendarVersion(Version):
 		Compare two version numbers for inequality.
 
 		The second operand should be an instance of :class:`CalendarVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a calendar version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a calendar version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -2282,8 +2282,8 @@ class CalendarVersion(Version):
 		Compare two version numbers if the version is less than the second operand.
 
 		The second operand should be an instance of :class:`CalendarVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -2300,8 +2300,8 @@ class CalendarVersion(Version):
 		Compare two version numbers if the version is less than or equal the second operand.
 
 		The second operand should be an instance of :class:`CalendarVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -2318,8 +2318,8 @@ class CalendarVersion(Version):
 		Compare two version numbers if the version is greater than the second operand.
 
 		The second operand should be an instance of :class:`CalendarVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
@@ -2336,8 +2336,8 @@ class CalendarVersion(Version):
 		Compare two version numbers if the version is greater than or equal the second operand.
 
 		The second operand should be an instance of :class:`CalendarVersion`, but ``str`` and ``int`` are accepted, too. |br|
-		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, a single major
-		number is assumed (all other parts are zero).
+		In case of ``str``, it's tried to parse the string as a semantic version number. In case of ``int``, it's the first
+		part - the major number or the year -, and all other parts are zero.
 
 		``float`` is not supported, due to rounding issues when converting the fractional part of the float to a minor
 		number.
