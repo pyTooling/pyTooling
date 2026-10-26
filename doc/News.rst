@@ -966,6 +966,9 @@ Version 10.x (2026)
 
    * ⚠️ ``SemanticVersion.Parse("v2.0.0-rc.1")`` **is release candidate 1**, not release candidate 0 with the postfix
      ``1`` - see *Bug Fixes*.
+   * ⚠️ ``SemanticVersion.Parse("1.2.3foo")`` **raises** :exc:`ValueError` instead of returning ``1.2`` with the postfix
+     ``3foo``; so do ``1.2.3_x`` and a fifth number (``1.2.3.4.5``) - see *Bug Fixes*. Separate a postfix by ``.``,
+     ``-`` or ``+``: ``1.2.3.foo``, ``1.2.3-1``, ``1.2.3+5``.
 
    .. rubric:: Changes
 
@@ -1490,6 +1493,9 @@ Version 10.x (2026)
        now.
      * :class:`~pyTooling.Versioning.SemanticVersion` read a release level after a build number as a postfix:
        ``1.2.3.4-rc1`` had build 4 and postfix ``rc1``. It reads build 4 and release candidate 1 now.
+     * ⚠️ :class:`~pyTooling.Versioning.SemanticVersion` lost a number followed by letters: ``1.2.3foo`` was ``1.2``
+       with the postfix ``3foo``, ``1.2.3.4.5`` build 4 with the postfix ``5``. A postfix after a ``.`` doesn't start
+       with a digit now, so these raise a syntax error.
      * A :class:`~pyTooling.Versioning.SemanticVersion` constructed with the release level ``Development`` and a number
        dropped the number: it was written ``-dev``. Such a number raises :exc:`ValueError` now, as with ``Final``; a
        development release's number is ``dev``.

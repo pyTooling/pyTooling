@@ -1091,6 +1091,36 @@ class DevelopmentLevel(Testcase):
 		self.assertEqual("1.2.3.dev2", str(SemanticVersion(1, 2, 3, dev=2)))
 
 
+class PostfixAfterDot(Testcase):
+	def test_LettersAfterNumber(self) -> None:
+		"""``1.2.3foo`` was read as ``1.2`` with the postfix ``3foo``: the micro number was lost."""
+		for versionString in ("1.2.3foo", "1.2.3xyz1", "1.2.3_x"):
+			with self.subTest(versionString=versionString):
+				with self.assertRaises(ValueError) as context:
+					SemanticVersion.Parse(versionString)
+				self.assertEqual(f"Syntax error in parameter 'versionString': '{versionString}'", str(context.exception))
+
+	def test_FifthNumber(self) -> None:
+		"""``1.2.3.4.5`` was read as build 4 with the postfix ``5``."""
+		with self.assertRaises(ValueError) as context:
+			SemanticVersion.Parse("1.2.3.4.5")
+		self.assertEqual("Syntax error in parameter 'versionString': '1.2.3.4.5'", str(context.exception))
+
+	def test_WordAfterDot(self) -> None:
+		version = SemanticVersion.Parse("1.2.3.foo")
+
+		self.assertEqual(3, version.Micro)
+		self.assertEqual("foo", version.Postfix)
+
+	def test_NumberAfterDashOrPlus(self) -> None:
+		for versionString in ("1.2.3-1", "1.2.3+1"):
+			with self.subTest(versionString=versionString):
+				version = SemanticVersion.Parse(versionString)
+
+				self.assertEqual(3, version.Micro)
+				self.assertEqual("1", version.Postfix)
+
+
 class FormatEscape(Testcase):
 	def test_PercentSign(self) -> None:
 		"""``%%`` is a literal percent sign; ``%%M`` was read as ``%`` followed by the major number."""
