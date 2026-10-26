@@ -664,7 +664,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 
 		* FreeBSD: ``"a"``
 		* Linux: ``"a"``
-		* macOS: ``"lib"``
+		* macOS: ``"a"``
 		* Windows: ``"lib"``
 
 		:returns:                            File extension of a static library.
