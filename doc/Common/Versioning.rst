@@ -121,6 +121,8 @@ prefix, a postfix or a build number.
 
         Identifiers separated by ``.`` or ``-``, like SemVer's build metadata. A postfix makes a version newer:
         ``v1.2.3 < v1.2.3+build.5 < v1.2.3+build.6``.
+        It follows the version after ``+``, ``-`` or ``.``; after a ``.`` it doesn't start with a digit
+        (``1.2.3.foo``), so ``1.2.3foo`` and a fifth number (``1.2.3.4.5``) are syntax errors.
 
       Comparison operators
         Operators for ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=``, ``>>``.

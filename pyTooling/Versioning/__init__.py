@@ -1288,7 +1288,7 @@ class SemanticVersion(Version):
 		r")?"
 		r"(?:(?P<delim2>[\.\-]post)(?P<post>\d+))?"
 		r"(?:(?P<delim3>[\.\-]dev)(?P<dev>\d+))?"
-		r"(?:(?P<delim4>[\.\-\+])(?P<postfix>\w+(?:[\.\-]\w+)*))?"
+		r"(?:(?P<delim4>[\.\-\+])(?!(?<=\.)\d)(?P<postfix>\w+(?:[\.\-]\w+)*))?"
 		r"$"
 	)  #: Regular expression to parse a semantic version from a string.
 
