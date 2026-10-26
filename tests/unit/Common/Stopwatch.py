@@ -618,6 +618,17 @@ class Durations(Testcase):
 		self.assertAlmostEqual(sw.ActivityInSeconds, sw.Activity.total_seconds(), delta=1e-6)
 		self.assertAlmostEqual(sw.InactivityInSeconds, sw.Inactivity.total_seconds(), delta=1e-6)
 
+	def test_DurationClass(self) -> None:
+		"""Duration, Activity and Inactivity are :class:`~pyTooling.Stopwatch.Duration` instances, so they format."""
+		sw = Stopwatch(started=True)
+		sw.Pause()
+		sw.Stop()
+
+		self.assertIs(Duration, type(sw.Duration))
+		self.assertIs(Duration, type(sw.Activity))
+		self.assertIs(Duration, type(sw.Inactivity))
+		self.assertRegex(f"{sw.Duration:%H:%M:%S.%U}", r"^00:00:\d{2}\.\d{6}$")
+
 	def test_Timedelta_StoppedIsCached(self) -> None:
 		"""A stopped stopwatch converts its duration once; a running one on every access."""
 		sw = Stopwatch(started=True)

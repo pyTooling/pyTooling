@@ -278,7 +278,7 @@ class Stopwatch(SlottedObject):
 	_pauseTime:    Nullable[int]             #: Performance counter in ns of the latest pause operation.
 	_stopTime:     Nullable[int]             #: Performance counter in ns when the stopwatch was stopped.
 	_totalTime:    Nullable[int]             #: Duration in ns from starting to stopping, activity and inactivity.
-	_duration:     Nullable[timedelta]       #: :attr:`Duration` of a stopped stopwatch, computed on first access.
+	_duration:     Nullable[Duration]        #: :attr:`Duration` of a stopped stopwatch, computed on first access.
 	_splits:       list[tuple[float, bool]]  #: Split times as (duration, is-active) pairs, in the order they were taken.
 
 	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
@@ -611,17 +611,18 @@ class Stopwatch(SlottedObject):
 		return len([t for t, a in self._splits if a is False]) + (1 if self._pauseTime is not None else 0)
 
 	@readonly
-	def Activity(self) -> timedelta:
+	def Activity(self) -> Duration:
 		"""
 		Read-only property returning the duration of all active split times.
 
 		If the stopwatch is currently running, the duration since start or last resume operation will be included. A
-		:class:`~datetime.timedelta` resolves microseconds; :attr:`ActivityInSeconds` is the same value as a float.
+		:class:`~pyTooling.Stopwatch.Duration` resolves microseconds; :attr:`ActivityInSeconds` is the same value as a
+		float.
 
 		:returns: Duration of all active split times. If the stopwatch was never started, the return value is a zero
 		          duration.
 		"""
-		return timedelta(seconds=self.ActivityInSeconds)
+		return Duration(seconds=self.ActivityInSeconds)
 
 	@readonly
 	def ActivityInSeconds(self) -> float:
@@ -638,17 +639,18 @@ class Stopwatch(SlottedObject):
 		return sum(t for t, a in self._splits if a is True) + currentDiff
 
 	@readonly
-	def Inactivity(self) -> timedelta:
+	def Inactivity(self) -> Duration:
 		"""
 		Read-only property returning the duration of all inactive split times.
 
 		If the stopwatch is currently paused, the duration since last pause operation will be included. A
-		:class:`~datetime.timedelta` resolves microseconds; :attr:`InactivityInSeconds` is the same value as a float.
+		:class:`~pyTooling.Stopwatch.Duration` resolves microseconds; :attr:`InactivityInSeconds` is the same value as a
+		float.
 
 		:returns: Duration of all inactive split times. If the stopwatch was never started, the return value is a zero
 		          duration.
 		"""
-		return timedelta(seconds=self.InactivityInSeconds)
+		return Duration(seconds=self.InactivityInSeconds)
 
 	@readonly
 	def InactivityInSeconds(self) -> float:
@@ -665,14 +667,14 @@ class Stopwatch(SlottedObject):
 		return sum(t for t, a in self._splits if a is False) + currentDiff
 
 	@readonly
-	def Duration(self) -> timedelta:
+	def Duration(self) -> Duration:
 		"""
 		Read-only property returning the duration from start operation to stop operation.
 
-		If the stopwatch is not yet stopped, the duration from start to now is returned. A :class:`~datetime.timedelta`
-		formats as hours, minutes and seconds and resolves microseconds; :attr:`DurationInSeconds` and
-		:attr:`DurationInNanoseconds` are the same measurement as numbers. The duration of a stopped stopwatch is
-		computed once (:attr:`_duration`).
+		If the stopwatch is not yet stopped, the duration from start to now is returned. A
+		:class:`~pyTooling.Stopwatch.Duration` prints as hours, minutes and seconds, accepts a format specification and
+		resolves microseconds; :attr:`DurationInSeconds` and :attr:`DurationInNanoseconds` are the same measurement as
+		numbers. The duration of a stopped stopwatch is computed once (:attr:`_duration`).
 
 		:returns: Duration since the stopwatch was started. If the stopwatch was never started, the return value is a zero
 		          duration.
@@ -680,7 +682,7 @@ class Stopwatch(SlottedObject):
 		if self._duration is not None:
 			return self._duration
 
-		duration = timedelta(microseconds=self.DurationInNanoseconds / 1000)
+		duration = Duration(microseconds=self.DurationInNanoseconds / 1000)
 		if self._totalTime is not None:
 			self._duration = duration
 
