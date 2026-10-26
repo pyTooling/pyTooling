@@ -1201,6 +1201,17 @@ Version 10.x (2026)
 
    .. rubric:: Bug Fixes
 
+   * :mod:`pyTooling.Attributes.ArgParse.KeyValueFlag`
+
+     * :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.NamedKeyValuePairsArgument`,
+       :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.ShortKeyValueFlag` and
+       :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.LongKeyValueFlag` parsed no key-value pair: they passed the
+       parameterization of a boolean flag to :mod:`argparse`, so ``-Dkey=value`` left ``-key=value`` unprocessed and the
+       handler received ``True``. The new action
+       :class:`~pyTooling.Attributes.ArgParse.KeyValueFlag.KeyValuePairsAction` adds every ``key=value`` to a
+       dictionary, which the handler receives (``None`` without the option); a key without ``=`` has the value ``None``.
+       A new parameter ``metaName`` names the value in the help page (default ``KEY=VALUE``).
+
    * :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`
 
      * :meth:`LineSegment2D.AngleTo <pyTooling.Cartesian2D.LineSegment2D.AngleTo>` and
