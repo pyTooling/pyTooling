@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Diagram.Gantt`: bars, rows, a diagram and the offsets they answer.
 """
 from datetime                import datetime, timedelta, timezone
+from typing                  import get_type_hints
 
 from pyTooling.Diagram        import DiagramError
 from pyTooling.Diagram.Gantt  import Bar, Diagram, Row
@@ -280,3 +281,12 @@ class ParameterChecks(Testcase):
 			_ = Bar(_at(30), _at(10), parent=row)
 
 		self.assertEqual("A bar's end precedes its begin.", str(context.exception))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Diagram.Gantt
+
+		self.assertIs(Diagram, get_type_hints(Bar, vars(pyTooling.Diagram.Gantt))["_diagram"])
+		self.assertIs(Diagram, get_type_hints(Row, vars(pyTooling.Diagram.Gantt))["_parent"])

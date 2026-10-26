@@ -34,7 +34,7 @@ resolution per platform, common options, and a sub-command with its own options.
 """
 from ast          import literal_eval
 from pathlib      import Path
-from typing       import Any, Self
+from typing       import Any, Self, get_type_hints
 
 from pytest       import mark
 from sys          import platform as sys_platform
@@ -382,3 +382,11 @@ class Derive(Testcase, Helper):
 			Git()._CopyParameters("git")
 
 		self.assertEqual("Parameter 'tool' is not of type 'Program'.", str(context.exception))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.CLIAbstraction
+
+		self.assertIs(Path, get_type_hints(Program, vars(pyTooling.CLIAbstraction))["_executablePath"])

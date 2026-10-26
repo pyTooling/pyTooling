@@ -334,7 +334,7 @@ class LinkNotFoundError(GraphError, LookupError):
 class SameGraphError(GraphError):
 	"""The exception is raised when a vertex is copied into the graph it already belongs to."""
 
-	_graph: Nullable[Graph]  #: Graph the vertex belongs to already.
+	_graph: Nullable[_Graph]  #: Graph the vertex belongs to already.
 
 	def __init__(self, message: str, /, *, graph: Nullable[Graph] = None) -> None:
 		"""

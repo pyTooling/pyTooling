@@ -1304,6 +1304,19 @@ Version 10.x (2026)
        resolved ``Subgraph._graph`` and ``Vertex._component`` to a property instead of a class. They are annotated
        with module-level aliases of :class:`~pyTooling.Graph.Graph` and :class:`~pyTooling.Graph.Component` now.
 
+   * :mod:`pyTooling.CI`, :mod:`pyTooling.CLIAbstraction`, :mod:`pyTooling.Dependency`, :mod:`pyTooling.Diagram`,
+     :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Graph`, :mod:`pyTooling.Platform`, :mod:`pyTooling.TerminalUI`,
+     :mod:`pyTooling.Tracing`, :mod:`pyTooling.Versioning` and their sub-modules
+
+     * The same shadowing resolved 39 fields of 27 classes to a property instead of a class, when evaluated in the
+       class' namespace by :func:`inspect.get_annotations` with ``eval_str=True`` or by :func:`typing.get_type_hints`
+       given the module's namespace: e.g. ``_path: Path`` of :class:`~pyTooling.Dependency.Python.RequirementsFile`
+       named its property :attr:`~pyTooling.Dependency.Python.RequirementsFile.Path`. In :mod:`pyTooling.Platform`,
+       whose annotations Python 3.14 evaluates lazily (:pep:`649`), :func:`typing.get_type_hints` returned the
+       properties :attr:`~pyTooling.Platform.Platform.PythonImplementation` and
+       :attr:`~pyTooling.Platform.Platform.PythonVersion` for the fields of :class:`~pyTooling.Platform.Platform` even
+       without a namespace. They are annotated with module-level aliases now, e.g. ``_Path = Path``.
+
    * :mod:`pyTooling.Graph.GraphML`
 
      * :meth:`~pyTooling.Graph.GraphML.GraphMLDocument.FromGraph` and

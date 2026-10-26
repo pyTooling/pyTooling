@@ -240,6 +240,12 @@ class Outcome(StringEnum):
 		return None
 
 
+_Outcome = Outcome
+"""
+Alias of :class:`Outcome` for annotations in a class with a property named ``Outcome``, which the class body binds.
+"""
+
+
 @export
 class RuleOutcome(StringEnum):
 	"""
@@ -275,11 +281,11 @@ class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 
 	_name:        str                  #: Name of the element.
 	_parent:      Nullable[Base]       #: Reference to the containing element.
-	_pipeline:    Nullable[Pipeline]   #: Reference to the pipeline this element belongs to.
+	_pipeline:    Nullable[_Pipeline]  #: Reference to the pipeline this element belongs to.
 	_createdAt:   Nullable[datetime]   #: Time the element was created.
 	_startedAt:   Nullable[datetime]   #: Time the element started running.
 	_completedAt: Nullable[datetime]   #: Time the element completed.
-	_outcome:     Nullable[Outcome]    #: How the element ended.
+	_outcome:     Nullable[_Outcome]   #: How the element ended.
 
 	def __init__(
 		self,
@@ -1533,6 +1539,11 @@ class Pipeline(Workflow):
 
 		self._pipeline = self
 
+
+_Pipeline = Pipeline
+"""
+Alias of :class:`Pipeline` for annotations in a class with a property named ``Pipeline``, which the class body binds.
+"""
 
 
 @export

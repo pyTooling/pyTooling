@@ -65,6 +65,13 @@ if TYPE_CHECKING:  # pragma: no cover
 	from pyTooling.Dependency.Resolver import ResolvedRequirement
 
 
+_LicenseExpression = LicenseExpression
+"""
+Alias of :class:`~pyTooling.Licensing.LicenseExpression` for annotations in a class with a property named
+``LicenseExpression``, which the class body binds.
+"""
+
+
 @export
 class DependencyError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Dependency`."""
@@ -997,17 +1004,17 @@ class PackageVersion(metaclass=ExtendedType, slots=True):
 	:class:`PackageVersion`s.
 	"""
 
-	_package:           Package                                               #: Reference to the corresponding package
-	_version:           SemanticVersion                                       #: :class:`SemanticVersion` of this version.
-	_releasedAt:        Nullable[datetime]                                    #: Time this package version was released.
-	_licenseExpression: LicenseExpression                                     #: What was published about the license.
-	_licenseURL:        Nullable[URL]                                         #: URL of the license's text, if known.
-	_repositoryURL:     Nullable[URL]                                         #: URL of the source repository, if known.
-	_documentationURL:  Nullable[URL]                                         #: URL of the documentation, if known.
-	_issueTrackerURL:   Nullable[URL]                                         #: URL of the issue tracker, if known.
-	_projectURL:        Nullable[URL]                                         #: URL of the project's homepage.
-	_changelogURL:      Nullable[URL]                                         #: URL of the changelog, if known.
-	_dependsOn:         dict[Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
+	_package:           _Package                                               #: Reference to the corresponding package
+	_version:           SemanticVersion                                        #: :class:`SemanticVersion` of this version.
+	_releasedAt:        Nullable[datetime]                                     #: Time this package version was released.
+	_licenseExpression: _LicenseExpression                                     #: What was published about the license.
+	_licenseURL:        Nullable[URL]                                          #: URL of the license's text, if known.
+	_repositoryURL:     Nullable[URL]                                          #: URL of the source repository, if known.
+	_documentationURL:  Nullable[URL]                                          #: URL of the documentation, if known.
+	_issueTrackerURL:   Nullable[URL]                                          #: URL of the issue tracker, if known.
+	_projectURL:        Nullable[URL]                                          #: URL of the project's homepage.
+	_changelogURL:      Nullable[URL]                                          #: URL of the changelog, if known.
+	_dependsOn:         dict[_Package, dict[SemanticVersion, PackageVersion]]  #: Versioned dependencies to other packages.
 
 	def __init__(self, version: SemanticVersion, package: Package, releasedAt: Nullable[datetime] = None) -> None:
 		"""
@@ -1641,6 +1648,12 @@ class Package(metaclass=ExtendedType, slots=True):
 			return f"{self._name} (empty)"
 		else:
 			return f"{self._name} (latest: {firstKey(self._versions)})"
+
+
+_Package = Package
+"""
+Alias of :class:`Package` for annotations in a class with a property named ``Package``, which the class body binds.
+"""
 
 
 @export

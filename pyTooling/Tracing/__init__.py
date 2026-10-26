@@ -583,8 +583,8 @@ class Span(TraceElement):
 
 	It may contain sub-spans, events and arbitrary attributes (key-value pairs).
 	"""
-	_trace:     Nullable[Union[Trace, Fragment]]  #: Reference to the trace (or fragment) this timespan belongs to.
-	_spanID:    str                               #: Identifier of this timespan, as 16 hex digits.
+	_trace:     Nullable[Union[_Trace, Fragment]]  #: Reference to the trace (or fragment) this timespan belongs to.
+	_spanID:    str                                #: Identifier of this timespan, as 16 hex digits.
 
 	_beginTime: Nullable[datetime]                #: Timestamp when the timespan begins.
 	_endTime:   Nullable[datetime]                #: Timestamp when the timespan ends.
@@ -1695,6 +1695,10 @@ class Trace(Span):
 			result.extend(span.Format(indent + 1, columnSize - 2))
 
 		return result
+
+
+_Trace = Trace
+"""Alias of :class:`Trace` for annotations in a class with a property named ``Trace``, which the class body binds."""
 
 
 @export

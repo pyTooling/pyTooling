@@ -58,6 +58,13 @@ from pyTooling.Versioning  import PythonVersion
 __all__ = ["CurrentPlatform"]
 
 
+_PythonVersion = PythonVersion
+"""
+Alias of :class:`~pyTooling.Versioning.PythonVersion` for annotations in a class with a property named
+``PythonVersion``, which the class body binds.
+"""
+
+
 @export
 class PlatformError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Platform`."""
@@ -114,6 +121,13 @@ class PythonImplementation(Enum):
 
 	CPython = 1   #: CPython (reference implementation)
 	PyPy = 2      #: PyPy
+
+
+_PythonImplementation = PythonImplementation
+"""
+Alias of :class:`PythonImplementation` for annotations in a class with a property named ``PythonImplementation``, which
+the class body binds.
+"""
 
 
 @export
@@ -195,9 +209,9 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 	   StackOverflow question: `Python: What OS am I running on? <https://stackoverflow.com/a/54837707/3719459>`__
 	"""
 
-	_platform:             Platforms             #: Operating system, processor architecture and environment, as flags.
-	_pythonImplementation: PythonImplementation  #: The Python implementation running this program (CPython, PyPy).
-	_pythonVersion:        PythonVersion         #: Version of the Python interpreter running this program.
+	_platform:             Platforms              #: Operating system, processor architecture and environment, as flags.
+	_pythonImplementation: _PythonImplementation  #: The Python implementation running this program (CPython, PyPy).
+	_pythonVersion:        _PythonVersion         #: Version of the Python interpreter running this program.
 
 	def __init__(self) -> None:
 		"""
@@ -338,7 +352,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 			raise UnknownPlatformError(f"Unknown operating system '{os.name}'.", unknownValue=os.name)
 
 	@readonly
-	def PythonImplementation(self) -> PythonImplementation:
+	def PythonImplementation(self) -> _PythonImplementation:
 		"""
 		Read-only property to access the :class:`PythonImplementation` of the current interpreter.
 
@@ -363,7 +377,7 @@ class Platform(metaclass=ExtendedType, singleton=True, slots=True):
 		return self._pythonImplementation is PythonImplementation.PyPy
 
 	@readonly
-	def PythonVersion(self) -> PythonVersion:
+	def PythonVersion(self) -> _PythonVersion:
 		"""
 		Read-only property to access the :class:`pyTooling.Versioning.PythonVersion` of the current interpreter.
 

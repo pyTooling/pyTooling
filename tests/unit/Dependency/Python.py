@@ -36,7 +36,7 @@ from datetime                     import datetime, timedelta, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
-from typing                       import Any, Optional as Nullable, Self
+from typing                       import Any, Optional as Nullable, Self, get_args, get_type_hints
 from unittest.mock                import patch
 
 from packaging.requirements       import Requirement
@@ -45,7 +45,7 @@ from requests                     import HTTPError, Response
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph, PythonPackageIndex, \
                                          Release, LicenseOverrides, RequirementsFile, RequirementsFileReference, \
-                                         RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
+                                         Distribution, RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError, \
                                          UndeclaredExtraMarkerWarning, UndeclaredExtraWarning, \
                                          UnparsableRequirementWarning, DependencyError, RequirementsFileNotFoundError, \
@@ -55,6 +55,7 @@ from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequi
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
+from pyTooling.URI                import URL
 from pyTooling.Licensing          import LicenseAbsence, LicenseReference, ProprietaryLicense, SPDXLicense, \
                                          UnknownLicense, WithOperator
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
@@ -2245,3 +2246,22 @@ class HTTPErrors(Testcase):
 
 		self.assertIn("'projectName'", str(context.exception))
 
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Dependency.Python
+
+		namespace = vars(pyTooling.Dependency.Python)
+		hints =     get_type_hints(RequirementsFile, namespace)
+		self.assertIs(Path, hints["_path"])
+		self.assertIs(Path, get_args(get_args(hints["_analyzedRequirementFiles"])[0])[0])
+		self.assertIs(Path, get_type_hints(RequirementsFileReference, namespace)["_path"])
+		self.assertIs(Path, get_args(get_args(get_type_hints(LicenseOverrides, namespace)["SCHEMA_FILES"])[0])[1])
+		self.assertIs(Path, get_args(get_type_hints(LicenseOverrides, namespace)["_path"])[0])
+		self.assertIs(URL, get_type_hints(Distribution, namespace)["_url"])
+		self.assertIs(URL, get_args(get_type_hints(Project, namespace)["_url"])[0])
+		self.assertIs(URL, get_args(get_type_hints(Project, namespace)["_api"])[0])
+		self.assertIs(URL, get_type_hints(PythonPackageIndex, namespace)["_url"])
+		self.assertIs(URL, get_type_hints(PythonPackageIndex, namespace)["_api"])
+		self.assertIs(LicenseOverrides, get_type_hints(PythonPackageIndex, namespace)["_licenseOverrides"])
