@@ -32,7 +32,9 @@
 Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attached to them.
 """
 from datetime          import datetime, timedelta, timezone
+from inspect           import get_annotations
 from time              import sleep
+from typing            import get_args
 
 from pyTooling.Tracing import TracingError, Trace, TraceElement, Span, Event, SpanState
 from pyTooling.Testing import Testcase
@@ -729,3 +731,9 @@ class Attributes(Testcase):
 				element["id2"] = 2
 
 				self.assertListEqual([("id1", "value1"), ("id2", 2)], list(element.IterateAttributes()))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		self.assertIs(Trace, get_args(get_annotations(Span, eval_str=True)["_trace"])[0])

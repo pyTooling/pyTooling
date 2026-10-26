@@ -78,7 +78,7 @@ class Bar(metaclass=ExtendedType, slots=True):
 	(:attr:`BeginSinceParent`) - because a chart is drawn on the second and a report usually wants one of the others.
 	"""
 	_parent:  Row       #: The row this bar sits in.
-	_diagram: Diagram   #: The diagram this bar belongs to.
+	_diagram: _Diagram  #: The diagram this bar belongs to.
 	_begin:   datetime  #: Begin of the bar.
 	_end:     datetime  #: End of the bar.
 
@@ -239,7 +239,7 @@ class Row(metaclass=ExtendedType, slots=True):
 
 	A row spans its bars: it begins with its earliest bar and ends with its latest, whether or not they touch.
 	"""
-	_parent: Diagram     #: The diagram this row belongs to.
+	_parent: _Diagram    #: The diagram this row belongs to.
 	_name:   str         #: Name of the row, which labels it in a chart.
 	_bars:   list[Bar]   #: The bars of this row, in the order they were added.
 
@@ -509,3 +509,9 @@ class Diagram(metaclass=ExtendedType, slots=True):
 		:returns: Iterator to iterate all rows, in the order they were added.
 		"""
 		return iter(self._rows)
+
+
+_Diagram = Diagram
+"""
+Alias of :class:`Diagram` for annotations in a class with a property named ``Diagram``, which the class body binds.
+"""

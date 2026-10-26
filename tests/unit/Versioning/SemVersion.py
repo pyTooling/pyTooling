@@ -32,7 +32,10 @@
 Unit tests for :class:`pyTooling.Versioning.SemanticVersion`: parsing, comparing, validating, formatting and
 the round-trip from a version string back to itself.
 """
-from pyTooling.Versioning import Flags, Parts, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator
+from typing               import get_type_hints
+
+from pyTooling.Versioning import Flags, Parts, ReleaseLevel, SemanticVersion, WordSizeValidator, MaxValueValidator, \
+                                 Version, VersionValidatorError
 from pyTooling.Testing    import Testcase
 
 
@@ -1077,3 +1080,14 @@ class RoundTrip(Testcase):
 		ver = "v01.02.03.rc04.post05.dev06+deb07"
 		version = SemanticVersion.Parse(ver)
 		self.assertEqual(ver.replace("0", "", 6), str(version), ver)
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Versioning
+
+		self.assertIs(Version, get_type_hints(VersionValidatorError, vars(pyTooling.Versioning))["_version"])
+		self.assertIs(Parts, get_type_hints(Version, vars(pyTooling.Versioning))["_parts"])
+		self.assertIs(ReleaseLevel, get_type_hints(Version, vars(pyTooling.Versioning))["_releaseLevel"])
+		self.assertIs(Flags, get_type_hints(Version, vars(pyTooling.Versioning))["_flags"])

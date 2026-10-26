@@ -32,7 +32,7 @@
 Unit tests for :mod:`pyTooling.CI`.
 """
 from datetime              import datetime, timedelta, timezone
-from typing                import get_type_hints
+from typing                import get_args, get_type_hints
 
 from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matrix, MatrixJob, MatrixWorkflow, Job, \
                                   JobGroup, Step, Rule, RuleOutcome, Outcome, CIError, PipelineError, \
@@ -1086,3 +1086,12 @@ class ToGraph(Testcase):
 		order = [self._Name(vertex) for vertex in graph.IterateTopologically()]
 		self.assertEqual("Prepare", order[0])
 		self.assertEqual("Release", order[-1])
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.CI
+
+		self.assertIs(Pipeline, get_args(get_type_hints(Base, vars(pyTooling.CI))["_pipeline"])[0])
+		self.assertIs(Outcome, get_args(get_type_hints(Base, vars(pyTooling.CI))["_outcome"])[0])

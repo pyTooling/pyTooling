@@ -32,6 +32,8 @@
 """
 Unit tests for :class:`pyTooling.TerminalUI.Line`: a message with its severity and its indentation.
 """
+from typing               import get_args, get_type_hints
+
 from pyTooling.TerminalUI import Line, Severity
 from pyTooling.Testing    import Testcase
 
@@ -74,3 +76,13 @@ class Indentation(Testcase):
 			line.IndentBy(1)
 
 		self.assertListEqual([1,2,1], [line.Indent for line in lines])
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.TerminalUI
+
+		hints = get_type_hints(Line, vars(pyTooling.TerminalUI))
+		self.assertIs(Severity, hints["_severity"])
+		self.assertIs(Severity, get_args(get_args(hints["_LOG_MESSAGE_FORMAT__"])[0])[0])

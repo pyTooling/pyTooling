@@ -703,6 +703,12 @@ class Severity(Enum):
 			raise ex
 
 
+_Severity = Severity
+"""
+Alias of :class:`Severity` for annotations in a class with a property named ``Severity``, which the class body binds.
+"""
+
+
 @export
 @unique
 class Mode(Enum):
@@ -719,7 +725,7 @@ class Line(metaclass=ExtendedType, slots=True):
 	Represents a single message line with a severity and indentation level.
 	"""
 
-	_LOG_MESSAGE_FORMAT__: ClassVar[dict[Severity, str]] = {
+	_LOG_MESSAGE_FORMAT__: ClassVar[dict[_Severity, str]] = {
 		Severity.Exception:     "EXCEPTION: {message}",
 		Severity.ExceptionNote: "           > {message}",
 		Severity.Fatal:         "FATAL: {message}",
@@ -737,11 +743,11 @@ class Line(metaclass=ExtendedType, slots=True):
 		Severity.Debug:         "DEBUG: {message}",
 	}                           #: Message line formatting rules.
 
-	_timestamp:       datetime  #: Timestamp when the line was created.
-	_message:         str       #: Text message (line content).
-	_severity:        Severity  #: Message severity
-	_indent:          int       #: Indentation
-	_appendLinebreak: bool      #: True, if a trailing linebreak should be added when printing this line object.
+	_timestamp:       datetime   #: Timestamp when the line was created.
+	_message:         str        #: Text message (line content).
+	_severity:        _Severity  #: Message severity
+	_indent:          int        #: Indentation
+	_appendLinebreak: bool       #: True, if a trailing linebreak should be added when printing this line object.
 
 	def __init__(
 		self,

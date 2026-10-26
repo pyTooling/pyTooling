@@ -238,7 +238,7 @@ class BaseWithID(Base):
 @export
 class BaseWithData(BaseWithID):
 	"""Base-class for all GraphML elements that can carry attached data items (key-value-pairs)."""
-	_data: list[Data]  #: Data items (key-value-pairs) attached to this GraphML element.
+	_data: list[_Data]  #: Data items (key-value-pairs) attached to this GraphML element.
 
 	def __init__(self, identifier: Nullable[str]) -> None:
 		"""
@@ -372,11 +372,15 @@ class Key(BaseWithID):
 		return [self.Tag(indent)]
 
 
+_Key = Key
+"""Alias of :class:`Key` for annotations in a class with a property named ``Key``, which the class body binds."""
+
+
 @export
 class Data(Base):
 	"""A single attached attribute: a value and the :class:`Key` describing it."""
-	_key:  Key  #: Key describing name and type of this data item.
-	_data: Any  #: Value of this data item.
+	_key:  _Key  #: Key describing name and type of this data item.
+	_data: Any   #: Value of this data item.
 
 	def __init__(self, key: Key, data: Any) -> None:
 		"""
@@ -455,6 +459,10 @@ class Data(Base):
 		:returns:      List of XML lines describing this data item and everything attached to it.
 		"""
 		return [self.Tag(indent)]
+
+
+_Data = Data
+"""Alias of :class:`Data` for annotations in a class with a property named ``Data``, which the class body binds."""
 
 
 @export
@@ -895,6 +903,10 @@ class Graph(BaseGraph):
 		return result
 
 
+_Graph = Graph
+"""Alias of :class:`Graph` for annotations in a class with a property named ``Graph``, which the class body binds."""
+
+
 @export
 class Subgraph(Node, BaseGraph):
 	"""
@@ -1043,7 +1055,7 @@ class GraphMLDocument(Base):
 		"schemaLocation": "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
 	}  #: XML schema instance attributes of a GraphML document.
 
-	_graph: Graph           #: The document's root graph.
+	_graph: _Graph          #: The document's root graph.
 	_keys:  dict[str, Key]  #: Keys declared by this document, by ID.
 
 	def __init__(self, identifier: str = "G") -> None:

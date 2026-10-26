@@ -68,6 +68,11 @@ __all__ = ["_ParentType"]
 _ParentType = TypeVar("_ParentType", bound="Element")
 """The type variable for a parent reference."""
 
+_Path = Path
+"""
+Alias of :class:`~pathlib.Path` for annotations in a class with a property named ``Path``, which the class body binds.
+"""
+
 
 @export
 class FilesystemError(ToolingException):
@@ -129,8 +134,8 @@ class Base(metaclass=ExtendedType, slots=True):
 
 	It implements a size and a reference to the root element of the filesystem.
 	"""
-	_root:   Nullable[Root]  #: Reference to the root of the filesystem statistics scope.
-	_size:   Nullable[int]   #: Actual or aggregated size of the filesystem element.
+	_root:   Nullable[_Root]  #: Reference to the root of the filesystem statistics scope.
+	_size:   Nullable[int]    #: Actual or aggregated size of the filesystem element.
 
 	def __init__(
 		self,
@@ -344,7 +349,7 @@ class Directory(Element["Directory"]):
 	aggregation is provided via :data:`AggregateDuration`.
 	"""
 
-	_path:              Nullable[Path]           #: Cached :class:`~pathlib.Path` object of this directory.
+	_path:              Nullable[_Path]          #: Cached :class:`~pathlib.Path` object of this directory.
 	_subdirectories:    dict[str, Directory]     #: Dictionary containing name-:class:`Directory` pairs.
 	_files:             dict[str, Filename]      #: Dictionary containing name-:class:`Filename` pairs.
 	_symbolicLinks:     dict[str, SymbolicLink]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
@@ -944,7 +949,7 @@ class Filename(Element[Directory]):
 	   Filename and file storage are represented by two classes, which allows multiple names (hard links) per file storage
 	   object.
 	"""
-	_file: Nullable[File]  #: The file this filename refers to; ``None`` until the filename is linked.
+	_file: Nullable[_File]  #: The file this filename refers to; ``None`` until the filename is linked.
 
 	def __init__(
 		self,
@@ -1148,7 +1153,7 @@ class SymbolicLink(Element[Directory]):
 	After the scan, the link is resolved: it is either connected to an element of the scanned tree, broken (the target
 	doesn't exist), or out of range (the target lies outside the scanned tree).
 	"""
-	_target:       Path            #: Path the symbolic link points to.
+	_target:       _Path           #: Path the symbolic link points to.
 	_isConnected:  bool            #: ``True``, if the link target was resolved to an element of the scanned tree.
 	_isBroken:     Nullable[bool]  #: ``True``, if the link target doesn't exist; ``None`` until resolved.
 	_isOutOfRange: Nullable[bool]  #: ``True``, if the link target lies outside the scanned tree; ``None`` until resolved.
@@ -1604,6 +1609,10 @@ class Root(Directory):
 		return self._name
 
 
+_Root = Root
+"""Alias of :class:`Root` for annotations in a class with a property named ``Root``, which the class body binds."""
+
+
 @export
 class File(Base):
 	"""
@@ -1729,3 +1738,7 @@ class File(Base):
 		)
 
 		return fileNode
+
+
+_File = File
+"""Alias of :class:`File` for annotations in a class with a property named ``File``, which the class body binds."""

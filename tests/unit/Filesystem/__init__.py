@@ -38,7 +38,7 @@ from os                    import DirEntry, link, scandir, symlink
 from pathlib               import Path
 from sys                   import platform as sys_platform
 from tempfile              import TemporaryDirectory
-from typing                import Iterator
+from typing                import Iterator, get_args, get_type_hints
 from unittest.mock         import patch
 
 from pytest                import mark
@@ -676,3 +676,14 @@ class SymbolicLinkResolution(Testcase):
 
 		self.assertTrue(self._Link(root, "a").IsOutOfRange)
 		self.assertEqual([self._Link(root, "a")], root.UnconnectedSymbolicLinks)
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Filesystem
+
+		self.assertIs(Root, get_args(get_type_hints(Base, vars(pyTooling.Filesystem))["_root"])[0])
+		self.assertIs(Path, get_args(get_type_hints(Directory, vars(pyTooling.Filesystem))["_path"])[0])
+		self.assertIs(File, get_args(get_type_hints(Filename, vars(pyTooling.Filesystem))["_file"])[0])
+		self.assertIs(Path, get_type_hints(SymbolicLink, vars(pyTooling.Filesystem))["_target"])

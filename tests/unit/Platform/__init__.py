@@ -34,11 +34,13 @@ Unit tests for :mod:`pyTooling.Platform`: the flags describing the current platf
 Most testcases are gated on the environment variable ``ENVIRONMENT_NAME``, so they run on the matching CI
 platform only.
 """
-from os       import getenv as os_getenv, environ as os_environ
-from pytest   import mark
+from os                   import getenv as os_getenv, environ as os_environ
+from typing               import get_type_hints
+from pytest               import mark
 
-from pyTooling.Platform import Platforms, Platform, CurrentPlatform, UnknownPlatformError
-from pyTooling.Testing  import Testcase
+from pyTooling.Platform   import Platforms, Platform, PythonImplementation, CurrentPlatform, UnknownPlatformError
+from pyTooling.Versioning import PythonVersion
+from pyTooling.Testing    import Testcase
 
 if __name__ == "__main__":  # pragma: no cover
 	print("ERROR: you called a testcase declaration file as an executable module.")
@@ -523,3 +525,12 @@ class Errors(Testcase):
 			raise UnknownPlatformError("Unknown platform.")
 
 		self.assertIsNone(context.exception.UnknownValue)
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Platform
+
+		self.assertIs(PythonImplementation, get_type_hints(Platform, vars(pyTooling.Platform))["_pythonImplementation"])
+		self.assertIs(PythonVersion, get_type_hints(Platform, vars(pyTooling.Platform))["_pythonVersion"])

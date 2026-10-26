@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Tracing.Render` and :mod:`pyTooling.Tracing.Render.Matplotlib`.
 """
 from datetime                    import datetime, timedelta, timezone
+from inspect                     import get_annotations
 from json                        import loads as json_loads
 from pathlib                     import Path
 from re                          import search
@@ -44,8 +45,8 @@ from xml.etree                   import ElementTree
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP
 from pyTooling.MetaClasses       import AbstractClassError
-from pyTooling.Tracing.Render    import GanttLayout, Renderer, StepExclusion, ciSpanFilter, msys2Environment, \
-                                       runnerCategory
+from pyTooling.Tracing.Render    import GanttLayout, GanttRow, Renderer, StepExclusion, ciSpanFilter, \
+                                       msys2Environment, runnerCategory
 from pyTooling.Testing           import Testcase
 
 try:
@@ -790,3 +791,10 @@ class Plotly(Testcase):
 			_ = PlotlyRenderer(layout, includePlotlyJS=True)
 
 		self.assertEqual("Parameter 'includePlotlyJS' is not of type 'PlotlyJavaScript'.", str(context.exception))
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		self.assertIs(Span, get_annotations(GanttRow, eval_str=True)["_span"])
+		self.assertIs(Trace, get_annotations(GanttLayout, eval_str=True)["_trace"])

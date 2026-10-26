@@ -98,6 +98,17 @@ from pyTooling.URI            import URL, URLError
 from pyTooling.Versioning     import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
 
 
+_Path = Path
+"""
+Alias of :class:`~pathlib.Path` for annotations in a class with a property named ``Path``, which the class body binds.
+"""
+
+_URL = URL
+"""
+Alias of :class:`~pyTooling.URI.URL` for annotations in a class with a property named ``URL``, which the class body
+binds.
+"""
+
 _LICENSE_NOTE_LENGTH = 64
 """Longest prefix of a free-text ``license`` field quoted in a warning note, so a full license text doesn't flood it."""
 
@@ -159,9 +170,9 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 
 	_root:                     RequirementsFile                            #: Entrypoint this tree was read from.
 	_parent:                   Nullable[RequirementsFile]                  #: Referencing file; ``None`` for a root.
-	_path:                     Path                                        #: Path of this requirements file.
+	_path:                     _Path                                       #: Path of this requirements file.
 	_entries:                  list[RequirementsFileEntryT]                #: What this file states, in file order.
-	_analyzedRequirementFiles: Nullable[dict[Path, RequirementsFile]]      #: Every file of the tree, by resolved path.
+	_analyzedRequirementFiles: Nullable[dict[_Path, RequirementsFile]]     #: Every file of the tree, by resolved path.
 	_analysisDuration:         Nullable[timedelta]                         #: Time :meth:`Parse` took to read the file.
 
 	def __init__(
@@ -596,7 +607,7 @@ class RequirementsFileReference(metaclass=ExtendedType, slots=True):
 	"""
 
 	_parent: Nullable[RequirementsFile]  #: File stating the ``-r`` line; ``None`` until a file states it.
-	_path:   Path                        #: Path of the referenced file.
+	_path:   _Path                       #: Path of the referenced file.
 	_target: RequirementsFile            #: The referenced file, read where it was referenced first.
 
 	def __init__(self, path: Path, target: RequirementsFile, *, parent: Nullable[RequirementsFile] = None) -> None:
@@ -729,7 +740,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 
 	#: JSON schema file per structure version, in :mod:`pyTooling.Resources`. A later version is added beside the one
 	#: in use, not instead of it, so a file written for an older structure keeps a schema to be checked against.
-	SCHEMA_FILES: ClassVar[dict[SemanticVersion, Path]] = {
+	SCHEMA_FILES: ClassVar[dict[SemanticVersion, _Path]] = {
 		SemanticVersion(0, 1): Path("PackageOverrides-v0.1.schema.json"),
 	}
 
@@ -738,7 +749,7 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 	_PACKAGE_KEY:  ClassVar[Pattern[str]] = re_compile(r"^\s*(?P<name>[^\s<>=!~]+)\s*(?P<expression>.*?)\s*$")
 
 	_analysedAt:   Nullable[datetime]                         #: When the statements were last checked by a human.
-	_path:         Nullable[Path]                             #: Path of the file the statements were read from.
+	_path:         Nullable[_Path]                            #: Path of the file the statements were read from.
 	#: License expression per package, by the version expression its key states, in the file's order.
 	_licenses:     dict[str, list[tuple[PythonVersionExpression[SemanticVersion], str]]]
 	#: URL of the license's text per package, by the version expression its key states, in the file's order.
@@ -1022,6 +1033,13 @@ class LicenseOverrides(metaclass=ExtendedType, slots=True):
 		return f"LicenseOverrides({len(self)} packages)"
 
 
+_LicenseOverrides = LicenseOverrides
+"""
+Alias of :class:`LicenseOverrides` for annotations in a class with a property named ``LicenseOverrides``, which the
+class body binds.
+"""
+
+
 @export
 class LazyLoaderState(IntEnum):
 	"""
@@ -1159,7 +1177,7 @@ class Distribution(metaclass=ExtendedType, slots=True):
 	A single downloadable file of a release - a wheel or a source archive.
 	"""
 	_filename:   str       #: Filename of the distribution's file.
-	_url:        URL       #: URL to download the distribution's file from.
+	_url:        _URL      #: URL to download the distribution's file from.
 	_uploadTime: datetime  #: Time when the distribution was uploaded to the package index.
 
 	def __init__(self, filename: str, url: Union[str, URL], uploadTime: datetime) -> None:
@@ -1700,9 +1718,9 @@ class Project(Package, LazyLoadableMixin):
 
 	The list of releases and the project's details are fetched from the index on first use.
 	"""
-	_url:         Nullable[URL]      #: URL of the project's page on the package index.
+	_url:         Nullable[_URL]     #: URL of the project's page on the package index.
 
-	_api:         Nullable[URL]      #: URL of the package index's API, used to load the project's details.
+	_api:         Nullable[_URL]     #: URL of the package index's API, used to load the project's details.
 	_session:     Nullable[Session]  #: HTTP session reused for the API requests.
 
 	def __init__(
@@ -2017,10 +2035,10 @@ class PythonPackageIndex(PackageStorage):
 	It is the entry point of the dependency graph: projects are looked up here, and every request to the index reuses
 	the same HTTP session.
 	"""
-	_url:              URL                 #: URL of the package index's website.
-	_api:              URL                 #: URL of the package index's API.
+	_url:              _URL                #: URL of the package index's website.
+	_api:              _URL                #: URL of the package index's API.
 	_session:          Session             #: HTTP session reused for every request to this index.
-	_licenseOverrides: LicenseOverrides    #: Licenses stated by hand, for what this index can't answer for.
+	_licenseOverrides: _LicenseOverrides   #: Licenses stated by hand, for what this index can't answer for.
 	_projectCache:     dict[str, Project]  #: Projects looked up on this index, by canonical name.
 	_unknownProjects:  set[str]            #: Canonical names of the projects this index doesn't know.
 

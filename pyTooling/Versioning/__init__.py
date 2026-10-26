@@ -68,7 +68,7 @@ class VersionValidatorError(ToolingException):
 	:attr:`Version`, so a caller can report what was wrong with it.
 	"""
 
-	_version: Version  #: The version rejected by a validator.
+	_version: _VersionType  #: The version rejected by a validator.
 
 	def __init__(self, message: str, /, *, version: Version) -> None:
 		"""
@@ -111,6 +111,10 @@ class Parts(Flag):
 	Postfix = 512   #: Postfix is present.
 	Hash = 1024     #: Hash is present.
 #		AHead   = 256
+
+
+_Parts = Parts
+"""Alias of :class:`Parts` for annotations in a class with a property named ``Parts``, which the class body binds."""
 
 
 @export
@@ -270,6 +274,13 @@ class ReleaseLevel(Enum):
 		raise ToolingException(f"Unknown ReleaseLevel '{self.name}'.")
 
 
+_ReleaseLevel = ReleaseLevel
+"""
+Alias of :class:`ReleaseLevel` for annotations in a class with a property named ``ReleaseLevel``, which the class body
+binds.
+"""
+
+
 @export
 class Flags(Flag):
 	"""State enumeration, if a (tagged) version is build from a clean or dirty working directory."""
@@ -281,6 +292,10 @@ class Flags(Flag):
 	SVN = 32        #: Subversion (SVN)
 	Git = 64        #: Git
 	Hg = 128        #: Mercurial (Hg)
+
+
+_Flags = Flags
+"""Alias of :class:`Flags` for annotations in a class with a property named ``Flags``, which the class body binds."""
 
 
 @export
@@ -398,20 +413,20 @@ class Version(metaclass=ExtendedType, slots=True):
 	#: ``2!1.2.3``, so :class:`PythonVersion` overrides this.
 	_EPOCH_SEPARATOR: ClassVar[str] = ":"
 
-	_parts:         Parts          #: Integer flag enumeration of present parts in a version number.
+	_parts:         _Parts         #: Integer flag enumeration of present parts in a version number.
 	_prefix:        str            #: Prefix string
 	_epoch:         int            #: Epoch, which outranks every other part of the version number.
 	_major:         int            #: Major number part of the version number.
 	_minor:         int            #: Minor number part of the version number.
 	_micro:         int            #: Micro number part of the version number.
-	_releaseLevel:  ReleaseLevel   #: Release level (alpha, beta, rc, final, ...).
+	_releaseLevel:  _ReleaseLevel  #: Release level (alpha, beta, rc, final, ...).
 	_releaseNumber: int            #: Release number (Python calls this a serial).
 	_post:          int            #: Post-release version number part.
 	_dev:           int            #: Development number
 	_build:         int            #: Build number part of the version number.
 	_postfix:       str            #: Postfix string
 	_hash:          str            #: Hash from version control system.
-	_flags:         Flags          #: State if the version in a working directory is clean or dirty compared to a tagged version.
+	_flags:         _Flags         #: State if the version in a working directory is clean or dirty compared to a tagged version.
 
 	def __init__(
 		self,

@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Filesystem.Docker`: slicing a filesystem tree into image layers.
 """
 from pathlib  import Path
+from typing   import get_args, get_type_hints
 
 from pyTooling.Filesystem        import Root, Directory, Filename, File
 from pyTooling.Filesystem.Docker import LayerCake, Layer
@@ -198,3 +199,11 @@ class Slicing(Testcase):
 
 		self.assertEqual(10, cake.LayerCount)
 		self.assertListEqual([l.FileCount for l in cake.Layers], [31, 33, 35, 37, 41, 45, 52, 67, 120, 39])
+
+
+class TypeHints(Testcase):
+	def test_PropertyNamedLikeAClass(self) -> None:
+		"""A field's annotation names the class, although the class body has a property of that name."""
+		import pyTooling.Filesystem.Docker
+
+		self.assertIs(Root, get_args(get_type_hints(LayerCake, vars(pyTooling.Filesystem.Docker))["_root"])[0])
