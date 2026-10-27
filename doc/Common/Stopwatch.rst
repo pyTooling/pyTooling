@@ -332,14 +332,17 @@ The recorded split times are reachable as a sequence: :meth:`~pyTooling.Stopwatc
 :meth:`~pyTooling.Stopwatch.Stopwatch.__getitem__` indexes them, and :meth:`~pyTooling.Stopwatch.Stopwatch.__len__`
 counts them - the same number as :attr:`~pyTooling.Stopwatch.Stopwatch.SplitCount`.
 
-Each item is a tuple of the span's duration in seconds and a boolean saying whether it was activity:
+Each item is a tuple of the span's duration as a :class:`~pyTooling.Stopwatch.Duration` and a boolean saying whether
+it was activity. :meth:`~pyTooling.Stopwatch.Stopwatch.Split`, :meth:`~pyTooling.Stopwatch.Stopwatch.Pause`,
+:meth:`~pyTooling.Stopwatch.Stopwatch.Resume` and :meth:`~pyTooling.Stopwatch.Stopwatch.Stop` return the same
+duration.
 
 .. rubric:: Usage
 
 .. code-block:: python
 
    for duration, isActive in sw:
-     print(f"{duration:.3f} s {'running' if isActive else 'paused'}")
+     print(f"{duration:%s.%L} s {'running' if isActive else 'paused'}")
 
 .. rubric:: Result
 
@@ -532,12 +535,10 @@ minutes and seconds, compares and calculates to the nanosecond, and
 :meth:`~pyTooling.Stopwatch.Duration.total_seconds` still gives the number. A stopped stopwatch computes it once. Reach
 for the numbers where a number is needed. :attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and
 :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` follow the same scheme, with
-:attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds` and :attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds`.
-
-.. note::
-
-   :attr:`~pyTooling.Stopwatch.Stopwatch.Activity` and :attr:`~pyTooling.Stopwatch.Stopwatch.Inactivity` are built
-   from their float seconds, so they resolve **microseconds**.
+:attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInSeconds` / :attr:`~pyTooling.Stopwatch.Stopwatch.ActivityInNanoseconds`
+and :attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInSeconds` /
+:attr:`~pyTooling.Stopwatch.Stopwatch.InactivityInNanoseconds`. A stopwatch keeps its split times in nanoseconds, so
+the activity and inactivity of a stopped stopwatch add up to its duration exactly.
 
 .. note::
 
