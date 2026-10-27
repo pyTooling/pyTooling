@@ -762,7 +762,7 @@ class Stopwatch(SlottedObject):
 	_stopTime:     Nullable[int]             #: Performance counter in ns when the stopwatch was stopped.
 	_totalTime:    Nullable[int]             #: Duration in ns from starting to stopping, activity and inactivity.
 	_duration:     Nullable[Duration]        #: :attr:`Duration` of a stopped stopwatch, computed on first access.
-	_splits:       list[tuple[float, bool]]  #: Split times as (duration, is-active) pairs, in the order they were taken.
+	_splits:       list[tuple[int, bool]]    #: Split times as (nanoseconds, is-active) pairs, in the order taken.
 
 	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
 
@@ -836,7 +836,7 @@ class Stopwatch(SlottedObject):
 		self._beginTime = datetime.now()
 		self._resumeTime = self._startTime = perf_counter_ns()
 
-	def Split(self) -> float:
+	def Split(self) -> Duration:
 		"""
 		Take a split time and return the time delta to the previous stopwatch operation.
 
@@ -847,7 +847,7 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first split.
 		* the duration from last resume to this split.
 
-		:returns:               Duration in seconds since last stopwatch operation
+		:returns:               Duration since last stopwatch operation.
 		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		pauseTime = perf_counter_ns()
@@ -855,13 +855,13 @@ class Stopwatch(SlottedObject):
 		if self._resumeTime is None:
 			raise StopwatchError("Stopwatch was not started or resumed.")
 
-		diff = (pauseTime - self._resumeTime) / 1e9
+		diff = pauseTime - self._resumeTime
 		self._splits.append((diff, True))
 		self._resumeTime = pauseTime
 
-		return diff
+		return Duration(nanoseconds=diff)
 
-	def Pause(self) -> float:
+	def Pause(self) -> Duration:
 		"""
 		Pause the stopwatch and return the time delta to the previous stopwatch operation.
 
@@ -872,7 +872,7 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the first pause.
 		* the duration from last resume to this pause.
 
-		:returns:               Duration in seconds since last stopwatch operation
+		:returns:               Duration since last stopwatch operation.
 		:raises StopwatchError: If stopwatch was not started or resumed.
 		"""
 		self._pauseTime = perf_counter_ns()
@@ -880,13 +880,13 @@ class Stopwatch(SlottedObject):
 		if self._resumeTime is None:
 			raise StopwatchError("Stopwatch was not started or resumed.")
 
-		diff = (self._pauseTime - self._resumeTime) / 1e9
+		diff = self._pauseTime - self._resumeTime
 		self._splits.append((diff, True))
 		self._resumeTime = None
 
-		return diff
+		return Duration(nanoseconds=diff)
 
-	def Resume(self) -> float:
+	def Resume(self) -> Duration:
 		"""
 		Resume the stopwatch and return the time delta to the previous pause operation.
 
@@ -894,7 +894,7 @@ class Stopwatch(SlottedObject):
 		and the resume operation is possible. |br|
 		The time delta will be the duration from last pause to this resume.
 
-		:returns:               Duration in seconds since last pause operation
+		:returns:               Duration since last pause operation.
 		:raises StopwatchError: If stopwatch was not paused.
 		"""
 		self._resumeTime = perf_counter_ns()
@@ -902,13 +902,13 @@ class Stopwatch(SlottedObject):
 		if self._pauseTime is None:
 			raise StopwatchError("Stopwatch was not paused.")
 
-		diff = (self._resumeTime - self._pauseTime) / 1e9
+		diff = self._resumeTime - self._pauseTime
 		self._splits.append((diff, False))
 		self._pauseTime = None
 
-		return diff
+		return Duration(nanoseconds=diff)
 
-	def Stop(self) -> float:
+	def Stop(self) -> Duration:
 		"""
 		Stop the stopwatch and return the time delta to the previous stopwatch operation.
 
@@ -919,7 +919,7 @@ class Stopwatch(SlottedObject):
 		* the duration from start operation to the stop operation.
 		* the duration from last resume to the stop operation.
 
-		:returns:               Duration in seconds since last stopwatch operation
+		:returns:               Duration since last stopwatch operation.
 		:raises StopwatchError: If stopwatch was not started.
 		:raises StopwatchError: If stopwatch was already stopped.
 		"""
@@ -936,12 +936,12 @@ class Stopwatch(SlottedObject):
 		self._endTime =  endTime
 
 		if len(self._splits) == 0:    # was never paused
-			diff = (self._stopTime - self._startTime) / 1e9
+			diff = self._stopTime - self._startTime
 		elif self._resumeTime is None:    # is paused
-			diff = (self._stopTime - self._pauseTime) / 1e9
+			diff = self._stopTime - self._pauseTime
 			self._splits.append((diff, False))
 		else:                           # is running
-			diff = (self._stopTime - self._resumeTime) / 1e9
+			diff = self._stopTime - self._resumeTime
 			self._splits.append((diff, True))
 
 		self._pauseTime =  None
@@ -951,7 +951,7 @@ class Stopwatch(SlottedObject):
 		# FIXME: why is this unused?
 		beginEndDiff = self._endTime - self._beginTime
 
-		return diff
+		return Duration(nanoseconds=diff)
 
 	@property
 	def Digits(self) -> int:
@@ -1098,13 +1098,13 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the duration of all active split times.
 
-		If the stopwatch is currently running, the duration since start or last resume operation will be included. It is
-		built from :attr:`ActivityInSeconds`, the same value as a float, so it resolves microseconds.
+		If the stopwatch is currently running, the duration since start or last resume operation will be included.
+		:attr:`ActivityInSeconds` and :attr:`ActivityInNanoseconds` are the same value as numbers.
 
 		:returns: Duration of all active split times. If the stopwatch was never started, the return value is a zero
 		          duration.
 		"""
-		return Duration(seconds=self.ActivityInSeconds)
+		return Duration(nanoseconds=self.ActivityInNanoseconds)
 
 	@readonly
 	def ActivityInSeconds(self) -> float:
@@ -1114,10 +1114,20 @@ class Stopwatch(SlottedObject):
 		:returns: Duration of all active split times in seconds. If the stopwatch was never started, the return value will
 		          be 0.0.
 		"""
-		if self._startTime is None:
-			return 0.0
+		return self.ActivityInNanoseconds / 1e9
 
-		currentDiff = 0.0 if self._resumeTime is None else ((perf_counter_ns() - self._resumeTime) / 1e9)
+	@readonly
+	def ActivityInNanoseconds(self) -> int:
+		"""
+		Read-only property returning the same duration as :attr:`Activity`, but in whole nanoseconds.
+
+		:returns: Duration of all active split times in nanoseconds. If the stopwatch was never started, the return value
+		          will be 0.
+		"""
+		if self._startTime is None:
+			return 0
+
+		currentDiff = 0 if self._resumeTime is None else (perf_counter_ns() - self._resumeTime)
 		return sum(t for t, a in self._splits if a is True) + currentDiff
 
 	@readonly
@@ -1125,13 +1135,13 @@ class Stopwatch(SlottedObject):
 		"""
 		Read-only property returning the duration of all inactive split times.
 
-		If the stopwatch is currently paused, the duration since last pause operation will be included. It is built from
-		:attr:`InactivityInSeconds`, the same value as a float, so it resolves microseconds.
+		If the stopwatch is currently paused, the duration since last pause operation will be included.
+		:attr:`InactivityInSeconds` and :attr:`InactivityInNanoseconds` are the same value as numbers.
 
 		:returns: Duration of all inactive split times. If the stopwatch was never started, the return value is a zero
 		          duration.
 		"""
-		return Duration(seconds=self.InactivityInSeconds)
+		return Duration(nanoseconds=self.InactivityInNanoseconds)
 
 	@readonly
 	def InactivityInSeconds(self) -> float:
@@ -1141,10 +1151,20 @@ class Stopwatch(SlottedObject):
 		:returns: Duration of all inactive split times in seconds. If the stopwatch was never started, the return value will
 		          be 0.0.
 		"""
-		if self._startTime is None:
-			return 0.0
+		return self.InactivityInNanoseconds / 1e9
 
-		currentDiff = 0.0 if self._pauseTime is None else ((perf_counter_ns() - self._pauseTime) / 1e9)
+	@readonly
+	def InactivityInNanoseconds(self) -> int:
+		"""
+		Read-only property returning the same duration as :attr:`Inactivity`, but in whole nanoseconds.
+
+		:returns: Duration of all inactive split times in nanoseconds. If the stopwatch was never started, the return
+		          value will be 0.
+		"""
+		if self._startTime is None:
+			return 0
+
+		currentDiff = 0 if self._pauseTime is None else (perf_counter_ns() - self._pauseTime)
 		return sum(t for t, a in self._splits if a is False) + currentDiff
 
 	@readonly
@@ -1230,7 +1250,7 @@ class Stopwatch(SlottedObject):
 		elif self._pauseTime is not None:     # resume after pause
 			self._resumeTime = perf_counter_ns()
 
-			diff = (self._resumeTime - self._pauseTime) / 1e9
+			diff = self._resumeTime - self._pauseTime
 			self._splits.append((diff, False))
 			self._pauseTime = None
 		elif self._resumeTime is not None:    # is running?
@@ -1270,14 +1290,14 @@ class Stopwatch(SlottedObject):
 		elif self._resumeTime is not None:    # pause or stop
 			if self._preferPause:
 				self._pauseTime = perf_counter_ns()
-				diff = (self._pauseTime - self._resumeTime) / 1e9
+				diff = self._pauseTime - self._resumeTime
 				self._splits.append((diff, True))
 				self._resumeTime = None
 			else:
 				self._stopTime = perf_counter_ns()
 				self._endTime =  datetime.now()
 
-				diff = (self._stopTime - self._resumeTime) / 1e9
+				diff = self._stopTime - self._resumeTime
 				self._splits.append((diff, True))
 
 				self._pauseTime =  None
@@ -1294,7 +1314,7 @@ class Stopwatch(SlottedObject):
 		"""
 		return len(self._splits)
 
-	def __getitem__(self, index: int) -> tuple[float, bool]:
+	def __getitem__(self, index: int) -> tuple[Duration, bool]:
 		"""
 		Implementation of ``split = object[i]`` to return the i-th split time.
 
@@ -1304,9 +1324,11 @@ class Stopwatch(SlottedObject):
 		                    (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		:raises IndexError: If index *i* doesn't exist.
 		"""
-		return self._splits[index]
+		nanoseconds, isActive = self._splits[index]
 
-	def __iter__(self) -> Iterator[tuple[float, bool]]:
+		return Duration(nanoseconds=nanoseconds), isActive
+
+	def __iter__(self) -> Iterator[tuple[Duration, bool]]:
 		"""
 		Return an iterator of tuples to iterate all split times.
 
@@ -1316,7 +1338,8 @@ class Stopwatch(SlottedObject):
 		          (1) delta time to the previous stopwatch operation and |br|
 		          (2) a boolean indicating if the split was an activity (true) or inactivity (false).
 		"""
-		return self._splits.__iter__()
+		for nanoseconds, isActive in self._splits:
+			yield Duration(nanoseconds=nanoseconds), isActive
 
 	def __format__(self, formatSpec: str) -> str:
 		"""
