@@ -37,7 +37,6 @@ shrinks from layer to layer - and writes one file list per layer, ready to be tu
 """
 from __future__            import annotations
 
-from datetime              import timedelta
 from pathlib               import Path
 from typing                import Optional as Nullable
 
@@ -45,7 +44,7 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Filesystem  import Root, Element, Directory, Filename, SymbolicLink, FilesystemError
-from pyTooling.Stopwatch   import Stopwatch
+from pyTooling.Stopwatch   import Duration, Stopwatch
 
 
 _Root = Root
@@ -214,7 +213,7 @@ class LayerCake(metaclass=ExtendedType):
 	_root:             Nullable[_Root]      #: Reference to the filesystem root.
 	_layers:           list[Layer]          #: List of Docker image layers.
 	_emptyDirectories: list[Directory]      #: List of empty directories (not covered by layers).
-	_slicingDuration:  Nullable[timedelta]  #: Time to sort files by size and assign them to layers.
+	_slicingDuration:  Nullable[Duration]   #: Time to sort files by size and assign them to layers.
 
 	def __init__(self, root: Root) -> None:
 		"""
@@ -281,7 +280,7 @@ class LayerCake(metaclass=ExtendedType):
 		return len(self._emptyDirectories)
 
 	@readonly
-	def SlicingDuration(self) -> timedelta:
+	def SlicingDuration(self) -> Duration:
 		"""
 		Read-only property to access the time needed to slice the filesystem structure into docker layers.
 

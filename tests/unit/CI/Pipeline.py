@@ -41,6 +41,7 @@ from pyTooling.CI          import Base, PipelineGroup, Pipeline, Workflow, Matri
 from pyTooling.Exceptions  import AlreadyInHierarchyError
 from pyTooling.Graph       import BaseGraph, Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import AbstractClassError, ExtendedType, UnfulfilledExpectationError
+from pyTooling.Stopwatch   import Duration
 from pyTooling.Tracing.CI  import Result
 from pyTooling.Testing     import Testcase
 
@@ -221,6 +222,7 @@ class Instantiation(Testcase):
 
 		self.assertListEqual([job], pipeline.Jobs)
 		self.assertEqual("success()", job.Rules[0].Condition)
+		self.assertIs(Duration, type(job.Duration))
 		self.assertEqual(timedelta(seconds=60), job.Duration)
 		self.assertEqual(60.0, job.DurationInSeconds)
 		self.assertIs(Outcome.Failure, job.Outcome)

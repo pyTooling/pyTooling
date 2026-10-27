@@ -984,9 +984,9 @@ class SPDXLicense(BaseLicense):
 
 		:param spdxLicense: The license this node stands for.
 		:param parent:      Optional, the operator this node becomes an operand of.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		:raises ValueError: If parameter 'spdxLicense' is None.
 		:raises TypeError:  If parameter 'spdxLicense' is not of type :class:`License`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(parent)
 
@@ -1061,12 +1061,12 @@ class LicenseReference(BaseLicense):
 		:param licenseIdentifier:  Identifier following ``LicenseRef-``.
 		:param documentIdentifier: Optional, identifier following ``DocumentRef-``.
 		:param parent:             Optional, the operator this node becomes an operand of.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`Operator`.
 		:raises ValueError:        If parameter 'licenseIdentifier' is None.
 		:raises TypeError:         If parameter 'licenseIdentifier' is not of type :class:`str`.
 		:raises ValueError:        If parameter 'licenseIdentifier' is empty.
 		:raises TypeError:         If parameter 'documentIdentifier' is not of type :class:`str`.
 		:raises ValueError:        If parameter 'documentIdentifier' is empty.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(parent)
 
@@ -1303,10 +1303,10 @@ class LicenseException(LicenseExpression):
 
 		:param identifier:  The exception's SPDX identifier.
 		:param parent:      Optional, the operator this node becomes an operand of.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		:raises ValueError: If parameter 'identifier' is None.
 		:raises TypeError:  If parameter 'identifier' is not of type :class:`str`.
 		:raises ValueError: If parameter 'identifier' is empty.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(parent)
 
@@ -1364,8 +1364,8 @@ class UnaryOperator(Operator):
 
 		:param operand:    Optional, the expression this operator is applied to.
 		:param parent:     Optional, the operator this node becomes an operand of.
-		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
 		:raises TypeError: If parameter 'operand' is not of type :class:`LicenseExpression`.
+		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(parent)
 
@@ -1487,9 +1487,9 @@ class BinaryOperator(Operator):
 		:param left:       Optional, the operator's left operand.
 		:param right:      Optional, the operator's right operand.
 		:param parent:     Optional, the operator this node becomes an operand of.
-		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
 		:raises TypeError: If parameter 'left' is not of type :class:`LicenseExpression`.
 		:raises TypeError: If parameter 'right' is not of type :class:`LicenseExpression`.
+		:raises TypeError: If parameter 'parent' is not of type :class:`Operator`.
 		"""
 		super().__init__(parent)
 

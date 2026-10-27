@@ -71,7 +71,7 @@ values, the interface of a reusable workflow.
 """
 from __future__            import annotations
 
-from datetime              import datetime, timedelta
+from datetime              import datetime
 from typing                import Any, ClassVar, Hashable, Iterable, Iterator, Mapping, Optional as Nullable
 
 from pyTooling.Common      import getFullyQualifiedName, StringEnum
@@ -80,6 +80,7 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import AlreadyInHierarchyError, CycleError, ToolingException
 from pyTooling.Graph       import Graph, Subgraph, Vertex
 from pyTooling.MetaClasses import ExtendedType, ThisClass, abstractclass
+from pyTooling.Stopwatch   import Duration
 
 
 @export
@@ -423,7 +424,7 @@ class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		return self._outcome
 
 	@readonly
-	def Duration(self) -> Nullable[timedelta]:
+	def Duration(self) -> Nullable[Duration]:
 		"""
 		Read-only property to return how long the element ran.
 
@@ -435,7 +436,7 @@ class Base(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		if self.StartedAt is None or self.CompletedAt is None:
 			return None
 
-		return self.CompletedAt - self.StartedAt
+		return Duration.FromTimedelta(self.CompletedAt - self.StartedAt)
 
 	@readonly
 	def DurationInSeconds(self) -> Nullable[float]:
@@ -549,11 +550,11 @@ class Rule(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:        Optional, reference to the element the rule belongs to, which adds it as its last rule.
 		                      Default: ``None``.
-		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'condition' is not of type :class:`str`.
 		:raises ValueError:   If parameter 'condition' is empty.
 		:raises ValueError:   If parameter 'when' is ``None``.
 		:raises TypeError:    If parameter 'when' is not of type :class:`RuleOutcome`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'parent' is not of type :class:`RulesMixin`.
 		"""
 		super().__init__(keyValuePairs)

@@ -10,6 +10,54 @@ release.
 Version 10.x (2026)
 *******************
 
+.. topic:: :gh:`v10.1.0 - 28.10.2026 <pyTooling/pyTooling/releases/v10.1.0>`
+
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Stopwatch`
+
+     * :class:`~pyTooling.Stopwatch.Duration` is a :class:`~datetime.timedelta` resolving nanoseconds. Its constructor
+       takes the parameters of :class:`~datetime.timedelta` plus ``nanoseconds``, and adds them all up. Like
+       :class:`~datetime.timedelta`, a duration is normalized into components: ``days`` (the only one with a sign),
+       ``seconds`` and :attr:`~pyTooling.Stopwatch.Duration.nanoseconds`; the inherited ``microseconds`` is
+       ``nanoseconds // 1000``. :meth:`~pyTooling.Stopwatch.Duration.total_nanoseconds` returns the whole duration in
+       nanoseconds, :meth:`~pyTooling.Stopwatch.Duration.FromTimedelta` converts a :class:`~datetime.timedelta`.
+     * Arithmetic involving a duration calculates in nanoseconds and returns a duration, also with a
+       :class:`~datetime.timedelta` on either side; ``*`` and ``/`` by a number round half to even, like
+       :class:`~datetime.timedelta`. Comparisons and the hash work in nanoseconds; comparing with something else than
+       a :class:`~datetime.timedelta` raises a :exc:`TypeError`.
+     * A duration accepts the format specification of the stopwatch: ``f"{duration:%H:%M:%S.%N}"``.
+
+   * :mod:`pyTooling.Dependency.Python`
+
+     * :class:`~pyTooling.Dependency.Python.PyProjectFile` reads the build requirements a ``pyproject.toml`` file
+       states in its ``[build-system]`` table (:pep:`518`), and
+       :meth:`Resolver.ResolvePyProjectFile <pyTooling.Dependency.Resolver.Resolver.ResolvePyProjectFile>` resolves
+       them. A missing file raises :exc:`~pyTooling.Dependency.PyProjectFileNotFoundError`, a malformed one
+       :exc:`~pyTooling.Dependency.PyProjectFileError`.
+
+   .. rubric:: Changes
+
+   * Durations are returned as :class:`~pyTooling.Stopwatch.Duration` instead of :class:`~datetime.timedelta`: by
+     :class:`~pyTooling.Stopwatch.Stopwatch` (``Duration``, ``Activity``, ``Inactivity``),
+     :mod:`pyTooling.Filesystem`, :mod:`pyTooling.Dependency.Python`, :mod:`pyTooling.CI`, :mod:`pyTooling.Tracing`
+     and :mod:`pyTooling.Diagram.Gantt`. A :class:`~pyTooling.Stopwatch.Duration` is a :class:`~datetime.timedelta`;
+     ``str()`` shows 9 fractional digits when a duration has nanoseconds below a microsecond.
+   * :class:`~pyTooling.Dependency.UnparsableRequirementWarning`'s line number is ``None`` for an entry of a
+     ``pyproject.toml`` file, which :mod:`tomllib` reads without line numbers.
+
+   .. rubric:: Bug Fixes
+
+   * A stopwatch's format specification replaced the placeholders before unescaping ``%%``: ``100%%M`` raised a
+     :exc:`ValueError` instead of rendering ``100%M``, and an unknown specifier after ``%%`` passed unnoticed.
+
+   .. rubric:: Documentation
+
+   * :ref:`COMMON/Stopwatch/Duration` describes the components, arithmetic and comparisons of a duration.
+   * :ref:`DEPENDENCIES` lists ``pyproject.toml`` files as an input of the resolver.
+   * ``:raises:`` fields follow the parameter order of the signature in 24 functions and methods.
+
+
 .. topic:: :gh:`v10.0.0 - 26.10.2026 <pyTooling/pyTooling/releases/v10.0.0>`
 
    .. rubric:: New Features

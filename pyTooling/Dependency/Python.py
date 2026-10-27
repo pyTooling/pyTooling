@@ -57,6 +57,7 @@ from functools                import wraps, update_wrapper
 from pathlib                  import Path
 from re                       import compile as re_compile, Pattern
 from threading                import RLock
+from tomllib                  import TOMLDecodeError, load as toml_load
 from typing                   import Any, ClassVar, Deque, Optional as Nullable, Union, Iterable, Iterator, Mapping, \
                                      Self
 
@@ -89,10 +90,11 @@ from pyTooling.Dependency     import Package, PackageStorage, PackageVersion, Pa
                                      UnparsableRequirementWarning, UnsupportedVersionWarning, ProjectNotFoundError, \
                                      DependencyError, NoSessionAvailableError, ReleaseNotFoundError, \
                                      CircularRequirementsFileError, RequirementsFileNotFoundError, PackageIndexError, \
-                                     AlreadyInRequirementsTreeError, UnparsableURLWarning
+                                     AlreadyInRequirementsTreeError, UnparsableURLWarning, PyProjectFileError, \
+                                     PyProjectFileNotFoundError
 from pyTooling.Licensing      import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER, \
                                      LicenseAbsence, ProprietaryLicense, UnknownLicense
-from pyTooling.Stopwatch      import Stopwatch
+from pyTooling.Stopwatch      import Duration, Stopwatch
 from pyTooling.Warning        import WarningCollector
 from pyTooling.URI            import URL, URLError
 from pyTooling.Versioning     import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
@@ -173,7 +175,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	_path:                     _Path                                       #: Path of this requirements file.
 	_entries:                  list[RequirementsFileEntryT]                #: What this file states, in file order.
 	_analyzedRequirementFiles: Nullable[dict[_Path, RequirementsFile]]     #: Every file of the tree, by resolved path.
-	_analysisDuration:         Nullable[timedelta]                         #: Time :meth:`Parse` took to read the file.
+	_analysisDuration:         Nullable[Duration]                          #: Time :meth:`Parse` took to read the file.
 
 	def __init__(
 		self,
@@ -200,12 +202,12 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		:raises ValueError:                     If parameter 'path' is ``None``.
 		:raises TypeError:                      If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:                      If parameter 'entries' is not iterable.
-		:raises TypeError:                      If parameter 'parent' is not of type :class:`RequirementsFile`.
-		:raises TypeError:                      If parameter 'analysisDuration' is not of type :class:`~datetime.timedelta`.
 		:raises ValueError:                     If an element of parameter 'entries' is ``None``.
 		:raises TypeError:                      If an element of parameter 'entries' is not of type
 		                                        :class:`~packaging.requirements.Requirement`, :class:`RequirementsFile`
 		                                        or :class:`RequirementsFileReference`.
+		:raises TypeError:                      If parameter 'parent' is not of type :class:`RequirementsFile`.
+		:raises TypeError:                      If parameter 'analysisDuration' is not of type :class:`~datetime.timedelta`.
 		:raises AlreadyInRequirementsTreeError: If an element of parameter 'entries' is referenced by another file
 		                                        already.
 		:raises AlreadyInRequirementsTreeError: If an element of parameter 'entries' is a reference another file states
@@ -237,7 +239,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		self._parent =           parent
 		self._root =             self if parent is None else parent._root
 		self._entries =          []
-		self._analysisDuration = analysisDuration
+		self._analysisDuration = None if analysisDuration is None else Duration.FromTimedelta(analysisDuration)
 
 		# resolved as the mapping's key only, not as '_path': a file reachable under two spellings is one key
 		if parent is None:
@@ -447,7 +449,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		return self._analyzedRequirementFiles
 
 	@readonly
-	def AnalysisDuration(self) -> Nullable[timedelta]:
+	def AnalysisDuration(self) -> Nullable[Duration]:
 		"""
 		Read-only property to access the time :meth:`Parse` took to read this file (:attr:`_analysisDuration`).
 
@@ -684,6 +686,200 @@ class RequirementsFileReference(metaclass=ExtendedType, slots=True):
 		:returns: A string representation of this reference.
 		"""
 		return f"{self._path} (referenced before)"
+
+
+@export
+class PyProjectFile(metaclass=ExtendedType, slots=True):
+	"""
+	A ``pyproject.toml`` file, with the build requirements it states.
+
+	:pep:`518` specifies the ``[build-system]`` table: its ``requires`` key lists the :pep:`508` requirements a build
+	frontend installs before it builds the package.
+
+	:meth:`Parse` reads a file and measures how long reading took (:attr:`AnalysisDuration`); the initializer takes the
+	build requirements, so a file can be described by hand, too.
+	"""
+
+	_path:              _Path                #: Path of the ``pyproject.toml`` file.
+	_buildRequirements: list[Requirement]    #: Requirements of the ``[build-system]`` table, in file order.
+	_analysisDuration:  Nullable[Duration]   #: Time :meth:`Parse` took to read the file.
+
+	def __init__(
+		self,
+		path:              Path,
+		buildRequirements: Nullable[Iterable[Requirement]] = None,
+		*,
+		analysisDuration:  Nullable[timedelta] = None
+	) -> None:
+		"""
+		Initializes a ``pyproject.toml`` file from its path and the build requirements it states.
+
+		:param path:              Path of the ``pyproject.toml`` file.
+		:param buildRequirements: Optional, requirements of the ``[build-system]`` table, in the order the file states
+		                          them. Default: ``None``.
+		:param analysisDuration:  Optional, the time reading the file took, converted to a
+		                          :class:`~pyTooling.Stopwatch.Duration`. Default: ``None``, not measured.
+		:raises ValueError:       If parameter 'path' is ``None``.
+		:raises TypeError:        If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises TypeError:        If parameter 'buildRequirements' is not iterable.
+		:raises ValueError:       If an element of parameter 'buildRequirements' is ``None``.
+		:raises TypeError:        If an element of parameter 'buildRequirements' is not of type
+		                          :class:`~packaging.requirements.Requirement`.
+		:raises TypeError:        If parameter 'analysisDuration' is not of type :class:`~datetime.timedelta`.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		if buildRequirements is not None and not isinstance(buildRequirements, Iterable):
+			ex = TypeError("Parameter 'buildRequirements' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(buildRequirements)}'.")
+			raise ex
+
+		if analysisDuration is not None and not isinstance(analysisDuration, timedelta):
+			ex = TypeError("Parameter 'analysisDuration' is not of type 'timedelta'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(analysisDuration)}'.")
+			raise ex
+
+		self._path =             path
+		self._analysisDuration = None if analysisDuration is None else Duration.FromTimedelta(analysisDuration)
+
+		self._buildRequirements = buildRequirementList = []
+		if buildRequirements is not None:
+			for requirement in buildRequirements:
+				if requirement is None:
+					raise ValueError("An element of parameter 'buildRequirements' is None.")
+				elif not isinstance(requirement, Requirement):
+					ex = TypeError("An element of parameter 'buildRequirements' is not of type 'Requirement'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(requirement)}'.")
+					raise ex
+
+				buildRequirementList.append(requirement)
+
+	@classmethod
+	def Parse(cls, path: Path) -> Self:
+		"""
+		Read the build requirements of a ``pyproject.toml`` file.
+
+		The file is read by :mod:`tomllib`, and every string of the ``[build-system]`` table's ``requires`` key is parsed
+		as a requirement. A string that can't be parsed as a requirement is left out and reported as a critical
+		:exc:`~pyTooling.Dependency.UnparsableRequirementWarning` to a :class:`~pyTooling.Warning.WarningCollector`;
+		without a collector, :exc:`~pyTooling.Warning.UnhandledCriticalWarningError` is raised.
+
+		A file without a ``[build-system]`` table has no build requirements: the list is empty, the setuptools defaults
+		:pep:`518` lets a build frontend assume aren't filled in. A ``[build-system]`` table must have the key
+		``requires`` (:pep:`518`), as pip rejects such a file too.
+
+		Reading is measured with a :class:`~pyTooling.Stopwatch.Stopwatch` (:attr:`AnalysisDuration`).
+
+		:param path:                           Path of the ``pyproject.toml`` file to read.
+		:returns:                              The ``pyproject.toml`` file with its build requirements.
+		:raises ValueError:                    If parameter 'path' is ``None``.
+		:raises TypeError:                     If parameter 'path' is not of type :class:`~pathlib.Path`.
+		:raises PyProjectFileNotFoundError:    If the ``pyproject.toml`` file doesn't exist.
+		:raises PyProjectFileError:            If the file isn't valid TOML.
+		:raises PyProjectFileError:            If key ``build-system`` is not a table.
+		:raises PyProjectFileError:            If key ``build-system`` has no key ``requires``.
+		:raises PyProjectFileError:            If key ``build-system.requires`` is not a list.
+		:raises PyProjectFileError:            If an element of key ``build-system.requires`` is not a string.
+		:raises UnhandledCriticalWarningError: If an element of key ``build-system.requires`` can't be parsed as a
+		                                       requirement and no :class:`~pyTooling.Warning.WarningCollector` collects
+		                                       the :exc:`~pyTooling.Dependency.UnparsableRequirementWarning`.
+		"""
+		if path is None:
+			raise ValueError("Parameter 'path' is None.")
+		elif not isinstance(path, Path):
+			ex = TypeError("Parameter 'path' is not of type 'Path'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(path)}'.")
+			raise ex
+
+		if not path.exists():
+			raise PyProjectFileNotFoundError(
+				f"Project file '{path}' does not exist.",
+				filePath=path
+			) from FileNotFoundError(path)
+
+		with Stopwatch() as sw:
+			with path.open("rb") as file:
+				try:
+					document = toml_load(file)
+				except TOMLDecodeError as cause:
+					raise PyProjectFileError(f"Project file '{path}' is not valid TOML.", filePath=path) from cause
+
+			buildRequirements: list[Requirement] = []
+			if (buildSystem := document.get("build-system", None)) is not None:
+				if not isinstance(buildSystem, dict):
+					ex = PyProjectFileError(f"Key 'build-system' in '{path}' is not a table.", filePath=path)
+					ex.add_note(f"Got type '{getFullyQualifiedName(buildSystem)}'.")
+					raise ex
+				elif (requires := buildSystem.get("requires", None)) is None:
+					raise PyProjectFileError(f"Key 'build-system' in '{path}' has no key 'requires'.", filePath=path)
+				elif not isinstance(requires, list):
+					ex = PyProjectFileError(f"Key 'build-system.requires' in '{path}' is not a list.", filePath=path)
+					ex.add_note(f"Got type '{getFullyQualifiedName(requires)}'.")
+					raise ex
+
+				for requirement in requires:
+					if not isinstance(requirement, str):
+						ex = PyProjectFileError(
+							f"An element of key 'build-system.requires' in '{path}' is not of type 'str'.",
+							filePath=path
+						)
+						ex.add_note(f"Got type '{getFullyQualifiedName(requirement)}'.")
+						raise ex
+
+					try:
+						buildRequirements.append(Requirement(requirement))
+					except InvalidRequirement as ex:
+						WarningCollector.Raise(
+							UnparsableRequirementWarning(
+								f"Build requirement '{requirement}' in '{path}' can't be parsed.",
+								line=requirement,
+								filePath=path,
+								lineNumber=None
+							),
+							ex
+						)
+
+		return cls(path, buildRequirements, analysisDuration=sw.Duration)
+
+	@readonly
+	def Path(self) -> Path:
+		"""
+		Read-only property to access this ``pyproject.toml`` file's path (:attr:`_path`).
+
+		:returns: Path of the ``pyproject.toml`` file, spelled the way it was handed in.
+		"""
+		return self._path
+
+	@readonly
+	def BuildRequirements(self) -> list[Requirement]:
+		"""
+		Read-only property to access the requirements of the ``[build-system]`` table (:attr:`_buildRequirements`).
+
+		:returns: The build requirements, in the order the file states them; empty if the file states none.
+		"""
+		return self._buildRequirements
+
+	@readonly
+	def AnalysisDuration(self) -> Nullable[Duration]:
+		"""
+		Read-only property to access the time :meth:`Parse` took to read this file (:attr:`_analysisDuration`).
+
+		:returns: Duration of reading this file, or ``None`` if the file wasn't read by :meth:`Parse`.
+		"""
+		return self._analysisDuration
+
+	def __str__(self) -> str:
+		"""
+		Return this file's path and how many build requirements it states.
+
+		:returns: A string representation of this ``pyproject.toml`` file.
+		"""
+		return f"{self._path}: {len(self._buildRequirements)} build requirement(s)"
 
 
 @export

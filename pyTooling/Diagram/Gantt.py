@@ -59,13 +59,14 @@ renderer draws what any of them describe.
 """
 from __future__            import annotations
 
-from datetime              import datetime, timedelta
+from datetime              import datetime
 from typing                import Iterator
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Diagram     import DiagramError
+from pyTooling.Stopwatch   import Duration
 
 
 @export
@@ -160,13 +161,13 @@ class Bar(metaclass=ExtendedType, slots=True):
 		return self._end
 
 	@readonly
-	def Duration(self) -> timedelta:
+	def Duration(self) -> Duration:
 		"""
 		Read-only property to return the length of the bar.
 
 		:returns: The length from the bar's begin to its end.
 		"""
-		return self._end - self._begin
+		return Duration.FromTimedelta(self._end - self._begin)
 
 	@readonly
 	def DurationInSeconds(self) -> float:
@@ -178,22 +179,22 @@ class Bar(metaclass=ExtendedType, slots=True):
 		return (self._end - self._begin).total_seconds()
 
 	@readonly
-	def BeginSinceOrigin(self) -> timedelta:
+	def BeginSinceOrigin(self) -> Duration:
 		"""
 		Read-only property to return how long after the diagram's origin the bar begins.
 
 		:returns: The distance from the origin to the bar's begin.
 		"""
-		return self._begin - self._diagram.Origin
+		return Duration.FromTimedelta(self._begin - self._diagram.Origin)
 
 	@readonly
-	def EndSinceOrigin(self) -> timedelta:
+	def EndSinceOrigin(self) -> Duration:
 		"""
 		Read-only property to return how long after the diagram's origin the bar ends.
 
 		:returns: The distance from the origin to the bar's end.
 		"""
-		return self._end - self._diagram.Origin
+		return Duration.FromTimedelta(self._end - self._diagram.Origin)
 
 	@readonly
 	def BeginSinceOriginInSeconds(self) -> float:
@@ -214,22 +215,22 @@ class Bar(metaclass=ExtendedType, slots=True):
 		return (self._end - self._diagram.Origin).total_seconds()
 
 	@readonly
-	def BeginSinceParent(self) -> timedelta:
+	def BeginSinceParent(self) -> Duration:
 		"""
 		Read-only property to return how long after its row the bar begins.
 
 		:returns: The distance from the row's begin to the bar's begin, which is zero for the row's earliest bar.
 		"""
-		return self._begin - self._parent.Begin
+		return Duration.FromTimedelta(self._begin - self._parent.Begin)
 
 	@readonly
-	def EndSinceParent(self) -> timedelta:
+	def EndSinceParent(self) -> Duration:
 		"""
 		Read-only property to return how long after its row's begin the bar ends.
 
 		:returns: The distance from the row's begin to the bar's end.
 		"""
-		return self._end - self._parent.Begin
+		return Duration.FromTimedelta(self._end - self._parent.Begin)
 
 
 @export
@@ -250,8 +251,8 @@ class Row(metaclass=ExtendedType, slots=True):
 		:param name:        Name of the row.
 		:param parent:      The diagram the row belongs to.
 		:raises ValueError: If parameter 'name' is None.
-		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'name' is not of type :class:`str`.
+		:raises ValueError: If parameter 'parent' is None.
 		:raises TypeError:  If parameter 'parent' is not of type :class:`Diagram`.
 		"""
 		if name is None:
@@ -336,14 +337,14 @@ class Row(metaclass=ExtendedType, slots=True):
 		return max(bar.End for bar in self._bars)
 
 	@readonly
-	def Duration(self) -> timedelta:
+	def Duration(self) -> Duration:
 		"""
 		Read-only property to return the length of the row.
 
 		:returns:             The length from the row's begin to its end, gaps between its bars included.
 		:raises DiagramError: If the row has no bars.
 		"""
-		return self.End - self.Begin
+		return Duration.FromTimedelta(self.End - self.Begin)
 
 	@readonly
 	def DurationInSeconds(self) -> float:
@@ -356,24 +357,24 @@ class Row(metaclass=ExtendedType, slots=True):
 		return (self.End - self.Begin).total_seconds()
 
 	@readonly
-	def BeginSinceOrigin(self) -> timedelta:
+	def BeginSinceOrigin(self) -> Duration:
 		"""
 		Read-only property to return how long after the diagram's origin the row begins.
 
 		:returns:             The distance from the origin to the row's begin.
 		:raises DiagramError: If the row has no bars.
 		"""
-		return self.Begin - self._parent.Origin
+		return Duration.FromTimedelta(self.Begin - self._parent.Origin)
 
 	@readonly
-	def EndSinceOrigin(self) -> timedelta:
+	def EndSinceOrigin(self) -> Duration:
 		"""
 		Read-only property to return how long after the diagram's origin the row ends.
 
 		:returns:             The distance from the origin to the row's end.
 		:raises DiagramError: If the row has no bars.
 		"""
-		return self.End - self._parent.Origin
+		return Duration.FromTimedelta(self.End - self._parent.Origin)
 
 	@readonly
 	def BarCount(self) -> int:
@@ -428,8 +429,8 @@ class Diagram(metaclass=ExtendedType, slots=True):
 		:param title:       Title of the diagram.
 		:param origin:      The time offsets are counted from.
 		:raises ValueError: If parameter 'title' is None.
-		:raises ValueError: If parameter 'origin' is None.
 		:raises TypeError:  If parameter 'title' is not of type :class:`str`.
+		:raises ValueError: If parameter 'origin' is None.
 		:raises TypeError:  If parameter 'origin' is not of type :class:`~datetime.datetime`.
 		"""
 		if title is None:

@@ -473,8 +473,8 @@ class Version(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'epoch' is a negative number.
 		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
 		"""
 		self.__hash = None
 
@@ -1373,8 +1373,8 @@ class SemanticVersion(Version):
 		:raises ValueError: If parameter 'epoch' is a negative number.
 		:raises TypeError:  If parameter 'build' is not of type integer.
 		:raises ValueError: If parameter 'build' is a negative number.
-		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'postfix' is not of type string.
+		:raises TypeError:  If parameter 'prefix' is not of type string.
 		:raises TypeError:  If parameter 'spelling' is not of type string.
 		:raises ValueError: If parameter 'spelling' isn't a spelling of the release level.
 		"""
@@ -2925,9 +2925,9 @@ class VersionRange(Generic[V], metaclass=ExtendedType, slots=True):
 		:param upperBound:    Highest version (inclusive), or ``None`` to leave the range open upwards.
 		:param boundHandling: Optional, strategy deciding whether the bounds are part of the range.
 		:raises TypeError:    If parameter ``lowerBound`` is neither ``None`` nor of type :class:`Version`.
-		:raises TypeError:    If parameter ``upperBound`` is neither ``None`` nor of type :class:`Version`.
 		:raises TypeError:    If parameter ``lowerBound`` and ``upperBound`` are unrelated types.
 		:raises ValueError:   If parameter ``lowerBound`` isn't less than or equal to ``upperBound``.
+		:raises TypeError:    If parameter ``upperBound`` is neither ``None`` nor of type :class:`Version`.
 		"""
 		if lowerBound is not None and not isinstance(lowerBound, Version):
 			ex = TypeError("Parameter 'lowerBound' is not of type 'Version'.")
@@ -3606,11 +3606,11 @@ class VersionConstraint(Generic[V], metaclass=ExtendedType, slots=True):
 		:param comparison:  The comparison to apply.
 		:param version:     The version to compare against.
 		:raises TypeError:  If parameter 'comparison' is not of type :class:`VersionComparison`.
-		:raises TypeError:  If parameter 'version' is not of type :class:`Version`.
 		:raises ValueError: If parameter 'comparison' is a shorthand like
 		                    :attr:`~VersionComparison.CompatibleRelease`. |br|
 		                    Use the matching :class:`RangeVersionConstraint`, which derives an upper bound from the
 		                    version.
+		:raises TypeError:  If parameter 'version' is not of type :class:`Version`.
 		"""
 		if not isinstance(comparison, VersionComparison):
 			ex = TypeError("Parameter 'comparison' is not of type 'VersionComparison'.")

@@ -177,19 +177,19 @@ class Function(BaseWithCountAndValue):
 		:param count:                   Optional, how often the function was called. Default: ``None``.
 		:param value:                   Optional, any value attached to the function, e.g. its location. Default: ``None``.
 		:param keyValuePairs:           Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:raises TypeError:              If parameter 'count' is not of type :class:`int`.
-		:raises ValueError:             If parameter 'count' is negative.
 		:raises ValueError:             If parameter 'callGraph' is None.
 		:raises TypeError:              If parameter 'callGraph' is not of type :class:`CallGraph`.
 		:raises ValueError:             If parameter 'functionID' is None.
 		:raises TypeError:              If parameter 'functionID' is not hashable.
-		:raises DuplicateFunctionError: If the graph has a function with that ID already.
 		:raises ValueError:             If parameter 'kind' is None.
 		:raises TypeError:              If parameter 'kind' is not of type :class:`FunctionKind`.
 		:raises TypeError:              If parameter 'controlFlowGraph' is not of type
 		                                :class:`~pyTooling.ControlFlow.ControlFlowGraph`.
 		:raises ValueError:             If parameter 'controlFlowGraph' is given for a function of kind
 		                                :attr:`FunctionKind.Unknown`.
+		:raises TypeError:              If parameter 'count' is not of type :class:`int`.
+		:raises ValueError:             If parameter 'count' is negative.
+		:raises DuplicateFunctionError: If the graph has a function with that ID already.
 		"""
 		super().__init__(count, value, keyValuePairs)
 
@@ -410,8 +410,6 @@ class Call(BaseWithCountAndValue):
 		:param count:         Optional, how often the call was made. Default: ``None``.
 		:param value:         Optional, any value attached to the call, e.g. the source line of the call. Default: ``None``.
 		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:raises TypeError:    If parameter 'count' is not of type :class:`int`.
-		:raises ValueError:   If parameter 'count' is negative.
 		:raises ValueError:   If parameter 'caller' is None.
 		:raises TypeError:    If parameter 'caller' is not of type :class:`Function`.
 		:raises ValueError:   If parameter 'callee' is None.
@@ -423,6 +421,8 @@ class Call(BaseWithCountAndValue):
 		:raises ValueError:   If parameter 'callSite' is given, but the caller has no control flow graph.
 		:raises ValueError:   If parameter 'callSite' belongs to another control flow graph than the caller's.
 		:raises ValueError:   If parameter 'callSite' is not a block of :attr:`~pyTooling.ControlFlow.BlockKind.Code`.
+		:raises TypeError:    If parameter 'count' is not of type :class:`int`.
+		:raises ValueError:   If parameter 'count' is negative.
 		"""
 		super().__init__(count, value, keyValuePairs)
 

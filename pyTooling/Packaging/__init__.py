@@ -862,18 +862,18 @@ def DescribePythonPackage(
 	:param dataFiles:                      Optional, a dictionary mapping package names to lists of additional data files.
 	:param debug:                          Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                              A dictionary suitable for :func:`setuptools.setup`.
-	:raises MissingDependencyError:        If package 'setuptools' is not available.
+	:raises TypeError:                     If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
 	:raises TypeError:                     If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:             If README file doesn't exist.
 	:raises TypeError:                     If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:             If requirements file doesn't exist.
 	:raises TypeError:                     If parameter 'documentationRequirementsFile' is not of type
 	                                       :class:`~pathlib.Path`.
 	:raises TypeError:                     If parameter 'unittestRequirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises TypeError:                     If parameter 'packagingRequirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises TypeError:                     If parameter 'sourceFileWithVersion' is not of type :class:`~pathlib.Path`.
+	:raises MissingDependencyError:        If package 'setuptools' is not available.
+	:raises FileNotFoundError:             If README file doesn't exist.
+	:raises FileNotFoundError:             If requirements file doesn't exist.
 	:raises FileNotFoundError:             If package file with dunder variables doesn't exist.
-	:raises TypeError:                     If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
 	:raises ValueError:                    If developmentStatus uses an unsupported value. (See :const:`STATUS`)
 	:raises ValueError:                    If the content type of the README file is not supported. (See
 	                                       :func:`loadReadmeFile`)
@@ -1186,18 +1186,18 @@ def DescribePythonPackageHostedOnGitHub(
 	:param dataFiles:                      Optional, a dictionary mapping package names to lists of additional data files.
 	:param debug:                          Optional, if ``True``, enable extended outputs for debugging.
 	:returns:                              A dictionary suitable for :func:`setuptools.setup`.
-	:raises MissingDependencyError:        If package 'setuptools' is not available.
+	:raises TypeError:                     If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
 	:raises TypeError:                     If parameter 'readmeFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:             If README file doesn't exist.
 	:raises TypeError:                     If parameter 'requirementsFile' is not of type :class:`~pathlib.Path`.
-	:raises FileNotFoundError:             If requirements file doesn't exist.
 	:raises TypeError:                     If parameter 'documentationRequirementsFile' is not of type
 	                                       :class:`~pathlib.Path`.
 	:raises TypeError:                     If parameter 'unittestRequirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises TypeError:                     If parameter 'packagingRequirementsFile' is not of type :class:`~pathlib.Path`.
 	:raises TypeError:                     If parameter 'sourceFileWithVersion' is not of type :class:`~pathlib.Path`.
+	:raises MissingDependencyError:        If package 'setuptools' is not available.
+	:raises FileNotFoundError:             If README file doesn't exist.
+	:raises FileNotFoundError:             If requirements file doesn't exist.
 	:raises FileNotFoundError:             If package file with dunder variables doesn't exist.
-	:raises TypeError:                     If parameter 'license' is not of type :class:`~pyTooling.Licensing.License`.
 	:raises ValueError:                    If developmentStatus uses an unsupported value. (See :const:`STATUS`)
 	:raises ValueError:                    If the content type of the README file is not supported. (See
 	                                       :func:`loadReadmeFile`)

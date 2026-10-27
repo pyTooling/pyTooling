@@ -47,7 +47,7 @@ from __future__            import annotations
 from datetime              import datetime, timedelta
 from time                  import perf_counter_ns
 from types                 import TracebackType
-from typing                import Optional as Nullable, Iterator, Self
+from typing                import Optional as Nullable, Any, Callable, ClassVar, Iterator, Self
 
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Decorators  import export, readonly
@@ -58,6 +58,632 @@ from pyTooling.Exceptions  import ToolingException
 @export
 class StopwatchError(ToolingException):
 	"""This exception is caused by wrong usage of the stopwatch."""
+
+
+@export
+class Duration(timedelta):
+	"""
+	A :class:`~datetime.timedelta` resolving nanoseconds, which can be formatted by a format specification.
+
+	The constructor takes the parameters of :class:`~datetime.timedelta` (``days``, ``seconds``, ``microseconds``,
+	``milliseconds``, ``minutes``, ``hours``, ``weeks``) and ``nanoseconds``; all of them are added up. Like
+	:class:`~datetime.timedelta`, a duration is normalized into components: :attr:`~datetime.timedelta.days` (the only
+	one with a sign), :attr:`~datetime.timedelta.seconds` (``0`` to ``86399``) and :attr:`nanoseconds` (``0`` to
+	``999999999``). The inherited :attr:`~datetime.timedelta.microseconds` is ``nanoseconds // 1000``, so code written
+	for :class:`~datetime.timedelta` sees the duration truncated to microseconds. An existing
+	:class:`~datetime.timedelta` is converted by :meth:`FromTimedelta`.
+
+	Arithmetic and comparisons involving a duration calculate in nanoseconds and return a duration (or a number, where
+	:class:`~datetime.timedelta` returns one). A :class:`~datetime.timedelta` operand is converted.
+	``datetime + duration`` stays the arithmetic of :class:`~datetime.datetime`, which resolves microseconds.
+
+	.. note::
+
+	   :class:`~datetime.timedelta` is a C type, so this is a plain class with ``__slots__``, not an
+	   :class:`~pyTooling.MetaClasses.ExtendedType` class.
+	"""
+
+	__slots__ = ("_nanoseconds",)
+
+	_nanoseconds: int  #: Sub-second component in nanoseconds, ``0`` to ``999999999``.
+
+	_FIELDS: ClassVar[dict[str, Callable[[int], str]]] = {
+		"H": lambda nanoseconds: f"{nanoseconds // 3_600_000_000_000:02}",
+		"M": lambda nanoseconds: f"{nanoseconds // 60_000_000_000 % 60:02}",
+		"S": lambda nanoseconds: f"{nanoseconds // 1_000_000_000 % 60:02}",
+		"L": lambda nanoseconds: f"{nanoseconds // 1_000_000 % 1_000:03}",
+		"U": lambda nanoseconds: f"{nanoseconds // 1_000 % 1_000_000:06}",
+		"N": lambda nanoseconds: f"{nanoseconds % 1_000_000_000:09}",
+		"s": lambda nanoseconds: f"{nanoseconds // 1_000_000_000}",
+		"m": lambda nanoseconds: f"{nanoseconds // 1_000_000}",
+		"u": lambda nanoseconds: f"{nanoseconds // 1_000}",
+		"n": lambda nanoseconds: f"{nanoseconds}",
+	}  #: Functions rendering a format specifier from a non-negative duration in nanoseconds.
+
+	def __new__(
+		cls,
+		days:         float = 0,
+		seconds:      float = 0,
+		microseconds: float = 0,
+		milliseconds: float = 0,
+		minutes:      float = 0,
+		hours:        float = 0,
+		weeks:        float = 0,
+		nanoseconds:  float = 0
+	) -> Self:
+		"""
+		Initializes a duration from the sum of all given units.
+
+		The units of :class:`~datetime.timedelta` are converted by :class:`~datetime.timedelta`, so they resolve
+		microseconds; ``nanoseconds`` resolves nanoseconds. A float number of nanoseconds is rounded to the nearest
+		integer.
+
+		:param days:         Optional, number of days. Default: ``0``.
+		:param seconds:      Optional, number of seconds. Default: ``0``.
+		:param microseconds: Optional, number of microseconds. Default: ``0``.
+		:param milliseconds: Optional, number of milliseconds. Default: ``0``.
+		:param minutes:      Optional, number of minutes. Default: ``0``.
+		:param hours:        Optional, number of hours. Default: ``0``.
+		:param weeks:        Optional, number of weeks. Default: ``0``.
+		:param nanoseconds:  Optional, number of nanoseconds. Default: ``0``.
+		:returns:            The duration.
+		:raises TypeError:   If one of the parameters 'days' to 'weeks' is not a number (raised by
+		                     :class:`~datetime.timedelta`).
+		:raises ValueError:  If parameter 'nanoseconds' is None.
+		:raises TypeError:   If parameter 'nanoseconds' is not of type :class:`int` or :class:`float`.
+		"""
+		if nanoseconds is None:
+			raise ValueError("Parameter 'nanoseconds' is None.")
+		elif isinstance(nanoseconds, float):
+			nanoseconds = round(nanoseconds)
+		elif not isinstance(nanoseconds, int):
+			ex = TypeError("Parameter 'nanoseconds' is not of type 'int' or 'float'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(nanoseconds)}'.")
+			raise ex
+
+		if days == seconds == microseconds == milliseconds == minutes == hours == weeks == 0:
+			total = nanoseconds
+		else:
+			delta = timedelta(days, seconds, microseconds, milliseconds, minutes, hours, weeks)
+			total = ((delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds) * 1_000 + nanoseconds
+
+		wholeSeconds, fraction = divmod(total, 1_000_000_000)
+
+		duration = super().__new__(cls, seconds=wholeSeconds, microseconds=fraction // 1_000)
+		duration._nanoseconds = fraction
+
+		return duration
+
+	@classmethod
+	def FromTimedelta(cls, value: timedelta) -> Self:
+		"""
+		Convert a :class:`~datetime.timedelta` into a duration.
+
+		A duration given as ``value`` keeps its nanoseconds.
+
+		:param value:       The time delta to convert.
+		:returns:           A duration of the same length.
+		:raises ValueError: If parameter 'value' is None.
+		:raises TypeError:  If parameter 'value' is not of type :class:`~datetime.timedelta`.
+		"""
+		if value is None:
+			raise ValueError("Parameter 'value' is None.")
+		elif isinstance(value, Duration):
+			return cls(value.days, value.seconds, nanoseconds=value._nanoseconds)
+		elif not isinstance(value, timedelta):
+			ex = TypeError("Parameter 'value' is not of type 'timedelta'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+			raise ex
+
+		return cls(value.days, value.seconds, value.microseconds)
+
+	@readonly
+	def nanoseconds(self) -> int:
+		"""
+		Read-only property to access the sub-second component in nanoseconds (:attr:`_nanoseconds`).
+
+		It is the counterpart of :attr:`~datetime.timedelta.microseconds` at nanosecond resolution.
+
+		:returns: The nanoseconds of the duration's last second, ``0`` to ``999999999``.
+		"""
+		return self._nanoseconds
+
+	def total_nanoseconds(self) -> int:
+		"""
+		Return the whole duration in nanoseconds.
+
+		It is the counterpart of :meth:`total_seconds` at nanosecond resolution.
+
+		:returns: The duration in nanoseconds.
+		"""
+		return (self.days * 86_400 + self.seconds) * 1_000_000_000 + self._nanoseconds
+
+	def total_seconds(self) -> float:
+		"""
+		Return the whole duration in seconds.
+
+		:returns: The duration in seconds, including the nanoseconds.
+		"""
+		return self.total_nanoseconds() / 1e9
+
+	@staticmethod
+	def _TotalNanoseconds(value: timedelta) -> int:
+		"""
+		Return a time delta in nanoseconds.
+
+		:param value: A :class:`~datetime.timedelta` or a duration.
+		:returns:     The time delta in nanoseconds.
+		"""
+		if isinstance(value, Duration):
+			return value.total_nanoseconds()
+
+		return ((value.days * 86_400 + value.seconds) * 1_000_000 + value.microseconds) * 1_000
+
+	@staticmethod
+	def _DivideRounded(numerator: int, denominator: int) -> int:
+		"""
+		Divide two integers, rounding half to even like :class:`~datetime.timedelta` does.
+
+		:param numerator:   The dividend.
+		:param denominator: The divisor.
+		:returns:           The quotient, rounded to the nearest integer; on a tie to the even one.
+		"""
+		quotient, remainder = divmod(numerator, denominator)
+		doubled = remainder * 2
+		if denominator < 0:
+			doubled =     -doubled
+			denominator = -denominator
+
+		if doubled > denominator or (doubled == denominator and quotient % 2 == 1):
+			quotient += 1
+
+		return quotient
+
+	def __bool__(self) -> bool:
+		"""
+		Check if the duration is not zero.
+
+		:returns: ``True``, if the duration is not zero.
+		"""
+		return self.days != 0 or self.seconds != 0 or self._nanoseconds != 0
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two durations for equality, in nanoseconds.
+
+		:param other:      A duration or a :class:`~datetime.timedelta` to compare with.
+		:returns:          ``True``, if both durations are equal.
+		:raises TypeError: If parameter 'other' is not of type :class:`~datetime.timedelta`.
+		"""
+		if isinstance(other, Duration):
+			return self.days == other.days and self.seconds == other.seconds and self._nanoseconds == other._nanoseconds
+		elif isinstance(other, timedelta):
+			return self._nanoseconds % 1_000 == 0 and super().__eq__(other)
+
+		ex = TypeError("Second operand is not supported by == operator.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+		ex.add_note("Supported types for second operand: Duration, timedelta")
+		raise ex
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two durations for inequality, in nanoseconds.
+
+		:param other:      A duration or a :class:`~datetime.timedelta` to compare with.
+		:returns:          ``True``, if both durations are not equal.
+		:raises TypeError: If parameter 'other' is not of type :class:`~datetime.timedelta`.
+		"""
+		if not isinstance(other, timedelta):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Duration, timedelta")
+			raise ex
+
+		return not self.__eq__(other)
+
+	def __lt__(self, other: Any) -> bool:
+		"""
+		Compare two durations for less-than, in nanoseconds.
+
+		:param other:      A duration or a :class:`~datetime.timedelta` to compare with.
+		:returns:          ``True``, if this duration is shorter.
+		:raises TypeError: If parameter 'other' is not of type :class:`~datetime.timedelta`.
+		"""
+		if isinstance(other, timedelta):
+			return self.total_nanoseconds() < self._TotalNanoseconds(other)
+
+		ex = TypeError("Second operand is not supported by < operator.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+		ex.add_note("Supported types for second operand: Duration, timedelta")
+		raise ex
+
+	def __le__(self, other: Any) -> bool:
+		"""
+		Compare two durations for less-than-or-equal, in nanoseconds.
+
+		:param other:      A duration or a :class:`~datetime.timedelta` to compare with.
+		:returns:          ``True``, if this duration is shorter or equal.
+		:raises TypeError: If parameter 'other' is not of type :class:`~datetime.timedelta`.
+		"""
+		if isinstance(other, timedelta):
+			return self.total_nanoseconds() <= self._TotalNanoseconds(other)
+
+		ex = TypeError("Second operand is not supported by <= operator.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+		ex.add_note("Supported types for second operand: Duration, timedelta")
+		raise ex
+
+	def __gt__(self, other: Any) -> bool:
+		"""
+		Compare two durations for greater-than, in nanoseconds.
+
+		:param other:      A duration or a :class:`~datetime.timedelta` to compare with.
+		:returns:          ``True``, if this duration is longer.
+		:raises TypeError: If parameter 'other' is not of type :class:`~datetime.timedelta`.
+		"""
+		if isinstance(other, timedelta):
+			return self.total_nanoseconds() > self._TotalNanoseconds(other)
+
+		ex = TypeError("Second operand is not supported by > operator.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+		ex.add_note("Supported types for second operand: Duration, timedelta")
+		raise ex
+
+	def __ge__(self, other: Any) -> bool:
+		"""
+		Compare two durations for greater-than-or-equal, in nanoseconds.
+
+		:param other:      A duration or a :class:`~datetime.timedelta` to compare with.
+		:returns:          ``True``, if this duration is longer or equal.
+		:raises TypeError: If parameter 'other' is not of type :class:`~datetime.timedelta`.
+		"""
+		if isinstance(other, timedelta):
+			return self.total_nanoseconds() >= self._TotalNanoseconds(other)
+
+		ex = TypeError("Second operand is not supported by >= operator.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+		ex.add_note("Supported types for second operand: Duration, timedelta")
+		raise ex
+
+	def __hash__(self) -> int:
+		"""
+		Return a hash, which equals the hash of an equal :class:`~datetime.timedelta`.
+
+		:returns: The hash value.
+		"""
+		if self._nanoseconds % 1_000 == 0:
+			return super().__hash__()
+
+		return hash((self.days, self.seconds, self._nanoseconds))
+
+	def __neg__(self) -> Self:
+		"""
+		Negate the duration.
+
+		:returns: The negated duration.
+		"""
+		return self.__class__(nanoseconds=-self.total_nanoseconds())
+
+	def __pos__(self) -> Self:
+		"""
+		Return the duration unchanged.
+
+		:returns: This duration.
+		"""
+		return self
+
+	def __abs__(self) -> Self:
+		"""
+		Return the absolute duration.
+
+		:returns: The duration without sign.
+		"""
+		return self if self.days >= 0 else self.__neg__()
+
+	def __add__(self, other: Any) -> Any:
+		"""
+		Add a duration or a :class:`~datetime.timedelta`.
+
+		Other operands are left to :class:`~datetime.timedelta`: ``duration + datetime`` is a
+		:class:`~datetime.datetime`.
+
+		:param other: The second operand.
+		:returns:     The sum as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.__class__(nanoseconds=self.total_nanoseconds() + self._TotalNanoseconds(other))
+
+		return super().__add__(other)
+
+	def __radd__(self, other: Any) -> Any:
+		"""
+		Add this duration to a :class:`~datetime.timedelta`.
+
+		:param other: The first operand.
+		:returns:     The sum as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.__class__(nanoseconds=self._TotalNanoseconds(other) + self.total_nanoseconds())
+
+		return super().__radd__(other)
+
+	def __sub__(self, other: Any) -> Any:
+		"""
+		Subtract a duration or a :class:`~datetime.timedelta`.
+
+		:param other: The second operand.
+		:returns:     The difference as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.__class__(nanoseconds=self.total_nanoseconds() - self._TotalNanoseconds(other))
+
+		return super().__sub__(other)
+
+	def __rsub__(self, other: Any) -> Any:
+		"""
+		Subtract this duration from a :class:`~datetime.timedelta`.
+
+		:param other: The first operand.
+		:returns:     The difference as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.__class__(nanoseconds=self._TotalNanoseconds(other) - self.total_nanoseconds())
+
+		return super().__rsub__(other)
+
+	def __mul__(self, other: Any) -> Any:
+		"""
+		Multiply the duration by a number.
+
+		A product with a :class:`float` is rounded to the nearest nanosecond, on a tie to the even one.
+
+		:param other: An :class:`int` or :class:`float` factor.
+		:returns:     The product as a duration.
+		"""
+		if isinstance(other, int):
+			return self.__class__(nanoseconds=self.total_nanoseconds() * other)
+		elif isinstance(other, float):
+			numerator, denominator = other.as_integer_ratio()
+			return self.__class__(nanoseconds=self._DivideRounded(self.total_nanoseconds() * numerator, denominator))
+
+		return super().__mul__(other)
+
+	def __rmul__(self, other: Any) -> Any:
+		"""
+		Multiply a number by the duration.
+
+		:param other: An :class:`int` or :class:`float` factor.
+		:returns:     The product as a duration.
+		"""
+		return self.__mul__(other)
+
+	def __truediv__(self, other: Any) -> Any:
+		"""
+		Divide the duration by a duration, a :class:`~datetime.timedelta` or a number.
+
+		A quotient of a number is rounded to the nearest nanosecond, on a tie to the even one.
+
+		:param other: The divisor.
+		:returns:     The ratio as a :class:`float` for a time delta divisor, otherwise the quotient as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.total_nanoseconds() / self._TotalNanoseconds(other)
+		elif isinstance(other, int):
+			return self.__class__(nanoseconds=self._DivideRounded(self.total_nanoseconds(), other))
+		elif isinstance(other, float):
+			numerator, denominator = other.as_integer_ratio()
+			return self.__class__(nanoseconds=self._DivideRounded(self.total_nanoseconds() * denominator, numerator))
+
+		return super().__truediv__(other)
+
+	def __rtruediv__(self, other: Any) -> Any:
+		"""
+		Divide a :class:`~datetime.timedelta` by the duration.
+
+		:param other: The dividend.
+		:returns:     The ratio as a :class:`float`.
+		"""
+		if isinstance(other, timedelta):
+			return self._TotalNanoseconds(other) / self.total_nanoseconds()
+
+		return super().__rtruediv__(other)
+
+	def __floordiv__(self, other: Any) -> Any:
+		"""
+		Divide the duration by a duration, a :class:`~datetime.timedelta` or an integer, rounding down.
+
+		:param other: The divisor.
+		:returns:     The ratio as an :class:`int` for a time delta divisor, otherwise the quotient as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.total_nanoseconds() // self._TotalNanoseconds(other)
+		elif isinstance(other, int):
+			return self.__class__(nanoseconds=self.total_nanoseconds() // other)
+
+		return super().__floordiv__(other)
+
+	def __rfloordiv__(self, other: Any) -> Any:
+		"""
+		Divide a :class:`~datetime.timedelta` by the duration, rounding down.
+
+		:param other: The dividend.
+		:returns:     The ratio as an :class:`int`.
+		"""
+		if isinstance(other, timedelta):
+			return self._TotalNanoseconds(other) // self.total_nanoseconds()
+
+		return super().__rfloordiv__(other)
+
+	def __mod__(self, other: Any) -> Any:
+		"""
+		Return the remainder of dividing the duration by a duration or a :class:`~datetime.timedelta`.
+
+		:param other: The divisor.
+		:returns:     The remainder as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.__class__(nanoseconds=self.total_nanoseconds() % self._TotalNanoseconds(other))
+
+		return super().__mod__(other)
+
+	def __rmod__(self, other: Any) -> Any:
+		"""
+		Return the remainder of dividing a :class:`~datetime.timedelta` by the duration.
+
+		:param other: The dividend.
+		:returns:     The remainder as a duration.
+		"""
+		if isinstance(other, timedelta):
+			return self.__class__(nanoseconds=self._TotalNanoseconds(other) % self.total_nanoseconds())
+
+		return super().__rmod__(other)
+
+	def __divmod__(self, other: Any) -> Any:
+		"""
+		Divide the duration by a duration or a :class:`~datetime.timedelta`, returning quotient and remainder.
+
+		:param other: The divisor.
+		:returns:     The quotient as an :class:`int` and the remainder as a duration.
+		"""
+		if isinstance(other, timedelta):
+			quotient, remainder = divmod(self.total_nanoseconds(), self._TotalNanoseconds(other))
+			return quotient, self.__class__(nanoseconds=remainder)
+
+		return super().__divmod__(other)
+
+	def __rdivmod__(self, other: Any) -> Any:
+		"""
+		Divide a :class:`~datetime.timedelta` by the duration, returning quotient and remainder.
+
+		:param other: The dividend.
+		:returns:     The quotient as an :class:`int` and the remainder as a duration.
+		"""
+		if isinstance(other, timedelta):
+			quotient, remainder = divmod(self._TotalNanoseconds(other), self.total_nanoseconds())
+			return quotient, self.__class__(nanoseconds=remainder)
+
+		return super().__rdivmod__(other)
+
+	def __reduce__(self) -> tuple[type[Self], tuple[int, ...]]:
+		"""
+		Return how to rebuild the duration, so :mod:`pickle` and :mod:`copy` keep its nanoseconds.
+
+		:returns: The class and its constructor arguments.
+		"""
+		return self.__class__, (self.days, self.seconds, 0, 0, 0, 0, 0, self._nanoseconds)
+
+	def __repr__(self) -> str:
+		"""
+		Return the duration as a constructor call.
+
+		Only components other than zero are named. A duration resolving more than microseconds names ``nanoseconds``
+		instead of ``microseconds``. A zero duration is ``Duration(0)``.
+
+		:returns: The constructor call, e.g. ``Duration(seconds=1, nanoseconds=5)``.
+		"""
+		arguments = []
+		if self.days != 0:
+			arguments.append(f"days={self.days}")
+
+		if self.seconds != 0:
+			arguments.append(f"seconds={self.seconds}")
+
+		if self._nanoseconds % 1_000 != 0:
+			arguments.append(f"nanoseconds={self._nanoseconds}")
+		elif self._nanoseconds != 0:
+			arguments.append(f"microseconds={self._nanoseconds // 1_000}")
+
+		if len(arguments) == 0:
+			return f"{self.__class__.__name__}(0)"
+
+		return f"{self.__class__.__name__}({', '.join(arguments)})"
+
+	def __str__(self) -> str:
+		"""
+		Return the duration like :class:`~datetime.timedelta` does.
+
+		A duration resolving more than microseconds shows 9 fractional digits instead of 6.
+
+		:returns: The duration as ``[D day[s], ]H:MM:SS[.ffffff]``, or with 9 fractional digits.
+		"""
+		text = super().__str__()
+		if self._nanoseconds % 1_000 == 0:
+			return text
+		elif self.microseconds != 0:
+			text = text[:-7]
+
+		return f"{text}.{self._nanoseconds:09}"
+
+	def __format__(self, formatSpec: str) -> str:
+		"""
+		Return the duration according to the format specification.
+
+		.. topic:: Format Specifiers
+
+		   An **uppercase** specifier is a field of the duration as it would be displayed. A **lowercase** specifier is
+		   the whole duration expressed in one unit, which is what a report or a comparison wants.
+
+		   +-----------+--------------------------------------------------------+
+		   | Specifier | Meaning                                                |
+		   +===========+========================================================+
+		   | ``%H``    | hours, not capped - a 26 hour duration shows ``26``    |
+		   +-----------+--------------------------------------------------------+
+		   | ``%M``    | minutes, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%S``    | seconds, ``00`` to ``59``                              |
+		   +-----------+--------------------------------------------------------+
+		   | ``%L``    | fractional seconds, 3 digits (milliseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%U``    | fractional seconds, 6 digits (microseconds)            |
+		   +-----------+--------------------------------------------------------+
+		   | ``%N``    | fractional seconds, 9 digits (nanoseconds)             |
+		   +-----------+--------------------------------------------------------+
+		   | ``%s``    | the whole duration in seconds                          |
+		   +-----------+--------------------------------------------------------+
+		   | ``%m``    | the whole duration in milliseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%u``    | the whole duration in microseconds                     |
+		   +-----------+--------------------------------------------------------+
+		   | ``%n``    | the whole duration in nanoseconds                      |
+		   +-----------+--------------------------------------------------------+
+
+		   The fractional specifiers are truncations of the same fraction, so ``%S.%U`` renders ``04.123456`` without
+		   having to be combined with anything. ``%H`` is not capped, so ``%H:%M:%S`` never silently drops a day.
+
+		   A negative duration renders the fields of its absolute value, with a ``-`` in front of the first placeholder:
+		   ``took %s s`` renders ``took -5 s``.
+
+		   ``%%`` renders a literal percent sign. An empty format specification returns :meth:`__str__`.
+
+		:param formatSpec:  The format specification, using ``%``-placeholders for the duration's parts.
+		:returns:           The formatted duration.
+		:raises ValueError: If the format specification contains an unknown placeholder.
+		"""
+		if formatSpec == "":
+			return self.__str__()
+
+		nanoseconds = self.total_nanoseconds()
+		if nanoseconds < 0:
+			sign =        "-"
+			nanoseconds = -nanoseconds
+		else:
+			sign = ""
+
+		fields = self._FIELDS
+		parts =  []
+		for part in formatSpec.split("%%"):
+			text, *placeholders = part.split("%")
+			for placeholder in placeholders:
+				field = fields.get(placeholder[:1], None)
+				if field is None:
+					raise ValueError(f"Unknown format specifier '%{placeholder[:1]}' in '{formatSpec}'.")
+
+				text += sign + field(nanoseconds) + placeholder[1:]
+				sign = ""
+
+			parts.append(text)
+
+		return "%".join(parts)
 
 
 @export
@@ -135,7 +761,7 @@ class Stopwatch(SlottedObject):
 	_pauseTime:    Nullable[int]             #: Performance counter in ns of the latest pause operation.
 	_stopTime:     Nullable[int]             #: Performance counter in ns when the stopwatch was stopped.
 	_totalTime:    Nullable[int]             #: Duration in ns from starting to stopping, activity and inactivity.
-	_duration:     Nullable[timedelta]       #: :attr:`Duration` of a stopped stopwatch, computed on first access.
+	_duration:     Nullable[Duration]        #: :attr:`Duration` of a stopped stopwatch, computed on first access.
 	_splits:       list[tuple[float, bool]]  #: Split times as (duration, is-active) pairs, in the order they were taken.
 
 	_excludeContextManager: ExcludeContextManager  #: The nested context manager excluding time spans from measurement.
@@ -468,17 +1094,17 @@ class Stopwatch(SlottedObject):
 		return len([t for t, a in self._splits if a is False]) + (1 if self._pauseTime is not None else 0)
 
 	@readonly
-	def Activity(self) -> timedelta:
+	def Activity(self) -> Duration:
 		"""
 		Read-only property returning the duration of all active split times.
 
-		If the stopwatch is currently running, the duration since start or last resume operation will be included. A
-		:class:`~datetime.timedelta` resolves microseconds; :attr:`ActivityInSeconds` is the same value as a float.
+		If the stopwatch is currently running, the duration since start or last resume operation will be included. It is
+		built from :attr:`ActivityInSeconds`, the same value as a float, so it resolves microseconds.
 
 		:returns: Duration of all active split times. If the stopwatch was never started, the return value is a zero
 		          duration.
 		"""
-		return timedelta(seconds=self.ActivityInSeconds)
+		return Duration(seconds=self.ActivityInSeconds)
 
 	@readonly
 	def ActivityInSeconds(self) -> float:
@@ -495,17 +1121,17 @@ class Stopwatch(SlottedObject):
 		return sum(t for t, a in self._splits if a is True) + currentDiff
 
 	@readonly
-	def Inactivity(self) -> timedelta:
+	def Inactivity(self) -> Duration:
 		"""
 		Read-only property returning the duration of all inactive split times.
 
-		If the stopwatch is currently paused, the duration since last pause operation will be included. A
-		:class:`~datetime.timedelta` resolves microseconds; :attr:`InactivityInSeconds` is the same value as a float.
+		If the stopwatch is currently paused, the duration since last pause operation will be included. It is built from
+		:attr:`InactivityInSeconds`, the same value as a float, so it resolves microseconds.
 
 		:returns: Duration of all inactive split times. If the stopwatch was never started, the return value is a zero
 		          duration.
 		"""
-		return timedelta(seconds=self.InactivityInSeconds)
+		return Duration(seconds=self.InactivityInSeconds)
 
 	@readonly
 	def InactivityInSeconds(self) -> float:
@@ -522,14 +1148,14 @@ class Stopwatch(SlottedObject):
 		return sum(t for t, a in self._splits if a is False) + currentDiff
 
 	@readonly
-	def Duration(self) -> timedelta:
+	def Duration(self) -> Duration:
 		"""
 		Read-only property returning the duration from start operation to stop operation.
 
-		If the stopwatch is not yet stopped, the duration from start to now is returned. A :class:`~datetime.timedelta`
-		formats as hours, minutes and seconds and resolves microseconds; :attr:`DurationInSeconds` and
-		:attr:`DurationInNanoseconds` are the same measurement as numbers. The duration of a stopped stopwatch is
-		computed once (:attr:`_duration`).
+		If the stopwatch is not yet stopped, the duration from start to now is returned. A
+		:class:`~pyTooling.Stopwatch.Duration` prints as hours, minutes and seconds, accepts a format specification and
+		resolves nanoseconds; :attr:`DurationInSeconds` and :attr:`DurationInNanoseconds` are the same measurement as
+		numbers. The duration of a stopped stopwatch is computed once (:attr:`_duration`).
 
 		:returns: Duration since the stopwatch was started. If the stopwatch was never started, the return value is a zero
 		          duration.
@@ -537,7 +1163,7 @@ class Stopwatch(SlottedObject):
 		if self._duration is not None:
 			return self._duration
 
-		duration = timedelta(microseconds=self.DurationInNanoseconds / 1000)
+		duration = Duration(nanoseconds=self.DurationInNanoseconds)
 		if self._totalTime is not None:
 			self._duration = duration
 
@@ -737,32 +1363,7 @@ class Stopwatch(SlottedObject):
 		if formatSpec == "":
 			return self.__str__()
 
-		nanoseconds = self.DurationInNanoseconds
-		seconds, fraction = divmod(nanoseconds, 1_000_000_000)
-		minutes, secondField = divmod(seconds, 60)
-		hours, minuteField = divmod(minutes, 60)
-
-		result = formatSpec
-		for placeholder, value in (
-			("%H", f"{hours:02}"),
-			("%M", f"{minuteField:02}"),
-			("%S", f"{secondField:02}"),
-			("%L", f"{fraction // 1_000_000:03}"),
-			("%U", f"{fraction // 1_000:06}"),
-			("%N", f"{fraction:09}"),
-			("%s", f"{nanoseconds // 1_000_000_000}"),
-			("%m", f"{nanoseconds // 1_000_000}"),
-			("%u", f"{nanoseconds // 1_000}"),
-			("%n", f"{nanoseconds}"),
-		):
-			result = result.replace(placeholder, value)
-
-		if (position := result.find("%")) != -1:
-			following = result[position + 1] if position + 1 < len(result) else ""
-			if following != "%":
-				raise ValueError(f"Unknown format specifier '%{following}' in '{formatSpec}'.")
-
-		return result.replace("%%", "%")
+		return self.Duration.__format__(formatSpec)
 
 	def __str__(self) -> str:
 		"""
