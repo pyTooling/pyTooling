@@ -31,9 +31,11 @@
 """
 Unit tests for :class:`pyTooling.Stopwatch.Stopwatch`: starting, pausing, resuming, splitting and stopping,
 the formatting of the results, and its use as a context manager. Unit tests for :class:`pyTooling.Stopwatch.Duration`:
-conversion and formatting.
+nanoseconds, conversion, comparison, arithmetic and formatting.
 """
-from datetime             import timedelta
+from copy                 import copy, deepcopy
+from datetime             import datetime, timedelta
+from pickle               import dumps, loads
 from time                 import sleep
 
 from pyTooling.Exceptions import ToolingException
@@ -890,17 +892,14 @@ class DurationClass(Testcase):
 		self.assertEqual("Parameter 'value' is not of type 'timedelta'.", str(context.exception))
 		self.assertEqual(["Got type 'float'."], context.exception.__notes__)
 
-	def test_Arithmetic(self) -> None:
-		"""Arithmetic returns a plain timedelta, which :meth:`FromTimedelta` converts back."""
-		first = Duration(seconds=5)
-		second = Duration(seconds=3)
+	def test_FromTimedelta_Duration(self) -> None:
+		"""A duration given to :meth:`FromTimedelta` keeps its nanoseconds."""
+		value = Duration(seconds=2, nanoseconds=5)
+		duration = Duration.FromTimedelta(value)
 
-		self.assertIs(timedelta, type(first + second))
-		self.assertIs(timedelta, type(first - second))
-		self.assertIs(timedelta, type(-first))
-		self.assertIs(timedelta, type(first * 2))
-		self.assertIs(Duration, type(Duration.FromTimedelta(first + second)))
-		self.assertEqual(Duration(seconds=8), Duration.FromTimedelta(first + second))
+		self.assertIsNot(value, duration)
+		self.assertEqual(5, duration.nanoseconds)
+		self.assertEqual(value, duration)
 
 
 class DurationClassFormatting(Testcase):
@@ -923,7 +922,7 @@ class DurationClassFormatting(Testcase):
 		self.assertEqual("01:00:01.002003", f"{duration:%H:%M:%S.%U}")
 
 	def test_Fractions(self) -> None:
-		"""A timedelta resolves microseconds, so ``%N`` ends in ``000``."""
+		"""A duration given in microseconds has no nanoseconds, so ``%N`` ends in ``000``."""
 		self.assertEqual("123", f"{self.DURATION:%L}")
 		self.assertEqual("123456", f"{self.DURATION:%U}")
 		self.assertEqual("123456000", f"{self.DURATION:%N}")
@@ -984,3 +983,247 @@ class DurationClassFormatting(Testcase):
 			format(self.DURATION, "%s%")
 
 		self.assertEqual("Unknown format specifier '%' in '%s%'.", str(context.exception))
+
+
+class DurationNanoseconds(Testcase):
+	"""The nanosecond component of :class:`~pyTooling.Stopwatch.Duration`."""
+
+	def test_Component(self) -> None:
+		duration = Duration(hours=1, minutes=2, seconds=3, nanoseconds=456_789_012)
+
+		self.assertEqual(0, duration.days)
+		self.assertEqual(3723, duration.seconds)
+		self.assertEqual(456_789, duration.microseconds)
+		self.assertEqual(456_789_012, duration.nanoseconds)
+
+	def test_Normalized(self) -> None:
+		"""Nanoseconds beyond one second carry over into seconds and days, as microseconds do in a timedelta."""
+		duration = Duration(nanoseconds=90_061_000_000_005)  # 1 day, 1 hour, 1 minute, 1 second, 5 ns
+
+		self.assertEqual(1, duration.days)
+		self.assertEqual(3661, duration.seconds)
+		self.assertEqual(0, duration.microseconds)
+		self.assertEqual(5, duration.nanoseconds)
+
+	def test_Normalized_Negative(self) -> None:
+		"""Only ``days`` carries the sign; the other components are positive."""
+		duration = Duration(nanoseconds=-1)
+
+		self.assertEqual(-1, duration.days)
+		self.assertEqual(86_399, duration.seconds)
+		self.assertEqual(999_999, duration.microseconds)
+		self.assertEqual(999_999_999, duration.nanoseconds)
+		self.assertEqual(-1, duration.total_nanoseconds())
+
+	def test_AddedUp(self) -> None:
+		"""All units are added up, also microseconds and nanoseconds."""
+		duration = Duration(days=1, seconds=2, microseconds=3, milliseconds=4, minutes=5, hours=6, weeks=7, nanoseconds=8)
+
+		self.assertEqual(50, duration.days)
+		self.assertEqual(6 * 3600 + 5 * 60 + 2, duration.seconds)
+		self.assertEqual(4_003_008, duration.nanoseconds)
+
+	def test_Float(self) -> None:
+		"""A float number of nanoseconds is rounded to the nearest integer."""
+		self.assertEqual(2, Duration(nanoseconds=1.6).nanoseconds)
+		self.assertEqual(1_500_000_000, Duration(seconds=1.5).total_nanoseconds())
+
+	def test_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Duration(nanoseconds=None)
+
+		self.assertEqual("Parameter 'nanoseconds' is None.", str(context.exception))
+
+	def test_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Duration(nanoseconds="5")
+
+		self.assertEqual("Parameter 'nanoseconds' is not of type 'int' or 'float'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_ReadOnly(self) -> None:
+		duration = Duration(nanoseconds=5)
+
+		with self.assertRaises(AttributeError):
+			duration.nanoseconds = 6
+
+	def test_TotalNanoseconds(self) -> None:
+		duration = Duration(hours=26, minutes=3, seconds=4, nanoseconds=123_456_789)
+
+		self.assertEqual(93_784_123_456_789, duration.total_nanoseconds())
+		self.assertEqual(0, Duration().total_nanoseconds())
+
+	def test_TotalSeconds(self) -> None:
+		""":meth:`total_seconds` includes the nanoseconds."""
+		self.assertEqual(1.000000005, Duration(seconds=1, nanoseconds=5).total_seconds())
+
+	def test_Bool(self) -> None:
+		"""A duration of nanoseconds only is not zero."""
+		self.assertTrue(Duration(nanoseconds=5))
+		self.assertFalse(Duration())
+
+	def test_Str(self) -> None:
+		self.assertEqual("0:00:01", str(Duration(seconds=1)))
+		self.assertEqual("0:00:01.000002", str(Duration(seconds=1, microseconds=2)))
+		self.assertEqual("0:00:01.000000005", str(Duration(seconds=1, nanoseconds=5)))
+		self.assertEqual("0:00:01.000002005", str(Duration(seconds=1, nanoseconds=2_005)))
+		self.assertEqual("-1 day, 23:59:59.999999999", str(Duration(nanoseconds=-1)))
+
+	def test_Repr(self) -> None:
+		self.assertEqual("Duration(seconds=1, microseconds=2)", repr(Duration(seconds=1, microseconds=2)))
+		self.assertEqual("Duration(seconds=1, nanoseconds=5)", repr(Duration(seconds=1, nanoseconds=5)))
+		self.assertEqual("Duration(days=-1, seconds=86399, nanoseconds=999999999)", repr(Duration(nanoseconds=-1)))
+
+	def test_Pickle(self) -> None:
+		duration = Duration(days=2, seconds=3, nanoseconds=5)
+
+		self.assertEqual(5, loads(dumps(duration)).nanoseconds)
+		self.assertEqual(duration, loads(dumps(duration)))
+
+	def test_Copy(self) -> None:
+		duration = Duration(days=2, seconds=3, nanoseconds=5)
+
+		self.assertEqual(5, copy(duration).nanoseconds)
+		self.assertEqual(5, deepcopy(duration).nanoseconds)
+
+	def test_Formatting(self) -> None:
+		duration = Duration(seconds=4, nanoseconds=123_456_789)
+
+		self.assertEqual("04.123456789", f"{duration:%S.%N}")
+		self.assertEqual("4123456789", f"{duration:%n}")
+
+
+class DurationComparison(Testcase):
+	"""Comparisons and hashes of :class:`~pyTooling.Stopwatch.Duration` work in nanoseconds."""
+
+	def test_Equal(self) -> None:
+		self.assertTrue(Duration(nanoseconds=1) == Duration(nanoseconds=1))
+		self.assertFalse(Duration(nanoseconds=1) == Duration(nanoseconds=2))
+
+	def test_NotEqual(self) -> None:
+		self.assertTrue(Duration(nanoseconds=1) != Duration(nanoseconds=2))
+		self.assertFalse(Duration(nanoseconds=1) != Duration(nanoseconds=1))
+
+	def test_Equal_Timedelta(self) -> None:
+		"""A duration with nanoseconds below a microsecond is not equal to any timedelta."""
+		self.assertTrue(Duration(seconds=1) == timedelta(seconds=1))
+		self.assertTrue(timedelta(seconds=1) == Duration(seconds=1))
+		self.assertFalse(Duration(seconds=1, nanoseconds=1) == timedelta(seconds=1))
+		self.assertTrue(timedelta(seconds=1) != Duration(seconds=1, nanoseconds=1))
+
+	def test_Ordering(self) -> None:
+		shorter = Duration(nanoseconds=1)
+		longer =  Duration(nanoseconds=2)
+
+		self.assertTrue(shorter < longer)
+		self.assertTrue(shorter <= longer)
+		self.assertTrue(longer > shorter)
+		self.assertTrue(longer >= shorter)
+		self.assertFalse(longer < shorter)
+
+	def test_Ordering_Timedelta(self) -> None:
+		self.assertTrue(Duration(microseconds=1, nanoseconds=1) > timedelta(microseconds=1))
+		self.assertTrue(timedelta(microseconds=1) < Duration(microseconds=1, nanoseconds=1))
+
+	def test_Hash(self) -> None:
+		"""Equal durations and timedeltas have equal hashes; durations differing in nanoseconds can be told apart."""
+		self.assertEqual(hash(timedelta(seconds=1)), hash(Duration(seconds=1)))
+		self.assertEqual(hash(Duration(nanoseconds=5)), hash(Duration(nanoseconds=5)))
+		self.assertEqual(2, len({Duration(nanoseconds=1), Duration(nanoseconds=2)}))
+
+	def test_Equal_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Duration(seconds=1) == 1
+
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertEqual(
+			["Got type 'int'.", "Supported types for second operand: Duration, timedelta"],
+			context.exception.__notes__
+		)
+
+	def test_NotEqual_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Duration(seconds=1) != 1
+
+		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
+
+	def test_Ordering_WrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Duration(seconds=1) < 1
+
+		self.assertEqual("Second operand is not supported by < operator.", str(context.exception))
+		self.assertEqual(
+			["Got type 'int'.", "Supported types for second operand: Duration, timedelta"],
+			context.exception.__notes__
+		)
+
+
+class DurationArithmetic(Testcase):
+	"""Arithmetic involving a :class:`~pyTooling.Stopwatch.Duration` is exact in nanoseconds and returns a duration."""
+
+	DURATION = Duration(nanoseconds=1_500)
+
+	def test_Add(self) -> None:
+		self.assertIs(Duration, type(self.DURATION + self.DURATION))
+		self.assertEqual(Duration(nanoseconds=3_000), self.DURATION + self.DURATION)
+
+	def test_Add_Timedelta(self) -> None:
+		"""A timedelta on either side gives a duration."""
+		self.assertIs(Duration, type(self.DURATION + timedelta(microseconds=1)))
+		self.assertIs(Duration, type(timedelta(microseconds=1) + self.DURATION))
+		self.assertEqual(Duration(nanoseconds=2_500), timedelta(microseconds=1) + self.DURATION)
+
+	def test_Add_Datetime(self) -> None:
+		"""A datetime resolves microseconds, so the nanoseconds below a microsecond are dropped."""
+		begin = datetime(2026, 1, 1)
+
+		self.assertEqual(datetime(2026, 1, 1, microsecond=1), begin + self.DURATION)
+		self.assertEqual(datetime(2026, 1, 1, microsecond=1), self.DURATION + begin)
+
+	def test_Subtract(self) -> None:
+		self.assertEqual(Duration(nanoseconds=500), self.DURATION - timedelta(microseconds=1))
+		self.assertEqual(Duration(nanoseconds=500), timedelta(microseconds=2) - self.DURATION)
+		self.assertIs(Duration, type(timedelta(microseconds=2) - self.DURATION))
+
+	def test_Unary(self) -> None:
+		self.assertEqual(Duration(nanoseconds=-1_500), -self.DURATION)
+		self.assertEqual(self.DURATION, +self.DURATION)
+		self.assertEqual(self.DURATION, abs(-self.DURATION))
+		self.assertIs(Duration, type(-self.DURATION))
+
+	def test_Multiply(self) -> None:
+		self.assertEqual(Duration(nanoseconds=4_500), self.DURATION * 3)
+		self.assertEqual(Duration(nanoseconds=4_500), 3 * self.DURATION)
+		self.assertEqual(Duration(nanoseconds=750), self.DURATION * 0.5)
+
+	def test_Multiply_RoundHalfEven(self) -> None:
+		self.assertEqual(Duration(nanoseconds=2), Duration(nanoseconds=3) * 0.5)
+		self.assertEqual(Duration(nanoseconds=2), Duration(nanoseconds=5) * 0.5)
+
+	def test_Divide(self) -> None:
+		self.assertEqual(Duration(nanoseconds=375), self.DURATION / 4)
+		self.assertEqual(Duration(nanoseconds=3_000), self.DURATION / 0.5)
+		self.assertEqual(3.0, self.DURATION / Duration(nanoseconds=500))
+		self.assertEqual(2.0, timedelta(microseconds=3) / self.DURATION)
+
+	def test_Divide_RoundHalfEven(self) -> None:
+		self.assertEqual(Duration(nanoseconds=2), Duration(nanoseconds=3) / 2)
+		self.assertEqual(Duration(nanoseconds=2), Duration(nanoseconds=5) / 2)
+		self.assertEqual(Duration(nanoseconds=-2), Duration(nanoseconds=-3) / 2)
+
+	def test_FloorDivide(self) -> None:
+		self.assertEqual(Duration(nanoseconds=750), self.DURATION // 2)
+		self.assertEqual(3, self.DURATION // Duration(nanoseconds=400))
+		self.assertEqual(2, timedelta(microseconds=3) // self.DURATION)
+
+	def test_Modulo(self) -> None:
+		self.assertEqual(Duration(nanoseconds=300), self.DURATION % Duration(nanoseconds=400))
+		self.assertEqual(Duration(nanoseconds=1_000), timedelta(microseconds=4) % self.DURATION)
+
+	def test_DivMod(self) -> None:
+		self.assertEqual((3, Duration(nanoseconds=300)), divmod(self.DURATION, Duration(nanoseconds=400)))
+		self.assertEqual((2, Duration(nanoseconds=1_000)), divmod(timedelta(microseconds=4), self.DURATION))
+
+	def test_Add_WrongType(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = self.DURATION + 1
