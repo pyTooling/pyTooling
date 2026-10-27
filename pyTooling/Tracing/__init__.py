@@ -63,6 +63,7 @@ from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Exceptions  import CycleError, DuplicateElementError, ElementNotFoundError, MissingDependencyError, \
                                   ToolingException
 from pyTooling.Common      import __version__, getFullyQualifiedName, getTypeName, readResourceFile
+from pyTooling.Stopwatch   import Duration
 from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Versioning  import SemanticVersion
 from pyTooling.Warning     import WarningCollector, DirectoryCreatedWarning
@@ -970,19 +971,25 @@ class Span(TraceElement):
 			raise ex
 
 	@readonly
-	def Duration(self) -> timedelta:
+	def Duration(self) -> Duration:
 		"""
 		Read-only property accessing the duration from start operation to stop operation.
 
 		If the span is not yet stopped, the duration from start to now is returned. For a timespan with recorded times,
-		the duration is the difference of both times, or the time since its recorded begin while it has no end. A
-		:class:`~datetime.timedelta` resolves microseconds; :attr:`DurationInSeconds` keeps the nanoseconds a performance
-		counter measured.
+		the duration is the difference of both times, or the time since its recorded begin while it has no end. The
+		duration keeps the nanoseconds a performance counter measured.
 
 		:returns:             Duration since span was started.
 		:raises TracingError: When span was never started.
 		"""
-		return timedelta(seconds=self.DurationInSeconds)
+		if self._totalTime is not None:
+			return Duration(nanoseconds=self._totalTime)
+		elif self._startTime is not None:
+			return Duration(nanoseconds=perf_counter_ns() - self._startTime)
+		elif self._beginTime is not None:
+			return Duration.FromTimedelta(datetime.now(self._beginTime.tzinfo) - self._beginTime)
+
+		raise TracingError(f"{getTypeName(self)} was never started.")
 
 	@readonly
 	def DurationInSeconds(self) -> float:

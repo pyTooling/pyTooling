@@ -31,13 +31,14 @@
 """
 Unit tests for :mod:`pyTooling.Tracing`: traces, spans and the attributes attached to them.
 """
-from datetime          import datetime, timedelta, timezone
-from inspect           import get_annotations
-from time              import sleep
-from typing            import get_args
+from datetime            import datetime, timedelta, timezone
+from inspect             import get_annotations
+from time                import sleep
+from typing              import get_args
 
-from pyTooling.Tracing import TracingError, Trace, TraceElement, Span, Event, SpanState
-from pyTooling.Testing import Testcase
+from pyTooling.Tracing   import TracingError, Trace, TraceElement, Span, Event, SpanState
+from pyTooling.Stopwatch import Duration
+from pyTooling.Testing   import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -126,7 +127,7 @@ class RecordedTimes(Testcase):
 	def test_Span_Timedelta(self) -> None:
 		s = Span("span", beginTime=self._BEGIN, endTime=self._BEGIN + timedelta(seconds=1, microseconds=500_000))
 
-		self.assertIs(timedelta, type(s.Duration))
+		self.assertIs(Duration, type(s.Duration))
 		self.assertEqual(timedelta(seconds=1.5), s.Duration)
 
 	def test_Span_Microsecond(self) -> None:

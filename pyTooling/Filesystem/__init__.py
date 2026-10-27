@@ -46,7 +46,6 @@ An object-oriented file system abstraction for directory, file, symbolic link, .
 """
 from __future__            import annotations
 
-from datetime              import timedelta
 from enum                  import Enum
 from os                    import scandir, readlink
 from pathlib               import Path
@@ -58,7 +57,7 @@ from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName, zipdicts
 from pyTooling.DataModel   import Predicate
 from pyTooling.Warning     import WarningCollector, Warning
-from pyTooling.Stopwatch   import Stopwatch
+from pyTooling.Stopwatch   import Duration, Stopwatch
 from pyTooling.Tree        import Node
 
 
@@ -355,8 +354,8 @@ class Directory(Element["Directory"]):
 	_symbolicLinks:     dict[str, SymbolicLink]  #: Dictionary containing name-:class:`SymbolicLink` pairs.
 	_filesSize:         int                      #: Aggregated size of all direct files.
 	_collapsed:         bool                     #: True, if this directory was collapsed. It contains no subelements.
-	_scanDuration:      Nullable[timedelta]      #: Duration for scanning the directory and all its subelements.
-	_aggregateDuration: Nullable[timedelta]      #: Duration for aggregating all subelements.
+	_scanDuration:      Nullable[Duration]       #: Duration for scanning the directory and all its subelements.
+	_aggregateDuration: Nullable[Duration]       #: Duration for aggregating all subelements.
 
 	def __init__(
 		self,
@@ -712,7 +711,7 @@ class Directory(Element["Directory"]):
 		return self._path
 
 	@readonly
-	def ScanDuration(self) -> timedelta:
+	def ScanDuration(self) -> Duration:
 		"""
 		Read-only property to access the time needed to scan a directory structure including all subelements (recursively).
 
@@ -725,7 +724,7 @@ class Directory(Element["Directory"]):
 		return self._scanDuration
 
 	@readonly
-	def AggregateDuration(self) -> timedelta:
+	def AggregateDuration(self) -> Duration:
 		"""
 		Read-only property to access the time needed to aggregate the directory's and subelement's properties (recursively).
 

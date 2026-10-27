@@ -92,7 +92,7 @@ from pyTooling.Dependency     import Package, PackageStorage, PackageVersion, Pa
                                      AlreadyInRequirementsTreeError, UnparsableURLWarning
 from pyTooling.Licensing      import LicenseExpression, LicenseExpressionError, LICENSES_BY_CLASSIFIER, \
                                      LicenseAbsence, ProprietaryLicense, UnknownLicense
-from pyTooling.Stopwatch      import Stopwatch
+from pyTooling.Stopwatch      import Duration, Stopwatch
 from pyTooling.Warning        import WarningCollector
 from pyTooling.URI            import URL, URLError
 from pyTooling.Versioning     import Parts, PythonVersion, PythonVersionExpression, SemanticVersion
@@ -173,7 +173,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 	_path:                     _Path                                       #: Path of this requirements file.
 	_entries:                  list[RequirementsFileEntryT]                #: What this file states, in file order.
 	_analyzedRequirementFiles: Nullable[dict[_Path, RequirementsFile]]     #: Every file of the tree, by resolved path.
-	_analysisDuration:         Nullable[timedelta]                         #: Time :meth:`Parse` took to read the file.
+	_analysisDuration:         Nullable[Duration]                          #: Time :meth:`Parse` took to read the file.
 
 	def __init__(
 		self,
@@ -237,7 +237,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		self._parent =           parent
 		self._root =             self if parent is None else parent._root
 		self._entries =          []
-		self._analysisDuration = analysisDuration
+		self._analysisDuration = None if analysisDuration is None else Duration.FromTimedelta(analysisDuration)
 
 		# resolved as the mapping's key only, not as '_path': a file reachable under two spellings is one key
 		if parent is None:
@@ -447,7 +447,7 @@ class RequirementsFile(metaclass=ExtendedType, slots=True):
 		return self._analyzedRequirementFiles
 
 	@readonly
-	def AnalysisDuration(self) -> Nullable[timedelta]:
+	def AnalysisDuration(self) -> Nullable[Duration]:
 		"""
 		Read-only property to access the time :meth:`Parse` took to read this file (:attr:`_analysisDuration`).
 

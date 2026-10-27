@@ -36,6 +36,7 @@ from typing                  import get_type_hints
 
 from pyTooling.Diagram        import DiagramError
 from pyTooling.Diagram.Gantt  import Bar, Diagram, Row
+from pyTooling.Stopwatch      import Duration
 from pyTooling.Testing        import Testcase
 
 
@@ -141,6 +142,7 @@ class Offsets(Testcase):
 		bar = _diagram().Rows[0].Bars[1]
 
 		self.assertEqual((_at(40), _at(90)), (bar.Begin, bar.End))
+		self.assertIs(Duration, type(bar.Duration))
 		self.assertEqual(timedelta(seconds=50), bar.Duration)
 		self.assertEqual(50.0, bar.DurationInSeconds)
 
