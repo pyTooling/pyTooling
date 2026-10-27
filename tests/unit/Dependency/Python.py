@@ -58,6 +58,7 @@ from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
 from pyTooling.URI                import URL
 from pyTooling.Licensing          import LicenseAbsence, LicenseReference, ProprietaryLicense, SPDXLicense, \
                                          UnknownLicense, WithOperator
+from pyTooling.Stopwatch          import Duration
 from pyTooling.Versioning         import PythonVersion, SemanticVersion
 from pyTooling.Warning            import CriticalWarning, UnhandledCriticalWarningError, WarningCollector
 from pyTooling.Testing            import Testcase
@@ -1427,8 +1428,8 @@ class RequirementsFiles(Testcase):
 
 		base = tuple(requirementsFile.ReferencedFiles)[0]
 
-		self.assertIsInstance(requirementsFile.AnalysisDuration, timedelta)
-		self.assertIsInstance(base.AnalysisDuration, timedelta)
+		self.assertIs(Duration, type(requirementsFile.AnalysisDuration))
+		self.assertIs(Duration, type(base.AnalysisDuration))
 		self.assertGreater(base.AnalysisDuration, timedelta(0))
 		self.assertGreaterEqual(requirementsFile.AnalysisDuration, base.AnalysisDuration)
 
@@ -1782,6 +1783,7 @@ class RequirementsFileInstantiation(Testcase):
 		requirementsFile = RequirementsFile(Path("requirements.txt"), analysisDuration=duration)
 
 		self.assertEqual(duration, requirementsFile.AnalysisDuration)
+		self.assertIs(Duration, type(requirementsFile.AnalysisDuration))
 
 	def test_AnalysisDurationWrongType(self) -> None:
 		with self.assertRaises(TypeError) as context:

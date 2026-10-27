@@ -41,7 +41,7 @@ only draws these rows and statistics, so every renderer shows the same chart.
 """
 from __future__                  import annotations
 
-from datetime                    import datetime, timedelta
+from datetime                    import datetime
 from enum                        import Enum
 from pathlib                     import Path
 from re                          import IGNORECASE, compile as re_compile
@@ -52,6 +52,7 @@ from pyTooling.MetaClasses       import ExtendedType, abstractclass, abstractmet
 from pyTooling.Common            import getFullyQualifiedName
 from pyTooling.DataModel         import Predicate
 from pyTooling.Diagram.Gantt     import Bar, Diagram, Row
+from pyTooling.Stopwatch         import Duration
 from pyTooling.Tracing           import Span, Trace, TracingError
 from pyTooling.Tracing.CI        import CI, OTLP, Result, SpanKind
 
@@ -708,13 +709,13 @@ class GanttLayout(Diagram):
 		return sum(statistics.JobCount for statistics in self._statistics.values())
 
 	@readonly
-	def Duration(self) -> timedelta:
+	def Duration(self) -> Duration:
 		"""
 		Read-only property to return the end of the last bar (:attr:`_duration`) as a time after the trace began.
 
 		:returns: The end after the trace began.
 		"""
-		return timedelta(seconds=self._duration)
+		return Duration(seconds=self._duration)
 
 	@readonly
 	def DurationInSeconds(self) -> float:
