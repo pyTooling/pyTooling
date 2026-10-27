@@ -2019,7 +2019,7 @@ class PyProjectFiles(Testcase):
 
 			pyProjectFile = PyProjectFile.Parse(path)
 
-		self.assertIsInstance(pyProjectFile.AnalysisDuration, timedelta)
+		self.assertIs(Duration, type(pyProjectFile.AnalysisDuration))
 		self.assertGreater(pyProjectFile.AnalysisDuration, timedelta(0))
 
 	def test_NoBuildSystem(self) -> None:
@@ -2205,6 +2205,7 @@ class PyProjectFileInstantiation(Testcase):
 		pyProjectFile = PyProjectFile(Path("pyproject.toml"), analysisDuration=duration)
 
 		self.assertEqual(duration, pyProjectFile.AnalysisDuration)
+		self.assertIs(Duration, type(pyProjectFile.AnalysisDuration))
 
 	def test_PathIsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:

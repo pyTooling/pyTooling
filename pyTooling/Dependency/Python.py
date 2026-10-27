@@ -702,7 +702,7 @@ class PyProjectFile(metaclass=ExtendedType, slots=True):
 
 	_path:              _Path                #: Path of the ``pyproject.toml`` file.
 	_buildRequirements: list[Requirement]    #: Requirements of the ``[build-system]`` table, in file order.
-	_analysisDuration:  Nullable[timedelta]  #: Time :meth:`Parse` took to read the file.
+	_analysisDuration:  Nullable[Duration]   #: Time :meth:`Parse` took to read the file.
 
 	def __init__(
 		self,
@@ -717,7 +717,8 @@ class PyProjectFile(metaclass=ExtendedType, slots=True):
 		:param path:              Path of the ``pyproject.toml`` file.
 		:param buildRequirements: Optional, requirements of the ``[build-system]`` table, in the order the file states
 		                          them. Default: ``None``.
-		:param analysisDuration:  Optional, the time reading the file took. Default: ``None``, not measured.
+		:param analysisDuration:  Optional, the time reading the file took, converted to a
+		                          :class:`~pyTooling.Stopwatch.Duration`. Default: ``None``, not measured.
 		:raises ValueError:       If parameter 'path' is ``None``.
 		:raises TypeError:        If parameter 'path' is not of type :class:`~pathlib.Path`.
 		:raises TypeError:        If parameter 'buildRequirements' is not iterable.
@@ -744,7 +745,7 @@ class PyProjectFile(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._path =             path
-		self._analysisDuration = analysisDuration
+		self._analysisDuration = None if analysisDuration is None else Duration.FromTimedelta(analysisDuration)
 
 		self._buildRequirements = buildRequirementList = []
 		if buildRequirements is not None:
@@ -864,7 +865,7 @@ class PyProjectFile(metaclass=ExtendedType, slots=True):
 		return self._buildRequirements
 
 	@readonly
-	def AnalysisDuration(self) -> Nullable[timedelta]:
+	def AnalysisDuration(self) -> Nullable[Duration]:
 		"""
 		Read-only property to access the time :meth:`Parse` took to read this file (:attr:`_analysisDuration`).
 
