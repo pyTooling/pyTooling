@@ -1073,6 +1073,8 @@ class DurationNanoseconds(Testcase):
 		self.assertEqual("Duration(seconds=1, microseconds=2)", repr(Duration(seconds=1, microseconds=2)))
 		self.assertEqual("Duration(seconds=1, nanoseconds=5)", repr(Duration(seconds=1, nanoseconds=5)))
 		self.assertEqual("Duration(days=-1, seconds=86399, nanoseconds=999999999)", repr(Duration(nanoseconds=-1)))
+		self.assertEqual("Duration(days=2)", repr(Duration(days=2)))
+		self.assertEqual("Duration(0)", repr(Duration()))
 
 	def test_Pickle(self) -> None:
 		duration = Duration(days=2, seconds=3, nanoseconds=5)

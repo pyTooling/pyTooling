@@ -576,13 +576,11 @@ class Duration(timedelta):
 		"""
 		Return the duration as a constructor call.
 
-		A duration resolving more than microseconds names ``nanoseconds`` instead of ``microseconds``.
+		Only components other than zero are named. A duration resolving more than microseconds names ``nanoseconds``
+		instead of ``microseconds``. A zero duration is ``Duration(0)``.
 
 		:returns: The constructor call, e.g. ``Duration(seconds=1, nanoseconds=5)``.
 		"""
-		if self._nanoseconds % 1_000 == 0:
-			return super().__repr__()
-
 		arguments = []
 		if self.days != 0:
 			arguments.append(f"days={self.days}")
@@ -590,7 +588,13 @@ class Duration(timedelta):
 		if self.seconds != 0:
 			arguments.append(f"seconds={self.seconds}")
 
-		arguments.append(f"nanoseconds={self._nanoseconds}")
+		if self._nanoseconds % 1_000 != 0:
+			arguments.append(f"nanoseconds={self._nanoseconds}")
+		elif self._nanoseconds != 0:
+			arguments.append(f"microseconds={self._nanoseconds // 1_000}")
+
+		if len(arguments) == 0:
+			return f"{self.__class__.__name__}(0)"
 
 		return f"{self.__class__.__name__}({', '.join(arguments)})"
 
