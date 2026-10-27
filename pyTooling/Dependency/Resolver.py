@@ -68,7 +68,8 @@ from pyTooling.Timeout           import Timeout
 from pyTooling.Warning           import WarningCollector
 from pyTooling.Dependency        import ExtraNotFoundError, PackageIndexFailureWarning, UndeclaredExtraWarning, \
                                         ReleaseNotFoundError, ResolutionTimeoutWarning, UnresolvedRequirementWarning
-from pyTooling.Dependency.Python import LazyLoaderState, Project, PythonPackageIndex, Release, RequirementsFile
+from pyTooling.Dependency.Python import LazyLoaderState, Project, PyProjectFile, PythonPackageIndex, Release, \
+                                        RequirementsFile
 
 _Requirement = Requirement
 _Project =     Project
@@ -606,6 +607,30 @@ class Resolver(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		return self.ResolveRequirements(requirementsFile.AllRequirements)
+
+	def ResolvePyProjectFile(self, pyProjectFile: PyProjectFile) -> Resolution:
+		"""
+		Resolve the build requirements of a ``pyproject.toml`` file.
+
+		The requirements are taken from :attr:`~pyTooling.Dependency.Python.PyProjectFile.BuildRequirements`.
+
+		:param pyProjectFile:                  The ``pyproject.toml`` file, e.g. read by
+		                                       :meth:`~pyTooling.Dependency.Python.PyProjectFile.Parse`.
+		:returns:                              The resolution.
+		:raises ValueError:                    If parameter 'pyProjectFile' is ``None``.
+		:raises TypeError:                     If parameter 'pyProjectFile' is not of type
+		                                       :class:`~pyTooling.Dependency.Python.PyProjectFile`.
+		:raises UnhandledCriticalWarningError: If a critical warning (see :class:`Resolver`) is reported and no
+		                                       :class:`~pyTooling.Warning.WarningCollector` collects it.
+		"""
+		if pyProjectFile is None:
+			raise ValueError("Parameter 'pyProjectFile' is None.")
+		elif not isinstance(pyProjectFile, PyProjectFile):
+			ex = TypeError("Parameter 'pyProjectFile' is not of type 'PyProjectFile'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(pyProjectFile)}'.")
+			raise ex
+
+		return self.ResolveRequirements(pyProjectFile.BuildRequirements)
 
 	def ResolvePackages(self, packages: Iterable[tuple[str, Nullable[str]]]) -> Resolution:
 		"""

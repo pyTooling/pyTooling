@@ -36,6 +36,7 @@ from datetime                     import datetime, timedelta, timezone
 from pathlib                      import Path
 from tempfile                     import TemporaryDirectory
 from textwrap                     import dedent
+from tomllib                      import TOMLDecodeError
 from typing                       import Any, Optional as Nullable, Self, get_args, get_type_hints
 from unittest.mock                import patch
 
@@ -45,13 +46,14 @@ from requests                     import HTTPError, Response
 
 from pyTooling.Dependency.Python  import LazyLoaderState, Project, PythonPackageDependencyGraph, PythonPackageIndex, \
                                          Release, LicenseOverrides, RequirementsFile, RequirementsFileReference, \
-                                         Distribution, RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
+                                         PyProjectFile, Distribution, RETRY_ATTEMPTS, RETRY_BACKOFF, RETRY_STATUS_CODES
 from pyTooling.Dependency         import BrokenRequirementWarning, CircularRequirementsFileError, \
                                          UndeclaredExtraMarkerWarning, UndeclaredExtraWarning, \
                                          UnparsableRequirementWarning, DependencyError, RequirementsFileNotFoundError, \
                                          UnknownLicenseWarning, PackageIndexError, ProjectNotFoundError, \
                                          ReleaseNotFoundError, NoSessionAvailableError, ReleaseDetailsWarning, \
-                                         UnsupportedVersionWarning, AlreadyInRequirementsTreeError, UnparsableURLWarning
+                                         UnsupportedVersionWarning, AlreadyInRequirementsTreeError, \
+                                         UnparsableURLWarning, PyProjectFileError, PyProjectFileNotFoundError
 from pyTooling.Configuration      import Dictionary
 from pyTooling.Exceptions         import ConfigurationError
 from pyTooling.Configuration.YAML import Configuration as YAMLConfiguration
@@ -1967,6 +1969,288 @@ class RequirementsFileInstantiation(Testcase):
 		)
 
 
+class PyProjectFiles(Testcase):
+	"""Reading the build requirements of a ``pyproject.toml`` file."""
+
+	@staticmethod
+	def _write(directory: Path, content: str) -> Path:
+		path = directory / "pyproject.toml"
+		path.write_text(dedent(content).lstrip(), encoding="utf-8")
+
+		return path
+
+	def test_BuildRequirements(self) -> None:
+		"""Version specifiers, extras and environment markers are kept, in the order the file states them."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system]
+				requires = [
+					"setuptools >= 80.0",
+					"pyTooling[packaging] ~= 10.0",
+					"tomli >= 2.0; python_version < '3.11'"
+				]
+				build-backend = "setuptools.build_meta"
+
+				[project]
+				name = "example"
+			""")
+
+			pyProjectFile = PyProjectFile.Parse(path)
+
+		self.assertIs(path, pyProjectFile.Path)
+		self.assertEqual(3, len(pyProjectFile.BuildRequirements))
+
+		setuptools, pyTooling, tomli = pyProjectFile.BuildRequirements
+		self.assertEqual("setuptools", setuptools.name)
+		self.assertEqual(">=80.0", str(setuptools.specifier))
+		self.assertEqual("pyTooling", pyTooling.name)
+		self.assertEqual({"packaging"}, pyTooling.extras)
+		self.assertEqual("~=10.0", str(pyTooling.specifier))
+		self.assertEqual("tomli", tomli.name)
+		self.assertEqual('python_version < "3.11"', str(tomli.marker))
+		self.assertEqual(f"{path}: 3 build requirement(s)", str(pyProjectFile))
+
+	def test_AnalysisDuration(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system]
+				requires = ["setuptools >= 80.0"]
+			""")
+
+			pyProjectFile = PyProjectFile.Parse(path)
+
+		self.assertIs(Duration, type(pyProjectFile.AnalysisDuration))
+		self.assertGreater(pyProjectFile.AnalysisDuration, timedelta(0))
+
+	def test_NoBuildSystem(self) -> None:
+		"""A file without a ``[build-system]`` table states no build requirements; no defaults are filled in."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[project]
+				name = "example"
+			""")
+
+			pyProjectFile = PyProjectFile.Parse(path)
+
+		self.assertEqual([], pyProjectFile.BuildRequirements)
+
+	def test_NoRequires(self) -> None:
+		"""A ``[build-system]`` table must have the key ``requires`` (PEP 518)."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system]
+				build-backend = "setuptools.build_meta"
+			""")
+
+			with self.assertRaises(PyProjectFileError) as context:
+				PyProjectFile.Parse(path)
+
+		self.assertEqual(f"Key 'build-system' in '{path}' has no key 'requires'.", str(context.exception))
+		self.assertIs(path, context.exception.FilePath)
+
+	def test_BuildSystemNotATable(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				build-system = "setuptools"
+			""")
+
+			with self.assertRaises(PyProjectFileError) as context:
+				PyProjectFile.Parse(path)
+
+		self.assertEqual(f"Key 'build-system' in '{path}' is not a table.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertIs(path, context.exception.FilePath)
+
+	def test_RequiresNotAList(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system]
+				requires = "setuptools >= 80.0"
+			""")
+
+			with self.assertRaises(PyProjectFileError) as context:
+				PyProjectFile.Parse(path)
+
+		self.assertEqual(f"Key 'build-system.requires' in '{path}' is not a list.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertIs(path, context.exception.FilePath)
+
+	def test_RequiresElementNotAString(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system]
+				requires = ["setuptools >= 80.0", 42]
+			""")
+
+			with self.assertRaises(PyProjectFileError) as context:
+				PyProjectFile.Parse(path)
+
+		self.assertEqual(
+			f"An element of key 'build-system.requires' in '{path}' is not of type 'str'.",
+			str(context.exception)
+		)
+		self.assertEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIs(path, context.exception.FilePath)
+
+	def test_InvalidTOML(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system
+				requires = ["setuptools >= 80.0"]
+			""")
+
+			with self.assertRaises(PyProjectFileError) as context:
+				PyProjectFile.Parse(path)
+
+		self.assertEqual(f"Project file '{path}' is not valid TOML.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, TOMLDecodeError)
+		self.assertIs(path, context.exception.FilePath)
+
+	def test_BrokenRequirement(self) -> None:
+		"""A string that isn't a requirement is reported, and the other strings are still read."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system]
+				requires = ["setuptools >= 80.0", "this is not a requirement", "wheel"]
+			""")
+
+			with WarningCollector(handler=lambda warning: False) as collector:
+				pyProjectFile = PyProjectFile.Parse(path)
+
+		self.assertEqual(["setuptools", "wheel"], [req.name for req in pyProjectFile.BuildRequirements])
+		self.assertEqual(1, len(collector.Warnings))
+		warning = collector.Warnings[0]
+		self.assertIsInstance(warning, UnparsableRequirementWarning)
+		self.assertEqual(f"Build requirement 'this is not a requirement' in '{path}' can't be parsed.", str(warning))
+		self.assertEqual("this is not a requirement", warning.Line)
+		self.assertEqual(path, warning.FilePath)
+		self.assertIsNone(warning.LineNumber)
+
+	def test_BrokenRequirement_Uncollected(self) -> None:
+		"""Without a collector, the critical warning raises an :exc:`~pyTooling.Warning.UnhandledCriticalWarningError`."""
+		with TemporaryDirectory() as directory:
+			path = self._write(Path(directory), """
+				[build-system]
+				requires = ["this is not a requirement"]
+			""")
+
+			with self.assertRaises(UnhandledCriticalWarningError) as context:
+				PyProjectFile.Parse(path)
+
+		self.assertIsInstance(context.exception.__cause__, UnparsableRequirementWarning)
+
+	def test_MissingFile(self) -> None:
+		with TemporaryDirectory() as directory:
+			path = Path(directory) / "pyproject.toml"
+
+			with self.assertRaises(PyProjectFileNotFoundError) as context:
+				PyProjectFile.Parse(path)
+
+		self.assertEqual(f"Project file '{path}' does not exist.", str(context.exception))
+		self.assertIsInstance(context.exception.__cause__, FileNotFoundError)
+		self.assertIs(path, context.exception.FilePath)
+
+	def test_PyProjectFileErrors_Bases(self) -> None:
+		self.assertTrue(issubclass(PyProjectFileNotFoundError, FileNotFoundError))
+		self.assertTrue(issubclass(PyProjectFileNotFoundError, DependencyError))
+		self.assertTrue(issubclass(PyProjectFileError, DependencyError))
+
+	def test_PyProjectFileErrors_MessageOnly(self) -> None:
+		"""The path is required: raising an exception with a message only is a 'TypeError'."""
+		with self.assertRaises(TypeError) as notFoundCapture:
+			raise PyProjectFileNotFoundError("Missing file.")
+
+		self.assertIn("'filePath'", str(notFoundCapture.exception))
+
+		with self.assertRaises(TypeError) as errorCapture:
+			raise PyProjectFileError("Invalid file.")
+
+		self.assertIn("'filePath'", str(errorCapture.exception))
+
+	def test_Parse_PathIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			PyProjectFile.Parse(None)
+
+		self.assertEqual("Parameter 'path' is None.", str(context.exception))
+
+	def test_Parse_PathWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			PyProjectFile.Parse("pyproject.toml")
+
+		self.assertEqual("Parameter 'path' is not of type 'Path'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+
+class PyProjectFileInstantiation(Testcase):
+	"""Describing a ``pyproject.toml`` file by hand, without reading one."""
+
+	def test_Empty(self) -> None:
+		path =          Path("pyproject.toml")
+		pyProjectFile = PyProjectFile(path)
+
+		self.assertIs(path, pyProjectFile.Path)
+		self.assertEqual([], pyProjectFile.BuildRequirements)
+		self.assertIsNone(pyProjectFile.AnalysisDuration)
+		self.assertEqual("pyproject.toml: 0 build requirement(s)", str(pyProjectFile))
+
+	def test_BuildRequirements(self) -> None:
+		setuptools =    Requirement("setuptools >= 80.0")
+		wheel =         Requirement("wheel")
+		pyProjectFile = PyProjectFile(Path("pyproject.toml"), (setuptools, wheel))
+
+		self.assertEqual([setuptools, wheel], pyProjectFile.BuildRequirements)
+
+	def test_AnalysisDuration(self) -> None:
+		duration =      timedelta(milliseconds=5)
+		pyProjectFile = PyProjectFile(Path("pyproject.toml"), analysisDuration=duration)
+
+		self.assertEqual(duration, pyProjectFile.AnalysisDuration)
+		self.assertIs(Duration, type(pyProjectFile.AnalysisDuration))
+
+	def test_PathIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			PyProjectFile(None)
+
+		self.assertEqual("Parameter 'path' is None.", str(context.exception))
+
+	def test_PathWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			PyProjectFile("pyproject.toml")
+
+		self.assertEqual("Parameter 'path' is not of type 'Path'.", str(context.exception))
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_BuildRequirementsNotIterable(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			PyProjectFile(Path("pyproject.toml"), 42)
+
+		self.assertEqual("Parameter 'buildRequirements' is not iterable.", str(context.exception))
+		self.assertEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_BuildRequirementsElementIsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			PyProjectFile(Path("pyproject.toml"), [None])
+
+		self.assertEqual("An element of parameter 'buildRequirements' is None.", str(context.exception))
+
+	def test_BuildRequirementsElementWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			PyProjectFile(Path("pyproject.toml"), ["setuptools >= 80.0"])
+
+		self.assertEqual(
+			"An element of parameter 'buildRequirements' is not of type 'Requirement'.",
+			str(context.exception)
+		)
+		self.assertEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_AnalysisDurationWrongType(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			PyProjectFile(Path("pyproject.toml"), analysisDuration=0.005)
+
+		self.assertEqual("Parameter 'analysisDuration' is not of type 'timedelta'.", str(context.exception))
+		self.assertEqual(["Got type 'float'."], context.exception.__notes__)
+
+
 @mark.skipif(not HAS_JSONSCHEMA, reason="Needs 'jsonschema', which can't be installed on PyPy for Windows.")
 class PackageOverridesSchema(Testcase):
 	"""The package-override file's structure is stated as a JSON schema, so an editor and CI check the same thing."""
@@ -2260,6 +2544,7 @@ class TypeHints(Testcase):
 		self.assertIs(Path, hints["_path"])
 		self.assertIs(Path, get_args(get_args(hints["_analyzedRequirementFiles"])[0])[0])
 		self.assertIs(Path, get_type_hints(RequirementsFileReference, namespace)["_path"])
+		self.assertIs(Path, get_type_hints(PyProjectFile, namespace)["_path"])
 		self.assertIs(Path, get_args(get_args(get_type_hints(LicenseOverrides, namespace)["SCHEMA_FILES"])[0])[1])
 		self.assertIs(Path, get_args(get_type_hints(LicenseOverrides, namespace)["_path"])[0])
 		self.assertIs(URL, get_type_hints(Distribution, namespace)["_url"])
