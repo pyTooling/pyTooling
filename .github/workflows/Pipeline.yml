@@ -122,9 +122,7 @@ jobs:
     if: success() || failure()
     with:
       coverage_report_json:   ${{ needs.ConfigParams.outputs.coverage_report_json }}
-      coverage_report_html:   ${{ needs.ConfigParams.outputs.coverage_report_html }}
       coverage_json_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_json }}
-      coverage_html_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
       codecov:                'true'
       codacy:                 'true'
     secrets:
