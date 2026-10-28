@@ -122,9 +122,7 @@ jobs:
     if: success() || failure()
     with:
       coverage_report_json:   ${{ needs.ConfigParams.outputs.coverage_report_json }}
-      coverage_report_html:   ${{ needs.ConfigParams.outputs.coverage_report_html }}
       coverage_json_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_json }}
-      coverage_html_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
       codecov:                'true'
       codacy:                 'true'
     secrets:
@@ -200,7 +198,7 @@ jobs:
 #      - UnitTestingParams
 #      - Documentation
 #    with:
-#      document: sphinx_reports
+#      document: pyTooling
 #      latex_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_latex }}
 #      pdf_artifact: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_pdf }}
 
@@ -214,9 +212,8 @@ jobs:
       - PublishCoverageResults
       - StaticTypeCheck
     with:
-      doc:      ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
-      coverage: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).codecoverage_html }}
-      typing:   ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
+      doc:    ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).documentation_html }}
+      typing: ${{ fromJson(needs.UnitTestingParams.outputs.artifact_names).statictyping_html }}
 
   TriggerTaggedRelease:
     uses: pyTooling/Actions/.github/workflows/TagReleaseCommit.yml@r9
