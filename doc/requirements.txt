@@ -13,9 +13,9 @@ packaging >= 25.0
 requests >= 2.32
 
 # The documentation's Sphinx extension - roles, 'dependency-table', 'xmlschema-graph', 'shields', ... Its extra
-# 'reports' adds the domain 'report' (unit tests, code and documentation coverage). It installs pyTooling from GitHub
+# 'reports' adds the domain 'report' (unit tests, code and documentation coverage). It installs pyTooling from PyPI
 # as its own requirement; 'conf.py' puts the checkout first, so autodoc reads the checkout.
-pyTooling.Sphinx[reports] @ git+https://github.com/pyTooling/pyTooling.Sphinx.git@dev
+pyTooling.Sphinx[reports] ~= 1.0.0
 
 # Enforce latest version on ReadTheDocs
 sphinx ~= 9.1
