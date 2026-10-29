@@ -117,7 +117,9 @@ dependency graph is otherwise thousands of HTTP requests wide.
 .. attention::
 
    Querying PyPI needs :gh:`aiohttp <aio-libs/aiohttp>`, :gh:`requests <psf/requests>`
-   and :gh:`packaging <pypa/packaging>`, which are optional dependencies. Install them with the
+   and :gh:`packaging <pypa/packaging>`, reading license overrides from a YAML file
+   (:meth:`LicenseOverrides.FromFile() <pyTooling.Dependency.Python.LicenseOverrides.FromFile>`) needs
+   :gh:`ruamel.yaml <pycontribs/ruamel-yaml>`. These are optional dependencies. Install them with the
    ``dependencies`` extra:
 
    .. code-block:: shell
