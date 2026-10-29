@@ -49,7 +49,8 @@ packageDirectory =       packageName[:-2]
 packageInformationFile = Path(f"{packageDirectory}/Common/__init__.py")
 
 additionalRequirements = {
-	"dependencies": ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32"],  # aiohttp limited on MSYS2 to 3.12.x
+	# aiohttp limited on MSYS2 to 3.12.x
+	"dependencies": ["aiohttp >= 3.12", "packaging >= 25.0", "requests >= 2.32", "ruamel.yaml ~= 0.19"],
 	"diagram":      ["matplotlib >= 3.10", "plotly >= 6.0"],
 	"idna":         ["idna >= 3.20"],
 	"packaging":    ["setuptools >= 83.0"],

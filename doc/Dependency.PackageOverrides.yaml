@@ -206,9 +206,6 @@ packages:
   sphinx-design:
     licenseURL: https://GitHub.com/executablebooks/sphinx-design/blob/main/LICENSE
 
-  sphinx-reports:
-    licenseURL: https://GitHub.com/pyTooling/sphinx-reports/blob/main/LICENSE.md
-
   sphinx-rtd-theme:
     licenseURL: https://GitHub.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE
 

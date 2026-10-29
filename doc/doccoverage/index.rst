@@ -1,5 +1,7 @@
-Documentation Coverage
-######################
+.. _DOCCOV:
+
+Documentation Coverage Report
+#############################
 
 .. grid:: 2
 
