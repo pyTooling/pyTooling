@@ -10,6 +10,24 @@ release.
 Version 10.x (2026)
 *******************
 
+.. topic:: :gh:`v10.1.1 - 29.10.2026 <pyTooling/pyTooling/releases/v10.1.1>`
+
+   .. rubric:: Bug Fixes
+
+   * The extra ``dependencies`` didn't include ruamel.yaml, which
+     :meth:`LicenseOverrides.FromFile() <pyTooling.Dependency.Python.LicenseOverrides.FromFile>` needs to read license
+     overrides from a YAML file. With ``pyTooling[dependencies]`` alone, reading such a file - e.g. a documentation
+     build with pyTooling.Sphinx and a ``Dependency.PackageOverrides.yaml`` - failed with a
+     :exc:`~pyTooling.Exceptions.MissingDependencyError`. The extra requires ``ruamel.yaml ~= 0.19`` now.
+
+   .. rubric:: Documentation
+
+   * Report pages for the unit tests (a page per testsuite and testcase), the code coverage (a page per module and
+     file) and the documentation coverage, rendered by pyTooling.Sphinx. Coverage.py's HTML report isn't published
+     anymore.
+   * :ref:`DEPENDENCIES` names ruamel.yaml as an optional dependency of :mod:`pyTooling.Dependency.Python`.
+
+
 .. topic:: :gh:`v10.1.0 - 28.10.2026 <pyTooling/pyTooling/releases/v10.1.0>`
 
    .. rubric:: New Features
